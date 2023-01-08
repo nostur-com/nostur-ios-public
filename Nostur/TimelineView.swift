@@ -16,7 +16,7 @@ struct TimelineView: View {
             VStack {
                 LazyVStack {
                     ForEach(tweets) { tweet in
-                        MessageView(tweet: tweet)
+                        TweetView(tweet: tweet)
                     }
                 }.padding(.vertical)
                 Spacer()
