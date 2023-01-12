@@ -9,35 +9,46 @@ import SwiftUI
 
 struct ContentView: View {
     
+    var connectionManager: ConnectionManager
     @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""
     @State var path = NavigationPath()
-    
+//    let connections = Connections.shared
     
     var body: some View {
             TabView {
                 NavigationStack {
+                    Button {
+                        var cc = """
+["REQ", "FET", {"authors": ["5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"], "kinds": [3], "limit": 1}]
+"""
+                        connectionManager.sendMessage(text: cc)
+                    } label: {
+                        Text("Test")
+                    }
                     TimelineView(tweets:DummyTweets().tweets())
                     Spacer()
                 }
-                .tabItem {
-                    Image(systemName: "house.fill")
-                }
+                .tabItem { Image(systemName: "house.fill") }
                 
                 Text("Notifications")
                     .badge(2)
-                    .tabItem {
-                        Image(systemName: "bell.fill")
-                    }
+                    .tabItem { Image(systemName: "bell.fill") }
                 
                 NavigationStack {
-                    AccountsView()
+                    AccountListView()
                     Spacer()
                 }
-                .badge(0)
                 .tabItem {
                     Image(systemName: "person.badge.key.fill")
                 }
+                NavigationStack {
+                    RelaysView()
+                    Spacer()
+                }
+                .tabItem { Image(systemName: "server.rack") }
             }
+            .onAppear { print("🔴 OnAppear") }
+            .onDisappear { print("🔴 OnDisappear") }
     }
     
     
@@ -53,6 +64,8 @@ private let itemFormatter: DateFormatter = {
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView().environment(\.managedObjectContext, PersistenceController.shared.container.viewContext)
+        ContentView(connectionManager: ConnectionManager.shared)
+            .environment(\.managedObjectContext,
+                                PersistenceController.preview.container.viewContext)
     }
 }

@@ -1,18 +1,19 @@
 //
-//  AccountsView.swift
+//  AccountListView.swift
 //  Nostur
 //
-//  Created by Fabian Lachman on 08/01/2023.
+//  Created by Fabian Lachman on 10/01/2023.
 //
 
 import SwiftUI
 
-struct AccountsView: View {
-    
+struct AccountListView: View {
     @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""
     @State var createAccountPresented = false
+    @State var addReadOnlyAccountPresented = false
     
-    @Environment(\.managedObjectContext) private var viewContext
+    
+    @Environment(\.managedObjectContext) var viewContext
     
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Identity.createdAt, ascending: true)],
@@ -20,54 +21,30 @@ struct AccountsView: View {
     private var identities: FetchedResults<Identity>
     
     var body: some View {
-        let activeIdentities = identities.filter { $0.publicKey == activeAccountPublicKey }
-        let inactiveIdentities = identities.filter { $0.publicKey != activeAccountPublicKey }
-        
+    
         VStack {
+//            Text("\(identities.count)")
             if (identities.count == 0) {
-                NewIdentityView()
-            }
-            else if (identities.count == 1) {
-                List {
-                    ForEach(identities, id: \.self) { identity in
-                        NavigationLink(value: identity, label: {
-                            Text(identity.name ?? "(Unknown)")
-                        })
-                    }.onDelete(perform: deleteItems)
-                }
-                .navigationTitle("Accounts")
-                .toolbar {
-                    ToolbarItem {
-                        Button {
-                            createAccountPresented = true
-                        } label: {
-                            Label("Add account", systemImage: "plus")
-                        }
-                    }
-                }
+                NewAccountView(addReadOnlyAccountPresented: $addReadOnlyAccountPresented)
             }
             else {
                 List {
                     
-                    Section {
-                        ForEach(activeIdentities, id: \.self) { identity in
-                            NavigationLink(value:identity, label: {
-                                Text(identity.name ?? "(Unknown)")
-                            })
-                        }
-                    } header: {
-                        Text("Main account")
-                    }
+                    ForEach(identities, id: \.self) { identity in
+                        NavigationLink(value:identity, label:{
+                            HStack {
+                                Text(identity.name != "" ? identity.name : identity.publicKey ?? "(Unknown)")
+                                        .lineLimit(1)
+                                if identity.publicKey == activeAccountPublicKey {
+                                    Text("active")
+                                        .padding(.horizontal, 5)
+                                        .background(.green)
+                                        .cornerRadius(3)
+                                }
+                            }
+                        })
+                    }.onDelete(perform: deleteItems)
                     
-                    Section {
-                        ForEach(inactiveIdentities, id: \.self) { identity in
-                            NavigationLink(value:identity, label:{
-                                Text(identity.name ?? "(Unknown)")
-                            })
-                        }.onDelete(perform: deleteItems)
-                    } header: {
-                        Text("Other accounts")
-                    }
                 }
                 .navigationTitle("Accounts")
                 .toolbar {
@@ -79,17 +56,27 @@ struct AccountsView: View {
                         }
                     }
                 }
-                
             }
         }
         .navigationDestination(isPresented: $createAccountPresented) {
-            NewIdentityView()
+            NewAccountView(addReadOnlyAccountPresented: $addReadOnlyAccountPresented)
+        }
+        .navigationDestination(isPresented: $addReadOnlyAccountPresented) {
+            AddReadOnlyAccountView()
         }
         .navigationDestination(for: Identity.self) { identity in
             VStack {
                 Text("Name: \(identity.name ?? "(Unknown)")")
-                Text("Priv: \(identity.privateKey ?? "(Unknown)")")
+//                Text("Priv: \(identity.privateKey ?? "(Unknown)")")
                 Text("Pub: \(identity.publicKey ?? "(Unknown)")")
+                
+                AccountView(identity: identity)
+                
+                Button {
+                    fetchContacts(identity:identity)
+                } label: {
+                    Text("Fetch contacts")
+                }
                 
                 if activeAccountPublicKey != identity.publicKey {
                     Button {
@@ -100,8 +87,27 @@ struct AccountsView: View {
                 }
             }
         }
+        .onAppear {
+            // Fetch identity metadata for accounts where who don't have the private key for
+            
+            createAccountPresented = false
+            addReadOnlyAccountPresented = false
+            
+            
+            let pubkeys = identities
+                .filter { $0.privateKey == nil || $0.privateKey == "" }
+                .map { $0.publicKey }
+            
+            let message = RequestMessage.getUserMetadata(pubkeys: pubkeys);
+            ConnectionManager.shared.sendMessage(text: message)
+            
+//            print(msg)
+        }
     }
     
+    func fetchContacts(identity:Identity) {
+        print(identity)
+    }
     
     private func addItem() {
         withAnimation {
@@ -135,8 +141,15 @@ struct AccountsView: View {
     }
 }
 
-struct AccountsView_Previews: PreviewProvider {
+struct AccountListView_Previews: PreviewProvider {
+    
+    static var viewContext = PersistenceController.preview.container.viewContext
+    
     static var previews: some View {
-        AccountsView().environment(\.managedObjectContext, PersistenceController.shared.container.viewContext)
+        NavigationStack {
+            AccountListView()
+                .environment(\.managedObjectContext,
+                              PersistenceController.preview.container.viewContext)
+        }
     }
 }

@@ -6,47 +6,42 @@
 //
 
 import SwiftUI
-import NostrKit
+//import NostrKit
 import secp256k1
 import Foundation
 
-struct NewIdentityView: View {
+struct NewAccountView: View {
     
     @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) private var viewContext
+    @Binding var addReadOnlyAccountPresented: Bool
     
     @State var name = ""
-    @State var bio = ""
+    @State var about = ""
     
     var accentColor: Color = Color.blue
     var grayBackground: Color = Color.gray.opacity(0.2)
     
 
     fileprivate func createAccount() {
-        
-        let privateKey: secp256k1.Signing.PrivateKey
-        privateKey = try! secp256k1.Signing.PrivateKey()
-        let privateKeyHex = String(bytes:privateKey.rawRepresentation.bytes)
-        
-        let publicKey: secp256k1.Signing.PublicKey
-        publicKey = privateKey.publicKey
-        let publicKeyHex = String(bytes: publicKey.rawRepresentation)
+
+        let newKeys = NKeys.newKeys()
         
 //        print("Private key: \(privateKeyHex)") for testing. dont print this ever
-        print("Public key: \(publicKeyHex)")
+        print("Public key: \(newKeys.publicKeyHex())")
 
         let identity = Identity(context: viewContext)
         identity.id = UUID()
         identity.createdAt = Date()
         identity.name = name
-        identity.bio = bio
-        identity.privateKey = privateKeyHex
-        identity.publicKey = publicKeyHex
+        identity.about = about
+        identity.privateKey = newKeys.privateKeyHex()
+        identity.publicKey = newKeys.publicKeyHex()
         
         do {
             try viewContext.save()
-            activeAccountPublicKey = publicKeyHex
+            activeAccountPublicKey = newKeys.publicKeyHex()
         } catch {
             // Replace this implementation with code to handle the error appropriately.
             // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
@@ -69,7 +64,7 @@ struct NewIdentityView: View {
                 .background(grayBackground)
                 .cornerRadius(5.0)
                 .padding(.bottom, 20)
-            TextField("Something about yourself (bio)", text: $bio)
+            TextField("Something about yourself (bio)", text: $about)
                 .lineLimit(5)
                 .padding()
                 .background(grayBackground)
@@ -88,7 +83,13 @@ struct NewIdentityView: View {
                     .cornerRadius(15.0)
             }
             Spacer()
-            Text("creates local account..").foregroundColor(.gray)
+            Button {
+                addReadOnlyAccountPresented = true
+                dismiss()
+            } label: {
+                Text("Or add read-only account")
+            }
+//            Text("creates local account..").foregroundColor(.gray)
             
         }.padding()
     }
@@ -98,6 +99,6 @@ struct NewIdentityView: View {
 
 struct NewIdentityView_Previews: PreviewProvider {
     static var previews: some View {
-        NewIdentityView()
+        NewAccountView(addReadOnlyAccountPresented: .constant(false)).environment(\.managedObjectContext, PersistenceController.shared.container.viewContext)
     }
 }

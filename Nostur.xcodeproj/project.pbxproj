@@ -7,45 +7,68 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1F055A53296EE2A2009EF792 /* secp256k1 in Frameworks */ = {isa = PBXBuildFile; productRef = 1F055A52296EE2A2009EF792 /* secp256k1 */; };
 		1F1C31E22969A27800E60BEF /* IdentityHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1C31E12969A27800E60BEF /* IdentityHelpers.swift */; };
-		1F1C31E42969A86700E60BEF /* NewIdentityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1C31E32969A86700E60BEF /* NewIdentityView.swift */; };
-		1F1C31E72969B75500E60BEF /* NostrKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1F1C31E62969B75500E60BEF /* NostrKit */; };
+		1F1C31E42969A86700E60BEF /* NewAccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1C31E32969A86700E60BEF /* NewAccountView.swift */; };
 		1F1C31E92969B7A000E60BEF /* CryptoKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F1C31E82969B79F00E60BEF /* CryptoKit.framework */; };
+		1F30FAA929705EBD008439C8 /* NosturCloud.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1F30FAA729705EBD008439C8 /* NosturCloud.xcdatamodeld */; };
+		1F30FAB029706E72008439C8 /* Identity+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F30FAAE29706E72008439C8 /* Identity+CoreDataClass.swift */; };
+		1F30FAB329707719008439C8 /* Identity+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F30FAB229707719008439C8 /* Identity+CoreDataProperties.swift */; };
 		1F375713296728DB007D210A /* TimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F375712296728DA007D210A /* TimelineView.swift */; };
 		1F37571629672AD0007D210A /* DummyData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F37571529672AD0007D210A /* DummyData.swift */; };
+		1F4773A5296CA72A0049454B /* AddReadOnlyAccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4773A4296CA72A0049454B /* AddReadOnlyAccountView.swift */; };
+		1F4773A7296D4F5B0049454B /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4773A6296D4F5B0049454B /* AccountView.swift */; };
+		1F4773A9296D85B70049454B /* AccountListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4773A8296D85B70049454B /* AccountListView.swift */; };
+		1F71037D296BD9DE006245CC /* Nostr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F71037C296BD9DE006245CC /* Nostr.swift */; };
+		1F710380296BDB31006245CC /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 1F71037F296BDB31006245CC /* Starscream */; };
 		1F75652F296ADA280078474E /* AccountsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F75652E296ADA280078474E /* AccountsView.swift */; };
+		1F756531296AE4260078474E /* RelaysView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F756530296AE4260078474E /* RelaysView.swift */; };
+		1F756533296AE7910078474E /* NewRelayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F756532296AE7910078474E /* NewRelayView.swift */; };
+		1F756536296AFE7F0078474E /* NosturLocal.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1F756534296AFE7F0078474E /* NosturLocal.xcdatamodeld */; };
 		1FB3E3BC2968061700CDA788 /* MessageDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB3E3BB2968061700CDA788 /* MessageDetailView.swift */; };
 		1FB3E3BE296820C600CDA788 /* UserProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB3E3BD296820C600CDA788 /* UserProfileView.swift */; };
 		1FB448BE2965F3D000038671 /* NosturApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB448BD2965F3D000038671 /* NosturApp.swift */; };
 		1FB448C02965F3D000038671 /* Persistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB448BF2965F3D000038671 /* Persistence.swift */; };
-		1FB448C32965F3D000038671 /* Nostur.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1FB448C12965F3D000038671 /* Nostur.xcdatamodeld */; };
 		1FB448C52965F3D000038671 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB448C42965F3D000038671 /* ContentView.swift */; };
 		1FB448C72965F3D200038671 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1FB448C62965F3D200038671 /* Assets.xcassets */; };
 		1FB448CB2965F3D200038671 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1FB448CA2965F3D200038671 /* Preview Assets.xcassets */; };
 		1FB448D22965FB5500038671 /* TweetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB448D12965FB5500038671 /* TweetView.swift */; };
 		1FB58DC32969EDE7005D83BA /* Bech32 in Frameworks */ = {isa = PBXBuildFile; productRef = 1FB58DC22969EDE7005D83BA /* Bech32 */; };
+		1FB62D0E296FFF1400A0055B /* RelayEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB62D0D296FFF1400A0055B /* RelayEditView.swift */; };
+		1FEC01C0296C4A400078CC9B /* SwiftyJSON in Frameworks */ = {isa = PBXBuildFile; productRef = 1FEC01BF296C4A400078CC9B /* SwiftyJSON */; };
+		B39353FC12E60CADAE655912 /* Connections.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3935E040327074D0C91EA33 /* Connections.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		1F1C31E12969A27800E60BEF /* IdentityHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentityHelpers.swift; sourceTree = "<group>"; };
-		1F1C31E32969A86700E60BEF /* NewIdentityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewIdentityView.swift; sourceTree = "<group>"; };
+		1F1C31E32969A86700E60BEF /* NewAccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewAccountView.swift; sourceTree = "<group>"; };
 		1F1C31E82969B79F00E60BEF /* CryptoKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CryptoKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/CryptoKit.framework; sourceTree = DEVELOPER_DIR; };
-		1F313DEC29694337004C7366 /* NostrKit-master */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "NostrKit-master"; path = "../../NostrKit-master"; sourceTree = "<group>"; };
+		1F30FAA829705EBD008439C8 /* NosturCloud.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = NosturCloud.xcdatamodel; sourceTree = "<group>"; };
+		1F30FAAE29706E72008439C8 /* Identity+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Identity+CoreDataClass.swift"; sourceTree = "<group>"; };
+		1F30FAB229707719008439C8 /* Identity+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Identity+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1F313DED296980D8004C7366 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		1F375712296728DA007D210A /* TimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineView.swift; sourceTree = "<group>"; };
 		1F37571529672AD0007D210A /* DummyData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DummyData.swift; sourceTree = "<group>"; };
+		1F4773A4296CA72A0049454B /* AddReadOnlyAccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddReadOnlyAccountView.swift; sourceTree = "<group>"; };
+		1F4773A6296D4F5B0049454B /* AccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountView.swift; sourceTree = "<group>"; };
+		1F4773A8296D85B70049454B /* AccountListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountListView.swift; sourceTree = "<group>"; };
+		1F71037C296BD9DE006245CC /* Nostr.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nostr.swift; sourceTree = "<group>"; };
 		1F75652E296ADA280078474E /* AccountsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsView.swift; sourceTree = "<group>"; };
+		1F756530296AE4260078474E /* RelaysView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelaysView.swift; sourceTree = "<group>"; };
+		1F756532296AE7910078474E /* NewRelayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewRelayView.swift; sourceTree = "<group>"; };
+		1F756535296AFE7F0078474E /* NosturLocal.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = NosturLocal.xcdatamodel; sourceTree = "<group>"; };
 		1FB3E3BB2968061700CDA788 /* MessageDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageDetailView.swift; sourceTree = "<group>"; };
 		1FB3E3BD296820C600CDA788 /* UserProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileView.swift; sourceTree = "<group>"; };
 		1FB448BA2965F3D000038671 /* Nostur.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Nostur.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1FB448BD2965F3D000038671 /* NosturApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturApp.swift; sourceTree = "<group>"; };
 		1FB448BF2965F3D000038671 /* Persistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Persistence.swift; sourceTree = "<group>"; };
-		1FB448C22965F3D000038671 /* Nostur.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Nostur.xcdatamodel; sourceTree = "<group>"; };
 		1FB448C42965F3D000038671 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		1FB448C62965F3D200038671 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1FB448C82965F3D200038671 /* Nostur.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Nostur.entitlements; sourceTree = "<group>"; };
 		1FB448CA2965F3D200038671 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		1FB448D12965FB5500038671 /* TweetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TweetView.swift; sourceTree = "<group>"; };
+		1FB62D0D296FFF1400A0055B /* RelayEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayEditView.swift; sourceTree = "<group>"; };
+		B3935E040327074D0C91EA33 /* Connections.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Connections.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,8 +77,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				1FB58DC32969EDE7005D83BA /* Bech32 in Frameworks */,
+				1F055A53296EE2A2009EF792 /* secp256k1 in Frameworks */,
 				1F1C31E92969B7A000E60BEF /* CryptoKit.framework in Frameworks */,
-				1F1C31E72969B75500E60BEF /* NostrKit in Frameworks */,
+				1FEC01C0296C4A400078CC9B /* SwiftyJSON in Frameworks */,
+				1F710380296BDB31006245CC /* Starscream in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,14 +103,6 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		1F313DEB29694337004C7366 /* Packages */ = {
-			isa = PBXGroup;
-			children = (
-				1F313DEC29694337004C7366 /* NostrKit-master */,
-			);
-			name = Packages;
-			sourceTree = "<group>";
-		};
 		1F37571429672AB6007D210A /* DummyData */ = {
 			isa = PBXGroup;
 			children = (
@@ -94,10 +111,29 @@
 			path = DummyData;
 			sourceTree = "<group>";
 		};
+		1F4773A3296CA7040049454B /* Accounts */ = {
+			isa = PBXGroup;
+			children = (
+				1F75652E296ADA280078474E /* AccountsView.swift */,
+				1F1C31E32969A86700E60BEF /* NewAccountView.swift */,
+				1F4773A4296CA72A0049454B /* AddReadOnlyAccountView.swift */,
+				1F4773A6296D4F5B0049454B /* AccountView.swift */,
+				1F4773A8296D85B70049454B /* AccountListView.swift */,
+			);
+			path = Accounts;
+			sourceTree = "<group>";
+		};
+		1F71037B296BD98D006245CC /* Nostr */ = {
+			isa = PBXGroup;
+			children = (
+				1F71037C296BD9DE006245CC /* Nostr.swift */,
+			);
+			path = Nostr;
+			sourceTree = "<group>";
+		};
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
-				1F313DEB29694337004C7366 /* Packages */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1FB448BB2965F3D000038671 /* Products */,
 				1F1C31E52969B75500E60BEF /* Frameworks */,
@@ -115,22 +151,27 @@
 		1FB448BC2965F3D000038671 /* Nostur */ = {
 			isa = PBXGroup;
 			children = (
+				1F30FAAE29706E72008439C8 /* Identity+CoreDataClass.swift */,
+				1F30FAB229707719008439C8 /* Identity+CoreDataProperties.swift */,
+				1FB62D0C296FFEBF00A0055B /* Relays */,
+				1F4773A3296CA7040049454B /* Accounts */,
+				1F71037B296BD98D006245CC /* Nostr */,
 				1F1C31E02969A26000E60BEF /* Helpers */,
 				1F313DED296980D8004C7366 /* Info.plist */,
 				1F37571429672AB6007D210A /* DummyData */,
+				B3935E040327074D0C91EA33 /* Connections.swift */,
 				1FB448BD2965F3D000038671 /* NosturApp.swift */,
 				1FB448BF2965F3D000038671 /* Persistence.swift */,
 				1FB448C42965F3D000038671 /* ContentView.swift */,
-				1F75652E296ADA280078474E /* AccountsView.swift */,
 				1FB448D12965FB5500038671 /* TweetView.swift */,
 				1FB3E3BD296820C600CDA788 /* UserProfileView.swift */,
 				1FB3E3BB2968061700CDA788 /* MessageDetailView.swift */,
 				1F375712296728DA007D210A /* TimelineView.swift */,
-				1F1C31E32969A86700E60BEF /* NewIdentityView.swift */,
 				1FB448C62965F3D200038671 /* Assets.xcassets */,
 				1FB448C82965F3D200038671 /* Nostur.entitlements */,
-				1FB448C12965F3D000038671 /* Nostur.xcdatamodeld */,
+				1F756534296AFE7F0078474E /* NosturLocal.xcdatamodeld */,
 				1FB448C92965F3D200038671 /* Preview Content */,
+				1F30FAA729705EBD008439C8 /* NosturCloud.xcdatamodeld */,
 			);
 			path = Nostur;
 			sourceTree = "<group>";
@@ -141,6 +182,16 @@
 				1FB448CA2965F3D200038671 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		1FB62D0C296FFEBF00A0055B /* Relays */ = {
+			isa = PBXGroup;
+			children = (
+				1F756532296AE7910078474E /* NewRelayView.swift */,
+				1F756530296AE4260078474E /* RelaysView.swift */,
+				1FB62D0D296FFF1400A0055B /* RelayEditView.swift */,
+			);
+			path = Relays;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -160,8 +211,10 @@
 			);
 			name = Nostur;
 			packageProductDependencies = (
-				1F1C31E62969B75500E60BEF /* NostrKit */,
 				1FB58DC22969EDE7005D83BA /* Bech32 */,
+				1F71037F296BDB31006245CC /* Starscream */,
+				1FEC01BF296C4A400078CC9B /* SwiftyJSON */,
+				1F055A52296EE2A2009EF792 /* secp256k1 */,
 			);
 			productName = Nostur;
 			productReference = 1FB448BA2965F3D000038671 /* Nostur.app */;
@@ -193,6 +246,9 @@
 			mainGroup = 1FB448B12965F3D000038671;
 			packageReferences = (
 				1FB58DC12969EDE7005D83BA /* XCRemoteSwiftPackageReference "bech32" */,
+				1F71037E296BDB31006245CC /* XCRemoteSwiftPackageReference "Starscream" */,
+				1FEC01BE296C4A400078CC9B /* XCRemoteSwiftPackageReference "SwiftyJSON" */,
+				1F055A51296EE2A2009EF792 /* XCRemoteSwiftPackageReference "secp256k1" */,
 			);
 			productRefGroup = 1FB448BB2965F3D000038671 /* Products */;
 			projectDirPath = "";
@@ -220,18 +276,29 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1FB448C32965F3D000038671 /* Nostur.xcdatamodeld in Sources */,
+				1F756533296AE7910078474E /* NewRelayView.swift in Sources */,
+				1F4773A5296CA72A0049454B /* AddReadOnlyAccountView.swift in Sources */,
+				1F4773A9296D85B70049454B /* AccountListView.swift in Sources */,
+				1FB62D0E296FFF1400A0055B /* RelayEditView.swift in Sources */,
 				1FB3E3BE296820C600CDA788 /* UserProfileView.swift in Sources */,
 				1F375713296728DB007D210A /* TimelineView.swift in Sources */,
 				1FB448BE2965F3D000038671 /* NosturApp.swift in Sources */,
 				1F37571629672AD0007D210A /* DummyData.swift in Sources */,
+				1F756536296AFE7F0078474E /* NosturLocal.xcdatamodeld in Sources */,
 				1FB448C52965F3D000038671 /* ContentView.swift in Sources */,
+				1F756531296AE4260078474E /* RelaysView.swift in Sources */,
 				1FB3E3BC2968061700CDA788 /* MessageDetailView.swift in Sources */,
 				1F1C31E22969A27800E60BEF /* IdentityHelpers.swift in Sources */,
+				1F4773A7296D4F5B0049454B /* AccountView.swift in Sources */,
 				1F75652F296ADA280078474E /* AccountsView.swift in Sources */,
-				1F1C31E42969A86700E60BEF /* NewIdentityView.swift in Sources */,
+				1F30FAA929705EBD008439C8 /* NosturCloud.xcdatamodeld in Sources */,
+				1F71037D296BD9DE006245CC /* Nostr.swift in Sources */,
+				1F1C31E42969A86700E60BEF /* NewAccountView.swift in Sources */,
+				1F30FAB329707719008439C8 /* Identity+CoreDataProperties.swift in Sources */,
 				1FB448C02965F3D000038671 /* Persistence.swift in Sources */,
+				1F30FAB029706E72008439C8 /* Identity+CoreDataClass.swift in Sources */,
 				1FB448D22965FB5500038671 /* TweetView.swift in Sources */,
+				B39353FC12E60CADAE655912 /* Connections.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -274,6 +341,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				EXCLUDED_ARCHS = "";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -332,6 +400,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				EXCLUDED_ARCHS = "";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -359,6 +428,7 @@
 				DEVELOPMENT_TEAM = 5T4GDWX88Z;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
+				EXCLUDED_ARCHS = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Nostur/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Nostur;
@@ -380,7 +450,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = nostur.com.Nostur;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
+				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -400,6 +470,7 @@
 				DEVELOPMENT_TEAM = 5T4GDWX88Z;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
+				EXCLUDED_ARCHS = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Nostur/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Nostur;
@@ -421,7 +492,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = nostur.com.Nostur;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
+				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -453,6 +524,22 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		1F055A51296EE2A2009EF792 /* XCRemoteSwiftPackageReference "secp256k1" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/GigaBitcoin/secp256k1.swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.9.2;
+			};
+		};
+		1F71037E296BDB31006245CC /* XCRemoteSwiftPackageReference "Starscream" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/daltoniam/Starscream.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.0.0;
+			};
+		};
 		1FB58DC12969EDE7005D83BA /* XCRemoteSwiftPackageReference "bech32" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/0xdeadp00l/bech32.git";
@@ -461,28 +548,57 @@
 				minimumVersion = 1.0.0;
 			};
 		};
+		1FEC01BE296C4A400078CC9B /* XCRemoteSwiftPackageReference "SwiftyJSON" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SwiftyJSON/SwiftyJSON";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		1F1C31E62969B75500E60BEF /* NostrKit */ = {
+		1F055A52296EE2A2009EF792 /* secp256k1 */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = NostrKit;
+			package = 1F055A51296EE2A2009EF792 /* XCRemoteSwiftPackageReference "secp256k1" */;
+			productName = secp256k1;
+		};
+		1F71037F296BDB31006245CC /* Starscream */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1F71037E296BDB31006245CC /* XCRemoteSwiftPackageReference "Starscream" */;
+			productName = Starscream;
 		};
 		1FB58DC22969EDE7005D83BA /* Bech32 */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 1FB58DC12969EDE7005D83BA /* XCRemoteSwiftPackageReference "bech32" */;
 			productName = Bech32;
 		};
+		1FEC01BF296C4A400078CC9B /* SwiftyJSON */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1FEC01BE296C4A400078CC9B /* XCRemoteSwiftPackageReference "SwiftyJSON" */;
+			productName = SwiftyJSON;
+		};
 /* End XCSwiftPackageProductDependency section */
 
 /* Begin XCVersionGroup section */
-		1FB448C12965F3D000038671 /* Nostur.xcdatamodeld */ = {
+		1F30FAA729705EBD008439C8 /* NosturCloud.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
-				1FB448C22965F3D000038671 /* Nostur.xcdatamodel */,
+				1F30FAA829705EBD008439C8 /* NosturCloud.xcdatamodel */,
 			);
-			currentVersion = 1FB448C22965F3D000038671 /* Nostur.xcdatamodel */;
-			path = Nostur.xcdatamodeld;
+			currentVersion = 1F30FAA829705EBD008439C8 /* NosturCloud.xcdatamodel */;
+			path = NosturCloud.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+		1F756534296AFE7F0078474E /* NosturLocal.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				1F756535296AFE7F0078474E /* NosturLocal.xcdatamodel */,
+			);
+			currentVersion = 1F756535296AFE7F0078474E /* NosturLocal.xcdatamodel */;
+			path = NosturLocal.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;
 		};

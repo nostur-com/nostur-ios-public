@@ -14,17 +14,26 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/GigaBitcoin/secp256k1.swift",
       "state" : {
-        "revision" : "b80388789a8058fc99202436225f8f15d35dfbea",
-        "version" : "0.8.1"
+        "revision" : "48fb20fce4ca3aad89180448a127d5bc16f0e44c",
+        "version" : "0.10.0"
       }
     },
     {
-      "identity" : "swift-crypto",
+      "identity" : "starscream",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-crypto.git",
+      "location" : "https://github.com/daltoniam/Starscream.git",
       "state" : {
-        "revision" : "d9825fa541df64b1a7b182178d61b9a82730d01f",
-        "version" : "2.1.0"
+        "revision" : "df8d82047f6654d8e4b655d1b1525c64e1059d21",
+        "version" : "4.0.4"
+      }
+    },
+    {
+      "identity" : "swiftyjson",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/SwiftyJSON/SwiftyJSON",
+      "state" : {
+        "revision" : "b3dcd7dbd0d488e1a7077cb33b00f2083e382f07",
+        "version" : "5.0.1"
       }
     }
   ],
