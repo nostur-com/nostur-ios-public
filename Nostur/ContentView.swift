@@ -6,9 +6,11 @@
 //
 
 import SwiftUI
+import CoreData
 
 struct ContentView: View {
     
+    var cloudContainer:NSPersistentCloudKitContainer
     var connectionManager: ConnectionManager
     @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""
     @State var path = NavigationPath()
@@ -17,14 +19,16 @@ struct ContentView: View {
     var body: some View {
             TabView {
                 NavigationStack {
-                    Button {
-                        var cc = """
-["REQ", "FET", {"authors": ["5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"], "kinds": [3], "limit": 1}]
-"""
-                        connectionManager.sendMessage(text: cc)
-                    } label: {
-                        Text("Test")
-                    }
+                    TestTimeline(cloudContainer: cloudContainer)
+                }
+                .tabItem { Image(systemName: "figure.fall") }
+                NavigationStack {
+                    Playground(cloudContainer:cloudContainer)
+//                        .environment(\.managedObjectContext,
+//                                      PersistenceController.shared.localContainer.viewContext)
+                }
+                .tabItem { Image(systemName: "lightbulb.fill") }
+                NavigationStack {
                     TimelineView(tweets:DummyTweets().tweets())
                     Spacer()
                 }
@@ -36,6 +40,8 @@ struct ContentView: View {
                 
                 NavigationStack {
                     AccountListView()
+                        .environment(\.managedObjectContext,
+                                      PersistenceController.shared.cloudContainer.viewContext)
                     Spacer()
                 }
                 .tabItem {
@@ -43,6 +49,8 @@ struct ContentView: View {
                 }
                 NavigationStack {
                     RelaysView()
+                        .environment(\.managedObjectContext,
+                                      PersistenceController.shared.cloudContainer.viewContext)
                     Spacer()
                 }
                 .tabItem { Image(systemName: "server.rack") }
@@ -63,9 +71,20 @@ private let itemFormatter: DateFormatter = {
 }()
 
 struct ContentView_Previews: PreviewProvider {
+    static var cloudContainer = PersistenceController.preview.cloudContainer
+
     static var previews: some View {
-        ContentView(connectionManager: ConnectionManager.shared)
+        ContentView(cloudContainer:cloudContainer, connectionManager: ConnectionManager.shared)
             .environment(\.managedObjectContext,
-                                PersistenceController.preview.container.viewContext)
+                                PersistenceController.preview.localContainer.viewContext)
     }
 }
+
+//struct ContentView_Previews: PreviewProvider {
+//
+//    static var previews: some View {
+//        ContentView(connectionManager: ConnectionManager.shared)
+//            .environment(\.managedObjectContext,
+//                                PersistenceController.preview.container.viewContext)
+//    }
+//}

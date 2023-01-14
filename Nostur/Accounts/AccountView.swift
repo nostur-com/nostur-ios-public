@@ -96,11 +96,11 @@ struct AccountView: View {
 //            fetchRequest.predicate = NSPredicate(
 //                format: "kind = %i", 0
 //            )
-            let objects = try! persistenceController.containerLocal.viewContext.fetch(fetchRequest)
+            let objects = try! persistenceController.localContainer.viewContext.fetch(fetchRequest)
             print("🉐🉐🉐🉐")
 
             if let event = objects.first {
-                let content = JSON(event.content)
+                let content = JSON(event.content!)
                 if let dataFromString = content.stringValue.data(using: .utf8, allowLossyConversion: false) {
                     let json = try! JSON(data: dataFromString)
                     print(json["nip05"].stringValue)
@@ -147,13 +147,14 @@ struct AccountView: View {
         print(event.wrappedEventJson())
 
         // broadcast to relays
-        ConnectionManager.shared.sendMessage(text: event.wrappedEventJson())
+        let message = ClientMessage(type: .EVENT, message: event.wrappedEventJson())
+        ConnectionManager.shared.sendMessage(message)
     }
 }
 
 struct AccountView_Previews: PreviewProvider {
     
-    static var viewContext = PersistenceController.preview.container.viewContext
+    static var viewContext = PersistenceController.preview.cloudContainer.viewContext
 
     static var previews: some View {
         
@@ -180,6 +181,6 @@ struct AccountView_Previews: PreviewProvider {
         identity.about = "Test"
         
         return AccountView(identity: identity)
-            .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+            .environment(\.managedObjectContext, PersistenceController.preview.cloudContainer.viewContext)
     }
 }

@@ -41,7 +41,7 @@ struct AccountsView: View {
                 List {
                     ForEach(identities, id: \.self) { identity in
                         NavigationLink(value: identity, label: {
-                            Text(identity.name ?? identity.publicKey ?? "(Unknown)")
+                            Text(identity.name != "" ? identity.name : identity.publicKey ?? "(Unknown)")
                                 .lineLimit(1)
                         })
                     }.onDelete(perform: deleteItems)
@@ -63,7 +63,7 @@ struct AccountsView: View {
                     Section {
                         ForEach(activeIdentities, id: \.self) { identity in
                             NavigationLink(value:identity, label: {
-                                Text(identity.name ?? identity.publicKey ?? "(Unknown)")
+                                Text(identity.name != "" ? identity.name : identity.publicKey ?? "(Unknown)")
                                     .lineLimit(1)
                             })
                         }
@@ -74,7 +74,7 @@ struct AccountsView: View {
                     Section {
                         ForEach(inactiveIdentities, id: \.self) { identity in
                             NavigationLink(value:identity, label:{
-                                Text(identity.name ?? identity.publicKey ?? "(Unknown)")
+                                Text(identity.name != "" ? identity.name : identity.publicKey ?? "(Unknown)")
                                     .lineLimit(1)
                             })
                         }.onDelete(perform: deleteItems)
@@ -103,7 +103,7 @@ struct AccountsView: View {
         }
         .navigationDestination(for: Identity.self) { identity in
             VStack {
-                Text("Name: \(identity.name ?? "(Unknown)")")
+                Text("Name: \(identity.name != "" ? identity.name : "(Unknown)")")
                 Text("Priv: \(identity.privateKey ?? "(Unknown)")")
                 Text("Pub: \(identity.publicKey ?? "(Unknown)")")
                 
@@ -131,8 +131,9 @@ struct AccountsView: View {
                 .filter { $0.privateKey == nil || $0.privateKey == "" }
                 .map { $0.publicKey }
             
-            let message = RequestMessage.getUserMetadata(pubkeys: pubkeys);
-            ConnectionManager.shared.sendMessage(text: message)
+            let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys))
+            
+            ConnectionManager.shared.sendMessage(message)
             
 //            print(msg)
         }
@@ -174,9 +175,9 @@ struct AccountsView: View {
     }
 }
 
-//struct AccountsView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        AccountsView().environment(\.managedObjectContext,
-//                                    PersistenceController.preview.container.viewContext)
-//    }
-//}
+struct AccountsView_Previews: PreviewProvider {
+    static var previews: some View {
+        AccountsView().environment(\.managedObjectContext,
+                                    PersistenceController.preview.cloudContainer.viewContext)
+    }
+}

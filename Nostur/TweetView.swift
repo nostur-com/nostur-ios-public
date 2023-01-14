@@ -42,10 +42,15 @@ struct TweetView: View {
                         VStack { // profile image + thread line
                             // profile image
                             NavigationLink(value:tweet.user, label: {
-                                Image(tweet.profileImageName).resizable().scaledToFit()
-                                    .clipShape(Circle())
-                                    .shadow(color: .gray, radius: 1.0)
-                                    .frame(maxWidth:50, maxHeight:50)
+                                if (true) {
+                                    Circle().foregroundColor(randomColor(seed: tweet.name)).frame(maxWidth:50, maxHeight:50)
+                                }
+                                else {
+                                    Image(tweet.profileImageName).resizable().scaledToFit()
+                                        .clipShape(Circle())
+                                        .shadow(color: .gray, radius: 1.0)
+                                        .frame(maxWidth:50, maxHeight:50)
+                                }
                             })
                             // thread line
                             if tweet.hasThread {
@@ -188,6 +193,26 @@ struct TweetView: View {
             Divider()
         }
     }
+
+    func randomColor(seed: String) -> Color {
+        
+        var total: Int = 0
+        for u in seed.unicodeScalars {
+            total += Int(UInt32(u))
+        }
+        
+        srand48(total * 200)
+        let r = CGFloat(drand48())
+        
+        srand48(total)
+        let g = CGFloat(drand48())
+        
+        srand48(total / 200)
+        let b = CGFloat(drand48())
+        
+        return Color(cgColor: CGColor(red: r, green: g, blue: b, alpha: 0.7))
+    }
+    
 }
 
 struct TweetView_Previews: PreviewProvider {

@@ -30,25 +30,24 @@ struct RelaysView: View {
                     HStack {
                         
                         if (cm.relaySockets.first { $0.relay == relay }?.isConnected ?? false) {
-                            Text("🟢")
+                            Image(systemName: "circle.fill").foregroundColor(.green)
+                                .opacity(1.0)
                         }
                         else {
-                            Text("🔴")
+                            Image(systemName: "circle.fill")
+                                .foregroundColor(.gray)
+                                .opacity(0.2)
                         }
                         
                         Text("\(relay.url ?? "(Unknown)")")
                         
                         Spacer()
                         
-                        Text("R").foregroundColor(relay.read ? .green : .gray)
-                            .padding(.horizontal, 4)
-                            .background(relay.read ? .green.opacity(0.2) : .gray.opacity(0.2))
-                            .cornerRadius(4)
+                        Image(systemName:"arrow.down.circle.fill").foregroundColor(relay.read ? .green : .gray)
+                            .opacity(relay.read ? 1.0 : 0.2)
                         
-                        Text("W").foregroundColor(relay.write ? .green : .gray)
-                            .padding(.horizontal, 4)
-                            .background(relay.write ? .green.opacity(0.2) : .gray.opacity(0.2))
-                            .cornerRadius(4)
+                        Image(systemName:"arrow.up.circle.fill").foregroundColor(relay.write ? .green : .gray)
+                            .opacity(relay.write ? 1.0 : 0.2)
                     }
                 }
             
@@ -109,7 +108,7 @@ struct RelaysView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
             RelaysView().environment(\.managedObjectContext,
-                                      PersistenceController.preview.container.viewContext)
+                                      PersistenceController.preview.cloudContainer.viewContext)
         }
     }
 }

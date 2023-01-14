@@ -37,9 +37,10 @@ struct AccountListView: View {
                                         .lineLimit(1)
                                 if identity.publicKey == activeAccountPublicKey {
                                     Text("active")
+                                        .foregroundColor(.white)
                                         .padding(.horizontal, 5)
                                         .background(.green)
-                                        .cornerRadius(3)
+                                        .cornerRadius(5)
                                 }
                             }
                         })
@@ -66,7 +67,7 @@ struct AccountListView: View {
         }
         .navigationDestination(for: Identity.self) { identity in
             VStack {
-                Text("Name: \(identity.name ?? "(Unknown)")")
+                Text("Name: \(identity.name != "" ? identity.name : "(Unknown)")")
 //                Text("Priv: \(identity.privateKey ?? "(Unknown)")")
                 Text("Pub: \(identity.publicKey ?? "(Unknown)")")
                 
@@ -98,8 +99,8 @@ struct AccountListView: View {
                 .filter { $0.privateKey == nil || $0.privateKey == "" }
                 .map { $0.publicKey }
             
-            let message = RequestMessage.getUserMetadata(pubkeys: pubkeys);
-            ConnectionManager.shared.sendMessage(text: message)
+            let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys))
+            ConnectionManager.shared.sendMessage(message)
             
 //            print(msg)
         }
@@ -143,13 +144,13 @@ struct AccountListView: View {
 
 struct AccountListView_Previews: PreviewProvider {
     
-    static var viewContext = PersistenceController.preview.container.viewContext
+//    static var viewContext = PersistenceController.preview.container.viewContext
     
     static var previews: some View {
         NavigationStack {
-            AccountListView()
+            AccountListView(activeAccountPublicKey: "11707ab5c187f4534ea7b4ad67cd9914cd07f7812b5ea2fdd91685ac84c91f5b")
                 .environment(\.managedObjectContext,
-                              PersistenceController.preview.container.viewContext)
+                              PersistenceController.preview.cloudContainer.viewContext)
         }
     }
 }

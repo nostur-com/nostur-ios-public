@@ -30,7 +30,7 @@ class RelaySocket : WebSocketDelegate {
     
     func connect(relayURL:String? = nil) {
         var request = URLRequest(url: URL(string: relayURL ?? relay.url!)!)
-        request.timeoutInterval = 5
+        request.timeoutInterval = 20
         socket = WebSocket(request: request)
         socket.delegate = self
         socket.connect()
@@ -40,10 +40,10 @@ class RelaySocket : WebSocketDelegate {
             switch event {
             case .connected(let headers):
                 isConnected = true
-                print("🟡🟡🟡 websocket is connected: \(headers)")
+                print("🤡🤡 websocket is connected: \(headers)")
             case .disconnected(let reason, let code):
                 isConnected = false
-                print("🟡🟡🟡 websocket is disconnected: \(reason) with code: \(code)")
+                print("🤡🤡 websocket is disconnected: \(reason) with code: \(code)")
             case .text(let string):
                 print("🟡🟡🟡 Received text: \(string)")
                 
@@ -52,16 +52,20 @@ class RelaySocket : WebSocketDelegate {
             case .binary(let data):
                 print("🟡🟡🟡 Received data: \(data.count)")
             case .ping(_):
+                print("🤡 PING")
                 break
             case .pong(_):
+                print("🤡 PONG")
                 break
             case .viabilityChanged(_):
                 break
             case .reconnectSuggested(_):
                 break
             case .cancelled:
+                print("🤡 CANCELLED")
                 isConnected = false
             case .error(let error):
+                print("🤡🤡🤡🤡🤡 ERROR")
                 isConnected = false
                 handleError(error)
             }
@@ -96,17 +100,51 @@ class ConnectionManager {
     
     var relaySockets = [RelaySocket]()
     
-    func sendMessage(text:String) {
+    func sendMessage(_ message:ClientMessage) {
         for relaySocket in relaySockets {
-            if relaySocket.isConnected && relaySocket.relay.write {
-                print("🟢 sending message: \(text)")
-                relaySocket.send(text: text)
+            if relaySocket.isConnected {
+//                print("🟢 sending message: \(text)")
+//                relaySocket.send(text: text)
+                if message.type == .REQ || message.type == .CLOSE { // REQ AND CLOSE IS FOR ALL RELAYS
+                    print("🟢 requesting from \(relaySocket.relay.url!): \(message.message)")
+                    relaySocket.send(text: message.message)
+                }
+                else if message.type == .EVENT && relaySocket.relay.write { // EVENT IS ONLY FOR WRITE RELAYS
+                    print("🟢 publishing to \(relaySocket.relay.url!): \(message.message)")
+                    relaySocket.send(text: message.message)
+                }
             }
         }
     }
 }
 
+struct ClientMessage {
+    enum type {
+        case EVENT
+        case REQ
+        case CLOSE
+    }
+    
+    var type:ClientMessage.type = .EVENT
+    var message:String
+    
+    
+}
+
+
 struct RequestMessage {
+    
+    static func getAuthorNotes(pubkey:String, limit:Int = 100, subscriptionId:String? = nil) -> String {
+        return """
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [1], "limit": \(limit)}]
+"""
+    }
+    
+    static func getAuthorsNotes(pubkeys:[String?], limit:Int = 100, subscriptionId:String? = nil) -> String {
+        return """
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(JSON(pubkeys).rawString() ?? "[]")"], "kinds": [1], "limit": \(limit)}]
+"""
+    }
 
     static func getUserMetadata(pubkey:String, subscriptionId:String? = nil) -> String {
         return """
@@ -116,7 +154,7 @@ struct RequestMessage {
     
     static func getUserMetadata(pubkeys:[String?], subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "kinds": [0], "limit": 1000}]
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "kinds": [0], "limit": 1}]
 """
     }
 }

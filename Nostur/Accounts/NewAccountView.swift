@@ -99,6 +99,6 @@ struct NewAccountView: View {
 
 struct NewIdentityView_Previews: PreviewProvider {
     static var previews: some View {
-        NewAccountView(addReadOnlyAccountPresented: .constant(false)).environment(\.managedObjectContext, PersistenceController.shared.container.viewContext)
+        NewAccountView(addReadOnlyAccountPresented: .constant(false)).environment(\.managedObjectContext, PersistenceController.shared.cloudContainer.viewContext)
     }
 }

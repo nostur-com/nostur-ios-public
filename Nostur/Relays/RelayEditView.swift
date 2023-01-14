@@ -19,7 +19,7 @@ struct RelayEditView: View {
         
 //        var isConnected = ConnectionManager.shared.relaySockets.filter { $0.relay == relay }.first?.isConnected ?? false
         
-        var isConnected = ConnectionManager.shared.relaySockets.first { $0.relay == relay }?.isConnected ?? false
+        let isConnected = ConnectionManager.shared.relaySockets.first { $0.relay == relay }?.isConnected ?? false
         
         return VStack {
             
@@ -36,7 +36,20 @@ struct RelayEditView: View {
                     }
                 }
                 Section(header: Text("Status") ) {
-                    Text(isConnected ? "Connected" : "Disconnected")
+                    HStack {
+                        if (isConnected) {
+                            Image(systemName: "circle.fill")
+                                .foregroundColor(.green)
+                                .opacity(1)
+                            Text("Connected")
+                        }
+                        else {
+                            Image(systemName: "circle.fill")
+                                .foregroundColor(.gray)
+                                .opacity(0.2)
+                            Text("Disconnected")
+                        }
+                    }
                 }
             }
             Button {
@@ -63,7 +76,7 @@ struct RelayEditView: View {
 struct RelayEditView_Previews: PreviewProvider {
     static var previews: some View {
         
-        let relay = Relay(context: PersistenceController.preview.container.viewContext)
+        let relay = Relay(context: PersistenceController.preview.cloudContainer.viewContext)
         relay.id = UUID()
         relay.url = "wss://nostr.bitcoin.sex"
         relay.read = true
