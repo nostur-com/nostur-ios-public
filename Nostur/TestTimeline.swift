@@ -47,6 +47,7 @@ struct Wrapper: View {
 struct TestTimeline: View {
     
     @EnvironmentObject var accountState:AccountState
+    @EnvironmentObject var cm:ConnectionManager
     
 //    @FetchRequest(
 //        sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
@@ -69,14 +70,14 @@ struct TestTimeline: View {
     func fetchLatest100EventsFromFollowing() {
 //        let allContacts = contacts.map { $0.pubkey }
         
-        for socket in ConnectionManager.shared.relaySockets {
+        for socket in cm.relaySockets {
             if (socket.relay.read || socket.relay.write) && !socket.isConnected {
                 socket.socket.connect()
             }
         }
         
         let followingPubkeys = [String](accountState.followingPublicKeys)
-        ConnectionManager.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorsEvents(pubkeys: followingPubkeys, limit: 100)))
+        cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorsEvents(pubkeys: followingPubkeys, limit: 100)))
     }
     
     

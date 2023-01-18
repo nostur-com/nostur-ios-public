@@ -13,7 +13,7 @@ struct AccountsView: View {
     @State var createAccountPresented = false
     @State var addReadOnlyAccountPresented = false
     
-    
+    @EnvironmentObject var cm:ConnectionManager
     @Environment(\.managedObjectContext) private var viewContext
     
     @FetchRequest(
@@ -133,7 +133,7 @@ struct AccountsView: View {
             
             let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys))
             
-            ConnectionManager.shared.sendMessage(message)
+            cm.sendMessage(message)
             
 //            print(msg)
         }

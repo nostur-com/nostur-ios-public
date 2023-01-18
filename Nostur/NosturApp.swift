@@ -18,6 +18,7 @@ struct NosturApp: App {
 //    let localContainer = PersistenceController.shared.localContainer
 //    let container = PersistenceController.shared.container
     @StateObject var accountState = AccountState(viewContext:PersistenceController.shared.container.viewContext)
+    @StateObject var cm = ConnectionManager()
     
     var body: some Scene {
         WindowGroup {
@@ -25,6 +26,7 @@ struct NosturApp: App {
                 .environment(\.managedObjectContext,
                               PersistenceController.shared.container.viewContext)
                 .environmentObject(accountState)
+                .environmentObject(cm)
                 .onAppear {
                     print("onAppear 🍿🍿🍿🍿🍿")
                     getCoreDataDBPath()

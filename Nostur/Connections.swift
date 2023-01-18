@@ -18,10 +18,14 @@ public protocol EventDelegate {
 
 class RelaySocket : WebSocketDelegate, ObservableObject {
     var delegate: EventDelegate
-    var relay: Relay
+    @Published var relay: Relay
     
-    var socket: WebSocket!
-    @Published var isConnected = false
+    @Published var socket: WebSocket!
+    
+    var isConnected: Bool {
+        get { relay.isConnected }
+        set(value) { relay.isConnected = value }
+    }
     
     init(relay: Relay, delegate: EventDelegate) {
         self.relay = relay
@@ -39,10 +43,10 @@ class RelaySocket : WebSocketDelegate, ObservableObject {
     func didReceive(event: WebSocketEvent, client: WebSocket) {
         switch event {
         case .connected(let headers):
-            isConnected = true
+            relay.isConnected = true
             print("🤡🤡 websocket is connected: \(headers)")
         case .disconnected(let reason, let code):
-            isConnected = false
+            relay.isConnected = false
             print("🤡🤡 websocket is disconnected: \(reason) with code: \(code)")
         case .text(let string):
             print("🟡🟡🟡 Received text: \(string)")
@@ -63,10 +67,10 @@ class RelaySocket : WebSocketDelegate, ObservableObject {
             break
         case .cancelled:
             print("🤡 CANCELLED")
-            isConnected = false
+            relay.isConnected = false
         case .error(let error):
             print("🤡🤡🤡🤡🤡 ERROR")
-            isConnected = false
+            relay.isConnected = false
             handleError(error)
         }
     }
@@ -86,17 +90,16 @@ class RelaySocket : WebSocketDelegate, ObservableObject {
     }
     
     func disconnect() {
-        if isConnected {
+        if relay.isConnected {
             socket.disconnect()
-        } else {
-            socket.connect()
+            relay.isConnected = false
         }
     }
 }
 
 class ConnectionManager: ObservableObject {
     
-    static let shared = ConnectionManager()
+//    static let shared = ConnectionManager()
     
     @Published var relaySockets = [RelaySocket]()
     var eventReceivingDelegate:EventDelegate? = nil

@@ -13,13 +13,11 @@ struct RelayEditView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) var viewContext
     @ObservedObject var relay: Relay
+    @EnvironmentObject var cm:ConnectionManager
+    @State private var refresh: Bool = false  //
     
     
     var body: some View {
-        
-//        var isConnected = ConnectionManager.shared.relaySockets.filter { $0.relay == relay }.first?.isConnected ?? false
-        
-        let isConnected = ConnectionManager.shared.relaySockets.first { $0.relay == relay }?.isConnected ?? false
         
         return VStack {
             
@@ -35,22 +33,41 @@ struct RelayEditView: View {
                         Text("Receive events")
                     }
                     Toggle(isOn: $relay.write) {
-                        Text("Post events")
+                        Text("Post events") .background(refresh ? Color.clear : Color.clear)
                     }
                 }
                 Section(header: Text("Status") ) {
                     HStack {
-                        if (isConnected) {
+                        if (relay.isConnected) {
                             Image(systemName: "circle.fill")
                                 .foregroundColor(.green)
                                 .opacity(1)
                             Text("Connected")
+                            Spacer()
+                            Button {
+                                if let thisRelay = cm.relaySockets.first(where: { $0.relay == relay }) {
+                                    print("Disconnecting: \(thisRelay.relay.url!)")
+                                    thisRelay.disconnect()
+//                                    refresh.toggle()
+                                }
+                            } label: {
+                                Text("Disconnect")
+                            }
                         }
                         else {
                             Image(systemName: "circle.fill")
                                 .foregroundColor(.gray)
                                 .opacity(0.2)
                             Text("Disconnected")
+                            Spacer()
+                            Button {
+                                if let thisRelay = cm.relaySockets.first(where: { $0.relay == relay }) {
+                                    print("Connecting: \(thisRelay.relay.url!)")
+                                    thisRelay.connect()
+                                }
+                            } label: {
+                                Text("Connect")
+                            }
                         }
                     }
                 }

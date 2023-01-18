@@ -50,7 +50,7 @@ struct ContentView: View, EventDelegate {
     var eventsR: FetchedResults<Event>
     
     
-    let connectionManager = ConnectionManager.shared
+    @EnvironmentObject var cm:ConnectionManager
     
     var body: some View {
         VStack {
@@ -153,8 +153,8 @@ struct ContentView: View, EventDelegate {
                     let relaySocket = RelaySocket(relay: relay, delegate: delegate)
                     print("🟣🟣 connecting to \(relay.url ?? "?")")
                     relaySocket.connect()
-                    connectionManager.relaySockets.append(relaySocket)
-                    connectionManager.eventReceivingDelegate = delegate
+                    cm.relaySockets.append(relaySocket)
+                    cm.eventReceivingDelegate = delegate
                 }
             } catch {
                 print("Unable to Execute Fetch Request, \(error)")
@@ -254,7 +254,7 @@ struct ContentView: View, EventDelegate {
                     
                 case .EOSE:
                     print("🟢 Sending close subscription message")
-                    connectionManager.sendMessage(ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: message.subscriptionId!)))
+                    cm.sendMessage(ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: message.subscriptionId!)))
                 case .NOTICE:
                     print(message.message)
                     
@@ -299,10 +299,13 @@ struct ContentView_Previews: PreviewProvider {
         
         let accountState = AccountState(viewContext: PersistenceController.preview.container.viewContext)
         
+        let cm = ConnectionManager()
+        
         ContentView()
             .defaultAppStorage(previewUserDefaults)
             .environment(\.managedObjectContext,
                           PersistenceController.preview.container.viewContext)
             .environmentObject(accountState)
+            .environmentObject(cm)
     }
 }

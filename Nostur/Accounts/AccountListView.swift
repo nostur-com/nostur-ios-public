@@ -12,7 +12,7 @@ struct AccountListView: View {
     @State var createAccountPresented = false
     @State var addReadOnlyAccountPresented = false
     
-    
+    @EnvironmentObject var cm:ConnectionManager
     @Environment(\.managedObjectContext) var viewContext
     
     @FetchRequest(
@@ -110,7 +110,7 @@ struct AccountListView: View {
                 .map { $0.publicKey }
             
             let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys))
-            ConnectionManager.shared.sendMessage(message)
+            cm.sendMessage(message)
             
 //            print(msg)
         }
@@ -118,13 +118,13 @@ struct AccountListView: View {
     
     func fetchContacts(identity:Identity) {
         if (identity.publicKey != nil) {
-            ConnectionManager.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: identity.publicKey!)))
+            cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: identity.publicKey!)))
         }
     }
     
     func updateContacts() { // move this method to somewhere more global maybe
         let pubkeys = contacts.map { $0.pubkey }
-        ConnectionManager.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys)))
+        cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys)))
     }
     
     private func addItem() {

@@ -113,6 +113,7 @@ struct Note: Identifiable, Hashable {
 struct NoteView: View {
     
     @Environment(\.managedObjectContext) var viewContext
+    @EnvironmentObject var cm:ConnectionManager
     
     let tweet:Tweet = Tweet(hasThread: false) // Todo
     var note:Note
@@ -472,7 +473,7 @@ struct NoteView: View {
             // followed contact meta data refresh should be updated at app wake up probably
             if (note.contact == nil) {
                 print("⚡️⚡️ REQ metadata for pubkey \(note.publicKey)")
-                ConnectionManager.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: note.publicKey)))
+                cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: note.publicKey)))
             }
         }
     }

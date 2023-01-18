@@ -11,6 +11,7 @@ struct NewRelayView: View {
     
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) private var viewContext
+    @EnvironmentObject var cm:ConnectionManager
     
     @State var url = "wss://"
     
@@ -27,10 +28,10 @@ struct NewRelayView: View {
 
         do {
             try viewContext.save()
-            let relaySocket = RelaySocket(relay: relay, delegate: ConnectionManager.shared.eventReceivingDelegate!)
+            let relaySocket = RelaySocket(relay: relay, delegate: cm.eventReceivingDelegate!)
             print("🟣🟣 connecting to \(relay.url ?? "?")")
             relaySocket.connect()
-            ConnectionManager.shared.relaySockets.append(relaySocket)
+            cm.relaySockets.append(relaySocket)
         } catch {
             // Replace this implementation with code to handle the error appropriately.
             // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.

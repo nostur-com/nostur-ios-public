@@ -8,6 +8,36 @@
 import SwiftUI
 import CoreData
 
+struct RelayRowView: View {
+//    @Environment(\.managedObjectContext) private var viewContext
+    @ObservedObject var relay:Relay
+    
+    var body: some View {
+        HStack {
+            
+            if (relay.isConnected) {
+                Image(systemName: "circle.fill").foregroundColor(.green)
+                    .opacity(1.0)
+            }
+            else {
+                Image(systemName: "circle.fill")
+                    .foregroundColor(.gray)
+                    .opacity(0.2)
+            }
+            
+            Text("\(relay.url ?? "(Unknown)")")
+            
+            Spacer()
+            
+            Image(systemName:"arrow.down.circle.fill").foregroundColor(relay.read ? .green : .gray)
+                .opacity(relay.read ? 1.0 : 0.2)
+            
+            Image(systemName:"arrow.up.circle.fill").foregroundColor(relay.write ? .green : .gray)
+                .opacity(relay.write ? 1.0 : 0.2)
+        }
+    }
+}
+
 struct RelaysView: View {
     
     @State var createRelayPresented = false
@@ -15,52 +45,30 @@ struct RelaysView: View {
     @Environment(\.managedObjectContext) private var viewContext
     
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Relay.createdAt, ascending: true)],
+        sortDescriptors: [SortDescriptor(\Relay.createdAt, order: .forward)],
         animation: .default)
+    var relays: FetchedResults<Relay>
     
-    private var relays: FetchedResults<Relay>
-//    @State var selectedRelay:Relay?
-    
-    @ObservedObject var cm = ConnectionManager.shared
+    @EnvironmentObject var cm:ConnectionManager
     
     var body: some View {
         List {
-            ForEach(relays) { relay in
+            ForEach(relays, id:\.objectID) { relay in
                 NavigationLink(value: relay) {
-                    HStack {
-                        
-                        if (cm.relaySockets.first { $0.relay == relay }?.isConnected ?? false) {
-                            Image(systemName: "circle.fill").foregroundColor(.green)
-                                .opacity(1.0)
-                        }
-                        else {
-                            Image(systemName: "circle.fill")
-                                .foregroundColor(.gray)
-                                .opacity(0.2)
-                        }
-                        
-                        Text("\(relay.url ?? "(Unknown)")")
-                        
-                        Spacer()
-                        
-                        Image(systemName:"arrow.down.circle.fill").foregroundColor(relay.read ? .green : .gray)
-                            .opacity(relay.read ? 1.0 : 0.2)
-                        
-                        Image(systemName:"arrow.up.circle.fill").foregroundColor(relay.write ? .green : .gray)
-                            .opacity(relay.write ? 1.0 : 0.2)
-                    }
+                    RelayRowView(relay: relay)
                 }
             
             }.onDelete(perform: deleteItems)
         }
-        .navigationTitle("Relays")
         .onAppear {
-            for socket in ConnectionManager.shared.relaySockets {
-                if (socket.relay.read || socket.relay.write) && !socket.isConnected {
-                    socket.socket.connect()
-                }
-            }
+        
+//            for socket in cm.relaySockets {
+//                if (socket.relay.read || socket.relay.write) && !socket.relay.isConnected {
+//                    socket.socket.connect()
+//                }
+//            }
         }
+        .navigationTitle("Relays")
         .toolbar {
             ToolbarItem {
                 Button {

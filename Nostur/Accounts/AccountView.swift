@@ -11,6 +11,7 @@ import SwiftyJSON
 
 struct AccountView: View {
     
+    @EnvironmentObject var cm:ConnectionManager
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) var viewContext
     @ObservedObject var identity: Identity
@@ -150,7 +151,7 @@ struct AccountView: View {
 
             // broadcast to relays
             let message = ClientMessage(type: .EVENT, message: event.wrappedEventJson())
-            ConnectionManager.shared.sendMessage(message)
+            cm.sendMessage(message)
         }
     }
 }

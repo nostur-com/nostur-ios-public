@@ -45,7 +45,7 @@
         <attribute name="publicKey" optional="YES" attributeType="String"/>
         <relationship name="follows" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact" inverseName="followedBy" inverseEntity="Contact"/>
     </entity>
-    <entity name="Relay" representedClassName=".Relay" syncable="YES" codeGenerationType="class">
+    <entity name="Relay" representedClassName=".Relay" syncable="YES">
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="read" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>

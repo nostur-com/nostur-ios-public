@@ -9,11 +9,25 @@ import SwiftUI
 import SwiftyJSON
 import CoreData
 
-struct ContactProfile: Identifiable, Hashable {
+class ContactProfile: Identifiable, Hashable, ObservableObject {
     
-    var contact:Contact
-    var metaData:NSetMetadata? = nil
-    var clEvent:Event? = nil
+    @Published var contact:Contact
+    @Published var metaData:NSetMetadata? = nil {
+        willSet {
+            objectWillChange.send()
+        }
+    }
+    @Published var clEvent:Event? = nil {
+        willSet {
+            objectWillChange.send()
+        }
+    }
+    
+    init(contact: Contact, metaData: NSetMetadata? = nil, clEvent: Event? = nil) {
+        self.contact = contact
+        self.metaData = metaData
+        self.clEvent = clEvent
+    }
     
     var id:String {
         get { contact.pubkey! }
@@ -60,6 +74,7 @@ struct ContactProfile: Identifiable, Hashable {
 struct ContactProfileView: View {
     
 //    @Environment(\.managedObjectContext) var viewContext
+    @EnvironmentObject var cm:ConnectionManager
     
     var pubkey:String
     
@@ -101,7 +116,7 @@ struct ContactProfileView: View {
         if (metaDataEvents.first == nil) {
             Text("No metadata events for pubkey: \(pubkey)")
                 .onAppear {
-                    ConnectionManager.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: pubkey)))
+                    cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: pubkey)))
                 }
         }
         
@@ -118,10 +133,9 @@ struct ContactProfileView: View {
 struct ContactProfileViewInner: View {
     
     @EnvironmentObject var accountState:AccountState
+    @EnvironmentObject var cm:ConnectionManager
     
-    var contactProfile: ContactProfile
-    
-    //    var pubkeys:[String] = []
+    @ObservedObject var contactProfile: ContactProfile
     
     var body: some View {
         ScrollView {
@@ -155,7 +169,7 @@ struct ContactProfileViewInner: View {
                             if accountState.isFollowing(contactProfile.publicKey) {
                                 accountState.unfollow(contactProfile.publicKey)
                             } else {
-                                accountState.follow(contactProfile.publicKey)
+                                accountState.follow(contactProfile.publicKey, cm: cm)
                             }
                         } label: {
                             Text(accountState.isFollowing(contactProfile.publicKey) ? "Following" : "Follow")
@@ -205,14 +219,14 @@ struct ContactProfileViewInner: View {
         }
         .onAppear {
             print("⚡️⚡️ REQ metadata for pubkey \(contactProfile.publicKey)")
-            ConnectionManager.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: contactProfile.publicKey)))
-            
+            cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: contactProfile.publicKey)))
+
             print("⚡️⚡️ REQ contact list for pubkey \(contactProfile.publicKey)")
-            ConnectionManager.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: contactProfile.publicKey)))
-            
+            cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: contactProfile.publicKey)))
+
             if let pubkeys = contactProfile.contactsPubkeys(), pubkeys.count > 0 {
                 print(" REQ META DATA FOR CL P TAGS")
-                ConnectionManager.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys)))
+                cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys)))
             }
             
         }
@@ -222,6 +236,9 @@ struct ContactProfileViewInner: View {
 
 // FOR PREVIEW
 struct ContactProfileViewWrapper: View {
+    
+    @EnvironmentObject var cm:ConnectionManager
+    
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
         predicate: NSPredicate(format: "pubkey == %@", "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"),
@@ -234,6 +251,7 @@ struct ContactProfileViewWrapper: View {
     @FetchRequest(fetchRequest:Event.contactListEvents(byAuthorPubkey: "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"))
     var contactListEvents: FetchedResults<Event>
     
+    
     @ViewBuilder
     var body: some View {
         
@@ -245,18 +263,16 @@ struct ContactProfileViewWrapper: View {
         
         if (metaDataEvents.first == nil) {
             Text("No metadata events for pubkey: \(pubkey)")
+//                .onAppear {
+//                    cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: pubkey)))
+//                }
         }
         
         if (contactListEvents.first == nil) {
             Text("No contact list events for pubkey: \(pubkey)")
         }
-        //
-        //        if let tags = try? JSON(data: contactListEvents.first!.tagsSerialized!.data(using: .utf8, allowLossyConversion: false)!) {
-        //
-        //            let contactProfile = ContactProfile(contact: contacts.first!, contactListPubkeys: tags.filter { $0.1[0] == "p" } .map { $0.1[1].stringValue })
-        //    }
-        let contactProfile = ContactProfile(contact: contacts.first!, clEvent: contactListEvents.first)
         
+        let contactProfile = ContactProfile(contact: contacts.first!, clEvent: contactListEvents.first)
         ContactProfileViewInner(contactProfile: contactProfile)
         
     }
@@ -275,6 +291,8 @@ struct ContactProfileView_Previews: PreviewProvider {
     
     static var previews: some View {
         
+        let cm = ConnectionManager()
+        
         let accountState = AccountState(viewContext: PersistenceController.preview.container.viewContext)
         
         return ContactProfileViewWrapper()
@@ -282,6 +300,7 @@ struct ContactProfileView_Previews: PreviewProvider {
             .environment(\.managedObjectContext,
                           PersistenceController.preview.container.viewContext)
             .environmentObject(accountState)
+            .environmentObject(cm)
     }
 }
 

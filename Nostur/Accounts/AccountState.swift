@@ -13,7 +13,6 @@ import CoreData
 final class AccountState : ObservableObject {
     // public keys of the contacts that the currently active ("logged in") account follows
     
-    let connectionManager = ConnectionManager.shared
     @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""
     @Published var followingPublicKeys:Set<String> = Set<String>()
     
@@ -46,7 +45,7 @@ final class AccountState : ObservableObject {
         }
     }
     
-    func follow(_ pubkey:String) {
+    func follow(_ pubkey:String, cm:ConnectionManager) {
         guard let activeIdentity = activeIdentity() else {
             return
         }
@@ -65,7 +64,7 @@ final class AccountState : ObservableObject {
 
         try! viewContext.save()
         followingPublicKeys.insert(pubkey)
-        connectionManager.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
+        cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
     }
     
     func unfollow(_ pubkey: String) {

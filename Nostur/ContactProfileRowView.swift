@@ -60,10 +60,11 @@ struct ContactProfileRowView: View {
 
 struct ContactProfileRowInner: View {
     
+    @EnvironmentObject var cm:ConnectionManager
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var accountState:AccountState
     
-    var contactProfile:ContactProfile
+    @ObservedObject var contactProfile:ContactProfile
     
     var body: some View {
         
@@ -85,7 +86,7 @@ struct ContactProfileRowInner: View {
                 if accountState.isFollowing(contactProfile.publicKey) {
                     accountState.unfollow(contactProfile.publicKey)
                 } else {
-                    accountState.follow(contactProfile.publicKey)
+                    accountState.follow(contactProfile.publicKey, cm: cm)
                 }
             } label: {
                 Text(accountState.isFollowing(contactProfile.publicKey) ? "Following" : "Follow")

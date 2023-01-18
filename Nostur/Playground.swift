@@ -28,6 +28,7 @@ class Events : ObservableObject {
 
 struct ContactsView : View {
     
+    @EnvironmentObject var cm:ConnectionManager
     @Environment(\.managedObjectContext) var viewContext
     
     @State var pubkey:String = "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
@@ -56,10 +57,10 @@ struct ContactsView : View {
             return
         }
         let metaDataMessage = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey))
-        ConnectionManager.shared.sendMessage(metaDataMessage)
+        cm.sendMessage(metaDataMessage)
         
         let notesMessage = ClientMessage(type: .REQ, message: RequestMessage.getAuthorNotes(pubkey: pubkey))
-        ConnectionManager.shared.sendMessage(notesMessage)
+        cm.sendMessage(notesMessage)
         
         let request = NSFetchRequest<Event>()
         request.entity = Event.entity()
