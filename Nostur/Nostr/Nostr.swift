@@ -5,9 +5,11 @@
 //  Created by Fabian Lachman on 09/01/2023.
 //
 
+import SwiftUI
 import Foundation
 import Starscream
 import secp256k1
+import SwiftyJSON
 
 //extension String: Error {}
 
@@ -204,6 +206,7 @@ struct NEvent: Codable {
     enum EventError : Error {
         case InvalidId
         case InvalidSignature
+        case EOSE
     }
 
     public var id: String
@@ -280,12 +283,12 @@ struct NEvent: Codable {
         let serializedEvent = try! encoder.encode(serializableEvent)
         let sha256Serialized = SHA256.hash(data: serializedEvent)
 
-        print("🟢🟢 verified:")
+//        print("🟢🟢 verified:")
         print(self.id)
         print(String(bytes:sha256Serialized.bytes))
 
         guard self.id == String(bytes:sha256Serialized.bytes) else {
-            throw "Invalid ID"
+            throw "🔴🔴 Invalid ID 🔴🔴"
         }
 
 //        let xOnlyKey = try secp256k1.Signing.XonlyKey(rawRepresentation: Data(hexString: self.publicKey).bytes, keyParity: 1)
@@ -340,6 +343,7 @@ struct NRelayMessage {
 public struct NSetMetadata: Codable {
 
     public var name: String?
+    public var display_name: String?
     public var about: String?
     public var picture: String?
     public var nip05: String? = nil
@@ -347,6 +351,7 @@ public struct NSetMetadata: Codable {
 
     enum CodingKeys: String, CodingKey {
         case name
+        case display_name
         case about
         case picture
         case nip05
@@ -392,6 +397,42 @@ struct NKeys {
         return try! self.init(privateKey: secp256k1.Signing.PrivateKey())
     }
 }
+
+//func parseEvent(text:String, skipValidation:Bool = false) throws -> NEvent? {
+//    
+////    guard let dataFromString = text.data(using: .utf8, allowLossyConversion: false) else {
+////        throw "cannot convert input string to data"
+////    }
+//    
+////    guard let json = try? JSON(data: dataFromString) else {
+////        throw "cannot convert to json"
+////    }
+//    
+////    guard json[0] != "EOSE" else {
+////        throw NEvent.EventError.EOSE
+////    }
+//    
+//    do {
+////        guard json[0] == "EVENT" else {
+////            throw "Event does not start with [\"EVENT\",..."
+////        }
+//        
+////        let decoder = JSONDecoder()
+////        let event = try! decoder.decode(NEvent.self, from: Data(json[2].rawData()))
+//        
+////        guard try skipValidation || event.verified() else {
+////            print("🟣\(event)")
+////            throw "🔴🔴🔴 NO VALID SIG 🔴🔴🔴 "
+////        }
+////        print("🟢🟢 VALID SIG 🟢🟢")
+//        
+////       return event
+//    }
+//    catch let error {
+//        print("🔴🔴 Error parsing event 🔴🔴 \(error)")
+//    }
+//    return nil
+//}
 
 //func verifySignature(event:NEvent) throws -> Bool {
 //
@@ -440,3 +481,23 @@ struct NKeys {
 //
 //    return NEvent(id: String(bytes:sha256Serialized.bytes), publicKey: keys.publicKeyHex(), createdAt: event.createdAt, kind: event.kind, tags: event.tags, content: event.content, signature: String(bytes:sig.rawRepresentation.bytes))
 //}
+
+
+func randomColor(seed: String) -> Color {
+    
+    var total: Int = 0
+    for u in seed.unicodeScalars {
+        total += Int(UInt32(u))
+    }
+    
+    srand48(total * 200)
+    let r = CGFloat(drand48())
+    
+    srand48(total)
+    let g = CGFloat(drand48())
+    
+    srand48(total / 200)
+    let b = CGFloat(drand48())
+    
+    return Color(cgColor: CGColor(red: r, green: g, blue: b, alpha: 0.7))
+}

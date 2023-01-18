@@ -20,6 +20,11 @@ struct AccountListView: View {
         animation: .default)
     private var identities: FetchedResults<Identity>
     
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
+        animation: .none)
+    var contacts:FetchedResults<Contact>
+    
     var body: some View {
     
         VStack {
@@ -78,6 +83,11 @@ struct AccountListView: View {
                 } label: {
                     Text("Fetch contacts")
                 }
+                Button {
+                    updateContacts()
+                } label: {
+                    Text("Update contacts metadata")
+                }
                 
                 if activeAccountPublicKey != identity.publicKey {
                     Button {
@@ -107,7 +117,14 @@ struct AccountListView: View {
     }
     
     func fetchContacts(identity:Identity) {
-        print(identity)
+        if (identity.publicKey != nil) {
+            ConnectionManager.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: identity.publicKey!)))
+        }
+    }
+    
+    func updateContacts() { // move this method to somewhere more global maybe
+        let pubkeys = contacts.map { $0.pubkey }
+        ConnectionManager.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys)))
     }
     
     private func addItem() {
@@ -150,7 +167,7 @@ struct AccountListView_Previews: PreviewProvider {
         NavigationStack {
             AccountListView(activeAccountPublicKey: "11707ab5c187f4534ea7b4ad67cd9914cd07f7812b5ea2fdd91685ac84c91f5b")
                 .environment(\.managedObjectContext,
-                              PersistenceController.preview.cloudContainer.viewContext)
+                              PersistenceController.preview.container.viewContext)
         }
     }
 }

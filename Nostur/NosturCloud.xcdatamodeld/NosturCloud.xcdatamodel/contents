@@ -2,19 +2,40 @@
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21513" systemVersion="22C65" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="Contact" representedClassName=".Contact" syncable="YES">
         <attribute name="about" optional="YES" attributeType="String"/>
+        <attribute name="display_name" optional="YES" attributeType="String"/>
         <attribute name="lud16" optional="YES" attributeType="String"/>
         <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="nip05" optional="YES" attributeType="String"/>
         <attribute name="nip05verifiedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="picture" optional="YES" attributeType="String"/>
-        <attribute name="pictureFile" optional="YES" attributeType="Binary"/>
-        <attribute name="pubkey" optional="YES" attributeType="String"/>
+        <attribute name="pictureFile" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
+        <attribute name="pubkey" attributeType="String"/>
         <attribute name="updated_at" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="followedBy" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Identity" inverseName="follows" inverseEntity="Identity"/>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="pubkey"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
+    </entity>
+    <entity name="Event" representedClassName=".Event" syncable="YES">
+        <attribute name="content" optional="YES" attributeType="String"/>
+        <attribute name="created_at" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="id" attributeType="String"/>
+        <attribute name="kind" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="pubkey" optional="YES" attributeType="String"/>
+        <attribute name="sig" optional="YES" attributeType="String"/>
+        <attribute name="tagsSerialized" optional="YES" attributeType="String"/>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="id"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
     </entity>
     <entity name="Identity" representedClassName=".Identity" syncable="YES">
         <attribute name="about" attributeType="String" defaultValueString=""/>
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="display_name" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="lud16" attributeType="String" defaultValueString=""/>
         <attribute name="name" attributeType="String" defaultValueString=""/>
@@ -24,11 +45,14 @@
         <attribute name="publicKey" optional="YES" attributeType="String"/>
         <relationship name="follows" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact" inverseName="followedBy" inverseEntity="Contact"/>
     </entity>
-    <entity name="Relay" representedClassName="Relay" syncable="YES" codeGenerationType="class">
+    <entity name="Relay" representedClassName=".Relay" syncable="YES" codeGenerationType="class">
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="read" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
         <attribute name="url" optional="YES" attributeType="String"/>
         <attribute name="write" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
     </entity>
+    <configuration name="Local">
+        <memberEntity name="Event"/>
+    </configuration>
 </model>

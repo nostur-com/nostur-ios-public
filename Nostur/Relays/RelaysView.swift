@@ -21,7 +21,7 @@ struct RelaysView: View {
     private var relays: FetchedResults<Relay>
 //    @State var selectedRelay:Relay?
     
-    var cm = ConnectionManager.shared
+    @ObservedObject var cm = ConnectionManager.shared
     
     var body: some View {
         List {
@@ -54,6 +54,13 @@ struct RelaysView: View {
             }.onDelete(perform: deleteItems)
         }
         .navigationTitle("Relays")
+        .onAppear {
+            for socket in ConnectionManager.shared.relaySockets {
+                if (socket.relay.read || socket.relay.write) && !socket.isConnected {
+                    socket.socket.connect()
+                }
+            }
+        }
         .toolbar {
             ToolbarItem {
                 Button {
@@ -108,7 +115,7 @@ struct RelaysView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
             RelaysView().environment(\.managedObjectContext,
-                                      PersistenceController.preview.cloudContainer.viewContext)
+                                      PersistenceController.preview.container.viewContext)
         }
     }
 }

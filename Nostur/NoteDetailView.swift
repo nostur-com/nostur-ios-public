@@ -7,8 +7,13 @@
 
 import SwiftUI
 
-struct MessageDetailView: View {
-    var tweet : Tweet
+struct NoteDetailView: View {
+    var tweet : Tweet = Tweet()
+    let note:Note
+    
+    init(_ note:Note) {
+        self.note = note
+    }
     
     var body: some View {
         VStack {
@@ -41,17 +46,26 @@ struct MessageDetailView: View {
                 
                 HStack {
                     // profile image
-                    Image(tweet.profileImageName).resizable().scaledToFit()
-                        .clipShape(Circle())
-                        .shadow(color: .gray, radius: 1.0)
-                        .frame(maxWidth:50, maxHeight:50)
+//                    Image(tweet.profileImageName).resizable().scaledToFit()
+//                        .clipShape(Circle())
+//                        .shadow(color: .gray, radius: 1.0)
+//                        .frame(maxWidth:50, maxHeight:50)
+                    
+                    if (note.contact != nil) {
+                        ProfilePicView(pubkey: note.publicKey, contact: note.contact!)
+                            .frame(maxWidth:50, maxHeight:50)
+                    }
+                    else {
+                        ProfilePicView(pubkey: note.publicKey)
+                            .frame(maxWidth:50, maxHeight:50)
+                    }
                     // name and username
                     
                     HStack {
                         VStack {
                             
                             HStack(spacing:2) {
-                                Text(tweet.name) // Name
+                                Text(note.authorName) // Name
                                     .font(.system(size: 14))
                                     .fontWeight(.bold)
                                 
@@ -64,7 +78,7 @@ struct MessageDetailView: View {
                             }
                             
                             HStack {
-                                Text("@\(tweet.username)") // Username
+                                Text("@\(note.username)") // Username
                                     .font(.system(size: 14))
                                     .foregroundColor(.secondary)
                                 Spacer()
@@ -75,14 +89,14 @@ struct MessageDetailView: View {
                     
                     Menu {
                         Button {
-                            print("Unfollow @\(tweet.username)")
+                            print("Unfollow @\(note.username)")
                         } label: {
-                            Label("Unfollow @\(tweet.username)", systemImage: "person.fill.xmark")
+                            Label("Unfollow @\(note.username)", systemImage: "person.fill.xmark")
                         }
                         Button {
-                            print("Block @\(tweet.username)")
+                            print("Block @\(note.username)")
                         } label: {
-                            Label("Block @\(tweet.username)", systemImage: "slash.circle")
+                            Label("Block @\(note.username)", systemImage: "slash.circle")
                         }
                     } label: {
                         Text("···")
@@ -103,7 +117,7 @@ struct MessageDetailView: View {
                 }
                 // Tweet
                 HStack {
-                    Text(tweet.text)
+                    Text(note.noteText)
                         .font(.system(size: 18))//.border(.red)
                     Spacer()
                 }.padding(.vertical,5)
@@ -144,12 +158,12 @@ struct MessageDetailView: View {
             }.foregroundColor(.gray)
                 .padding(10)
             
-            // Replies
-            LazyVStack {
-                ForEach (tweet.replies ?? []) { tweet in
-                    TweetView(tweet: tweet)
-                }
-            }
+            // Replies TODO
+//            LazyVStack {
+//                ForEach (tweet.replies ?? []) { tweet in
+//                    TweetView(tweet: tweet)
+//                }
+//            }
             
             // Finished
             Spacer()
@@ -157,8 +171,30 @@ struct MessageDetailView: View {
     }
 }
 
+// FOR PREVIEW
+struct NoteDetailViewWrapper: View {
+    
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
+        predicate: NSPredicate(format: "pubkey == %@", "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"),
+        animation: .none)
+    var contacts:FetchedResults<Contact>
+    
+    @FetchRequest(fetchRequest:Event.textNotes())
+    var events: FetchedResults<Event>
+    
+    var body: some View {
+        
+        VStack {
+            NoteDetailView(Note(event:events.first!, contact: contacts.first))
+        }
+    }
+}
+
 struct MessageDetailView_Previews: PreviewProvider {
     static var previews: some View {
-        MessageDetailView(tweet:DummyTweets().tweets()[6])
+        NoteDetailViewWrapper()
+            .environment(\.managedObjectContext,
+                                PersistenceController.preview.container.viewContext)
     }
 }

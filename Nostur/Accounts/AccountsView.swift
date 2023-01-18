@@ -178,6 +178,6 @@ struct AccountsView: View {
 struct AccountsView_Previews: PreviewProvider {
     static var previews: some View {
         AccountsView().environment(\.managedObjectContext,
-                                    PersistenceController.preview.cloudContainer.viewContext)
+                                    PersistenceController.preview.container.viewContext)
     }
 }

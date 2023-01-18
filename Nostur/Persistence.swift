@@ -13,9 +13,8 @@ struct PersistenceController {
     
     static var preview: PersistenceController = {
         let result = PersistenceController(inMemory: true)
-        let cloudContext = result.cloudContainer.viewContext
-        let localContext = result.localContainer.viewContext
-        
+        let cloudContext = result.container.viewContext
+//        let localContext = result.localContainer.viewContext
         
         let account = Identity(context: cloudContext)
         account.createdAt = Date()
@@ -41,6 +40,20 @@ struct PersistenceController {
         relay.read = true
         relay.write = false
         
+//        let relay2 = Relay(context: cloudContext)
+//        relay.url = "wss://relay.damus.io"
+//        relay.createdAt = Date()
+//        relay.id = UUID()
+//        relay.read = true
+//        relay.write = false
+//        
+//        let relay3 = Relay(context: cloudContext)
+//        relay.url = "wss://brb.io"
+//        relay.createdAt = Date()
+//        relay.id = UUID()
+//        relay.read = true
+//        relay.write = false
+        
         
         let contact = Contact(context: cloudContext)
         contact.pubkey = "11707ab5c187f4534ea7b4ad67cd9914cd07f7812b5ea2fdd91685ac84c91f5b"
@@ -62,7 +75,9 @@ struct PersistenceController {
     
         var events = testKind0Events()
         
-        events.append(contentsOf: testKind1Events())
+        events.append(contentsOf: testKind3Events())
+        
+//        events.append(contentsOf: testKind1Events())
         
         events.append(contentsOf: testKindMixedOldDunnoEvents())
         
@@ -91,14 +106,14 @@ struct PersistenceController {
                     
                     switch event.kind {
                     case .setMetadata:
-                        Contact.handleSetMetadataEvent(event: event, cloudContext: cloudContext)
+                        Contact.handleSetMetadataEvent(event: event, context: cloudContext)
                         //                case .custom(3):
                         
                     default:
                         print("unhandled event")
                     }
                     
-                    let savedEvent = Event(context: localContext)
+                    let savedEvent = Event(context: cloudContext)
                     savedEvent.id = event.id
                     savedEvent.kind = json[2]["kind"].int16Value
                     savedEvent.created_at = json[2]["created_at"].int64Value
@@ -110,7 +125,7 @@ struct PersistenceController {
                     print("Received event: \(json[2]["id"].stringValue)")
                     
                     do {
-                        try localContext.save()
+                        try cloudContext.save()
                     }
                     catch let error {
                         print("🔴🐥🔴 Error storing event 🔴🐥🔴 \(error)")
@@ -125,7 +140,7 @@ struct PersistenceController {
         
         
         do {
-            try localContext.save()
+//            try localContext.save()
             try cloudContext.save()
         } catch {
             // Replace this implementation with code to handle the error appropriately.
@@ -136,23 +151,36 @@ struct PersistenceController {
         return result
     }()
     
-    let cloudContainer: NSPersistentCloudKitContainer
-    let localContainer: NSPersistentContainer
+    let container: NSPersistentCloudKitContainer
     
     init(inMemory: Bool = false) {
-        cloudContainer = NSPersistentCloudKitContainer(name: "NosturCloud")
-        localContainer = NSPersistentContainer(name:"NosturLocal")
-        localContainer.viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+        
+        
+        container = NSPersistentCloudKitContainer(name: "NosturCloud")
+        
+        let defaultDirectoryURL = NSPersistentCloudKitContainer.defaultDirectoryURL()
+        
+        let cloudDescription = NSPersistentStoreDescription(url: defaultDirectoryURL.appendingPathComponent("Nostur-iCloud.sqlite"))
+        cloudDescription.configuration = "Default"
+        
+        let localDescription = NSPersistentStoreDescription(url: defaultDirectoryURL.appendingPathComponent("Nostur-local.sqlite"))
+        localDescription.configuration = "Local"
+         
+        container.viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+//        container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        
+        container.persistentStoreDescriptions = [cloudDescription, localDescription]
         
         if inMemory {
-            cloudContainer.persistentStoreDescriptions.first!.url = URL(fileURLWithPath: "/dev/null")
-            localContainer.persistentStoreDescriptions.first!.url = URL(fileURLWithPath: "/dev/null")
+            for description in container.persistentStoreDescriptions {
+                description.url = URL(fileURLWithPath: "/dev/null")
+            }
         }
-        cloudContainer.loadPersistentStores(completionHandler: { (storeDescription, error) in
+        container.loadPersistentStores(completionHandler: { (storeDescription, error) in
             if let error = error as NSError? {
                 // Replace this implementation with code to handle the error appropriately.
                 // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                
+
                 /*
                  Typical reasons for an error here include:
                  * The parent directory does not exist, cannot be created, or disallows writing.
@@ -168,27 +196,28 @@ struct PersistenceController {
                 print("Store has been loaded \(String(describing: storeDescription.url))")
             }
         })
-        cloudContainer.viewContext.automaticallyMergesChangesFromParent = true
+        container.viewContext.automaticallyMergesChangesFromParent = true
         
-        localContainer.loadPersistentStores(completionHandler: { (storeDescription, error) in
-            if let error = error as NSError? {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                
-                /*
-                 Typical reasons for an error here include:
-                 * The parent directory does not exist, cannot be created, or disallows writing.
-                 * The persistent store is not accessible, due to permissions or data protection when the device is locked.
-                 * The device is out of space.
-                 * The store could not be migrated to the current model version.
-                 Check the error message to determine what the actual problem was.
-                 */
-                print("Unresolved error \(error), \(error.userInfo)")
-                //                fatalError("Unresolved error \(error), \(error.userInfo)")
-            }
-            else {
-                print("Local Store has been loaded \(String(describing: storeDescription.url))")
-            }
-        })
+//        localContainer.loadPersistentStores(completionHandler: { (storeDescription, error) in
+//            if let error = error as NSError? {
+//                // Replace this implementation with code to handle the error appropriately.
+//                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
+//
+//                /*
+//                 Typical reasons for an error here include:
+//                 * The parent directory does not exist, cannot be created, or disallows writing.
+//                 * The persistent store is not accessible, due to permissions or data protection when the device is locked.
+//                 * The device is out of space.
+//                 * The store could not be migrated to the current model version.
+//                 Check the error message to determine what the actual problem was.
+//                 */
+//                print("Unresolved error \(error), \(error.userInfo)")
+//                //                fatalError("Unresolved error \(error), \(error.userInfo)")
+//            }
+//            else {
+//                print("Local Store has been loaded \(String(describing: storeDescription.url))")
+//            }
+//        })
+    
     }
 }

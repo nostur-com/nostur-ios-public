@@ -12,7 +12,7 @@ struct NewRelayView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) private var viewContext
     
-    @State var url = ""
+    @State var url = "wss://"
     
     var accentColor: Color = Color.blue
     var grayBackground: Color = Color.gray.opacity(0.2)
@@ -27,6 +27,10 @@ struct NewRelayView: View {
 
         do {
             try viewContext.save()
+            let relaySocket = RelaySocket(relay: relay, delegate: ConnectionManager.shared.eventReceivingDelegate!)
+            print("🟣🟣 connecting to \(relay.url ?? "?")")
+            relaySocket.connect()
+            ConnectionManager.shared.relaySockets.append(relaySocket)
         } catch {
             // Replace this implementation with code to handle the error appropriately.
             // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
@@ -45,6 +49,9 @@ struct NewRelayView: View {
                 .fontWeight(.semibold)
                 .padding(.bottom, 20)
             TextField("wss://relay...", text: $url)
+                .keyboardType(.URL)
+                .disableAutocorrection(true)
+                .textInputAutocapitalization(.never)
                 .padding()
                 .background(grayBackground)
                 .cornerRadius(5.0)

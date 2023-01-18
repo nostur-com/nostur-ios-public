@@ -19,14 +19,14 @@ extension Identity {
     @NSManaged public var about: String
     @NSManaged public var createdAt: Date?
     @NSManaged public var name: String
+    @NSManaged public var display_name: String?
     @NSManaged public var lud16: String
     @NSManaged public var nip05: String
     @NSManaged public var picture: String
     @NSManaged public var privateKey: String?
     @NSManaged public var publicKey: String?
     @NSManaged public var id: UUID?
-    @NSManaged public var follows: NSSet?
-
+    @NSManaged public var follows: Set<Contact>?
 }
 
 // MARK: Generated accessors for follows

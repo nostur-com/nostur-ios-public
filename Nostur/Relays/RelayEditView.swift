@@ -26,6 +26,9 @@ struct RelayEditView: View {
             Form {
                 Section(header: Text("Relay URL") ) {
                     TextField("wss://nostr.relay.url.here", text: Binding($relay.url)!)
+                        .keyboardType(.URL)
+                        .disableAutocorrection(true)
+                        .textInputAutocapitalization(.never)
                 }
                 Section(header: Text("Relay settings") ) {
                     Toggle(isOn: $relay.read) {
@@ -76,7 +79,7 @@ struct RelayEditView: View {
 struct RelayEditView_Previews: PreviewProvider {
     static var previews: some View {
         
-        let relay = Relay(context: PersistenceController.preview.cloudContainer.viewContext)
+        let relay = Relay(context: PersistenceController.preview.container.viewContext)
         relay.id = UUID()
         relay.url = "wss://nostr.bitcoin.sex"
         relay.read = true

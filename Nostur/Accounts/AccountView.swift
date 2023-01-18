@@ -96,7 +96,7 @@ struct AccountView: View {
 //            fetchRequest.predicate = NSPredicate(
 //                format: "kind = %i", 0
 //            )
-            let objects = try! persistenceController.localContainer.viewContext.fetch(fetchRequest)
+            let objects = try! persistenceController.container.viewContext.fetch(fetchRequest)
             print("🉐🉐🉐🉐")
 
             if let event = objects.first {
@@ -134,27 +134,30 @@ struct AccountView: View {
         if identity.nip05 != "" { setMetadataContent.nip05 = identity.nip05 }
         if identity.lud16 != "" { setMetadataContent.lud16 = identity.lud16 }
 
-        guard identity.privateKey != nil else {
-            throw "Identity has no private key"
+//        guard identity.privateKey != nil else {
+//            throw "Identity has no private key"
+//        }
+
+        
+        if (identity.privateKey != nil) {
+            let keys = NKeys(privateKeyHex: identity.privateKey!)
+
+            var event = NEvent(content: setMetadataContent)
+            event = try! event.sign(keys)
+
+            print(event.eventJson())
+            print(event.wrappedEventJson())
+
+            // broadcast to relays
+            let message = ClientMessage(type: .EVENT, message: event.wrappedEventJson())
+            ConnectionManager.shared.sendMessage(message)
         }
-
-        let keys = NKeys(privateKeyHex: identity.privateKey!)
-
-        var event = NEvent(content: setMetadataContent)
-        event = try! event.sign(keys)
-
-        print(event.eventJson())
-        print(event.wrappedEventJson())
-
-        // broadcast to relays
-        let message = ClientMessage(type: .EVENT, message: event.wrappedEventJson())
-        ConnectionManager.shared.sendMessage(message)
     }
 }
 
 struct AccountView_Previews: PreviewProvider {
     
-    static var viewContext = PersistenceController.preview.cloudContainer.viewContext
+    static var viewContext = PersistenceController.preview.container.viewContext
 
     static var previews: some View {
         
@@ -181,6 +184,6 @@ struct AccountView_Previews: PreviewProvider {
         identity.about = "Test"
         
         return AccountView(identity: identity)
-            .environment(\.managedObjectContext, PersistenceController.preview.cloudContainer.viewContext)
+            .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
     }
 }

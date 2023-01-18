@@ -11,12 +11,10 @@ import CoreData
 struct Playground: View {
     
     @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""
-    @Environment(\.managedObjectContext) var viewContext
-    var cloudContainer:NSPersistentCloudKitContainer
     
     var body: some View {
         VStack {
-            ContactsView(pubkey: activeAccountPublicKey, viewContext: viewContext, cloudContainer:cloudContainer)
+            ContactsView(pubkey: activeAccountPublicKey)
         }
     }
 }
@@ -30,29 +28,27 @@ class Events : ObservableObject {
 
 struct ContactsView : View {
     
-    @State var pubkey:String = "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
-    
     @Environment(\.managedObjectContext) var viewContext
     
-    var cloudContainer:NSPersistentCloudKitContainer
-
-    private var contacts:[Contact]
+    @State var pubkey:String = "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
+    
+    
+    private var contacts:[Contact] = [Contact]()
     @ObservedObject var events = Events()
     
-    init(pubkey:String, viewContext:NSManagedObjectContext, cloudContainer:NSPersistentCloudKitContainer) {
+    init(pubkey:String) {
         
         self.pubkey = pubkey
-        self.cloudContainer = cloudContainer
-        let request = NSFetchRequest<Contact>()
-        request.entity = Contact.entity()
-        request.predicate = NSPredicate(format: "pubkey == %@", pubkey)
-        contacts = try! cloudContainer.viewContext.fetch(request)
-        
-        let xrequest = NSFetchRequest<Event>()
-        xrequest.entity = Event.entity()
-        let fetchedEvents = (try! viewContext.fetch(xrequest))
-        
-        events.events.append(contentsOf: fetchedEvents)
+//        let request = NSFetchRequest<Contact>()
+//        request.entity = Contact.entity()
+//        request.predicate = NSPredicate(format: "pubkey == %@", pubkey)
+//        contacts = try! viewContext.fetch(request)
+//        
+//        let xrequest = NSFetchRequest<Event>()
+//        xrequest.entity = Event.entity()
+//        let fetchedEvents = (try! viewContext.fetch(xrequest))
+//        
+//        events.events.append(contentsOf: fetchedEvents)
     }
     
     func searchByPubkey() {
@@ -186,7 +182,7 @@ struct TweetLoader {
 struct Playground_Previews: PreviewProvider {
     
     
-    static var cloudContainer = PersistenceController.preview.cloudContainer
+//    static var cloudContainer = PersistenceController.preview.cloudContainer
     
     static var previewUserDefaults: UserDefaults = {
                 let d = UserDefaults(suiteName: "preview_user_defaults")!
@@ -196,10 +192,10 @@ struct Playground_Previews: PreviewProvider {
         return d
             }()
     static var previews: some View {
-        Playground(cloudContainer:cloudContainer)
+        Playground()
             .defaultAppStorage(previewUserDefaults)
             .environment(\.managedObjectContext,
-                          PersistenceController.preview.localContainer.viewContext)
+                          PersistenceController.preview.container.viewContext)
             
     }
 }

@@ -2,7 +2,7 @@
 //  Event+CoreDataClass.swift
 //  Nostur
 //
-//  Created by Fabian Lachman on 14/01/2023.
+//  Created by Fabian Lachman on 15/01/2023.
 //
 //
 

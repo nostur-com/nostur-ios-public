@@ -8,106 +8,116 @@
 import SwiftUI
 import CoreData
 
-class XEvents : ObservableObject {
-    @Published var events:[Event] = []
-    @Published var metaDataEvent:Event?
-    @Published var contacts:[Contact] = [Contact]()
-    @Published var contactsFR:FetchedResults<Contact>?
-    
-    func byPubkey(_ pubkey:String?) -> String {
-        guard pubkey != nil else {
-            return ""
-        }
-        return contacts.first(where: { ($0.pubkey != nil) && $0.pubkey == pubkey})?.name! ?? ""
-    }
-}
+//class XEvents : ObservableObject {
+//    @Published var events:[Event] = []
+//    @Published var metaDataEvent:Event?
+//    @Published var contacts:[Contact] = [Contact]()
+//    @Published var contactsFR:FetchedResults<Contact>?
+//
+//    func contact(byPubkey:String?) -> Contact? {
+//        guard byPubkey != nil else {
+//            return nil
+//        }
+//        return contacts.first(where: { ($0.pubkey != nil) && $0.pubkey == byPubkey})
+//    }
+//}
 
 struct Wrapper: View {
-
+    
     @Environment(\.managedObjectContext) var viewContext
-    var cloudContainer:NSPersistentCloudKitContainer
+    
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
+        animation: .none)
+    var contacts:FetchedResults<Contact>
+    
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
+        predicate: NSPredicate(format: "kind == 1"),
+        animation: .none)
+    var events: FetchedResults<Event>
     
     var body: some View {
         VStack {
-            TestTimeline(cloudContainer: cloudContainer)
+            TestTimeline(contacts: contacts, events: events)
         }
     }
 }
 
 struct TestTimeline: View {
     
-    var cloudContainer:NSPersistentCloudKitContainer
+    @EnvironmentObject var accountState:AccountState
     
-    var contacts:FetchedResults<Contact>? = nil
+//    @FetchRequest(
+//        sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
+//        animation: .none)
+    var contacts:FetchedResults<Contact>
     
-//    @FetchRequest(fetchRequest:Event.textNotes(byAuthorPubkey:"5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"))
-    @FetchRequest(fetchRequest:Event.textNotes())
+//    @FetchRequest(
+//        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
+//        predicate: NSPredicate(format: "kind == 1"),
+//        animation: .none)
     var events: FetchedResults<Event>
     
-    var xevents:XEvents = XEvents()
-    
-//    private var contacts:[Contact] = [Contact]()
-    
-    init(cloudContainer:NSPersistentCloudKitContainer) {
-        self.cloudContainer = cloudContainer
-
-        let request = NSFetchRequest<Contact>()
-        request.entity = Contact.entity()
-//        request.predicate = NSPredicate(format: "pubkey == %@", pubkey)
-        let fetchedContacts = try! self.cloudContainer.viewContext.fetch(request)
-        
-    
-        xevents.contacts.append(contentsOf: fetchedContacts)
+    func contact(byPubkey:String?) -> Contact? {
+        guard byPubkey != nil else {
+            return nil
+        }
+        return contacts.first(where: { ($0.pubkey != nil) && $0.pubkey == byPubkey})
     }
     
+    func fetchLatest100EventsFromFollowing() {
+//        let allContacts = contacts.map { $0.pubkey }
         
-    var body: some View {
-    
-        
-        
-        var tweets:[Tweet] = events.map { event in Tweet(text: event.content ?? "", hasImage: false, isVerified: true, imageName: "", username: xevents.byPubkey(event.pubkey), name: xevents.byPubkey(event.pubkey), profileImageName: "peterschiffDummy", retweetCount: "28", likeCount: "189", replyCount: "8", retweetedByName: "", replyToUsername: "", ago: "1m", hasThread: false)
-        }
-//
-        
-        VStack {
-//            Text("Hello, World! contacts: \(contacts.count)")
-            
-            
-//            ForEach(contacts) { contact in
-//                Text(contact.name ?? "no name")
-//            }
-            
-//            Text("Hello, World! contacts: \(xevents.contactsFR?.count ?? 0)")
-//            Text("Hello, World! contacts: \(xevents.contacts.count)")
-            NotesViewer(tweets:tweets)
-        }
-    }
-}
-
-struct NotesViewer: View {
-    
-//    var events:FetchedResults<Event>
-    var tweets:[Tweet]
-    
-    var body: some View {
-        ScrollView {
-            ForEach(tweets) { tweet in
-                TweetView(tweet: tweet)
+        for socket in ConnectionManager.shared.relaySockets {
+            if (socket.relay.read || socket.relay.write) && !socket.isConnected {
+                socket.socket.connect()
             }
         }
-//        ForEach(events) { event in
-//            Text("event: \(event.id ?? "<id missing>")")
-//        }
+        
+        let followingPubkeys = [String](accountState.followingPublicKeys)
+        ConnectionManager.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorsEvents(pubkeys: followingPubkeys, limit: 100)))
     }
     
+    
+    var body: some View {
+        
+        VStack {
+//            Text("contacts: \(contacts.count) events: \(events.count)")
+            Button {
+                fetchLatest100EventsFromFollowing()
+            } label: {
+                Text("Fetch latest 100 events from who you follow \(accountState.followingPublicKeys.count)")
+            }
+            
+            ScrollView { // TODO
+                LazyVStack {
+                    ForEach(events) { event in
+                        let note = Note(event: event, contact: contact(byPubkey: event.pubkey))
+                        NoteView(note:note)
+                    }
+                }
+            }
+        }
+    }
 }
 
 struct TestTimeline_Previews: PreviewProvider {
     
-    static var cloudContainer = PersistenceController.preview.cloudContainer
+    static var previewUserDefaults: UserDefaults = {
+                let d = UserDefaults(suiteName: "preview_user_defaults")!
+                
+        d.set("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", forKey: "activeAccountPublicKey")
+                
+        return d
+            }()
     
     static var previews: some View {
-        Wrapper(cloudContainer:cloudContainer)
-            .environment(\.managedObjectContext, PersistenceController.preview.localContainer.viewContext)
+        
+        let accountState = AccountState(viewContext: PersistenceController.preview.container.viewContext)
+        
+        Wrapper()
+            .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+            .environmentObject(accountState)
     }
 }
