@@ -8,6 +8,8 @@
 import SwiftUI
 import SwiftyJSON
 import CoreData
+import Nuke
+import NukeUI
 
 class ContactProfile: Identifiable, Hashable, ObservableObject {
     
@@ -73,7 +75,6 @@ class ContactProfile: Identifiable, Hashable, ObservableObject {
 
 struct ContactProfileView: View {
     
-//    @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var cm:ConnectionManager
     
     var pubkey:String
@@ -116,6 +117,7 @@ struct ContactProfileView: View {
         if (metaDataEvents.first == nil) {
             Text("No metadata events for pubkey: \(pubkey)")
                 .onAppear {
+                    print("☎️ ContactProfileView: REQ metadata for pubkey \(pubkey)")
                     cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: pubkey)))
                 }
         }
@@ -141,17 +143,51 @@ struct ContactProfileViewInner: View {
         ScrollView {
             ZStack() {
                 GeometryReader { geo in
-                    Image("bitcoinerrrrrHeaderDummy")
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: geo.size.width, height: 150)
-                        .clipped()
+                    if (contactProfile.contact.banner != nil) {
+                                
+                    LazyImage(url: URL(string: contactProfile.contact.banner!)) { state in
+                        if let image = state.image {
+                            image // Displays the loaded image
+                        }
+                        else {
+                            Image("NosturBanner")
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: geo.size.width, height: 150)
+//                                .clipped()
+                        }
+                    }
+            //            .processors([ImageProcessors.Resize(width: 50)])
+                    .processors([ImageProcessors.Resize(width: geo.size.width)])
+                        .animation(nil)
+                        .priority(.high)
+                        .pipeline(ImagePipeline {
+                            $0.dataLoader = DataLoader(configuration: {
+                                // Disable disk caching built into URLSession
+                                let conf = DataLoader.defaultConfiguration
+                                conf.urlCache = nil
+                                return conf
+                            }())
+
+                            $0.imageCache = ImageCache()
+                            $0.dataCache = try! DataCache(name: "com.nostur.2140.banner")
+                        }).frame(width: geo.size.width, height: 150)
+//                            .clipped()
+                        
+                    }
+                    else {
+                        Image("NosturBanner")
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: geo.size.width, height: 150)
+                    }
                 }
                 
                 HStack {
                     VStack {
                         ProfilePicView(pubkey: contactProfile.publicKey, contact: contactProfile.contact)
                             .frame(maxWidth:75, maxHeight:75)
+                            .clipShape(Circle())
                             .offset(x: 10, y: 150-37.5)
                         Spacer()
                     }
@@ -187,9 +223,17 @@ struct ContactProfileViewInner: View {
                         }
                     }
                     
-                    Text("\(contactProfile.authorName)")
+                    Text("\(contactProfile.authorName)").font(.headline)
+                    HStack {
+                        Text("@\(contactProfile.username)").foregroundColor(.secondary)
+                        Button {
+                            UIPasteboard.general.string = contactProfile.publicKey
+                        } label: {
+                            Image(systemName: "person.badge.key.fill")
+                        }
+                    }
                     
-                    Text("\(contactProfile.about)")
+                    Text("\n\(contactProfile.about)")
                     
                     //                Text("Followed by ppl you know...")
                     // Tweets here
@@ -218,21 +262,27 @@ struct ContactProfileViewInner: View {
             }
         }
         .onAppear {
-            print("⚡️⚡️ REQ metadata for pubkey \(contactProfile.publicKey)")
-            cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: contactProfile.publicKey)))
+            // TODO banner update logic...
+            // new field .banner in metadata, but not in existing contact
+            // how/when to update?
+            if (contactProfile.metaData == nil) {
+                print("☎️ CPVinner: REQ metadata for pubkey \(contactProfile.publicKey)")
+                cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: contactProfile.publicKey)))
+            }
 
-            print("⚡️⚡️ REQ contact list for pubkey \(contactProfile.publicKey)")
+            print("📙 CPVinner REQ contact list for pubkey \(contactProfile.publicKey)")
             cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: contactProfile.publicKey)))
 
             if let pubkeys = contactProfile.contactsPubkeys(), pubkeys.count > 0 {
-                print(" REQ META DATA FOR CL P TAGS")
+                print("📙📙📙📙📙 REQ META DATA FOR CL P TAGS")
                 cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys)))
             }
             
         }
-        //        }.ignoresSafeArea()
+        .ignoresSafeArea()
     }
 }
+
 
 // FOR PREVIEW
 struct ContactProfileViewWrapper: View {

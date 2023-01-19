@@ -9,6 +9,7 @@
 import Foundation
 import CoreData
 
+typealias ContactPubkey = String
 
 extension Contact {
 
@@ -31,6 +32,7 @@ extension Contact {
     @NSManaged public var nip05verifiedAt: Date?
     @NSManaged public var picture: String?
     @NSManaged public var pictureFile: Data?
+    @NSManaged public var banner: String?
     @NSManaged public var pubkey: String?
     @NSManaged public var updated_at: Int64
     @NSManaged public var followedBy: NSSet?
@@ -124,6 +126,7 @@ extension Contact : Identifiable {
             contact.display_name = metaData.display_name
             contact.about = metaData.about
             contact.picture = metaData.picture
+            contact.banner = metaData.banner
             contact.pictureFile = nil // todo
             contact.nip05 = metaData.nip05
             contact.lud16 = metaData.lud16

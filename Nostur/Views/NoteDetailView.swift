@@ -191,7 +191,7 @@ struct NoteDetailViewWrapper: View {
     }
 }
 
-struct MessageDetailView_Previews: PreviewProvider {
+struct NoteDetailView_Previews: PreviewProvider {
     static var previews: some View {
         NoteDetailViewWrapper()
             .environment(\.managedObjectContext,

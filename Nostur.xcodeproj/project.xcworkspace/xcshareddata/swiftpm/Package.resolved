@@ -10,6 +10,15 @@
       }
     },
     {
+      "identity" : "nuke",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/kean/Nuke",
+      "state" : {
+        "branch" : "master",
+        "revision" : "b187456fffa045e7dfc03fec1db86164ae0c0dc1"
+      }
+    },
+    {
       "identity" : "secp256k1.swift",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/GigaBitcoin/secp256k1.swift",
@@ -25,6 +34,15 @@
       "state" : {
         "revision" : "df8d82047f6654d8e4b655d1b1525c64e1059d21",
         "version" : "4.0.4"
+      }
+    },
+    {
+      "identity" : "swiftcompactor",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/openalloc/SwiftCompactor",
+      "state" : {
+        "revision" : "5caf0b3d43ee139fc34673df89c5ad93d2f5078f",
+        "version" : "1.3.0"
       }
     },
     {

@@ -8,20 +8,6 @@
 import SwiftUI
 import CoreData
 
-//class XEvents : ObservableObject {
-//    @Published var events:[Event] = []
-//    @Published var metaDataEvent:Event?
-//    @Published var contacts:[Contact] = [Contact]()
-//    @Published var contactsFR:FetchedResults<Contact>?
-//
-//    func contact(byPubkey:String?) -> Contact? {
-//        guard byPubkey != nil else {
-//            return nil
-//        }
-//        return contacts.first(where: { ($0.pubkey != nil) && $0.pubkey == byPubkey})
-//    }
-//}
-
 struct Wrapper: View {
     
     @Environment(\.managedObjectContext) var viewContext
@@ -32,7 +18,7 @@ struct Wrapper: View {
     var contacts:FetchedResults<Contact>
     
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
+        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)],
         predicate: NSPredicate(format: "kind == 1"),
         animation: .none)
     var events: FetchedResults<Event>
@@ -49,15 +35,11 @@ struct TestTimeline: View {
     @EnvironmentObject var accountState:AccountState
     @EnvironmentObject var cm:ConnectionManager
     
-//    @FetchRequest(
-//        sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
-//        animation: .none)
+    @State var unread = 0
+    @AppStorage("lastAppearedIndex") var lastAppearedIndex = 0
+
     var contacts:FetchedResults<Contact>
     
-//    @FetchRequest(
-//        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
-//        predicate: NSPredicate(format: "kind == 1"),
-//        animation: .none)
     var events: FetchedResults<Event>
     
     func contact(byPubkey:String?) -> Contact? {
@@ -82,22 +64,69 @@ struct TestTimeline: View {
     
     
     var body: some View {
-        
-        VStack {
-//            Text("contacts: \(contacts.count) events: \(events.count)")
-            Button {
-                fetchLatest100EventsFromFollowing()
-            } label: {
-                Text("Fetch latest 100 events from who you follow \(accountState.followingPublicKeys.count)")
-            }
-            
-            ScrollView { // TODO
-                LazyVStack {
-                    ForEach(events) { event in
-                        let note = Note(event: event, contact: contact(byPubkey: event.pubkey))
-                        NoteView(note:note)
-                    }
+          
+        ZStack {
+            VStack {
+                Button {
+                    fetchLatest100EventsFromFollowing()
+                } label: {
+                    Text("Fetch latest 100 events from who you follow \(accountState.followingPublicKeys.count)")
                 }
+                Group {
+                    ScrollViewReader { proxy in
+                        ScrollView { // TODO
+                            LazyVStack {
+                                ForEach(events.indices, id:\.self) { index in
+                                    let note = Note(event: events[index], contact: contact(byPubkey: events[index].pubkey))
+                                    NoteView(note:note)
+                                        .onAppear {
+                                            print("🍿🍿 appear index: \(index) lastAppearedIndex: \(lastAppearedIndex) events.count: \(events.count)")
+                                            if (index > lastAppearedIndex) {
+                                                lastAppearedIndex = index
+                                                let unreadOld = unread
+                                                unread = events.count-1 - index
+                                                print("🍿🍿 unread: \(unread) (was: \(unreadOld))")
+                                            }
+                                        }
+                                        .scaleEffect(x: 1, y: -1)
+                                }
+                            }
+                        }
+                        Button {
+                            proxy.scrollTo(events.count-1, anchor: .bottom)
+                        } label: {
+                            Text("Scroll to index: \(events.count-1)")
+                        }
+                        .scaleEffect(x: 1, y: -1)
+                        .onChange(of: events.count) { newCount in
+                            let unreadOld = unread
+                            unread = unread + (newCount - events.count)
+                            print("🍿🍿 events.count: \(events.count) newCount: \(newCount) unread: \(unread) (was: \(unreadOld))")
+                        }
+                        .onAppear {
+                            print("🍿🍿 onAppear .scrollTo:\(lastAppearedIndex) events.count:\(events.count) unread: \(unread) (not changed)")
+                            proxy.scrollTo(lastAppearedIndex)
+//                            proxy.scrollTo(events.last?.id, anchor: .bottom)
+                        }
+                    }
+                    .scaleEffect(x: 1, y: -1)
+                }
+            }
+            VStack {
+                HStack {
+                    Spacer()
+                    if (unread > 0) {
+                        Text("\(unread)")
+                            .padding(5)
+                            .fontWeight(.heavy)
+                            .foregroundColor(.white)
+                            .background(.gray)
+                            .cornerRadius(10)
+                            .offset(x:-30,y:35)
+                    }
+                        
+                }
+                Spacer()
             }
         }
     }

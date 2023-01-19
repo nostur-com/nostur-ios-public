@@ -346,6 +346,7 @@ public struct NSetMetadata: Codable {
     public var display_name: String?
     public var about: String?
     public var picture: String?
+    public var banner: String?
     public var nip05: String? = nil
     public var lud16: String? = nil
 
@@ -354,6 +355,7 @@ public struct NSetMetadata: Codable {
         case display_name
         case about
         case picture
+        case banner
         case nip05
         case lud16
     }

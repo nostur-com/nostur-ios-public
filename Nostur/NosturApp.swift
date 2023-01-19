@@ -27,10 +27,9 @@ struct NosturApp: App {
                               PersistenceController.shared.container.viewContext)
                 .environmentObject(accountState)
                 .environmentObject(cm)
-                .onAppear {
-                    print("onAppear 🍿🍿🍿🍿🍿")
-                    getCoreDataDBPath()
-                }
+//                .onAppear {
+//                    getCoreDataDBPath()
+//                }
         }
     }
     

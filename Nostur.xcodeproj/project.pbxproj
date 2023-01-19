@@ -31,6 +31,8 @@
 		1F7A63C129711CCC00D8B2CB /* Playground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7A63C029711CCC00D8B2CB /* Playground.swift */; };
 		1FA51FF62978441200FE60EF /* Relay+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */; };
 		1FA51FF72978441200FE60EF /* Relay+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA51FF52978441200FE60EF /* Relay+CoreDataProperties.swift */; };
+		1FA51FFD2978805400FE60EF /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = 1FA51FFC2978805400FE60EF /* Nuke */; };
+		1FA51FFF2978805400FE60EF /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1FA51FFE2978805400FE60EF /* NukeUI */; };
 		1FB3E3BC2968061700CDA788 /* NoteDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB3E3BB2968061700CDA788 /* NoteDetailView.swift */; };
 		1FB3E3BE296820C600CDA788 /* ContactProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB3E3BD296820C600CDA788 /* ContactProfileView.swift */; };
 		1FB448BE2965F3D000038671 /* NosturApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB448BD2965F3D000038671 /* NosturApp.swift */; };
@@ -44,6 +46,9 @@
 		1FC38B9D2972DD5A004769F8 /* Contact+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC38B9B2972DD5A004769F8 /* Contact+CoreDataClass.swift */; };
 		1FC38B9E2972DD5A004769F8 /* Contact+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC38B9C2972DD5A004769F8 /* Contact+CoreDataProperties.swift */; };
 		1FC38BA0297316AA004769F8 /* DummyEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC38B9F297316AA004769F8 /* DummyEvents.swift */; };
+		1FEA785529799697007CC8E7 /* Compactor in Frameworks */ = {isa = PBXBuildFile; productRef = 1FEA785429799697007CC8E7 /* Compactor */; };
+		1FEA785829799FE6007CC8E7 /* ProfilePicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */; };
+		1FEA785B2979A1A0007CC8E7 /* Note.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FEA785A2979A1A0007CC8E7 /* Note.swift */; };
 		1FEC01C0296C4A400078CC9B /* SwiftyJSON in Frameworks */ = {isa = PBXBuildFile; productRef = 1FEC01BF296C4A400078CC9B /* SwiftyJSON */; };
 		B39353FC12E60CADAE655912 /* Connections.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3935E040327074D0C91EA33 /* Connections.swift */; };
 /* End PBXBuildFile section */
@@ -86,6 +91,8 @@
 		1FC38B9B2972DD5A004769F8 /* Contact+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Contact+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1FC38B9C2972DD5A004769F8 /* Contact+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Contact+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1FC38B9F297316AA004769F8 /* DummyEvents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DummyEvents.swift; sourceTree = "<group>"; };
+		1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePicView.swift; sourceTree = "<group>"; };
+		1FEA785A2979A1A0007CC8E7 /* Note.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Note.swift; sourceTree = "<group>"; };
 		B3935E040327074D0C91EA33 /* Connections.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Connections.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -95,8 +102,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				1FB58DC32969EDE7005D83BA /* Bech32 in Frameworks */,
+				1FEA785529799697007CC8E7 /* Compactor in Frameworks */,
+				1FA51FFF2978805400FE60EF /* NukeUI in Frameworks */,
 				1F055A53296EE2A2009EF792 /* secp256k1 in Frameworks */,
 				1F1C31E92969B7A000E60BEF /* CryptoKit.framework in Frameworks */,
+				1FA51FFD2978805400FE60EF /* Nuke in Frameworks */,
 				1FEC01C0296C4A400078CC9B /* SwiftyJSON in Frameworks */,
 				1F710380296BDB31006245CC /* Starscream in Frameworks */,
 			);
@@ -163,6 +173,8 @@
 		1FB448BC2965F3D000038671 /* Nostur */ = {
 			isa = PBXGroup;
 			children = (
+				1FEA78592979A18E007CC8E7 /* Model */,
+				1FEA785629799FD7007CC8E7 /* Views */,
 				1FC38B952972B1B4004769F8 /* CoreData */,
 				1FB62D0C296FFEBF00A0055B /* Relays */,
 				1F4773A3296CA7040049454B /* Accounts */,
@@ -172,12 +184,7 @@
 				B3935E040327074D0C91EA33 /* Connections.swift */,
 				1FB448BD2965F3D000038671 /* NosturApp.swift */,
 				1FB448BF2965F3D000038671 /* Persistence.swift */,
-				1FB448C42965F3D000038671 /* ContentView.swift */,
 				1F7A63C029711CCC00D8B2CB /* Playground.swift */,
-				1FB448D12965FB5500038671 /* NoteView.swift */,
-				1FB3E3BD296820C600CDA788 /* ContactProfileView.swift */,
-				1F3C3F932975347F00E813FD /* ContactProfileRowView.swift */,
-				1FB3E3BB2968061700CDA788 /* NoteDetailView.swift */,
 				1F375712296728DA007D210A /* TimelineView.swift */,
 				1F15E9B22972A35100E8A751 /* TestTimeline.swift */,
 				1FB448C62965F3D200038671 /* Assets.xcassets */,
@@ -229,6 +236,27 @@
 			path = Local;
 			sourceTree = "<group>";
 		};
+		1FEA785629799FD7007CC8E7 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				1FB3E3BD296820C600CDA788 /* ContactProfileView.swift */,
+				1F3C3F932975347F00E813FD /* ContactProfileRowView.swift */,
+				1FB448C42965F3D000038671 /* ContentView.swift */,
+				1FB448D12965FB5500038671 /* NoteView.swift */,
+				1FB3E3BB2968061700CDA788 /* NoteDetailView.swift */,
+				1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		1FEA78592979A18E007CC8E7 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				1FEA785A2979A1A0007CC8E7 /* Note.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -250,6 +278,9 @@
 				1F71037F296BDB31006245CC /* Starscream */,
 				1FEC01BF296C4A400078CC9B /* SwiftyJSON */,
 				1F055A52296EE2A2009EF792 /* secp256k1 */,
+				1FA51FFC2978805400FE60EF /* Nuke */,
+				1FA51FFE2978805400FE60EF /* NukeUI */,
+				1FEA785429799697007CC8E7 /* Compactor */,
 			);
 			productName = Nostur;
 			productReference = 1FB448BA2965F3D000038671 /* Nostur.app */;
@@ -284,6 +315,8 @@
 				1F71037E296BDB31006245CC /* XCRemoteSwiftPackageReference "Starscream" */,
 				1FEC01BE296C4A400078CC9B /* XCRemoteSwiftPackageReference "SwiftyJSON" */,
 				1F055A51296EE2A2009EF792 /* XCRemoteSwiftPackageReference "secp256k1" */,
+				1FA51FFB2978805400FE60EF /* XCRemoteSwiftPackageReference "Nuke" */,
+				1FEA785329799697007CC8E7 /* XCRemoteSwiftPackageReference "SwiftCompactor" */,
 			);
 			productRefGroup = 1FB448BB2965F3D000038671 /* Products */;
 			projectDirPath = "";
@@ -322,6 +355,7 @@
 				1F375713296728DB007D210A /* TimelineView.swift in Sources */,
 				1FB448BE2965F3D000038671 /* NosturApp.swift in Sources */,
 				1F3C3F942975347F00E813FD /* ContactProfileRowView.swift in Sources */,
+				1FEA785B2979A1A0007CC8E7 /* Note.swift in Sources */,
 				1F37571629672AD0007D210A /* DummyData.swift in Sources */,
 				1F7A63C129711CCC00D8B2CB /* Playground.swift in Sources */,
 				1FB448C52965F3D000038671 /* ContentView.swift in Sources */,
@@ -343,6 +377,7 @@
 				1FB448D22965FB5500038671 /* NoteView.swift in Sources */,
 				B39353FC12E60CADAE655912 /* Connections.swift in Sources */,
 				1F15E9B32972A35100E8A751 /* TestTimeline.swift in Sources */,
+				1FEA785829799FE6007CC8E7 /* ProfilePicView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -584,9 +619,25 @@
 				minimumVersion = 4.0.0;
 			};
 		};
+		1FA51FFB2978805400FE60EF /* XCRemoteSwiftPackageReference "Nuke" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/kean/Nuke";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
 		1FB58DC12969EDE7005D83BA /* XCRemoteSwiftPackageReference "bech32" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/0xdeadp00l/bech32.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
+		1FEA785329799697007CC8E7 /* XCRemoteSwiftPackageReference "SwiftCompactor" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/openalloc/SwiftCompactor";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 1.0.0;
@@ -613,10 +664,25 @@
 			package = 1F71037E296BDB31006245CC /* XCRemoteSwiftPackageReference "Starscream" */;
 			productName = Starscream;
 		};
+		1FA51FFC2978805400FE60EF /* Nuke */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1FA51FFB2978805400FE60EF /* XCRemoteSwiftPackageReference "Nuke" */;
+			productName = Nuke;
+		};
+		1FA51FFE2978805400FE60EF /* NukeUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1FA51FFB2978805400FE60EF /* XCRemoteSwiftPackageReference "Nuke" */;
+			productName = NukeUI;
+		};
 		1FB58DC22969EDE7005D83BA /* Bech32 */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 1FB58DC12969EDE7005D83BA /* XCRemoteSwiftPackageReference "bech32" */;
 			productName = Bech32;
+		};
+		1FEA785429799697007CC8E7 /* Compactor */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1FEA785329799697007CC8E7 /* XCRemoteSwiftPackageReference "SwiftCompactor" */;
+			productName = Compactor;
 		};
 		1FEC01BF296C4A400078CC9B /* SwiftyJSON */ = {
 			isa = XCSwiftPackageProductDependency;

@@ -44,32 +44,32 @@ class RelaySocket : WebSocketDelegate, ObservableObject {
         switch event {
         case .connected(let headers):
             relay.isConnected = true
-            print("🤡🤡 websocket is connected: \(headers)")
+            print("🟢 websocket is connected: \(headers)")
         case .disconnected(let reason, let code):
             relay.isConnected = false
-            print("🤡🤡 websocket is disconnected: \(reason) with code: \(code)")
+            print("🟠 websocket is disconnected: \(reason) with code: \(code)")
         case .text(let string):
-            print("🟡🟡🟡 Received text: \(string)")
+            print("💬 Received text: \(string)".prefix(260))
             
             // if event
             delegate.didReceiveEvent(text: string)
         case .binary(let data):
-            print("🟡🟡🟡 Received data: \(data.count)")
+            print("💾 Received data: \(data.count)")
         case .ping(_):
-            print("🤡 PING")
+//            print("PING")
             break
         case .pong(_):
-            print("🤡 PONG")
+//            print("PONG")
             break
         case .viabilityChanged(_):
             break
         case .reconnectSuggested(_):
             break
         case .cancelled:
-            print("🤡 CANCELLED")
+            print("🔴 CANCELLED")
             relay.isConnected = false
         case .error(let error):
-            print("🤡🤡🤡🤡🤡 ERROR")
+            print("🔴🔴🔴🔴 ERROR")
             relay.isConnected = false
             handleError(error)
         }
@@ -77,11 +77,11 @@ class RelaySocket : WebSocketDelegate, ObservableObject {
     
     func handleError(_ error: Error?) {
         if let e = error as? WSError {
-            print("🟡 websocket encountered an error: \(e.message)")
+            print("🔴🔴🔴🔴 Websocket encountered an error: \(e.message)")
         } else if let e = error {
-            print("🟡 websocket encountered an error: \(e.localizedDescription)")
+            print("🔴🔴🔴🔴 webSocket encountered an error: \(e.localizedDescription)")
         } else {
-            print("🟡 websocket encountered an error")
+            print("🔴🔴🔴🔴 websockeT encountered an error")
         }
     }
     
@@ -110,7 +110,8 @@ class ConnectionManager: ObservableObject {
                 //                print("🟢 sending message: \(text)")
                 //                relaySocket.send(text: text)
                 if message.type == .REQ || message.type == .CLOSE { // REQ AND CLOSE IS FOR ALL RELAYS
-                    print("🟢 SENDING TO \(relaySocket.relay.url!): \(message.message)")
+//                    dump("🟢 SENDING TO \(relaySocket.relay.url!): \(message.message)")
+                    print("🟢 SENDING TO \(relaySocket.relay.url!): \(message.message)".prefix(260))
                     relaySocket.send(text: message.message)
                 }
                 else if message.type == .EVENT && relaySocket.relay.write { // EVENT IS ONLY FOR WRITE RELAYS

@@ -21,7 +21,7 @@ struct ContentView: View, EventDelegate {
     var contacts:FetchedResults<Contact>
     
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
+        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)],
         predicate: NSPredicate(format: "kind == 1"),
         animation: .none)
     var events: FetchedResults<Event>
@@ -54,9 +54,6 @@ struct ContentView: View, EventDelegate {
     
     var body: some View {
         VStack {
-            HStack {
-                Text("C: \(contacts.count) N:\(events.count) M:\(eventsMeta.count) CL:\(eventsCL.count) R:\(eventsR.count) ALL: \(eventsAll.count)")
-            }
             TabView {
             NavigationStack {
                 TestTimeline(contacts: contacts, events: events)
@@ -102,12 +99,52 @@ struct ContentView: View, EventDelegate {
             }
             .tabItem { Image(systemName: "server.rack") }
         }
+            HStack {
+                Text("C: \(contacts.count) N:\(events.count) M:\(eventsMeta.count) CL:\(eventsCL.count) R:\(eventsR.count) ALL: \(eventsAll.count)")
+            }
         }
         .onAppear {
-            print("🔴 OnAppear")
+//            print("🔴 OnAppear")
             startNosturing()
         }
-        .onDisappear { print("🔴 OnDisappear") }
+//        .onDisappear { print("🔴 OnDisappear") }
+    }
+    
+    func maintenance() {
+        viewContext.perform {
+            
+            do {
+                let decoder = JSONDecoder()
+
+                let er = NSFetchRequest<Event>(entityName: "Event")
+                er.predicate = NSPredicate(format: "kind == 0")
+                er.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+                let metaEvents = try! er.execute()
+                
+                let cr = NSFetchRequest<Contact>(entityName: "Contact")
+                cr.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)]
+                let contacts = try! cr.execute()
+                
+                for contact in contacts {
+                    // TODO: `replace with new function (updateContactFromMetaEvent)
+                    if let lastEvent = metaEvents.first(where: { $0.pubkey == contact.pubkey }) {
+                        guard let metaData = try? decoder.decode(NSetMetadata.self, from: (lastEvent.content?.data(using: .utf8, allowLossyConversion: false)!)!) else {
+                            continue
+                        }
+                        if metaData.banner != nil {
+                            contact.banner = metaData.banner!
+                            print("🟡🟡 Updated banner \(metaData.banner!) for \(contact.pubkey!)")
+                        }
+                    }
+                }
+                try viewContext.save()
+            }
+            
+            catch let error as NSError {
+                // TODO: handle the error
+                print("😢😢😢 XX \(error)")
+            }
+        }
     }
     
     func repairDb() {
@@ -137,6 +174,7 @@ struct ContentView: View, EventDelegate {
     func startNosturing() {
         // One time fix
 //        repairDb()
+//        maintenance()
 
         let delegate = self
         
@@ -144,20 +182,20 @@ struct ContentView: View, EventDelegate {
         viewContext.perform {
             do {
                 
-                // Fetch RELAYS
+                // Fetch RELAYS from CORE DATA
                 let fetchRequest: NSFetchRequest<Relay> = Relay.fetchRequest()
                 let relays = try fetchRequest.execute()
                 
                 // CONNECT TO RELAYS
                 for relay in relays {
                     let relaySocket = RelaySocket(relay: relay, delegate: delegate)
-                    print("🟣🟣 connecting to \(relay.url ?? "?")")
+                    print("🟠 connecting to \(relay.url ?? "?")")
                     relaySocket.connect()
                     cm.relaySockets.append(relaySocket)
                     cm.eventReceivingDelegate = delegate
                 }
             } catch {
-                print("Unable to Execute Fetch Request, \(error)")
+                print("🔴🔴🔴 Unable to Execute Fetch Request, \(error)")
             }
         }
     }
@@ -277,6 +315,9 @@ struct ContentView: View, EventDelegate {
         }
     }
 }
+
+
+private func processEvent() async { /* a lot of work */ } // Implicitly nonisolated due to being a free function
 
 private let itemFormatter: DateFormatter = {
     let formatter = DateFormatter()

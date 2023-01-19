@@ -73,6 +73,7 @@ struct ContactProfileRowInner: View {
                 HStack(alignment: .top) {
                     ProfilePicView(pubkey: contactProfile.publicKey, contact: contactProfile.contact)
                         .frame(width: 50, height: 50)
+                        .clipShape(Circle())
                     VStack(alignment: .leading) {
                         Text(contactProfile.authorName).font(.headline).foregroundColor(.primary)
                         Text("@\(contactProfile.username)").font(.subheadline).foregroundColor(.secondary)
