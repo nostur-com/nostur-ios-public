@@ -1,5 +1,18 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21513" systemVersion="22C65" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="Account" representedClassName=".Account" syncable="YES">
+        <attribute name="about" attributeType="String" defaultValueString=""/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="display_name" optional="YES" attributeType="String"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="lud16" attributeType="String" defaultValueString=""/>
+        <attribute name="name" attributeType="String" defaultValueString=""/>
+        <attribute name="nip05" attributeType="String" defaultValueString=""/>
+        <attribute name="picture" attributeType="String" defaultValueString=""/>
+        <attribute name="privateKey" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
+        <attribute name="publicKey" optional="YES" attributeType="String"/>
+        <relationship name="follows" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact" inverseName="followedBy" inverseEntity="Contact"/>
+    </entity>
     <entity name="Contact" representedClassName=".Contact" syncable="YES">
         <attribute name="about" optional="YES" attributeType="String"/>
         <attribute name="banner" optional="YES" attributeType="String"/>
@@ -12,7 +25,7 @@
         <attribute name="pictureFile" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
         <attribute name="pubkey" attributeType="String"/>
         <attribute name="updated_at" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
-        <relationship name="followedBy" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Identity" inverseName="follows" inverseEntity="Identity"/>
+        <relationship name="followedBy" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Account" inverseName="follows" inverseEntity="Account"/>
         <uniquenessConstraints>
             <uniquenessConstraint>
                 <constraint value="pubkey"/>
@@ -33,18 +46,11 @@
             </uniquenessConstraint>
         </uniquenessConstraints>
     </entity>
-    <entity name="Identity" representedClassName=".Identity" syncable="YES">
-        <attribute name="about" attributeType="String" defaultValueString=""/>
+    <entity name="NosturList" representedClassName=".NosturList" syncable="YES">
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
-        <attribute name="display_name" optional="YES" attributeType="String"/>
-        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
-        <attribute name="lud16" attributeType="String" defaultValueString=""/>
-        <attribute name="name" attributeType="String" defaultValueString=""/>
-        <attribute name="nip05" attributeType="String" defaultValueString=""/>
-        <attribute name="picture" attributeType="String" defaultValueString=""/>
-        <attribute name="privateKey" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
-        <attribute name="publicKey" optional="YES" attributeType="String"/>
-        <relationship name="follows" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact" inverseName="followedBy" inverseEntity="Contact"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="refreshedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="contacts" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact"/>
     </entity>
     <entity name="Relay" representedClassName=".Relay" syncable="YES">
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>

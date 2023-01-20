@@ -1,0 +1,45 @@
+//
+//  List+CoreDataProperties.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 20/01/2023.
+//
+//
+
+import Foundation
+import CoreData
+
+
+extension NosturList {
+
+    @nonobjc public class func fetchRequest() -> NSFetchRequest<NosturList> {
+        return NSFetchRequest<NosturList>(entityName: "NosturList")
+    }
+
+    @NSManaged public var name: String?
+    @NSManaged public var createdAt: Date?
+    @NSManaged public var refreshedAt: Date?
+    @NSManaged public var contacts: NSSet?
+
+}
+
+// MARK: Generated accessors for contacts
+extension NosturList {
+
+    @objc(addContactsObject:)
+    @NSManaged public func addToContacts(_ value: Contact)
+
+    @objc(removeContactsObject:)
+    @NSManaged public func removeFromContacts(_ value: Contact)
+
+    @objc(addContacts:)
+    @NSManaged public func addToContacts(_ values: NSSet)
+
+    @objc(removeContacts:)
+    @NSManaged public func removeFromContacts(_ values: NSSet)
+
+}
+
+extension NosturList : Identifiable {
+
+}

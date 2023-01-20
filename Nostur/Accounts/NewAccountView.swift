@@ -1,5 +1,5 @@
 //
-//  NewIdentityView.swift
+//  NewAccountView.swift
 //  Nostur
 //
 //  Created by Fabian Lachman on 07/01/2023.
@@ -30,13 +30,13 @@ struct NewAccountView: View {
 //        print("Private key: \(privateKeyHex)") for testing. dont print this ever
         print("Public key: \(newKeys.publicKeyHex())")
 
-        let identity = Identity(context: viewContext)
-        identity.id = UUID()
-        identity.createdAt = Date()
-        identity.name = name
-        identity.about = about
-        identity.privateKey = newKeys.privateKeyHex()
-        identity.publicKey = newKeys.publicKeyHex()
+        let account = Account(context: viewContext)
+        account.id = UUID()
+        account.createdAt = Date()
+        account.name = name
+        account.about = about
+        account.privateKey = newKeys.privateKeyHex()
+        account.publicKey = newKeys.publicKeyHex()
         
         do {
             try viewContext.save()
@@ -96,7 +96,7 @@ struct NewAccountView: View {
 
 
 
-struct NewIdentityView_Previews: PreviewProvider {
+struct NewAccountView_Previews: PreviewProvider {
     static var previews: some View {
         NewAccountView(addReadOnlyAccountPresented: .constant(false)).environment(\.managedObjectContext, PersistenceController.shared.container.viewContext)
     }

@@ -23,8 +23,8 @@ final class AccountState : ObservableObject {
         loadFollowing()
     }
     
-    func activeIdentity() -> Identity? {
-        let r = Identity.fetchRequest()
+    func activeAccount() -> Account? {
+        let r = Account.fetchRequest()
         r.predicate = NSPredicate(format: "publicKey == %@", activeAccountPublicKey)
         return try! viewContext.fetch(r).first
     }
@@ -34,32 +34,32 @@ final class AccountState : ObservableObject {
 //        r.entity = Contact.entity()
 //        r.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)]
 //        let allContacts = try! viewContext.fetch(r)
-        let activeIdentity = activeIdentity()
+        let activeAccount = activeAccount()
         
         
-//        var arr:[String] = (activeIdentity.follows?.map{ $0.pubkey! })!
+//        var arr:[String] = (activeAccount.follows?.map{ $0.pubkey! })!
         
-        if (activeIdentity?.follows != nil) {
-            let pubkeys = activeIdentity!.follows?.map { $0.pubkey! } ?? []
+        if (activeAccount?.follows != nil) {
+            let pubkeys = activeAccount!.follows?.map { $0.pubkey! } ?? []
             self.followingPublicKeys = Set( pubkeys )
         }
     }
     
     func follow(_ pubkey:String, cm:ConnectionManager) {
-        guard let activeIdentity = activeIdentity() else {
+        guard let activeAccount = activeAccount() else {
             return
         }
         
         
         // find existing contact
         if let contact = Contact.contactBy(pubkey: pubkey, context: viewContext) {
-            activeIdentity.addToFollows(contact)
+            activeAccount.addToFollows(contact)
         }
         else {
             // if nil, create new contact
             let contact = Contact(context: viewContext)
             contact.pubkey = pubkey
-            activeIdentity.addToFollows(contact)
+            activeAccount.addToFollows(contact)
         }
 
         try! viewContext.save()
@@ -73,13 +73,13 @@ final class AccountState : ObservableObject {
         guard let contact = Contact.contactBy(pubkey: pubkey, context: viewContext) else {
             return
         }
-        guard let activeIdentity = activeIdentity() else {
+        guard let activeAccount = activeAccount() else {
             return
         }
-        guard ((activeIdentity.follows?.contains(contact)) != nil) else {
+        guard ((activeAccount.follows?.contains(contact)) != nil) else {
             return
         }
-        activeIdentity.removeFromFollows(contact)
+        activeAccount.removeFromFollows(contact)
         try! viewContext.save()
     }
     

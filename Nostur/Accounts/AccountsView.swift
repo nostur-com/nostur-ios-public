@@ -17,9 +17,9 @@ struct AccountsView: View {
     @Environment(\.managedObjectContext) private var viewContext
     
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Identity.createdAt, ascending: true)],
+        sortDescriptors: [NSSortDescriptor(keyPath: \Account.createdAt, ascending: true)],
         animation: .default)
-    private var identities: FetchedResults<Identity>
+    private var identities: FetchedResults<Account>
     
     var body: some View {
         let activeIdentities = identities.filter { $0.publicKey == activeAccountPublicKey }
@@ -39,9 +39,9 @@ struct AccountsView: View {
             }
             else if (identities.count == 1) {
                 List {
-                    ForEach(identities, id: \.self) { identity in
-                        NavigationLink(value: identity, label: {
-                            Text(identity.name != "" ? identity.name : identity.publicKey ?? "(Unknown)")
+                    ForEach(identities, id: \.self) { account in
+                        NavigationLink(value: account, label: {
+                            Text(account.name != "" ? account.name : account.publicKey ?? "(Unknown)")
                                 .lineLimit(1)
                         })
                     }.onDelete(perform: deleteItems)
@@ -61,9 +61,9 @@ struct AccountsView: View {
                 List {
                     
                     Section {
-                        ForEach(activeIdentities, id: \.self) { identity in
-                            NavigationLink(value:identity, label: {
-                                Text(identity.name != "" ? identity.name : identity.publicKey ?? "(Unknown)")
+                        ForEach(activeIdentities, id: \.self) { account in
+                            NavigationLink(value:account, label: {
+                                Text(account.name != "" ? account.name : account.publicKey ?? "(Unknown)")
                                     .lineLimit(1)
                             })
                         }
@@ -72,9 +72,9 @@ struct AccountsView: View {
                     }
                     
                     Section {
-                        ForEach(inactiveIdentities, id: \.self) { identity in
-                            NavigationLink(value:identity, label:{
-                                Text(identity.name != "" ? identity.name : identity.publicKey ?? "(Unknown)")
+                        ForEach(inactiveIdentities, id: \.self) { account in
+                            NavigationLink(value:account, label:{
+                                Text(account.name != "" ? account.name : account.publicKey ?? "(Unknown)")
                                     .lineLimit(1)
                             })
                         }.onDelete(perform: deleteItems)
@@ -101,23 +101,23 @@ struct AccountsView: View {
         .navigationDestination(isPresented: $addReadOnlyAccountPresented) {
             AddReadOnlyAccountView()
         }
-        .navigationDestination(for: Identity.self) { identity in
+        .navigationDestination(for: Account.self) { account in
             VStack {
-                Text("Name: \(identity.name != "" ? identity.name : "(Unknown)")")
-                Text("Priv: \(identity.privateKey ?? "(Unknown)")")
-                Text("Pub: \(identity.publicKey ?? "(Unknown)")")
+                Text("Name: \(account.name != "" ? account.name : "(Unknown)")")
+                Text("Priv: \(account.privateKey ?? "(Unknown)")")
+                Text("Pub: \(account.publicKey ?? "(Unknown)")")
                 
-                AccountView(identity: identity)
+                AccountView(account: account)
                 
                 Button {
-                    fetchContacts(identity:identity)
+                    fetchContacts(account:account)
                 } label: {
                     Text("Fetch contacts")
                 }
                 
-                if activeAccountPublicKey != identity.publicKey {
+                if activeAccountPublicKey != account.publicKey {
                     Button {
-                        activeAccountPublicKey = identity.publicKey ?? ""
+                        activeAccountPublicKey = account.publicKey ?? ""
                     } label: {
                         Text("Set as active account")
                     }
@@ -125,7 +125,7 @@ struct AccountsView: View {
             }
         }
         .onAppear {
-            // Fetch identity metadata for accounts where who don't have the private key for
+            // Fetch account metadata for accounts where who don't have the private key for
             
             let pubkeys = identities
                 .filter { $0.privateKey == nil || $0.privateKey == "" }
@@ -139,13 +139,13 @@ struct AccountsView: View {
         }
     }
     
-    func fetchContacts(identity:Identity) {
-        print(identity)
+    func fetchContacts(account:Account) {
+        print(account)
     }
     
     private func addItem() {
         withAnimation {
-            let newItem = Identity(context: viewContext)
+            let newItem = Account(context: viewContext)
             newItem.createdAt = Date()
             
             do {

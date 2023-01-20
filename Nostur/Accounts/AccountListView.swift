@@ -16,9 +16,9 @@ struct AccountListView: View {
     @Environment(\.managedObjectContext) var viewContext
     
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Identity.createdAt, ascending: true)],
+        sortDescriptors: [NSSortDescriptor(keyPath: \Account.createdAt, ascending: true)],
         animation: .default)
-    private var identities: FetchedResults<Identity>
+    private var accounts: FetchedResults<Account>
     
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
@@ -29,18 +29,18 @@ struct AccountListView: View {
     
         VStack {
 //            Text("\(identities.count)")
-            if (identities.count == 0) {
+            if (accounts.count == 0) {
                 NewAccountView(addReadOnlyAccountPresented: $addReadOnlyAccountPresented)
             }
             else {
                 List {
                     
-                    ForEach(identities, id: \.self) { identity in
-                        NavigationLink(value:identity, label:{
+                    ForEach(accounts, id: \.self) { account in
+                        NavigationLink(value:account, label:{
                             HStack {
-                                Text(identity.name != "" ? identity.name : identity.publicKey ?? "(Unknown)")
+                                Text(account.name != "" ? account.name : account.publicKey ?? "(Unknown)")
                                         .lineLimit(1)
-                                if identity.publicKey == activeAccountPublicKey {
+                                if account.publicKey == activeAccountPublicKey {
                                     Text("active")
                                         .foregroundColor(.white)
                                         .padding(.horizontal, 5)
@@ -70,16 +70,16 @@ struct AccountListView: View {
         .navigationDestination(isPresented: $addReadOnlyAccountPresented) {
             AddReadOnlyAccountView()
         }
-        .navigationDestination(for: Identity.self) { identity in
+        .navigationDestination(for: Account.self) { account in
             VStack {
-                Text("Name: \(identity.name != "" ? identity.name : "(Unknown)")")
-//                Text("Priv: \(identity.privateKey ?? "(Unknown)")")
-                Text("Pub: \(identity.publicKey ?? "(Unknown)")")
+                Text("Name: \(account.name != "" ? account.name : "(Unknown)")")
+//                Text("Priv: \(account.privateKey ?? "(Unknown)")")
+                Text("Pub: \(account.publicKey ?? "(Unknown)")")
                 
-                AccountView(identity: identity)
+                AccountView(account: account)
                 
                 Button {
-                    fetchContacts(identity:identity)
+                    fetchContacts(account:account)
                 } label: {
                     Text("Fetch contacts")
                 }
@@ -89,9 +89,9 @@ struct AccountListView: View {
                     Text("Update contacts metadata")
                 }
                 
-                if activeAccountPublicKey != identity.publicKey {
+                if activeAccountPublicKey != account.publicKey {
                     Button {
-                        activeAccountPublicKey = identity.publicKey ?? ""
+                        activeAccountPublicKey = account.publicKey ?? ""
                     } label: {
                         Text("Set as active account")
                     }
@@ -99,13 +99,13 @@ struct AccountListView: View {
             }
         }
         .onAppear {
-            // Fetch identity metadata for accounts where who don't have the private key for
+            // Fetch account metadata for accounts where who don't have the private key for
             
             createAccountPresented = false
             addReadOnlyAccountPresented = false
             
             
-            let pubkeys = identities
+            let pubkeys = accounts
                 .filter { $0.privateKey == nil || $0.privateKey == "" }
                 .map { $0.publicKey }
             
@@ -116,9 +116,9 @@ struct AccountListView: View {
         }
     }
     
-    func fetchContacts(identity:Identity) {
-        if (identity.publicKey != nil) {
-            cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: identity.publicKey!)))
+    func fetchContacts(account:Account) {
+        if (account.publicKey != nil) {
+            cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: account.publicKey!)))
         }
     }
     
@@ -129,7 +129,7 @@ struct AccountListView: View {
     
     private func addItem() {
         withAnimation {
-            let newItem = Identity(context: viewContext)
+            let newItem = Account(context: viewContext)
             newItem.createdAt = Date()
             
             do {
@@ -145,7 +145,7 @@ struct AccountListView: View {
     
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
-            offsets.map { identities[$0] }.forEach(viewContext.delete)
+            offsets.map { accounts[$0] }.forEach(viewContext.delete)
             
             do {
                 try viewContext.save()
@@ -164,10 +164,17 @@ struct AccountListView_Previews: PreviewProvider {
 //    static var viewContext = PersistenceController.preview.container.viewContext
     
     static var previews: some View {
+        
+        let accountState = AccountState(viewContext: PersistenceController.preview.container.viewContext)
+        
+        let cm = ConnectionManager()
+        
         NavigationStack {
-            AccountListView(activeAccountPublicKey: "11707ab5c187f4534ea7b4ad67cd9914cd07f7812b5ea2fdd91685ac84c91f5b")
+            AccountListView(activeAccountPublicKey: "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0")
                 .environment(\.managedObjectContext,
                               PersistenceController.preview.container.viewContext)
+                .environmentObject(accountState)
+                .environmentObject(cm)
         }
     }
 }

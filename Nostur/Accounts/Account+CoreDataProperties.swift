@@ -1,5 +1,5 @@
 //
-//  Identity+CoreDataProperties.swift
+//  Account+CoreDataProperties.swift
 //  Nostur
 //
 //  Created by Fabian Lachman on 13/01/2023.
@@ -10,10 +10,10 @@ import Foundation
 import CoreData
 
 
-extension Identity {
+extension Account {
 
-    @nonobjc public class func fetchRequest() -> NSFetchRequest<Identity> {
-        return NSFetchRequest<Identity>(entityName: "Identity")
+    @nonobjc public class func fetchRequest() -> NSFetchRequest<Account> {
+        return NSFetchRequest<Account>(entityName: "Account")
     }
 
     @NSManaged public var about: String
@@ -30,7 +30,7 @@ extension Identity {
 }
 
 // MARK: Generated accessors for follows
-extension Identity {
+extension Account {
 
     @objc(addFollowsObject:)
     @NSManaged public func addToFollows(_ value: Contact)
@@ -46,6 +46,11 @@ extension Identity {
 
 }
 
-extension Identity : Identifiable {
+extension Account : Identifiable {
 
+    var npub:String {
+        get {
+            publicKey != nil ? try! NIP19(prefix: "npub", hexString: publicKey!).displayString : "?"
+        }
+    }
 }

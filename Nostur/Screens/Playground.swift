@@ -141,7 +141,7 @@ struct ContactsView : View {
             }
         }
         .task {
-            // determine active identity
+            // determine active account
 //            print(activeAccountPublicKey)
 //
 //            var request = NSFetchRequest<Contact>(entityName: "Contact")

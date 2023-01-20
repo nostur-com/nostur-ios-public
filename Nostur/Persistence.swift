@@ -16,7 +16,7 @@ struct PersistenceController {
         let cloudContext = result.container.viewContext
 //        let localContext = result.localContainer.viewContext
         
-        let account = Identity(context: cloudContext)
+        let account = Account(context: cloudContext)
         account.createdAt = Date()
         account.id = UUID()
         account.publicKey = "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
@@ -25,7 +25,7 @@ struct PersistenceController {
         
         let keys = NKeys.newKeys()
         
-        let xaccount = Identity(context: cloudContext)
+        let xaccount = Account(context: cloudContext)
         xaccount.createdAt = Date()
         xaccount.id = UUID()
         xaccount.privateKey = "184a90b0cbdf4b4a318d33f6464593d9936430c6793fed82d9b6ec3b8f12804f"

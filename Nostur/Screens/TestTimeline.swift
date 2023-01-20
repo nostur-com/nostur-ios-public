@@ -104,9 +104,8 @@ struct TestTimeline: View {
                             print("🍿🍿 events.count: \(events.count) newCount: \(newCount) unread: \(unread) (was: \(unreadOld))")
                         }
                         .onAppear {
-                            print("🍿🍿 onAppear .scrollTo:\(lastAppearedIndex) events.count:\(events.count) unread: \(unread) (not changed)")
-                            proxy.scrollTo(lastAppearedIndex)
-//                            proxy.scrollTo(events.last?.id, anchor: .bottom)
+                            print("🍿🍿 onAppear (disabled).scrollTo:\(lastAppearedIndex) events.count:\(events.count) unread: \(unread) (not changed)")
+//                            proxy.scrollTo(lastAppearedIndex)
                         }
                     }
                     .scaleEffect(x: 1, y: -1)

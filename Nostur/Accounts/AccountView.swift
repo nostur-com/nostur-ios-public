@@ -14,40 +14,40 @@ struct AccountView: View {
     @EnvironmentObject var cm:ConnectionManager
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) var viewContext
-    @ObservedObject var identity: Identity
+    @ObservedObject var account: Account
     @State var newPrivateKey = ""
     
     let persistenceController = PersistenceController.shared
     
     var body: some View {
         
-        let shouldDisable = identity.privateKey == nil || identity.privateKey == ""
+        let shouldDisable = account.privateKey == nil || account.privateKey == ""
         
         VStack {
             
-            Text("Following \(identity.follows?.count ?? 0)")
+            Text("Following \(account.follows?.count ?? 0)")
             
             Form {
 //            List {
               
                 Section(header: Text("Your name") ) {
-                    TextField("Enter your name", text: $identity.name).disabled(shouldDisable)
+                    TextField("Enter your name", text: $account.name).disabled(shouldDisable)
                 }
                 
                 Section(header: Text("Bio") ) {
-                    TextField("Something about yourself", text:$identity.about).disabled(shouldDisable)
+                    TextField("Something about yourself", text:$account.about).disabled(shouldDisable)
                 }
 
                 Section(header: Text("NIP-05 identifier") ) {
-                    TextField("", text: $identity.nip05).keyboardType(.emailAddress).disabled(shouldDisable)
+                    TextField("", text: $account.nip05).keyboardType(.emailAddress).disabled(shouldDisable)
                 }
 
                 Section(header: Text("Lightning Address (LUD-16)") ) {
-                    TextField("", text: $identity.lud16).keyboardType(.emailAddress).disabled(shouldDisable)
+                    TextField("", text: $account.lud16).keyboardType(.emailAddress).disabled(shouldDisable)
                 }
 
                 Section(header: Text("Profile picturel URL") ) {
-                    TextField("https://nostur.com/profile.jpg", text: $identity.picture).keyboardType(.URL).disabled(shouldDisable)
+                    TextField("https://nostur.com/profile.jpg", text: $account.picture).keyboardType(.URL).disabled(shouldDisable)
                 }
                 
                 if (shouldDisable) {
@@ -55,10 +55,15 @@ struct AccountView: View {
                         TextField("hex", text: $newPrivateKey).foregroundColor(.primary)
                     }.foregroundColor(.primary)
                 }
+                
+                Section(header: Text("Public key") ) {
+                    Text(account.npub)
+                }
+                
             }.foregroundColor(.gray)
             Button {
                 if newPrivateKey != "" {
-                    identity.privateKey = newPrivateKey
+                    account.privateKey = newPrivateKey
                 }
                 try! saveAccount()
                 dismiss()
@@ -73,8 +78,8 @@ struct AccountView: View {
             }
         }.onAppear {
             
-            print(identity.privateKey ?? "")
-            print(identity.publicKey ?? "")
+            print(account.privateKey ?? "")
+            print(account.publicKey ?? "")
             
             let fetchRequest = NSFetchRequest<Event>(entityName: "Event")
           //  fetchRequest = Event.fetchRequest()
@@ -86,7 +91,7 @@ struct AccountView: View {
             fetchRequest.predicate = NSCompoundPredicate(
                 andPredicateWithSubpredicates: [
                     NSPredicate(
-                        format: "pubkey = %@", identity.publicKey!
+                        format: "pubkey = %@", account.publicKey!
                     ),
                     NSPredicate(
                         format: "kind = %i", 0
@@ -106,11 +111,11 @@ struct AccountView: View {
                     let json = try! JSON(data: dataFromString)
                     print(json["nip05"].stringValue)
                     
-                    identity.name = json["name"].stringValue
-                    identity.about = json["about"].stringValue
-                    identity.picture = json["picture"].stringValue
-                    identity.nip05 = json["nip05"].stringValue
-                    identity.lud16 = json["lud16"].stringValue
+                    account.name = json["name"].stringValue
+                    account.about = json["about"].stringValue
+                    account.picture = json["picture"].stringValue
+                    account.nip05 = json["nip05"].stringValue
+                    account.lud16 = json["lud16"].stringValue
                     
                     do {
                         try viewContext.save()
@@ -131,17 +136,17 @@ struct AccountView: View {
 
 
         // create nostr .setMetadata event
-        var setMetadataContent = NSetMetadata(name: identity.name, about: identity.about, picture: identity.picture)
-        if identity.nip05 != "" { setMetadataContent.nip05 = identity.nip05 }
-        if identity.lud16 != "" { setMetadataContent.lud16 = identity.lud16 }
+        var setMetadataContent = NSetMetadata(name: account.name, about: account.about, picture: account.picture)
+        if account.nip05 != "" { setMetadataContent.nip05 = account.nip05 }
+        if account.lud16 != "" { setMetadataContent.lud16 = account.lud16 }
 
-//        guard identity.privateKey != nil else {
-//            throw "Identity has no private key"
+//        guard account.privateKey != nil else {
+//            throw "Account has no private key"
 //        }
 
         
-        if (identity.privateKey != nil) {
-            let keys = NKeys(privateKeyHex: identity.privateKey!)
+        if (account.privateKey != nil) {
+            let keys = NKeys(privateKeyHex: account.privateKey!)
 
             var event = NEvent(content: setMetadataContent)
             event = try! event.sign(keys)
@@ -164,8 +169,8 @@ struct AccountView_Previews: PreviewProvider {
         
         // Create a fetch request with a string filter
         // for an entity’s name
-//        let fetchRequest: NSFetchRequest<Identity>
-//        fetchRequest = Identity.fetchRequest()
+//        let fetchRequest: NSFetchRequest<Account>
+//        fetchRequest = Account.fetchRequest()
 
 //        fetchRequest.predicate = NSPredicate(
 //            format: "name LIKE %@", "Robert"
@@ -174,17 +179,17 @@ struct AccountView_Previews: PreviewProvider {
 
         // Perform the fetch request to get the objects
         // matching the predicate
-//        let identity = try! viewContext.fetch(fetchRequest).first
+//        let account = try! viewContext.fetch(fetchRequest).first
         
-        let identity = Identity(context: viewContext)
-        identity.createdAt = Date()
-        identity.id = UUID()
-        //identity.privateKey = "184a90b0cbdf4b4a318d33f6464593d9936430c6793fed82d9b6ec3b8f12804f"
-        identity.publicKey = "11707ab5c187f4534ea7b4ad67cd9914cd07f7812b5ea2fdd91685ac84c91f5b"
-        identity.name = "Eltje"
-        identity.about = "Test"
+        let account = Account(context: viewContext)
+        account.createdAt = Date()
+        account.id = UUID()
+        //account.privateKey = "184a90b0cbdf4b4a318d33f6464593d9936430c6793fed82d9b6ec3b8f12804f"
+        account.publicKey = "11707ab5c187f4534ea7b4ad67cd9914cd07f7812b5ea2fdd91685ac84c91f5b"
+        account.name = "Eltje"
+        account.about = "Test"
         
-        return AccountView(identity: identity)
+        return AccountView(account: account)
             .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
     }
 }

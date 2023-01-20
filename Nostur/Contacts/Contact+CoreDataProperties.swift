@@ -43,10 +43,10 @@ extension Contact {
 extension Contact {
 
     @objc(addFollowedByObject:)
-    @NSManaged public func addToFollowedBy(_ value: Identity)
+    @NSManaged public func addToFollowedBy(_ value: Account)
 
     @objc(removeFollowedByObject:)
-    @NSManaged public func removeFromFollowedBy(_ value: Identity)
+    @NSManaged public func removeFromFollowedBy(_ value: Account)
 
     @objc(addFollowedBy:)
     @NSManaged public func addToFollowedBy(_ values: NSSet)
@@ -80,6 +80,12 @@ extension Contact : Identifiable {
             : name != nil
                 ? name!
                 : authorKey
+        }
+    }
+    
+    var npub:String {
+        get {
+            pubkey != nil ? try! NIP19(prefix: "npub", hexString: pubkey!).displayString : "?"
         }
     }
 
@@ -152,7 +158,7 @@ extension Contact : Identifiable {
         }
     }
     
-    static func handleContactListEvent(event:NEvent, context:NSManagedObjectContext) async -> [String] {
+    static func handleContactListEvent(event:NEvent, context:NSManagedObjectContext) async -> ([String], [String]) {
         print("how to handle?? \(event.eventJson())")
         
         let newPubkeys = await context.perform {
@@ -165,11 +171,13 @@ extension Contact : Identifiable {
             print(allContacts)
             let allContactPubkeys = allContacts.map { $0.pubkey! }
             var newPubkeys = [String]()
+            var eventPubkeys = [String]()
             
             // create contacts from "p" tags
             for tag in event.tags {
                 if tag.id == "p" {
                     let pubkey = tag.otherInformation[0]
+                    eventPubkeys.append(pubkey)
             
                     if allContactPubkeys.contains(where: { $0 == pubkey }) {
                         print("Already have \(pubkey) in contacts. Skipped")
@@ -185,7 +193,7 @@ extension Contact : Identifiable {
             }
             
             // return all new pubkeys
-            return newPubkeys
+            return (newPubkeys, eventPubkeys)
         }
         return newPubkeys
     }

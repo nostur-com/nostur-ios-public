@@ -6,72 +6,9 @@
 //
 
 import SwiftUI
-import SwiftyJSON
 import CoreData
 import Nuke
 import NukeUI
-
-class ContactProfile: Identifiable, Hashable, ObservableObject {
-    
-    @Published var contact:Contact
-    @Published var metaData:NSetMetadata? = nil {
-        willSet {
-            objectWillChange.send()
-        }
-    }
-    @Published var clEvent:Event? = nil {
-        willSet {
-            objectWillChange.send()
-        }
-    }
-    
-    init(contact: Contact, metaData: NSetMetadata? = nil, clEvent: Event? = nil) {
-        self.contact = contact
-        self.metaData = metaData
-        self.clEvent = clEvent
-    }
-    
-    var id:String {
-        get { contact.pubkey! }
-    }
-    
-    var authorName:String {
-        get { contact.authorName }
-    }
-    
-    var username:String {
-        get { contact.name ?? contact.authorKey }
-    }
-    
-    var publicKey:String {
-        get { contact.pubkey! }
-    }
-    
-    var about:String {
-        get { contact.about ?? "" }
-    }
-    
-    static func == (lhs: ContactProfile, rhs: ContactProfile) -> Bool {
-        return lhs.contact.id == rhs.contact.id
-    }
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(contact.id)
-    }
-    
-    func contactsPubkeys() -> [String]? {
-        guard let tagsSerialized = clEvent?.tagsSerialized else {
-            return nil
-        }
-        
-        guard let tags = try? JSON(data: tagsSerialized.data(using: .utf8, allowLossyConversion: false)!) else {
-            return nil
-        }
-        
-        return tags.filter { $0.1[0] == "p" } .map { $0.1[1].stringValue }
-    }
-    
-}
 
 struct ContactProfileView: View {
     
@@ -226,10 +163,28 @@ struct ContactProfileViewInner: View {
                     Text("\(contactProfile.authorName)").font(.headline)
                     HStack {
                         Text("@\(contactProfile.username)").foregroundColor(.secondary)
-                        Button {
-                            UIPasteboard.general.string = contactProfile.publicKey
+                        
+                        
+                        Menu {
+                            Button {
+                                UIPasteboard.general.string = contactProfile.publicKey
+                            } label: {
+                                Label("Copy public key hex \(contactProfile.publicKey)...", systemImage: "doc.on.clipboard")
+                            }
+                            Button {
+                                UIPasteboard.general.string = contactProfile.npub
+                            } label: {
+                                Label("Copy npub \(contactProfile.npub)...", systemImage: "doc.on.clipboard")
+                            }
                         } label: {
                             Image(systemName: "person.badge.key.fill")
+//                            Text("···")
+//                                .foregroundColor(.secondary)
+//                                .padding(.top, 0)
+//                                .padding(.bottom, 10)
+//                                .padding(.leading, 20)
+//                                .padding(.trailing, 10)
+                            
                         }
                     }
                     

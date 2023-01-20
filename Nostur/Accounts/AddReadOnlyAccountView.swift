@@ -20,10 +20,10 @@ struct AddReadOnlyAccountView: View {
 
     fileprivate func addReadOnlyAccount() {
         
-        let identity = Identity(context: viewContext)
-        identity.id = UUID()
-        identity.createdAt = Date()
-        identity.publicKey = publicKeyHex
+        let account = Account(context: viewContext)
+        account.id = UUID()
+        account.createdAt = Date()
+        account.publicKey = publicKeyHex
         
         do {
             try viewContext.save()

@@ -247,6 +247,8 @@ struct ContentView: View, EventDelegate {
     func didReceiveEvent(text: String) {
         
         do {
+            let moc = PersistenceController.shared.container.newBackgroundContext()
+            
             if let message = try? RelayMessage.parseRelayMessage(text: text)  {
                 
                 switch message.type {
@@ -277,10 +279,20 @@ struct ContentView: View, EventDelegate {
                     case .custom(3):
                         // STORE CONTACT LIST
                         print("should handle kind 3")
-                        _ = Task {
-                            let pubkeys = await Contact.handleContactListEvent(event: event, context: viewContext)
+                        _ = Task(priority: .background) {
+                            let (pubkeys, _) = await Contact.handleContactListEvent(event: event, context: moc)
                             print("do something with pubkeys: \(pubkeys)")
                             
+//                            if accountState.activeAccountPublicKey == event.publicKey {
+//                                // add contacts to followed contacts
+//                                
+//                                let cr = Contact.fetchRequest()
+//                                cr.predicate = NSPredicate(format: "ANY pubkey IN %@", eventPubkeys)
+//                                let contacts = try! cr.execute()
+//                                print("😡😡😡😡 contacts.count: \(contacts.count)")
+//                                accountState.activeAccount()?.addToFollows(NSSet(objects: contacts
+//                                                                                ))
+//                            }
                             // PROBABLY OOPS:
                             // SHOULD NOT TRIGGER NEW .REQ FROM didReceiveEvent. (LOOP, RECURSIVE..)
         //                        ConnectionManager.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys)))

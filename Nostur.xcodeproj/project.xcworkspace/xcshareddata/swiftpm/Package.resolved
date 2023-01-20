@@ -1,15 +1,6 @@
 {
   "pins" : [
     {
-      "identity" : "bech32",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/0xdeadp00l/bech32.git",
-      "state" : {
-        "revision" : "e5e1353b7840dc19d10e023fe1b784cd5469ca8a",
-        "version" : "1.0.0"
-      }
-    },
-    {
       "identity" : "nuke",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/kean/Nuke",
