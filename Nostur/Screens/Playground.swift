@@ -7,6 +7,7 @@
 
 import SwiftUI
 import CoreData
+import Nuke
 
 struct Playground: View {
     
@@ -40,16 +41,16 @@ struct ContactsView : View {
     init(pubkey:String) {
         
         self.pubkey = pubkey
-//        let request = NSFetchRequest<Contact>()
-//        request.entity = Contact.entity()
-//        request.predicate = NSPredicate(format: "pubkey == %@", pubkey)
-//        contacts = try! viewContext.fetch(request)
-//        
-//        let xrequest = NSFetchRequest<Event>()
-//        xrequest.entity = Event.entity()
-//        let fetchedEvents = (try! viewContext.fetch(xrequest))
-//        
-//        events.events.append(contentsOf: fetchedEvents)
+        //        let request = NSFetchRequest<Contact>()
+        //        request.entity = Contact.entity()
+        //        request.predicate = NSPredicate(format: "pubkey == %@", pubkey)
+        //        contacts = try! viewContext.fetch(request)
+        //
+        //        let xrequest = NSFetchRequest<Event>()
+        //        xrequest.entity = Event.entity()
+        //        let fetchedEvents = (try! viewContext.fetch(xrequest))
+        //
+        //        events.events.append(contentsOf: fetchedEvents)
     }
     
     func searchByPubkey() {
@@ -79,21 +80,47 @@ struct ContactsView : View {
         
         events.events.removeAll()
         events.events.append(contentsOf: fetchedEvents)
-
+        
         let mdr = NSFetchRequest<Event>()
         mdr.entity = Event.entity()
         mdr.predicate = NSPredicate(format: "pubkey == %@ AND kind == %d", pubkey, 0)
         mdr.sortDescriptors = [NSSortDescriptor(key: "created_at", ascending: false)]
-
+        
         let fetchedmdr = (try! viewContext.fetch(mdr))
         
         self.events.metaDataEvent = fetchedmdr.first
     }
     
-    var body: some View {
     
+    var body: some View {
+        
         ScrollView {
             VStack {
+                Group {
+                    Text("\(4)")
+                        .frame(minWidth: 30)
+                        .padding(5)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .background(.tint)
+                        .cornerRadius(20)
+//                        .offset(x:-30,y:35)
+                }
+                Group {
+                    Button {
+                        ImageCache.shared.removeAll()
+                    } label: {
+                                            
+                        HStack {
+                            Text(String(format: "%d", Int64(ImageCache.shared.totalCost)/1024))
+                            
+                            Text(String(format: "%d" , Int64(ImageCache.shared.costLimit)/1024))
+                            
+                            Text("\(ImageCache.shared.totalCount) / \(ImageCache.shared.countLimit == Int.max ? "Unlimited" : "\(ImageCache.shared.countLimit)")")
+                            Text("Clear image cache")
+                        }
+                    }
+                }
                 Group {
                     TextField("Search by public key", text:$pubkey)
                     Button {
@@ -113,7 +140,7 @@ struct ContactsView : View {
                         Text("\(events.metaDataEvent?.content ?? "no metadata")")
                     }
                 }
-            
+                
                 Group {
                     Text("\(contacts.count) contacts for pubkey (cloud)").font(.title3)
                     ForEach(contacts) { contact in
@@ -142,16 +169,16 @@ struct ContactsView : View {
         }
         .task {
             // determine active account
-//            print(activeAccountPublicKey)
-//
-//            var request = NSFetchRequest<Contact>(entityName: "Contact")
-//            var contacts = try! viewContext.fetch(request)
-//
-//            for contact in contacts {
-//                print(contact.name ?? "(unknown)")
-//            }
-//
-//
+            //            print(activeAccountPublicKey)
+            //
+            //            var request = NSFetchRequest<Contact>(entityName: "Contact")
+            //            var contacts = try! viewContext.fetch(request)
+            //
+            //            for contact in contacts {
+            //                print(contact.name ?? "(unknown)")
+            //            }
+            //
+            //
             // determine follower pubkeys
             
             
@@ -183,20 +210,20 @@ struct TweetLoader {
 struct Playground_Previews: PreviewProvider {
     
     
-//    static var cloudContainer = PersistenceController.preview.cloudContainer
+    //    static var cloudContainer = PersistenceController.preview.cloudContainer
     
     static var previewUserDefaults: UserDefaults = {
-                let d = UserDefaults(suiteName: "preview_user_defaults")!
-                
+        let d = UserDefaults(suiteName: "preview_user_defaults")!
+        
         d.set("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", forKey: "activeAccountPublicKey")
-                
+        
         return d
-            }()
+    }()
     static var previews: some View {
         Playground()
             .defaultAppStorage(previewUserDefaults)
             .environment(\.managedObjectContext,
-                          PersistenceController.preview.container.viewContext)
-            
+                          EventsProvider.preview.container.viewContext)
+        
     }
 }

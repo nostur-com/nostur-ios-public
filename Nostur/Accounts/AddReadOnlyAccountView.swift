@@ -8,34 +8,13 @@
 import SwiftUI
 
 struct AddReadOnlyAccountView: View {
-    @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.managedObjectContext) private var viewContext
-    
     @State var publicKeyHex = ""
     
     var accentColor: Color = Color.blue
     var grayBackground: Color = Color.gray.opacity(0.2)
     
-
-    fileprivate func addReadOnlyAccount() {
-        
-        let account = Account(context: viewContext)
-        account.id = UUID()
-        account.createdAt = Date()
-        account.publicKey = publicKeyHex
-        
-        do {
-            try viewContext.save()
-            activeAccountPublicKey = publicKeyHex
-        } catch {
-            // Replace this implementation with code to handle the error appropriately.
-            // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-            let nsError = error as NSError
-            fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-        }
-        dismiss()
-    }
+    var onCreate:((_ pubkey:String) -> Void)? = nil
     
     var body: some View {
         
@@ -51,7 +30,10 @@ struct AddReadOnlyAccountView: View {
                 .cornerRadius(5.0)
                 .padding(.bottom, 20)
             Button {
-                addReadOnlyAccount()
+                if (onCreate != nil) {
+                    onCreate!(publicKeyHex)
+                }
+                dismiss()
             } label: {
                 Text("Add")
                     .font(.headline)

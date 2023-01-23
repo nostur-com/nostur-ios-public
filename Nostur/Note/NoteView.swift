@@ -84,6 +84,7 @@ struct NoteView: View {
                                             .font(.system(size: 14))
                                             .foregroundColor(.primary)
                                             .fontWeight(.bold)
+                                            .lineLimit(1)
                                         
                                         if tweet.isVerified { // Verification check
                                             Image(systemName: "checkmark.seal.fill")
@@ -182,6 +183,7 @@ struct NoteView: View {
             // followed contact meta data refresh should be updated at app wake up probably
             if (note.contact == nil) {
                 print("☎️ note.contact == nil -> REQ metadata for pubkey \(note.publicKey)")
+                
                 cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: note.publicKey)))
             }
         }
@@ -198,8 +200,14 @@ struct NoteMenuView : View {
             Button {
                 UIPasteboard.general.string = note.id
             } label: {
-                Label("Copy note id \(note.id)", systemImage: "doc.on.clipboard")
+                Label("Copy note id hex \(note.id)", systemImage: "doc.on.clipboard")
             }
+            Button {
+                UIPasteboard.general.string = note.noteId
+            } label: {
+                Label("Copy note id \(note.noteId)", systemImage: "doc.on.clipboard")
+            }
+            
             Button {
                 print("Unfollow @\(note.username)")
             } label: {
@@ -236,21 +244,30 @@ struct NoteViewWrapper: View {
     
     var body: some View {
         
+
         VStack {
-            Text("event content: \(events.first!.content ?? "xx")")
-            Text("contact pubkey: \(contacts.first!.name ?? "xx")")
-            
-            
-            NoteView(note:Note(event:events.first!, contact: contacts.first))
+            if (events.first != nil) {
+                NoteView(note:Note(event:events.first!, responses:nil, contact: contacts.first))
+            }
+            else {
+                Text("No events")
+            }
         }
     }
 }
 
 
 struct NoteView_Previews: PreviewProvider {
+    
     static var previews: some View {
+        
+        let accountState = AccountState(viewContext: EventsProvider.preview.container.viewContext)
+        let cm = ConnectionManager()
+        
         NoteViewWrapper()
             .environment(\.managedObjectContext,
-                          PersistenceController.preview.container.viewContext)
+                          EventsProvider.preview.container.viewContext)
+            .environmentObject(accountState)
+            .environmentObject(cm)
     }
 }

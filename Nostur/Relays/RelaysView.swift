@@ -9,7 +9,6 @@ import SwiftUI
 import CoreData
 
 struct RelayRowView: View {
-//    @Environment(\.managedObjectContext) private var viewContext
     @ObservedObject var relay:Relay
     
     var body: some View {
@@ -57,16 +56,15 @@ struct RelaysView: View {
                 NavigationLink(value: relay) {
                     RelayRowView(relay: relay)
                 }
-            
+                
             }.onDelete(perform: deleteItems)
         }
         .onAppear {
-        
-//            for socket in cm.relaySockets {
-//                if (socket.relay.read || socket.relay.write) && !socket.relay.isConnected {
-//                    socket.socket.connect()
-//                }
-//            }
+            for socket in cm.relaySockets {
+                if (socket.relay.read || socket.relay.write) && !socket.relay.isConnected {
+                    socket.socket.connect()
+                }
+            }
         }
         .navigationTitle("Relays")
         .toolbar {
@@ -79,25 +77,27 @@ struct RelaysView: View {
             }
         }
         .navigationDestination(for: Relay.self) { relay in
-                RelayEditView(relay: relay)
+            RelayEditView(relay: relay)
         }
         .navigationDestination(isPresented: $createRelayPresented) {
-            NewRelayView()
-        }
-    }
-    
-    private func addItem() {
-        withAnimation {
-            let newItem = Relay(context: viewContext)
-            newItem.createdAt = Date()
-            
-            do {
-                try viewContext.save()
-            } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+            NewRelayView { url in
+                let relay = Relay(context: viewContext)
+                relay.id = UUID()
+                relay.createdAt = Date()
+                relay.url = url
+                
+                do {
+                    try viewContext.save()
+                    let relaySocket = RelaySocket(relay: relay, delegate: cm.eventReceivingDelegate)
+                    print("🟣🟣 connecting to \(relay.url ?? "?")")
+                    relaySocket.connect()
+                    cm.relaySockets.append(relaySocket)
+                } catch {
+                    // Replace this implementation with code to handle the error appropriately.
+                    // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
+                    let nsError = error as NSError
+                    fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+                }
             }
         }
     }
@@ -121,9 +121,13 @@ struct RelaysView: View {
 
 struct RelaysView_Previews: PreviewProvider {
     static var previews: some View {
+        
+        let cm = ConnectionManager()
+        
         NavigationStack {
             RelaysView().environment(\.managedObjectContext,
-                                      PersistenceController.preview.container.viewContext)
+                                      EventsProvider.preview.container.viewContext)
+            .environmentObject(cm)
         }
     }
 }

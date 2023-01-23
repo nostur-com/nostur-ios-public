@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 struct Note: Identifiable, Hashable {
     
@@ -14,6 +15,11 @@ struct Note: Identifiable, Hashable {
     var username:String { get { contact != nil ? (contact!.name ?? event.authorKey) : event.authorKey } }
     var publicKey:String { get { event.pubkey ?? "WHAT" } }
     var noteText:String { get { event.noteText } }
+    var noteId:String {
+        get {
+            event.id != nil ? try! NIP19(prefix: "note", hexString: event.id!).displayString : "?"
+        }
+    }
     
     static func == (lhs: Note, rhs: Note) -> Bool {
         return lhs.event.id == rhs.event.id
@@ -24,5 +30,6 @@ struct Note: Identifiable, Hashable {
     }
 
     let event:Event
-    var contact:Contact?
+    var responses:[Event]? = nil
+    var contact:Contact? = nil
 }

@@ -96,8 +96,9 @@ extension Contact : Identifiable {
             return
         }
         
-        let request = NSFetchRequest<Contact>()
-        request.entity = Contact.entity()
+        
+        let request = NSFetchRequest<Contact>(entityName: "Contact")
+//        request.entity = Contact.entity()
         request.predicate = NSPredicate(format: "pubkey == %@", event.publicKey)
         request.sortDescriptors = [NSSortDescriptor(key: "updated_at", ascending: false)]
         

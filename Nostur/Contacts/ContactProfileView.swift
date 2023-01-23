@@ -268,13 +268,16 @@ struct ContactProfileViewWrapper: View {
         
         if (metaDataEvents.first == nil) {
             Text("No metadata events for pubkey: \(pubkey)")
-//                .onAppear {
-//                    cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: pubkey)))
-//                }
+            .onAppear {
+                cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
+            }
         }
         
         if (contactListEvents.first == nil) {
             Text("No contact list events for pubkey: \(pubkey)")
+                .onAppear {
+                    cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: pubkey)))
+                }
         }
         
         let contactProfile = ContactProfile(contact: contacts.first!, clEvent: contactListEvents.first)
@@ -298,12 +301,12 @@ struct ContactProfileView_Previews: PreviewProvider {
         
         let cm = ConnectionManager()
         
-        let accountState = AccountState(viewContext: PersistenceController.preview.container.viewContext)
+        let accountState = AccountState(viewContext: EventsProvider.preview.container.viewContext)
         
         return ContactProfileViewWrapper()
             .defaultAppStorage(previewUserDefaults)
             .environment(\.managedObjectContext,
-                          PersistenceController.preview.container.viewContext)
+                          EventsProvider.preview.container.viewContext)
             .environmentObject(accountState)
             .environmentObject(cm)
     }

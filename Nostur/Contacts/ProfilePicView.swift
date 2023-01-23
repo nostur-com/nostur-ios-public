@@ -26,8 +26,8 @@ struct ProfilePicView : View {
                     Circle().foregroundColor(randomColor(seed: pubkey)).frame(maxWidth:50, maxHeight:50)
                 }
             }
-            
-            .processors([ImageProcessors.Resize(width: 50), ImageProcessors.Circle()])
+            .processors([ImageProcessors.Resize(width: 100), ImageProcessors.Circle()])
+//            .processors([ImageProcessors.Resize(size: CGSize(width: 50, height: 150), unit: .pixels, contentMode: .aspectFit, crop: true, upscale: true)])
             .animation(nil)
             .priority(.high)
             .pipeline(ImagePipeline {
@@ -38,7 +38,8 @@ struct ProfilePicView : View {
                     return conf
                 }())
 
-                $0.imageCache = ImageCache()
+                $0.dataCachePolicy = .storeEncodedImages
+                $0.imageCache = ImageCache.shared
                 $0.dataCache = try! DataCache(name: "com.nostur.2140.picture")
             })
         }
@@ -52,6 +53,12 @@ struct ProfilePicView : View {
 // FOR PREVIEW
 struct ProfilePicViewWrapper: View {
     
+    // animated gif profile pic
+    // 3f770d65d3a764a9c5cb503ae123e62ec7598ad035d836e2a810f3877a745b24
+    
+    // me
+    // 5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0
+    
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
         predicate: NSPredicate(format: "pubkey == %@", "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"),
@@ -59,8 +66,9 @@ struct ProfilePicViewWrapper: View {
     var contacts:FetchedResults<Contact>
     
     var body: some View {
+//        EmptyView()
         ProfilePicView(pubkey: "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", contact: contacts.first)
-            .frame(width: 100, height: 100)
+            .frame(width: 150, height: 150)
     }
 }
 
@@ -68,6 +76,6 @@ struct ProfilePicView_Previews: PreviewProvider {
     static var previews: some View {
         ProfilePicViewWrapper()
             .environment(\.managedObjectContext,
-                          PersistenceController.preview.container.viewContext)
+                          EventsProvider.preview.container.viewContext)
     }
 }

@@ -17,7 +17,7 @@ struct AccountView: View {
     @ObservedObject var account: Account
     @State var newPrivateKey = ""
     
-    let persistenceController = PersistenceController.shared
+    let persistenceController = EventsProvider.shared
     
     var body: some View {
         
@@ -163,7 +163,7 @@ struct AccountView: View {
 
 struct AccountView_Previews: PreviewProvider {
     
-    static var viewContext = PersistenceController.preview.container.viewContext
+    static var viewContext = EventsProvider.preview.container.viewContext
 
     static var previews: some View {
         
@@ -190,6 +190,6 @@ struct AccountView_Previews: PreviewProvider {
         account.about = "Test"
         
         return AccountView(account: account)
-            .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+            .environment(\.managedObjectContext, EventsProvider.preview.container.viewContext)
     }
 }

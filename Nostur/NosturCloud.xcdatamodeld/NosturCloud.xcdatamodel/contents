@@ -26,6 +26,7 @@
         <attribute name="pubkey" attributeType="String"/>
         <attribute name="updated_at" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="followedBy" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Account" inverseName="follows" inverseEntity="Account"/>
+        <relationship name="lists" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="NosturList" inverseName="contacts" inverseEntity="NosturList"/>
         <uniquenessConstraints>
             <uniquenessConstraint>
                 <constraint value="pubkey"/>
@@ -38,6 +39,8 @@
         <attribute name="id" attributeType="String"/>
         <attribute name="kind" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="pubkey" optional="YES" attributeType="String"/>
+        <attribute name="replyToId" optional="YES" attributeType="String"/>
+        <attribute name="replyToRootId" optional="YES" attributeType="String"/>
         <attribute name="sig" optional="YES" attributeType="String"/>
         <attribute name="tagsSerialized" optional="YES" attributeType="String"/>
         <uniquenessConstraints>
@@ -50,7 +53,7 @@
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="refreshedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
-        <relationship name="contacts" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact"/>
+        <relationship name="contacts" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact" inverseName="lists" inverseEntity="Contact"/>
     </entity>
     <entity name="Relay" representedClassName=".Relay" syncable="YES">
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
@@ -59,7 +62,4 @@
         <attribute name="url" optional="YES" attributeType="String"/>
         <attribute name="write" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
     </entity>
-    <configuration name="Local">
-        <memberEntity name="Event"/>
-    </configuration>
 </model>

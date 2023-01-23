@@ -9,12 +9,11 @@ import SwiftUI
 
 struct RelayEditView: View {
     
-    
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) var viewContext
     @ObservedObject var relay: Relay
     @EnvironmentObject var cm:ConnectionManager
-    @State private var refresh: Bool = false  //
+    @State private var refresh: Bool = false 
     
     
     var body: some View {
@@ -81,7 +80,7 @@ struct RelayEditView: View {
                     .foregroundColor(.white)
                     .padding()
                     .frame(width: 220, height: 50)
-                    .background(.cyan)
+                    .background(Color.accentColor)
                     .cornerRadius(15.0)
             }
             Spacer()
@@ -94,9 +93,12 @@ struct RelayEditView: View {
 }
 
 struct RelayEditView_Previews: PreviewProvider {
+    
     static var previews: some View {
         
-        let relay = Relay(context: PersistenceController.preview.container.viewContext)
+        let cm = ConnectionManager()
+        
+        let relay = Relay(context: EventsProvider.preview.container.viewContext)
         relay.id = UUID()
         relay.url = "wss://nostr.bitcoin.sex"
         relay.read = true
@@ -105,6 +107,8 @@ struct RelayEditView_Previews: PreviewProvider {
         
         return NavigationStack {
             RelayEditView(relay: relay)
+                .environment(\.managedObjectContext, EventsProvider.preview.container.viewContext)
+                .environmentObject(cm)
         }
     }
 }

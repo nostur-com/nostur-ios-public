@@ -19,43 +19,17 @@ struct NewAccountView: View {
     @State var name = ""
     @State var about = ""
     
-    var accentColor: Color = Color.blue
+    var accentColor: Color = .orange
     var grayBackground: Color = Color.gray.opacity(0.2)
     
-
-    fileprivate func createAccount() {
-
-        let newKeys = NKeys.newKeys()
-        
-//        print("Private key: \(privateKeyHex)") for testing. dont print this ever
-        print("Public key: \(newKeys.publicKeyHex())")
-
-        let account = Account(context: viewContext)
-        account.id = UUID()
-        account.createdAt = Date()
-        account.name = name
-        account.about = about
-        account.privateKey = newKeys.privateKeyHex()
-        account.publicKey = newKeys.publicKeyHex()
-        
-        do {
-            try viewContext.save()
-            activeAccountPublicKey = newKeys.publicKeyHex()
-        } catch {
-            // Replace this implementation with code to handle the error appropriately.
-            // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-            let nsError = error as NSError
-            fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-        }
-        dismiss()
-    }
+    var onCreate:((_ name:String, _ about:String) -> Void)? = nil
     
     var body: some View {
         
         VStack{
             Text("Create account")
                 .font(.largeTitle)
-                .foregroundColor(.accentColor)
+                .foregroundColor(Color("orange"))
                 .fontWeight(.semibold)
                 .padding(.bottom, 20)
             TextField("Name", text: $name)
@@ -71,7 +45,10 @@ struct NewAccountView: View {
                 .padding(.bottom, 20)
             
             Button {
-                createAccount()
+                if (onCreate != nil) {
+                    onCreate!(name, about)
+                }
+                dismiss()
             } label: {
                 Text("Create")
                     .font(.headline)
@@ -98,6 +75,6 @@ struct NewAccountView: View {
 
 struct NewAccountView_Previews: PreviewProvider {
     static var previews: some View {
-        NewAccountView(addReadOnlyAccountPresented: .constant(false)).environment(\.managedObjectContext, PersistenceController.shared.container.viewContext)
+        NewAccountView(addReadOnlyAccountPresented: .constant(false)).environment(\.managedObjectContext, EventsProvider.shared.container.viewContext)
     }
 }

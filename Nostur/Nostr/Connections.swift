@@ -13,11 +13,12 @@ import Starscream
 import SwiftyJSON
 
 public protocol EventDelegate {
-    func didReceiveEvent(text: String)
+//    func didReceiveEvent(text: String)
+    func fetchEventsIsNowDidReceive(text: String) async throws
 }
 
 class RelaySocket : WebSocketDelegate, ObservableObject {
-    var delegate: EventDelegate
+    var delegate: EventDelegate?
     @Published var relay: Relay
     
     @Published var socket: WebSocket!
@@ -27,7 +28,7 @@ class RelaySocket : WebSocketDelegate, ObservableObject {
         set(value) { relay.isConnected = value }
     }
     
-    init(relay: Relay, delegate: EventDelegate) {
+    init(relay: Relay, delegate: EventDelegate? = nil) {
         self.relay = relay
         self.delegate = delegate
     }
@@ -51,8 +52,11 @@ class RelaySocket : WebSocketDelegate, ObservableObject {
         case .text(let string):
             print("💬 Received text: \(string)".prefix(260))
             
-            // if event
-            delegate.didReceiveEvent(text: string)
+            if (delegate != nil) {
+                _ = Task {
+                    try! await delegate!.fetchEventsIsNowDidReceive(text: string)
+                }
+            }
         case .binary(let data):
             print("💾 Received data: \(data.count)")
         case .ping(_):
@@ -110,8 +114,8 @@ class ConnectionManager: ObservableObject {
                 //                print("🟢 sending message: \(text)")
                 //                relaySocket.send(text: text)
                 if message.type == .REQ || message.type == .CLOSE { // REQ AND CLOSE IS FOR ALL RELAYS
-//                    dump("🟢 SENDING TO \(relaySocket.relay.url!): \(message.message)")
-                    print("🟢 SENDING TO \(relaySocket.relay.url!): \(message.message)".prefix(260))
+                    dump("🟢 SENDING TO \(relaySocket.relay.url!): \(message.message)")
+//                    print("🟢 SENDING TO \(relaySocket.relay.url!): \(message.message)".prefix(260))
                     relaySocket.send(text: message.message)
                 }
                 else if message.type == .EVENT && relaySocket.relay.write { // EVENT IS ONLY FOR WRITE RELAYS
@@ -206,7 +210,13 @@ struct RequestMessage {
 """
     }
     
-    static func getAuthorsEvents(pubkeys:[String?], limit:Int = 100, subscriptionId:String? = nil) -> String {
+    static func getAuthorsEvents(pubkeys:[String?], limit:Int = 200, subscriptionId:String? = nil, since:NTimestamp? = nil) -> String {
+        
+        if since != nil {
+            return """
+    ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "limit": \(limit), "since": \(since!.timestamp)}]
+    """
+        }
         return """
 ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "limit": \(limit)}]
 """

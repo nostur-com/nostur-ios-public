@@ -8,10 +8,16 @@
 import SwiftUI
 
 struct AccountListView: View {
+    
+    let accountsRunLoop = Timer.publish(every: 2, tolerance: 1, on: .main, in: .common).autoconnect()
+    @State var fetching = true // fetching: true or, false if parsing
+    @State var isViewDisplayed = false
+    
     @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""
     @State var createAccountPresented = false
     @State var addReadOnlyAccountPresented = false
     
+    @EnvironmentObject var ep:EventsProvider
     @EnvironmentObject var cm:ConnectionManager
     @Environment(\.managedObjectContext) var viewContext
     
@@ -26,9 +32,9 @@ struct AccountListView: View {
     var contacts:FetchedResults<Contact>
     
     var body: some View {
-    
+        
         VStack {
-//            Text("\(identities.count)")
+            //            Text("\(identities.count)")
             if (accounts.count == 0) {
                 NewAccountView(addReadOnlyAccountPresented: $addReadOnlyAccountPresented)
             }
@@ -39,13 +45,13 @@ struct AccountListView: View {
                         NavigationLink(value:account, label:{
                             HStack {
                                 Text(account.name != "" ? account.name : account.publicKey ?? "(Unknown)")
-                                        .lineLimit(1)
+                                    .lineLimit(1)
                                 if account.publicKey == activeAccountPublicKey {
                                     Text("active")
                                         .foregroundColor(.white)
-                                        .padding(.horizontal, 5)
-                                        .background(.green)
-                                        .cornerRadius(5)
+                                        .padding(.horizontal, 10)
+                                        .background(Color("primary"))
+                                        .cornerRadius(8)
                                 }
                             }
                         })
@@ -65,15 +71,51 @@ struct AccountListView: View {
             }
         }
         .navigationDestination(isPresented: $createAccountPresented) {
-            NewAccountView(addReadOnlyAccountPresented: $addReadOnlyAccountPresented)
+            NewAccountView(addReadOnlyAccountPresented: $addReadOnlyAccountPresented) { name, about in
+                let newKeys = NKeys.newKeys()
+                
+                //        print("Private key: \(privateKeyHex)") for testing. dont print this ever
+                print("Public key: \(newKeys.publicKeyHex())")
+                
+                let account = Account(context: viewContext)
+                account.id = UUID()
+                account.createdAt = Date()
+                account.name = name
+                account.about = about
+                account.privateKey = newKeys.privateKeyHex()
+                account.publicKey = newKeys.publicKeyHex()
+                
+                do {
+                    try viewContext.save()
+                    activeAccountPublicKey = newKeys.publicKeyHex()
+                } catch {
+                    // Replace this implementation with code to handle the error appropriately.
+                    // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
+                    let nsError = error as NSError
+                    fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+                }
+            }
         }
         .navigationDestination(isPresented: $addReadOnlyAccountPresented) {
-            AddReadOnlyAccountView()
+            AddReadOnlyAccountView { pubkey in
+                let account = Account(context: viewContext)
+                account.id = UUID()
+                account.createdAt = Date()
+                account.publicKey = pubkey
+                
+                do {
+                    try viewContext.save()
+                    activeAccountPublicKey = pubkey
+                } catch {
+                    let nsError = error as NSError
+                    fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+                }
+            }
         }
         .navigationDestination(for: Account.self) { account in
             VStack {
                 Text("Name: \(account.name != "" ? account.name : "(Unknown)")")
-//                Text("Priv: \(account.privateKey ?? "(Unknown)")")
+                //                Text("Priv: \(account.privateKey ?? "(Unknown)")")
                 Text("Pub: \(account.publicKey ?? "(Unknown)")")
                 
                 AccountView(account: account)
@@ -112,7 +154,38 @@ struct AccountListView: View {
             let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys))
             cm.sendMessage(message)
             
-//            print(msg)
+            //            print(msg)
+        }
+        .onAppear {
+            self.isViewDisplayed = true
+        }
+        .onDisappear {
+            self.isViewDisplayed = false
+        }
+        .onReceive(accountsRunLoop) { time in
+            
+            if (!isViewDisplayed) {
+                return
+            }
+            
+            if (fetching) { // fetching
+                print("🍭🍭🍭 GONNA FETCH BABY 🍭🍭🍭🍭")
+                let pubkeys = accounts
+                    .filter { $0.privateKey == nil || $0.privateKey == "" }
+                    .map { $0.publicKey }
+                
+                let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys))
+                cm.sendMessage(message)
+            }
+            else { // parsing
+                _ = Task {
+                    try! await ep.parseMessagesFromQueue()
+                    print("queue count: \(ep.messageQueue.count)")
+                }
+                print("🧚🧚🧚 GONNA PARSE YEA 🧚🧚🧚")
+            }
+            
+            fetching = !fetching
         }
     }
     
@@ -161,20 +234,23 @@ struct AccountListView: View {
 
 struct AccountListView_Previews: PreviewProvider {
     
-//    static var viewContext = PersistenceController.preview.container.viewContext
+    //    static var viewContext = PersistenceController.preview.container.viewContext
     
     static var previews: some View {
         
-        let accountState = AccountState(viewContext: PersistenceController.preview.container.viewContext)
+        let accountState = AccountState(viewContext: EventsProvider.preview.container.viewContext)
         
         let cm = ConnectionManager()
+        
+        let eventsProvider = EventsProvider.shared
         
         NavigationStack {
             AccountListView(activeAccountPublicKey: "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0")
                 .environment(\.managedObjectContext,
-                              PersistenceController.preview.container.viewContext)
+                              EventsProvider.preview.container.viewContext)
                 .environmentObject(accountState)
                 .environmentObject(cm)
+                .environmentObject(eventsProvider)
         }
     }
 }

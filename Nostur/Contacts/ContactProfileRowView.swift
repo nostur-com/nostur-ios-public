@@ -19,8 +19,8 @@ struct ContactProfileRowView: View {
     @FetchRequest
     var metaDataEvents: FetchedResults<Event>
     
-//    @FetchRequest
-//    var contactListEvents: FetchedResults<Event>
+    //    @FetchRequest
+    //    var contactListEvents: FetchedResults<Event>
     
     init(pubkey:String) {
         self.pubkey = pubkey
@@ -34,22 +34,22 @@ struct ContactProfileRowView: View {
             predicate: NSPredicate(format: "pubkey == %@ AND kind == 0", pubkey)
         )
         
-//        _contactListEvents = FetchRequest(
-//            sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
-//            predicate: NSPredicate(format: "pubkey == %@ AND kind == 3", pubkey)
-//        )
+        //        _contactListEvents = FetchRequest(
+        //            sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
+        //            predicate: NSPredicate(format: "pubkey == %@ AND kind == 3", pubkey)
+        //        )
     }
     
     var body: some View {
         if (contacts.first != nil) {
-//            if (contactListEvents.first != nil) {
-//                let contactProfile = ContactProfile(contact: contacts.first!, clEvent: contactListEvents.first!)
-//                ContactProfileRowInner(contactProfile: contactProfile)
-//            }
-//            else {
-                let contactProfile = ContactProfile(contact: contacts.first!)
-                ContactProfileRowInner(contactProfile: contactProfile)
-//            }
+            //            if (contactListEvents.first != nil) {
+            //                let contactProfile = ContactProfile(contact: contacts.first!, clEvent: contactListEvents.first!)
+            //                ContactProfileRowInner(contactProfile: contactProfile)
+            //            }
+            //            else {
+            let contactProfile = ContactProfile(contact: contacts.first!)
+            ContactProfileRowInner(contactProfile: contactProfile)
+            //            }
             
         }
         else {
@@ -67,44 +67,66 @@ struct ContactProfileRowInner: View {
     @ObservedObject var contactProfile:ContactProfile
     
     var body: some View {
+        //        NavigationLink(value: contactProfile) {}
         
-        HStack(alignment: .top) {
-            NavigationLink(value: contactProfile) {
-                HStack(alignment: .top) {
+        NavigationLink(value: contactProfile) {
+            HStack {
+                VStack {
                     ProfilePicView(pubkey: contactProfile.publicKey, contact: contactProfile.contact)
                         .frame(width: 50, height: 50)
                         .clipShape(Circle())
-                    VStack(alignment: .leading) {
-                        Text(contactProfile.authorName).font(.headline).foregroundColor(.primary)
-                        Text("@\(contactProfile.username)").font(.subheadline).foregroundColor(.secondary)
-                        Text(contactProfile.about).foregroundColor(.primary)
-                    }.multilineTextAlignment(.leading)
+                    Spacer()
+                }
+                VStack(alignment: .leading) {
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text(contactProfile.authorName).font(.headline).foregroundColor(.primary)
+                                .lineLimit(1)
+                            Text("@\(contactProfile.username)").font(.subheadline).foregroundColor(.secondary)
+                                .lineLimit(1)
+                        }.multilineTextAlignment(.leading)
+                        Spacer()
+                        Button {
+                            if accountState.isFollowing(contactProfile.publicKey) {
+                                accountState.unfollow(contactProfile.publicKey)
+                            } else {
+                                accountState.follow(contactProfile.publicKey, cm: cm)
+                            }
+                        } label: {
+                            FollowButton(isFollowing:accountState.isFollowing(contactProfile.publicKey))
+                        }
+                    }
+                    Text(contactProfile.about).foregroundColor(.primary)
+                        .multilineTextAlignment(.leading)
                     Spacer()
                 }
             }
-            
-            Button {
-                if accountState.isFollowing(contactProfile.publicKey) {
-                    accountState.unfollow(contactProfile.publicKey)
-                } else {
-                    accountState.follow(contactProfile.publicKey, cm: cm)
-                }
-            } label: {
-                Text(accountState.isFollowing(contactProfile.publicKey) ? "Following" : "Follow")
-                    .frame(height: 30)
-                    .padding(.horizontal, 25)
-                //.padding(.vertical, 10)
-                    .font(.caption.weight(.bold))
-                    .foregroundColor(.primary)
-                    .background(.clear)
-                    .cornerRadius(20)
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(.primary, lineWidth: 1)
-                    }
-            }
         }
+    }
+}
+
+struct FollowButton: View {
+    @Environment(\.colorScheme) var colorScheme
+    var isFollowing: Bool = false
+    
+    var body: some View {
         
+        let whiteColor = colorScheme == .light ? Color.white : Color.black
+        let blackColor = colorScheme == .light ? Color.black : Color.white
+        
+        Text(isFollowing ? "Following" : "Follow")
+            .lineLimit(1)
+            .frame(width: 65, height: 30)
+            .padding(.horizontal, 25)
+        //.padding(.vertical, 10)
+            .font(.caption.weight(.heavy))
+            .foregroundColor(isFollowing ? blackColor : whiteColor)
+            .background(isFollowing ? whiteColor : blackColor)
+            .cornerRadius(20)
+            .overlay {
+                RoundedRectangle(cornerRadius: 15)
+                    .stroke(.gray, lineWidth: 1)
+            }
     }
 }
 
@@ -123,7 +145,10 @@ struct ContactProfileRowViewWrapper: View {
     var body: some View {
         let contactProfile = ContactProfile(contact: contacts.first!)
         
-        ContactProfileRowInner(contactProfile: contactProfile)
+        HStack {
+            ContactProfileRowInner(contactProfile: contactProfile).padding()
+            Divider()
+        }
     }
 }
 
@@ -139,12 +164,12 @@ struct ContactProfileRowView_Previews: PreviewProvider {
     
     static var previews: some View {
         
-        let accountState = AccountState(viewContext: PersistenceController.preview.container.viewContext)
+        let accountState = AccountState(viewContext: EventsProvider.preview.container.viewContext)
         
         ContactProfileRowViewWrapper()
             .defaultAppStorage(previewUserDefaults)
             .environment(\.managedObjectContext,
-                          PersistenceController.preview.container.viewContext)
+                          EventsProvider.preview.container.viewContext)
             .environmentObject(accountState)
     }
 }

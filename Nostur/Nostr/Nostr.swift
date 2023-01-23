@@ -147,8 +147,16 @@ public enum NEventKind: Codable, Equatable {
 public struct NEventTag: Codable {
     private let underlyingData: [String]
 
-    public var id: String {
+    public var type: String {
         return underlyingData.first!
+    }
+    
+    public var id: String {
+        return underlyingData.suffix(from: 1).first!
+    }
+    
+    public var pubkey: String {
+        return underlyingData.suffix(from: 1).first!
     }
 
     public var otherInformation: [String] {
@@ -156,15 +164,15 @@ public struct NEventTag: Codable {
     }
 
     public static func event(otherEventId: String, recommendedRelay: URL? = nil) -> NEventTag {
-        return NEventTag(id: "e", otherInformation: otherEventId, recommendedRelay?.absoluteString)
+        return NEventTag(type: "e", otherInformation: otherEventId, recommendedRelay?.absoluteString)
     }
-
+    
     public static func pubKey(publicKey: String, recommendedRelay: URL? = nil) -> NEventTag {
-        return NEventTag(id: "p", otherInformation: publicKey, recommendedRelay?.absoluteString)
+        return NEventTag(type: "p", otherInformation: publicKey, recommendedRelay?.absoluteString)
     }
-
-    public init(id: String, otherInformation: String?...) {
-        underlyingData = [id] + otherInformation.compactMap { $0 }
+    
+    public init(type: String, otherInformation: String?...) {
+        underlyingData = [type] + otherInformation.compactMap { $0 }
     }
 
     public init(from decoder: Decoder) throws {
@@ -267,9 +275,9 @@ struct NEvent: Codable {
         self.publicKey = keys.publicKeyHex()
         self.signature = String(bytes:sig.rawRepresentation.bytes)
 
-        print("🟣🟣 sign:")
-        print(self.id)
-        print(self.signature)
+//        print("🟣🟣 sign:")
+//        print(self.id)
+//        print(self.signature)
 
         return self
     }
@@ -283,21 +291,9 @@ struct NEvent: Codable {
         let serializedEvent = try! encoder.encode(serializableEvent)
         let sha256Serialized = SHA256.hash(data: serializedEvent)
 
-//        print("🟢🟢 verified:")
-        print(self.id)
-        print(String(bytes:sha256Serialized.bytes))
-
         guard self.id == String(bytes:sha256Serialized.bytes) else {
             throw "🔴🔴 Invalid ID 🔴🔴"
         }
-
-//        let xOnlyKey = try secp256k1.Signing.XonlyKey(rawRepresentation: Data(hexString: self.publicKey).bytes, keyParity: 1)
-//        let pubKey = secp256k1.Signing.PublicKey(xonlyKey: xOnlyKey)
-//
-//        let schnorrSignature = try secp256k1.Signing.SchnorrSignature(rawRepresentation: event.signature.bytes)
-
-        // public key from this event
-
 
         let xOnlyKey = try secp256k1.Signing.XonlyKey(rawRepresentation: self.publicKey.bytes, keyParity: 1)
         let pubKey = secp256k1.Signing.PublicKey(xonlyKey: xOnlyKey)
@@ -323,6 +319,89 @@ struct NEvent: Codable {
 
     func wrappedEventJson() -> String {
         return NRelayMessage.event(self)
+    }
+    
+    
+    // tags helpers
+    func eTags() -> [NEventTag] {
+        return tags.filter { $0.type == "e" }
+    }
+
+    func noEtags() -> Bool {
+        return eTags().count == 0
+    }
+
+    func oneEtag() -> Bool {
+        return eTags().count == 1
+    }
+
+    func twoEtags() -> Bool {
+        return eTags().count == 2
+    }
+
+    func manyEtags() -> Bool {
+        return eTags().count > 2
+    }
+    
+    
+    // E TAGS
+    func replyToEtag() -> NEventTag? {
+        if noEtags() {
+            return nil
+        }
+        // PREFERRED NEW METHOD
+        let replyEtags = tags.filter { $0.type == "e" && $0.otherInformation.count == 3 && $0.otherInformation[2] == "reply" }
+        if (replyEtags.count != 0) {
+            return replyEtags.first
+        }
+
+        // OLD METHOD
+        if oneEtag() {
+            return eTags().first
+        }
+        if (twoEtags() || manyEtags()) {
+            return eTags().last
+        }
+        return nil
+    }
+    
+    func replyToRootEtag() -> NEventTag? {
+        if noEtags() {
+            return nil
+        }
+        let rootEtag = tags.filter { $0.type == "e" && $0.otherInformation.count == 3 && $0.otherInformation[2] == "root" }.first
+        // PREFERRED NEW METHOD
+        if (rootEtag != nil) {
+            return rootEtag
+        }
+
+        // OLD METHOD
+        if oneEtag() {
+            return eTags().first
+
+        }
+        if (twoEtags() || manyEtags()) {
+            return eTags().first
+
+        }
+        return nil
+    }
+    
+    func mentionEtags() -> [NEventTag]? {
+        if noEtags() {
+            return nil
+        }
+        // PREFERRED NEW METHOD
+        let mentionEtags = tags.filter { $0.type == "e" && $0.otherInformation.count == 3 && $0.otherInformation[2] == "mention" }
+        if mentionEtags.count > 0 {
+            return mentionEtags
+        }
+
+        // OLD METHOD
+        if (!manyEtags()) { return nil }
+        let etags = eTags()
+        let etagsSlice = etags[1..<etags.count-1]
+        return Array(etagsSlice)
     }
 }
 

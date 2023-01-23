@@ -118,6 +118,7 @@ struct NoteDetailView: View {
                 // Tweet
                 HStack {
                     Text(note.noteText)
+                        .textSelection(.enabled)
                         .font(.system(size: 18))//.border(.red)
                     Spacer()
                 }.padding(.vertical,5)
@@ -159,11 +160,16 @@ struct NoteDetailView: View {
                 .padding(10)
             
             // Replies TODO
-//            LazyVStack {
-//                ForEach (tweet.replies ?? []) { tweet in
-//                    TweetView(tweet: tweet)
-//                }
-//            }
+            
+            if (note.responses != nil) {
+                LazyVStack {
+                    ForEach (note.responses!, id:\.id) { row in
+//                        Text("1")
+//                        Text("id: \(row.id ?? "") kind: \(row.kind) text:\(row.content ?? "")")
+                        NoteView(note:Note(event:row))
+                    }
+                }
+            }
             
             // Finished
             Spacer()
@@ -179,22 +185,41 @@ struct NoteDetailViewWrapper: View {
         predicate: NSPredicate(format: "pubkey == %@", "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"),
         animation: .none)
     var contacts:FetchedResults<Contact>
-    
-    @FetchRequest(fetchRequest:Event.textNotes())
+
+    // note.id 6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81
+    // pubkey: 5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
+        predicate: NSPredicate(format: "id == %@", "6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81"),
+        animation: .none)
     var events: FetchedResults<Event>
+
+    // note.id 6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81
+    // pubkey: 5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
+        predicate: NSPredicate(format: "replyToId == %@", "6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81"),
+        animation: .none)
+    var responses: FetchedResults<Event>
     
     var body: some View {
         
         VStack {
-            NoteDetailView(Note(event:events.first!, contact: contacts.first))
+            NoteDetailView(Note(event:events.first!, responses:responses.reversed(), contact: contacts.first))
         }
     }
 }
 
 struct NoteDetailView_Previews: PreviewProvider {
     static var previews: some View {
+        
+        let accountState = AccountState(viewContext: EventsProvider.preview.container.viewContext)
+        let cm = ConnectionManager()
+        
         NoteDetailViewWrapper()
             .environment(\.managedObjectContext,
-                                PersistenceController.preview.container.viewContext)
+                          EventsProvider.preview.container.viewContext)
+            .environmentObject(accountState)
+            .environmentObject(cm)
     }
 }

@@ -88,9 +88,3 @@ struct DummyUsers {
     }
 }
     
-
-struct DummyData_Previews: PreviewProvider {
-    static var previews: some View {
-        TimelineView(tweets:DummyTweets().tweets())
-    }
-}
