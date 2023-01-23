@@ -27,6 +27,9 @@ extension Event {
     
     @NSManaged public var replyToRootId: String?
     @NSManaged public var replyToId: String?
+    @NSManaged public var likes: Int64 // Cache
+    @NSManaged public var replies: Int64 // Cache
+    @NSManaged public var mentions: Int64 // Cache
 }
 
 extension Event : Identifiable {
@@ -116,91 +119,75 @@ extension Event : Identifiable {
         }
         return events
     }
-}
-
-/// A struct encapsulating the properties of a Quake.
-struct EventProperties: Decodable {
-
     
-    public var content: String?
-    public var created_at: Int64
-    public var id: String?
-    public var kind: Int16
-    public var pubkey: String?
-    public var sig: String?
-    public var tagsSerialized: String?
-    
-    public var replyToRootId: String?
-    public var replyToId: String?
-    
-    // MARK: Codable
-    
-    private enum CodingKeys: String, CodingKey {
-        case content
-        case created_At
-        case id
-        case kind
-        case pubkey
-        case sig
+    // NIP-10: Those marked with "reply" denote the id of the reply event being responded to.
+    // NIP-10: Those marked with "root" denote the root id of the reply thread being responded to.
+    static func updateRepliesCountCache(_ tags:[NEventTag], context:NSManagedObjectContext) throws {
+        // NIP-10: Those marked with "reply" denote the id of the reply event being responded to.
+        if let replyEtag = TagsHelpers(tags).replyToEtag() {
+            let request = NSFetchRequest<Event>()
+            request.entity = Event.entity()
+            request.predicate = NSPredicate(format: "id == %@", replyEtag.id)
+            
+            if let reactingToEvent = try context.fetch(request).first {
+                print("updating .replies for .id = \(String(describing: reactingToEvent.id))")
+                reactingToEvent.replies = reactingToEvent.replies + 1
+            }
+        }
         
-        // tags?
-        case tagsSerialized
-        case replyToRootId
-        case replyToId
-//        case magnitude = "mag"
+        // NIP-10: Those marked with "root" denote the root id of the reply thread being responded to.
+        if let rootEtag = TagsHelpers(tags).replyToRootEtag() {
+            if rootEtag.id != TagsHelpers(tags).replyToEtag()?.id { // dont increase counter if root reply id is same as reply id
+                let request = NSFetchRequest<Event>()
+                request.entity = Event.entity()
+                request.predicate = NSPredicate(format: "id == %@", rootEtag.id)
+                
+                if let reactingToEvent = try context.fetch(request).first {
+                    print("updating .replies for .id = \(String(describing: reactingToEvent.id))")
+                    reactingToEvent.replies = reactingToEvent.replies + 1
+                }
+            }
+        }
     }
     
-    init(from decoder: Decoder) throws {
-        
-        self.content = nil
-        self.created_at = Int64(Date().timeIntervalSinceNow)
-        self.id = nil
-        self.kind = 0
-        self.pubkey = "111"
-        self.sig = "11"
-        self.tagsSerialized = nil
-        self.replyToRootId = nil
-        self.replyToId = nil
-        
-//        let values = try decoder.container(keyedBy: CodingKeys.self)
-//        let rawMagnitude = try? values.decode(Float.self, forKey: .magnitude)
-//        let rawPlace = try? values.decode(String.self, forKey: .place)
-//        let rawTime = try? values.decode(Double.self, forKey: .time)
-//        let rawCode = try? values.decode(String.self, forKey: .code)
-//
-//        // Ignore earthquakes with missing data.
-//        guard let magntiude = rawMagnitude,
-//              let place = rawPlace,
-//              let time = rawTime,
-//              let code = rawCode
-//        else {
-//            let values = "code = \(rawCode?.description ?? "nil"), "
-//            + "mag = \(rawMagnitude?.description ?? "nil"), "
-//            + "place = \(rawPlace?.description ?? "nil"), "
-//            + "time = \(rawTime?.description ?? "nil")"
-//
-//            let logger = Logger(subsystem: "com.example.apple-samplecode.Earthquakes", category: "parsing")
-//            logger.debug("Ignored: \(values)")
-//
-//            throw QuakeError.missingData
-//        }
-//
-//        self.magnitude = magntiude
-//        self.place = place
-//        self.time = time
-//        self.code = code
+    // NIP-25: The generic reaction, represented by the content set to a + string, SHOULD be interpreted as a "like" or "upvote".
+    // NIP-25: The content MAY be an emoji, in this case it MAY be interpreted as a "like" or "dislike", or the client MAY display this emoji reaction on the post.
+    static func updateLikeCountCache(_ tags:[NEventTag], content:String, context:NSManagedObjectContext) throws {
+        switch content {
+        case "+","👍","🤙","❤️","🫂","🤗","😘","😍","💯","🤩":
+            // # NIP-25: The last e tag MUST be the id of the note that is being reacted to.
+            if let lastEtag = TagsHelpers(tags).eTags().last {
+                let request = NSFetchRequest<Event>()
+                request.entity = Event.entity()
+                request.predicate = NSPredicate(format: "id == %@", lastEtag.id)
+                
+                if let reactingToEvent = try context.fetch(request).first {
+                    print("updating .likes for .id = \(String(describing: reactingToEvent.id))")
+                    reactingToEvent.likes = reactingToEvent.likes + 1
+//                                            try reactingToEvent.managedObjectContext?.save()
+                }
+            }
+        case "-":
+            print("downvote")
+        default:
+            print("unhandled reaction")
+        }
     }
     
-    // The keys must have the same name as the attributes of the Quake entity.
-    var dictionaryValue: [String: Any] {
-        [
-            "magnitude": 1
-        ]
-//        [
-//            "magnitude": magnitude,
-//            "place": place,
-//            "time": Date(timeIntervalSince1970: TimeInterval(time) / 1000),
-//            "code": code
-//        ]
+    // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
+    static func updateMentionsCountCache(_ tags:[NEventTag], context:NSManagedObjectContext) throws {
+        // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
+        if let mentionEtags = TagsHelpers(tags).mentionEtags() {
+            for etag in mentionEtags {
+                let request = NSFetchRequest<Event>()
+                request.entity = Event.entity()
+                request.predicate = NSPredicate(format: "id == %@", etag.id)
+                
+                if let reactingToEvent = try context.fetch(request).first {
+                    print("updating .mentions for .id = \(String(describing: reactingToEvent.id))")
+                    reactingToEvent.mentions = reactingToEvent.mentions + 1
+                }
+            }
+        }
     }
 }

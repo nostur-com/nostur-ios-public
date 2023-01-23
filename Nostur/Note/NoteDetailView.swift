@@ -7,172 +7,218 @@
 
 import SwiftUI
 
+// A Note and its repies, shown when tapping on a NoteRow
 struct NoteDetailView: View {
-    var tweet : Tweet = Tweet()
-    let note:Note
+    
+    @EnvironmentObject var cm:ConnectionManager
+    
+    var note:Note
+    
+    @FetchRequest
+    var responses:FetchedResults<Event>
     
     init(_ note:Note) {
         self.note = note
+        
+        _responses = FetchRequest(
+            sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
+            predicate: NSPredicate(format: "replyToId == %@ AND kind == 1", note.id)
+        )
     }
     
     var body: some View {
-        VStack {
-            // Parent Tweet
-            
-            
-            VStack {
-                // Retweeted header
-                if tweet.retweetedByName != "" {
-                    HStack { // retweet header
-                        // Retweet icon
-                        Image(systemName:"arrow.2.squarepath")
-                            .font(.system(size: 12, weight: .heavy))
-                        //                    .shadow(color: .gray, radius: 2, x: 3, y: 3)
-                            .foregroundColor(.secondary)
-                        //                    .scaleEffect(0.7)
-                            .frame(maxWidth:50, alignment: .trailing)
-                        Text("\(tweet.retweetedByName) Retweeted")
-                            .font(
-                                .system(size: 12)
-                                .weight(.heavy)
-                            )
-                        //                    .font(.system(size: 12, weight: .heavy))
-                            .foregroundColor(.secondary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        // Retweeter name
-                        
-                    }.padding(.leading, 10)
-                }
-                
-                HStack {
-                    // profile image
-//                    Image(tweet.profileImageName).resizable().scaledToFit()
-//                        .clipShape(Circle())
-//                        .shadow(color: .gray, radius: 1.0)
-//                        .frame(maxWidth:50, maxHeight:50)
-                    
-                    if (note.contact != nil) {
-                        ProfilePicView(pubkey: note.publicKey, contact: note.contact!)
-                            .frame(maxWidth:50, maxHeight:50)
-                    }
-                    else {
-                        ProfilePicView(pubkey: note.publicKey)
-                            .frame(maxWidth:50, maxHeight:50)
-                    }
-                    // name and username
-                    
-                    HStack {
-                        VStack {
-                            
-                            HStack(spacing:2) {
-                                Text(note.authorName) // Name
-                                    .font(.system(size: 14))
-                                    .fontWeight(.bold)
-                                
-                                if tweet.isVerified { // Verification check
-                                    Image(systemName: "checkmark.seal.fill")
-                                        .foregroundColor(.blue)
-                                        .font(.system(size: 13))
-                                }
-                                Spacer()
-                            }
-                            
-                            HStack {
-                                Text("@\(note.username)") // Username
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                            }
-                            
-                        }//.border(.red)
-                    }
-                    
-                    Menu {
-                        Button {
-                            print("Unfollow @\(note.username)")
-                        } label: {
-                            Label("Unfollow @\(note.username)", systemImage: "person.fill.xmark")
-                        }
-                        Button {
-                            print("Block @\(note.username)")
-                        } label: {
-                            Label("Block @\(note.username)", systemImage: "slash.circle")
-                        }
-                    } label: {
-                        Text("···")
-                            .foregroundColor(.secondary)
-                            .padding(.top, 0)
-                            .padding(.bottom, 10)
-                            .padding(.leading, 20)
-                            .padding(.trailing, 10)
-                        
-                    }
-                }
-                // "Replying to"
-                if (tweet.replyToUsername != "") {
-                    HStack {
-                        Text("Replying to @\(tweet.replyToUsername)")//.border(.red)
-                        Spacer()
-                    }
-                }
-                // Tweet
-                HStack {
-                    Text(note.noteText)
-                        .textSelection(.enabled)
-                        .font(.system(size: 18))//.border(.red)
-                    Spacer()
-                }.padding(.vertical,5)
-            }.padding(10)
-            
-            
-            Divider()
+        NoteDetailViewInner(note:Note(event:note.event, responses:responses.reversed(), contact: note.contact))
+    }
+}
 
-            // Footer
-            HStack { // Footer stats
-                Button(action: {
-                    // Handle retweet action
-                }) {
-                    HStack {
-                        Image(systemName: "message")
-                        Text("\(tweet.replyCount)")
-                    }.frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
-                }
+// A Note and its repies, shown when tapping on a NoteRow
+struct NoteDetailViewInner: View {
+    var tweet : Tweet = Tweet()
+    let note:Note
+    @EnvironmentObject var cm:ConnectionManager
+    
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
+        animation: .none)
+    var contacts:FetchedResults<Contact>
+    
+    func contact(byPubkey:String?) -> Contact? {
+        guard byPubkey != nil else {
+            return nil
+        }
+        return contacts.first(where: { ($0.pubkey != nil) && $0.pubkey == byPubkey})
+    }
+    
+    func allContactPubkeys() -> Set<String> {
+        return Set(contacts.map { $0.pubkey! })
+    }
+    
+    
+    var body: some View {
+        ScrollView {
+            VStack {
+                // Parent Tweet
                 
                 
-                Button(action: {
-                    // Handle retweet action
-                }) {
+                VStack {
+                    // Retweeted header
+                    if tweet.retweetedByName != "" {
+                        HStack { // retweet header
+                            // Retweet icon
+                            Image(systemName:"arrow.2.squarepath")
+                                .font(.system(size: 12, weight: .heavy))
+                            //                    .shadow(color: .gray, radius: 2, x: 3, y: 3)
+                                .foregroundColor(.secondary)
+                            //                    .scaleEffect(0.7)
+                                .frame(maxWidth:50, alignment: .trailing)
+                            Text("\(tweet.retweetedByName) Retweeted")
+                                .font(
+                                    .system(size: 12)
+                                    .weight(.heavy)
+                                )
+                            //                    .font(.system(size: 12, weight: .heavy))
+                                .foregroundColor(.secondary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            // Retweeter name
+                            
+                        }.padding(.leading, 10)
+                    }
+                    
                     HStack {
-                        Image(systemName: "arrow.2.squarepath")
-                        Text("\(tweet.retweetCount)")
-                    }.frame(maxWidth: .infinity, alignment: .center).font(.system(size: 14))
-                }
+                        if (note.contact != nil) {
+                            NavigationLink(value: ContactProfile(contact: note.contact!), label: {
+                                ProfilePicView(pubkey: note.publicKey, contact:note.contact)
+                                    .frame(width:50, height:50)
+                                    .clipShape(Circle())
+                            })
+                        }
+                        else {
+                            ProfilePicView(pubkey: note.publicKey)
+                                .frame(width:50, height:50)
+                                .clipShape(Circle())
+                        }
+                        // name and username
+                        
+                        HStack {
+                            VStack {
+                                
+                                HStack(spacing:2) {
+                                    Text(note.authorName) // Name
+                                        .font(.system(size: 14))
+                                        .fontWeight(.bold)
+                                    
+                                    if tweet.isVerified { // Verification check
+                                        Image(systemName: "checkmark.seal.fill")
+                                            .foregroundColor(.blue)
+                                            .font(.system(size: 13))
+                                    }
+                                    Spacer()
+                                }
+                                
+                                HStack {
+                                    Text("@\(note.username)") // Username
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                }
+                                
+                            }//.border(.red)
+                        }
+                        
+                        NoteMenuView(note)
+                    }
+//                    .background(.red)
+                    // "Replying to"
+                    if (note.event.replyToId != nil) {
+                        HStack {
+                            Text("Replying to @\(String(note.event.replyToId!.prefix(5)))")
+                            Spacer()
+                        }
+                    }
+                    // Tweet
+                    HStack {
+                        Text(note.noteText)
+                            .textSelection(.enabled)
+                            .font(.system(size: 18))//.border(.red)
+                        Spacer()
+                    }.padding(.vertical,5)
+                        
+                }.padding(10)
                 
-                Button(action: {
-                    // Handle like action
-                }) {
-                    HStack {
-                        Image(systemName: "heart")
-                        Text("\(tweet.likeCount)")
-                    }.frame(maxWidth: .infinity, alignment: .trailing).font(.system(size: 14))
-                }
-            }.foregroundColor(.gray)
-                .padding(10)
-            
-            // Replies TODO
-            
-            if (note.responses != nil) {
-                LazyVStack {
-                    ForEach (note.responses!, id:\.id) { row in
-//                        Text("1")
-//                        Text("id: \(row.id ?? "") kind: \(row.kind) text:\(row.content ?? "")")
-                        NoteView(note:Note(event:row))
+                
+                Divider()
+
+                // Footer
+                HStack { // Footer stats
+                    Spacer()
+                    Button(action: {
+                        // Handle retweet action
+                    }) {
+                        HStack {
+                            Image(systemName: "message")
+                            Text("\(note.responses?.count ?? 0)")
+                        }.frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
+                    }
+    //                Spacer()
+                    Button(action: {
+                        // Handle retweet action
+                    }) {
+                        HStack {
+                            Image(systemName: "arrow.2.squarepath")
+                            Text("\(note.event.mentions)")
+                        }.frame(maxWidth: .infinity, alignment: .center).font(.system(size: 14))
+                    }
+    //                Spacer()
+                    Button(action: {
+                        // Handle like action
+                    }) {
+                        HStack {
+                            Image(systemName: "heart")
+                            Text("\(note.event.likes)")
+                        }.frame(maxWidth: .infinity, alignment: .trailing).font(.system(size: 14))
+                    }
+                    Spacer()
+                }.foregroundColor(.gray)
+                    .padding(10)
+                
+                // Replies TODO
+                
+                if (note.responses != nil) {
+                    LazyVStack {
+                        ForEach (note.responses!, id:\.id) { row in
+                            NoteRowView(note:Note(event:row))
+                        }
                     }
                 }
+                
+                // Finished
+                Spacer()
+            }
+        }
+        .onAppear {
+            
+            print("onAPEAAR)")
+            if (note.responses == nil) {
+                return
             }
             
-            // Finished
-            Spacer()
+            print("onAPEAffffffR)")
+            // all known pubkeys SET
+            let allContactPubkeys = allContactPubkeys()
+            let responsesPubkeys:Set<String> = Set(note.responses!.map { $0.pubkey! })
+            
+            // .REQ meta for all responses
+            let pubkeysToRequest = responsesPubkeys.subtracting(allContactPubkeys)
+            
+            print("onAPEAdfsfdsdsdsdAR) \(pubkeysToRequest.count)")
+            
+            if (pubkeysToRequest.count > 0) {
+                cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: Array(pubkeysToRequest), limit: 200)))
+            }
+
+            // SET A is NOT in B
+            //cm.REQ
+            
         }
     }
 }
@@ -205,7 +251,7 @@ struct NoteDetailViewWrapper: View {
     var body: some View {
         
         VStack {
-            NoteDetailView(Note(event:events.first!, responses:responses.reversed(), contact: contacts.first))
+            NoteDetailViewInner(note:Note(event:events.first!, responses:responses.reversed(), contact: contacts.first))
         }
     }
 }

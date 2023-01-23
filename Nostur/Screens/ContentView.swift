@@ -16,38 +16,49 @@ struct ContentView: View {
     @State var path = NavigationPath()
     
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
+//        entity: Contact.entity(),
+//        sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
+        sortDescriptors: [SortDescriptor(\Contact.updated_at, order: .reverse)],
         animation: .none)
-    var contacts:FetchedResults<Contact>
+    var contacts:FetchedResults<Contact> // ALL CONTACTS
     
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)],
-        predicate: NSPredicate(format: "kind == 1"),
+//        entity: Event.entity(),
+//        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)],
+        sortDescriptors: [SortDescriptor(\Event.created_at, order: .forward)],
+        predicate: NSPredicate(format: "kind == 1 && replyToId == nil"),
         animation: .none)
-    var events: FetchedResults<Event>
+    var events: FetchedResults<Event> // NOTES (NOT REPLIES)
     
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
+//        entity: Event.entity(),
+//        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
+        sortDescriptors: [SortDescriptor(\Event.created_at, order: .forward)],
         animation: .none)
-    var eventsAll: FetchedResults<Event>
+    var eventsAll: FetchedResults<Event> // NOTES AND REPLIES
     
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
+//        entity: Event.entity(),
+//        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
+        sortDescriptors: [SortDescriptor(\Event.created_at, order: .forward)],
         predicate: NSPredicate(format: "kind == 0"),
         animation: .none)
-    var eventsMeta: FetchedResults<Event>
+    var eventsMeta: FetchedResults<Event> // CONTACT ABOUT INFO
     
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
+//        entity: Event.entity(),
+//        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
+        sortDescriptors: [SortDescriptor(\Event.created_at, order: .forward)],
         predicate: NSPredicate(format: "kind == 3"),
         animation: .none)
-    var eventsCL: FetchedResults<Event>
+    var eventsCL: FetchedResults<Event> // CONTACT FOLLOWING CONTACTS
     
     @FetchRequest(
+        entity: Event.entity(),
         sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
         predicate: NSPredicate(format: "kind == 7"),
         animation: .none)
-    var eventsR: FetchedResults<Event>
+    var eventsR: FetchedResults<Event> // REACTIONS TO NOTES
     
     
     @EnvironmentObject var cm:ConnectionManager
@@ -56,7 +67,7 @@ struct ContentView: View {
         VStack {
             TabView {
             NavigationStack {
-                MainTimeline(contacts: contacts, events: events)
+                MainTimelineView(contacts: contacts, events: events)
                     .navigationDestination(for: Note.self) { note in
                         NoteDetailView(note)
                     }
@@ -87,7 +98,7 @@ struct ContentView: View {
                 Image(systemName: "person.badge.key.fill")
             }
             NavigationStack {
-                RelaysView()
+                ConfigurationView()
                 Spacer()
             }
             .tabItem { Image(systemName: "server.rack") }

@@ -102,7 +102,7 @@ extension Contact : Identifiable {
         request.predicate = NSPredicate(format: "pubkey == %@", event.publicKey)
         request.sortDescriptors = [NSSortDescriptor(key: "updated_at", ascending: false)]
         
-        if let contact = try! context.fetch(request).first {
+        if let contact = try! context.fetch(request).first { // Thread 20: EXC_BAD_ACCESS (code=1, address=0xc4f8890)
             
             // Received metadata is newer than stored Contact
             if contact.updated_at < event.createdAt.timestamp {

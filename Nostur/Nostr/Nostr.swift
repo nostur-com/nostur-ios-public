@@ -320,9 +320,15 @@ struct NEvent: Codable {
     func wrappedEventJson() -> String {
         return NRelayMessage.event(self)
     }
+}
+
+struct TagsHelpers {
+    var tags:[NEventTag]
     
+    init(_ tags:[NEventTag]) {
+        self.tags = tags
+    }
     
-    // tags helpers
     func eTags() -> [NEventTag] {
         return tags.filter { $0.type == "e" }
     }

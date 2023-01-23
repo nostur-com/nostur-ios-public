@@ -122,12 +122,13 @@ struct RelaysView: View {
 struct RelaysView_Previews: PreviewProvider {
     static var previews: some View {
         
+        let accountState = AccountState(viewContext: EventsProvider.preview.container.viewContext)
+        
         let cm = ConnectionManager()
         
         NavigationStack {
-            RelaysView().environment(\.managedObjectContext,
-                                      EventsProvider.preview.container.viewContext)
-            .environmentObject(cm)
+            RelaysView()
+                .environment(\.managedObjectContext, EventsProvider.preview.container.viewContext).environmentObject(accountState).environmentObject(cm)
         }
     }
 }

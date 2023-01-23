@@ -11,6 +11,12 @@ actor Queue<T> {
     private var elements: [T] = []
     var count:Int { get { elements.count } }
     
+    var backgroundTaskCounter:UInt = 0
+    
+    func incrementCounter() {
+        backgroundTaskCounter = backgroundTaskCounter + 1
+    }
+    
     func enqueue(_ value: T) {
         elements.append(value)
     }

@@ -8,7 +8,8 @@
 import SwiftUI
 import CoreData
 
-struct MainTimeline: View {
+// The main time line, basically a list of NoteRowViews
+struct MainTimelineView: View {
     
     // every 8 seconds, should toggle between fetch and parse
     // 0..fetch....8..parse...16...fetch....24....parse...etc..
@@ -17,6 +18,8 @@ struct MainTimeline: View {
     // parse every 5 is now done on NosturApp
     let timelineRunLoop = Timer.publish(every: 8, tolerance: 1, on: .main, in: .common).autoconnect()
     
+    @State var timesFetchedWhileUnread = 0 // Increases if there are unread messages (prevent unnecessary refresh)
+    @State var shouldSkipTimes = 0
     @State var fetching = true // fetching: true or, false if parsing
     @State var isViewDisplayed = false
     
@@ -41,7 +44,7 @@ struct MainTimeline: View {
         return contacts.first(where: { ($0.pubkey != nil) && $0.pubkey == byPubkey})
     }
     
-    func fetchEventsFromFollowing(amount:Int? = 200) {
+    func fetchEventsFromFollowing(amount:Int? = 500) {
 //        let allContacts = contacts.map { $0.pubkey }
         
         for socket in cm.relaySockets {
@@ -53,7 +56,7 @@ struct MainTimeline: View {
         
         
         let followingPubkeys = [String](accountState.followingPublicKeys)
-        cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorsEvents(pubkeys: followingPubkeys, limit: amount!, since: ep.lastTimelineEventTimestamp)))
+        cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getFollowingEvents(pubkeys: followingPubkeys, limit: amount!, since: ep.lastTimelineEventTimestamp)))
     }
     
     
@@ -87,7 +90,7 @@ struct MainTimeline: View {
                             LazyVStack {
                                 ForEach(events.indices, id:\.self) { index in
                                     let note = Note(event: events[index], responses:[], contact: contact(byPubkey: events[index].pubkey))
-                                    NoteView(note:note)
+                                    NoteRowView(note:note)
                                         .onAppear {
                                             print("🍿🍿 appear index: \(index) lastUnreadIndex: \(lastUnreadIndex) events.count: \(events.count)")
                                             if (index > lastUnreadIndex) {
@@ -97,6 +100,9 @@ struct MainTimeline: View {
                                                 print("🍿🍿 unread: \(unread) (was: \(unreadOld))")
                                             }
                                             lastAppearedIndex = index
+                                            if (index == events.count-1) {
+                                                lastUnreadIndex = index
+                                            }
                                         }
                                         .scaleEffect(x: 1, y: -1)
                                 }
@@ -115,6 +121,10 @@ struct MainTimeline: View {
                             print("🍿🍿 events.count: \(events.count) newCount: \(newCount) unread: \(unread) (was: \(unreadOld))")
                         }
                         .onAppear {
+                            
+                            shouldSkipTimes = 0
+                            timesFetchedWhileUnread = 0
+                            
                             print("🍿🍿 onAppear: lastAppearedIndex \(lastAppearedIndex) events.count:\(events.count) unread: \(unread) (not changed)")
                             if (!restored) {
                                 proxy.scrollTo(lastAppearedIndex)
@@ -146,19 +156,50 @@ struct MainTimeline: View {
             }
         }
         .onAppear {
-                self.isViewDisplayed = true
+            self.isViewDisplayed = true
+            shouldSkipTimes = 0
+            timesFetchedWhileUnread = 0
         }
         .onDisappear {
             self.isViewDisplayed = false
         }
         .onReceive(timelineRunLoop) { time in
-            
+                    
             if (!isViewDisplayed) {
                 return
             }
-
+            
+            print("unread is: \(unread) timesFetchedWhileUnread: \(timesFetchedWhileUnread) shouldSkipTimes: \(shouldSkipTimes)")
+            
+            
+            if (unread > 0 && shouldSkipTimes > 0) {
+                shouldSkipTimes = shouldSkipTimes - 1
+                return
+            }
+            
+            
             print("🍭🍭🍭 GONNA FETCH BABY 🍭🍭🍭🍭")
-            fetchEventsFromFollowing(amount: 200)
+            fetchEventsFromFollowing(amount: 500)
+            
+            if (unread > 0) {
+                shouldSkipTimes = timesFetchedWhileUnread + shouldSkipTimes + 1
+                timesFetchedWhileUnread = timesFetchedWhileUnread + 1
+                
+                if (shouldSkipTimes > 8) {
+                    shouldSkipTimes = 8
+                    timesFetchedWhileUnread = 0
+                    print("never skip more than 8 times")
+                }
+                else {
+                    print("increase delay!")
+                }
+                
+            }
+            else {
+                print("delay reset")
+                shouldSkipTimes = 0
+                timesFetchedWhileUnread = 0
+            }
             
 //            if (fetching) { // fetching
 //                print("🍭🍭🍭 GONNA FETCH BABY 🍭🍭🍭🍭")
@@ -185,19 +226,23 @@ struct MainTimelineWrapper: View {
     @Environment(\.managedObjectContext) var viewContext
     
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
+//        entity: Contact.entity(),
+//        sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
+        sortDescriptors: [SortDescriptor(\Contact.updated_at, order: .reverse)],
         animation: .none)
     var contacts:FetchedResults<Contact>
     
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)],
+//        entity: Event.entity(),
+//        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)],
+        sortDescriptors: [SortDescriptor(\Event.created_at, order: .reverse)],
         predicate: NSPredicate(format: "kind == 1 and replyToId == nil"),
         animation: .none)
     var events: FetchedResults<Event>
     
     var body: some View {
         VStack {
-            MainTimeline(contacts: contacts, events: events)
+            MainTimelineView(contacts: contacts, events: events)
         }
     }
 }

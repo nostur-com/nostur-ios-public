@@ -224,9 +224,12 @@ struct ContactProfileViewInner: View {
                 print("☎️ CPVinner: REQ metadata for pubkey \(contactProfile.publicKey)")
                 cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: contactProfile.publicKey)))
             }
+            
 
-            print("📙 CPVinner REQ contact list for pubkey \(contactProfile.publicKey)")
-            cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: contactProfile.publicKey)))
+            if (contactProfile.clEvent == nil) {
+                print("📙 CPVinner REQ contact list for pubkey \(contactProfile.publicKey)")
+                cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: contactProfile.publicKey)))
+            }
 
             if let pubkeys = contactProfile.contactsPubkeys(), pubkeys.count > 0 {
                 print("📙📙📙📙📙 REQ META DATA FOR CL P TAGS")

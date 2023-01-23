@@ -16,11 +16,11 @@ class EventsProvider: ObservableObject, EventDelegate {
     var queue = Queue<RelayMessage>()
     
     var lastTimelineEventTimestamp:NTimestamp? = nil
-//    let queue = DispatchQueue(label: "RelayMessageQueue")
-//    let queue = DispatchQueue(label: "RelayMessageQueue", qos: .default)
+    //    let queue = DispatchQueue(label: "RelayMessageQueue")
+    //    let queue = DispatchQueue(label: "RelayMessageQueue", qos: .default)
     var cm:ConnectionManager? = nil
     //    var messageQueue:[RelayMessage] = []
-//    var messageQueue:Queue<RelayMessage> = Queue<RelayMessage>()
+    //    var messageQueue:Queue<RelayMessage> = Queue<RelayMessage>()
     
     // MARK: Logging
     let logger = Logger(subsystem: "com.nostir.2140.Events", category: "persistence")
@@ -95,7 +95,7 @@ class EventsProvider: ObservableObject, EventDelegate {
                     switch event.kind {
                     case .setMetadata:
                         Contact.handleSetMetadataEvent(event: event, context: viewContext)
-//                    case .custom(3):
+                        //                    case .custom(3):
                         
                     default:
                         print("unhandled event")
@@ -146,38 +146,38 @@ class EventsProvider: ObservableObject, EventDelegate {
     /// A persistent container to set up the Core Data stack.
     lazy var container: NSPersistentContainer = {
         let container = NSPersistentContainer(name: "NosturCloud")
-
+        
         guard let description = container.persistentStoreDescriptions.first else {
             fatalError("Failed to retrieve a persistent store description.")
         }
         
         
         let defaultDirectoryURL = NSPersistentContainer.defaultDirectoryURL()
-    
+        
         
         description.url = defaultDirectoryURL.appendingPathComponent("Nostur-iCloud.sqlite")
         description.configuration = "Default"
-
+        
         if inMemory {
             description.url = URL(fileURLWithPath: "/dev/null")
         }
-
+        
         // Enable persistent store remote change notifications
         /// - Tag: persistentStoreRemoteChange
         description.setOption(true as NSNumber,
                               forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
-
+        
         // Enable persistent history tracking
         /// - Tag: persistentHistoryTracking
         description.setOption(true as NSNumber,
                               forKey: NSPersistentHistoryTrackingKey)
-
+        
         container.loadPersistentStores { storeDescription, error in
             if let error = error as NSError? {
                 fatalError("Unresolved error \(error), \(error.userInfo)")
             }
         }
-
+        
         // This sample refreshes UI by consuming store changes via persistent history tracking.
         /// - Tag: viewContextMergeParentChanges
         container.viewContext.automaticallyMergesChangesFromParent = false
@@ -190,74 +190,74 @@ class EventsProvider: ObservableObject, EventDelegate {
         
         
         
-//        /// - Tag: persistentContainer
-//        //        let container = NSPersistentCloudKitContainer(name: "Events")
-//        container = NSPersistentCloudKitContainer(name: "NosturCloud")
-//        
-//        let defaultDirectoryURL = NSPersistentCloudKitContainer.defaultDirectoryURL()
-//        
-//        let cloudDescription = NSPersistentStoreDescription(url: defaultDirectoryURL.appendingPathComponent("Nostur-iCloud.sqlite"))
-//        cloudDescription.configuration = "Default"
-//        
-////        let localDescription = NSPersistentStoreDescription(url: defaultDirectoryURL.appendingPathComponent("Nostur-local.sqlite"))
-////        localDescription.configuration = "Local"
-//        
-//        
-//        
-//        container.viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
-//        //        container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
-//        
-//        container.persistentStoreDescriptions = [cloudDescription]
-////        container.persistentStoreDescriptions = [cloudDescription, localDescription]
-//        
-//        guard let description = container.persistentStoreDescriptions.first else {
-//            fatalError("Failed to retrieve a persistent store description.")
-//        }
-//        
-//        if inMemory {
-//            for descripton in container.persistentStoreDescriptions {
-//                description.url = URL(fileURLWithPath: "/dev/null")
-//            }
-//        }
-//        
-//        for descripton in container.persistentStoreDescriptions {
-//            // Enable persistent store remote change notifications
-//            /// - Tag: persistentStoreRemoteChange
-//            description.setOption(true as NSNumber,
-//                                  forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
-//            
-//            // Enable persistent history tracking
-//            /// - Tag: persistentHistoryTracking
-//            description.setOption(true as NSNumber,
-//                                  forKey: NSPersistentHistoryTrackingKey)
-//        }
-//        
-//        
-////        guard let description = container.persistentStoreDescriptions.first else {
-////            fatalError("Failed to retrieve a persistent store description.")
-////        }
-//        
-//        container.loadPersistentStores { storeDescription, error in
-//            if let error = error as NSError? {
-//                fatalError("Unresolved error \(error), \(error.userInfo)")
-//            }
-//        }
-//        
-//        //        if (!inMemory) {
-//        // This sample refreshes UI by consuming store changes via persistent history tracking.
-//        /// - Tag: viewContextMergeParentChanges
-//        container.viewContext.automaticallyMergesChangesFromParent = false
-//        container.viewContext.name = "viewContext"
-//        /// - Tag: viewContextMergePolicy
-//        container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
-//        container.viewContext.undoManager = nil
-//        container.viewContext.shouldDeleteInaccessibleFaults = true
-//        //        }
-//        return container
+        //        /// - Tag: persistentContainer
+        //        //        let container = NSPersistentCloudKitContainer(name: "Events")
+        //        container = NSPersistentCloudKitContainer(name: "NosturCloud")
+        //
+        //        let defaultDirectoryURL = NSPersistentCloudKitContainer.defaultDirectoryURL()
+        //
+        //        let cloudDescription = NSPersistentStoreDescription(url: defaultDirectoryURL.appendingPathComponent("Nostur-iCloud.sqlite"))
+        //        cloudDescription.configuration = "Default"
+        //
+        ////        let localDescription = NSPersistentStoreDescription(url: defaultDirectoryURL.appendingPathComponent("Nostur-local.sqlite"))
+        ////        localDescription.configuration = "Local"
+        //
+        //
+        //
+        //        container.viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+        //        //        container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        //
+        //        container.persistentStoreDescriptions = [cloudDescription]
+        ////        container.persistentStoreDescriptions = [cloudDescription, localDescription]
+        //
+        //        guard let description = container.persistentStoreDescriptions.first else {
+        //            fatalError("Failed to retrieve a persistent store description.")
+        //        }
+        //
+        //        if inMemory {
+        //            for descripton in container.persistentStoreDescriptions {
+        //                description.url = URL(fileURLWithPath: "/dev/null")
+        //            }
+        //        }
+        //
+        //        for descripton in container.persistentStoreDescriptions {
+        //            // Enable persistent store remote change notifications
+        //            /// - Tag: persistentStoreRemoteChange
+        //            description.setOption(true as NSNumber,
+        //                                  forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+        //
+        //            // Enable persistent history tracking
+        //            /// - Tag: persistentHistoryTracking
+        //            description.setOption(true as NSNumber,
+        //                                  forKey: NSPersistentHistoryTrackingKey)
+        //        }
+        //
+        //
+        ////        guard let description = container.persistentStoreDescriptions.first else {
+        ////            fatalError("Failed to retrieve a persistent store description.")
+        ////        }
+        //
+        //        container.loadPersistentStores { storeDescription, error in
+        //            if let error = error as NSError? {
+        //                fatalError("Unresolved error \(error), \(error.userInfo)")
+        //            }
+        //        }
+        //
+        //        //        if (!inMemory) {
+        //        // This sample refreshes UI by consuming store changes via persistent history tracking.
+        //        /// - Tag: viewContextMergeParentChanges
+        //        container.viewContext.automaticallyMergesChangesFromParent = false
+        //        container.viewContext.name = "viewContext"
+        //        /// - Tag: viewContextMergePolicy
+        //        container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        //        container.viewContext.undoManager = nil
+        //        container.viewContext.shouldDeleteInaccessibleFaults = true
+        //        //        }
+        //        return container
     }()
     
     /// Creates and configures a private queue context.
-    private func newTaskContext() -> NSManagedObjectContext {
+    func newTaskContext() -> NSManagedObjectContext {
         // Create a private queue context.
         /// - Tag: newBackgroundContext
         let taskContext = container.newBackgroundContext()
@@ -284,7 +284,7 @@ class EventsProvider: ObservableObject, EventDelegate {
             default:
                 
                 await queue.enqueue(message) // Wrap in _ = Task {}?
-//                EventsProvider.shared.messageQueue.enqueue(message) // Thread 30: signal SIGABRT
+                //                EventsProvider.shared.messageQueue.enqueue(message) // Thread 30: signal SIGABRT
                 
                 // remember recent .created_at timestamp from timeline events
                 if message.type == .EVENT && message.event?.kind == .textNote {
@@ -320,8 +320,8 @@ class EventsProvider: ObservableObject, EventDelegate {
         }
     }
     
-    func parseMessagesFromQueue(amount:Int? = nil) async throws {
-//        let amountOfMessagesToParse = amount ?? EventsProvider.shared.messageQueue.count
+    func XparseMessagesFromQueue(amount:Int? = nil) async throws {
+        //        let amountOfMessagesToParse = amount ?? EventsProvider.shared.messageQueue.count
         let amountOfMessagesToParse = await queue.count
         
         var messagesToParse:[RelayMessage] = []
@@ -333,161 +333,305 @@ class EventsProvider: ObservableObject, EventDelegate {
             messagesToParse.append(await queue.dequeue()!)
         }
         
-//        queue.sync() { // Thread 12: EXC_BAD_ACCESS (code=1, address=0x0)
-            // Read array here
+        //        queue.sync() { // Thread 12: EXC_BAD_ACCESS (code=1, address=0x0)
+        // Read array here
+        
+        for index in 0..<messagesToParse.count {
+            let message = messagesToParse.reversed()[index]
             
-            for index in 0..<messagesToParse.count {
-                let message = messagesToParse.reversed()[index]
-                
-                do {
-                    switch message.type {
-                    case .EVENT:
-                        let event = message.event!
-                        // skip if event is already in DB
-                        let request = NSFetchRequest<Event>()
-                        request.entity = Event.entity()
-                        request.predicate = NSPredicate(format: "id == %@", event.id)
+            do {
+                switch message.type {
+                case .EVENT:
+                    let event = message.event!
+                    // skip if event is already in DB
+                    let request = NSFetchRequest<Event>()
+                    request.entity = Event.entity()
+                    request.predicate = NSPredicate(format: "id == %@", event.id)
+                    
+                    // remember recent .created_at timestamp from timeline events
+                    if event.kind == .textNote {
+                        // don't remember if timestamp is in the future
+                        if event.createdAt.timestamp > Int(Date().timeIntervalSince1970) {
+                            return
+                        }
                         
-                        // remember recent .created_at timestamp from timeline events
-                        if event.kind == .textNote {
-                            // don't remember if timestamp is in the future
-                            if event.createdAt.timestamp > Int(Date().timeIntervalSince1970) {
-                                return
-                            }
-                            
-                            // remember timestamp if its the first one
-                            if (self.lastTimelineEventTimestamp == nil) {
+                        // remember timestamp if its the first one
+                        if (self.lastTimelineEventTimestamp == nil) {
+                            self.lastTimelineEventTimestamp = event.createdAt
+                        }
+                        else {
+                            // only remember if timestamp is newer than already remembered timestamp
+                            if (event.createdAt.timestamp > self.lastTimelineEventTimestamp!.timestamp) {
                                 self.lastTimelineEventTimestamp = event.createdAt
                             }
-                            else {
-                                // only remember if timestamp is newer than already remembered timestamp
-                                if (event.createdAt.timestamp > self.lastTimelineEventTimestamp!.timestamp) {
-                                    self.lastTimelineEventTimestamp = event.createdAt
-                                }
-                            }
+                        }
+                    }
+                    
+                    guard try container.viewContext.fetch(request).first == nil else {
+                        throw "🟠 event.id \(event.id) already in DB. skipped."
+                    }
+                    
+                    // STORE EVENT
+                    print("Trying to store event")
+                    try EventsProvider.saveEvent(event: event, context:container.viewContext) // Thread 12: EXC_BAD_ACCESS (code=1, address=0x0)
+                    
+                    // STORE CONTACT
+                    
+                    do {
+                        // skip if contact is already in DB
+                        let crequest = NSFetchRequest<Contact>()
+                        crequest.entity = Contact.entity()
+                        crequest.predicate = NSPredicate(format: "pubkey == %@", event.publicKey)
+                        
+                        guard try container.viewContext.fetch(crequest).first == nil else {
+                            throw "🟠 Contact.pubkey \(event.publicKey) already in DB. skipped."
                         }
                         
-                        guard try container.viewContext.fetch(request).first == nil else {
-                            throw "🟠 event.id \(event.id) already in DB. skipped."
-                            
-                        }
+                        try EventsProvider.saveContact(event: event, context: container.viewContext)
+                    }
+                    catch {
+//                        print(error)
+                    }
+                    
+                    
+                    
+                    
+                    
+                    switch event.kind {
                         
-                        // STORE EVENT
-                        print("Trying to store event")
-                        try EventsProvider.saveEvent(event: event, context:container.viewContext) // Thread 12: EXC_BAD_ACCESS (code=1, address=0x0)
-                        
+                    case .setMetadata:
                         // STORE CONTACT
+                        Contact.handleSetMetadataEvent(event: event, context: container.viewContext)
                         
-                        do {
-                            // skip if contact is already in DB
-                            let crequest = NSFetchRequest<Contact>()
-                            crequest.entity = Contact.entity()
-                            crequest.predicate = NSPredicate(format: "pubkey == %@", event.publicKey)
+                        
+                    case .custom(3):
+                        // STORE CONTACT LIST
+                        print("should handle kind 3")
+                        _ = Task(priority: .background) {
+                            //                            let (pubkeys, _) = await Contact.handleContactListEvent(event: event, context: container.viewContext)
+                            //                            print("do something with pubkeys: \(pubkeys)")
                             
-                            guard try container.viewContext.fetch(crequest).first == nil else {
-                                throw "🟠 Contact.pubkey \(event.publicKey) already in DB. skipped."
-                            }
-                            
-                            try EventsProvider.saveContact(event: event, context: container.viewContext)
+                            //                            if accountState.activeAccountPublicKey == event.publicKey {
+                            //                                // add contacts to followed contacts
+                            //
+                            //                                let cr = Contact.fetchRequest()
+                            //                                cr.predicate = NSPredicate(format: "ANY pubkey IN %@", eventPubkeys)
+                            //                                let contacts = try! cr.execute()
+                            //                                print("😡😡😡😡 contacts.count: \(contacts.count)")
+                            //                                accountState.activeAccount()?.addToFollows(NSSet(objects: contacts
+                            //                                                                                ))
+                            //                            }
+                            // PROBABLY OOPS:
+                            // SHOULD NOT TRIGGER NEW .REQ FROM didReceiveEvent. (LOOP, RECURSIVE..)
+                            //                        ConnectionManager.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys)))
                         }
-                        catch {
-                            print(error)
-                            
-                        }
-                        
-                        
-                        
-                        
-                        
-                        switch event.kind {
-                            
-                        case .setMetadata:
-                            // STORE CONTACT
-                            Contact.handleSetMetadataEvent(event: event, context: container.viewContext)
-                            
-                            
-                        case .custom(3):
-                            // STORE CONTACT LIST
-                            print("should handle kind 3")
-                            _ = Task(priority: .background) {
-                                //                            let (pubkeys, _) = await Contact.handleContactListEvent(event: event, context: container.viewContext)
-                                //                            print("do something with pubkeys: \(pubkeys)")
-                                
-                                //                            if accountState.activeAccountPublicKey == event.publicKey {
-                                //                                // add contacts to followed contacts
-                                //
-                                //                                let cr = Contact.fetchRequest()
-                                //                                cr.predicate = NSPredicate(format: "ANY pubkey IN %@", eventPubkeys)
-                                //                                let contacts = try! cr.execute()
-                                //                                print("😡😡😡😡 contacts.count: \(contacts.count)")
-                                //                                accountState.activeAccount()?.addToFollows(NSSet(objects: contacts
-                                //                                                                                ))
-                                //                            }
-                                // PROBABLY OOPS:
-                                // SHOULD NOT TRIGGER NEW .REQ FROM didReceiveEvent. (LOOP, RECURSIVE..)
-                                //                        ConnectionManager.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys)))
-                            }
-                            
-                        default:
-                            print("unhandled event")
-                        }
-                        
                         
                     default:
-                        print("unhandled relay message type")
+                        print("unhandled event")
                     }
+                    
+                    
+                default:
+                    print("unhandled relay message type")
                 }
-                catch {
-                    print(error)
-                }
-                
             }
+            catch {
+//                print(error)
+            }
+            
+        }
         
-            print("🐥🐥🐥🐥 Events in queue? \(await queue.count) 🐥🐥🐥🐥")
-//        }
+        print("🐥🐥🐥🐥 Events in queue? \(await queue.count) 🐥🐥🐥🐥")
+        //        }
         
         
     }
+    
+    func startParsing() {
+        Task {
+            let before = await queue.count
+            do {
+                try await parseMessagesFromQueue() // Thread 12: EXC_BAD_ACCESS (code=1, address=0x0)
+            }
+            catch {
+                print("oops::: \(error)")
+            }
+            let after = await queue.count
+            print("🧚🧚🧚 PARSING: \(before) -> \(after) 🧚🧚🧚")
+        }
+        
+    }
+    
     
     /// Uses `NSBatchInsertRequest` (BIR) to import a JSON dictionary into the Core Data store on a private queue.
-    private func importQuakes(from propertiesList: [EventProperties]) async throws { // import from in memory array
-        //        guard !propertiesList.isEmpty else { return }
-        //
-        //        let taskContext = newTaskContext()
-        //        // Add name and author to identify source of persistent history changes.
-        //        taskContext.name = "importContext"
-        //        taskContext.transactionAuthor = "importQuakes"
-        //
-        //        /// - Tag: performAndWait
-        //        try await taskContext.perform {
-        //            // Execute the batch insert.
-        //            /// - Tag: batchInsertRequest
-        //            let batchInsertRequest = self.newBatchInsertRequest(with: propertiesList)
-        //            if let fetchResult = try? taskContext.execute(batchInsertRequest),
-        //               let batchInsertResult = fetchResult as? NSBatchInsertResult,
-        //               let success = batchInsertResult.result as? Bool, success {
-        //                return
-        //            }
-        //            self.logger.debug("Failed to execute batch insert request.")
-        //            throw EventError.batchInsertError
-        //        }
-        //
-        //        logger.debug("Successfully inserted data.")
+    ///
+    /// THIS SHOULD BE parseMessagesFromQueuee\?
+    func parseMessagesFromQueue(amount:Int? = nil) async throws { // import from in memory array
+        //                guard !propertiesList.isEmpty else { return }
+        
+        
+        await queue.incrementCounter()
+        let taskContext = newTaskContext()
+        // Add name and author to identify source of persistent history changes.
+        taskContext.name = "parseContext\(await queue.backgroundTaskCounter)"
+        taskContext.transactionAuthor = "parseMessagesFromQueue"
+        
+        /// - Tag: performAndWait
+        ///
+        _ = taskContext.performAndWait {
+            Task {
+                let amountOfMessagesToParse = await queue.count
+                
+                var messagesToParse:[RelayMessage] = []
+                
+                for _ in 0..<amountOfMessagesToParse {
+                    if amountOfMessagesToParse == 0 {
+                        break;
+                    }
+                    messagesToParse.append(await queue.dequeue()!)
+                }
+                
+                for index in 0..<messagesToParse.count {
+                    let message = messagesToParse.reversed()[index]
+                    
+                    do {
+                        switch message.type {
+                        case .EVENT:
+                            let event = message.event!
+                            // skip if event is already in DB
+                            let request = NSFetchRequest<Event>()
+                            request.entity = Event.entity()
+                            request.predicate = NSPredicate(format: "id == %@", event.id)
+                            
+                            // remember recent .created_at timestamp from timeline events
+                            if event.kind == .textNote {
+                                // don't remember if timestamp is in the future
+                                if event.createdAt.timestamp > Int(Date().timeIntervalSince1970) {
+                                    return
+                                }
+                                
+                                // remember timestamp if its the first one
+                                if (self.lastTimelineEventTimestamp == nil) {
+                                    self.lastTimelineEventTimestamp = event.createdAt
+                                }
+                                else {
+                                    // only remember if timestamp is newer than already remembered timestamp
+                                    if (event.createdAt.timestamp > self.lastTimelineEventTimestamp!.timestamp) {
+                                        self.lastTimelineEventTimestamp = event.createdAt
+                                    }
+                                }
+                            }
+                            
+//                            guard try container.viewContext.fetch(request).first == nil else {
+                            guard try taskContext.fetch(request).first == nil else {
+                                throw "🟠 event.id \(event.id) already in DB. skipped."
+                                
+                            }
+                            
+                            // STORE EVENT
+                            print("Trying to store event")
+                            try EventsProvider.saveEvent(event: event, context:taskContext) // Thread 12: EXC_BAD_ACCESS (code=1, address=0x0)
+                            
+                            // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC
+                            if event.kind == .custom(7) {
+                                try Event.updateLikeCountCache(event.tags, content:event.content, context: taskContext)
+                            }
+                           
+                            if event.kind == .textNote {
+                                // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
+                                try Event.updateMentionsCountCache(event.tags, context: taskContext)
+                                
+                                // NIP-10: Those marked with "reply" denote the id of the reply event being responded to.
+                                // NIP-10: Those marked with "root" denote the root id of the reply thread being responded to.
+                                try Event.updateRepliesCountCache(event.tags, context: taskContext)
+                            }
+
+                            try taskContext.save()
+                            
+                            
+                            // STORE CONTACT
+                            
+                            do {
+                                // skip if contact is already in DB
+                                let crequest = NSFetchRequest<Contact>()
+                                crequest.entity = Contact.entity()
+                                crequest.predicate = NSPredicate(format: "pubkey == %@", event.publicKey)
+                                
+//                                guard try container.viewContext.fetch(crequest).first == nil else {
+                                guard try taskContext.fetch(crequest).first == nil else {
+                                    throw "🟠 Contact.pubkey \(event.publicKey) already in DB. skipped."
+                                }
+                                
+                                try EventsProvider.saveContact(event: event, context: taskContext)
+                            }
+                            catch {
+//                                print(error)
+                            }
+                            
+                            switch event.kind {
+                                
+                            case .setMetadata:
+                                // STORE CONTACT
+                                Contact.handleSetMetadataEvent(event: event, context: taskContext)
+                                
+                                
+                            case .custom(3):
+                                // STORE CONTACT LIST
+                                print("should handle kind 3")
+//                                _ = Task(priority: .background) {
+//                                    //                            let (pubkeys, _) = await Contact.handleContactListEvent(event: event, context: container.viewContext)
+//                                    //                            print("do something with pubkeys: \(pubkeys)")
+//
+//                                    //                            if accountState.activeAccountPublicKey == event.publicKey {
+//                                    //                                // add contacts to followed contacts
+//                                    //
+//                                    //                                let cr = Contact.fetchRequest()
+//                                    //                                cr.predicate = NSPredicate(format: "ANY pubkey IN %@", eventPubkeys)
+//                                    //                                let contacts = try! cr.execute()
+//                                    //                                print("😡😡😡😡 contacts.count: \(contacts.count)")
+//                                    //                                accountState.activeAccount()?.addToFollows(NSSet(objects: contacts
+//                                    //                                                                                ))
+//                                    //                            }
+//                                    // PROBABLY OOPS:
+//                                    // SHOULD NOT TRIGGER NEW .REQ FROM didReceiveEvent. (LOOP, RECURSIVE..)
+//                                    //                        ConnectionManager.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys)))
+//                                }
+                                
+                            default:
+                                print("unhandled event \(event.kind)")
+                            }
+                            
+                            
+                        default:
+                            print("unhandled relay message type")
+                        }
+                    }
+                    catch {
+                        print(error)
+                    }
+                    
+                }
+                
+//                print("🐥🐥🐥🐥 Events in queue? \(await queue.count) 🐥🐥🐥🐥")
+            }
+        }
+        
+        //                logger.debug("Successfully inserted data.")
     }
     
-    private func newBatchInsertRequest(with propertyList: [EventProperties]) -> NSBatchInsertRequest {
-        var index = 0
-        let total = propertyList.count
-        
-        // Provide one dictionary at a time when the closure is called.
-        let batchInsertRequest = NSBatchInsertRequest(entity: Event.entity(), dictionaryHandler: { dictionary in
-            guard index < total else { return true }
-            dictionary.addEntries(from: propertyList[index].dictionaryValue)
-            index += 1
-            return false
-        })
-        return batchInsertRequest
-    }
+//    private func newBatchInsertRequest(with propertyList: [EventProperties]) -> NSBatchInsertRequest {
+//        var index = 0
+//        let total = propertyList.count
+//
+//        // Provide one dictionary at a time when the closure is called.
+//        let batchInsertRequest = NSBatchInsertRequest(entity: Event.entity(), dictionaryHandler: { dictionary in
+//            guard index < total else { return true }
+//            dictionary.addEntries(from: propertyList[index].dictionaryValue)
+//            index += 1
+//            return false
+//        })
+//        return batchInsertRequest
+//    }
     
     /// Synchronously deletes given records in the Core Data store with the specified object IDs.
     func deleteEvents(identifiedBy objectIDs: [NSManagedObjectID]) {
@@ -544,7 +688,7 @@ class EventsProvider: ObservableObject, EventDelegate {
         try await taskContext.perform {
             // Execute the persistent history change since the last transaction.
             /// - Tag: fetchHistory
-            let changeRequest = NSPersistentHistoryChangeRequest.fetchHistory(after: self.lastToken)
+            let changeRequest = NSPersistentHistoryChangeRequest.fetchHistory(after: self.lastToken) // Thread 62: EXC_BAD_ACCESS (code=1, address=0x5dc91bc00)
             let historyResult = try taskContext.execute(changeRequest) as? NSPersistentHistoryResult
             if let history = historyResult?.result as? [NSPersistentHistoryTransaction],
                !history.isEmpty {
@@ -566,7 +710,7 @@ class EventsProvider: ObservableObject, EventDelegate {
         let viewContext = container.viewContext
         viewContext.perform {
             for transaction in history {
-                viewContext.mergeChanges(fromContextDidSave: transaction.objectIDNotification())
+                viewContext.mergeChanges(fromContextDidSave: transaction.objectIDNotification()) // Thread 1: signal SIGABRT
                 self.lastToken = transaction.token
             }
         }
@@ -580,11 +724,12 @@ class EventsProvider: ObservableObject, EventDelegate {
         savedEvent.content = event.content
         savedEvent.sig = event.signature
         savedEvent.pubkey = event.publicKey
-        if (event.kind == .textNote && event.replyToRootEtag() != nil) {
-            savedEvent.replyToRootId = event.replyToRootEtag()!.id
+        savedEvent.likes = 0
+        if (event.kind == .textNote && TagsHelpers(event.tags).replyToRootEtag() != nil) {
+            savedEvent.replyToRootId = TagsHelpers(event.tags).replyToRootEtag()!.id
         }
-        if (event.kind == .textNote && event.replyToEtag() != nil) {
-            savedEvent.replyToId = event.replyToEtag()!.id
+        if (event.kind == .textNote && TagsHelpers(event.tags).replyToEtag() != nil) {
+            savedEvent.replyToId = TagsHelpers(event.tags).replyToEtag()!.id
         }
         
         let encoder = JSONEncoder()

@@ -15,7 +15,7 @@ extension String: Error {}
 //struct NosturApp: App, EventDelegate {
 struct NosturApp: App {
     
-    // Timer to check for stuff to parse every 5 sec..
+    // Timer to check for stuff to parse every 3 sec..
     let parseRunLoop = Timer.publish(every: 5, tolerance: 1, on: .main, in: .common).autoconnect()
     
     //    let connectionManager = ConnectionManager.shared
@@ -60,11 +60,7 @@ struct NosturApp: App {
                         return
                     }
                     
-                    _ = Task {
-                        try! await eventsProvider.parseMessagesFromQueue() // Thread 12: EXC_BAD_ACCESS (code=1, address=0x0)
-                        print("queue count: \(await eventsProvider.queue.count)")
-                    }
-                    print("🧚🧚🧚 GONNA PARSE YEA 🧚🧚🧚")
+                    eventsProvider.startParsing()
                 }
                 .statusBarHidden(true)
         }

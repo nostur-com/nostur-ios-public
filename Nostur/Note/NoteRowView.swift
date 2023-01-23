@@ -9,7 +9,8 @@ import SwiftUI
 import Nuke
 import NukeUI
 
-struct NoteView: View {
+// A single note shown in a row in the MainTimelineView
+struct NoteRowView: View {
     
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var cm:ConnectionManager
@@ -42,7 +43,8 @@ struct NoteView: View {
                 }.padding(.leading, 10)
             }
             
-            VStack (alignment: .leading) { // Vstack for retweeted thread
+            NavigationLink(value:note, label: {
+                VStack (alignment: .leading) { // Vstack for retweeted thread
                 HStack(alignment: .top) { // Tweet
                     NavigationLink(value: note, label: {
                         VStack { // profile image + thread line
@@ -97,8 +99,8 @@ struct NoteView: View {
                                             .foregroundColor(.secondary)
                                     }
                                     
-                                    if (tweet.replyToUsername != "") {
-                                        Text("Replying to @\(tweet.replyToUsername)")
+                                    if (note.event.replyToId != nil) {
+                                        Text("Replying to @\(String(note.event.replyToId!.prefix(5)))")
                                             .foregroundColor(.secondary)
                                             .font(.system(size: 13))
                                             .fontWeight(.light)
@@ -111,11 +113,11 @@ struct NoteView: View {
                             NoteMenuView(note)
                         }
                         
-                        NavigationLink(value:note, label: {
-                            Text(note.noteText).multilineTextAlignment(TextAlignment.leading)
-                                .font(.system(size: 14))
-                                .foregroundColor(.primary)
-                        })
+                        Text(note.noteText).multilineTextAlignment(TextAlignment.leading)
+                            .font(.system(size: 14))
+                            .foregroundColor(.primary)
+                            .lineSpacing(3)
+                            .padding(.vertical, 5)
                         
                         if tweet.hasImage {
                             Image(tweet.imageName)
@@ -131,7 +133,7 @@ struct NoteView: View {
                             }) {
                                 HStack {
                                     Image(systemName: "message")
-                                    Text("\(tweet.replyCount)")
+                                    Text("\(note.event.replies)")
                                 }.frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
                             }
                             
@@ -141,7 +143,7 @@ struct NoteView: View {
                             }) {
                                 HStack {
                                     Image(systemName: "arrow.2.squarepath")
-                                    Text("\(tweet.retweetCount)")
+                                    Text("\(note.event.mentions)")
                                 }.frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
                             }
                             
@@ -150,7 +152,7 @@ struct NoteView: View {
                             }) {
                                 HStack {
                                     Image(systemName: "heart")
-                                    Text("\(tweet.likeCount)")
+                                    Text("\(note.event.likes)")
                                 }.frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
                             }
                         }.foregroundColor(.gray)
@@ -174,6 +176,7 @@ struct NoteView: View {
                     }
                 }
             }
+            })
             Divider()
         }
         .onAppear {
@@ -247,7 +250,7 @@ struct NoteViewWrapper: View {
 
         VStack {
             if (events.first != nil) {
-                NoteView(note:Note(event:events.first!, responses:nil, contact: contacts.first))
+                NoteRowView(note:Note(event:events.first!, responses:nil, contact: contacts.first))
             }
             else {
                 Text("No events")

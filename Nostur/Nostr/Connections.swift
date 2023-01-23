@@ -70,10 +70,10 @@ class RelaySocket : WebSocketDelegate, ObservableObject {
         case .reconnectSuggested(_):
             break
         case .cancelled:
-            print("🔴 CANCELLED")
+            print("🔴 CANCELLED \(relay.url ?? "(no url)")")
             relay.isConnected = false
         case .error(let error):
-            print("🔴🔴🔴🔴 ERROR")
+            print("🔴🔴🔴🔴 ERROR \(relay.url ?? "(no url)")")
             relay.isConnected = false
             handleError(error)
         }
@@ -197,6 +197,22 @@ struct RelayMessage {
 }
 
 struct RequestMessage {
+    
+    // For fetching events posted by people you follow
+    // or reactions by others reacting to the people you follow
+    static func getFollowingEvents(pubkeys:[String?], limit:Int = 500, subscriptionId:String? = nil, since:NTimestamp? = nil) -> String {
+        
+        if since != nil {
+            return """
+    ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "limit": \(limit), "since": \(since!.timestamp)}, {"#p": \(JSON(pubkeys).rawString() ?? "[]"), "limit": \(limit), "since": \(since!.timestamp)}]
+    """
+        }
+        return """
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "limit": \(limit)}]
+"""
+    }
+    
+    
     
     static func getAuthorContactsList(pubkey:String, limit:Int = 1, subscriptionId:String? = nil) -> String {
         return """
