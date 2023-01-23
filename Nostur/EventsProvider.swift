@@ -13,12 +13,14 @@ import SwiftyJSON
 
 class EventsProvider: ObservableObject, EventDelegate {
     
+    var queue = Queue<RelayMessage>()
+    
     var lastTimelineEventTimestamp:NTimestamp? = nil
-    let queue = DispatchQueue(label: "RelayMessageQueue")
+//    let queue = DispatchQueue(label: "RelayMessageQueue")
 //    let queue = DispatchQueue(label: "RelayMessageQueue", qos: .default)
     var cm:ConnectionManager? = nil
     //    var messageQueue:[RelayMessage] = []
-    var messageQueue:Queue<RelayMessage> = Queue<RelayMessage>()
+//    var messageQueue:Queue<RelayMessage> = Queue<RelayMessage>()
     
     // MARK: Logging
     let logger = Logger(subsystem: "com.nostir.2140.Events", category: "persistence")
@@ -273,38 +275,35 @@ class EventsProvider: ObservableObject, EventDelegate {
                 throw "couild not parse message"
             }
             
-            queue.async() {
-                // Manipulate the array here
-                switch message.type {
-                case .NOTICE:
-                    print(message.message)
-                case .EOSE:
-                    print("🟢 Sending close subscription message")
-                    self.cm!.sendMessage(ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: message.subscriptionId!)))
-                default:
-                    EventsProvider.shared.messageQueue.enqueue(message) // Thread 30: signal SIGABRT
+            switch message.type {
+            case .NOTICE:
+                print(message.message)
+            case .EOSE:
+                print("🟢 Sending close subscription message")
+                self.cm!.sendMessage(ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: message.subscriptionId!)))
+            default:
+                
+                await queue.enqueue(message) // Wrap in _ = Task {}?
+//                EventsProvider.shared.messageQueue.enqueue(message) // Thread 30: signal SIGABRT
+                
+                // remember recent .created_at timestamp from timeline events
+                if message.type == .EVENT && message.event?.kind == .textNote {
+                    // don't remember if timestamp is in the future
+                    if message.event!.createdAt.timestamp > Int(Date().timeIntervalSince1970) {
+                        return
+                    }
                     
-                    // remember recent .created_at timestamp from timeline events
-                    if message.type == .EVENT && message.event?.kind == .textNote {
-                        // don't remember if timestamp is in the future
-                        if message.event!.createdAt.timestamp > Int(Date().timeIntervalSince1970) {
-                            return
-                        }
-                        
-                        // remember timestamp if its the first one
-                        if (self.lastTimelineEventTimestamp == nil) {
+                    // remember timestamp if its the first one
+                    if (self.lastTimelineEventTimestamp == nil) {
+                        self.lastTimelineEventTimestamp = message.event?.createdAt
+                    }
+                    else {
+                        // only remember if timestamp is newer than already remembered timestamp
+                        if ((message.event?.createdAt.timestamp)! > self.lastTimelineEventTimestamp!.timestamp) {
                             self.lastTimelineEventTimestamp = message.event?.createdAt
-                        }
-                        else {
-                            // only remember if timestamp is newer than already remembered timestamp
-                            if ((message.event?.createdAt.timestamp)! > self.lastTimelineEventTimestamp!.timestamp) {
-                                self.lastTimelineEventTimestamp = message.event?.createdAt
-                            }
                         }
                     }
                 }
-                
-                //                self.messageQueue.append(message)
             }
         }
         catch RelayMessage.error.UNKNOWN_MESSAGE_TYPE {
@@ -322,18 +321,19 @@ class EventsProvider: ObservableObject, EventDelegate {
     }
     
     func parseMessagesFromQueue(amount:Int? = nil) async throws {
-        let amountOfMessagesToParse = amount ?? EventsProvider.shared.messageQueue.count
+//        let amountOfMessagesToParse = amount ?? EventsProvider.shared.messageQueue.count
+        let amountOfMessagesToParse = await queue.count
         
         var messagesToParse:[RelayMessage] = []
         
         for _ in 0..<amountOfMessagesToParse {
-            if EventsProvider.shared.messageQueue.count == 0 {
+            if amountOfMessagesToParse == 0 {
                 break;
             }
-            messagesToParse.append(EventsProvider.shared.messageQueue.dequeue()!)
+            messagesToParse.append(await queue.dequeue()!)
         }
         
-        queue.sync() { // Thread 12: EXC_BAD_ACCESS (code=1, address=0x0)
+//        queue.sync() { // Thread 12: EXC_BAD_ACCESS (code=1, address=0x0)
             // Read array here
             
             for index in 0..<messagesToParse.count {
@@ -442,8 +442,9 @@ class EventsProvider: ObservableObject, EventDelegate {
                 }
                 
             }
-            print("🐥🐥🐥🐥 Events in queue? \(self.messageQueue.count) 🐥🐥🐥🐥")
-        }
+        
+            print("🐥🐥🐥🐥 Events in queue? \(await queue.count) 🐥🐥🐥🐥")
+//        }
         
         
     }

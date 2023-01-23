@@ -62,7 +62,7 @@ struct NosturApp: App {
                     
                     _ = Task {
                         try! await eventsProvider.parseMessagesFromQueue() // Thread 12: EXC_BAD_ACCESS (code=1, address=0x0)
-                        print("queue count: \(eventsProvider.messageQueue.count)")
+                        print("queue count: \(await eventsProvider.queue.count)")
                     }
                     print("🧚🧚🧚 GONNA PARSE YEA 🧚🧚🧚")
                 }

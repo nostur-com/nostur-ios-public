@@ -61,13 +61,16 @@ struct MainTimeline: View {
           
         HStack {
             Button {
-                    print("queue count: \(ep.messageQueue.count)")
+                Task {
+                    print("queue count: \(await ep.queue.count)")
+                }
+                    
             } label: {Text("COUNT")}
             
             Button {
                     _ = Task {
                         try! await ep.parseMessagesFromQueue()
-                        print("queue count: \(ep.messageQueue.count)")
+                        print("queue count: \(await ep.queue.count)")
                     }
             } label: {Text("PARSE")}
         }

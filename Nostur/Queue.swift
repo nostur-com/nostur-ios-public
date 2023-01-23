@@ -7,15 +7,15 @@
 
 import Foundation
 
-struct Queue<T> {
+actor Queue<T> {
     private var elements: [T] = []
     var count:Int { get { elements.count } }
     
-    mutating func enqueue(_ value: T) {
+    func enqueue(_ value: T) {
         elements.append(value)
     }
     
-    mutating func dequeue() -> T? {
+    func dequeue() -> T? {
         guard !elements.isEmpty else {
             return nil
         }

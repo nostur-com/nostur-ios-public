@@ -180,7 +180,7 @@ struct AccountListView: View {
             else { // parsing
                 _ = Task {
                     try! await ep.parseMessagesFromQueue()
-                    print("queue count: \(ep.messageQueue.count)")
+                    print("queue count: \(await ep.queue.count)")
                 }
                 print("🧚🧚🧚 GONNA PARSE YEA 🧚🧚🧚")
             }
