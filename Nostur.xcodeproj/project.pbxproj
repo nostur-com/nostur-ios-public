@@ -47,6 +47,8 @@
 		1F8B1363297B36DB002EB8CF /* BytesConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8B1358297B36DB002EB8CF /* BytesConvertible.swift */; };
 		1F8B1365297B3BE8002EB8CF /* ContactProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8B1364297B3BE8002EB8CF /* ContactProfile.swift */; };
 		1F927C6F297DB34A0024F665 /* Queue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F927C6E297DB3490024F665 /* Queue.swift */; };
+		1F987EB129804AA5001E352E /* NewNoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F987EB029804AA4001E352E /* NewNoteView.swift */; };
+		1F987EB329805F33001E352E /* String+matchingStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F987EB229805F33001E352E /* String+matchingStrings.swift */; };
 		1FA51FF62978441200FE60EF /* Relay+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */; };
 		1FA51FF72978441200FE60EF /* Relay+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA51FF52978441200FE60EF /* Relay+CoreDataProperties.swift */; };
 		1FA51FFD2978805400FE60EF /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = 1FA51FFC2978805400FE60EF /* Nuke */; };
@@ -63,6 +65,10 @@
 		1FC38B9D2972DD5A004769F8 /* Contact+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC38B9B2972DD5A004769F8 /* Contact+CoreDataClass.swift */; };
 		1FC38B9E2972DD5A004769F8 /* Contact+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC38B9C2972DD5A004769F8 /* Contact+CoreDataProperties.swift */; };
 		1FC38BA0297316AA004769F8 /* DummyEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC38B9F297316AA004769F8 /* DummyEvents.swift */; };
+		1FD49731297FC9C80084F14E /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD49730297FC9C80084F14E /* ProfileView.swift */; };
+		1FD49733297FCB5E0084F14E /* PreviewHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD49732297FCB5E0084F14E /* PreviewHelper.swift */; };
+		1FD49735297FE2FE0084F14E /* ProfileRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD49734297FE2FE0084F14E /* ProfileRowView.swift */; };
+		1FD49737298029600084F14E /* NoteTextRenderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD49736298029600084F14E /* NoteTextRenderView.swift */; };
 		1FDFEBB7297ED78100511AA0 /* ConfigurationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FDFEBB6297ED78100511AA0 /* ConfigurationView.swift */; };
 		1FEA785529799697007CC8E7 /* Compactor in Frameworks */ = {isa = PBXBuildFile; productRef = 1FEA785429799697007CC8E7 /* Compactor */; };
 		1FEA785829799FE6007CC8E7 /* ProfilePicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */; };
@@ -111,6 +117,8 @@
 		1F8B1358297B36DB002EB8CF /* BytesConvertible.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BytesConvertible.swift; sourceTree = "<group>"; };
 		1F8B1364297B3BE8002EB8CF /* ContactProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactProfile.swift; sourceTree = "<group>"; };
 		1F927C6E297DB3490024F665 /* Queue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Queue.swift; sourceTree = "<group>"; };
+		1F987EB029804AA4001E352E /* NewNoteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewNoteView.swift; sourceTree = "<group>"; };
+		1F987EB229805F33001E352E /* String+matchingStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+matchingStrings.swift"; sourceTree = "<group>"; };
 		1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Relay+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1FA51FF52978441200FE60EF /* Relay+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Relay+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1FB3E3BB2968061700CDA788 /* NoteDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteDetailView.swift; sourceTree = "<group>"; };
@@ -127,6 +135,10 @@
 		1FC38B9B2972DD5A004769F8 /* Contact+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Contact+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1FC38B9C2972DD5A004769F8 /* Contact+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Contact+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1FC38B9F297316AA004769F8 /* DummyEvents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DummyEvents.swift; sourceTree = "<group>"; };
+		1FD49730297FC9C80084F14E /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		1FD49732297FCB5E0084F14E /* PreviewHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewHelper.swift; sourceTree = "<group>"; };
+		1FD49734297FE2FE0084F14E /* ProfileRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileRowView.swift; sourceTree = "<group>"; };
+		1FD49736298029600084F14E /* NoteTextRenderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteTextRenderView.swift; sourceTree = "<group>"; };
 		1FDFEBB6297ED78100511AA0 /* ConfigurationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationView.swift; sourceTree = "<group>"; };
 		1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePicView.swift; sourceTree = "<group>"; };
 		1FEA785A2979A1A0007CC8E7 /* Note.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Note.swift; sourceTree = "<group>"; };
@@ -179,17 +191,17 @@
 			path = Screens;
 			sourceTree = "<group>";
 		};
-		1F25B395297A508200A8A5A7 /* Contacts */ = {
+		1F25B395297A508200A8A5A7 /* ContactsOld */ = {
 			isa = PBXGroup;
 			children = (
+				1FC38B9B2972DD5A004769F8 /* Contact+CoreDataClass.swift */,
+				1FC38B9C2972DD5A004769F8 /* Contact+CoreDataProperties.swift */,
 				1F8B1364297B3BE8002EB8CF /* ContactProfile.swift */,
 				1FB3E3BD296820C600CDA788 /* ContactProfileView.swift */,
 				1F3C3F932975347F00E813FD /* ContactProfileRowView.swift */,
 				1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */,
-				1FC38B9B2972DD5A004769F8 /* Contact+CoreDataClass.swift */,
-				1FC38B9C2972DD5A004769F8 /* Contact+CoreDataProperties.swift */,
 			);
-			path = Contacts;
+			path = ContactsOld;
 			sourceTree = "<group>";
 		};
 		1F37571429672AB6007D210A /* DummyData */ = {
@@ -205,13 +217,13 @@
 			isa = PBXGroup;
 			children = (
 				1F75652E296ADA280078474E /* AccountsView.swift */,
-				1F1C31E32969A86700E60BEF /* NewAccountView.swift */,
-				1F4773A4296CA72A0049454B /* AddReadOnlyAccountView.swift */,
 				1F4773A6296D4F5B0049454B /* AccountView.swift */,
 				1F4773A8296D85B70049454B /* AccountListView.swift */,
 				1F3C3F9529755D4C00E813FD /* AccountState.swift */,
 				1F30FAAE29706E72008439C8 /* Account+CoreDataClass.swift */,
 				1F30FAB229707719008439C8 /* Account+CoreDataProperties.swift */,
+				1F4773A4296CA72A0049454B /* AddReadOnlyAccountView.swift */,
+				1F1C31E32969A86700E60BEF /* NewAccountView.swift */,
 			);
 			path = Accounts;
 			sourceTree = "<group>";
@@ -220,9 +232,9 @@
 			isa = PBXGroup;
 			children = (
 				1F37571429672AB6007D210A /* DummyData */,
+				B3935E040327074D0C91EA33 /* Connections.swift */,
 				1F4AFC4529733E2400CC1F90 /* Event+CoreDataClass.swift */,
 				1F4AFC4629733E2400CC1F90 /* Event+CoreDataProperties.swift */,
-				B3935E040327074D0C91EA33 /* Connections.swift */,
 				1F71037C296BD9DE006245CC /* Nostr.swift */,
 			);
 			path = Nostr;
@@ -233,6 +245,7 @@
 			children = (
 				1F8B1348297B34D7002EB8CF /* Bech32.swift */,
 				1F8B134A297B3551002EB8CF /* NIP19.swift */,
+				1F987EB229805F33001E352E /* String+matchingStrings.swift */,
 			);
 			path = Crypto;
 			sourceTree = "<group>";
@@ -279,7 +292,8 @@
 				1F8B134D297B36BA002EB8CF /* Utils */,
 				1F8B1347297B34C6002EB8CF /* Crypto */,
 				1F4773A3296CA7040049454B /* Accounts */,
-				1F25B395297A508200A8A5A7 /* Contacts */,
+				1FD4972F297FC99B0084F14E /* Profiles */,
+				1F25B395297A508200A8A5A7 /* ContactsOld */,
 				1F71037B296BD98D006245CC /* Nostr */,
 				1FEA78592979A18E007CC8E7 /* Note */,
 				1F25B394297A4FB400A8A5A7 /* Screens */,
@@ -289,11 +303,13 @@
 				1F5BBE3F297BC7E600F4AF03 /* EventsError.swift */,
 				1FB448BD2965F3D000038671 /* NosturApp.swift */,
 				1FB448BF2965F3D000038671 /* Persistence.swift */,
+				1FD49732297FCB5E0084F14E /* PreviewHelper.swift */,
 				1F313DED296980D8004C7366 /* Info.plist */,
 				1FB448C62965F3D200038671 /* Assets.xcassets */,
 				1FB448C82965F3D200038671 /* Nostur.entitlements */,
 				1F30FAA729705EBD008439C8 /* NosturCloud.xcdatamodeld */,
 				1FB448C92965F3D200038671 /* Preview Content */,
+				1F987EB029804AA4001E352E /* NewNoteView.swift */,
 			);
 			path = Nostur;
 			sourceTree = "<group>";
@@ -312,18 +328,28 @@
 				1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */,
 				1FA51FF52978441200FE60EF /* Relay+CoreDataProperties.swift */,
 				1F756532296AE7910078474E /* NewRelayView.swift */,
-				1F756530296AE4260078474E /* RelaysView.swift */,
 				1FB62D0D296FFF1400A0055B /* RelayEditView.swift */,
+				1F756530296AE4260078474E /* RelaysView.swift */,
 			);
 			path = Relays;
+			sourceTree = "<group>";
+		};
+		1FD4972F297FC99B0084F14E /* Profiles */ = {
+			isa = PBXGroup;
+			children = (
+				1FD49730297FC9C80084F14E /* ProfileView.swift */,
+				1FD49734297FE2FE0084F14E /* ProfileRowView.swift */,
+			);
+			path = Profiles;
 			sourceTree = "<group>";
 		};
 		1FEA78592979A18E007CC8E7 /* Note */ = {
 			isa = PBXGroup;
 			children = (
-				1FB448D12965FB5500038671 /* NoteRowView.swift */,
 				1FB3E3BB2968061700CDA788 /* NoteDetailView.swift */,
+				1FB448D12965FB5500038671 /* NoteRowView.swift */,
 				1FEA785A2979A1A0007CC8E7 /* Note.swift */,
+				1FD49736298029600084F14E /* NoteTextRenderView.swift */,
 			);
 			path = Note;
 			sourceTree = "<group>";
@@ -424,6 +450,7 @@
 				1FC38B9E2972DD5A004769F8 /* Contact+CoreDataProperties.swift in Sources */,
 				1FB3E3BE296820C600CDA788 /* ContactProfileView.swift in Sources */,
 				1F8B135C297B36DB002EB8CF /* Data+Bytes.swift in Sources */,
+				1FD49735297FE2FE0084F14E /* ProfileRowView.swift in Sources */,
 				1F927C6F297DB34A0024F665 /* Queue.swift in Sources */,
 				1F25B392297A4E3400A8A5A7 /* NosturList+CoreDataClass.swift in Sources */,
 				1F8B1359297B36DB002EB8CF /* Bytes+UInt.swift in Sources */,
@@ -431,9 +458,11 @@
 				1FB448BE2965F3D000038671 /* NosturApp.swift in Sources */,
 				1F8B135D297B36DB002EB8CF /* Bytes+Base64.swift in Sources */,
 				1FDFEBB7297ED78100511AA0 /* ConfigurationView.swift in Sources */,
+				1F987EB129804AA5001E352E /* NewNoteView.swift in Sources */,
 				1F8B135F297B36DB002EB8CF /* Bytes+TrimLeadingZeros.swift in Sources */,
 				1F3C3F942975347F00E813FD /* ContactProfileRowView.swift in Sources */,
 				1FEA785B2979A1A0007CC8E7 /* Note.swift in Sources */,
+				1FD49737298029600084F14E /* NoteTextRenderView.swift in Sources */,
 				1F37571629672AD0007D210A /* DummyData.swift in Sources */,
 				1F7A63C129711CCC00D8B2CB /* Playground.swift in Sources */,
 				1FB448C52965F3D000038671 /* ContentView.swift in Sources */,
@@ -441,6 +470,7 @@
 				1F8B134B297B3551002EB8CF /* NIP19.swift in Sources */,
 				1FB3E3BC2968061700CDA788 /* NoteDetailView.swift in Sources */,
 				1F4773A7296D4F5B0049454B /* AccountView.swift in Sources */,
+				1FD49731297FC9C80084F14E /* ProfileView.swift in Sources */,
 				1F8B1361297B36DB002EB8CF /* Bytes+SecureRandom.swift in Sources */,
 				1FA51FF72978441200FE60EF /* Relay+CoreDataProperties.swift in Sources */,
 				1F75652F296ADA280078474E /* AccountsView.swift in Sources */,
@@ -457,7 +487,9 @@
 				1F8B1363297B36DB002EB8CF /* BytesConvertible.swift in Sources */,
 				1FC38B9D2972DD5A004769F8 /* Contact+CoreDataClass.swift in Sources */,
 				1FB448C02965F3D000038671 /* Persistence.swift in Sources */,
+				1FD49733297FCB5E0084F14E /* PreviewHelper.swift in Sources */,
 				1F30FAB029706E72008439C8 /* Account+CoreDataClass.swift in Sources */,
+				1F987EB329805F33001E352E /* String+matchingStrings.swift in Sources */,
 				1F25B393297A4E3400A8A5A7 /* NosturList+CoreDataProperties.swift in Sources */,
 				1F5BBE3E297BC3D200F4AF03 /* EventsProvider.swift in Sources */,
 				1FB448D22965FB5500038671 /* NoteRowView.swift in Sources */,
@@ -600,12 +632,16 @@
 				INFOPLIST_FILE = Nostur/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Nostur;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -642,12 +678,16 @@
 				INFOPLIST_FILE = Nostur/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Nostur;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";

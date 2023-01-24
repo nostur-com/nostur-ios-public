@@ -11,6 +11,9 @@ import Foundation
 func testKind0Events() -> [String] {
     var events:[String] = []
     
+    // SNOWDEN
+    events.append(###"["EVENT","GIMME",{"id":"88f238bdd7b94761c2d0e8311b7cb2b7c0ebe138cd09728f0c436da05e1a3975","kind":0,"pubkey":"84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240","created_at":1674571167,"content":"{\"display_name\":\"Edward Snowden\",\"name\":\"Snowden\",\"picture\":\"https://nostr.build/i/p/6838p.jpeg\",\"banner\":\"https://nostr.build/i/6843.jpeg\",\"about\":\"Bio: I used to work for the government. Now I work for the public. Author, \\\"Permanent Record\\\": https://us.macmillan.com/books/9781250237231/permanentrecord\",\"website\":\"edwardsnowden.substack.com\",\"lud16\":\"snowden@getalby.com\",\"nip05valid\":false}","tags":[],"sig":"b4d65571e16d7848d717c34e9105ffc8f4460d2fc02263b6db664546a777b0324522a915c11a53288104146b4dfbed3cae578e3ba98173b7d350654404b065b6"}]"###)
+                  
     events.append(###"["EVENT","GIMME",{"created_at":1674007831,"pubkey":"3f770d65d3a764a9c5cb503ae123e62ec7598ad035d836e2a810f3877a745b24","kind":0,"content":"{\"name\":\"DerekRoss\",\"about\":\"Bitcoin HODLer, home miner, and node runner. #Bitcoin only. Systems Administrator. NostrPlebs.com\",\"picture\":\"https://i.postimg.cc/G3qsjxMq/derek-profile-pic.gif\",\"nip05\":\"_@derekross.me\",\"lud06\":\"LNURL1DP68GURN8GHJ7MR9VAJKUEPWD3HXY6T5WVHXXMMD9AKXUATJD3CZ76ZZGA65VDSHC6WKV\",\"lud16\":\"pay@derekross.me\",\"display_name\":\"Derek Ross\",\"website\":\"NostrPlebs.com\",\"banner\":\"https://void.cat/d/J9c2jiSocXbhTnZ6b2bCy9\"}","sig":"9284545df6cf50f75cb3bfbb8e427b8043cc70430186e0d9100b5116a8d6633bfe105d377a8cd6442dd3266b5e77e496a0d291ab292f3642dce99fda3ee6694e","id":"dccfbae2e60e6507a3b8461937917f23cef66a261041aeeb6f2805f97dea3ee7","tags":[]}]"###)
     
     events.append(###"["EVENT","GIMMESOME",{"created_at":1674007831,"pubkey":"3f770d65d3a764a9c5cb503ae123e62ec7598ad035d836e2a810f3877a745b24","kind":0,"content":"{\"name\":\"DerekRoss\",\"about\":\"Bitcoin HODLer, home miner, and node runner. #Bitcoin only. Systems Administrator. NostrPlebs.com\",\"picture\":\"https://i.postimg.cc/G3qsjxMq/derek-profile-pic.gif\",\"nip05\":\"_@derekross.me\",\"lud06\":\"LNURL1DP68GURN8GHJ7MR9VAJKUEPWD3HXY6T5WVHXXMMD9AKXUATJD3CZ76ZZGA65VDSHC6WKV\",\"lud16\":\"pay@derekross.me\",\"display_name\":\"Derek Ross\",\"website\":\"NostrPlebs.com\",\"banner\":\"https://void.cat/d/J9c2jiSocXbhTnZ6b2bCy9\"}","sig":"9284545df6cf50f75cb3bfbb8e427b8043cc70430186e0d9100b5116a8d6633bfe105d377a8cd6442dd3266b5e77e496a0d291ab292f3642dce99fda3ee6694e","id":"dccfbae2e60e6507a3b8461937917f23cef66a261041aeeb6f2805f97dea3ee7","tags":[]}]"###)
@@ -70,7 +73,11 @@ func testKind0Events() -> [String] {
 func testKind1Events() -> [String] {
     var events = [String]()
     
-    // NOTE X START
+    
+    // WITH A TOKEN
+    events.append(###"["EVENT","GIMME",{"id":"1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0","kind":1,"pubkey":"1833ee04459feb2ca4ae690d5f31269ad488c69e5fe903a42b532c677c4a8170","created_at":1674571519,"content":"Having #[0] on nostr after a month of the protocol launch is a great progress… thankful for all the open source devs working hard to bring this into reality 🤙","tags":[["p","84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240"]],"sig":"39f2485ef8252dfaddaa8a6720dcbeafebd51ef8d8520b8d3dadcd8d0d6066d5ace68aa3216c842c7b777ea74a07d4d74068e16e74e41c0a23067a527cf2f1df"}]"###)
+    
+    
     events.append(###"["EVENT","GIMME",{"created_at":1674403897,"pubkey":"04c915daefee38317fa734444acee390a8269fe5810b2241e5e6dd343dfbecc9","kind":1,"content":"Google - 12000 laid off - jan 20th 2023\nMicrosoft - 10000 laid off - jan 18th 2023\nAmazon - 18000 laid off - jan 4th 2023\nSalesforce - 8000 laid off - jan 4th 2023\nFacebook - 11000 laid off - nov 9th 2023","sig":"b6eca8a97b51f1452c3fa4e4f481408b0de9059d7afe833e9d6dd8d76e789a898decf494e7788f711d45abe2ffc1009eec42c042a9c0c0189b89da4b4178416b","id":"6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81","tags":[]}]"###)
     
     

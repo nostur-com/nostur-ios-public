@@ -10,21 +10,20 @@ import CoreData
 
 struct ConfigurationView: View {
     
-    @Environment(\.managedObjectContext) var viewContext
+    @AppStorage("devToggle") var devToggle: Bool = false
+//    @Environment(\.managedObjectContext) var viewContext
     
     @FetchRequest(
         sortDescriptors: [SortDescriptor(\Contact.updated_at, order: .forward)],
         animation: .none)
     var allContacts: FetchedResults<Contact>
     
-    @FetchRequest(
-        sortDescriptors: [SortDescriptor(\Event.created_at, order: .forward)],
-        animation: .none)
-    var allEvents: FetchedResults<Event>
+//    @FetchRequest(
+//        sortDescriptors: [SortDescriptor(\Event.created_at, order: .forward)],
+//        animation: .none)
+//    var allEvents: FetchedResults<Event>
     
     func rebuildReplyToIdsCache() {
-        let kind1 = allEvents.filter { $0.kind == 1 }
-        
         let taskContext = EventsProvider.shared.container.newBackgroundContext()
         taskContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         // Set unused undoManager to nil for macOS (it is nil by default on iOS)
@@ -36,6 +35,10 @@ struct ConfigurationView: View {
         
         taskContext.performAndWait {
          
+            let r = NSFetchRequest<Event>(entityName: "Event")
+            r.predicate = NSPredicate(format: "kind == 1")
+            r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+            let kind1 = try! taskContext.fetch(r)
             
             // ON FIRST PASS RESET ALL TO NIL
             for event in kind1 {
@@ -50,7 +53,7 @@ struct ConfigurationView: View {
                     if let tags = try? decoder.decode([NEventTag].self, from: Data(event.tagsSerialized!.utf8)) {
                         
                         if let replyToEtag = TagsHelpers(tags).replyToEtag() {
-//                            event.replyToId = replyToEtag.id
+                            event.replyToId = replyToEtag.id
 //                            print("updating replyToId for \(String(describing: event.id))")
                         }
                         
@@ -59,7 +62,7 @@ struct ConfigurationView: View {
                             if (event.replyToId == nil) {
                                 event.replyToId = replyToRootEtag.id
                             }
-                            print("updating replyToRootId for \(String(describing: event.id))")
+//                            print("updating replyToRootId for \(String(describing: event.id))")
                         }
                         
                     }
@@ -67,13 +70,12 @@ struct ConfigurationView: View {
             }
             
             do {
+//                try viewContext.save()
                 try taskContext.save()
             }
             catch {
-                print(error)
+                print("rebuildReplyToIdsCache error on save(): \(error)")
             }
-            
-            try! viewContext.save()
         }
     }
     
@@ -90,9 +92,10 @@ struct ConfigurationView: View {
         
         taskContext.performAndWait {
             // sort events by date. oldest first
-            let firstEvent = allEvents.first
-            print("first event: \(String(describing: firstEvent!.id)) date/time: \(Date(timeIntervalSince1970: TimeInterval(firstEvent!.created_at))) ")
-            // for each event (KIND 1 or 7)
+            let r = NSFetchRequest<Event>(entityName: "Event")
+            r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+            let allEvents = try! taskContext.fetch(r)
+            
             let kind1or7 = allEvents.filter { $0.kind == 1 || $0.kind == 7 }
             let kind1 = allEvents.filter { $0.kind == 1 }
             
@@ -153,77 +156,150 @@ struct ConfigurationView: View {
             }
             
             
-            print("Finishing up with viewContext.save()")
+            print("Finishing up with taskContext.save()")
+
+            do {
+                try taskContext.save()
+            }
+            catch {
+                print("rebuildCountingCache error on save(): \(error)")
+                print(error)
+            }
+        }
+    }
+    
+    func rebuildContactCache() {
+        
+        // update fields. BUT ALSO NIL THEM IF MISSING // TODO: SHOULD ALSO DO IN REGULAR METADATA PARSING
+        
+        let taskContext = EventsProvider.shared.container.newBackgroundContext()
+        taskContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        // Set unused undoManager to nil for macOS (it is nil by default on iOS)
+        // to reduce resource requirements.
+        taskContext.undoManager = nil
+        // Add name and author to identify source of persistent history changes.
+        taskContext.name = "rebuildContactCacheContext"
+        taskContext.transactionAuthor = "rebuildContactCache"
+        
+        taskContext.performAndWait {
+         
+            let decoder = JSONDecoder()
+            
+            let r = NSFetchRequest<Event>(entityName: "Event")
+            r.predicate = NSPredicate(format: "kind == 0")
+            r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)]
+            let kind0 = try! taskContext.fetch(r)
+            
+            for event in kind0 {
+                guard event.content != nil else {
+                    continue
+                }
+            
+                guard let metaData = try? decoder.decode(NSetMetadata.self, from: Data(event.content!.utf8)) else {
+                    continue
+                }
+                
+                do {
+                    print("trying to update for \(String(describing: event.pubkey))")
+                    try Contact.updateMetadata(metaData, pubkey: event.pubkey!, context: taskContext)
+                }
+                catch {
+                    print("something wrong with updating conact info cache")
+                    print(error)
+                }
+            }
+            
             
             do {
                 try taskContext.save()
             }
             catch {
+                print("rebuildContactCache error on save(): \(error)")
                 print(error)
             }
         }
-        try! viewContext.save()
     }
     
-    func rebuildContactCache() {
-        // sort events by date. oldest first
+    func deleteAllContacts() {
+        let taskContext = EventsProvider.shared.container.newBackgroundContext()
+        taskContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        // Set unused undoManager to nil for macOS (it is nil by default on iOS)
+        // to reduce resource requirements.
+        taskContext.undoManager = nil
+        // Add name and author to identify source of persistent history changes.
+        taskContext.name = "deleteAllContactsContext"
+        taskContext.transactionAuthor = "deleteAllContacts"
         
-        
-        // for each event (KIND 0) (SET METADATA)
-        
-        // update fields. BUT ALSO NIL THEM IF MISSING // TODO: SHOULD ALSO DO IN REGULAR METADATA PARSING
+        taskContext.performAndWait {
+         
+            let r = NSFetchRequest<Contact>(entityName: "Contact")
+            let allContacts = try! taskContext.fetch(r)
+            
+            for contact in allContacts {
+                taskContext.delete(contact)
+            }
+            do {
+                print("deleting \(allContacts.count) contacts.")
+                try taskContext.save()
+            }
+            catch {
+                print("deleteAllContacts error on save(): \(error)")
+                print(error)
+            }
+        }
     }
     
     var body: some View {
         VStack {
-            //            RelaysView()
+            RelaysView()
             Divider()
-            Text("Other options").font(.headline)
-            
-            Button {
-                rebuildReplyToIdsCache()
-            } label: {
-                Text("Rebuild replyToId, replyToRootId cache")
-            }.padding(10)
-            
-            Button {
-                rebuildCountingCache()
-            } label: {
-                Text("Rebuild counting cache (likes, mentions, replies)")
-            }.padding(10)
-            
-            Text("\n")
-            
-            Button {
-                rebuildContactCache()
-            } label: {
-                Text("Rebuild contact cache (banner, picture etc)")
-            }.padding(10)
+            Toggle(isOn: $devToggle) {
+                Text("Dev mode")
+            }.padding(20)
+            Divider()
+            if (devToggle) {
+                Group {
+                    Text("Other options").font(.headline)
+                    
+                    Button {
+                        rebuildReplyToIdsCache()
+                    } label: {
+                        Text("Rebuild replyToId, replyToRootId cache")
+                    }.padding(10)
+                    
+                    Button {
+                        rebuildCountingCache()
+                    } label: {
+                        Text("Rebuild counting cache (likes, mentions, replies)")
+                    }.padding(10)
+                    
+                    Button {
+                        rebuildContactCache()
+                    } label: {
+                        Text("Rebuild contact cache (banner, picture etc)")
+                    }.padding(10)
+                    
+                    Button {
+                        deleteAllContacts()
+                    } label: {
+                        Text("Delete all contacts \(allContacts.count)")
+                    }.padding(10)
+                    
+                    Text("**Umb** [@snowder](nostr:npub1g53mukxnjkcmr94fhryzkqutdz2ukq4ks0gvy5af25rgmwsl4ngq43drvk)")
+                    Text("**Umb** [@callebtc](nostr:npub12rv5lskctqxxs2c8rf2zlzc7xx3qpvzs3w4etgemauy9thegr43sf485vg)")
+                    
+                    Text("\n")
+                }
+            }
         }
     }
 }
 
 struct ConfigurationView_Previews: PreviewProvider {
     
-    static var previewUserDefaults: UserDefaults = {
-        let d = UserDefaults(suiteName: "preview_user_defaults")!
-        
-        d.set("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", forKey: "activeAccountPublicKey")
-        
-        return d
-    }()
-    
     static var previews: some View {
-        
-        let accountState = AccountState(viewContext: EventsProvider.preview.container.viewContext)
-        
-        let cm = ConnectionManager()
-        
+    
         ConfigurationView()
-            .defaultAppStorage(previewUserDefaults)
-            .environment(\.managedObjectContext,
-                          EventsProvider.preview.container.viewContext)
-            .environmentObject(accountState)
-            .environmentObject(cm)
+            .withPreviewEnvironment()
     }
 }

@@ -190,6 +190,6 @@ struct AccountView_Previews: PreviewProvider {
         account.about = "Test"
         
         return AccountView(account: account)
-            .environment(\.managedObjectContext, EventsProvider.preview.container.viewContext)
+            .withPreviewEnvironment()
     }
 }

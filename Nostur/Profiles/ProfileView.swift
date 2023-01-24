@@ -1,0 +1,231 @@
+//
+//  ProfileView.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 24/01/2023.
+//
+
+import SwiftUI
+import NukeUI
+import Nuke
+
+// Navigation values:
+//typealias ContactPubkey
+
+struct ProfileView: View {
+    
+    @EnvironmentObject var accountState:AccountState
+    @EnvironmentObject var cm:ConnectionManager
+    
+    var pubkey:String
+    var contact:Contact? = nil
+    //    var clEvent:Event? = nil
+    var urlNavigation:Bool? = nil
+    
+    @FetchRequest
+    var clEvents:FetchedResults<Event>
+    
+    init(pubkey:String, contact: Contact? = nil, urlNavigation:Bool? = nil) {
+        self.pubkey = pubkey
+        self.contact = contact
+        self.urlNavigation = urlNavigation
+        
+        _clEvents = FetchRequest(
+            sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
+            predicate: NSPredicate(format: "pubkey == %@ AND kind == 3", pubkey)
+        )
+    }
+    
+    var body: some View {
+        ScrollView {
+            ZStack() {
+                GeometryReader { geo in
+                    if (contact?.banner != nil) {
+                        
+                        LazyImage(url: URL(string: contact!.banner!)) { state in
+                            if let image = state.image {
+                                image // Displays the loaded image
+                            }
+                            else {
+                                Image("NosturBanner")
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: geo.size.width, height: 150)
+                                //                                .clipped()
+                            }
+                        }
+                        .processors([ImageProcessors.Resize(width: geo.size.width)])
+                        .animation(nil)
+                        .priority(.high)
+                        .pipeline(ImagePipeline {
+                            $0.dataLoader = DataLoader(configuration: {
+                                // Disable disk caching built into URLSession
+                                let conf = DataLoader.defaultConfiguration
+                                conf.urlCache = nil
+                                return conf
+                            }())
+                            
+                            $0.imageCache = ImageCache()
+                            $0.dataCache = try! DataCache(name: "com.nostur.2140.banner")
+                        }).frame(width: geo.size.width, height: 150)
+                        //                            .clipped()
+                        
+                    }
+                    else {
+                        HStack {
+                            Image("NosturBanner")
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: geo.size.width, height: 150)
+                        }
+                    }
+                }
+                
+                HStack {
+                    VStack {
+                        ProfilePicView(pubkey: pubkey, contact: contact)
+                            .frame(maxWidth:75, maxHeight:75)
+                            .clipShape(Circle())
+                            .offset(x: 10, y: 150-37.5)
+                        Spacer()
+                    }
+                    Spacer()
+                }
+                
+                VStack(alignment: .leading) {
+                    Rectangle().background(.clear).foregroundColor(.clear).frame(height:150) // Spacer to push content below header pic
+                    
+                    HStack(alignment:.top) {
+                        
+                        Spacer()
+                        
+                        Button {
+                            if accountState.isFollowing(pubkey) {
+                                accountState.unfollow(pubkey)
+                            } else {
+                                accountState.follow(pubkey, cm: cm)
+                            }
+                        } label: {
+                            Text(accountState.isFollowing(pubkey) ? "Following" : "Follow")
+                                .frame(height: 30)
+                                .padding(.horizontal, 25)
+                            //.padding(.vertical, 10)
+                                .font(.caption.weight(.bold))
+                                .foregroundColor(.primary)
+                                .background(.clear)
+                                .cornerRadius(20)
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(.primary, lineWidth: 1)
+                                }
+                        }
+                    }
+                    
+                    
+                    Text("\(contact?.authorName ?? "Anon")").font(.headline)
+                    HStack {
+                        Text("@\(contact?.username ?? String(pubkey.prefix(5)) )").foregroundColor(.secondary)
+                        
+                        Menu {
+                            Button {
+                                UIPasteboard.general.string = pubkey
+                            } label: {
+                                Label("Copy public key hex \(pubkey)...", systemImage: "doc.on.clipboard")
+                            }
+                            Button {
+                                UIPasteboard.general.string = Contact.npub(pubkey)
+                            } label: {
+                                Label("Copy npub \(Contact.npub(pubkey))...", systemImage: "doc.on.clipboard")
+                            }
+                        } label: {
+                            Image(systemName: "person.badge.key.fill")
+                            //                            Text("···")
+                            //                                .foregroundColor(.secondary)
+                            //                                .padding(.top, 0)
+                            //                                .padding(.bottom, 10)
+                            //                                .padding(.leading, 20)
+                            //                                .padding(.trailing, 10)
+                            
+                        }
+                        
+                    }
+                    
+                    
+                    Text("\n\(String(contact?.about ?? "(No information)"))")
+                    
+                    //                Text("Followed by ppl you know...")
+                    // Tweets here
+                    Text("Tweets / Liked").font(.headline).fontWeight(.heavy).padding(.vertical, 10)
+                    
+                    
+                    if clEvents.count != 0, let pubkeys = clEvents.first!.contactPubkeys() {
+                        
+                        Text("Following").font(.headline).fontWeight(.heavy).padding(.vertical, 10)
+                        
+                        LazyVStack {
+                            ForEach(pubkeys.indices, id: \.self) { index in
+                                ProfileRowView(pubkey: pubkeys[index])
+                                    .onAppear {
+                                        // dont prefetch first 5
+                                        // will probably already be visible and fetched by its own .onAppear
+                                        
+                                        if (index > 5) {
+                                            // TODO: find out logic for prefetching next profile info but not if already in cache but also refetch if too old
+                                        }
+                                    }
+                                Divider()
+                            }
+                            // TODO: onAppear, take index. prefetch next 10.....
+                        }
+                        
+                        Spacer()
+                    }
+                    else {
+                        Text("Could not find list of contacts followed by @\( contact?.username ?? String(pubkey.prefix(5)) )")
+                            .onAppear {
+                                cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: pubkey)))
+                            }
+                    }
+                }.padding(10)
+                Spacer()
+            }
+        }
+        .ignoresSafeArea(edges: .top)
+        .onAppear {
+            cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
+        }
+    }
+}
+
+struct OnlyPubkey_Previews: PreviewProvider {
+    static var previews: some View {
+        // 5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0 // bitcoiner
+        let pubkey = "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
+        
+        ProfileView(pubkey: pubkey)
+            .withPreviewEnvironment()
+    }
+}
+
+struct NoClEvent_Previews: PreviewProvider {
+    static var previews: some View {
+        // 5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0 // bitcoiner
+        let pubkey = "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
+        let contact = PreviewFetcher.fetchContact(pubkey)
+        
+        ProfileView(pubkey: pubkey, contact: contact)
+            .withPreviewEnvironment()
+    }
+}
+
+struct ProfileView_Previews: PreviewProvider {
+    static var previews: some View {
+        // 5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0 // bitcoiner
+        let pubkey = "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
+        let contact = PreviewFetcher.fetchContact(pubkey)
+        //        let clEvent = PreviewFetcher.fetchEvents(pubkey, kind: 3).first!
+        //
+        ProfileView(pubkey: pubkey, contact: contact)
+            .withPreviewEnvironment()
+    }
+}

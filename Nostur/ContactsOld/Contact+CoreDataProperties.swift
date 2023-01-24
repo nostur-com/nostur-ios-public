@@ -83,6 +83,10 @@ extension Contact : Identifiable {
         }
     }
     
+    var username:String {
+        get { name ?? authorKey }
+    }
+    
     var npub:String {
         get {
             pubkey != nil ? try! NIP19(prefix: "npub", hexString: pubkey!).displayString : "?"
@@ -140,12 +144,12 @@ extension Contact : Identifiable {
             contact.updated_at = Int64(Date().timeIntervalSince1970)
             print("🟢🟢 New contact stored ")
         }
-        do {
-            try context.save()
-        }
-        catch let error {
-            print("🔴🐥🔴 Error storing event 🔴🐥🔴 \(error)")
-        }
+//        do {
+//            try context.save() // NEED SAVE() HERE OR NOT??
+//        }
+//        catch let error {
+//            print("🔴🐥🔴 Error storing event 🔴🐥🔴 \(error)")
+//        }
     }
     
     static func allContactPubkeys(context:NSManagedObjectContext) async -> [String] {
@@ -158,46 +162,47 @@ extension Contact : Identifiable {
             return allContacts.map { $0.pubkey! }
         }
     }
-    
-    static func handleContactListEvent(event:NEvent, context:NSManagedObjectContext) async -> ([String], [String]) {
-        print("how to handle?? \(event.eventJson())")
-        
-        let newPubkeys = await context.perform {
-            
-            // check existing to prevent duplicates (because iCloud database doesn't support unique id contraints)
-            let r = NSFetchRequest<Contact>()
-            r.entity = Contact.entity()
-            r.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)]
-            let allContacts = try! r.execute()
-            print(allContacts)
-            let allContactPubkeys = allContacts.map { $0.pubkey! }
-            var newPubkeys = [String]()
-            var eventPubkeys = [String]()
-            
-            // create contacts from "p" tags
-            for tag in event.tags {
-                if tag.id == "p" {
-                    let pubkey = tag.otherInformation[0]
-                    eventPubkeys.append(pubkey)
-            
-                    if allContactPubkeys.contains(where: { $0 == pubkey }) {
-                        print("Already have \(pubkey) in contacts. Skipped")
-                        continue
-                    }
-                    print("🩸🩸🩸 new contact tag.id \(tag.id), tag.otherinf \(tag.otherInformation[0]), pubkey \(pubkey)")
-                    let newContact = Contact(context: context)
-                    newContact.pubkey = pubkey
-                    newContact.updated_at = 0
-                    newPubkeys.append(pubkey)
-                    try! context.save()
-                }
-            }
-            
-            // return all new pubkeys
-            return (newPubkeys, eventPubkeys)
-        }
-        return newPubkeys
-    }
+//    
+//    static func handleContactListEvent(event:NEvent, context:NSManagedObjectContext) async -> ([String], [String]) {
+//        // DONT NEED THIS ENTIRE FUNC ACTUALLY
+//        print("how to handle?? \(event.eventJson())")
+//        
+//        let newPubkeys = await context.perform {
+//            
+//            // check existing to prevent duplicates (because iCloud database doesn't support unique id contraints)
+//            let r = NSFetchRequest<Contact>()
+//            r.entity = Contact.entity()
+//            r.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)]
+//            let allContacts = try! r.execute()
+//            print(allContacts)
+//            let allContactPubkeys = allContacts.map { $0.pubkey! }
+//            var newPubkeys = [String]()
+//            var eventPubkeys = [String]()
+//            
+//            // create contacts from "p" tags
+//            for tag in event.tags {
+//                if tag.id == "p" {
+//                    let pubkey = tag.otherInformation[0]
+//                    eventPubkeys.append(pubkey)
+//            
+//                    if allContactPubkeys.contains(where: { $0 == pubkey }) {
+//                        print("Already have \(pubkey) in contacts. Skipped")
+//                        continue
+//                    }
+//                    print("🩸🩸🩸 new contact tag.id \(tag.id), tag.otherinf \(tag.otherInformation[0]), pubkey \(pubkey)")
+//                    let newContact = Contact(context: context)
+//                    newContact.pubkey = pubkey
+//                    newContact.updated_at = 0
+//                    newPubkeys.append(pubkey)
+//                    try! context.save()
+//                }
+//            }
+//            
+//            // return all new pubkeys
+//            return (newPubkeys, eventPubkeys)
+//        }
+//        return newPubkeys
+//    }
     
     static func contactBy(pubkey:String, context:NSManagedObjectContext) -> Contact? {
         
@@ -207,5 +212,44 @@ extension Contact : Identifiable {
         request.sortDescriptors = [NSSortDescriptor(key: "updated_at", ascending: false)]
         
         return try? context.fetch(request).first    
+    }
+    
+    static func npub(_ pubkey:String) -> String {
+        return try! NIP19(prefix: "npub", hexString: pubkey).displayString
+    }
+    
+    
+    static func updateMetadata(_ metaData:NSetMetadata, pubkey:String, context:NSManagedObjectContext) throws {
+        
+        let request = NSFetchRequest<Contact>()
+        request.entity = Contact.entity()
+        request.predicate = NSPredicate(format: "pubkey == %@", pubkey)
+        
+        if let contactToUpdate = try context.fetch(request).first {
+            contactToUpdate.about = metaData.about
+            contactToUpdate.lud16 = metaData.lud16
+            contactToUpdate.name = metaData.name
+            contactToUpdate.display_name = metaData.display_name
+            contactToUpdate.picture = metaData.picture
+            contactToUpdate.banner = metaData.banner
+            if (metaData.nip05 != contactToUpdate.nip05) {
+                contactToUpdate.nip05verifiedAt = nil // WHEN SET
+            }
+            contactToUpdate.nip05 = metaData.nip05
+            contactToUpdate.updated_at = Int64(Date().timeIntervalSinceNow)
+        }
+        else {
+            let contact = Contact(context: context)
+            contact.pubkey = pubkey
+            contact.about = metaData.about
+            contact.lud16 = metaData.lud16
+            contact.name = metaData.name
+            contact.display_name = metaData.display_name
+            contact.picture = metaData.picture
+            contact.banner = metaData.banner
+            contact.nip05verifiedAt = nil // WHEN SET
+            contact.nip05 = metaData.nip05
+            contact.updated_at = Int64(Date().timeIntervalSinceNow)
+        }
     }
 }

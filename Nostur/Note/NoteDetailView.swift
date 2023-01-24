@@ -86,16 +86,18 @@ struct NoteDetailViewInner: View {
                     
                     HStack {
                         if (note.contact != nil) {
-                            NavigationLink(value: ContactProfile(contact: note.contact!), label: {
+                            NavigationLink(value: note.contact, label: {
                                 ProfilePicView(pubkey: note.publicKey, contact:note.contact)
                                     .frame(width:50, height:50)
                                     .clipShape(Circle())
                             })
                         }
                         else {
-                            ProfilePicView(pubkey: note.publicKey)
-                                .frame(width:50, height:50)
-                                .clipShape(Circle())
+                            NavigationLink(value: note.publicKey, label: {
+                                ProfilePicView(pubkey: note.publicKey)
+                                    .frame(width:50, height:50)
+                                    .clipShape(Circle())
+                            })
                         }
                         // name and username
                         
@@ -259,13 +261,8 @@ struct NoteDetailViewWrapper: View {
 struct NoteDetailView_Previews: PreviewProvider {
     static var previews: some View {
         
-        let accountState = AccountState(viewContext: EventsProvider.preview.container.viewContext)
-        let cm = ConnectionManager()
-        
         NoteDetailViewWrapper()
-            .environment(\.managedObjectContext,
-                          EventsProvider.preview.container.viewContext)
-            .environmentObject(accountState)
-            .environmentObject(cm)
+            .withPreviewEnvironment()
+        
     }
 }

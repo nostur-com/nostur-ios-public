@@ -94,10 +94,7 @@ struct RelayEditView: View {
 
 struct RelayEditView_Previews: PreviewProvider {
     
-    static var previews: some View {
-        
-        let cm = ConnectionManager()
-        
+    static var previews: some View {        
         let relay = Relay(context: EventsProvider.preview.container.viewContext)
         relay.id = UUID()
         relay.url = "wss://nostr.bitcoin.sex"
@@ -107,8 +104,7 @@ struct RelayEditView_Previews: PreviewProvider {
         
         return NavigationStack {
             RelayEditView(relay: relay)
-                .environment(\.managedObjectContext, EventsProvider.preview.container.viewContext)
-                .environmentObject(cm)
+                .withPreviewEnvironment()
         }
     }
 }

@@ -11,6 +11,8 @@ import CoreData
 // The main time line, basically a list of NoteRowViews
 struct MainTimelineView: View {
     
+    @AppStorage("devToggle") var devToggle: Bool = false
+    
     // every 8 seconds, should toggle between fetch and parse
     // 0..fetch....8..parse...16...fetch....24....parse...etc..
     
@@ -62,27 +64,31 @@ struct MainTimelineView: View {
     
     var body: some View {
           
-        HStack {
-            Button {
-                Task {
-                    print("queue count: \(await ep.queue.count)")
-                }
+        if (devToggle) {
+            HStack {
+                Button {
+                    Task {
+                        print("queue count: \(await ep.queue.count)")
+                    }
                     
-            } label: {Text("COUNT")}
-            
-            Button {
+                } label: {Text("COUNT")}
+                
+                Button {
                     _ = Task {
                         try! await ep.parseMessagesFromQueue()
                         print("queue count: \(await ep.queue.count)")
                     }
-            } label: {Text("PARSE")}
+                } label: {Text("PARSE")}
+            }
         }
         ZStack {
             VStack {
-                Button {
-                    fetchEventsFromFollowing(amount:100)
-                } label: {
-                    Text("Fetch latest 50 events from who you follow \(accountState.followingPublicKeys.count)")
+                if (devToggle) {
+                    Button {
+                        fetchEventsFromFollowing(amount:100)
+                    } label: {
+                        Text("Fetch latest 50 events from who you follow \(accountState.followingPublicKeys.count)")
+                    }
                 }
                 Group {
                     ScrollViewReader { proxy in
@@ -109,12 +115,6 @@ struct MainTimelineView: View {
                             }
                         }
                         .padding(.top, 1)
-                        Button {
-                            proxy.scrollTo(events.count-1, anchor: .bottom)
-                        } label: {
-                            Text("Scroll to index: \(events.count-1)")
-                        }
-                        .scaleEffect(x: 1, y: -1)
                         .onChange(of: events.count) { newCount in
                             let unreadOld = unread
                             unread = unread + (newCount - events.count)
@@ -132,6 +132,14 @@ struct MainTimelineView: View {
                                 unread = events.count-1 - lastUnreadIndex
                                 print("🍿🍿 RESTORING SCROLL INDEX 🍿🍿🍿🍿")
                             }
+                        }
+                        if (devToggle) {
+                            Button {
+                                proxy.scrollTo(events.count-1, anchor: .bottom)
+                            } label: {
+                                Text("Scroll to index: \(events.count-1)")
+                            }
+                            .scaleEffect(x: 1, y: -1)
                         }
                     }
                     .scaleEffect(x: 1, y: -1)
@@ -248,27 +256,8 @@ struct MainTimelineWrapper: View {
 }
 
 struct MainTimeline_Previews: PreviewProvider {
-    
-    static var previewUserDefaults: UserDefaults = {
-                let d = UserDefaults(suiteName: "preview_user_defaults")!
-                
-        d.set("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", forKey: "activeAccountPublicKey")
-                
-        return d
-            }()
-    
     static var previews: some View {
-        
-        let accountState = AccountState(viewContext: EventsProvider.preview.container.viewContext)
-        
-        let eventsProvider = EventsProvider.shared
-        
-        let cm = ConnectionManager()
-        
         MainTimelineWrapper()
-            .environment(\.managedObjectContext, EventsProvider.preview.container.viewContext)
-            .environmentObject(accountState)
-            .environmentObject(eventsProvider)
-            .environmentObject(cm)
+            .withPreviewEnvironment()
     }
 }

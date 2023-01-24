@@ -75,7 +75,6 @@ struct ProfilePicViewWrapper: View {
 struct ProfilePicView_Previews: PreviewProvider {
     static var previews: some View {
         ProfilePicViewWrapper()
-            .environment(\.managedObjectContext,
-                          EventsProvider.preview.container.viewContext)
+            .withPreviewEnvironment()
     }
 }

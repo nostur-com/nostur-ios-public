@@ -46,7 +46,6 @@ struct ContactProfileView: View {
     @ViewBuilder
     var body: some View {
         
-        
         if (contacts.first == nil) {
             Text("No contact for pubkey: \(pubkey)")
         }
@@ -94,7 +93,6 @@ struct ContactProfileViewInner: View {
 //                                .clipped()
                         }
                     }
-            //            .processors([ImageProcessors.Resize(width: 50)])
                     .processors([ImageProcessors.Resize(width: geo.size.width)])
                         .animation(nil)
                         .priority(.high)
@@ -113,10 +111,12 @@ struct ContactProfileViewInner: View {
                         
                     }
                     else {
-                        Image("NosturBanner")
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: geo.size.width, height: 150)
+                        HStack {
+                            Image("NosturBanner")
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: geo.size.width, height: 150)
+                        }
                     }
                 }
                 
@@ -237,7 +237,7 @@ struct ContactProfileViewInner: View {
             }
             
         }
-        .ignoresSafeArea()
+        .ignoresSafeArea(edges: .top)
     }
 }
 
@@ -292,26 +292,29 @@ struct ContactProfileViewWrapper: View {
 
 struct ContactProfileView_Previews: PreviewProvider {
     
-    static var previewUserDefaults: UserDefaults = {
-                let d = UserDefaults(suiteName: "preview_user_defaults")!
-                
-        d.set("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", forKey: "activeAccountPublicKey")
-                
-        return d
-            }()
+//    static var previewUserDefaults: UserDefaults = {
+//                let d = UserDefaults(suiteName: "preview_user_defaults")!
+//
+//        d.set("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", forKey: "activeAccountPublicKey")
+//
+//        return d
+//            }()
     
     static var previews: some View {
         
-        let cm = ConnectionManager()
-        
-        let accountState = AccountState(viewContext: EventsProvider.preview.container.viewContext)
+//        let cm = ConnectionManager()
+//
+//        let accountState = AccountState(viewContext: EventsProvider.preview.container.viewContext)
         
         return ContactProfileViewWrapper()
-            .defaultAppStorage(previewUserDefaults)
-            .environment(\.managedObjectContext,
-                          EventsProvider.preview.container.viewContext)
-            .environmentObject(accountState)
-            .environmentObject(cm)
+            .withPreviewEnvironment()
+        
+        
+//            .defaultAppStorage(previewUserDefaults)
+//            .environment(\.managedObjectContext,
+//                          EventsProvider.preview.container.viewContext)
+//            .environmentObject(accountState)
+//            .environmentObject(cm)
     }
 }
 

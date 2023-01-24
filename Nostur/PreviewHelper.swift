@@ -1,0 +1,82 @@
+//
+//  PreviewHelper.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 24/01/2023.
+//
+
+import SwiftUI
+import CoreData
+
+extension View {
+        
+    func withPreviewEnvironment() -> some View {
+        
+        let userDefaults:UserDefaults = {
+            let d = UserDefaults(suiteName: "preview_user_defaults")!
+            
+            d.set("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0",
+                  forKey: "activeAccountPublicKey")
+            
+            d.set(true,
+                  forKey: "devToggle")
+            
+            return d
+        }()
+
+        let cm = ConnectionManager()
+        let accountState = AccountState(viewContext: EventsProvider.preview.container.viewContext)
+        let ep = EventsProvider.preview // need this?
+        
+        return self.defaultAppStorage(userDefaults)
+            .environment(\.managedObjectContext,
+                          EventsProvider.preview.container.viewContext)
+            .environmentObject(accountState)
+            .environmentObject(cm)
+            .environmentObject(ep)
+    }
+}
+
+struct PreviewFetcher {
+    
+    static let viewContext = EventsProvider.preview.container.viewContext
+    
+    static func allContacts() -> [Contact] {
+        let request = NSFetchRequest<Contact>(entityName: "Contact")
+        request.sortDescriptors = []
+
+        return try! PreviewFetcher.viewContext.fetch(request)
+    }
+    
+    static func fetchEvents(_ pubkey:String, kind:Int? = nil) -> [Event] {
+        let request = NSFetchRequest<Event>(entityName: "Event")
+//        request.entity = Event.entity()
+        if (kind != nil) {
+            request.predicate = NSPredicate(format: "pubkey == %@ AND kind == %d", pubkey, kind!)
+        } else {
+            request.predicate = NSPredicate(format: "pubkey == %@", pubkey)
+        }
+        
+        request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        
+        return try! PreviewFetcher.viewContext.fetch(request)
+    }
+    
+    static func fetchEvent(_ id:String) -> Event? {
+        let request = NSFetchRequest<Event>(entityName: "Event")
+//        request.entity = Contact.entity()
+        request.predicate = NSPredicate(format: "id == %@", id)
+        request.sortDescriptors = []
+        
+        return try! PreviewFetcher.viewContext.fetch(request).first
+    }
+    
+    static func fetchContact(_ pubkey:String) -> Contact? {
+        let request = NSFetchRequest<Contact>(entityName: "Contact")
+//        request.entity = Contact.entity()
+        request.predicate = NSPredicate(format: "pubkey == %@", pubkey)
+        request.sortDescriptors = []
+        
+        return try! PreviewFetcher.viewContext.fetch(request).first
+    }
+}

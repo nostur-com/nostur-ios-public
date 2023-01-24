@@ -62,6 +62,7 @@ extension Event : Identifiable {
     static func textNotes(byAuthorPubkey:String? = nil) -> NSFetchRequest<Event> {
         
         let request: NSFetchRequest<Event> = Event.fetchRequest()
+        request.entity = Event.entity()
         request.includesPendingChanges = false
         if (byAuthorPubkey != nil) {
             request.predicate = NSPredicate(format: "kind == 1 AND pubkey == %@", byAuthorPubkey!)
@@ -130,24 +131,24 @@ extension Event : Identifiable {
             request.predicate = NSPredicate(format: "id == %@", replyEtag.id)
             
             if let reactingToEvent = try context.fetch(request).first {
-                print("updating .replies for .id = \(String(describing: reactingToEvent.id))")
+//                print("updating .replies for .id = \(String(describing: reactingToEvent.id))")
                 reactingToEvent.replies = reactingToEvent.replies + 1
             }
         }
         
         // NIP-10: Those marked with "root" denote the root id of the reply thread being responded to.
-        if let rootEtag = TagsHelpers(tags).replyToRootEtag() {
-            if rootEtag.id != TagsHelpers(tags).replyToEtag()?.id { // dont increase counter if root reply id is same as reply id
-                let request = NSFetchRequest<Event>()
-                request.entity = Event.entity()
-                request.predicate = NSPredicate(format: "id == %@", rootEtag.id)
-                
-                if let reactingToEvent = try context.fetch(request).first {
-                    print("updating .replies for .id = \(String(describing: reactingToEvent.id))")
-                    reactingToEvent.replies = reactingToEvent.replies + 1
-                }
-            }
-        }
+//        if let rootEtag = TagsHelpers(tags).replyToRootEtag() {
+//            if rootEtag.id != TagsHelpers(tags).replyToEtag()?.id { // dont increase counter if root reply id is same as reply id
+//                let request = NSFetchRequest<Event>()
+//                request.entity = Event.entity()
+//                request.predicate = NSPredicate(format: "id == %@", rootEtag.id)
+//                
+//                if let reactingToEvent = try context.fetch(request).first {
+////                    print("updating .replies for .id = \(String(describing: reactingToEvent.id))")
+//                    reactingToEvent.replies = reactingToEvent.replies + 1
+//                }
+//            }
+//        }
     }
     
     // NIP-25: The generic reaction, represented by the content set to a + string, SHOULD be interpreted as a "like" or "upvote".
@@ -162,7 +163,7 @@ extension Event : Identifiable {
                 request.predicate = NSPredicate(format: "id == %@", lastEtag.id)
                 
                 if let reactingToEvent = try context.fetch(request).first {
-                    print("updating .likes for .id = \(String(describing: reactingToEvent.id))")
+//                    print("updating .likes for .id = \(String(describing: reactingToEvent.id))")
                     reactingToEvent.likes = reactingToEvent.likes + 1
 //                                            try reactingToEvent.managedObjectContext?.save()
                 }
@@ -170,7 +171,7 @@ extension Event : Identifiable {
         case "-":
             print("downvote")
         default:
-            print("unhandled reaction")
+            break
         }
     }
     
@@ -184,10 +185,25 @@ extension Event : Identifiable {
                 request.predicate = NSPredicate(format: "id == %@", etag.id)
                 
                 if let reactingToEvent = try context.fetch(request).first {
-                    print("updating .mentions for .id = \(String(describing: reactingToEvent.id))")
+//                    print("updating .mentions for .id = \(String(describing: reactingToEvent.id))")
                     reactingToEvent.mentions = reactingToEvent.mentions + 1
                 }
             }
+        }
+    }
+    
+    func contactPubkeys() -> [String]? {
+        let decoder = JSONDecoder()
+        
+        if (tagsSerialized != nil) {
+            guard let tags = try? decoder.decode([NEventTag].self, from: Data(tagsSerialized!.utf8)) else {
+                return nil
+            }
+            
+            return tags.filter { $0.type == "p" } .map { $0.pubkey }
+        }
+        else {
+            return nil
         }
     }
 }

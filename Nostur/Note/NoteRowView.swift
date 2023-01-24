@@ -9,6 +9,10 @@ import SwiftUI
 import Nuke
 import NukeUI
 
+// TODO: replying to trick:
+// people.map(\.nameComponents).formatted(.list(memberStyle: .name(style:.short), type:.and)
+// uitzoeken, from WWDC video
+
 // A single note shown in a row in the MainTimelineView
 struct NoteRowView: View {
     
@@ -17,6 +21,14 @@ struct NoteRowView: View {
     
     let tweet:Tweet = Tweet(hasThread: false) // Todo
     var note:Note
+    var allContacts:FetchedResults<Contact>?
+    
+//    func contact(byPubkey:String?) -> Contact? {
+//        guard byPubkey != nil && allContacts != nil else {
+//            return nil
+//        }
+//        return allContacts!.first(where: { ($0.pubkey != nil) && $0.pubkey == byPubkey})
+//    }
     
     var body: some View {
         VStack(spacing:2) { // A TWEET
@@ -50,16 +62,18 @@ struct NoteRowView: View {
                         VStack { // profile image + thread line
                             // profile image
                             if (note.contact != nil) {
-                                NavigationLink(value: ContactProfile(contact: note.contact!), label: {
+                                NavigationLink(value: note.contact, label: {
                                     ProfilePicView(pubkey: note.publicKey, contact:note.contact)
                                         .frame(maxWidth:50, maxHeight:50)
                                         .clipShape(Circle())
                                 })
                             }
                             else {
-                                ProfilePicView(pubkey: note.publicKey)
-                                    .frame(maxWidth:50, maxHeight:50)
-                                    .clipShape(Circle())
+                                NavigationLink(value: note.publicKey, label: {
+                                    ProfilePicView(pubkey: note.publicKey, contact:note.contact)
+                                        .frame(maxWidth:50, maxHeight:50)
+                                        .clipShape(Circle())
+                                })
                             }
                             // thread line
                             if tweet.hasThread {
@@ -113,7 +127,9 @@ struct NoteRowView: View {
                             NoteMenuView(note)
                         }
                         
-                        Text(note.noteText).multilineTextAlignment(TextAlignment.leading)
+                        NoteTextRenderView(event:note.event, allContacts: allContacts?.reversed())
+                        .multilineTextAlignment(TextAlignment.leading)
+//                        Text(note.noteText).multilineTextAlignment(TextAlignment.leading)
                             .font(.system(size: 14))
                             .foregroundColor(.primary)
                             .lineSpacing(3)
@@ -236,8 +252,20 @@ struct NoteMenuView : View {
 // FOR PREVIEW
 struct NoteViewWrapper: View {
     
+//    @Environment(\.managedObjectContext) var viewContext
+//
+//    @FetchRequest(
+//        sortDescriptors: []
+//    )
+//    var events:FetchedResults<Event>
+    
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
+        sortDescriptors: [SortDescriptor(\Contact.updated_at, order: .reverse)],
+        animation: .none)
+    var allContacts:FetchedResults<Contact>
+    
+    @FetchRequest(
+        sortDescriptors: [SortDescriptor(\Contact.updated_at, order: .reverse)],
         predicate: NSPredicate(format: "pubkey == %@", "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"),
         animation: .none)
     var contacts:FetchedResults<Contact>
@@ -245,12 +273,21 @@ struct NoteViewWrapper: View {
     @FetchRequest(fetchRequest:Event.textNotes())
     var events: FetchedResults<Event>
     
+//    @FetchRequest(
+//        entity: Event.entity(),
+//        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
+//        predicate: NSPredicate(format: "kind == 1"),
+//        animation: .none)
+//        var events: FetchedResults<Event>
+    
+//    var body: some View {
+//        Text("hi")
+//    }
+    
     var body: some View {
-        
-
         VStack {
             if (events.first != nil) {
-                NoteRowView(note:Note(event:events.first!, responses:nil, contact: contacts.first))
+                NoteRowView(note:Note(event:events.first!, responses:nil, contact: contacts.first), allContacts:allContacts)
             }
             else {
                 Text("No events")
@@ -264,13 +301,7 @@ struct NoteView_Previews: PreviewProvider {
     
     static var previews: some View {
         
-        let accountState = AccountState(viewContext: EventsProvider.preview.container.viewContext)
-        let cm = ConnectionManager()
-        
         NoteViewWrapper()
-            .environment(\.managedObjectContext,
-                          EventsProvider.preview.container.viewContext)
-            .environmentObject(accountState)
-            .environmentObject(cm)
+            .withPreviewEnvironment()
     }
 }

@@ -7,9 +7,18 @@
 
 import Foundation
 
+//var key = try! NIP19(displayString: "npub")
+//key.displayString // "npub..."
+//key.hexString // "8df73d0..."
+//
+//var key = try! NIP19(prefix: "npub", hexString: "73ea43...")
+//var key = try! NIP19(prefix: "note", hexString: "139d3d...")
+var key = try! NIP19(prefix: "nsec", hexString: "139d3d...")
+
 struct NIP19 {
     let key: Bytes
     let displayString: String
+    var hexString:String { get { key.hexString() }}
     
     public init(prefix:String, hexString: String) throws {
         self.key = hexString.hexToBytes()

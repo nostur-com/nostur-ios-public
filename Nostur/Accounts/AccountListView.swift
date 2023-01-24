@@ -50,7 +50,7 @@ struct AccountListView: View {
                                     Text("active")
                                         .foregroundColor(.white)
                                         .padding(.horizontal, 10)
-                                        .background(Color("primary"))
+                                        .background(Color("OrangeColor"))
                                         .cornerRadius(8)
                                 }
                             }
@@ -233,24 +233,10 @@ struct AccountListView: View {
 }
 
 struct AccountListView_Previews: PreviewProvider {
-    
-    //    static var viewContext = PersistenceController.preview.container.viewContext
-    
     static var previews: some View {
-        
-        let accountState = AccountState(viewContext: EventsProvider.preview.container.viewContext)
-        
-        let cm = ConnectionManager()
-        
-        let eventsProvider = EventsProvider.shared
-        
         NavigationStack {
-            AccountListView(activeAccountPublicKey: "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0")
-                .environment(\.managedObjectContext,
-                              EventsProvider.preview.container.viewContext)
-                .environmentObject(accountState)
-                .environmentObject(cm)
-                .environmentObject(eventsProvider)
+            AccountListView()
+                .withPreviewEnvironment()
         }
     }
 }

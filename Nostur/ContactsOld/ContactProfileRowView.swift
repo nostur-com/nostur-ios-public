@@ -154,22 +154,9 @@ struct ContactProfileRowViewWrapper: View {
 
 struct ContactProfileRowView_Previews: PreviewProvider {
     
-    static var previewUserDefaults: UserDefaults = {
-        let d = UserDefaults(suiteName: "preview_user_defaults")!
-        
-        d.set("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", forKey: "activeAccountPublicKey")
-        
-        return d
-    }()
-    
     static var previews: some View {
         
-        let accountState = AccountState(viewContext: EventsProvider.preview.container.viewContext)
-        
         ContactProfileRowViewWrapper()
-            .defaultAppStorage(previewUserDefaults)
-            .environment(\.managedObjectContext,
-                          EventsProvider.preview.container.viewContext)
-            .environmentObject(accountState)
+            .withPreviewEnvironment()
     }
 }

@@ -122,30 +122,10 @@ class EventsProvider: ObservableObject, EventDelegate {
     private let inMemory: Bool
     private var notificationToken: NSObjectProtocol?
     
-    private init(inMemory: Bool = false) {
+    init(inMemory: Bool = false) {
         self.inMemory = inMemory
         
-        // Observe Core Data remote change notifications on the queue where the changes were made.
-        notificationToken = NotificationCenter.default.addObserver(forName: .NSPersistentStoreRemoteChange, object: nil, queue: nil) { note in
-            self.logger.debug("Received a persistent store remote change notification.")
-            Task {
-                await self.fetchPersistentHistory()
-            }
-        }
-    }
-    
-    deinit {
-        if let observer = notificationToken {
-            NotificationCenter.default.removeObserver(observer)
-        }
-    }
-    
-    /// A peristent history token used for fetching transactions from the store.
-    private var lastToken: NSPersistentHistoryToken?
-    
-    /// A persistent container to set up the Core Data stack.
-    lazy var container: NSPersistentContainer = {
-        let container = NSPersistentContainer(name: "NosturCloud")
+        container = NSPersistentContainer(name: "NosturCloud")
         
         guard let description = container.persistentStoreDescriptions.first else {
             fatalError("Failed to retrieve a persistent store description.")
@@ -186,75 +166,141 @@ class EventsProvider: ObservableObject, EventDelegate {
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         container.viewContext.undoManager = nil
         container.viewContext.shouldDeleteInaccessibleFaults = true
-        return container
         
         
-        
-        //        /// - Tag: persistentContainer
-        //        //        let container = NSPersistentCloudKitContainer(name: "Events")
-        //        container = NSPersistentCloudKitContainer(name: "NosturCloud")
-        //
-        //        let defaultDirectoryURL = NSPersistentCloudKitContainer.defaultDirectoryURL()
-        //
-        //        let cloudDescription = NSPersistentStoreDescription(url: defaultDirectoryURL.appendingPathComponent("Nostur-iCloud.sqlite"))
-        //        cloudDescription.configuration = "Default"
-        //
-        ////        let localDescription = NSPersistentStoreDescription(url: defaultDirectoryURL.appendingPathComponent("Nostur-local.sqlite"))
-        ////        localDescription.configuration = "Local"
-        //
-        //
-        //
-        //        container.viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
-        //        //        container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
-        //
-        //        container.persistentStoreDescriptions = [cloudDescription]
-        ////        container.persistentStoreDescriptions = [cloudDescription, localDescription]
-        //
-        //        guard let description = container.persistentStoreDescriptions.first else {
-        //            fatalError("Failed to retrieve a persistent store description.")
-        //        }
-        //
-        //        if inMemory {
-        //            for descripton in container.persistentStoreDescriptions {
-        //                description.url = URL(fileURLWithPath: "/dev/null")
-        //            }
-        //        }
-        //
-        //        for descripton in container.persistentStoreDescriptions {
-        //            // Enable persistent store remote change notifications
-        //            /// - Tag: persistentStoreRemoteChange
-        //            description.setOption(true as NSNumber,
-        //                                  forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
-        //
-        //            // Enable persistent history tracking
-        //            /// - Tag: persistentHistoryTracking
-        //            description.setOption(true as NSNumber,
-        //                                  forKey: NSPersistentHistoryTrackingKey)
-        //        }
-        //
-        //
-        ////        guard let description = container.persistentStoreDescriptions.first else {
-        ////            fatalError("Failed to retrieve a persistent store description.")
-        ////        }
-        //
-        //        container.loadPersistentStores { storeDescription, error in
-        //            if let error = error as NSError? {
-        //                fatalError("Unresolved error \(error), \(error.userInfo)")
-        //            }
-        //        }
-        //
-        //        //        if (!inMemory) {
-        //        // This sample refreshes UI by consuming store changes via persistent history tracking.
-        //        /// - Tag: viewContextMergeParentChanges
-        //        container.viewContext.automaticallyMergesChangesFromParent = false
-        //        container.viewContext.name = "viewContext"
-        //        /// - Tag: viewContextMergePolicy
-        //        container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
-        //        container.viewContext.undoManager = nil
-        //        container.viewContext.shouldDeleteInaccessibleFaults = true
-        //        //        }
-        //        return container
-    }()
+        // Observe Core Data remote change notifications on the queue where the changes were made.
+        notificationToken = NotificationCenter.default.addObserver(forName: .NSPersistentStoreRemoteChange, object: nil, queue: nil) { note in
+            self.logger.debug("Received a persistent store remote change notification.")
+            Task {
+                await self.fetchPersistentHistory()
+            }
+        }
+    }
+    
+    deinit {
+        if let observer = notificationToken {
+            NotificationCenter.default.removeObserver(observer)
+        }
+    }
+    
+    /// A peristent history token used for fetching transactions from the store.
+    private var lastToken: NSPersistentHistoryToken?
+    
+    
+    
+    let container: NSPersistentContainer
+    /// A persistent container to set up the Core Data stack.
+//    var container: NSPersistentContainer = {
+//        let container = NSPersistentContainer(name: "NosturCloud")
+//
+//        guard let description = container.persistentStoreDescriptions.first else {
+//            fatalError("Failed to retrieve a persistent store description.")
+//        }
+//
+//
+//        let defaultDirectoryURL = NSPersistentContainer.defaultDirectoryURL()
+//
+//
+//        description.url = defaultDirectoryURL.appendingPathComponent("Nostur-iCloud.sqlite")
+//        description.configuration = "Default"
+//
+//        if inMemory {
+//            description.url = URL(fileURLWithPath: "/dev/null")
+//        }
+//
+//        // Enable persistent store remote change notifications
+//        /// - Tag: persistentStoreRemoteChange
+//        description.setOption(true as NSNumber,
+//                              forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+//
+//        // Enable persistent history tracking
+//        /// - Tag: persistentHistoryTracking
+//        description.setOption(true as NSNumber,
+//                              forKey: NSPersistentHistoryTrackingKey)
+//
+//        container.loadPersistentStores { storeDescription, error in
+//            if let error = error as NSError? {
+//                fatalError("Unresolved error \(error), \(error.userInfo)")
+//            }
+//        }
+//
+//        // This sample refreshes UI by consuming store changes via persistent history tracking.
+//        /// - Tag: viewContextMergeParentChanges
+//        container.viewContext.automaticallyMergesChangesFromParent = false
+//        container.viewContext.name = "viewContext"
+//        /// - Tag: viewContextMergePolicy
+//        container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+//        container.viewContext.undoManager = nil
+//        container.viewContext.shouldDeleteInaccessibleFaults = true
+//        return container
+//
+//
+//
+//        //        /// - Tag: persistentContainer
+//        //        //        let container = NSPersistentCloudKitContainer(name: "Events")
+//        //        container = NSPersistentCloudKitContainer(name: "NosturCloud")
+//        //
+//        //        let defaultDirectoryURL = NSPersistentCloudKitContainer.defaultDirectoryURL()
+//        //
+//        //        let cloudDescription = NSPersistentStoreDescription(url: defaultDirectoryURL.appendingPathComponent("Nostur-iCloud.sqlite"))
+//        //        cloudDescription.configuration = "Default"
+//        //
+//        ////        let localDescription = NSPersistentStoreDescription(url: defaultDirectoryURL.appendingPathComponent("Nostur-local.sqlite"))
+//        ////        localDescription.configuration = "Local"
+//        //
+//        //
+//        //
+//        //        container.viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+//        //        //        container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+//        //
+//        //        container.persistentStoreDescriptions = [cloudDescription]
+//        ////        container.persistentStoreDescriptions = [cloudDescription, localDescription]
+//        //
+//        //        guard let description = container.persistentStoreDescriptions.first else {
+//        //            fatalError("Failed to retrieve a persistent store description.")
+//        //        }
+//        //
+//        //        if inMemory {
+//        //            for descripton in container.persistentStoreDescriptions {
+//        //                description.url = URL(fileURLWithPath: "/dev/null")
+//        //            }
+//        //        }
+//        //
+//        //        for descripton in container.persistentStoreDescriptions {
+//        //            // Enable persistent store remote change notifications
+//        //            /// - Tag: persistentStoreRemoteChange
+//        //            description.setOption(true as NSNumber,
+//        //                                  forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+//        //
+//        //            // Enable persistent history tracking
+//        //            /// - Tag: persistentHistoryTracking
+//        //            description.setOption(true as NSNumber,
+//        //                                  forKey: NSPersistentHistoryTrackingKey)
+//        //        }
+//        //
+//        //
+//        ////        guard let description = container.persistentStoreDescriptions.first else {
+//        ////            fatalError("Failed to retrieve a persistent store description.")
+//        ////        }
+//        //
+//        //        container.loadPersistentStores { storeDescription, error in
+//        //            if let error = error as NSError? {
+//        //                fatalError("Unresolved error \(error), \(error.userInfo)")
+//        //            }
+//        //        }
+//        //
+//        //        //        if (!inMemory) {
+//        //        // This sample refreshes UI by consuming store changes via persistent history tracking.
+//        //        /// - Tag: viewContextMergeParentChanges
+//        //        container.viewContext.automaticallyMergesChangesFromParent = false
+//        //        container.viewContext.name = "viewContext"
+//        //        /// - Tag: viewContextMergePolicy
+//        //        container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+//        //        container.viewContext.undoManager = nil
+//        //        container.viewContext.shouldDeleteInaccessibleFaults = true
+//        //        //        }
+//        //        return container
+//    }()
     
     /// Creates and configures a private queue context.
     func newTaskContext() -> NSManagedObjectContext {
@@ -375,23 +421,26 @@ class EventsProvider: ObservableObject, EventDelegate {
                     print("Trying to store event")
                     try EventsProvider.saveEvent(event: event, context:container.viewContext) // Thread 12: EXC_BAD_ACCESS (code=1, address=0x0)
                     
-                    // STORE CONTACT
                     
-                    do {
-                        // skip if contact is already in DB
-                        let crequest = NSFetchRequest<Contact>()
-                        crequest.entity = Contact.entity()
-                        crequest.predicate = NSPredicate(format: "pubkey == %@", event.publicKey)
-                        
-                        guard try container.viewContext.fetch(crequest).first == nil else {
-                            throw "🟠 Contact.pubkey \(event.publicKey) already in DB. skipped."
-                        }
-                        
-                        try EventsProvider.saveContact(event: event, context: container.viewContext)
-                    }
-                    catch {
-//                        print(error)
-                    }
+                    
+//                    fatalError("DONT DOUBLE SAVE CONTACTs. DELETE ALL CONTACTS AND REFRESH...")
+//                    // STORE CONTACT
+//
+//                    do {
+//                        // skip if contact is already in DB
+//                        let crequest = NSFetchRequest<Contact>()
+//                        crequest.entity = Contact.entity()
+//                        crequest.predicate = NSPredicate(format: "pubkey == %@", event.publicKey)
+//
+//                        guard try container.viewContext.fetch(crequest).first == nil else {
+//                            throw "🟠 Contact.pubkey \(event.publicKey) already in DB. skipped."
+//                        }
+//
+//                        EventsProvider.saveContact(event: event, context: container.viewContext)
+//                    }
+//                    catch {
+////                        print(error)
+//                    }
                     
                     
                     
@@ -479,7 +528,7 @@ class EventsProvider: ObservableObject, EventDelegate {
         /// - Tag: performAndWait
         ///
         _ = taskContext.performAndWait {
-            Task {
+            Task(priority:.background) {
                 let amountOfMessagesToParse = await queue.count
                 
                 var messagesToParse:[RelayMessage] = []
@@ -504,7 +553,7 @@ class EventsProvider: ObservableObject, EventDelegate {
                             request.predicate = NSPredicate(format: "id == %@", event.id)
                             
                             // remember recent .created_at timestamp from timeline events
-                            if event.kind == .textNote {
+                            if event.kind == .textNote || event.kind == .custom(7) {
                                 // don't remember if timestamp is in the future
                                 if event.createdAt.timestamp > Int(Date().timeIntervalSince1970) {
                                     return
@@ -532,11 +581,12 @@ class EventsProvider: ObservableObject, EventDelegate {
                             print("Trying to store event")
                             try EventsProvider.saveEvent(event: event, context:taskContext) // Thread 12: EXC_BAD_ACCESS (code=1, address=0x0)
                             
-                            // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC
+                            // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
                             if event.kind == .custom(7) {
                                 try Event.updateLikeCountCache(event.tags, content:event.content, context: taskContext)
                             }
                            
+                            // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REPLIES, MENTIONS)
                             if event.kind == .textNote {
                                 // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
                                 try Event.updateMentionsCountCache(event.tags, context: taskContext)
@@ -546,27 +596,27 @@ class EventsProvider: ObservableObject, EventDelegate {
                                 try Event.updateRepliesCountCache(event.tags, context: taskContext)
                             }
 
-                            try taskContext.save()
+//                            try taskContext.save() // NEED SAVE() HERE OR NOT??
                             
                             
                             // STORE CONTACT
                             
-                            do {
-                                // skip if contact is already in DB
-                                let crequest = NSFetchRequest<Contact>()
-                                crequest.entity = Contact.entity()
-                                crequest.predicate = NSPredicate(format: "pubkey == %@", event.publicKey)
-                                
-//                                guard try container.viewContext.fetch(crequest).first == nil else {
-                                guard try taskContext.fetch(crequest).first == nil else {
-                                    throw "🟠 Contact.pubkey \(event.publicKey) already in DB. skipped."
-                                }
-                                
-                                try EventsProvider.saveContact(event: event, context: taskContext)
-                            }
-                            catch {
-//                                print(error)
-                            }
+//                            do {
+//                                // skip if contact is already in DB
+//                                let crequest = NSFetchRequest<Contact>()
+//                                crequest.entity = Contact.entity()
+//                                crequest.predicate = NSPredicate(format: "pubkey == %@", event.publicKey)
+//
+////                                guard try container.viewContext.fetch(crequest).first == nil else {
+//                                guard try taskContext.fetch(crequest).first == nil else {
+//                                    throw "🟠 Contact.pubkey \(event.publicKey) already in DB. skipped."
+//                                }
+//
+//                                EventsProvider.saveContact(event: event, context: taskContext)
+//                            }
+//                            catch {
+////                                print(error)
+//                            }
                             
                             switch event.kind {
                                 
@@ -613,6 +663,12 @@ class EventsProvider: ObservableObject, EventDelegate {
                 }
                 
 //                print("🐥🐥🐥🐥 Events in queue? \(await queue.count) 🐥🐥🐥🐥")
+                do {
+                    try taskContext.save() // SHOULD ONLY SAVE HERE! NO WHERE ELSE!!!
+                }
+                catch {
+                    print ("error taskContext.save(): \(error)")
+                }
             }
         }
         
@@ -738,26 +794,26 @@ class EventsProvider: ObservableObject, EventDelegate {
         if (tagsSerialized != nil) {
             savedEvent.tagsSerialized = String(data: tagsSerialized!, encoding: .utf8)
         }
-        do {
-            try context.save() // Thread 12: EXC_BAD_ACCESS (code=1, address=0x0)
-        }
-        catch let error {
-            print("🔴🔴 Error saving event 🔴🔴 \(error)")
-        }
+//        do { // NEED SAVE() HERE OR NOT??
+//            try context.save() // Thread 12: EXC_BAD_ACCESS (code=1, address=0x0)
+//        }
+//        catch let error {
+//            print("🔴🔴 Error saving event 🔴🔴 \(error)")
+//        }
         
     }
     
-    static func saveContact(event:NEvent, context:NSManagedObjectContext) throws {
-        let contact = Contact(context: context)
-        contact.pubkey = event.publicKey
-        contact.updated_at = 0
-        do {
-            try context.save()
-        }
-        catch let error {
-            print("🔴🔴 Error saving contact (saveContact) 🔴🔴 \(error)")
-        }
-    }
+//    static func saveContact(event:NEvent, context:NSManagedObjectContext) {
+//        let contact = Contact(context: context)
+//        contact.pubkey = event.publicKey
+//        contact.updated_at = 0
+////        do { // NEED SAVE() HERE OR NOT??
+////            try context.save()
+////        }
+////        catch let error {
+////            print("🔴🔴 Error saving contact (saveContact) 🔴🔴 \(error)")
+////        }
+//    }
 }
 
 

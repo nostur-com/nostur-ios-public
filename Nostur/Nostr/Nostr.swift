@@ -356,15 +356,21 @@ struct TagsHelpers {
             return nil
         }
         // PREFERRED NEW METHOD
+        // NIP-10: Those marked with "reply" denote the id of the reply event being responded to.
         let replyEtags = tags.filter { $0.type == "e" && $0.otherInformation.count == 3 && $0.otherInformation[2] == "reply" }
         if (replyEtags.count != 0) {
             return replyEtags.first
         }
 
-        // OLD METHOD
+        // OLD METHOD NIP-10:
+        // One "e" tag = REPLY
         if oneEtag() {
             return eTags().first
         }
+        
+        // OLD METHOD NIP-10: 
+        // Two "e" tags: FIRST = ROOT, LAST = REPLY
+        // Many "e" tags: SAME
         if (twoEtags() || manyEtags()) {
             return eTags().last
         }

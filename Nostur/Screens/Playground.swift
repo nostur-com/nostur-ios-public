@@ -209,21 +209,9 @@ struct TweetLoader {
 
 struct Playground_Previews: PreviewProvider {
     
-    
-    //    static var cloudContainer = PersistenceController.preview.cloudContainer
-    
-    static var previewUserDefaults: UserDefaults = {
-        let d = UserDefaults(suiteName: "preview_user_defaults")!
-        
-        d.set("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", forKey: "activeAccountPublicKey")
-        
-        return d
-    }()
     static var previews: some View {
         Playground()
-            .defaultAppStorage(previewUserDefaults)
-            .environment(\.managedObjectContext,
-                          EventsProvider.preview.container.viewContext)
+            .withPreviewEnvironment()
         
     }
 }
