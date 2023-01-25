@@ -16,11 +16,19 @@ import NukeUI
 // A single note shown in a row in the MainTimelineView
 struct NoteRowView: View {
     
+    var event:Event
+    
+    @FetchRequest(
+        sortDescriptors: [],
+        animation: .none)
+    var authors:FetchedResults<Contact>
+    
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var cm:ConnectionManager
     
     let tweet:Tweet = Tweet(hasThread: false) // Todo
-    var note:Note
+    
+//    var note:Note
     var allContacts:FetchedResults<Contact>?
     
 //    func contact(byPubkey:String?) -> Contact? {
@@ -29,6 +37,15 @@ struct NoteRowView: View {
 //        }
 //        return allContacts!.first(where: { ($0.pubkey != nil) && $0.pubkey == byPubkey})
 //    }
+    
+    init(event: Event) {
+        self.event = event
+        
+        _authors = FetchRequest(
+            sortDescriptors: [],
+            predicate: NSPredicate(format: "pubkey == %@", event.pubkey!)
+        )
+    }
     
     var body: some View {
         VStack(spacing:2) { // A TWEET
@@ -55,22 +72,22 @@ struct NoteRowView: View {
                 }.padding(.leading, 10)
             }
             
-            NavigationLink(value:note, label: {
+            NavigationLink(value: NotePath(id: event.id!), label: {
                 VStack (alignment: .leading) { // Vstack for retweeted thread
                 HStack(alignment: .top) { // Tweet
-                    NavigationLink(value: note, label: {
+                    NavigationLink(value: NotePath(id: event.id!), label: {
                         VStack { // profile image + thread line
                             // profile image
-                            if (note.contact != nil) {
-                                NavigationLink(value: note.contact, label: {
-                                    ProfilePicView(pubkey: note.publicKey, contact:note.contact)
+                            if (authors.first != nil) {
+                                NavigationLink(value: ContactPath(key: event.pubkey!), label: {
+                                    ProfilePicView(pubkey: event.pubkey!, contact:authors.first)
                                         .frame(maxWidth:50, maxHeight:50)
                                         .clipShape(Circle())
                                 })
                             }
                             else {
-                                NavigationLink(value: note.publicKey, label: {
-                                    ProfilePicView(pubkey: note.publicKey, contact:note.contact)
+                                NavigationLink(value: ContactPath(key: event.pubkey!), label: {
+                                    ProfilePicView(pubkey: event.pubkey!, contact:authors.first)
                                         .frame(maxWidth:50, maxHeight:50)
                                         .clipShape(Circle())
                                 })
@@ -93,10 +110,10 @@ struct NoteRowView: View {
                     VStack(alignment: .leading, spacing: 3) { // Tweet container
                         HStack { // name + reply + context menu
                             
-                            NavigationLink(value:note, label: {
+                            NavigationLink(value: NotePath(id: event.id!), label: {
                                 VStack(alignment: .leading) { // Name + menu "replying to"
                                     HStack(spacing:2) {
-                                        Text(note.authorName) // Name
+                                        Text(authors.first?.authorName ?? "Anom") // Name
                                             .font(.system(size: 14))
                                             .foregroundColor(.primary)
                                             .fontWeight(.bold)
@@ -108,13 +125,13 @@ struct NoteRowView: View {
                                                 .font(.system(size: 13))
                                         }
                                         
-                                        Text("@\(note.username) · \(note.event.ago)") //
+                                        Text("@\(authors.first?.username ?? event.authorKey) · \(event.ago)") //
                                             .font(.system(size: 14))
                                             .foregroundColor(.secondary)
                                     }
                                     
-                                    if (note.event.replyToId != nil) {
-                                        Text("Replying to @\(String(note.event.replyToId!.prefix(5)))")
+                                    if (event.replyToId != nil) {
+                                        Text("Replying to @\(String(event.replyToId!.prefix(5)))")
                                             .foregroundColor(.secondary)
                                             .font(.system(size: 13))
                                             .fontWeight(.light)
@@ -124,12 +141,12 @@ struct NoteRowView: View {
                             
                             Spacer()
                             
-                            NoteMenuView(note)
+                            NoteMenuView(event: event)
                         }
                         
-                        NoteTextRenderView(event:note.event, allContacts: allContacts?.reversed())
-                        .multilineTextAlignment(TextAlignment.leading)
-//                        Text(note.noteText).multilineTextAlignment(TextAlignment.leading)
+//                        NoteTextRenderView(event:event, allContacts: allContacts?.reversed())
+//                        .multilineTextAlignment(TextAlignment.leading)
+                        Text(event.noteText).multilineTextAlignment(TextAlignment.leading)
                             .font(.system(size: 14))
                             .foregroundColor(.primary)
                             .lineSpacing(3)
@@ -149,7 +166,7 @@ struct NoteRowView: View {
                             }) {
                                 HStack {
                                     Image(systemName: "message")
-                                    Text("\(note.event.replies)")
+                                    Text("\(event.replies)")
                                 }.frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
                             }
                             
@@ -159,7 +176,7 @@ struct NoteRowView: View {
                             }) {
                                 HStack {
                                     Image(systemName: "arrow.2.squarepath")
-                                    Text("\(note.event.mentions)")
+                                    Text("\(event.mentions)")
                                 }.frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
                             }
                             
@@ -168,7 +185,7 @@ struct NoteRowView: View {
                             }) {
                                 HStack {
                                     Image(systemName: "heart")
-                                    Text("\(note.event.likes)")
+                                    Text("\(event.likes)")
                                 }.frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
                             }
                         }.foregroundColor(.gray)
@@ -184,7 +201,7 @@ struct NoteRowView: View {
                             //                                .shadow(color: .gray, radius: 1.0)
                             //                                .frame(maxWidth:25, maxHeight:25)
                             
-                            ProfilePicView(pubkey: note.publicKey, contact: note.contact)
+                            ProfilePicView(pubkey: event.pubkey!, contact: authors.first)
                                 .frame(maxWidth:25, maxHeight:25)
                             
                         }.padding(.leading, 10)
@@ -200,42 +217,41 @@ struct NoteRowView: View {
             // No Contact
             // Contact updated_at is very old
             // followed contact meta data refresh should be updated at app wake up probably
-            if (note.contact == nil) {
-                print("☎️ note.contact == nil -> REQ metadata for pubkey \(note.publicKey)")
+            if (authors.first == nil) {
+                print("☎️ note.contact == nil -> REQ metadata for pubkey \(event.pubkey!)")
                 
-                cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: note.publicKey)))
+                cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.pubkey!)))
             }
         }
     }
 }
 
 struct NoteMenuView : View {
-    var note:Note
-    init(_ note:Note) {
-        self.note = note
-    }
+    var event:Event
+    var author:Contact?
+    
     var body: some View {
         Menu {
             Button {
-                UIPasteboard.general.string = note.id
+                UIPasteboard.general.string = event.id
             } label: {
-                Label("Copy note id hex \(note.id)", systemImage: "doc.on.clipboard")
+                Label("Copy note id hex \(String(describing:event.id))", systemImage: "doc.on.clipboard")
             }
             Button {
-                UIPasteboard.general.string = note.noteId
+                UIPasteboard.general.string = event.noteId
             } label: {
-                Label("Copy note id \(note.noteId)", systemImage: "doc.on.clipboard")
+                Label("Copy note id \(event.noteId)", systemImage: "doc.on.clipboard")
             }
             
             Button {
-                print("Unfollow @\(note.username)")
+                print("Unfollow @\(String(describing: author?.username ?? event.pubkey))")
             } label: {
-                Label("Unfollow @\(note.username)", systemImage: "person.fill.xmark")
+                Label("Unfollow @\(String(describing: author?.username ?? event.pubkey))", systemImage: "person.fill.xmark")
             }
             Button {
-                print("Block @\(note.username)")
+                print("Block @\(String(describing: author?.username ?? event.pubkey))")
             } label: {
-                Label("Block @\(note.username)", systemImage: "slash.circle")
+                Label("Block @\(String(describing: author?.username ?? event.pubkey))", systemImage: "slash.circle")
             }
         } label: {
             Text("···")
@@ -259,19 +275,19 @@ struct NoteViewWrapper: View {
 //    )
 //    var events:FetchedResults<Event>
     
-    @FetchRequest(
-        sortDescriptors: [SortDescriptor(\Contact.updated_at, order: .reverse)],
-        animation: .none)
-    var allContacts:FetchedResults<Contact>
+//    @FetchRequest(
+//        sortDescriptors: [SortDescriptor(\Contact.updated_at, order: .reverse)],
+//        animation: .none)
+//    var allContacts:FetchedResults<Contact>
     
-    @FetchRequest(
-        sortDescriptors: [SortDescriptor(\Contact.updated_at, order: .reverse)],
-        predicate: NSPredicate(format: "pubkey == %@", "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"),
-        animation: .none)
-    var contacts:FetchedResults<Contact>
+//    @FetchRequest(
+//        sortDescriptors: [SortDescriptor(\Contact.updated_at, order: .reverse)],
+//        predicate: NSPredicate(format: "pubkey == %@", "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"),
+//        animation: .none)
+//    var contacts:FetchedResults<Contact>
     
-    @FetchRequest(fetchRequest:Event.textNotes())
-    var events: FetchedResults<Event>
+//    @FetchRequest(fetchRequest:Event.textNotes())
+//    var events: FetchedResults<Event>
     
 //    @FetchRequest(
 //        entity: Event.entity(),
@@ -284,10 +300,18 @@ struct NoteViewWrapper: View {
 //        Text("hi")
 //    }
     
+    // note.id 6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81
+    // pubkey: 5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
+        predicate: NSPredicate(format: "id == %@", "6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81"),
+        animation: .none)
+    var events: FetchedResults<Event>
+    
     var body: some View {
         VStack {
             if (events.first != nil) {
-                NoteRowView(note:Note(event:events.first!, responses:nil, contact: contacts.first), allContacts:allContacts)
+                NoteRowView(event: events.first!)
             }
             else {
                 Text("No events")
@@ -300,7 +324,6 @@ struct NoteViewWrapper: View {
 struct NoteView_Previews: PreviewProvider {
     
     static var previews: some View {
-        
         NoteViewWrapper()
             .withPreviewEnvironment()
     }

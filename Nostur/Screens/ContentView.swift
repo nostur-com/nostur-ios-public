@@ -8,6 +8,14 @@
 import SwiftUI
 import CoreData
 
+struct NotePath: Hashable {
+    var id:String
+}
+
+struct ContactPath: Hashable {
+    var key:String
+}
+
 struct ContentView: View {
     
     @AppStorage("devToggle") var devToggle: Bool = false
@@ -63,60 +71,69 @@ struct ContentView: View {
     
     
     @EnvironmentObject var cm:ConnectionManager
-    
-    @State var navigateToNoteId:String? = nil
-    @State var navigateToPubkey:String? = nil
-    @State var urlNavigation:Bool = false
     @State var selectedTab = "MainTimeline"
+    @State var navigationPath = NavigationPath()
     
     var body: some View {
         VStack {
             TabView(selection: $selectedTab) {
-                NavigationStack {
+                NavigationStack(path: $navigationPath) {
                     MainTimelineView(contacts: contacts, events: events)
-                        .navigationDestination(for: Note.self) { note in
-                            NoteDetailView(note)
-                        }
-                        .navigationDestination(for: ContactPubkey.self) { pubkey in
-                            ProfileView(pubkey: pubkey)
-                        }
-                        .navigationDestination(isPresented: $urlNavigation) {
-                            if (navigateToPubkey != nil) {
-                                ProfileView(pubkey: navigateToPubkey!, urlNavigation: urlNavigation)
-                            }
-                        }
                         .onOpenURL { url in
                             // TODO: CHECK INPUT!!! SECURITY!
                             print(url.absoluteString)
-                            let matches = url.absoluteString.matchingStrings(regex: "^(nostr:)(npub[0-9a-zA-Z]{59})$")
-                            if matches.count == 1 && matches[0].count == 3 {
-                                print("ok lets go to: \(matches[0][2])")
-                                key = try! NIP19(displayString: matches[0][2])
+                            let matches = url.absoluteString.matchingStrings(regex: "^(nostr:)(npub|note)([0-9a-zA-Z]{59})$")
+                            if matches.count == 1 && matches[0].count == 4 {
+                                print("ok lets go to: \(matches[0][2])\(matches[0][3])")
+                                key = try! NIP19(displayString: "\(matches[0][2])\(matches[0][3])")
                                 print("ok lets go to: \(key.hexString)")
-                                navigateToPubkey = key.hexString
-                                urlNavigation = true
+                                if matches[0][2] == "npub" {
+                                    navigationPath.append(ContactPath(key: key.hexString))
+                                }
+                                if matches[0][2] == "note" {
+                                    navigationPath.append(NotePath(id: key.hexString))
+                                }
                                 selectedTab = "MainTimeline"
+//                                navigationPath.append(key.hexString)
                             }
                             
                         }
-                        .navigationDestination(for: Contact.self) { contact in
-                            ProfileView(pubkey: contact.pubkey!, contact: contact)
+//                        .navigationDestination(for: Note.self) { note in
+//                            NoteDetailView(note)
+//                        }
+                    
+                        .navigationDestination(for: NotePath.self) { path in
+                            NoteDetailView(id: path.id)
                         }
+                        .navigationDestination(for: ContactPath.self) { path in
+                            ProfileView(pubkey: path.key)
+                        }
+//                        .navigationDestination(for: ContactPubkey.self) { pubkey in
+//                            ProfileView(pubkey: pubkey)
+//                        }
+                        .navigationDestination(for: Contact.self) { contact in
+                            ProfileView(pubkey: contact.pubkey!)
+                        }
+//                        .navigationDestination(isPresented: $urlNavigation) {
+//                            if (navigateToPubkey != nil) {
+//                                ProfileView(pubkey: navigateToPubkey!, urlNavigation: urlNavigation)
+//                            }
+//                        }
                 }
                 .tabItem { Image(systemName: "figure.fall") }
                 .tag("MainTimeline")
                 
-                NavigationStack {
-                    Playground()
-                        .navigationDestination(for: Note.self) { note in
-                            NoteDetailView(note)
-                        }
-                        .navigationDestination(for: ContactProfile.self) { contactProfile in
-                            ContactProfileView(pubkey: contactProfile.publicKey)
-                        }
-                }
-                .tabItem { Image(systemName: "lightbulb.fill") }
-                .tag("Playground")
+//                NavigationStack {
+//                    Playground()
+//                        .navigationDestination(for: Note.self) { note in
+//                            NoteDetailView(note)
+//                        }
+//                        .navigationDestination(for: ContactProfile.self) { contactProfile in
+//                            ContactProfileView(pubkey: contactProfile.publicKey)
+//                        }
+//                }
+//                .tabItem { Image(systemName: "lightbulb.fill") }
+//                .tag("Playground")
                 
                 NavigationStack {
                     AccountListView()

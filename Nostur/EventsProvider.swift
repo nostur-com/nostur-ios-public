@@ -775,7 +775,7 @@ class EventsProvider: ObservableObject, EventDelegate {
     static func saveEvent(event:NEvent, context:NSManagedObjectContext) throws {
         let savedEvent = Event(context: context)
         savedEvent.id = event.id
-        savedEvent.kind = Int16(event.kind.id)
+        savedEvent.kind = Int64(event.kind.id)
         savedEvent.created_at = Int64(event.createdAt.timestamp)
         savedEvent.content = event.content
         savedEvent.sig = event.signature

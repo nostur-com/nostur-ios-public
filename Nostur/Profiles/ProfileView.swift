@@ -18,21 +18,24 @@ struct ProfileView: View {
     @EnvironmentObject var cm:ConnectionManager
     
     var pubkey:String
-    var contact:Contact? = nil
-    //    var clEvent:Event? = nil
-    var urlNavigation:Bool? = nil
+    
+    @FetchRequest
+    var contacts:FetchedResults<Contact>
     
     @FetchRequest
     var clEvents:FetchedResults<Event>
     
-    init(pubkey:String, contact: Contact? = nil, urlNavigation:Bool? = nil) {
+    init(pubkey:String) {
         self.pubkey = pubkey
-        self.contact = contact
-        self.urlNavigation = urlNavigation
         
         _clEvents = FetchRequest(
             sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
             predicate: NSPredicate(format: "pubkey == %@ AND kind == 3", pubkey)
+        )
+            
+        _contacts = FetchRequest(
+            sortDescriptors: [],
+            predicate: NSPredicate(format: "pubkey == %@", pubkey)
         )
     }
     
@@ -40,9 +43,9 @@ struct ProfileView: View {
         ScrollView {
             ZStack() {
                 GeometryReader { geo in
-                    if (contact?.banner != nil) {
+                    if (contacts.first?.banner != nil) {
                         
-                        LazyImage(url: URL(string: contact!.banner!)) { state in
+                        LazyImage(url: URL(string: contacts.first!.banner!)) { state in
                             if let image = state.image {
                                 image // Displays the loaded image
                             }
@@ -83,7 +86,7 @@ struct ProfileView: View {
                 
                 HStack {
                     VStack {
-                        ProfilePicView(pubkey: pubkey, contact: contact)
+                        ProfilePicView(pubkey: pubkey, contact: contacts.first)
                             .frame(maxWidth:75, maxHeight:75)
                             .clipShape(Circle())
                             .offset(x: 10, y: 150-37.5)
@@ -122,9 +125,9 @@ struct ProfileView: View {
                     }
                     
                     
-                    Text("\(contact?.authorName ?? "Anon")").font(.headline)
+                    Text("\(contacts.first?.authorName ?? "Anon")").font(.headline)
                     HStack {
-                        Text("@\(contact?.username ?? String(pubkey.prefix(5)) )").foregroundColor(.secondary)
+                        Text("@\(contacts.first?.username ?? String(pubkey.prefix(5)) )").foregroundColor(.secondary)
                         
                         Menu {
                             Button {
@@ -151,7 +154,7 @@ struct ProfileView: View {
                     }
                     
                     
-                    Text("\n\(String(contact?.about ?? "(No information)"))")
+                    Text("\n\(String(contacts.first?.about ?? "(No information)"))")
                     
                     //                Text("Followed by ppl you know...")
                     // Tweets here
@@ -181,7 +184,7 @@ struct ProfileView: View {
                         Spacer()
                     }
                     else {
-                        Text("Could not find list of contacts followed by @\( contact?.username ?? String(pubkey.prefix(5)) )")
+                        Text("Could not find list of contacts followed by @\( contacts.first?.username ?? String(pubkey.prefix(5)) )")
                             .onAppear {
                                 cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: pubkey)))
                             }
@@ -192,6 +195,7 @@ struct ProfileView: View {
         }
         .ignoresSafeArea(edges: .top)
         .onAppear {
+            print("fetching kind=0 for \(pubkey)")
             cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
         }
     }
@@ -211,9 +215,9 @@ struct NoClEvent_Previews: PreviewProvider {
     static var previews: some View {
         // 5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0 // bitcoiner
         let pubkey = "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
-        let contact = PreviewFetcher.fetchContact(pubkey)
+//        let contact = PreviewFetcher.fetchContact(pubkey)
         
-        ProfileView(pubkey: pubkey, contact: contact)
+        ProfileView(pubkey: pubkey)
             .withPreviewEnvironment()
     }
 }
@@ -222,10 +226,10 @@ struct ProfileView_Previews: PreviewProvider {
     static var previews: some View {
         // 5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0 // bitcoiner
         let pubkey = "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
-        let contact = PreviewFetcher.fetchContact(pubkey)
+//        let contact = PreviewFetcher.fetchContact(pubkey)
         //        let clEvent = PreviewFetcher.fetchEvents(pubkey, kind: 3).first!
         //
-        ProfileView(pubkey: pubkey, contact: contact)
+        ProfileView(pubkey: pubkey)
             .withPreviewEnvironment()
     }
 }

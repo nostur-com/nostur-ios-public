@@ -20,7 +20,7 @@ extension Event {
     @NSManaged public var content: String?
     @NSManaged public var created_at: Int64
     @NSManaged public var id: String?
-    @NSManaged public var kind: Int16
+    @NSManaged public var kind: Int64
     @NSManaged public var pubkey: String?
     @NSManaged public var sig: String?
     @NSManaged public var tagsSerialized: String?
@@ -56,6 +56,12 @@ extension Event : Identifiable {
     var noteText: String {
         get {
             content ?? "(empty note)"
+        }
+    }
+    
+    var noteId:String {
+        get {
+            id != nil ? try! NIP19(prefix: "note", hexString: id!).displayString : "?"
         }
     }
     
