@@ -24,6 +24,7 @@ struct ConfigurationView: View {
 //    var allEvents: FetchedResults<Event>
     
     func rebuildReplyToIdsCache() {
+        SavedEventsCache.shared.clear()
         let taskContext = EventsProvider.shared.container.newBackgroundContext()
         taskContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         // Set unused undoManager to nil for macOS (it is nil by default on iOS)
@@ -80,7 +81,7 @@ struct ConfigurationView: View {
     }
     
     func rebuildCountingCache() {
-        
+        SavedEventsCache.shared.clear()
         let taskContext = EventsProvider.shared.container.newBackgroundContext()
         taskContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         // Set unused undoManager to nil for macOS (it is nil by default on iOS)
@@ -169,7 +170,7 @@ struct ConfigurationView: View {
     }
     
     func rebuildContactCache() {
-        
+        SavedEventsCache.shared.clear()
         // update fields. BUT ALSO NIL THEM IF MISSING // TODO: SHOULD ALSO DO IN REGULAR METADATA PARSING
         
         let taskContext = EventsProvider.shared.container.newBackgroundContext()
@@ -221,6 +222,7 @@ struct ConfigurationView: View {
     }
     
     func deleteAllContacts() {
+        SavedEventsCache.shared.clear()
         let taskContext = EventsProvider.shared.container.newBackgroundContext()
         taskContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         // Set unused undoManager to nil for macOS (it is nil by default on iOS)

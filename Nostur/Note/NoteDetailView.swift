@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-// A Note and its repies, shown when tapping on a NoteRow
+// A Note and its replies, shown when tapping on a NoteRow
 struct NoteDetailView: View {
     
     @EnvironmentObject var cm:ConnectionManager
@@ -19,11 +19,6 @@ struct NoteDetailView: View {
     
     @FetchRequest
     var responses:FetchedResults<Event>
-
-//
-//    @FetchRequest
-//    var contacts:FetchedResults<Contact>
-    
     
     init(id:String) {
         self.id = id
@@ -39,18 +34,7 @@ struct NoteDetailView: View {
         )
     }
     
-//    init(_ note:Note) {
-//        self.note = note
-//
-//        _responses = FetchRequest(
-//            sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
-//            predicate: NSPredicate(format: "replyToId == %@ AND kind == 1", note.id)
-//        )
-//    }
-    
     var body: some View {
-//        NoteDetailViewInner(note:Note(event:note.event, responses:responses.reversed(), contact: note.contact))
-        
         if (events.first != nil) {
             NoteDetailViewInner(event:events.first!, responses:responses)
         }
@@ -69,12 +53,13 @@ struct NoteDetailViewInner: View {
     var responses:FetchedResults<Event>
     
     var tweet : Tweet = Tweet()
-//    let note:Note
+
     @EnvironmentObject var cm:ConnectionManager
+    @EnvironmentObject var accountState:AccountState
     
     // ALL CONTACTS FOR P TAGS KEY TO USERNAME
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
+        sortDescriptors: [],
         animation: .none)
     var contacts:FetchedResults<Contact>
     
@@ -94,6 +79,11 @@ struct NoteDetailViewInner: View {
         return Set(contacts.map { $0.pubkey! })
     }
     
+    @FetchRequest(
+        sortDescriptors: [],
+        animation: .none)
+    var rootAndItsReplies:FetchedResults<Event>
+    
     init(event: Event, responses: FetchedResults<Event>) {
         self.event = event
         self.responses = responses
@@ -102,6 +92,13 @@ struct NoteDetailViewInner: View {
             sortDescriptors: [],
             predicate: NSPredicate(format: "pubkey == %@", event.pubkey!)
         )
+        
+        if (event.replyToRootId != nil) {
+            _rootAndItsReplies = FetchRequest(
+                sortDescriptors: [SortDescriptor(\Event.created_at, order: .forward)],
+                predicate: NSPredicate(format: "kind == 1 AND (id == %@ OR replyToId == %@) AND (created_at < %d)", event.replyToRootId!, event.replyToRootId!, event.created_at)
+            )
+        }
     }
     
     
@@ -110,7 +107,16 @@ struct NoteDetailViewInner: View {
             VStack {
                 // Parent Tweet
                 
+                if (event.replyToRootId != nil) {
+                    ForEach(rootAndItsReplies, id:\.self) { event in
+                        NoteRowView(event: event)
+                    }
+                }
                 
+                if (event.replyToId != nil) {
+                    NoteRowView(id: event.replyToId!)
+                }
+
                 VStack {
                     // Retweeted header
                     if tweet.retweetedByName != "" {
@@ -190,8 +196,9 @@ struct NoteDetailViewInner: View {
                     }
                     // Tweet
                     HStack {
-                        Text(event.noteText)
-                            .textSelection(.enabled)
+                        NoteTextRenderView(event: event, allContacts: contacts.reversed())
+//                        Text(event.noteText)
+//                            .textSelection(.enabled)
                             .font(.system(size: 18))//.border(.red)
                         Spacer()
                     }.padding(.vertical,5)
@@ -230,19 +237,34 @@ struct NoteDetailViewInner: View {
                             Text("\(event.likes)")
                         }.frame(maxWidth: .infinity, alignment: .trailing).font(.system(size: 14))
                     }
+                    
+                    
+                    Button {
+                        if (accountState.isBookmarked(event)) {
+                            accountState.removeBookmark(event)
+                        }
+                        else {
+                            accountState.addBookmark(event)
+                        }
+                    } label: {
+                        if (accountState.isBookmarked(event)) {
+                            Label("", systemImage: "bookmark.fill").foregroundColor(.orange)
+                        }
+                        else {
+                            Label("", systemImage: "bookmark")
+                        }
+                    }.frame(maxWidth: .infinity, alignment: .trailing).font(.system(size: 14))
+                    
+                    
                     Spacer()
                 }.foregroundColor(.gray)
                     .padding(10)
                 
-                // Replies TODO
-//                LazyVStack {
-//                    ForEach (responses, id:\.id) { row in
-//                        NoteRowView(note:Note(event:row))
-//                    }
-//                }
-                
-                
-                // Finished
+                LazyVStack {
+                    ForEach (responses, id:\.id) { event in
+                        NoteRowView(event: event)
+                    }
+                }
                 Spacer()
             }
         }
@@ -274,49 +296,25 @@ struct NoteDetailViewInner: View {
     }
 }
 
-// FOR PREVIEW
-struct NoteDetailViewWrapper: View {
-    
-//    @FetchRequest(
-//        sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
-//        predicate: NSPredicate(format: "pubkey == %@", "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"),
-//        animation: .none)
-//    var contacts:FetchedResults<Contact>
-    
-//    @FetchRequest(
-//        sortDescriptors: [],
-//        animation: .none)
-//    var contacts:FetchedResults<Contact>
-
-    // note.id 6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81
-    // pubkey: 5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
-        predicate: NSPredicate(format: "id == %@", "6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81"),
-        animation: .none)
-    var events: FetchedResults<Event>
-
-    // note.id 6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81
-    // pubkey: 5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
-        predicate: NSPredicate(format: "replyToId == %@", "6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81"),
-        animation: .none)
-    var responses: FetchedResults<Event>
-    
-    var body: some View {
-        
-        VStack {
-            NoteDetailViewInner(event: events.first!, responses: responses)
-//            NoteDetailViewInner(note:Note(event:events.first!, responses:responses.reversed(), contact: contacts.first))
-        }
-    }
-}
-
 struct NoteDetailView_Previews: PreviewProvider {
+    
     static var previews: some View {
         
-        NoteDetailViewWrapper()
+        // A reply note
+        // cae92f22295c2109a4596a373caeaa706bd140e4a71419722014f223ae681bce
+        // ..replying to: 77045e500913f9cf78a5e3e1c16137702046dbbe1cc84c5a2621bad69945eb42
+        // ..and the root: 6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81
+        
+        // #[2]
+        // 115eab2976aee4ca562d83ea6b1d805c6d4e0acf54fe2e6a4e1a62f73c2850cc
+        
+        // #[0]
+        // 1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0
+        
+        // note.id 6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81
+        // pubkey: 5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0
+        
+        NoteDetailView(id: "cae92f22295c2109a4596a373caeaa706bd140e4a71419722014f223ae681bce")
             .withPreviewEnvironment()
         
     }

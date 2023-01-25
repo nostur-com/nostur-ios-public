@@ -14,7 +14,7 @@ import SwiftyJSON
 
 public protocol EventDelegate {
 //    func didReceiveEvent(text: String)
-    func fetchEventsIsNowDidReceive(text: String) async throws
+    func didReceiveMessage(text: String) async throws
 }
 
 class RelaySocket : WebSocketDelegate, ObservableObject {
@@ -54,7 +54,7 @@ class RelaySocket : WebSocketDelegate, ObservableObject {
             
             if (delegate != nil) {
                 _ = Task {
-                    try! await delegate!.fetchEventsIsNowDidReceive(text: string)
+                    try! await delegate!.didReceiveMessage(text: string)
                 }
             }
         case .binary(let data):
@@ -114,7 +114,7 @@ class ConnectionManager: ObservableObject {
                 //                print("🟢 sending message: \(text)")
                 //                relaySocket.send(text: text)
                 if message.type == .REQ || message.type == .CLOSE { // REQ AND CLOSE IS FOR ALL RELAYS
-                    dump("🟢 SENDING TO \(relaySocket.relay.url!): \(message.message)")
+//                    dump("🟢 SENDING TO \(relaySocket.relay.url!): \(message.message)")
 //                    print("🟢 SENDING TO \(relaySocket.relay.url!): \(message.message)".prefix(260))
                     relaySocket.send(text: message.message)
                 }
@@ -197,6 +197,19 @@ struct RelayMessage {
 }
 
 struct RequestMessage {
+    
+    // FETCH A SINGLE EVENT
+    static func getEvent(id:String, subscriptionId:String? = nil) -> String {
+        return """
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"ids":"[\(id)]"), "limit": 1}]
+"""
+    }
+    
+    static func getEvents(ids:[String?], limit:Int? = 500, subscriptionId:String? = nil) -> String {
+        return """
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"ids": \(JSON(ids).rawString() ?? "[]"), "limit": \(limit)}]
+"""
+    }
     
     // For fetching events posted by people you follow
     // or reactions by others reacting to the people you follow

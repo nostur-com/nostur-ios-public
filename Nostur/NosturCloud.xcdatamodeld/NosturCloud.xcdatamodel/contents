@@ -11,6 +11,7 @@
         <attribute name="picture" attributeType="String" defaultValueString=""/>
         <attribute name="privateKey" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
         <attribute name="publicKey" optional="YES" attributeType="String"/>
+        <relationship name="bookmarks" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Event" inverseName="bookmarkedBy" inverseEntity="Event"/>
         <relationship name="follows" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact" inverseName="followedBy" inverseEntity="Contact"/>
     </entity>
     <entity name="Contact" representedClassName=".Contact" syncable="YES">
@@ -46,6 +47,7 @@
         <attribute name="replyToRootId" optional="YES" attributeType="String"/>
         <attribute name="sig" optional="YES" attributeType="String"/>
         <attribute name="tagsSerialized" optional="YES" attributeType="String"/>
+        <relationship name="bookmarkedBy" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Account" inverseName="bookmarks" inverseEntity="Account"/>
         <uniquenessConstraints>
             <uniquenessConstraint>
                 <constraint value="id"/>

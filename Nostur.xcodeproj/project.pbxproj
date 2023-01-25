@@ -9,6 +9,12 @@
 /* Begin PBXBuildFile section */
 		1F055A53296EE2A2009EF792 /* secp256k1 in Frameworks */ = {isa = PBXBuildFile; productRef = 1F055A52296EE2A2009EF792 /* secp256k1 */; };
 		1F15E9B32972A35100E8A751 /* MainTimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F15E9B22972A35100E8A751 /* MainTimelineView.swift */; };
+		1F1ABC4329810D5500D03FA9 /* LinkPresentation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F1ABC4229810D5500D03FA9 /* LinkPresentation.framework */; };
+		1F1ABC45298110D800D03FA9 /* LinkPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1ABC44298110D800D03FA9 /* LinkPreview.swift */; };
+		1F1ABC4729811A1B00D03FA9 /* LRUCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1ABC4629811A1A00D03FA9 /* LRUCache.swift */; };
+		1F1ABC492981718700D03FA9 /* BookmarksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1ABC482981718700D03FA9 /* BookmarksView.swift */; };
+		1F1ABC4B29819CAC00D03FA9 /* Cache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1ABC4A29819CAC00D03FA9 /* Cache.swift */; };
+		1F1ABC4D2981AEA500D03FA9 /* ProfileNotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1ABC4C2981AEA500D03FA9 /* ProfileNotesView.swift */; };
 		1F1C31E42969A86700E60BEF /* NewAccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1C31E32969A86700E60BEF /* NewAccountView.swift */; };
 		1F1C31E92969B7A000E60BEF /* CryptoKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F1C31E82969B79F00E60BEF /* CryptoKit.framework */; };
 		1F25B392297A4E3400A8A5A7 /* NosturList+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F25B390297A4E3400A8A5A7 /* NosturList+CoreDataClass.swift */; };
@@ -79,6 +85,12 @@
 
 /* Begin PBXFileReference section */
 		1F15E9B22972A35100E8A751 /* MainTimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTimelineView.swift; sourceTree = "<group>"; };
+		1F1ABC4229810D5500D03FA9 /* LinkPresentation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = LinkPresentation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/LinkPresentation.framework; sourceTree = DEVELOPER_DIR; };
+		1F1ABC44298110D800D03FA9 /* LinkPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkPreview.swift; sourceTree = "<group>"; };
+		1F1ABC4629811A1A00D03FA9 /* LRUCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LRUCache.swift; sourceTree = "<group>"; };
+		1F1ABC482981718700D03FA9 /* BookmarksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarksView.swift; sourceTree = "<group>"; };
+		1F1ABC4A29819CAC00D03FA9 /* Cache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cache.swift; sourceTree = "<group>"; };
+		1F1ABC4C2981AEA500D03FA9 /* ProfileNotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileNotesView.swift; sourceTree = "<group>"; };
 		1F1C31E32969A86700E60BEF /* NewAccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewAccountView.swift; sourceTree = "<group>"; };
 		1F1C31E82969B79F00E60BEF /* CryptoKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CryptoKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/CryptoKit.framework; sourceTree = DEVELOPER_DIR; };
 		1F25B390297A4E3400A8A5A7 /* NosturList+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NosturList+CoreDataClass.swift"; sourceTree = "<group>"; };
@@ -150,6 +162,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1F1ABC4329810D5500D03FA9 /* LinkPresentation.framework in Frameworks */,
 				1FEA785529799697007CC8E7 /* Compactor in Frameworks */,
 				1FA51FFF2978805400FE60EF /* NukeUI in Frameworks */,
 				1F055A53296EE2A2009EF792 /* secp256k1 in Frameworks */,
@@ -166,6 +179,7 @@
 		1F1C31E52969B75500E60BEF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1F1ABC4229810D5500D03FA9 /* LinkPresentation.framework */,
 				1F1C31E82969B79F00E60BEF /* CryptoKit.framework */,
 			);
 			name = Frameworks;
@@ -174,8 +188,6 @@
 		1F25B38B297A4D9400A8A5A7 /* Lists */ = {
 			isa = PBXGroup;
 			children = (
-				1F25B390297A4E3400A8A5A7 /* NosturList+CoreDataClass.swift */,
-				1F25B391297A4E3400A8A5A7 /* NosturList+CoreDataProperties.swift */,
 			);
 			path = Lists;
 			sourceTree = "<group>";
@@ -187,21 +199,29 @@
 				1F7A63C029711CCC00D8B2CB /* Playground.swift */,
 				1F15E9B22972A35100E8A751 /* MainTimelineView.swift */,
 				1FDFEBB6297ED78100511AA0 /* ConfigurationView.swift */,
+				1F1ABC482981718700D03FA9 /* BookmarksView.swift */,
 			);
 			path = Screens;
 			sourceTree = "<group>";
 		};
-		1F25B395297A508200A8A5A7 /* ContactsOld */ = {
+		1F25B395297A508200A8A5A7 /* CoreData */ = {
 			isa = PBXGroup;
 			children = (
+				1F30FAAE29706E72008439C8 /* Account+CoreDataClass.swift */,
+				1F30FAB229707719008439C8 /* Account+CoreDataProperties.swift */,
 				1FC38B9B2972DD5A004769F8 /* Contact+CoreDataClass.swift */,
 				1FC38B9C2972DD5A004769F8 /* Contact+CoreDataProperties.swift */,
 				1F8B1364297B3BE8002EB8CF /* ContactProfile.swift */,
 				1FB3E3BD296820C600CDA788 /* ContactProfileView.swift */,
 				1F3C3F932975347F00E813FD /* ContactProfileRowView.swift */,
-				1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */,
+				1F4AFC4529733E2400CC1F90 /* Event+CoreDataClass.swift */,
+				1F4AFC4629733E2400CC1F90 /* Event+CoreDataProperties.swift */,
+				1F25B390297A4E3400A8A5A7 /* NosturList+CoreDataClass.swift */,
+				1F25B391297A4E3400A8A5A7 /* NosturList+CoreDataProperties.swift */,
+				1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */,
+				1FA51FF52978441200FE60EF /* Relay+CoreDataProperties.swift */,
 			);
-			path = ContactsOld;
+			path = CoreData;
 			sourceTree = "<group>";
 		};
 		1F37571429672AB6007D210A /* DummyData */ = {
@@ -220,8 +240,6 @@
 				1F4773A6296D4F5B0049454B /* AccountView.swift */,
 				1F4773A8296D85B70049454B /* AccountListView.swift */,
 				1F3C3F9529755D4C00E813FD /* AccountState.swift */,
-				1F30FAAE29706E72008439C8 /* Account+CoreDataClass.swift */,
-				1F30FAB229707719008439C8 /* Account+CoreDataProperties.swift */,
 				1F4773A4296CA72A0049454B /* AddReadOnlyAccountView.swift */,
 				1F1C31E32969A86700E60BEF /* NewAccountView.swift */,
 			);
@@ -233,8 +251,6 @@
 			children = (
 				1F37571429672AB6007D210A /* DummyData */,
 				B3935E040327074D0C91EA33 /* Connections.swift */,
-				1F4AFC4529733E2400CC1F90 /* Event+CoreDataClass.swift */,
-				1F4AFC4629733E2400CC1F90 /* Event+CoreDataProperties.swift */,
 				1F71037C296BD9DE006245CC /* Nostr.swift */,
 			);
 			path = Nostr;
@@ -245,7 +261,6 @@
 			children = (
 				1F8B1348297B34D7002EB8CF /* Bech32.swift */,
 				1F8B134A297B3551002EB8CF /* NIP19.swift */,
-				1F987EB229805F33001E352E /* String+matchingStrings.swift */,
 			);
 			path = Crypto;
 			sourceTree = "<group>";
@@ -253,6 +268,7 @@
 		1F8B134D297B36BA002EB8CF /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				1F1ABC4A29819CAC00D03FA9 /* Cache.swift */,
 				1F8B1352297B36DB002EB8CF /* Bytes+Base64.swift */,
 				1F8B1357297B36DB002EB8CF /* Bytes+HexString.swift */,
 				1F8B1356297B36DB002EB8CF /* Bytes+SecureRandom.swift */,
@@ -262,6 +278,8 @@
 				1F8B1350297B36DB002EB8CF /* Convert.swift */,
 				1F8B1351297B36DB002EB8CF /* Data+Bytes.swift */,
 				1F8B1353297B36DB002EB8CF /* HexEncoding.swift */,
+				1F1ABC4629811A1A00D03FA9 /* LRUCache.swift */,
+				1F987EB229805F33001E352E /* String+matchingStrings.swift */,
 				1F8B134F297B36DA002EB8CF /* String+Conversion.swift */,
 				1F8B1355297B36DB002EB8CF /* String+HexBytes.swift */,
 				1F927C6E297DB3490024F665 /* Queue.swift */,
@@ -289,18 +307,19 @@
 		1FB448BC2965F3D000038671 /* Nostur */ = {
 			isa = PBXGroup;
 			children = (
-				1F8B134D297B36BA002EB8CF /* Utils */,
-				1F8B1347297B34C6002EB8CF /* Crypto */,
 				1F4773A3296CA7040049454B /* Accounts */,
-				1FD4972F297FC99B0084F14E /* Profiles */,
-				1F25B395297A508200A8A5A7 /* ContactsOld */,
+				1F25B395297A508200A8A5A7 /* CoreData */,
+				1F8B1347297B34C6002EB8CF /* Crypto */,
+				1F25B38B297A4D9400A8A5A7 /* Lists */,
 				1F71037B296BD98D006245CC /* Nostr */,
 				1FEA78592979A18E007CC8E7 /* Note */,
-				1F25B394297A4FB400A8A5A7 /* Screens */,
-				1F25B38B297A4D9400A8A5A7 /* Lists */,
+				1FD4972F297FC99B0084F14E /* Profiles */,
 				1FB62D0C296FFEBF00A0055B /* Relays */,
+				1F25B394297A4FB400A8A5A7 /* Screens */,
+				1F8B134D297B36BA002EB8CF /* Utils */,
 				1F5BBE3D297BC3D200F4AF03 /* EventsProvider.swift */,
 				1F5BBE3F297BC7E600F4AF03 /* EventsError.swift */,
+				1F987EB029804AA4001E352E /* NewNoteView.swift */,
 				1FB448BD2965F3D000038671 /* NosturApp.swift */,
 				1FB448BF2965F3D000038671 /* Persistence.swift */,
 				1FD49732297FCB5E0084F14E /* PreviewHelper.swift */,
@@ -309,7 +328,6 @@
 				1FB448C82965F3D200038671 /* Nostur.entitlements */,
 				1F30FAA729705EBD008439C8 /* NosturCloud.xcdatamodeld */,
 				1FB448C92965F3D200038671 /* Preview Content */,
-				1F987EB029804AA4001E352E /* NewNoteView.swift */,
 			);
 			path = Nostur;
 			sourceTree = "<group>";
@@ -325,8 +343,6 @@
 		1FB62D0C296FFEBF00A0055B /* Relays */ = {
 			isa = PBXGroup;
 			children = (
-				1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */,
-				1FA51FF52978441200FE60EF /* Relay+CoreDataProperties.swift */,
 				1F756532296AE7910078474E /* NewRelayView.swift */,
 				1FB62D0D296FFF1400A0055B /* RelayEditView.swift */,
 				1F756530296AE4260078474E /* RelaysView.swift */,
@@ -337,8 +353,10 @@
 		1FD4972F297FC99B0084F14E /* Profiles */ = {
 			isa = PBXGroup;
 			children = (
-				1FD49730297FC9C80084F14E /* ProfileView.swift */,
+				1F1ABC4C2981AEA500D03FA9 /* ProfileNotesView.swift */,
+				1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */,
 				1FD49734297FE2FE0084F14E /* ProfileRowView.swift */,
+				1FD49730297FC9C80084F14E /* ProfileView.swift */,
 			);
 			path = Profiles;
 			sourceTree = "<group>";
@@ -346,6 +364,7 @@
 		1FEA78592979A18E007CC8E7 /* Note */ = {
 			isa = PBXGroup;
 			children = (
+				1F1ABC44298110D800D03FA9 /* LinkPreview.swift */,
 				1FB3E3BB2968061700CDA788 /* NoteDetailView.swift */,
 				1FB448D12965FB5500038671 /* NoteRowView.swift */,
 				1FEA785A2979A1A0007CC8E7 /* Note.swift */,
@@ -467,13 +486,17 @@
 				1F7A63C129711CCC00D8B2CB /* Playground.swift in Sources */,
 				1FB448C52965F3D000038671 /* ContentView.swift in Sources */,
 				1F756531296AE4260078474E /* RelaysView.swift in Sources */,
+				1F1ABC4B29819CAC00D03FA9 /* Cache.swift in Sources */,
 				1F8B134B297B3551002EB8CF /* NIP19.swift in Sources */,
+				1F1ABC4729811A1B00D03FA9 /* LRUCache.swift in Sources */,
 				1FB3E3BC2968061700CDA788 /* NoteDetailView.swift in Sources */,
 				1F4773A7296D4F5B0049454B /* AccountView.swift in Sources */,
 				1FD49731297FC9C80084F14E /* ProfileView.swift in Sources */,
 				1F8B1361297B36DB002EB8CF /* Bytes+SecureRandom.swift in Sources */,
+				1F1ABC492981718700D03FA9 /* BookmarksView.swift in Sources */,
 				1FA51FF72978441200FE60EF /* Relay+CoreDataProperties.swift in Sources */,
 				1F75652F296ADA280078474E /* AccountsView.swift in Sources */,
+				1F1ABC4D2981AEA500D03FA9 /* ProfileNotesView.swift in Sources */,
 				1F30FAA929705EBD008439C8 /* NosturCloud.xcdatamodeld in Sources */,
 				1F71037D296BD9DE006245CC /* Nostr.swift in Sources */,
 				1F1C31E42969A86700E60BEF /* NewAccountView.swift in Sources */,
@@ -495,6 +518,7 @@
 				1FB448D22965FB5500038671 /* NoteRowView.swift in Sources */,
 				B39353FC12E60CADAE655912 /* Connections.swift in Sources */,
 				1F15E9B32972A35100E8A751 /* MainTimelineView.swift in Sources */,
+				1F1ABC45298110D800D03FA9 /* LinkPreview.swift in Sources */,
 				1FEA785829799FE6007CC8E7 /* ProfilePicView.swift in Sources */,
 				1F8B1362297B36DB002EB8CF /* Bytes+HexString.swift in Sources */,
 				1F8B1349297B34D7002EB8CF /* Bech32.swift in Sources */,

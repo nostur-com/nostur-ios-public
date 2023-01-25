@@ -34,6 +34,7 @@ struct MainTimelineView: View {
     
     @State var restored = false
     @AppStorage("lastAppearedIndex") var lastAppearedIndex = 0
+    @Binding var showReplies:Bool
 
     var contacts:FetchedResults<Contact>
     
@@ -91,6 +92,12 @@ struct MainTimelineView: View {
                     }
                 }
                 Group {
+                    Toggle(isOn: $showReplies) {
+                                Label("Show replies", systemImage: "bubble.left.and.bubble.right")
+                            .symbolVariant(showReplies ? .none : .fill)
+                            }
+                            .toggleStyle(.button)
+                    
                     ScrollViewReader { proxy in
                         ScrollView { // TODO
                             LazyVStack {
@@ -249,9 +256,11 @@ struct MainTimelineWrapper: View {
         animation: .none)
     var events: FetchedResults<Event>
     
+    @AppStorage("showReplies") var showReplies = false
+    
     var body: some View {
         VStack {
-            MainTimelineView(contacts: contacts, events: events)
+            MainTimelineView(showReplies: $showReplies, contacts: contacts, events: events)
         }
     }
 }

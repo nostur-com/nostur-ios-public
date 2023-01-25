@@ -16,14 +16,8 @@ extension String: Error {}
 struct NosturApp: App {
     
     // Timer to check for stuff to parse every 3 sec..
-    let parseRunLoop = Timer.publish(every: 5, tolerance: 1, on: .main, in: .common).autoconnect()
+    let parseRunLoop = Timer.publish(every: 3, tolerance: 1, on: .main, in: .common).autoconnect()
     
-    //    let connectionManager = ConnectionManager.shared
-    //    let localContainer = PersistenceController.shared.localContainer
-    //    let container = PersistenceController.shared.container
-    //    @StateObject var accountState = AccountState(viewContext:PersistenceController.shared.container.viewContext)
-    
-    //    let container = EventsProvider.shared.container
     let eventsProvider = EventsProvider.shared
     @StateObject var accountState = AccountState(viewContext:EventsProvider.shared.container.viewContext)
     
@@ -38,16 +32,10 @@ struct NosturApp: App {
             ContentView()
                 .environment(\.managedObjectContext,
                               eventsProvider.container.viewContext)
-            //                .environment(\.managedObjectContext,
-            //                              PersistenceController.shared.container.viewContext)
                 .environmentObject(accountState)
                 .environmentObject(cm)
-            //                .onAppear {
-            //                    getCoreDataDBPath()
-            //                }
                 .environmentObject(eventsProvider)
                 .onAppear {
-                    //            print("🔴 OnAppear")
                     startNosturing()
                     self.isViewDisplayed = true
                 }
@@ -64,18 +52,6 @@ struct NosturApp: App {
                 }
                 .statusBarHidden(true)
         }
-    }
-    
-    func getCoreDataDBPath() {
-        let path = FileManager
-            .default
-            .urls(for: .applicationSupportDirectory, in: .userDomainMask)
-            .last?
-            .absoluteString
-            .replacingOccurrences(of: "file://", with: "")
-            .removingPercentEncoding
-        
-        print("👍👍👍👍 Core Data DB Path :: \(path ?? "Not found")")
     }
     
     func maintenance() {
@@ -168,136 +144,5 @@ struct NosturApp: App {
             }
         }
     }
-    
-    //    func didReceiveEvent(text: String) {
-    //
-    //        do {
-    //            PersistenceController.shared.container.performBackgroundTask { context in
-    //                if let message = try? RelayMessage.parseRelayMessage(text: text)  {
-    //
-    //                    switch message.type {
-    //                    case .EVENT:
-    //                        let event = message.event!
-    //                        // skip if event is already in DB
-    //                        let request = NSFetchRequest<Event>()
-    //                        request.entity = Event.entity()
-    //                        request.predicate = NSPredicate(format: "id == %@", event.id)
-    //
-    //                        guard try context.fetch(request).first == nil else {
-    //                            throw "🟠 event.id \(event.id) already in DB. skipped."
-    //
-    //                        }
-    //
-    //                        // STORE EVENT
-    //                        print("Trying to store event")
-    //                        try saveEvent(event: event)
-    //                        try saveContact(event: event)
-    //
-    //                        switch event.kind {
-    //
-    //                        case .setMetadata:
-    //                            // STORE CONTACT
-    //                            Contact.handleSetMetadataEvent(event: event, context: context)
-    //
-    //
-    //                        case .custom(3):
-    //                            // STORE CONTACT LIST
-    //                            print("should handle kind 3")
-    //                            _ = Task(priority: .background) {
-    //                                let (pubkeys, _) = await Contact.handleContactListEvent(event: event, context: context)
-    //                                print("do something with pubkeys: \(pubkeys)")
-    //
-    //    //                            if accountState.activeAccountPublicKey == event.publicKey {
-    //    //                                // add contacts to followed contacts
-    //    //
-    //    //                                let cr = Contact.fetchRequest()
-    //    //                                cr.predicate = NSPredicate(format: "ANY pubkey IN %@", eventPubkeys)
-    //    //                                let contacts = try! cr.execute()
-    //    //                                print("😡😡😡😡 contacts.count: \(contacts.count)")
-    //    //                                accountState.activeAccount()?.addToFollows(NSSet(objects: contacts
-    //    //                                                                                ))
-    //    //                            }
-    //                                // PROBABLY OOPS:
-    //                                // SHOULD NOT TRIGGER NEW .REQ FROM didReceiveEvent. (LOOP, RECURSIVE..)
-    //            //                        ConnectionManager.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys)))
-    //                            }
-    //
-    //                        default:
-    //                            print("unhandled event")
-    //                        }
-    //
-    //                    case .EOSE:
-    //                        print("🟢 Sending close subscription message")
-    //                        cm.sendMessage(ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: message.subscriptionId!)))
-    //                    case .NOTICE:
-    //                        print(message.message)
-    //
-    //                    default:
-    //                        print("unhandled relay message type")
-    //                    }
-    //                }
-    //            }
-    //
-    //
-    //
-    //        }
-    //        catch RelayMessage.error.UNKNOWN_MESSAGE_TYPE {
-    //            print("🟠 Unknown message type: \(text)")
-    //        }
-    //        catch RelayMessage.error.FAILED_TO_PARSE {
-    //            print("🟠 Could not parse text received: \(text)")
-    //        }
-    //        catch RelayMessage.error.FAILED_TO_PARSE_EVENT {
-    //            print("🟠 Could not parse EVENT: \(text)")
-    //        }
-    //        catch {
-    //            print(error)
-    //        }
-    //    }
-    
-    //    func saveEvent(event:NEvent) throws {
-    //        let savedEvent = Event(context: eventsProvider.container.viewContext)
-    //        savedEvent.id = event.id
-    //        savedEvent.kind = Int16(event.kind.id)
-    //        savedEvent.created_at = Int64(event.createdAt.timestamp)
-    //        savedEvent.content = event.content
-    //        savedEvent.sig = event.signature
-    //        savedEvent.pubkey = event.publicKey
-    //
-    //        let encoder = JSONEncoder()
-    //        encoder.outputFormatting = .withoutEscapingSlashes
-    //        let tagsSerialized = try? encoder.encode(event.tags)
-    //        if (tagsSerialized != nil) {
-    //            savedEvent.tagsSerialized = String(data: tagsSerialized!, encoding: .utf8)
-    //        }
-    //        do {
-    //            try eventsProvider.container.viewContext.save()
-    //        }
-    //        catch let error {
-    //            print("🔴🔴 Error saving event 🔴🔴 \(error)")
-    //        }
-    //
-    //    }
-    
-    //    func saveContact(event:NEvent) throws {
-    //
-    //        let pubkeys = contacts.map { $0.pubkey }
-    //
-    //        guard pubkeys.firstIndex(of: event.publicKey) != nil else {
-    //            print ("contact.pubkey already exists, new placeholder contact after event not needed")
-    //            return
-    //        }
-    //
-    //        let contact = Contact(context: container.viewContext)
-    //        contact.pubkey = event.publicKey
-    //        contact.updated_at = 0
-    //        do {
-    //            try container.viewContext.save()
-    //        }
-    //        catch let error {
-    //            print("🔴🔴 Error saving contact (saveContact) 🔴🔴 \(error)")
-    //        }
-    //    }
-    
 }
 

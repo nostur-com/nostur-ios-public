@@ -8,6 +8,7 @@
 import SwiftUI
 import Nuke
 import NukeUI
+import CoreData
 
 // TODO: replying to trick:
 // people.map(\.nameComponents).formatted(.list(memberStyle: .name(style:.short), type:.and)
@@ -15,6 +16,62 @@ import NukeUI
 
 // A single note shown in a row in the MainTimelineView
 struct NoteRowView: View {
+    
+    @Environment(\.managedObjectContext) var viewContext
+    @EnvironmentObject var cm:ConnectionManager
+    
+    // NoteRowView(event: event) - PREFERRED
+    var event:Event? = nil
+    
+    // NoteRowView(id: noteId) - ALTERNATIVE
+    var id:String? = nil
+    @State var fetchedEvent:Event? = nil
+    
+    @State var eventNotInCache = false
+
+    init(event: Event) {
+        self.event = event
+    }
+    
+    init(id: String) {
+        self.id = id
+    }
+    
+    func fetchEvent() {
+        viewContext.perform {
+            let r = Event.fetchRequest()
+            r.predicate = NSPredicate(format: "id == %@", self.id!)
+            fetchedEvent = try! r.execute().first
+            if (fetchedEvent == nil) {
+                eventNotInCache = true
+            }
+        }
+    }
+    
+    var body: some View {
+        if (event != nil) { // EVENT PASSED FROM CALLER
+            NoteRowViewInner(event: event!)
+        }
+        else if (fetchedEvent != nil) { // EVENT FETCHED FROM CORE DATA
+            NoteRowViewInner(event: fetchedEvent!)
+        }
+        else {
+            Text("Unable to find event")
+                .onAppear {
+                    if (event == nil && fetchedEvent == nil) {
+                        fetchEvent()
+                    }
+                }
+                .onChange(of:eventNotInCache) { newValue in
+                    if (newValue) {
+                        cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: id!)))
+                    }
+                }
+        }
+    }
+}
+
+struct NoteRowViewInner: View {
     
     var event:Event
     
@@ -25,11 +82,14 @@ struct NoteRowView: View {
     
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var cm:ConnectionManager
+    @EnvironmentObject var accountState:AccountState
     
     let tweet:Tweet = Tweet(hasThread: false) // Todo
     
-//    var note:Note
-    var allContacts:FetchedResults<Contact>?
+    @FetchRequest(
+        sortDescriptors: [],
+        animation: .none)
+    var allContacts:FetchedResults<Contact>
     
 //    func contact(byPubkey:String?) -> Contact? {
 //        guard byPubkey != nil && allContacts != nil else {
@@ -142,15 +202,16 @@ struct NoteRowView: View {
                             Spacer()
                             
                             NoteMenuView(event: event)
+//                                .background(.red)
                         }
                         
-//                        NoteTextRenderView(event:event, allContacts: allContacts?.reversed())
-//                        .multilineTextAlignment(TextAlignment.leading)
-                        Text(event.noteText).multilineTextAlignment(TextAlignment.leading)
+                        NoteTextRenderView(event:event, allContacts: allContacts.reversed()).multilineTextAlignment(TextAlignment.leading)
+//                        Text(event.noteText).multilineTextAlignment(TextAlignment.leading)
                             .font(.system(size: 14))
                             .foregroundColor(.primary)
                             .lineSpacing(3)
                             .padding(.vertical, 5)
+                        
                         
                         if tweet.hasImage {
                             Image(tweet.imageName)
@@ -188,6 +249,28 @@ struct NoteRowView: View {
                                     Text("\(event.likes)")
                                 }.frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
                             }
+                            
+                            Button(action: {
+                                // Handle like action
+                            }) {
+                                HStack {
+                                    Button {
+                                        if (accountState.isBookmarked(event)) {
+                                            accountState.removeBookmark(event)
+                                        }
+                                        else {
+                                            accountState.addBookmark(event)
+                                        }
+                                    } label: {
+                                        if (accountState.isBookmarked(event)) {
+                                            Label("", systemImage: "bookmark.fill").foregroundColor(.orange)
+                                        }
+                                        else {
+                                            Label("", systemImage: "bookmark")
+                                        }
+                                    }
+                                }.frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
+                            }
                         }.foregroundColor(.gray)
                             .padding(.top, 3)
                     }.padding(.trailing, 10).padding(.bottom, 5)
@@ -210,6 +293,7 @@ struct NoteRowView: View {
                 }
             }
             })
+                .frame(maxHeight: 1900)
             Divider()
         }
         .onAppear {
@@ -230,31 +314,39 @@ struct NoteMenuView : View {
     var event:Event
     var author:Contact?
     
+    var noteIdHex:String { get { event.id ?? "00000" } }
+    var noteId:String { get { event.noteId } }
+    var username:String {
+        get {
+            author?.username ?? String(event.pubkey!.prefix(5))
+        }
+    }
+    
     var body: some View {
         Menu {
             Button {
-                UIPasteboard.general.string = event.id
+                UIPasteboard.general.string = noteId
             } label: {
-                Label("Copy note id hex \(String(describing:event.id))", systemImage: "doc.on.clipboard")
+                Label("Copy note id \(noteId)", systemImage: "doc.on.clipboard")
             }
             Button {
-                UIPasteboard.general.string = event.noteId
+                UIPasteboard.general.string = noteIdHex
             } label: {
-                Label("Copy note id \(event.noteId)", systemImage: "doc.on.clipboard")
-            }
-            
-            Button {
-                print("Unfollow @\(String(describing: author?.username ?? event.pubkey))")
-            } label: {
-                Label("Unfollow @\(String(describing: author?.username ?? event.pubkey))", systemImage: "person.fill.xmark")
+                Label("Copy note id hex \(noteIdHex))", systemImage: "doc.on.clipboard")
             }
             Button {
-                print("Block @\(String(describing: author?.username ?? event.pubkey))")
+                print("Unfollow @\(username)")
             } label: {
-                Label("Block @\(String(describing: author?.username ?? event.pubkey))", systemImage: "slash.circle")
+                Label("Unfollow @\(username)", systemImage: "person.fill.xmark")
+            }
+            Button {
+                print("Block @\(username)")
+            } label: {
+                Label("Block @\(username)", systemImage: "slash.circle")
             }
         } label: {
             Text("···")
+                .fontWeight(.bold)
                 .foregroundColor(.secondary)
                 .padding(.top, 0)
                 .padding(.bottom, 10)
@@ -265,66 +357,22 @@ struct NoteMenuView : View {
     }
 }
 
-// FOR PREVIEW
-struct NoteViewWrapper: View {
-    
-//    @Environment(\.managedObjectContext) var viewContext
-//
-//    @FetchRequest(
-//        sortDescriptors: []
-//    )
-//    var events:FetchedResults<Event>
-    
-//    @FetchRequest(
-//        sortDescriptors: [SortDescriptor(\Contact.updated_at, order: .reverse)],
-//        animation: .none)
-//    var allContacts:FetchedResults<Contact>
-    
-//    @FetchRequest(
-//        sortDescriptors: [SortDescriptor(\Contact.updated_at, order: .reverse)],
-//        predicate: NSPredicate(format: "pubkey == %@", "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"),
-//        animation: .none)
-//    var contacts:FetchedResults<Contact>
-    
-//    @FetchRequest(fetchRequest:Event.textNotes())
-//    var events: FetchedResults<Event>
-    
-//    @FetchRequest(
-//        entity: Event.entity(),
-//        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
-//        predicate: NSPredicate(format: "kind == 1"),
-//        animation: .none)
-//        var events: FetchedResults<Event>
-    
-//    var body: some View {
-//        Text("hi")
-//    }
-    
-    // note.id 6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81
-    // pubkey: 5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
-        predicate: NSPredicate(format: "id == %@", "6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81"),
-        animation: .none)
-    var events: FetchedResults<Event>
-    
-    var body: some View {
-        VStack {
-            if (events.first != nil) {
-                NoteRowView(event: events.first!)
-            }
-            else {
-                Text("No events")
-            }
-        }
-    }
-}
-
-
 struct NoteView_Previews: PreviewProvider {
-    
+
     static var previews: some View {
-        NoteViewWrapper()
+    
+        // #[2]
+        // 115eab2976aee4ca562d83ea6b1d805c6d4e0acf54fe2e6a4e1a62f73c2850cc
+        
+        // #[0]
+        // 1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0
+        
+        // note.id 6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81
+        // pubkey: 5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0
+        
+        let event = PreviewFetcher.fetchEvent("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
+        
+        NoteRowView(event: event!)
             .withPreviewEnvironment()
     }
 }

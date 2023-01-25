@@ -27,6 +27,7 @@ extension Account {
     @NSManaged public var publicKey: String?
     @NSManaged public var id: UUID?
     @NSManaged public var follows: Set<Contact>?
+    @NSManaged public var bookmarks: Set<Event>?
 }
 
 // MARK: Generated accessors for follows
@@ -43,6 +44,23 @@ extension Account {
 
     @objc(removeFollows:)
     @NSManaged public func removeFromFollows(_ values: NSSet)
+
+}
+
+// MARK: Generated accessors for bookmarks
+extension Account {
+
+    @objc(addBookmarksObject:)
+    @NSManaged public func addToBookmarks(_ value: Event)
+
+    @objc(removeBookmarksObject:)
+    @NSManaged public func removeFromBookmarks(_ value: Event)
+
+    @objc(addBookmarks:)
+    @NSManaged public func addToBookmarks(_ values: NSSet)
+
+    @objc(removeBookmarks:)
+    @NSManaged public func removeFromBookmarks(_ values: NSSet)
 
 }
 

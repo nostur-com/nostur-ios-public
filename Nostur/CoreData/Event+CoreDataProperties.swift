@@ -30,6 +30,25 @@ extension Event {
     @NSManaged public var likes: Int64 // Cache
     @NSManaged public var replies: Int64 // Cache
     @NSManaged public var mentions: Int64 // Cache
+    
+    @NSManaged public var bookmarkedBy: NSSet?
+}
+
+// MARK: Generated accessors for bookmarkedBy
+extension Event {
+
+    @objc(addBookmarkedByObject:)
+    @NSManaged public func addToBookmarkedBy(_ value: Account)
+
+    @objc(removeBookmarkedByObject:)
+    @NSManaged public func removeFromBookmarkedBy(_ value: Account)
+
+    @objc(addBookmarkedBy:)
+    @NSManaged public func addToBookmarkedBy(_ values: NSSet)
+
+    @objc(removeBookmarkedBy:)
+    @NSManaged public func removeFromBookmarkedBy(_ values: NSSet)
+
 }
 
 extension Event : Identifiable {
@@ -195,6 +214,22 @@ extension Event : Identifiable {
                     reactingToEvent.mentions = reactingToEvent.mentions + 1
                 }
             }
+        }
+    }
+    
+    
+    func tags() -> [NEventTag]? {
+        let decoder = JSONDecoder()
+        
+        if (tagsSerialized != nil) {
+            guard let tags = try? decoder.decode([NEventTag].self, from: Data(tagsSerialized!.utf8)) else {
+                return nil
+            }
+            
+            return tags
+        }
+        else {
+            return nil
         }
     }
     

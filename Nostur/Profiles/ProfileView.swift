@@ -25,6 +25,10 @@ struct ProfileView: View {
     @FetchRequest
     var clEvents:FetchedResults<Event>
     
+    @State var notesTab = true
+    @State var followersTab = false
+    
+    
     init(pubkey:String) {
         self.pubkey = pubkey
         
@@ -32,7 +36,7 @@ struct ProfileView: View {
             sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
             predicate: NSPredicate(format: "pubkey == %@ AND kind == 3", pubkey)
         )
-            
+        
         _contacts = FetchRequest(
             sortDescriptors: [],
             predicate: NSPredicate(format: "pubkey == %@", pubkey)
@@ -161,36 +165,64 @@ struct ProfileView: View {
                     Text("Tweets / Liked").font(.headline).fontWeight(.heavy).padding(.vertical, 10)
                     
                     
-                    if clEvents.count != 0, let pubkeys = clEvents.first!.contactPubkeys() {
-                        
-                        Text("Following").font(.headline).fontWeight(.heavy).padding(.vertical, 10)
-                        
-                        LazyVStack {
-                            ForEach(pubkeys.indices, id: \.self) { index in
-                                ProfileRowView(pubkey: pubkeys[index])
-                                    .onAppear {
-                                        // dont prefetch first 5
-                                        // will probably already be visible and fetched by its own .onAppear
-                                        
-                                        if (index > 5) {
-                                            // TODO: find out logic for prefetching next profile info but not if already in cache but also refetch if too old
-                                        }
+                    ControlGroup {
+                        Toggle(isOn: $notesTab) {
+                            Label("Notes", systemImage: "bubble.left.and.bubble.right")
+                        }.toggleStyle(.button)
+                        Toggle(isOn: $followersTab) {
+                            Label("Followers", systemImage: "person.3.sequence")
+                        }.toggleStyle(.button)
+                    }
+                    
+                    
+                    if (followersTab) {
+                        VStack {
+                            if clEvents.count != 0, let pubkeys = clEvents.first!.contactPubkeys() {
+                                
+                                Text("Following").font(.headline).fontWeight(.heavy).padding(.vertical, 10)
+                                
+                                LazyVStack {
+                                    ForEach(pubkeys.indices, id: \.self) { index in
+                                        ProfileRowView(pubkey: pubkeys[index])
+                                            .onAppear {
+                                                // dont prefetch first 5
+                                                // will probably already be visible and fetched by its own .onAppear
+                                                
+                                                if (index > 5) {
+                                                    // TODO: find out logic for prefetching next profile info but not if already in cache but also refetch if too old
+                                                }
+                                            }
+                                        Divider()
                                     }
-                                Divider()
+                                    // TODO: onAppear, take index. prefetch next 10.....
+                                }
+                                
+//                                Spacer()
                             }
-                            // TODO: onAppear, take index. prefetch next 10.....
+                            else {
+                                Text("Could not find list of contacts followed by @\( contacts.first?.username ?? String(pubkey.prefix(5)) )")
+                                    .onAppear {
+                                        cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: pubkey)))
+                                    }
+                            }
                         }
-                        
-                        Spacer()
+                        .onAppear {
+                            notesTab = false
+                        }
                     }
-                    else {
-                        Text("Could not find list of contacts followed by @\( contacts.first?.username ?? String(pubkey.prefix(5)) )")
+                    
+                    if (notesTab) {
+                        ProfileNotesView(pubkey: pubkey)
                             .onAppear {
-                                cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: pubkey)))
+                                followersTab = false
                             }
                     }
+                    
+                    
+                    
+                    
                 }.padding(10)
-                Spacer()
+//                Spacer()
             }
         }
         .ignoresSafeArea(edges: .top)
@@ -215,7 +247,7 @@ struct NoClEvent_Previews: PreviewProvider {
     static var previews: some View {
         // 5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0 // bitcoiner
         let pubkey = "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
-//        let contact = PreviewFetcher.fetchContact(pubkey)
+        //        let contact = PreviewFetcher.fetchContact(pubkey)
         
         ProfileView(pubkey: pubkey)
             .withPreviewEnvironment()
@@ -225,8 +257,9 @@ struct NoClEvent_Previews: PreviewProvider {
 struct ProfileView_Previews: PreviewProvider {
     static var previews: some View {
         // 5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0 // bitcoiner
-        let pubkey = "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
-//        let contact = PreviewFetcher.fetchContact(pubkey)
+        // snowden: 84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240
+        let pubkey = "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240"
+        //        let contact = PreviewFetcher.fetchContact(pubkey)
         //        let clEvent = PreviewFetcher.fetchEvents(pubkey, kind: 3).first!
         //
         ProfileView(pubkey: pubkey)

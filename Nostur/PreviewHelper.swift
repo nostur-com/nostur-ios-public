@@ -18,8 +18,9 @@ extension View {
             d.set("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0",
                   forKey: "activeAccountPublicKey")
             
-            d.set(true,
-                  forKey: "devToggle")
+            d.set(true, forKey: "devToggle")
+            
+            d.set(true, forKey: "showReplies")
             
             return d
         }()
@@ -41,14 +42,17 @@ struct PreviewFetcher {
     
     static let viewContext = EventsProvider.preview.container.viewContext
     
-    static func allContacts() -> [Contact] {
+    static func allContacts(context:NSManagedObjectContext? = nil) -> [Contact] {
         let request = NSFetchRequest<Contact>(entityName: "Contact")
         request.sortDescriptors = []
 
+        if (context != nil) {
+            return try! context!.fetch(request)
+        }
         return try! PreviewFetcher.viewContext.fetch(request)
     }
     
-    static func fetchEvents(_ pubkey:String, kind:Int? = nil) -> [Event] {
+    static func fetchEvents(_ pubkey:String, kind:Int? = nil, context:NSManagedObjectContext? = nil) -> [Event] {
         let request = NSFetchRequest<Event>(entityName: "Event")
 //        request.entity = Event.entity()
         if (kind != nil) {
@@ -59,24 +63,32 @@ struct PreviewFetcher {
         
         request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         
+        if (context != nil) {
+            return try! context!.fetch(request)
+        }
         return try! PreviewFetcher.viewContext.fetch(request)
     }
     
-    static func fetchEvent(_ id:String) -> Event? {
+    static func fetchEvent(_ id:String, context:NSManagedObjectContext? = nil) -> Event? {
         let request = NSFetchRequest<Event>(entityName: "Event")
-//        request.entity = Contact.entity()
         request.predicate = NSPredicate(format: "id == %@", id)
         request.sortDescriptors = []
         
+        if (context != nil) {
+            return try! context!.fetch(request).first
+        }
         return try! PreviewFetcher.viewContext.fetch(request).first
     }
     
-    static func fetchContact(_ pubkey:String) -> Contact? {
+    static func fetchContact(_ pubkey:String, context:NSManagedObjectContext? = nil) -> Contact? {
         let request = NSFetchRequest<Contact>(entityName: "Contact")
 //        request.entity = Contact.entity()
         request.predicate = NSPredicate(format: "pubkey == %@", pubkey)
         request.sortDescriptors = []
         
+        if (context != nil) {
+            return try! context!.fetch(request).first
+        }
         return try! PreviewFetcher.viewContext.fetch(request).first
     }
 }

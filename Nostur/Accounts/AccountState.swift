@@ -30,15 +30,7 @@ final class AccountState : ObservableObject {
     }
     
     func loadFollowing() {
-//        let r = NSFetchRequest<Contact>()
-//        r.entity = Contact.entity()
-//        r.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)]
-//        let allContacts = try! viewContext.fetch(r)
         let activeAccount = activeAccount()
-        
-        
-//        var arr:[String] = (activeAccount.follows?.map{ $0.pubkey! })!
-        
         if (activeAccount?.follows != nil) {
             let pubkeys = activeAccount!.follows?.map { $0.pubkey! } ?? []
             self.followingPublicKeys = Set( pubkeys )
@@ -84,7 +76,44 @@ final class AccountState : ObservableObject {
     }
     
     func isFollowing(_ pubkey:String) -> Bool {
-//        print(followingPublicKeys)
         return followingPublicKeys.contains(pubkey)
+    }
+    
+    
+    
+    func addBookmark(_ event:Event) {
+        guard let activeAccount = activeAccount() else {
+            return
+        }
+        activeAccount.addToBookmarks(event)
+        do {
+            try viewContext.save()
+        }
+        catch {
+            print("Could not add bookmark: \(error)")
+        }
+    }
+    
+    func removeBookmark(_ event:Event) {
+        guard let activeAccount = activeAccount() else {
+            return
+        }
+        guard ((activeAccount.bookmarks?.contains(event)) != nil) else {
+            return
+        }
+        activeAccount.removeFromBookmarks(event)
+        do {
+            try viewContext.save()
+        }
+        catch {
+            print("Could not remove bookmark: \(error)")
+        }
+    }
+    
+    func isBookmarked(_ event:Event) -> Bool {
+        guard let activeAccount = activeAccount(), activeAccount.bookmarks != nil else {
+            return false
+        }
+        return activeAccount.bookmarks!.contains(event)
     }
 }
