@@ -12,4 +12,7 @@ import CoreData
 
 public class Event: NSManagedObject {
 
+    
+    
 }
+

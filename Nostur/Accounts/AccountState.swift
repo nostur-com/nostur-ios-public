@@ -18,8 +18,11 @@ final class AccountState : ObservableObject {
     
     var viewContext:NSManagedObjectContext
     
-    init(viewContext:NSManagedObjectContext) {
+    init(viewContext:NSManagedObjectContext, activeAccountPublicKey:String? = nil) {
         self.viewContext = viewContext
+        if (activeAccountPublicKey != nil) {
+            self.activeAccountPublicKey = activeAccountPublicKey!
+        }
         loadFollowing()
     }
     

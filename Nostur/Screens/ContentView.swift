@@ -24,24 +24,47 @@ struct ContentView: View {
     @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""
     @State var path = NavigationPath()
     
-    @FetchRequest(
-        sortDescriptors: [SortDescriptor(\Contact.updated_at, order: .reverse)],
-        animation: .none)
-    var contacts:FetchedResults<Contact> // ALL CONTACTS
+//    @FetchRequest(
+//        sortDescriptors: [SortDescriptor(\Contact.updated_at, order: .reverse)],
+//        animation: .none)
+//    var contacts:FetchedResults<Contact> // ALL CONTACTS
+//
+//    @FetchRequest(
+//        sortDescriptors: [SortDescriptor(\Event.created_at, order: .forward)],
+//        predicate: NSPredicate(format: "kind == 1 && replyToId == nil"),
+//        animation: .none)
+//    var events: FetchedResults<Event> // NOTES (NOT REPLIES)
     
-    @FetchRequest(
-        sortDescriptors: [SortDescriptor(\Event.created_at, order: .forward)],
-        predicate: NSPredicate(format: "kind == 1 && replyToId == nil"),
-        animation: .none)
-    var events: FetchedResults<Event> // NOTES (NOT REPLIES)
+//    init() {
+//        let request: NSFetchRequest<Event> = Event.fetchRequest()
+//            request.predicate = NSPredicate(format: "kind == 1 && replyToId == nil")
+//
+//            request.sortDescriptors = [
+//                NSSortDescriptor(keyPath: \Event.created_at, ascending: true)
+//            ]
+//
+//            request.fetchLimit = 300
+//            _events = FetchRequest(fetchRequest: request)
+//
+//
+//        let requestAll: NSFetchRequest<Event> = Event.fetchRequest()
+//        requestAll.predicate = NSPredicate(format: "kind == 1")
+//
+//        requestAll.sortDescriptors = [
+//                NSSortDescriptor(keyPath: \Event.created_at, ascending: true)
+//            ]
+//
+//        requestAll.fetchLimit = 300
+//        _eventsAll = FetchRequest(fetchRequest: requestAll)
+//    }
     
-    @FetchRequest(
-        //        entity: Event.entity(),
-        //        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
-        sortDescriptors: [SortDescriptor(\Event.created_at, order: .forward)],
-        predicate: NSPredicate(format: "kind == 1"),
-        animation: .none)
-    var eventsAll: FetchedResults<Event> // NOTES AND REPLIES
+//    @FetchRequest(
+//        //        entity: Event.entity(),
+//        //        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
+//        sortDescriptors: [SortDescriptor(\Event.created_at, order: .forward)],
+//        predicate: NSPredicate(format: "kind == 1"),
+//        animation: .none)
+//    var eventsAll: FetchedResults<Event> // NOTES AND REPLIES
     
     @EnvironmentObject var cm:ConnectionManager
     @State var selectedTab = "MainTimeline"
@@ -52,28 +75,58 @@ struct ContentView: View {
         VStack {
             TabView(selection: $selectedTab) {
                 NavigationStack(path: $navigationPath) {
-                    MainTimelineView(showReplies: $showReplies, contacts: contacts, events: showReplies ? eventsAll : events)
+                    Toggle(isOn: $showReplies) {
+                        HStack {
+                            Spacer()
+                            Label("Show replies", systemImage: "bubble.left.and.bubble.right")
+                        }
+                    }.toggleStyle(.switch)
+                        .padding(.horizontal)
+                    
+//                    MainTimelineView(showReplies: $showReplies, contacts: contacts, events: showReplies ? eventsAll : events)
+                    
+                    VStack {
+                        TimelineRefresher()
+                        NaturalTimelineView(withReplies: showReplies)
+                    }
+                    
                         .onOpenURL { url in
                             // TODO: CHECK INPUT!!! SECURITY!
                             print(url.absoluteString)
-                            let matches = url.absoluteString.matchingStrings(regex: "^(nostr:)(npub1|note1)([023456789acdefghjklmnpqrstuvwxyz]{58})$")
-                            if matches.count == 1 && matches[0].count == 4 {
-                                print("ok lets go to: \(matches[0][2])\(matches[0][3])")
-                                key = try! NIP19(displayString: "\(matches[0][2])\(matches[0][3])")
+                            let nostr = url.absoluteString.matchingStrings(regex: "^(nostr:)(npub1|note1)([023456789acdefghjklmnpqrstuvwxyz]{58})$")
+                            if nostr.count == 1 && nostr[0].count == 4 {
+                                print("ok lets go to: \(nostr[0][2])\(nostr[0][3])")
+                                key = try! NIP19(displayString: "\(nostr[0][2])\(nostr[0][3])")
                                 print("ok lets go to: \(key.hexString)")
-                                if matches[0][2] == "npub1" {
+                                if nostr[0][2] == "npub1" {
                                     navigationPath.append(ContactPath(key: key.hexString))
                                 }
-                                if matches[0][2] == "note1" {
+                                if nostr[0][2] == "note1" {
                                     navigationPath.append(NotePath(id: key.hexString))
                                 }
                                 selectedTab = "MainTimeline"
 //                                navigationPath.append(key.hexString)
                             }
                             
+                            let nostur = url.absoluteString.matchingStrings(regex: "^(nostur:)(p:|e:)([0-9a-z]{64})$")
+                            if nostur.count == 1 && nostur[0].count == 4 {
+                                print("ok lets go to: \(nostur[0][2])\(nostur[0][3])")
+                                if nostur[0][2] == "p:" {
+                                    navigationPath.append(ContactPath(key: nostur[0][3]))
+                                }
+                                if nostur[0][2] == "e:" {
+                                    navigationPath.append(NotePath(id: nostur[0][3]))
+                                }
+                                selectedTab = "MainTimeline"
+//                                navigationPath.append(key.hexString)
+                            }                            //
+                            
                         }
                         .navigationDestination(for: NotePath.self) { path in
-                            NoteDetailView(id: path.id)
+                            NoteById(id: path.id)
+                        }
+                        .navigationDestination(for: Event.self) { event in
+                            NoteDetail(event: event)
                         }
                         .navigationDestination(for: ContactPath.self) { path in
                             ProfileView(pubkey: path.key)
@@ -95,7 +148,24 @@ struct ContentView: View {
                 .tag("Accounts")
                 
                 NavigationStack {
-                    BookmarksView()
+                    if (accountState.activeAccount() != nil) {
+                        BookmarksView(account: accountState.activeAccount()!)
+                            .navigationDestination(for: NotePath.self) { path in
+                                NoteById(id: path.id)
+                            }
+                            .navigationDestination(for: Event.self) { event in
+                                NoteDetail(event: event)
+                            }
+                            .navigationDestination(for: ContactPath.self) { path in
+                                ProfileView(pubkey: path.key)
+                            }
+                            .navigationDestination(for: Contact.self) { contact in
+                                ProfileView(pubkey: contact.pubkey!)
+                            }
+                    }
+                    else {
+                        Text("Select account account first on accounts tab.")
+                    }
                     Spacer()
                 }
                 .tabItem { Image(systemName: "bookmark.circle") }

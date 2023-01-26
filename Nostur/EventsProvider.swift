@@ -91,7 +91,7 @@ class EventsProvider: ObservableObject, EventDelegate {
                     case .setMetadata:
                         Contact.handleSetMetadataEvent(event: event, context: viewContext)
                         //                    case .custom(3):
-                        
+
                     default:
                         print("unhandled event")
                     }
@@ -109,12 +109,12 @@ class EventsProvider: ObservableObject, EventDelegate {
         account.addToBookmarks(someEvent)
         someEvent.addToBookmarkedBy(account)
         
-        do {
-            try viewContext.save()
-        } catch {
-            let nsError = error as NSError
-            fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-        }
+//        do {
+//            try viewContext.save()
+//        } catch {
+//            let nsError = error as NSError
+//            fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+//        }
         return provider
     }()
     
@@ -223,8 +223,19 @@ class EventsProvider: ObservableObject, EventDelegate {
                 
                 // remember recent .created_at timestamp from timeline events
                 if message.type == .EVENT && (message.event?.kind == .textNote || message.event?.kind == .custom(7)) {
-                    // don't remember if timestamp is in the future
-                    if message.event!.createdAt.timestamp > Int(Date().timeIntervalSince1970) {
+                    
+                    
+                    if (message.subscriptionId == nil) {
+                        print("WHERE IS SUBSCRIPTION ID BRO")
+                        return
+                    }
+                    
+                    // TIMESTAMP TRACKING NOT COULD ENOUGH, BECAUSe NEED TO FETCH OLDER EVENTS SOMETIMES
+                    // MAYBE EXCLUDE FROM TRACKING BY SUBSCRIPTION ID.
+                    // DISABLE FOR NOW...
+                    // ----
+                    // don't remember if timestamp is in the future:
+                    if message.subscriptionId!.prefix(3) == "TL-" && message.event!.createdAt.timestamp > Int(Date().timeIntervalSince1970) {
                         return
                     }
                     
@@ -266,7 +277,6 @@ class EventsProvider: ObservableObject, EventDelegate {
                 print("oops::: \(error)")
             }
             let after = await queue.count
-            print("🧚🧚🧚 PARSING: \(before) -> \(after) 🧚🧚🧚")
         }
         
     }
@@ -486,11 +496,51 @@ class EventsProvider: ObservableObject, EventDelegate {
         savedEvent.sig = event.signature
         savedEvent.pubkey = event.publicKey
         savedEvent.likes = 0
+        
         if (event.kind == .textNote && TagsHelpers(event.tags).replyToRootEtag() != nil) {
             savedEvent.replyToRootId = TagsHelpers(event.tags).replyToRootEtag()!.id
+            
+            let er = NSFetchRequest<Event>(entityName: "Event")
+            er.predicate = NSPredicate(format: "id == %@", savedEvent.replyToRootId!)
+            er.sortDescriptors = []
+            if let rootReply = try? context.fetch(er).first {
+                savedEvent.replyToRoot = rootReply
+                // root heeft geen inverse
+            }
         }
         if (event.kind == .textNote && TagsHelpers(event.tags).replyToEtag() != nil) {
             savedEvent.replyToId = TagsHelpers(event.tags).replyToEtag()!.id
+            
+            let er = NSFetchRequest<Event>(entityName: "Event")
+            er.predicate = NSPredicate(format: "id == %@", savedEvent.replyToId!)
+            er.sortDescriptors = []
+            if let reply = try? context.fetch(er).first {
+                savedEvent.replyTo = reply
+                // TODO: inverse hier erbij of neit?
+            }
+        }
+        
+        // if other existing messages were replying to this, fix the relation
+        let pointingToEventReq = NSFetchRequest<Event>(entityName: "Event")
+        pointingToEventReq.predicate = NSPredicate(format: "kind == 1 AND (replyToId == %@ OR replyToRootId == %@)", savedEvent.id!, savedEvent.id!)
+        pointingToEventReq.sortDescriptors = []
+        if let pointingToEvents = try? context.fetch(pointingToEventReq) {
+            for event in pointingToEvents {
+                if (event.replyToId != nil) && (event.replyToId == savedEvent.id!) {
+                    event.replyTo = savedEvent
+                }
+                if (event.replyToRootId != nil) && (event.replyToRootId == savedEvent.id!) {
+                    event.replyToRoot = savedEvent
+                }
+            }
+        }
+        
+        // set relation to Contact
+        let cr = NSFetchRequest<Contact>(entityName: "Contact")
+        cr.predicate = NSPredicate(format: "pubkey == %@", event.publicKey)
+        cr.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)]
+        if let contact = try? context.fetch(cr).first {
+            savedEvent.contact = contact
         }
         
         let encoder = JSONEncoder()

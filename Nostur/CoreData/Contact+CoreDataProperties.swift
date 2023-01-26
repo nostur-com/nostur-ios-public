@@ -102,7 +102,6 @@ extension Contact : Identifiable {
         
         
         let request = NSFetchRequest<Contact>(entityName: "Contact")
-//        request.entity = Contact.entity()
         request.predicate = NSPredicate(format: "pubkey == %@", event.publicKey)
         request.sortDescriptors = [NSSortDescriptor(key: "updated_at", ascending: false)]
         
@@ -143,6 +142,15 @@ extension Contact : Identifiable {
             contact.lud16 = metaData.lud16
             contact.updated_at = Int64(Date().timeIntervalSince1970)
             print("🟢🟢 New contact stored ")
+            
+            // Update relation on already existing events
+            let er = Event.fetchRequest()
+            er.sortDescriptors = []
+            er.predicate = NSPredicate(format: "kind == 1 && pubkey == %@", event.publicKey)
+            let contactEvents = Array(try! context.fetch(er))
+            for event in contactEvents {
+                event.contact = contact
+            }
         }
 //        do {
 //            try context.save() // NEED SAVE() HERE OR NOT??

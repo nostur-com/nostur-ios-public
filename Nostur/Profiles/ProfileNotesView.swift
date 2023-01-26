@@ -11,6 +11,9 @@ import SwiftUI
 // NOTES ON USER PROFILE SCREEN
 struct ProfileNotesView: View {
     
+    @EnvironmentObject var cm:ConnectionManager
+    var pubkey:String
+    
     @FetchRequest(
         sortDescriptors: [],
         animation: .none)
@@ -23,7 +26,7 @@ struct ProfileNotesView: View {
     var events: FetchedResults<Event>
     
     init(pubkey: String) {
-        
+        self.pubkey = pubkey
         _events = FetchRequest(
             sortDescriptors: [SortDescriptor(\Event.created_at, order: .reverse)],
             predicate: NSPredicate(format: "pubkey == %@ AND kind == 1", pubkey)
@@ -47,29 +50,37 @@ struct ProfileNotesView: View {
                     
                 }
             }
-            
+        }.onAppear {
+            cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
         }
     }
 }
 
 struct ProfileNotesViewInner: View {
     
+    @EnvironmentObject var cm:ConnectionManager
     var contact:Contact
     var events:FetchedResults<Event>
     
     var body: some View {
-        if (events.count > 0) {
-            LazyVStack {
-                ForEach(events, id:\Event.id) { event in
-                    NoteRowView(event:event)
+        HStack {
+            if (events.count > 0) {
+                LazyVStack {
+                    ForEach(events, id:\Event.id) { event in
+                        NoteRow(event:event)
+                    }
                 }
             }
-        }
-        else {
-            Text("It looks like there are no posts from this user")
-                .onAppear {
-                    // .REQ by author
-                }
+            else {
+                Text("Fetching posts from user...")
+                    .onAppear {
+                        // .REQ by author
+                        // TODO:
+                        
+                    }
+            }
+        }.onAppear {
+            cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorNotes(pubkey: contact.pubkey!)))
         }
     }
 }

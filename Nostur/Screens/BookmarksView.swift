@@ -1,3 +1,4 @@
+
 //
 //  BookmarksView.swift
 //  Nostur
@@ -8,42 +9,76 @@
 import SwiftUI
 
 struct BookmarksView: View {
-    
-    @EnvironmentObject var accountState:AccountState
 
-    @State var bookmarks:[Event]?
+    @Environment(\.managedObjectContext) var viewContext
+    
+    let account: Account?
+    
+    @FetchRequest(sortDescriptors: [])
+    var bookmarks: FetchedResults<Event>
+    
+    init(account:Account? = nil) {
+        self.account = account
+        guard account != nil else { return }
+        _bookmarks = FetchRequest(
+            sortDescriptors: [SortDescriptor(\Event.created_at, order: .reverse)],
+            predicate: NSPredicate(format: "%@ IN bookmarkedBy", self.account!)
+        )
+    }
     
     var body: some View {
-        
-        
-        if bookmarks != nil {
+        VStack {
+            // TODO: Account switcher/filter
+            Text("Account: \(account?.name ?? "No account")")
             ScrollView {
-                ForEach(bookmarks!, id:\.self) { bookmark in
-                    NoteRowView(event: bookmark)
-                }
-                Spacer()
+                ForEach(bookmarks) { bookmark in
+                    NoteRow(event: bookmark)
+                        .contextMenu {
+                            Button {
+                                UIPasteboard.general.string = bookmark.noteId
+                            } label: {
+                                Label("Copy note id \(bookmark.noteId)", systemImage: "doc.on.clipboard")
+                            }
+                            Button {
+                                UIPasteboard.general.string = bookmark.id!
+                            } label: {
+                                Label("Copy note id hex \(bookmark.id!))", systemImage: "doc.on.clipboard")
+                            }
+                            Button {
+                                print("Unfollow @\(bookmark.username)")
+                            } label: {
+                                Label("Unfollow @\(bookmark.username)", systemImage: "person.fill.xmark")
+                            }
+                            Button {
+                                print("Block @\(bookmark.username)")
+                            } label: {
+                                Label("Block @\(bookmark.username)", systemImage: "slash.circle")
+                            }
+                        }
+                        .padding(20)
+                }.onDelete(perform: deleteItems)
+            }
+            Spacer()
+        }
+    }
+    
+    private func deleteItems(offsets: IndexSet) {
+        withAnimation {
+            offsets.map { bookmarks[$0] }.forEach(viewContext.delete)
+            do { try viewContext.save() } catch {
+                let nsError = error as NSError
+                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
             }
         }
-        else if (bookmarks?.count == 0) {
-            Text("You don't have any bookmarks")
-        }
-        else {
-            Text("You don't have any bookmarks")
-                .onAppear {
-                    if bookmarks == nil {
-                        if (accountState.activeAccount()?.bookmarks != nil) {
-                            bookmarks = Array((accountState.activeAccount()?.bookmarks)!)
-                        }
-                    }
-                }
-        }
-        
     }
 }
 
 struct BookmarksView_Previews: PreviewProvider {
     static var previews: some View {
-        BookmarksView()
+        
+        let activeAccount = PreviewFetcher.fetchAccount("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", context: EventsProvider.preview.container.viewContext)
+        
+        BookmarksView(account: activeAccount)
             .withPreviewEnvironment()
     }
 }

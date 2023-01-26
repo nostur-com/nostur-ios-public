@@ -28,10 +28,27 @@ extension Event {
     @NSManaged public var replyToRootId: String?
     @NSManaged public var replyToId: String?
     @NSManaged public var likes: Int64 // Cache
-    @NSManaged public var replies: Int64 // Cache
+    @NSManaged public var repliesCount: Int64 // Cache
     @NSManaged public var mentions: Int64 // Cache
     
     @NSManaged public var bookmarkedBy: NSSet?
+    @NSManaged public var contact: Contact?
+    @NSManaged public var replyTo: Event?
+    @NSManaged public var replyToRoot: Event?
+
+
+    @NSManaged public var replies: NSSet?
+    // helper
+    var replies_: Set<Event> {
+        get { (replies as? Set<Event>) ?? [] }
+        set { replies = newValue as NSSet }
+    }
+    
+    var username: String {
+        get {
+            contact?.username ?? authorKey
+        }
+    }
 }
 
 // MARK: Generated accessors for bookmarkedBy
@@ -50,6 +67,25 @@ extension Event {
     @NSManaged public func removeFromBookmarkedBy(_ values: NSSet)
 
 }
+
+// MARK: Generated accessors for replies
+extension Event {
+    
+    @objc(addRepliesObject:)
+    @NSManaged public func addToReplies(_ value: Event)
+
+    @objc(removeRepliesObject:)
+    @NSManaged public func removeFromReplies(_ value: Event)
+
+    @objc(addReplies:)
+    @NSManaged public func addToReplies(_ values: NSSet)
+
+    @objc(removeReplies:)
+    @NSManaged public func removeFromReplies(_ values: NSSet)
+
+}
+
+
 
 extension Event : Identifiable {
     
@@ -157,7 +193,7 @@ extension Event : Identifiable {
             
             if let reactingToEvent = try context.fetch(request).first {
 //                print("updating .replies for .id = \(String(describing: reactingToEvent.id))")
-                reactingToEvent.replies = reactingToEvent.replies + 1
+                reactingToEvent.repliesCount = reactingToEvent.repliesCount + 1
             }
         }
         

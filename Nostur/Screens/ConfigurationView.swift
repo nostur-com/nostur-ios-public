@@ -104,7 +104,7 @@ struct ConfigurationView: View {
             
             // ON FIRST PASS RESET ALL COUNTERS TO 0 (FOR KIND 1)
             for event in kind1 {
-                event.replies = 0
+                event.repliesCount = 0 // TODO: Dit allemaal kan @aggregate worden?? @count ofzo?
                 event.mentions = 0
                 event.likes = 0
             }
@@ -251,6 +251,101 @@ struct ConfigurationView: View {
         }
     }
     
+    
+    func fixContactEventRelations() {
+    
+        SavedEventsCache.shared.clear()
+        let taskContext = EventsProvider.shared.container.newBackgroundContext()
+        taskContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        // Set unused undoManager to nil for macOS (it is nil by default on iOS)
+        // to reduce resource requirements.
+        taskContext.undoManager = nil
+        // Add name and author to identify source of persistent history changes.
+        taskContext.name = "fixContactEventRelationsContext"
+        taskContext.transactionAuthor = "fixContactEventRelations"
+        
+        taskContext.performAndWait {
+        
+            // TODO: MAybe dont need for all events??? just kind:1 is enough?
+            let er = NSFetchRequest<Event>(entityName: "Event")
+            er.sortDescriptors = []
+            let allEvents = Array(try! taskContext.fetch(er))
+            
+            
+            for event in allEvents {
+                // set relation to Contact
+                let cr = NSFetchRequest<Contact>(entityName: "Contact")
+                cr.predicate = NSPredicate(format: "pubkey == %@", event.pubkey!)
+                cr.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)]
+                if let contact = try? taskContext.fetch(cr).first {
+                    event.contact = contact
+                }
+            }
+            
+            do {
+                print("Rebuilt event.contact relation")
+                try taskContext.save()
+            }
+            catch {
+                print("fixContactEventRelations error on save(): \(error)")
+                print(error)
+            }
+        }
+    }
+    
+    func fixReplyToEventRelations() {
+    
+        SavedEventsCache.shared.clear()
+        let taskContext = EventsProvider.shared.container.newBackgroundContext()
+        taskContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        // Set unused undoManager to nil for macOS (it is nil by default on iOS)
+        // to reduce resource requirements.
+        taskContext.undoManager = nil
+        // Add name and author to identify source of persistent history changes.
+        taskContext.name = "fixReplyToEventRelationsContext"
+        taskContext.transactionAuthor = "fixReplyToEventRelations"
+        
+        taskContext.performAndWait {
+        
+            // TODO: MAybe dont need for all events??? just kind:1 is enough?
+            let er = NSFetchRequest<Event>(entityName: "Event")
+            er.sortDescriptors = []
+            er.predicate = NSPredicate(format: "kind == 1")
+            let allKind1 = Array(try! taskContext.fetch(er))
+            
+            
+            for event in allKind1 {
+                
+                if (event.replyToId != nil) {
+                    let cr = NSFetchRequest<Event>(entityName: "Event")
+                    cr.predicate = NSPredicate(format: "id == %@", event.replyToId!)
+                    cr.sortDescriptors = []
+                    if let replyToEvent = try? taskContext.fetch(cr).first {
+                        event.replyTo = replyToEvent
+//                        replyToEvent.addToReplies(event) // TODO: inverse hoeft niet? automatisc?
+                    }
+                }
+                if (event.replyToRootId != nil) {
+                    let cr = NSFetchRequest<Event>(entityName: "Event")
+                    cr.predicate = NSPredicate(format: "id == %@", event.replyToRootId!)
+                    cr.sortDescriptors = []
+                    if let replyToRootEvent = try? taskContext.fetch(cr).first {
+                        event.replyToRoot = replyToRootEvent
+                    }
+                }
+            }
+            
+            do {
+                print("Rebuilt event.contact relation")
+                try taskContext.save()
+            }
+            catch {
+                print("fixContactEventRelations error on save(): \(error)")
+                print(error)
+            }
+        }
+    }
+    
     var body: some View {
         VStack {
             RelaysView()
@@ -285,6 +380,18 @@ struct ConfigurationView: View {
                         deleteAllContacts()
                     } label: {
                         Text("Delete all contacts \(allContacts.count)")
+                    }.padding(10)
+                    
+                    Button {
+                        fixContactEventRelations()
+                    } label: {
+                        Text("Fix event.contact relation")
+                    }.padding(10)
+                    
+                    Button {
+                        fixReplyToEventRelations()
+                    } label: {
+                        Text("Fix reply relations")
                     }.padding(10)
                     
                     Text("**Umb** [@snowder](nostr:npub1g53mukxnjkcmr94fhryzkqutdz2ukq4ks0gvy5af25rgmwsl4ngq43drvk)")

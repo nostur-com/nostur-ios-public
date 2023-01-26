@@ -73,6 +73,7 @@ func testKind0Events() -> [String] {
 func testKind1Events() -> [String] {
     var events = [String]()
     
+    events.append(###"["EVENT","GIMME",{"id":"143efe07393c5b07efbe6ea1fc66c39cb985b98f8844650edd00fbcb041228a3","pubkey":"85080d3bad70ccdcd7f74c29a44f55bb85cbcd3dd0cbb957da1d215bdb931204","created_at":1674754153,"kind":1,"tags":[["p","eab0e756d32b80bcd464f3d844b8040303075a13eabc3599a762c9ac7ab91f4f"]],"content":"Welcome to Nostr #[0]","sig":"7586a1548ec9572424b2efe87b11338f6649356b75fbdf7958881353de86e78ebe41c20f1067dc18be4b9f211d89654228c8a43dd8ebdc49dd369f88e8d0ca99"}]"###)
     
     // WITH A TOKEN
     events.append(###"["EVENT","GIMME",{"id":"1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0","kind":1,"pubkey":"1833ee04459feb2ca4ae690d5f31269ad488c69e5fe903a42b532c677c4a8170","created_at":1674571519,"content":"Having #[0] on nostr after a month of the protocol launch is a great progress… thankful for all the open source devs working hard to bring this into reality 🤙","tags":[["p","84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240"]],"sig":"39f2485ef8252dfaddaa8a6720dcbeafebd51ef8d8520b8d3dadcd8d0d6066d5ace68aa3216c842c7b777ea74a07d4d74068e16e74e41c0a23067a527cf2f1df"}]"###)

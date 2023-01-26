@@ -104,7 +104,7 @@ struct MainTimelineView: View {
                                 ForEach(events.indices, id:\.self) { index in
 //                                    let note = Note(event: events[index], responses:[], contact: contact(byPubkey: events[index].pubkey))
 //                                    NoteRowView(note:note)
-                                    NoteRowView(event:events[index])
+                                    NoteRow(event:events[index])
                                         .onAppear {
                                             print("🍿🍿 appear index: \(index) lastUnreadIndex: \(lastUnreadIndex) events.count: \(events.count)")
                                             if (index > lastUnreadIndex) {
@@ -239,7 +239,7 @@ struct MainTimelineView: View {
 // FOR PREVIEW??
 struct MainTimelineWrapper: View {
     
-    @Environment(\.managedObjectContext) var viewContext
+//    @Environment(\.managedObjectContext) var viewContext
     
     @FetchRequest(
 //        entity: Contact.entity(),

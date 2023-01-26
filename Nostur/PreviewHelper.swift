@@ -26,8 +26,18 @@ extension View {
         }()
 
         let cm = ConnectionManager()
-        let accountState = AccountState(viewContext: EventsProvider.preview.container.viewContext)
+        let accountState = AccountState(viewContext: EventsProvider.preview.container.viewContext, activeAccountPublicKey: "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0")
         let ep = EventsProvider.preview // need this?
+//        let activeAccount = accountState.activeAccount()
+        let activeAccount = PreviewFetcher.fetchAccount("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", context: EventsProvider.preview.container.viewContext)
+//        let newAccount = Account(context: EventsProvider.preview.container.viewContext)
+//        newAccount.name = "john01"
+//        newAccount.about = "About me"
+//        newAccount.createdAt = Date()
+//        newAccount.display_name = "Johnny"
+//        newAccount.lud16 = ""
+//        newAccount.nip05 = ""
+//        newAccount.picture = ""
         
         return self.defaultAppStorage(userDefaults)
             .environment(\.managedObjectContext,
@@ -35,6 +45,7 @@ extension View {
             .environmentObject(accountState)
             .environmentObject(cm)
             .environmentObject(ep)
+            .environmentObject(activeAccount!)
     }
 }
 
@@ -67,6 +78,17 @@ struct PreviewFetcher {
             return try! context!.fetch(request)
         }
         return try! PreviewFetcher.viewContext.fetch(request)
+    }
+    
+    static func fetchAccount(_ pubkey:String, context:NSManagedObjectContext? = nil) -> Account? {
+        let request = NSFetchRequest<Account>(entityName: "Account")
+        request.predicate = NSPredicate(format: "publicKey == %@", pubkey)
+        request.sortDescriptors = []
+        
+        if (context != nil) {
+            return try! context!.fetch(request).first
+        }
+        return try! PreviewFetcher.viewContext.fetch(request).first
     }
     
     static func fetchEvent(_ id:String, context:NSManagedObjectContext? = nil) -> Event? {

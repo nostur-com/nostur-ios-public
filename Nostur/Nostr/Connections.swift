@@ -109,6 +109,7 @@ class ConnectionManager: ObservableObject {
     var eventReceivingDelegate:EventDelegate? = nil
     
     func sendMessage(_ message:ClientMessage) {
+        dump("🟢sendMessage: \(message.message)")
         for relaySocket in relaySockets {
             if relaySocket.isConnected {
                 //                print("🟢 sending message: \(text)")
@@ -201,11 +202,11 @@ struct RequestMessage {
     // FETCH A SINGLE EVENT
     static func getEvent(id:String, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"ids":"[\(id)]"), "limit": 1}]
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"ids": ["\(id)"], "limit": 1}]
 """
     }
     
-    static func getEvents(ids:[String?], limit:Int? = 500, subscriptionId:String? = nil) -> String {
+    static func getEvents(ids:[String?], limit:Int = 500, subscriptionId:String? = nil) -> String {
         return """
 ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"ids": \(JSON(ids).rawString() ?? "[]"), "limit": \(limit)}]
 """
@@ -217,11 +218,11 @@ struct RequestMessage {
         
         if since != nil {
             return """
-    ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "limit": \(limit), "since": \(since!.timestamp)}, {"#p": \(JSON(pubkeys).rawString() ?? "[]"), "limit": \(limit), "since": \(since!.timestamp)}]
+    ["REQ", "\(subscriptionId ?? ("TL-"+UUID().uuidString))", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "limit": \(limit), "since": \(since!.timestamp)}, {"#p": \(JSON(pubkeys).rawString() ?? "[]"), "limit": \(limit), "since": \(since!.timestamp)}]
     """
         }
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? ("TL-"+UUID().uuidString))", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "limit": \(limit)}]
 """
     }
     

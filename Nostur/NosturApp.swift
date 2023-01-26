@@ -50,7 +50,7 @@ struct NosturApp: App {
                     
                     eventsProvider.startParsing()
                 }
-                .statusBarHidden(true)
+//                .statusBarHidden(true)
         }
     }
     

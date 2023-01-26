@@ -42,12 +42,16 @@
         <attribute name="likes" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="mentions" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="pubkey" optional="YES" attributeType="String"/>
-        <attribute name="replies" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="repliesCount" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES" elementID="repliesCount"/>
         <attribute name="replyToId" optional="YES" attributeType="String"/>
         <attribute name="replyToRootId" optional="YES" attributeType="String"/>
         <attribute name="sig" optional="YES" attributeType="String"/>
         <attribute name="tagsSerialized" optional="YES" attributeType="String"/>
         <relationship name="bookmarkedBy" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Account" inverseName="bookmarks" inverseEntity="Account"/>
+        <relationship name="contact" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Contact"/>
+        <relationship name="replies" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Event" inverseName="replyTo" inverseEntity="Event" elementID="repliesRelation"/>
+        <relationship name="replyTo" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event" inverseName="replies" inverseEntity="Event" elementID="replyToRelation"/>
+        <relationship name="replyToRoot" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event" elementID="replyToRootRelation"/>
         <uniquenessConstraints>
             <uniquenessConstraint>
                 <constraint value="id"/>
