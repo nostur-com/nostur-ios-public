@@ -25,7 +25,7 @@ struct MainTimelineView: View {
     @State var fetching = true // fetching: true or, false if parsing
     @State var isViewDisplayed = false
     
-    @EnvironmentObject var ep:EventsProvider
+    var ep: EventsProvider = .shared
     @EnvironmentObject var accountState:AccountState
     @EnvironmentObject var cm:ConnectionManager
     
@@ -34,34 +34,29 @@ struct MainTimelineView: View {
     
     @State var restored = false
     @AppStorage("lastAppearedIndex") var lastAppearedIndex = 0
-    @Binding var showReplies:Bool
-
-    var contacts:FetchedResults<Contact>
     
-    var events: FetchedResults<Event>
+    @FetchRequest
+    private var events: FetchedResults<Event>
     
-    func contact(byPubkey:String?) -> Contact? {
-        guard byPubkey != nil else {
-            return nil
+    init(followingPubkeys:[String], showReplies:Bool) {
+        
+        let request: NSFetchRequest<Event> = Event.fetchRequest()
+        request.predicate = NSPredicate(format: "active = true")
+        request.fetchLimit = 5
+        request.fetchOffset = 0
+        request.sortDescriptors = [
+            NSSortDescriptor(keyPath: \Event.created_at, ascending: false)
+        ]
+        
+        if (showReplies) {
+            request.predicate = NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId != nil", followingPubkeys)
         }
-        return contacts.first(where: { ($0.pubkey != nil) && $0.pubkey == byPubkey})
-    }
-    
-    func fetchEventsFromFollowing(amount:Int? = 500) {
-//        let allContacts = contacts.map { $0.pubkey }
-        
-        for socket in cm.relaySockets {
-            if (socket.relay.read || socket.relay.write) && !socket.isConnected {
-                socket.socket.connect()
-            }
+        else {
+            request.predicate = NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil", followingPubkeys)
         }
+        _events = FetchRequest(fetchRequest: request)
         
-        
-        
-        let followingPubkeys = [String](accountState.followingPublicKeys)
-        cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getFollowingEvents(pubkeys: followingPubkeys, limit: amount!, since: ep.lastTimelineEventTimestamp)))
     }
-    
     
     var body: some View {
           
@@ -75,9 +70,12 @@ struct MainTimelineView: View {
                 } label: {Text("COUNT")}
                 
                 Button {
-                    _ = Task {
-                        try! await ep.parseMessagesFromQueue()
-                        print("queue count: \(await ep.queue.count)")
+                    Task {
+                        let before = await ep.queue.count
+                        try await ep.importEvents()
+                        if (before != 0) {
+                            print("didParse? queue count, before: \(before) after: \(await ep.queue.count)")
+                        }
                     }
                 } label: {Text("PARSE")}
             }
@@ -92,12 +90,6 @@ struct MainTimelineView: View {
                     }
                 }
                 Group {
-                    Toggle(isOn: $showReplies) {
-                                Label("Show replies", systemImage: "bubble.left.and.bubble.right")
-                            .symbolVariant(showReplies ? .none : .fill)
-                            }
-                            .toggleStyle(.button)
-                    
                     ScrollViewReader { proxy in
                         ScrollView { // TODO
                             LazyVStack {
@@ -105,8 +97,14 @@ struct MainTimelineView: View {
 //                                    let note = Note(event: events[index], responses:[], contact: contact(byPubkey: events[index].pubkey))
 //                                    NoteRowView(note:note)
                                     NoteRow(event:events[index])
+                                        .id(events[index].id)
                                         .onAppear {
                                             print("🍿🍿 appear index: \(index) lastUnreadIndex: \(lastUnreadIndex) events.count: \(events.count)")
+                                            if (lastUnreadIndex > events.count) {
+                                                lastUnreadIndex = 0
+                                                print("lastUnreadIndex higher than .count. so reset to 0")
+                                            }
+                                            
                                             if (index > lastUnreadIndex) {
                                                 lastUnreadIndex = index
                                                 let unreadOld = unread
@@ -184,7 +182,6 @@ struct MainTimelineView: View {
             if (!isViewDisplayed) {
                 return
             }
-            
             print("unread is: \(unread) timesFetchedWhileUnread: \(timesFetchedWhileUnread) shouldSkipTimes: \(shouldSkipTimes)")
             
             
@@ -236,38 +233,34 @@ struct MainTimelineView: View {
     }
 }
 
-// FOR PREVIEW??
-struct MainTimelineWrapper: View {
-    
-//    @Environment(\.managedObjectContext) var viewContext
-    
-    @FetchRequest(
-//        entity: Contact.entity(),
-//        sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
-        sortDescriptors: [SortDescriptor(\Contact.updated_at, order: .reverse)],
-        animation: .none)
-    var contacts:FetchedResults<Contact>
-    
-    @FetchRequest(
-//        entity: Event.entity(),
-//        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)],
-        sortDescriptors: [SortDescriptor(\Event.created_at, order: .reverse)],
-        predicate: NSPredicate(format: "kind == 1 and replyToId == nil"),
-        animation: .none)
-    var events: FetchedResults<Event>
-    
-    @AppStorage("showReplies") var showReplies = false
-    
-    var body: some View {
-        VStack {
-            MainTimelineView(showReplies: $showReplies, contacts: contacts, events: events)
+extension MainTimelineView {
+    private func fetchEventsFromFollowing(amount:Int? = 500) {
+        for socket in cm.relaySockets {
+            if (socket.relay.read || socket.relay.write) && !socket.isConnected {
+                socket.socket.connect()
+            }
+        }
+
+        let followingPubkeys = [String](accountState.followingPublicKeys)
+        cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getFollowingEvents(pubkeys: followingPubkeys, limit: amount!, since: ep.lastTimelineEventTimestamp)))
+    }
+
+    private func importEvents() async {
+        Task {
+            let before = await ep.queue.count
+            try await ep.importEvents()
+            if (before != 0) {
+                print("didParse? queue count, before: \(before) after: \(await ep.queue.count)")
+            }
         }
     }
 }
 
 struct MainTimeline_Previews: PreviewProvider {
     static var previews: some View {
-        MainTimelineWrapper()
+        MainTimelineView(followingPubkeys: [], showReplies: false)
             .withPreviewEnvironment()
     }
 }
+
+

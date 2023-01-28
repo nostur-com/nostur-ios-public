@@ -102,8 +102,10 @@ struct NoteTextRenderView: View {
             else if (taggedContacts.count == 0) { Text(event?.noteText ?? "") }
             else { Text("") }
             if (firstLinkInText != nil) {
-                LinkPreview(url: URL(string: firstLinkInText!)!, togglePreview: $withLinkPreview)
-                .aspectRatio(contentMode: .fit)
+                if (withLinkPreview) {
+                    LinkPreview(url: URL(string: firstLinkInText!)!, togglePreview: $withLinkPreview)
+                        .aspectRatio(contentMode: .fit)
+                }
             }
         }
     }

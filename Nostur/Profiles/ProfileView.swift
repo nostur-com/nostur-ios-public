@@ -12,6 +12,50 @@ import Nuke
 // Navigation values:
 //typealias ContactPubkey
 
+struct ContactList: View {
+    
+    @FetchRequest
+    var contacts:FetchedResults<Contact>
+    var pubkeys:[String]
+
+    init(pubkeys:[String]) {
+        self.pubkeys = pubkeys
+        
+        _contacts = FetchRequest(
+            sortDescriptors: [],
+            predicate: NSPredicate(format: "pubkey IN %@", pubkeys),
+            animation: .none)
+    }
+    
+    var body: some View {
+        LazyVStack {
+            Text("Total: \(contacts.count)")
+            ForEach(contacts) { contact in
+                ProfileRow(contact: contact)
+            }
+            
+            // TODO: ForEach for Fake ProfileRow view for pubkeys not in Contact
+            
+            let missing = pubkeys.filter { pubkey in
+                contacts.map { $0.pubkey! }.firstIndex(of: pubkey) == nil
+            }
+            
+            VStack {
+                Text("Missing: \(missing.count)")
+                ForEach(missing, id:\.self) { pubkey in
+                    Text("Missing: \(pubkey)")
+                }
+            }
+            
+        }.onAppear {
+            // fetch missing
+            // fetch pubkeys not in [contacts.pubkey]
+        }
+    }
+    
+}
+
+
 struct ProfileView: View {
     
     @EnvironmentObject var accountState:AccountState
@@ -65,6 +109,8 @@ struct ProfileView: View {
                         .animation(nil)
                         .priority(.high)
                         .pipeline(ImagePipeline {
+                            // TODO: volgens mij klopt niet
+                            /// moet ergens anders clean 1x doen ipv iedere keer voor image
                             $0.dataLoader = DataLoader(configuration: {
                                 // Disable disk caching built into URLSession
                                 let conf = DataLoader.defaultConfiguration
@@ -181,27 +227,30 @@ struct ProfileView: View {
                                 
                                 Text("Following").font(.headline).fontWeight(.heavy).padding(.vertical, 10)
                                 
-                                LazyVStack {
-                                    ForEach(pubkeys.indices, id: \.self) { index in
-                                        ProfileRowView(pubkey: pubkeys[index])
-                                            .onAppear {
-                                                // dont prefetch first 5
-                                                // will probably already be visible and fetched by its own .onAppear
-                                                
-                                                if (index > 5) {
-                                                    // TODO: find out logic for prefetching next profile info but not if already in cache but also refetch if too old
-                                                }
-                                            }
-                                        Divider()
-                                    }
-                                    // TODO: onAppear, take index. prefetch next 10.....
-                                }
+                                ContactList(pubkeys: pubkeys)
+                                
+//                                LazyVStack {
+//                                    ForEach(pubkeys.indices, id: \.self) { index in
+//                                        ProfileRowView(pubkey: pubkeys[index])
+//                                            .onAppear {
+//                                                // dont prefetch first 5
+//                                                // will probably already be visible and fetched by its own .onAppear
+//
+//                                                if (index > 5) {
+//                                                    // TODO: find out logic for prefetching next profile info but not if already in cache but also refetch if too old
+//                                                }
+//                                            }
+//                                        Divider()
+//                                    }
+//                                    // TODO: onAppear, take index. prefetch next 10.....
+//                                }
                                 
 //                                Spacer()
                             }
                             else {
                                 Text("Could not find list of contacts followed by @\( contacts.first?.username ?? String(pubkey.prefix(5)) )")
                                     .onAppear {
+                                        print("🟢 ProfileView.onAppear no clEvent so REQ.3: \(pubkey)")
                                         cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: pubkey)))
                                     }
                             }
@@ -228,6 +277,7 @@ struct ProfileView: View {
         .ignoresSafeArea(edges: .top)
         .onAppear {
             print("fetching kind=0 for \(pubkey)")
+            print("🟢🟢🟢 ProfileView.onAppear ALWAYS REQ.0: \(pubkey)")
             cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
         }
     }

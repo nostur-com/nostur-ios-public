@@ -9,6 +9,51 @@ import SwiftUI
 import NukeUI
 import Nuke
 
+
+struct ProfileRow: View {
+
+    @EnvironmentObject var accountState:AccountState
+    @EnvironmentObject var cm:ConnectionManager
+    
+    var contact:Contact
+    
+    var body: some View {
+        HStack {
+            NavigationLink(value: contact) {
+                VStack {
+                    ProfilePicView(pubkey: contact.pubkey!, contact: contact)
+                        .frame(width: 50, height: 50)
+                        .clipShape(Circle())
+                    Spacer()
+                }
+                VStack(alignment: .leading) {
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text(contact.authorName).font(.headline).foregroundColor(.primary)
+                                .lineLimit(1)
+                            Text("@\(contact.username)").font(.subheadline).foregroundColor(.secondary)
+                                .lineLimit(1)
+                        }.multilineTextAlignment(.leading)
+                        Spacer()
+                        Button {
+                            if accountState.isFollowing(contact.pubkey!) { // TODO: check account.following
+                                accountState.unfollow(contact.pubkey!)
+                            } else {
+                                accountState.follow(contact.pubkey!, cm: cm)
+                            }
+                        } label: {
+                            FollowButton(isFollowing:accountState.isFollowing(contact.pubkey!))
+                        }
+                    }
+                    Text(contact.about ?? "").foregroundColor(.primary)
+                        .multilineTextAlignment(.leading)
+                    Spacer()
+                }
+            }
+        }
+    }
+}
+
 struct ProfileRowView: View {
     
     var pubkey:ContactPubkey
@@ -83,6 +128,7 @@ struct ProfileRowInner: View {
         }
         .onAppear {
             if (contacts.first == nil) {
+                print("🟢 ProfileRowInner.onAppear no contacts so REQ.0: \(pubkey)")
                 cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
             }
         }

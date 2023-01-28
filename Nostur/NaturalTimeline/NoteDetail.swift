@@ -32,6 +32,7 @@ struct NoteById: View {
         else {
             Text("Trying to fetch...").onAppear {
                 // .REQ
+                print("🟢 NoteById.onAppear no event so REQ.1: \(id)")
                 cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: id)))
             }
         }
@@ -47,7 +48,7 @@ struct NoteDetail: View {
     @EnvironmentObject var cm:ConnectionManager
     @EnvironmentObject var accountState:AccountState
     
-    var event:Event
+    @ObservedObject var event:Event
     
     @FetchRequest
     var taggedContacts:FetchedResults<Contact>
@@ -82,182 +83,212 @@ struct NoteDetail: View {
     }
     
     var body: some View {
-        ScrollView {
-            VStack {
-                // Parent root note and other replies to it
-                if (event.replyToRoot != nil) && (event.replyToRoot != event.replyTo) {
-                    // ROOT NOTE
-                    NoteRow(event: event.replyToRoot!)
-                    // REPLIES TO ROOT, UNTIL CURRENT NOTE
-                    ForEach(rootRepliesUntilThisEvent(), id:\.self) { event in
-                        NoteRow(event: event)
-                    }
-                }
-                
-                // Our reply to
-                if (event.replyTo != nil) {
-                    NoteRow(event: event.replyTo!)
-                }
-                
-                VStack {
-                    // Retweeted header
-                    if tweet.retweetedByName != "" {
-                        HStack { // retweet header
-                            // Retweet icon
-                            Image(systemName:"arrow.2.squarepath")
-                                .font(.system(size: 12, weight: .heavy))
-                            //                    .shadow(color: .gray, radius: 2, x: 3, y: 3)
-                                .foregroundColor(.secondary)
-                            //                    .scaleEffect(0.7)
-                                .frame(maxWidth:50, alignment: .trailing)
-                            Text("\(tweet.retweetedByName) Retweeted")
-                                .font(
-                                    .system(size: 12)
-                                    .weight(.heavy)
-                                )
-                            //                    .font(.system(size: 12, weight: .heavy))
-                                .foregroundColor(.secondary)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                            // Retweeter name
-                            
-                        }.padding(.leading, 10)
-                    }
-                    
-                    // PFP | NAME/USERNAME/AGO
-                    HStack {
-                        if (event.contact != nil) {
-                            NavigationLink(value: ContactPath(key: event.pubkey!), label: {
-                                ProfilePicView(pubkey: event.pubkey!, contact:event.contact!)
-                                    .frame(width:50, height:50)
-                                    .clipShape(Circle())
-                            })
-                        }
-                        else {
-                            NavigationLink(value: ContactPath(key: event.pubkey!), label: {
-                                ProfilePicView(pubkey: event.pubkey!)
-                                    .frame(width:50, height:50)
-                                    .clipShape(Circle())
-                            })
-                        }
-                        
-                        // name and username
-                        HStack {
-                            VStack {
-                                // name + verified
-                                HStack(spacing:2) {
-                                    Text(event.contact?.authorName ?? "Anon") // Name
-                                        .font(.system(size: 14))
-                                        .fontWeight(.bold)
-                                    
-                                    if tweet.isVerified { // Verification check
-                                        Image(systemName: "checkmark.seal.fill")
-                                            .foregroundColor(.blue)
-                                            .font(.system(size: 13))
-                                    }
-                                    Spacer()
-                                }
-                                // username
-                                HStack {
-                                    Text("@\(event.contact?.username ?? event.authorKey)") // Username
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.secondary)
-                                    Spacer()
-                                }
+        
+        GeometryReader{ geometry in
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack {
+                        // Parent root note and other replies to it
+                        if (event.replyToRoot != nil) && (event.replyToRoot != event.replyTo) {
+                            // ROOT NOTE
+                            NoteRow(event: event.replyToRoot!)
+                            // REPLIES TO ROOT, UNTIL CURRENT NOTE
+                            ForEach(rootRepliesUntilThisEvent(), id:\.self) { event in
+                                NoteRow(event: event)
                             }
                         }
                         
-                        NoteMenu(event: event)
+                        // Our reply to
+                        if (event.replyTo != nil) {
+                            NoteRow(event: event.replyTo!)
+                        }
+                        
+                        VStack {
+                            // Retweeted header
+                            if tweet.retweetedByName != "" {
+                                HStack { // retweet header
+                                    // Retweet icon
+                                    Image(systemName:"arrow.2.squarepath")
+                                        .font(.system(size: 12, weight: .heavy))
+                                    //                    .shadow(color: .gray, radius: 2, x: 3, y: 3)
+                                        .foregroundColor(.secondary)
+                                    //                    .scaleEffect(0.7)
+                                        .frame(maxWidth:50, alignment: .trailing)
+                                    Text("\(tweet.retweetedByName) Retweeted")
+                                        .font(
+                                            .system(size: 12)
+                                            .weight(.heavy)
+                                        )
+                                    //                    .font(.system(size: 12, weight: .heavy))
+                                        .foregroundColor(.secondary)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                    // Retweeter name
+                                    
+                                }.padding(.leading, 10)
+                            }
+                            
+                            // PFP | NAME/USERNAME/AGO
+                            HStack {
+                                if (event.contact != nil) {
+                                    NavigationLink(value: ContactPath(key: event.pubkey!), label: {
+                                        ProfilePicView(pubkey: event.pubkey!, contact:event.contact!)
+                                            .frame(width:50, height:50)
+                                            .clipShape(Circle())
+                                    })
+                                }
+                                else {
+                                    NavigationLink(value: ContactPath(key: event.pubkey!), label: {
+                                        ProfilePicView(pubkey: event.pubkey!)
+                                            .frame(width:50, height:50)
+                                            .clipShape(Circle())
+                                    })
+                                }
+                                
+                                // name and username
+                                HStack {
+                                    VStack {
+                                        // name + verified
+                                        HStack(spacing:2) {
+                                            Text(event.contact?.authorName ?? "Anon") // Name
+                                                .font(.system(size: 14))
+                                                .fontWeight(.bold)
+                                            
+                                            if tweet.isVerified { // Verification check
+                                                Image(systemName: "checkmark.seal.fill")
+                                                    .foregroundColor(.blue)
+                                                    .font(.system(size: 13))
+                                            }
+                                            Spacer()
+                                        }
+                                        // username
+                                        HStack {
+                                            Text("@\(event.contact?.username ?? event.authorKey)") // Username
+                                                .font(.system(size: 14))
+                                                .foregroundColor(.secondary)
+                                            Spacer()
+                                        }
+                                    }
+                                }
+                                
+                                NoteMenu(event: event)
+                            }
+                            .id("NoteAnchorID")
+                            
+                            HStack {
+                                ReplyingToFragment(event: event)
+                                Spacer()
+                            }
+                            
+                            // Tweet
+                            HStack {
+                                // TODO:
+                                NoteTextRenderView(event: event, taggedContacts: Array(taggedContacts))
+                                        .foregroundColor(.primary)
+                                        .textSelection(.enabled)
+                                        .font(.system(size: 18))
+                                Spacer()
+                            }.padding(.vertical,5)
+                            
+                        }.padding(10)
+                        
+                        
+                        Divider()
+                        
+                        // Footer
+                        HStack { // Footer stats
+                            Button(action: {
+                                // Handle retweet action
+                            }) {
+                                HStack {
+                                    Image(systemName: "message")
+                                    Text("\(event.repliesCount)")
+                                }.frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
+                            }
+                            
+                            
+                            Button(action: {
+                                // Handle retweet action
+                            }) {
+                                HStack {
+                                    Image(systemName: "arrow.2.squarepath")
+                                    Text("\(event.mentions)")
+                                }.frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
+                            }
+                            
+                            Button(action: {
+                                // Handle like action
+                            }) {
+                                HStack {
+                                    Image(systemName: "heart")
+                                    Text("\(event.likes)")
+                                }.frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
+                            }
+                            
+                            
+                            Button {
+                                if (accountState.isBookmarked(event)) {
+                                    accountState.removeBookmark(event)
+                                }
+                                else {
+                                    accountState.addBookmark(event)
+                                }
+                            } label: {
+                                if (accountState.isBookmarked(event)) {
+                                    Image(systemName: "bookmark.fill")
+                                        .foregroundColor(.orange)
+                                        .frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
+                                }
+                                else {
+                                    Image(systemName: "bookmark")
+                                        .frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
+                                }
+                            }
+                            
+                            //                            Toggle(isOn: isBookmarkedBinding) {
+                            //                                Image(systemName: isBookmarked() ? "bookmark.fill" : "bookmark")
+                            //                                    .foregroundColor( isBookmarked() ? .orange : .gray )
+                            //                            }
+                            //                            .toggleStyle(.button)
+                            //                            .tint(.clear)
+                            //                            .frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
+                            //
+                            
+                        }.foregroundColor(.gray)
+                        Spacer()
+                        
+                    }
+                    .foregroundColor(.gray)
+                    .padding(10)
+                        
+                    LazyVStack {
+                        ForEach (Array(event.replies_), id:\.self) { event in
+                            NoteRow(event: event)
+                        }
                     }
                     
-                    HStack {
-                        ReplyingToFragment(event: event)
-                        Spacer()
+                    // If there are less than 5 replies, put some empty space so our detail note is at top of screen
+                    if (event.replies_.count < 5) {
+                        let height = geometry.size.height - 280
+                        Rectangle().frame(width: 100, height: (height < 280 ? 400 : height))
+                            .background(.clear)
+                            .foregroundColor(.clear)
                     }
                     
-                    // Tweet
-                    HStack {
-                        // TODO:
-                        NoteTextRenderView(event: event, taggedContacts: Array(taggedContacts))
-                                .foregroundColor(.primary)
-                                .textSelection(.enabled)
-                                .font(.system(size: 18))
-                        Spacer()
-                    }.padding(.vertical,5)
-                    
-                }.padding(10)
-                
-                
-                Divider()
-                
-                // Footer
-                HStack { // Footer stats
                     Spacer()
-                    Button(action: {
-                        // Handle retweet action
-                    }) {
-                        HStack {
-                            Image(systemName: "message")
-                            Text("\(event.repliesCount)") // TODO: count beter
-                        }.frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
-                    }
-                    //                Spacer()
-                    Button(action: {
-                        // Handle retweet action
-                    }) {
-                        HStack {
-                            Image(systemName: "arrow.2.squarepath")
-                            Text("\(event.mentions)")
-                        }.frame(maxWidth: .infinity, alignment: .center).font(.system(size: 14))
-                    }
-                    //                Spacer()
-                    Button(action: {
-                        // Handle like action
-                    }) {
-                        HStack {
-                            Image(systemName: "heart")
-                            Text("\(event.likes)")
-                        }.frame(maxWidth: .infinity, alignment: .trailing).font(.system(size: 14))
-                    }
-                    
-                    
-                    Button {
-                        if (accountState.isBookmarked(event)) {
-                            accountState.removeBookmark(event)
-                        }
-                        else {
-                            accountState.addBookmark(event)
-                        }
-                    } label: {
-                        if (accountState.isBookmarked(event)) {
-                            Label("", systemImage: "bookmark.fill").foregroundColor(.orange)
-                        }
-                        else {
-                            Label("", systemImage: "bookmark")
-                        }
-                    }
                 }
-                .frame(maxWidth: .infinity, alignment: .trailing).font(.system(size: 14))
-                Spacer()
-                
-            }
-            .foregroundColor(.gray)
-            .padding(10)
-                
-            LazyVStack {
-                ForEach (Array(event.replies_), id:\.self) { event in
-                    NoteRow(event: event)
+                .onAppear {
+                    proxy.scrollTo("NoteAnchorID")
                 }
             }
-            Spacer()
         }
         .onAppear {
             
-            print("onAPEAAR)")
+//            print("onAPEAAR)")
 //            if (event.replies.count == 0) {
 //                return
 //            }
 //            
-            print("onAPEAffffffR)")
+//            print("onAPEAffffffR)")
             // all known pubkeys SET
 //            let allContactPubkeys = allContactPubkeys()
 //            let responsesPubkeys:Set<String> = Set(responses.map { $0.pubkey! })
@@ -273,6 +304,7 @@ struct NoteDetail: View {
 
             // SET A is NOT in B
             //cm.REQ
+            
             
         }
     }

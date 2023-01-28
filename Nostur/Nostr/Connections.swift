@@ -45,13 +45,12 @@ class RelaySocket : WebSocketDelegate, ObservableObject {
         switch event {
         case .connected(let headers):
             relay.isConnected = true
-            print("🟢 websocket is connected: \(headers)")
+//            print("🟢 websocket is connected: \(headers)")
         case .disconnected(let reason, let code):
             relay.isConnected = false
             print("🟠 websocket is disconnected: \(reason) with code: \(code)")
         case .text(let string):
             print("💬 Received text: \(string)".prefix(260))
-            
             if (delegate != nil) {
                 _ = Task {
                     try! await delegate!.didReceiveMessage(text: string)
@@ -109,7 +108,7 @@ class ConnectionManager: ObservableObject {
     var eventReceivingDelegate:EventDelegate? = nil
     
     func sendMessage(_ message:ClientMessage) {
-        dump("🟢sendMessage: \(message.message)")
+        print("🟢sendMessage: \(message.message.prefix(260))")
         for relaySocket in relaySockets {
             if relaySocket.isConnected {
                 //                print("🟢 sending message: \(text)")
@@ -218,11 +217,11 @@ struct RequestMessage {
         
         if since != nil {
             return """
-    ["REQ", "\(subscriptionId ?? ("TL-"+UUID().uuidString))", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "limit": \(limit), "since": \(since!.timestamp)}, {"#p": \(JSON(pubkeys).rawString() ?? "[]"), "limit": \(limit), "since": \(since!.timestamp)}]
+    ["REQ", "\(subscriptionId ?? ("TL-"+UUID().uuidString))", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "limit": \(limit), "since": \(since!.timestamp)}, {"#p": \(JSON(pubkeys).rawString() ?? "[]"), "kinds": [0,1,7], "limit": \(limit), "since": \(since!.timestamp)}]
     """
         }
         return """
-["REQ", "\(subscriptionId ?? ("TL-"+UUID().uuidString))", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? ("TL-"+UUID().uuidString))", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "kinds": [0,1,7], "limit": \(limit)}]
 """
     }
     

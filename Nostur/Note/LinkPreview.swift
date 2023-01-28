@@ -40,23 +40,6 @@ struct LinkPreview : UIViewRepresentable {
                 
             }
         }
-        //        DispatchQueue(label: "fetchUrlPreview", qos: .background, attributes: .concurrent).async {
-        //
-        //            provider.startFetchingMetadata(for: url) { (metadata, error) in
-        //                if let md = metadata {
-        //
-        //                    LinkPreviewCache.shared.setObject(for: url, value: metadata!)
-        //
-        //                    DispatchQueue.main.async {
-        //                        view.metadata = md
-        //                        view.sizeToFit()
-        //                        self.togglePreview.toggle()
-        //                    }
-        //                }
-        //            }
-        //
-        //        }
-        
         return view
     }
     

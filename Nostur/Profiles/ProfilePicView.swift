@@ -16,7 +16,7 @@ struct ProfilePicView : View {
     
     var body: some View {
         
-        if (contact?.picture != nil) {
+        if (1 == 2 && contact?.picture != nil) { // TODO: is this slow??
             
             LazyImage(url: URL(string: contact!.picture!)) { state in
                 if let image = state.image {

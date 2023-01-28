@@ -30,8 +30,10 @@
 		1F4773A9296D85B70049454B /* AccountListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4773A8296D85B70049454B /* AccountListView.swift */; };
 		1F4AFC4729733E2400CC1F90 /* Event+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4AFC4529733E2400CC1F90 /* Event+CoreDataClass.swift */; };
 		1F4AFC4829733E2400CC1F90 /* Event+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4AFC4629733E2400CC1F90 /* Event+CoreDataProperties.swift */; };
-		1F5BBE3E297BC3D200F4AF03 /* EventsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5BBE3D297BC3D200F4AF03 /* EventsProvider.swift */; };
 		1F5BBE40297BC7E600F4AF03 /* EventsError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5BBE3F297BC7E600F4AF03 /* EventsError.swift */; };
+		1F5F5A5C29838F1D00DED8F4 /* NewEventsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5F5A5B29838F1D00DED8F4 /* NewEventsProvider.swift */; };
+		1F5F5A5E2983FF9D00DED8F4 /* EventsWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5F5A5D2983FF9D00DED8F4 /* EventsWindow.swift */; };
+		1F5F5A692984315900DED8F4 /* TimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5F5A682984315900DED8F4 /* TimelineView.swift */; };
 		1F5F6B97298247FF007E207F /* TestTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5F6B96298247FF007E207F /* TestTest.swift */; };
 		1F71037D296BD9DE006245CC /* Nostr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F71037C296BD9DE006245CC /* Nostr.swift */; };
 		1F710380296BDB31006245CC /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 1F71037F296BDB31006245CC /* Starscream */; };
@@ -113,8 +115,10 @@
 		1F4773A8296D85B70049454B /* AccountListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountListView.swift; sourceTree = "<group>"; };
 		1F4AFC4529733E2400CC1F90 /* Event+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Event+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1F4AFC4629733E2400CC1F90 /* Event+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Event+CoreDataProperties.swift"; sourceTree = "<group>"; };
-		1F5BBE3D297BC3D200F4AF03 /* EventsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsProvider.swift; sourceTree = "<group>"; };
 		1F5BBE3F297BC7E600F4AF03 /* EventsError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsError.swift; sourceTree = "<group>"; };
+		1F5F5A5B29838F1D00DED8F4 /* NewEventsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewEventsProvider.swift; sourceTree = "<group>"; };
+		1F5F5A5D2983FF9D00DED8F4 /* EventsWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsWindow.swift; sourceTree = "<group>"; };
+		1F5F5A682984315900DED8F4 /* TimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineView.swift; sourceTree = "<group>"; };
 		1F5F6B96298247FF007E207F /* TestTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestTest.swift; sourceTree = "<group>"; };
 		1F71037C296BD9DE006245CC /* Nostr.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nostr.swift; sourceTree = "<group>"; };
 		1F75652E296ADA280078474E /* AccountsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsView.swift; sourceTree = "<group>"; };
@@ -210,6 +214,7 @@
 				1FB448C42965F3D000038671 /* ContentView.swift */,
 				1F7A63C029711CCC00D8B2CB /* Playground.swift */,
 				1F15E9B22972A35100E8A751 /* MainTimelineView.swift */,
+				1F5F5A5D2983FF9D00DED8F4 /* EventsWindow.swift */,
 				1F5F6B96298247FF007E207F /* TestTest.swift */,
 				1FDFEBB6297ED78100511AA0 /* ConfigurationView.swift */,
 				1F1ABC482981718700D03FA9 /* BookmarksView.swift */,
@@ -276,6 +281,7 @@
 				1F87AE322982935F005FF1C8 /* NoteRow.swift */,
 				1FE4C0262982FF3B004E7750 /* ReplyingToFragment.swift */,
 				1F87AE362982B64E005FF1C8 /* NoteDetail.swift */,
+				1F5F5A682984315900DED8F4 /* TimelineView.swift */,
 			);
 			path = NaturalTimeline;
 			sourceTree = "<group>";
@@ -342,7 +348,7 @@
 				1FB62D0C296FFEBF00A0055B /* Relays */,
 				1F25B394297A4FB400A8A5A7 /* Screens */,
 				1F8B134D297B36BA002EB8CF /* Utils */,
-				1F5BBE3D297BC3D200F4AF03 /* EventsProvider.swift */,
+				1F5F5A5B29838F1D00DED8F4 /* NewEventsProvider.swift */,
 				1F5BBE3F297BC7E600F4AF03 /* EventsError.swift */,
 				1F987EB029804AA4001E352E /* NewNoteView.swift */,
 				1FB448BD2965F3D000038671 /* NosturApp.swift */,
@@ -489,7 +495,9 @@
 				1F8B1365297B3BE8002EB8CF /* ContactProfile.swift in Sources */,
 				1F5BBE40297BC7E600F4AF03 /* EventsError.swift in Sources */,
 				1F8B1360297B36DB002EB8CF /* String+HexBytes.swift in Sources */,
+				1F5F5A5E2983FF9D00DED8F4 /* EventsWindow.swift in Sources */,
 				1F4773A5296CA72A0049454B /* AddReadOnlyAccountView.swift in Sources */,
+				1F5F5A692984315900DED8F4 /* TimelineView.swift in Sources */,
 				1F4773A9296D85B70049454B /* AccountListView.swift in Sources */,
 				1FB62D0E296FFF1400A0055B /* RelayEditView.swift in Sources */,
 				1FC38B9E2972DD5A004769F8 /* Contact+CoreDataProperties.swift in Sources */,
@@ -543,10 +551,10 @@
 				1FC38B9D2972DD5A004769F8 /* Contact+CoreDataClass.swift in Sources */,
 				1FB448C02965F3D000038671 /* Persistence.swift in Sources */,
 				1FD49733297FCB5E0084F14E /* PreviewHelper.swift in Sources */,
+				1F5F5A5C29838F1D00DED8F4 /* NewEventsProvider.swift in Sources */,
 				1F30FAB029706E72008439C8 /* Account+CoreDataClass.swift in Sources */,
 				1F987EB329805F33001E352E /* String+matchingStrings.swift in Sources */,
 				1F25B393297A4E3400A8A5A7 /* NosturList+CoreDataProperties.swift in Sources */,
-				1F5BBE3E297BC3D200F4AF03 /* EventsProvider.swift in Sources */,
 				1FB448D22965FB5500038671 /* NoteRowView.swift in Sources */,
 				B39353FC12E60CADAE655912 /* Connections.swift in Sources */,
 				1F15E9B32972A35100E8A751 /* MainTimelineView.swift in Sources */,

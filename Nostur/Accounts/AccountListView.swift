@@ -17,7 +17,7 @@ struct AccountListView: View {
     @State var createAccountPresented = false
     @State var addReadOnlyAccountPresented = false
     
-    @EnvironmentObject var ep:EventsProvider
+    var ep: EventsProvider = .shared
     @EnvironmentObject var cm:ConnectionManager
     @Environment(\.managedObjectContext) var viewContext
     
@@ -178,11 +178,13 @@ struct AccountListView: View {
                 cm.sendMessage(message)
             }
             else { // parsing
-                _ = Task {
-                    try! await ep.parseMessagesFromQueue()
-                    print("queue count: \(await ep.queue.count)")
+                Task {
+                    let before = await ep.queue.count
+                    try await ep.importEvents()
+                    if (before != 0) {
+                        print("didParse? queue count, before: \(before) after: \(await ep.queue.count)")
+                    }
                 }
-                print("🧚🧚🧚 GONNA PARSE YEA 🧚🧚🧚")
             }
             
             fetching = !fetching

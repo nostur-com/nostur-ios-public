@@ -11,7 +11,7 @@ struct ReplyingToFragment: View {
     
     @EnvironmentObject var cm:ConnectionManager
     
-    var event:Event
+    @ObservedObject var event:Event
     
     // gets event.replyTo.contact or event.firstPtag
     func replyToUsername() -> String {
@@ -50,6 +50,7 @@ struct ReplyingToFragment: View {
                         // is this the best place for this .REQ?
                         // Somewhere .onAppear? Not in parse of receive because can lead to infinite fetching?
                         
+                        print("🟢 ReplyingToFragment.onAppear .replyTo + replyToId == nil so: REQ.0+1:\(replyToPubkeyHex())+\(event.replyToId!)")
                         cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: replyToPubkeyHex())))
                         
                         cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.replyToId!)))

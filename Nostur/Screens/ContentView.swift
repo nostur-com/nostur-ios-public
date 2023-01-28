@@ -24,48 +24,6 @@ struct ContentView: View {
     @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""
     @State var path = NavigationPath()
     
-//    @FetchRequest(
-//        sortDescriptors: [SortDescriptor(\Contact.updated_at, order: .reverse)],
-//        animation: .none)
-//    var contacts:FetchedResults<Contact> // ALL CONTACTS
-//
-//    @FetchRequest(
-//        sortDescriptors: [SortDescriptor(\Event.created_at, order: .forward)],
-//        predicate: NSPredicate(format: "kind == 1 && replyToId == nil"),
-//        animation: .none)
-//    var events: FetchedResults<Event> // NOTES (NOT REPLIES)
-    
-//    init() {
-//        let request: NSFetchRequest<Event> = Event.fetchRequest()
-//            request.predicate = NSPredicate(format: "kind == 1 && replyToId == nil")
-//
-//            request.sortDescriptors = [
-//                NSSortDescriptor(keyPath: \Event.created_at, ascending: true)
-//            ]
-//
-//            request.fetchLimit = 300
-//            _events = FetchRequest(fetchRequest: request)
-//
-//
-//        let requestAll: NSFetchRequest<Event> = Event.fetchRequest()
-//        requestAll.predicate = NSPredicate(format: "kind == 1")
-//
-//        requestAll.sortDescriptors = [
-//                NSSortDescriptor(keyPath: \Event.created_at, ascending: true)
-//            ]
-//
-//        requestAll.fetchLimit = 300
-//        _eventsAll = FetchRequest(fetchRequest: requestAll)
-//    }
-    
-//    @FetchRequest(
-//        //        entity: Event.entity(),
-//        //        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
-//        sortDescriptors: [SortDescriptor(\Event.created_at, order: .forward)],
-//        predicate: NSPredicate(format: "kind == 1"),
-//        animation: .none)
-//    var eventsAll: FetchedResults<Event> // NOTES AND REPLIES
-    
     @EnvironmentObject var cm:ConnectionManager
     @State var selectedTab = "MainTimeline"
     @State var navigationPath = NavigationPath()
@@ -75,19 +33,21 @@ struct ContentView: View {
         VStack {
             TabView(selection: $selectedTab) {
                 NavigationStack(path: $navigationPath) {
-                    Toggle(isOn: $showReplies) {
-                        HStack {
-                            Spacer()
-                            Label("Show replies", systemImage: "bubble.left.and.bubble.right")
-                        }
-                    }.toggleStyle(.switch)
-                        .padding(.horizontal)
-                    
-//                    MainTimelineView(showReplies: $showReplies, contacts: contacts, events: showReplies ? eventsAll : events)
+//                    Toggle(isOn: $showReplies) {
+//                        HStack {
+//                            Spacer()
+//                            Label("Show replies", systemImage: "bubble.left.and.bubble.right")
+//                        }
+//                    }.toggleStyle(.button)
+//                        .padding(.horizontal)
+    
                     
                     VStack {
-                        TimelineRefresher()
-                        NaturalTimelineView(withReplies: showReplies)
+                        
+                        let followingPubkeys = [String](accountState.followingPublicKeys)
+                        TimelineFRControllerView(followingPubkeys: followingPubkeys, showReplies:showReplies)
+//                        MainTimelineView(followingPubkeys: followingPubkeys, showReplies: showReplies)
+//                        NaturalTimelineView(showReplies: true)
                     }
                     
                         .onOpenURL { url in
@@ -96,7 +56,7 @@ struct ContentView: View {
                             let nostr = url.absoluteString.matchingStrings(regex: "^(nostr:)(npub1|note1)([023456789acdefghjklmnpqrstuvwxyz]{58})$")
                             if nostr.count == 1 && nostr[0].count == 4 {
                                 print("ok lets go to: \(nostr[0][2])\(nostr[0][3])")
-                                key = try! NIP19(displayString: "\(nostr[0][2])\(nostr[0][3])")
+                                let key = try! NIP19(displayString: "\(nostr[0][2])\(nostr[0][3])")
                                 print("ok lets go to: \(key.hexString)")
                                 if nostr[0][2] == "npub1" {
                                     navigationPath.append(ContactPath(key: key.hexString))
@@ -178,6 +138,7 @@ struct ContentView: View {
                 .tabItem { Image(systemName: "server.rack") }
                 .tag("Configuration")
             }
+            .background(.regularMaterial)
             if (devToggle) {
                 HStack {
 //                    Text("C: \(contacts.count) N:\(events.count) M:\(eventsMeta.count) CL:\(eventsCL.count) R:\(eventsR.count) ALL: \(eventsAll.count)")

@@ -15,10 +15,9 @@ extension String: Error {}
 //struct NosturApp: App, EventDelegate {
 struct NosturApp: App {
     
-    // Timer to check for stuff to parse every 3 sec..
-    let parseRunLoop = Timer.publish(every: 3, tolerance: 1, on: .main, in: .common).autoconnect()
+    // FROM LOCAL QUEUE TO DATABASE.
+    let loopyRunny = Timer.publish(every: 3, tolerance: 1, on: .main, in: .common).autoconnect()
     
-    let eventsProvider = EventsProvider.shared
     @StateObject var accountState = AccountState(viewContext:EventsProvider.shared.container.viewContext)
     
     //    @StateObject var accountState = AccountState(viewContext:PersistenceController.shared.container.viewContext)
@@ -31,10 +30,9 @@ struct NosturApp: App {
         WindowGroup {
             ContentView()
                 .environment(\.managedObjectContext,
-                              eventsProvider.container.viewContext)
+                              EventsProvider.shared.container.viewContext)
                 .environmentObject(accountState)
                 .environmentObject(cm)
-                .environmentObject(eventsProvider)
                 .onAppear {
                     startNosturing()
                     self.isViewDisplayed = true
@@ -42,20 +40,24 @@ struct NosturApp: App {
                 .onDisappear {
                     self.isViewDisplayed = false
                 }
-                .onReceive(parseRunLoop) { time in
+                .onReceive(loopyRunny) { time in
                     
                     if (!isViewDisplayed) {
                         return
                     }
                     
-                    eventsProvider.startParsing()
+//                    Task(priority: .background) {
+                    Task {
+//                        try await Task.sleep(nanoseconds: 3_000_000_000)
+                        try await EventsProvider.shared.importEvents()
+                    }
                 }
-//                .statusBarHidden(true)
+                .statusBarHidden(true)
         }
     }
     
     func maintenance() {
-        eventsProvider.container.viewContext.perform {
+        EventsProvider.shared.container.viewContext.perform {
             
             do {
                 let decoder = JSONDecoder()
@@ -81,7 +83,7 @@ struct NosturApp: App {
                         }
                     }
                 }
-                try eventsProvider.container.viewContext.save()
+                try EventsProvider.shared.container.viewContext.save()
             }
             
             catch let error as NSError {
@@ -92,7 +94,7 @@ struct NosturApp: App {
     }
     
     func repairDb() {
-        eventsProvider.container.viewContext.perform {
+        EventsProvider.shared.container.viewContext.perform {
             do {
                 let r = NSFetchRequest<Contact>()
                 r.entity = Contact.entity()
@@ -104,10 +106,10 @@ struct NosturApp: App {
                 }
                 
                 for contact in allContacts {
-                    eventsProvider.container.viewContext.delete(contact)
+                    EventsProvider.shared.container.viewContext.delete(contact)
                 }
                 
-                try eventsProvider.container.viewContext.save()
+                try EventsProvider.shared.container.viewContext.save()
             } catch let error as NSError {
                 // TODO: handle the error
                 print("😢😢😢 XX \(error)")
@@ -116,15 +118,20 @@ struct NosturApp: App {
     }
     
     func startNosturing() {
+        
+        // Daily cleanuo
+//        EventsProvider.shared.removeOldEvents()
+        
+        
         // One time fix
         //        repairDb()
         //        maintenance()
         
-        let delegate = eventsProvider
-        eventsProvider.cm = cm
+        let delegate = EventsProvider.shared
+        EventsProvider.shared.cm = cm
         
         // Perform Fetch Request
-        eventsProvider.container.viewContext.perform {
+        EventsProvider.shared.container.viewContext.perform {
             do {
                 
                 // Fetch RELAYS from CORE DATA

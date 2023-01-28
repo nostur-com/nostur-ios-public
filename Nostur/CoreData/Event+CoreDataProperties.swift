@@ -184,7 +184,7 @@ extension Event : Identifiable {
     
     // NIP-10: Those marked with "reply" denote the id of the reply event being responded to.
     // NIP-10: Those marked with "root" denote the root id of the reply thread being responded to.
-    static func updateRepliesCountCache(_ tags:[NEventTag], context:NSManagedObjectContext) throws {
+    static func updateRepliesCountCache(_ tags:[NEventTag], context:NSManagedObjectContext) throws -> Bool {
         // NIP-10: Those marked with "reply" denote the id of the reply event being responded to.
         if let replyEtag = TagsHelpers(tags).replyToEtag() {
             let request = NSFetchRequest<Event>()
@@ -210,11 +210,12 @@ extension Event : Identifiable {
 //                }
 //            }
 //        }
+        return true
     }
     
     // NIP-25: The generic reaction, represented by the content set to a + string, SHOULD be interpreted as a "like" or "upvote".
     // NIP-25: The content MAY be an emoji, in this case it MAY be interpreted as a "like" or "dislike", or the client MAY display this emoji reaction on the post.
-    static func updateLikeCountCache(_ tags:[NEventTag], content:String, context:NSManagedObjectContext) throws {
+    static func updateLikeCountCache(_ tags:[NEventTag], content:String, context:NSManagedObjectContext) throws -> Bool {
         switch content {
         case "+","👍","🤙","❤️","🫂","🤗","😘","😍","💯","🤩":
             // # NIP-25: The last e tag MUST be the id of the note that is being reacted to.
@@ -234,10 +235,11 @@ extension Event : Identifiable {
         default:
             break
         }
+        return true
     }
     
     // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
-    static func updateMentionsCountCache(_ tags:[NEventTag], context:NSManagedObjectContext) throws {
+    static func updateMentionsCountCache(_ tags:[NEventTag], context:NSManagedObjectContext) throws -> Bool {
         // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
         if let mentionEtags = TagsHelpers(tags).mentionEtags() {
             for etag in mentionEtags {
@@ -251,6 +253,7 @@ extension Event : Identifiable {
                 }
             }
         }
+        return true
     }
     
     
@@ -282,5 +285,81 @@ extension Event : Identifiable {
         else {
             return nil
         }
+    }
+    
+    
+    static func fetchEvent(id:String, context:NSManagedObjectContext) throws -> Event? {
+        let request = NSFetchRequest<Event>()
+        request.entity = Event.entity()
+        request.predicate = NSPredicate(format: "id == %@", id)
+        request.fetchLimit = 1
+        request.fetchBatchSize = 1
+        return try context.fetch(request).first
+    }
+    
+    static func saveEvent(event:NEvent, context:NSManagedObjectContext) -> Event {
+        let savedEvent = Event(context: context)
+        savedEvent.id = event.id
+        savedEvent.kind = Int64(event.kind.id)
+        savedEvent.created_at = Int64(event.createdAt.timestamp)
+        savedEvent.content = event.content
+        savedEvent.sig = event.signature
+        savedEvent.pubkey = event.publicKey
+        savedEvent.likes = 0
+        
+        if (event.kind == .textNote && TagsHelpers(event.tags).replyToRootEtag() != nil) {
+            savedEvent.replyToRootId = TagsHelpers(event.tags).replyToRootEtag()!.id
+            
+            let er = NSFetchRequest<Event>(entityName: "Event")
+            er.predicate = NSPredicate(format: "id == %@", savedEvent.replyToRootId!)
+            er.sortDescriptors = []
+            if let rootReply = try? context.fetch(er).first {
+                savedEvent.replyToRoot = rootReply
+                // root heeft geen inverse
+            }
+        }
+        if (event.kind == .textNote && TagsHelpers(event.tags).replyToEtag() != nil) {
+            savedEvent.replyToId = TagsHelpers(event.tags).replyToEtag()!.id
+            
+            let er = NSFetchRequest<Event>(entityName: "Event")
+            er.predicate = NSPredicate(format: "id == %@", savedEvent.replyToId!)
+            er.sortDescriptors = []
+            if let reply = try? context.fetch(er).first {
+                savedEvent.replyTo = reply
+                // TODO: inverse hier erbij of neit?
+            }
+        }
+        
+        // if other existing messages were replying to this, fix the relation
+        let pointingToEventReq = NSFetchRequest<Event>(entityName: "Event")
+        pointingToEventReq.predicate = NSPredicate(format: "kind == 1 AND (replyToId == %@ OR replyToRootId == %@)", savedEvent.id!, savedEvent.id!)
+        pointingToEventReq.sortDescriptors = []
+        if let pointingToEvents = try? context.fetch(pointingToEventReq) {
+            for event in pointingToEvents {
+                if (event.replyToId != nil) && (event.replyToId == savedEvent.id!) {
+                    event.replyTo = savedEvent
+                }
+                if (event.replyToRootId != nil) && (event.replyToRootId == savedEvent.id!) {
+                    event.replyToRoot = savedEvent
+                }
+            }
+        }
+        
+        // set relation to Contact
+        let cr = NSFetchRequest<Contact>(entityName: "Contact")
+        cr.predicate = NSPredicate(format: "pubkey == %@", event.publicKey)
+        cr.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)]
+        if let contact = try? context.fetch(cr).first {
+            savedEvent.contact = contact
+        }
+        
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .withoutEscapingSlashes
+        let tagsSerialized = try? encoder.encode(event.tags)
+        if (tagsSerialized != nil) {
+            savedEvent.tagsSerialized = String(data: tagsSerialized!, encoding: .utf8)
+        }
+        
+        return savedEvent
     }
 }

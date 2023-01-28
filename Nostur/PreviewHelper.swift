@@ -24,10 +24,11 @@ extension View {
             
             return d
         }()
+        
+        let eventsProvider = EventsProvider.preview
 
         let cm = ConnectionManager()
-        let accountState = AccountState(viewContext: EventsProvider.preview.container.viewContext, activeAccountPublicKey: "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0")
-        let ep = EventsProvider.preview // need this?
+        let accountState = AccountState(viewContext: eventsProvider.container.viewContext, activeAccountPublicKey: "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0")
 //        let activeAccount = accountState.activeAccount()
         let activeAccount = PreviewFetcher.fetchAccount("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", context: EventsProvider.preview.container.viewContext)
 //        let newAccount = Account(context: EventsProvider.preview.container.viewContext)
@@ -39,12 +40,14 @@ extension View {
 //        newAccount.nip05 = ""
 //        newAccount.picture = ""
         
+        
+        
         return self.defaultAppStorage(userDefaults)
             .environment(\.managedObjectContext,
-                          EventsProvider.preview.container.viewContext)
+                          eventsProvider.container.viewContext)
             .environmentObject(accountState)
             .environmentObject(cm)
-            .environmentObject(ep)
+            .environmentObject(eventsProvider)
             .environmentObject(activeAccount!)
     }
 }

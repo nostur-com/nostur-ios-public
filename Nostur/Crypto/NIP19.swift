@@ -13,7 +13,7 @@ import Foundation
 //
 //var key = try! NIP19(prefix: "npub", hexString: "73ea43...")
 //var key = try! NIP19(prefix: "note", hexString: "139d3d...")
-var key = try! NIP19(prefix: "nsec", hexString: "139d3d...")
+//var key = try! NIP19(prefix: "nsec", hexString: "139d3d...")
 
 struct NIP19 {
     let key: Bytes

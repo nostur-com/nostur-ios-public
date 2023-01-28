@@ -51,7 +51,9 @@ struct ProfileNotesView: View {
                 }
             }
         }.onAppear {
-            cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
+            // NO NEED BECAUSE ALWAYS REQ-ing already:
+//            print("🟢 ProfileNotesView.onAppear no contact so REQ.0: \(pubkey)")
+//            cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
         }
     }
 }
@@ -80,6 +82,7 @@ struct ProfileNotesViewInner: View {
                     }
             }
         }.onAppear {
+            print("🟢 ProfileNotesViewInner.onAppear always REQ.1: \(contact.pubkey!)")
             cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorNotes(pubkey: contact.pubkey!)))
         }
     }

@@ -162,6 +162,8 @@ struct NoteRow: View {
                                     .padding(.vertical, 10)
                             }
                             
+                            Text(Date(timeIntervalSince1970: TimeInterval(event.created_at)).description)
+                            
                             HStack { // Footer stats
                                 Button(action: {
                                     // Handle retweet action
@@ -251,8 +253,7 @@ struct NoteRow: View {
             // Contact updated_at is very old
             // followed contact meta data refresh should be updated at app wake up probably
             if (event.contact == nil) {
-                print("☎️ note.contact == nil -> REQ metadata for pubkey \(event.pubkey!)")
-                
+                print("🟢 NoteRow.onAppear event.contact == nil so: REQ.0:\(event.pubkey!)")
                 cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.pubkey!)))
             }
         }
