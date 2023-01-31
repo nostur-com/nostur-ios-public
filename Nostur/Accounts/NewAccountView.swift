@@ -22,14 +22,14 @@ struct NewAccountView: View {
     var accentColor: Color = .orange
     var grayBackground: Color = Color.gray.opacity(0.2)
     
-    var onCreate:((_ name:String, _ about:String) -> Void)? = nil
+    var onCreate: (_ name:String, _ about:String) -> ()
     
     var body: some View {
         
         VStack{
             Text("Create account")
                 .font(.largeTitle)
-                .foregroundColor(Color("orange"))
+                .foregroundColor(Color("OrangeColor"))
                 .fontWeight(.semibold)
                 .padding(.bottom, 20)
             TextField("Name", text: $name)
@@ -45,9 +45,7 @@ struct NewAccountView: View {
                 .padding(.bottom, 20)
             
             Button {
-                if (onCreate != nil) {
-                    onCreate!(name, about)
-                }
+                onCreate(name, about)
                 dismiss()
             } label: {
                 Text("Create")
@@ -75,6 +73,9 @@ struct NewAccountView: View {
 
 struct NewAccountView_Previews: PreviewProvider {
     static var previews: some View {
-        NewAccountView(addReadOnlyAccountPresented: .constant(false)).environment(\.managedObjectContext, EventsProvider.shared.container.viewContext)
+        NewAccountView(addReadOnlyAccountPresented: .constant(false), onCreate: { name, about in
+            
+        })
+            .environment(\.managedObjectContext, EventsProvider.shared.container.viewContext)
     }
 }

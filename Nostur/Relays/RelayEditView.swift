@@ -12,7 +12,7 @@ struct RelayEditView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) var viewContext
     @ObservedObject var relay: Relay
-    @EnvironmentObject var cm:ConnectionManager
+    @ObservedObject var socket: SocketClient
     @State private var refresh: Bool = false 
     
     
@@ -37,18 +37,14 @@ struct RelayEditView: View {
                 }
                 Section(header: Text("Status") ) {
                     HStack {
-                        if (relay.isConnected) {
+                        if (socket.isConnected) {
                             Image(systemName: "circle.fill")
                                 .foregroundColor(.green)
                                 .opacity(1)
                             Text("Connected")
                             Spacer()
                             Button {
-                                if let thisRelay = cm.relaySockets.first(where: { $0.relay == relay }) {
-                                    print("Disconnecting: \(thisRelay.relay.url!)")
-                                    thisRelay.disconnect()
-//                                    refresh.toggle()
-                                }
+                                socket.client.disconnect()
                             } label: {
                                 Text("Disconnect")
                             }
@@ -60,10 +56,7 @@ struct RelayEditView: View {
                             Text("Disconnected")
                             Spacer()
                             Button {
-                                if let thisRelay = cm.relaySockets.first(where: { $0.relay == relay }) {
-                                    print("Connecting: \(thisRelay.relay.url!)")
-                                    thisRelay.connect()
-                                }
+                                socket.client.connect()
                             } label: {
                                 Text("Connect")
                             }
@@ -92,19 +85,19 @@ struct RelayEditView: View {
     }
 }
 
-struct RelayEditView_Previews: PreviewProvider {
-    
-    static var previews: some View {        
-        let relay = Relay(context: EventsProvider.preview.container.viewContext)
-        relay.id = UUID()
-        relay.url = "wss://nostr.bitcoin.sex"
-        relay.read = true
-        relay.write = false
-        relay.createdAt = Date()
-        
-        return NavigationStack {
-            RelayEditView(relay: relay)
-                .withPreviewEnvironment()
-        }
-    }
-}
+//struct RelayEditView_Previews: PreviewProvider {
+//    
+//    static var previews: some View {        
+//        let relay = Relay(context: EventsProvider.preview.container.viewContext)
+//        relay.id = UUID()
+//        relay.url = "wss://nostr.bitcoin.sex"
+//        relay.read = true
+//        relay.write = false
+//        relay.createdAt = Date()
+//        
+//        return NavigationStack {
+//            RelayEditView(relay: relay)
+//                .withPreviewEnvironment()
+//        }
+//    }
+//}

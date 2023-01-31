@@ -20,36 +20,27 @@ struct ContentView: View {
     
     @AppStorage("devToggle") var devToggle: Bool = false
     @Environment(\.managedObjectContext) var viewContext
-    @EnvironmentObject var accountState:AccountState
+    @EnvironmentObject var ns:NosturState
     @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""
     @State var path = NavigationPath()
     
-    @EnvironmentObject var cm:ConnectionManager
+    var cm:SocketPool = .shared
+//    @EnvironmentObject var cm:ConnectionManager
     @State var selectedTab = "MainTimeline"
     @State var navigationPath = NavigationPath()
-    @AppStorage("showReplies") var showReplies = false
+    @AppStorage("showReplies") var showReplies = true
     
     var body: some View {
         VStack {
             TabView(selection: $selectedTab) {
                 NavigationStack(path: $navigationPath) {
-//                    Toggle(isOn: $showReplies) {
-//                        HStack {
-//                            Spacer()
-//                            Label("Show replies", systemImage: "bubble.left.and.bubble.right")
-//                        }
-//                    }.toggleStyle(.button)
-//                        .padding(.horizontal)
-    
-                    
                     VStack {
                         
-                        let followingPubkeys = [String](accountState.followingPublicKeys)
+                        let followingPubkeys = [String](ns.followingPublicKeys)
                         TimelineFRControllerView(followingPubkeys: followingPubkeys, showReplies:showReplies)
 //                        MainTimelineView(followingPubkeys: followingPubkeys, showReplies: showReplies)
 //                        NaturalTimelineView(showReplies: true)
                     }
-                    
                         .onOpenURL { url in
                             // TODO: CHECK INPUT!!! SECURITY!
                             print(url.absoluteString)
@@ -89,10 +80,10 @@ struct ContentView: View {
                             NoteDetail(event: event)
                         }
                         .navigationDestination(for: ContactPath.self) { path in
-                            ProfileView(pubkey: path.key)
+                            ProfileByPubkey(pubkey: path.key)
                         }
                         .navigationDestination(for: Contact.self) { contact in
-                            ProfileView(pubkey: contact.pubkey!)
+                            Profile(contact: contact)
                         }
                 }
                 .tabItem { Image(systemName: "house.fill") }
@@ -108,8 +99,8 @@ struct ContentView: View {
                 .tag("Accounts")
                 
                 NavigationStack {
-                    if (accountState.activeAccount() != nil) {
-                        BookmarksView(account: accountState.activeAccount()!)
+                    if (ns.account != nil) {
+                        BookmarksView(account: ns.account!)
                             .navigationDestination(for: NotePath.self) { path in
                                 NoteById(id: path.id)
                             }
@@ -117,10 +108,10 @@ struct ContentView: View {
                                 NoteDetail(event: event)
                             }
                             .navigationDestination(for: ContactPath.self) { path in
-                                ProfileView(pubkey: path.key)
+                                ProfileByPubkey(pubkey: path.key)
                             }
                             .navigationDestination(for: Contact.self) { contact in
-                                ProfileView(pubkey: contact.pubkey!)
+                                Profile(contact: contact)
                             }
                     }
                     else {

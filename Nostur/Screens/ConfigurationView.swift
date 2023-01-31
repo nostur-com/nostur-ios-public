@@ -11,393 +11,355 @@ import CoreData
 struct ConfigurationView: View {
     
     @AppStorage("devToggle") var devToggle: Bool = false
-//    @Environment(\.managedObjectContext) var viewContext
+    @Environment(\.managedObjectContext) var viewContext
     
     @FetchRequest(
         sortDescriptors: [SortDescriptor(\Contact.updated_at, order: .forward)],
         animation: .none)
     var allContacts: FetchedResults<Contact>
     
-//    @FetchRequest(
-//        sortDescriptors: [SortDescriptor(\Event.created_at, order: .forward)],
-//        animation: .none)
-//    var allEvents: FetchedResults<Event>
+    @FetchRequest(
+        sortDescriptors: [],
+        animation: .none)
+    var allEvents: FetchedResults<Event>
     
     func rebuildReplyToIdsCache() {
         SavedEventsCache.shared.clear()
-        let taskContext = EventsProvider.shared.container.newBackgroundContext()
-        taskContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
-        // Set unused undoManager to nil for macOS (it is nil by default on iOS)
-        // to reduce resource requirements.
-        taskContext.undoManager = nil
-        // Add name and author to identify source of persistent history changes.
-        taskContext.name = "rebuildReplyToIdsCacheContext"
-        taskContext.transactionAuthor = "rebuildReplyToIdsCache"
         
-        taskContext.performAndWait {
-         
-            let r = NSFetchRequest<Event>(entityName: "Event")
-            r.predicate = NSPredicate(format: "kind == 1")
-            r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-            let kind1 = try! taskContext.fetch(r)
-            
-            // ON FIRST PASS RESET ALL TO NIL
-            for event in kind1 {
-                event.replyToId = nil
-                event.replyToRootId = nil
-            }
-            
-            let decoder = JSONDecoder()
-            
-            for event in kind1 {
-                if (event.tagsSerialized != nil) {
-                    if let tags = try? decoder.decode([NEventTag].self, from: Data(event.tagsSerialized!.utf8)) {
-                        
-                        if let replyToEtag = TagsHelpers(tags).replyToEtag() {
-                            event.replyToId = replyToEtag.id
-//                            print("updating replyToId for \(String(describing: event.id))")
-                        }
-                        
-                        if let replyToRootEtag = TagsHelpers(tags).replyToRootEtag() {
-                            event.replyToRootId = replyToRootEtag.id
-                            if (event.replyToId == nil) {
-                                event.replyToId = replyToRootEtag.id
-                            }
-//                            print("updating replyToRootId for \(String(describing: event.id))")
-                        }
-                        
+        
+        let r = NSFetchRequest<Event>(entityName: "Event")
+        r.predicate = NSPredicate(format: "kind == 1")
+        r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        let kind1 = try! viewContext.fetch(r)
+        
+        // ON FIRST PASS RESET ALL TO NIL
+        for event in kind1 {
+            event.replyToId = nil
+            event.replyToRootId = nil
+        }
+        
+        let decoder = JSONDecoder()
+        
+        for event in kind1 {
+            if (event.tagsSerialized != nil) {
+                if let tags = try? decoder.decode([NEventTag].self, from: Data(event.tagsSerialized!.utf8)) {
+                    
+                    if let replyToEtag = TagsHelpers(tags).replyToEtag() {
+                        event.replyToId = replyToEtag.id
+                        //                            print("updating replyToId for \(String(describing: event.id))")
                     }
+                    
+                    if let replyToRootEtag = TagsHelpers(tags).replyToRootEtag() {
+                        event.replyToRootId = replyToRootEtag.id
+                        if (event.replyToId == nil) {
+                            event.replyToId = replyToRootEtag.id
+                        }
+                        //                            print("updating replyToRootId for \(String(describing: event.id))")
+                    }
+                    
                 }
             }
-            
-            do {
-//                try viewContext.save()
-                try taskContext.save()
-            }
-            catch {
-                print("rebuildReplyToIdsCache error on save(): \(error)")
-            }
         }
+        
+        do {
+            //                try viewContext.save()
+            try viewContext.save()
+        }
+        catch {
+            print("rebuildReplyToIdsCache error on save(): \(error)")
+        }
+        
     }
     
     func rebuildCountingCache() {
         SavedEventsCache.shared.clear()
-        let taskContext = EventsProvider.shared.container.newBackgroundContext()
-        taskContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
-        // Set unused undoManager to nil for macOS (it is nil by default on iOS)
-        // to reduce resource requirements.
-        taskContext.undoManager = nil
-        // Add name and author to identify source of persistent history changes.
-        taskContext.name = "rebuildCountingCacheContext"
-        taskContext.transactionAuthor = "rebuildCountingCache"
         
-        taskContext.performAndWait {
-            // sort events by date. oldest first
-            let r = NSFetchRequest<Event>(entityName: "Event")
-            r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-            let allEvents = try! taskContext.fetch(r)
+        
+        // sort events by date. oldest first
+        let r = NSFetchRequest<Event>(entityName: "Event")
+        r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        let allEvents = try! viewContext.fetch(r)
+        
+        let kind1or7 = allEvents.filter { $0.kind == 1 || $0.kind == 7 }
+        let kind1 = allEvents.filter { $0.kind == 1 }
+        
+        let decoder = JSONDecoder()
+        
+        // ON FIRST PASS RESET ALL COUNTERS TO 0 (FOR KIND 1)
+        for event in kind1 {
+            event.repliesCount = 0 // TODO: Dit allemaal kan @aggregate worden?? @count ofzo?
+            event.mentions = 0
+            event.likes = 0
+        }
+        
+        // RECOUNT
+        for event in kind1or7 {
             
-            let kind1or7 = allEvents.filter { $0.kind == 1 || $0.kind == 7 }
-            let kind1 = allEvents.filter { $0.kind == 1 }
-            
-            let decoder = JSONDecoder()
-            
-            // ON FIRST PASS RESET ALL COUNTERS TO 0 (FOR KIND 1)
-            for event in kind1 {
-                event.repliesCount = 0 // TODO: Dit allemaal kan @aggregate worden?? @count ofzo?
-                event.mentions = 0
-                event.likes = 0
-            }
-            
-            // RECOUNT
-            for event in kind1or7 {
-                
-                // if reply or replytoroot (and KIND 1)
-                // update replies counter
-                if (event.kind == 1 && event.tagsSerialized != nil) {
-                    do {
-                        if let tags = try? decoder.decode([NEventTag].self, from: Data(event.tagsSerialized!.utf8)) {
-                            try Event.updateRepliesCountCache(tags, context: taskContext)
-                        }
-                    }
-                    catch {
-                        print("something wrong with updating replies cache")
-                        print(error)
+            // if reply or replytoroot (and KIND 1)
+            // update replies counter
+            if (event.kind == 1 && event.tagsSerialized != nil) {
+                do {
+                    if let tags = try? decoder.decode([NEventTag].self, from: Data(event.tagsSerialized!.utf8)) {
+                        try _ = Event.updateRepliesCountCache(tags, context: viewContext)
                     }
                 }
-                
-                
-                // if reaction (KIND 7)
-                // update likes count
-                if (event.kind == 7 && event.tagsSerialized != nil) {
-                    do {
-                        if let tags = try? decoder.decode([NEventTag].self, from: Data(event.tagsSerialized!.utf8)) {
-                            try Event.updateLikeCountCache(tags, content:event.content ?? "", context: taskContext)
-                        }
-                    }
-                    catch {
-                        print("something wrong with updating likes/reactions cache")
-                        print(error)
-                    }
-                }
-                
-                // if mentions (and KIND 1)
-                // update mentions count
-                if (event.kind == 1 && event.tagsSerialized != nil) {
-                    do {
-                        if let tags = try? decoder.decode([NEventTag].self, from: Data(event.tagsSerialized!.utf8)) {
-                            try Event.updateMentionsCountCache(tags, context: taskContext)
-                        }
-                    }
-                    catch {
-                        print("something wrong with updating mentions cache")
-                        print(error)
-                    }
+                catch {
+                    print("something wrong with updating replies cache")
+                    print(error)
                 }
             }
             
             
-            print("Finishing up with taskContext.save()")
-
-            do {
-                try taskContext.save()
+            // if reaction (KIND 7)
+            // update likes count
+            if (event.kind == 7 && event.tagsSerialized != nil) {
+                do {
+                    if let tags = try? decoder.decode([NEventTag].self, from: Data(event.tagsSerialized!.utf8)) {
+                        try _ = Event.updateLikeCountCache(tags, content:event.content ?? "", context: viewContext)
+                    }
+                }
+                catch {
+                    print("something wrong with updating likes/reactions cache")
+                    print(error)
+                }
             }
-            catch {
-                print("rebuildCountingCache error on save(): \(error)")
-                print(error)
+            
+            // if mentions (and KIND 1)
+            // update mentions count
+            if (event.kind == 1 && event.tagsSerialized != nil) {
+                do {
+                    if let tags = try? decoder.decode([NEventTag].self, from: Data(event.tagsSerialized!.utf8)) {
+                        try _ = Event.updateMentionsCountCache(tags, context: viewContext)
+                    }
+                }
+                catch {
+                    print("something wrong with updating mentions cache")
+                    print(error)
+                }
             }
         }
+        
+        
+        print("Finishing up with viewContext.save()")
+        
+        do {
+            try viewContext.save()
+        }
+        catch {
+            print("rebuildCountingCache error on save(): \(error)")
+            print(error)
+        }
+        
     }
     
     func rebuildContactCache() {
         SavedEventsCache.shared.clear()
         // update fields. BUT ALSO NIL THEM IF MISSING // TODO: SHOULD ALSO DO IN REGULAR METADATA PARSING
         
-        let taskContext = EventsProvider.shared.container.newBackgroundContext()
-        taskContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
-        // Set unused undoManager to nil for macOS (it is nil by default on iOS)
-        // to reduce resource requirements.
-        taskContext.undoManager = nil
-        // Add name and author to identify source of persistent history changes.
-        taskContext.name = "rebuildContactCacheContext"
-        taskContext.transactionAuthor = "rebuildContactCache"
+        let decoder = JSONDecoder()
         
-        taskContext.performAndWait {
-         
-            let decoder = JSONDecoder()
-            
-            let r = NSFetchRequest<Event>(entityName: "Event")
-            r.predicate = NSPredicate(format: "kind == 0")
-            r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)]
-            let kind0 = try! taskContext.fetch(r)
-            
-            for event in kind0 {
-                guard event.content != nil else {
-                    continue
-                }
-            
-                guard let metaData = try? decoder.decode(NSetMetadata.self, from: Data(event.content!.utf8)) else {
-                    continue
-                }
-                
-                do {
-                    print("trying to update for \(String(describing: event.pubkey))")
-                    try Contact.updateMetadata(metaData, pubkey: event.pubkey!, context: taskContext)
-                }
-                catch {
-                    print("something wrong with updating conact info cache")
-                    print(error)
-                }
+        let r = NSFetchRequest<Event>(entityName: "Event")
+        r.predicate = NSPredicate(format: "kind == 0")
+        r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)]
+        let kind0 = try! viewContext.fetch(r)
+        
+        for event in kind0 {
+            guard event.content != nil else {
+                continue
             }
             
+            guard let metaData = try? decoder.decode(NSetMetadata.self, from: Data(event.content!.utf8)) else {
+                continue
+            }
             
             do {
-                try taskContext.save()
+                print("trying to update for \(String(describing: event.pubkey))")
+                try Contact.updateMetadata(metaData, pubkey: event.pubkey!, context: viewContext)
             }
             catch {
-                print("rebuildContactCache error on save(): \(error)")
+                print("something wrong with updating conact info cache")
                 print(error)
             }
         }
+        
+        
+        do {
+            try viewContext.save()
+        }
+        catch {
+            print("rebuildContactCache error on save(): \(error)")
+            print(error)
+        }
+        
     }
     
     func deleteAllContacts() {
         SavedEventsCache.shared.clear()
-        let taskContext = EventsProvider.shared.container.newBackgroundContext()
-        taskContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
-        // Set unused undoManager to nil for macOS (it is nil by default on iOS)
-        // to reduce resource requirements.
-        taskContext.undoManager = nil
-        // Add name and author to identify source of persistent history changes.
-        taskContext.name = "deleteAllContactsContext"
-        taskContext.transactionAuthor = "deleteAllContacts"
         
-        taskContext.performAndWait {
-         
-            let r = NSFetchRequest<Contact>(entityName: "Contact")
-            let allContacts = try! taskContext.fetch(r)
-            
-            for contact in allContacts {
-                taskContext.delete(contact)
-            }
-            do {
-                print("deleting \(allContacts.count) contacts.")
-                try taskContext.save()
-            }
-            catch {
-                print("deleteAllContacts error on save(): \(error)")
-                print(error)
-            }
+        let r = NSFetchRequest<Contact>(entityName: "Contact")
+        let allContacts = try! viewContext.fetch(r)
+        
+        for contact in allContacts {
+            viewContext.delete(contact)
+        }
+        do {
+            print("deleting \(allContacts.count) contacts.")
+            try viewContext.save()
+        }
+        catch {
+            print("deleteAllContacts error on save(): \(error)")
+            print(error)
         }
     }
     
+    func deleteAllEvents() {
+        SavedEventsCache.shared.clear()
+
+        let r = NSFetchRequest<Event>(entityName: "Event")
+        let allEvents = try! viewContext.fetch(r)
+
+        for event in allEvents {
+            viewContext.delete(event)
+        }
+        do {
+            print("deleting \(allEvents.count) contacts.")
+            try viewContext.save()
+        }
+        catch {
+            print("deleteAllEvents error on save(): \(error)")
+            print(error)
+        }
+    }
     
     func fixContactEventRelations() {
-    
+        
         SavedEventsCache.shared.clear()
-        let taskContext = EventsProvider.shared.container.newBackgroundContext()
-        taskContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
-        // Set unused undoManager to nil for macOS (it is nil by default on iOS)
-        // to reduce resource requirements.
-        taskContext.undoManager = nil
-        // Add name and author to identify source of persistent history changes.
-        taskContext.name = "fixContactEventRelationsContext"
-        taskContext.transactionAuthor = "fixContactEventRelations"
         
-        taskContext.performAndWait {
         
-            // TODO: MAybe dont need for all events??? just kind:1 is enough?
-            let er = NSFetchRequest<Event>(entityName: "Event")
-            er.sortDescriptors = []
-            let allEvents = Array(try! taskContext.fetch(er))
-            
-            
-            for event in allEvents {
-                // set relation to Contact
-                let cr = NSFetchRequest<Contact>(entityName: "Contact")
-                cr.predicate = NSPredicate(format: "pubkey == %@", event.pubkey!)
-                cr.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)]
-                if let contact = try? taskContext.fetch(cr).first {
-                    event.contact = contact
-                }
-            }
-            
-            do {
-                print("Rebuilt event.contact relation")
-                try taskContext.save()
-            }
-            catch {
-                print("fixContactEventRelations error on save(): \(error)")
-                print(error)
+        // TODO: MAybe dont need for all events??? just kind:1 is enough?
+        let er = NSFetchRequest<Event>(entityName: "Event")
+        er.sortDescriptors = []
+        let allEvents = Array(try! viewContext.fetch(er))
+        
+        
+        for event in allEvents {
+            // set relation to Contact
+            let cr = NSFetchRequest<Contact>(entityName: "Contact")
+            cr.predicate = NSPredicate(format: "pubkey == %@", event.pubkey!)
+            cr.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)]
+            if let contact = try? viewContext.fetch(cr).first {
+                event.contact = contact
             }
         }
+        
+        do {
+            print("Rebuilt event.contact relation")
+            try viewContext.save()
+        }
+        catch {
+            print("fixContactEventRelations error on save(): \(error)")
+            print(error)
+        }
+        
     }
     
     func fixReplyToEventRelations() {
-    
+        
         SavedEventsCache.shared.clear()
-        let taskContext = EventsProvider.shared.container.newBackgroundContext()
-        taskContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
-        // Set unused undoManager to nil for macOS (it is nil by default on iOS)
-        // to reduce resource requirements.
-        taskContext.undoManager = nil
-        // Add name and author to identify source of persistent history changes.
-        taskContext.name = "fixReplyToEventRelationsContext"
-        taskContext.transactionAuthor = "fixReplyToEventRelations"
+        let viewContext = EventsProvider.shared.container.newBackgroundContext()
         
-        taskContext.performAndWait {
         
-            // TODO: MAybe dont need for all events??? just kind:1 is enough?
-            let er = NSFetchRequest<Event>(entityName: "Event")
-            er.sortDescriptors = []
-            er.predicate = NSPredicate(format: "kind == 1")
-            let allKind1 = Array(try! taskContext.fetch(er))
+        // TODO: MAybe dont need for all events??? just kind:1 is enough?
+        let er = NSFetchRequest<Event>(entityName: "Event")
+        er.sortDescriptors = []
+        er.predicate = NSPredicate(format: "kind == 1")
+        let allKind1 = Array(try! viewContext.fetch(er))
+        
+        
+        for event in allKind1 {
             
-            
-            for event in allKind1 {
-                
-                if (event.replyToId != nil) {
-                    let cr = NSFetchRequest<Event>(entityName: "Event")
-                    cr.predicate = NSPredicate(format: "id == %@", event.replyToId!)
-                    cr.sortDescriptors = []
-                    if let replyToEvent = try? taskContext.fetch(cr).first {
-                        event.replyTo = replyToEvent
-//                        replyToEvent.addToReplies(event) // TODO: inverse hoeft niet? automatisc?
-                    }
-                }
-                if (event.replyToRootId != nil) {
-                    let cr = NSFetchRequest<Event>(entityName: "Event")
-                    cr.predicate = NSPredicate(format: "id == %@", event.replyToRootId!)
-                    cr.sortDescriptors = []
-                    if let replyToRootEvent = try? taskContext.fetch(cr).first {
-                        event.replyToRoot = replyToRootEvent
-                    }
+            if (event.replyToId != nil) {
+                let cr = NSFetchRequest<Event>(entityName: "Event")
+                cr.predicate = NSPredicate(format: "id == %@", event.replyToId!)
+                cr.sortDescriptors = []
+                if let replyToEvent = try? viewContext.fetch(cr).first {
+                    event.replyTo = replyToEvent
+                    //                        replyToEvent.addToReplies(event) // TODO: inverse hoeft niet? automatisc?
                 }
             }
-            
-            do {
-                print("Rebuilt event.contact relation")
-                try taskContext.save()
-            }
-            catch {
-                print("fixContactEventRelations error on save(): \(error)")
-                print(error)
+            if (event.replyToRootId != nil) {
+                let cr = NSFetchRequest<Event>(entityName: "Event")
+                cr.predicate = NSPredicate(format: "id == %@", event.replyToRootId!)
+                cr.sortDescriptors = []
+                if let replyToRootEvent = try? viewContext.fetch(cr).first {
+                    event.replyToRoot = replyToRootEvent
+                }
             }
         }
+        
+        do {
+            print("Rebuilt event.contact relation")
+            try viewContext.save()
+        }
+        catch {
+            print("fixContactEventRelations error on save(): \(error)")
+            print(error)
+        }
+        
     }
     
     var body: some View {
         VStack {
             RelaysView()
-            Divider()
             Toggle(isOn: $devToggle) {
                 Text("Dev mode")
             }.padding(20)
-            Divider()
             if (devToggle) {
-                Group {
-                    Text("Other options").font(.headline)
-                    
+                List {
                     Button {
                         rebuildReplyToIdsCache()
                     } label: {
                         Text("Rebuild replyToId, replyToRootId cache")
-                    }.padding(10)
+                    }.padding(5)
                     
                     Button {
                         rebuildCountingCache()
                     } label: {
                         Text("Rebuild counting cache (likes, mentions, replies)")
-                    }.padding(10)
+                    }.padding(5)
                     
                     Button {
                         rebuildContactCache()
                     } label: {
                         Text("Rebuild contact cache (banner, picture etc)")
-                    }.padding(10)
+                    }.padding(5)
                     
                     Button {
                         deleteAllContacts()
                     } label: {
                         Text("Delete all contacts \(allContacts.count)")
-                    }.padding(10)
+                    }.padding(5)
+                    
+                    Button {
+                        deleteAllEvents()
+                    } label: {
+                        Text("Delete all events \(allEvents.count)")
+                    }.padding(5)
                     
                     Button {
                         fixContactEventRelations()
                     } label: {
                         Text("Fix event.contact relation")
-                    }.padding(10)
+                    }.padding(5)
                     
                     Button {
                         fixReplyToEventRelations()
                     } label: {
                         Text("Fix reply relations")
-                    }.padding(10)
+                    }.padding(5)
                     
-                    Text("**Umb** [@snowder](nostr:npub1g53mukxnjkcmr94fhryzkqutdz2ukq4ks0gvy5af25rgmwsl4ngq43drvk)")
-                    Text("**Umb** [@callebtc](nostr:npub12rv5lskctqxxs2c8rf2zlzc7xx3qpvzs3w4etgemauy9thegr43sf485vg)")
-                    
-                    Text("\n")
+                    Text("**Umb** [@Snowden](nostr:npub1g53mukxnjkcmr94fhryzkqutdz2ukq4ks0gvy5af25rgmwsl4ngq43drvk)")
+                    Text("**Umb** [@callebtc](nostr:npub12rv5lskctqxxs2c8rf2zlzc7xx3qpvzs3w4etgemauy9thegr43sf485vg) 'n")
                 }
             }
         }
@@ -405,10 +367,11 @@ struct ConfigurationView: View {
 }
 
 struct ConfigurationView_Previews: PreviewProvider {
-    
+
     static var previews: some View {
-    
+
         ConfigurationView()
             .withPreviewEnvironment()
     }
 }
+

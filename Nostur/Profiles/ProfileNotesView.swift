@@ -11,13 +11,9 @@ import SwiftUI
 // NOTES ON USER PROFILE SCREEN
 struct ProfileNotesView: View {
     
-    @EnvironmentObject var cm:ConnectionManager
+//    @EnvironmentObject var cm:ConnectionManager
+    var cm:SocketPool = .shared
     var pubkey:String
-    
-    @FetchRequest(
-        sortDescriptors: [],
-        animation: .none)
-    var contacts:FetchedResults<Contact>
     
     @FetchRequest(
         sortDescriptors: [SortDescriptor(\Event.created_at, order: .reverse)],
@@ -31,64 +27,34 @@ struct ProfileNotesView: View {
             sortDescriptors: [SortDescriptor(\Event.created_at, order: .reverse)],
             predicate: NSPredicate(format: "pubkey == %@ AND kind == 1", pubkey)
         )
-        
-        _contacts = FetchRequest(
-            sortDescriptors: [],
-            predicate: NSPredicate(format: "pubkey == %@", pubkey)
-        )
     }
     
     
     var body: some View {
+        
         VStack {
-            if (contacts.first != nil) {
-                ProfileNotesViewInner(contact: contacts.first!, events: events)
-            }
-            else {
-                Text("Profile not found").onAppear {
-                    // fetch
-                    
+            if (events.count == 0) {
+                HStack {
+                    Spacer()
+                    ProgressView()
+                        .padding(50)
+                    Spacer()
                 }
             }
-        }.onAppear {
-            // NO NEED BECAUSE ALWAYS REQ-ing already:
-//            print("🟢 ProfileNotesView.onAppear no contact so REQ.0: \(pubkey)")
-//            cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
-        }
-    }
-}
-
-struct ProfileNotesViewInner: View {
-    
-    @EnvironmentObject var cm:ConnectionManager
-    var contact:Contact
-    var events:FetchedResults<Event>
-    
-    var body: some View {
-        HStack {
-            if (events.count > 0) {
+            else {
                 LazyVStack {
                     ForEach(events, id:\Event.id) { event in
                         NoteRow(event:event)
                     }
                 }
             }
-            else {
-                Text("Fetching posts from user...")
-                    .onAppear {
-                        // .REQ by author
-                        // TODO:
-                        
-                    }
-            }
         }.onAppear {
-            print("🟢 ProfileNotesViewInner.onAppear always REQ.1: \(contact.pubkey!)")
-            cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorNotes(pubkey: contact.pubkey!)))
+            print("🟢 ProfileNotesView.onAppear always REQ.1: \(pubkey)")
+            cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorNotes(pubkey: pubkey)))
         }
+        
     }
 }
-
-
 
 struct ProfileNotesView_Previews: PreviewProvider {
     static var previews: some View {

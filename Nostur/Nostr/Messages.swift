@@ -1,0 +1,195 @@
+//
+//  Messages.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 29/01/2023.
+//
+
+import Foundation
+import SwiftyJSON
+
+// Message ready to sent, with envelope  EVENT/REQ/CLOSE
+struct ClientMessage {
+    enum type {
+        case EVENT
+        case REQ
+        case CLOSE
+    }
+    
+    var type:ClientMessage.type = .EVENT
+    var message:String
+    
+    static func close(subscriptionId:String) -> String {
+        return "[\"CLOSE\", \"\(subscriptionId)\"]"
+    }
+    
+    static func event(event:NEvent) -> String {
+        return "[\"EVENT\",\(event.eventJson())]"
+    }
+}
+
+// Messages received from relay EVENT/EOSE/NOTICE
+struct RelayMessage {
+    
+    enum type:String {
+        case EVENT
+        case NOTICE
+        case EOSE
+    }
+    
+    enum error:Error {
+        case FAILED_TO_PARSE // Failed to parse raw websocket
+        case UNKNOWN_MESSAGE_TYPE // NOT EVENT, NOTICE or EOSE
+        case FAILED_TO_PARSE_EVENT // Could parse raw websocket but not event
+    }
+    
+    var type:RelayMessage.type?
+    var message:String
+    var subscriptionId:String?
+    var event:NEvent?
+    
+    static func parseRelayMessage(text:String, skipValidation:Bool = false) throws -> RelayMessage {
+        guard let dataFromString = text.data(using: .utf8, allowLossyConversion: false) else {
+            throw error.FAILED_TO_PARSE
+        }
+        
+        guard let json = try? JSON(data: dataFromString) else {
+            throw error.FAILED_TO_PARSE
+        }
+        
+        guard json[0] != "EOSE" else {
+            return RelayMessage(type: .EOSE, message: text, subscriptionId: json[1].stringValue)
+        }
+        
+        guard json[0] != "NOTICE" else {
+            return RelayMessage(type: .NOTICE, message: text)
+        }
+        
+        guard json[0] == "EVENT" else {
+            throw error.UNKNOWN_MESSAGE_TYPE
+        }
+        
+        let decoder = JSONDecoder()
+        guard let event = try? decoder.decode(NEvent.self, from: Data(json[2].rawData())) else {
+            throw error.FAILED_TO_PARSE_EVENT
+        }
+        
+        guard try skipValidation || event.verified() else {
+            print("🟣\(event)")
+            throw "🔴🔴🔴 NO VALID SIG 🔴🔴🔴 "
+        }
+        
+        return RelayMessage(type: .EVENT, message: text, subscriptionId: json[1].stringValue, event: event)
+    }
+}
+
+// REQ messages for requesting with filters
+struct RequestMessage {
+    
+    // FETCH A SINGLE EVENT
+    static func getEvent(id:String, subscriptionId:String? = nil) -> String {
+        return """
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"ids": ["\(id)"], "limit": 1}]
+"""
+    }
+    
+    static func getEvents(ids:[String?], limit:Int = 500, subscriptionId:String? = nil) -> String {
+        return """
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"ids": \(JSON(ids).rawString() ?? "[]"), "limit": \(limit)}]
+"""
+    }
+    
+    // For fetching events posted by people you follow
+    // or reactions by others reacting to the people you follow
+    static func getFollowingEvents(pubkeys:[String?], limit:Int = 500, subscriptionId:String? = nil, since:NTimestamp? = nil) -> String {
+        
+        if since != nil {
+            return """
+    ["REQ", "\(subscriptionId ?? ("TL-"+UUID().uuidString))", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "limit": \(limit), "since": \(since!.timestamp)}, {"#p": \(JSON(pubkeys).rawString() ?? "[]"), "kinds": [0,1,7], "limit": \(limit), "since": \(since!.timestamp)}]
+    """
+        }
+        return """
+["REQ", "\(subscriptionId ?? ("TL-"+UUID().uuidString))", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "kinds": [0,1,7], "limit": \(limit)}]
+"""
+    }
+    
+    
+    
+    static func getAuthorContactsList(pubkey:String, limit:Int = 1, subscriptionId:String? = nil) -> String {
+        return """
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [3], "limit": \(limit)}]
+"""
+    }
+    
+    static func getAuthorNotes(pubkey:String, limit:Int = 100, subscriptionId:String? = nil) -> String {
+        return """
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [1], "limit": \(limit)}]
+"""
+    }
+    
+    static func getAuthorReactions(pubkey:String, limit:Int = 100, subscriptionId:String? = nil) -> String {
+        return """
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [7], "limit": \(limit)}]
+"""
+    }
+    
+    static func getAuthorsEvents(pubkeys:[String?], limit:Int = 200, subscriptionId:String? = nil, since:NTimestamp? = nil) -> String {
+        
+        if since != nil {
+            return """
+    ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "limit": \(limit), "since": \(since!.timestamp)}]
+    """
+        }
+        return """
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "limit": \(limit)}]
+"""
+    }
+    
+    static func getAuthorsNotes(pubkeys:[String?], limit:Int = 100, subscriptionId:String? = nil) -> String {
+        return """
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "kinds": [1], "limit": \(limit)}]
+"""
+    }
+    
+    static func getUserMetadata(pubkey:String, subscriptionId:String? = nil) -> String {
+        return """
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [0], "limit": 1}]
+"""
+    }
+    
+    static func getUserMetadata(pubkeys:[String?], limit:Int? = nil, subscriptionId:String? = nil) -> String {
+        let limit = limit ?? (pubkeys.count + 20) // add 20 in case of multiple setMetadata's for a pubkey maybe?? not sure
+        return """
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "kinds": [0], "limit": \(limit)}]
+"""
+    }
+}
+
+
+struct EventMessageBuilder {
+    
+    
+    static func makeReactionEvent(reactingTo: Event) -> NEvent {
+        var tags = reactingTo.tags()!.filter { $0.type == "e" || $0.type == "p" }
+        tags.append(NEventTag(type: "e", otherInformation: reactingTo.id))
+        tags.append(NEventTag(type: "p", otherInformation: reactingTo.pubkey!))
+        
+        var reactionEvent = NEvent(content: "+")
+        reactionEvent.kind = .custom(7)
+        reactionEvent.tags = tags
+        
+        return reactionEvent
+    }
+    
+    static func makeReactionEvent(reactingTo: NEvent) -> NEvent {
+        var tags = reactingTo.tags.filter { $0.type == "e" || $0.type == "p" }
+        tags.append(NEventTag(type: "e", otherInformation: reactingTo.id))
+        tags.append(NEventTag(type: "p", otherInformation: reactingTo.publicKey))
+        
+        var reactionEvent = NEvent(content: "+")
+        reactionEvent.kind = .custom(7)
+        reactionEvent.tags = tags
+        
+        return reactionEvent
+    }
+}

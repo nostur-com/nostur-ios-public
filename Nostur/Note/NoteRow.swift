@@ -21,8 +21,9 @@ import CoreData
 struct NoteRow: View {
     
     @Environment(\.managedObjectContext) var viewContext
-    @EnvironmentObject var cm:ConnectionManager
-    @EnvironmentObject var accountState:AccountState
+    var cm:SocketPool = .shared
+//    @EnvironmentObject var cm:ConnectionManager
+    @EnvironmentObject var accountState:NosturState
     
     @ObservedObject var event:Event
     
@@ -162,7 +163,10 @@ struct NoteRow: View {
                                     .padding(.vertical, 10)
                             }
                             
-                            Text(Date(timeIntervalSince1970: TimeInterval(event.created_at)).description)
+                            let WTF = Date(timeIntervalSince1970: TimeInterval(event.created_at))
+                                .formatted(.dateTime.hour().minute().second())
+                            
+                            Text("\(WTF)")
                             
                             HStack { // Footer stats
                                 Button(action: {

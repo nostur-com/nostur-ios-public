@@ -13,6 +13,7 @@
         <attribute name="publicKey" optional="YES" attributeType="String"/>
         <relationship name="bookmarks" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Event" inverseName="bookmarkedBy" inverseEntity="Event"/>
         <relationship name="follows" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact" inverseName="followedBy" inverseEntity="Contact"/>
+        <relationship name="likes" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Event"/>
     </entity>
     <entity name="Contact" representedClassName=".Contact" syncable="YES">
         <attribute name="about" optional="YES" attributeType="String"/>
@@ -39,6 +40,7 @@
         <attribute name="created_at" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="id" attributeType="String"/>
         <attribute name="kind" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="liked" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="likes" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="mentions" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="pubkey" optional="YES" attributeType="String"/>

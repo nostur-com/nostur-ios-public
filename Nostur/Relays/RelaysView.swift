@@ -10,11 +10,12 @@ import CoreData
 
 struct RelayRowView: View {
     @ObservedObject var relay:Relay
+    @StateObject var socket:SocketClient
     
     var body: some View {
         HStack {
             
-            if (relay.isConnected) {
+            if (socket.isConnected) {
                 Image(systemName: "circle.fill").foregroundColor(.green)
                     .opacity(1.0)
             }
@@ -48,23 +49,34 @@ struct RelaysView: View {
         animation: .default)
     var relays: FetchedResults<Relay>
     
-    @EnvironmentObject var cm:ConnectionManager
+//    @EnvironmentObject var cm:ConnectionManager
+    var sp:SocketPool = .shared
+    
+    func socketForRelay(relay: Relay) -> SocketClient {
+        guard let socket = sp.sockets[relay.url!] else {
+            let addedSocket = sp.addSocket(url: relay.url!, read: relay.read, write: relay.write)
+            return addedSocket
+        }
+        return socket
+    }
     
     var body: some View {
         List {
             ForEach(relays, id:\.objectID) { relay in
                 NavigationLink(value: relay) {
-                    RelayRowView(relay: relay)
+                    RelayRowView(relay: relay, socket: socketForRelay(relay: relay))
                 }
                 
             }.onDelete(perform: deleteItems)
         }
         .onAppear {
-            for socket in cm.relaySockets {
-                if (socket.relay.read || socket.relay.write) && !socket.relay.isConnected {
-                    socket.socket.connect()
-                }
-            }
+//            for socket in cm.relaySockets {
+//                if (socket.relay.read || socket.relay.write) && !socket.relay.isConnected {
+//                    Task {
+//                        await socket.connect()
+//                    }
+//                }
+//            }
         }
         .navigationTitle("Relays")
         .toolbar {
@@ -77,7 +89,7 @@ struct RelaysView: View {
             }
         }
         .navigationDestination(for: Relay.self) { relay in
-            RelayEditView(relay: relay)
+            RelayEditView(relay: relay, socket: socketForRelay(relay: relay))
         }
         .navigationDestination(isPresented: $createRelayPresented) {
             NewRelayView { url in
@@ -88,10 +100,15 @@ struct RelaysView: View {
                 
                 do {
                     try viewContext.save()
-                    let relaySocket = RelaySocket(relay: relay, delegate: cm.eventReceivingDelegate)
-                    print("🟣🟣 connecting to \(relay.url ?? "?")")
-                    relaySocket.connect()
-                    cm.relaySockets.append(relaySocket)
+                    if (relay.read || relay.write) {
+                        _ = sp.addSocket(url: relay.url!, read: relay.read, write: relay.write)
+                    }
+//                    let relaySocket = RelaySocket(relay: relay)
+//                    print("🟣🟣 connecting to \(relay.url ?? "?")")
+//                    Task {
+//                        await relaySocket.connect()
+//                    }
+//                    cm.relaySockets.append(relaySocket)
                 } catch {
                     // Replace this implementation with code to handle the error appropriately.
                     // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
@@ -122,13 +139,16 @@ struct RelaysView: View {
 struct RelaysView_Previews: PreviewProvider {
     static var previews: some View {
         
-        let accountState = AccountState(viewContext: EventsProvider.preview.container.viewContext)
+        let accountState = NosturState(viewContext: EventsProvider.preview.container.viewContext)
         
-        let cm = ConnectionManager()
+//        let cm = ConnectionManager()
+//        var cm:SocketPool = .shared
         
         NavigationStack {
             RelaysView()
-                .environment(\.managedObjectContext, EventsProvider.preview.container.viewContext).environmentObject(accountState).environmentObject(cm)
+                .environment(\.managedObjectContext, EventsProvider.preview.container.viewContext)
+                .environmentObject(accountState)
+//                .environmentObject(cm)
         }
     }
 }

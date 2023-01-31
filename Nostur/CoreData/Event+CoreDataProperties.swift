@@ -28,21 +28,23 @@ extension Event {
     @NSManaged public var replyToRootId: String?
     @NSManaged public var replyToId: String?
     @NSManaged public var likes: Int64 // Cache
+    @NSManaged public var liked: Bool // Cache
     @NSManaged public var repliesCount: Int64 // Cache
+//    @NSManaged public var repliesCounter: Int64 // Better Cache?
     @NSManaged public var mentions: Int64 // Cache
     
-    @NSManaged public var bookmarkedBy: NSSet?
+    @NSManaged public var bookmarkedBy: Set<Account>?
     @NSManaged public var contact: Contact?
     @NSManaged public var replyTo: Event?
     @NSManaged public var replyToRoot: Event?
 
 
-    @NSManaged public var replies: NSSet?
-    // helper
-    var replies_: Set<Event> {
-        get { (replies as? Set<Event>) ?? [] }
-        set { replies = newValue as NSSet }
-    }
+    @NSManaged public var replies: Set<Event>?
+//    // helper
+//    var replies_: Set<Event> {
+//        get { (replies as? Set<Event>) ?? [] }
+//        set { replies = newValue as NSSet }
+//    }
     
     var username: String {
         get {
@@ -190,6 +192,7 @@ extension Event : Identifiable {
             let request = NSFetchRequest<Event>()
             request.entity = Event.entity()
             request.predicate = NSPredicate(format: "id == %@", replyEtag.id)
+            request.fetchLimit = 1
             
             if let reactingToEvent = try context.fetch(request).first {
 //                print("updating .replies for .id = \(String(describing: reactingToEvent.id))")
@@ -223,6 +226,7 @@ extension Event : Identifiable {
                 let request = NSFetchRequest<Event>()
                 request.entity = Event.entity()
                 request.predicate = NSPredicate(format: "id == %@", lastEtag.id)
+                request.fetchLimit = 1
                 
                 if let reactingToEvent = try context.fetch(request).first {
 //                    print("updating .likes for .id = \(String(describing: reactingToEvent.id))")
@@ -246,6 +250,7 @@ extension Event : Identifiable {
                 let request = NSFetchRequest<Event>()
                 request.entity = Event.entity()
                 request.predicate = NSPredicate(format: "id == %@", etag.id)
+                request.fetchLimit = 1
                 
                 if let reactingToEvent = try context.fetch(request).first {
 //                    print("updating .mentions for .id = \(String(describing: reactingToEvent.id))")
@@ -287,7 +292,6 @@ extension Event : Identifiable {
         }
     }
     
-    
     static func fetchEvent(id:String, context:NSManagedObjectContext) throws -> Event? {
         let request = NSFetchRequest<Event>()
         request.entity = Event.entity()
@@ -306,12 +310,14 @@ extension Event : Identifiable {
         savedEvent.sig = event.signature
         savedEvent.pubkey = event.publicKey
         savedEvent.likes = 0
+        savedEvent.liked = false
         
         if (event.kind == .textNote && TagsHelpers(event.tags).replyToRootEtag() != nil) {
             savedEvent.replyToRootId = TagsHelpers(event.tags).replyToRootEtag()!.id
             
             let er = NSFetchRequest<Event>(entityName: "Event")
             er.predicate = NSPredicate(format: "id == %@", savedEvent.replyToRootId!)
+            er.fetchLimit = 1
             er.sortDescriptors = []
             if let rootReply = try? context.fetch(er).first {
                 savedEvent.replyToRoot = rootReply
@@ -323,6 +329,7 @@ extension Event : Identifiable {
             
             let er = NSFetchRequest<Event>(entityName: "Event")
             er.predicate = NSPredicate(format: "id == %@", savedEvent.replyToId!)
+            er.fetchLimit = 1
             er.sortDescriptors = []
             if let reply = try? context.fetch(er).first {
                 savedEvent.replyTo = reply
@@ -361,5 +368,18 @@ extension Event : Identifiable {
         }
         
         return savedEvent
+    }
+    
+    // TODO: Maybe [EVENT..] to Core Data ... to NEvent will not give a valid id or sig, because
+    // data not exactly the same.
+    func toNEvent() -> NEvent {
+        var nEvent = NEvent(content: content!)
+        nEvent.id = id!
+        nEvent.publicKey = pubkey!
+        nEvent.createdAt = NTimestamp(timestamp: Int(created_at))
+        nEvent.kind = NEventKind(id: Int(kind))
+        nEvent.tags = tags() ?? []
+        nEvent.signature = sig!
+        return nEvent
     }
 }

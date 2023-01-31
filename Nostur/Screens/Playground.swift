@@ -28,8 +28,8 @@ class Events : ObservableObject {
 }
 
 struct ContactsView : View {
-    
-    @EnvironmentObject var cm:ConnectionManager
+    var cm:SocketPool = .shared
+//    @EnvironmentObject var cm:ConnectionManager
     @Environment(\.managedObjectContext) var viewContext
     
     @State var pubkey:String = "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"

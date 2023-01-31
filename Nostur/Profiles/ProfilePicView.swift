@@ -16,35 +16,41 @@ struct ProfilePicView : View {
     
     var body: some View {
         
-        if (1 == 2 && contact?.picture != nil) { // TODO: is this slow??
+        if (contact?.picture != nil) { // TODO: is this slow??
             
-            LazyImage(url: URL(string: contact!.picture!)) { state in
-                if let image = state.image {
-                    image // Displays the loaded image
-                }
-                else {
-                    Circle().foregroundColor(randomColor(seed: pubkey)).frame(maxWidth:50, maxHeight:50)
-                }
+            if (contact!.picture!.prefix(7) == "http://") {
+                Circle().foregroundColor(randomColor(seed: pubkey)).frame(width: 50, height: 50)
             }
-            .processors([ImageProcessors.Resize(width: 100), ImageProcessors.Circle()])
-//            .processors([ImageProcessors.Resize(size: CGSize(width: 50, height: 150), unit: .pixels, contentMode: .aspectFit, crop: true, upscale: true)])
-            .animation(nil)
-            .priority(.high)
-            .pipeline(ImagePipeline {
-                $0.dataLoader = DataLoader(configuration: {
-                    // Disable disk caching built into URLSession
-                    let conf = DataLoader.defaultConfiguration
-                    conf.urlCache = nil
-                    return conf
-                }())
-
-                $0.dataCachePolicy = .storeEncodedImages
-                $0.imageCache = ImageCache.shared
-                $0.dataCache = try! DataCache(name: "com.nostur.2140.picture")
-            })
+            else {
+                LazyImage(url: URL(string: contact!.picture!)) { state in
+                    if let image = state.image {
+                        image.frame(width: 50, height: 50).clipShape(Circle())
+                    }
+                    else {
+                        Circle().foregroundColor(randomColor(seed: pubkey)).frame(width: 50, height: 50)
+                    }
+                }
+                .processors([ImageProcessors.Resize(width: 100), ImageProcessors.Circle()])
+    //            .processors([ImageProcessors.Resize(size: CGSize(width: 50, height: 150), unit: .pixels, contentMode: .aspectFit, crop: true, upscale: true)])
+                .animation(nil)
+                .priority(.low)
+                .pipeline(ImageProcessing.shared.pipeline)
+//                .pipeline(ImagePipeline {
+//                    $0.dataLoader = DataLoader(configuration: {
+//                        // Disable disk caching built into URLSession
+//                        let conf = DataLoader.defaultConfiguration
+//                        conf.urlCache = nil
+//                        return conf
+//                    }())
+//
+//                    $0.dataCachePolicy = .storeEncodedImages
+//                    $0.imageCache = ImageCache.shared
+//                    $0.dataCache = try! DataCache(name: "com.nostur.2140.picture")
+//                })
+            }
         }
         else {
-            Circle().foregroundColor(randomColor(seed: pubkey)).frame(maxWidth:50, maxHeight:50)
+            Circle().foregroundColor(randomColor(seed: pubkey)).frame(width: 50, height: 50)
         }
     }
 }

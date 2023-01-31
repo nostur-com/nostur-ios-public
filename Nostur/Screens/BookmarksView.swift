@@ -30,6 +30,7 @@ struct BookmarksView: View {
         VStack {
             // TODO: Account switcher/filter
             Text("Account: \(account?.name ?? "No account")")
+            Text("Your list of bookmarks is not public")
             ScrollView {
                 ForEach(bookmarks) { bookmark in
                     NoteRow(event: bookmark)

@@ -199,10 +199,11 @@ extension NaturalTimelineView {
                 }
             }
             lastUpdated = Date().timeIntervalSince1970
-        } catch {
-            self.error = error as? EventError ?? .unexpectedError(error: error)
-            self.hasError = true
         }
+//        } catch {
+//            self.error = error as? EventError ?? .unexpectedError(error: error)
+//            self.hasError = true
+//        }
         isLoading = false
     }
 }

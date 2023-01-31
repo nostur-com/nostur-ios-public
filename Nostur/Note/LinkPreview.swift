@@ -13,7 +13,7 @@ struct LinkPreview : UIViewRepresentable {
     var url:URL
     var metadata:LPLinkMetadata?
     
-    @Binding var togglePreview: Bool
+    @Binding var previewIsReady: Bool
     
     func makeUIView(context: Context) -> LPLinkView {
         
@@ -27,19 +27,20 @@ struct LinkPreview : UIViewRepresentable {
         let view = LPLinkView(url: url)
         let provider = LPMetadataProvider()
         
-        DispatchQueue.global(qos: .userInitiated).async {
+        DispatchQueue.global(qos: .background).async {
             provider.startFetchingMetadata(for: url) { (metadata, error) in
                 if let md = metadata {
                     LinkPreviewCache.shared.setObject(for: url, value: metadata!)
                     DispatchQueue.main.async {
                         view.metadata = md
                         view.sizeToFit()
-                        self.togglePreview.toggle()
+                        self.previewIsReady.toggle()
                     }
                 }
                 
             }
         }
+        
         return view
     }
     

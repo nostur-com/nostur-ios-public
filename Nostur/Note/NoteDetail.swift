@@ -9,7 +9,7 @@ import SwiftUI
 
 struct NoteById: View {
 
-    @EnvironmentObject var cm:ConnectionManager
+    @EnvironmentObject var sp:SocketPool
 
     var id:String
 
@@ -33,7 +33,7 @@ struct NoteById: View {
             Text("Trying to fetch...").onAppear {
                 // .REQ
                 print("🟢 NoteById.onAppear no event so REQ.1: \(id)")
-                cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: id)))
+                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: id)))
             }
         }
     }
@@ -45,8 +45,8 @@ struct NoteById: View {
 struct NoteDetail: View {
     
     @Environment(\.managedObjectContext) var viewContext
-    @EnvironmentObject var cm:ConnectionManager
-    @EnvironmentObject var accountState:AccountState
+    @EnvironmentObject var sp:SocketPool
+    @EnvironmentObject var ns:NosturState
     
     @ObservedObject var event:Event
     
@@ -77,9 +77,10 @@ struct NoteDetail: View {
         guard event.replyToRoot != nil else {
             return []
         }
-        return event.replyToRoot!.replies_
+        return event.replyToRoot!.replies?
             .filter { $0.created_at < event.created_at }
-            .filter { $0 != event.replyTo } // Also dont should duplicate .replyTo 
+            .filter { $0 != event.replyTo } // Also dont should duplicate .replyTo
+        ?? []
     }
     
     var body: some View {
@@ -90,17 +91,38 @@ struct NoteDetail: View {
                     VStack {
                         // Parent root note and other replies to it
                         if (event.replyToRoot != nil) && (event.replyToRoot != event.replyTo) {
+                            if (event.replyToRoot!.replyTo != nil) {
+                                // uhm how are we going to turtles all the way up this thing?
+                                // for now just manual hack until here
+                                NoteRowView(event: event.replyToRoot!.replyTo!)
+                            }
+                            
+                            
                             // ROOT NOTE
-                            NoteRow(event: event.replyToRoot!)
+                            NoteRowView(event: event.replyToRoot!)
                             // REPLIES TO ROOT, UNTIL CURRENT NOTE
                             ForEach(rootRepliesUntilThisEvent(), id:\.self) { event in
-                                NoteRow(event: event)
+                                NoteRowView(event: event)
+                            }
+                        }
+                        else if (event.replyToRootId != nil) && (event.replyToId != event.replyToRootId) {
+                            ProgressView().onAppear {
+                                print("🤩🤩 🦋🦋 Fetching .replyToRoot \(event.replyToRootId!) ")
+                                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.replyToRootId!)))
+                                // TODO: CHECK IF NOT ALREADY FETCHED BY EARLIER VIEWS
                             }
                         }
                         
                         // Our reply to
                         if (event.replyTo != nil) {
-                            NoteRow(event: event.replyTo!)
+                            NoteRowView(event: event.replyTo!)
+                        }
+                        else if (event.replyToId != nil) {
+                            ProgressView().onAppear {
+                                print("🤩🤩 🦋🦋 Fetching .replyTo \(event.replyToId!) ")
+                                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.replyToId!)))
+                                // TODO: CHECK IF NOT ALREADY FETCHED BY EARLIER VIEWS
+                            }
                         }
                         
                         VStack {
@@ -189,85 +211,23 @@ struct NoteDetail: View {
                                 Spacer()
                             }.padding(.vertical,5)
                             
+                            DetailFooterFragment(event: event)
                         }.padding(10)
-                        
-                        
+                    
                         Divider()
-                        
-                        // Footer
-                        HStack { // Footer stats
-                            Button(action: {
-                                // Handle retweet action
-                            }) {
-                                HStack {
-                                    Image(systemName: "message")
-                                    Text("\(event.repliesCount)")
-                                }.frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
-                            }
-                            
-                            
-                            Button(action: {
-                                // Handle retweet action
-                            }) {
-                                HStack {
-                                    Image(systemName: "arrow.2.squarepath")
-                                    Text("\(event.mentions)")
-                                }.frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
-                            }
-                            
-                            Button(action: {
-                                // Handle like action
-                            }) {
-                                HStack {
-                                    Image(systemName: "heart")
-                                    Text("\(event.likes)")
-                                }.frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
-                            }
-                            
-                            
-                            Button {
-                                if (accountState.isBookmarked(event)) {
-                                    accountState.removeBookmark(event)
-                                }
-                                else {
-                                    accountState.addBookmark(event)
-                                }
-                            } label: {
-                                if (accountState.isBookmarked(event)) {
-                                    Image(systemName: "bookmark.fill")
-                                        .foregroundColor(.orange)
-                                        .frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
-                                }
-                                else {
-                                    Image(systemName: "bookmark")
-                                        .frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
-                                }
-                            }
-                            
-                            //                            Toggle(isOn: isBookmarkedBinding) {
-                            //                                Image(systemName: isBookmarked() ? "bookmark.fill" : "bookmark")
-                            //                                    .foregroundColor( isBookmarked() ? .orange : .gray )
-                            //                            }
-                            //                            .toggleStyle(.button)
-                            //                            .tint(.clear)
-                            //                            .frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
-                            //
-                            
-                        }.foregroundColor(.gray)
-                        Spacer()
-                        
+                                            
                     }
                     .foregroundColor(.gray)
                     .padding(10)
                         
                     LazyVStack {
-                        ForEach (Array(event.replies_), id:\.self) { event in
-                            NoteRow(event: event)
+                        ForEach (Array(event.replies ?? []), id:\.self) { event in
+                            NoteRowView(event: event)
                         }
                     }
                     
                     // If there are less than 5 replies, put some empty space so our detail note is at top of screen
-                    if (event.replies_.count < 5) {
+                    if (event.replies?.count ?? 0 < 5) {
                         let height = geometry.size.height - 280
                         Rectangle().frame(width: 100, height: (height < 280 ? 400 : height))
                             .background(.clear)
@@ -279,6 +239,7 @@ struct NoteDetail: View {
                 .onAppear {
                     proxy.scrollTo("NoteAnchorID")
                 }
+                .ignoresSafeArea(edges: .top)
             }
         }
         .onAppear {
@@ -306,6 +267,93 @@ struct NoteDetail: View {
             //cm.REQ
             
             
+        }
+    }
+}
+
+struct DetailFooterFragment: View {
+    
+    @Environment(\.managedObjectContext) var viewContext
+    @EnvironmentObject var ns:NosturState
+    @ObservedObject var event:Event
+    
+    var body: some View {
+        VStack(alignment: .center) {
+            HStack(alignment: .center) { // Footer stats
+//                Spacer()
+                Button {
+
+                } label: {
+                    Label("\(event.repliesCount)", systemImage: "message")
+                }
+                Spacer()
+                Button {
+                    
+                } label: {
+                    Label("\(event.mentions)", systemImage: "arrow.2.squarepath")
+                }
+                Spacer()
+                if (event.liked) {
+                    Label("\(event.likes)", systemImage: "heart.fill").foregroundColor(.red)
+                }
+                else {
+                    Button {
+                        if (ns.account != nil) {
+                            print("💖💖💖💖💖💖💖💖💖💖💖💖💖💖")
+                            event.liked = true
+                            event.likes = event.likes + 1
+                            ns.account?.addToLikes(event)
+                            
+                            // 1. create kind 7 event based on kind 1 event:    Event
+                            let likeEvent = EventMessageBuilder.makeReactionEvent(reactingTo: event)
+                            
+                            // 2. sign that event with account keys             Account
+                            guard let signedEvent = try? ns.signEvent(likeEvent) else {
+                                print("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
+                                return
+                            }
+                            
+                            // 3. Save in core data                             NSManagedObjectContext
+                            let savedEvent = Event.saveEvent(event: signedEvent, context: viewContext)
+                            do {
+                                try viewContext.save()
+                            }
+                            catch {
+                                print("🔴🔴🔴🔴🔴 COULD NOT SAVE EVENT 🔴🔴🔴🔴🔴")
+                                print(error)
+                                return
+                            }
+
+                            // 4. publish that event                            SocketPool
+                            print("Should send: \(NRelayMessage(event: savedEvent.toNEvent()).message)")
+                            
+                            print("💖💖💖💖💖💖💖💖💖💖💖💖💖💖")
+                        }
+                    } label: {
+                        Label("\(event.likes)", systemImage: "heart")
+                    }
+                }
+                Spacer()
+                Button {
+                    if (ns.isBookmarked(event)) {
+                        ns.removeBookmark(event)
+                    }
+                    else {
+                        ns.addBookmark(event)
+                    }
+                } label: {
+                    if (ns.isBookmarked(event)) {
+                        Image(systemName: "bookmark.fill")
+                            .foregroundColor(.orange)
+//                            .frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
+                    }
+                    else {
+                        Image(systemName: "bookmark")
+//                            .frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
+                    }
+                }
+//                Spacer()
+            }.foregroundColor(.gray)
         }
     }
 }

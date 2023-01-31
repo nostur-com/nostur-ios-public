@@ -9,9 +9,9 @@ import SwiftUI
 
 struct ReplyingToFragment: View {
     
-    @EnvironmentObject var cm:ConnectionManager
+    var cm:SocketPool = .shared
     
-    @ObservedObject var event:Event
+    @ObservedObject var event:Event // @Observed here can cause hang?? but needed...
     
     // gets event.replyTo.contact or event.firstPtag
     func replyToUsername() -> String {
@@ -45,17 +45,26 @@ struct ReplyingToFragment: View {
                 .foregroundColor(.secondary)
                 .font(.system(size: 13))
                 .fontWeight(.light)
-                .onAppear {
-                    if (event.replyTo == nil) && (event.replyToId != nil) {
-                        // is this the best place for this .REQ?
-                        // Somewhere .onAppear? Not in parse of receive because can lead to infinite fetching?
-                        
-                        print("🟢 ReplyingToFragment.onAppear .replyTo + replyToId == nil so: REQ.0+1:\(replyToPubkeyHex())+\(event.replyToId!)")
-                        cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: replyToPubkeyHex())))
-                        
-                        cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.replyToId!)))
-                    }
-                }
+//                .onAppear {
+//                    //TODO: DOESNT HANG ANY MORE?? OR??
+//                    // TODO: THIS CODE CAUSES TOO MANY SUBSCRIPTIONS....
+//                    /// THIS CODE CAUSES HANG WHEN FAST SCROLLING!
+//                    /// THIS CODE CAUSES HANG WHEN FAST SCROLLING!
+//                    /// THIS CODE CAUSES HANG WHEN FAST SCROLLING!
+//                    if (event.replyTo == nil) && (event.replyToId != nil) {
+//                        // is this the best place for this .REQ?
+//                        // Somewhere .onAppear? Not in parse of receive because can lead to infinite fetching?
+//
+//                        print("🟢 ReplyingToFragment.onAppear .replyTo + replyToId == nil so: REQ.0+1:\(replyToPubkeyHex())+\(event.replyToId!)")
+//                        
+//                        //TODO: COMBINE IN 1 REQ:
+//                        cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: replyToPubkeyHex())))
+//
+//                        cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.replyToId!)))
+//                    }
+//                    /// THIS CODE CAUSES HANG WHEN FAST SCROLLING!
+//                    /// THIS CODE CAUSES HANG WHEN FAST SCROLLING!
+//                }
         }
     }
 }

@@ -9,7 +9,7 @@ import SwiftUI
 
 struct AccountListView: View {
     
-    let accountsRunLoop = Timer.publish(every: 2, tolerance: 1, on: .main, in: .common).autoconnect()
+//    let accountsRunLoop = Timer.publish(every: 2, tolerance: 1, on: .main, in: .common).autoconnect()
     @State var fetching = true // fetching: true or, false if parsing
     @State var isViewDisplayed = false
     
@@ -18,7 +18,7 @@ struct AccountListView: View {
     @State var addReadOnlyAccountPresented = false
     
     var ep: EventsProvider = .shared
-    @EnvironmentObject var cm:ConnectionManager
+    var cm: SocketPool = .shared
     @Environment(\.managedObjectContext) var viewContext
     
     @FetchRequest(
@@ -36,7 +36,30 @@ struct AccountListView: View {
         VStack {
             //            Text("\(identities.count)")
             if (accounts.count == 0) {
-                NewAccountView(addReadOnlyAccountPresented: $addReadOnlyAccountPresented)
+                NewAccountView(addReadOnlyAccountPresented: $addReadOnlyAccountPresented) { name, about in
+                    let newKeys = NKeys.newKeys()
+                    
+                    //        print("Private key: \(privateKeyHex)") for testing. dont print this ever
+                    print("Public key: \(newKeys.publicKeyHex())")
+                    
+                    let account = Account(context: viewContext)
+                    account.id = UUID()
+                    account.createdAt = Date()
+                    account.name = name
+                    account.about = about
+                    account.privateKey = newKeys.privateKeyHex()
+                    account.publicKey = newKeys.publicKeyHex()
+                    
+                    do {
+                        try viewContext.save()
+                        activeAccountPublicKey = newKeys.publicKeyHex()
+                    } catch {
+                        // Replace this implementation with code to handle the error appropriately.
+                        // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
+                        let nsError = error as NSError
+                        fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+                    }
+                }
             }
             else {
                 List {
@@ -51,6 +74,13 @@ struct AccountListView: View {
                                         .foregroundColor(.white)
                                         .padding(.horizontal, 10)
                                         .background(Color("OrangeColor"))
+                                        .cornerRadius(8)
+                                }
+                                if account.privateKey == nil {
+                                    Text("read only")
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 10)
+                                        .background(Color.red)
                                         .cornerRadius(8)
                                 }
                             }
@@ -150,11 +180,10 @@ struct AccountListView: View {
             let pubkeys = accounts
                 .filter { $0.privateKey == nil || $0.privateKey == "" }
                 .map { $0.publicKey }
-            
-            let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys))
-            cm.sendMessage(message)
-            
-            //            print(msg)
+            if (pubkeys.count > 0) {
+                let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys))
+                cm.sendMessage(message)
+            }
         }
         .onAppear {
             self.isViewDisplayed = true
@@ -162,33 +191,35 @@ struct AccountListView: View {
         .onDisappear {
             self.isViewDisplayed = false
         }
-        .onReceive(accountsRunLoop) { time in
-            
-            if (!isViewDisplayed) {
-                return
-            }
-            
-            if (fetching) { // fetching
-                print("🍭🍭🍭 GONNA FETCH BABY 🍭🍭🍭🍭")
-                let pubkeys = accounts
-                    .filter { $0.privateKey == nil || $0.privateKey == "" }
-                    .map { $0.publicKey }
-                
-                let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys))
-                cm.sendMessage(message)
-            }
-            else { // parsing
-                Task {
-                    let before = await ep.queue.count
-                    try await ep.importEvents()
-                    if (before != 0) {
-                        print("didParse? queue count, before: \(before) after: \(await ep.queue.count)")
-                    }
-                }
-            }
-            
-            fetching = !fetching
-        }
+//        .onReceive(accountsRunLoop) { time in
+//            
+//            if (!isViewDisplayed) {
+//                return
+//            }
+//            
+//            if (fetching) { // fetching
+//                print("🍭🍭🍭 GONNA FETCH BABY 🍭🍭🍭🍭")
+//                let pubkeys = accounts
+//                    .filter { $0.privateKey == nil || $0.privateKey == "" }
+//                    .map { $0.publicKey }
+//                
+//                let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys))
+//                cm.sendMessage(message)
+//            }
+//            else { // parsing
+////                Task {
+//////                    let before = ep.queue.count
+////                    let before = await ep.queue.count
+////                    try await ep.importEvents()
+////                    if (before != 0) {
+//////                        print("didParse? queue count, before: \(before) after: \(ep.queue.count)")
+////                        print("didParse? queue count, before: \(before) after: \(await ep.queue.count)")
+////                    }
+////                }
+//            }
+//            
+//            fetching = !fetching
+//        }
     }
     
     func fetchContacts(account:Account) {

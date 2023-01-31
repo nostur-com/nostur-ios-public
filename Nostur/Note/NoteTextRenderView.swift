@@ -28,12 +28,15 @@ struct LinkPreviewCache {
 
 
 struct NoteTextRenderView: View {
-    
+        
     var event:Event?
     var taggedContacts:[Contact]
     var renderedText:AttributedString? = nil
     var firstLinkInText:String? = nil
-    @State var withLinkPreview = false
+    @State var previewIsReady = false
+    @State var isVisible = false
+    
+    var disableLinkPreviews = false
     
     func contact(byPubkey:String?) -> Contact? {
         guard byPubkey != nil else {
@@ -98,14 +101,41 @@ struct NoteTextRenderView: View {
     
     var body: some View {
         VStack(alignment: .leading) {
-            if (event != nil) && (taggedContacts.count > 0) { Text(renderedText!) }
-            else if (taggedContacts.count == 0) { Text(event?.noteText ?? "") }
+            if (event != nil) && (taggedContacts.count > 0) {
+                Text(renderedText!)
+                    .textSelection(.enabled)
+                    .multilineTextAlignment(TextAlignment.leading)
+                        .font(.system(size: 14))
+                        .foregroundColor(.primary)
+                        .lineSpacing(3)
+                        .padding(.vertical, 5)
+            }
+            else if (taggedContacts.count == 0) {
+                Text(event?.noteText ?? "")
+                    .textSelection(.enabled)
+                    .multilineTextAlignment(TextAlignment.leading)
+                        .font(.system(size: 14))
+                        .foregroundColor(.primary)
+                        .lineSpacing(3)
+                        .padding(.vertical, 5)
+            }
             else { Text("") }
             if (firstLinkInText != nil) {
-                if (withLinkPreview) {
-                    LinkPreview(url: URL(string: firstLinkInText!)!, togglePreview: $withLinkPreview)
-                        .aspectRatio(contentMode: .fit)
+                if (!disableLinkPreviews) {
+                    LinkPreview(url: URL(string: firstLinkInText!)!, previewIsReady: $previewIsReady)
+                    //                    .aspectRatio(contentMode: .fit)
+                        .frame(height: 300)
                 }
+            }
+        }
+        .onAppear {
+            if (firstLinkInText != nil) && (previewIsReady) {
+                isVisible = true
+            }
+        }
+        .onChange(of: previewIsReady) { newValue in
+            if (newValue == true && isVisible != true) {
+                isVisible = true
             }
         }
     }

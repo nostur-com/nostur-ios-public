@@ -14,7 +14,7 @@ struct AddReadOnlyAccountView: View {
     var accentColor: Color = Color.blue
     var grayBackground: Color = Color.gray.opacity(0.2)
     
-    var onCreate:((_ pubkey:String) -> Void)? = nil
+    var onCreate: (_ pubkey:String) -> ()
     
     var body: some View {
         
@@ -30,9 +30,7 @@ struct AddReadOnlyAccountView: View {
                 .cornerRadius(5.0)
                 .padding(.bottom, 20)
             Button {
-                if (onCreate != nil) {
-                    onCreate!(publicKeyHex)
-                }
+                onCreate(publicKeyHex)
                 dismiss()
             } label: {
                 Text("Add")
@@ -52,6 +50,8 @@ struct AddReadOnlyAccountView: View {
 
 struct NewReadOnlyAccountView_Previews: PreviewProvider {
     static var previews: some View {
-        AddReadOnlyAccountView()
+        AddReadOnlyAccountView { pubkey in
+            
+        }
     }
 }

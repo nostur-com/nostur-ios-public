@@ -12,27 +12,26 @@ import SwiftyJSON
 extension String: Error {}
 
 @main
-//struct NosturApp: App, EventDelegate {
 struct NosturApp: App {
     
     // FROM LOCAL QUEUE TO DATABASE.
-    let loopyRunny = Timer.publish(every: 3, tolerance: 1, on: .main, in: .common).autoconnect()
+    let loopyRunny = Timer.publish(every: 2, tolerance: 1, on: .main, in: .common).autoconnect()
     
-    @StateObject var accountState = AccountState(viewContext:EventsProvider.shared.container.viewContext)
+    @StateObject var ns = NosturState(viewContext:EventsProvider.shared.container.viewContext)
     
     //    @StateObject var accountState = AccountState(viewContext:PersistenceController.shared.container.viewContext)
-    @StateObject var cm = ConnectionManager()
-    
+//    @StateObject var cm = ConnectionManager()
+    var sp:SocketPool = .shared
     
     @State var isViewDisplayed = false
     
-    var body: some Scene {
+    var body: some Scene {        
         WindowGroup {
             ContentView()
                 .environment(\.managedObjectContext,
                               EventsProvider.shared.container.viewContext)
-                .environmentObject(accountState)
-                .environmentObject(cm)
+                .environmentObject(ns)
+                .environmentObject(sp)
                 .onAppear {
                     startNosturing()
                     self.isViewDisplayed = true
@@ -46,11 +45,29 @@ struct NosturApp: App {
                         return
                     }
                     
-//                    Task(priority: .background) {
                     Task {
-//                        try await Task.sleep(nanoseconds: 3_000_000_000)
-                        try await EventsProvider.shared.importEvents()
+                        await Importer.shared.importEvents()
                     }
+//                    SocketPool.shared.someQueue.sync {
+//                        let readyForImportQueue = MessageParser.shared.readyForImportQueue
+//                        do {
+////                            print("🟣🟣🟣 Loopyy 🟣🟣🟣 🟣🟣🟣 🟣🟣🟣 ")
+//                            try Importer.shared.importEvents(queue: readyForImportQueue)
+//                        }
+//                        catch {
+//                            print("🟣🟣🟣 something wrong")
+//                            print(error)
+//                        }
+//                    }
+                    
+//                    Task(priority: .background) {
+//                    Task {
+////                        for relaySocket in cm.relaySockets {
+////                            await relaySocket.handleReceivedMessages()
+////                        }
+////                        try await Task.sleep(nanoseconds: 3_000_000_000)
+//                        try await EventsProvider.shared.importEvents()
+//                    }
                 }
                 .statusBarHidden(true)
         }
@@ -118,33 +135,24 @@ struct NosturApp: App {
     }
     
     func startNosturing() {
-        
-        // Daily cleanuo
+        // Daily cleanup
 //        EventsProvider.shared.removeOldEvents()
-        
         
         // One time fix
         //        repairDb()
         //        maintenance()
         
-        let delegate = EventsProvider.shared
-        EventsProvider.shared.cm = cm
-        
-        // Perform Fetch Request
+        // Get relays from Core Data, create sockets in SocketPool and connect.
         EventsProvider.shared.container.viewContext.perform {
             do {
-                
                 // Fetch RELAYS from CORE DATA
                 let fetchRequest: NSFetchRequest<Relay> = Relay.fetchRequest()
                 let relays = try fetchRequest.execute()
+                let sp = SocketPool.shared
                 
                 // CONNECT TO RELAYS
                 for relay in relays {
-                    let relaySocket = RelaySocket(relay: relay, delegate: delegate)
-                    print("🟠 connecting to \(relay.url ?? "?")")
-                    relaySocket.connect()
-                    cm.relaySockets.append(relaySocket)
-                    cm.eventReceivingDelegate = delegate
+                    _ = sp.addSocket(url: relay.url!, write: relay.write)
                 }
             } catch {
                 print("🔴🔴🔴 Unable to Execute Fetch Request, \(error)")
