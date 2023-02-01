@@ -12,8 +12,6 @@ import Combine
 struct ReversedTimeline: View {
     
     @Namespace var SCROLL_ANCHOR
-     
-    @State var items = Array(0..<15)
     
     @State var scrollOffset = CGFloat.zero
     @State var anchorOffset = CGFloat.zero
@@ -21,7 +19,6 @@ struct ReversedTimeline: View {
     
     @State var oldScrollOffset = CGFloat.zero
     @State var oldContentHeight = CGFloat.zero
-    
     
     @State var isRefreshing = true
     @State var isLoading = true
@@ -36,7 +33,7 @@ struct ReversedTimeline: View {
     var mp: MessageParser = .shared
     
     var events:FetchedResults<Event>
-    var reversed:[Event]
+//    var reversed:[Event]
     var account:Account
     
     @AppStorage("lastReadDate") var lastReadDate = 0
@@ -47,19 +44,29 @@ struct ReversedTimeline: View {
     init(events: FetchedResults<Event>, account:Account, showMenu:Binding<Bool>) {
         self._showMenu = showMenu
         self.events = events
-        self.reversed = events.reversed() // Starts with (30?) events
+//        self.reversed = events.reversed() // Starts with (30?) events
         self.account = account
         
-        self.debouncedPublisher = relay
-            .debounce(for: 0.15, scheduler: RunLoop.main)
+        self.scrollOffsetPublisher = scrollOffsetSubject
+            .debounce(for: 1, scheduler: RunLoop.main)
+                    .eraseToAnyPublisher()
+        
+        self.contentHeightPublisher = contentHeightSubject
+            .debounce(for: 1, scheduler: RunLoop.main)
                     .eraseToAnyPublisher()
     }
+    
+    private var scrollOffsetSubject = PassthroughSubject<CGFloat,Never>()
+    private var scrollOffsetPublisher: AnyPublisher<CGFloat, Never>
+    
+    private var contentHeightSubject = PassthroughSubject<CGFloat,Never>()
+    private var contentHeightPublisher: AnyPublisher<CGFloat, Never>
     
     func getUnreadCount(events:[Event]? = nil) -> Int {
         if (events != nil) {
             return events!.filter { $0.created_at > lastReadDate }.count
         }
-        return reversed.filter { $0.created_at > lastReadDate }.count
+        return 0
     }
     
     func lastReadEvent() -> Event? {
@@ -73,22 +80,14 @@ struct ReversedTimeline: View {
             }
             .last
     }
-    @State var subscriptions = Set<AnyCancellable>()
-    
-    let subject = PassthroughSubject<CGFloat, Never>()
-    let subject2 = PassthroughSubject<CGFloat, Never>()
-    
-    private var relay = PassthroughSubject<CGFloat,Never>()
-    private var debouncedPublisher: AnyPublisher<CGFloat, Never>
     
     var body: some View {
         
         ZStack {
-//            ObservableScrollView(scrollOffset: $scrollOffset, contentHeight: $contentHeight) { proxy in
             ScrollView {
                 ZStack {
                     VStack { // LazyVStack here = STUTTER, SO VSTACK FOR NOW
-                        ForEach(reversed, id:\.self) { event in
+                        ForEach(events) { event in
                             NoteRowView(event: event)
 //                            VStack {
 //                                NoteRowView(event: event)
@@ -96,21 +95,13 @@ struct ReversedTimeline: View {
                         }
                     }
                     VStack(spacing: 0) {
-                        Rectangle().foregroundColor(.red).frame(width:370, height: anchorOffset < 0 ? 0 : anchorOffset).foregroundColor(.red)
-                        Rectangle().foregroundColor(.red).frame(width: 370, height: 0)
-//                        Color.clear.frame(width:370, height: anchorOffset < 0 ? 0 : anchorOffset).foregroundColor(.red)
-//                        Color.clear.frame(width: 370, height: 0)
+                        Rectangle().foregroundColor(.yellow).opacity(0.1).frame(width:370, height: anchorOffset < 0 ? 0 : anchorOffset).foregroundColor(.yellow)
+                        Color.clear.frame(width: 370, height: 0)
                             .id(SCROLL_ANCHOR)
                         Spacer()
                     }
                 }
                 .background(GeometryReader { geo in
-                    
-//                    Color.clear.onAppear {
-//                        scrollOffset = -geo.frame(in: .named("scroll")).origin.y
-//                        contentHeight = geo.size.height
-//                    }
-                    
                     Color.clear.preference(
                         key: ViewOffsetKey.self,
                         value: -geo.frame(in: .named("scroll")).origin.y
@@ -119,17 +110,14 @@ struct ReversedTimeline: View {
                         key: ContentHeightKey.self,
                         value: geo.size.height
                     )
-                    
                 })
                 .onPreferenceChange(ViewOffsetKey.self) { offset in
-//                    subject.send(offset)
-//                    scrollOffset = offset
-                    relay.send(offset)
+                    scrollOffsetSubject.send(offset)
                 }
                 .onPreferenceChange(ContentHeightKey.self) { height in
-//                    subject2.send(height)
-//                    relay.send(height)
-                    contentHeight = height
+                    if (1 == 2) { // TODO: IF did receive or change events. Else height cannot be changed.
+                        contentHeightSubject.send(height)
+                    }
                 }
                 // This will work with items last I think????
 //                .onChange(of: items) { newItems in
@@ -139,32 +127,16 @@ struct ReversedTimeline: View {
                 .onChange(of: scrollOffset) { newScrollOfset in
                     anchorOffset = newScrollOfset // KEEP SCROLL ANCHOR IN SYNC WITH SCROLL OFFSET
                 }
-                .onReceive(debouncedPublisher, perform: { offset in
-//                    contentHeight = height
+                .onReceive(scrollOffsetPublisher, perform: { offset in
                     scrollOffset = offset
                 })
-            }
-            .onAppear {
-                
-//                let cancellable = subject
-//                    .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
-//                    .sink { offset in
-//                        print ("Received offset \(offset)")
-//                        scrollOffset = offset
-//                    }
-//                    .store(in: &subscriptions)
-//
-//                let cancellable2 = subject2
-//                    .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
-//                    .sink { height in
-//                        contentHeight = height
-//                        print("height >> \(height)")
-//                    }
-//                    .store(in: &subscriptions)
+                .onReceive(contentHeightPublisher, perform: { height in
+                    contentHeight = height
+                })
             }
             .safeAreaInset(edge: .top) {
                 VStack(alignment: .center) {
-                    Text("Items: \(items.count)\nScroll offset: \(scrollOffset)\nAnchor offset: \(anchorOffset)\nContent height: \(contentHeight)\nScroll-Anchor diff:\(anchorOffset - scrollOffset)")
+                    Text("Items: \(events.count)\nScroll offset: \(scrollOffset)\nAnchor offset: \(anchorOffset)\nContent height: \(contentHeight)\nScroll-Anchor diff:\(anchorOffset - scrollOffset)")
                     HStack {
                         ProfilePicView(pubkey: account.publicKey!, account: account, size:30)
                             .offset(x: 30)
@@ -229,19 +201,19 @@ struct ReversedTimeline: View {
                 print("🤩🤩 (Fetched)events changed, last was: \(String(events.last!.noteText.prefix(100)))")
                 print("🤩🤩 (Fetched)events changed, last is: \(String(newLastEvent!.noteText.prefix(100)))")
             }
-            .onChange(of: reversed) { newReversed in
-                // NEW EVENTS LOADED
-                print("🤩🤩 reversed onChange")
-                print("🤩🤩 first: \(d(reversed.first!.created_at))")
-                print("🤩🤩 last: \(d(reversed.last!.created_at))")
-                let nextUnreadCount = getUnreadCount(events:newReversed)
-                if (nextUnreadCount != unreadCount) {
-                    unreadCount = nextUnreadCount
-                }
-                //                    unreadCount = getUnreadCount(events:newReversed)
-                print("🤩🤩 unreadCount: \(unreadCount)")
-                //                    isRefreshing = false
-            }
+//            .onChange(of: reversed) { newReversed in
+//                // NEW EVENTS LOADED
+//                print("🤩🤩 reversed onChange")
+//                print("🤩🤩 first: \(d(reversed.first!.created_at))")
+//                print("🤩🤩 last: \(d(reversed.last!.created_at))")
+//                let nextUnreadCount = getUnreadCount(events:newReversed)
+//                if (nextUnreadCount != unreadCount) {
+//                    unreadCount = nextUnreadCount
+//                }
+//                //                    unreadCount = getUnreadCount(events:newReversed)
+//                print("🤩🤩 unreadCount: \(unreadCount)")
+//                //                    isRefreshing = false
+//            }
             .onReceive(timelineRunLoop) { time in
                 
                 if (!isViewDisplayed) {
@@ -306,27 +278,29 @@ struct ContentHeightKey: PreferenceKey {
   }
 }
 
-struct ReversedTimelineFRControllerView: View {
+struct MainTimelineView: View {
+    
+    // Maybe put this code no longer needs to be in parent, because of the dynamic predicate problem has been solved.
     
     @EnvironmentObject var ns:NosturState
-    
-    @FetchRequest
-    var events:FetchedResults<Event>
-    
     @Binding var showMenu:Bool
     
-    init(followingPubkeys:[String], showReplies:Bool, showMenu:Binding<Bool>) {
-        self._showMenu = showMenu
+    @FetchRequest(
+        entity: Event.entity(),
+        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
+        predicate: NSPredicate(format: "FALSEPREDICATE")
+    )
+    var events: FetchedResults<Event>
+    
+    init(showReplies:Bool, followingPubkeys: Set<String>, showMenu: Binding<Bool>) {
+        _showMenu = showMenu
+        
         let fr = NSFetchRequest<Event>(entityName: "Event")
+        fr.predicate = showReplies
+            ? NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId != nil", followingPubkeys)
+            : NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil", followingPubkeys)
         
-        if (showReplies) {
-            fr.predicate = NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId != nil", followingPubkeys)
-        }
-        else {
-            fr.predicate = NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil", followingPubkeys)
-        }
-        
-        fr.fetchLimit = 30 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW
+        fr.fetchLimit = 80 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         
         _events = FetchRequest(fetchRequest: fr)
@@ -403,9 +377,9 @@ struct ReversedTimeline_Previews: PreviewProvider {
     
     static var previews: some View {
         
-        let pubkeys = ["1833ee04459feb2ca4ae690d5f31269ad488c69e5fe903a42b532c677c4a8170","84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240","3f770d65d3a764a9c5cb503ae123e62ec7598ad035d836e2a810f3877a745b24"]
+        let pubkeys = Set(["1833ee04459feb2ca4ae690d5f31269ad488c69e5fe903a42b532c677c4a8170","84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240","3f770d65d3a764a9c5cb503ae123e62ec7598ad035d836e2a810f3877a745b24"])
         
-        ReversedTimelineFRControllerView(followingPubkeys: pubkeys, showReplies:false, showMenu: $showMenu)
+        MainTimelineView(showReplies:true, followingPubkeys: pubkeys, showMenu: $showMenu)
             .withPreviewEnvironment()
         
     }

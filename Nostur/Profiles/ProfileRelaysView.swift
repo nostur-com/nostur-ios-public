@@ -48,9 +48,9 @@ struct ProfileRelaysView: View {
                             Spacer()
                             Button {
                                 let url = String(relay)
-                                _ = sp.addSocket(url: url, read:true, write: true)
+                                _ = sp.addSocket(url: url.description, read:true, write: true)
                                 let r = Relay()
-                                r.url = url
+                                r.url =  url.description
                                 r.read = true
                                 r.write = true
                                 r.createdAt = Date.now

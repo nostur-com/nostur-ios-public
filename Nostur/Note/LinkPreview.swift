@@ -17,7 +17,8 @@ struct LinkPreview : UIViewRepresentable {
     
     func makeUIView(context: Context) -> LPLinkView {
         if (metadata != nil) {
-            let view = LPLinkView(metadata: metadata!)
+            let view = LPLinkView(url: url)
+            view.metadata = metadata!
             return view
         }
         return LPLinkView(url: url)

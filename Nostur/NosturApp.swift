@@ -20,9 +20,8 @@ struct NosturApp: App {
     
     var body: some Scene {        
         WindowGroup {
-//                RootView() <--- put this one instead of ContentView to bring back sidebar menu
-//                .environmentObject(ns)
-                ContentView(showMenu: $showMenu)
+                NosturRootMenu() // <--- put this one instead of ContentView to bring back sidebar menu
+//                ContentView(showMenu: $showMenu)
                 .environment(\.managedObjectContext, EventsProvider.shared.container.viewContext)
                 .environmentObject(ns)
                 .environmentObject(sp)

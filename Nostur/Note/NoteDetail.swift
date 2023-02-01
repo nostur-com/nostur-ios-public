@@ -48,8 +48,8 @@ struct NoteDetail: View {
     @EnvironmentObject var sp:SocketPool
     @EnvironmentObject var ns:NosturState
     
-//    @ObservedObject var event:Event
-    var event:Event // TODO: Need @ObservedObject here or not?
+    @ObservedObject var event:Event
+//    var event:Event // TODO: Need @ObservedObject here or not?
     
     @FetchRequest
     var taggedContacts:FetchedResults<Contact>
@@ -91,7 +91,7 @@ struct NoteDetail: View {
                 ScrollView {
                     VStack {
                         
-                        if (1 == 2) {
+                        if (1 == 1) {
                         
                         // Parent root note and other replies to it
                         if (event.replyToRoot != nil) && (event.replyToRoot != event.replyTo) {
@@ -209,12 +209,10 @@ struct NoteDetail: View {
                             
                             // Tweet
                             HStack {
-                                // TODO:
-                                Text(event.noteText)
-//                                NoteTextRenderView(event: event, taggedContacts: Array(taggedContacts))
-//                                        .foregroundColor(.primary)
-//                                        .textSelection(.enabled)
-//                                        .font(.system(size: 18))
+                                NoteTextRenderView(event: event, taggedContacts: Array(taggedContacts))
+                                        .foregroundColor(.primary)
+                                        .textSelection(.enabled)
+                                        .font(.system(size: 18))
                                 Spacer()
                             }.padding(.vertical,5)
                             
@@ -234,7 +232,7 @@ struct NoteDetail: View {
                     }
                     
                     // If there are less than 5 replies, put some empty space so our detail note is at top of screen
-                    if (1 == 2) && (event.replies?.count ?? 0 < 5) {
+                    if (1 == 1) && (event.replies?.count ?? 0 < 5) {
                         let height = geometry.size.height - 280
                         Rectangle().frame(width: 100, height: (height < 280 ? 400 : height))
                             .background(.clear)

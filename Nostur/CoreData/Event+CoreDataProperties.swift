@@ -382,4 +382,22 @@ extension Event : Identifiable {
         nEvent.signature = sig!
         return nEvent
     }
+    
+    func getMetadataContent() throws -> NSetMetadata? {
+        if kind != NEventKind.setMetadata.id {
+            throw "Event is not kind 7"
+        }
+        let decoder = JSONDecoder()
+        
+        if (content != nil) {
+            guard let setMetadata = try? decoder.decode(NSetMetadata.self, from: Data(content!.utf8)) else {
+                return nil
+            }
+            
+            return setMetadata
+        }
+        else {
+            return nil
+        }
+    }
 }

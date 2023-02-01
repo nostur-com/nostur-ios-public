@@ -26,8 +26,8 @@ struct NoteRowView: View {
     var cm:SocketPool = .shared
     @EnvironmentObject var accountState:NosturState
     
-//    @ObservedObject var event:Event
-    var event:Event // TODO: Not sure need ObservedObject or not???
+    @ObservedObject var event:Event
+//    var event:Event // TODO: Not sure need ObservedObject or not???
     
     @FetchRequest
     var taggedContacts:FetchedResults<Contact>

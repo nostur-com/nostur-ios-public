@@ -47,6 +47,13 @@ final class NosturState : ObservableObject {
         let r = Account.fetchRequest()
         r.predicate = NSPredicate(format: "publicKey == %@", activeAccountPublicKey)
         self.account = try! viewContext.fetch(r).first
+        
+        if (self.account == nil) {
+            r.predicate = nil
+            self.account = try! viewContext.fetch(r).first
+        }
+        
+        
         if (self.account!.privateKey != nil) {
             self.keys = NKeys(privateKeyHex: self.account!.privateKey!)
         }

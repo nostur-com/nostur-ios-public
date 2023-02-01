@@ -23,8 +23,8 @@ struct ProfileRow: View {
             NavigationLink(value: contact) {
                 VStack {
                     ProfilePicView(pubkey: contact.pubkey!, contact: contact)
-                        .frame(width: 50, height: 50)
-                        .clipShape(Circle())
+//                        .frame(width: 50, height: 50)
+//                        .clipShape(Circle())
                     Spacer()
                 }
                 VStack(alignment: .leading) {
