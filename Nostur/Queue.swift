@@ -7,6 +7,8 @@
 
 import Foundation
 
+extension String: Error {}
+
 actor ActorQueue<T> {
     private var elements: [T] = []
     

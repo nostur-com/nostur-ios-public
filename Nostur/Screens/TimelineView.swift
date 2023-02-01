@@ -34,7 +34,8 @@ struct TimelineView: View {
     var reversed:[Event]
     var account:Account
     
-    init(events: FetchedResults<Event>, account:Account) {
+    init(events: FetchedResults<Event>, account:Account, showMenu:Binding<Bool>) {
+        self._showMenu = showMenu
         self.events = events
         self.reversed = events.reversed() // Starts with (30?) events
         self.account = account
@@ -44,6 +45,7 @@ struct TimelineView: View {
     @AppStorage("lastReadDate") var lastReadDate = 0
     @State var didAutoScroll = false // Only scroll to last unread after launch, not after .onAppear after coming back from detail
     @State var unreadCount = 0
+    @Binding var showMenu:Bool
     
     func getUnreadCount(events:[Event]? = nil) -> Int {
         if (events != nil) {
@@ -99,7 +101,12 @@ struct TimelineView: View {
                             VStack {
                                 
                                 NoteRowView(event: event)
-                                    .scaleEffect(x: 1, y: -1)
+                                    .transformEffect(CGAffineTransform(rotationAngle: Double.pi))
+//                                    .transformEffect(CGAffineTransformMakeScale(1, -1))
+//                                    .frame(width: 400, height: 300)
+//                                    .flip()
+                                    
+//                                    .scaleEffect(x: 1, y: -1)  // TODO: turned off for quick test
                                 
                                 //                                    .contextMenu {
                                 //                                        Button {
@@ -157,7 +164,12 @@ struct TimelineView: View {
                     }
                     // INVERTED SCROLLVIEW: THIS THE TOP
                 }
-                .scaleEffect(x: 1, y: -1)
+//                .transformEffect(CGAffineTransform(rotationAngle: Double.pi))
+//                .transformEffect(.scaledBy(CGAffineTransformMakeScale(1, -1)))
+//                .transformEffect(CGAffineTransformMakeScale(1, 1))
+//                .frame(width: 300)
+//                .flip()
+//                .scaleEffect(x: 1, y: -1) // TODO: turned off for quick test
                 //                    .refreshable {
                 //                        await fetchNotes()
                 //                    }
@@ -165,11 +177,24 @@ struct TimelineView: View {
                 //                        t.animation = .none
                 //                    }
                 .safeAreaInset(edge: .top) {
-                    HStack {
-                        VStack {
-                            Text("Last lastReadDate \(d(lastReadDate).description)")
-                            //                            Text("Last READ \(d(lastReadDate))")
-                            //                                Text("1st UNREAD: \(firstUnreadEvent() != nil ? d(firstUnreadEvent()!.created_at) : "?")")
+                    VStack(alignment: .center) {
+                            HStack {
+                                ProfilePicView(pubkey: account.publicKey!, account: account, size:30)
+                                    .offset(x: 30)
+                                    .onTapGesture {
+                                        showMenu = true
+                                    }
+                                Spacer()
+                                Spacer()
+                                Image("NosturLogo")
+                                                                .resizable()
+                                                                .scaledToFit()
+                                    .frame(height:30)
+                                    .offset(x: -15)
+                                Spacer()
+                                Text("LRD \(d(lastReadDate).description)")
+                                Spacer()
+                            }
                             ControlGroup {
                                 Button {
                                     proxy.scrollTo("TOP", anchor: .bottom) } label: { Text("TO TOP") }
@@ -189,7 +214,6 @@ struct TimelineView: View {
                                 Button { fetchEventsFromFollowing(amount:500) } label: { Text("Fetch & parse") }
                             }
                         }
-                    }
                     .background(.regularMaterial)
                 }
                 //                }
@@ -361,36 +385,7 @@ extension TimelineView {
     }
 }
 
-struct d {
-    var t:Int64?
-    
-    init(_ t:Int64? = nil) {
-        self.t = t
-    }
-    
-    init(_ t:NTimestamp? = nil) {
-        if (t != nil) {
-            self.t = Int64(t!.timestamp)
-        }
-    }
-    
-    init(_ t:Int) {
-        self.t = Int64(t)
-    }
-    
-    init(_ t:Int? = nil) {
-        if (t != nil) {
-            self.t = Int64(t!)
-        }
-    }
-    
-    var description:String {
-        get {
-            if (t == nil) { return "?" }
-            return Date(timeIntervalSince1970: TimeInterval(t!)).formatted(.dateTime.hour().minute().second())
-        }
-    }
-}
+
 //func d(_ t:Int64?) -> String {
 //    if (t == nil) { return "?" }
 //
@@ -403,7 +398,10 @@ struct TimelineFRControllerView: View {
     @FetchRequest
     var events:FetchedResults<Event>
     
-    init(followingPubkeys:[String], showReplies:Bool) {
+    @Binding var showMenu:Bool
+    
+    init(followingPubkeys:[String], showReplies:Bool, showMenu:Binding<Bool>) {
+        self._showMenu = showMenu
         let fr = NSFetchRequest<Event>(entityName: "Event")
         
         if (showReplies) {
@@ -413,7 +411,7 @@ struct TimelineFRControllerView: View {
             fr.predicate = NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil", followingPubkeys)
         }
         
-        fr.fetchLimit = 100
+        fr.fetchLimit = 150
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         
         _events = FetchRequest(fetchRequest: fr)
@@ -421,7 +419,7 @@ struct TimelineFRControllerView: View {
     
     var body: some View {
         if (ns.account != nil) {
-            TimelineView(events:events, account: ns.account!)
+            TimelineView(events:events, account: ns.account!, showMenu: $showMenu)
         }
         else {
             Text("Please set up account first")
@@ -432,11 +430,14 @@ struct TimelineFRControllerView: View {
 }
 
 struct TimelineView_Previews: PreviewProvider {
+    
+    @State static var showMenu = true
+    
     static var previews: some View {
         
         let pubkeys = ["1833ee04459feb2ca4ae690d5f31269ad488c69e5fe903a42b532c677c4a8170","84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240","3f770d65d3a764a9c5cb503ae123e62ec7598ad035d836e2a810f3877a745b24"]
         
-        TimelineFRControllerView(followingPubkeys: pubkeys, showReplies:false)
+        TimelineFRControllerView(followingPubkeys: pubkeys, showReplies:false, showMenu: $showMenu)
             .withPreviewEnvironment()
     }
 }

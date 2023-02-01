@@ -48,7 +48,8 @@ struct NoteDetail: View {
     @EnvironmentObject var sp:SocketPool
     @EnvironmentObject var ns:NosturState
     
-    @ObservedObject var event:Event
+//    @ObservedObject var event:Event
+    var event:Event // TODO: Need @ObservedObject here or not?
     
     @FetchRequest
     var taggedContacts:FetchedResults<Contact>
@@ -59,7 +60,7 @@ struct NoteDetail: View {
         self.event = event
         let pubkeys = event.contactPubkeys()
         
-        if (pubkeys == nil) {
+        if (1 == 1) || (pubkeys == nil) {
             _taggedContacts = FetchRequest(
                 sortDescriptors: [],
                 predicate: NSPredicate(format: "FALSEPREDICATE")
@@ -89,6 +90,9 @@ struct NoteDetail: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack {
+                        
+                        if (1 == 2) {
+                        
                         // Parent root note and other replies to it
                         if (event.replyToRoot != nil) && (event.replyToRoot != event.replyTo) {
                             if (event.replyToRoot!.replyTo != nil) {
@@ -123,6 +127,8 @@ struct NoteDetail: View {
                                 sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.replyToId!)))
                                 // TODO: CHECK IF NOT ALREADY FETCHED BY EARLIER VIEWS
                             }
+                        }
+                        
                         }
                         
                         VStack {
@@ -204,10 +210,11 @@ struct NoteDetail: View {
                             // Tweet
                             HStack {
                                 // TODO:
-                                NoteTextRenderView(event: event, taggedContacts: Array(taggedContacts))
-                                        .foregroundColor(.primary)
-                                        .textSelection(.enabled)
-                                        .font(.system(size: 18))
+                                Text(event.noteText)
+//                                NoteTextRenderView(event: event, taggedContacts: Array(taggedContacts))
+//                                        .foregroundColor(.primary)
+//                                        .textSelection(.enabled)
+//                                        .font(.system(size: 18))
                                 Spacer()
                             }.padding(.vertical,5)
                             
@@ -227,7 +234,7 @@ struct NoteDetail: View {
                     }
                     
                     // If there are less than 5 replies, put some empty space so our detail note is at top of screen
-                    if (event.replies?.count ?? 0 < 5) {
+                    if (1 == 2) && (event.replies?.count ?? 0 < 5) {
                         let height = geometry.size.height - 280
                         Rectangle().frame(width: 100, height: (height < 280 ? 400 : height))
                             .background(.clear)

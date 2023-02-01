@@ -9,6 +9,7 @@ import SwiftUI
 import Nuke
 import NukeUI
 import CoreData
+//import UIKit
 
 // TODO: replying to trick:
 // people.map(\.nameComponents).formatted(.list(memberStyle: .name(style:.short), type:.and)
@@ -25,7 +26,8 @@ struct NoteRowView: View {
     var cm:SocketPool = .shared
     @EnvironmentObject var accountState:NosturState
     
-    @ObservedObject var event:Event
+//    @ObservedObject var event:Event
+    var event:Event // TODO: Not sure need ObservedObject or not???
     
     @FetchRequest
     var taggedContacts:FetchedResults<Contact>
@@ -34,7 +36,7 @@ struct NoteRowView: View {
         self.event = event
         let pubkeys = event.contactPubkeys()
         
-        if (pubkeys == nil) {
+        if (1 == 1) || (pubkeys == nil) {
             _taggedContacts = FetchRequest(
                 sortDescriptors: [],
                 predicate: NSPredicate(format: "FALSEPREDICATE")
@@ -391,8 +393,41 @@ struct NoteRowView_Previews: PreviewProvider {
             NoteRowView(event: event1!)
                 .withPreviewEnvironment()
             NoteRowView(event: event2!)
+//                .flip()
                 .withPreviewEnvironment()
             Spacer()
         }
     }
 }
+
+
+
+//struct FlipWrapper<Content: View>: UIViewRepresentable{
+//    //The content to be flipped
+//    @ViewBuilder let content: () -> Content
+//    //Triggers the animation
+//    func makeUIView(context: Context) -> UIView {
+//        //Convert SwiftUI View to UIKit UIView
+//        let view = UIHostingController(rootView: content()).view
+//        view!.transform = CGAffineTransformMakeScale(1, -1)
+//        view!.frame = view!.bounds
+////        view = view!.transform.scaledBy(x: 1, y: -1)
+//        return view!
+//    }
+//    func updateUIView(_ uiView: UIView, context: Context) {
+//        uiView.transform = CGAffineTransformMakeScale(1, -1)
+//        uiView.frame = uiView.bounds
+//    }
+//}
+//
+//
+//extension View {
+//    func flip() -> some View {
+//        modifier(FlipViewModifier())
+//    }
+//}
+//struct FlipViewModifier: ViewModifier {
+//    func body(content: Content) -> some View {
+//        FlipWrapper(content: { content })
+//    }
+//}

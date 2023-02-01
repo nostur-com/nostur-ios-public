@@ -13,21 +13,24 @@ struct ProfilePicView : View {
     
     var pubkey:String
     var contact:Contact?
+    var account:Account?
+    var size:CGFloat? = 50
     
     var body: some View {
+        let picture = contact != nil ? contact!.picture : account?.picture
         
-        if (contact?.picture != nil) { // TODO: is this slow??
+        if (picture != nil) { // TODO: is this slow??
             
-            if (contact!.picture!.prefix(7) == "http://") {
-                Circle().foregroundColor(randomColor(seed: pubkey)).frame(width: 50, height: 50)
+            if (picture!.prefix(7) == "http://") {
+                Circle().foregroundColor(randomColor(seed: pubkey)).frame(width: size, height: size)
             }
             else {
-                LazyImage(url: URL(string: contact!.picture!)) { state in
+                LazyImage(url: URL(string: picture!)) { state in
                     if let image = state.image {
-                        image.frame(width: 50, height: 50).clipShape(Circle())
+                        image.frame(width: size, height: size).clipShape(Circle())
                     }
                     else {
-                        Circle().foregroundColor(randomColor(seed: pubkey)).frame(width: 50, height: 50)
+                        Circle().foregroundColor(randomColor(seed: pubkey)).frame(width: size, height: size)
                     }
                 }
                 .processors([ImageProcessors.Resize(width: 100), ImageProcessors.Circle()])
@@ -50,7 +53,7 @@ struct ProfilePicView : View {
             }
         }
         else {
-            Circle().foregroundColor(randomColor(seed: pubkey)).frame(width: 50, height: 50)
+            Circle().foregroundColor(randomColor(seed: pubkey)).frame(width: size, height: size)
         }
     }
 }

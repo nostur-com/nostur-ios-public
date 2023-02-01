@@ -72,6 +72,7 @@ class SocketPool: WebSocketDelegate, ObservableObject {
         print("🔴🔴🔴🔴🔴🔴🔴🔴 sendMessage DISABLED FOR DEV 🔴🔴🔴🔴🔴🔴")
         print("🔴🔴🔴🔴🔴🔴🔴🔴 sendMessage DISABLED FOR DEV 🔴🔴🔴🔴🔴🔴")
         print("🔴🔴🔴🔴🔴🔴🔴🔴 sendMessage DISABLED FOR DEV 🔴🔴🔴🔴🔴🔴")
+        return
         print("⬆ Sending: \(String(message.message.prefix(260)))")
         for (url, socketClient) in sockets {
             if (!socketClient.isConnected) { socketClient.client.connect() }

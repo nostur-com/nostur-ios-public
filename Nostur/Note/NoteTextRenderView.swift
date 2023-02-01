@@ -37,6 +37,9 @@ struct NoteTextRenderView: View {
     @State var isVisible = false
     
     var disableLinkPreviews = false
+    @State var linkMetadata:LPLinkMetadata? = nil
+    
+//    @State var linkPreview:LPLinkView? = nil
     
     func contact(byPubkey:String?) -> Contact? {
         guard byPubkey != nil else {
@@ -66,17 +69,27 @@ struct NoteTextRenderView: View {
         else {
             for index in tags!.indices {
                 if (tags![index].type == "p") {
-                    let key = try! NIP19(prefix: "npub", hexString: tags![index].pubkey)
-                    if let contact = contact(byPubkey:tags![index].pubkey) {
-                        newText = newText.replacingOccurrences(of: "#[\(index)]", with: "[@\(contact.username)](nostr:\(key.displayString))")
+                    
+                    if (1 == 2) {
+                        // TODO: NIP19 bech32 is very slow, with hundreds of rows it slows down UI noticeably, so disable for now
+                        let key = try! NIP19(prefix: "npub", hexString: tags![index].pubkey)
+                        if let contact = contact(byPubkey:tags![index].pubkey) {
+                            newText = newText.replacingOccurrences(of: "#[\(index)]", with: "[@\(contact.username)](nostr:\(key.displayString))")
+                        }
+                        else {
+                            newText = newText.replacingOccurrences(of: "#[\(index)]", with: "[@\(String(tags![index].pubkey).prefix(5))](nostr:\(key.displayString))")
+                        }
                     }
-                    else {
-                        newText = newText.replacingOccurrences(of: "#[\(index)]", with: "[@\(String(tags![index].pubkey).prefix(5))](nostr:\(key.displayString))")
-                    }
+                    newText = newText.replacingOccurrences(of: "#[\(index)]", with: "[@\(String(tags![index].pubkey).prefix(5))](nostur:p:\(tags![index].pubkey))")
                 }
                 if (tags![index].type == "e") {
-                    let key = try! NIP19(prefix: "note", hexString: tags![index].id)
-                    newText = newText.replacingOccurrences(of: "#[\(index)]", with: "[@\(String(tags![index].id).prefix(10))](nostr:\(key.displayString))")
+                    
+                    if (1 == 2) {
+                        // TODO: NIP19 bech32 is very slow, with hundreds of rows it slows down UI noticeably, so disable for now
+                        let key = try! NIP19(prefix: "note", hexString: tags![index].id)
+                        newText = newText.replacingOccurrences(of: "#[\(index)]", with: "[@\(String(tags![index].id).prefix(10))](nostr:\(key.displayString))")
+                    }
+                    newText = newText.replacingOccurrences(of: "#[\(index)]", with: "[@\(String(tags![index].id).prefix(10))](nostur:e:\(tags![index].id))")
                 }
             }
             do {
@@ -91,54 +104,94 @@ struct NoteTextRenderView: View {
         }
     }
 
-    init(event: Event? = nil, taggedContacts: [Contact] = []) {
-        self.event = event
-        self.taggedContacts = taggedContacts
-        let text = (event?.content) ?? ""
-        self.firstLinkInText = getFirstLinkInText(text)
-        self.renderedText = renderMentions(text)
-    }
+//    init(event: Event? = nil, taggedContacts: [Contact] = []) {
+//        self.event = event
+//        self.taggedContacts = taggedContacts
+//        let text = (event?.content) ?? ""
+//        self.firstLinkInText = getFirstLinkInText(text)
+//        self.renderedText = renderMentions(text)
+//    }
     
     var body: some View {
-        VStack(alignment: .leading) {
-            if (event != nil) && (taggedContacts.count > 0) {
-                Text(renderedText!)
-                    .textSelection(.enabled)
-                    .multilineTextAlignment(TextAlignment.leading)
-                        .font(.system(size: 14))
-                        .foregroundColor(.primary)
-                        .lineSpacing(3)
-                        .padding(.vertical, 5)
-            }
-            else if (taggedContacts.count == 0) {
-                Text(event?.noteText ?? "")
-                    .textSelection(.enabled)
-                    .multilineTextAlignment(TextAlignment.leading)
-                        .font(.system(size: 14))
-                        .foregroundColor(.primary)
-                        .lineSpacing(3)
-                        .padding(.vertical, 5)
-            }
-            else { Text("") }
-            if (firstLinkInText != nil) {
-                if (!disableLinkPreviews) {
-                    LinkPreview(url: URL(string: firstLinkInText!)!, previewIsReady: $previewIsReady)
-                    //                    .aspectRatio(contentMode: .fit)
-                        .frame(height: 300)
-                }
-            }
+        if (event != nil) {
+            Text(event!.noteText)
         }
-        .onAppear {
-            if (firstLinkInText != nil) && (previewIsReady) {
-                isVisible = true
-            }
-        }
-        .onChange(of: previewIsReady) { newValue in
-            if (newValue == true && isVisible != true) {
-                isVisible = true
-            }
-        }
+        Text("empty note")
     }
+    
+//    var body: some View {
+//        VStack(alignment: .leading) {
+//            if (event != nil) && (taggedContacts.count > 0) {
+//                Text(renderedText!)
+//                    .textSelection(.enabled)
+//                    .multilineTextAlignment(TextAlignment.leading)
+//                        .font(.system(size: 14))
+//                        .foregroundColor(.primary)
+//                        .lineSpacing(3)
+//                        .padding(.vertical, 5)
+//            }
+//            else if (taggedContacts.count == 0) {
+//                Text(event?.noteText ?? "")
+//                    .textSelection(.enabled)
+//                    .multilineTextAlignment(TextAlignment.leading)
+//                        .font(.system(size: 14))
+//                        .foregroundColor(.primary)
+//                        .lineSpacing(3)
+//                        .padding(.vertical, 5)
+//            }
+//            else { Text("") }
+////            if (linkPreview != nil) {
+////                linkPreview!
+////                    .frame(height: 300)
+////            }
+//            if (firstLinkInText != nil) {
+//                if (!disableLinkPreviews) {
+//                    if (linkMetadata != nil) {
+//                        LinkPreview(url: URL(string: firstLinkInText!)!, metadata: linkMetadata)
+//                    }
+//                    else {
+//                        LinkPreview(url: URL(string: firstLinkInText!)!)
+//                    }
+//                    //                    .aspectRatio(contentMode: .fit)
+////                        .frame(height: 300)
+//                }
+//            }
+//        }
+//        .onAppear {
+//            if (firstLinkInText != nil) && (previewIsReady) {
+//                isVisible = true
+//            }
+//        }
+//        .onChange(of: previewIsReady) { newValue in
+//            if (newValue == true && isVisible != true) {
+//                isVisible = true
+//            }
+//        }
+//        .task {
+//            if (firstLinkInText != nil) {
+//                let url = URL(string: firstLinkInText!)!
+//                let metadata = LinkPreviewCache.shared.retrieveObject(at: url)
+//                if (metadata != nil) {
+//                    self.linkMetadata = metadata
+//                }
+//                else {
+//                    let provider = LPMetadataProvider()
+//                    do {
+//
+//                        let metaData = try await provider.startFetchingMetadata(for: url)
+//                        if (metadata != nil) {
+//                            LinkPreviewCache.shared.setObject(for: url, value: metadata!)
+//                            linkMetadata = metadata
+//                        }
+//                    }
+//                    catch {
+//                        print("🫂🫂🫂")
+//                        print(error)
+//                    }
+//                }
+//            }
+//        }
+//    }
 }
 
 struct NoteTextRenderView_Previews: PreviewProvider {

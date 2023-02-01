@@ -29,6 +29,7 @@ struct ContentView: View {
     @State var selectedTab = "MainTimeline"
     @State var navigationPath = NavigationPath()
     @AppStorage("showReplies") var showReplies = true
+    @Binding var showMenu:Bool
     
     var body: some View {
         VStack {
@@ -37,7 +38,7 @@ struct ContentView: View {
                     VStack {
                         
                         let followingPubkeys = [String](ns.followingPublicKeys)
-                        TimelineFRControllerView(followingPubkeys: followingPubkeys, showReplies:showReplies)
+                        ReversedTimelineFRControllerView(followingPubkeys: followingPubkeys, showReplies:showReplies, showMenu: $showMenu)
 //                        MainTimelineView(followingPubkeys: followingPubkeys, showReplies: showReplies)
 //                        NaturalTimelineView(showReplies: true)
                     }
@@ -146,8 +147,10 @@ private func processEvent() async { /* a lot of work */ } // Implicitly nonisola
 
 struct ContentView_Previews: PreviewProvider {
     
+    @State static var showMenu = false
+    
     static var previews: some View {
-        ContentView()
+        ContentView(showMenu: $showMenu)
             .withPreviewEnvironment()
     }
 }

@@ -36,7 +36,7 @@ struct NoteRow: View {
         self.event = event
         let pubkeys = event.contactPubkeys()
         
-        if (pubkeys == nil) {
+        if (1 == 1) || (pubkeys == nil) {
             _taggedContacts = FetchRequest(
                 sortDescriptors: [],
                 predicate: NSPredicate(format: "FALSEPREDICATE")
