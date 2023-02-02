@@ -73,15 +73,19 @@ class SocketPool: WebSocketDelegate, ObservableObject {
 //        print("🔴🔴🔴🔴🔴🔴🔴🔴 sendMessage DISABLED FOR DEV 🔴🔴🔴🔴🔴🔴")
 //        print("🔴🔴🔴🔴🔴🔴🔴🔴 sendMessage DISABLED FOR DEV 🔴🔴🔴🔴🔴🔴")
 //        return
-        print("⬆ Sending: \(String(message.message.prefix(260)))")
         for (url, socketClient) in sockets {
             if (!socketClient.isConnected) { socketClient.client.connect() }
             
-            if message.type == .REQ || message.type == .CLOSE { // REQ AND CLOSE IS FOR ALL RELAYS
+            if message.type == .REQ && socketClient.read { // REQ FOR ALL READ RELAYS
+                print("⬇️⬇️ REQUESTING: \(String(message.message.prefix(260)))")
+                socketClient.client.write(string: message.message)
+            }
+            else if  message.type == .CLOSE { // CLOSE FOR ALL RELAYS
+                print("🔚🔚 CLOSE: \(String(message.message.prefix(260)))")
                 socketClient.client.write(string: message.message) { }
             }
             else if message.type == .EVENT && socketClient.write { // EVENT IS ONLY FOR WRITE RELAYS
-                print("🟢 PUBLISHING TO \(url): \(message.message)")
+                print("⬆⬆⬆ PUBLISHING TO \(url): \(message.message)")
                 socketClient.client.write(string: message.message) { }
             }
         }
@@ -98,7 +102,7 @@ class SocketPool: WebSocketDelegate, ObservableObject {
                 socketClient.isConnected = false
                 print("websocket is disconnected: \(reason) with code: \(code)")
             case .text(let string):
-//                print("💬 Received text: \(string)")
+                print("💬 Received text: \(string)")
                 MessageParser.shared.socketReceivedMessage(text: string)
             case .binary(let data):
                 print("Received data: \(data.count)")
@@ -112,6 +116,7 @@ class SocketPool: WebSocketDelegate, ObservableObject {
                 break
             case .cancelled:
                 socketClient.isConnected = false
+                print("websocket cancelled")
             case .error(let error):
                 socketClient.isConnected = false
                 print(error!)

@@ -48,8 +48,8 @@ struct NoteDetail: View {
     @EnvironmentObject var sp:SocketPool
     @EnvironmentObject var ns:NosturState
     
-    @ObservedObject var event:Event
-//    var event:Event // TODO: Need @ObservedObject here or not?
+//    @ObservedObject var event:Event
+    var event:Event // TODO: Need @ObservedObject here or not?
     
     @FetchRequest
     var taggedContacts:FetchedResults<Contact>
@@ -244,7 +244,7 @@ struct NoteDetail: View {
                 .onAppear {
                     proxy.scrollTo("NoteAnchorID")
                 }
-                .ignoresSafeArea(edges: .top)
+//                .ignoresSafeArea(edges: .top)
             }
         }
         .onAppear {

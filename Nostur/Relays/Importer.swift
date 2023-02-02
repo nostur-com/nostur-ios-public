@@ -106,6 +106,7 @@ class Importer {
                 ThreadWarning.which("importEvents")
                 if (context.hasChanges) {
                     try context.save() // TODO: is this the slowdown??
+                    print("✅✅✅ context.save() ✅✅✅")
                 }
                 
                 self.logger.debug("Successfully inserted data.")

@@ -150,14 +150,22 @@ extension AccountView {
             let keys = NKeys(privateKeyHex: account.privateKey!)
             
             var event = NEvent(content: setMetadataContent)
-            event = try! event.sign(keys)
-            
-            print(event.eventJson())
-            print(event.wrappedEventJson())
-            
-            // broadcast to relays
-            let message = ClientMessage(type: .EVENT, message: event.wrappedEventJson())
-            cm.sendMessage(message)
+            do {
+                event = try event.sign(keys)
+                
+                print(event.eventJson())
+                print(event.wrappedEventJson())
+                
+                _ = Event.saveEvent(event: event, context: viewContext)
+                try viewContext.save()
+                
+                // broadcast to relays
+                let message = ClientMessage(type: .EVENT, message: event.wrappedEventJson())
+                cm.sendMessage(message)
+            }
+            catch {
+                print("🔴🔴🔴🔴 Could not sign/save/broadcast event 🔴🔴🔴🔴")
+            }
         }
     }
 }

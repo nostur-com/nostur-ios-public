@@ -32,6 +32,8 @@ struct NoteRowView: View {
     @FetchRequest
     var taggedContacts:FetchedResults<Contact>
     
+    @State var visible = false
+    
     init(event: Event) {
         self.event = event
         let pubkeys = event.contactPubkeys()
@@ -52,11 +54,10 @@ struct NoteRowView: View {
     
     var body: some View {
         
-        
         VStack {
 //        VStack(spacing:2) { // A TW EET
                         
-//            NavigationLink(value: event, label: {
+            NavigationLink(value: event, label: {
                 VStack (alignment: .leading) { // Vstack for retweeted thread
                     HStack(alignment: .top) { // Tweet
                         NavigationLink(value: event, label: {
@@ -80,25 +81,28 @@ struct NoteRowView: View {
                         
                         VStack(alignment:.leading) {// Tweet container
                             HStack { // name + reply + context menu
-                                NavigationLink(value: event, label: {
-                                    VStack(alignment: .leading) { // Name + menu "replying to"
-                                        HStack(spacing:2) {
-                                            Text(event.contact?.authorName ?? "Anon") // Name
-                                                .font(.system(size: 14))
-                                                .foregroundColor(.primary)
-                                                .fontWeight(.bold)
-                                                .lineLimit(1)
-                                            
-                                            Text("@\(event.contact?.username ?? event.authorKey) · \(event.ago)") //
-                                                .font(.system(size: 14))
-                                                .foregroundColor(.secondary)
-                                        }
+                                if (visible) {
                                     
-                                        ReplyingToFragment(event: event)
-                                    }
-                                })
+                                    NavigationLink(value: event, label: {
+                                        VStack(alignment: .leading) { // Name + menu "replying to"
+                                            HStack(spacing:2) {
+                                                Text(event.contact?.authorName ?? "Anon") // Name
+                                                    .font(.system(size: 14))
+                                                    .foregroundColor(.primary)
+                                                    .fontWeight(.bold)
+                                                    .lineLimit(1)
+                                                
+                                                Text("@\(event.contact?.username ?? event.authorKey) · \(event.ago)") //
+                                                    .font(.system(size: 14))
+                                                    .foregroundColor(.secondary)
+                                            }
+                                            
+                                            ReplyingToFragment(event: event)
+                                        }
+                                    })
+                                }
                                 Spacer()
-                            }
+                            }.frame(height: 40).border(.red)
                             
                             NavigationLink(value: event, label: {
                                 VStack(alignment: .leading) {
@@ -111,15 +115,16 @@ struct NoteRowView: View {
                                 }
                             })
 
-                           FooterFragment(event: event)
-                                .frame(height: 25)
+                           HStack {
+                               if (visible) { FooterFragment(event: event) } 
+                           }  .frame(height: 25)
 //                            FooterFragment(event:event)
 //                                .frame(height: 30)
                         }
 //                        .padding(.trailing, 10).padding(.bottom, 5)
                     }
                 }
-//            })
+            })
 //            .frame(maxHeight: 1900)
             Divider()
         }

@@ -11,6 +11,14 @@ import Combine
 
 struct ReversedTimeline: View {
     
+    // MARK: PAGINATION
+    @State var firstPageEvents: Slice<FetchedResults<Event>>? = nil
+    @State var pages: [Slice<FetchedResults<Event>>] = []
+    let pageSize = 30.0
+    
+    
+    
+    // MARK: FIRST PAGE: KEEP SCROLL POSITION AFTER NEW EVENTS LOADED
     @Namespace var SCROLL_ANCHOR
     
     @State var scrollOffset = CGFloat.zero
@@ -20,6 +28,7 @@ struct ReversedTimeline: View {
     @State var oldScrollOffset = CGFloat.zero
     @State var oldContentHeight = CGFloat.zero
     
+
     @State var isRefreshing = true
     @State var isLoading = true
     

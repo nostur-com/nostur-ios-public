@@ -16,16 +16,18 @@ struct NosturTabsView: View {
     
     @Binding var selectedTab:String
     
-    @State var mainTimelinePath = NavigationPath()
-    @State var searchPath = NavigationPath()
-    @State var accountsPath = NavigationPath()
-    @State var notificationsPath = NavigationPath()
-    @State var messagesPath = NavigationPath()
+    @Binding var timelinePath:NavigationPath
+    @Binding var searchPath:NavigationPath
+    @Binding var accountsPath:NavigationPath
+    @Binding var bookmarksPath:NavigationPath
+    @Binding var notificationsPath:NavigationPath
+    @Binding var messagesPath:NavigationPath
+    @Binding var configurationPath:NavigationPath
     
     var body: some View {
         VStack {
             TabView(selection: $selectedTab) {
-                NavigationStack(path: $mainTimelinePath) {
+                NavigationStack(path: $timelinePath) {
                     if (ns.followingPublicKeys.count != 0) {
                         MainTimelineView(showReplies: true, followingPubkeys: ns.followingPublicKeys, showMenu: $showMenu)
                             .withNavigationDestinations()
@@ -33,9 +35,9 @@ struct NosturTabsView: View {
                         Text(" Ey yo")
                     }
                 }
-                .tabItem { Image(systemName: "house.fill") }.tag("MainTimeline")
+                .tabItem { Image(systemName: "house.fill") }.tag("Timeline")
                 
-                NavigationStack {
+                NavigationStack(path: $accountsPath) {
                     AccountListView()
                         .withNavigationDestinations()
                     Spacer()
@@ -44,7 +46,7 @@ struct NosturTabsView: View {
                     Image(systemName: "person.badge.key.fill")
                 }.tag("Accounts")
                 
-                NavigationStack {
+                NavigationStack(path: $bookmarksPath) {
                     if (ns.account != nil) {
                         BookmarksView(account: ns.account!)
                             .withNavigationDestinations()
@@ -57,7 +59,7 @@ struct NosturTabsView: View {
                 .tabItem { Image(systemName: "bookmark.circle") }
                 .tag("Bookmarks")
                 
-                NavigationStack {
+                NavigationStack(path: $configurationPath) {
                     ConfigurationView()
                         .withNavigationDestinations()
                     Spacer()
@@ -74,8 +76,17 @@ struct NosturTabsView: View {
 struct ContentView_Previews: PreviewProvider {
     @State static var showMenu = false
     @State static var selectedTab = "MainTimeline"
+    
+    @State static var timelinePath = NavigationPath()
+    @State static var searchPath = NavigationPath()
+    @State static var accountsPath = NavigationPath()
+    @State static var bookmarksPath = NavigationPath()
+    @State static var notificationsPath = NavigationPath()
+    @State static var messagesPath = NavigationPath()
+    @State static var configurationPath = NavigationPath()
+    
     static var previews: some View {
-        NosturTabsView(showMenu: $showMenu, selectedTab: $selectedTab)
+        NosturTabsView(showMenu: $showMenu, selectedTab: $selectedTab, timelinePath: $timelinePath, searchPath: $searchPath, accountsPath: $accountsPath, bookmarksPath: $bookmarksPath, notificationsPath: $notificationsPath, messagesPath: $messagesPath, configurationPath: $configurationPath)
             .withPreviewEnvironment()
     }
 }
