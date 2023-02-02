@@ -31,7 +31,7 @@
 		1F330981298970F000D4D8CF /* AppView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F330980298970F000D4D8CF /* AppView.swift */; };
 		1F3309832989819700D4D8CF /* Maintenance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3309822989819700D4D8CF /* Maintenance.swift */; };
 		1F330985298A57C700D4D8CF /* ReversedScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F330984298A57C700D4D8CF /* ReversedScrollView.swift */; };
-		1F33098A298A909100D4D8CF /* ReversedTimeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F330989298A909100D4D8CF /* ReversedTimeline.swift */; };
+		1F33098A298A909100D4D8CF /* Timeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F330989298A909100D4D8CF /* Timeline.swift */; };
 		1F33098C298AEE5D00D4D8CF /* View+withNavigationDestinations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F33098B298AEE5D00D4D8CF /* View+withNavigationDestinations.swift */; };
 		1F37571629672AD0007D210A /* DummyData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F37571529672AD0007D210A /* DummyData.swift */; };
 		1F3C3F942975347F00E813FD /* ContactProfileRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3C3F932975347F00E813FD /* ContactProfileRowView.swift */; };
@@ -126,7 +126,7 @@
 		1F330980298970F000D4D8CF /* AppView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppView.swift; sourceTree = "<group>"; };
 		1F3309822989819700D4D8CF /* Maintenance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Maintenance.swift; sourceTree = "<group>"; };
 		1F330984298A57C700D4D8CF /* ReversedScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReversedScrollView.swift; sourceTree = "<group>"; };
-		1F330989298A909100D4D8CF /* ReversedTimeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReversedTimeline.swift; sourceTree = "<group>"; };
+		1F330989298A909100D4D8CF /* Timeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Timeline.swift; sourceTree = "<group>"; };
 		1F33098B298AEE5D00D4D8CF /* View+withNavigationDestinations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+withNavigationDestinations.swift"; sourceTree = "<group>"; };
 		1F37571529672AD0007D210A /* DummyData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DummyData.swift; sourceTree = "<group>"; };
 		1F3C3F932975347F00E813FD /* ContactProfileRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactProfileRowView.swift; sourceTree = "<group>"; };
@@ -229,13 +229,14 @@
 		1F25B394297A4FB400A8A5A7 /* Screens */ = {
 			isa = PBXGroup;
 			children = (
+				1F8B0A01298BDA9D00736B9A /* PaginationTest.swift */,
 				1FB448C42965F3D000038671 /* NosturTabsView.swift */,
 				1F7A63C029711CCC00D8B2CB /* Playground.swift */,
 				1F5F5A682984315900DED8F4 /* TimelineView.swift */,
 				1F5F5A5D2983FF9D00DED8F4 /* EventsWindow.swift */,
 				1FDFEBB6297ED78100511AA0 /* ConfigurationView.swift */,
 				1F1ABC482981718700D03FA9 /* BookmarksView.swift */,
-				1F330989298A909100D4D8CF /* ReversedTimeline.swift */,
+				1F330989298A909100D4D8CF /* Timeline.swift */,
 			);
 			path = Screens;
 			sourceTree = "<group>";
@@ -326,9 +327,7 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
-				1F8B0A01298BDA9D00736B9A /* PaginationTest.swift */,
 				1F330984298A57C700D4D8CF /* ReversedScrollView.swift */,
-				1F33096429895D1600D4D8CF /* SidebarStack.swift */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1FB448BB2965F3D000038671 /* Products */,
 				1F1C31E52969B75500E60BEF /* Frameworks */,
@@ -362,6 +361,7 @@
 				1F987EB029804AA4001E352E /* NewNoteView.swift */,
 				1FB448BD2965F3D000038671 /* NosturApp.swift */,
 				1F3309622989598600D4D8CF /* NosturRootMenuView.swift */,
+				1F33096429895D1600D4D8CF /* SidebarStack.swift */,
 				1F330980298970F000D4D8CF /* AppView.swift */,
 				1F3C3F9529755D4C00E813FD /* NosturState.swift */,
 				1FD49732297FCB5E0084F14E /* PreviewHelper.swift */,
@@ -519,7 +519,7 @@
 				1F4773A5296CA72A0049454B /* AddReadOnlyAccountView.swift in Sources */,
 				1F8B0A02298BDA9D00736B9A /* PaginationTest.swift in Sources */,
 				1F5F5A692984315900DED8F4 /* TimelineView.swift in Sources */,
-				1F33098A298A909100D4D8CF /* ReversedTimeline.swift in Sources */,
+				1F33098A298A909100D4D8CF /* Timeline.swift in Sources */,
 				1F4773A9296D85B70049454B /* AccountListView.swift in Sources */,
 				1FB62D0E296FFF1400A0055B /* RelayEditView.swift in Sources */,
 				1FC38B9E2972DD5A004769F8 /* Contact+CoreDataProperties.swift in Sources */,
@@ -726,7 +726,6 @@
 				INFOPLIST_FILE = Nostur/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Nostur;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -772,7 +771,6 @@
 				INFOPLIST_FILE = Nostur/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Nostur;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

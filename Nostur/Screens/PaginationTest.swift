@@ -87,7 +87,7 @@ struct Page: View {
     var events:Slice<FetchedResults<Event>>
     
     var body: some View {
-        VStack { 
+        VStack {
             ForEach(events) { event in
                 NoteRowView(event: event)
             }

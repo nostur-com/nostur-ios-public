@@ -9,12 +9,12 @@ import SwiftUI
 import CoreData
 import Combine
 
-struct ReversedTimeline: View {
-    
+struct Timeline: View {
+    @Namespace var scrollSpace
     // MARK: PAGINATION
     @State var firstPageEvents: Slice<FetchedResults<Event>>? = nil
     @State var pages: [Slice<FetchedResults<Event>>] = []
-    let pageSize = 30.0
+    let pageSize = 19.0
     
     
     
@@ -24,6 +24,7 @@ struct ReversedTimeline: View {
     @State var scrollOffset = CGFloat.zero
     @State var anchorOffset = CGFloat.zero
     @State var contentHeight = CGFloat.zero
+    @State var scrollCounter = 0
     
     @State var oldScrollOffset = CGFloat.zero
     @State var oldContentHeight = CGFloat.zero
@@ -57,11 +58,11 @@ struct ReversedTimeline: View {
         self.account = account
         
         self.scrollOffsetPublisher = scrollOffsetSubject
-            .debounce(for: 1, scheduler: RunLoop.main)
+            .debounce(for: 0.25, scheduler: RunLoop.main)
                     .eraseToAnyPublisher()
         
         self.contentHeightPublisher = contentHeightSubject
-            .debounce(for: 1, scheduler: RunLoop.main)
+            .debounce(for: 0.25, scheduler: RunLoop.main)
                     .eraseToAnyPublisher()
     }
     
@@ -94,54 +95,78 @@ struct ReversedTimeline: View {
         
         ZStack {
             ScrollView {
-                ZStack {
-                    VStack { // LazyVStack here = STUTTER, SO VSTACK FOR NOW
-                        ForEach(events) { event in
-                            NoteRowView(event: event)
-//                            VStack {
-//                                NoteRowView(event: event)
-//                            }.id(event.id)
+                ScrollViewReader { proxy in
+                    ZStack { // ZSTACK WITH ANCHOR, ONLY FOR FIRST PAGE
+                        VStack {
+                            VStack {
+                                if (firstPageEvents != nil) {
+                                    ForEach(firstPageEvents!) { event in
+                                        NoteRowView(event: event)
+                                    }
+                                }
+                            }
+                            .background(GeometryReader { geo in
+                                Color.clear.preference(
+                                    key: ContentHeightKey.self,
+                                    value: geo.size.height
+                                )
+                            })
+                            
+                            // REMAINING PAGES
+                            LazyVStack {
+                                ForEach(pages, id:\.startIndex) { events in
+                                    Page(events: events)
+                                        .id(events.last)
+                                }
+                            }
+                        }
+                        VStack(spacing: 0) {
+                            Rectangle().foregroundColor(.yellow).opacity(0.3).frame(width:370, height: anchorOffset < 0 ? 0 : anchorOffset).foregroundColor(.yellow)
+                            Color.clear.frame(width: 370, height: 0)
+                                .id(SCROLL_ANCHOR)
+                            Spacer()
                         }
                     }
-                    VStack(spacing: 0) {
-                        Rectangle().foregroundColor(.yellow).opacity(0.1).frame(width:370, height: anchorOffset < 0 ? 0 : anchorOffset).foregroundColor(.yellow)
-                        Color.clear.frame(width: 370, height: 0)
-                            .id(SCROLL_ANCHOR)
-                        Spacer()
+                    .background(GeometryReader { geo in
+                        Color.clear.preference(
+                            key: ViewOffsetKey.self,
+                            value: -geo.frame(in: .named(scrollSpace)).minY
+                        )
+                    })
+                    .onPreferenceChange(ViewOffsetKey.self) { offset in
+                        scrollOffsetSubject.send(offset)
+                    }
+                    .onPreferenceChange(ContentHeightKey.self) { height in
+                        if (1 == 1) { // TODO: IF did receive or change events. Else height cannot be changed.
+                            contentHeightSubject.send(height)
+                        }
+                    }
+                    // This will work with items last I think????
+                    .onChange(of: events.first) { newFirstItem in
+//                        oldContentHeight = contentHeight
+//                        oldScrollOffset = scrollOffset
+                    }
+                    .onChange(of: scrollCounter) { newScrollCounter in
+                        anchorOffset = contentHeight - oldContentHeight + oldScrollOffset
+                        proxy.scrollTo(SCROLL_ANCHOR, anchor: .top)
+                    }
+                    .onChange(of: scrollOffset) { newScrollOfset in
+                        anchorOffset = newScrollOfset // KEEP SCROLL ANCHOR IN SYNC WITH SCROLL OFFSET
+                    }
+                    .onReceive(scrollOffsetPublisher) { offset in
+                        scrollOffset = offset
+                    }
+                    .onReceive(contentHeightPublisher) { height in
+                        contentHeight = height
                     }
                 }
-                .background(GeometryReader { geo in
-                    Color.clear.preference(
-                        key: ViewOffsetKey.self,
-                        value: -geo.frame(in: .named("scroll")).origin.y
-                    )
-                    .preference(
-                        key: ContentHeightKey.self,
-                        value: geo.size.height
-                    )
-                })
-                .onPreferenceChange(ViewOffsetKey.self) { offset in
-                    scrollOffsetSubject.send(offset)
-                }
-                .onPreferenceChange(ContentHeightKey.self) { height in
-                    if (1 == 2) { // TODO: IF did receive or change events. Else height cannot be changed.
-                        contentHeightSubject.send(height)
-                    }
-                }
-                // This will work with items last I think????
-//                .onChange(of: items) { newItems in
-//                    anchorOffset = contentHeight - oldContentHeight + oldScrollOffset
-//                    proxy.scrollTo(SCROLL_ANCHOR, anchor: .top)
-//                }
-                .onChange(of: scrollOffset) { newScrollOfset in
-                    anchorOffset = newScrollOfset // KEEP SCROLL ANCHOR IN SYNC WITH SCROLL OFFSET
-                }
-                .onReceive(scrollOffsetPublisher, perform: { offset in
-                    scrollOffset = offset
-                })
-                .onReceive(contentHeightPublisher, perform: { height in
-                    contentHeight = height
-                })
+            }
+            .coordinateSpace(name: scrollSpace)
+            .onAppear {
+                setupPages()
+            }
+            .onChange(of: events.first) { newEvent in
+//                setupPages()
             }
             .safeAreaInset(edge: .top) {
                 VStack(alignment: .center) {
@@ -163,13 +188,15 @@ struct ReversedTimeline: View {
                         Text("LRD \(d(lastReadDate).description)")
                         Spacer()
                     }
-                    ControlGroup {
+                    HStack {
+                        Button { setupPages() } label: { Text("Setup pages") }
                         Text("\(unreadCount)")
                         
                         Button { importNotes() } label: { Text("Import") }
                         Button { fetchEventsFromFollowing(amount:500) } label: { Text("Fetch & parse") }
-                        
-                    }
+                    }.buttonStyle(.borderedProminent)
+                        .buttonBorderShape(.roundedRectangle)
+                        .tint(.cyan)
                     
                 }.background(.regularMaterial)
             }
@@ -271,6 +298,36 @@ struct ReversedTimeline: View {
     }
 }
 
+// MARK: PAGINATION
+extension Timeline {
+
+    func setupPages() {
+        
+        oldContentHeight = contentHeight
+        oldScrollOffset = scrollOffset
+        
+        let pageCount = Int(floor(Double(events.count) / pageSize))
+        
+        // First page
+        let eventsOnFirstPage = events.count % Int(pageSize)
+        firstPageEvents = events[0..<eventsOnFirstPage]
+        
+        // All other pages
+        for loopCount in 0..<pageCount {
+            
+            let end = events.count - (loopCount * Int(pageSize)) // 153 - (0 * 30)
+            let start = end - Int(pageSize)         // end - 30 = 123
+            
+            let eventsRange = events[start..<end]
+            
+            pages.insert(eventsRange, at: 0)
+        }
+        
+        scrollCounter = scrollCounter + 1
+    }
+
+}
+
 struct ViewOffsetKey: PreferenceKey {
     typealias Value = CGFloat
     static var defaultValue = CGFloat.zero
@@ -287,7 +344,7 @@ struct ContentHeightKey: PreferenceKey {
   }
 }
 
-struct MainTimelineView: View {
+struct TimelineWrapper: View {
     
     // Maybe put this code no longer needs to be in parent, because of the dynamic predicate problem has been solved.
     
@@ -309,7 +366,7 @@ struct MainTimelineView: View {
             ? NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId != nil", followingPubkeys)
             : NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil", followingPubkeys)
         
-        fr.fetchLimit = 80 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW
+        fr.fetchLimit = 250 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         
         _events = FetchRequest(fetchRequest: fr)
@@ -317,7 +374,7 @@ struct MainTimelineView: View {
     
     var body: some View {
         if (ns.account != nil) {
-            ReversedTimeline(events:events, account: ns.account!, showMenu: $showMenu)
+            Timeline(events:events, account: ns.account!, showMenu: $showMenu)
         }
         else {
             Text("Please set up account first")
@@ -327,7 +384,7 @@ struct MainTimelineView: View {
     
 }
 
-extension ReversedTimeline {
+extension Timeline {
     
     private func importNotes() {
         Task { await Importer.shared.importEvents() }
@@ -349,46 +406,13 @@ extension ReversedTimeline {
     }
 }
 
-struct d {
-    var t:Int64?
-    
-    init(_ t:Int64? = nil) {
-        self.t = t
-    }
-    
-    init(_ t:NTimestamp? = nil) {
-        if (t != nil) {
-            self.t = Int64(t!.timestamp)
-        }
-    }
-    
-    init(_ t:Int) {
-        self.t = Int64(t)
-    }
-    
-    init(_ t:Int? = nil) {
-        if (t != nil) {
-            self.t = Int64(t!)
-        }
-    }
-    
-    var description:String {
-        get {
-            if (t == nil) { return "?" }
-            return Date(timeIntervalSince1970: TimeInterval(t!)).formatted(.dateTime.hour().minute().second())
-        }
-    }
-}
-
 struct ReversedTimeline_Previews: PreviewProvider {
-    
     @State static var showMenu = true
-    
     static var previews: some View {
         
         let pubkeys = Set(["1833ee04459feb2ca4ae690d5f31269ad488c69e5fe903a42b532c677c4a8170","84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240","3f770d65d3a764a9c5cb503ae123e62ec7598ad035d836e2a810f3877a745b24"])
         
-        MainTimelineView(showReplies:true, followingPubkeys: pubkeys, showMenu: $showMenu)
+        TimelineWrapper(showReplies:true, followingPubkeys: pubkeys, showMenu: $showMenu)
             .withPreviewEnvironment()
         
     }

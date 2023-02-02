@@ -29,7 +29,7 @@ struct NosturTabsView: View {
             TabView(selection: $selectedTab) {
                 NavigationStack(path: $timelinePath) {
                     if (ns.followingPublicKeys.count != 0) {
-                        MainTimelineView(showReplies: true, followingPubkeys: ns.followingPublicKeys, showMenu: $showMenu)
+                        TimelineWrapper(showReplies: true, followingPubkeys: ns.followingPublicKeys, showMenu: $showMenu)
                             .withNavigationDestinations()
                     } else {
                         Text(" Ey yo")

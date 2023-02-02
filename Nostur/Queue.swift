@@ -125,3 +125,35 @@ struct ThreadWarning {
 //        return "\(file):\(line) : \(function)"
 //    }
 }
+
+
+struct d {
+    var t:Int64?
+    
+    init(_ t:Int64? = nil) {
+        self.t = t
+    }
+    
+    init(_ t:NTimestamp? = nil) {
+        if (t != nil) {
+            self.t = Int64(t!.timestamp)
+        }
+    }
+    
+    init(_ t:Int) {
+        self.t = Int64(t)
+    }
+    
+    init(_ t:Int? = nil) {
+        if (t != nil) {
+            self.t = Int64(t!)
+        }
+    }
+    
+    var description:String {
+        get {
+            if (t == nil) { return "?" }
+            return Date(timeIntervalSince1970: TimeInterval(t!)).formatted(.dateTime.hour().minute().second())
+        }
+    }
+}

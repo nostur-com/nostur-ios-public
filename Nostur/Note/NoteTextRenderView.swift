@@ -6,7 +6,29 @@
 //
 
 import SwiftUI
+
+
+import UIKit
 import LinkPresentation
+
+
+@MainActor
+struct LinkView: UIViewRepresentable {
+    typealias UIViewType = LPLinkView
+    
+    var metadata: LPLinkMetadata?
+    
+    @MainActor
+    func makeUIView(context: Context) -> LPLinkView {
+        guard let metadata = metadata else { return LPLinkView() }
+        let linkView = LPLinkView(metadata: metadata)
+        return linkView
+    }
+
+    func updateUIView(_ uiView: LPLinkView, context: Context) {
+
+    }
+}
 
 
 // TODO: RESEARCH SWIFT USER GENERATED CONTEXT SANITIZING ETC.
@@ -33,11 +55,14 @@ struct NoteTextRenderView: View {
     var taggedContacts:[Contact]
     var renderedText:AttributedString? = nil
     var firstLinkInText:String? = nil
-    @State var previewIsReady = false
-    @State var isVisible = false
+//    @State var previewIsReady = false
     
-    var disableLinkPreviews = false
-    @State var linkMetadata:LPLinkMetadata? = nil
+    @State private var metadata: LPLinkMetadata?
+    
+//    @State var isVisible = false
+    
+//    var disableLinkPreviews = false
+//    @State var linkMetadata:LPLinkMetadata? = nil
     
 //    @State var linkPreview:LPLinkView? = nil
     
@@ -137,23 +162,38 @@ struct NoteTextRenderView: View {
                         .padding(.vertical, 5)
             }
             else { Text("") }
+            
+            if (1 == 2 && firstLinkInText != nil) {
+//                LinkPreview(url: URL(string:firstLinkInText!)!, previewIsReady: $previewIsReady)
+                VStack {
+                            if metadata != nil {
+                                LinkView(metadata: metadata!)
+                            } else {
+                                ProgressView()
+                            }
+                        }
+                        .onAppear(perform: fetchMetadata)
+            }
+            
 //            if (linkPreview != nil) {
 //                linkPreview!
 //                    .frame(height: 300)
 //            }
-            if (firstLinkInText != nil) {
-                if (!disableLinkPreviews) {
-                    if (linkMetadata != nil) {
-                        LinkPreview(url: URL(string: firstLinkInText!)!, metadata: linkMetadata)
-                    }
-                    else {
-                        LinkPreview(url: URL(string: firstLinkInText!)!)
-                    }
-                    //                    .aspectRatio(contentMode: .fit)
-//                        .frame(height: 300)
-                }
-            }
+//            if (firstLinkInText != nil) {
+//                if (!disableLinkPreviews) {
+//                    if (linkMetadata != nil) {
+//                        LinkPreview(url: URL(string: firstLinkInText!)!, metadata: linkMetadata)
+//                    }
+//                    else {
+//                        LinkPreview(url: URL(string: firstLinkInText!)!)
+//                    }
+//                    //                    .aspectRatio(contentMode: .fit)
+////                        .frame(height: 300)
+//                }
+//            }
         }
+        
+        
 //        .onAppear {
 //            if (firstLinkInText != nil) && (previewIsReady) {
 //                isVisible = true
@@ -164,30 +204,45 @@ struct NoteTextRenderView: View {
 //                isVisible = true
 //            }
 //        }
-        .task {
-            if (firstLinkInText != nil) {
-                let url = URL(string: firstLinkInText!)!
-                let metadata = LinkPreviewCache.shared.retrieveObject(at: url)
-                if (metadata != nil) {
-                    self.linkMetadata = metadata
-                }
-                else {
-                    let provider = LPMetadataProvider()
-//                    do {
-
-                        if let metadata = try? await provider.startFetchingMetadata(for: url) {
-                            LinkPreviewCache.shared.setObject(for: url, value: metadata)
-                            DispatchQueue.main.async {
-                                linkMetadata = metadata
-                            }
-                        }
-//                    }
-//                    catch {
-//                        print("🫂🫂🫂")
-//                        print(error)
-//                    }
-                }
-            }
+//        .task {
+//            if (firstLinkInText != nil) {
+//                let url = URL(string: firstLinkInText!)!
+//                let metadata = LinkPreviewCache.shared.retrieveObject(at: url)
+//                if (metadata != nil) {
+//                    self.linkMetadata = metadata
+//                }
+//                else {
+//                    let provider = LPMetadataProvider()
+////                    do {
+//
+//                        if let metadata = try? await provider.startFetchingMetadata(for: url) {
+//                            LinkPreviewCache.shared.setObject(for: url, value: metadata)
+//                            DispatchQueue.main.async {
+//                                linkMetadata = metadata
+//                            }
+//                        }
+////                    }
+////                    catch {
+////                        print("🫂🫂🫂")
+////                        print(error)
+////                    }
+//                }
+//            }
+//        }
+    }
+    
+    private func fetchMetadata() {
+        let provider = LPMetadataProvider()
+        let url = URL(string: firstLinkInText!)!
+        provider.startFetchingMetadata(for: url) { metadata, error in
+            oyooy(metadata: metadata)
+        }
+    }
+    
+    @MainActor
+    func oyooy(metadata:LPLinkMetadata?) {
+        if let md = metadata {
+            self.metadata = md
         }
     }
 }

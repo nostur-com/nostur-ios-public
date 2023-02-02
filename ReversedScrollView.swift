@@ -128,7 +128,6 @@ struct ReversedScrollViewExample: View {
                     }
                     // This will work with items last I think????
                     .onChange(of: items) { newItems in
-                        //
                         anchorOffset = contentHeight - oldContentHeight + oldScrollOffset
                         proxy.scrollTo(SCROLL_ANCHOR, anchor: .top)
                     }
@@ -186,17 +185,17 @@ struct ObservableScrollView<Content>: View where Content : View {
           .background(GeometryReader { geo in
               let offset = -geo.frame(in: .named(scrollSpace)).minY
               let height = geo.size.height
-              Color.clear.onAppear {
-                  scrollOffset = offset
-                  contentHeight = height
-              }
+//              Color.clear.onAppear {
+//                  scrollOffset = offset
+//                  contentHeight = height
+//              }
               
-//              Color.clear
-//                .preference(key: ScrollViewOffsetPreferenceKey.self,
-//                            value: offset)
-//              Color.clear
-//                .preference(key: ScrollViewContentHeightPreferenceKey.self,
-//                            value: contentHeight)
+              Color.clear
+                .preference(key: ScrollViewOffsetPreferenceKey.self,
+                            value: offset)
+              Color.clear
+                .preference(key: ScrollViewContentHeightPreferenceKey.self,
+                            value: height)
           })
       }
     }

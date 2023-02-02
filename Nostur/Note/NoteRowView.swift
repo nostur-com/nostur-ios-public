@@ -32,7 +32,7 @@ struct NoteRowView: View {
     @FetchRequest
     var taggedContacts:FetchedResults<Contact>
     
-    @State var visible = false
+    @State var visible = true
     
     init(event: Event) {
         self.event = event
@@ -102,7 +102,7 @@ struct NoteRowView: View {
                                     })
                                 }
                                 Spacer()
-                            }.frame(height: 40).border(.red)
+                            }.frame(height: 40)//.border(.red)
                             
                             NavigationLink(value: event, label: {
                                 VStack(alignment: .leading) {
@@ -116,7 +116,7 @@ struct NoteRowView: View {
                             })
 
                            HStack {
-                               if (visible) { FooterFragment(event: event) } 
+                               if (visible) { FooterFragment(event: event) }
                            }  .frame(height: 25)
 //                            FooterFragment(event:event)
 //                                .frame(height: 30)
