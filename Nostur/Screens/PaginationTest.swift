@@ -55,7 +55,7 @@ struct PaginationTest: View {
             }
             LazyVStack {
                 ForEach(pages, id:\.startIndex) { events in
-                    Page(events: events)
+                    FPage(events: events)
                 }
             }
         }
@@ -83,13 +83,17 @@ struct PaginationTest: View {
     }
 }
 
-struct Page: View {
+
+
+struct FPage: View {
     var events:Slice<FetchedResults<Event>>
+//    var events:[Event]
     
     var body: some View {
         VStack {
             ForEach(events) { event in
                 NoteRowView(event: event)
+                    .id(event.id)
             }
         }
     }

@@ -95,6 +95,8 @@ struct NoteRowView: View {
                                                 Text("@\(event.contact?.username ?? event.authorKey) · \(event.ago)") //
                                                     .font(.system(size: 14))
                                                     .foregroundColor(.secondary)
+                                                Spacer()
+                                                Text(Date(timeIntervalSince1970: TimeInterval(event.created_at)), format: Date.VerbatimFormatStyle(format: "\(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .oneBased)):\(minute: .twoDigits)", timeZone: .current, calendar: .current))
                                             }
                                             
                                             ReplyingToFragment(event: event)
@@ -107,11 +109,6 @@ struct NoteRowView: View {
                             NavigationLink(value: event, label: {
                                 VStack(alignment: .leading) {
                                     NoteTextRenderView(event:event, taggedContacts:Array(taggedContacts))
-                                    
-                                    let WTF = Date(timeIntervalSince1970: TimeInterval(event.created_at))
-                                        .formatted(.dateTime.hour().minute().second())
-                                    
-                                    Text("\(WTF)")
                                 }
                             })
 

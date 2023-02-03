@@ -28,105 +28,107 @@ struct NosturRootMenu: View {
                 sideBar
                     .withNavigationDestinations()
             }
-        } content: {            
-            NosturTabsView(showMenu: $showSidebar, selectedTab: $selectedTab, timelinePath: $timelinePath, searchPath: $searchPath, accountsPath: $accountsPath, bookmarksPath: $bookmarksPath, notificationsPath: $notificationsPath, messagesPath: $messagesPath, configurationPath: $configurationPath)
-            
-                .onOpenURL { url in
-                    // TODO: CHECK INPUT!!! SECURITY!
-                    print(url.absoluteString)
-                    let nostr = url.absoluteString.matchingStrings(regex: "^(nostr:)(npub1|note1)([023456789acdefghjklmnpqrstuvwxyz]{58})$")
-                    if nostr.count == 1 && nostr[0].count == 4 {
-                        print("ok lets go to: \(nostr[0][2])\(nostr[0][3])")
-                        let key = try! NIP19(displayString: "\(nostr[0][2])\(nostr[0][3])")
-                        print("ok lets go to: \(key.hexString)")
-                        if nostr[0][2] == "npub1" {                            
-                            switch (selectedTab) {
-                                case "Timeline":
-                                    timelinePath.append(ContactPath(key: key.hexString))
-                                case "Accounts":
-                                    accountsPath.append(ContactPath(key: key.hexString))
-                                case "Bookmarks":
-                                    bookmarksPath.append(ContactPath(key: key.hexString))
-                                case "Configuration":
-                                    configurationPath.append(ContactPath(key: key.hexString))
-                                case "Messages":
-                                    messagesPath.append(ContactPath(key: key.hexString))
-                                case "Notifications":
-                                    notificationsPath.append(ContactPath(key: key.hexString))
-                                case "Search":
-                                    searchPath.append(ContactPath(key: key.hexString))
-                                default:
-                                    timelinePath.append(ContactPath(key: key.hexString))
+        } content: {
+            //TODO: Check if ns.account is loaded first
+            if (ns.account != nil) {
+                NosturTabsView(showMenu: $showSidebar, selectedTab: $selectedTab, timelinePath: $timelinePath, searchPath: $searchPath, accountsPath: $accountsPath, bookmarksPath: $bookmarksPath, notificationsPath: $notificationsPath, messagesPath: $messagesPath, configurationPath: $configurationPath)
+                    .onOpenURL { url in
+                        // TODO: CHECK INPUT!!! SECURITY!
+                        print(url.absoluteString)
+                        let nostr = url.absoluteString.matchingStrings(regex: "^(nostr:)(npub1|note1)([023456789acdefghjklmnpqrstuvwxyz]{58})$")
+                        if nostr.count == 1 && nostr[0].count == 4 {
+                            print("ok lets go to: \(nostr[0][2])\(nostr[0][3])")
+                            let key = try! NIP19(displayString: "\(nostr[0][2])\(nostr[0][3])")
+                            print("ok lets go to: \(key.hexString)")
+                            if nostr[0][2] == "npub1" {                            
+                                switch (selectedTab) {
+                                    case "Timeline":
+                                        timelinePath.append(ContactPath(key: key.hexString))
+                                    case "Accounts":
+                                        accountsPath.append(ContactPath(key: key.hexString))
+                                    case "Bookmarks":
+                                        bookmarksPath.append(ContactPath(key: key.hexString))
+                                    case "Configuration":
+                                        configurationPath.append(ContactPath(key: key.hexString))
+                                    case "Messages":
+                                        messagesPath.append(ContactPath(key: key.hexString))
+                                    case "Notifications":
+                                        notificationsPath.append(ContactPath(key: key.hexString))
+                                    case "Search":
+                                        searchPath.append(ContactPath(key: key.hexString))
+                                    default:
+                                        timelinePath.append(ContactPath(key: key.hexString))
+                                }
+                            }
+                            if nostr[0][2] == "note1" {
+                                switch (selectedTab) {
+                                    case "Timeline":
+                                        timelinePath.append(NotePath(id: key.hexString))
+                                    case "Accounts":
+                                        accountsPath.append(NotePath(id: key.hexString))
+                                    case "Bookmarks":
+                                        bookmarksPath.append(NotePath(id: key.hexString))
+                                    case "Configuration":
+                                        configurationPath.append(NotePath(id: key.hexString))
+                                    case "Messages":
+                                        messagesPath.append(NotePath(id: key.hexString))
+                                    case "Notifications":
+                                        notificationsPath.append(NotePath(id: key.hexString))
+                                    case "Search":
+                                        searchPath.append(NotePath(id: key.hexString))
+                                    default:
+                                        timelinePath.append(NotePath(id: key.hexString))
+                                }
                             }
                         }
-                        if nostr[0][2] == "note1" {
-                            switch (selectedTab) {
-                                case "Timeline":
-                                    timelinePath.append(NotePath(id: key.hexString))
-                                case "Accounts":
-                                    accountsPath.append(NotePath(id: key.hexString))
-                                case "Bookmarks":
-                                    bookmarksPath.append(NotePath(id: key.hexString))
-                                case "Configuration":
-                                    configurationPath.append(NotePath(id: key.hexString))
-                                case "Messages":
-                                    messagesPath.append(NotePath(id: key.hexString))
-                                case "Notifications":
-                                    notificationsPath.append(NotePath(id: key.hexString))
-                                case "Search":
-                                    searchPath.append(NotePath(id: key.hexString))
-                                default:
-                                    timelinePath.append(NotePath(id: key.hexString))
+                        
+                        let nostur = url.absoluteString.matchingStrings(regex: "^(nostur:)(p:|e:)([0-9a-z]{64})$")
+                        if nostur.count == 1 && nostur[0].count == 4 {
+                            print("ok lets go to: \(nostur[0][2])\(nostur[0][3])")
+                            if nostur[0][2] == "p:" {
+                                switch (selectedTab) {
+                                    case "Timeline":
+                                        timelinePath.append(ContactPath(key: nostur[0][3]))
+                                    case "Accounts":
+                                        accountsPath.append(ContactPath(key: nostur[0][3]))
+                                    case "Bookmarks":
+                                        bookmarksPath.append(ContactPath(key: nostur[0][3]))
+                                    case "Configuration":
+                                        configurationPath.append(ContactPath(key: nostur[0][3]))
+                                    case "Messages":
+                                        messagesPath.append(ContactPath(key: nostur[0][3]))
+                                    case "Notifications":
+                                        notificationsPath.append(ContactPath(key: nostur[0][3]))
+                                    case "Search":
+                                        searchPath.append(ContactPath(key: nostur[0][3]))
+                                    default:
+                                        timelinePath.append(ContactPath(key: nostur[0][3]))
+                                }
+                            }
+                            if nostur[0][2] == "e:" {
+                                switch (selectedTab) {
+                                    case "Timeline":
+                                        timelinePath.append(NotePath(id: nostur[0][3]))
+                                    case "Accounts":
+                                        accountsPath.append(NotePath(id: nostur[0][3]))
+                                    case "Bookmarks":
+                                        bookmarksPath.append(NotePath(id: nostur[0][3]))
+                                    case "Configuration":
+                                        configurationPath.append(NotePath(id: nostur[0][3]))
+                                    case "Messages":
+                                        messagesPath.append(NotePath(id: nostur[0][3]))
+                                    case "Notifications":
+                                        notificationsPath.append(NotePath(id: nostur[0][3]))
+                                    case "Search":
+                                        searchPath.append(NotePath(id: nostur[0][3]))
+                                    default:
+                                        timelinePath.append(NotePath(id: nostur[0][3]))
+                                }
                             }
                         }
+                        
                     }
-                    
-                    let nostur = url.absoluteString.matchingStrings(regex: "^(nostur:)(p:|e:)([0-9a-z]{64})$")
-                    if nostur.count == 1 && nostur[0].count == 4 {
-                        print("ok lets go to: \(nostur[0][2])\(nostur[0][3])")
-                        if nostur[0][2] == "p:" {
-                            switch (selectedTab) {
-                                case "Timeline":
-                                    timelinePath.append(ContactPath(key: nostur[0][3]))
-                                case "Accounts":
-                                    accountsPath.append(ContactPath(key: nostur[0][3]))
-                                case "Bookmarks":
-                                    bookmarksPath.append(ContactPath(key: nostur[0][3]))
-                                case "Configuration":
-                                    configurationPath.append(ContactPath(key: nostur[0][3]))
-                                case "Messages":
-                                    messagesPath.append(ContactPath(key: nostur[0][3]))
-                                case "Notifications":
-                                    notificationsPath.append(ContactPath(key: nostur[0][3]))
-                                case "Search":
-                                    searchPath.append(ContactPath(key: nostur[0][3]))
-                                default:
-                                    timelinePath.append(ContactPath(key: nostur[0][3]))
-                            }
-                        }
-                        if nostur[0][2] == "e:" {
-                            switch (selectedTab) {
-                                case "Timeline":
-                                    timelinePath.append(NotePath(id: nostur[0][3]))
-                                case "Accounts":
-                                    accountsPath.append(NotePath(id: nostur[0][3]))
-                                case "Bookmarks":
-                                    bookmarksPath.append(NotePath(id: nostur[0][3]))
-                                case "Configuration":
-                                    configurationPath.append(NotePath(id: nostur[0][3]))
-                                case "Messages":
-                                    messagesPath.append(NotePath(id: nostur[0][3]))
-                                case "Notifications":
-                                    notificationsPath.append(NotePath(id: nostur[0][3]))
-                                case "Search":
-                                    searchPath.append(NotePath(id: nostur[0][3]))
-                                default:
-                                    timelinePath.append(NotePath(id: nostur[0][3]))
-                            }
-                        }
-                    }
-                    
-                }
+            }
             
         }
         .edgesIgnoringSafeArea(.all)

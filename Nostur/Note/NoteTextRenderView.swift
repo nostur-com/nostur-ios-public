@@ -145,6 +145,7 @@ struct NoteTextRenderView: View {
         VStack(alignment: .leading) {
             if (event != nil) && (taggedContacts.count > 0) {
                 Text(renderedText!)
+                    .lineLimit(4, reservesSpace: true)
                     .textSelection(.enabled)
                     .multilineTextAlignment(TextAlignment.leading)
                         .font(.system(size: 14))
@@ -154,6 +155,7 @@ struct NoteTextRenderView: View {
             }
             else if (taggedContacts.count == 0) {
                 Text(event?.noteText ?? "")
+                    .lineLimit(4, reservesSpace: true)
                     .textSelection(.enabled)
                     .multilineTextAlignment(TextAlignment.leading)
                         .font(.system(size: 14))

@@ -9,31 +9,107 @@ import SwiftUI
 import CoreData
 import Combine
 
+extension Publisher {
+  func sample(
+    every interval: TimeInterval,
+    on runLoop: RunLoop,
+    in mode: RunLoop.Mode
+  ) -> AnyPublisher<Output, Failure> {
+    let timer = Timer.publish(every: interval, on: runLoop, in: mode)
+      .autoconnect()
+      .mapError { $0 as! Failure }
+
+    return combineLatest(timer)
+      .map(\.0)
+      .eraseToAnyPublisher()
+  }
+}
+
+extension Timeline {
+    
+    @MainActor class TimelineViewModel: ObservableObject {
+        
+//        static var shared = TimelineViewModel()
+        var cancellables = Set<AnyCancellable>()
+        
+        @Published private(set) var scrollOffset = CGFloat.zero
+        @Published private(set) var contentHeight = CGFloat.zero
+        @Published private(set) var anchorOffset = CGFloat.zero
+        
+        @Published private(set) var oldScrollOffset = CGFloat.zero
+        @Published private(set) var oldContentHeight = CGFloat.zero
+        
+        @Published private(set) var scrollOffsetEmitter = PassthroughSubject<CGFloat, Never>()
+        @Published private(set) var contentHeightEmitter = PassthroughSubject<CGFloat, Never>()
+        
+        init() {
+            addSubscribers()
+        }
+        
+        deinit { for c in cancellables { c.cancel() } }
+        
+        func updateAnchorOffset() {
+            self.anchorOffset = self.contentHeight - self.oldContentHeight + self.scrollOffset
+        }
+        
+        func saveOldHeightAndOffset() {
+            self.oldContentHeight = self.contentHeight
+            self.oldScrollOffset = self.scrollOffset
+        }
+        
+        func addSubscribers() {
+            scrollOffsetEmitter
+                .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
+                .sink { value in
+                    self.scrollOffset = value
+                    self.anchorOffset = value // Keep anchor + scroll in sync
+                }
+                .store(in: &cancellables)
+            
+            contentHeightEmitter
+            //            .debounce(for: .seconds(0.7), scheduler: RunLoop.main)
+                .sink { value in
+                    self.contentHeight = value
+                    print("💿💿 V. S:\(self.scrollOffset) A:\(self.anchorOffset) H:\(self.contentHeight) - AFTER EMIT")
+                }
+                .store(in: &cancellables)
+        }
+    }
+}
+
 struct Timeline: View {
+    
+//    @ObservedObject var vm = TimelineViewModel.shared
+    @StateObject private var vm = TimelineViewModel()
+    
     @Namespace var scrollSpace
     // MARK: PAGINATION
-    @State var firstPageEvents: Slice<FetchedResults<Event>>? = nil
-    @State var pages: [Slice<FetchedResults<Event>>] = []
-    let pageSize = 19.0
+//    @State var firstPageEvents: Slice<FetchedResults<Event>>? = nil
+//    @State var pages: [Slice<FetchedResults<Event>>] = []
+//    @State var pages: [ArraySlice<FetchedResults<Event>>] = []
+//    @State var pages: [ArraySlice<[Event]>] = []
+//    @State var pages: [ReversedCollection<ArraySlice<Event>>] = []
+    @State var pages: [ArraySlice<Event>] = []
+//    @State var pages: [[Event]] = []
+    let pageSize:Int = 10
     
     
     
     // MARK: FIRST PAGE: KEEP SCROLL POSITION AFTER NEW EVENTS LOADED
     @Namespace var SCROLL_ANCHOR
     
-    @State var scrollOffset = CGFloat.zero
-    @State var anchorOffset = CGFloat.zero
-    @State var contentHeight = CGFloat.zero
+//    @State var scrollOffset = CGFloat.zero
+//    @State var anchorOffset = CGFloat.zero
+//    @State var contentHeight = CGFloat.zero
     @State var scrollCounter = 0
     
-    @State var oldScrollOffset = CGFloat.zero
-    @State var oldContentHeight = CGFloat.zero
+    
     
 
     @State var isRefreshing = true
     @State var isLoading = true
     
-    let timelineRunLoop = Timer.publish(every: 8, tolerance: 1, on: .main, in: .common).autoconnect()
+    let timelineRunLoop = Timer.publish(every: 15, tolerance: 1, on: .main, in: .common).autoconnect()
     @State var timesFetchedWhileUnread = 0 // Increases if there are unread messages (prevent unnecessary refresh)
     @State var shouldSkipTimes = 0
     @State var isViewDisplayed = false
@@ -42,7 +118,7 @@ struct Timeline: View {
     var sp: SocketPool = .shared
     var mp: MessageParser = .shared
     
-    var events:FetchedResults<Event>
+//    var events:FetchedResults<Event>
 //    var reversed:[Event]
     var account:Account
     
@@ -51,26 +127,78 @@ struct Timeline: View {
     @State var unreadCount = 0
     @Binding var showMenu:Bool
     
-    init(events: FetchedResults<Event>, account:Account, showMenu:Binding<Bool>) {
-        self._showMenu = showMenu
-        self.events = events
-//        self.reversed = events.reversed() // Starts with (30?) events
+    @EnvironmentObject var ns:NosturState
+//    @Binding var showMenu:Bool
+    
+    @FetchRequest(
+        entity: Event.entity(),
+        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
+        predicate: NSPredicate(format: "FALSEPREDICATE")
+    )
+    var events: FetchedResults<Event>
+    
+    init(showReplies:Bool, followingPubkeys: Set<String>, showMenu: Binding<Bool>, account:Account) {
         self.account = account
+        _showMenu = showMenu
         
-        self.scrollOffsetPublisher = scrollOffsetSubject
-            .debounce(for: 0.25, scheduler: RunLoop.main)
-                    .eraseToAnyPublisher()
+        let fr = NSFetchRequest<Event>(entityName: "Event")
+        fr.predicate = showReplies
+            ? NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId != nil", followingPubkeys)
+            : NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil", followingPubkeys)
         
-        self.contentHeightPublisher = contentHeightSubject
-            .debounce(for: 0.25, scheduler: RunLoop.main)
-                    .eraseToAnyPublisher()
+        fr.fetchLimit = 100 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW
+        fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+        
+        _events = FetchRequest(fetchRequest: fr)
     }
     
-    private var scrollOffsetSubject = PassthroughSubject<CGFloat,Never>()
-    private var scrollOffsetPublisher: AnyPublisher<CGFloat, Never>
+//    init(events: FetchedResults<Event>, account:Account, showMenu:Binding<Bool>) {
+//        self._showMenu = showMenu
+//        self.events = events
+////        self.reversed = events.reversed() // Starts with (30?) events
+//        self.account = account
+//
+////        self.scrollOffsetSubject
+////            .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
+////            .sink { offset in
+////                scrollOffset = offset
+////            }
+//
+////        self.scrollOffsetPublisher = scrollOffsetSubject
+////            .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
+////            .eraseToAnyPublisher()
+////                .sink { index in
+////                    print ("Received index \(index)")
+////                }
+//
+////            .sample(every: 2.5, on: RunLoop.main, in: .tracking)
+////            .debounce(for: 0.25, scheduler: RunLoop.main)
+////            .dropFirst()
+////            .throttle(for: 0.25, scheduler: RunLoop.main, latest: true)
+////                    .eraseToAnyPublisher()
+//
+////        self.contentHeightPublisher = contentHeightSubject
+////            .sample(every: 2.5, on: RunLoop.main, in: .tracking)
+////            .debounce(for: 0.25, scheduler: RunLoop.main)
+////            .dropFirst()
+////            .throttle(for: 0.25, scheduler: RunLoop.main, latest: true)
+////                    .eraseToAnyPublisher()
+//    }
     
-    private var contentHeightSubject = PassthroughSubject<CGFloat,Never>()
-    private var contentHeightPublisher: AnyPublisher<CGFloat, Never>
+//    private var scrollOffsetSubject = PassthroughSubject<CGFloat,Never>()
+//    private var scrollOffsetPublisher: AnyPublisher<CGFloat, Never>
+
+    
+
+//    private var contentHeightPublisher: AnyPublisher<CGFloat, Never>
+    
+//    var emitter = PassthroughSubject<CGFloat, Never>()
+//        .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
+//
+//    var emitter2 = PassthroughSubject<CGFloat, Never>()
+//        .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
+//
+//    var publisher: AnyPublisher<CGFloat, Never>
     
     func getUnreadCount(events:[Event]? = nil) -> Int {
         if (events != nil) {
@@ -96,69 +224,81 @@ struct Timeline: View {
         ZStack {
             ScrollView {
                 ScrollViewReader { proxy in
-                    ZStack { // ZSTACK WITH ANCHOR, ONLY FOR FIRST PAGE
-                        VStack {
-                            VStack {
-                                if (firstPageEvents != nil) {
-                                    ForEach(firstPageEvents!) { event in
-                                        NoteRowView(event: event)
+                    ZStack { // ZSTACK WITH 2 LAYERS: PAGES, ANCHOR.
+                        LazyVStack { // PAGES ARE LAZY
+                            ForEach(pages.reversed(), id:\.last) { events in
+                                Page(events: events)
+                                    .onAppear {
+                                        print("🥶🥶 LAZY PAGE \(pages.firstIndex { $0.first! == events.first! } )")
                                     }
-                                }
-                            }
-                            .background(GeometryReader { geo in
-                                Color.clear.preference(
-                                    key: ContentHeightKey.self,
-                                    value: geo.size.height
-                                )
-                            })
-                            
-                            // REMAINING PAGES
-                            LazyVStack {
-                                ForEach(pages, id:\.startIndex) { events in
-                                    Page(events: events)
-                                        .id(events.last)
-                                }
                             }
                         }
-                        VStack(spacing: 0) {
-                            Rectangle().foregroundColor(.yellow).opacity(0.3).frame(width:370, height: anchorOffset < 0 ? 0 : anchorOffset).foregroundColor(.yellow)
+                        VStack(spacing: 0) { // THE SCROLL ANCHOR
+                            Rectangle().foregroundColor(.yellow).opacity(0.3).frame(width:370, height: vm.anchorOffset < 0 ? 0 : vm.anchorOffset).foregroundColor(.yellow)
                             Color.clear.frame(width: 370, height: 0)
                                 .id(SCROLL_ANCHOR)
                             Spacer()
                         }
                     }
+                    // SEND TO PARENT: SCROLL OFFSET + CONTENT HEIGHT
                     .background(GeometryReader { geo in
                         Color.clear.preference(
                             key: ViewOffsetKey.self,
                             value: -geo.frame(in: .named(scrollSpace)).minY
+                        ).preference(
+                            key: ContentHeightKey.self,
+                            value: geo.size.height
                         )
                     })
+                    // RECEIVE FROM CHILD: SCROLL OFFSET
                     .onPreferenceChange(ViewOffsetKey.self) { offset in
-                        scrollOffsetSubject.send(offset)
+//                        emitter.send(offset) // SEND DEBOUNCED
+//                        print("💿💿💿💿💿💿 .onPreferenceChange(ViewOffsetKey.self)")
+                        vm.scrollOffsetEmitter.send(offset)
                     }
+                    // RECEIVE FROM CHILD: CONTENT HEIGHT
                     .onPreferenceChange(ContentHeightKey.self) { height in
+//                        print("💿💿💿💿💿💿 .onPreferenceChange(ContentHeightKe")
                         if (1 == 1) { // TODO: IF did receive or change events. Else height cannot be changed.
-                            contentHeightSubject.send(height)
+//                            emitter2.send(height) // SEND DEBOUNCED
+                            vm.contentHeightEmitter.send(height)
                         }
                     }
-                    // This will work with items last I think????
+//                    // This will work with items last I think????
                     .onChange(of: events.first) { newFirstItem in
 //                        oldContentHeight = contentHeight
 //                        oldScrollOffset = scrollOffset
+                        if (events.first != nil) {
+                            print("💿💿 X. S:\(vm.scrollOffset) A:\(vm.anchorOffset) H:\(vm.contentHeight) - onChange: events.first || events.count: \(events.count)")
+                            print("🤩🤩 onChange, first was = \(d(events.first!.created_at).description)")
+                            print("🤩🤩 onChange, first is = \(d(newFirstItem!.created_at).description)")
+                        }
                     }
+                    // MAKE PROXY.SCROLLTO ACCESSIBLE FROM OUTSIDE
+                    // BY WATCHING FOR SCROLLCOUNTER CHANGES
                     .onChange(of: scrollCounter) { newScrollCounter in
-                        anchorOffset = contentHeight - oldContentHeight + oldScrollOffset
-                        proxy.scrollTo(SCROLL_ANCHOR, anchor: .top)
+                        print("💿💿 4. S:\(vm.scrollOffset) A:\(vm.anchorOffset) H:\(vm.contentHeight) - BEFORE SCROLL TO. 💿 OH: \(vm.oldContentHeight).   DIFF: \(vm.contentHeight - vm.oldContentHeight)")
+                        
+                        let scrollDiff = vm.contentHeight - vm.oldContentHeight
+                        
+                        if (scrollDiff > 0) { // TODO: Can scrollDiff be negative??? dunno
+                            vm.updateAnchorOffset()
+                            proxy.scrollTo(SCROLL_ANCHOR, anchor: .top)
+                        }
+                        
                     }
-                    .onChange(of: scrollOffset) { newScrollOfset in
-                        anchorOffset = newScrollOfset // KEEP SCROLL ANCHOR IN SYNC WITH SCROLL OFFSET
-                    }
-                    .onReceive(scrollOffsetPublisher) { offset in
-                        scrollOffset = offset
-                    }
-                    .onReceive(contentHeightPublisher) { height in
-                        contentHeight = height
-                    }
+                    // KEEP SCROLL ANCHOR IN SYNC WITH SCROLL OFFSET
+//                    .onChange(of: vm.scrollOffset) { newScrollOfset in
+//                        vm.anchorOffset = newScrollOfset
+//                    }
+                    
+                    
+//                    .onReceive(dsdassd) { offset in
+//                        scrollOffset = offset // RECEIVE DEBOUNCED
+//                    }
+//                    .onReceive(emitter2) { height in
+//                        contentHeight = height // RECEIVE DEBOUNCED
+//                    }
                 }
             }
             .coordinateSpace(name: scrollSpace)
@@ -166,11 +306,11 @@ struct Timeline: View {
                 setupPages()
             }
             .onChange(of: events.first) { newEvent in
-//                setupPages()
+//                updatePages()
             }
             .safeAreaInset(edge: .top) {
                 VStack(alignment: .center) {
-                    Text("Items: \(events.count)\nScroll offset: \(scrollOffset)\nAnchor offset: \(anchorOffset)\nContent height: \(contentHeight)\nScroll-Anchor diff:\(anchorOffset - scrollOffset)")
+                    Text("Items: \(events.count), First page: \(pages.first?.count ?? 0)\nScroll offset: \(vm.scrollOffset)\nAnchor offset: \(vm.anchorOffset)\nContent height: \(vm.contentHeight)\nScroll-Anchor diff:\(vm.anchorOffset - vm.scrollOffset)")
                     HStack {
                         ProfilePicView(pubkey: account.publicKey!, account: account, size:30)
                             .offset(x: 30)
@@ -189,11 +329,14 @@ struct Timeline: View {
                         Spacer()
                     }
                     HStack {
-                        Button { setupPages() } label: { Text("Setup pages") }
+                        Button { fetchEventsFromFollowing(amount:500) } label: { Text("1. Fetch") }
+                        Button { importNotes() } label: { Text("2. Import") }
+                        Button { updatePages() } label: { Text("3. Pages \(pages.count)") }
+                        Button { scrollCounter += 1 } label: { Text("4. Scroll") }
+                        Button {
+                            print("💿💿 I. S:\(vm.scrollOffset) A:\(vm.anchorOffset) H:\(vm.contentHeight) - INFO events.count: \(events.count)")
+                        } label: { Text("I") }
                         Text("\(unreadCount)")
-                        
-                        Button { importNotes() } label: { Text("Import") }
-                        Button { fetchEventsFromFollowing(amount:500) } label: { Text("Fetch & parse") }
                     }.buttonStyle(.borderedProminent)
                         .buttonBorderShape(.roundedRectangle)
                         .tint(.cyan)
@@ -265,8 +408,12 @@ struct Timeline: View {
                 }
                 
                 
-                print("🍭🍭🍭 GONNA FETCH BABY 🍭🍭🍭🍭")
-                fetchEventsFromFollowing(amount: 500)
+                if (!Importer.shared.isImporting) {
+                    print("💿💿 GONNA FETCH BABY 💿💿")
+                    fetchEventsFromFollowing(amount: 500)
+                } else {
+                    print("💿💿 STILL IMPORTING. NOT FETCHING YET 💿💿")
+                }
                 
                 if (unreadCount > 0) {
                     shouldSkipTimes = timesFetchedWhileUnread + shouldSkipTimes + 1
@@ -302,30 +449,103 @@ struct Timeline: View {
 extension Timeline {
 
     func setupPages() {
+        print("💿💿 2. S:\(vm.scrollOffset) A:\(vm.anchorOffset) H:\(vm.contentHeight) - BEFORE PAGES events.count: \(events.count)")
+        pages = []
+        let eventsSorted = events.sorted { $0.created_at > $1.created_at }
         
-        oldContentHeight = contentHeight
-        oldScrollOffset = scrollOffset
+        vm.saveOldHeightAndOffset()
         
-        let pageCount = Int(floor(Double(events.count) / pageSize))
+        let pageCount = Int(ceil(Double(eventsSorted.count) / Double(pageSize))) // 5
         
-        // First page
-        let eventsOnFirstPage = events.count % Int(pageSize)
-        firstPageEvents = events[0..<eventsOnFirstPage]
-        
-        // All other pages
-        for loopCount in 0..<pageCount {
+        for loopCount in 0..<pageCount { // 0..<5
             
-            let end = events.count - (loopCount * Int(pageSize)) // 153 - (0 * 30)
-            let start = end - Int(pageSize)         // end - 30 = 123
+            let end = eventsSorted.count - (loopCount * pageSize) // 46 - (0 * 10) = 46
+            let start = end - pageSize // 46 - 10 = 36
+                        
+            // Example ranges 36..<46, 26..<36, 16..<26, 6..<16, -6..<6
+            let noOutOfBoundsStart = start < 0 ? 0 : start // Fix the last out of bounds range
             
-            let eventsRange = events[start..<end]
-            
-            pages.insert(eventsRange, at: 0)
+            // Example ranges 36..<46, 26..<36, 16..<26, 6..<16, 0..<6
+            let eventsRange = eventsSorted[noOutOfBoundsStart..<end]
+            pages.append(eventsRange) // insert new page at the end
         }
+        print("💿💿 3. S:\(vm.scrollOffset) A:\(vm.anchorOffset) H:\(vm.contentHeight) - AFTER PAGES events.count: \(events.count)")
+//        scrollCounter = scrollCounter + 1
+    }
+    
+    func updatePages() {
+        print("💿💿 U. S:\(vm.scrollOffset) A:\(vm.anchorOffset) H:\(vm.contentHeight) - BEFORE UPDATE events.count: \(events.count)")
         
-        scrollCounter = scrollCounter + 1
+        vm.saveOldHeightAndOffset()
+        
+        let eventsSorted = events.sorted { $0.created_at > $1.created_at }
+        
+        let pageCount = Int(ceil(Double(eventsSorted.count) / Double(pageSize))) // 9
+        
+        let existingPages = pages.count // 5 (4 full pages of 10m and 1 page of 6 items)
+        
+        // if most recent page is full, add new pages
+        if (pages.last!.count == pageSize) {
+            // last page is full
+            let newPages = pageCount - existingPages // 9 - 5 = 4
+            
+            for loopCount in 0..<newPages { // 0..<4
+                
+                let end = eventsSorted.count - ((newPages - loopCount) * pageSize) // 90 - ((4-0) * 10) = 50
+                let start = end - pageSize // 50 - 10 = 40
+                            
+                // Example ranges 40..<50, 30..<40, 20..<30, 10..<0
+                let noOutOfBoundsStart = start < 0 ? 0 : start // Fix the last out of bounds range
+                
+                // Example ranges 40..<50, 30..<40, 20..<30, 10..<0
+                let eventsRange = eventsSorted[noOutOfBoundsStart..<end]
+                pages.append(eventsRange) // insert new page at the end
+            }
+        }
+        // else replace recent page, and then add new pages
+        else {
+            let newPages = pageCount - existingPages + 1 // one extra is the replacement
+            
+            for loopCount in 0..<newPages {
+                let end = eventsSorted.count - ((newPages - loopCount) * pageSize) // 90 - ((4-0) * 10) = 50
+                let start = end - pageSize // 50 - 10 = 40
+                            
+                // Example ranges 40..<50, 30..<40, 20..<30, 10..<0
+                let noOutOfBoundsStart = start < 0 ? 0 : start // Fix the last out of bounds range
+                
+                // Example ranges 40..<50, 30..<40, 20..<30, 10..<0
+                let eventsRange = eventsSorted[noOutOfBoundsStart..<end]
+                
+                if (loopCount == 0) {
+                    // replace page
+                    pages.removeLast()
+                    pages.append(eventsRange)
+                }
+                else { // insert new page
+                    pages.append(eventsRange)
+                }
+            }
+        }
+
+        print("💿💿 U. S:\(vm.scrollOffset) A:\(vm.anchorOffset) H:\(vm.contentHeight) - AFTER UPDATE events.count: \(events.count)")
+//        scrollCounter = scrollCounter + 1
     }
 
+}
+
+struct Page: View {
+//    var events:Slice<FetchedResults<Event>>
+    var events:ArraySlice<Event>
+//    var events:[Event]
+    
+    var body: some View {
+        VStack {
+            ForEach(events) { event in
+                NoteRowView(event: event)
+                    .id(event.id)
+            }
+        }
+    }
 }
 
 struct ViewOffsetKey: PreferenceKey {
@@ -344,49 +564,53 @@ struct ContentHeightKey: PreferenceKey {
   }
 }
 
-struct TimelineWrapper: View {
-    
-    // Maybe put this code no longer needs to be in parent, because of the dynamic predicate problem has been solved.
-    
-    @EnvironmentObject var ns:NosturState
-    @Binding var showMenu:Bool
-    
-    @FetchRequest(
-        entity: Event.entity(),
-        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
-        predicate: NSPredicate(format: "FALSEPREDICATE")
-    )
-    var events: FetchedResults<Event>
-    
-    init(showReplies:Bool, followingPubkeys: Set<String>, showMenu: Binding<Bool>) {
-        _showMenu = showMenu
-        
-        let fr = NSFetchRequest<Event>(entityName: "Event")
-        fr.predicate = showReplies
-            ? NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId != nil", followingPubkeys)
-            : NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil", followingPubkeys)
-        
-        fr.fetchLimit = 250 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW
-        fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        
-        _events = FetchRequest(fetchRequest: fr)
-    }
-    
-    var body: some View {
-        if (ns.account != nil) {
-            Timeline(events:events, account: ns.account!, showMenu: $showMenu)
-        }
-        else {
-            Text("Please set up account first")
-        }
-        //        Spacer()
-    }
-    
-}
+//struct TimelineWrapper: View {
+//
+//    // Maybe put this code no longer needs to be in parent, because of the dynamic predicate problem has been solved.
+//
+//    @EnvironmentObject var ns:NosturState
+//    @Binding var showMenu:Bool
+//
+//    @FetchRequest(
+//        entity: Event.entity(),
+//        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
+//        predicate: NSPredicate(format: "FALSEPREDICATE")
+//    )
+//    var events: FetchedResults<Event>
+//
+//    init(showReplies:Bool, followingPubkeys: Set<String>, showMenu: Binding<Bool>) {
+//        _showMenu = showMenu
+//
+//        let fr = NSFetchRequest<Event>(entityName: "Event")
+//        fr.predicate = showReplies
+//            ? NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId != nil", followingPubkeys)
+//            : NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil", followingPubkeys)
+//
+//        fr.fetchLimit = 100 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW
+//        fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+//
+//        _events = FetchRequest(fetchRequest: fr)
+//    }
+//
+//    var body: some View {
+//        if (ns.account != nil) {
+//            Timeline(events:events, account: ns.account!, showMenu: $showMenu)
+//                .onAppear {
+//                    print("💿💿 RELOADDED??? ")
+//                }
+//        }
+//        else {
+//            Text("Please set up account first")
+//        }
+//        //        Spacer()
+//    }
+//
+//}
 
 extension Timeline {
     
     private func importNotes() {
+        print("💿💿 2. S:\(vm.scrollOffset) A:\(vm.anchorOffset) H:\(vm.contentHeight) - BEFORE IMPORT events.count: \(events.count)")
         Task { await Importer.shared.importEvents() }
     }
     
@@ -399,6 +623,8 @@ extension Timeline {
     }
     
     private func fetchEventsFromFollowing(amount:Int? = 500) {
+        print("💿💿 1. S:\(vm.scrollOffset) A:\(vm.anchorOffset) H:\(vm.contentHeight) - BEFORE FETCH events.count: \(events.count)")
+        
         if (account.follows != nil) {
             let followingPubkeys = [String](account.follows!.map { $0.pubkey! } )
             sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getFollowingEvents(pubkeys: followingPubkeys, limit: amount!, since: mp.lastTimelineEventTimestamp)))
@@ -406,13 +632,15 @@ extension Timeline {
     }
 }
 
-struct ReversedTimeline_Previews: PreviewProvider {
+struct Timeline_Previews: PreviewProvider {
     @State static var showMenu = true
     static var previews: some View {
         
+        let account = PreviewFetcher.fetchAccount("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0")
+        
         let pubkeys = Set(["1833ee04459feb2ca4ae690d5f31269ad488c69e5fe903a42b532c677c4a8170","84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240","3f770d65d3a764a9c5cb503ae123e62ec7598ad035d836e2a810f3877a745b24"])
         
-        TimelineWrapper(showReplies:true, followingPubkeys: pubkeys, showMenu: $showMenu)
+        Timeline(showReplies: true, followingPubkeys: pubkeys, showMenu: $showMenu, account: account!)
             .withPreviewEnvironment()
         
     }

@@ -77,11 +77,11 @@ class SocketPool: WebSocketDelegate, ObservableObject {
             if (!socketClient.isConnected) { socketClient.client.connect() }
             
             if message.type == .REQ && socketClient.read { // REQ FOR ALL READ RELAYS
-                print("⬇️⬇️ REQUESTING: \(String(message.message.prefix(260)))")
+//                print("⬇️⬇️ REQUESTING: \(String(message.message.prefix(260)))")
                 socketClient.client.write(string: message.message)
             }
             else if  message.type == .CLOSE { // CLOSE FOR ALL RELAYS
-                print("🔚🔚 CLOSE: \(String(message.message.prefix(260)))")
+//                print("🔚🔚 CLOSE: \(String(message.message.prefix(260)))")
                 socketClient.client.write(string: message.message) { }
             }
             else if message.type == .EVENT && socketClient.write { // EVENT IS ONLY FOR WRITE RELAYS
@@ -102,7 +102,7 @@ class SocketPool: WebSocketDelegate, ObservableObject {
                 socketClient.isConnected = false
                 print("websocket is disconnected: \(reason) with code: \(code)")
             case .text(let string):
-                print("💬 Received text: \(string)")
+//                print("💬 Received text: \(string)")
                 MessageParser.shared.socketReceivedMessage(text: string)
             case .binary(let data):
                 print("Received data: \(data.count)")

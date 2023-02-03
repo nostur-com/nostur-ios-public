@@ -74,6 +74,7 @@ struct Profile: View {
     var clEvents:FetchedResults<Event>
     
     @State var activeTab = "NOTES"
+    @State var isFollowing = false
 
     init(contact:Contact) {
         self.contact = contact
@@ -151,7 +152,25 @@ struct Profile: View {
                         
                         Spacer()
                         
-                        FollowButton(isFollowing: ns.isFollowing(contact))
+                        Button {
+                            if (isFollowing) {
+                                isFollowing = false
+                                ns.unfollow(contact)
+                            }
+                            else {
+                                print("chaning isFollowing to true 1")
+                                isFollowing = true
+                                ns.follow(contact)
+                                print("chaning isFollowing to true 2")
+//                                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
+                            }
+                        } label: {
+                            FollowButton(isFollowing:isFollowing)
+                        }.onAppear {
+                            if (ns.isFollowing(contact)) {
+                                isFollowing = true
+                            }
+                        }
                     }
                     
                     
