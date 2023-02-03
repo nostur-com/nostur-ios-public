@@ -97,10 +97,10 @@ class SocketPool: WebSocketDelegate, ObservableObject {
             switch event {
             case .connected(let headers):
                 socketClient.isConnected = true
-                print("websocket is connected: \(headers)")
+//                print("websocket is connected: \(headers)")
             case .disconnected(let reason, let code):
                 socketClient.isConnected = false
-                print("websocket is disconnected: \(reason) with code: \(code)")
+//                print("websocket is disconnected: \(reason) with code: \(code)")
             case .text(let string):
 //                print("💬 Received text: \(string)")
                 MessageParser.shared.socketReceivedMessage(text: string)
@@ -116,10 +116,10 @@ class SocketPool: WebSocketDelegate, ObservableObject {
                 break
             case .cancelled:
                 socketClient.isConnected = false
-                print("websocket cancelled")
+//                print("websocket cancelled")
             case .error(let error):
                 socketClient.isConnected = false
-                print(error!)
+//                print("other websocket error \(error!)")
             }
             
         }
