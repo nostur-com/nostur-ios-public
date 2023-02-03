@@ -5,6 +5,8 @@
 //  Created by Fabian Lachman on 02/02/2023.
 //
 
+// DEZE IS GOED.. MAAR 3 x REVERSE..!!
+
 import SwiftUI
 import CoreData
 
