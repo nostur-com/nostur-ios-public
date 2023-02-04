@@ -120,6 +120,7 @@ extension Contact : Identifiable {
                 contact.lud16 = metaData.lud16
                 contact.updated_at = Int64(Date().timeIntervalSince1970)
                 print("🟢🟢 Existing Contact metadata updated")
+                // TODO: Maybe some event.objectWillChange.send() to relations in active views? Performance?
             }
             else {
                 // Received metadata is older than stored Contact
@@ -150,6 +151,7 @@ extension Contact : Identifiable {
             let contactEvents = Array(try! context.fetch(er))
             for event in contactEvents {
                 event.contact = contact
+                event.objectWillChange.send()
             }
         }
 //        do {

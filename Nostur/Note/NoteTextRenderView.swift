@@ -133,35 +133,60 @@ struct NoteTextRenderView: View {
         }
     }
 
-    init(event: Event? = nil, taggedContacts: [Contact] = []) {
+    var useLinelimit = true
+    
+    init(event: Event? = nil, taggedContacts: [Contact] = [], useLinelimit:Bool = true) {
         self.event = event
         self.taggedContacts = taggedContacts
         let text = (event?.content) ?? ""
         self.firstLinkInText = getFirstLinkInText(text)
         self.renderedText = renderMentions(text)
+        self.useLinelimit = useLinelimit
     }
     
     var body: some View {
         VStack(alignment: .leading) {
             if (event != nil) && (taggedContacts.count > 0) {
-                Text(renderedText!)
-                    .lineLimit(4, reservesSpace: true)
-                    .textSelection(.enabled)
-                    .multilineTextAlignment(TextAlignment.leading)
-                        .font(.system(size: 14))
-                        .foregroundColor(.primary)
-                        .lineSpacing(3)
-                        .padding(.vertical, 5)
+                if (useLinelimit) {
+                    Text(renderedText!)
+                        .lineLimit(4, reservesSpace: true)
+                        .textSelection(.enabled)
+                        .multilineTextAlignment(TextAlignment.leading)
+                            .font(.system(size: 14))
+                            .foregroundColor(.primary)
+                            .lineSpacing(3)
+                            .padding(.vertical, 5)
+                }
+                else {
+                    Text(renderedText!)
+                        .textSelection(.enabled)
+                        .multilineTextAlignment(TextAlignment.leading)
+                            .font(.system(size: 14))
+                            .foregroundColor(.primary)
+                            .lineSpacing(3)
+                            .padding(.vertical, 5)
+                }
             }
             else if (taggedContacts.count == 0) {
-                Text(event?.noteText ?? "")
-                    .lineLimit(4, reservesSpace: true)
-                    .textSelection(.enabled)
-                    .multilineTextAlignment(TextAlignment.leading)
-                        .font(.system(size: 14))
-                        .foregroundColor(.primary)
-                        .lineSpacing(3)
-                        .padding(.vertical, 5)
+                if (useLinelimit) {
+                    Text(event?.noteText ?? "")
+                        .lineLimit(4, reservesSpace: true)
+                        .textSelection(.enabled)
+                        .multilineTextAlignment(TextAlignment.leading)
+                            .font(.system(size: 14))
+                            .foregroundColor(.primary)
+                            .lineSpacing(3)
+                            .padding(.vertical, 5)
+                }
+                else {
+                    Text(event?.noteText ?? "")
+                        .textSelection(.enabled)
+                        .multilineTextAlignment(TextAlignment.leading)
+                            .font(.system(size: 14))
+                            .foregroundColor(.primary)
+                            .lineSpacing(3)
+                            .padding(.vertical, 5)
+                }
             }
             else { Text("") }
             

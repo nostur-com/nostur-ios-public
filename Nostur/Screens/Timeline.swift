@@ -22,9 +22,14 @@ extension Timeline {
         
         @Published private(set) var oldScrollOffset = CGFloat.zero
         @Published private(set) var oldContentHeight = CGFloat.zero
+        @Published private(set) var savedHeight = CGFloat.zero
+        @Published private(set) var scrollCounter = 0
         
         @Published private(set) var scrollOffsetEmitter = PassthroughSubject<CGFloat, Never>()
         @Published private(set) var contentHeightEmitter = PassthroughSubject<CGFloat, Never>()
+        
+        var theDiff = 0.0
+        var pendingRescroll = false
         
         init() {
             addSubscribers()
@@ -33,8 +38,20 @@ extension Timeline {
         deinit { for c in cancellables { c.cancel() } }
         
         func updateAnchorOffset() {
-            self.anchorOffset = self.contentHeight - self.oldContentHeight + self.scrollOffset
-            print("💿💿 NEW ANCHOR DIFF: \(self.contentHeight - self.oldContentHeight)")
+            if (pendingRescroll) {
+                print("🎃 ANCHOR DIFF:\(self.theDiff)")
+                self.anchorOffset = self.scrollOffset + self.theDiff
+                self.theDiff = 0
+                self.pendingRescroll = false
+            }
+//            self.anchorOffset = self.contentHeight - self.oldContentHeight + self.scrollOffset
+//            print("💿💿 NEW ANCHOR DIFF: \(self.contentHeight - self.oldContentHeight)")
+        }
+        
+        func saveHeight() {
+            self.savedHeight = self.contentHeight
+            self.theDiff = 0.0
+            self.pendingRescroll = true
         }
         
         func saveOldHeightAndOffset() {
@@ -53,9 +70,16 @@ extension Timeline {
                 .store(in: &cancellables)
             
             contentHeightEmitter
-            //            .debounce(for: .seconds(0.7), scheduler: RunLoop.main)
+//                .debounce(for: .seconds(0.15), scheduler: RunLoop.main)
                 .sink { value in
                     self.contentHeight = value
+                    
+                    if (self.pendingRescroll) {
+                        self.theDiff = self.contentHeight - self.savedHeight
+                        self.scrollCounter = self.scrollCounter + 1
+                        print("🎃 NEW HEIGHT:\(self.contentHeight)")
+                    }
+                    
 //                    print("💿💿🟢 S:\(self.scrollOffset) A:\(self.anchorOffset) H:\(self.contentHeight) - HERES THE NEW HEIGHT")
                 }
                 .store(in: &cancellables)
@@ -83,7 +107,7 @@ struct Timeline: View {
     // MARK: FIRST PAGE: KEEP SCROLL POSITION AFTER NEW EVENTS LOADED
     @Namespace var SCROLL_ANCHOR
 
-    @State var scrollCounter = 0
+//    @State var scrollCounter = 0
     
     @State var isRefreshing = true
     @State var isLoading = true
@@ -197,16 +221,16 @@ struct Timeline: View {
                     }
                     // MAKE PROXY.SCROLLTO ACCESSIBLE FROM OUTSIDE
                     // BY WATCHING FOR SCROLLCOUNTER CHANGES
-                    .onChange(of: scrollCounter) { newScrollCounter in
-                        print("💿💿 4. S:\(vm.scrollOffset) A:\(vm.anchorOffset) H:\(vm.contentHeight) - BEFORE SCROLL TO. 💿 OH: \(vm.oldContentHeight).   DIFF: \(vm.contentHeight - vm.oldContentHeight)")
+                    .onChange(of: vm.scrollCounter) { newScrollCounter in
+//                        print("💿💿 4. S:\(vm.scrollOffset) A:\(vm.anchorOffset) H:\(vm.contentHeight) - BEFORE SCROLL TO. 💿 OH: \(vm.oldContentHeight).   DIFF: \(vm.contentHeight - vm.oldContentHeight)")
                         
-                        let scrollDiff = vm.contentHeight - vm.oldContentHeight
+//                        let scrollDiff = vm.contentHeight - vm.oldContentHeight
                         
-                        if (scrollDiff > 0) { // TODO: Can scrollDiff be negative??? dunno
+//                        if (scrollDiff > 0) { // TODO: Can scrollDiff be negative??? dunno
                             vm.updateAnchorOffset()
                             proxy.scrollTo(SCROLL_ANCHOR, anchor: .top)
-                            vm.saveOldHeightAndOffset()
-                        }
+//                            vm.saveOldHeightAndOffset()
+//                        }
                         
                     }
                 }
@@ -218,7 +242,7 @@ struct Timeline: View {
             .onChange(of: events.first) { newestEvent in
 //                updatePages() // Even nog niet auto updaten tijdens debuggen
             }
-            .safeAreaInset(edge: .top) {
+            .safeAreaInset(edge: .bottom) {
                 VStack(alignment: .center) {
                     Text("Items: \(events.count), First page: \(pages.first?.count ?? 0)\nScroll offset: \(vm.scrollOffset)\nAnchor offset: \(vm.anchorOffset)\nContent height: \(vm.contentHeight)\nScroll-Anchor diff:\(vm.anchorOffset - vm.scrollOffset)")
                     HStack {
@@ -242,7 +266,7 @@ struct Timeline: View {
                         Button { fetchEventsFromFollowing(amount:500) } label: { Text("1. Fetch") }
                         Button { importNotes() } label: { Text("2. Import") }
                         Button { updatePages() } label: { Text("3. Pages \(pages.count)") }
-                        Button { scrollCounter += 1 } label: { Text("4. Scroll") }
+//                        Button { vm.scrollCounter += 1 } label: { Text("4. Scroll") }
                         Button {
                             print("💿💿 I. S:\(vm.scrollOffset) A:\(vm.anchorOffset) H:\(vm.contentHeight) - INFO events.count: \(events.count)")
                         } label: { Text("I") }
@@ -359,15 +383,15 @@ extension Timeline {
     }
     
     func updatePages() {
-        print("💿💿 updatePages S:\(vm.scrollOffset) A:\(vm.anchorOffset) H:\(vm.contentHeight) ")
+        print("🎃 HEIGHT:\(vm.contentHeight)")
         
-        vm.saveOldHeightAndOffset()
+        vm.saveHeight()
         
         let pageCount = Int(ceil(Double(events.count) / Double(pageSize))) // 33 / 3 = 11
         let oldEventsCount = pages.reduce(0) { partialResult, events in
             return events.count + partialResult
         }
-        print("💿💿🟡 BEFORE updatePages S:\(vm.scrollOffset) A:\(vm.anchorOffset) H:\(vm.contentHeight) pageCount: \(pageCount) oldEvents: \(oldEventsCount)")
+//        print("💿💿🟡 BEFORE updatePages S:\(vm.scrollOffset) A:\(vm.anchorOffset) H:\(vm.contentHeight) pageCount: \(pageCount) oldEvents: \(oldEventsCount)")
         
         pages = []
         // All pages // TODO: HOw only update/add pages, leave existing in tact..
@@ -378,7 +402,11 @@ extension Timeline {
         let newEventsCount = pages.reduce(0) { partialResult, events in
             return events.count + partialResult
         }
-        print("💿💿🟢 AFTER updatePages S:\(vm.scrollOffset) A:\(vm.anchorOffset) H:\(vm.contentHeight) pageCount: \(pageCount) newEventsCount: \(newEventsCount) -- prolly new height not rendered yet")
+        
+        //TODO: For new events in the timeline, fetch mention, contacts. "mention", "p", req.0
+        
+        
+//        print("💿💿🟢 AFTER updatePages S:\(vm.scrollOffset) A:\(vm.anchorOffset) H:\(vm.contentHeight) pageCount: \(pageCount) newEventsCount: \(newEventsCount) -- prolly new height not rendered yet")
 //        scrollCounter = scrollCounter + 1
     }
 

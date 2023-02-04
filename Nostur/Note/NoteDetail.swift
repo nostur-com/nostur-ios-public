@@ -48,8 +48,8 @@ struct NoteDetail: View {
     @EnvironmentObject var sp:SocketPool
     @EnvironmentObject var ns:NosturState
     
-//    @ObservedObject var event:Event
-    var event:Event // TODO: Need @ObservedObject here or not?
+    @ObservedObject var event:Event // @ObserverdObject + objectWillChange.send() in Imported is needed!
+//    var event:Event // TODO: Need @ObservedObject here or not?
     
     @FetchRequest
     var taggedContacts:FetchedResults<Contact>
@@ -100,8 +100,7 @@ struct NoteDetail: View {
                                 // for now just manual hack until here
                                 NoteRowView(event: event.replyToRoot!.replyTo!)
                             }
-                            
-                            
+
                             // ROOT NOTE
                             NoteRowView(event: event.replyToRoot!)
                             // REPLIES TO ROOT, UNTIL CURRENT NOTE
@@ -209,7 +208,7 @@ struct NoteDetail: View {
                             
                             // Tweet
                             HStack {
-                                NoteTextRenderView(event: event, taggedContacts: Array(taggedContacts))
+                                NoteTextRenderView(event: event, taggedContacts: Array(taggedContacts), useLinelimit: false)
                                         .foregroundColor(.primary)
                                         .textSelection(.enabled)
                                         .font(.system(size: 18))

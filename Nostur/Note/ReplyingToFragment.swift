@@ -11,7 +11,7 @@ struct ReplyingToFragment: View {
     
     var cm:SocketPool = .shared
     
-    @ObservedObject var event:Event // @Observed here can cause hang?? but needed...
+    @ObservedObject var event:Event
     
     // gets event.replyTo.contact or event.firstPtag
     func replyToUsername() -> String {

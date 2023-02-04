@@ -321,6 +321,7 @@ extension Event : Identifiable {
             er.sortDescriptors = []
             if let rootReply = try? context.fetch(er).first {
                 savedEvent.replyToRoot = rootReply
+//                rootReply.objectWillChange.send()
                 // root heeft geen inverse
             }
         }
@@ -333,6 +334,7 @@ extension Event : Identifiable {
             er.sortDescriptors = []
             if let reply = try? context.fetch(er).first {
                 savedEvent.replyTo = reply
+//                reply.objectWillChange.send()
                 // TODO: inverse hier erbij of neit?
             }
         }
@@ -345,9 +347,11 @@ extension Event : Identifiable {
             for event in pointingToEvents {
                 if (event.replyToId != nil) && (event.replyToId == savedEvent.id!) {
                     event.replyTo = savedEvent
+                    event.objectWillChange.send()
                 }
                 if (event.replyToRootId != nil) && (event.replyToRootId == savedEvent.id!) {
                     event.replyToRoot = savedEvent
+                    event.objectWillChange.send()
                 }
             }
         }
