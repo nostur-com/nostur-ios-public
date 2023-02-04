@@ -22,6 +22,7 @@
 		1F1C31E42969A86700E60BEF /* NewAccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1C31E32969A86700E60BEF /* NewAccountView.swift */; };
 		1F25B392297A4E3400A8A5A7 /* NosturList+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F25B390297A4E3400A8A5A7 /* NosturList+CoreDataClass.swift */; };
 		1F25B393297A4E3400A8A5A7 /* NosturList+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F25B391297A4E3400A8A5A7 /* NosturList+CoreDataProperties.swift */; };
+		1F2DE030298E5C5C00891D2E /* BlockListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2DE02F298E5C5C00891D2E /* BlockListView.swift */; };
 		1F30FAA929705EBD008439C8 /* NosturCloud.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1F30FAA729705EBD008439C8 /* NosturCloud.xcdatamodeld */; };
 		1F30FAB029706E72008439C8 /* Account+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F30FAAE29706E72008439C8 /* Account+CoreDataClass.swift */; };
 		1F30FAB329707719008439C8 /* Account+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F30FAB229707719008439C8 /* Account+CoreDataProperties.swift */; };
@@ -45,6 +46,9 @@
 		1F5F5A5C29838F1D00DED8F4 /* EventsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5F5A5B29838F1D00DED8F4 /* EventsProvider.swift */; };
 		1F5F5A5E2983FF9D00DED8F4 /* EventsWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5F5A5D2983FF9D00DED8F4 /* EventsWindow.swift */; };
 		1F5F5A692984315900DED8F4 /* TimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5F5A682984315900DED8F4 /* TimelineView.swift */; };
+		1F654F29298E8BA50040F15D /* QuotedNote.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F654F28298E8BA40040F15D /* QuotedNote.swift */; };
+		1F654F2B298EB4F30040F15D /* WebsocketConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F654F2A298EB4F30040F15D /* WebsocketConnection.swift */; };
+		1F654F2D298EB5510040F15D /* SocketPool2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F654F2C298EB5510040F15D /* SocketPool2.swift */; };
 		1F71037D296BD9DE006245CC /* Nostr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F71037C296BD9DE006245CC /* Nostr.swift */; };
 		1F75211329865E0C00C43DF0 /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 1F75211229865E0C00C43DF0 /* Starscream */; };
 		1F75211529865F2D00C43DF0 /* SocketPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F75211429865F2D00C43DF0 /* SocketPool.swift */; };
@@ -99,7 +103,6 @@
 		1FEA785529799697007CC8E7 /* Compactor in Frameworks */ = {isa = PBXBuildFile; productRef = 1FEA785429799697007CC8E7 /* Compactor */; };
 		1FEA785829799FE6007CC8E7 /* ProfilePicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */; };
 		1FEC01C0296C4A400078CC9B /* SwiftyJSON in Frameworks */ = {isa = PBXBuildFile; productRef = 1FEC01BF296C4A400078CC9B /* SwiftyJSON */; };
-		B39353FC12E60CADAE655912 /* Connections.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3935E040327074D0C91EA33 /* Connections.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -118,6 +121,7 @@
 		1F1C31E82969B79F00E60BEF /* CryptoKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CryptoKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/CryptoKit.framework; sourceTree = DEVELOPER_DIR; };
 		1F25B390297A4E3400A8A5A7 /* NosturList+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NosturList+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1F25B391297A4E3400A8A5A7 /* NosturList+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NosturList+CoreDataProperties.swift"; sourceTree = "<group>"; };
+		1F2DE02F298E5C5C00891D2E /* BlockListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockListView.swift; sourceTree = "<group>"; };
 		1F30FAA829705EBD008439C8 /* NosturCloud.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = NosturCloud.xcdatamodel; sourceTree = "<group>"; };
 		1F30FAAE29706E72008439C8 /* Account+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Account+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1F30FAB229707719008439C8 /* Account+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Account+CoreDataProperties.swift"; sourceTree = "<group>"; };
@@ -142,6 +146,9 @@
 		1F5F5A5B29838F1D00DED8F4 /* EventsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsProvider.swift; sourceTree = "<group>"; };
 		1F5F5A5D2983FF9D00DED8F4 /* EventsWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsWindow.swift; sourceTree = "<group>"; };
 		1F5F5A682984315900DED8F4 /* TimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineView.swift; sourceTree = "<group>"; };
+		1F654F28298E8BA40040F15D /* QuotedNote.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuotedNote.swift; sourceTree = "<group>"; };
+		1F654F2A298EB4F30040F15D /* WebsocketConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebsocketConnection.swift; sourceTree = "<group>"; };
+		1F654F2C298EB5510040F15D /* SocketPool2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketPool2.swift; sourceTree = "<group>"; };
 		1F71037C296BD9DE006245CC /* Nostr.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nostr.swift; sourceTree = "<group>"; };
 		1F75211429865F2D00C43DF0 /* SocketPool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketPool.swift; sourceTree = "<group>"; };
 		1F7521162986736400C43DF0 /* Messages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Messages.swift; sourceTree = "<group>"; };
@@ -193,7 +200,6 @@
 		1FDFEBB6297ED78100511AA0 /* ConfigurationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationView.swift; sourceTree = "<group>"; };
 		1FE4C0262982FF3B004E7750 /* ReplyingToFragment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplyingToFragment.swift; sourceTree = "<group>"; };
 		1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePicView.swift; sourceTree = "<group>"; };
-		B3935E040327074D0C91EA33 /* Connections.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Connections.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -267,6 +273,14 @@
 			path = CoreData;
 			sourceTree = "<group>";
 		};
+		1F2DE02E298E5B4D00891D2E /* Blocklist */ = {
+			isa = PBXGroup;
+			children = (
+				1F2DE02F298E5C5C00891D2E /* BlockListView.swift */,
+			);
+			path = Blocklist;
+			sourceTree = "<group>";
+		};
 		1F37571429672AB6007D210A /* DummyData */ = {
 			isa = PBXGroup;
 			children = (
@@ -292,7 +306,6 @@
 			isa = PBXGroup;
 			children = (
 				1F37571429672AB6007D210A /* DummyData */,
-				B3935E040327074D0C91EA33 /* Connections.swift */,
 				1F71037C296BD9DE006245CC /* Nostr.swift */,
 				1F7521162986736400C43DF0 /* Messages.swift */,
 			);
@@ -333,6 +346,7 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
+				1F654F28298E8BA40040F15D /* QuotedNote.swift */,
 				1F330984298A57C700D4D8CF /* ReversedScrollView.swift */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1FB448BB2965F3D000038671 /* Products */,
@@ -352,6 +366,7 @@
 			isa = PBXGroup;
 			children = (
 				1F4773A3296CA7040049454B /* Accounts */,
+				1F2DE02E298E5B4D00891D2E /* Blocklist */,
 				1F25B395297A508200A8A5A7 /* CoreData */,
 				1F8B1347297B34C6002EB8CF /* Crypto */,
 				1F25B38B297A4D9400A8A5A7 /* Lists */,
@@ -396,8 +411,10 @@
 				1FB62D0D296FFF1400A0055B /* RelayEditView.swift */,
 				1F756530296AE4260078474E /* RelaysView.swift */,
 				1F75211429865F2D00C43DF0 /* SocketPool.swift */,
+				1F654F2C298EB5510040F15D /* SocketPool2.swift */,
 				1F75211A2986D45D00C43DF0 /* Importer.swift */,
 				1F7521182986D44E00C43DF0 /* MessageParser.swift */,
+				1F654F2A298EB4F30040F15D /* WebsocketConnection.swift */,
 			);
 			path = Relays;
 			sourceTree = "<group>";
@@ -516,6 +533,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1F2DE030298E5C5C00891D2E /* BlockListView.swift in Sources */,
 				1F756533296AE7910078474E /* NewRelayView.swift in Sources */,
 				1F3C3F9629755D4C00E813FD /* NosturState.swift in Sources */,
 				1F8B1365297B3BE8002EB8CF /* ContactProfile.swift in Sources */,
@@ -544,6 +562,7 @@
 				1FB448BE2965F3D000038671 /* NosturApp.swift in Sources */,
 				1F8B135D297B36DB002EB8CF /* Bytes+Base64.swift in Sources */,
 				1FDFEBB7297ED78100511AA0 /* ConfigurationView.swift in Sources */,
+				1F654F29298E8BA50040F15D /* QuotedNote.swift in Sources */,
 				1FE4C0272982FF3B004E7750 /* ReplyingToFragment.swift in Sources */,
 				1F987EB129804AA5001E352E /* NewNoteView.swift in Sources */,
 				1F87AE332982935F005FF1C8 /* NoteRow.swift in Sources */,
@@ -563,6 +582,7 @@
 				1F75211B2986D45D00C43DF0 /* Importer.swift in Sources */,
 				1F8B134B297B3551002EB8CF /* NIP19.swift in Sources */,
 				1F1ABC4729811A1B00D03FA9 /* LRUCache.swift in Sources */,
+				1F654F2B298EB4F30040F15D /* WebsocketConnection.swift in Sources */,
 				1F14BA7029854DFC00EACCD5 /* ProfileRow.swift in Sources */,
 				1F4773A7296D4F5B0049454B /* AccountView.swift in Sources */,
 				1FD49731297FC9C80084F14E /* ProfileView.swift in Sources */,
@@ -589,12 +609,12 @@
 				1FD49733297FCB5E0084F14E /* PreviewHelper.swift in Sources */,
 				1F14BA6E29854B8E00EACCD5 /* ContactList.swift in Sources */,
 				1F5F5A5C29838F1D00DED8F4 /* EventsProvider.swift in Sources */,
+				1F654F2D298EB5510040F15D /* SocketPool2.swift in Sources */,
 				1F30FAB029706E72008439C8 /* Account+CoreDataClass.swift in Sources */,
 				1F33096129891C4800D4D8CF /* ProfileLikesView.swift in Sources */,
 				1F987EB329805F33001E352E /* String+matchingStrings.swift in Sources */,
 				1F25B393297A4E3400A8A5A7 /* NosturList+CoreDataProperties.swift in Sources */,
 				1F779832298D19D3000642BB /* PaginationTest3.swift in Sources */,
-				B39353FC12E60CADAE655912 /* Connections.swift in Sources */,
 				1F14BA722985633300EACCD5 /* NoteRowView.swift in Sources */,
 				1F1ABC45298110D800D03FA9 /* LinkPreview.swift in Sources */,
 				1FEA785829799FE6007CC8E7 /* ProfilePicView.swift in Sources */,

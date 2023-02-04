@@ -27,6 +27,7 @@ extension Event {
     
     @NSManaged public var replyToRootId: String?
     @NSManaged public var replyToId: String?
+    @NSManaged public var firstQuoteId: String?
     @NSManaged public var likes: Int64 // Cache
     @NSManaged public var liked: Bool // Cache
     @NSManaged public var repliesCount: Int64 // Cache
@@ -37,6 +38,7 @@ extension Event {
     @NSManaged public var contact: Contact?
     @NSManaged public var replyTo: Event?
     @NSManaged public var replyToRoot: Event?
+    @NSManaged public var firstQuote: Event?
 
 
     @NSManaged public var replies: Set<Event>?
@@ -339,9 +341,21 @@ extension Event : Identifiable {
             }
         }
         
+        if (event.kind == .textNote && TagsHelpers(event.tags).mentionEtags() != nil) {
+            savedEvent.firstQuoteId = TagsHelpers(event.tags).mentionEtags()!.first!.id
+            
+            let er = NSFetchRequest<Event>(entityName: "Event")
+            er.predicate = NSPredicate(format: "id == %@", savedEvent.firstQuoteId!)
+            er.fetchLimit = 1
+            er.sortDescriptors = []
+            if let mentionedEvent = try? context.fetch(er).first {
+                savedEvent.firstQuote = mentionedEvent
+            }
+        }
+        
         // if other existing messages were replying to this, fix the relation
         let pointingToEventReq = NSFetchRequest<Event>(entityName: "Event")
-        pointingToEventReq.predicate = NSPredicate(format: "kind == 1 AND (replyToId == %@ OR replyToRootId == %@)", savedEvent.id!, savedEvent.id!)
+        pointingToEventReq.predicate = NSPredicate(format: "kind == 1 AND (replyToId == %@ OR replyToRootId == %@ OR firstQuoteId == %@)", savedEvent.id!, savedEvent.id!, savedEvent.id!)
         pointingToEventReq.sortDescriptors = []
         if let pointingToEvents = try? context.fetch(pointingToEventReq) {
             for event in pointingToEvents {
@@ -351,6 +365,10 @@ extension Event : Identifiable {
                 }
                 if (event.replyToRootId != nil) && (event.replyToRootId == savedEvent.id!) {
                     event.replyToRoot = savedEvent
+                    event.objectWillChange.send()
+                }
+                if (event.firstQuoteId != nil) && (event.firstQuoteId == savedEvent.id!) {
+                    event.firstQuote = savedEvent
                     event.objectWillChange.send()
                 }
             }

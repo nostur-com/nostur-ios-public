@@ -11,6 +11,7 @@
         <attribute name="picture" attributeType="String" defaultValueString=""/>
         <attribute name="privateKey" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
         <attribute name="publicKey" optional="YES" attributeType="String"/>
+        <relationship name="blockedContacts" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact"/>
         <relationship name="bookmarks" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Event" inverseName="bookmarkedBy" inverseEntity="Event"/>
         <relationship name="follows" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact" inverseName="followedBy" inverseEntity="Contact"/>
         <relationship name="likes" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Event"/>
@@ -38,6 +39,7 @@
     <entity name="Event" representedClassName=".Event" syncable="YES">
         <attribute name="content" optional="YES" attributeType="String"/>
         <attribute name="created_at" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="firstQuoteId" optional="YES" attributeType="String"/>
         <attribute name="id" attributeType="String"/>
         <attribute name="kind" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="liked" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
@@ -51,6 +53,7 @@
         <attribute name="tagsSerialized" optional="YES" attributeType="String"/>
         <relationship name="bookmarkedBy" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Account" inverseName="bookmarks" inverseEntity="Account"/>
         <relationship name="contact" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Contact"/>
+        <relationship name="firstQuote" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event"/>
         <relationship name="replies" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Event" inverseName="replyTo" inverseEntity="Event" elementID="repliesRelation"/>
         <relationship name="replyTo" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event" inverseName="replies" inverseEntity="Event" elementID="replyToRelation"/>
         <relationship name="replyToRoot" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event" elementID="replyToRootRelation"/>

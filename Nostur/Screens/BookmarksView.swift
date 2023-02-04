@@ -33,7 +33,7 @@ struct BookmarksView: View {
             Text("Your list of bookmarks is not public")
             ScrollView {
                 ForEach(bookmarks) { bookmark in
-                    NoteRow(event: bookmark)
+                    NoteRowView(event: bookmark)
                         .contextMenu {
                             Button {
                                 UIPasteboard.general.string = bookmark.noteId

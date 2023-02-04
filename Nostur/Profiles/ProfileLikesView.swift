@@ -42,7 +42,7 @@ struct ProfileLikesView: View {
         VStack {
             LazyVStack {
                 ForEach(reactionsTo, id:\Event.id) { event in
-                    NoteRow(event:event)
+                    NoteRowView(event:event)
                 }
             }
         }

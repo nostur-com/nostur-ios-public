@@ -10,11 +10,12 @@ import SwiftUI
 struct ProfileRow: View {
 
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var sp:SocketClient
+    @EnvironmentObject var sp:SocketPool
 //    var sp:SocketPool = .shared
     
     // Following/Unfollowing tap is slow so update UI and do in background:
     @State var isFollowing = false
+    var withoutFollowButton = false
     
     var contact:Contact
     
@@ -36,20 +37,22 @@ struct ProfileRow: View {
                                 .lineLimit(1)
                         }.multilineTextAlignment(.leading)
                         Spacer()
-                        Button {
-                            if (isFollowing) {
-                                isFollowing = false
-                                ns.unfollow(contact)
+                        if (!withoutFollowButton) {
+                            Button {
+                                if (isFollowing) {
+                                    isFollowing = false
+                                    ns.unfollow(contact)
+                                }
+                                else {
+                                    print("chaning isFollowing to true 1")
+                                    isFollowing = true
+                                    ns.follow(contact)
+                                    print("chaning isFollowing to true 2")
+    //                                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
+                                }
+                            } label: {
+                                FollowButton(isFollowing:isFollowing)
                             }
-                            else {
-                                print("chaning isFollowing to true 1")
-                                isFollowing = true
-                                ns.follow(contact)
-                                print("chaning isFollowing to true 2")
-//                                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
-                            }
-                        } label: {
-                            FollowButton(isFollowing:isFollowing)
                         }
                     }
                     Text(contact.about ?? "").foregroundColor(.primary)

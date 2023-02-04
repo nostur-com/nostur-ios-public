@@ -55,7 +55,8 @@ struct NosturApp: App {
                 
                 // CONNECT TO RELAYS
                 for relay in relays {
-                    _ = sp.addSocket(url: relay.url!, write: relay.write)
+                    _ = sp.addSocket(relayId: relay.objectID, url: relay.url!, read:relay.read, write: relay.write
+                    )
                 }
             } catch {
                 print("🔴🔴🔴 Unable to Execute Fetch Request, \(error)")

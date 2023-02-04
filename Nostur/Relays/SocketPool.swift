@@ -1,147 +1,178 @@
+////
+////  SocketPool.swift
+////  Nostur
+////
+////  Created by Fabian Lachman on 29/01/2023.
+////
 //
-//  SocketPool.swift
-//  Nostur
+//import Foundation
+//import Starscream
+//import CoreData
 //
-//  Created by Fabian Lachman on 29/01/2023.
+//class SocketPool: WebSocketDelegate, ObservableObject {
+//    
+//    static let shared = SocketPool()
 //
-
-import Foundation
-import Starscream
-
-class SocketPool: WebSocketDelegate, ObservableObject {
-    
-    static let shared = SocketPool()
-
-    var socketQueue = DispatchQueue(label: "nostur.queue", qos: .background)
-    @Published var sockets:[String : SocketClient] = [:]
-    
-    func addSocket(url:String, read:Bool = true, write: Bool = false) -> SocketClient {
-        if (!sockets.keys.contains(url)) {
-            
-            var request = URLRequest(url: URL(string: url)!)
-            request.timeoutInterval = 5
-            
-//            Compression gives error: WSError(type: Starscream.ErrorType.protocolError, message: "not valid UTF-8 data", code: 1002)
-//            let compression = WSCompression()
-//            let socket = WebSocket(request: request, compressionHandler: compression)
-            
-            let socket = WebSocket(request: request)
-            socket.callbackQueue = self.socketQueue
-            socket.delegate = self
-            socket.connect()
-            
-            let socketClient = SocketClient(client: socket, read: read, write: write)
-            sockets[url] = socketClient
-            return socketClient
-        }
-        else {
-            return sockets[url]!
-        }
-    }
-    
-    func isUrlConnected(_ url:String) -> Bool {
-        if (!sockets.keys.contains(url)) { return false }
-        if let socket:SocketClient = sockets[url] {
-            return socket.isConnected
-        }
-        return false
-    }
-    
-    func connectSocketByUrl(_ url:String) {
-        if let socket:SocketClient = sockets[url] {
-            socket.client.connect()
-        }
-    }
-    
-    func disconnectSocketByUrl(_ url:String) {
-        if let socket:SocketClient = sockets[url] {
-            socket.client.disconnect()
-            socket.isConnected = false
-        }
-    }
-    
-    func removeSocket(url:String) {
-        if (sockets.keys.contains(url)) {
-            sockets.removeValue(forKey: url)
-        }
-    }
-    
-    func sendMessage(_ message:ClientMessage) {
-//        print("🔴🔴🔴🔴🔴🔴🔴🔴 sendMessage DISABLED FOR DEV 🔴🔴🔴🔴🔴🔴")
-//        print("🔴🔴🔴🔴🔴🔴🔴🔴 sendMessage DISABLED FOR DEV 🔴🔴🔴🔴🔴🔴")
-//        print("🔴🔴🔴🔴🔴🔴🔴🔴 sendMessage DISABLED FOR DEV 🔴🔴🔴🔴🔴🔴")
-//        print("🔴🔴🔴🔴🔴🔴🔴🔴 sendMessage DISABLED FOR DEV 🔴🔴🔴🔴🔴🔴")
-//        print("🔴🔴🔴🔴🔴🔴🔴🔴 sendMessage DISABLED FOR DEV 🔴🔴🔴🔴🔴🔴")
-//        return
-        for (url, socketClient) in sockets {
-            if (!socketClient.isConnected) { socketClient.client.connect() }
-            
-            if message.type == .REQ && socketClient.read { // REQ FOR ALL READ RELAYS
-//                print("⬇️⬇️ REQUESTING: \(String(message.message.prefix(260)))")
-                socketClient.client.write(string: message.message)
-            }
-            else if  message.type == .CLOSE { // CLOSE FOR ALL RELAYS
-//                print("🔚🔚 CLOSE: \(String(message.message.prefix(260)))")
-                socketClient.client.write(string: message.message) { }
-            }
-            else if message.type == .EVENT && socketClient.write { // EVENT IS ONLY FOR WRITE RELAYS
-                print("⬆⬆⬆ PUBLISHING TO \(url): \(message.message)")
-                socketClient.client.write(string: message.message) { }
-            }
-        }
-    }
-    
-    func didReceive(event: Starscream.WebSocketEvent, client: Starscream.WebSocket) {
-        if let socketClient = sockets[client.request.url!.absoluteString] {
-            
-            switch event {
-            case .connected(let headers):
-                socketClient.isConnected = true
-//                print("websocket is connected: \(headers)")
-            case .disconnected(let reason, let code):
-                socketClient.isConnected = false
-//                print("websocket is disconnected: \(reason) with code: \(code)")
-            case .text(let string):
-//                print("💬 Received text: \(string)")
-                MessageParser.shared.socketReceivedMessage(text: string)
-            case .binary(let data):
-                print("Received data: \(data.count)")
-            case .ping(_):
-                break
-            case .pong(_):
-                break
-            case .viabilityChanged(_):
-                break
-            case .reconnectSuggested(_):
-                break
-            case .cancelled:
-                socketClient.isConnected = false
-//                print("websocket cancelled")
-            case .error(let error):
-                socketClient.isConnected = false
-//                print("other websocket error \(error!)")
-            }
-            
-        }
-    }
-    
-}
-
-class SocketClient: ObservableObject {
-    var client:WebSocket
-    @Published var isConnected = false
-    @Published var read = true
-    @Published var write = false
-    
-    init(client: WebSocket, isConnected: Bool = false, read: Bool = true, write: Bool = false) {
-        self.client = client
-        self.isConnected = isConnected
-        self.read = read
-        self.write = write
-    }
-}
-
-
-
-
-
+//    var socketQueue = DispatchQueue(label: "nostur.queue", qos: .background)
+//    
+//    @Published var sockets:[NSManagedObjectID : SocketClient] = [:]
+//    
+//    func addSocket(relayId:NSManagedObjectID, url:String, read:Bool = true, write: Bool = false) -> SocketClient {
+//        if (!sockets.keys.contains(relayId)) {
+//            
+//            var request = URLRequest(url: URL(string: url)!)
+////            request.setValue(["wamp"].joined(separator: ","), forHTTPHeaderField: "Sec-WebSocket-Protocol")
+//            request.timeoutInterval = 15
+//            
+//            //Compression gives error: WSError(type: Starscream.ErrorType.protocolError, message: "not valid UTF-8 data", code: 1002)
+////            let compression = WSCompression()
+////            let socket = WebSocket(request: request, compressionHandler: compression)
+//            
+//            let socket = WebSocket(request: request, compressionHandler: .none)
+//            socket.callbackQueue = self.socketQueue
+//            socket.delegate = self
+//            let socketClient = SocketClient(client: socket, read: read, write: write, relayId: relayId)
+//            if (read || write) {
+//                socketClient.isConnecting = true
+//                socket.connect()
+//            }
+//            sockets[relayId] = socketClient
+//            return socketClient
+//        }
+//        else {
+//            return sockets[relayId]!
+//        }
+//    }
+//    
+//    func socketByUrl(_ url:String) -> SocketClient? {
+//        let managedSocket = sockets.filter { relayId, managedSocket in
+//            return managedSocket.client.request.url!.absoluteString.lowercased() == url.lowercased()
+//        }.first?.value
+//        
+//        guard managedSocket != nil, let socketClient = managedSocket else {
+//            return nil
+//        }
+//        return socketClient
+//    }
+//    
+//    func isUrlConnected(_ url:String) -> Bool {
+//        let managedSocket = sockets.filter { relayId, managedSocket in
+//            return managedSocket.client.request.url!.absoluteString.lowercased() == url.lowercased()
+//        }.first?.value
+//        guard managedSocket != nil, let socketClient = managedSocket else {
+//            return false
+//        }
+//        return socketClient.isConnected
+//    }
+//    
+//    func removeSocket(_ relayId:NSManagedObjectID) {
+//        if (sockets.keys.contains(relayId)) {
+//            sockets.removeValue(forKey: relayId)
+//        }
+//    }
+//    
+//    func sendMessage(_ message:ClientMessage) {
+//        for (relayId, socketClient) in sockets {
+//            guard socketClient.read || socketClient.write else {
+//                // Skip if relay is not selected for reading or writing events
+//                continue
+//            }
+//            
+//            if message.type == .REQ && socketClient.read { // REQ FOR ALL READ RELAYS
+//                if (!socketClient.isConnected && !socketClient.isConnecting) {
+//                    socketClient.client.connect()
+//                }
+////                print("⬇️⬇️ REQUESTING: \(String(message.message.prefix(260)))")
+//                socketClient.client.write(string: message.message)
+//            }
+//            else if  message.type == .CLOSE { // CLOSE FOR ALL RELAYS
+//                if (!socketClient.isConnected && socketClient.read && !socketClient.isConnecting) {
+//                    socketClient.client.connect()
+//                }
+////                print("🔚🔚 CLOSE: \(String(message.message.prefix(260)))")
+//                socketClient.client.write(string: message.message) { }
+//            }
+//            else if message.type == .EVENT && socketClient.write { // EVENT IS ONLY FOR WRITE RELAYS
+//                if (!socketClient.isConnected && !socketClient.isConnecting) {
+//                    socketClient.client.connect()
+//                }
+//                print("⬆⬆⬆ PUBLISHING TO \(socketClient.client.request.url!.description): \(message.message)")
+//                socketClient.client.write(string: message.message) { }
+//            }
+//        }
+//    }
+//    
+//    func didReceive(event: Starscream.WebSocketEvent, client: Starscream.WebSocket) {
+//        let managedSocket = sockets.filter { relayId, managedSocket in
+//            return managedSocket.client.request.url!.absoluteString == client.request.url!.absoluteString
+//        }.first?.value
+//        guard managedSocket != nil, let socketClient = managedSocket else {
+//            print("🔌 🔴 Received from socket that is not in .sockets")
+//            return
+//        }
+//        switch event {
+//        case .connected(let headers):
+//            print(headers.description)
+//            DispatchQueue.main.async {
+//                socketClient.isConnecting = false
+//                socketClient.isConnected = true
+//            }
+//            print("🔌 CONNECTED \(socketClient.client.request.description): \(headers)")
+//        case .disconnected(let reason, let code):
+//            DispatchQueue.main.async {
+//                socketClient.isConnecting = false
+//                socketClient.isConnected = false
+//            }
+//            print("🔌 DISCONNECTED \(socketClient.client.request.description): \(reason) with code: \(code)")
+//        case .text(let string):
+////                print("🔌 💬 Received text: \(string)")
+//            MessageParser.shared.socketReceivedMessage(text: string)
+//        case .binary(let data):
+//            print("🔌 RECEIVED DATA \(socketClient.client.request.description): \(data.count)")
+//        case .ping(_):
+//            break
+//        case .pong(_):
+//            break
+//        case .viabilityChanged(_):
+//            break
+//        case .reconnectSuggested(_):
+//            break
+//        case .cancelled:
+//            DispatchQueue.main.async {
+//                socketClient.isConnecting = false
+//                socketClient.isConnected = false
+//            }
+//            print("🔌 CANCELLED \(socketClient.client.request.description)")
+//        case .error(let error):
+//            DispatchQueue.main.async {
+//                socketClient.isConnecting = false
+//                socketClient.isConnected = false
+//            }
+//                print("🔌🔴 ERROR \(socketClient.client.request.description): \(error!)")
+//        }
+//    }
+//    
+//}
+//
+//class SocketClient: ObservableObject {
+//    var client:WebSocket
+//    var isConnecting = false
+//    @Published var isConnected = false
+//    @Published var read = true
+//    @Published var write = false
+//    var relayId:NSManagedObjectID
+//    
+//    init(client: WebSocket, isConnected: Bool = false, read: Bool = true, write: Bool = false, relayId:NSManagedObjectID) {
+//        self.client = client
+//        self.isConnecting = false
+//        self.isConnected = isConnected
+//        self.read = read
+//        self.write = write
+//        self.relayId = relayId
+//    }
+//}
+//
+//
+//
+//
+//

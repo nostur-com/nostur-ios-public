@@ -70,7 +70,7 @@ struct NoteTextRenderView: View {
         guard byPubkey != nil else {
             return nil
         }
-        return taggedContacts.first(where: { $0.pubkey == byPubkey })
+        return taggedContacts.first(where: { $0.pubkey! == byPubkey! })
     }
     
     private func getFirstLinkInText(_ text:String) -> String? {
@@ -97,27 +97,27 @@ struct NoteTextRenderView: View {
                     
                     if (1 == 1) {
                         // TODO: NIP19 bech32 is very slow, with hundreds of rows it slows down UI noticeably, so disable for now
-                        let key = try! NIP19(prefix: "npub", hexString: tags![index].pubkey)
+                        let key = try! NIP19(prefix: "npub1", hexString: tags![index].pubkey)
                         if let contact = contact(byPubkey:tags![index].pubkey) {
-                            newText = newText.replacingOccurrences(of: "#[\(index)]", with: "[@\(contact.username)](nostr:\(key.displayString))")
+                            newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(contact.username)](nostur:p:\(key.displayString))")
                         }
                         else {
-                            newText = newText.replacingOccurrences(of: "#[\(index)]", with: "[@\(String(tags![index].pubkey).prefix(5))](nostr:\(key.displayString))")
+                            newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(tags![index].pubkey).prefix(5))](nostur:p:\(key.displayString))")
                         }
                     }
                     else {
-                        newText = newText.replacingOccurrences(of: "#[\(index)]", with: "[@\(String(tags![index].pubkey).prefix(5))](nostur:p:\(tags![index].pubkey))")
+                        newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(tags![index].pubkey).prefix(5))](nostur:p:\(tags![index].pubkey))")
                     }
                 }
                 if (tags![index].type == "e") {
                     
                     if (1 == 1) {
                         // TODO: NIP19 bech32 is very slow, with hundreds of rows it slows down UI noticeably, so disable for now
-                        let key = try! NIP19(prefix: "note", hexString: tags![index].id)
-                        newText = newText.replacingOccurrences(of: "#[\(index)]", with: "[@\(String(tags![index].id).prefix(10))](nostr:\(key.displayString))")
+                        let key = try! NIP19(prefix: "note1", hexString: tags![index].id)
+                        newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(tags![index].id).prefix(10))](nostur:e:\(key.displayString))")
                     }
                     else {
-                        newText = newText.replacingOccurrences(of: "#[\(index)]", with: "[@\(String(tags![index].id).prefix(10))](nostur:e:\(tags![index].id))")
+                        newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(tags![index].id).prefix(10))](nostur:e:\(tags![index].id))")
                     }
                 }
             }
@@ -190,13 +190,17 @@ struct NoteTextRenderView: View {
             }
             else { Text("") }
             
-            if (1 == 2 && firstLinkInText != nil) {
+            if (1 == 1 && firstLinkInText != nil && !useLinelimit) {
 //                LinkPreview(url: URL(string:firstLinkInText!)!, previewIsReady: $previewIsReady)
                 VStack {
                             if metadata != nil {
                                 LinkView(metadata: metadata!)
                             } else {
-                                ProgressView()
+                                HStack {
+                                    Spacer()
+                                    ProgressView()
+                                    Spacer()
+                                }
                             }
                         }
                         .onAppear(perform: fetchMetadata)
@@ -218,6 +222,9 @@ struct NoteTextRenderView: View {
 ////                        .frame(height: 300)
 //                }
 //            }
+        }
+        .onAppear {
+//            print("taggedContacts.count: \(taggedContacts.count)")
         }
         
         
@@ -261,9 +268,13 @@ struct NoteTextRenderView: View {
     private func fetchMetadata() {
         let provider = LPMetadataProvider()
         let url = URL(string: firstLinkInText!)!
-        provider.startFetchingMetadata(for: url) { metadata, error in
-            oyooy(metadata: metadata)
+        Task {
+            let metadata = try await provider.startFetchingMetadata(for: url)
+            await oyooy(metadata: metadata)
         }
+//        provider.startFetchingMetadata(for: url) { metadata, error in
+//            oyooy(metadata: metadata)
+//        }
     }
     
     @MainActor

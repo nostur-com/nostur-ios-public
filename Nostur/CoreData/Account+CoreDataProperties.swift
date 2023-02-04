@@ -28,6 +28,7 @@ extension Account {
     @NSManaged public var id: UUID?
     @NSManaged public var follows: Set<Contact>?
     @NSManaged public var bookmarks: Set<Event>?
+    @NSManaged public var blockedContacts: Set<Contact>?
     
     @NSManaged public var likes: Set<Event>?
 }
@@ -46,6 +47,23 @@ extension Account {
 
     @objc(removeFollows:)
     @NSManaged public func removeFromFollows(_ values: NSSet)
+
+}
+
+// MARK: Generated accessors for blockedContacts
+extension Account {
+
+    @objc(addBlockedContactsObject:)
+    @NSManaged public func addToBlockedContacts(_ value: Contact)
+
+    @objc(removeBlockedContactsObject:)
+    @NSManaged public func removeFromBlockedContacts(_ value: Contact)
+
+    @objc(addBlockedContacts:)
+    @NSManaged public func addToBlockedContacts(_ values: NSSet)
+
+    @objc(removeBlockedContacts:)
+    @NSManaged public func removeFromBlockedContacts(_ values: NSSet)
 
 }
 

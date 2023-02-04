@@ -17,18 +17,15 @@ import CoreData
 
 // A single note shown in a row in the MainTimelineView
 
-
+// See old struct NoteRow. For some old thread layout stuff still.
 
 struct NoteRowView: View {
     
     @Environment(\.managedObjectContext) var viewContext
-//    @EnvironmentObject var cm:ConnectionManager
-    var cm:SocketPool = .shared
+    var sp:SocketPool = .shared
     @EnvironmentObject var accountState:NosturState
-    
     @ObservedObject var event:Event
-//    var event:Event // TODO: Not sure need ObservedObject or not???
-    
+
     @FetchRequest
     var taggedContacts:FetchedResults<Contact>
     
@@ -38,13 +35,13 @@ struct NoteRowView: View {
         self.event = event
         let pubkeys = event.contactPubkeys()
         
-        if (1 == 1) || (pubkeys == nil) {
+        if (1 == 2) || (pubkeys == nil) {
             _taggedContacts = FetchRequest(
                 sortDescriptors: [],
                 predicate: NSPredicate(format: "FALSEPREDICATE")
             )
         }
-        else {
+        else { // TODO: IS THIS SLOW OR NOT?
             _taggedContacts = FetchRequest(
                 sortDescriptors: [],
                 predicate: NSPredicate(format: "pubkey IN %@", pubkeys!)
@@ -111,6 +108,17 @@ struct NoteRowView: View {
                                     NoteTextRenderView(event:event, taggedContacts:Array(taggedContacts))
                                 }
                             })
+                            
+                            if (event.firstQuoteId != nil) {
+                                if (event.firstQuote != nil) {
+                                    QuotedNoteFragment(event: event.firstQuote!)
+                                }
+                                else {
+                                    ProgressView().onAppear {
+                                        sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.firstQuoteId!)))
+                                    }
+                                }
+                            }
 
                            HStack {
                                if (visible) { FooterFragment(event: event) }
@@ -133,10 +141,75 @@ struct NoteRowView: View {
             // followed contact meta data refresh should be updated at app wake up probably
             if (event.contact == nil) {
                 print("🟢 NoteRow.onAppear event.contact == nil so: REQ.0:\(event.pubkey!)")
-                cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.pubkey!)))
+                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.pubkey!)))
             }
         }
         
+    }
+}
+
+struct NoteMenu: View {
+    @EnvironmentObject var ns:NosturState
+    @Environment(\.managedObjectContext) var viewContext
+    var event:Event
+    
+    var noteIdHex:String { get { event.id ?? "00000" } }
+    var noteId:String { get { event.noteId } }
+    var username:String {
+        get {
+            event.contact?.username ?? String(event.pubkey!.prefix(5))
+        }
+    }
+    
+    var body: some View {
+        Menu {
+            Button {
+                UIPasteboard.general.string = noteId
+            } label: {
+                Label("Copy note id \(noteId)", systemImage: "doc.on.clipboard")
+            }
+            Button {
+                UIPasteboard.general.string = noteIdHex
+            } label: {
+                Label("Copy note id hex \(noteIdHex))", systemImage: "doc.on.clipboard")
+            }
+            Button {
+                print("Unfollow @\(username)")
+            } label: {
+                Label("Unfollow @\(username)", systemImage: "person.fill.xmark")
+            }
+            Button {
+                print("Block @\(username)")
+                if (event.contact == nil) {
+                    let newContact = Contact(context: viewContext)
+                    newContact.pubkey = event.pubkey!
+                    newContact.updated_at = 0
+                    ns.account?.addToBlockedContacts(newContact)
+                    ns.account?.objectWillChange.send()
+                }
+                else {
+                    ns.account?.addToBlockedContacts(event.contact!)
+                    ns.account?.objectWillChange.send()
+                }
+                do { try viewContext.save() }
+                catch {
+                    print("Could not save after blocking contact \(error)")
+                }
+                    
+                
+            } label: {
+                Label("Block @\(username)", systemImage: "slash.circle")
+            }
+        } label: {
+            Text("···")
+                .fontWeight(.bold)
+                .foregroundColor(.secondary)
+                .padding(.top, 0)
+                .padding(.bottom, 10)
+                .padding(.leading, 20)
+                .padding(.trailing, 10)
+            
+        }
     }
 }
 
@@ -202,164 +275,31 @@ struct FooterFragment: View {
                     Label("\(event.likes)", systemImage: "heart")
                 }
             }
-//            Spacer()
-
-
+            Spacer()
             
-//            Button {
-//                print("GO")
-//            } label: {
-//                Label("\(event.repliesCount)", systemImage: "message")
-//            }
-//
-//            Button {
-//                print("GO")
-//            } label: {
-//                Label("\(event.likes)", systemImage: "heart")
-//            }
+            Button {
+                if (ns.isBookmarked(event)) {
+                    ns.removeBookmark(event)
+                }
+                else {
+                    ns.addBookmark(event)
+                }
+            } label: {
+                if (ns.isBookmarked(event)) {
+                    Image(systemName: "bookmark.fill")
+                        .foregroundColor(.orange)
+//                        .frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
+                }
+                else {
+                    Image(systemName: "bookmark")
+//                        .frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
+                }
+            }
             
-//            Text("WTF FOOTER \(event.repliesCount)")
-//            Image(systemName: "message")//.frame(height: 50)
-//            Button(action: {
-//                // Handle retweet action
-//            }) {
-////                Label("\(event.repliesCount)", systemImage: "message")
-////                HStack {
-//////                    Image(systemName: "message")
-////                    Text("\(event.repliesCount)")
-////                }//.frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
-//            }
-//
-//
-//            Button {
-//                print("A")
-//            }  label: {
-//                Label("\(event.repliesCount)", systemImage: "message")
-////                HStack {
-//////                    Image(systemName: "arrow.2.squarepath")
-//////                    Text("\(event.mentions)")
-////                    Label("\(event.repliesCount)", systemImage: "message")
-////                }//.frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
-//            }
-//
-//            Button(action: {
-//                // Handle like action
-//            }) {
-//                HStack {
-//                    Image(systemName: "heart")
-//                    Text("\(event.likes)")
-//                }//.frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
-//            }
-//
-
-//            Button {
-//                if (accountState.isBookmarked(event)) {
-//                    accountState.removeBookmark(event)
-//                }
-//                else {
-//                    accountState.addBookmark(event)
-//                }
-//            } label: {
-//                if (accountState.isBookmarked(event)) {
-//                    Image(systemName: "bookmark.fill")
-//                        .foregroundColor(.orange)
-//                        .frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
-//                }
-//                else {
-//                    Image(systemName: "bookmark")
-//                        .frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
-//                }
-//            }
-
         }.foregroundColor(.gray)
 //            .padding(.top, 3)
     }
 }
-
-//struct FooterFragment: View {
-////    @EnvironmentObject var accountState:AccountState
-//    var event:Event
-//
-//    var body: some View {
-//        HStack { // Footer stats
-//
-//
-//            Label("\(event.repliesCount)", systemImage: "message")
-//            Spacer()
-//            Label("\(event.mentions)", systemImage: "arrow.2.squarepath")
-//            Spacer()
-//            Label("\(event.likes)", systemImage: "heart")
-//            Spacer()
-//
-////            Button {
-////                print("GO")
-////            } label: {
-////                Label("\(event.repliesCount)", systemImage: "message")
-////            }
-////
-////            Button {
-////                print("GO")
-////            } label: {
-////                Label("\(event.likes)", systemImage: "heart")
-////            }
-//
-////            Text("WTF FOOTER \(event.repliesCount)")
-////            Image(systemName: "message")//.frame(height: 50)
-////            Button(action: {
-////                // Handle retweet action
-////            }) {
-//////                Label("\(event.repliesCount)", systemImage: "message")
-//////                HStack {
-////////                    Image(systemName: "message")
-//////                    Text("\(event.repliesCount)")
-//////                }//.frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
-////            }
-////
-////
-////            Button {
-////                print("A")
-////            }  label: {
-////                Label("\(event.repliesCount)", systemImage: "message")
-//////                HStack {
-////////                    Image(systemName: "arrow.2.squarepath")
-////////                    Text("\(event.mentions)")
-//////                    Label("\(event.repliesCount)", systemImage: "message")
-//////                }//.frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
-////            }
-////
-////            Button(action: {
-////                // Handle like action
-////            }) {
-////                HStack {
-////                    Image(systemName: "heart")
-////                    Text("\(event.likes)")
-////                }//.frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
-////            }
-////
-//
-////            Button {
-////                if (accountState.isBookmarked(event)) {
-////                    accountState.removeBookmark(event)
-////                }
-////                else {
-////                    accountState.addBookmark(event)
-////                }
-////            } label: {
-////                if (accountState.isBookmarked(event)) {
-////                    Image(systemName: "bookmark.fill")
-////                        .foregroundColor(.orange)
-////                        .frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
-////                }
-////                else {
-////                    Image(systemName: "bookmark")
-////                        .frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
-////                }
-////            }
-//
-//        }.foregroundColor(.gray)
-////            .padding(.top, 3)
-//    }
-//}
 
 struct NoteRowView_Previews: PreviewProvider {
     
@@ -401,35 +341,3 @@ struct NoteRowView_Previews: PreviewProvider {
         }
     }
 }
-
-
-
-//struct FlipWrapper<Content: View>: UIViewRepresentable{
-//    //The content to be flipped
-//    @ViewBuilder let content: () -> Content
-//    //Triggers the animation
-//    func makeUIView(context: Context) -> UIView {
-//        //Convert SwiftUI View to UIKit UIView
-//        let view = UIHostingController(rootView: content()).view
-//        view!.transform = CGAffineTransformMakeScale(1, -1)
-//        view!.frame = view!.bounds
-////        view = view!.transform.scaledBy(x: 1, y: -1)
-//        return view!
-//    }
-//    func updateUIView(_ uiView: UIView, context: Context) {
-//        uiView.transform = CGAffineTransformMakeScale(1, -1)
-//        uiView.frame = uiView.bounds
-//    }
-//}
-//
-//
-//extension View {
-//    func flip() -> some View {
-//        modifier(FlipViewModifier())
-//    }
-//}
-//struct FlipViewModifier: ViewModifier {
-//    func body(content: Content) -> some View {
-//        FlipWrapper(content: { content })
-//    }
-//}

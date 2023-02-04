@@ -10,7 +10,7 @@ import CoreData
 
 struct RelayRowView: View {
     @ObservedObject var relay:Relay
-    @StateObject var socket:SocketClient
+    @StateObject var socket:ManagedConnection
     
     var body: some View {
         HStack {
@@ -52,9 +52,9 @@ struct RelaysView: View {
 //    @EnvironmentObject var cm:ConnectionManager
     var sp:SocketPool = .shared
     
-    func socketForRelay(relay: Relay) -> SocketClient {
-        guard let socket = sp.sockets[relay.url!] else {
-            let addedSocket = sp.addSocket(url: relay.url!, read: relay.read, write: relay.write)
+    func socketForRelay(relay: Relay) -> ManagedConnection {
+        guard let socket = sp.sockets[relay.objectID] else {
+            let addedSocket = sp.addSocket(relayId: relay.objectID, url: relay.url!, read: relay.read, write: relay.write)
             return addedSocket
         }
         return socket
@@ -68,15 +68,6 @@ struct RelaysView: View {
                 }
                 
             }.onDelete(perform: deleteItems)
-        }
-        .onAppear {
-//            for socket in cm.relaySockets {
-//                if (socket.relay.read || socket.relay.write) && !socket.relay.isConnected {
-//                    Task {
-//                        await socket.connect()
-//                    }
-//                }
-//            }
         }
         .navigationTitle("Relays")
         .toolbar {
@@ -101,17 +92,9 @@ struct RelaysView: View {
                 do {
                     try viewContext.save()
                     if (relay.read || relay.write) {
-                        _ = sp.addSocket(url: relay.url!, read: relay.read, write: relay.write)
+                        _ = sp.addSocket(relayId: relay.objectID, url: relay.url!, read: relay.read, write: relay.write)
                     }
-//                    let relaySocket = RelaySocket(relay: relay)
-//                    print("🟣🟣 connecting to \(relay.url ?? "?")")
-//                    Task {
-//                        await relaySocket.connect()
-//                    }
-//                    cm.relaySockets.append(relaySocket)
                 } catch {
-                    // Replace this implementation with code to handle the error appropriately.
-                    // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
                     let nsError = error as NSError
                     fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
                 }

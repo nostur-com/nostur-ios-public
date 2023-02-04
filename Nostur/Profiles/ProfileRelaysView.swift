@@ -48,16 +48,30 @@ struct ProfileRelaysView: View {
                             Spacer()
                             Button {
                                 let url = String(relay)
-                                _ = sp.addSocket(url: url.description, read:true, write: true)
-                                let r = Relay()
-                                r.url =  url.description
-                                r.read = true
-                                r.write = true
-                                r.createdAt = Date.now
-                                try! viewContext.save()
+                                do {
+                                    let maybeSocket = sp.managedConnectionByUrl(url.description)
+                                    if (maybeSocket != nil) {
+                                        maybeSocket!.connection.connect()
+                                    }
+                                    else {
+                                        // create new
+                                        let newRelay = Relay(context: viewContext)
+                                        newRelay.url = url.description
+                                        newRelay.read = true
+                                        newRelay.write = true
+                                        newRelay.createdAt = Date.now
+                                        
+                                        try viewContext.save()
+                                        let managedSocket = sp.addSocket(relayId: newRelay.objectID, url: url.description, read: true, write: true)
+                                        managedSocket.connection.connect()
+                                    }
+                                }
+                                catch {
+                                    print("🔌🔴 Could not add relay \(error)")
+                                }
                                 
                             } label: {
-                                if (sp.isUrlConnected(String(relay))) {
+                                if (sp.isUrlConnected(relay.description)) {
                                     Text("")
                                 }
                                 else {

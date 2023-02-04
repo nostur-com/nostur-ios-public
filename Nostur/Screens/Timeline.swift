@@ -100,7 +100,7 @@ struct Timeline: View {
 //    @State var pages: [ReversedCollection<ArraySlice<Event>>] = []
     @State var pages: [Slice<FetchedResults<Event>>] = []
 //    @State var pages: [[Event]] = []
-    let pageSize:Int = 10
+    let pageSize:Int = 7
     
     
     
@@ -145,12 +145,21 @@ struct Timeline: View {
         _showMenu = showMenu
         
         let fr = NSFetchRequest<Event>(entityName: "Event")
-        fr.predicate = showReplies
+        if (account.blockedContacts == nil) {
+            fr.predicate = showReplies
             ? NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId != nil", followingPubkeys)
             : NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil", followingPubkeys)
-        
-        fr.fetchLimit = 200 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW (MET VSTACK).
-        fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+            
+            fr.fetchLimit = 150 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW (MET VSTACK).
+            fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+        } else {
+            fr.predicate = showReplies
+            ? NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId != nil AND NOT contact IN %@", followingPubkeys, account.blockedContacts!)
+            : NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil AND NOT contact IN %@", followingPubkeys, account.blockedContacts!)
+            
+            fr.fetchLimit = 150 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW (MET VSTACK).
+            fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+        }
         
         _events = FetchRequest(fetchRequest: fr)
     }
@@ -244,7 +253,9 @@ struct Timeline: View {
             }
             .safeAreaInset(edge: .bottom) {
                 VStack(alignment: .center) {
-                    Text("Items: \(events.count), First page: \(pages.first?.count ?? 0)\nScroll offset: \(vm.scrollOffset)\nAnchor offset: \(vm.anchorOffset)\nContent height: \(vm.contentHeight)\nScroll-Anchor diff:\(vm.anchorOffset - vm.scrollOffset)")
+                    HStack {
+                        Text("EVENTS: \(events.count)\nSCROLL: \(Int(vm.scrollOffset)) ANCHOR: \(Int(vm.anchorOffset))\nCONTENT: \(Int(vm.contentHeight)) DIFF:\(Int(vm.anchorOffset - vm.scrollOffset))")
+                    }
                     HStack {
                         ProfilePicView(pubkey: account.publicKey!, account: account, size:30)
                             .offset(x: 30)

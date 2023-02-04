@@ -58,20 +58,12 @@ struct NoteDetail: View {
     
     init(event: Event) {
         self.event = event
-        let pubkeys = event.contactPubkeys()
+        let pubkeys = event.contactPubkeys()        
         
-        if (1 == 1) || (pubkeys == nil) {
-            _taggedContacts = FetchRequest(
-                sortDescriptors: [],
-                predicate: NSPredicate(format: "FALSEPREDICATE")
-            )
-        }
-        else {
-            _taggedContacts = FetchRequest(
-                sortDescriptors: [],
-                predicate: NSPredicate(format: "pubkey IN %@", pubkeys!)
-            )
-        }
+        _taggedContacts = FetchRequest(
+            sortDescriptors: [],
+            predicate: NSPredicate(format: "pubkey IN %@", pubkeys!)
+        )
     }
     
     func rootRepliesUntilThisEvent() -> [Event] {
@@ -214,6 +206,17 @@ struct NoteDetail: View {
                                         .font(.system(size: 18))
                                 Spacer()
                             }.padding(.vertical,5)
+                            
+                            if (event.firstQuoteId != nil) {
+                                if (event.firstQuote != nil) {
+                                    QuotedNoteFragment(event: event.firstQuote!)
+                                }
+                                else {
+                                    ProgressView().onAppear {
+                                        sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.firstQuoteId!)))
+                                    }
+                                }
+                            }
                             
                             DetailFooterFragment(event: event)
                         }.padding(10)

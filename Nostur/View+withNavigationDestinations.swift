@@ -16,6 +16,10 @@ struct ContactPath: Hashable {
     var key:String
 }
 
+enum ViewPath: Hashable {
+    case Blocklist
+}
+
 extension View {
     func withNavigationDestinations() -> some View {
         return self
@@ -30,6 +34,12 @@ extension View {
             }
             .navigationDestination(for: Contact.self) { contact in
                 Profile(contact: contact)
+            }
+            .navigationDestination(for: ViewPath.self) { path in
+                switch (path) {
+                    case .Blocklist:
+                        BlockListView()
+                }
             }
     }
 }

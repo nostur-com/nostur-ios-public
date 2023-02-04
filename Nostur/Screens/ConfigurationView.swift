@@ -23,6 +23,10 @@ struct ConfigurationView: View {
         animation: .none)
     var allEvents: FetchedResults<Event>
     
+    @State var deleteAll = false
+    @State var showDeleteAllEventsConfirmation = false
+    
+    // Also fixes mention ids (first Quote Id)
     func rebuildReplyToIdsCache() {
         SavedEventsCache.shared.clear()
         
@@ -36,6 +40,7 @@ struct ConfigurationView: View {
         for event in kind1 {
             event.replyToId = nil
             event.replyToRootId = nil
+            event.firstQuoteId = nil
         }
         
         let decoder = JSONDecoder()
@@ -46,7 +51,6 @@ struct ConfigurationView: View {
                     
                     if let replyToEtag = TagsHelpers(tags).replyToEtag() {
                         event.replyToId = replyToEtag.id
-                        //                            print("updating replyToId for \(String(describing: event.id))")
                     }
                     
                     if let replyToRootEtag = TagsHelpers(tags).replyToRootEtag() {
@@ -54,7 +58,13 @@ struct ConfigurationView: View {
                         if (event.replyToId == nil) {
                             event.replyToId = replyToRootEtag.id
                         }
-                        //                            print("updating replyToRootId for \(String(describing: event.id))")
+                    }
+                    
+                    if let firstMentionEtag = TagsHelpers(tags).mentionEtags()?.first {
+                        event.firstQuoteId = firstMentionEtag.id
+                        if (event.firstQuoteId == nil) {
+                            event.firstQuoteId = firstMentionEtag.id
+                        }
                     }
                     
                 }
@@ -266,9 +276,7 @@ struct ConfigurationView: View {
     func fixReplyToEventRelations() {
         
         SavedEventsCache.shared.clear()
-        let viewContext = EventsProvider.shared.container.newBackgroundContext()
-        
-        
+                
         // TODO: MAybe dont need for all events??? just kind:1 is enough?
         let er = NSFetchRequest<Event>(entityName: "Event")
         er.sortDescriptors = []
@@ -295,6 +303,15 @@ struct ConfigurationView: View {
                     event.replyToRoot = replyToRootEvent
                 }
             }
+            
+            if (event.firstQuoteId != nil) {
+                let cr = NSFetchRequest<Event>(entityName: "Event")
+                cr.predicate = NSPredicate(format: "id == %@", event.firstQuoteId!)
+                cr.sortDescriptors = []
+                if let mentionedEvent = try? viewContext.fetch(cr).first {
+                    event.firstQuote = mentionedEvent
+                }
+            }
         }
         
         do {
@@ -311,6 +328,7 @@ struct ConfigurationView: View {
     var body: some View {
         VStack {
             RelaysView()
+            
             Toggle(isOn: $devToggle) {
                 Text("Dev mode")
             }.padding(20)
@@ -319,7 +337,7 @@ struct ConfigurationView: View {
                     Button {
                         rebuildReplyToIdsCache()
                     } label: {
-                        Text("Rebuild replyToId, replyToRootId cache")
+                        Text("Rebuild replyToId, replyToRootId, firstQuoteId cache")
                     }.padding(5)
                     
                     Button {
@@ -335,16 +353,27 @@ struct ConfigurationView: View {
                     }.padding(5)
                     
                     Button {
-                        deleteAllContacts()
+                        deleteAll = true
                     } label: {
                         Text("Delete all contacts \(allContacts.count)")
-                    }.padding(5)
+                    }.confirmationDialog("SURE???", isPresented: $deleteAll, actions: {
+                        Button("YES DELETE ALL", role: .destructive) { deleteAllEvents() }
+//                        Button("Cancel", role: .cancel) { deleteAll = false }
+
+                    })
+                    .padding(5)
+                        
                     
                     Button {
-                        deleteAllEvents()
+                        showDeleteAllEventsConfirmation = true
                     } label: {
                         Text("Delete all events \(allEvents.count)")
                     }.padding(5)
+                        .confirmationDialog("DELETE ALL EVENTS????", isPresented: $showDeleteAllEventsConfirmation) {
+                            Button("YES DELETE ALL", role: .destructive) {
+                                deleteAllEvents()
+                            }
+                        }
                     
                     Button {
                         fixContactEventRelations()
@@ -355,7 +384,7 @@ struct ConfigurationView: View {
                     Button {
                         fixReplyToEventRelations()
                     } label: {
-                        Text("Fix reply relations")
+                        Text("Fix reply, quote relations")
                     }.padding(5)
                     
                     Text("**Umb** [@Snowden](nostr:npub1g53mukxnjkcmr94fhryzkqutdz2ukq4ks0gvy5af25rgmwsl4ngq43drvk)")

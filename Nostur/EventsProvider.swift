@@ -114,7 +114,11 @@ class EventsProvider: ObservableObject {
             "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240", context: viewContext)
         account.addToFollows(contact2!)
         
+        let contact3 = PreviewFetcher.fetchContact(
+            "df8efff2bfc02d81f93c7ff6ae111541637e0b3a4caff9ad48939a2f2f283be2", context: viewContext)
+        
         account.addToBookmarks(someEvent)
+        account.addToBlockedContacts(contact3!)
         someEvent.addToBookmarkedBy(account)
         
         
@@ -126,12 +130,6 @@ class EventsProvider: ObservableObject {
     
     private init(inMemory: Bool = false) {
         self.inMemory = inMemory
-    }
-    
-    deinit {
-        //        if let observer = notificationToken {
-        //            NotificationCenter.default.removeObserver(observer)
-        //        }
     }
     
     /// A peristent history token used for fetching transactions from the store.
