@@ -25,14 +25,14 @@ extension View {
             return d
         }()
         
-        let eventsProvider = EventsProvider.preview
+        let previewProvider = EventsProvider.preview
 
         // "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
         
 //        let cm = ConnectionManager()
         let sp:SocketPool = .shared
-        let ns = NosturState(viewContext: eventsProvider.container.viewContext)
-        let activeAccount = PreviewFetcher.fetchAccount("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", context: EventsProvider.preview.container.viewContext)
+        let ns = NosturState(viewContext: previewProvider.container.viewContext)
+        let activeAccount = PreviewFetcher.fetchAccount("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", context: previewProvider.container.viewContext)
         _ = try! ns.loadActiveAccount(account: activeAccount)
 //        let newAccount = Account(context: EventsProvider.preview.container.viewContext)
 //        newAccount.name = "john01"
@@ -47,10 +47,10 @@ extension View {
         
         return self.defaultAppStorage(userDefaults)
             .environment(\.managedObjectContext,
-                          eventsProvider.container.viewContext)
+                          previewProvider.container.viewContext)
             .environmentObject(ns)
             .environmentObject(sp)
-            .environmentObject(eventsProvider)
+            .environmentObject(previewProvider)
             .environmentObject(activeAccount!)
     }
 }

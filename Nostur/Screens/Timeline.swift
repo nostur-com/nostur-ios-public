@@ -9,107 +9,16 @@ import SwiftUI
 import CoreData
 import Combine
 
-extension Timeline {
-    
-    @MainActor class TimelineViewModel: ObservableObject {
-        
-//        static var shared = TimelineViewModel()
-        var cancellables = Set<AnyCancellable>()
-        
-        @Published private(set) var scrollOffset = CGFloat.zero
-        @Published private(set) var contentHeight = CGFloat.zero
-        @Published private(set) var anchorOffset = CGFloat.zero
-        
-        @Published private(set) var oldScrollOffset = CGFloat.zero
-        @Published private(set) var oldContentHeight = CGFloat.zero
-        @Published private(set) var savedHeight = CGFloat.zero
-        @Published private(set) var scrollCounter = 0
-        
-        @Published private(set) var scrollOffsetEmitter = PassthroughSubject<CGFloat, Never>()
-        @Published private(set) var contentHeightEmitter = PassthroughSubject<CGFloat, Never>()
-        
-        var theDiff = 0.0
-        var pendingRescroll = false
-        
-        init() {
-            addSubscribers()
-        }
-        
-        deinit { for c in cancellables { c.cancel() } }
-        
-        func updateAnchorOffset() {
-            if (pendingRescroll) {
-                print("🎃 ANCHOR DIFF:\(self.theDiff)")
-                self.anchorOffset = self.scrollOffset + self.theDiff
-                self.theDiff = 0
-                self.pendingRescroll = false
-            }
-//            self.anchorOffset = self.contentHeight - self.oldContentHeight + self.scrollOffset
-//            print("💿💿 NEW ANCHOR DIFF: \(self.contentHeight - self.oldContentHeight)")
-        }
-        
-        func saveHeight() {
-            self.savedHeight = self.contentHeight
-            self.theDiff = 0.0
-            self.pendingRescroll = true
-        }
-        
-        func saveOldHeightAndOffset() {
-            self.oldContentHeight = self.contentHeight
-            self.oldScrollOffset = self.scrollOffset
-            print("💿💿 SAVE HEIGHT + OFFSET = \(self.contentHeight) ::: \(self.scrollOffset)")
-        }
-        
-        func addSubscribers() {
-            scrollOffsetEmitter
-//                .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
-                .sink { value in
-                    self.scrollOffset = value
-                    self.anchorOffset = value // Keep anchor + scroll in sync
-                }
-                .store(in: &cancellables)
-            
-            contentHeightEmitter
-//                .debounce(for: .seconds(0.15), scheduler: RunLoop.main)
-                .sink { value in
-                    self.contentHeight = value
-                    
-                    if (self.pendingRescroll) {
-                        self.theDiff = self.contentHeight - self.savedHeight
-                        self.scrollCounter = self.scrollCounter + 1
-                        print("🎃 NEW HEIGHT:\(self.contentHeight)")
-                    }
-                    
-//                    print("💿💿🟢 S:\(self.scrollOffset) A:\(self.anchorOffset) H:\(self.contentHeight) - HERES THE NEW HEIGHT")
-                }
-                .store(in: &cancellables)
-        }
-    }
-}
-
 struct Timeline: View {
-    
-    @StateObject private var vm = TimelineViewModel()
-    
-    @Namespace var scrollSpace
-    // MARK: PAGINATION
-//    @State var firstPageEvents: Slice<FetchedResults<Event>>? = nil
-//    @State var pages: [Slice<FetchedResults<Event>>] = []
-//    @State var pages: [ArraySlice<FetchedResults<Event>>] = []
-//    @State var pages: [ArraySlice<[Event]>] = []
-//    @State var pages: [ReversedCollection<ArraySlice<Event>>] = []
-    @State var pages: [Slice<FetchedResults<Event>>] = []
-//    @State var pages: [[Event]] = []
-    let pageSize:Int = 10
-    
-    
-    
-    // MARK: FIRST PAGE: KEEP SCROLL POSITION AFTER NEW EVENTS LOADED
-    @Namespace var SCROLL_ANCHOR
 
-//    @State var scrollCounter = 0
+    @Environment(\.managedObjectContext) var viewContext
+    @Namespace var SCROLL_TO_TOP_ANCHOR
     
-    @State var isRefreshing = true
+    @State var pages: [PageModel] = []
+    let pageSize:Int = 1
+    
+    @State var didSetup = false
+//    @State var isRefreshing = true
     @State var isLoading = true
     
     let timelineRunLoop = Timer.publish(every: 15, tolerance: 1, on: .main, in: .common).autoconnect()
@@ -128,10 +37,9 @@ struct Timeline: View {
     @AppStorage("lastReadDate") var lastReadDate = 0
     @State var didAutoScroll = false // Only scroll to last unread after launch, not after .onAppear after coming back from detail
     @State var unreadCount = 0
-    @Binding var showMenu:Bool
+    @Binding var showMenu:Bool // _showMenu changed ... why??? lots of reloads??
     
     @EnvironmentObject var ns:NosturState
-//    @Binding var showMenu:Bool
     
     @FetchRequest(
         entity: Event.entity(),
@@ -140,26 +48,29 @@ struct Timeline: View {
     )
     var events: FetchedResults<Event>
     
-    init(showReplies:Bool, followingPubkeys: Set<String>, showMenu: Binding<Bool>, account:Account) {
+    init(showReplies:Bool, showMenu:Binding<Bool>, followingPubkeys: Set<String>, account:Account) {
         self.account = account
         _showMenu = showMenu
-        
+    
         let fr = NSFetchRequest<Event>(entityName: "Event")
-        if (account.blockedContacts == nil) {
+        if (1 == 1 || account.blockedContacts == nil) {
             fr.predicate = showReplies
             ? NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId != nil", followingPubkeys)
             : NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil", followingPubkeys)
-            
-            fr.fetchLimit = 200 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW (MET VSTACK).
-            fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+//            fr.predicate = NSPredicate(format: "kind == 1 and replyToId == nil")
         } else {
             fr.predicate = showReplies
             ? NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId != nil AND NOT contact IN %@", followingPubkeys, account.blockedContacts!)
             : NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil AND NOT contact IN %@", followingPubkeys, account.blockedContacts!)
-            
-            fr.fetchLimit = 200 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW (MET VSTACK).
-            fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         }
+        
+        fr.fetchLimit = 50 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW (MET VSTACK).
+        fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+        
+//        let fr = Event.fetchRequest()
+//        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+//        fr.predicate = NSPredicate(format: "kind == 1 and replyToId == nil")
+//        fr.fetchLimit = 50
         
         _events = FetchRequest(fetchRequest: fr)
     }
@@ -170,11 +81,11 @@ struct Timeline: View {
         }
         return 0
     }
-    
+
     func lastReadEvent() -> Event? {
         return events.filter { $0.created_at == lastReadDate }.first
     }
-    
+
     func firstUnreadEvent() -> Event? {
         return events.filter { $0.created_at > lastReadDate }
             .sorted { e1, e2 in
@@ -183,194 +94,154 @@ struct Timeline: View {
             .last
     }
     
+    func scrollToTop(_ proxy:ScrollViewProxy) {
+        proxy.scrollTo(SCROLL_TO_TOP_ANCHOR)
+//        withAnimation {
+//            proxy.scrollTo(SCROLL_TO_TOP_ANCHOR)
+//        }
+    }
+    
     var body: some View {
-        
-        ZStack {
-            ScrollView {
+        let _ = Self._printChanges()
+        VStack {
+            HStack {
+                Color.clear.frame(width: 200, height: 30)
+            }
+            ZStack {
                 ScrollViewReader { proxy in
-                    ZStack { // ZSTACK WITH 2 LAYERS: PAGES, ANCHOR.
+                    ScrollView {
                         LazyVStack { // PAGES ARE LAZY
-                            ForEach(pages.reversed(), id:\.first) { events in
-                                Page(events: events)
-                                    .onAppear {
-//                                        print("🥶🥶 LAZY PAGE \(pages.firstIndex { $0.first! == events.first! } )")
+                            ForEach(pages, id:\.id) { page in
+                                Page(events: page.events)
+                                    .scaleEffect(x:1, y:-1)
+                                //                                .onAppear {
+                                //                                    print("🥶🥶 onAppear: PAGE \(page.id)")
+                                //                                }
+                            }
+                        }
+                        //                    .background(Color.random)
+                        Color.clear.frame(width: 300, height: 0)
+                            .id(SCROLL_TO_TOP_ANCHOR)
+                    }
+                    .scaleEffect(x:1, y:-1)
+                    .onAppear {
+                        if (!didSetup) {
+                            setupPages()
+                        }
+                    }
+                    .onDisappear {
+                        print("ScrollView.onDisappear!")
+                    }
+                    .safeAreaInset(edge: .bottom) {
+                        VStack(alignment: .center) {
+                            HStack {
+                                Button { fetchEventsFromFollowing(amount:500) } label: { Text("Fetch") }
+                                Button {
+                                    print("🚘 ADDING EVENTS")
+                                    for _ in 0...3 {
+                                        let newEvent = Event(context: viewContext)
+                                        newEvent.id = UUID().description
+                                        newEvent.pubkey = "1833ee04459feb2ca4ae690d5f31269ad488c69e5fe903a42b532c677c4a8170"
+                                        
+                                        //                                    newEvent.pubkey = "50d94fc2d8580c682b071a542f8b1e31a200b0508bab95a33bef0855df281d63"
+                                        newEvent.kind = 1
+                                        newEvent.created_at = Int64(Date.now.timeIntervalSince1970)
                                     }
+                                    //                                updatePages()
+                                } label: { Text("Add events (\(events.count))") }
+                                Button { updatePages() } label: { Text("Pages (\(pages.count))") }
+                                Button { scrollToTop(proxy) } label: { Text("To Top") }
+                                //                            Text("LRD \(d(lastReadDate).description)")
                             }
-                        }
-                        VStack(spacing: 0) { // THE SCROLL ANCHOR
-                            Rectangle().foregroundColor(.yellow).opacity(0.3).frame(width:370, height: vm.anchorOffset < 0 ? 0 : vm.anchorOffset).foregroundColor(.yellow)
-                            Color.clear.frame(width: 370, height: 0)
-                                .id(SCROLL_ANCHOR)
-                            Spacer()
-                        }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.small)
+                            //                        HStack {
+                            //                            Button { fetchEventsFromFollowing(amount:500) } label: { Text("1. Fetch") }
+                            //                            Button { importNotes() } label: { Text("2. Import") }
+                            //                            Button { updatePages() } label: { Text("3. Pages") }
+                            //                            Button { scrollToTop() } label: { Text("To Top") }
+                            //                            Text("\(unreadCount)")
+                            //                        }
+                            
+                        }.background(.regularMaterial)
                     }
-                    // SEND TO PARENT: SCROLL OFFSET + CONTENT HEIGHT
-                    .background(GeometryReader { geo in
-                        Color.clear.preference(
-                            key: ViewOffsetKey.self,
-                            value: -geo.frame(in: .named(scrollSpace)).minY
-                        ).preference(
-                            key: ContentHeightKey.self,
-                            value: geo.size.height
-                        )
-                    })
-                    // RECEIVE FROM CHILD: SCROLL OFFSET
-                    .onPreferenceChange(ViewOffsetKey.self) { offset in
-//                        emitter.send(offset) // SEND DEBOUNCED
-//                        print("💿💿💿💿💿💿 .onPreferenceChange(ViewOffsetKey.self)")
-                        vm.scrollOffsetEmitter.send(offset)
-                    }
-                    // RECEIVE FROM CHILD: CONTENT HEIGHT
-                    .onPreferenceChange(ContentHeightKey.self) { height in
-//                        print("💿💿💿💿💿💿 .onPreferenceChange(ContentHeightKe")
-                        if (1 == 1) { // TODO: IF did receive or change events. Else height cannot be changed.
-//                            emitter2.send(height) // SEND DEBOUNCED
-                            vm.contentHeightEmitter.send(height)
+                    .onAppear {
+                        unreadCount = getUnreadCount()
+                        if (events.first != nil) {
+                            //                    print("🤩🤩 onAppear, last read = \(d(lastReadDate).description)")
+                            //                    print("🤩🤩 onAppear, last first = \(d(events.first!.created_at).description)")
+                            //                    print("🤩🤩 onAppear, last event = \(d(events.last!.created_at).description)")
+                        }
+                        else {
+                            isLoading = false
+                            didAutoScroll = true
                         }
                     }
-                    // MAKE PROXY.SCROLLTO ACCESSIBLE FROM OUTSIDE
-                    // BY WATCHING FOR SCROLLCOUNTER CHANGES
-                    .onChange(of: vm.scrollCounter) { newScrollCounter in
-//                        print("💿💿 4. S:\(vm.scrollOffset) A:\(vm.anchorOffset) H:\(vm.contentHeight) - BEFORE SCROLL TO. 💿 OH: \(vm.oldContentHeight).   DIFF: \(vm.contentHeight - vm.oldContentHeight)")
+                    .onReceive(timelineRunLoop) { time in
                         
-//                        let scrollDiff = vm.contentHeight - vm.oldContentHeight
+                        if (!isViewDisplayed) {
+                            return
+                        }
                         
-//                        if (scrollDiff > 0) { // TODO: Can scrollDiff be negative??? dunno
-                            vm.updateAnchorOffset()
-                            proxy.scrollTo(SCROLL_ANCHOR, anchor: .top)
-//                            vm.saveOldHeightAndOffset()
-//                        }
+                        print("unread is: \(unreadCount) timesFetchedWhileUnread: \(timesFetchedWhileUnread) shouldSkipTimes: \(shouldSkipTimes)")
                         
-                    }
-                }
-            }
-            .coordinateSpace(name: scrollSpace)
-            .onAppear {
-                setupPages()
-            }
-            .onChange(of: events.first) { newestEvent in
-//                updatePages() // Even nog niet auto updaten tijdens debuggen
-            }
-            .safeAreaInset(edge: .bottom) {
-                VStack(alignment: .center) {
-                    HStack {
-                        Text("EVENTS: \(events.count)\nSCROLL: \(Int(vm.scrollOffset)) ANCHOR: \(Int(vm.anchorOffset))\nCONTENT: \(Int(vm.contentHeight)) DIFF:\(Int(vm.anchorOffset - vm.scrollOffset))")
-                    }
-                    HStack {
-                        ProfilePicView(pubkey: account.publicKey!, account: account, size:30)
-                            .offset(x: 30)
-                            .onTapGesture {
-                                showMenu = true
+                        
+                        if (unreadCount > 0 && shouldSkipTimes > 0) {
+                            shouldSkipTimes = shouldSkipTimes - 1
+                            return
+                        }
+                        
+                        
+                        if (!Importer.shared.isImporting) {
+                            print("💿💿 GONNA FETCH BABY 💿💿")
+                            fetchEventsFromFollowing(amount: 500)
+                        } else {
+                            print("💿💿 STILL IMPORTING. NOT FETCHING YET 💿💿")
+                        }
+                        
+                        if (unreadCount > 0) {
+                            shouldSkipTimes = timesFetchedWhileUnread + shouldSkipTimes + 1
+                            timesFetchedWhileUnread = timesFetchedWhileUnread + 1
+                            
+                            if (shouldSkipTimes > 8) {
+                                shouldSkipTimes = 8
+                                timesFetchedWhileUnread = 0
+                                print("never skip more than 8 times")
                             }
-                        Spacer()
-                        Spacer()
-                        Image("NosturLogo")
-                                                        .resizable()
-                                                        .scaledToFit()
-                            .frame(height:30)
-                            .offset(x: -15)
-                        Spacer()
-                        Text("LRD \(d(lastReadDate).description)")
-                        Spacer()
+                            else {
+                                print("increase delay!")
+                            }
+                            
+                        }
+                        else {
+                            print("delay reset")
+                            shouldSkipTimes = 0
+                            timesFetchedWhileUnread = 0
+                        }
+                        if (MessageParser.shared.lastTimelineEventTimestamp != nil) {
+                            print("last timeline event timestamp: \(d(MessageParser.shared.lastTimelineEventTimestamp!.timestamp).description)")
+                        }
+                        if (Importer.shared.lastTimelineEventTimestamp != nil) {
+                            print("last timeline event timestamp: \(d(Importer.shared.lastTimelineEventTimestamp!.timestamp).description)")
+                        }
                     }
+                }
+                VStack {
                     HStack {
-                        Button { fetchEventsFromFollowing(amount:500) } label: { Text("1. Fetch") }
-                        Button { importNotes() } label: { Text("2. Import") }
-                        Button { updatePages() } label: { Text("3. Pages \(pages.count)") }
-//                        Button { vm.scrollCounter += 1 } label: { Text("4. Scroll") }
-                        Button {
-                            print("💿💿 I. S:\(vm.scrollOffset) A:\(vm.anchorOffset) H:\(vm.contentHeight) - INFO events.count: \(events.count)")
-                        } label: { Text("I") }
-                        Text("\(unreadCount)")
-                    }.buttonStyle(.borderedProminent)
-                        .buttonBorderShape(.roundedRectangle)
-                        .tint(.cyan)
-                    
-                }.background(.regularMaterial)
-            }
-            .onAppear {
-                unreadCount = getUnreadCount()
-                if (events.first != nil) {
-//                    print("🤩🤩 onAppear, last read = \(d(lastReadDate).description)")
-//                    print("🤩🤩 onAppear, last first = \(d(events.first!.created_at).description)")
-//                    print("🤩🤩 onAppear, last event = \(d(events.last!.created_at).description)")
-                }
-                else {
-                    isLoading = false
-                    didAutoScroll = true
-                }
-            }
-            VStack {
-                HStack {
+                        Spacer()
+                        if (unreadCount > 0) {
+                            Text("\(unreadCount)")
+                                .frame(minWidth: 30)
+                                .padding(5)
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+                                .background(.tint)
+                                .cornerRadius(20)
+                                .offset(x:-30,y:35)
+                        }
+                        
+                    }
                     Spacer()
-                    if (unreadCount > 0) {
-                        Text("\(unreadCount)")
-                            .frame(minWidth: 30)
-                            .padding(5)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                            .background(.tint)
-                            .cornerRadius(20)
-                            .offset(x:-30,y:35)
-                    }
-                    
-                }
-                Spacer()
-            }
-            .onChange(of: events.first) { newFirstEvent in
-//                print("🤩🤩 (Fetched)events changed, first was: \(String(events.first!.noteText.prefix(100)))")
-//                print("🤩🤩 (Fetched)events changed, first is: \(String(newFirstEvent!.noteText.prefix(100)))")
-            }
-            .onChange(of: events.last) { newLastEvent in
-//                print("🤩🤩 (Fetched)events changed, last was: \(String(events.last!.noteText.prefix(100)))")
-//                print("🤩🤩 (Fetched)events changed, last is: \(String(newLastEvent!.noteText.prefix(100)))")
-            }
-            .onReceive(timelineRunLoop) { time in
-                
-                if (!isViewDisplayed) {
-                    return
-                }
-                
-                print("unread is: \(unreadCount) timesFetchedWhileUnread: \(timesFetchedWhileUnread) shouldSkipTimes: \(shouldSkipTimes)")
-                
-                
-                if (unreadCount > 0 && shouldSkipTimes > 0) {
-                    shouldSkipTimes = shouldSkipTimes - 1
-                    return
-                }
-                
-                
-                if (!Importer.shared.isImporting) {
-                    print("💿💿 GONNA FETCH BABY 💿💿")
-                    fetchEventsFromFollowing(amount: 500)
-                } else {
-                    print("💿💿 STILL IMPORTING. NOT FETCHING YET 💿💿")
-                }
-                
-                if (unreadCount > 0) {
-                    shouldSkipTimes = timesFetchedWhileUnread + shouldSkipTimes + 1
-                    timesFetchedWhileUnread = timesFetchedWhileUnread + 1
-                    
-                    if (shouldSkipTimes > 8) {
-                        shouldSkipTimes = 8
-                        timesFetchedWhileUnread = 0
-                        print("never skip more than 8 times")
-                    }
-                    else {
-                        print("increase delay!")
-                    }
-                    
-                }
-                else {
-                    print("delay reset")
-                    shouldSkipTimes = 0
-                    timesFetchedWhileUnread = 0
-                }
-                if (MessageParser.shared.lastTimelineEventTimestamp != nil) {
-                    print("last timeline event timestamp: \(d(MessageParser.shared.lastTimelineEventTimestamp!.timestamp).description)")
-                }
-                if (Importer.shared.lastTimelineEventTimestamp != nil) {
-                    print("last timeline event timestamp: \(d(Importer.shared.lastTimelineEventTimestamp!.timestamp).description)")
                 }
             }
         }
@@ -381,44 +252,31 @@ struct Timeline: View {
 extension Timeline {
 
     func setupPages() {
-//        print("💿💿 2. S:\(vm.scrollOffset) A:\(vm.anchorOffset) H:\(vm.contentHeight) - BEFORE PAGES events.count: \(events.count)")
+        print("setupPages")
+        didSetup = true
         let pageCount = Int(ceil(Double(events.count) / Double(pageSize))) // 33 / 3 = 11
         pages = []
         
         // All pages
         for loopCount in 0..<pageCount { // 0..<11
-            pages.append(events.dropLast(loopCount * pageSize).suffix(pageSize))
+            let events = events.dropLast(loopCount * pageSize).suffix(pageSize)
+            let page = PageModel(id: "\(loopCount)-\(events.count)", events: events)
+            pages.append(page)
         }
-//        print("💿💿 3. S:\(vm.scrollOffset) A:\(vm.anchorOffset) H:\(vm.contentHeight) - AFTER PAGES events.count: \(events.count)")
-//        scrollCounter = scrollCounter + 1
     }
     
     func updatePages() {
-        print("🎃 HEIGHT:\(vm.contentHeight)")
-        
-        vm.saveHeight()
-        
         let pageCount = Int(ceil(Double(events.count) / Double(pageSize))) // 33 / 3 = 11
-        let oldEventsCount = pages.reduce(0) { partialResult, events in
-            return events.count + partialResult
-        }
-//        print("💿💿🟡 BEFORE updatePages S:\(vm.scrollOffset) A:\(vm.anchorOffset) H:\(vm.contentHeight) pageCount: \(pageCount) oldEvents: \(oldEventsCount)")
-        
+//        let oldEventsCount = pages.reduce(0) { partialResult, events in
+//            return events.count + partialResult
+//        }
         pages = []
         // All pages // TODO: HOw only update/add pages, leave existing in tact..
         for loopCount in 0..<pageCount { // 0..<11
-            pages.append(events.dropLast(loopCount * pageSize).suffix(pageSize))
+            let events = events.dropLast(loopCount * pageSize).suffix(pageSize)
+            let page = PageModel(id: "\(loopCount)-\(events.count)", events: events)
+            pages.append(page)
         }
-
-        let newEventsCount = pages.reduce(0) { partialResult, events in
-            return events.count + partialResult
-        }
-        
-        //TODO: For new events in the timeline, fetch mention, contacts. "mention", "p", req.0
-        
-        
-//        print("💿💿🟢 AFTER updatePages S:\(vm.scrollOffset) A:\(vm.anchorOffset) H:\(vm.contentHeight) pageCount: \(pageCount) newEventsCount: \(newEventsCount) -- prolly new height not rendered yet")
-//        scrollCounter = scrollCounter + 1
     }
 
 }
@@ -433,22 +291,6 @@ struct Page: View {
             }
         }
     }
-}
-
-struct ViewOffsetKey: PreferenceKey {
-    typealias Value = CGFloat
-    static var defaultValue = CGFloat.zero
-    static func reduce(value: inout Value, nextValue: () -> Value) {
-        value += nextValue()
-    }
-}
-
-struct ContentHeightKey: PreferenceKey {
-  static var defaultValue = CGFloat.zero
-
-  static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-    value += nextValue()
-  }
 }
 
 //struct TimelineWrapper: View {
@@ -502,11 +344,11 @@ extension Timeline {
     }
     
     private func fetchNotes() async {
-        isRefreshing = true
+//        isRefreshing = true
         fetchEventsFromFollowing(amount:500)
         //TODO: hmmm need to return earlier if onChange events.last
         try! await Task.sleep(nanoseconds: 1_000_000_000)
-        isRefreshing = false
+//        isRefreshing = false
     }
     
     private func fetchEventsFromFollowing(amount:Int? = 500) {
@@ -525,9 +367,10 @@ struct Timeline_Previews: PreviewProvider {
         
         let account = PreviewFetcher.fetchAccount("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0")
         
-        let pubkeys = Set(["1833ee04459feb2ca4ae690d5f31269ad488c69e5fe903a42b532c677c4a8170","84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240","3f770d65d3a764a9c5cb503ae123e62ec7598ad035d836e2a810f3877a745b24"])
+        let pubkeys = Set(["5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0",
+            "1833ee04459feb2ca4ae690d5f31269ad488c69e5fe903a42b532c677c4a8170","84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240","3f770d65d3a764a9c5cb503ae123e62ec7598ad035d836e2a810f3877a745b24"])
         
-        Timeline(showReplies: true, followingPubkeys: pubkeys, showMenu: $showMenu, account: account!)
+        Timeline(showReplies: true, showMenu: $showMenu, followingPubkeys: pubkeys, account: account!)
             .withPreviewEnvironment()
         
     }

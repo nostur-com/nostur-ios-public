@@ -27,14 +27,14 @@ struct NosturTabsView: View {
     var body: some View {
         VStack {
             TabView(selection: $selectedTab) {
-                PaginationTest3()
-                    .tabItem {
-                        Image(systemName: "person.badge.key.fill")
-                    }
-                    .tag("TEST")
+//                PaginationTest3()
+//                    .tabItem {
+//                        Image(systemName: "person.badge.key.fill")
+//                    }
+//                    .tag("TEST")
                 NavigationStack(path: $timelinePath) {
                     if (ns.followingPublicKeys.count != 0) {
-                        Timeline(showReplies: false, followingPubkeys: ns.followingPublicKeys, showMenu: $showMenu, account: ns.account!)
+                        Timeline(showReplies: true, showMenu: $showMenu, followingPubkeys: ns.followingPublicKeys, account: ns.account!)
                             .withNavigationDestinations()
                     } else {
                         Text(" Ey yo")
@@ -72,6 +72,28 @@ struct NosturTabsView: View {
                 .tabItem { Image(systemName: "server.rack") }
                 .tag("Configuration")
             }
+            .safeAreaInset(edge: .top) {
+                ZStack {
+                    HStack {
+                        if (ns.account != nil) {
+                            ProfilePicView(pubkey: ns.activeAccountPublicKey, account: ns.account, size:30)
+                                .offset(x: 30)
+                                .onTapGesture {
+                                    showMenu.toggle()
+                                }
+                        }
+                        Spacer()
+                    }
+                    HStack {
+                        Spacer()
+                        Image("NosturLogo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height:30)
+                        Spacer()
+                    }
+                }
+            }.background(.regularMaterial)
 //            .background(.regularMaterial)
         }
     }
@@ -80,7 +102,7 @@ struct NosturTabsView: View {
 
 struct ContentView_Previews: PreviewProvider {
     @State static var showMenu = false
-    @State static var selectedTab = "MainTimeline"
+    @State static var selectedTab = "Timeline"
     
     @State static var timelinePath = NavigationPath()
     @State static var searchPath = NavigationPath()

@@ -121,32 +121,34 @@ class SocketPool: ObservableObject {
     }
     
     func sendMessage(_ message:ClientMessage) {
-        for (_, managedClient) in sockets {
-            guard managedClient.read || managedClient.write else {
-                // Skip if relay is not selected for reading or writing events
-                continue
-            }
-            
-            if message.type == .REQ && managedClient.read { // REQ FOR ALL READ RELAYS
-                if (!managedClient.isConnected) {
-                    managedClient.client.connect()
+        Task(priority: .background) {
+            for (_, managedClient) in sockets {
+                guard managedClient.read || managedClient.write else {
+                    // Skip if relay is not selected for reading or writing events
+                    continue
                 }
-//                print("⬇️⬇️ REQUESTING: \(String(message.message.prefix(260)))")
-                managedClient.client.write(string: message.message)
-            }
-            else if  message.type == .CLOSE { // CLOSE FOR ALL RELAYS
-                if (!managedClient.isConnected && managedClient.read) {
-                    managedClient.client.connect()
+                
+                if message.type == .REQ && managedClient.read { // REQ FOR ALL READ RELAYS
+                    if (!managedClient.isConnected) {
+                        managedClient.client.connect()
+                    }
+    //                print("⬇️⬇️ REQUESTING: \(String(message.message.prefix(260)))")
+                    managedClient.client.write(string: message.message)
                 }
-//                print("🔚🔚 CLOSE: \(String(message.message.prefix(260)))")
-                managedClient.client.write(string: message.message) { }
-            }
-            else if message.type == .EVENT && managedClient.write { // EVENT IS ONLY FOR WRITE RELAYS
-                if (!managedClient.isConnected) {
-                    managedClient.client.connect()
+                else if  message.type == .CLOSE { // CLOSE FOR ALL RELAYS
+                    if (!managedClient.isConnected && managedClient.read) {
+                        managedClient.client.connect()
+                    }
+    //                print("🔚🔚 CLOSE: \(String(message.message.prefix(260)))")
+                    managedClient.client.write(string: message.message) { }
                 }
-                print("⬆⬆⬆ PUBLISHING TO \(managedClient.url): \(message.message)")
-                managedClient.client.write(string: message.message) { }
+                else if message.type == .EVENT && managedClient.write { // EVENT IS ONLY FOR WRITE RELAYS
+                    if (!managedClient.isConnected) {
+                        managedClient.client.connect()
+                    }
+                    print("⬆⬆⬆ PUBLISHING TO \(managedClient.url): \(message.message)")
+                    managedClient.client.write(string: message.message) { }
+                }
             }
         }
     }

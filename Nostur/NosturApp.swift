@@ -13,10 +13,10 @@ struct NosturApp: App {
     
     @StateObject var ns = NosturState(viewContext:EventsProvider.shared.container.viewContext)
     @State var isViewDisplayed = false
-    @State var showMenu = false
     
     let loopyRunny = Timer.publish(every: 2, tolerance: 1, on: .main, in: .common).autoconnect()
     let sp:SocketPool = .shared
+//    @State var path = NavigationPath()
     
     var body: some Scene {        
         WindowGroup {
@@ -33,7 +33,7 @@ struct NosturApp: App {
                     if (!isViewDisplayed) { return }
                     Task { await Importer.shared.importEvents() }
                 }
-//                .statusBarHidden(true)
+                .statusBarHidden(true)
         }
     }
 

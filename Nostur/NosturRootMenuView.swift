@@ -13,7 +13,7 @@ extension NosturRootMenu {
 
     @MainActor class NosturRootMenuViewModel: ObservableObject {
         @Published var showSidebar: Bool = false
-        @Published var selectedTab = "TEST"
+        @Published var selectedTab = "Timeline"
         @Published var timelinePath = NavigationPath()
         @Published var searchPath = NavigationPath()
         @Published var accountsPath = NavigationPath()
@@ -50,7 +50,6 @@ struct NosturRootMenu: View {
     
     @EnvironmentObject var ns:NosturState
     @StateObject var vm = NosturRootMenuViewModel()
-
     
     var body: some View {
         SideBarStack(sidebarWidth: 285, showSidebar: $vm.showSidebar) {
@@ -93,7 +92,7 @@ struct NosturRootMenu: View {
             }
             
         }
-        .edgesIgnoringSafeArea(.all)
+//        .edgesIgnoringSafeArea(.all)
     }
 }
 
@@ -141,6 +140,7 @@ extension NosturRootMenu {
 
 struct MainView_Previews: PreviewProvider {
     static var previews: some View {
-        NosturRootMenu().withPreviewEnvironment()
+        NosturRootMenu()
+            .withPreviewEnvironment()
     }
 }

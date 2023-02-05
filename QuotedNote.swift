@@ -58,6 +58,7 @@ struct QuotedNoteFragment: View {
                                 })
                             }
                             else {
+                                let _ = print(event)
                                 NavigationLink(value: ContactPath(key: event.pubkey!), label: {
                                     ProfilePicView(pubkey: event.pubkey!, contact:event.contact, size: 20)
                                 })

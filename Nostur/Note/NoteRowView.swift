@@ -50,9 +50,8 @@ struct NoteRowView: View {
     }
     
     var body: some View {
-        
-        VStack {
-//        VStack(spacing:2) { // A TW EET
+//        VStack {
+        VStack(spacing:0) { // A TW EET
                         
             NavigationLink(value: event, label: {
                 VStack (alignment: .leading) { // Vstack for retweeted thread
@@ -107,7 +106,7 @@ struct NoteRowView: View {
                                 VStack(alignment: .leading) {
                                     NoteTextRenderView(event:event, taggedContacts:Array(taggedContacts))
                                 }
-                            })
+                            }).frame(height: 100).clipped()
                             
                             if (event.firstQuoteId != nil) {
                                 if (event.firstQuote != nil) {
@@ -133,7 +132,8 @@ struct NoteRowView: View {
 //            .frame(maxHeight: 1900)
             Divider()
         }
-        .padding(10)
+//        .background(Color.random)
+        .padding(0)
         .onAppear {
             // should fetch setMetaData if
             // No Contact
