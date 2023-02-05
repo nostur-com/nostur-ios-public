@@ -27,6 +27,11 @@ struct NosturTabsView: View {
     var body: some View {
         VStack {
             TabView(selection: $selectedTab) {
+                PaginationTest3()
+                    .tabItem {
+                        Image(systemName: "person.badge.key.fill")
+                    }
+                    .tag("TEST")
                 NavigationStack(path: $timelinePath) {
                     if (ns.followingPublicKeys.count != 0) {
                         Timeline(showReplies: false, followingPubkeys: ns.followingPublicKeys, showMenu: $showMenu, account: ns.account!)

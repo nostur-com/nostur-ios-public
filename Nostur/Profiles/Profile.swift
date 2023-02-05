@@ -52,6 +52,7 @@ class ImageProcessing {
         pipeline = ImagePipeline {
             $0.dataCache = try? DataCache(name: "com.nostur.2140.picture")
             $0.dataCachePolicy = .storeEncodedImages
+            $0.imageCache = ImageCache()
         }
         
         bannerPipeline = ImagePipeline {

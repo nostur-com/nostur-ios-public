@@ -100,7 +100,7 @@ struct Timeline: View {
 //    @State var pages: [ReversedCollection<ArraySlice<Event>>] = []
     @State var pages: [Slice<FetchedResults<Event>>] = []
 //    @State var pages: [[Event]] = []
-    let pageSize:Int = 7
+    let pageSize:Int = 10
     
     
     
@@ -150,14 +150,14 @@ struct Timeline: View {
             ? NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId != nil", followingPubkeys)
             : NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil", followingPubkeys)
             
-            fr.fetchLimit = 150 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW (MET VSTACK).
+            fr.fetchLimit = 200 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW (MET VSTACK).
             fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         } else {
             fr.predicate = showReplies
             ? NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId != nil AND NOT contact IN %@", followingPubkeys, account.blockedContacts!)
             : NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil AND NOT contact IN %@", followingPubkeys, account.blockedContacts!)
             
-            fr.fetchLimit = 150 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW (MET VSTACK).
+            fr.fetchLimit = 200 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW (MET VSTACK).
             fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         }
         

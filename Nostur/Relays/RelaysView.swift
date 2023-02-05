@@ -10,7 +10,7 @@ import CoreData
 
 struct RelayRowView: View {
     @ObservedObject var relay:Relay
-    @StateObject var socket:ManagedConnection
+    @StateObject var socket:ManagedClient
     
     var body: some View {
         HStack {
@@ -52,7 +52,7 @@ struct RelaysView: View {
 //    @EnvironmentObject var cm:ConnectionManager
     var sp:SocketPool = .shared
     
-    func socketForRelay(relay: Relay) -> ManagedConnection {
+    func socketForRelay(relay: Relay) -> ManagedClient {
         guard let socket = sp.sockets[relay.objectID] else {
             let addedSocket = sp.addSocket(relayId: relay.objectID, url: relay.url!, read: relay.read, write: relay.write)
             return addedSocket

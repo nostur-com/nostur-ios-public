@@ -13,7 +13,7 @@ extension NosturRootMenu {
 
     @MainActor class NosturRootMenuViewModel: ObservableObject {
         @Published var showSidebar: Bool = false
-        @Published var selectedTab = "MainTimeline"
+        @Published var selectedTab = "TEST"
         @Published var timelinePath = NavigationPath()
         @Published var searchPath = NavigationPath()
         @Published var accountsPath = NavigationPath()

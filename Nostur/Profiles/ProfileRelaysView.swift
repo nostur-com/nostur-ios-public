@@ -49,9 +49,9 @@ struct ProfileRelaysView: View {
                             Button {
                                 let url = String(relay)
                                 do {
-                                    let maybeSocket = sp.managedConnectionByUrl(url.description)
+                                    let maybeSocket = sp.socketByUrl(url.description)
                                     if (maybeSocket != nil) {
-                                        maybeSocket!.connection.connect()
+                                        maybeSocket!.client.connect()
                                     }
                                     else {
                                         // create new
@@ -63,7 +63,7 @@ struct ProfileRelaysView: View {
                                         
                                         try viewContext.save()
                                         let managedSocket = sp.addSocket(relayId: newRelay.objectID, url: url.description, read: true, write: true)
-                                        managedSocket.connection.connect()
+                                        managedSocket.client.connect()
                                     }
                                 }
                                 catch {

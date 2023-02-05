@@ -49,8 +49,8 @@
 		1F654F29298E8BA50040F15D /* QuotedNote.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F654F28298E8BA40040F15D /* QuotedNote.swift */; };
 		1F654F2B298EB4F30040F15D /* WebsocketConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F654F2A298EB4F30040F15D /* WebsocketConnection.swift */; };
 		1F654F2D298EB5510040F15D /* SocketPool2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F654F2C298EB5510040F15D /* SocketPool2.swift */; };
+		1F654F30298ED52E0040F15D /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 1F654F2F298ED52E0040F15D /* Starscream */; };
 		1F71037D296BD9DE006245CC /* Nostr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F71037C296BD9DE006245CC /* Nostr.swift */; };
-		1F75211329865E0C00C43DF0 /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 1F75211229865E0C00C43DF0 /* Starscream */; };
 		1F75211529865F2D00C43DF0 /* SocketPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F75211429865F2D00C43DF0 /* SocketPool.swift */; };
 		1F7521172986736400C43DF0 /* Messages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7521162986736400C43DF0 /* Messages.swift */; };
 		1F7521192986D44E00C43DF0 /* MessageParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7521182986D44E00C43DF0 /* MessageParser.swift */; };
@@ -207,7 +207,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1F75211329865E0C00C43DF0 /* Starscream in Frameworks */,
+				1F654F30298ED52E0040F15D /* Starscream in Frameworks */,
 				1F1ABC4329810D5500D03FA9 /* LinkPresentation.framework in Frameworks */,
 				1FEA785529799697007CC8E7 /* Compactor in Frameworks */,
 				1FA51FFF2978805400FE60EF /* NukeUI in Frameworks */,
@@ -470,7 +470,7 @@
 				1FA51FFC2978805400FE60EF /* Nuke */,
 				1FA51FFE2978805400FE60EF /* NukeUI */,
 				1FEA785429799697007CC8E7 /* Compactor */,
-				1F75211229865E0C00C43DF0 /* Starscream */,
+				1F654F2F298ED52E0040F15D /* Starscream */,
 			);
 			productName = Nostur;
 			productReference = 1FB448BA2965F3D000038671 /* Nostur.app */;
@@ -505,7 +505,7 @@
 				1F055A51296EE2A2009EF792 /* XCRemoteSwiftPackageReference "secp256k1" */,
 				1FA51FFB2978805400FE60EF /* XCRemoteSwiftPackageReference "Nuke" */,
 				1FEA785329799697007CC8E7 /* XCRemoteSwiftPackageReference "SwiftCompactor" */,
-				1F75211129865E0C00C43DF0 /* XCRemoteSwiftPackageReference "Starscream" */,
+				1F654F2E298ED52E0040F15D /* XCRemoteSwiftPackageReference "Starscream" */,
 			);
 			productRefGroup = 1FB448BB2965F3D000038671 /* Products */;
 			projectDirPath = "";
@@ -859,12 +859,12 @@
 				minimumVersion = 0.9.2;
 			};
 		};
-		1F75211129865E0C00C43DF0 /* XCRemoteSwiftPackageReference "Starscream" */ = {
+		1F654F2E298ED52E0040F15D /* XCRemoteSwiftPackageReference "Starscream" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/daltoniam/Starscream/";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 4.0.4;
+				branch = master;
+				kind = branch;
 			};
 		};
 		1FA51FFB2978805400FE60EF /* XCRemoteSwiftPackageReference "Nuke" */ = {
@@ -899,9 +899,9 @@
 			package = 1F055A51296EE2A2009EF792 /* XCRemoteSwiftPackageReference "secp256k1" */;
 			productName = secp256k1;
 		};
-		1F75211229865E0C00C43DF0 /* Starscream */ = {
+		1F654F2F298ED52E0040F15D /* Starscream */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 1F75211129865E0C00C43DF0 /* XCRemoteSwiftPackageReference "Starscream" */;
+			package = 1F654F2E298ED52E0040F15D /* XCRemoteSwiftPackageReference "Starscream" */;
 			productName = Starscream;
 		};
 		1FA51FFC2978805400FE60EF /* Nuke */ = {

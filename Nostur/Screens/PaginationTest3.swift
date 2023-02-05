@@ -21,6 +21,7 @@ extension PaginationTest3 {
         @Published private(set) var topOffset = CGFloat.zero // = scrollOffset
         @Published private(set) var bottomOffset = CGFloat.zero
         @Published private(set) var contentHeight = CGFloat.zero
+        @Published private(set) var viewportHeight = CGFloat.zero
         
         @Published private(set) var scrollCounter = 0
         
@@ -30,12 +31,13 @@ extension PaginationTest3 {
         
         func moveAnchorUp() {
             self.topAnchorSize = self.topAnchorSize - 50
-            self.bottomAnchorSize = self.bottomAnchorSize + 50
+            self.bottomAnchorSize = self.bottomAnchorSize - 50
         }
         
         @Published private(set) var viewportOffsetTopEmitter = PassthroughSubject<CGFloat, Never>()
-        @Published private(set) var viewportOffsetBottomEmitter = PassthroughSubject<CGFloat, Never>()
+//        @Published private(set) var viewportOffsetBottomEmitter = PassthroughSubject<CGFloat, Never>()
         @Published private(set) var contentHeightEmitter = PassthroughSubject<CGFloat, Never>()
+        @Published private(set) var viewportHeightEmitter = PassthroughSubject<CGFloat, Never>()
         
         var cancellables = Set<AnyCancellable>()
         
@@ -45,6 +47,7 @@ extension PaginationTest3 {
         
         func finish() {
             self.pendingHeightChange = false
+            print("🚘 PENDING HEIGHT CHANGE FLAG REMOVED")
         }
         
         func addSubscribers() {
@@ -53,32 +56,46 @@ extension PaginationTest3 {
                 .sink { topOffset in
                     if (!self.pendingHeightChange) {
                         self.topOffset = topOffset
-                        // KEEP ANCHOR IN SYNC
-                        //                        self.anchorSize = value + 50 // +30 to "see" anchor
                         self.topAnchorSize = -topOffset
+                        self.bottomAnchorSize = self.contentHeight - self.viewportHeight - -topOffset
                     }
                 }
                 .store(in: &cancellables)
             
-            viewportOffsetBottomEmitter
-//                .debounce(for: .seconds(0.25), scheduler: RunLoop.main)
-                .sink { bottomOffset in
-                    if (!self.pendingHeightChange) {
-                        self.bottomOffset = bottomOffset
-                        // KEEP ANCHOR IN SYNC
-                        //                        self.anchorSize = value + 50 // +30 to "see" anchor
-                        self.bottomAnchorSize = self.contentHeight - bottomOffset
-                    }
-                }
-                .store(in: &cancellables)
+//            viewportOffsetBottomEmitter
+////                .debounce(for: .seconds(0.25), scheduler: RunLoop.main)
+//                .sink { bottomOffset in
+//                    if (!self.pendingHeightChange) {
+//                        self.bottomOffset = bottomOffset
+//                        // KEEP ANCHOR IN SYNC
+//                        //                        self.anchorSize = value + 50 // +30 to "see" anchor
+//                        self.bottomAnchorSize = self.contentHeight - bottomOffset + self.topOffset
+//                    }
+//                }
+//                .store(in: &cancellables)
             
             contentHeightEmitter
-                .sink { value in
+                .sink { contentHeight in
                     if (self.pendingHeightChange) {
-                        self.topAnchorSize = self.topOffset
+//                        self.topAnchorSize = self.topOffset
+                        // hier self.pendingHeightChange = false?
+                        print("🚘 NEW HEIGHT: \(contentHeight). BOTTOM ANCHOR CHANGED FROM: \(self.bottomAnchorSize) TO: \(self.bottomAnchorSize - (contentHeight - self.contentHeight) - self.topOffset)")
+                        self.bottomAnchorSize = self.bottomAnchorSize - (contentHeight - self.contentHeight) - self.topOffset
+                    }
+                    else {
+                        print("🚘 HEIGHT CHANGE IGNORED \(contentHeight)")
+                    }
+                    self.contentHeight = contentHeight
+                }
+                .store(in: &cancellables)
+            
+            viewportHeightEmitter
+                .sink { viewportHeight in
+                    if (self.pendingHeightChange) {
+//                        self.topAnchorSize = self.topOffset
 //                        self.bottomAnchorSize = value - self.bottomOffset
                     }
-                    self.contentHeight = value
+                    self.viewportHeight = viewportHeight
                 }
                 .store(in: &cancellables)
         }
@@ -99,6 +116,13 @@ struct ViewportOffsetBottom: PreferenceKey {
         value += nextValue()
     }
 }
+struct ViewportHeightKey: PreferenceKey {
+    typealias Value = CGFloat
+    static var defaultValue = CGFloat.zero
+    static func reduce(value: inout Value, nextValue: () -> Value) {
+        value += nextValue()
+    }
+}
 
 struct PaginationTest3: View {
     @Namespace var TOP_SCROLL_ANCHOR
@@ -113,6 +137,7 @@ struct PaginationTest3: View {
     let pageSize = 3
     
     init() {
+        UIScrollView.appearance().bounces = false
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         fr.predicate = NSPredicate(format: "kind == 1 and replyToId == nil")
@@ -140,43 +165,53 @@ struct PaginationTest3: View {
                     }
                 }
                 // SEND TO PARENT: SCROLL OFFSET + CONTENT HEIGHT
-                .background(GeometryReader { geo in
+                .background(GeometryReader { contentGeo in
                     Color.clear.preference(
                         key: ViewportOffsetTop.self,
-                        value: geo.frame(in: .named(SCROLL_SPACE)).minY
-                    ).preference(
-                        key: ViewportOffsetBottom.self,
-                        value: geo.frame(in: .named(SCROLL_SPACE)).maxY
+                        value: contentGeo.frame(in: .named(SCROLL_SPACE)).minY
                     )
+//                    .preference(
+//                        key: ViewportOffsetBottom.self,
+//                        value: contentGeo.frame(in: .named(SCROLL_SPACE)).maxY
+//                    )
                     .preference(
                         key: ContentHeightKey.self,
-                        value: geo.size.height
+                        value: contentGeo.size.height
                     )
                 })
                 // RECEIVE FROM CHILD: SCROLL OFFSET + CONTENT HEIGHT
                 .onPreferenceChange(ViewportOffsetTop.self) { offset in
                     vm.viewportOffsetTopEmitter.send(offset)
                 }
-                .onPreferenceChange(ViewportOffsetBottom.self) { offset in
-                    vm.viewportOffsetBottomEmitter.send(offset)
-                }
+//                .onPreferenceChange(ViewportOffsetBottom.self) { offset in
+//                    vm.viewportOffsetBottomEmitter.send(offset)
+//                }
                 // RECEIVE FROM CHILD: CONTENT HEIGHT
                 .onPreferenceChange(ContentHeightKey.self) { height in
                     vm.contentHeightEmitter.send(height)
                 }
-//                .onChange(of: vm.bottomAnchorSize) { newValue in
-//                    if (vm.bottomOffset != vm.bottomAnchorSize) {
-//                        vm.pendingHeightChange = false
-//                        proxy.scrollTo(BOTTOM_SCROLL_ANCHOR)
-//                        vm.finish()
-//                    }
-//                }
-                .onChange(of: vm.scrollCounter) { newValue in
-                    withAnimation {
-                        proxy.scrollTo(TOP_SCROLL_ANCHOR)
+                .onChange(of: vm.bottomAnchorSize) { newValue in
+                    if (vm.pendingHeightChange) {
                         vm.finish()
+                        print("🚘 SCROLLING TO BOTTOM ANCHOR")
+                        proxy.scrollTo(BOTTOM_SCROLL_ANCHOR)
                     }
                 }
+                .onChange(of: vm.scrollCounter) { newValue in
+                    withAnimation {
+                        print("🚘 SCROLLING TO BOTTOM ANCHOR")
+                        proxy.scrollTo(BOTTOM_SCROLL_ANCHOR)
+                    }
+                }
+            }
+            .background(GeometryReader { viewPortGeo in
+                Color.clear.preference(
+                    key: ViewportHeightKey.self,
+                    value: viewPortGeo.size.height
+                )
+            })
+            .onPreferenceChange(ViewportHeightKey.self) { height in
+                vm.viewportHeightEmitter.send(height)
             }
         }
         //            .ignoresSafeArea(edges: .top)
@@ -185,11 +220,13 @@ struct PaginationTest3: View {
             HStack {
                 Spacer()
                 VStack {
+                    Rectangle().frame(width: 30, height: 100)
                     Text("E:\(events.count) TOP OFFSET: \(Int(vm.topOffset)) ANCHOR: \(Int(vm.topAnchorSize))")
-                    Text("BOTTOM OFFSET: \(Int(vm.bottomOffset)) ANCHOR: \(Int(vm.bottomAnchorSize))")
-                    Text("HEIGHT: \(Int(vm.contentHeight))")
+                    Text("VIEWPORT HEIGHT: \(Int(vm.viewportHeight)) ANCHOR: \(Int(vm.bottomAnchorSize))")
+                    Text("CONTENT HEIGHT: \(Int(vm.contentHeight))")
                     HStack {
                         Button {
+                            print("🚘 ADDING 1 EVENT AT HEIGHT: \(vm.contentHeight)")
                             let newEvent = Event(context: viewContext)
                             newEvent.id = UUID().description
                             newEvent.kind = 1
@@ -198,6 +235,7 @@ struct PaginationTest3: View {
                         Button { updatePages() } label: { Text("Pages") }
                         Button { vm.triggerScroll() } label: { Text("Scroll") }
                         Button { vm.moveAnchorUp() } label: { Text("Move") }
+                        Button { vm.pendingHeightChange.toggle() } label: { Text("T") }
                     }
                 }.buttonStyle(.borderedProminent)
                 Spacer()
@@ -231,6 +269,7 @@ struct PaginationTest3: View {
         }
         if (events.count != beforeEventsCount) { // TODO: should check 'gt' also?
             vm.pendingHeightChange = true
+            print("🚘 PENDING HEIGHT CHANGE FLAG ADDED")
         }
         
         let pageCount = Int(ceil(Double(events.count) / Double(pageSize))) // 33 / 3 = 11
@@ -242,10 +281,11 @@ struct PaginationTest3: View {
         // NEW HEIGHT IS NOT KNOWN HERE YET..
         // SO. FLAG FOR PENDING HEIGHT CHANGE
         // ON HEIGHT CHANGE DO THINGS IF FLAG IS SET
+        print("🚘 UPDATED PAGES (MODEL), NEW HEIGHT: \(vm.contentHeight) (VIEW NOT UPDATED YET)")
     }
 }
 
-var rr = 2333
+var rr = 3
 
 struct BPage: View {
     
