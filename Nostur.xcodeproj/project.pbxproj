@@ -78,6 +78,8 @@
 		1F8B1362297B36DB002EB8CF /* Bytes+HexString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8B1357297B36DB002EB8CF /* Bytes+HexString.swift */; };
 		1F8B1363297B36DB002EB8CF /* BytesConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8B1358297B36DB002EB8CF /* BytesConvertible.swift */; };
 		1F8B1365297B3BE8002EB8CF /* ContactProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8B1364297B3BE8002EB8CF /* ContactProfile.swift */; };
+		1F90E11529913C2C00E7596E /* PaginationTest4.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F90E11429913C2C00E7596E /* PaginationTest4.swift */; };
+		1F90E1172991716D00E7596E /* Timeline2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F90E1162991716D00E7596E /* Timeline2.swift */; };
 		1F927C6F297DB34A0024F665 /* Queue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F927C6E297DB3490024F665 /* Queue.swift */; };
 		1F987EB129804AA5001E352E /* NewNoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F987EB029804AA4001E352E /* NewNoteView.swift */; };
 		1F987EB329805F33001E352E /* String+matchingStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F987EB229805F33001E352E /* String+matchingStrings.swift */; };
@@ -177,6 +179,8 @@
 		1F8B1357297B36DB002EB8CF /* Bytes+HexString.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Bytes+HexString.swift"; sourceTree = "<group>"; };
 		1F8B1358297B36DB002EB8CF /* BytesConvertible.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BytesConvertible.swift; sourceTree = "<group>"; };
 		1F8B1364297B3BE8002EB8CF /* ContactProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactProfile.swift; sourceTree = "<group>"; };
+		1F90E11429913C2C00E7596E /* PaginationTest4.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaginationTest4.swift; sourceTree = "<group>"; };
+		1F90E1162991716D00E7596E /* Timeline2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Timeline2.swift; sourceTree = "<group>"; };
 		1F927C6E297DB3490024F665 /* Queue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Queue.swift; sourceTree = "<group>"; };
 		1F987EB029804AA4001E352E /* NewNoteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewNoteView.swift; sourceTree = "<group>"; };
 		1F987EB229805F33001E352E /* String+matchingStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+matchingStrings.swift"; sourceTree = "<group>"; };
@@ -242,6 +246,7 @@
 				1F8B0A01298BDA9D00736B9A /* PaginationTest.swift */,
 				1F77982F298D0623000642BB /* PaginationTest2.swift */,
 				1F779831298D19D3000642BB /* PaginationTest3.swift */,
+				1F90E11429913C2C00E7596E /* PaginationTest4.swift */,
 				1FB448C42965F3D000038671 /* NosturTabsView.swift */,
 				1F7A63C029711CCC00D8B2CB /* Playground.swift */,
 				1F5F5A682984315900DED8F4 /* TimelineView.swift */,
@@ -249,6 +254,7 @@
 				1FDFEBB6297ED78100511AA0 /* ConfigurationView.swift */,
 				1F1ABC482981718700D03FA9 /* BookmarksView.swift */,
 				1F330989298A909100D4D8CF /* Timeline.swift */,
+				1F90E1162991716D00E7596E /* Timeline2.swift */,
 			);
 			path = Screens;
 			sourceTree = "<group>";
@@ -537,6 +543,7 @@
 				1F756533296AE7910078474E /* NewRelayView.swift in Sources */,
 				1F3C3F9629755D4C00E813FD /* NosturState.swift in Sources */,
 				1F8B1365297B3BE8002EB8CF /* ContactProfile.swift in Sources */,
+				1F90E1172991716D00E7596E /* Timeline2.swift in Sources */,
 				1F5BBE40297BC7E600F4AF03 /* EventsError.swift in Sources */,
 				1F8B1360297B36DB002EB8CF /* String+HexBytes.swift in Sources */,
 				1F5F5A5E2983FF9D00DED8F4 /* EventsWindow.swift in Sources */,
@@ -579,6 +586,7 @@
 				1F756531296AE4260078474E /* RelaysView.swift in Sources */,
 				1F779830298D0623000642BB /* PaginationTest2.swift in Sources */,
 				1F1ABC4B29819CAC00D03FA9 /* Cache.swift in Sources */,
+				1F90E11529913C2C00E7596E /* PaginationTest4.swift in Sources */,
 				1F75211B2986D45D00C43DF0 /* Importer.swift in Sources */,
 				1F8B134B297B3551002EB8CF /* NIP19.swift in Sources */,
 				1F1ABC4729811A1B00D03FA9 /* LRUCache.swift in Sources */,

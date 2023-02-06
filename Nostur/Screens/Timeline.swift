@@ -14,11 +14,9 @@ struct Timeline: View {
     @Environment(\.managedObjectContext) var viewContext
     @Namespace var SCROLL_TO_TOP_ANCHOR
     
-    @State var pages: [PageModel] = []
-    let pageSize:Int = 1
+    @State var notes: [Event] = []
     
     @State var didSetup = false
-//    @State var isRefreshing = true
     @State var isLoading = true
     
     let timelineRunLoop = Timer.publish(every: 15, tolerance: 1, on: .main, in: .common).autoconnect()
@@ -30,13 +28,12 @@ struct Timeline: View {
     var sp: SocketPool = .shared
     var mp: MessageParser = .shared
     
-//    var events:FetchedResults<Event>
-//    var reversed:[Event]
     var account:Account
     
     @AppStorage("lastReadDate") var lastReadDate = 0
     @State var didAutoScroll = false // Only scroll to last unread after launch, not after .onAppear after coming back from detail
     @State var unreadCount = 0
+    @State var lastReadIndex = 0
     @Binding var showMenu:Bool // _showMenu changed ... why??? lots of reloads??
     
     @EnvironmentObject var ns:NosturState
@@ -53,11 +50,10 @@ struct Timeline: View {
         _showMenu = showMenu
     
         let fr = NSFetchRequest<Event>(entityName: "Event")
-        if (1 == 1 || account.blockedContacts == nil) {
+        if (account.blockedContacts == nil) {
             fr.predicate = showReplies
             ? NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId != nil", followingPubkeys)
             : NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil", followingPubkeys)
-//            fr.predicate = NSPredicate(format: "kind == 1 and replyToId == nil")
         } else {
             fr.predicate = showReplies
             ? NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId != nil AND NOT contact IN %@", followingPubkeys, account.blockedContacts!)
@@ -67,31 +63,7 @@ struct Timeline: View {
         fr.fetchLimit = 50 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW (MET VSTACK).
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         
-//        let fr = Event.fetchRequest()
-//        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-//        fr.predicate = NSPredicate(format: "kind == 1 and replyToId == nil")
-//        fr.fetchLimit = 50
-        
         _events = FetchRequest(fetchRequest: fr)
-    }
-    
-    func getUnreadCount(events:[Event]? = nil) -> Int {
-        if (events != nil) {
-            return events!.filter { $0.created_at > lastReadDate }.count
-        }
-        return 0
-    }
-
-    func lastReadEvent() -> Event? {
-        return events.filter { $0.created_at == lastReadDate }.first
-    }
-
-    func firstUnreadEvent() -> Event? {
-        return events.filter { $0.created_at > lastReadDate }
-            .sorted { e1, e2 in
-                e1.created_at > e2.created_at
-            }
-            .last
     }
     
     func scrollToTop(_ proxy:ScrollViewProxy) {
@@ -101,8 +73,15 @@ struct Timeline: View {
 //        }
     }
     
+    func eventAppeared(_ index:Int) {
+        if index >= lastReadIndex {
+            lastReadIndex = index
+        }
+//        print("eventAppeared:\(index), lastReadIndex: \(lastReadIndex) notes.count: \(notes.count)")
+        unreadCount = notes.count - (lastReadIndex+1)
+    }
+    
     var body: some View {
-        let _ = Self._printChanges()
         VStack {
             HStack {
                 Color.clear.frame(width: 200, height: 30)
@@ -111,12 +90,12 @@ struct Timeline: View {
                 ScrollViewReader { proxy in
                     ScrollView {
                         LazyVStack { // PAGES ARE LAZY
-                            ForEach(pages, id:\.id) { page in
-                                Page(events: page.events)
-                                    .scaleEffect(x:1, y:-1)
-                                //                                .onAppear {
-                                //                                    print("🥶🥶 onAppear: PAGE \(page.id)")
-                                //                                }
+                            ForEach(notes.indices, id:\.self) { index in
+                                VStack {
+                                    NoteRowView(event: notes[index])
+                                        .scaleEffect(x:1, y:-1)
+                                    Color.clear.frame(width: 200, height: 1).onAppear { eventAppeared(index) }
+                                }.id(notes[index].id)
                             }
                         }
                         //                    .background(Color.random)
@@ -124,55 +103,21 @@ struct Timeline: View {
                             .id(SCROLL_TO_TOP_ANCHOR)
                     }
                     .scaleEffect(x:1, y:-1)
-                    .onAppear {
-                        if (!didSetup) {
-                            setupPages()
-                        }
-                    }
-                    .onDisappear {
-                        print("ScrollView.onDisappear!")
-                    }
+                    .onAppear { if (!didSetup) { setupNotes() } }
                     .safeAreaInset(edge: .bottom) {
-                        VStack(alignment: .center) {
-                            HStack {
-                                Button { fetchEventsFromFollowing(amount:500) } label: { Text("Fetch") }
-                                Button {
-                                    print("🚘 ADDING EVENTS")
-                                    for _ in 0...3 {
-                                        let newEvent = Event(context: viewContext)
-                                        newEvent.id = UUID().description
-                                        newEvent.pubkey = "1833ee04459feb2ca4ae690d5f31269ad488c69e5fe903a42b532c677c4a8170"
-                                        
-                                        //                                    newEvent.pubkey = "50d94fc2d8580c682b071a542f8b1e31a200b0508bab95a33bef0855df281d63"
-                                        newEvent.kind = 1
-                                        newEvent.created_at = Int64(Date.now.timeIntervalSince1970)
-                                    }
-                                    //                                updatePages()
-                                } label: { Text("Add events (\(events.count))") }
-                                Button { updatePages() } label: { Text("Pages (\(pages.count))") }
-                                Button { scrollToTop(proxy) } label: { Text("To Top") }
-                                //                            Text("LRD \(d(lastReadDate).description)")
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .controlSize(.small)
-                            //                        HStack {
-                            //                            Button { fetchEventsFromFollowing(amount:500) } label: { Text("1. Fetch") }
-                            //                            Button { importNotes() } label: { Text("2. Import") }
-                            //                            Button { updatePages() } label: { Text("3. Pages") }
-                            //                            Button { scrollToTop() } label: { Text("To Top") }
-                            //                            Text("\(unreadCount)")
-                            //                        }
-                            
-                        }.background(.regularMaterial)
+                        HStack {
+                            Spacer()
+                            Button { fetchEventsFromFollowing(amount:500) } label: { Text("Fetch") }
+                            Button { loadNewNotes() } label: { Text("Load (\(events.count - notes.count))") }
+                            Button { scrollToTop(proxy) } label: { Text("To Top") }
+                            Spacer()
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.small)
+                        .background(.regularMaterial)
                     }
                     .onAppear {
-                        unreadCount = getUnreadCount()
-                        if (events.first != nil) {
-                            //                    print("🤩🤩 onAppear, last read = \(d(lastReadDate).description)")
-                            //                    print("🤩🤩 onAppear, last first = \(d(events.first!.created_at).description)")
-                            //                    print("🤩🤩 onAppear, last event = \(d(events.last!.created_at).description)")
-                        }
-                        else {
+                        if (events.first == nil) {
                             isLoading = false
                             didAutoScroll = true
                         }
@@ -226,24 +171,31 @@ struct Timeline: View {
                         }
                     }
                 }
-                VStack {
-                    HStack {
-                        Spacer()
-                        if (unreadCount > 0) {
-                            Text("\(unreadCount)")
-                                .frame(minWidth: 30)
-                                .padding(5)
-                                .fontWeight(.bold)
-                                .foregroundColor(.white)
-                                .background(.tint)
-                                .cornerRadius(20)
-                                .offset(x:-30,y:35)
-                        }
-                        
-                    }
-                    Spacer()
-                }
+                UnreadCounter(count:unreadCount)
             }
+        }
+    }
+}
+
+struct UnreadCounter: View {
+    var count:Int
+    var body: some View {
+        VStack {
+            HStack {
+                Spacer()
+                if (count > 0) {
+                    Text("\(count)")
+                        .frame(minWidth: 30)
+                        .padding(5)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .background(.tint)
+                        .cornerRadius(20)
+                        .offset(x:-30,y:35)
+                }
+                
+            }
+            Spacer()
         }
     }
 }
@@ -251,90 +203,22 @@ struct Timeline: View {
 // MARK: PAGINATION
 extension Timeline {
 
-    func setupPages() {
+    func setupNotes() {
         print("setupPages")
         didSetup = true
-        let pageCount = Int(ceil(Double(events.count) / Double(pageSize))) // 33 / 3 = 11
-        pages = []
-        
-        // All pages
-        for loopCount in 0..<pageCount { // 0..<11
-            let events = events.dropLast(loopCount * pageSize).suffix(pageSize)
-            let page = PageModel(id: "\(loopCount)-\(events.count)", events: events)
-            pages.append(page)
+        for index in 0..<events.count {
+            notes.append(events.reversed()[index])
         }
     }
     
-    func updatePages() {
-        let pageCount = Int(ceil(Double(events.count) / Double(pageSize))) // 33 / 3 = 11
-//        let oldEventsCount = pages.reduce(0) { partialResult, events in
-//            return events.count + partialResult
-//        }
-        pages = []
-        // All pages // TODO: HOw only update/add pages, leave existing in tact..
-        for loopCount in 0..<pageCount { // 0..<11
-            let events = events.dropLast(loopCount * pageSize).suffix(pageSize)
-            let page = PageModel(id: "\(loopCount)-\(events.count)", events: events)
-            pages.append(page)
-        }
-    }
-
-}
-
-struct Page: View {
-    var events:Slice<FetchedResults<Event>>
-    var body: some View {
-        VStack {
-            ForEach(events) { event in
-                NoteRowView(event: event)
-                    .id(event.id)
-            }
+    func loadNewNotes() {
+        let beforeEventsCount = notes.count
+        for index in 0..<events.count { // 0..<11
+            if (index < beforeEventsCount) { continue }
+            notes.append(events.reversed()[index])
         }
     }
 }
-
-//struct TimelineWrapper: View {
-//
-//    // Maybe put this code no longer needs to be in parent, because of the dynamic predicate problem has been solved.
-//
-//    @EnvironmentObject var ns:NosturState
-//    @Binding var showMenu:Bool
-//
-//    @FetchRequest(
-//        entity: Event.entity(),
-//        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
-//        predicate: NSPredicate(format: "FALSEPREDICATE")
-//    )
-//    var events: FetchedResults<Event>
-//
-//    init(showReplies:Bool, followingPubkeys: Set<String>, showMenu: Binding<Bool>) {
-//        _showMenu = showMenu
-//
-//        let fr = NSFetchRequest<Event>(entityName: "Event")
-//        fr.predicate = showReplies
-//            ? NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId != nil", followingPubkeys)
-//            : NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil", followingPubkeys)
-//
-//        fr.fetchLimit = 100 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW
-//        fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-//
-//        _events = FetchRequest(fetchRequest: fr)
-//    }
-//
-//    var body: some View {
-//        if (ns.account != nil) {
-//            Timeline(events:events, account: ns.account!, showMenu: $showMenu)
-//                .onAppear {
-//                    print("💿💿 RELOADDED??? ")
-//                }
-//        }
-//        else {
-//            Text("Please set up account first")
-//        }
-//        //        Spacer()
-//    }
-//
-//}
 
 extension Timeline {
     

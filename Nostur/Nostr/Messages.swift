@@ -35,6 +35,7 @@ struct RelayMessage {
         case EVENT
         case NOTICE
         case EOSE
+        case OK
     }
     
     enum error:Error {
@@ -63,6 +64,10 @@ struct RelayMessage {
         
         guard json[0] != "NOTICE" else {
             return RelayMessage(type: .NOTICE, message: text)
+        }
+        
+        guard json[0] != "OK" else {
+            return RelayMessage(type: .OK, message: text)
         }
         
         guard json[0] == "EVENT" else {

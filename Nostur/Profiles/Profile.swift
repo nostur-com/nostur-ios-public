@@ -68,7 +68,7 @@ struct Profile: View {
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var sp:SocketPool
     
-    var contact:Contact
+    @ObservedObject var contact:Contact
     var pubkey:String
     
     @FetchRequest

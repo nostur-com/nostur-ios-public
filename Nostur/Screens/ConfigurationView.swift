@@ -282,8 +282,10 @@ struct ConfigurationView: View {
         er.predicate = NSPredicate(format: "kind == 1")
         let allKind1 = Array(try! viewContext.fetch(er))
         
-        
         for event in allKind1 {
+            event.replyTo = nil
+            event.replyToRoot = nil
+            event.firstQuote = nil
             
             if (event.replyToId != nil) {
                 let cr = NSFetchRequest<Event>(entityName: "Event")
@@ -314,7 +316,7 @@ struct ConfigurationView: View {
         }
         
         do {
-            print("Rebuilt event.contact relation")
+            print("Rebuilt event.replyTo, event.replyToRoot, event.firstQuote relations")
             try viewContext.save()
         }
         catch {

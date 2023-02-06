@@ -155,6 +155,15 @@ struct ScrollViewContentHeightPreferenceKey: PreferenceKey {
 }
 
 // Simple preference that observes a CGFloat.
+struct XXX: PreferenceKey {
+    static var defaultValue = 0.0
+
+  static func reduce(value: inout Double, nextValue: () -> Double) {
+    value += nextValue()
+  }
+}
+
+// Simple preference that observes a CGFloat.
 struct ScrollViewOffsetPreferenceKey: PreferenceKey {
   static var defaultValue = CGFloat.zero
 

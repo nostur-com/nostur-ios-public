@@ -51,13 +51,12 @@ struct NoteRowView: View {
     
     var body: some View {
 //        VStack {
-        VStack(spacing:0) { // A TW EET
-                        
+        VStack() { // A TW EET
             NavigationLink(value: event, label: {
                 VStack (alignment: .leading) { // Vstack for retweeted thread
                     HStack(alignment: .top) { // Tweet
                         NavigationLink(value: event, label: {
-                            VStack{ // profile image + thread line
+                            VStack { // profile image + thread line
                                 // profile image
                                 if (event.contact != nil) {
                                     NavigationLink(value: ContactPath(key: event.pubkey!), label: {
@@ -72,7 +71,7 @@ struct NoteRowView: View {
                                 Spacer()
                             }
                             .frame(height: 100)
-//                            .padding(.leading, 10)
+                            .padding(.leading, 10)
                         })
                         
                         VStack(alignment:.leading) {// Tweet container
@@ -92,7 +91,8 @@ struct NoteRowView: View {
                                                     .font(.system(size: 14))
                                                     .foregroundColor(.secondary)
                                                 Spacer()
-                                                Text(Date(timeIntervalSince1970: TimeInterval(event.created_at)), format: Date.VerbatimFormatStyle(format: "\(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .oneBased)):\(minute: .twoDigits)", timeZone: .current, calendar: .current))
+                                                Text(Date(timeIntervalSince1970: TimeInterval(event.created_at)), format: Date.VerbatimFormatStyle(format: "\(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased)):\(minute: .twoDigits)", timeZone: .current, calendar: .current))
+                                                    .font(.system(size: 14))
                                             }
                                             
                                             ReplyingToFragment(event: event)
@@ -106,26 +106,24 @@ struct NoteRowView: View {
                                 VStack(alignment: .leading) {
                                     NoteTextRenderView(event:event, taggedContacts:Array(taggedContacts))
                                 }
-                            }).frame(height: 100).clipped()
+                            }).frame(height: 70)
                             
-                            if (event.firstQuoteId != nil) {
-                                if (event.firstQuote != nil) {
-                                    QuotedNoteFragment(event: event.firstQuote!)
-                                }
-                                else {
-                                    ProgressView().onAppear {
-                                        sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.firstQuoteId!)))
-                                    }
+                            if (event.firstQuoteId != nil && event.firstQuote != nil) {
+                                QuotedNoteFragment(event: event.firstQuote!)
+                            }
+                            else if (event.firstQuote != nil) {
+                                ProgressView().onAppear {
+                                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.firstQuoteId!)))
                                 }
                             }
 
                            HStack {
-                               if (visible) { FooterFragment(event: event) }
+                               FooterFragment(event: event)
                            }  .frame(height: 25)
-//                            FooterFragment(event:event)
-//                                .frame(height: 30)
+
                         }
-//                        .padding(.trailing, 10).padding(.bottom, 5)
+                        .padding(.trailing, 10)
+//                        .padding(.bottom, 5)
                     }
                 }
             })

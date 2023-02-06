@@ -42,8 +42,8 @@ class ManagedClient: WebSocketDelegate, ObservableObject {
             }
             print("🔌 DISCONNECTED \(self.url): \(reason) with code: \(code)")
         case .text(let string):
-//                print("🔌 💬 Received text: \(string)")
-            MessageParser.shared.socketReceivedMessage(text: string)
+//                print("🔌 💬 Received text: \(string)") 
+            MessageParser.shared.socketReceivedMessage(text: string, relayUrl: self.url)
         case .binary(let data):
             print("🔌 RECEIVED DATA \(self.url): \(data.count)")
         case .ping(_):

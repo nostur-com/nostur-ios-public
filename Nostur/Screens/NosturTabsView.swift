@@ -9,7 +9,7 @@ import SwiftUI
 import CoreData
 
 struct NosturTabsView: View {
-
+    
     @AppStorage("showReplies") var showReplies = true // TODO: Move to Timeline
     @Binding var showMenu:Bool
     @EnvironmentObject var ns:NosturState
@@ -32,6 +32,11 @@ struct NosturTabsView: View {
 //                        Image(systemName: "person.badge.key.fill")
 //                    }
 //                    .tag("TEST")
+                //                PaginationTest3()
+                //                    .tabItem {
+                //                        Image(systemName: "person.badge.key.fill")
+                //                    }
+                //                    .tag("TEST")
                 NavigationStack(path: $timelinePath) {
                     if (ns.followingPublicKeys.count != 0) {
                         Timeline(showReplies: true, showMenu: $showMenu, followingPubkeys: ns.followingPublicKeys, account: ns.account!)
@@ -94,7 +99,7 @@ struct NosturTabsView: View {
                     }
                 }
             }.background(.regularMaterial)
-//            .background(.regularMaterial)
+            //            .background(.regularMaterial)
         }
     }
     

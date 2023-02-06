@@ -20,6 +20,7 @@ struct NosturApp: App {
     
     var body: some Scene {        
         WindowGroup {
+//                PaginationTest3()
                 NosturRootMenu() // <--- put this one instead of ContentView to bring back sidebar menu
 //                ContentView(showMenu: $showMenu)
                 .environment(\.managedObjectContext, EventsProvider.shared.container.viewContext)
