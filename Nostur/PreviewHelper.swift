@@ -86,9 +86,10 @@ struct PreviewFetcher {
         return try! PreviewFetcher.viewContext.fetch(request)
     }
     
-    static func fetchAccount(_ pubkey:String, context:NSManagedObjectContext? = nil) -> Account? {
+    static func fetchAccount(_ pubkey:String? = nil, context:NSManagedObjectContext? = nil) -> Account? {
+        let accountKey = pubkey ?? "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
         let request = NSFetchRequest<Account>(entityName: "Account")
-        request.predicate = NSPredicate(format: "publicKey == %@", pubkey)
+        request.predicate = NSPredicate(format: "publicKey == %@", accountKey)
         request.sortDescriptors = []
         
         if (context != nil) {

@@ -4,37 +4,30 @@
 //
 //  Created by Fabian Lachman on 05/01/2023.
 //
-
 import SwiftUI
 import CoreData
 
 @main
 struct NosturApp: App {
-    
     @StateObject var ns = NosturState(viewContext:EventsProvider.shared.container.viewContext)
     @State var isViewDisplayed = false
     
-    let loopyRunny = Timer.publish(every: 2, tolerance: 1, on: .main, in: .common).autoconnect()
+    let runLoop = Timer.publish(every: 2, tolerance: 1, on: .main, in: .common).autoconnect()
     let sp:SocketPool = .shared
-//    @State var path = NavigationPath()
     
     var body: some Scene {        
         WindowGroup {
-//                PaginationTest3()
-                NosturRootMenu() // <--- put this one instead of ContentView to bring back sidebar menu
-//                ContentView(showMenu: $showMenu)
+                NosturRootMenu()
                 .environment(\.managedObjectContext, EventsProvider.shared.container.viewContext)
                 .environmentObject(ns)
                 .environmentObject(sp)
-                .onAppear {
-                    startNosturing(); self.isViewDisplayed = true
-                }
+                .onAppear {startNosturing(); self.isViewDisplayed = true }
                 .onDisappear { self.isViewDisplayed = false }
-                .onReceive(loopyRunny) { time in
+                .onReceive(runLoop) { time in
                     if (!isViewDisplayed) { return }
                     Task { await Importer.shared.importEvents() }
                 }
-                .statusBarHidden(true)
+//                .statusBarHidden(true)
         }
     }
 

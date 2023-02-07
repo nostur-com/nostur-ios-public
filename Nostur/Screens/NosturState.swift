@@ -12,11 +12,9 @@ import CoreData
 final class NosturState : ObservableObject {
     
     // public keys of the contacts that the currently active ("logged in") account follows
-    
     // WTF followingPublicKeys met @Published is superlangzaam... HMMM.
     //@Published var followingPublicKeys:Set<String> = Set<String>()
     var followingPublicKeys:Set<String> = Set<String>()
-    
     
     @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""
     @Published var account:Account? = nil
@@ -175,9 +173,7 @@ final class NosturState : ObservableObject {
             return false
         }
         return account!.follows?.contains(contact) ?? false
-    }
-    
-    
+    }    
     
     func addBookmark(_ event:Event) {
         guard account != nil else {

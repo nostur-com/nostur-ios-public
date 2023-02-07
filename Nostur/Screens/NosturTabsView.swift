@@ -26,17 +26,8 @@ struct NosturTabsView: View {
     
     var body: some View {
         VStack {
+            AppTopBar(showMenu: $showMenu)
             TabView(selection: $selectedTab) {
-//                PaginationTest3()
-//                    .tabItem {
-//                        Image(systemName: "person.badge.key.fill")
-//                    }
-//                    .tag("TEST")
-                //                PaginationTest3()
-                //                    .tabItem {
-                //                        Image(systemName: "person.badge.key.fill")
-                //                    }
-                //                    .tag("TEST")
                 NavigationStack(path: $timelinePath) {
                     if (ns.followingPublicKeys.count != 0) {
                         Timeline(showReplies: true, showMenu: $showMenu, followingPubkeys: ns.followingPublicKeys, account: ns.account!)
@@ -69,6 +60,14 @@ struct NosturTabsView: View {
                 .tabItem { Image(systemName: "bookmark.circle") }
                 .tag("Bookmarks")
                 
+                NavigationStack(path: $searchPath) {
+                    Search()
+                        .withNavigationDestinations()
+                    Spacer()
+                }
+                .tabItem { Image(systemName: "magnifyingglass") }
+                .tag("Search")
+                
                 NavigationStack(path: $configurationPath) {
                     ConfigurationView()
                         .withNavigationDestinations()
@@ -77,28 +76,9 @@ struct NosturTabsView: View {
                 .tabItem { Image(systemName: "server.rack") }
                 .tag("Configuration")
             }
-            .safeAreaInset(edge: .top) {
-                ZStack {
-                    HStack {
-                        if (ns.account != nil) {
-                            ProfilePicView(pubkey: ns.activeAccountPublicKey, account: ns.account, size:30)
-                                .offset(x: 30)
-                                .onTapGesture {
-                                    showMenu.toggle()
-                                }
-                        }
-                        Spacer()
-                    }
-                    HStack {
-                        Spacer()
-                        Image("NosturLogo")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height:30)
-                        Spacer()
-                    }
-                }
-            }.background(.regularMaterial)
+//            .safeAreaInset(edge: .top) {
+//
+//            }.background(.regularMaterial)
             //            .background(.regularMaterial)
         }
     }

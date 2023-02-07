@@ -1,0 +1,102 @@
+//
+//  Search.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 07/02/2023.
+//
+
+import SwiftUI
+
+struct Search: View {
+    
+    var sp:SocketPool = .shared
+    @State var searchText = ""
+    
+    @FetchRequest(
+        entity: Event.entity(),
+        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
+        predicate: NSPredicate(value: false),
+        animation: .none)
+    var events:FetchedResults<Event>
+    
+    @FetchRequest(
+        entity: Contact.entity(),
+        sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
+        predicate: NSPredicate(value: false),
+        animation: .none)
+    var contacts:FetchedResults<Contact>
+    
+    @State var searching = false
+    
+    var body: some View {
+        let _ = Self._printChanges()
+        ScrollView {
+            if (contacts.count == 0 && events.count == 0 && searching) {
+                ProgressView()
+            }
+            ForEach(contacts) { contact in
+                ProfileRow(contact: contact)
+                Divider()
+            }
+            ForEach(events) { event in
+                NoteRowView(event: event)
+                Divider()
+            }
+        }
+        .padding(10)
+        .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
+        .onChange(of: searchText) { searchString in
+            
+            let searchTrimmed = searchString.trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            // try npub
+            if (searchTrimmed.prefix(5) == "npub1") {
+                do {
+                    searching = true
+                    let key = try NIP19(displayString: searchTrimmed)
+                    contacts.nsPredicate = NSPredicate(format: "pubkey = %@", key.hexString)
+                    events.nsPredicate = NSPredicate(value: false)
+                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: key.hexString)))
+                }
+                catch {
+                    print("npub1 search fail \(error)")
+                    searching = false
+                }
+            }
+            
+            // try note1
+            else if (searchTrimmed.prefix(5) == "note1") {
+                do {
+                    searching = true
+                    let key = try NIP19(displayString: searchTrimmed)
+                    events.nsPredicate = NSPredicate(format: "id = %@", key.hexString)
+                    contacts.nsPredicate = NSPredicate(value: false)
+                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: key.hexString)))
+                }
+                catch {
+                    print("note1 search fail \(error)")
+                    searching = false
+                }
+            }
+            // else try hex id or pubkey
+            else if (searchTrimmed.count == 64) {
+                searching = true
+                events.nsPredicate = NSPredicate(format: "id = %@", searchTrimmed)
+                contacts.nsPredicate = NSPredicate(format: "pubkey = %@", searchTrimmed)
+                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: searchTrimmed)))
+                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: searchTrimmed)))
+                Task {
+                    try? await Task.sleep(nanoseconds: 5_500_000_000)
+                    searching = false
+                }
+            }
+        }
+    }
+}
+
+struct Search_Previews: PreviewProvider {
+    static var previews: some View {
+        Search()
+            .withPreviewEnvironment()
+    }
+}

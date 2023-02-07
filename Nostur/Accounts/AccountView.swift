@@ -21,7 +21,15 @@ struct AccountView: View {
     var body: some View {
         let shouldDisable = account.privateKey == nil || account.privateKey == ""
         VStack {
-            Button { contactsPresented = true } label: { Text("Following \(account.follows?.count ?? 0)") }
+            Button { contactsPresented = true } label: {
+                
+                
+                NavigationLink(value: ViewPath.Following(account:account)) {
+                    Text("Following \(account.follows?.count ?? 0)")
+                }
+                
+                
+            }
             
             Form {
                 Section(header: Text("Your name") ) {
@@ -148,89 +156,7 @@ extension AccountView {
     }
 }
 
-struct AccountFollowingList: View {
-    var account:Account
-    var sp:SocketPool = .shared
-    @Environment(\.managedObjectContext) var viewContext
-    @State var searchText = ""
-    
-    var body: some View {
-        ScrollView {
-            VStack {
-                ForEach(Array(account.follows?.filter({ contact in
-                    if (searchText == "") { return true }
-                    if contact.authorName.contains(searchText) {
-                        return true
-                    }
-                    if contact.username.contains(searchText) {
-                        return true
-                    }
-                    if contact.about != nil && contact.about!.contains(searchText) {
-                        return true
-                    }
-                    return false
-                }) ?? [])) { contact in
-                    ProfileRow(contact: contact)
-                }
-            }
-        }
-        .searchable(text: $searchText)
-        .safeAreaInset(edge: .bottom) {
-            HStack {
-                Spacer()
-                Button {
-                    do {
-                        try publishFollowersList(account: account, sp: sp, context: viewContext)
-                    }
-                    catch {
-                        print("Could not publish followers list (kind=3)")
-                        print(error)
-                    }
-                    
-                } label: { Text("Publish your followers list") }
-                    .buttonStyle(.borderedProminent)
-                Spacer()
-            }.background(.regularMaterial)
-        }
-    }
-    
-    // TODO: MOVE TO Event Publisher class
-    func publishFollowersList(account:Account, sp:SocketPool, context:NSManagedObjectContext) throws {
-        guard account.privateKey != nil else {
-            throw "Account has no private key"
-        }
-        
-        // create nostr contact list event
-        var nEvent = NEvent(content: "")
-        nEvent.publicKey = account.publicKey!
-        nEvent.kind = .custom(3)
-        nEvent.tags = (Array(account.follows ?? Set<Contact>())).map({ contact in
-            let tag = NEventTag.pubKey(publicKey: contact.pubkey!)
-            return tag
-        })
-        
-        if (account.privateKey != nil) {
-            let keys = NKeys(privateKeyHex: account.privateKey!)
-            
-            do {
-                nEvent = try nEvent.sign(keys)
-                
-                print(nEvent.eventJson())
-                print(nEvent.wrappedEventJson())
-                
-                _ = Event.saveEvent(event: nEvent, context: context)
-                try context.save()
-                
-                // broadcast to relays
-                let message = ClientMessage(type: .EVENT, message: nEvent.wrappedEventJson())
-                sp.sendMessage(message)
-            }
-            catch {
-                print("🔴🔴🔴🔴 Could not sign/save/broadcast event 🔴🔴🔴🔴")
-            }
-        }
-    }
-}
+
 
 struct AccountView_Previews: PreviewProvider {
     static var previews: some View {
