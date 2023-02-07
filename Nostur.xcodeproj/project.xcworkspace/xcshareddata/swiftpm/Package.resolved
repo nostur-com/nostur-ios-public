@@ -1,12 +1,12 @@
 {
   "pins" : [
     {
-      "identity" : "nuke",
+      "identity" : "kingfisher",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/kean/Nuke",
+      "location" : "https://github.com/onevcat/Kingfisher",
       "state" : {
-        "branch" : "master",
-        "revision" : "b187456fffa045e7dfc03fec1db86164ae0c0dc1"
+        "revision" : "2db469112fbcfd83ff0a96c4546772d283f317f5",
+        "version" : "7.6.0"
       }
     },
     {

@@ -6,54 +6,48 @@
 //
 
 import SwiftUI
-import NukeUI
-import Nuke
+import Kingfisher
 
 struct ProfilePicView : View {
     
     var pubkey:String
     var contact:Contact?
     var account:Account?
-    var size:CGFloat? = 50
+    var size:CGFloat = 50
+    var color:Color
+    
+    init(pubkey: String, contact: Contact? = nil, account: Account? = nil, size: CGFloat = 50) {
+        self.pubkey = pubkey
+        self.contact = contact
+        self.account = account
+        self.size = size
+        self.color = randomColor(seed: pubkey)
+    }
     
     var body: some View {
         let picture = contact != nil ? contact!.picture : account?.picture
         
-        if (picture != nil) { // TODO: is this slow??
-            
-            if (picture!.prefix(7) == "http://") {
-                Circle().foregroundColor(randomColor(seed: pubkey)).frame(width: size, height: size)
-            }
-            else {
-                LazyImage(url: URL(string: picture!)) { state in
-                    if let image = state.image {
-                        image.frame(width: size, height: size).clipShape(Circle())
-                    }
-                    else {
-                        Circle().foregroundColor(randomColor(seed: pubkey)).frame(width: size, height: size)
-                    }
-                }
-                .processors([ImageProcessors.Resize(width: 100), ImageProcessors.Circle()])
-    //            .processors([ImageProcessors.Resize(size: CGSize(width: 50, height: 150), unit: .pixels, contentMode: .aspectFit, crop: true, upscale: true)])
-                .animation(nil)
-                .priority(.low)
-                .pipeline(ImageProcessing.shared.pipeline)
-//                .pipeline(ImagePipeline {
-//                    $0.dataLoader = DataLoader(configuration: {
-//                        // Disable disk caching built into URLSession
-//                        let conf = DataLoader.defaultConfiguration
-//                        conf.urlCache = nil
-//                        return conf
-//                    }())
-//
-//                    $0.dataCachePolicy = .storeEncodedImages
-//                    $0.imageCache = ImageCache.shared
-//                    $0.dataCache = try! DataCache(name: "com.nostur.2140.picture")
-//                })
-            }
+        if (picture == nil || (picture != nil && picture!.prefix(7) == "http://")) { // TODO: is this slow??
+            Circle().foregroundColor(color).frame(width: size, height: size)
         }
         else {
-            Circle().foregroundColor(randomColor(seed: pubkey)).frame(width: size, height: size)
+            KFImage(URL(string: picture!))
+                .placeholder {
+                    Circle().foregroundColor(color).frame(width: size, height: size)
+                }
+                .downsampling(size: CGSize(width: size, height: size))
+                .roundCorner(radius: Radius.point(20.0))
+                .cacheOriginalImage()
+                .retry(maxCount: 2, interval: .seconds(5))
+                .onSuccess { r in
+                    // r: RetrieveImageResult
+                    print("success: \(r)")
+                }
+                .onFailure { e in
+                    // e: KingfisherError
+                    print("failure: \(e)")
+                }
+                .cancelOnDisappear(true)
         }
     }
 }
@@ -75,7 +69,7 @@ struct ProfilePicViewWrapper: View {
     var contacts:FetchedResults<Contact>
     
     var body: some View {
-//        EmptyView()
+        //        EmptyView()
         ProfilePicView(pubkey: "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", contact: contacts.first)
             .frame(width: 150, height: 150)
     }

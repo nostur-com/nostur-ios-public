@@ -15,6 +15,7 @@ struct Timeline: View {
     @Namespace var SCROLL_TO_TOP_ANCHOR
     
     @State var notes: [Event] = []
+//    @State var notes:[Slice<FetchedResults<Event>>] = []
     
     @State var didSetup = false
     @State var isLoading = true
@@ -60,8 +61,9 @@ struct Timeline: View {
             : NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil AND NOT contact IN %@", followingPubkeys, account.blockedContacts!)
         }
         
-        fr.fetchLimit = 50 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW (MET VSTACK).
-        fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+        fr.fetchLimit = 10 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW (MET VSTACK).
+        fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.insertedAt, ascending: false),
+                              NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         
         _events = FetchRequest(fetchRequest: fr)
     }
@@ -89,13 +91,14 @@ struct Timeline: View {
             ZStack {
                 ScrollViewReader { proxy in
                     ScrollView {
-                        LazyVStack { // PAGES ARE LAZY
+                        LazyVStack(spacing: 0) { // PAGES ARE LAZY
                             ForEach(notes.indices, id:\.self) { index in
-                                VStack {
+                                VStack(spacing: 0) {
                                     NoteRowView(event: notes[index])
                                         .scaleEffect(x:1, y:-1)
-                                    Color.clear.frame(width: 200, height: 1).onAppear { eventAppeared(index) }
+                                    Color.clear.frame(width: 200, height: 0).onAppear { eventAppeared(index) }
                                 }.id(notes[index].id)
+                                Divider()
                             }
                         }
                         //                    .background(Color.random)
@@ -106,6 +109,7 @@ struct Timeline: View {
                     .onAppear { if (!didSetup) { setupNotes() } }
                     .safeAreaInset(edge: .bottom) {
                         HStack {
+                            Text("E:\(events.count) N:\(notes.count)")
                             Spacer()
                             Button { fetchEventsFromFollowing(amount:500) } label: { Text("Fetch") }
                             Button { loadNewNotes() } label: { Text("Load (\(events.count - notes.count))") }
@@ -206,16 +210,30 @@ extension Timeline {
     func setupNotes() {
         print("setupPages")
         didSetup = true
+        
+        let oldestAtIndexZero = events.sorted(by: { $0.created_at < $1.created_at })
         for index in 0..<events.count {
-            notes.append(events.reversed()[index])
+            notes.append(oldestAtIndexZero[index])
+        }
+        
+        oldestAtIndexZero.forEach { event in
+            print("\(event.id!) \(d(event.created_at))")
         }
     }
     
     func loadNewNotes() {
+        
+        let oldestAtIndexZero = events.sorted(by: { $0.created_at < $1.created_at })
         let beforeEventsCount = notes.count
         for index in 0..<events.count { // 0..<11
             if (index < beforeEventsCount) { continue }
-            notes.append(events.reversed()[index])
+            notes.append(oldestAtIndexZero[index])
+            
+            // 0, 1, 2, 3, 4, 5, 6, 7
+            // N, N, 0, 1, 2, 3, 4, 5
+        }
+        oldestAtIndexZero.forEach { event in
+            print("\(event.id!) \(d(event.created_at))")
         }
     }
 }

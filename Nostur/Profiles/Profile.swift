@@ -6,8 +6,8 @@
 //
 
 import SwiftUI
-import NukeUI
-import Nuke
+//import NukeUI
+//import Nuke
 
 
 
@@ -42,26 +42,26 @@ struct ProfileByPubkey: View {
     }
 }
 
-class ImageProcessing {
-    static public var shared = ImageProcessing()
-    
-    var pipeline:ImagePipeline
-    var bannerPipeline:ImagePipeline
-    
-    init() {
-        pipeline = ImagePipeline {
-            $0.dataCache = try? DataCache(name: "com.nostur.2140.picture")
-            $0.dataCachePolicy = .storeEncodedImages
-            $0.imageCache = ImageCache()
-        }
-        
-        bannerPipeline = ImagePipeline {
-            $0.dataCache = try? DataCache(name: "com.nostur.2140.banner")
-            $0.dataCachePolicy = .storeEncodedImages
-        }
-    }
-    
-}
+//class ImageProcessing {
+//    static public var shared = ImageProcessing()
+//
+//    var pipeline:ImagePipeline
+//    var bannerPipeline:ImagePipeline
+//
+//    init() {
+//        pipeline = ImagePipeline {
+//            $0.dataCache = try? DataCache(name: "com.nostur.2140.picture")
+//            $0.dataCachePolicy = .storeEncodedImages
+//            $0.imageCache = ImageCache()
+//        }
+//
+//        bannerPipeline = ImagePipeline {
+//            $0.dataCache = try? DataCache(name: "com.nostur.2140.banner")
+//            $0.dataCachePolicy = .storeEncodedImages
+//        }
+//    }
+//
+//}
 
 struct Profile: View {
     
@@ -92,37 +92,37 @@ struct Profile: View {
             ZStack() {
                 GeometryReader { geo in
                     if (contact.banner != nil) {
-                        LazyImage(url: URL(string: contact.banner!)) { state in
-                            if let image = state.image {
-                                image // Displays the loaded image
-                            }
-                            else {
-                                Image("NosturBanner")
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: geo.size.width, height: 150)
-                                //                                .clipped()
-                            }
-                        }
-                        .processors([ImageProcessors.Resize(width: geo.size.width)])
-                        .animation(nil)
-                        .priority(.normal)
-                        .pipeline(ImageProcessing.shared.bannerPipeline)
-//                        .pipeline(ImagePipeline {
-//                            // TODO: volgens mij klopt niet
-//                            /// moet ergens anders clean 1x doen ipv iedere keer voor image
-//                            $0.dataLoader = DataLoader(configuration: {
-//                                // Disable disk caching built into URLSession
-//                                let conf = DataLoader.defaultConfiguration
-//                                conf.urlCache = nil
-//                                return conf
-//                            }())
-//
-//                            $0.imageCache = ImageCache()
-//                            $0.dataCache = try! DataCache(name: "com.nostur.2140.banner")
-//                        })
-                        .frame(width: geo.size.width, height: 150)
-                        //                            .clipped()
+//                        LazyImage(url: URL(string: contact.banner!)) { state in
+//                            if let image = state.image {
+//                                image // Displays the loaded image
+//                            }
+//                            else {
+//                                Image("NosturBanner")
+//                                    .resizable()
+//                                    .scaledToFill()
+//                                    .frame(width: geo.size.width, height: 150)
+//                                //                                .clipped()
+//                            }
+//                        }
+//                        .processors([ImageProcessors.Resize(width: geo.size.width)])
+//                        .animation(nil)
+//                        .priority(.normal)
+//                        .pipeline(ImageProcessing.shared.bannerPipeline)
+////                        .pipeline(ImagePipeline {
+////                            // TODO: volgens mij klopt niet
+////                            /// moet ergens anders clean 1x doen ipv iedere keer voor image
+////                            $0.dataLoader = DataLoader(configuration: {
+////                                // Disable disk caching built into URLSession
+////                                let conf = DataLoader.defaultConfiguration
+////                                conf.urlCache = nil
+////                                return conf
+////                            }())
+////
+////                            $0.imageCache = ImageCache()
+////                            $0.dataCache = try! DataCache(name: "com.nostur.2140.banner")
+////                        })
+//                        .frame(width: geo.size.width, height: 150)
+//                        //                            .clipped()
                         
                     }
                     else {

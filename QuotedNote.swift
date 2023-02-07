@@ -13,8 +13,6 @@
 //
 
 import SwiftUI
-import Nuke
-import NukeUI
 import CoreData
 
 struct QuotedNoteFragment: View {

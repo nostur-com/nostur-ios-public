@@ -6,8 +6,6 @@
 //
 
 import SwiftUI
-import Nuke
-import NukeUI
 import CoreData
 //import UIKit
 
@@ -25,7 +23,7 @@ struct NoteRowView: View {
     var sp:SocketPool = .shared
     @EnvironmentObject var accountState:NosturState
     @ObservedObject var event:Event
-
+    
     @FetchRequest
     var taggedContacts:FetchedResults<Contact>
     
@@ -50,88 +48,42 @@ struct NoteRowView: View {
     }
     
     var body: some View {
-//        VStack {
-        VStack() { // A TW EET
-            NavigationLink(value: event, label: {
-                VStack (alignment: .leading) { // Vstack for retweeted thread
-                    HStack(alignment: .top) { // Tweet
-                        NavigationLink(value: event, label: {
-                            VStack { // profile image + thread line
-                                // profile image
-                                if (event.contact != nil) {
-                                    NavigationLink(value: ContactPath(key: event.pubkey!), label: {
-                                        ProfilePicView(pubkey: event.pubkey!, contact:event.contact)
-                                    })
-                                }
-                                else {
-                                    NavigationLink(value: ContactPath(key: event.pubkey!), label: {
-                                        ProfilePicView(pubkey: event.pubkey!, contact:event.contact)
-                                    })
-                                }
-                                Spacer()
-                            }
-                            .frame(height: 100)
-                            .padding(.leading, 10)
+        NavigationLink(value: event, label: {
+            VStack (alignment: .leading) {
+                HStack(alignment: .top) {
+                    VStack {
+                        NavigationLink(value: ContactPath(key: event.pubkey!), label: {
+                            ProfilePicView(pubkey: event.pubkey!, contact:event.contact)
+                                .padding(.horizontal, 10)
                         })
+                    }//.background(.green)
+                    
+                    VStack(alignment:.leading) {// Tweet container
+                        HStack { // name + reply + context menu
+                            NoteHeader(event:event)
+                        }//.frame(height: 40).border(.red)
                         
-                        VStack(alignment:.leading) {// Tweet container
-                            HStack { // name + reply + context menu
-                                if (visible) {
-                                    
-                                    NavigationLink(value: event, label: {
-                                        VStack(alignment: .leading) { // Name + menu "replying to"
-                                            HStack(spacing:2) {
-                                                Text(event.contact?.authorName ?? "Anon") // Name
-                                                    .font(.system(size: 14))
-                                                    .foregroundColor(.primary)
-                                                    .fontWeight(.bold)
-                                                    .lineLimit(1)
-                                                
-                                                Text("@\(event.contact?.username ?? event.authorKey) · \(event.ago)") //
-                                                    .font(.system(size: 14))
-                                                    .foregroundColor(.secondary)
-                                                Spacer()
-                                                Text(Date(timeIntervalSince1970: TimeInterval(event.created_at)), format: Date.VerbatimFormatStyle(format: "\(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased)):\(minute: .twoDigits)", timeZone: .current, calendar: .current))
-                                                    .font(.system(size: 14))
-                                            }
-                                            
-                                            ReplyingToFragment(event: event)
-                                        }
-                                    })
-                                }
-                                Spacer()
-                            }.frame(height: 40)//.border(.red)
-                            
-                            NavigationLink(value: event, label: {
-                                VStack(alignment: .leading) {
-                                    NoteTextRenderView(event:event, taggedContacts:Array(taggedContacts))
-                                }
-                            }).frame(height: 70)
-                            
-                            if (event.firstQuoteId != nil && event.firstQuote != nil) {
-                                QuotedNoteFragment(event: event.firstQuote!)
-                            }
-                            else if (event.firstQuote != nil) {
-                                ProgressView().onAppear {
-                                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.firstQuoteId!)))
-                                }
-                            }
-
-                           HStack {
-                               FooterFragment(event: event)
-                           }  .frame(height: 25)
-
+                        NavigationLink(value: event, label: {
+                            NoteTextRenderView(event:event, taggedContacts:Array(taggedContacts))
+                        })//.border(.red)
+                        
+                        if (event.firstQuoteId != nil && event.firstQuote != nil) {
+                            QuotedNoteFragment(event: event.firstQuote!)
                         }
-                        .padding(.trailing, 10)
-//                        .padding(.bottom, 5)
-                    }
+                        else if (event.firstQuote != nil) {
+                            ProgressView().onAppear {
+                                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.firstQuoteId!)))
+                            }
+                        }
+                        
+                        FooterFragment(event: event)//.border(.red)
+                        
+                    }//.border(.green)
+                    .padding(.trailing, 10)
+                    //                        .padding(.bottom, 5)
                 }
-            })
-//            .frame(maxHeight: 1900)
-            Divider()
-        }
-//        .background(Color.random)
-        .padding(0)
+            }
+        })
         .onAppear {
             // should fetch setMetaData if
             // No Contact
@@ -142,7 +94,36 @@ struct NoteRowView: View {
                 sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.pubkey!)))
             }
         }
+//        .frame(minHeight: 140)//.border(.red)
+        .padding(.vertical, 10)
+//        .background(Color.random)
         
+    }
+}
+
+struct NoteHeader: View {
+    var event:Event
+    var body: some View {
+        NavigationLink(value: event, label: {
+                VStack(alignment: .leading) { // Name + menu "replying to"
+                    HStack(spacing:2) {
+                        Text(event.contact?.authorName ?? "Anon") // Name
+                            .font(.system(size: 14))
+                            .foregroundColor(.primary)
+                            .fontWeight(.bold)
+                            .lineLimit(1)
+                        
+                        Text("@\(event.contact?.username ?? event.authorKey) · \(event.ago)") //
+                            .font(.system(size: 14))
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text(Date(timeIntervalSince1970: TimeInterval(event.created_at)), format: Date.VerbatimFormatStyle(format: "\(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased)):\(minute: .twoDigits)", timeZone: .current, calendar: .current))
+                            .font(.system(size: 14))
+                            .padding(.trailing, 5)
+                    }
+                    ReplyingToFragment(event: event)
+                }
+        })
     }
 }
 
@@ -193,7 +174,7 @@ struct NoteMenu: View {
                 catch {
                     print("Could not save after blocking contact \(error)")
                 }
-                    
+                
                 
             } label: {
                 Label("Block @\(username)", systemImage: "slash.circle")
@@ -212,13 +193,13 @@ struct NoteMenu: View {
 }
 
 struct FooterFragment: View {
-//    @EnvironmentObject var accountState:AccountState
+    //    @EnvironmentObject var accountState:AccountState
     @EnvironmentObject var ns:NosturState
     @Environment(\.managedObjectContext) var viewContext
     @ObservedObject var event:Event
     
     var body: some View {
-        HStack { // Footer stats
+        HStack {
             Button {
                 
             } label: {
@@ -263,7 +244,7 @@ struct FooterFragment: View {
                             print(error)
                             return
                         }
-
+                        
                         // 4. publish that event                            SocketPool
                         print("Should send: \(NRelayMessage(event: savedEvent.toNEvent()).message)")
                         
@@ -286,16 +267,17 @@ struct FooterFragment: View {
                 if (ns.isBookmarked(event)) {
                     Image(systemName: "bookmark.fill")
                         .foregroundColor(.orange)
-//                        .frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
+                    //                        .frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
                 }
                 else {
                     Image(systemName: "bookmark")
-//                        .frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
+                    //                        .frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
                 }
             }
             
         }.foregroundColor(.gray)
-//            .padding(.top, 3)
+            .padding(.trailing, 5)
+            .font(.system(size: 14))
     }
 }
 
@@ -327,13 +309,13 @@ struct NoteRowView_Previews: PreviewProvider {
         
         let event2 = PreviewFetcher.fetchEvent("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e")
         
-        VStack {
+        VStack(spacing:0) {
             NoteRowView(event: event0!)
                 .withPreviewEnvironment()
             NoteRowView(event: event1!)
                 .withPreviewEnvironment()
             NoteRowView(event: event2!)
-//                .flip()
+            //                .flip()
                 .withPreviewEnvironment()
             Spacer()
         }

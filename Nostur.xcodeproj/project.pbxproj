@@ -42,6 +42,7 @@
 		1F4773A9296D85B70049454B /* AccountListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4773A8296D85B70049454B /* AccountListView.swift */; };
 		1F4AFC4729733E2400CC1F90 /* Event+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4AFC4529733E2400CC1F90 /* Event+CoreDataClass.swift */; };
 		1F4AFC4829733E2400CC1F90 /* Event+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4AFC4629733E2400CC1F90 /* Event+CoreDataProperties.swift */; };
+		1F57C544299249EE00DFE063 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 1F57C543299249EE00DFE063 /* Kingfisher */; };
 		1F5BBE40297BC7E600F4AF03 /* EventsError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5BBE3F297BC7E600F4AF03 /* EventsError.swift */; };
 		1F5F5A5C29838F1D00DED8F4 /* EventsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5F5A5B29838F1D00DED8F4 /* EventsProvider.swift */; };
 		1F5F5A5E2983FF9D00DED8F4 /* EventsWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5F5A5D2983FF9D00DED8F4 /* EventsWindow.swift */; };
@@ -85,8 +86,6 @@
 		1F987EB329805F33001E352E /* String+matchingStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F987EB229805F33001E352E /* String+matchingStrings.swift */; };
 		1FA51FF62978441200FE60EF /* Relay+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */; };
 		1FA51FF72978441200FE60EF /* Relay+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA51FF52978441200FE60EF /* Relay+CoreDataProperties.swift */; };
-		1FA51FFD2978805400FE60EF /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = 1FA51FFC2978805400FE60EF /* Nuke */; };
-		1FA51FFF2978805400FE60EF /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1FA51FFE2978805400FE60EF /* NukeUI */; };
 		1FB3E3BE296820C600CDA788 /* ContactProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB3E3BD296820C600CDA788 /* ContactProfileView.swift */; };
 		1FB448BE2965F3D000038671 /* NosturApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB448BD2965F3D000038671 /* NosturApp.swift */; };
 		1FB448C52965F3D000038671 /* NosturTabsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB448C42965F3D000038671 /* NosturTabsView.swift */; };
@@ -211,12 +210,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1F57C544299249EE00DFE063 /* Kingfisher in Frameworks */,
 				1F654F30298ED52E0040F15D /* Starscream in Frameworks */,
 				1F1ABC4329810D5500D03FA9 /* LinkPresentation.framework in Frameworks */,
 				1FEA785529799697007CC8E7 /* Compactor in Frameworks */,
-				1FA51FFF2978805400FE60EF /* NukeUI in Frameworks */,
 				1F055A53296EE2A2009EF792 /* secp256k1 in Frameworks */,
-				1FA51FFD2978805400FE60EF /* Nuke in Frameworks */,
 				1FEC01C0296C4A400078CC9B /* SwiftyJSON in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -473,10 +471,9 @@
 			packageProductDependencies = (
 				1FEC01BF296C4A400078CC9B /* SwiftyJSON */,
 				1F055A52296EE2A2009EF792 /* secp256k1 */,
-				1FA51FFC2978805400FE60EF /* Nuke */,
-				1FA51FFE2978805400FE60EF /* NukeUI */,
 				1FEA785429799697007CC8E7 /* Compactor */,
 				1F654F2F298ED52E0040F15D /* Starscream */,
+				1F57C543299249EE00DFE063 /* Kingfisher */,
 			);
 			productName = Nostur;
 			productReference = 1FB448BA2965F3D000038671 /* Nostur.app */;
@@ -509,9 +506,9 @@
 			packageReferences = (
 				1FEC01BE296C4A400078CC9B /* XCRemoteSwiftPackageReference "SwiftyJSON" */,
 				1F055A51296EE2A2009EF792 /* XCRemoteSwiftPackageReference "secp256k1" */,
-				1FA51FFB2978805400FE60EF /* XCRemoteSwiftPackageReference "Nuke" */,
 				1FEA785329799697007CC8E7 /* XCRemoteSwiftPackageReference "SwiftCompactor" */,
 				1F654F2E298ED52E0040F15D /* XCRemoteSwiftPackageReference "Starscream" */,
+				1F57C542299249EE00DFE063 /* XCRemoteSwiftPackageReference "Kingfisher" */,
 			);
 			productRefGroup = 1FB448BB2965F3D000038671 /* Products */;
 			projectDirPath = "";
@@ -867,17 +864,17 @@
 				minimumVersion = 0.9.2;
 			};
 		};
+		1F57C542299249EE00DFE063 /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/onevcat/Kingfisher";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.0.0;
+			};
+		};
 		1F654F2E298ED52E0040F15D /* XCRemoteSwiftPackageReference "Starscream" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/daltoniam/Starscream/";
-			requirement = {
-				branch = master;
-				kind = branch;
-			};
-		};
-		1FA51FFB2978805400FE60EF /* XCRemoteSwiftPackageReference "Nuke" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/kean/Nuke";
 			requirement = {
 				branch = master;
 				kind = branch;
@@ -907,20 +904,15 @@
 			package = 1F055A51296EE2A2009EF792 /* XCRemoteSwiftPackageReference "secp256k1" */;
 			productName = secp256k1;
 		};
+		1F57C543299249EE00DFE063 /* Kingfisher */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1F57C542299249EE00DFE063 /* XCRemoteSwiftPackageReference "Kingfisher" */;
+			productName = Kingfisher;
+		};
 		1F654F2F298ED52E0040F15D /* Starscream */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 1F654F2E298ED52E0040F15D /* XCRemoteSwiftPackageReference "Starscream" */;
 			productName = Starscream;
-		};
-		1FA51FFC2978805400FE60EF /* Nuke */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1FA51FFB2978805400FE60EF /* XCRemoteSwiftPackageReference "Nuke" */;
-			productName = Nuke;
-		};
-		1FA51FFE2978805400FE60EF /* NukeUI */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1FA51FFB2978805400FE60EF /* XCRemoteSwiftPackageReference "Nuke" */;
-			productName = NukeUI;
 		};
 		1FEA785429799697007CC8E7 /* Compactor */ = {
 			isa = XCSwiftPackageProductDependency;

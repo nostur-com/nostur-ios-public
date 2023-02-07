@@ -57,6 +57,7 @@ struct BookmarksView: View {
                             }
                         }
                         .padding(20)
+                    Divider()
                 }.onDelete(perform: deleteItems)
             }
             Spacer()

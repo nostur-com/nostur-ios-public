@@ -17,6 +17,8 @@ extension Event {
         return NSFetchRequest<Event>(entityName: "Event")
     }
     
+    @NSManaged public var insertedAt: Date // Needed for correct ordering of events in timeline
+    
     @NSManaged public var content: String?
     @NSManaged public var created_at: Int64
     @NSManaged public var id: String?
@@ -175,6 +177,7 @@ extension Event : Identifiable {
         let viewContext = EventsProvider.preview.container.viewContext
         for index in 0..<count {
             let event = Event(context: viewContext)
+            event.insertedAt = Date.now
             event.pubkey = "pubkey\(index)" //rand from preview keys
             event.id = "id\(index)"
             event.created_at = Int64(Date().timeIntervalSinceNow)
@@ -305,6 +308,7 @@ extension Event : Identifiable {
     
     static func saveEvent(event:NEvent, context:NSManagedObjectContext) -> Event {
         let savedEvent = Event(context: context)
+        savedEvent.insertedAt = Date.now
         savedEvent.id = event.id
         savedEvent.kind = Int64(event.kind.id)
         savedEvent.created_at = Int64(event.createdAt.timestamp)

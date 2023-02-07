@@ -45,6 +45,7 @@ struct ProfileNotesView: View {
                 LazyVStack {
                     ForEach(events, id:\Event.id) { event in
                         NoteRowView(event:event)
+                        Divider()
                     }
                 }
             }

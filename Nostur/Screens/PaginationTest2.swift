@@ -47,6 +47,7 @@ struct PaginationTest2: View {
                 HStack {
                     Button {
                         let newEvent = Event(context: viewContext)
+                        newEvent.insertedAt = Date.now
                         newEvent.id = UUID().description
                         newEvent.kind = 1
                         newEvent.created_at = Int64(Date.now.timeIntervalSince1970)

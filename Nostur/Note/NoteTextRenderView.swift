@@ -48,24 +48,17 @@ struct LinkPreviewCache {
     }()
 }
 
-
 struct NoteTextRenderView: View {
         
-    var event:Event?
+    var event:Event
     var taggedContacts:[Contact]
+    
     var renderedText:AttributedString? = nil
     var firstLinkInText:String? = nil
-//    @State var previewIsReady = false
-    
+    var tags:[NEventTag] = []
+
     @State private var metadata: LPLinkMetadata?
-    
-//    @State var isVisible = false
-    
-//    var disableLinkPreviews = false
-//    @State var linkMetadata:LPLinkMetadata? = nil
-    
-//    @State var linkPreview:LPLinkView? = nil
-    
+
     func contact(byPubkey:String?) -> Contact? {
         guard byPubkey != nil else {
             return nil
@@ -84,40 +77,39 @@ struct NoteTextRenderView: View {
         return nil
     }
     
-    private func renderMentions(_ text:String) -> AttributedString? {
-        let tags = event?.tags()
+    private func renderMentions(_ text:String) -> AttributedString? { // This is slow??
         var newText = text
         
-        if (tags == nil || tags?.count == 0) {
+        if (tags.count == 0) {
             return AttributedString(text)
         }
         else {
-            for index in tags!.indices {
-                if (tags![index].type == "p") {
+            for index in tags.indices {
+                if (tags[index].type == "p") {
                     
                     if (1 == 1) {
                         // TODO: NIP19 bech32 is very slow, with hundreds of rows it slows down UI noticeably, so disable for now
-                        let key = try! NIP19(prefix: "npub1", hexString: tags![index].pubkey)
-                        if let contact = contact(byPubkey:tags![index].pubkey) {
+                        let key = try! NIP19(prefix: "npub1", hexString: tags[index].pubkey)
+                        if let contact = contact(byPubkey:tags[index].pubkey) {
                             newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(contact.username)](nostur:p:\(key.displayString))")
                         }
                         else {
-                            newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(tags![index].pubkey).prefix(5))](nostur:p:\(key.displayString))")
+                            newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(tags[index].pubkey).prefix(5))](nostur:p:\(key.displayString))")
                         }
                     }
                     else {
-                        newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(tags![index].pubkey).prefix(5))](nostur:p:\(tags![index].pubkey))")
+                        newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(tags[index].pubkey).prefix(5))](nostur:p:\(tags[index].pubkey))")
                     }
                 }
-                if (tags![index].type == "e") {
+                if (tags[index].type == "e") {
                     
                     if (1 == 1) {
                         // TODO: NIP19 bech32 is very slow, with hundreds of rows it slows down UI noticeably, so disable for now
-                        let key = try! NIP19(prefix: "note1", hexString: tags![index].id)
-                        newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(tags![index].id).prefix(10))](nostur:e:\(key.displayString))")
+                        let key = try! NIP19(prefix: "note1", hexString: tags[index].id)
+                        newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(tags[index].id).prefix(10))](nostur:e:\(key.displayString))")
                     }
                     else {
-                        newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(tags![index].id).prefix(10))](nostur:e:\(tags![index].id))")
+                        newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(tags[index].id).prefix(10))](nostur:e:\(tags[index].id))")
                     }
                 }
             }
@@ -135,10 +127,10 @@ struct NoteTextRenderView: View {
 
     var useLinelimit = true
     
-    init(event: Event? = nil, taggedContacts: [Contact] = [], useLinelimit:Bool = true) {
+    init(event: Event, taggedContacts: [Contact] = [], useLinelimit:Bool = true) {
         self.event = event
         self.taggedContacts = taggedContacts
-        let text = (event?.content) ?? ""
+        let text = event.content ?? ""
         self.firstLinkInText = getFirstLinkInText(text)
         self.renderedText = renderMentions(text)
         self.useLinelimit = useLinelimit
@@ -146,10 +138,10 @@ struct NoteTextRenderView: View {
     
     var body: some View {
         VStack(alignment: .leading) {
-            if (event != nil) && (taggedContacts.count > 0) {
+            if (taggedContacts.count > 0) {
                 if (useLinelimit) {
                     Text(renderedText!)
-                        .lineLimit(4, reservesSpace: true)
+                        .lineLimit(4, reservesSpace: false)
                         .textSelection(.enabled)
                         .multilineTextAlignment(TextAlignment.leading)
                             .font(.system(size: 14))
@@ -169,8 +161,8 @@ struct NoteTextRenderView: View {
             }
             else if (taggedContacts.count == 0) {
                 if (useLinelimit) {
-                    Text(event?.noteText ?? "")
-                        .lineLimit(4, reservesSpace: true)
+                    Text(event.noteText)
+                        .lineLimit(4, reservesSpace: false)
                         .textSelection(.enabled)
                         .multilineTextAlignment(TextAlignment.leading)
                             .font(.system(size: 14))
@@ -179,7 +171,7 @@ struct NoteTextRenderView: View {
                             .padding(.vertical, 5)
                 }
                 else {
-                    Text(event?.noteText ?? "")
+                    Text(event.noteText)
                         .textSelection(.enabled)
                         .multilineTextAlignment(TextAlignment.leading)
                             .font(.system(size: 14))
@@ -191,7 +183,6 @@ struct NoteTextRenderView: View {
             else { Text("") }
             
             if (1 == 1 && firstLinkInText != nil && !useLinelimit) {
-//                LinkPreview(url: URL(string:firstLinkInText!)!, previewIsReady: $previewIsReady)
                 VStack {
                             if metadata != nil {
                                 LinkView(metadata: metadata!)
@@ -205,64 +196,7 @@ struct NoteTextRenderView: View {
                         }
                         .onAppear(perform: fetchMetadata)
             }
-            
-//            if (linkPreview != nil) {
-//                linkPreview!
-//                    .frame(height: 300)
-//            }
-//            if (firstLinkInText != nil) {
-//                if (!disableLinkPreviews) {
-//                    if (linkMetadata != nil) {
-//                        LinkPreview(url: URL(string: firstLinkInText!)!, metadata: linkMetadata)
-//                    }
-//                    else {
-//                        LinkPreview(url: URL(string: firstLinkInText!)!)
-//                    }
-//                    //                    .aspectRatio(contentMode: .fit)
-////                        .frame(height: 300)
-//                }
-//            }
         }
-        .onAppear {
-//            print("taggedContacts.count: \(taggedContacts.count)")
-        }
-        
-        
-//        .onAppear {
-//            if (firstLinkInText != nil) && (previewIsReady) {
-//                isVisible = true
-//            }
-//        }
-//        .onChange(of: previewIsReady) { newValue in
-//            if (newValue == true && isVisible != true) {
-//                isVisible = true
-//            }
-//        }
-//        .task {
-//            if (firstLinkInText != nil) {
-//                let url = URL(string: firstLinkInText!)!
-//                let metadata = LinkPreviewCache.shared.retrieveObject(at: url)
-//                if (metadata != nil) {
-//                    self.linkMetadata = metadata
-//                }
-//                else {
-//                    let provider = LPMetadataProvider()
-////                    do {
-//
-//                        if let metadata = try? await provider.startFetchingMetadata(for: url) {
-//                            LinkPreviewCache.shared.setObject(for: url, value: metadata)
-//                            DispatchQueue.main.async {
-//                                linkMetadata = metadata
-//                            }
-//                        }
-////                    }
-////                    catch {
-////                        print("🫂🫂🫂")
-////                        print(error)
-////                    }
-//                }
-//            }
-//        }
     }
     
     private func fetchMetadata() {
@@ -272,9 +206,6 @@ struct NoteTextRenderView: View {
             let metadata = try await provider.startFetchingMetadata(for: url)
             await oyooy(metadata: metadata)
         }
-//        provider.startFetchingMetadata(for: url) { metadata, error in
-//            oyooy(metadata: metadata)
-//        }
     }
     
     @MainActor
@@ -305,7 +236,7 @@ struct NoteTextRenderView_Previews: PreviewProvider {
         let noteWithMentions = PreviewFetcher.fetchEvent(eventId)
         let allContacts = PreviewFetcher.allContacts()
         
-        NoteTextRenderView(event:noteWithMentions, taggedContacts: allContacts)
+        NoteTextRenderView(event:noteWithMentions!, taggedContacts: allContacts)
             .withPreviewEnvironment()
     }
 }
