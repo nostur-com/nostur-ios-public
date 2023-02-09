@@ -12,64 +12,11 @@ import CoreData
 import Introspect
 import Combine
 
-struct ListDidScrollViewModifier: ViewModifier {
-    
-    class ViewModel: ObservableObject {
-        var contentOffsetSubscription: AnyCancellable?
-    }
-    
-    @StateObject var viewModel = ViewModel()
-    var didScroll: (CGPoint) -> Void
-    
-    func body(content: Content) -> some View {
-        content
-            .introspect(selector: TargetViewSelector.ancestorOrSiblingContaining, customize: { (collectionView: UICollectionView) in
-                if viewModel.contentOffsetSubscription == nil {
-                    viewModel.contentOffsetSubscription = collectionView.publisher(for: \.contentOffset)
-                        .sink { contentOffset in
-                            didScroll(contentOffset)
-                        }
-                }
-            })
-    }
-}
 
-struct ListDidChangeHeightViewModifier: ViewModifier {
-    
-    class ViewModel: ObservableObject {
-        var contentHeightSubscription: AnyCancellable?
-    }
-    
-    @StateObject var viewModel = ViewModel()
-    var didChangeHeight: (CGFloat) -> Void
-    
-    func body(content: Content) -> some View {
-        content
-            .introspect(selector: TargetViewSelector.ancestorOrSiblingContaining, customize: { (collectionView: UICollectionView) in
-                if viewModel.contentHeightSubscription == nil {
-                    viewModel.contentHeightSubscription = collectionView.publisher(for: \.contentSize)
-                        .debounce(for: .seconds(0.01), scheduler: RunLoop.main)
-                        .sink { contentSize in
-                            didChangeHeight(contentSize.height)
-                        }
-                }
-            })
-    }
-}
-
-extension List {
-    func didScroll(_ didScroll: @escaping (CGPoint) -> Void) -> some View {
-        self.modifier(ListDidScrollViewModifier(didScroll: didScroll))
-    }
-    func didChangeHeight(_ didChangeHeight: @escaping (CGFloat) -> Void) -> some View {
-        self.modifier(ListDidChangeHeightViewModifier(didChangeHeight: didChangeHeight))
-    }
-}
 
 struct PaginationTest3: View {
     
     @EnvironmentObject var ns:NosturState
-    @Namespace var SCROLLANCHOR
     @Environment(\.managedObjectContext) var viewContext
     @FetchRequest
     var events: FetchedResults<Event>

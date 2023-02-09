@@ -8,15 +8,10 @@
 import SwiftUI
 import CoreData
 import Combine
+import Introspect
 
 struct Timeline: View {
-
-    @Environment(\.managedObjectContext) var viewContext
-    @Namespace var SCROLL_TO_TOP_ANCHOR
-    
-    @State var notes: [Event] = []
-//    @State var notes:[Slice<FetchedResults<Event>>] = []
-    
+///////;o/[-'9
     @State var didSetup = false
     @State var isLoading = true
     
@@ -45,8 +40,16 @@ struct Timeline: View {
         predicate: NSPredicate(format: "FALSEPREDICATE")
     )
     var events: FetchedResults<Event>
+    @State var notes: [Event] = []
+    @State private var scroller: UIScrollView?
+    @State var contentHeight = 0.0
+    @State var oldContentHeight = 0.0
+    @State var pendingHeightChange = false
+    @State var offset = 0.0
+    @State var oldOffset = 0.0
     
     init(showReplies:Bool, showMenu:Binding<Bool>, followingPubkeys: Set<String>, account:Account) {
+        UIScrollView.appearance().bounces = false
         self.account = account
         _showMenu = showMenu
     
@@ -61,26 +64,18 @@ struct Timeline: View {
             : NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil AND NOT contact IN %@", followingPubkeys, account.blockedContacts!)
         }
         
-        fr.fetchLimit = 10 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW (MET VSTACK).
-        fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.insertedAt, ascending: false),
-                              NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+        fr.fetchLimit = 25 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW (MET VSTACK).
+        fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         
         _events = FetchRequest(fetchRequest: fr)
     }
     
-    func scrollToTop(_ proxy:ScrollViewProxy) {
-        proxy.scrollTo(SCROLL_TO_TOP_ANCHOR)
-//        withAnimation {
-//            proxy.scrollTo(SCROLL_TO_TOP_ANCHOR)
-//        }
-    }
-    
     func eventAppeared(_ index:Int) {
-        if index >= lastReadIndex {
-            lastReadIndex = index
+        if index < unreadCount {
+            unreadCount = index
         }
 //        print("eventAppeared:\(index), lastReadIndex: \(lastReadIndex) notes.count: \(notes.count)")
-        unreadCount = notes.count - (lastReadIndex+1)
+//        unreadCount = notes.count - (lastReadIndex+1)
     }
     
     var body: some View {
@@ -89,92 +84,130 @@ struct Timeline: View {
                 Color.clear.frame(width: 200, height: 30)
             }
             ZStack {
-                ScrollViewReader { proxy in
-                    ScrollView {
-                        VStack(spacing: 0) { // Lazy = Jittery, Vstack
-                            ForEach(notes.indices, id:\.self) { index in
-                                VStack(spacing: 0) {
-                                    NoteRowView(event: notes[index])
-                                        .scaleEffect(x:1, y:-1)
-                                    Color.clear.frame(width: 200, height: 0).onAppear { eventAppeared(index) }
-                                }.id(notes[index].id)
-                                Divider()
+                List(notes.indices, id:\.self) { index in
+//                    Text("index:\(notes[index].noteId)\n\(d(notes[index].created_at).description)").background(randomColor(seed: notes[index].noteId).frame(width:300,height:100)).frame(width: 300, height: 100)
+                    NoteRowView(event: notes[index])
+                        .id(notes[index].noteId)
+                        .onAppear {
+                            eventAppeared(index)
+                        }
+                        .listRowInsets(EdgeInsets())
+                }
+                .didChangeHeight { contentHeight in
+                    if (scroller != nil) {
+                        print(contentHeight)
+                        offset = scroller!.contentOffset.y
+                        self.contentHeight = contentHeight
+                        if (pendingHeightChange) {
+                            if (scroller != nil) {
+                                //                        scroller!.layoutIfNeeded()
+                                UIView.setAnimationsEnabled(true)
+                                scroller!.contentOffset.y = oldOffset + (contentHeight - oldContentHeight)
+                                pendingHeightChange = false
+                                oldContentHeight = contentHeight
                             }
-                        }
-                        //                    .background(Color.random)
-                        Color.clear.frame(width: 300, height: 0)
-                            .id(SCROLL_TO_TOP_ANCHOR)
-                    }
-                    .scaleEffect(x:1, y:-1)
-                    .onAppear { if (!didSetup) { setupNotes() } }
-                    .safeAreaInset(edge: .bottom) {
-                        HStack {
-                            Text("E:\(events.count) N:\(notes.count)")
-                            Spacer()
-                            Button { fetchEventsFromFollowing(amount:500) } label: { Text("Fetch") }
-                            Button { loadNewNotes() } label: { Text("Load (\(events.count - notes.count))") }
-                            Button { scrollToTop(proxy) } label: { Text("To Top") }
-                            Spacer()
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .controlSize(.small)
-                        .background(.regularMaterial)
-                    }
-                    .onAppear {
-                        if (events.first == nil) {
-                            isLoading = false
-                            didAutoScroll = true
-                        }
-                    }
-                    .onReceive(timelineRunLoop) { time in
-                        
-                        if (!isViewDisplayed) {
-                            return
-                        }
-                        
-                        print("unread is: \(unreadCount) timesFetchedWhileUnread: \(timesFetchedWhileUnread) shouldSkipTimes: \(shouldSkipTimes)")
-                        
-                        
-                        if (unreadCount > 0 && shouldSkipTimes > 0) {
-                            shouldSkipTimes = shouldSkipTimes - 1
-                            return
-                        }
-                        
-                        
-                        if (!Importer.shared.isImporting) {
-                            print("💿💿 GONNA FETCH BABY 💿💿")
-                            fetchEventsFromFollowing(amount: 500)
-                        } else {
-                            print("💿💿 STILL IMPORTING. NOT FETCHING YET 💿💿")
-                        }
-                        
-                        if (unreadCount > 0) {
-                            shouldSkipTimes = timesFetchedWhileUnread + shouldSkipTimes + 1
-                            timesFetchedWhileUnread = timesFetchedWhileUnread + 1
-                            
-                            if (shouldSkipTimes > 8) {
-                                shouldSkipTimes = 8
-                                timesFetchedWhileUnread = 0
-                                print("never skip more than 8 times")
-                            }
-                            else {
-                                print("increase delay!")
-                            }
-                            
-                        }
-                        else {
-                            print("delay reset")
-                            shouldSkipTimes = 0
-                            timesFetchedWhileUnread = 0
-                        }
-                        if (MessageParser.shared.lastTimelineEventTimestamp != nil) {
-                            print("last timeline event timestamp: \(d(MessageParser.shared.lastTimelineEventTimestamp!.timestamp).description)")
-                        }
-                        if (Importer.shared.lastTimelineEventTimestamp != nil) {
-                            print("last timeline event timestamp: \(d(Importer.shared.lastTimelineEventTimestamp!.timestamp).description)")
                         }
                     }
                 }
+                .listStyle(.plain)
+                
+                /* in iOS 16 List is backed by UICollectionView, no out of the box .introspectMethod ... nbd. */
+                .introspect(selector: TargetViewSelector.ancestorOrSiblingContaining, customize: { (collectionView: UICollectionView) in
+                    guard #available(iOS 16, *) else { return }
+                    self.scroller = collectionView
+                    var config = UICollectionLayoutListConfiguration(appearance: .plain)
+                    config.showsSeparators = false
+                    
+                    let layout = UICollectionViewCompositionalLayout.list(using: config)
+                    
+                    collectionView.collectionViewLayout = layout
+                })
+                
+                /* in iOS 15 List is backed by UITableView ... */
+                .introspectTableView(customize: { tableView in
+                    guard #available(iOS 15, *) else { return }
+                    self.scroller = tableView
+                })
+                
+                .onAppear { if (!didSetup) { setupNotes() } }
+                .safeAreaInset(edge: .bottom) {
+                    HStack {
+                        Text("E:\(events.count) N:\(notes.count)")
+                        Spacer()
+                        Button { fetchEventsFromFollowing(amount:500) } label: { Text("Fetch") }
+                        Button {
+//                            var transaction = Transaction(animation: .none)
+//                            transaction.disablesAnimations = true
+//                            withTransaction(transaction) {
+//                                loadNewNotes()
+//                            }
+                            
+//                            CATransaction.begin()
+                            UIView.setAnimationsEnabled(false)
+                            loadNewNotes()
+//                            CATransaction.commit()
+                        } label: { Text("Load (\(events.count - notes.count))") }
+                        Spacer()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                    .background(.regularMaterial)
+                }
+                .onAppear {
+                    if (events.first == nil) {
+                        isLoading = false
+                        didAutoScroll = true
+                    }
+                }
+                .onReceive(timelineRunLoop) { time in
+                    
+                    if (!isViewDisplayed) {
+                        return
+                    }
+                    
+                    print("unread is: \(unreadCount) timesFetchedWhileUnread: \(timesFetchedWhileUnread) shouldSkipTimes: \(shouldSkipTimes)")
+                    
+                    
+                    if (unreadCount > 0 && shouldSkipTimes > 0) {
+                        shouldSkipTimes = shouldSkipTimes - 1
+                        return
+                    }
+                    
+                    
+                    if (!Importer.shared.isImporting) {
+                        print("💿💿 GONNA FETCH BABY 💿💿")
+                        fetchEventsFromFollowing(amount: 500)
+                    } else {
+                        print("💿💿 STILL IMPORTING. NOT FETCHING YET 💿💿")
+                    }
+                    
+                    if (unreadCount > 0) {
+                        shouldSkipTimes = timesFetchedWhileUnread + shouldSkipTimes + 1
+                        timesFetchedWhileUnread = timesFetchedWhileUnread + 1
+                        
+                        if (shouldSkipTimes > 8) {
+                            shouldSkipTimes = 8
+                            timesFetchedWhileUnread = 0
+                            print("never skip more than 8 times")
+                        }
+                        else {
+                            print("increase delay!")
+                        }
+                        
+                    }
+                    else {
+                        print("delay reset")
+                        shouldSkipTimes = 0
+                        timesFetchedWhileUnread = 0
+                    }
+                    if (MessageParser.shared.lastTimelineEventTimestamp != nil) {
+                        print("last timeline event timestamp: \(d(MessageParser.shared.lastTimelineEventTimestamp!.timestamp).description)")
+                    }
+                    if (Importer.shared.lastTimelineEventTimestamp != nil) {
+                        print("last timeline event timestamp: \(d(Importer.shared.lastTimelineEventTimestamp!.timestamp).description)")
+                    }
+                }
+                
                 UnreadCounter(count:unreadCount)
             }
         }
@@ -213,7 +246,7 @@ extension Timeline {
         
         let oldestAtIndexZero = events.sorted(by: { $0.created_at < $1.created_at })
         for index in 0..<events.count {
-            notes.append(oldestAtIndexZero[index])
+            notes.insert(oldestAtIndexZero[index], at:0)
         }
         
         oldestAtIndexZero.forEach { event in
@@ -222,12 +255,20 @@ extension Timeline {
     }
     
     func loadNewNotes() {
+        oldOffset = scroller!.contentOffset.y
+        offset = scroller!.contentOffset.y
+        oldContentHeight = contentHeight
+        pendingHeightChange = true
         
+        unreadCount = unreadCount + (events.count-notes.count)
         let oldestAtIndexZero = events.sorted(by: { $0.created_at < $1.created_at })
-        let beforeEventsCount = notes.count
-        for index in 0..<events.count { // 0..<11
-            if (index < beforeEventsCount) { continue }
-            notes.append(oldestAtIndexZero[index])
+            .sorted { a, b in
+                return notes.firstIndex(of: a) == nil // Move new notes not already on screen, but older created_at, to front
+            }
+        for index in 0..<(events.count-notes.count) { // 0..<11
+//            if (index < beforeEventsCount) { continue }
+            //            notes.insert(oldestAtIndexZero[index],at:0)
+            notes.insert(oldestAtIndexZero[index], at:0)
             
             // 0, 1, 2, 3, 4, 5, 6, 7
             // N, N, 0, 1, 2, 3, 4, 5

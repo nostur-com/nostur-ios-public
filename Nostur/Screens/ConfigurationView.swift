@@ -398,7 +398,7 @@ struct ConfigurationView: View {
     
     var body: some View {
         VStack {
-//            RelaysView()
+            RelaysView()
             
             Toggle(isOn: $devToggle) { Text("Dev mode") }.padding(10)
             if (devToggle) {
@@ -423,7 +423,7 @@ struct ConfigurationView: View {
                     
                     Group {
                         Button { deleteAll = true } label: {
-                            Text("Delete all contacts")
+                            Text("Delete all contacts \(allContacts.count)")
 //                            Text("Delete all contacts \(allContacts.count)")
                         }.confirmationDialog("SURE???", isPresented: $deleteAll, actions: {
                             Button("YES DELETE ALL", role: .destructive) { deleteAllContacts() }
@@ -431,7 +431,7 @@ struct ConfigurationView: View {
                         .padding(5)
                         
                         Button { showDeleteAllEventsConfirmation = true } label: {
-                            Text("Delete all events")
+                            Text("Delete all events \(allEvents.count)")
 //                            Text("Delete all events \(allEvents.count)")
                         }.confirmationDialog("DELETE ALL EVENTS????", isPresented: $showDeleteAllEventsConfirmation) {
                             Button("YES DELETE ALL", role: .destructive) {

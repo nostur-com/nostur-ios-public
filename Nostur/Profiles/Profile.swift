@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Kingfisher
 //import NukeUI
 //import Nuke
 
@@ -92,6 +93,28 @@ struct Profile: View {
             ZStack() {
                 GeometryReader { geo in
                     if (contact.banner != nil) {
+                        KFImage(URL(string: contact.banner!))
+                            .placeholder {
+                                Image("NosturBanner")
+                                   .resizable()
+                                   .scaledToFill()
+                                   .frame(width: geo.size.width, height: 150)
+                            }
+                            .downsampling(size: CGSize(width: geo.size.width, height: 150))
+                            .cacheOriginalImage()
+//                            .serialize(by: FormatIndicatedCacheSerializer.png)
+                            .retry(maxCount: 2, interval: .seconds(5))
+                            .onSuccess { r in
+                                // r: RetrieveImageResult
+                                print("success: \(r)")
+                            }
+                            .onFailure { e in
+                                // e: KingfisherError
+                                print("failure: \(e)")
+                            }
+                            .cancelOnDisappear(true)
+                        
+                        
 //                        LazyImage(url: URL(string: contact.banner!)) { state in
 //                            if let image = state.image {
 //                                image // Displays the loaded image
@@ -137,9 +160,9 @@ struct Profile: View {
                 
                 HStack {
                     VStack {
-                        ProfilePicView(pubkey: contact.pubkey!, contact: contact)
-                            .frame(maxWidth:75, maxHeight:75)
-                            .clipShape(Circle())
+                        ProfilePicView(pubkey: contact.pubkey!, contact: contact, size: 75)
+//                            .frame(maxWidth:75, maxHeight:75)
+//                            .clipShape(Circle())
                             .offset(x: 10, y: 150-37.5)
                         Spacer()
                     }

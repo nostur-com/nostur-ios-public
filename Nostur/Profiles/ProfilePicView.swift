@@ -36,7 +36,7 @@ struct ProfilePicView: View {
                     Circle().foregroundColor(color).frame(width: size, height: size)
                 }
                 .downsampling(size: CGSize(width: size, height: size))
-                .roundCorner(radius: Radius.point(20.0))
+                .roundCorner(radius: Radius.point(size/2))
                 .cacheOriginalImage()
                 .serialize(by: FormatIndicatedCacheSerializer.png)
                 .retry(maxCount: 2, interval: .seconds(5))
