@@ -166,6 +166,10 @@ struct AccountListView: View {
                     if activeAccountPublicKey != account.publicKey {
                         Button {
                             activeAccountPublicKey = account.publicKey ?? ""
+                            do { let _ = try ns.loadActiveAccount(account: account) }
+                            catch {
+                                print("🔴 error switching active account")
+                            }
                         } label: {
                             Text("Set as active account")
                         }

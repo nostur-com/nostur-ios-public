@@ -23,6 +23,7 @@ extension Account {
     @NSManaged public var lud16: String
     @NSManaged public var nip05: String
     @NSManaged public var picture: String
+    @NSManaged public var banner: String
     @NSManaged public var privateKey: String?
     @NSManaged public var publicKey: String?
     @NSManaged public var id: UUID?

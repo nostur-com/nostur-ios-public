@@ -71,7 +71,7 @@ struct Timeline: View {
     }
     
     func eventAppeared(_ index:Int) {
-        if index < unreadCount {
+        if (index < unreadCount) && !pendingHeightChange {
             unreadCount = index
         }
 //        print("eventAppeared:\(index), lastReadIndex: \(lastReadIndex) notes.count: \(notes.count)")
@@ -249,9 +249,9 @@ extension Timeline {
             notes.insert(oldestAtIndexZero[index], at:0)
         }
         
-        oldestAtIndexZero.forEach { event in
-            print("\(event.id!) \(d(event.created_at))")
-        }
+//        oldestAtIndexZero.forEach { event in
+//            print("\(event.id!) \(d(event.created_at))")
+//        }
     }
     
     func loadNewNotes() {
@@ -266,16 +266,11 @@ extension Timeline {
                 return notes.firstIndex(of: a) == nil // Move new notes not already on screen, but older created_at, to front
             }
         for index in 0..<(events.count-notes.count) { // 0..<11
-//            if (index < beforeEventsCount) { continue }
-            //            notes.insert(oldestAtIndexZero[index],at:0)
             notes.insert(oldestAtIndexZero[index], at:0)
-            
-            // 0, 1, 2, 3, 4, 5, 6, 7
-            // N, N, 0, 1, 2, 3, 4, 5
         }
-        oldestAtIndexZero.forEach { event in
-            print("\(event.id!) \(d(event.created_at))")
-        }
+//        oldestAtIndexZero.forEach { event in
+//            print("\(event.id!) \(d(event.created_at))")
+//        }
     }
 }
 

@@ -137,12 +137,15 @@ extension AccountView {
     func preloadFromEvent() {
         let fr = NSFetchRequest<Event>(entityName: "Event")
         fr.predicate = NSPredicate(format: "pubkey = %@ AND kind == 0", account.publicKey!)
-
+        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        print("preload...")
         if let event = try? viewContext.fetch(fr).first {
+            print("\(event.content ?? "??")")
             if let metadata = try? event.getMetadataContent() {
                 account.name = metadata.name ?? ""
                 account.about = metadata.about ?? ""
                 account.picture = metadata.picture ?? ""
+                account.banner = metadata.banner ?? ""
                 account.nip05 = metadata.nip05 ?? ""
                 account.lud16 = metadata.lud16 ?? ""
                 

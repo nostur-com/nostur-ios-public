@@ -13,7 +13,7 @@ class Importer {
     var isImporting = false
     
     let logger = Logger(subsystem: "com.nostir.2140.Events", category: "persistence")
-
+    
     static var shared = Importer()
     
     var lastTimelineEventTimestamp:NTimestamp? = nil
@@ -34,7 +34,7 @@ class Importer {
         while let forImport = await parsedBucket.dequeue() {
             forImports.append(forImport)
         }
-            
+        
         let context = EventsProvider.shared.container.newBackgroundContext()
         
         await context.perform {
@@ -65,7 +65,9 @@ class Importer {
                     _ = Event.saveEvent(event: event, context:context)
                     
                     if event.kind == .setMetadata {
-                        Contact.handleSetMetadataEvent(event: event, context: context)
+                        if Contact.handleSetMetadataEvent(event: event, context: context) != nil {
+                            
+                        }
                     }
                     
                     if event.kind == .custom(3) {
@@ -103,13 +105,13 @@ class Importer {
                     print("🦋🦋 Skipped \(alreadyInDBskipped) already in DB")
                 }
                 
-//                ThreadWarning.which("importEvents")
+                //                ThreadWarning.which("importEvents")
                 if (context.hasChanges) {
                     try context.save() // TODO: is this the slowdown??
-//                    print("✅✅✅ context.save() ✅✅✅")
+                    //                    print("✅✅✅ context.save() ✅✅✅")
                 }
                 
-//                self.logger.debug("Successfully inserted data.")
+                //                self.logger.debug("Successfully inserted data.")
                 self.isImporting = false
             }
             catch {

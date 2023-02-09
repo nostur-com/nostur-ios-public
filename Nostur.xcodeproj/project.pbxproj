@@ -105,6 +105,7 @@
 		1FE4011729940D6E00A388A2 /* Introspect in Frameworks */ = {isa = PBXBuildFile; productRef = 1FE4011629940D6E00A388A2 /* Introspect */; };
 		1FE4011929940D9300A388A2 /* SwiftUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4011829940D9300A388A2 /* SwiftUIView.swift */; };
 		1FE4011B2994CD8700A388A2 /* List+didScroll.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4011A2994CD8700A388A2 /* List+didScroll.swift */; };
+		1FE4011D29952EC800A388A2 /* NIP05.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4011C29952EC800A388A2 /* NIP05.swift */; };
 		1FE4C0272982FF3B004E7750 /* ReplyingToFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4C0262982FF3B004E7750 /* ReplyingToFragment.swift */; };
 		1FEA785529799697007CC8E7 /* Compactor in Frameworks */ = {isa = PBXBuildFile; productRef = 1FEA785429799697007CC8E7 /* Compactor */; };
 		1FEA785829799FE6007CC8E7 /* ProfilePicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */; };
@@ -210,6 +211,7 @@
 		1FE401132993DCBA00A388A2 /* UITableTimeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITableTimeline.swift; sourceTree = "<group>"; };
 		1FE4011829940D9300A388A2 /* SwiftUIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIView.swift; sourceTree = "<group>"; };
 		1FE4011A2994CD8700A388A2 /* List+didScroll.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "List+didScroll.swift"; path = "../List+didScroll.swift"; sourceTree = "<group>"; };
+		1FE4011C29952EC800A388A2 /* NIP05.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP05.swift; sourceTree = "<group>"; };
 		1FE4C0262982FF3B004E7750 /* ReplyingToFragment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplyingToFragment.swift; sourceTree = "<group>"; };
 		1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePicView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -381,6 +383,7 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
+				1FE4011C29952EC800A388A2 /* NIP05.swift */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1FB448BB2965F3D000038671 /* Products */,
 				1F1C31E52969B75500E60BEF /* Frameworks */,
@@ -616,6 +619,7 @@
 				1FB448C52965F3D000038671 /* NosturTabsView.swift in Sources */,
 				1F756531296AE4260078474E /* RelaysView.swift in Sources */,
 				1F779830298D0623000642BB /* PaginationTest2.swift in Sources */,
+				1FE4011D29952EC800A388A2 /* NIP05.swift in Sources */,
 				1F1ABC4B29819CAC00D03FA9 /* Cache.swift in Sources */,
 				1F90E11529913C2C00E7596E /* PaginationTest4.swift in Sources */,
 				1F75211B2986D45D00C43DF0 /* Importer.swift in Sources */,

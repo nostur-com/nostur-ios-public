@@ -71,7 +71,7 @@ class ManagedClient: WebSocketDelegate, ObservableObject {
 class SocketPool: ObservableObject {
 
     static let shared = SocketPool()
-
+    
     var socketQueue = DispatchQueue(label: "nostur.queue", qos: .background)
     
     @Published var sockets:[NSManagedObjectID : ManagedClient] = [:]
@@ -80,6 +80,8 @@ class SocketPool: ObservableObject {
         if (!sockets.keys.contains(relayId)) {
             
             var request = URLRequest(url: URL(string: url)!)
+             request.setValue(["wamp"].joined(separator: ","), forHTTPHeaderField: "Sec-WebSocket-Protocol")
+
             request.timeoutInterval = 15
             let client = WebSocket(request: request)
             client.callbackQueue = self.socketQueue

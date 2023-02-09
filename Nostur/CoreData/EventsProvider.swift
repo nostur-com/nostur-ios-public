@@ -87,7 +87,7 @@ class EventsProvider: ObservableObject {
                     
                     switch event.kind {
                     case .setMetadata:
-                        Contact.handleSetMetadataEvent(event: event, context: viewContext)
+                        let _ = Contact.handleSetMetadataEvent(event: event, context: viewContext)
                         //                    case .custom(3):
                         
                     default:
@@ -113,6 +113,8 @@ class EventsProvider: ObservableObject {
         let contact2 = PreviewFetcher.fetchContact(
             "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240", context: viewContext)
         account.addToFollows(contact2!)
+        contact2!.nip05 = "snowden@citizenfour.com"
+        contact2!.nip05verifiedAt = Date.now
         
         let contact3 = PreviewFetcher.fetchContact(
             "df8efff2bfc02d81f93c7ff6ae111541637e0b3a4caff9ad48939a2f2f283be2", context: viewContext)

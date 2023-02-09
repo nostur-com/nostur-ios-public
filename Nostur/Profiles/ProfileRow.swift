@@ -26,8 +26,17 @@ struct ProfileRow: View {
                 VStack(alignment: .leading) {
                     HStack {
                         VStack(alignment: .leading) {
-                            Text(contact.authorName).font(.headline).foregroundColor(.primary)
-                                .lineLimit(1)
+                            HStack(spacing:3) {
+                                Text(contact.authorName).font(.headline).foregroundColor(.primary)
+                                    .lineLimit(1)
+                                
+                                if (contact.nip05veried) {
+                                    Image(systemName: "checkmark.seal.fill")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.blue)
+                                }
+                            }
+                            
                             Text("@\(contact.username)").font(.subheadline).foregroundColor(.secondary)
                                 .lineLimit(1)
                         }.multilineTextAlignment(.leading)

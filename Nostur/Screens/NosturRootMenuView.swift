@@ -7,14 +7,6 @@
 
 import SwiftUI
 
-
-
-extension NosturRootMenu {
-
-    
-    
-}
-
 struct NosturRootMenu: View {
     
     @EnvironmentObject var nav:NavigationModel

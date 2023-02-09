@@ -68,6 +68,7 @@ struct Profile: View {
     
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var sp:SocketPool
+    @Environment(\.managedObjectContext) var viewContext
     
     @ObservedObject var contact:Contact
     var pubkey:String
@@ -113,40 +114,6 @@ struct Profile: View {
                                 print("failure: \(e)")
                             }
                             .cancelOnDisappear(true)
-                        
-                        
-//                        LazyImage(url: URL(string: contact.banner!)) { state in
-//                            if let image = state.image {
-//                                image // Displays the loaded image
-//                            }
-//                            else {
-//                                Image("NosturBanner")
-//                                    .resizable()
-//                                    .scaledToFill()
-//                                    .frame(width: geo.size.width, height: 150)
-//                                //                                .clipped()
-//                            }
-//                        }
-//                        .processors([ImageProcessors.Resize(width: geo.size.width)])
-//                        .animation(nil)
-//                        .priority(.normal)
-//                        .pipeline(ImageProcessing.shared.bannerPipeline)
-////                        .pipeline(ImagePipeline {
-////                            // TODO: volgens mij klopt niet
-////                            /// moet ergens anders clean 1x doen ipv iedere keer voor image
-////                            $0.dataLoader = DataLoader(configuration: {
-////                                // Disable disk caching built into URLSession
-////                                let conf = DataLoader.defaultConfiguration
-////                                conf.urlCache = nil
-////                                return conf
-////                            }())
-////
-////                            $0.imageCache = ImageCache()
-////                            $0.dataCache = try! DataCache(name: "com.nostur.2140.banner")
-////                        })
-//                        .frame(width: geo.size.width, height: 150)
-//                        //                            .clipped()
-                        
                     }
                     else {
                         HStack {
@@ -161,8 +128,6 @@ struct Profile: View {
                 HStack {
                     VStack {
                         ProfilePicView(pubkey: contact.pubkey!, contact: contact, size: 75)
-//                            .frame(maxWidth:75, maxHeight:75)
-//                            .clipShape(Circle())
                             .offset(x: 10, y: 150-37.5)
                         Spacer()
                     }
@@ -198,7 +163,15 @@ struct Profile: View {
                     }
                     
                     
-                    Text("\(contact.authorName)").font(.headline)
+                    HStack(spacing:1) {
+                        Text("\(contact.authorName) ").font(.headline)
+                        if (contact.nip05veried) {
+                            Group {
+                                Image(systemName: "checkmark.seal.fill")
+                                Text(contact.nip05domain).font(.footnote)
+                            }.foregroundColor(.blue)
+                        }
+                    }
                     HStack {
                         Text("@\(contact.username)").foregroundColor(.secondary)
                         
@@ -303,6 +276,32 @@ struct Profile: View {
             }
         }
         .ignoresSafeArea(edges: .top)
+        .task {
+            if (NIP05.shouldVerify(contact)) {
+                if (await NIP05.verify(nip05: contact.nip05!, expectedPubkey: contact.pubkey!)) {
+                    await viewContext.perform {
+                        contact.nip05verifiedAt = Date.now
+                        do { try viewContext.save() }
+                        catch { print("w🚗at") }
+                    }
+                    print("👍👍 nip05 verified \(contact.pubkey!) \(contact.nip05!) ")
+                }
+            }
+        }
+        .onChange(of: contact.nip05) { nip05 in
+            if (NIP05.shouldVerify(contact)) {
+                Task {
+                    if (await NIP05.verify(nip05: contact.nip05!, expectedPubkey: contact.pubkey!)) {
+                        await viewContext.perform {
+                            contact.nip05verifiedAt = Date.now
+                            do { try viewContext.save() }
+                            catch { print("w🚗at") }
+                        }
+                        print("👍👍 nip05 verified \(contact.pubkey!) \(contact.nip05!) ")
+                    }
+                }
+            }
+        }
 //        .onReceive(loopyRunny) { time in
 //            let readyForImportQueue = MessageParser.shared.readyForImportQueue
 //            do {

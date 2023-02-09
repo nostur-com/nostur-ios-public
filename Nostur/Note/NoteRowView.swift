@@ -129,9 +129,16 @@ struct NoteHeader: View {
                             .fontWeight(.bold)
                             .lineLimit(1)
                         
+                        if (event.contact?.nip05veried ?? false) {
+                            Image(systemName: "checkmark.seal.fill")
+                                .font(.system(size: 14))
+                                .foregroundColor(.blue)
+                        }
+                        
                         Text("@\(event.contact?.username ?? event.authorKey) · \(event.ago)") //
                             .font(.system(size: 14))
                             .foregroundColor(.secondary)
+                            .lineLimit(1)
                     }
                     .onTapGesture {
                         nav.navigateTo(ContactPath(key: event.pubkey!))
@@ -325,6 +332,9 @@ struct NoteRowView_Previews: PreviewProvider {
         // reply to known  contact
         // f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e
         
+        
+        let eventX = PreviewFetcher.fetchEvent("24ad21d57d59b03f4f9a8931f8bc4ccca84ed6ab257bf62cb84b0d04e0583118")
+        
         let event0 = PreviewFetcher.fetchEvent("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
         
         let event1 = PreviewFetcher.fetchEvent("dec5a86ad780edd26fb8a1b85f919ddace9cb2b2b5d3a68d5124802fc2da4ed3")
@@ -332,6 +342,10 @@ struct NoteRowView_Previews: PreviewProvider {
         let event2 = PreviewFetcher.fetchEvent("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e")
         
         List {
+            
+            NoteRowView(event: eventX!)
+                .listRowInsets(EdgeInsets())
+            
             NoteRowView(event: event0!)
                 .listRowInsets(EdgeInsets())
                 

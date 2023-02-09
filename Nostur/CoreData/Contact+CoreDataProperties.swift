@@ -99,12 +99,33 @@ extension Contact : Identifiable {
             pubkey != nil ? try! NIP19(prefix: "npub", hexString: pubkey!).displayString : "?"
         }
     }
+    
+    var nip05veried:Bool {
+        get {
+            let twoWeeksAgo = Date.now.addingTimeInterval(-(14 * 86400))
+            if nip05verifiedAt != nil && nip05verifiedAt! > twoWeeksAgo {
+                return true
+            }
+            return false
+        }
+    }
+    
+    var nip05domain:String {
+        get {
+            guard nip05 != nil else { return "" }
+            let nip05 = nip05!.trimmingCharacters(in: .whitespacesAndNewlines)
+            let nip05parts = nip05.split(separator: "@", maxSplits: 1, omittingEmptySubsequences: true)
+            
+            guard nip05parts.count == 2 else { return "" }
+            return String(nip05parts[1])
+        }
+    }
 
-    static func handleSetMetadataEvent(event:NEvent, context:NSManagedObjectContext) {
+    static func handleSetMetadataEvent(event:NEvent, context:NSManagedObjectContext) -> Contact? {
         
         let decoder = JSONDecoder()
         guard let metaData = try? decoder.decode(NSetMetadata.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) else {
-            return
+            return nil
         }
         
         
@@ -132,9 +153,9 @@ extension Contact : Identifiable {
                 // Received metadata is older than stored Contact
                 print("🟠🟠 Already have newer info stored in Contact. Skipped update.")
             }
+            return contact
         }
         else {
-            
             // Received metadata is not in any Contact
             // insert new contact
             let contact = Contact(context: context)
@@ -158,13 +179,8 @@ extension Contact : Identifiable {
                 event.contact = contact
                 event.objectWillChange.send()
             }
+            return contact
         }
-//        do {
-//            try context.save() // NEED SAVE() HERE OR NOT??
-//        }
-//        catch let error {
-//            print("🔴🐥🔴 Error storing event 🔴🐥🔴 \(error)")
-//        }
     }
     
     static func allContactPubkeys(context:NSManagedObjectContext) async -> [String] {
