@@ -78,9 +78,9 @@ struct BookmarksView: View {
 struct BookmarksView_Previews: PreviewProvider {
     static var previews: some View {
         
-        let activeAccount = PreviewFetcher.fetchAccount("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", context: EventsProvider.preview.container.viewContext)
+        let account = PreviewFetcher.fetchAccount("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", context: EventsProvider.preview.container.viewContext)
         
-        BookmarksView(account: activeAccount)
+        BookmarksView(account: account!)
             .withPreviewEnvironment()
     }
 }

@@ -10,6 +10,7 @@ import CoreData
 @main
 struct NosturApp: App {
     @StateObject var ns = NosturState(viewContext:EventsProvider.shared.container.viewContext)
+    @StateObject var nav = NavigationModel()
     @State var isViewDisplayed = false
     
     let runLoop = Timer.publish(every: 2, tolerance: 1, on: .main, in: .common).autoconnect()
@@ -21,6 +22,7 @@ struct NosturApp: App {
                 .environment(\.managedObjectContext, EventsProvider.shared.container.viewContext)
                 .environmentObject(ns)
                 .environmentObject(sp)
+                .environmentObject(nav)
                 .onAppear {startNosturing(); self.isViewDisplayed = true }
                 .onDisappear { self.isViewDisplayed = false }
                 .onReceive(runLoop) { time in

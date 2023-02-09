@@ -11,56 +11,25 @@ import SwiftUI
 
 extension NosturRootMenu {
 
-    @MainActor class NosturRootMenuViewModel: ObservableObject {
-        @Published var showSidebar: Bool = false
-        @Published var selectedTab = "Timeline"
-        @Published var timelinePath = NavigationPath()
-        @Published var searchPath = NavigationPath()
-        @Published var accountsPath = NavigationPath()
-        @Published var bookmarksPath = NavigationPath()
-        @Published var notificationsPath = NavigationPath()
-        @Published var messagesPath = NavigationPath()
-        @Published var configurationPath = NavigationPath()
-        
-        func navigateTo(_ path:any Hashable) -> Void {
-            switch (selectedTab) {
-                case "Timeline":
-                    self.timelinePath.append(path)
-                case "Accounts":
-                    self.accountsPath.append(path)
-                case "Bookmarks":
-                    self.bookmarksPath.append(path)
-                case "Configuration":
-                    self.configurationPath.append(path)
-                case "Messages":
-                    self.messagesPath.append(path)
-                case "Notifications":
-                    self.notificationsPath.append(path)
-                case "Search":
-                    self.searchPath.append(path)
-                default:
-                    self.timelinePath.append(path)
-            }
-        }
-    }
+    
     
 }
 
 struct NosturRootMenu: View {
     
+    @EnvironmentObject var nav:NavigationModel
     @EnvironmentObject var ns:NosturState
-    @StateObject var vm = NosturRootMenuViewModel()
     
     var body: some View {
-        SideBarStack(sidebarWidth: 285, showSidebar: $vm.showSidebar) {
+        SideBarStack(sidebarWidth: 285, showSidebar: $nav.showSidebar) {
             if (ns.account != nil) {
                 sideBar
-                    .withNavigationDestinations()
+//                    .withNavigationDestinations() TODO: Put back?
             }
         } content: {
             //TODO: Check if ns.account is loaded first
             if (ns.account != nil) {
-                NosturTabsView(showMenu: $vm.showSidebar, selectedTab: $vm.selectedTab, timelinePath: $vm.timelinePath, searchPath: $vm.searchPath, accountsPath: $vm.accountsPath, bookmarksPath: $vm.bookmarksPath, notificationsPath: $vm.notificationsPath, messagesPath: $vm.messagesPath, configurationPath: $vm.configurationPath)
+                NosturTabsView(showMenu: $nav.showSidebar, selectedTab: $nav.selectedTab, timelinePath: $nav.timelinePath, searchPath: $nav.searchPath, accountsPath: $nav.accountsPath, bookmarksPath: $nav.bookmarksPath, notificationsPath: $nav.notificationsPath, messagesPath: $nav.messagesPath, configurationPath: $nav.configurationPath)
                     .onOpenURL { url in
                         // TODO: CHECK INPUT!!! SECURITY!
                         print(url.absoluteString)
@@ -70,10 +39,10 @@ struct NosturRootMenu: View {
                             let key = try! NIP19(displayString: "\(nostr[0][2])\(nostr[0][3])")
                             print("ok lets go to: \(key.hexString)")
                             if nostr[0][2] == "npub1" {                            
-                                vm.navigateTo(ContactPath(key: key.hexString))
+                                nav.navigateTo(ContactPath(key: key.hexString))
                             }
                             if nostr[0][2] == "note1" {
-                                vm.navigateTo(NotePath(id: key.hexString))
+                                nav.navigateTo(NotePath(id: key.hexString))
                             }
                         }
                         
@@ -81,16 +50,20 @@ struct NosturRootMenu: View {
                         if nostur.count == 1 && nostur[0].count == 4 {
                             print("ok lets go to: \(nostur[0][2])\(nostur[0][3])")
                             if nostur[0][2] == "p:" {
-                                vm.navigateTo(ContactPath(key: nostur[0][3]))
+                                nav.navigateTo(ContactPath(key: nostur[0][3]))
                             }
                             if nostur[0][2] == "e:" {
-                                vm.navigateTo(NotePath(id: nostur[0][3]))
+                                nav.navigateTo(NotePath(id: nostur[0][3]))
                             }
                         }
                         
                     }
             }
-            
+            else {
+                NavigationStack(path: $nav.accountsPath) {
+                    AccountListView()
+                }
+            }
         }
 //        .edgesIgnoringSafeArea(.all)
     }
@@ -111,8 +84,8 @@ extension NosturRootMenu {
                 Text(try! AttributedString(markdown: "**bla**  Following  **196** Followers")).font(.caption)
                 
                 Button {
-                    vm.navigateTo(ContactPath(key: ns.account!.publicKey!))
-                    vm.showSidebar = false
+                    nav.navigateTo(ContactPath(key: ns.account!.publicKey!))
+                    nav.showSidebar = false
                 } label: {
                     Label("Profile", systemImage: "person")
                 }
@@ -123,8 +96,8 @@ extension NosturRootMenu {
                     Label("Settings", systemImage: "gearshape")
                 }
                 Button {
-                    vm.navigateTo(ViewPath.Blocklist)
-                    vm.showSidebar = false
+                    nav.navigateTo(ViewPath.Blocklist)
+                    nav.showSidebar = false
                 } label: {
                     Label("Block list", systemImage: "person.badge.minus")
                 }

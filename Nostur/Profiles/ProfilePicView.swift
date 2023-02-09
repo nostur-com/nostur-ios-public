@@ -8,7 +8,7 @@
 import SwiftUI
 import Kingfisher
 
-struct ProfilePicView : View {
+struct ProfilePicView: View {
     
     var pubkey:String
     var contact:Contact?
@@ -38,6 +38,7 @@ struct ProfilePicView : View {
                 .downsampling(size: CGSize(width: size, height: size))
                 .roundCorner(radius: Radius.point(20.0))
                 .cacheOriginalImage()
+                .serialize(by: FormatIndicatedCacheSerializer.png)
                 .retry(maxCount: 2, interval: .seconds(5))
                 .onSuccess { r in
                     // r: RetrieveImageResult

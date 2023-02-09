@@ -25,33 +25,22 @@ extension View {
             return d
         }()
         
-        let previewProvider = EventsProvider.preview
-
         // "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
         
-//        let cm = ConnectionManager()
         let sp:SocketPool = .shared
-        let ns = NosturState(viewContext: previewProvider.container.viewContext)
-        let activeAccount = PreviewFetcher.fetchAccount("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", context: previewProvider.container.viewContext)
-        _ = try! ns.loadActiveAccount(account: activeAccount)
-//        let newAccount = Account(context: EventsProvider.preview.container.viewContext)
-//        newAccount.name = "john01"
-//        newAccount.about = "About me"
-//        newAccount.createdAt = Date()
-//        newAccount.display_name = "Johnny"
-//        newAccount.lud16 = ""
-//        newAccount.nip05 = ""
-//        newAccount.picture = ""
-        
-        
+        let ns = NosturState(viewContext: EventsProvider.preview.container.viewContext)
+        let nav = NavigationModel()
+        let account = PreviewFetcher.fetchAccount("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", context: EventsProvider.preview.container.viewContext)
+        _ = try! ns.loadActiveAccount(account: account)
         
         return self.defaultAppStorage(userDefaults)
             .environment(\.managedObjectContext,
-                          previewProvider.container.viewContext)
+                          EventsProvider.preview.container.viewContext)
             .environmentObject(ns)
             .environmentObject(sp)
-            .environmentObject(previewProvider)
-            .environmentObject(activeAccount!)
+            .environmentObject(EventsProvider.preview)
+            .environmentObject(account!)
+            .environmentObject(nav)
     }
 }
 

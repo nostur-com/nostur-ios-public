@@ -7,24 +7,22 @@
 
 import SwiftUI
 import CoreData
+import Kingfisher
 
 struct ConfigurationView: View {
     
     @AppStorage("devToggle") var devToggle: Bool = false
     @Environment(\.managedObjectContext) var viewContext
+
+    @FetchRequest(fetchRequest: Contact.fetchRequest())
+    var allContacts:FetchedResults<Contact>
     
-    @FetchRequest(
-        sortDescriptors: [SortDescriptor(\Contact.updated_at, order: .forward)],
-        animation: .none)
-    var allContacts: FetchedResults<Contact>
-    
-    @FetchRequest(
-        sortDescriptors: [],
-        animation: .none)
-    var allEvents: FetchedResults<Event>
+    @FetchRequest(fetchRequest: Event.fetchRequest())
+    var allEvents:FetchedResults<Event>
     
     @State var deleteAll = false
     @State var showDeleteAllEventsConfirmation = false
+    @State var imageCacheSize = 0.0
     
     // Also fixes mention ids (first Quote Id)
     func rebuildReplyToIdsCache() {
@@ -223,10 +221,10 @@ struct ConfigurationView: View {
     
     func deleteAllEvents() {
         SavedEventsCache.shared.clear()
-
+        
         let r = NSFetchRequest<Event>(entityName: "Event")
         let allEvents = try! viewContext.fetch(r)
-
+        
         for event in allEvents {
             viewContext.delete(event)
         }
@@ -275,7 +273,7 @@ struct ConfigurationView: View {
     func fixReplyToEventRelations() {
         
         SavedEventsCache.shared.clear()
-                
+        
         // TODO: MAybe dont need for all events??? just kind:1 is enough?
         let er = NSFetchRequest<Event>(entityName: "Event")
         er.sortDescriptors = []
@@ -334,7 +332,7 @@ struct ConfigurationView: View {
             newResult.append(account.publicKey!)
             return newResult
         }
-
+        
         let ownAccountBookmarkIds = allACcounts.reduce([String]()) { partialResult, account in
             var newResult = Array(partialResult)
             if (account.bookmarks != nil) {
@@ -345,7 +343,7 @@ struct ConfigurationView: View {
         }
         
         let xDaysAgo = Date.now.addingTimeInterval(-3 * 86400) // 3 days
-
+        
         
         // KIND 1 OF 7
         // OUDER DAN 3 DAGEN
@@ -354,10 +352,10 @@ struct ConfigurationView: View {
         viewContext.perform {
             let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
             fetchRequest.predicate = NSPredicate(format: "(kind == 7 OR kind == 1) AND created_at < %i AND NOT id IN %@ AND NOT pubkey IN %@", Int64(xDaysAgo.timeIntervalSince1970), ownAccountBookmarkIds, ownAccountPubkeys)
-
+            
             let batchDelete = NSBatchDeleteRequest(fetchRequest: fetchRequest)
             batchDelete.resultType = .resultTypeCount
-
+            
             do {
                 let result = try viewContext.execute(batchDelete) as! NSBatchDeleteResult
                 print("Deleted \(result.result!) kind 1 or 7 events")
@@ -372,10 +370,10 @@ struct ConfigurationView: View {
         viewContext.perform {
             let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
             fetchRequest.predicate = NSPredicate(format: "(kind == 0) AND NOT pubkey IN %@", ownAccountPubkeys)
-
+            
             let batchDelete = NSBatchDeleteRequest(fetchRequest: fetchRequest)
             batchDelete.resultType = .resultTypeCount
-
+            
             do {
                 let result = try viewContext.execute(batchDelete) as! NSBatchDeleteResult
                 print("Deleted \(result.result!) kind=0 events")
@@ -393,77 +391,83 @@ struct ConfigurationView: View {
         }
     }
     
+    func clearImageCache() {
+        ImageCache.default.clearMemoryCache()
+        ImageCache.default.clearDiskCache { print("Done"); imageCacheSize = 0 }
+    }
+    
     var body: some View {
         VStack {
-            RelaysView()
+//            RelaysView()
             
-            Toggle(isOn: $devToggle) {
-                Text("Dev mode")
-            }.padding(20)
+            Toggle(isOn: $devToggle) { Text("Dev mode") }.padding(10)
             if (devToggle) {
                 List {
-                    
-                    Button {
-                        maintenance()
-                    } label: {
-                        Text("Clean up older than 3 days!")
-                    }.padding(5)
-                    
-                    Button {
-                        rebuildReplyToIdsCache()
-                    } label: {
-                        Text("Rebuild replyToId, replyToRootId, firstQuoteId cache")
-                    }.padding(5)
-                    
-                    Button {
-                        rebuildCountingCache()
-                    } label: {
-                        Text("Rebuild counting cache (likes, mentions, replies)")
-                    }.padding(5)
-                    
-                    Button {
-                        rebuildContactCache()
-                    } label: {
-                        Text("Rebuild contact cache (banner, picture etc)")
-                    }.padding(5)
-                    
-                    Button {
-                        deleteAll = true
-                    } label: {
-                        Text("Delete all contacts \(allContacts.count)")
-                    }.confirmationDialog("SURE???", isPresented: $deleteAll, actions: {
-                        Button("YES DELETE ALL", role: .destructive) { deleteAllEvents() }
-//                        Button("Cancel", role: .cancel) { deleteAll = false }
-
-                    })
-                    .padding(5)
+                    Group {
+                        Button { maintenance() } label: {
+                            Text("Clean up older than 3 days!")
+                        }.padding(5)
                         
+                        Button { rebuildReplyToIdsCache() } label: {
+                            Text("Rebuild replyToId, replyToRootId, firstQuoteId cache")
+                        }.padding(5)
+                        
+                        Button { rebuildCountingCache() } label: {
+                            Text("Rebuild counting cache (likes, mentions, replies)")
+                        }.padding(5)
+                        
+                        Button { rebuildContactCache() } label: {
+                            Text("Rebuild contact cache (banner, picture etc)")
+                        }.padding(5)
+                    }
                     
-                    Button {
-                        showDeleteAllEventsConfirmation = true
-                    } label: {
-                        Text("Delete all events \(allEvents.count)")
-                    }.padding(5)
-                        .confirmationDialog("DELETE ALL EVENTS????", isPresented: $showDeleteAllEventsConfirmation) {
+                    Group {
+                        Button { deleteAll = true } label: {
+                            Text("Delete all contacts")
+//                            Text("Delete all contacts \(allContacts.count)")
+                        }.confirmationDialog("SURE???", isPresented: $deleteAll, actions: {
+                            Button("YES DELETE ALL", role: .destructive) { deleteAllContacts() }
+                        })
+                        .padding(5)
+                        
+                        Button { showDeleteAllEventsConfirmation = true } label: {
+                            Text("Delete all events")
+//                            Text("Delete all events \(allEvents.count)")
+                        }.confirmationDialog("DELETE ALL EVENTS????", isPresented: $showDeleteAllEventsConfirmation) {
                             Button("YES DELETE ALL", role: .destructive) {
                                 deleteAllEvents()
                             }
                         }
+                        .padding(5)
+                        
+                        Button { fixContactEventRelations() } label: {
+                            Text("Fix event.contact relation")
+                        }.padding(5)
+                        
+                        Button { fixReplyToEventRelations()
+                        } label: { Text("Fix reply, quote relations") }.padding(5)
+                        
+                        Button { clearImageCache()} label: {
+                            Text("Clear image cache \(imageCacheSize) MB")
+                        }
+                    }
                     
-                    Button {
-                        fixContactEventRelations()
-                    } label: {
-                        Text("Fix event.contact relation")
-                    }.padding(5)
                     
-                    Button {
-                        fixReplyToEventRelations()
-                    } label: {
-                        Text("Fix reply, quote relations")
-                    }.padding(5)
-                    
-                    Text("**Umb** [@Snowden](nostr:npub1g53mukxnjkcmr94fhryzkqutdz2ukq4ks0gvy5af25rgmwsl4ngq43drvk)")
-                    Text("**Umb** [@callebtc](nostr:npub12rv5lskctqxxs2c8rf2zlzc7xx3qpvzs3w4etgemauy9thegr43sf485vg) 'n")
+                    Group {
+                        Text("**Umb** [@Snowden](nostur:p:4523be58d395b1b196a9b8c82b038b6895cb02b683d0c253a955068dba1facd0)")
+                        Text("**Umb** [@callebtc](nostur:p:50d94fc2d8580c682b071a542f8b1e31a200b0508bab95a33bef0855df281d63) 'n")
+                    }
+                }
+                .onAppear {
+                    ImageCache.default.calculateDiskStorageSize { result in
+                        switch result {
+                            case .success(let size):
+                                imageCacheSize = floor(Double(size) / 1024 / 1024)
+                                print("Disk cache size: \(imageCacheSize) MB")
+                            case .failure(let error):
+                                print(error)
+                        }
+                    }
                 }
             }
         }
@@ -471,9 +475,9 @@ struct ConfigurationView: View {
 }
 
 struct ConfigurationView_Previews: PreviewProvider {
-
+    
     static var previews: some View {
-
+        
         ConfigurationView()
             .withPreviewEnvironment()
     }

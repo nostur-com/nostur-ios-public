@@ -21,8 +21,16 @@ extension Contact {
 //    }
     
     @nonobjc public class func fetchRequest() -> NSFetchRequest<Contact> {
-        return NSFetchRequest<Contact>(entityName: "Contact")
+        let fr = NSFetchRequest<Contact>(entityName: "Contact")
+        fr.sortDescriptors = []
+        return fr
     }
+    
+//    @nonobjc public class func fetchRequest2() -> NSFetchRequest<Contact> { // SOMEHOW THIS FIXES PREVIEW CANVAS BUG JEEZ
+//        let fr = NSFetchRequest<Contact>(entityName: "Contact")
+//        fr.sortDescriptors = []
+//        return fr
+//    }
 
     @NSManaged public var about: String?
     @NSManaged public var lud16: String?
@@ -31,7 +39,6 @@ extension Contact {
     @NSManaged public var nip05: String?
     @NSManaged public var nip05verifiedAt: Date?
     @NSManaged public var picture: String?
-    @NSManaged public var pictureFile: Data?
     @NSManaged public var banner: String?
     @NSManaged public var pubkey: String?
     @NSManaged public var updated_at: Int64
@@ -115,7 +122,6 @@ extension Contact : Identifiable {
                 contact.display_name = metaData.display_name
                 contact.about = metaData.about
                 contact.picture = metaData.picture
-                contact.pictureFile = nil // todo
                 contact.nip05 = metaData.nip05
                 contact.lud16 = metaData.lud16
                 contact.updated_at = Int64(Date().timeIntervalSince1970)
@@ -138,7 +144,6 @@ extension Contact : Identifiable {
             contact.about = metaData.about
             contact.picture = metaData.picture
             contact.banner = metaData.banner
-            contact.pictureFile = nil // todo
             contact.nip05 = metaData.nip05
             contact.lud16 = metaData.lud16
             contact.updated_at = Int64(Date().timeIntervalSince1970)

@@ -13,7 +13,7 @@ struct SideBarStack<SidebarContent: View, Content: View>: View {
     let mainContent: Content
     let sidebarWidth: CGFloat
     @Binding var showSidebar: Bool
-    @State var sidebarOffsetX = 0.0
+    @State var sidebarOffsetX = -285.0
     @State var mainContentOffsetX = 0.0
     
     init(sidebarWidth: CGFloat, showSidebar: Binding<Bool>, @ViewBuilder sidebar: ()->SidebarContent, @ViewBuilder content: ()->Content) {

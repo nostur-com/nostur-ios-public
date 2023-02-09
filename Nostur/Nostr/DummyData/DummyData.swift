@@ -45,7 +45,6 @@ struct Tweet: Identifiable, Hashable {
     var name = "Fabian"
     var profileImageName = "NosturAppIcon"
     var pictureUrl:String? = nil
-    var pictureFile:Data? = nil
     var retweetCount = "5.791"
     var likeCount = "40,9K"
     var replyCount = "1.028"

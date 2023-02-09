@@ -14,8 +14,16 @@ import Compactor
 extension Event {
     
     @nonobjc public class func fetchRequest() -> NSFetchRequest<Event> {
-        return NSFetchRequest<Event>(entityName: "Event")
+        let fr = NSFetchRequest<Event>(entityName: "Event")
+        fr.sortDescriptors = []
+        return fr
     }
+    
+//    @nonobjc public class func fetchRequest2() -> NSFetchRequest<Event> {
+//        let fr = NSFetchRequest<Event>(entityName: "Event")
+//        fr.sortDescriptors = []
+//        return fr
+//    }
     
     @NSManaged public var insertedAt: Date // Needed for correct ordering of events in timeline
     

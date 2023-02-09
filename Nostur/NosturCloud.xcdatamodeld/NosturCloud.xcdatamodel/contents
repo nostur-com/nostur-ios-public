@@ -25,7 +25,6 @@
         <attribute name="nip05" optional="YES" attributeType="String"/>
         <attribute name="nip05verifiedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="picture" optional="YES" attributeType="String"/>
-        <attribute name="pictureFile" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
         <attribute name="pubkey" attributeType="String"/>
         <attribute name="updated_at" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="followedBy" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Account" inverseName="follows" inverseEntity="Account"/>

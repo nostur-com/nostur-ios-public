@@ -100,6 +100,10 @@
 		1FD49735297FE2FE0084F14E /* ProfileRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD49734297FE2FE0084F14E /* ProfileRowView.swift */; };
 		1FD49737298029600084F14E /* NoteTextRenderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD49736298029600084F14E /* NoteTextRenderView.swift */; };
 		1FDFEBB7297ED78100511AA0 /* ConfigurationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FDFEBB6297ED78100511AA0 /* ConfigurationView.swift */; };
+		1FE401122993D88700A388A2 /* SwiftUIUITableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE401112993D88700A388A2 /* SwiftUIUITableView.swift */; };
+		1FE401142993DCBA00A388A2 /* UITableTimeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE401132993DCBA00A388A2 /* UITableTimeline.swift */; };
+		1FE4011729940D6E00A388A2 /* Introspect in Frameworks */ = {isa = PBXBuildFile; productRef = 1FE4011629940D6E00A388A2 /* Introspect */; };
+		1FE4011929940D9300A388A2 /* SwiftUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4011829940D9300A388A2 /* SwiftUIView.swift */; };
 		1FE4C0272982FF3B004E7750 /* ReplyingToFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4C0262982FF3B004E7750 /* ReplyingToFragment.swift */; };
 		1FEA785529799697007CC8E7 /* Compactor in Frameworks */ = {isa = PBXBuildFile; productRef = 1FEA785429799697007CC8E7 /* Compactor */; };
 		1FEA785829799FE6007CC8E7 /* ProfilePicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */; };
@@ -201,6 +205,9 @@
 		1FD49734297FE2FE0084F14E /* ProfileRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileRowView.swift; sourceTree = "<group>"; };
 		1FD49736298029600084F14E /* NoteTextRenderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteTextRenderView.swift; sourceTree = "<group>"; };
 		1FDFEBB6297ED78100511AA0 /* ConfigurationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationView.swift; sourceTree = "<group>"; };
+		1FE401112993D88700A388A2 /* SwiftUIUITableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIUITableView.swift; sourceTree = "<group>"; };
+		1FE401132993DCBA00A388A2 /* UITableTimeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITableTimeline.swift; sourceTree = "<group>"; };
+		1FE4011829940D9300A388A2 /* SwiftUIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIView.swift; sourceTree = "<group>"; };
 		1FE4C0262982FF3B004E7750 /* ReplyingToFragment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplyingToFragment.swift; sourceTree = "<group>"; };
 		1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePicView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -214,6 +221,7 @@
 				1F654F30298ED52E0040F15D /* Starscream in Frameworks */,
 				1F1ABC4329810D5500D03FA9 /* LinkPresentation.framework in Frameworks */,
 				1FEA785529799697007CC8E7 /* Compactor in Frameworks */,
+				1FE4011729940D6E00A388A2 /* Introspect in Frameworks */,
 				1F055A53296EE2A2009EF792 /* secp256k1 in Frameworks */,
 				1FEC01C0296C4A400078CC9B /* SwiftyJSON in Frameworks */,
 			);
@@ -250,6 +258,7 @@
 				1F3309622989598600D4D8CF /* NosturRootMenuView.swift */,
 				1F33096429895D1600D4D8CF /* SidebarStack.swift */,
 				1F330989298A909100D4D8CF /* Timeline.swift */,
+				1FE401132993DCBA00A388A2 /* UITableTimeline.swift */,
 			);
 			path = Screens;
 			sourceTree = "<group>";
@@ -386,6 +395,7 @@
 		1FB448BC2965F3D000038671 /* Nostur */ = {
 			isa = PBXGroup;
 			children = (
+				1FE4010E2993D85600A388A2 /* UITableView */,
 				1F4773A3296CA7040049454B /* Accounts */,
 				1F2DE02E298E5B4D00891D2E /* Blocklist */,
 				1F25B395297A508200A8A5A7 /* CoreData */,
@@ -403,6 +413,7 @@
 				1FB448C82965F3D200038671 /* Nostur.entitlements */,
 				1F30FAA729705EBD008439C8 /* NosturCloud.xcdatamodeld */,
 				1FB448C92965F3D200038671 /* Preview Content */,
+				1FE4011829940D9300A388A2 /* SwiftUIView.swift */,
 			);
 			path = Nostur;
 			sourceTree = "<group>";
@@ -445,6 +456,14 @@
 			path = Profiles;
 			sourceTree = "<group>";
 		};
+		1FE4010E2993D85600A388A2 /* UITableView */ = {
+			isa = PBXGroup;
+			children = (
+				1FE401112993D88700A388A2 /* SwiftUIUITableView.swift */,
+			);
+			path = UITableView;
+			sourceTree = "<group>";
+		};
 		1FEA78592979A18E007CC8E7 /* Note */ = {
 			isa = PBXGroup;
 			children = (
@@ -482,6 +501,7 @@
 				1FEA785429799697007CC8E7 /* Compactor */,
 				1F654F2F298ED52E0040F15D /* Starscream */,
 				1F57C543299249EE00DFE063 /* Kingfisher */,
+				1FE4011629940D6E00A388A2 /* Introspect */,
 			);
 			productName = Nostur;
 			productReference = 1FB448BA2965F3D000038671 /* Nostur.app */;
@@ -517,6 +537,7 @@
 				1FEA785329799697007CC8E7 /* XCRemoteSwiftPackageReference "SwiftCompactor" */,
 				1F654F2E298ED52E0040F15D /* XCRemoteSwiftPackageReference "Starscream" */,
 				1F57C542299249EE00DFE063 /* XCRemoteSwiftPackageReference "Kingfisher" */,
+				1FE4011529940D6E00A388A2 /* XCRemoteSwiftPackageReference "SwiftUI-Introspect" */,
 			);
 			productRefGroup = 1FB448BB2965F3D000038671 /* Products */;
 			projectDirPath = "";
@@ -550,6 +571,7 @@
 				1F8B1365297B3BE8002EB8CF /* ContactProfile.swift in Sources */,
 				1F90E1172991716D00E7596E /* Timeline2.swift in Sources */,
 				1F5BBE40297BC7E600F4AF03 /* EventsError.swift in Sources */,
+				1FE4011929940D9300A388A2 /* SwiftUIView.swift in Sources */,
 				1F8B1360297B36DB002EB8CF /* String+HexBytes.swift in Sources */,
 				1F5F5A5E2983FF9D00DED8F4 /* EventsWindow.swift in Sources */,
 				1F4773A5296CA72A0049454B /* AddReadOnlyAccountView.swift in Sources */,
@@ -595,6 +617,7 @@
 				1F75211B2986D45D00C43DF0 /* Importer.swift in Sources */,
 				1F8B134B297B3551002EB8CF /* NIP19.swift in Sources */,
 				1F1ABC4729811A1B00D03FA9 /* LRUCache.swift in Sources */,
+				1FE401142993DCBA00A388A2 /* UITableTimeline.swift in Sources */,
 				1F654F2B298EB4F30040F15D /* WebsocketConnection.swift in Sources */,
 				1F14BA7029854DFC00EACCD5 /* ProfileRow.swift in Sources */,
 				1F4773A7296D4F5B0049454B /* AccountView.swift in Sources */,
@@ -614,6 +637,7 @@
 				1F4AFC4729733E2400CC1F90 /* Event+CoreDataClass.swift in Sources */,
 				1F8B135E297B36DB002EB8CF /* HexEncoding.swift in Sources */,
 				1F4AFC4829733E2400CC1F90 /* Event+CoreDataProperties.swift in Sources */,
+				1FE401122993D88700A388A2 /* SwiftUIUITableView.swift in Sources */,
 				1F7521192986D44E00C43DF0 /* MessageParser.swift in Sources */,
 				1FC38BA0297316AA004769F8 /* DummyEvents.swift in Sources */,
 				1F8B1363297B36DB002EB8CF /* BytesConvertible.swift in Sources */,
@@ -888,6 +912,14 @@
 				kind = branch;
 			};
 		};
+		1FE4011529940D6E00A388A2 /* XCRemoteSwiftPackageReference "SwiftUI-Introspect" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/siteline/SwiftUI-Introspect";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
 		1FEA785329799697007CC8E7 /* XCRemoteSwiftPackageReference "SwiftCompactor" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/openalloc/SwiftCompactor";
@@ -921,6 +953,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1F654F2E298ED52E0040F15D /* XCRemoteSwiftPackageReference "Starscream" */;
 			productName = Starscream;
+		};
+		1FE4011629940D6E00A388A2 /* Introspect */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1FE4011529940D6E00A388A2 /* XCRemoteSwiftPackageReference "SwiftUI-Introspect" */;
+			productName = Introspect;
 		};
 		1FEA785429799697007CC8E7 /* Compactor */ = {
 			isa = XCSwiftPackageProductDependency;

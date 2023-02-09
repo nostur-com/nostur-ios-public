@@ -160,7 +160,7 @@ extension AccountView {
 
 struct AccountView_Previews: PreviewProvider {
     static var previews: some View {
-        let account = PreviewFetcher.fetchAccount("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0")
+        let account = PreviewFetcher.fetchAccount("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", context: EventsProvider.preview.container.viewContext)
             NavigationStack {
                 AccountView(account: account!)
                     .withPreviewEnvironment()

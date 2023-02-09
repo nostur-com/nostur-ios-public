@@ -18,25 +18,24 @@ import CoreData
 // See old struct NoteRow. For some old thread layout stuff still.
 
 struct NoteRowView: View {
-    
+
     @Environment(\.managedObjectContext) var viewContext
     var sp:SocketPool = .shared
-    @EnvironmentObject var accountState:NosturState
+    @EnvironmentObject var nav:NavigationModel
+//    @EnvironmentObject var ns:NosturState
     @ObservedObject var event:Event
     
     @FetchRequest
     var taggedContacts:FetchedResults<Contact>
     
-    @State var visible = true
-    
     init(event: Event) {
         self.event = event
-        let pubkeys = event.contactPubkeys()
-        
-        if (1 == 2) || (pubkeys == nil) {
+        let pubkeys:String? = nil
+
+        if (pubkeys == nil) {
             _taggedContacts = FetchRequest(
                 sortDescriptors: [],
-                predicate: NSPredicate(format: "FALSEPREDICATE")
+                predicate: NSPredicate(value: false)
             )
         }
         else { // TODO: IS THIS SLOW OR NOT?
@@ -48,14 +47,16 @@ struct NoteRowView: View {
     }
     
     var body: some View {
-        NavigationLink(value: event, label: {
+//        NavigationLink(value: event, label: {
+                
             VStack (alignment: .leading) {
                 HStack(alignment: .top) {
                     VStack {
-                        NavigationLink(value: ContactPath(key: event.pubkey!), label: {
-                            ProfilePicView(pubkey: event.pubkey!, contact:event.contact)
-                                .padding(.horizontal, 10)
-                        })
+                        ProfilePicView(pubkey: event.pubkey!, contact:event.contact)
+                            .padding(.horizontal, 10)
+                            .onTapGesture {
+                                nav.navigateTo(ContactPath(key: event.pubkey!))
+                            }
                     }//.background(.green)
                     
                     VStack(alignment:.leading) {// Tweet container
@@ -63,9 +64,17 @@ struct NoteRowView: View {
                             NoteHeader(event:event)
                         }//.frame(height: 40).border(.red)
                         
-                        NavigationLink(value: event, label: {
+                        //                        NavigationLink(value: event, label: {
+                        
                             NoteTextRenderView(event:event, taggedContacts:Array(taggedContacts))
-                        })//.border(.red)
+//                            .onTapGesture {
+//                                nav.navigateTo(event)
+//                            }
+                            
+                            
+                            
+                        
+                        //                        })//.border(.red)
                         
                         if (event.firstQuoteId != nil && event.firstQuote != nil) {
                             QuotedNoteFragment(event: event.firstQuote!)
@@ -83,7 +92,11 @@ struct NoteRowView: View {
                     //                        .padding(.bottom, 5)
                 }
             }
-        })
+            .onTapGesture {
+                nav.navigateTo(event)
+            }
+
+//        })
         .onAppear {
             // should fetch setMetaData if
             // No Contact
@@ -102,11 +115,14 @@ struct NoteRowView: View {
 }
 
 struct NoteHeader: View {
+    @EnvironmentObject var nav:NavigationModel
     var event:Event
     var body: some View {
-        NavigationLink(value: event, label: {
-                VStack(alignment: .leading) { // Name + menu "replying to"
-                    HStack(spacing:2) {
+//        NavigationLink(value: event, label: {
+        
+            VStack(alignment: .leading) { // Name + menu "replying to"
+                HStack(spacing:2) {
+                    Group {
                         Text(event.contact?.authorName ?? "Anon") // Name
                             .font(.system(size: 14))
                             .foregroundColor(.primary)
@@ -116,14 +132,20 @@ struct NoteHeader: View {
                         Text("@\(event.contact?.username ?? event.authorKey) · \(event.ago)") //
                             .font(.system(size: 14))
                             .foregroundColor(.secondary)
-                        Spacer()
-                        Text(Date(timeIntervalSince1970: TimeInterval(event.created_at)), format: Date.VerbatimFormatStyle(format: "\(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased)):\(minute: .twoDigits)", timeZone: .current, calendar: .current))
-                            .font(.system(size: 14))
-                            .padding(.trailing, 5)
                     }
-                    ReplyingToFragment(event: event)
+                    .onTapGesture {
+                        nav.navigateTo(ContactPath(key: event.pubkey!))
+                    }
+                    Spacer()
+                    Text(Date(timeIntervalSince1970: TimeInterval(event.created_at)), format: Date.VerbatimFormatStyle(format: "\(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased)):\(minute: .twoDigits)", timeZone: .current, calendar: .current))
+                        .font(.system(size: 14))
+                        .padding(.trailing, 5)
                 }
-        })
+                ReplyingToFragment(event: event)
+            }
+            
+        
+//        })
     }
 }
 
@@ -309,15 +331,18 @@ struct NoteRowView_Previews: PreviewProvider {
         
         let event2 = PreviewFetcher.fetchEvent("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e")
         
-        VStack(spacing:0) {
+        List {
             NoteRowView(event: event0!)
-                .withPreviewEnvironment()
+                .listRowInsets(EdgeInsets())
+                
             NoteRowView(event: event1!)
-                .withPreviewEnvironment()
+                .listRowInsets(EdgeInsets())
+
             NoteRowView(event: event2!)
-            //                .flip()
-                .withPreviewEnvironment()
-            Spacer()
+                .listRowInsets(EdgeInsets())
+
         }
+        .listStyle(PlainListStyle())
+        .withPreviewEnvironment()
     }
 }

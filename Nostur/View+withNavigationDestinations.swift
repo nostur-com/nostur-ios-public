@@ -46,3 +46,36 @@ extension View {
             }
     }
 }
+
+class NavigationModel: ObservableObject {
+    @Published var showSidebar: Bool = false
+    @Published var selectedTab = "Timeline"
+    @Published var timelinePath = NavigationPath()
+    @Published var searchPath = NavigationPath()
+    @Published var accountsPath = NavigationPath()
+    @Published var bookmarksPath = NavigationPath()
+    @Published var notificationsPath = NavigationPath()
+    @Published var messagesPath = NavigationPath()
+    @Published var configurationPath = NavigationPath()
+    
+    func navigateTo(_ path:any Hashable) -> Void {
+        switch (selectedTab) {
+            case "Timeline":
+                self.timelinePath.append(path)
+            case "Accounts":
+                self.accountsPath.append(path)
+            case "Bookmarks":
+                self.bookmarksPath.append(path)
+            case "Configuration":
+                self.configurationPath.append(path)
+            case "Messages":
+                self.messagesPath.append(path)
+            case "Notifications":
+                self.notificationsPath.append(path)
+            case "Search":
+                self.searchPath.append(path)
+            default:
+                self.timelinePath.append(path)
+        }
+    }
+}

@@ -189,7 +189,7 @@ struct NoteTextRenderView: View {
                             } else {
                                 HStack {
                                     Spacer()
-                                    ProgressView()
+                                    ProgressView().padding(20)
                                     Spacer()
                                 }
                             }

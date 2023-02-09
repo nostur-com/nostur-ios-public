@@ -10,6 +10,7 @@ import SwiftUI
 struct AccountListView: View {
     
 //    let accountsRunLoop = Timer.publish(every: 2, tolerance: 1, on: .main, in: .common).autoconnect()
+    @EnvironmentObject var ns:NosturState
     @State var fetching = true // fetching: true or, false if parsing
     @State var isViewDisplayed = false
     
@@ -136,6 +137,7 @@ struct AccountListView: View {
                     do {
                         try viewContext.save()
                         activeAccountPublicKey = pubkey
+                        try _ = ns.loadActiveAccount(account: account)
                     } catch {
                         let nsError = error as NSError
                         fatalError("Unresolved error \(nsError), \(nsError.userInfo)")

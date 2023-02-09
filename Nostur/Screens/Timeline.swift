@@ -91,7 +91,7 @@ struct Timeline: View {
             ZStack {
                 ScrollViewReader { proxy in
                     ScrollView {
-                        LazyVStack(spacing: 0) { // PAGES ARE LAZY
+                        VStack(spacing: 0) { // Lazy = Jittery, Vstack
                             ForEach(notes.indices, id:\.self) { index in
                                 VStack(spacing: 0) {
                                     NoteRowView(event: notes[index])
@@ -267,10 +267,9 @@ struct Timeline_Previews: PreviewProvider {
     @State static var showMenu = true
     static var previews: some View {
         
-        let account = PreviewFetcher.fetchAccount("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0")
+        let account = PreviewFetcher.fetchAccount("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", context: EventsProvider.preview.container.viewContext)
         
-        let pubkeys = Set(["5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0",
-            "1833ee04459feb2ca4ae690d5f31269ad488c69e5fe903a42b532c677c4a8170","84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240","3f770d65d3a764a9c5cb503ae123e62ec7598ad035d836e2a810f3877a745b24"])
+        let pubkeys = Set(["1833ee04459feb2ca4ae690d5f31269ad488c69e5fe903a42b532c677c4a8170","84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240","3f770d65d3a764a9c5cb503ae123e62ec7598ad035d836e2a810f3877a745b24"])
         
         Timeline(showReplies: true, showMenu: $showMenu, followingPubkeys: pubkeys, account: account!)
             .withPreviewEnvironment()

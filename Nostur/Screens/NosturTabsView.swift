@@ -30,13 +30,14 @@ struct NosturTabsView: View {
             TabView(selection: $selectedTab) {
                 NavigationStack(path: $timelinePath) {
                     if (ns.followingPublicKeys.count != 0) {
-                        Timeline(showReplies: true, showMenu: $showMenu, followingPubkeys: ns.followingPublicKeys, account: ns.account!)
+                        PaginationTest3()
+//                        UITableTimeline(showReplies: true, showMenu: $showMenu, followingPubkeys: ns.followingPublicKeys, account: ns.account!)
                             .withNavigationDestinations()
                     } else {
                         Text(" Ey yo")
                     }
                 }
-                .tabItem { Image(systemName: "house.fill") }.tag("Timeline")
+                .tabItem { Image(systemName: "house") }.tag("Timeline")
                 
                 NavigationStack(path: $accountsPath) {
                     AccountListView()
@@ -44,7 +45,7 @@ struct NosturTabsView: View {
                     Spacer()
                 }
                 .tabItem {
-                    Image(systemName: "person.badge.key.fill")
+                    Image(systemName: "person.badge.key")
                 }.tag("Accounts")
                 
                 NavigationStack(path: $bookmarksPath) {

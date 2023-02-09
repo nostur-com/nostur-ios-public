@@ -20,14 +20,9 @@ struct ProfileRow: View {
     var contact:Contact
     
     var body: some View {
-        HStack {
-            NavigationLink(value: contact) {
-                VStack {
-                    ProfilePicView(pubkey: contact.pubkey!, contact: contact)
-//                        .frame(width: 50, height: 50)
-//                        .clipShape(Circle())
-                    Spacer()
-                }
+        NavigationLink(value: contact) {
+            HStack(alignment: .top) {
+                ProfilePicView(pubkey: contact.pubkey!, contact: contact)
                 VStack(alignment: .leading) {
                     HStack {
                         VStack(alignment: .leading) {
@@ -48,7 +43,7 @@ struct ProfileRow: View {
                                     isFollowing = true
                                     ns.follow(contact)
                                     print("chaning isFollowing to true 2")
-    //                                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
+                                    //                                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
                                 }
                             } label: {
                                 FollowButton(isFollowing:isFollowing)
@@ -57,13 +52,12 @@ struct ProfileRow: View {
                     }
                     Text(contact.about ?? "").foregroundColor(.primary)
                         .multilineTextAlignment(.leading)
-                    Spacer()
                 }
             }
-            .onAppear {
-                if (ns.isFollowing(contact)) {
-                    isFollowing = true
-                }
+        }
+        .onAppear {
+            if (ns.isFollowing(contact)) {
+                isFollowing = true
             }
         }
     }
@@ -78,7 +72,16 @@ struct ProfileRow_Previews: PreviewProvider {
         
         let contact = PreviewFetcher.fetchContact(pubkey)
         
-        ProfileRow(contact: contact!)
-            .withPreviewEnvironment()
+        VStack {
+            ProfileRow(contact: contact!)
+            
+            ProfileRow(contact: contact!)
+            
+            ProfileRow(contact: contact!)
+         
+            Spacer()
+        }
+        .withPreviewEnvironment()
+        
     }
 }
