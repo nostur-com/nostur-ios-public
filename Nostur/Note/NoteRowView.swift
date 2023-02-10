@@ -30,9 +30,9 @@ struct NoteRowView: View {
     
     init(event: Event) {
         self.event = event
-        let pubkeys:String? = nil
+        let pubkeys = TagsHelpers(event.tags() ?? []).pTags().map { $0.pubkey }
 
-        if (pubkeys == nil) {
+        if (pubkeys.count == 0) {
             _taggedContacts = FetchRequest(
                 sortDescriptors: [],
                 predicate: NSPredicate(value: false)
@@ -41,7 +41,7 @@ struct NoteRowView: View {
         else { // TODO: IS THIS SLOW OR NOT?
             _taggedContacts = FetchRequest(
                 sortDescriptors: [],
-                predicate: NSPredicate(format: "pubkey IN %@", pubkeys!)
+                predicate: NSPredicate(format: "pubkey IN %@", pubkeys)
             )
         }
     }
@@ -228,23 +228,35 @@ struct FooterFragment: View {
     @ObservedObject var event:Event
     
     var body: some View {
-        HStack {
+        HStack() {
             Button {
                 
             } label: {
-                Label("\(event.repliesCount)", systemImage: "message")
+                HStack {
+                    Image(systemName: "message")
+                    Text("\(event.repliesCount)")
+                }
+//                Label("\(event.repliesCount)", systemImage: "message")
             }
             Spacer()
             Button {
                 
             } label: {
-                Label("\(event.mentions)", systemImage: "arrow.2.squarepath")
+                HStack {
+                    Image(systemName: "arrow.2.squarepath")
+                    Text("\(event.mentions)")
+                }
+//                Label("\(event.mentions)", systemImage: "arrow.2.squarepath")
             }
             Spacer()
             
             
             if (event.liked) {
-                Label("\(event.likes)", systemImage: "heart.fill").foregroundColor(.red)
+                HStack {
+                    Image(systemName: "heart.fill").foregroundColor(.red)
+                    Text("\(event.likes)")
+                }
+//                Label("\(event.likes)", systemImage: "heart.fill").foregroundColor(.red)
             }
             else {
                 Button {
@@ -275,12 +287,16 @@ struct FooterFragment: View {
                         }
                         
                         // 4. publish that event                            SocketPool
-                        print("Should send: \(NRelayMessage(event: savedEvent.toNEvent()).message)")
+                        print("DISABLED Should send: \(NRelayMessage(event: savedEvent.toNEvent()).message)")
                         
                         print("💖💖💖💖💖💖💖💖💖💖💖💖💖💖")
                     }
                 } label: {
-                    Label("\(event.likes)", systemImage: "heart")
+                    HStack {
+                        Image(systemName: "heart")
+                        Text("\(event.likes)")
+                    }
+//                    Label("\(event.likes)", systemImage: "heart")
                 }
             }
             Spacer()
@@ -333,26 +349,31 @@ struct NoteRowView_Previews: PreviewProvider {
         // f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e
         
         
-        let eventX = PreviewFetcher.fetchEvent("24ad21d57d59b03f4f9a8931f8bc4ccca84ed6ab257bf62cb84b0d04e0583118")
+        let event0 = PreviewFetcher.fetchEvent("24ad21d57d59b03f4f9a8931f8bc4ccca84ed6ab257bf62cb84b0d04e0583118")
         
-        let event0 = PreviewFetcher.fetchEvent("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
+        let event1 = PreviewFetcher.fetchEvent("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
         
-        let event1 = PreviewFetcher.fetchEvent("dec5a86ad780edd26fb8a1b85f919ddace9cb2b2b5d3a68d5124802fc2da4ed3")
+        let event2 = PreviewFetcher.fetchEvent("dec5a86ad780edd26fb8a1b85f919ddace9cb2b2b5d3a68d5124802fc2da4ed3")
         
-        let event2 = PreviewFetcher.fetchEvent("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e")
+        let event3 = PreviewFetcher.fetchEvent("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e")
+        
+        let event4 = PreviewFetcher.fetchEvent("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe")
         
         List {
             
-            NoteRowView(event: eventX!)
-                .listRowInsets(EdgeInsets())
-            
             NoteRowView(event: event0!)
                 .listRowInsets(EdgeInsets())
-                
+            
             NoteRowView(event: event1!)
                 .listRowInsets(EdgeInsets())
-
+                
             NoteRowView(event: event2!)
+                .listRowInsets(EdgeInsets())
+
+            NoteRowView(event: event3!)
+                .listRowInsets(EdgeInsets())
+            
+            NoteRowView(event: event4!)
                 .listRowInsets(EdgeInsets())
 
         }

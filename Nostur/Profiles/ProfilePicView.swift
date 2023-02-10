@@ -6,7 +6,8 @@
 //
 
 import SwiftUI
-import Kingfisher
+import NukeUI
+import Nuke
 
 struct ProfilePicView: View {
     
@@ -31,24 +32,31 @@ struct ProfilePicView: View {
             Circle().foregroundColor(color).frame(width: size, height: size)
         }
         else {
-            KFImage(URL(string: picture!))
-                .placeholder {
+            LazyImage(url: URL(string: picture!)) { state in
+                if let image = state.image {
+                    image.frame(width: size, height: size).clipShape(Circle())
+                }
+                else {
                     Circle().foregroundColor(color).frame(width: size, height: size)
                 }
-                .downsampling(size: CGSize(width: size, height: size))
-                .roundCorner(radius: Radius.point(size/2))
-                .cacheOriginalImage()
-                .serialize(by: FormatIndicatedCacheSerializer.png)
-                .retry(maxCount: 2, interval: .seconds(5))
-                .onSuccess { r in
-                    // r: RetrieveImageResult
-                    print("success: \(r)")
-                }
-                .onFailure { e in
-                    // e: KingfisherError
-                    print("failure: \(e)")
-                }
-                .cancelOnDisappear(true)
+            }
+            .processors([ImageProcessors.Resize(width: 100), ImageProcessors.Circle()])
+//            .processors([ImageProcessors.Resize(size: CGSize(width: 50, height: 150), unit: .pixels, contentMode: .aspectFit, crop: true, upscale: true)])
+            .animation(nil)
+            .priority(.low)
+            .pipeline(ImageProcessing.shared.pipeline)
+//                .pipeline(ImagePipeline {
+//                    $0.dataLoader = DataLoader(configuration: {
+//                        // Disable disk caching built into URLSession
+//                        let conf = DataLoader.defaultConfiguration
+//                        conf.urlCache = nil
+//                        return conf
+//                    }())
+//
+//                    $0.dataCachePolicy = .storeEncodedImages
+//                    $0.imageCache = ImageCache.shared
+//                    $0.dataCache = try! DataCache(name: "com.nostur.2140.picture")
+//                })
         }
     }
 }

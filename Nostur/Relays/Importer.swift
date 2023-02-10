@@ -18,7 +18,7 @@ class Importer {
     
     var lastTimelineEventTimestamp:NTimestamp? = nil
     
-    public func importEvents(doImport:Bool = false) async {
+    public func importEvents() async {
         if (isImporting) {
             print("🟠🟠🟠 ALREADY IMPORTING. SKIPPED 🟠🟠🟠")
             return
@@ -108,6 +108,7 @@ class Importer {
                 //                ThreadWarning.which("importEvents")
                 if (context.hasChanges) {
                     try context.save() // TODO: is this the slowdown??
+                    
                     //                    print("✅✅✅ context.save() ✅✅✅")
                 }
                 

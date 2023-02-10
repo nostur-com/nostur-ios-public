@@ -9,47 +9,47 @@ import SwiftUI
 import Introspect
 import Combine
 
-struct ListDidScrollViewModifier: ViewModifier {
-    
-    class ViewModel: ObservableObject {
-        @Published var contentOffset: CGPoint = .zero
-        var contentOffsetSubscription: AnyCancellable?
-        
-        func subscribe(collectionView: UICollectionView) {
-              contentOffsetSubscription = collectionView.publisher(for: \.contentOffset)
-                .sink { [weak self] contentOffset in
-                self?.contentOffset = contentOffset
-              }
-        }
-    }
-    
-    @StateObject var viewModel = ViewModel()
-    var didScroll: (CGPoint) -> Void
-    
+//struct ListDidScrollViewModifier: ViewModifier {
+//
+//    class ViewModel: ObservableObject {
+//        @Published var contentOffset: CGPoint = .zero
+//        var contentOffsetSubscription: AnyCancellable?
+//
+//        func subscribe(collectionView: UICollectionView) {
+//              contentOffsetSubscription = collectionView.publisher(for: \.contentOffset)
+//                .sink { [weak self] contentOffset in
+//                self?.contentOffset = contentOffset
+//              }
+//        }
+//    }
+//
+//    @StateObject var viewModel = ViewModel()
+//    var didScroll: (CGPoint) -> Void
+//
+////    func body(content: Content) -> some View {
+////        content
+////            .introspect(selector: TargetViewSelector.ancestorOrSiblingContaining, customize: { (collectionView: UICollectionView) in
+////                if viewModel.contentOffsetSubscription == nil {
+////                    viewModel.contentOffsetSubscription = collectionView.publisher(for: \.contentOffset)
+////                        .sink { contentOffset in
+////                            didScroll(contentOffset)
+////                        }
+////                }
+////            })
+////    }
+//
 //    func body(content: Content) -> some View {
 //        content
 //            .introspect(selector: TargetViewSelector.ancestorOrSiblingContaining, customize: { (collectionView: UICollectionView) in
-//                if viewModel.contentOffsetSubscription == nil {
-//                    viewModel.contentOffsetSubscription = collectionView.publisher(for: \.contentOffset)
-//                        .sink { contentOffset in
-//                            didScroll(contentOffset)
-//                        }
-//                }
-//            })
-//    }
-    
-    func body(content: Content) -> some View {
-        content
-            .introspect(selector: TargetViewSelector.ancestorOrSiblingContaining, customize: { (collectionView: UICollectionView) in
-            if viewModel.contentOffsetSubscription == nil {
-              viewModel.subscribe(collectionView: collectionView)
-            }
-          })
-          .onReceive(viewModel.$contentOffset) { contentOffset in
-            didScroll(contentOffset)
-          }
-      }
-}
+//            if viewModel.contentOffsetSubscription == nil {
+//              viewModel.subscribe(collectionView: collectionView)
+//            }
+//          })
+//          .onReceive(viewModel.$contentOffset) { contentOffset in
+//            didScroll(contentOffset)
+//          }
+//      }
+//}
 
 struct ListDidChangeHeightViewModifier: ViewModifier {
     
@@ -96,9 +96,9 @@ struct ListDidChangeHeightViewModifier: ViewModifier {
 }
 
 extension List {
-    func didScroll(_ didScroll: @escaping (CGPoint) -> Void) -> some View {
-        self.modifier(ListDidScrollViewModifier(didScroll: didScroll))
-    }
+//    func didScroll(_ didScroll: @escaping (CGPoint) -> Void) -> some View {
+//        self.modifier(ListDidScrollViewModifier(didScroll: didScroll))
+//    }
     func didChangeHeight(_ didChangeHeight: @escaping (CGFloat) -> Void) -> some View {
         self.modifier(ListDidChangeHeightViewModifier(didChangeHeight: didChangeHeight))
     }

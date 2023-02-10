@@ -64,19 +64,9 @@ extension Contact {
 }
 
 extension Contact : Identifiable {
-    
-//    static func allContacts() -> NSFetchRequest<Contact> {
-//        
-//        let request: NSFetchRequest<Contact> = Contact.fetchRequest()
-//        let sortDescriptor = NSSortDescriptor(key: "updated_at", ascending: false)
-//        return request
-//    }
-    
-    //
+        
     var authorKey: String {
-        get {
-            pubkey != nil ? String(pubkey!.prefix(5)) : "?:?"
-        }
+        get { pubkey != nil ? String(pubkey!.prefix(5)) : "?:?" }
     }
     
     // Display name, with fallbacks: (User)name, pubkey (prefix), or "?:?"
@@ -90,15 +80,9 @@ extension Contact : Identifiable {
         }
     }
     
-    var username:String {
-        get { name ?? authorKey }
-    }
+    var username:String { get { name ?? authorKey } }
     
-    var npub:String {
-        get {
-            pubkey != nil ? try! NIP19(prefix: "npub", hexString: pubkey!).displayString : "?"
-        }
-    }
+    var npub:String { get { pubkey != nil ? try! NIP19(prefix: "npub", hexString: pubkey!).displayString : "?" } }
     
     var nip05veried:Bool {
         get {
@@ -118,6 +102,43 @@ extension Contact : Identifiable {
             
             guard nip05parts.count == 2 else { return "" }
             return String(nip05parts[1])
+        }
+    }
+    
+    var clEvent:Event? {
+        get {
+            let fr = Event.fetchRequest()
+            fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+            fr.predicate = NSPredicate(format: "kind == 3 AND pubkey == %@", self.pubkey!)
+            return try? self.managedObjectContext?.fetch(fr).first
+        }
+    }
+    
+    var clNEvent:NEvent? {
+        get {
+            if let clEvent = self.clEvent {
+                return clEvent.toNEvent()
+            }
+            return nil
+        }
+    }
+    
+    var followingPubkeys:[String] {
+        get {
+            if let nEvent = self.clNEvent {
+                return TagsHelpers(nEvent.tags).pTags().map { $0.pubkey }
+            }
+            return []
+        }
+    }
+    
+    // [Contact] <-- NEvent.tags (clNEvent.tags) <-- Event (.clEvent)
+    var followingContacts:[Contact] {
+        get {
+            guard self.followingPubkeys.count != 0 else { return [] }
+            let fr = Contact.fetchRequest()
+            fr.predicate = NSPredicate(format: "pubkey IN %@", self.followingPubkeys)
+            return (try? self.managedObjectContext?.fetch(fr)) ?? []
         }
     }
 
@@ -248,7 +269,6 @@ extension Contact : Identifiable {
     static func npub(_ pubkey:String) -> String {
         return try! NIP19(prefix: "npub", hexString: pubkey).displayString
     }
-    
     
     static func updateMetadata(_ metaData:NSetMetadata, pubkey:String, context:NSManagedObjectContext) throws {
         

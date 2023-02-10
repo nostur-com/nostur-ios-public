@@ -55,7 +55,7 @@ struct NoteTextRenderView: View {
     
     var renderedText:AttributedString? = nil
     var firstLinkInText:String? = nil
-    var tags:[NEventTag] = []
+    var tags:[NEventTag]
 
     @State private var metadata: LPLinkMetadata?
 
@@ -94,7 +94,7 @@ struct NoteTextRenderView: View {
                             newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(contact.username)](nostur:p:\(key.displayString))")
                         }
                         else {
-                            newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(tags[index].pubkey).prefix(5))](nostur:p:\(key.displayString))")
+                            newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(key.displayString).prefix(12))](nostur:p:\(key.displayString))")
                         }
                     }
                     else {
@@ -106,7 +106,7 @@ struct NoteTextRenderView: View {
                     if (1 == 1) {
                         // TODO: NIP19 bech32 is very slow, with hundreds of rows it slows down UI noticeably, so disable for now
                         let key = try! NIP19(prefix: "note1", hexString: tags[index].id)
-                        newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(tags[index].id).prefix(10))](nostur:e:\(key.displayString))")
+                        newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(key.displayString).prefix(12))](nostur:e:\(key.hexString))")
                     }
                     else {
                         newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(tags[index].id).prefix(10))](nostur:e:\(tags[index].id))")
@@ -129,6 +129,7 @@ struct NoteTextRenderView: View {
     
     init(event: Event, taggedContacts: [Contact] = [], useLinelimit:Bool = true) {
         self.event = event
+        self.tags = event.tags() ?? []
         self.taggedContacts = taggedContacts
         let text = event.content ?? ""
         self.firstLinkInText = getFirstLinkInText(text)
@@ -231,12 +232,38 @@ struct NoteTextRenderView_Previews: PreviewProvider {
         // Mention in end #[0]
         // 143efe07393c5b07efbe6ea1fc66c39cb985b98f8844650edd00fbcb041228a3
         
-        let eventId = "143efe07393c5b07efbe6ea1fc66c39cb985b98f8844650edd00fbcb041228a3"
+        let event0 = PreviewFetcher.fetchEvent("143efe07393c5b07efbe6ea1fc66c39cb985b98f8844650edd00fbcb041228a3")
         
-        let noteWithMentions = PreviewFetcher.fetchEvent(eventId)
+        let event1 = PreviewFetcher.fetchEvent("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe")
+        
+        let event2 = PreviewFetcher.fetchEvent("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
+        
+        let event3 = PreviewFetcher.fetchEvent("115eab2976aee4ca562d83ea6b1d805c6d4e0acf54fe2e6a4e1a62f73c2850cc")
+        
+        let event4 = PreviewFetcher.fetchEvent("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
+        
         let allContacts = PreviewFetcher.allContacts()
         
-        NoteTextRenderView(event:noteWithMentions!, taggedContacts: allContacts)
-            .withPreviewEnvironment()
+        VStack {
+            NoteTextRenderView(event:event0!, taggedContacts: allContacts)
+                .withPreviewEnvironment()
+            Divider()
+            
+            NoteTextRenderView(event:event1!, taggedContacts: allContacts)
+                .withPreviewEnvironment()
+            Divider()
+            
+            NoteTextRenderView(event:event2!, taggedContacts: allContacts)
+                .withPreviewEnvironment()
+            Divider()
+            
+//            Text(allContacts.count.description)
+            NoteTextRenderView(event:event3!, taggedContacts: allContacts)
+                .withPreviewEnvironment()
+            Divider()
+            
+            NoteTextRenderView(event:event4!, taggedContacts: allContacts)
+                .withPreviewEnvironment()
+        }
     }
 }

@@ -6,9 +6,9 @@
 //
 
 import SwiftUI
-import Kingfisher
-//import NukeUI
-//import Nuke
+//import Kingfisher
+import NukeUI
+import Nuke
 
 
 
@@ -43,26 +43,26 @@ struct ProfileByPubkey: View {
     }
 }
 
-//class ImageProcessing {
-//    static public var shared = ImageProcessing()
-//
-//    var pipeline:ImagePipeline
-//    var bannerPipeline:ImagePipeline
-//
-//    init() {
-//        pipeline = ImagePipeline {
-//            $0.dataCache = try? DataCache(name: "com.nostur.2140.picture")
-//            $0.dataCachePolicy = .storeEncodedImages
-//            $0.imageCache = ImageCache()
-//        }
-//
-//        bannerPipeline = ImagePipeline {
-//            $0.dataCache = try? DataCache(name: "com.nostur.2140.banner")
-//            $0.dataCachePolicy = .storeEncodedImages
-//        }
-//    }
-//
-//}
+class ImageProcessing {
+    static public var shared = ImageProcessing()
+    
+    var pipeline:ImagePipeline
+    var bannerPipeline:ImagePipeline
+    
+    init() {
+        pipeline = ImagePipeline {
+            $0.dataCache = try? DataCache(name: "com.nostur.2140.picture")
+            $0.dataCachePolicy = .storeEncodedImages
+            $0.imageCache = ImageCache()
+        }
+        
+        bannerPipeline = ImagePipeline {
+            $0.dataCache = try? DataCache(name: "com.nostur.2140.banner")
+            $0.dataCachePolicy = .storeEncodedImages
+        }
+    }
+    
+}
 
 struct Profile: View {
     
@@ -78,7 +78,7 @@ struct Profile: View {
     
     @State var activeTab = "NOTES"
     @State var isFollowing = false
-
+    
     init(contact:Contact) {
         self.contact = contact
         self.pubkey = contact.pubkey!
@@ -94,27 +94,71 @@ struct Profile: View {
             ZStack() {
                 GeometryReader { geo in
                     if (contact.banner != nil) {
-                        KFImage(URL(string: contact.banner!))
-                            .placeholder {
+                        LazyImage(url: URL(string: contact.banner!)) { state in
+                            if let image = state.image {
+                                image // Displays the loaded image
+                            }
+                            else {
                                 Image("NosturBanner")
-                                   .resizable()
-                                   .scaledToFill()
-                                   .frame(width: geo.size.width, height: 150)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: geo.size.width, height: 150)
+                                //                                .clipped()
                             }
-                            .downsampling(size: CGSize(width: geo.size.width, height: 150))
-                            .cacheOriginalImage()
-//                            .serialize(by: FormatIndicatedCacheSerializer.png)
-                            .retry(maxCount: 2, interval: .seconds(5))
-                            .onSuccess { r in
-                                // r: RetrieveImageResult
-                                print("success: \(r)")
-                            }
-                            .onFailure { e in
-                                // e: KingfisherError
-                                print("failure: \(e)")
-                            }
-                            .cancelOnDisappear(true)
+                        }
+                        .processors([ImageProcessors.Resize(width: geo.size.width)])
+                        .animation(nil)
+                        .priority(.normal)
+                        .pipeline(ImageProcessing.shared.bannerPipeline)
+                        //                        .pipeline(ImagePipeline {
+                        //                            // TODO: volgens mij klopt niet
+                        //                            /// moet ergens anders clean 1x doen ipv iedere keer voor image
+                        //                            $0.dataLoader = DataLoader(configuration: {
+                        //                                // Disable disk caching built into URLSession
+                        //                                let conf = DataLoader.defaultConfiguration
+                        //                                conf.urlCache = nil
+                        //                                return conf
+                        //                            }())
+                        //
+                        //                            $0.imageCache = ImageCache()
+                        //                            $0.dataCache = try! DataCache(name: "com.nostur.2140.banner")
+                        //                        })
+                        .frame(width: geo.size.width, height: 150)
+                        //                            .clipped()
+                        //                        LazyImage(url: URL(string: contact.banner!)) { state in
+                        //                            if let image = state.image {
+                        //                                image // Displays the loaded image
+                        //                            }
+                        //                            else {
+                        //                                Image("NosturBanner")
+                        //                                    .resizable()
+                        //                                    .scaledToFill()
+                        //                                    .frame(width: geo.size.width, height: 150)
+                        //                                //                                .clipped()
+                        //                            }
+                        //                        }
+                        //                        .processors([ImageProcessors.Resize(width: geo.size.width)])
+                        //                        .animation(nil)
+                        //                        .priority(.normal)
+                        //                        .pipeline(ImageProcessing.shared.bannerPipeline)
+                        ////                        .pipeline(ImagePipeline {
+                        ////                            // TODO: volgens mij klopt niet
+                        ////                            /// moet ergens anders clean 1x doen ipv iedere keer voor image
+                        ////                            $0.dataLoader = DataLoader(configuration: {
+                        ////                                // Disable disk caching built into URLSession
+                        ////                                let conf = DataLoader.defaultConfiguration
+                        ////                                conf.urlCache = nil
+                        ////                                return conf
+                        ////                            }())
+                        ////
+                        ////                            $0.imageCache = ImageCache()
+                        ////                            $0.dataCache = try! DataCache(name: "com.nostur.2140.banner")
+                        ////                        })
+                        //                        .frame(width: geo.size.width, height: 150)
+                        //                        //                            .clipped()
+                        
                     }
+                    
                     else {
                         HStack {
                             Image("NosturBanner")
@@ -151,11 +195,12 @@ struct Profile: View {
                                 isFollowing = true
                                 ns.follow(contact)
                                 print("chaning isFollowing to true 2")
-//                                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
+                                //                                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
                             }
                         } label: {
                             FollowButton(isFollowing:isFollowing)
-                        }.onAppear {
+                        }
+                        .onAppear {
                             if (ns.isFollowing(contact)) {
                                 isFollowing = true
                             }
@@ -172,9 +217,9 @@ struct Profile: View {
                             }.foregroundColor(.blue)
                         }
                     }
+                    
                     HStack {
                         Text("@\(contact.username)").foregroundColor(.secondary)
-                        
                         Menu {
                             Button {
                                 UIPasteboard.general.string = pubkey
@@ -194,13 +239,24 @@ struct Profile: View {
                             //                                .padding(.bottom, 10)
                             //                                .padding(.leading, 20)
                             //                                .padding(.trailing, 10)
-                            
                         }
+                        Text("Follows you").font(.system(size: 12))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 7)
+                            .padding(.vertical, 2)
+                            .background(Color.secondary)
+                            .opacity(0.7)
+                            .cornerRadius(13)
                         
                     }
-
+                    
                     Text("\n\(String(contact.about ?? "(No information)"))")
-                                        
+                    
+                    HStack {
+                        Text("\n**\(contact.followingPubkeys.count)** Following")
+                        //                        Text("\n**\(contact.followingPubkeys.count)** Followers")
+                    }
+                    
                     ControlGroup {
                         Button { importNotes() } label: { Text("Import") }
                         Button { activeTab = "NOTES" } label: {
@@ -217,60 +273,63 @@ struct Profile: View {
                         }
                     }
                     
-                    if (activeTab == "NOTES") {
-                        ProfileNotesView(pubkey: pubkey)
-                            .padding(.vertical, 10)
-                    }
-                    
-                    if (activeTab == "FOLLOWING") {
-                        VStack {
-                            if clEvents.count != 0, let pubkeys = clEvents.first!.contactPubkeys() {
-                                
-                                Text("Following").font(.headline).fontWeight(.heavy).padding(.vertical, 10)
-                                
-                                ContactList(pubkeys: pubkeys)
-                            }
-                            else {
-                                HStack {
-                                    Spacer()
-                                    ProgressView()
-                                        .padding(50)
-                                    Spacer()
-                                        .onAppear {
-                                            print("🟢 ProfileView.onAppear no clEvent so REQ.3: \(pubkey)")
-                                            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: pubkey)))
-                                        }
+                    Group {
+                        if (activeTab == "NOTES") {
+                            ProfileNotesView(pubkey: pubkey)
+                                .padding(.vertical, 10)
+                        }
+                        
+                        if (activeTab == "FOLLOWING") {
+                            VStack {
+                                if clEvents.count != 0, let pubkeys = clEvents.first!.contactPubkeys() {
+                                    
+                                    Text("Following").font(.headline).fontWeight(.heavy).padding(.vertical, 10)
+                                    
+                                    ContactList(pubkeys: pubkeys)
+                                }
+                                else {
+                                    HStack {
+                                        Spacer()
+                                        ProgressView()
+                                            .padding(50)
+                                        Spacer()
+                                            .onAppear {
+                                                print("🟢 ProfileView.onAppear no clEvent so REQ.3: \(pubkey)")
+                                                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: pubkey)))
+                                            }
+                                    }
                                 }
                             }
                         }
-                    }
-                    
-                    if (activeTab == "LIKES") {
-                        ProfileLikesView(pubkey: pubkey)
-                            .padding(.vertical, 10)
-                    }
-                    
-                    if (activeTab == "RELAYS") {
-                        VStack {
-                            if clEvents.count != 0 {
-                                ProfileRelaysView(clEvent: clEvents.first!)
+                        
+                        if (activeTab == "LIKES") {
+                            ProfileLikesView(pubkey: pubkey)
+                                .padding(.vertical, 10)
+                        }
+                        
+                        if (activeTab == "RELAYS") {
+                            VStack {
+                                if clEvents.count != 0 {
+                                    ProfileRelaysView(clEvent: clEvents.first!)
                                     
-                            }
-                            else {
-                                HStack {
-                                    Spacer()
-                                    ProgressView()
-                                        .padding(50)
-                                    Spacer()
                                 }
+                                else {
+                                    HStack {
+                                        Spacer()
+                                        ProgressView()
+                                            .padding(50)
+                                        Spacer()
+                                    }
                                     .onAppear {
                                         print("🟢 ProfileView.onAppear no clEvent so REQ.3: \(pubkey)")
                                         sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: pubkey)))
                                     }
+                                }
                             }
+                            .padding(.vertical, 10)
                         }
-                        .padding(.vertical, 10)
-                    } 
+                        
+                    }
                 }.padding(10)
                 //                Spacer()
             }
@@ -302,16 +361,16 @@ struct Profile: View {
                 }
             }
         }
-//        .onReceive(loopyRunny) { time in
-//            let readyForImportQueue = MessageParser.shared.readyForImportQueue
-//            do {
-//                try Importer.shared.importEvents(queue: readyForImportQueue)
-//            }
-//            catch {
-//                print("🟣🟣🟣 something wrong")
-//                print(error)
-//            }
-//        }
+        //        .onReceive(loopyRunny) { time in
+        //            let readyForImportQueue = MessageParser.shared.readyForImportQueue
+        //            do {
+        //                try Importer.shared.importEvents(queue: readyForImportQueue)
+        //            }
+        //            catch {
+        //                print("🟣🟣🟣 something wrong")
+        //                print(error)
+        //            }
+        //        }
     }
 }
 
@@ -324,12 +383,12 @@ extension Profile {
 struct FollowButton: View {
     @Environment(\.colorScheme) var colorScheme
     var isFollowing: Bool = false
-
+    
     var body: some View {
-
+        
         let whiteColor = colorScheme == .light ? Color.white : Color.black
         let blackColor = colorScheme == .light ? Color.black : Color.white
-
+        
         Text(isFollowing ? "Following" : "Follow")
             .lineLimit(1)
             .frame(width: 65, height: 30)

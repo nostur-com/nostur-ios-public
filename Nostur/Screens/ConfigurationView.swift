@@ -7,7 +7,7 @@
 
 import SwiftUI
 import CoreData
-import Kingfisher
+//import Kingfisher
 
 struct ConfigurationView: View {
     
@@ -392,8 +392,9 @@ struct ConfigurationView: View {
     }
     
     func clearImageCache() {
-        ImageCache.default.clearMemoryCache()
-        ImageCache.default.clearDiskCache { print("Done"); imageCacheSize = 0 }
+        // Kingfisher
+//        ImageCache.default.clearMemoryCache()
+//        ImageCache.default.clearDiskCache { print("Done"); imageCacheSize = 0 }
     }
     
     var body: some View {
@@ -459,15 +460,16 @@ struct ConfigurationView: View {
                     }
                 }
                 .onAppear {
-                    ImageCache.default.calculateDiskStorageSize { result in
-                        switch result {
-                            case .success(let size):
-                                imageCacheSize = floor(Double(size) / 1024 / 1024)
-                                print("Disk cache size: \(imageCacheSize) MB")
-                            case .failure(let error):
-                                print(error)
-                        }
-                    }
+                    // Kingfisher
+//                    ImageCache.default.calculateDiskStorageSize { result in
+//                        switch result {
+//                            case .success(let size):
+//                                imageCacheSize = floor(Double(size) / 1024 / 1024)
+//                                print("Disk cache size: \(imageCacheSize) MB")
+//                            case .failure(let error):
+//                                print(error)
+//                        }
+//                    }
                 }
             }
         }

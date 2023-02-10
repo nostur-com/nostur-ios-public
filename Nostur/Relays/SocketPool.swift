@@ -15,6 +15,7 @@ class ManagedClient: WebSocketDelegate, ObservableObject {
     var url:String
     var client:WebSocket
     
+    var isConnecting = false
     @Published var isConnected = false
     @Published var read = true
     @Published var write = false
@@ -28,16 +29,23 @@ class ManagedClient: WebSocketDelegate, ObservableObject {
         self.client.delegate = self
     }
     
+    func connect() {
+        self.isConnecting = true
+        self.client.connect()
+    }
+    
     func didReceive(event: Starscream.WebSocketEvent, client: Starscream.WebSocketClient) {
         switch event {
         case .connected(let headers):
             print(headers.description)
             DispatchQueue.main.async {
+                self.isConnecting = false
                 self.isConnected = true
             }
             print("🔌 CONNECTED \(self.url): \(headers)")
         case .disconnected(let reason, let code):
             DispatchQueue.main.async {
+                self.isConnecting = false
                 self.isConnected = false
             }
             print("🔌 DISCONNECTED \(self.url): \(reason) with code: \(code)")
@@ -56,11 +64,13 @@ class ManagedClient: WebSocketDelegate, ObservableObject {
             break
         case .cancelled:
             DispatchQueue.main.async {
+                self.isConnecting = false
                 self.isConnected = false
             }
                 print("🔌 CANCELLED \(self.url)")
         case .error(let error):
             DispatchQueue.main.async {
+                self.isConnecting = false
                 self.isConnected = false
             }
                 print("🔌🔴 ERROR \(self.url): \(error!)")
@@ -80,16 +90,17 @@ class SocketPool: ObservableObject {
         if (!sockets.keys.contains(relayId)) {
             
             var request = URLRequest(url: URL(string: url)!)
-             request.setValue(["wamp"].joined(separator: ","), forHTTPHeaderField: "Sec-WebSocket-Protocol")
+//             request.setValue(["wamp"].joined(separator: ","), forHTTPHeaderField: "Sec-WebSocket-Protocol")
 
             request.timeoutInterval = 15
+            
             let client = WebSocket(request: request)
             client.callbackQueue = self.socketQueue
             
             let managedClient = ManagedClient(relayId: relayId, url: url, client:client, read: read, write: write)
             
             if (read || write) {
-                managedClient.client.connect()
+                managedClient.connect()
             }
             sockets[relayId] = managedClient
             return managedClient
@@ -131,22 +142,22 @@ class SocketPool: ObservableObject {
                 }
                 
                 if message.type == .REQ && managedClient.read { // REQ FOR ALL READ RELAYS
-                    if (!managedClient.isConnected) {
-                        managedClient.client.connect()
+                    if (!managedClient.isConnected) && (!managedClient.isConnecting) {
+                        managedClient.connect()
                     }
     //                print("⬇️⬇️ REQUESTING: \(String(message.message.prefix(260)))")
                     managedClient.client.write(string: message.message)
                 }
                 else if  message.type == .CLOSE { // CLOSE FOR ALL RELAYS
-                    if (!managedClient.isConnected && managedClient.read) {
-                        managedClient.client.connect()
+                    if (!managedClient.isConnected && managedClient.read) && (!managedClient.isConnecting) {
+                        managedClient.connect()
                     }
     //                print("🔚🔚 CLOSE: \(String(message.message.prefix(260)))")
                     managedClient.client.write(string: message.message) { }
                 }
                 else if message.type == .EVENT && managedClient.write { // EVENT IS ONLY FOR WRITE RELAYS
-                    if (!managedClient.isConnected) {
-                        managedClient.client.connect()
+                    if (!managedClient.isConnected) && (!managedClient.isConnecting) {
+                        managedClient.connect()
                     }
                     print("⬆⬆⬆ PUBLISHING TO \(managedClient.url): \(message.message)")
                     managedClient.client.write(string: message.message) { }

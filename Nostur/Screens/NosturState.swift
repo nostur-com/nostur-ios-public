@@ -57,7 +57,7 @@ final class NosturState : ObservableObject {
         }
         _ = loadFollowing()
         Task.detached(priority: .userInitiated) {
-            await self.loadLikes()
+            self.loadLikes()
         }
         return self.account
     }

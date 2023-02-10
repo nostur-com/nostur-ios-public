@@ -16,10 +16,10 @@ import SwiftUI
 import CoreData
 
 struct QuotedNoteFragment: View {
-    
     @Environment(\.managedObjectContext) var viewContext
     var cm:SocketPool = .shared
     @EnvironmentObject var accountState:NosturState
+    @EnvironmentObject var nav:NavigationModel
     @ObservedObject var event:Event
 
     @FetchRequest
@@ -44,47 +44,51 @@ struct QuotedNoteFragment: View {
     }
     
     var body: some View {
-        NavigationLink(value: event, label: {
-            VStack(alignment:.leading) {
-                HStack { // name + reply + context menu
-                    VStack(alignment: .leading) { // Name + menu "replying to"
-                        HStack(spacing:2) {
-                            // profile image
-                            if (event.contact != nil) {
-                                NavigationLink(value: ContactPath(key: event.pubkey!), label: {
-                                    ProfilePicView(pubkey: event.pubkey!, contact:event.contact, size: 20)
-                                })
+
+        VStack(alignment:.leading) {
+            HStack { // name + reply + context menu
+                VStack(alignment: .leading) { // Name + menu "replying to"
+                    HStack(spacing:2) {
+                        // profile image
+                        if (event.contact != nil) {
+                            ProfilePicView(pubkey: event.pubkey!, contact:event.contact, size: 20)
+                            .onTapGesture {
+                                nav.navigateTo(ContactPath(key: event.pubkey!))
                             }
-                            else {
-                                let _ = print(event)
-                                NavigationLink(value: ContactPath(key: event.pubkey!), label: {
-                                    ProfilePicView(pubkey: event.pubkey!, contact:event.contact, size: 20)
-                                })
+                        }
+                        else {
+                            ProfilePicView(pubkey: event.pubkey!, contact:event.contact, size: 20)
+                            .onTapGesture {
+                                nav.navigateTo(ContactPath(key: event.pubkey!))
                             }
-                            
-                            Text(event.contact?.authorName ?? "Anon") // Name
-                                .font(.system(size: 14))
-                                .foregroundColor(.primary)
-                                .fontWeight(.bold)
-                                .lineLimit(1)
-                            Text("@\(event.contact?.username ?? event.authorKey) · ") //
-                                .font(.system(size: 14))
-                                .foregroundColor(.secondary)
-                            Text("\(event.ago)") //
-                                .font(.system(size: 14))
-                                .foregroundColor(.secondary)
                         }
                         
-                        ReplyingToFragment(event: event)
+                        Text(event.contact?.authorName ?? "Anon") // Name
+                            .font(.system(size: 14))
+                            .foregroundColor(.primary)
+                            .fontWeight(.bold)
+                            .lineLimit(1)
+                        Text("@\(event.contact?.username ?? event.authorKey) · ") //
+                            .font(.system(size: 14))
+                            .foregroundColor(.secondary)
+                        Text("\(event.ago)") //
+                            .font(.system(size: 14))
+                            .foregroundColor(.secondary)
                     }
                     
-                    Spacer()
-                }.frame(height: 40)
-                VStack(alignment: .leading) {
-                    NoteTextRenderView(event:event, taggedContacts:Array(taggedContacts))
+                    ReplyingToFragment(event: event)
                 }
+                
+                Spacer()
+            }.frame(height: 40)
+            VStack(alignment: .leading) {
+                NoteTextRenderView(event:event, taggedContacts:Array(taggedContacts))
             }
-        })
+        }
+        .onTapGesture {
+            nav.navigateTo(event)
+        }
+
         .padding(10)
         .overlay(
             RoundedRectangle(cornerRadius: 15)
@@ -134,7 +138,7 @@ struct QuotedNote_Previews: PreviewProvider {
         let event2 = PreviewFetcher.fetchEvent("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e")
         
         VStack {
-            
+//            Text(event0!.firstQuoteId!)
             Spacer()
             NoteRowView(event: event0!)
                 .withPreviewEnvironment()

@@ -11,7 +11,6 @@ import Combine
 import Introspect
 
 struct Timeline: View {
-///////;o/[-'9
     @State var didSetup = false
     @State var isLoading = true
     
@@ -30,7 +29,7 @@ struct Timeline: View {
     @State var didAutoScroll = false // Only scroll to last unread after launch, not after .onAppear after coming back from detail
     @State var unreadCount = 0
     @State var lastReadIndex = 0
-    @Binding var showMenu:Bool // _showMenu changed ... why??? lots of reloads??
+    @State var watchForHeightChange = false
     
     @EnvironmentObject var ns:NosturState
     
@@ -41,18 +40,11 @@ struct Timeline: View {
     )
     var events: FetchedResults<Event>
     @State var notes: [Event] = []
-    @State private var scroller: UIScrollView?
-    @State var contentHeight = 0.0
-    @State var oldContentHeight = 0.0
-    @State var pendingHeightChange = false
-    @State var offset = 0.0
-    @State var oldOffset = 0.0
     
-    init(showReplies:Bool, showMenu:Binding<Bool>, followingPubkeys: Set<String>, account:Account) {
-        UIScrollView.appearance().bounces = false
+    init(showReplies:Bool, followingPubkeys: Set<String>, account:Account) {
+//        UIScrollView.appearance().bounces = false
         self.account = account
-        _showMenu = showMenu
-    
+        
         let fr = NSFetchRequest<Event>(entityName: "Event")
         if (account.blockedContacts == nil) {
             fr.predicate = showReplies
@@ -64,71 +56,22 @@ struct Timeline: View {
             : NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil AND NOT contact IN %@", followingPubkeys, account.blockedContacts!)
         }
         
-        fr.fetchLimit = 25 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW (MET VSTACK).
+        fr.fetchLimit = 125 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW (MET VSTACK).
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         
         _events = FetchRequest(fetchRequest: fr)
     }
     
     func eventAppeared(_ index:Int) {
-        if (index < unreadCount) && !pendingHeightChange {
+        if (index < unreadCount) {
             unreadCount = index
         }
-//        print("eventAppeared:\(index), lastReadIndex: \(lastReadIndex) notes.count: \(notes.count)")
-//        unreadCount = notes.count - (lastReadIndex+1)
     }
     
     var body: some View {
-        VStack {
-            HStack {
-                Color.clear.frame(width: 200, height: 30)
-            }
-            ZStack {
-                List(notes.indices, id:\.self) { index in
-//                    Text("index:\(notes[index].noteId)\n\(d(notes[index].created_at).description)").background(randomColor(seed: notes[index].noteId).frame(width:300,height:100)).frame(width: 300, height: 100)
-                    NoteRowView(event: notes[index])
-                        .id(notes[index].noteId)
-                        .onAppear {
-                            eventAppeared(index)
-                        }
-                        .listRowInsets(EdgeInsets())
-                }
-                .didChangeHeight { contentHeight in
-                    if (scroller != nil) {
-                        print(contentHeight)
-                        offset = scroller!.contentOffset.y
-                        self.contentHeight = contentHeight
-                        if (pendingHeightChange) {
-                            if (scroller != nil) {
-                                //                        scroller!.layoutIfNeeded()
-                                UIView.setAnimationsEnabled(true)
-                                scroller!.contentOffset.y = oldOffset + (contentHeight - oldContentHeight)
-                                pendingHeightChange = false
-                                oldContentHeight = contentHeight
-                            }
-                        }
-                    }
-                }
-                .listStyle(.plain)
-                
-                /* in iOS 16 List is backed by UICollectionView, no out of the box .introspectMethod ... nbd. */
-                .introspect(selector: TargetViewSelector.ancestorOrSiblingContaining, customize: { (collectionView: UICollectionView) in
-                    guard #available(iOS 16, *) else { return }
-                    self.scroller = collectionView
-                    var config = UICollectionLayoutListConfiguration(appearance: .plain)
-                    config.showsSeparators = false
-                    
-                    let layout = UICollectionViewCompositionalLayout.list(using: config)
-                    
-                    collectionView.collectionViewLayout = layout
-                })
-                
-                /* in iOS 15 List is backed by UITableView ... */
-                .introspectTableView(customize: { tableView in
-                    guard #available(iOS 15, *) else { return }
-                    self.scroller = tableView
-                })
-                
+        let _ = Self._printChanges()
+        ZStack {
+            NotesList(notes: $notes, eventAppeared: self.eventAppeared)
                 .onAppear { if (!didSetup) { setupNotes() } }
                 .safeAreaInset(edge: .bottom) {
                     HStack {
@@ -136,16 +79,16 @@ struct Timeline: View {
                         Spacer()
                         Button { fetchEventsFromFollowing(amount:500) } label: { Text("Fetch") }
                         Button {
-//                            var transaction = Transaction(animation: .none)
-//                            transaction.disablesAnimations = true
-//                            withTransaction(transaction) {
-//                                loadNewNotes()
-//                            }
+                            //                            var transaction = Transaction(animation: .none)
+                            //                            transaction.disablesAnimations = true
+                            //                            withTransaction(transaction) {
+                            //                                loadNewNotes()
+                            //                            }
                             
-//                            CATransaction.begin()
-                            UIView.setAnimationsEnabled(false)
+                            //                            CATransaction.begin()
+                            //                            UIView.setAnimationsEnabled(false)
                             loadNewNotes()
-//                            CATransaction.commit()
+                            //                            CATransaction.commit()
                         } label: { Text("Load (\(events.count - notes.count))") }
                         Spacer()
                     }
@@ -207,10 +150,74 @@ struct Timeline: View {
                         print("last timeline event timestamp: \(d(Importer.shared.lastTimelineEventTimestamp!.timestamp).description)")
                     }
                 }
+            
+            UnreadCounter(count:unreadCount)
+        }
+    }
+}
+
+extension Timeline {
+    struct NotesList: View, Equatable {
+        static func == (lhs: Timeline.NotesList, rhs: Timeline.NotesList) -> Bool {
+            return lhs.notes == rhs.notes && lhs.watchForHeightChange == rhs.watchForHeightChange
+        }
+        
+        @Binding var notes:[Event]
+        @State var watchForHeightChange = false
+        
+        @State private var scroller: UIScrollView?
+        @State var oldContentHeight = 0.0
+        @State var oldOffset = 0.0
+        
+        var eventAppeared:(Int) -> Void
+        
+        var body: some View {
+            let _ = Self._printChanges()
+            List(notes.indices, id:\.self) { index in
+                //                    Text("index:\(notes[index].noteId)\n\(d(notes[index].created_at).description)").background(randomColor(seed: notes[index].noteId).frame(width:300,height:100)).frame(width: 300, height: 100)
+                NoteRowView(event: notes[index])
+                    .id(notes[index].noteId)
+                    .onAppear {
+                        guard !watchForHeightChange else { return }
+                        self.eventAppeared(index)
+                    }
+                    .listRowInsets(EdgeInsets())
+            }
+            .didChangeHeight { contentHeight in
+                guard (contentHeight != oldContentHeight) else { return }
+                guard (watchForHeightChange) else { return }
+                guard (scroller != nil) else { return }
+                scroller!.contentOffset.y = oldOffset + (contentHeight - oldContentHeight)
+                watchForHeightChange = false
+            }
+            .listStyle(.plain)
+            
+            /* in iOS 16 List is backed by UICollectionView, no out of the box .introspectMethod ... nbd. */
+            .introspect(selector: TargetViewSelector.ancestorOrSiblingContaining, customize: { (collectionView: UICollectionView) in
+                guard #available(iOS 16, *) else { return }
+                self.scroller = collectionView
+                var config = UICollectionLayoutListConfiguration(appearance: .plain)
+                config.showsSeparators = false
                 
-                UnreadCounter(count:unreadCount)
+                let layout = UICollectionViewCompositionalLayout.list(using: config)
+                
+                collectionView.collectionViewLayout = layout
+            })
+            
+            /* in iOS 15 List is backed by UITableView ... */
+            .introspectTableView(customize: { tableView in
+                guard #available(iOS 15, *) else { return }
+                self.scroller = tableView
+            })
+            .onReceive(receiveNotification(.timelineWillReceiveNewNotes)) { _ in
+                guard scroller != nil else { return }
+                watchForHeightChange = true
+                oldOffset = scroller!.contentOffset.y
+                oldContentHeight = scroller!.contentSize.height
             }
         }
+        
+        
     }
 }
 
@@ -239,7 +246,7 @@ struct UnreadCounter: View {
 
 // MARK: PAGINATION
 extension Timeline {
-
+    
     func setupNotes() {
         print("setupPages")
         didSetup = true
@@ -249,48 +256,51 @@ extension Timeline {
             notes.insert(oldestAtIndexZero[index], at:0)
         }
         
-//        oldestAtIndexZero.forEach { event in
-//            print("\(event.id!) \(d(event.created_at))")
-//        }
+        //        oldestAtIndexZero.forEach { event in
+        //            print("\(event.id!) \(d(event.created_at))")
+        //        }
     }
     
     func loadNewNotes() {
-        oldOffset = scroller!.contentOffset.y
-        offset = scroller!.contentOffset.y
-        oldContentHeight = contentHeight
-        pendingHeightChange = true
         
+//        watchForHeightChange = true
+        print("🟡🟡 loadNewNotes(), watchForHeightChange set to true")
         unreadCount = unreadCount + (events.count-notes.count)
+        if events.count > notes.count {
+            sendNotification(.timelineWillReceiveNewNotes, nil)
+        }
         let oldestAtIndexZero = events.sorted(by: { $0.created_at < $1.created_at })
             .sorted { a, b in
                 return notes.firstIndex(of: a) == nil // Move new notes not already on screen, but older created_at, to front
             }
+        guard (events.count > notes.count) else { return }
         for index in 0..<(events.count-notes.count) { // 0..<11
             notes.insert(oldestAtIndexZero[index], at:0)
         }
-//        oldestAtIndexZero.forEach { event in
-//            print("\(event.id!) \(d(event.created_at))")
-//        }
+        print("🟡🟡 loadNewNotes(), notes inserted in Timeline.notes")
+        //        oldestAtIndexZero.forEach { event in
+        //            print("\(event.id!) \(d(event.created_at))")
+        //        }
     }
 }
 
 extension Timeline {
     
     private func importNotes() {
-//        print("💿💿 2. S:\(vm.scrollOffset) A:\(vm.anchorOffset) H:\(vm.contentHeight) - BEFORE IMPORT events.count: \(events.count)")
+        //        print("💿💿 2. S:\(vm.scrollOffset) A:\(vm.anchorOffset) H:\(vm.contentHeight) - BEFORE IMPORT events.count: \(events.count)")
         Task { await Importer.shared.importEvents() }
     }
     
     private func fetchNotes() async {
-//        isRefreshing = true
+        //        isRefreshing = true
         fetchEventsFromFollowing(amount:500)
         //TODO: hmmm need to return earlier if onChange events.last
         try! await Task.sleep(nanoseconds: 1_000_000_000)
-//        isRefreshing = false
+        //        isRefreshing = false
     }
     
     private func fetchEventsFromFollowing(amount:Int? = 500) {
-//        print("💿💿 1. S:\(vm.scrollOffset) A:\(vm.anchorOffset) H:\(vm.contentHeight) - BEFORE FETCH events.count: \(events.count)")
+        //        print("💿💿 1. S:\(vm.scrollOffset) A:\(vm.anchorOffset) H:\(vm.contentHeight) - BEFORE FETCH events.count: \(events.count)")
         
         if (account.follows != nil) {
             let followingPubkeys = [String](account.follows!.map { $0.pubkey! } )
@@ -300,14 +310,13 @@ extension Timeline {
 }
 
 struct Timeline_Previews: PreviewProvider {
-    @State static var showMenu = true
     static var previews: some View {
         
         let account = PreviewFetcher.fetchAccount("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", context: EventsProvider.preview.container.viewContext)
         
         let pubkeys = Set(["1833ee04459feb2ca4ae690d5f31269ad488c69e5fe903a42b532c677c4a8170","84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240","3f770d65d3a764a9c5cb503ae123e62ec7598ad035d836e2a810f3877a745b24"])
         
-        Timeline(showReplies: true, showMenu: $showMenu, followingPubkeys: pubkeys, account: account!)
+        Timeline(showReplies: true, followingPubkeys: pubkeys, account: account!)
             .withPreviewEnvironment()
         
     }

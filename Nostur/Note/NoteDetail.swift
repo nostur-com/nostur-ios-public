@@ -332,7 +332,7 @@ struct DetailFooterFragment: View {
                             }
 
                             // 4. publish that event                            SocketPool
-                            print("Should send: \(NRelayMessage(event: savedEvent.toNEvent()).message)")
+                            print("DISABLED - Should send: \(NRelayMessage(event: savedEvent.toNEvent()).message)")
                             
                             print("💖💖💖💖💖💖💖💖💖💖💖💖💖💖")
                         }
