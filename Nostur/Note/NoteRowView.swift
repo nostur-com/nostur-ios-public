@@ -18,11 +18,11 @@ import CoreData
 // See old struct NoteRow. For some old thread layout stuff still.
 
 struct NoteRowView: View {
-
+    
     @Environment(\.managedObjectContext) var viewContext
     var sp:SocketPool = .shared
     @EnvironmentObject var nav:NavigationModel
-//    @EnvironmentObject var ns:NosturState
+    //    @EnvironmentObject var ns:NosturState
     @ObservedObject var event:Event
     
     @FetchRequest
@@ -31,7 +31,7 @@ struct NoteRowView: View {
     init(event: Event) {
         self.event = event
         let pubkeys = TagsHelpers(event.tags() ?? []).pTags().map { $0.pubkey }
-
+        
         if (pubkeys.count == 0) {
             _taggedContacts = FetchRequest(
                 sortDescriptors: [],
@@ -47,56 +47,56 @@ struct NoteRowView: View {
     }
     
     var body: some View {
-//        NavigationLink(value: event, label: {
+        //        NavigationLink(value: event, label: {
+        
+        VStack (alignment: .leading) {
+            HStack(alignment: .top) {
+                VStack {
+                    ProfilePicView(pubkey: event.pubkey!, contact:event.contact)
+                        .padding(.horizontal, 10)
+                        .onTapGesture {
+                            nav.navigateTo(ContactPath(key: event.pubkey!))
+                        }
+                }//.background(.green)
                 
-            VStack (alignment: .leading) {
-                HStack(alignment: .top) {
-                    VStack {
-                        ProfilePicView(pubkey: event.pubkey!, contact:event.contact)
-                            .padding(.horizontal, 10)
-                            .onTapGesture {
-                                nav.navigateTo(ContactPath(key: event.pubkey!))
-                            }
-                    }//.background(.green)
+                VStack(alignment:.leading) {// Tweet container
+                    HStack { // name + reply + context menu
+                        NoteHeader(event:event)
+                    }//.frame(height: 40).border(.red)
                     
-                    VStack(alignment:.leading) {// Tweet container
-                        HStack { // name + reply + context menu
-                            NoteHeader(event:event)
-                        }//.frame(height: 40).border(.red)
-                        
-                        //                        NavigationLink(value: event, label: {
-                        
-                            NoteTextRenderView(event:event, taggedContacts:Array(taggedContacts))
-//                            .onTapGesture {
-//                                nav.navigateTo(event)
-//                            }
-                            
-                            
-                            
-                        
-                        //                        })//.border(.red)
-                        
-                        if (event.firstQuoteId != nil && event.firstQuote != nil) {
-                            QuotedNoteFragment(event: event.firstQuote!)
+                    //                        NavigationLink(value: event, label: {
+                    
+                    NoteTextRenderView(event:event, taggedContacts:Array(taggedContacts))
+                    //                            .onTapGesture {
+                    //                                nav.navigateTo(event)
+                    //                            }
+                    
+                    
+                    
+                    
+                    //                        })//.border(.red)
+                    
+                    if (event.firstQuoteId != nil && event.firstQuote != nil) {
+                        QuotedNoteFragment(event: event.firstQuote!)
+                    }
+                    else if (event.firstQuote != nil) {
+                        ProgressView().onAppear {
+                            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.firstQuoteId!)))
                         }
-                        else if (event.firstQuote != nil) {
-                            ProgressView().onAppear {
-                                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.firstQuoteId!)))
-                            }
-                        }
-                        
-                        FooterFragment(event: event)//.border(.red)
-                        
-                    }//.border(.green)
-                    .padding(.trailing, 10)
-                    //                        .padding(.bottom, 5)
-                }
+                    }
+                    
+                    FooterFragment(event: event)//.border(.red)
+                    
+                }//.border(.green)
+                .padding(.trailing, 10)
+                //                        .padding(.bottom, 5)
             }
-            .onTapGesture {
-                nav.navigateTo(event)
-            }
-
-//        })
+        }
+        .onTapGesture {
+            nav.navigateTo(event)
+        }
+        
+        //        })
         .onAppear {
             // should fetch setMetaData if
             // No Contact
@@ -107,9 +107,9 @@ struct NoteRowView: View {
                 sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.pubkey!)))
             }
         }
-//        .frame(minHeight: 140)//.border(.red)
+        //        .frame(minHeight: 140)//.border(.red)
         .padding(.vertical, 10)
-//        .background(Color.random)
+        //        .background(Color.random)
         
     }
 }
@@ -118,41 +118,41 @@ struct NoteHeader: View {
     @EnvironmentObject var nav:NavigationModel
     var event:Event
     var body: some View {
-//        NavigationLink(value: event, label: {
+        //        NavigationLink(value: event, label: {
         
-            VStack(alignment: .leading) { // Name + menu "replying to"
-                HStack(spacing:2) {
-                    Group {
-                        Text(event.contact?.authorName ?? "Anon") // Name
-                            .font(.system(size: 14))
-                            .foregroundColor(.primary)
-                            .fontWeight(.bold)
-                            .lineLimit(1)
-                        
-                        if (event.contact?.nip05veried ?? false) {
-                            Image(systemName: "checkmark.seal.fill")
-                                .font(.system(size: 14))
-                                .foregroundColor(.blue)
-                        }
-                        
-                        Text("@\(event.contact?.username ?? event.authorKey) · \(event.ago)") //
-                            .font(.system(size: 14))
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                    }
-                    .onTapGesture {
-                        nav.navigateTo(ContactPath(key: event.pubkey!))
-                    }
-                    Spacer()
-                    Text(Date(timeIntervalSince1970: TimeInterval(event.created_at)), format: Date.VerbatimFormatStyle(format: "\(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased)):\(minute: .twoDigits)", timeZone: .current, calendar: .current))
+        VStack(alignment: .leading) { // Name + menu "replying to"
+            HStack(spacing:2) {
+                Group {
+                    Text(event.contact?.authorName ?? "Anon") // Name
                         .font(.system(size: 14))
-                        .padding(.trailing, 5)
+                        .foregroundColor(.primary)
+                        .fontWeight(.bold)
+                        .lineLimit(1)
+                    
+                    if (event.contact?.nip05veried ?? false) {
+                        Image(systemName: "checkmark.seal.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(.blue)
+                    }
+                    
+                    Text("@\(event.contact?.username ?? event.authorKey) · \(event.ago)") //
+                        .font(.system(size: 14))
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
                 }
-                ReplyingToFragment(event: event)
+                .onTapGesture {
+                    nav.navigateTo(ContactPath(key: event.pubkey!))
+                }
+                Spacer()
+                Text(Date(timeIntervalSince1970: TimeInterval(event.created_at)), format: Date.VerbatimFormatStyle(format: "\(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased)):\(minute: .twoDigits)", timeZone: .current, calendar: .current))
+                    .font(.system(size: 14))
+                    .padding(.trailing, 5)
             }
-            
+            ReplyingToFragment(event: event)
+        }
         
-//        })
+        
+        //        })
     }
 }
 
@@ -226,6 +226,9 @@ struct FooterFragment: View {
     @EnvironmentObject var ns:NosturState
     @Environment(\.managedObjectContext) var viewContext
     @ObservedObject var event:Event
+    @EnvironmentObject var up:Unpublisher
+    
+    @State var unpublishLikeId:UUID? = nil
     
     var body: some View {
         HStack() {
@@ -236,7 +239,7 @@ struct FooterFragment: View {
                     Image(systemName: "message")
                     Text("\(event.repliesCount)")
                 }
-//                Label("\(event.repliesCount)", systemImage: "message")
+                //                Label("\(event.repliesCount)", systemImage: "message")
             }
             Spacer()
             Button {
@@ -246,20 +249,27 @@ struct FooterFragment: View {
                     Image(systemName: "arrow.2.squarepath")
                     Text("\(event.mentions)")
                 }
-//                Label("\(event.mentions)", systemImage: "arrow.2.squarepath")
+                //                Label("\(event.mentions)", systemImage: "arrow.2.squarepath")
             }
             Spacer()
             
-            
+            // LIKE
             if (event.liked) {
                 HStack {
                     Image(systemName: "heart.fill").foregroundColor(.red)
                     Text("\(event.likes)")
                 }
-//                Label("\(event.likes)", systemImage: "heart.fill").foregroundColor(.red)
+                .onTapGesture {
+                    if unpublishLikeId != nil && up.cancel(unpublishLikeId!) {
+                        event.liked = false
+                    }
+                }
             }
             else {
-                Button {
+                HStack {
+                    Image(systemName: "heart")
+                    Text("\(event.likes)")
+                }.onTapGesture {
                     if (ns.account != nil) {
                         print("💖💖💖💖💖💖💖💖💖💖💖💖💖💖")
                         event.liked = true
@@ -275,49 +285,28 @@ struct FooterFragment: View {
                             return
                         }
                         
-                        // 3. Save in core data                             NSManagedObjectContext
-                        let savedEvent = Event.saveEvent(event: signedEvent, context: viewContext)
-                        do {
-                            try viewContext.save()
-                        }
-                        catch {
-                            print("🔴🔴🔴🔴🔴 COULD NOT SAVE EVENT 🔴🔴🔴🔴🔴")
-                            print(error)
-                            return
-                        }
+                        unpublishLikeId = up.publish(signedEvent)
                         
-                        // 4. publish that event                            SocketPool
-                        print("DISABLED Should send: \(NRelayMessage(event: savedEvent.toNEvent()).message)")
-                        
-                        print("💖💖💖💖💖💖💖💖💖💖💖💖💖💖")
+                       
                     }
-                } label: {
-                    HStack {
-                        Image(systemName: "heart")
-                        Text("\(event.likes)")
-                    }
-//                    Label("\(event.likes)", systemImage: "heart")
                 }
+                
             }
             Spacer()
             
-            Button {
-                if (ns.isBookmarked(event)) {
-                    ns.removeBookmark(event)
-                }
-                else {
-                    ns.addBookmark(event)
-                }
-            } label: {
-                if (ns.isBookmarked(event)) {
-                    Image(systemName: "bookmark.fill")
-                        .foregroundColor(.orange)
-                    //                        .frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
-                }
-                else {
-                    Image(systemName: "bookmark")
-                    //                        .frame(maxWidth: .infinity, alignment: .leading).font(.system(size: 14))
-                }
+            // BOOKMARK
+            if (ns.isBookmarked(event)) {
+                Image(systemName: "bookmark.fill")
+                    .foregroundColor(.orange)
+                    .onTapGesture {
+                        ns.removeBookmark(event)
+                    }
+            }
+            else {
+                Image(systemName: "bookmark")
+                    .onTapGesture {
+                        ns.addBookmark(event)
+                    }
             }
             
         }.foregroundColor(.gray)
@@ -366,16 +355,16 @@ struct NoteRowView_Previews: PreviewProvider {
             
             NoteRowView(event: event1!)
                 .listRowInsets(EdgeInsets())
-                
+            
             NoteRowView(event: event2!)
                 .listRowInsets(EdgeInsets())
-
+            
             NoteRowView(event: event3!)
                 .listRowInsets(EdgeInsets())
             
             NoteRowView(event: event4!)
                 .listRowInsets(EdgeInsets())
-
+            
         }
         .listStyle(PlainListStyle())
         .withPreviewEnvironment()

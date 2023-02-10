@@ -18,4 +18,8 @@ extension Notification.Name {
     static var timelineWillReceiveNewNotes: Notification.Name {
         return Notification.Name("timelineWillReceiveNewNotes")
     }
+    
+    static var unpublisherTimerNextTick: Notification.Name {
+        return Notification.Name("unpublisherTimerNextTick")
+    }
 }

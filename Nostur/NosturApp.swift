@@ -9,6 +9,7 @@ import CoreData
 
 @main
 struct NosturApp: App {
+    @StateObject var up = Unpublisher(viewContext:EventsProvider.shared.container.viewContext)
     @StateObject var ns = NosturState(viewContext:EventsProvider.shared.container.viewContext)
     @StateObject var nav = NavigationModel()
     @State var isViewDisplayed = false
@@ -23,6 +24,7 @@ struct NosturApp: App {
                 .environmentObject(ns)
                 .environmentObject(sp)
                 .environmentObject(nav)
+                .environmentObject(up)
                 .onAppear {startNosturing(); self.isViewDisplayed = true }
                 .onDisappear { self.isViewDisplayed = false }
                 .onReceive(runLoop) { time in
