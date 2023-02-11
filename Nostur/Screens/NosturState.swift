@@ -46,11 +46,10 @@ final class NosturState : ObservableObject {
         r.predicate = NSPredicate(format: "publicKey == %@", activeAccountPublicKey)
         self.account = try! viewContext.fetch(r).first
         
-        if (self.account == nil) {
+        if (self.account == nil) { // No account? Just fall back to (ANY) firstaccount
             r.predicate = nil
             self.account = try! viewContext.fetch(r).first
         }
-        
         
         if (self.account!.privateKey != nil) {
             self.keys = NKeys(privateKeyHex: self.account!.privateKey!)
@@ -210,7 +209,8 @@ final class NosturState : ObservableObject {
     
     func signEvent(_ event:NEvent) throws -> NEvent {
         guard account != nil, keys != nil else {
-            print("🔴🔴🔴🔴🔴 Acccount or keys missing, could not sign 🔴🔴🔴🔴🔴")
+            if (account == nil) { print("🔴🔴🔴🔴🔴 Acccount missing, could not sign 🔴🔴🔴🔴🔴") }
+                if (keys == nil) { print("🔴🔴🔴🔴🔴 Keys missing, could not sign 🔴🔴🔴🔴🔴") }
             throw "account or keys missing, could not sign"
         }
         

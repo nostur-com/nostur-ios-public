@@ -145,7 +145,7 @@ class SocketPool: ObservableObject {
                     if (!managedClient.isConnected) && (!managedClient.isConnecting) {
                         managedClient.connect()
                     }
-    //                print("⬇️⬇️ REQUESTING: \(String(message.message.prefix(260)))")
+                    print("⬇️⬇️ REQUESTING: \(String(message.message.prefix(260)))")
                     managedClient.client.write(string: message.message)
                 }
                 else if  message.type == .CLOSE { // CLOSE FOR ALL RELAYS

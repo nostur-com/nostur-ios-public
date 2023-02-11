@@ -27,9 +27,11 @@ struct NoteRowView: View {
     
     @FetchRequest
     var taggedContacts:FetchedResults<Contact>
+    var hideFooter = false // For rendering in NewReply
     
-    init(event: Event) {
+    init(event: Event, hideFooter:Bool = false) {
         self.event = event
+        self.hideFooter = hideFooter
         let pubkeys = TagsHelpers(event.tags() ?? []).pTags().map { $0.pubkey }
         
         if (pubkeys.count == 0) {
@@ -57,25 +59,16 @@ struct NoteRowView: View {
                         .onTapGesture {
                             nav.navigateTo(ContactPath(key: event.pubkey!))
                         }
-                }//.background(.green)
+                }
                 
                 VStack(alignment:.leading) {// Tweet container
                     HStack { // name + reply + context menu
                         NoteHeader(event:event)
-                    }//.frame(height: 40).border(.red)
-                    
-                    //                        NavigationLink(value: event, label: {
+                    }
                     
                     NoteTextRenderView(event:event, taggedContacts:Array(taggedContacts))
-                    //                            .onTapGesture {
-                    //                                nav.navigateTo(event)
-                    //                            }
-                    
-                    
-                    
-                    
-                    //                        })//.border(.red)
-                    
+                        .onTapGesture { nav.navigateTo(event) }
+                
                     if (event.firstQuoteId != nil && event.firstQuote != nil) {
                         QuotedNoteFragment(event: event.firstQuote!)
                     }
@@ -85,16 +78,20 @@ struct NoteRowView: View {
                         }
                     }
                     
-                    FooterFragment(event: event)//.border(.red)
+                    if (!hideFooter) {
+                        FooterFragment(event: event)//.border(.red)
+                    }
                     
-                }//.border(.green)
+                }
                 .padding(.trailing, 10)
                 //                        .padding(.bottom, 5)
             }
         }
-        .onTapGesture {
-            nav.navigateTo(event)
-        }
+        .background(
+            Color(.systemBackground)
+                .onTapGesture { nav.navigateTo(event) }
+        )
+
         
         //        })
         .onAppear {
@@ -230,27 +227,49 @@ struct FooterFragment: View {
     
     @State var unpublishLikeId:UUID? = nil
     
+    @State var unpublishRepostId:UUID? = nil
+    @State var unpublishOriginalId:UUID? = nil
+    
+    @State var showingNewReply = false
+    
     var body: some View {
         HStack() {
-            Button {
-                
-            } label: {
-                HStack {
-                    Image(systemName: "message")
-                    Text("\(event.repliesCount)")
-                }
-                //                Label("\(event.repliesCount)", systemImage: "message")
+            
+            HStack {
+                Image(systemName: "message")
+                Text("\(event.repliesCount)")
             }
+            .background(Color(.systemBackground))
+                .onTapGesture {
+                    showingNewReply = true
+                }
             Spacer()
-            Button {
                 
-            } label: {
-                HStack {
-                    Image(systemName: "arrow.2.squarepath")
-                    Text("\(event.mentions)")
+
+            HStack {
+                Image(systemName: "arrow.2.squarepath")
+                Text("\(event.mentions)")
+            }.background(Color(.systemBackground).onTapGesture {
+                if (ns.account != nil) {
+                    print("🔄🔄🔄🔄🔄 REPOSTING 🔄🔄🔄")
+//                    event.reposted = true
+                    event.mentions = event.mentions + 1
+//                    ns.account?.addToLikes(event)
+                    
+                    // 1. create kind 7 event based on kind 1 event:    Event
+                    let repostEvent = EventMessageBuilder.makeRepost(original: event)
+                    
+                    // 2. sign that event with account keys             Account
+                    guard let signedEvent = try? ns.signEvent(repostEvent) else {
+                        print("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
+                        return
+                    }
+                    
+                    unpublishRepostId = up.publish(signedEvent)
+                    unpublishOriginalId = up.publish(event.toNEvent())
                 }
-                //                Label("\(event.mentions)", systemImage: "arrow.2.squarepath")
-            }
+            })
+            
             Spacer()
             
             // LIKE
@@ -312,6 +331,9 @@ struct FooterFragment: View {
         }.foregroundColor(.gray)
             .padding(.trailing, 5)
             .font(.system(size: 14))
+            .sheet(isPresented: $showingNewReply) {
+                NewReply(replyTo: event)
+            }
     }
 }
 
@@ -337,6 +359,9 @@ struct NoteRowView_Previews: PreviewProvider {
         // reply to known  contact
         // f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e
         
+        
+        // TODO: find repost of 97a1a5dab19064061b45937c4e3523782d34608bd13278def9af4d5107ece65c
+        // maybe: 7edef20143bb4df0c65dff3993bd9f7c5fb755fe6c8fa72cc847299afe52d8fa
         
         let event0 = PreviewFetcher.fetchEvent("24ad21d57d59b03f4f9a8931f8bc4ccca84ed6ab257bf62cb84b0d04e0583118")
         

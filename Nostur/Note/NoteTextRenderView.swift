@@ -91,10 +91,10 @@ struct NoteTextRenderView: View {
                         // TODO: NIP19 bech32 is very slow, with hundreds of rows it slows down UI noticeably, so disable for now
                         let key = try! NIP19(prefix: "npub1", hexString: tags[index].pubkey)
                         if let contact = contact(byPubkey:tags[index].pubkey) {
-                            newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(contact.username)](nostur:p:\(key.displayString))")
+                            newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(contact.username)](nostur:p:\(tags[index].pubkey))")
                         }
                         else {
-                            newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(key.displayString).prefix(12))](nostur:p:\(key.displayString))")
+                            newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(key.displayString).prefix(12))](nostur:p:\(tags[index].pubkey))")
                         }
                     }
                     else {
@@ -106,7 +106,7 @@ struct NoteTextRenderView: View {
                     if (1 == 1) {
                         // TODO: NIP19 bech32 is very slow, with hundreds of rows it slows down UI noticeably, so disable for now
                         let key = try! NIP19(prefix: "note1", hexString: tags[index].id)
-                        newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(key.displayString).prefix(12))](nostur:e:\(key.hexString))")
+                        newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(key.displayString).prefix(12))](nostur:e:\(tags[index].id))")
                     }
                     else {
                         newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(tags[index].id).prefix(10))](nostur:e:\(tags[index].id))")

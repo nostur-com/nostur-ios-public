@@ -72,15 +72,19 @@ class Unpublisher: ObservableObject {
     }
     
     private func sendToRelays(_ nEvent:NEvent) {
-        let savedEvent = Event.saveEvent(event: nEvent, context: viewContext)
-        do { try viewContext.save() }
-        catch {
-            print("🔴🔴🔴🔴🔴 COULD NOT SAVE EVENT 🔴🔴🔴🔴🔴")
-            print(error)
-            return
+        if try! Event.fetchEvent(id: nEvent.id, context: viewContext) == nil {
+            let savedEvent = Event.saveEvent(event: nEvent, context: viewContext)
+            do { try viewContext.save() }
+            catch {
+                print("🔴🔴🔴🔴🔴 COULD NOT SAVE EVENT 🔴🔴🔴🔴🔴")
+                print(error)
+                return
+            }
+            print("DISABLED 🚺🚺🚺 GONNA PUBLISHHHH:  \(NRelayMessage(event: savedEvent.toNEvent()).message)")
         }
-        print("DISABLED 🚺🚺🚺 GONNA PUBLISHHHH:  \(NRelayMessage(event: savedEvent.toNEvent()).message)")
-        
+        else {
+            print("DISABLED 🚺🚺🚺 GONNA (REPOST)PUBLISHHHH:  \(NRelayMessage(event: nEvent).message)")
+        }
     }
 }
 

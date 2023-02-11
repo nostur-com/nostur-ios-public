@@ -35,7 +35,6 @@ struct AccountListView: View {
     var body: some View {
         
             VStack {
-                //            Text("\(identities.count)")
                 if (accounts.count == 0) {
                     NewAccountView(addReadOnlyAccountPresented: $addReadOnlyAccountPresented) { name, about in
                         let newKeys = NKeys.newKeys()
@@ -65,7 +64,7 @@ struct AccountListView: View {
                 else {
                     List {
                         ForEach(accounts, id: \.self) { account in
-                            NavigationLink(value:account, label:{
+                            NavigationLink(value:account, label: {
                                 HStack {
                                     Text(account.name != "" ? account.name : account.publicKey ?? "(Unknown)")
                                         .lineLimit(1)
@@ -166,7 +165,9 @@ struct AccountListView: View {
                     if activeAccountPublicKey != account.publicKey {
                         Button {
                             activeAccountPublicKey = account.publicKey ?? ""
-                            do { let _ = try ns.loadActiveAccount(account: account) }
+                            do {
+                                let _ = try ns.loadActiveAccount(account: account)
+                            }
                             catch {
                                 print("🔴 error switching active account")
                             }

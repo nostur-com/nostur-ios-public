@@ -30,6 +30,8 @@ struct Timeline: View {
     @State var unreadCount = 0
     @State var lastReadIndex = 0
     @State var watchForHeightChange = false
+    @State var showingNewNote = false
+    @State var noteCancellationId:UUID?
     
     @EnvironmentObject var ns:NosturState
     
@@ -38,8 +40,22 @@ struct Timeline: View {
         sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
         predicate: NSPredicate(format: "FALSEPREDICATE")
     )
-    var events: FetchedResults<Event>
-    @State var notes: [Event] = []
+    var events: FetchedResults<Event> // 1. When new events enter DB, this one gets out of sync, wrong sorting.
+    
+    var eventsSorted:[Event] {
+        get {
+            events.sorted(by: { $0.created_at < $1.created_at })
+        }
+    } // 2. Make sure the sorting is always correct
+    var lastNewNoteTimestamp:Int64 {
+        get {
+            notes.first?.created_at ?? Int64(Date().timeIntervalSince1970)
+        }
+    }
+    
+    @State var notesWithoutOlderNotes: [Event] = [] // 3. eventsSorted can have notes that are too old, they are filtered here
+    
+    @State var notes: [Event] = [] // 4. These are the notes on screen
     
     init(showReplies:Bool, followingPubkeys: Set<String>, account:Account) {
 //        UIScrollView.appearance().bounces = false
@@ -75,7 +91,7 @@ struct Timeline: View {
                 .onAppear { if (!didSetup) { setupNotes() } }
                 .safeAreaInset(edge: .bottom) {
                     HStack {
-                        Text("E:\(events.count) N:\(notes.count)")
+                        Text("E:\(notesWithoutOlderNotes.count) N:\(notes.count)")
                         Spacer()
                         Button { fetchEventsFromFollowing(amount:500) } label: { Text("Fetch") }
                         Button {
@@ -89,7 +105,7 @@ struct Timeline: View {
                             //                            UIView.setAnimationsEnabled(false)
                             loadNewNotes()
                             //                            CATransaction.commit()
-                        } label: { Text("Load (\(events.count - notes.count))") }
+                        } label: { Text("Load (\(notesWithoutOlderNotes.count - notes.count))") }
                         Spacer()
                     }
                     .buttonStyle(.borderedProminent)
@@ -150,8 +166,22 @@ struct Timeline: View {
                         print("last timeline event timestamp: \(d(Importer.shared.lastTimelineEventTimestamp!.timestamp).description)")
                     }
                 }
+                .onChange(of: eventsSorted) { _ in
+                    notesWithoutOlderNotes = eventsSorted.filter {
+                        // Only take notes newer than the last newest note on screen (+10 min wiggle room)
+                        // Or also take notes that are already on screen
+                        ($0.created_at > (lastNewNoteTimestamp - 600)) || notes.firstIndex(of: $0) != nil
+                        // So don't take older notes, like 10-40 days older loaded from profile
+                        // because FetchedResult does received those new notes but does not update correct sorting.
+                    }
+                }
             
             UnreadCounter(count:unreadCount)
+            
+            NewNoteButton(showingNewNote: $showingNewNote)
+        }
+        .sheet(isPresented: $showingNewNote) {
+            NewNote(noteCancellationId: $noteCancellationId)
         }
     }
 }
@@ -219,27 +249,57 @@ extension Timeline {
         
         
     }
-}
-
-struct UnreadCounter: View {
-    var count:Int
-    var body: some View {
-        VStack {
-            HStack {
+    
+    struct NewNoteButton: View {
+        @EnvironmentObject var nav:NavigationModel
+        @Binding var showingNewNote:Bool
+        
+        var body: some View {
+            VStack {
                 Spacer()
-                if (count > 0) {
-                    Text("\(count)")
-                        .frame(minWidth: 30)
-                        .padding(5)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-                        .background(.tint)
-                        .cornerRadius(20)
-                        .offset(x:-30,y:35)
+                HStack {
+                    Spacer()
+                    Button {
+                        showingNewNote = true
+                    } label: {
+                        ZStack {
+                            Circle() // Transparent plug.circle looks weird - so make white here
+                                .foregroundColor(Color(.systemBackground))
+                                .frame(width: 45, height: 45)
+                                .padding(30)
+                            Image(systemName: "plus.circle.fill")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 45, height: 45)
+                                .padding(30)
+                        }
+                    }
                 }
-                
+//                .offset(x:-30,y:-55)
             }
-            Spacer()
+        }
+    }
+    
+    struct UnreadCounter: View {
+        var count:Int
+        var body: some View {
+            VStack {
+                HStack {
+                    Spacer()
+                    if (count > 0) {
+                        Text("\(count)")
+                            .frame(minWidth: 30)
+                            .padding(5)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .background(.tint)
+                            .cornerRadius(20)
+                            .offset(x:-30,y:35)
+                    }
+                    
+                }
+                Spacer()
+            }
         }
     }
 }
@@ -248,33 +308,27 @@ struct UnreadCounter: View {
 extension Timeline {
     
     func setupNotes() {
-        print("setupPages")
         didSetup = true
-        
-        let oldestAtIndexZero = events.sorted(by: { $0.created_at < $1.created_at })
-        for index in 0..<events.count {
-            notes.insert(oldestAtIndexZero[index], at:0)
+        notesWithoutOlderNotes = eventsSorted
+        for index in 0..<notesWithoutOlderNotes.count {
+            notes.insert(notesWithoutOlderNotes[index], at:0)
         }
-        
-        //        oldestAtIndexZero.forEach { event in
-        //            print("\(event.id!) \(d(event.created_at))")
-        //        }
     }
     
     func loadNewNotes() {
         
-//        watchForHeightChange = true
-        print("🟡🟡 loadNewNotes(), watchForHeightChange set to true")
-        unreadCount = unreadCount + (events.count-notes.count)
-        if events.count > notes.count {
+        unreadCount = unreadCount + (notesWithoutOlderNotes.count-notes.count)
+        if notesWithoutOlderNotes.count > notes.count {
             sendNotification(.timelineWillReceiveNewNotes, nil)
         }
-        let oldestAtIndexZero = events.sorted(by: { $0.created_at < $1.created_at })
+        
+        let oldestAtIndexZero = notesWithoutOlderNotes
+            .sorted { $0.created_at > $1.created_at }
             .sorted { a, b in
                 return notes.firstIndex(of: a) == nil // Move new notes not already on screen, but older created_at, to front
             }
-        guard (events.count > notes.count) else { return }
-        for index in 0..<(events.count-notes.count) { // 0..<11
+        guard (oldestAtIndexZero.count > notes.count) else { return }
+        for index in 0..<(oldestAtIndexZero.count-notes.count) { // 0..<11
             notes.insert(oldestAtIndexZero[index], at:0)
         }
         print("🟡🟡 loadNewNotes(), notes inserted in Timeline.notes")
@@ -310,14 +364,15 @@ extension Timeline {
 }
 
 struct Timeline_Previews: PreviewProvider {
+    
     static var previews: some View {
         
         let account = PreviewFetcher.fetchAccount("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", context: EventsProvider.preview.container.viewContext)
         
         let pubkeys = Set(["1833ee04459feb2ca4ae690d5f31269ad488c69e5fe903a42b532c677c4a8170","84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240","3f770d65d3a764a9c5cb503ae123e62ec7598ad035d836e2a810f3877a745b24"])
         
-        Timeline(showReplies: true, followingPubkeys: pubkeys, account: account!)
-            .withPreviewEnvironment()
+            Timeline(showReplies: true, followingPubkeys: pubkeys, account: account!)
+                .withPreviewEnvironment()
         
     }
 }

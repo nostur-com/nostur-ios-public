@@ -91,6 +91,20 @@ struct RelayMessage {
 // REQ messages for requesting with filters
 struct RequestMessage {
     
+    // Get all events where [pubkeys] are mentioned (in p tag)
+    static func getMentions(pubkeys:[String], limit:Int = 500, subscriptionId:String? = nil, since:NTimestamp? = nil) -> String {
+        
+        if since != nil {
+            return """
+    ["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"#p": \(JSON(pubkeys).rawString()!), "limit": \(limit), "since": \(since!.timestamp), "kinds": [1,7] }]
+    """
+        }
+        return """
+["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"#p": \(JSON(pubkeys).rawString()!), "limit": \(limit), "kinds": [1,7] }]
+"""
+    }
+    
+    
     // FETCH A SINGLE EVENT
     static func getEvent(id:String, subscriptionId:String? = nil) -> String {
         return """
@@ -173,6 +187,13 @@ struct RequestMessage {
 
 struct EventMessageBuilder {
     
+    static func makeRepost(original: Event) -> NEvent {
+        var repost = NEvent(content: "#[0]")
+        repost.tags.append(NEventTag(type: "e", otherInformation: original.id!, "mention"))
+        repost.tags.append(NEventTag(type: "p", otherInformation: original.pubkey!))
+        repost.kind = .textNote
+        return repost
+    }
     
     static func makeReactionEvent(reactingTo: Event) -> NEvent {
         var tags = reactingTo.tags()!.filter { $0.type == "e" || $0.type == "p" }

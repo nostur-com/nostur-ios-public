@@ -48,6 +48,9 @@ extension View {
 }
 
 class NavigationModel: ObservableObject {
+    
+    static var shared = NavigationModel()
+    
     @Published var showSidebar: Bool = false
     @Published var selectedTab = "Timeline"
     @Published var timelinePath = NavigationPath()

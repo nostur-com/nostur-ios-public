@@ -62,6 +62,14 @@ struct NosturTabsView: View {
                 .tabItem { Image(systemName: "bookmark.circle") }
                 .tag("Bookmarks")
                 
+                NavigationStack(path: $notificationsPath) {
+                    NotificationsView()
+                        .withNavigationDestinations()
+                    Spacer()
+                }
+                .tabItem { Image(systemName: "bell.fill") }
+                .tag("Notifications")
+                
                 NavigationStack(path: $searchPath) {
                     Search()
                         .withNavigationDestinations()

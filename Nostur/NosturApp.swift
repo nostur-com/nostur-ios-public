@@ -11,7 +11,7 @@ import CoreData
 struct NosturApp: App {
     @StateObject var up = Unpublisher(viewContext:EventsProvider.shared.container.viewContext)
     @StateObject var ns = NosturState(viewContext:EventsProvider.shared.container.viewContext)
-    @StateObject var nav = NavigationModel()
+    @StateObject var nav = NavigationModel.shared
     @State var isViewDisplayed = false
     
     let runLoop = Timer.publish(every: 2, tolerance: 1, on: .main, in: .common).autoconnect()

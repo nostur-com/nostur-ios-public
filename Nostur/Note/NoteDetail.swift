@@ -283,16 +283,20 @@ struct DetailFooterFragment: View {
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
     @ObservedObject var event:Event
+    @State var showingNewReply = false
     
     var body: some View {
         VStack(alignment: .center) {
             HStack(alignment: .center) { // Footer stats
 //                Spacer()
-                Button {
-
-                } label: {
-                    Label("\(event.repliesCount)", systemImage: "message")
+                HStack {
+                    Image(systemName: "message")
+                    Text("\(event.repliesCount)")
                 }
+                .background(Color(.systemBackground))
+                    .onTapGesture {
+                        showingNewReply = true
+                    }
                 Spacer()
                 Button {
                     
@@ -361,6 +365,9 @@ struct DetailFooterFragment: View {
                 }
 //                Spacer()
             }.foregroundColor(.gray)
+        }
+        .sheet(isPresented: $showingNewReply) {
+            NewReply(replyTo: event)
         }
     }
 }
