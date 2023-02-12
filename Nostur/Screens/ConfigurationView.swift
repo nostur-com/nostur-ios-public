@@ -397,6 +397,36 @@ struct ConfigurationView: View {
 //        ImageCache.default.clearDiskCache { print("Done"); imageCacheSize = 0 }
     }
     
+    func removeOlderKind3Events() {
+        let r = NSFetchRequest<Event>(entityName: "Event")
+        r.predicate = NSPredicate(format: "kind == 3")
+        r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        let kind3 = try! viewContext.fetch(r)
+        
+        var noDuplicates:Dictionary<String, Event> = [:]
+        var forDeletion:[Event] = []
+        
+        for event in kind3 {
+            if noDuplicates[event.pubkey!] != nil {
+                forDeletion.append(event)
+            }
+            else {
+                noDuplicates[event.pubkey!] = event
+            }
+        }
+        print("going to delete \(forDeletion.count) kind 3 events")
+        for toDelete in forDeletion {
+            viewContext.delete(toDelete)
+        }
+        
+        do {
+            try viewContext.save()
+        }
+        catch {
+            print("removeOlderKind3Events error on save(): \(error)")
+        }
+    }
+    
     var body: some View {
         VStack {
             RelaysView()
@@ -405,6 +435,11 @@ struct ConfigurationView: View {
             if (devToggle) {
                 List {
                     Group {
+                        
+                        Button { removeOlderKind3Events() } label: {
+                            Text("Remove older kind 3 events")
+                        }.padding(5)
+                        
                         Button { maintenance() } label: {
                             Text("Clean up older than 3 days!")
                         }.padding(5)

@@ -8,6 +8,7 @@
 import SwiftUI
 import CoreData
 //import UIKit
+import LightningDevKit
 
 // TODO: replying to trick:
 // people.map(\.nameComponents).formatted(.list(memberStyle: .name(style:.short), type:.and)
@@ -29,6 +30,13 @@ struct NoteRowView: View {
     var taggedContacts:FetchedResults<Contact>
     var hideFooter = false // For rendering in NewReply
     
+    enum type {
+        case note
+        case lightningInvoice
+    }
+    
+    let type:NoteRowView.type
+    
     init(event: Event, hideFooter:Bool = false) {
         self.event = event
         self.hideFooter = hideFooter
@@ -46,6 +54,13 @@ struct NoteRowView: View {
                 predicate: NSPredicate(format: "pubkey IN %@", pubkeys)
             )
         }
+        if event.noteText.prefix(4) == "lnbc" && Invoice.fromStr(s: event.noteText).getValue() != nil {
+            self.type = .lightningInvoice
+        }
+        else {
+            self.type = .note
+        }
+        
     }
     
     var body: some View {
@@ -66,8 +81,14 @@ struct NoteRowView: View {
                         NoteHeader(event:event)
                     }
                     
-                    NoteTextRenderView(event:event, taggedContacts:Array(taggedContacts))
-                        .onTapGesture { nav.navigateTo(event) }
+                    switch self.type {
+                        case .lightningInvoice:
+                            LightningInvoice(invoice: event.noteText)
+                        default:
+                            NoteTextRenderView(event:event, taggedContacts:Array(taggedContacts))
+                                .onTapGesture { nav.navigateTo(event) }
+                    }
+                    
                 
                     if (event.firstQuoteId != nil && event.firstQuote != nil) {
                         QuotedNoteFragment(event: event.firstQuote!)
@@ -369,9 +390,11 @@ struct NoteRowView_Previews: PreviewProvider {
         
         let event2 = PreviewFetcher.fetchEvent("dec5a86ad780edd26fb8a1b85f919ddace9cb2b2b5d3a68d5124802fc2da4ed3")
         
-        let event3 = PreviewFetcher.fetchEvent("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e")
+        let event3 = PreviewFetcher.fetchEvent("d3b581761bab06fbe727b12b22c33c7b8768d7d9681b45cb6b1f4ad798496e14")
         
         let event4 = PreviewFetcher.fetchEvent("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe")
+        
+        let event5 = PreviewFetcher.fetchEvent("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e")
         
         List {
             
@@ -388,6 +411,9 @@ struct NoteRowView_Previews: PreviewProvider {
                 .listRowInsets(EdgeInsets())
             
             NoteRowView(event: event4!)
+                .listRowInsets(EdgeInsets())
+            
+            NoteRowView(event: event5!)
                 .listRowInsets(EdgeInsets())
             
         }

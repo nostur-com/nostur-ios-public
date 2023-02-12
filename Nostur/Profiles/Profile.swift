@@ -240,13 +240,15 @@ struct Profile: View {
                             //                                .padding(.leading, 20)
                             //                                .padding(.trailing, 10)
                         }
-                        Text("Follows you").font(.system(size: 12))
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 7)
-                            .padding(.vertical, 2)
-                            .background(Color.secondary)
-                            .opacity(0.7)
-                            .cornerRadius(13)
+                        if (ns.followsYou(contact)) {
+                            Text("Follows you").font(.system(size: 12))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 7)
+                                .padding(.vertical, 2)
+                                .background(Color.secondary)
+                                .opacity(0.7)
+                                .cornerRadius(13)
+                        }
                         
                     }
                     
@@ -254,6 +256,11 @@ struct Profile: View {
                     
                     HStack {
                         Text("\n**\(contact.followingPubkeys.count)** Following")
+                        
+                        Text("\n**??** Followers")
+                            .onTapGesture {
+                                activeTab = "FOLLOWERS"
+                            }
                         //                        Text("\n**\(contact.followingPubkeys.count)** Followers")
                     }
                     
@@ -300,6 +307,13 @@ struct Profile: View {
                                     }
                                 }
                             }
+                        }
+                        
+                        if (activeTab == "FOLLOWERS") {
+                            
+                            Text("Followers").font(.headline).fontWeight(.heavy).padding(.vertical, 10)
+                            
+                            FollowersList(pubkey: contact.pubkey!)
                         }
                         
                         if (activeTab == "LIKES") {

@@ -37,8 +37,8 @@ class EventsProvider: ObservableObject {
         let xaccount = Account(context: context)
         xaccount.createdAt = Date()
         xaccount.id = UUID()
-        xaccount.privateKey = "184a90b0cbdf4b4a318d33f6464593d9936430c6793fed82d9b6ec3b8f12804f"
         xaccount.publicKey = "11707ab5c187f4534ea7b4ad67cd9914cd07f7812b5ea2fdd91685ac84c91f5b"
+//        xaccount.privateKey = "184a90b0cbdf4b4a318d33f6464593d9936430c6793fed82d9b6ec3b8f12804f"
         xaccount.name = "Eltje"
         xaccount.about = "Test"
         

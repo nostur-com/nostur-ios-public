@@ -10,7 +10,7 @@ import CoreData
 @main
 struct NosturApp: App {
     @StateObject var up = Unpublisher(viewContext:EventsProvider.shared.container.viewContext)
-    @StateObject var ns = NosturState(viewContext:EventsProvider.shared.container.viewContext)
+    @StateObject var ns = NosturState(container:EventsProvider.shared.container)
     @StateObject var nav = NavigationModel.shared
     @State var isViewDisplayed = false
     

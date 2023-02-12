@@ -28,7 +28,7 @@ extension View {
         // "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
         
         let sp:SocketPool = .shared
-        let ns = NosturState(viewContext: EventsProvider.preview.container.viewContext)
+        let ns = NosturState(container: EventsProvider.preview.container)
         let nav = NavigationModel()
         let account = PreviewFetcher.fetchAccount("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", context: EventsProvider.preview.container.viewContext)
         _ = try! ns.loadActiveAccount(account: account)
@@ -87,15 +87,20 @@ struct PreviewFetcher {
         return try! PreviewFetcher.viewContext.fetch(request).first
     }
     
-    static func fetchEvent(_ id:String, context:NSManagedObjectContext? = nil) -> Event? {
+    static func fetchEvent(_ id:String? = nil, context:NSManagedObjectContext? = nil) -> Event? {
         let request = NSFetchRequest<Event>(entityName: "Event")
-        request.predicate = NSPredicate(format: "id == %@", id)
+        if id != nil {
+            request.predicate = NSPredicate(format: "id == %@", id!)
+        }
+        else {
+            request.predicate = NSPredicate(format: "kind == 1")
+        }
         request.sortDescriptors = []
         
         if (context != nil) {
-            return try! context!.fetch(request).first
+            return try! context!.fetch(request).randomElement()
         }
-        return try! PreviewFetcher.viewContext.fetch(request).first
+        return try! PreviewFetcher.viewContext.fetch(request).randomElement()
     }
     
     static func fetchContact(_ pubkey:String, context:NSManagedObjectContext? = nil) -> Contact? {

@@ -71,6 +71,9 @@ struct AccountView: View {
         .safeAreaInset(edge: .bottom) {
             Button {
                 if newPrivateKey != "" { // TODO: Handle nsec format
+                    
+                    // TODO: Check if private key matches public key
+                    
                     account.privateKey = newPrivateKey
                 }
                 do {

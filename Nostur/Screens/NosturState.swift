@@ -14,17 +14,21 @@ final class NosturState : ObservableObject {
     // public keys of the contacts that the currently active ("logged in") account follows
     // WTF followingPublicKeys met @Published is superlangzaam... HMMM.
     //@Published var followingPublicKeys:Set<String> = Set<String>()
-    var followingPublicKeys:Set<String> = Set<String>()
+    @Published var followingPublicKeys:Set<String> = Set<String>()
     
     @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""
     @Published var account:Account? = nil
     
-    private var keys:NKeys? = nil
+    var pubkey:String? {
+        get { account?.publicKey }
+    }
     
+    var container:NSPersistentContainer
     var viewContext:NSManagedObjectContext
     
-    init(viewContext:NSManagedObjectContext) {
-        self.viewContext = viewContext
+    init(container:NSPersistentContainer) {
+        self.container = container
+        self.viewContext = container.viewContext
         do {
             try _ = loadActiveAccount()
         } catch {
@@ -38,24 +42,20 @@ final class NosturState : ObservableObject {
         }
         
         if (account != nil) {
-            self.account = account!
-            return self.account
+            self.account = account!            
         }
-        
-        let r = Account.fetchRequest()
-        r.predicate = NSPredicate(format: "publicKey == %@", activeAccountPublicKey)
-        self.account = try! viewContext.fetch(r).first
-        
-        if (self.account == nil) { // No account? Just fall back to (ANY) firstaccount
-            r.predicate = nil
+        else {
+            let r = Account.fetchRequest()
+            r.predicate = NSPredicate(format: "publicKey == %@", activeAccountPublicKey)
             self.account = try! viewContext.fetch(r).first
+            
+            if (self.account == nil) { // No account? Just fall back to (ANY) firstaccount
+                r.predicate = nil
+                self.account = try! viewContext.fetch(r).first
+            }
         }
-        
-        if (self.account!.privateKey != nil) {
-            self.keys = NKeys(privateKeyHex: self.account!.privateKey!)
-        }
-        _ = loadFollowing()
-        Task.detached(priority: .userInitiated) {
+        self.followingPublicKeys = loadFollowing()
+        Task(priority: .userInitiated) {
             self.loadLikes()
         }
         return self.account
@@ -67,7 +67,7 @@ final class NosturState : ObservableObject {
             return
         }
         
-        let backgroundContext = EventsProvider.shared.container.newBackgroundContext()
+        let backgroundContext = container.newBackgroundContext()
 
         backgroundContext.perform {
             let batchUpdate = NSBatchUpdateRequest(entityName: "Event")
@@ -81,18 +81,18 @@ final class NosturState : ObservableObject {
                 print("Failed to zero .liked")
             }
         }
-        
+
         backgroundContext.performAndWait {
             let account = backgroundContext.object(with: self.account!.objectID) as! Account
             guard account.likes != nil else {
                 print("🔴🔴 no account or account.likes 🔴🔴")
                 return
             }
-            
+
             for event in account.likes! {
                 event.liked = true
             }
-            
+
             print("Updated likes cache for \(account.likes!.count) events... NEED TO SAVE HERE OR NO?")
         }
     }
@@ -100,12 +100,13 @@ final class NosturState : ObservableObject {
     func loadFollowing() -> Set<String> {
         if (account?.follows != nil) {
             let pubkeys = account!.follows?.map { $0.pubkey! } ?? []
-            self.followingPublicKeys = Set( pubkeys )
+            print("💿 ")
+            print(pubkeys)
+            return Set( pubkeys )
         }
         else {
-            self.followingPublicKeys = Set<String>()
+            return Set([])
         }
-        return self.followingPublicKeys
     }
     
     func follow(_ pubkey:String) {
@@ -208,21 +209,27 @@ final class NosturState : ObservableObject {
     }
     
     func signEvent(_ event:NEvent) throws -> NEvent {
-        guard account != nil, keys != nil else {
+        guard account != nil, account?.privateKey != nil else {
             if (account == nil) { print("🔴🔴🔴🔴🔴 Acccount missing, could not sign 🔴🔴🔴🔴🔴") }
-                if (keys == nil) { print("🔴🔴🔴🔴🔴 Keys missing, could not sign 🔴🔴🔴🔴🔴") }
+            if (account?.privateKey == nil) { print("🔴🔴🔴🔴🔴 private key missing, could not sign 🔴🔴🔴🔴🔴") }
             throw "account or keys missing, could not sign"
         }
         
         var eventToSign = event
         do {
-            let signedEvent = try eventToSign.sign(keys!)
+            let keys = NKeys(privateKeyHex: account!.privateKey!)
+            let signedEvent = try eventToSign.sign(keys)
             return signedEvent
         }
         catch {
             print("🔴🔴🔴🔴🔴 Could not sign event 🔴🔴🔴🔴🔴")
             throw "Could not sign event"
         }
+    }
+    
+    func followsYou(_ contact:Contact) -> Bool {
+        guard contact.clEvent != nil else { return false }
+        return (contact.clEvent!.tags() ?? []).filter { $0.type == "p" && $0.otherInformation[0] == activeAccountPublicKey }.count > 0
     }
     
 }

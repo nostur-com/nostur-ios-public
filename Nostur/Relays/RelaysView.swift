@@ -122,7 +122,7 @@ struct RelaysView: View {
 struct RelaysView_Previews: PreviewProvider {
     static var previews: some View {
         
-        let accountState = NosturState(viewContext: EventsProvider.preview.container.viewContext)
+        let accountState = NosturState(container: EventsProvider.preview.container)
         
 //        let cm = ConnectionManager()
 //        var cm:SocketPool = .shared

@@ -19,6 +19,11 @@ struct NewAccountView: View {
     @State var name = ""
     @State var about = ""
     
+    enum FocusedField {
+        case name
+    }
+    @FocusState private var focusedField: FocusedField?
+    
     var accentColor: Color = .orange
     var grayBackground: Color = Color.gray.opacity(0.2)
     
@@ -37,6 +42,7 @@ struct NewAccountView: View {
                 .background(grayBackground)
                 .cornerRadius(5.0)
                 .padding(.bottom, 20)
+                .focused($focusedField, equals: .name)
             TextField("Something about yourself (bio)", text: $about)
                 .lineLimit(5)
                 .padding()
@@ -66,6 +72,9 @@ struct NewAccountView: View {
 //            Text("creates local account..").foregroundColor(.gray)
             
         }.padding()
+            .onAppear {
+                focusedField = .name
+            }
     }
 }
 

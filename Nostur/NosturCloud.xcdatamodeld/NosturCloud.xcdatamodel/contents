@@ -10,7 +10,6 @@
         <attribute name="name" attributeType="String" defaultValueString=""/>
         <attribute name="nip05" attributeType="String" defaultValueString=""/>
         <attribute name="picture" attributeType="String" defaultValueString=""/>
-        <attribute name="privateKey" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
         <attribute name="publicKey" optional="YES" attributeType="String"/>
         <relationship name="blockedContacts" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact"/>
         <relationship name="bookmarks" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Event" inverseName="bookmarkedBy" inverseEntity="Event"/>

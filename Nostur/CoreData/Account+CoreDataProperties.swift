@@ -24,7 +24,6 @@ extension Account {
     @NSManaged public var nip05: String
     @NSManaged public var picture: String
     @NSManaged public var banner: String
-    @NSManaged public var privateKey: String?
     @NSManaged public var publicKey: String?
     @NSManaged public var id: UUID?
     @NSManaged public var follows: Set<Contact>?
@@ -107,6 +106,24 @@ extension Account : Identifiable {
     var npub:String {
         get {
             publicKey != nil ? try! NIP19(prefix: "npub", hexString: publicKey!).displayString : "?"
+        }
+    }
+    
+    var privateKey:String? {
+        get {
+            guard self.publicKey != nil else { return nil }
+            return AccountManager.shared.getPrivateKeyHex(pubkey: self.publicKey!)
+        }
+        set(privateKeyHex) {
+            guard privateKeyHex != nil, self.publicKey != nil else {
+                if (self.publicKey != nil) {
+                    AccountManager.shared.deletePrivateKey(forPublicKeyHex: self.publicKey!)
+                }
+                return
+            }
+            if (self.publicKey != nil) { // TODO: Store public key based on private?
+                AccountManager.shared.storePrivateKey(privateKeyHex: privateKeyHex!, forPublicKeyHex: self.publicKey!)
+            }
         }
     }
 }

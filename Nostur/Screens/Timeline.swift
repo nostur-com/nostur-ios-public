@@ -56,20 +56,24 @@ struct Timeline: View {
     @State var notesWithoutOlderNotes: [Event] = [] // 3. eventsSorted can have notes that are too old, they are filtered here
     
     @State var notes: [Event] = [] // 4. These are the notes on screen
+    @Binding var followingPubkeys:Set<String>
+    var showReplies:Bool
     
-    init(showReplies:Bool, followingPubkeys: Set<String>, account:Account) {
+    init(showReplies:Bool, followingPubkeys: Binding<Set<String>>, account:Account) {
 //        UIScrollView.appearance().bounces = false
+        self.showReplies = showReplies
         self.account = account
+        self._followingPubkeys = followingPubkeys
         
         let fr = NSFetchRequest<Event>(entityName: "Event")
         if (account.blockedContacts == nil) {
             fr.predicate = showReplies
-            ? NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId != nil", followingPubkeys)
-            : NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil", followingPubkeys)
+            ? NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId != nil", followingPubkeys.wrappedValue)
+            : NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil", followingPubkeys.wrappedValue)
         } else {
             fr.predicate = showReplies
-            ? NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId != nil AND NOT contact IN %@", followingPubkeys, account.blockedContacts!)
-            : NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil AND NOT contact IN %@", followingPubkeys, account.blockedContacts!)
+            ? NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId != nil AND NOT contact IN %@", followingPubkeys.wrappedValue, account.blockedContacts!)
+            : NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil AND NOT contact IN %@", followingPubkeys.wrappedValue, account.blockedContacts!)
         }
         
         fr.fetchLimit = 125 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW (MET VSTACK).
@@ -182,6 +186,18 @@ struct Timeline: View {
         }
         .sheet(isPresented: $showingNewNote) {
             NewNote(noteCancellationId: $noteCancellationId)
+        }
+        .onChange(of: followingPubkeys) { newPubkeys in
+            notes = []
+            if (account.blockedContacts == nil) {
+                events.nsPredicate = showReplies
+                ? NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId != nil", newPubkeys)
+                : NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil", newPubkeys)
+            } else {
+                events.nsPredicate = showReplies
+                ? NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId != nil AND NOT contact IN %@", newPubkeys, account.blockedContacts!)
+                : NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil AND NOT contact IN %@", newPubkeys, account.blockedContacts!)
+            }
         }
     }
 }
@@ -365,13 +381,15 @@ extension Timeline {
 
 struct Timeline_Previews: PreviewProvider {
     
+    @State static var pubkeys = Set(["1833ee04459feb2ca4ae690d5f31269ad488c69e5fe903a42b532c677c4a8170","84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240","3f770d65d3a764a9c5cb503ae123e62ec7598ad035d836e2a810f3877a745b24"])
+    
     static var previews: some View {
         
         let account = PreviewFetcher.fetchAccount("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", context: EventsProvider.preview.container.viewContext)
         
-        let pubkeys = Set(["1833ee04459feb2ca4ae690d5f31269ad488c69e5fe903a42b532c677c4a8170","84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240","3f770d65d3a764a9c5cb503ae123e62ec7598ad035d836e2a810f3877a745b24"])
         
-            Timeline(showReplies: true, followingPubkeys: pubkeys, account: account!)
+        
+            Timeline(showReplies: true, followingPubkeys: $pubkeys, account: account!)
                 .withPreviewEnvironment()
         
     }

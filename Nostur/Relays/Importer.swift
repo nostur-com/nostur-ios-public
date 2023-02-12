@@ -62,6 +62,16 @@ class Importer {
                         continue
                     }
                     
+                    if event.kind == .setMetadata { // What's best? Delete existing kind 3, then insert? Mark existing deletedAt, then insert? Or just update existing event?
+                        // for now, delete older and hope the new insert never fails
+                        let r = NSFetchRequest<Event>(entityName: "Event")
+                        r.predicate = NSPredicate(format: "kind == 3 AND pubkey == %@ AND created_at < %i", event.publicKey, event.createdAt.timestamp)
+                        let olderKind3 = try! context.fetch(r)
+                        for older in olderKind3 {
+                            context.delete(older)
+                        }
+                    }
+                    
                     _ = Event.saveEvent(event: event, context:context)
                     
                     if event.kind == .setMetadata {
