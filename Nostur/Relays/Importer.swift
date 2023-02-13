@@ -72,7 +72,7 @@ class Importer {
                         }
                     }
                     
-                    _ = Event.saveEvent(event: event, context:context)
+                    let savedEvent = Event.saveEvent(event: event, context:context)
                     
                     if event.kind == .setMetadata {
                         if Contact.handleSetMetadataEvent(event: event, context: context) != nil {
@@ -80,15 +80,20 @@ class Importer {
                         }
                     }
                     
-                    if event.kind == .custom(3) {
+                    if event.kind == .contactList {
                         print("kind 3 event \(event.id) saved, but no further handling done yet...")
                     }
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
-                    if event.kind == .custom(7) {
+                    if event.kind == .reaction {
                         do { try _ = Event.updateLikeCountCache(event.tags, content:event.content, context: context) } catch {
                             print("🦋🦋🔴🔴🔴 problem updating Like Count Cache .id \(event.id)")
                         }
+                    }
+                    
+                    // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
+                    if event.kind == .zapNote {
+                        let _ = Event.updateZapTallyCache(savedEvent, context: context)
                     }
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REPLIES, MENTIONS)

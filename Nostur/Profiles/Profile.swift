@@ -110,55 +110,8 @@ struct Profile: View {
                         .animation(nil)
                         .priority(.normal)
                         .pipeline(ImageProcessing.shared.bannerPipeline)
-                        //                        .pipeline(ImagePipeline {
-                        //                            // TODO: volgens mij klopt niet
-                        //                            /// moet ergens anders clean 1x doen ipv iedere keer voor image
-                        //                            $0.dataLoader = DataLoader(configuration: {
-                        //                                // Disable disk caching built into URLSession
-                        //                                let conf = DataLoader.defaultConfiguration
-                        //                                conf.urlCache = nil
-                        //                                return conf
-                        //                            }())
-                        //
-                        //                            $0.imageCache = ImageCache()
-                        //                            $0.dataCache = try! DataCache(name: "com.nostur.2140.banner")
-                        //                        })
                         .frame(width: geo.size.width, height: 150)
-                        //                            .clipped()
-                        //                        LazyImage(url: URL(string: contact.banner!)) { state in
-                        //                            if let image = state.image {
-                        //                                image // Displays the loaded image
-                        //                            }
-                        //                            else {
-                        //                                Image("NosturBanner")
-                        //                                    .resizable()
-                        //                                    .scaledToFill()
-                        //                                    .frame(width: geo.size.width, height: 150)
-                        //                                //                                .clipped()
-                        //                            }
-                        //                        }
-                        //                        .processors([ImageProcessors.Resize(width: geo.size.width)])
-                        //                        .animation(nil)
-                        //                        .priority(.normal)
-                        //                        .pipeline(ImageProcessing.shared.bannerPipeline)
-                        ////                        .pipeline(ImagePipeline {
-                        ////                            // TODO: volgens mij klopt niet
-                        ////                            /// moet ergens anders clean 1x doen ipv iedere keer voor image
-                        ////                            $0.dataLoader = DataLoader(configuration: {
-                        ////                                // Disable disk caching built into URLSession
-                        ////                                let conf = DataLoader.defaultConfiguration
-                        ////                                conf.urlCache = nil
-                        ////                                return conf
-                        ////                            }())
-                        ////
-                        ////                            $0.imageCache = ImageCache()
-                        ////                            $0.dataCache = try! DataCache(name: "com.nostur.2140.banner")
-                        ////                        })
-                        //                        .frame(width: geo.size.width, height: 150)
-                        //                        //                            .clipped()
-                        
                     }
-                    
                     else {
                         HStack {
                             Image("NosturBanner")
@@ -184,6 +137,8 @@ struct Profile: View {
                     HStack(alignment:.top) {
                         
                         Spacer()
+                        
+                        LightningButton(contact: contact)
                         
                         Button {
                             if (isFollowing) {
@@ -361,6 +316,24 @@ struct Profile: View {
                 }
             }
         }
+        .task {
+            guard contact.lud16 != nil else { return }
+            guard contact.lud16! != "" else { return }
+            let lud16 = contact.lud16!
+            do {
+                let response = try await LUD16.getCallbackUrl(lud16: lud16)
+                await MainActor.run {
+                    if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                        contact.zapperPubkey = response.nostrPubkey!
+                        print("contact.zapperPubkey updated: \(response.nostrPubkey!)")
+                    }
+                }
+            }
+            catch {
+                print("problem in lnurlp")
+                print(error)
+            }
+        }
         .onChange(of: contact.nip05) { nip05 in
             if (NIP05.shouldVerify(contact)) {
                 Task {
@@ -424,7 +397,7 @@ struct Profile_Previews: PreviewProvider {
     static var previews: some View {
         // 5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0 // bitcoiner
         // snowden: 84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240
-        let pubkey = "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240"
+        let pubkey = "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
         let snowden = PreviewFetcher.fetchContact(pubkey)
         //        let clEvent = PreviewFetcher.fetchEvents(pubkey, kind: 3).first!
         //

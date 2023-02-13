@@ -31,7 +31,7 @@ class NIP05 {
         
         guard nip05parts.count == 2 else { return false }
         
-        let nip05url = URL(string: "https://\(nip05parts[1])/.well-known/nostr.json?name=\(nip05parts[0])")!
+        guard let nip05url = URL(string: "https://\(nip05parts[1])/.well-known/nostr.json?name=\(nip05parts[0])") else { return false }
         let urlSession = URLSession.shared
         
         do {

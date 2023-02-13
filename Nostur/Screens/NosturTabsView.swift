@@ -30,8 +30,6 @@ struct NosturTabsView: View {
             TabView(selection: $selectedTab) {
                 NavigationStack(path: $timelinePath) {
                     if (ns.followingPublicKeys.count != 0) {
-//                        PaginationTest3()
-//                        UITableTimeline(showReplies: true, showMenu: $showMenu, followingPubkeys: ns.followingPublicKeys, account: ns.account!)
                         Timeline(showReplies: true, followingPubkeys: $ns.followingPublicKeys, account: ns.account!)
                             .withNavigationDestinations()
                     } else {

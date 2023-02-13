@@ -70,7 +70,9 @@ struct LightningInvoice: View {
             }
         }
         .padding(20)
-        .background(.gray.opacity(0.2))
+        .background(LinearGradient(colors: [.orange, .red],
+                                   startPoint: .top,
+                                   endPoint: .center).opacity(0.3))
         .cornerRadius(20)
         .task {
             guard let url = URL(string: "https://api.kraken.com/0/public/Ticker?pair=XXBTZUSD") else { return }

@@ -66,6 +66,7 @@ class EventsProvider: ObservableObject {
         messages.append(contentsOf: testSnowden())
         messages.append(contentsOf: testKind6Events())
         messages.append(contentsOf: testEfilter())
+        messages.append(contentsOf: testZaps())
         
         var relayMessages:[RelayMessage] = []
         
@@ -141,6 +142,7 @@ class EventsProvider: ObservableObject {
         
         account.addToBookmarks(someEvent)
         account.addToBlockedContacts(contact3!)
+        account.addToBlockedContacts(contact1!)
         someEvent.addToBookmarkedBy(account)
         
         

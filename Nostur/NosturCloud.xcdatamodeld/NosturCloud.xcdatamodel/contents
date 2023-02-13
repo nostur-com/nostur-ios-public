@@ -11,7 +11,7 @@
         <attribute name="nip05" attributeType="String" defaultValueString=""/>
         <attribute name="picture" attributeType="String" defaultValueString=""/>
         <attribute name="publicKey" optional="YES" attributeType="String"/>
-        <relationship name="blockedContacts" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact"/>
+        <relationship name="blockedContacts" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact" inverseName="blockedBy" inverseEntity="Contact"/>
         <relationship name="bookmarks" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Event" inverseName="bookmarkedBy" inverseEntity="Event"/>
         <relationship name="follows" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact" inverseName="followedBy" inverseEntity="Contact"/>
         <relationship name="likes" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Event"/>
@@ -27,6 +27,8 @@
         <attribute name="picture" optional="YES" attributeType="String"/>
         <attribute name="pubkey" attributeType="String"/>
         <attribute name="updated_at" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="zapperPubkey" optional="YES" attributeType="String"/>
+        <relationship name="blockedBy" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Account" inverseName="blockedContacts" inverseEntity="Account"/>
         <relationship name="followedBy" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Account" inverseName="follows" inverseEntity="Account"/>
         <relationship name="lists" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="NosturList" inverseName="contacts" inverseEntity="NosturList"/>
         <uniquenessConstraints>
@@ -51,6 +53,7 @@
         <attribute name="replyToRootId" optional="YES" attributeType="String"/>
         <attribute name="sig" optional="YES" attributeType="String"/>
         <attribute name="tagsSerialized" optional="YES" attributeType="String"/>
+        <attribute name="zapTally" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="bookmarkedBy" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Account" inverseName="bookmarks" inverseEntity="Account"/>
         <relationship name="contact" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Contact"/>
         <relationship name="firstQuote" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event"/>

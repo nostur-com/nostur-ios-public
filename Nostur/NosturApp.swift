@@ -9,14 +9,16 @@ import CoreData
 
 @main
 struct NosturApp: App {
-    @StateObject var up = Unpublisher(viewContext:EventsProvider.shared.container.viewContext)
-    @StateObject var ns = NosturState(container:EventsProvider.shared.container)
-    @StateObject var nav = NavigationModel.shared
+    
+    let up = Unpublisher(viewContext:EventsProvider.shared.container.viewContext)
+    let ns = NosturState(container:EventsProvider.shared.container)
+    let nav:NavigationModel = .shared
+    let sp:SocketPool = .shared
+    
     @State var isViewDisplayed = false
     
     let runLoop = Timer.publish(every: 2, tolerance: 1, on: .main, in: .common).autoconnect()
-    let sp:SocketPool = .shared
-    
+
     var body: some Scene {        
         WindowGroup {
                 NosturRootMenu()

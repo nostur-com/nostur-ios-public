@@ -40,22 +40,34 @@ public enum NEventKind: Codable, Equatable {
     case setMetadata
     case textNote
     case recommentServer
+    case contactList
+    case reaction
+    case zapRequest
+    case zapNote
     case custom(Int)
 
     init(id: Int) {
         switch id {
-        case 0: self = .setMetadata
-        case 1: self = .textNote
-        case 2: self = .recommentServer
-        default: self = .custom(id)
+        case    0: self = .setMetadata
+        case    1: self = .textNote
+        case    2: self = .recommentServer
+        case    3: self = .contactList
+        case    7: self = .reaction
+        case 9734: self = .zapRequest
+        case 9735: self = .zapNote
+        default:   self = .custom(id)
         }
     }
 
     var id: Int {
         switch self {
-        case .setMetadata: return 0
-        case .textNote: return 1
-        case .recommentServer: return 2
+        case .setMetadata:          return 0
+        case .textNote:             return 1
+        case .recommentServer:      return 2
+        case .contactList:          return 3
+        case .reaction:             return 7
+        case .zapRequest:           return 9734
+        case .zapNote:              return 9735
         case .custom(let customId): return customId
         }
     }
@@ -101,6 +113,10 @@ public struct NEventTag: Codable {
     }
     
     public init(type: String, otherInformation: String?...) {
+        underlyingData = [type] + otherInformation.compactMap { $0 }
+    }
+    
+    public init(type: String, otherInformation: [String]) {
         underlyingData = [type] + otherInformation.compactMap { $0 }
     }
 

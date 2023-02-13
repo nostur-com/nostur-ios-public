@@ -22,4 +22,8 @@ extension Notification.Name {
     static var unpublisherTimerNextTick: Notification.Name {
         return Notification.Name("unpublisherTimerNextTick")
     }
+    
+    static var blockListUpdated: Notification.Name {
+        return Notification.Name("blockListUpdated")
+    }
 }

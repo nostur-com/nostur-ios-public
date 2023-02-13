@@ -130,12 +130,17 @@ struct AccountListView: View {
                     Button {
                         fetchContacts(account:account)
                     } label: {
-                        Text("Fetch contacts")
+                        Text("Load contacts from relays")
                     }
                     Button {
                         updateContacts()
                     } label: {
                         Text("Update contacts metadata")
+                    }
+                    Button {
+                        loadFollowers(account: account)
+                    } label: {
+                        Text("load followers from kind 3")
                     }
                     
                     if activeAccountPublicKey != account.publicKey {
@@ -209,6 +214,28 @@ struct AccountListView: View {
     func fetchContacts(account:Account) {
         if (account.publicKey != nil) {
             cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: account.publicKey!)))
+        }
+    }
+    
+    func loadFollowers(account:Account) {
+        let fr = Event.fetchRequest()
+        fr.predicate = NSPredicate(format: "kind == 3 AND pubkey == %@", account.publicKey!)
+        let clEvent = try! viewContext.fetch(fr).first
+        if (clEvent != nil) {
+            
+        
+            let contactPubkeys = TagsHelpers(clEvent?.tags() ?? []).pTags().map { $0.pubkey }
+            
+            let cr = Contact.fetchRequest()
+            cr.predicate = NSPredicate(format: "pubkey IN %@", contactPubkeys)
+            let contacts = try! viewContext.fetch(cr)
+            
+            for contact in contacts {
+                account.addToFollows(contact)
+                print("Adding to followers: \(contact.name ?? "??")")
+            }
+            
+            try! viewContext.save();
         }
     }
     

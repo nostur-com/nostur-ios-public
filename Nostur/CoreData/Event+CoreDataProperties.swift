@@ -9,7 +9,7 @@
 import Foundation
 import CoreData
 import Compactor
-
+import LightningDevKit
 
 extension Event {
     
@@ -49,7 +49,7 @@ extension Event {
     @NSManaged public var replyTo: Event?
     @NSManaged public var replyToRoot: Event?
     @NSManaged public var firstQuote: Event?
-
+    @NSManaged public var zapTally: Int64
 
     @NSManaged public var replies: Set<Event>?
 //    // helper
@@ -251,6 +251,39 @@ extension Event : Identifiable {
             print("downvote")
         default:
             break
+        }
+        return true
+    }
+    
+    
+    static func updateZapTallyCache(_ event:Event, context:NSManagedObjectContext) -> Bool {
+        let nEvent = event.toNEvent()
+        
+        // we need to have contact.zapperPubkey first... ughh
+        let pTag = nEvent.tags.first { $0.type == "p" }
+        guard pTag != nil else { return false }
+        let contact = Contact.fetchByPubkey(pTag!.pubkey, context: context)
+        guard contact != nil else { return false }
+        guard contact!.zapperPubkey != nil else { return false }
+        guard contact!.zapperPubkey! != event.pubkey! else { return false }
+        
+        
+        // bolt11
+        let bolt11tag = nEvent.tags.first { $0.type == "bolt11" }
+        guard bolt11tag != nil else { return false }
+        let invoice = Invoice.fromStr(s: bolt11tag!.otherInformation[0])
+        guard invoice.getValue() != nil else { return false }
+        
+        // zapped event
+        let eventTag = nEvent.tags.first { $0.type == "e" }
+        guard eventTag != nil else { return false }
+        let request = NSFetchRequest<Event>()
+        request.entity = Event.entity()
+        request.predicate = NSPredicate(format: "id == %@", eventTag!.id)
+        request.fetchLimit = 1
+        
+        if let zappedEvent = try! context.fetch(request).first {
+            zappedEvent.zapTally = zappedEvent.zapTally + Int64(((invoice.getValue()!.amountMilliSatoshis() ?? 0) / 1000))
         }
         return true
     }

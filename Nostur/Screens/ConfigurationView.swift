@@ -87,7 +87,7 @@ struct ConfigurationView: View {
         r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         let allEvents = try! viewContext.fetch(r)
         
-        let kind1or7 = allEvents.filter { $0.kind == 1 || $0.kind == 7 }
+        let kind1or7or9735 = allEvents.filter { $0.kind == 1 || $0.kind == 7 || $0.kind == 9735 }
         let kind1 = allEvents.filter { $0.kind == 1 }
         
         let decoder = JSONDecoder()
@@ -97,10 +97,11 @@ struct ConfigurationView: View {
             event.repliesCount = 0 // TODO: Dit allemaal kan @aggregate worden?? @count ofzo?
             event.mentions = 0
             event.likes = 0
+            event.zapTally = 0
         }
         
         // RECOUNT
-        for event in kind1or7 {
+        for event in kind1or7or9735 {
             
             // if reply or replytoroot (and KIND 1)
             // update replies counter
@@ -143,6 +144,13 @@ struct ConfigurationView: View {
                     print("something wrong with updating mentions cache")
                     print(error)
                 }
+            }
+            
+            
+            // if reaction (KIND 7)
+            // update likes count
+            if (event.kind == 9735 && event.tagsSerialized != nil) {
+                let _ = Event.updateZapTallyCache(event, context: viewContext)
             }
         }
         

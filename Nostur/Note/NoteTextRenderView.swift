@@ -56,6 +56,7 @@ struct NoteTextRenderView: View {
     var renderedText:AttributedString? = nil
     var firstLinkInText:String? = nil
     var tags:[NEventTag]
+    var useLinelimit = true
 
     @State private var metadata: LPLinkMetadata?
 
@@ -125,8 +126,6 @@ struct NoteTextRenderView: View {
         }
     }
 
-    var useLinelimit = true
-    
     init(event: Event, taggedContacts: [Contact] = [], useLinelimit:Bool = true) {
         self.event = event
         self.tags = event.tags() ?? []
@@ -139,7 +138,7 @@ struct NoteTextRenderView: View {
     
     var body: some View {
         VStack(alignment: .leading) {
-            if (taggedContacts.count > 0) {
+            if (tags.count > 0) {
                 if (useLinelimit) {
                     Text(renderedText!)
                         .lineLimit(4, reservesSpace: false)
@@ -160,7 +159,7 @@ struct NoteTextRenderView: View {
                             .padding(.vertical, 5)
                 }
             }
-            else if (taggedContacts.count == 0) {
+            else if (tags.count == 0) {
                 if (useLinelimit) {
                     Text(event.noteText)
                         .lineLimit(4, reservesSpace: false)
@@ -232,30 +231,34 @@ struct NoteTextRenderView_Previews: PreviewProvider {
         // Mention in end #[0]
         // 143efe07393c5b07efbe6ea1fc66c39cb985b98f8844650edd00fbcb041228a3
         
-        let event0 = PreviewFetcher.fetchEvent("143efe07393c5b07efbe6ea1fc66c39cb985b98f8844650edd00fbcb041228a3")
+        let event5 = PreviewFetcher.fetchEvent("143efe07393c5b07efbe6ea1fc66c39cb985b98f8844650edd00fbcb041228a3")
         
-        let event1 = PreviewFetcher.fetchEvent("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe")
+        let event4 = PreviewFetcher.fetchEvent("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe")
         
-        let event2 = PreviewFetcher.fetchEvent("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
+        let event3 = PreviewFetcher.fetchEvent("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
         
-        let event3 = PreviewFetcher.fetchEvent("115eab2976aee4ca562d83ea6b1d805c6d4e0acf54fe2e6a4e1a62f73c2850cc")
+        let event2 = PreviewFetcher.fetchEvent("115eab2976aee4ca562d83ea6b1d805c6d4e0acf54fe2e6a4e1a62f73c2850cc")
         
-        let event4 = PreviewFetcher.fetchEvent("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
+        let event1 = PreviewFetcher.fetchEvent("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
+        
+        let event0 = PreviewFetcher.fetchEvent("21a1b8e4083c11eab8f280dc0c0bddf3837949df75662e181ad117bd0bd5fdf3")
         
         let allContacts = PreviewFetcher.allContacts()
         
         VStack {
-            NoteTextRenderView(event:event0!, taggedContacts: allContacts)
-                .withPreviewEnvironment()
-            Divider()
-            
-            NoteTextRenderView(event:event1!, taggedContacts: allContacts)
-                .withPreviewEnvironment()
-            Divider()
-            
-            NoteTextRenderView(event:event2!, taggedContacts: allContacts)
-                .withPreviewEnvironment()
-            Divider()
+            Group {
+                NoteTextRenderView(event:event0!, taggedContacts: allContacts)
+                    .withPreviewEnvironment()
+                Divider()
+                
+                NoteTextRenderView(event:event1!, taggedContacts: allContacts)
+                    .withPreviewEnvironment()
+                Divider()
+                
+                NoteTextRenderView(event:event2!, taggedContacts: allContacts)
+                    .withPreviewEnvironment()
+                Divider()
+            }
             
 //            Text(allContacts.count.description)
             NoteTextRenderView(event:event3!, taggedContacts: allContacts)
@@ -264,6 +267,11 @@ struct NoteTextRenderView_Previews: PreviewProvider {
             
             NoteTextRenderView(event:event4!, taggedContacts: allContacts)
                 .withPreviewEnvironment()
+            Divider()
+            
+            NoteTextRenderView(event:event5!, taggedContacts: allContacts)
+                .withPreviewEnvironment()
+            Divider()
         }
     }
 }

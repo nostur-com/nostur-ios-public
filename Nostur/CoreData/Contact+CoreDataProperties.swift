@@ -41,6 +41,7 @@ extension Contact {
     @NSManaged public var picture: String?
     @NSManaged public var banner: String?
     @NSManaged public var pubkey: String?
+    @NSManaged public var zapperPubkey: String? // used to authorize kind 9735 zap notes. fetch from lud16 endpoint
     @NSManaged public var updated_at: Int64
     @NSManaged public var followedBy: NSSet?
 
@@ -60,6 +61,23 @@ extension Contact {
 
     @objc(removeFollowedBy:)
     @NSManaged public func removeFromFollowedBy(_ values: NSSet)
+
+}
+
+// MARK: Generated accessors for blockedBy
+extension Contact {
+
+    @objc(addBlockedByObject:)
+    @NSManaged public func addToBlockedBy(_ value: Account)
+
+    @objc(removeBlockedByObject:)
+    @NSManaged public func removeFromBlockedBy(_ value: Account)
+
+    @objc(addBlockedBy:)
+    @NSManaged public func addToBlockedBy(_ values: NSSet)
+
+    @objc(removeBlockedBy:)
+    @NSManaged public func removeFromBlockedBy(_ values: NSSet)
 
 }
 
@@ -302,5 +320,12 @@ extension Contact : Identifiable {
             contact.nip05 = metaData.nip05
             contact.updated_at = Int64(Date().timeIntervalSinceNow)
         }
+    }
+    
+    
+    static func fetchByPubkey(_ pubkey:String, context:NSManagedObjectContext) -> Contact? {
+        let r = Contact.fetchRequest()
+        r.predicate = NSPredicate(format: "pubkey == %@", pubkey)
+        return try? context.fetch(r).first
     }
 }

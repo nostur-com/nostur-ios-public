@@ -217,7 +217,10 @@ struct NoteMenu: View {
                     ns.account?.addToBlockedContacts(event.contact!)
                     ns.account?.objectWillChange.send()
                 }
-                do { try viewContext.save() }
+                do {
+                    try viewContext.save()
+                    sendNotification(.blockListUpdated, nil)
+                }
                 catch {
                     print("Could not save after blocking contact \(error)")
                 }
@@ -334,6 +337,15 @@ struct FooterFragment: View {
             }
             Spacer()
             
+            if (event.contact?.lud16 != nil) {
+                LightningButton(contact:event.contact!, event: event)
+                Spacer()
+            }
+            else {
+                Color.clear.frame(width: 30)
+                Spacer()
+            }
+            
             // BOOKMARK
             if (ns.isBookmarked(event)) {
                 Image(systemName: "bookmark.fill")
@@ -384,7 +396,8 @@ struct NoteRowView_Previews: PreviewProvider {
         // TODO: find repost of 97a1a5dab19064061b45937c4e3523782d34608bd13278def9af4d5107ece65c
         // maybe: 7edef20143bb4df0c65dff3993bd9f7c5fb755fe6c8fa72cc847299afe52d8fa
         
-        let event0 = PreviewFetcher.fetchEvent("24ad21d57d59b03f4f9a8931f8bc4ccca84ed6ab257bf62cb84b0d04e0583118")
+        let event0 = PreviewFetcher.fetchEvent("21a1b8e4083c11eab8f280dc0c0bddf3837949df75662e181ad117bd0bd5fdf3")
+//        let event0 = PreviewFetcher.fetchEvent("24ad21d57d59b03f4f9a8931f8bc4ccca84ed6ab257bf62cb84b0d04e0583118")
         
         let event1 = PreviewFetcher.fetchEvent("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
         

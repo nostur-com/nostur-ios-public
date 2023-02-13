@@ -199,6 +199,11 @@ struct Timeline: View {
                 : NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil AND NOT contact IN %@", newPubkeys, account.blockedContacts!)
             }
         }
+        .onReceive(receiveNotification(.blockListUpdated)) { _ in
+            notes = notes.filter {
+                !(ns.account?.blockedContacts ?? Set<Contact>()).contains($0.contact)
+            }
+        }
     }
 }
 

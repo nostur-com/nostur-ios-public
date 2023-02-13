@@ -16,39 +16,14 @@ struct NosturRootMenu: View {
         SideBarStack(sidebarWidth: 285, showSidebar: $nav.showSidebar) {
             if (ns.account != nil) {
                 sideBar
-//                    .withNavigationDestinations() TODO: Put back?
+                    .withNavigationDestinations() //TODO: Put back?
             }
         } content: {
             //TODO: Check if ns.account is loaded first
             if (ns.account != nil) {
                 NosturTabsView(showMenu: $nav.showSidebar, selectedTab: $nav.selectedTab, timelinePath: $nav.timelinePath, searchPath: $nav.searchPath, accountsPath: $nav.accountsPath, bookmarksPath: $nav.bookmarksPath, notificationsPath: $nav.notificationsPath, messagesPath: $nav.messagesPath, configurationPath: $nav.configurationPath)
                     .onOpenURL { url in
-                        // TODO: CHECK INPUT!!! SECURITY!
-                        print(url.absoluteString)
-                        let nostr = url.absoluteString.matchingStrings(regex: "^(nostr:)(npub1|note1)([023456789acdefghjklmnpqrstuvwxyz]{58})$")
-                        if nostr.count == 1 && nostr[0].count == 4 {
-                            print("ok lets go to: \(nostr[0][2])\(nostr[0][3])")
-                            let key = try! NIP19(displayString: "\(nostr[0][2])\(nostr[0][3])")
-                            print("ok lets go to: \(key.hexString)")
-                            if nostr[0][2] == "npub1" {                            
-                                nav.navigateTo(ContactPath(key: key.hexString))
-                            }
-                            if nostr[0][2] == "note1" {
-                                nav.navigateTo(NotePath(id: key.hexString))
-                            }
-                        }
-                        
-                        let nostur = url.absoluteString.matchingStrings(regex: "^(nostur:)(p:|e:)([0-9a-z]{64})$")
-                        if nostur.count == 1 && nostur[0].count == 4 {
-                            print("ok lets go to: \(nostur[0][2])\(nostur[0][3])")
-                            if nostur[0][2] == "p:" {
-                                nav.navigateTo(ContactPath(key: nostur[0][3]))
-                            }
-                            if nostur[0][2] == "e:" {
-                                nav.navigateTo(NotePath(id: nostur[0][3]))
-                            }
-                        }
-                        
+                        self.handleUrl(url)
                     }
             }
             else {
@@ -101,6 +76,33 @@ extension NosturRootMenu {
         }
     }
 
+    func handleUrl(_ url:URL) {
+        // TODO: CHECK INPUT!!! SECURITY!
+        print(url.absoluteString)
+        let nostr = url.absoluteString.matchingStrings(regex: "^(nostr:)(npub1|note1)([023456789acdefghjklmnpqrstuvwxyz]{58})$")
+        if nostr.count == 1 && nostr[0].count == 4 {
+            print("ok lets go to: \(nostr[0][2])\(nostr[0][3])")
+            let key = try! NIP19(displayString: "\(nostr[0][2])\(nostr[0][3])")
+            print("ok lets go to: \(key.hexString)")
+            if nostr[0][2] == "npub1" {
+                nav.navigateTo(ContactPath(key: key.hexString))
+            }
+            if nostr[0][2] == "note1" {
+                nav.navigateTo(NotePath(id: key.hexString))
+            }
+        }
+        
+        let nostur = url.absoluteString.matchingStrings(regex: "^(nostur:)(p:|e:)([0-9a-z]{64})$")
+        if nostur.count == 1 && nostur[0].count == 4 {
+            print("ok lets go to: \(nostur[0][2])\(nostur[0][3])")
+            if nostur[0][2] == "p:" {
+                nav.navigateTo(ContactPath(key: nostur[0][3]))
+            }
+            if nostur[0][2] == "e:" {
+                nav.navigateTo(NotePath(id: nostur[0][3]))
+            }
+        }
+    }
 }
 
 struct MainView_Previews: PreviewProvider {

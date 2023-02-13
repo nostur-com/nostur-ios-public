@@ -345,6 +345,16 @@ struct DetailFooterFragment: View {
                     }
                 }
                 Spacer()
+                
+                if (event.contact?.lud16 != nil) {
+                    LightningButton(contact:event.contact!, event: event)
+                    Spacer()
+                }
+                else {
+                    Color.clear.frame(width: 30)
+                    Spacer()
+                }
+                
                 Button {
                     if (ns.isBookmarked(event)) {
                         ns.removeBookmark(event)
@@ -390,7 +400,9 @@ struct NoteDetailViewX_Previews: PreviewProvider {
         // note.id 6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81
         // pubkey: 5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0
         
-        let event = PreviewFetcher.fetchEvent("cae92f22295c2109a4596a373caeaa706bd140e4a71419722014f223ae681bce")
+        // zapp test e: 49635b590782cb1ab1580bd7e9d85ba586e6e99e48664bacf65e71821ae79df1
+        
+        let event = PreviewFetcher.fetchEvent("49635b590782cb1ab1580bd7e9d85ba586e6e99e48664bacf65e71821ae79df1")
         
         NoteDetail(event: event!)
             .withPreviewEnvironment()

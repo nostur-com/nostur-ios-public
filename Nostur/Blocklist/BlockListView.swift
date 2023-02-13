@@ -12,23 +12,32 @@ struct BlockListView: View {
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
     
+    
     var body: some View {
         if (ns.account == nil) {
             Text("Please choose account first")
         }
         else {
             List {
-                ForEach(Array(ns.account!.blockedContacts ?? []), id:\.objectID) { contact in
+                ForEach((ns.account!.blockedContacts ?? Set<Contact>()).sorted(by: { $0.authorName < $1.authorName })) { contact in
                     ProfileRow(withoutFollowButton: true, contact: contact)
-                }
-                .onDelete { offsets in
-                    withAnimation {
-                        offsets.map { Array(ns.account!.blockedContacts ?? [] )[$0] }.forEach(viewContext.delete)
-                        do { try viewContext.save() } catch {
-                            let nsError = error as NSError
-                            fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+//                        .id(contact.id)
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button {
+//                                withAnimation {
+                                ns.account!.removeFromBlockedContacts(contact)
+                                ns.objectWillChange.send()
+                                try! viewContext.save()
+                                do {
+                                    try viewContext.save()
+                                    sendNotification(.blockListUpdated, nil)
+                                } catch {
+                                    print("🔴 could not remove contact from blocked list")
+                                    print(error)
+                                }
+//                                }
+                            } label: { Text("Unblock") }.tint(.green)
                         }
-                    }
                 }
             }
         }
@@ -37,7 +46,9 @@ struct BlockListView: View {
 
 struct BlockListView_Previews: PreviewProvider {
     static var previews: some View {
-        BlockListView()
-            .withPreviewEnvironment()
+        VStack {
+            BlockListView()
+                .withPreviewEnvironment()
+        }
     }
 }
