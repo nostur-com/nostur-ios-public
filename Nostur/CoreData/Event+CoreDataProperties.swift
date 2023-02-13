@@ -265,7 +265,7 @@ extension Event : Identifiable {
         let contact = Contact.fetchByPubkey(pTag!.pubkey, context: context)
         guard contact != nil else { return false }
         guard contact!.zapperPubkey != nil else { return false }
-        guard contact!.zapperPubkey! != event.pubkey! else { return false }
+        guard contact!.zapperPubkey! == event.pubkey! else { return false }
         
         
         // bolt11
