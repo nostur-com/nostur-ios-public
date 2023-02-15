@@ -90,7 +90,7 @@ struct FollowersList_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
             
-            let pubkey = "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
+            let pubkey = "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240"
             
             FollowersList(pubkey: pubkey)
                 .withPreviewEnvironment()

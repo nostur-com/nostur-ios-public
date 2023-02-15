@@ -63,6 +63,12 @@ extension Event {
             contact?.username ?? authorKey
         }
     }
+    
+    var name: String {
+        get {
+            contact?.display_name ?? contact?.username ?? authorKey
+        }
+    }
 }
 
 // MARK: Generated accessors for bookmarkedBy
@@ -151,7 +157,7 @@ extension Event : Identifiable {
     }
     
     // GETTER for "setMetaData" Events. !! NOT A SETTER !!
-    static func setMetaDataEvents(byAuthorPubkey:String? = nil) -> NSFetchRequest<Event> {
+    static func setMetaDataEvents(byAuthorPubkey:String? = nil, context:NSManagedObjectContext) -> [Event]? {
         
         let request: NSFetchRequest<Event> = Event.fetchRequest()
         if (byAuthorPubkey != nil) {
@@ -162,10 +168,10 @@ extension Event : Identifiable {
         }
         request.sortDescriptors = [NSSortDescriptor(key: "created_at", ascending: false)]
         
-        return request
+        return try? context.fetch(request)
     }
     
-    static func contactListEvents(byAuthorPubkey:String? = nil) -> NSFetchRequest<Event> {
+    static func contactListEvents(byAuthorPubkey:String? = nil, context:NSManagedObjectContext) -> [Event]? {
         
         let request: NSFetchRequest<Event> = Event.fetchRequest()
         if (byAuthorPubkey != nil) {
@@ -176,7 +182,7 @@ extension Event : Identifiable {
         }
         request.sortDescriptors = [NSSortDescriptor(key: "created_at", ascending: false)]
         
-        return request
+        return try? context.fetch(request)
     }
     
     @discardableResult
@@ -386,7 +392,7 @@ extension Event : Identifiable {
             }
         }
         
-        if (event.kind == .textNote && TagsHelpers(event.tags).mentionEtags() != nil) {
+        if ((event.kind == .repost || event.kind == .textNote) && TagsHelpers(event.tags).mentionEtags() != nil) {
             savedEvent.firstQuoteId = TagsHelpers(event.tags).mentionEtags()!.first!.id
             
             let er = NSFetchRequest<Event>(entityName: "Event")
@@ -398,9 +404,9 @@ extension Event : Identifiable {
             }
         }
         
-        // if other existing messages were replying to this, fix the relation
+        // if other existing messages were replying, mentioning, reposting (to) this, fix the relation
         let pointingToEventReq = NSFetchRequest<Event>(entityName: "Event")
-        pointingToEventReq.predicate = NSPredicate(format: "kind == 1 AND (replyToId == %@ OR replyToRootId == %@ OR firstQuoteId == %@)", savedEvent.id!, savedEvent.id!, savedEvent.id!)
+        pointingToEventReq.predicate = NSPredicate(format: "(kind == 1 OR kind == 6) AND (replyToId == %@ OR replyToRootId == %@ OR firstQuoteId == %@)", savedEvent.id!, savedEvent.id!, savedEvent.id!)
         pointingToEventReq.sortDescriptors = []
         if let pointingToEvents = try? context.fetch(pointingToEventReq) {
             for event in pointingToEvents {

@@ -17,7 +17,7 @@ struct ProfileNotesView: View {
     
     @FetchRequest(
         sortDescriptors: [SortDescriptor(\Event.created_at, order: .reverse)],
-        predicate: NSPredicate(format: "kind == 1"),
+        predicate: NSPredicate(format: "kind IN {1,6}"),
         animation: .none)
     var events: FetchedResults<Event>
     
@@ -25,7 +25,7 @@ struct ProfileNotesView: View {
         self.pubkey = pubkey
         _events = FetchRequest(
             sortDescriptors: [SortDescriptor(\Event.created_at, order: .reverse)],
-            predicate: NSPredicate(format: "pubkey == %@ AND kind == 1", pubkey)
+            predicate: NSPredicate(format: "pubkey == %@ AND kind IN {1,6}", pubkey)
         )
     }
     

@@ -28,7 +28,8 @@ extension View {
                 NoteById(id: path.id)
             }
             .navigationDestination(for: Event.self) { event in
-                NoteDetail(event: event)
+                ReplyNoteView(event: event)
+//                NoteDetail(event: event)
             }
             .navigationDestination(for: ContactPath.self) { path in
                 ProfileByPubkey(pubkey: path.key)

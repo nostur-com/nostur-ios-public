@@ -38,8 +38,11 @@ struct NosturApp: App {
     }
 
     func startNosturing() {
-        // Daily cleanup
-//        EventsProvider.shared.removeOldEvents()
+        Maintenance.firstTimeStartup(context: EventsProvider.shared.container.viewContext)
+        
+        // Daily cleanup.
+        //TODO: Is fast or do in background task?
+        Maintenance.maintenance(context: EventsProvider.shared.container.viewContext)
         
         // One time fix
         //        repairDb()

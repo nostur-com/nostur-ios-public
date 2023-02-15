@@ -68,12 +68,12 @@ struct Timeline: View {
         let fr = NSFetchRequest<Event>(entityName: "Event")
         if (account.blockedContacts == nil) {
             fr.predicate = showReplies
-            ? NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId != nil", followingPubkeys.wrappedValue)
-            : NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil", followingPubkeys.wrappedValue)
+            ? NSPredicate(format: "pubkey IN %@ AND kind IN {1,6} AND replyToId != nil", followingPubkeys.wrappedValue)
+            : NSPredicate(format: "pubkey IN %@ AND kind IN {1,6} AND replyToId == nil", followingPubkeys.wrappedValue)
         } else {
             fr.predicate = showReplies
-            ? NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId != nil AND NOT contact IN %@", followingPubkeys.wrappedValue, account.blockedContacts!)
-            : NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil AND NOT contact IN %@", followingPubkeys.wrappedValue, account.blockedContacts!)
+            ? NSPredicate(format: "pubkey IN %@ AND kind IN {1,6} AND replyToId != nil AND NOT contact IN %@", followingPubkeys.wrappedValue, account.blockedContacts!)
+            : NSPredicate(format: "pubkey IN %@ AND kind IN {1,6} AND replyToId == nil AND NOT contact IN %@", followingPubkeys.wrappedValue, account.blockedContacts!)
         }
         
         fr.fetchLimit = 125 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW (MET VSTACK).
@@ -191,18 +191,23 @@ struct Timeline: View {
             notes = []
             if (account.blockedContacts == nil) {
                 events.nsPredicate = showReplies
-                ? NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId != nil", newPubkeys)
-                : NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil", newPubkeys)
+                ? NSPredicate(format: "pubkey IN %@ AND kind IN {1,6} AND replyToId != nil", newPubkeys)
+                : NSPredicate(format: "pubkey IN %@ AND kind IN {1,6} AND replyToId == nil", newPubkeys)
             } else {
                 events.nsPredicate = showReplies
-                ? NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId != nil AND NOT contact IN %@", newPubkeys, account.blockedContacts!)
-                : NSPredicate(format: "pubkey IN %@ AND kind == 1 AND replyToId == nil AND NOT contact IN %@", newPubkeys, account.blockedContacts!)
+                ? NSPredicate(format: "pubkey IN %@ AND kind IN {1,6} AND replyToId != nil AND NOT contact IN %@", newPubkeys, account.blockedContacts!)
+                : NSPredicate(format: "pubkey IN %@ AND kind IN {1,6} AND replyToId == nil AND NOT contact IN %@", newPubkeys, account.blockedContacts!)
             }
+            loadNewNotes()
         }
         .onReceive(receiveNotification(.blockListUpdated)) { _ in
             notes = notes.filter {
                 !(ns.account?.blockedContacts ?? Set<Contact>()).contains($0.contact)
             }
+        }
+        .onReceive(receiveNotification(.willDeleteAllEvents)) { _ in
+            notes = []
+            notesWithoutOlderNotes = []
         }
     }
 }
@@ -248,7 +253,7 @@ extension Timeline {
                 guard #available(iOS 16, *) else { return }
                 self.scroller = collectionView
                 var config = UICollectionLayoutListConfiguration(appearance: .plain)
-                config.showsSeparators = false
+                config.showsSeparators = true
                 
                 let layout = UICollectionViewCompositionalLayout.list(using: config)
                 
@@ -339,7 +344,7 @@ extension Timeline {
     func loadNewNotes() {
         
         unreadCount = unreadCount + (notesWithoutOlderNotes.count-notes.count)
-        if notesWithoutOlderNotes.count > notes.count {
+        if notesWithoutOlderNotes.count > notes.count && notes.count != 0 {
             sendNotification(.timelineWillReceiveNewNotes, nil)
         }
         
@@ -379,7 +384,14 @@ extension Timeline {
         
         if (account.follows != nil) {
             let followingPubkeys = [String](account.follows!.map { $0.pubkey! } )
-            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getFollowingEvents(pubkeys: followingPubkeys, limit: amount!, since: mp.lastTimelineEventTimestamp)))
+            
+            if (notes.count < 20) {
+                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getFollowingEvents(pubkeys: followingPubkeys, limit: amount!)))
+            }
+            else {
+                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getFollowingEvents(pubkeys: followingPubkeys, limit: amount!, since: mp.lastTimelineEventTimestamp)))
+            }
+            
         }
     }
 }

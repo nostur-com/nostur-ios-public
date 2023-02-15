@@ -105,7 +105,7 @@ struct LightningButton: View {
     }
     
     fileprivate func renderPaymentSelector() -> PaymentAmountSelector {
-        return PaymentAmountSelector(min:min, max:max) { amount in
+        return PaymentAmountSelector(min:min, max:max, supportsZap:supportsZap) { amount, zapMessage in
             
             let pubkey = contact.pubkey!
             let eventId = event?.id ?? nil
@@ -117,7 +117,7 @@ struct LightningButton: View {
                 Task.detached(priority: .background) {
                     do {
                         
-                        let zapRequestNote = zapRequest(forPubkey: pubkey, andEvent: eventId, withMessage: "Zapped :)", relays: relays)
+                        let zapRequestNote = zapRequest(forPubkey: pubkey, andEvent: eventId, withMessage: zapMessage, relays: relays)
                         
                         let signedZapRequestNote = try await ns.signEvent(zapRequestNote)
                         

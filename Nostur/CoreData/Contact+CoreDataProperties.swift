@@ -160,19 +160,18 @@ extension Contact : Identifiable {
         }
     }
 
-    static func handleSetMetadataEvent(event:NEvent, context:NSManagedObjectContext) -> Contact? {
+    static func saveOrUpdateContact(event:NEvent, context:NSManagedObjectContext) {
         
         let decoder = JSONDecoder()
         guard let metaData = try? decoder.decode(NSetMetadata.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) else {
-            return nil
+            return
         }
-        
         
         let request = NSFetchRequest<Contact>(entityName: "Contact")
         request.predicate = NSPredicate(format: "pubkey == %@", event.publicKey)
         request.sortDescriptors = [NSSortDescriptor(key: "updated_at", ascending: false)]
         
-        if let contact = try! context.fetch(request).first { // Thread 20: EXC_BAD_ACCESS (code=1, address=0xc4f8890)
+        if let contact = try! context.fetch(request).first {
             
             // Received metadata is newer than stored Contact
             if contact.updated_at < event.createdAt.timestamp {
@@ -192,7 +191,6 @@ extension Contact : Identifiable {
                 // Received metadata is older than stored Contact
                 print("🟠🟠 Already have newer info stored in Contact. Skipped update.")
             }
-            return contact
         }
         else {
             // Received metadata is not in any Contact
@@ -218,9 +216,27 @@ extension Contact : Identifiable {
                 event.contact = contact
                 event.objectWillChange.send()
             }
-            return contact
         }
     }
+
+    // Create dummy Contact if not already exists.
+    static func ensureContactsCreated(event:NEvent, context:NSManagedObjectContext) -> [Contact] {
+        var contactsInThisEvent:[Contact] = []
+        let pTags = TagsHelpers(event.tags).pTags()
+        for pTag in pTags {
+            let contact = Contact.fetchByPubkey(pTag.pubkey, context: context)
+            guard contact == nil else {
+                contactsInThisEvent.append(contact!)
+                continue
+            }
+            let newContact = Contact(context: context)
+            newContact.pubkey = pTag.pubkey
+            contactsInThisEvent.append(newContact)
+        }
+        
+        return contactsInThisEvent
+    }
+    
     
     static func allContactPubkeys(context:NSManagedObjectContext) async -> [String] {
         return await context.perform {

@@ -228,6 +228,7 @@ struct ConfigurationView: View {
     }
     
     func deleteAllEvents() {
+        sendNotification(.willDeleteAllEvents, nil)
         SavedEventsCache.shared.clear()
         
         let r = NSFetchRequest<Event>(entityName: "Event")
@@ -237,7 +238,7 @@ struct ConfigurationView: View {
             viewContext.delete(event)
         }
         do {
-            print("deleting \(allEvents.count) contacts.")
+            print("deleting \(allEvents.count) events.")
             try viewContext.save()
         }
         catch {
@@ -332,72 +333,7 @@ struct ConfigurationView: View {
         
     }
     
-    func maintenance() {
-        let frA = Account.fetchRequest()
-        let allACcounts = Array(try! viewContext.fetch(frA))
-        let ownAccountPubkeys = allACcounts.reduce([String]()) { partialResult, account in
-            var newResult = Array(partialResult)
-            newResult.append(account.publicKey!)
-            return newResult
-        }
-        
-        let ownAccountBookmarkIds = allACcounts.reduce([String]()) { partialResult, account in
-            var newResult = Array(partialResult)
-            if (account.bookmarks != nil) {
-                let ids = account.bookmarks!.map { $0.id! }
-                newResult.append(contentsOf: ids)
-            }
-            return newResult
-        }
-        
-        let xDaysAgo = Date.now.addingTimeInterval(-3 * 86400) // 3 days
-        
-        
-        // KIND 1 OF 7
-        // OUDER DAN 3 DAGEN
-        // IS GEEN BOOKMARK
-        // IS GEEN EIGEN EVENT
-        viewContext.perform {
-            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
-            fetchRequest.predicate = NSPredicate(format: "(kind == 7 OR kind == 1) AND created_at < %i AND NOT id IN %@ AND NOT pubkey IN %@", Int64(xDaysAgo.timeIntervalSince1970), ownAccountBookmarkIds, ownAccountPubkeys)
-            
-            let batchDelete = NSBatchDeleteRequest(fetchRequest: fetchRequest)
-            batchDelete.resultType = .resultTypeCount
-            
-            do {
-                let result = try viewContext.execute(batchDelete) as! NSBatchDeleteResult
-                print("Deleted \(result.result!) kind 1 or 7 events")
-            } catch {
-                print("Failed to delete kind 1 or 7 data")
-            }
-        }
-        
-        // KIND 0
-        // ALLES WEG WANT IEDERE KIND 0 HEEFT EEN CONTACT
-        // EIGEN KIND 0 NIET WEG
-        viewContext.perform {
-            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
-            fetchRequest.predicate = NSPredicate(format: "(kind == 0) AND NOT pubkey IN %@", ownAccountPubkeys)
-            
-            let batchDelete = NSBatchDeleteRequest(fetchRequest: fetchRequest)
-            batchDelete.resultType = .resultTypeCount
-            
-            do {
-                let result = try viewContext.execute(batchDelete) as! NSBatchDeleteResult
-                print("Deleted \(result.result!) kind=0 events")
-            } catch {
-                print("Failed to delete kind=0 data")
-            }
-        }
-        
-        do {
-            //                try viewContext.save()
-            try viewContext.save()
-        }
-        catch {
-            print("maintenance error on save(): \(error)")
-        }
-    }
+    
     
     func clearImageCache() {
         // Kingfisher
@@ -448,7 +384,7 @@ struct ConfigurationView: View {
                             Text("Remove older kind 3 events")
                         }.padding(5)
                         
-                        Button { maintenance() } label: {
+                        Button { Maintenance.maintenance(context: viewContext) } label: {
                             Text("Clean up older than 3 days!")
                         }.padding(5)
                         

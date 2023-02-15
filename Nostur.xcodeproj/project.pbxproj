@@ -45,6 +45,7 @@
 		1F57C5492992816300DFE063 /* AccountFollowingList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F57C5482992816300DFE063 /* AccountFollowingList.swift */; };
 		1F57C54B299285B300DFE063 /* Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F57C54A299285B300DFE063 /* Search.swift */; };
 		1F5BBE40297BC7E600F4AF03 /* EventsError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5BBE3F297BC7E600F4AF03 /* EventsError.swift */; };
+		1F5BF1B9299BCF97003A91DD /* ReplyNoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5BF1B8299BCF97003A91DD /* ReplyNoteView.swift */; };
 		1F5F5A5C29838F1D00DED8F4 /* EventsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5F5A5B29838F1D00DED8F4 /* EventsProvider.swift */; };
 		1F5F5A5E2983FF9D00DED8F4 /* EventsWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5F5A5D2983FF9D00DED8F4 /* EventsWindow.swift */; };
 		1F5F5A692984315900DED8F4 /* TimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5F5A682984315900DED8F4 /* TimelineView.swift */; };
@@ -185,6 +186,7 @@
 		1F57C5482992816300DFE063 /* AccountFollowingList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountFollowingList.swift; sourceTree = "<group>"; };
 		1F57C54A299285B300DFE063 /* Search.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Search.swift; sourceTree = "<group>"; };
 		1F5BBE3F297BC7E600F4AF03 /* EventsError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsError.swift; sourceTree = "<group>"; };
+		1F5BF1B8299BCF97003A91DD /* ReplyNoteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplyNoteView.swift; sourceTree = "<group>"; };
 		1F5F5A5B29838F1D00DED8F4 /* EventsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsProvider.swift; sourceTree = "<group>"; };
 		1F5F5A5D2983FF9D00DED8F4 /* EventsWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsWindow.swift; sourceTree = "<group>"; };
 		1F5F5A682984315900DED8F4 /* TimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineView.swift; sourceTree = "<group>"; };
@@ -556,6 +558,7 @@
 				1F654F28298E8BA40040F15D /* QuotedNote.swift */,
 				1FE4C0262982FF3B004E7750 /* ReplyingToFragment.swift */,
 				1F1DCB8C2999290E0085223E /* LightningInvoice.swift */,
+				1F5BF1B8299BCF97003A91DD /* ReplyNoteView.swift */,
 			);
 			path = Note;
 			sourceTree = "<group>";
@@ -678,6 +681,7 @@
 				1FC4D4082997E126004E88CD /* AccountManager.swift in Sources */,
 				1FCEA0B529993B2400A309DC /* Swift-Big-Number-Core.swift in Sources */,
 				1F8B135C297B36DB002EB8CF /* Data+Bytes.swift in Sources */,
+				1F5BF1B9299BCF97003A91DD /* ReplyNoteView.swift in Sources */,
 				1FD49735297FE2FE0084F14E /* ProfileRowView.swift in Sources */,
 				1F927C6F297DB34A0024F665 /* Queue.swift in Sources */,
 				1FBE8228299AA43000FB41CE /* ZapButton.swift in Sources */,

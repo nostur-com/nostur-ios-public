@@ -17,7 +17,7 @@ struct ProfileRow: View {
     @State var isFollowing = false
     var withoutFollowButton = false
     
-    var contact:Contact
+    @ObservedObject var contact:Contact
     
     var body: some View {
         NavigationLink(value: contact) {

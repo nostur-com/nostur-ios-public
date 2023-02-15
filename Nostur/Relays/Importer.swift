@@ -75,13 +75,12 @@ class Importer {
                     let savedEvent = Event.saveEvent(event: event, context:context)
                     
                     if event.kind == .setMetadata {
-                        if Contact.handleSetMetadataEvent(event: event, context: context) != nil {
-                            
-                        }
+                        Contact.saveOrUpdateContact(event: event, context: context)
+                        Account.preFillReadOnlyAccountInfo(event: event, context: context)
                     }
                     
                     if event.kind == .contactList {
-                        print("kind 3 event \(event.id) saved, but no further handling done yet...")
+                        Account.preFillReadOnlyAccountFollowing(event: event, context: context)
                     }
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
@@ -97,7 +96,7 @@ class Importer {
                     }
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REPLIES, MENTIONS)
-                    if event.kind == .textNote {
+                    if event.kind == .textNote || event.kind == .repost {
                         // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
                         do { try _ = Event.updateMentionsCountCache(event.tags, context: context) } catch {
                             print("🦋🦋🔴🔴🔴 problem updateMentionsCountCache .id \(event.id)")

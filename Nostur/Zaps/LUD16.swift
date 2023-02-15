@@ -47,7 +47,6 @@ class LUD16 {
         
         guard let lud16url = URL(string: "https://\(lud16parts[1])/.well-known/lnurlp/\(lud16parts[0])") else { throw "invalid lud16url" }
         
-        let urlSession = URLSession.shared
         let request = URLRequest(url: lud16url)
         
         let (data, httpResponse) = try await URLSession.shared.data(for: request)

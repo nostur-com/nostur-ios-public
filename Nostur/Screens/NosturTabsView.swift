@@ -61,8 +61,14 @@ struct NosturTabsView: View {
                 .tag("Bookmarks")
                 
                 NavigationStack(path: $notificationsPath) {
-                    NotificationsView()
-                        .withNavigationDestinations()
+                    if (ns.account != nil) {
+                        NotificationsView(pubkey: ns.activeAccountPublicKey)
+                            .withNavigationDestinations()
+                    }
+                    else {
+                        Text("Select account account first on accounts tab.")
+                    }
+                    Spacer()
                     Spacer()
                 }
                 .tabItem { Image(systemName: "bell.fill") }

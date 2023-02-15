@@ -220,7 +220,7 @@ struct Profile: View {
                     }
                     
                     ControlGroup {
-                        Button { importNotes() } label: { Text("Import") }
+//                        Button { importNotes() } label: { Text("Import") }
                         Button { activeTab = "NOTES" } label: {
                             Label("Notes", systemImage: "bubble.left.and.bubble.right")
                         }
@@ -347,6 +347,9 @@ struct Profile: View {
                     }
                 }
             }
+        }
+        .task {
+            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
         }
         //        .onReceive(loopyRunny) { time in
         //            let readyForImportQueue = MessageParser.shared.readyForImportQueue

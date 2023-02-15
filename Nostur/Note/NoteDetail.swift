@@ -70,6 +70,9 @@ struct NoteDetail: View {
         guard event.replyToRoot != nil else {
             return []
         }
+        
+        // TODO: IF TOO MANY, FILTER NONE FOLLOWERS
+        
         return event.replyToRoot!.replies?
             .filter { $0.created_at < event.created_at }
             .filter { $0 != event.replyTo } // Also dont should duplicate .replyTo
@@ -83,21 +86,26 @@ struct NoteDetail: View {
                 ScrollView {
                     VStack {
                         
-                        if (1 == 1) {
-                        
-                        // Parent root note and other replies to it
+                        // ULTIMATE ROOT NOTE THAT STARTED THIS THREAD AND REPLIES
                         if (event.replyToRoot != nil) && (event.replyToRoot != event.replyTo) {
-                            if (event.replyToRoot!.replyTo != nil) {
-                                // uhm how are we going to turtles all the way up this thing?
-                                // for now just manual hack until here
-                                NoteRowView(event: event.replyToRoot!.replyTo!)
-                            }
+                            
+//                            // DISABLED BECAUSE A ROOT SHOULD NOT HAVE ANOTHER ROOT RIGHT?
+//                            if (event.replyToRoot!.replyTo != nil) {
+//                                // uhm how are we going to turtles all the way up this thing?
+//                                // for now just manual hack until here
+//                                NoteRowView(event: event.replyToRoot!.replyTo!)
+//                                Divider()
+//                            }
 
                             // ROOT NOTE
                             NoteRowView(event: event.replyToRoot!)
+                            Divider()
                             // REPLIES TO ROOT, UNTIL CURRENT NOTE
                             ForEach(rootRepliesUntilThisEvent(), id:\.self) { event in
-                                NoteRowView(event: event)
+                                Group {
+                                    NoteRowView(event: event)
+                                    Divider()
+                                }.id(event.id)
                             }
                         }
                         else if (event.replyToRootId != nil) && (event.replyToId != event.replyToRootId) {
@@ -108,9 +116,10 @@ struct NoteDetail: View {
                             }
                         }
                         
-                        // Our reply to
+                        // WHAT IS OUR MAIN NOTE REPLYING TO? event.replyTo:
                         if (event.replyTo != nil) {
                             NoteRowView(event: event.replyTo!)
+                            Divider()
                         }
                         else if (event.replyToId != nil) {
                             ProgressView().onAppear {
@@ -120,8 +129,7 @@ struct NoteDetail: View {
                             }
                         }
                         
-                        }
-                        
+                        // OUR MAIN NOTE DETAIL
                         VStack {
                             // Retweeted header
                             if tweet.retweetedByName != "" {
@@ -148,29 +156,28 @@ struct NoteDetail: View {
                             
                             // PFP | NAME/USERNAME/AGO
                             HStack {
-                                if (event.contact != nil) {
-                                    NavigationLink(value: ContactPath(key: event.pubkey!), label: {
-                                        ProfilePicView(pubkey: event.pubkey!, contact:event.contact!)
-                                            .frame(width:50, height:50)
-                                            .clipShape(Circle())
-                                    })
-                                }
-                                else {
-                                    NavigationLink(value: ContactPath(key: event.pubkey!), label: {
-                                        ProfilePicView(pubkey: event.pubkey!)
-                                            .frame(width:50, height:50)
-                                            .clipShape(Circle())
-                                    })
-                                }
+                                NavigationLink(value: ContactPath(key: event.pubkey!), label: {
+                                    ProfilePic(event:event)
+                                        .frame(width:50, height:50)
+                                        .clipShape(Circle())
+                                })
                                 
                                 // name and username
                                 HStack {
                                     VStack {
                                         // name + verified
                                         HStack(spacing:2) {
-                                            Text(event.contact?.authorName ?? "Anon") // Name
-                                                .font(.system(size: 14))
-                                                .fontWeight(.bold)
+                                            if (event.contact != nil) {
+                                                Text(event.contact!.authorName) // Name
+                                                    .font(.system(size: 14))
+                                                    .fontWeight(.bold)
+                                            }
+                                            else {
+                                                Text("Anon") // Name
+                                                    .font(.system(size: 14))
+                                                    .fontWeight(.bold)
+                                                    .redacted(reason: .placeholder)
+                                            }
                                             
                                             if tweet.isVerified { // Verification check
                                                 Image(systemName: "checkmark.seal.fill")
@@ -198,7 +205,6 @@ struct NoteDetail: View {
                                 Spacer()
                             }
                             
-                            // Tweet
                             HStack {
                                 NoteTextRenderView(event: event, taggedContacts: Array(taggedContacts), useLinelimit: false)
                                         .foregroundColor(.primary)
@@ -227,14 +233,16 @@ struct NoteDetail: View {
                     .foregroundColor(.gray)
                     .padding(10)
                         
+                    // REPLIES TO OUR MAIN NOTE
                     LazyVStack {
                         ForEach (Array(event.replies ?? []), id:\.self) { event in
                             NoteRowView(event: event)
+                            Divider()
                         }
                     }
                     
                     // If there are less than 5 replies, put some empty space so our detail note is at top of screen
-                    if (1 == 1) && (event.replies?.count ?? 0 < 5) {
+                    if (event.replies?.count ?? 0 < 5) {
                         let height = geometry.size.height - 280
                         Rectangle().frame(width: 100, height: (height < 280 ? 400 : height))
                             .background(.clear)
@@ -246,7 +254,6 @@ struct NoteDetail: View {
                 .onAppear {
                     proxy.scrollTo("NoteAnchorID")
                 }
-//                .ignoresSafeArea(edges: .top)
             }
         }
         .onAppear {
@@ -285,6 +292,13 @@ struct DetailFooterFragment: View {
     @ObservedObject var event:Event
     @State var showingNewReply = false
     
+    @EnvironmentObject var up:Unpublisher
+    
+    @State var unpublishLikeId:UUID? = nil
+    
+    @State var unpublishRepostId:UUID? = nil
+    @State var unpublishOriginalId:UUID? = nil
+    
     var body: some View {
         VStack(alignment: .center) {
             HStack(alignment: .center) { // Footer stats
@@ -298,17 +312,51 @@ struct DetailFooterFragment: View {
                         showingNewReply = true
                     }
                 Spacer()
-                Button {
-                    
-                } label: {
-                    Label("\(event.mentions)", systemImage: "arrow.2.squarepath")
+                HStack {
+                    Image(systemName: "arrow.2.squarepath")
+                    Text("\(event.mentions)")
+                }
+                .background(Color(.systemBackground))
+                .onTapGesture {
+                    if (ns.account != nil) {
+                        print("🔄🔄🔄🔄🔄 REPOSTING 🔄🔄🔄")
+    //                    event.reposted = true
+                        event.mentions = event.mentions + 1
+    //                    ns.account?.addToLikes(event)
+                        
+                        // 1. create kind 7 event based on kind 1 event:    Event
+                        let repostEvent = EventMessageBuilder.makeRepost(original: event)
+                        
+                        // 2. sign that event with account keys             Account
+                        guard let signedEvent = try? ns.signEvent(repostEvent) else {
+                            print("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
+                            return
+                        }
+                        
+                        unpublishRepostId = up.publish(signedEvent)
+                        unpublishOriginalId = up.publish(event.toNEvent())
+                    }
                 }
                 Spacer()
                 if (event.liked) {
-                    Label("\(event.likes)", systemImage: "heart.fill").foregroundColor(.red)
+                    HStack {
+                        Image(systemName: "heart.fill").foregroundColor(.red)
+                        Text("\(event.likes)")
+                    }
+                    .background(Color(.systemBackground))
+                    .onTapGesture {
+                        if unpublishLikeId != nil && up.cancel(unpublishLikeId!) {
+                            event.liked = false
+                        }
+                    }
                 }
                 else {
-                    Button {
+                    HStack {
+                        Image(systemName: "heart")
+                        Text("\(event.likes)")
+                    }
+                    .background(Color(.systemBackground))
+                    .onTapGesture {
                         if (ns.account != nil) {
                             print("💖💖💖💖💖💖💖💖💖💖💖💖💖💖")
                             event.liked = true
@@ -324,25 +372,10 @@ struct DetailFooterFragment: View {
                                 return
                             }
                             
-                            // 3. Save in core data                             NSManagedObjectContext
-                            let savedEvent = Event.saveEvent(event: signedEvent, context: viewContext)
-                            do {
-                                try viewContext.save()
-                            }
-                            catch {
-                                print("🔴🔴🔴🔴🔴 COULD NOT SAVE EVENT 🔴🔴🔴🔴🔴")
-                                print(error)
-                                return
-                            }
-
-                            // 4. publish that event                            SocketPool
-                            print("DISABLED - Should send: \(NRelayMessage(event: savedEvent.toNEvent()).message)")
-                            
-                            print("💖💖💖💖💖💖💖💖💖💖💖💖💖💖")
+                            unpublishLikeId = up.publish(signedEvent)
                         }
-                    } label: {
-                        Label("\(event.likes)", systemImage: "heart")
                     }
+                    
                 }
                 Spacer()
                 

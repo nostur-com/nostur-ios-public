@@ -26,4 +26,8 @@ extension Notification.Name {
     static var blockListUpdated: Notification.Name {
         return Notification.Name("blockListUpdated")
     }
+    
+    static var willDeleteAllEvents: Notification.Name {
+        return Notification.Name("willDeleteAllEvents")
+    }
 }

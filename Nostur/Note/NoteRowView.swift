@@ -37,10 +37,32 @@ struct NoteRowView: View {
     
     let type:NoteRowView.type
     
+    var isRepost:Bool {
+        get {
+            if event.kind == 6 { return true }
+            if (event.content != nil && event.content! == "#[0]") && (TagsHelpers(event.tags() ?? []).mentionEtags()?.count == 1) { return true }
+            return false
+        }
+    }
+    
+    var eventOrRepost:Event {
+        get {
+            isRepost && event.firstQuote != nil ? event.firstQuote! : event
+        }
+    }
+    
+    static func isRepost(_ event:Event) -> Bool {
+        if event.kind == 6 { return true }
+        if (event.content != nil && event.content! == "#[0]") && (TagsHelpers(event.tags() ?? []).mentionEtags()?.count == 1) { return true }
+        return false
+    }
+    
     init(event: Event, hideFooter:Bool = false) {
         self.event = event
         self.hideFooter = hideFooter
-        let pubkeys = TagsHelpers(event.tags() ?? []).pTags().map { $0.pubkey }
+        
+        let eventOrRepost = NoteRowView.isRepost(event) && event.firstQuote != nil ? event.firstQuote! : event
+        let pubkeys = TagsHelpers(eventOrRepost.tags() ?? []).pTags().map { $0.pubkey }
         
         if (pubkeys.count == 0) {
             _taggedContacts = FetchRequest(
@@ -67,40 +89,51 @@ struct NoteRowView: View {
         //        NavigationLink(value: event, label: {
         
         VStack (alignment: .leading) {
+            if (isRepost) {
+                HStack {
+                    Image(systemName: "arrow.2.squarepath")
+                    Text("\(event.name) reposted")
+                }
+                .onTapGesture {
+                    nav.navigateTo(ContactPath(key: event.pubkey!))
+                }
+                .padding(.leading, 45)
+            }
             HStack(alignment: .top) {
                 VStack {
-                    ProfilePicView(pubkey: event.pubkey!, contact:event.contact)
+                    ProfilePic(event: eventOrRepost)
                         .padding(.horizontal, 10)
                         .onTapGesture {
-                            nav.navigateTo(ContactPath(key: event.pubkey!))
+                            nav.navigateTo(ContactPath(key: eventOrRepost.pubkey!))
                         }
                 }
                 
-                VStack(alignment:.leading) {// Tweet container
+                VStack(alignment:.leading, spacing: 3) {// Tweet container
                     HStack { // name + reply + context menu
-                        NoteHeader(event:event)
+                        NoteHeader(event:eventOrRepost)
                     }
+                    ReplyingToFragment(event: eventOrRepost)
                     
                     switch self.type {
                         case .lightningInvoice:
-                            LightningInvoice(invoice: event.noteText)
+                            LightningInvoice(invoice: eventOrRepost.noteText)
                         default:
-                            NoteTextRenderView(event:event, taggedContacts:Array(taggedContacts))
-                                .onTapGesture { nav.navigateTo(event) }
+                            NoteTextRenderView(event:eventOrRepost, taggedContacts:Array(taggedContacts))
+                                .onTapGesture { nav.navigateTo(eventOrRepost) }
                     }
                     
                 
-                    if (event.firstQuoteId != nil && event.firstQuote != nil) {
-                        QuotedNoteFragment(event: event.firstQuote!)
+                    if (eventOrRepost.firstQuoteId != nil && eventOrRepost.firstQuote != nil) {
+                        QuotedNoteFragment(event: eventOrRepost.firstQuote!)
                     }
-                    else if (event.firstQuote != nil) {
+                    else if (eventOrRepost.firstQuote != nil) {
                         ProgressView().onAppear {
-                            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.firstQuoteId!)))
+                            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: eventOrRepost.firstQuoteId!)))
                         }
                     }
                     
                     if (!hideFooter) {
-                        FooterFragment(event: event)//.border(.red)
+                        FooterFragment(event: eventOrRepost)//.border(.red)
                     }
                     
                 }
@@ -110,7 +143,7 @@ struct NoteRowView: View {
         }
         .background(
             Color(.systemBackground)
-                .onTapGesture { nav.navigateTo(event) }
+                .onTapGesture { nav.navigateTo(eventOrRepost) }
         )
 
         
@@ -121,8 +154,8 @@ struct NoteRowView: View {
             // Contact updated_at is very old
             // followed contact meta data refresh should be updated at app wake up probably
             if (event.contact == nil) {
-                print("🟢 NoteRow.onAppear event.contact == nil so: REQ.0:\(event.pubkey!)")
-                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.pubkey!)))
+                print("🟢 NoteRow.onAppear event.contact == nil so: REQ.0:\(eventOrRepost.pubkey!)")
+                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: eventOrRepost.pubkey!)))
             }
         }
         //        .frame(minHeight: 140)//.border(.red)
@@ -134,39 +167,56 @@ struct NoteRowView: View {
 
 struct NoteHeader: View {
     @EnvironmentObject var nav:NavigationModel
-    var event:Event
+    @ObservedObject var event:Event
+    var singleLine:Bool = true
+    
     var body: some View {
         //        NavigationLink(value: event, label: {
         
         VStack(alignment: .leading) { // Name + menu "replying to"
             HStack(spacing:2) {
                 Group {
-                    Text(event.contact?.authorName ?? "Anon") // Name
-                        .font(.system(size: 14))
-                        .foregroundColor(.primary)
-                        .fontWeight(.bold)
-                        .lineLimit(1)
+                    if (event.contact != nil) {
+                        Text(event.contact!.authorName) // Name
+                            .foregroundColor(.primary)
+                            .fontWeight(.bold)
+                            .lineLimit(1)
+                    }
+                    else {
+                        Text("Anon") // Name
+                            .foregroundColor(.primary)
+                            .fontWeight(.bold)
+                            .lineLimit(1)
+                            .redacted(reason: .placeholder)
+                    }
                     
                     if (event.contact?.nip05veried ?? false) {
                         Image(systemName: "checkmark.seal.fill")
-                            .font(.system(size: 14))
+//                            .font(.system(size: 14))
                             .foregroundColor(.blue)
                     }
                     
-                    Text("@\(event.contact?.username ?? event.authorKey) · \(event.ago)") //
-                        .font(.system(size: 14))
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
+                    if (singleLine) {
+                        Text("@\(event.contact?.username ?? event.authorKey) · \(event.ago)") //
+    //                        .font(.system(size: 14))
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                    }
                 }
                 .onTapGesture {
                     nav.navigateTo(ContactPath(key: event.pubkey!))
                 }
                 Spacer()
                 Text(Date(timeIntervalSince1970: TimeInterval(event.created_at)), format: Date.VerbatimFormatStyle(format: "\(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased)):\(minute: .twoDigits)", timeZone: .current, calendar: .current))
-                    .font(.system(size: 14))
+//                    .font(.system(size: 14))
                     .padding(.trailing, 5)
             }
-            ReplyingToFragment(event: event)
+            if (!singleLine) {
+                Text("@\(event.contact?.username ?? event.authorKey) · \(event.ago)") //
+//                        .font(.system(size: 14))
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+            }
         }
         
         
@@ -257,7 +307,7 @@ struct FooterFragment: View {
     @State var showingNewReply = false
     
     var body: some View {
-        HStack() {
+        HStack {
             
             HStack {
                 Image(systemName: "message")
@@ -273,7 +323,9 @@ struct FooterFragment: View {
             HStack {
                 Image(systemName: "arrow.2.squarepath")
                 Text("\(event.mentions)")
-            }.background(Color(.systemBackground).onTapGesture {
+            }
+            .background(Color(.systemBackground))
+            .onTapGesture {
                 if (ns.account != nil) {
                     print("🔄🔄🔄🔄🔄 REPOSTING 🔄🔄🔄")
 //                    event.reposted = true
@@ -292,7 +344,7 @@ struct FooterFragment: View {
                     unpublishRepostId = up.publish(signedEvent)
                     unpublishOriginalId = up.publish(event.toNEvent())
                 }
-            })
+            }
             
             Spacer()
             
@@ -302,6 +354,7 @@ struct FooterFragment: View {
                     Image(systemName: "heart.fill").foregroundColor(.red)
                     Text("\(event.likes)")
                 }
+                .background(Color(.systemBackground))
                 .onTapGesture {
                     if unpublishLikeId != nil && up.cancel(unpublishLikeId!) {
                         event.liked = false
@@ -312,7 +365,9 @@ struct FooterFragment: View {
                 HStack {
                     Image(systemName: "heart")
                     Text("\(event.likes)")
-                }.onTapGesture {
+                }
+                .background(Color(.systemBackground))
+                .onTapGesture {
                     if (ns.account != nil) {
                         print("💖💖💖💖💖💖💖💖💖💖💖💖💖💖")
                         event.liked = true
@@ -342,7 +397,7 @@ struct FooterFragment: View {
                 Spacer()
             }
             else {
-                Color.clear.frame(width: 30)
+                Color.clear.frame(width: 30, height: 15)
                 Spacer()
             }
             
@@ -350,18 +405,21 @@ struct FooterFragment: View {
             if (ns.isBookmarked(event)) {
                 Image(systemName: "bookmark.fill")
                     .foregroundColor(.orange)
+                    .background(Color(.systemBackground))
                     .onTapGesture {
                         ns.removeBookmark(event)
                     }
             }
             else {
                 Image(systemName: "bookmark")
+                    .background(Color(.systemBackground))
                     .onTapGesture {
                         ns.addBookmark(event)
                     }
             }
             
-        }.foregroundColor(.gray)
+        }
+        .foregroundColor(.gray)
             .padding(.trailing, 5)
             .font(.system(size: 14))
             .sheet(isPresented: $showingNewReply) {
@@ -409,24 +467,29 @@ struct NoteRowView_Previews: PreviewProvider {
         
         let event5 = PreviewFetcher.fetchEvent("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e")
         
+        let event6 = PreviewFetcher.fetchEvent("7d96834f60c5411be97fe9e4b07e3221c56df531543a11a1d67ff81168033e8e")
+        
         List {
             
-            NoteRowView(event: event0!)
-                .listRowInsets(EdgeInsets())
-            
+//            NoteRowView(event: event0!)
+//                .listRowInsets(EdgeInsets())
+//
             NoteRowView(event: event1!)
                 .listRowInsets(EdgeInsets())
-            
+//
             NoteRowView(event: event2!)
                 .listRowInsets(EdgeInsets())
+//
+//            NoteRowView(event: event3!)
+//                .listRowInsets(EdgeInsets())
+//
+//            NoteRowView(event: event4!)
+//                .listRowInsets(EdgeInsets())
+//
+//            NoteRowView(event: event5!)
+//                .listRowInsets(EdgeInsets())
             
-            NoteRowView(event: event3!)
-                .listRowInsets(EdgeInsets())
-            
-            NoteRowView(event: event4!)
-                .listRowInsets(EdgeInsets())
-            
-            NoteRowView(event: event5!)
+            NoteRowView(event: event6!)
                 .listRowInsets(EdgeInsets())
             
         }

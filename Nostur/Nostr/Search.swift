@@ -6,11 +6,13 @@
 //
 
 import SwiftUI
+import Combine
 
 struct Search: View {
     
+    @StateObject var debounceObject = DebounceObject()
+
     var sp:SocketPool = .shared
-    @State var searchText = ""
     
     @FetchRequest(
         entity: Event.entity(),
@@ -44,8 +46,8 @@ struct Search: View {
             }
         }
         .padding(10)
-        .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
-        .onChange(of: searchText) { searchString in
+        .searchable(text: $debounceObject.text, placement: .navigationBarDrawer(displayMode: .always))
+        .onChange(of: debounceObject.debouncedText) { searchString in
             
             let searchTrimmed = searchString.trimmingCharacters(in: .whitespacesAndNewlines)
             
@@ -90,7 +92,29 @@ struct Search: View {
                     searching = false
                 }
             }
+            // search in names/usernames
+            else {
+                searching = false
+                events.nsPredicate = NSPredicate(format: "kind == 1 AND content CONTAINS[cd] %@", searchTrimmed)
+                contacts.nsPredicate = NSPredicate(format: "name CONTAINS[cd] %@ OR display_name CONTAINS[cd] %@", searchTrimmed, searchTrimmed)
+            }
         }
+    }
+}
+
+public final class DebounceObject: ObservableObject {
+    @Published var text: String = ""
+    @Published var debouncedText: String = ""
+    private var bag = Set<AnyCancellable>()
+
+    public init(dueTime: TimeInterval = 0.4) {
+        $text
+            .removeDuplicates()
+            .debounce(for: .seconds(dueTime), scheduler: DispatchQueue.main)
+            .sink(receiveValue: { [weak self] value in
+                self?.debouncedText = value
+            })
+            .store(in: &bag)
     }
 }
 

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import CoreData
 
 struct NotificationsView: View {
     
@@ -14,29 +15,52 @@ struct NotificationsView: View {
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var sp:SocketPool
     
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
-        predicate: NSPredicate(format: "kind IN {1,7,9735}")
-    )
-    var events:FetchedResults<Event>
+    @FetchRequest
+    var kind1:FetchedResults<Event>
+    
+    @FetchRequest
+    var kind7:FetchedResults<Event>
+    
+    @FetchRequest
+    var kind9735:FetchedResults<Event>
     
     @State var tab = "NOTES"
     
+    init(pubkey:String) {
+        let kind1r:NSFetchRequest<Event> = Event.fetchRequest()
+        kind1r.fetchLimit = 100
+        kind1r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        kind1r.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", pubkey)
+        _kind1 = FetchRequest(fetchRequest: kind1r)
+        
+        let kind7r:NSFetchRequest<Event> = Event.fetchRequest()
+        kind7r.fetchLimit = 100
+        kind7r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        kind7r.predicate = NSPredicate(format: "kind == 7 AND tagsSerialized CONTAINS %@", pubkey)
+        _kind7 = FetchRequest(fetchRequest: kind7r)
+        
+        let kind9735r:NSFetchRequest<Event> = Event.fetchRequest()
+        kind9735r.fetchLimit = 100
+        kind9735r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        kind9735r.predicate = NSPredicate(format: "kind == 9735 AND tagsSerialized CONTAINS %@", pubkey)
+        _kind9735 = FetchRequest(fetchRequest: kind9735r)
+    }
+    
     var myNotifications:[Event] {
         get {
-            events.filter { ($0.kind == 1) && ($0.tags() ?? []).contains(where: { $0.pubkey == ns.activeAccountPublicKey })}
+            kind1.filter { ($0.kind == 1) && ($0.tags() ?? []).contains(where: { $0.pubkey == ns.activeAccountPublicKey })}
         }
     }
     
     var myReactions:[Event] {
         get {
-            events.filter { ($0.kind == 7) && ($0.tags() ?? []).contains(where: { $0.pubkey == ns.activeAccountPublicKey })}
+            kind7.filter { ($0.kind == 7) && ($0.tags() ?? []).contains(where: { $0.pubkey == ns.activeAccountPublicKey })}
         }
     }
     
     var myZaps:[Event] {
         get {
-            events.filter { ($0.kind == 9735) }
+            kind9735.filter { ($0.kind == 9735) }
         }
     }
     
@@ -131,7 +155,9 @@ extension NotificationsView {
 
 struct NotificationsView_Previews: PreviewProvider {
     static var previews: some View {
-        NotificationsView()
+        let pubkey = "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
+        
+        NotificationsView(pubkey: pubkey)
             .withPreviewEnvironment()
     }
 }

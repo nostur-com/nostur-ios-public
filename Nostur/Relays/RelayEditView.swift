@@ -30,10 +30,10 @@ struct RelayEditView: View {
                 }
                 Section(header: Text("Relay settings") ) {
                     Toggle(isOn: $relay.read) {
-                        Text("Receive events")
+                        Text("Receive from this relay")
                     }
                     Toggle(isOn: $relay.write) {
-                        Text("Post events") .background(refresh ? Color.clear : Color.clear)
+                        Text("Publish to this relay") .background(refresh ? Color.clear : Color.clear)
                     }
                 }
                 Section(header: Text("Status") ) {
@@ -98,19 +98,29 @@ struct RelayEditView: View {
     }
 }
 
-//struct RelayEditView_Previews: PreviewProvider {
-//    
-//    static var previews: some View {        
-//        let relay = Relay(context: EventsProvider.preview.container.viewContext)
-//        relay.id = UUID()
-//        relay.url = "wss://nostr.bitcoin.sex"
-//        relay.read = true
-//        relay.write = false
-//        relay.createdAt = Date()
-//        
-//        return NavigationStack {
-//            RelayEditView(relay: relay)
-//                .withPreviewEnvironment()
-//        }
-//    }
-//}
+struct RelayEditView_Previews: PreviewProvider {
+    
+    static var previews: some View {
+        let relay = Relay(context: EventsProvider.preview.container.viewContext)
+        relay.id = UUID()
+        relay.url = "wss://nostr.bitcoin.sex"
+        relay.read = true
+        relay.write = false
+        relay.createdAt = Date()
+        
+        let sp:SocketPool = .shared
+        
+        func socketForRelay(relay: Relay) -> ManagedClient {
+            guard let socket = sp.sockets[relay.objectID] else {
+                let addedSocket = sp.addSocket(relayId: relay.objectID, url: relay.url!, read: relay.read, write: relay.write)
+                return addedSocket
+            }
+            return socket
+        }
+        
+        return NavigationStack {
+            RelayEditView(relay: relay, socket: socketForRelay(relay: relay))
+                .withPreviewEnvironment()
+        }
+    }
+}

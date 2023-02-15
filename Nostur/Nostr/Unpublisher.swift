@@ -29,6 +29,7 @@ class Unpublisher: ObservableObject {
     var timer:Timer?
     var viewContext:NSManagedObjectContext
     var queue:[Unpublished] = []
+    let sp:SocketPool = .shared
     
     static var shared = Unpublisher(viewContext: EventsProvider.shared.container.viewContext)
     
@@ -43,6 +44,10 @@ class Unpublisher: ObservableObject {
         let cancellationId = UUID()
         queue.append(Unpublished(cancellationId: cancellationId, nEvent: nEvent, createdAt: Date.now))
         return cancellationId
+    }
+    
+    func publishNow(_ nEvent:NEvent) {
+        sendToRelays(nEvent)
     }
     
     func cancel(_ cancellationId:UUID) -> Bool {
@@ -72,6 +77,7 @@ class Unpublisher: ObservableObject {
     }
     
     private func sendToRelays(_ nEvent:NEvent) {
+        // Always save event first
         if try! Event.fetchEvent(id: nEvent.id, context: viewContext) == nil {
             let savedEvent = Event.saveEvent(event: nEvent, context: viewContext)
             do { try viewContext.save() }
@@ -80,10 +86,10 @@ class Unpublisher: ObservableObject {
                 print(error)
                 return
             }
-            print("DISABLED 🚺🚺🚺 GONNA PUBLISHHHH:  \(NRelayMessage(event: savedEvent.toNEvent()).message)")
+            sp.sendMessage(ClientMessage(message: savedEvent.toNEvent().wrappedEventJson()))
         }
         else {
-            print("DISABLED 🚺🚺🚺 GONNA (REPOST)PUBLISHHHH:  \(NRelayMessage(event: nEvent).message)")
+            sp.sendMessage(ClientMessage(message: nEvent.wrappedEventJson()))
         }
     }
 }

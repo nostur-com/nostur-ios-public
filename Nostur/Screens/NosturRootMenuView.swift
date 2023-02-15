@@ -11,6 +11,8 @@ struct NosturRootMenu: View {
     
     @EnvironmentObject var nav:NavigationModel
     @EnvironmentObject var ns:NosturState
+    @EnvironmentObject var sp:SocketPool
+    
     
     var body: some View {
         SideBarStack(sidebarWidth: 285, showSidebar: $nav.showSidebar) {
@@ -30,6 +32,15 @@ struct NosturRootMenu: View {
                 NavigationStack(path: $nav.accountsPath) {
                     AccountListView()
                 }
+            }
+        }
+        .onReceive(receiveNotification(.willDeleteAllEvents)) { _ in
+            ns.setAccount()
+        }
+        .onChange(of: ns.account?.follows) { newValue in
+            ns.loadFollowing()
+            if (ns.pendingFirstContactsFetch) {
+                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: Array(ns.followingPublicKeys))))
             }
         }
 //        .edgesIgnoringSafeArea(.all)

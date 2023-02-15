@@ -10,16 +10,19 @@ import SwiftUI
 struct PaymentAmountSelector: View {
     var min:UInt64
     var max:UInt64
+    var supportsZap:Bool
     @State var amount:Float = 0.0
     @State var exchangeRate:Double? = 0.0
     @State var fiatPrice = ""
+    @State var zapMessage = ""
     @Environment(\.dismiss) private var dismiss
     
-    var amountSelected: (Float) -> ()
+    var amountSelected: (Float, String) -> ()
     
-    init(min: UInt64, max: UInt64, onAmountSelected: @escaping (Float) -> ()) {
+    init(min: UInt64, max: UInt64, supportsZap:Bool, onAmountSelected: @escaping (Float, String) -> ()) {
         self.min = min
         self.max = max
+        self.supportsZap = supportsZap
         self.amountSelected = onAmountSelected
     }
     
@@ -35,8 +38,19 @@ struct PaymentAmountSelector: View {
             }
             Slider(value: $amount, in: Float(min)...Float(max))
                 .padding()
+            if (supportsZap) {
+                HStack(alignment: .center) {
+                    TextField("Add public note (optional)", text: $zapMessage)
+                        .multilineTextAlignment(.leading)
+                        .lineLimit(5, reservesSpace: true)
+                        .textFieldStyle(.roundedBorder)
+                        .padding(20)
+                        .frame(height: 100)
+                        
+                }
+            }
             Button {
-                amountSelected(ceil(amount))
+                amountSelected(ceil(amount), zapMessage)
 //                dismiss()
             } label: {
                 Text("Pay").padding(10)
@@ -84,8 +98,9 @@ struct PaymentAmountSelector: View {
 
 struct PaymentAmountSelector_Previews: PreviewProvider {
     static var previews: some View {
-        PaymentAmountSelector(min: 1000/1000, max: 1000000000/1000) { amount in
+        PaymentAmountSelector(min: 1000/1000, max: 500000000/1000, supportsZap:true) { amount, zapMessage in
             print(amount)
+            print(zapMessage)
         }
     }
 }

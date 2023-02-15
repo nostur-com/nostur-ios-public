@@ -19,8 +19,20 @@ final class NosturState : ObservableObject {
     @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""
     @Published var account:Account? = nil
     
+    @State var pendingFirstContactsFetch:Bool = false
+    
     var pubkey:String? {
         get { account?.publicKey }
+    }
+    
+    func setAccount(account:Account? = nil) {
+        self.account = account
+        if (account == nil) {
+            self.followingPublicKeys = []
+        }
+        else {
+            _ = try! loadActiveAccount(account: account)
+        }
     }
     
     var container:NSPersistentContainer
@@ -54,7 +66,7 @@ final class NosturState : ObservableObject {
                 self.account = try! viewContext.fetch(r).first
             }
         }
-        self.followingPublicKeys = loadFollowing()
+        loadFollowing()
         Task(priority: .userInitiated) {
             self.loadLikes()
         }
@@ -97,15 +109,15 @@ final class NosturState : ObservableObject {
         }
     }
     
-    func loadFollowing() -> Set<String> {
+    func loadFollowing() {
         if (account?.follows != nil) {
             let pubkeys = account!.follows?.map { $0.pubkey! } ?? []
             print("💿 ")
             print(pubkeys)
-            return Set( pubkeys )
+            self.followingPublicKeys = Set( pubkeys )
         }
         else {
-            return Set([])
+            self.followingPublicKeys = Set([])
         }
     }
     

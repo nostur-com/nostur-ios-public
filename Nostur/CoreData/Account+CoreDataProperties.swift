@@ -126,4 +126,88 @@ extension Account : Identifiable {
             }
         }
     }
+    
+    
+    // For when adding read only accounts, prefill with kind.0 info from relays (FROM CACHE)
+    static func preFillReadOnlyAccountInfo(account:Account, context:NSManagedObjectContext) {
+        
+        guard let kind0 = Event.setMetaDataEvents(byAuthorPubkey: account.publicKey!, context: context)?.first else {
+            return
+        }
+        
+        let decoder = JSONDecoder()
+        guard let metaData = try? decoder.decode(NSetMetadata.self, from: kind0.content!.data(using: .utf8, allowLossyConversion: false)!) else {
+            return
+        }
+
+        if (account.privateKey == nil) { // Don't overwrite non-read-only accounts
+            account.name = metaData.name ?? ""
+            account.about = metaData.about ?? ""
+            account.picture = metaData.picture ?? ""
+            account.banner = metaData.banner ?? ""
+            account.nip05 = metaData.nip05 ?? ""
+            account.lud16 = metaData.lud16 ?? ""
+            account.objectWillChange.send()
+        }
+    }
+    
+    // For when adding read only accounts, prefill with kind.0 info from relays (NEW EVENT FROM IMPORTER)
+    static func preFillReadOnlyAccountInfo(event:NEvent, context:NSManagedObjectContext) {
+        
+        let decoder = JSONDecoder()
+        guard let metaData = try? decoder.decode(NSetMetadata.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) else {
+            return
+        }
+        
+        let fr = Account.fetchRequest()
+        fr.predicate = NSPredicate(format: "publicKey = %@", event.publicKey)
+        if let account = try? context.fetch(fr).first {
+            if (account.privateKey == nil) { // Don't overwrite non-read-only accounts
+                account.name = metaData.name ?? ""
+                account.about = metaData.about ?? ""
+                account.picture = metaData.picture ?? ""
+                account.banner = metaData.banner ?? ""
+                account.nip05 = metaData.nip05 ?? ""
+                account.lud16 = metaData.lud16 ?? ""
+                account.objectWillChange.send()
+            }
+        }
+    }
+    
+    // For when adding read only accounts, prefill with kind.3 info from relays (FROM CACHE)
+    static func preFillReadOnlyAccountFollowing(account:Account, context:NSManagedObjectContext) {
+        
+        guard let kind3 = Event.contactListEvents(byAuthorPubkey: account.publicKey!, context: context)?.first else {
+            return
+        }
+        
+        let contacts = Contact.ensureContactsCreated(event: kind3.toNEvent(), context: context)
+        
+        // if read only account, import follows
+        if (account.privateKey == nil && contacts.count > 0) {
+            for contact in contacts {
+                account.addToFollows(contact)
+            }
+            account.objectWillChange.send()
+        }
+    }
+    
+    // For when adding read only accounts, prefill with kind.0 info from relays (NEW EVENT FROM IMPORTER)
+    static func preFillReadOnlyAccountFollowing(event:NEvent, context:NSManagedObjectContext) {
+        
+        let fr = Account.fetchRequest()
+        fr.predicate = NSPredicate(format: "publicKey = %@", event.publicKey)
+        if let account = try? context.fetch(fr).first {
+            
+            let contacts = Contact.ensureContactsCreated(event: event, context: context)
+
+            if (account.privateKey == nil && contacts.count > 0) {
+                for contact in contacts {
+                    account.addToFollows(contact)
+                }
+                account.objectWillChange.send()
+            }
+        }
+    }
+    
 }

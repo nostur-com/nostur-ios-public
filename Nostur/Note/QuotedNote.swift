@@ -44,64 +44,75 @@ struct QuotedNoteFragment: View {
     }
     
     var body: some View {
-
-        VStack(alignment:.leading) {
-            HStack { // name + reply + context menu
-                VStack(alignment: .leading) { // Name + menu "replying to"
-                    HStack(spacing:2) {
-                        // profile image
-                        if (event.contact != nil) {
-                            ProfilePicView(pubkey: event.pubkey!, contact:event.contact, size: 20)
-                            .onTapGesture {
-                                nav.navigateTo(ContactPath(key: event.pubkey!))
+        if (event.pubkey == nil) {
+            EmptyView()
+        }
+        else {
+            VStack(alignment:.leading) {
+                HStack { // name + reply + context menu
+                    VStack(alignment: .leading) { // Name + menu "replying to"
+                        HStack(spacing:2) {
+                            // profile image
+                            ProfilePic(event: event, size: 20)
+                                .onTapGesture {
+                                    nav.navigateTo(ContactPath(key: event.pubkey!))
+                                }
+                            
+                            if (event.contact != nil) {
+                                Text(event.contact!.authorName) // Name
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.primary)
+                                    .fontWeight(.bold)
+                                    .lineLimit(1)
+                                Text("@\(event.contact!.username)") //
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.secondary)
                             }
-                        }
-                        else {
-                            ProfilePicView(pubkey: event.pubkey!, contact:event.contact, size: 20)
-                            .onTapGesture {
-                                nav.navigateTo(ContactPath(key: event.pubkey!))
+                            else {
+                                Text("Anon")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.primary)
+                                    .fontWeight(.bold)
+                                    .lineLimit(1).redacted(reason: .placeholder)
+                                Text("@Anon") //
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.secondary)
+                                    .redacted(reason: .placeholder)
                             }
+                            
+                            
+                            Text(" · \(event.ago)") //
+                                .font(.system(size: 14))
+                                .foregroundColor(.secondary)
                         }
                         
-                        Text(event.contact?.authorName ?? "Anon") // Name
-                            .font(.system(size: 14))
-                            .foregroundColor(.primary)
-                            .fontWeight(.bold)
-                            .lineLimit(1)
-                        Text("@\(event.contact?.username ?? event.authorKey) · ") //
-                            .font(.system(size: 14))
-                            .foregroundColor(.secondary)
-                        Text("\(event.ago)") //
-                            .font(.system(size: 14))
-                            .foregroundColor(.secondary)
+                        ReplyingToFragment(event: event)
                     }
                     
-                    ReplyingToFragment(event: event)
+                    Spacer()
+                }.frame(height: 40)
+                VStack(alignment: .leading) {
+                    NoteTextRenderView(event:event, taggedContacts:Array(taggedContacts))
                 }
-                
-                Spacer()
-            }.frame(height: 40)
-            VStack(alignment: .leading) {
-                NoteTextRenderView(event:event, taggedContacts:Array(taggedContacts))
             }
-        }
-        .onTapGesture {
-            nav.navigateTo(event)
-        }
-
-        .padding(10)
-        .overlay(
-            RoundedRectangle(cornerRadius: 15)
-                .stroke(.regularMaterial, lineWidth: 1)
-        )
-        .onAppear {
-            // should fetch setMetaData if
-            // No Contact
-            // Contact updated_at is very old
-            // followed contact meta data refresh should be updated at app wake up probably
-            if (event.contact == nil) {
-                print("🟢 NoteRow.onAppear event.contact == nil so: REQ.0:\(event.pubkey!)")
-                cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.pubkey!)))
+            .onTapGesture {
+                nav.navigateTo(event)
+            }
+            
+            .padding(10)
+            .overlay(
+                RoundedRectangle(cornerRadius: 15)
+                    .stroke(.regularMaterial, lineWidth: 1)
+            )
+            .onAppear {
+                // should fetch setMetaData if
+                // No Contact
+                // Contact updated_at is very old
+                // followed contact meta data refresh should be updated at app wake up probably
+                if (event.contact == nil) {
+                    print("🟢 NoteRow.onAppear event.contact == nil so: REQ.0:\(event.pubkey!)")
+                    cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.pubkey!)))
+                }
             }
         }
     }

@@ -9,6 +9,54 @@ import SwiftUI
 import NukeUI
 import Nuke
 
+struct ProfilePic: View {
+    
+    @ObservedObject var event:Event
+    var size:CGFloat = 50
+    var color:Color
+    
+    init(event:Event, size: CGFloat = 50) {
+        self.event = event
+        self.size = size
+        self.color = randomColor(seed: event.pubkey!)
+    }
+    
+    var body: some View {
+        let picture = event.contact?.picture
+        
+        if (picture == nil || (picture != nil && picture!.prefix(7) == "http://")) { // TODO: is this slow??
+            Circle().foregroundColor(color).frame(width: size, height: size)
+        }
+        else {
+            LazyImage(url: URL(string: picture!)) { state in
+                if let image = state.image {
+                    image.frame(width: size, height: size).clipShape(Circle())
+                }
+                else {
+                    Circle().foregroundColor(color).frame(width: size, height: size)
+                }
+            }
+            .processors([ImageProcessors.Resize(width: 100), ImageProcessors.Circle()])
+//            .processors([ImageProcessors.Resize(size: CGSize(width: 50, height: 150), unit: .pixels, contentMode: .aspectFit, crop: true, upscale: true)])
+            .animation(nil)
+            .priority(.low)
+            .pipeline(ImageProcessing.shared.pipeline)
+//                .pipeline(ImagePipeline {
+//                    $0.dataLoader = DataLoader(configuration: {
+//                        // Disable disk caching built into URLSession
+//                        let conf = DataLoader.defaultConfiguration
+//                        conf.urlCache = nil
+//                        return conf
+//                    }())
+//
+//                    $0.dataCachePolicy = .storeEncodedImages
+//                    $0.imageCache = ImageCache.shared
+//                    $0.dataCache = try! DataCache(name: "com.nostur.2140.picture")
+//                })
+        }
+    }
+}
+
 struct ProfilePicView: View {
     
     var pubkey:String

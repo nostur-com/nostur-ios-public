@@ -43,7 +43,7 @@ struct ReplyingToFragment: View {
         else {
             Text(try! AttributedString(markdown:"Replying to [@\(replyToUsername())](nostur:p:\(replyToPubkeyHex()))"))
                 .foregroundColor(.secondary)
-                .font(.system(size: 13))
+//                .font(.system(size: 13))
                 .fontWeight(.light)
 //                .onAppear {
 //                    //TODO: DOESNT HANG ANY MORE?? OR??

@@ -124,11 +124,11 @@ struct RequestMessage {
         
         if since != nil {
             return """
-    ["REQ", "\(subscriptionId ?? ("TL-"+UUID().uuidString))", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "limit": \(limit), "since": \(since!.timestamp)}, {"#p": \(JSON(pubkeys).rawString() ?? "[]"), "kinds": [0,1,7,9735], "limit": \(limit), "since": \(since!.timestamp)}]
+    ["REQ", "\(subscriptionId ?? ("TL-"+UUID().uuidString))", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "limit": \(limit), "since": \(since!.timestamp)}, {"#p": \(JSON(pubkeys).rawString() ?? "[]"), "kinds": [0,1,6,7,9735], "limit": \(limit), "since": \(since!.timestamp)}]
     """
         }
         return """
-["REQ", "\(subscriptionId ?? ("TL-"+UUID().uuidString))", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "kinds": [0,1,7,9735], "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? ("TL-"+UUID().uuidString))", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "kinds": [0,1,6,7,9735], "limit": \(limit)}]
 """
     }
     
@@ -142,7 +142,7 @@ struct RequestMessage {
     
     static func getAuthorNotes(pubkey:String, limit:Int = 100, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [1], "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [1,6], "limit": \(limit)}]
 """
     }
     
@@ -176,7 +176,13 @@ struct RequestMessage {
 """
     }
     
-    static func getUserMetadata(pubkeys:[String?], limit:Int? = nil, subscriptionId:String? = nil) -> String {
+    static func getUserMetadataAndContactList(pubkey:String, subscriptionId:String? = nil) -> String {
+        return """
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [0,3], "limit": 20}]
+"""
+    }
+    
+    static func getUserMetadata(pubkeys:[String], limit:Int? = nil, subscriptionId:String? = nil) -> String {
         let limit = limit ?? (pubkeys.count + 20) // add 20 in case of multiple setMetadata's for a pubkey maybe?? not sure
         return """
 ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "kinds": [0], "limit": \(limit)}]
@@ -189,9 +195,9 @@ struct EventMessageBuilder {
     
     static func makeRepost(original: Event) -> NEvent {
         var repost = NEvent(content: "#[0]")
-        repost.tags.append(NEventTag(type: "e", otherInformation: original.id!, "mention"))
+        repost.tags.append(NEventTag(type: "e", otherInformation: original.id!, "", "mention"))
         repost.tags.append(NEventTag(type: "p", otherInformation: original.pubkey!))
-        repost.kind = .textNote
+        repost.kind = .repost
         return repost
     }
     

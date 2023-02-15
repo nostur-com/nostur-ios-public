@@ -19,7 +19,7 @@ struct AccountListView: View {
     @State var addReadOnlyAccountPresented = false
     
     var ep: EventsProvider = .shared
-    var cm: SocketPool = .shared
+    var sp: SocketPool = .shared
     @Environment(\.managedObjectContext) var viewContext
     
     @FetchRequest(
@@ -64,7 +64,7 @@ struct AccountListView: View {
                                             .background(Color("OrangeColor"))
                                             .cornerRadius(8)
                                     }
-                                    if 1==1 || account.privateKey == nil {
+                                    if account.privateKey == nil {
                                         Text("read only")
                                             .foregroundColor(.white)
                                             .padding(.horizontal, 10)
@@ -102,6 +102,7 @@ struct AccountListView: View {
             }
             .navigationDestination(isPresented: $addReadOnlyAccountPresented) {
                 AddReadOnlyAccountView { pubkey in
+                    ns.pendingFirstContactsFetch = true
                     let account = Account(context: viewContext)
                     account.id = UUID()
                     account.createdAt = Date()
@@ -109,10 +110,19 @@ struct AccountListView: View {
                     // Convert npub to hex... etc
                     account.publicKey = pubkey
                     
+                    // 1. Prefill from cached event
+                    Account.preFillReadOnlyAccountInfo(account: account, context: viewContext)
+                    Account.preFillReadOnlyAccountFollowing(account: account, context: viewContext)
+                    
                     do {
                         try viewContext.save()
                         activeAccountPublicKey = pubkey
                         try _ = ns.loadActiveAccount(account: account)
+                        
+                        
+                        // 2. But also check if there are newer events
+                        let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: pubkey))
+                        sp.sendMessage(message)
                     } catch {
                         let nsError = error as NSError
                         fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
@@ -161,17 +171,17 @@ struct AccountListView: View {
             .onAppear {
                 // Fetch account metadata for accounts where who don't have the private key for
                 
-                createAccountPresented = false
-                addReadOnlyAccountPresented = false
-                
-                
-                let pubkeys = accounts
-                    .filter { $0.privateKey == nil || $0.privateKey == "" }
-                    .map { $0.publicKey }
-                if (pubkeys.count > 0) {
-                    let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys))
-                    cm.sendMessage(message)
-                }
+//                createAccountPresented = false
+//                addReadOnlyAccountPresented = false
+//                
+//                
+//                let pubkeys = accounts
+//                    .filter { $0.privateKey == nil || $0.privateKey == "" }
+//                    .map { $0.publicKey! }
+//                if (pubkeys.count > 0) {
+//                    let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys))
+//                    sp.sendMessage(message)
+//                }
             }
             .onAppear {
                 self.isViewDisplayed = true
@@ -213,7 +223,7 @@ struct AccountListView: View {
     
     func fetchContacts(account:Account) {
         if (account.publicKey != nil) {
-            cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: account.publicKey!)))
+            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: account.publicKey!)))
         }
     }
     
@@ -234,14 +244,14 @@ struct AccountListView: View {
                 account.addToFollows(contact)
                 print("Adding to followers: \(contact.name ?? "??")")
             }
-            
+            ns.objectWillChange.send()
             try! viewContext.save();
         }
     }
     
     func updateContacts() { // move this method to somewhere more global maybe
-        let pubkeys = contacts.map { $0.pubkey }
-        cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys)))
+        let pubkeys = contacts.map { $0.pubkey! }
+        sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys)))
     }
     
     private func addItem() {
@@ -262,8 +272,13 @@ struct AccountListView: View {
     
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
-            offsets.map { accounts[$0] }.forEach(viewContext.delete)
-            
+            offsets.map {
+                if (accounts[$0] == ns.account) {
+                    ns.setAccount()
+                }
+                return accounts[$0]
+            }.forEach(viewContext.delete)
+            ns.objectWillChange.send()
             do {
                 try viewContext.save()
             } catch {

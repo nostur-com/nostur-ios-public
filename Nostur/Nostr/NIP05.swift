@@ -49,7 +49,7 @@ class NIP05 {
             return false
         }
         catch {
-            debugPrint("Error loading \(nip05url): \(String(describing: error))")
+            print("Error loading \(nip05url): \(String(describing: error))")
             return false
         }
     }

@@ -29,8 +29,8 @@ class EventsProvider: ObservableObject {
         account.createdAt = Date()
         account.id = UUID()
         account.publicKey = "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
-        account.name = "Testeur"
-        account.about = "hi"
+        account.name = "bitcoinerrrrr"
+        account.about = "test account"
         
         let keys = NKeys.newKeys()
         
@@ -67,12 +67,13 @@ class EventsProvider: ObservableObject {
         messages.append(contentsOf: testKind6Events())
         messages.append(contentsOf: testEfilter())
         messages.append(contentsOf: testZaps())
+        messages.append(contentsOf: testThread())
         
         var relayMessages:[RelayMessage] = []
         
         for text in messages {
             guard let message = try? RelayMessage.parseRelayMessage(text: text, skipValidation: true) else { continue }
-            if (message.event?.kind == .textNote || message.event?.kind == .custom(7) || message.event?.kind == .setMetadata) {
+            if (1==1 || message.event?.kind == .textNote || message.event?.kind == .custom(7) || message.event?.kind == .setMetadata) {
                 
                 if (message.subscriptionId == nil) {
                     print("WHERE IS SUBSCRIPTION ID BRO")
@@ -94,9 +95,7 @@ class EventsProvider: ObservableObject {
             _ = Event.saveEvent(event: event, context:context)
             
             if event.kind == .setMetadata {
-                if Contact.handleSetMetadataEvent(event: event, context: context) != nil {
-                    
-                }
+                Contact.saveOrUpdateContact(event: event, context: context)
             }
             
 //            // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
@@ -144,7 +143,8 @@ class EventsProvider: ObservableObject {
         account.addToBlockedContacts(contact3!)
         account.addToBlockedContacts(contact1!)
         someEvent.addToBookmarkedBy(account)
-        
+        account.addToFollows(contact2!)
+        account.addToFollows(contact3!)
         
         return provider
     }()
@@ -232,11 +232,11 @@ class EventsProvider: ObservableObject {
     
     func removeOldEvents() {
         
-        let threeDaysAgo = Date.now.addingTimeInterval(-(3 * 86400))
+        let fiveDaysAgo = Date.now.addingTimeInterval(-(5 * 86400))
         
         let fr = NSFetchRequest<Event>(entityName: "Event")
         fr.predicate =
-        NSPredicate(format: "created_at < %i AND (kind == 0 OR kind == 1 OR kind == 3 OR kind == 7)", Int64(threeDaysAgo.timeIntervalSince1970))
+        NSPredicate(format: "created_at < %i AND (kind == 0 OR kind == 1 OR kind == 3 OR kind == 7)", Int64(fiveDaysAgo.timeIntervalSince1970))
         //        fr.resultType = .managedObjectIDResultType
         
         do {

@@ -14,6 +14,7 @@ struct AccountView: View {
     var sp:SocketPool = .shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) var viewContext
+    @EnvironmentObject var up:Unpublisher
     @ObservedObject var account: Account
     @State var newPrivateKey = ""
     @State var contactsPresented = false
@@ -66,7 +67,10 @@ struct AccountView: View {
             
         }
         .onAppear {
-            preloadFromEvent()
+            if (account.privateKey == nil) {
+                let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: account.publicKey!))
+                sp.sendMessage(message)
+            }
         }
         .safeAreaInset(edge: .bottom) {
             Button {
@@ -78,7 +82,7 @@ struct AccountView: View {
                 }
                 do {
                     try viewContext.save()
-                    try publishMetadataEvent(account: account, sp: sp, context: viewContext)
+                    try publishMetadataEvent()
                     dismiss()
                 }
                 catch {
@@ -104,7 +108,7 @@ extension AccountView {
     }
     
     // TODO: MOVE TO Event Publisher class
-    func publishMetadataEvent(account:Account, sp:SocketPool, context:NSManagedObjectContext) throws {
+    func publishMetadataEvent() throws {
         guard account.privateKey != nil else {
             throw "Account has no private key"
         }
@@ -117,19 +121,19 @@ extension AccountView {
         if (account.privateKey != nil) {
             let keys = NKeys(privateKeyHex: account.privateKey!)
             
-            var event = NEvent(content: setMetadataContent)
+            var newKind0Event = NEvent(content: setMetadataContent)
             do {
-                event = try event.sign(keys)
+                let newKind0EventSigned = try newKind0Event.sign(keys)
                 
-                print(event.eventJson())
-                print(event.wrappedEventJson())
+                print(newKind0EventSigned.eventJson())
+                print(newKind0EventSigned.wrappedEventJson())
                 
-                _ = Event.saveEvent(event: event, context: context)
-                try context.save()
+                _ = Event.saveEvent(event: newKind0EventSigned, context: viewContext)
+                Contact.saveOrUpdateContact(event: newKind0EventSigned, context: viewContext)
+                try viewContext.save()
                 
                 // broadcast to relays
-                let message = ClientMessage(type: .EVENT, message: event.wrappedEventJson())
-                sp.sendMessage(message)
+                up.publishNow(newKind0EventSigned)
             }
             catch {
                 print("🔴🔴🔴🔴 Could not sign/save/broadcast event 🔴🔴🔴🔴")
@@ -137,29 +141,29 @@ extension AccountView {
         }
     }
     
-    func preloadFromEvent() {
-        let fr = NSFetchRequest<Event>(entityName: "Event")
-        fr.predicate = NSPredicate(format: "pubkey = %@ AND kind == 0", account.publicKey!)
-        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        print("preload...")
-        if let event = try? viewContext.fetch(fr).first {
-            print("\(event.content ?? "??")")
-            if let metadata = try? event.getMetadataContent() {
-                account.name = metadata.name ?? ""
-                account.about = metadata.about ?? ""
-                account.picture = metadata.picture ?? ""
-                account.banner = metadata.banner ?? ""
-                account.nip05 = metadata.nip05 ?? ""
-                account.lud16 = metadata.lud16 ?? ""
-                
-                do {
-                    try viewContext.save()
-                } catch {
-                    print("error saving own account data from event to account")
-                }
-            }
-        }
-    }
+//    func preloadFromEvent() {
+//        let fr = NSFetchRequest<Event>(entityName: "Event")
+//        fr.predicate = NSPredicate(format: "pubkey = %@ AND kind == 0", account.publicKey!)
+//        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+//        print("preload...")
+//        if let event = try? viewContext.fetch(fr).first {
+//            print("\(event.content ?? "??")")
+//            if let metadata = try? event.getMetadataContent() {
+//                account.name = metadata.name ?? ""
+//                account.about = metadata.about ?? ""
+//                account.picture = metadata.picture ?? ""
+//                account.banner = metadata.banner ?? ""
+//                account.nip05 = metadata.nip05 ?? ""
+//                account.lud16 = metadata.lud16 ?? ""
+//                
+//                do {
+//                    try viewContext.save()
+//                } catch {
+//                    print("error saving own account data from event to account")
+//                }
+//            }
+//        }
+//    }
 }
 
 

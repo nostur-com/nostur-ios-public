@@ -48,7 +48,7 @@ class MessageParser {
                             else {
                                 await self.parsedBucket.enqueue(message) // Wrap in _ = Task {}?
                                 
-                                if (message.event?.kind == .textNote || message.event?.kind == .custom(7)) {
+                                if (message.event?.kind == .textNote || message.event?.kind == .reaction) {
                                     
                                     if (message.subscriptionId == nil) {
                                         print("WHERE IS SUBSCRIPTION ID BRO")
