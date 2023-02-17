@@ -19,7 +19,7 @@ extension Account {
     @NSManaged public var about: String
     @NSManaged public var createdAt: Date?
     @NSManaged public var name: String
-    @NSManaged public var display_name: String?
+    @NSManaged public var display_name: String
     @NSManaged public var lud16: String
     @NSManaged public var nip05: String
     @NSManaged public var picture: String
@@ -84,7 +84,7 @@ extension Account {
 
 }
 
-// MARK: Generated accessors for bookmarks
+// MARK: Generated accessors for likes
 extension Account {
 
     @objc(addLikesObject:)
@@ -127,6 +127,16 @@ extension Account : Identifiable {
         }
     }
     
+    var nsec:String? {
+        get {
+            guard self.privateKey != nil else { return nil }
+            guard let nsec = try? NIP19(prefix: "nsec", hexString: self.privateKey!).displayString else {
+                return nil
+            }
+            return nsec
+        }
+    }
+    
     
     // For when adding read only accounts, prefill with kind.0 info from relays (FROM CACHE)
     static func preFillReadOnlyAccountInfo(account:Account, context:NSManagedObjectContext) {
@@ -141,6 +151,7 @@ extension Account : Identifiable {
         }
 
         if (account.privateKey == nil) { // Don't overwrite non-read-only accounts
+            account.display_name = metaData.display_name ?? ""
             account.name = metaData.name ?? ""
             account.about = metaData.about ?? ""
             account.picture = metaData.picture ?? ""
@@ -163,6 +174,7 @@ extension Account : Identifiable {
         fr.predicate = NSPredicate(format: "publicKey = %@", event.publicKey)
         if let account = try? context.fetch(fr).first {
             if (account.privateKey == nil) { // Don't overwrite non-read-only accounts
+                account.display_name = metaData.display_name ?? ""
                 account.name = metaData.name ?? ""
                 account.about = metaData.about ?? ""
                 account.picture = metaData.picture ?? ""
@@ -196,12 +208,17 @@ extension Account : Identifiable {
     static func preFillReadOnlyAccountFollowing(event:NEvent, context:NSManagedObjectContext) {
         
         let fr = Account.fetchRequest()
-        fr.predicate = NSPredicate(format: "publicKey = %@", event.publicKey)
+        fr.predicate = NSPredicate(format: "publicKey == %@", event.publicKey)
         if let account = try? context.fetch(fr).first {
             
             let contacts = Contact.ensureContactsCreated(event: event, context: context)
 
             if (account.privateKey == nil && contacts.count > 0) {
+                
+                // Also prefetch all metadata
+                let pubkeys = contacts.map { $0.pubkey! }
+                SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys)))
+                
                 for contact in contacts {
                     account.addToFollows(contact)
                 }

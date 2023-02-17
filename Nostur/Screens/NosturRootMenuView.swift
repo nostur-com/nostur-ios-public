@@ -6,12 +6,15 @@
 //
 
 import SwiftUI
+import Introspect
 
 struct NosturRootMenu: View {
     
     @EnvironmentObject var nav:NavigationModel
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var sp:SocketPool
+    
+    @State var accountsSheetIsShown = false
     
     
     var body: some View {
@@ -28,21 +31,27 @@ struct NosturRootMenu: View {
                         self.handleUrl(url)
                     }
             }
-            else {
-                NavigationStack(path: $nav.accountsPath) {
-                    AccountListView()
+            else if (ns.accounts.count == 0) {
+                NavigationStack(path: $nav.timelinePath) {
+                    WelcomeSheet(offerTryOut: true)
+                        .withNavigationDestinations()
                 }
             }
+        }
+        .sheet(isPresented: $accountsSheetIsShown) {
+            AccountsSheet()
+                .presentationDetents([.fraction(0.45), .medium, .large])
+//                .presentationDragIndicator(.hidden)
         }
         .onReceive(receiveNotification(.willDeleteAllEvents)) { _ in
             ns.setAccount()
         }
-        .onChange(of: ns.account?.follows) { newValue in
-            ns.loadFollowing()
-            if (ns.pendingFirstContactsFetch) {
-                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: Array(ns.followingPublicKeys))))
-            }
-        }
+//        .onChange(of: ns.account?.follows) { newValue in
+//            ns.loadFollowing()
+//            if (ns.pendingFirstContactsFetch) {
+//                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: Array(ns.followingPublicKeys))))
+//            }
+//        }
 //        .edgesIgnoringSafeArea(.all)
     }
 }
@@ -55,9 +64,15 @@ extension NosturRootMenu {
                 HStack {
                     ProfilePicView(pubkey: ns.account!.publicKey!, account: ns.account!)
                     Spacer()
+                    
+                    Button { accountsSheetIsShown = true } label: {
+                        Text("Accounts...")
+                    }
+                    .buttonStyle(.bordered)
+                    .buttonBorderShape(.capsule)
                 }
                 
-                Text("\(ns.account!.display_name ?? ns.account!.name)").font(.headline)
+                Text("\(ns.account!.display_name != "" ? ns.account!.display_name : ns.account!.name)").font(.headline)
                 Text("@\(ns.account!.name)").font(.subheadline)
                 Text(try! AttributedString(markdown: "**bla**  Following  **196** Followers")).font(.caption)
                 
@@ -67,7 +82,10 @@ extension NosturRootMenu {
                 } label: {
                     Label("Profile", systemImage: "person")
                 }
-                Button {} label: {
+                Button {
+                    nav.navigateTo(ViewPath.Bookmarks(account: ns.account!))
+                    nav.showSidebar = false
+                } label: {
                     Label("Bookmarks", systemImage: "bookmark")
                 }
                 Button {} label: {
@@ -83,6 +101,13 @@ extension NosturRootMenu {
                     Label("About", systemImage: "info")
                 }
             }.listStyle(.plain)
+                .introspect(selector: TargetViewSelector.ancestorOrSiblingContaining, customize: { (collectionView: UICollectionView) in
+                    guard #available(iOS 16, *) else { return }
+                    var config = UICollectionLayoutListConfiguration(appearance: .plain)
+                    config.showsSeparators = false
+                    let layout = UICollectionViewCompositionalLayout.list(using: config)
+                    collectionView.collectionViewLayout = layout
+                })
             Spacer()
         }
     }

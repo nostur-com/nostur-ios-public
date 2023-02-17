@@ -7,6 +7,38 @@
 
 import SwiftUI
 
+struct NoteById: View {
+
+    @EnvironmentObject var sp:SocketPool
+
+    var id:String
+
+    @FetchRequest
+    var events:FetchedResults<Event>
+
+    init(id:String) {
+        self.id = id
+
+        _events = FetchRequest(
+            sortDescriptors: [],
+            predicate: NSPredicate(format: "id == %@", id)
+        )
+    }
+
+    var body: some View {
+        if (events.first != nil) {
+            ReplyNoteView(event: events.first!)
+        }
+        else {
+            Text("Trying to fetch...").onAppear {
+                // .REQ
+                print("🟢 NoteById.onAppear no event so REQ.1: \(id)")
+                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: id)))
+            }
+        }
+    }
+}
+
 struct ReplyNoteView: View {
     
     @ObservedObject var event:Event // OUR MAIN NOTE (NOT ROOT)
@@ -86,7 +118,7 @@ struct ReplyAndParentView: View {
                                 ReplyingToFragment(event: event)
                             }
                         }//.background(.red)
-                        
+                        Spacer()
                         NoteMenu(event: event)
                     }//.background(.yellow)
                     .id(event.id)
@@ -128,7 +160,7 @@ struct ReplyAndParentView: View {
                             .padding(.leading, isParent ? INDENT : 0)
                     }
                     else {
-                        DetailFooterFragment(event: event)
+                        FooterFragment(event: event)
                         Divider()
                         
                         // REPLIES TO OUR MAIN NOTE
@@ -149,7 +181,8 @@ struct ReplyAndParentView: View {
                         
                         Spacer()
                     }
-                }//.padding(10)
+                }
+                .padding(!isParent ? 10 : 0)
                 .background(MaybeThreadLine(isParent: isParent))
                 .onTapGesture {
                     nav.navigateTo(event)

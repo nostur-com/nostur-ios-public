@@ -44,7 +44,6 @@ extension Contact {
     @NSManaged public var zapperPubkey: String? // used to authorize kind 9735 zap notes. fetch from lud16 endpoint
     @NSManaged public var updated_at: Int64
     @NSManaged public var followedBy: NSSet?
-
 }
 
 // MARK: Generated accessors for followedBy
@@ -181,11 +180,20 @@ extension Contact : Identifiable {
                 contact.display_name = metaData.display_name
                 contact.about = metaData.about
                 contact.picture = metaData.picture
+                contact.banner = metaData.banner
                 contact.nip05 = metaData.nip05
                 contact.lud16 = metaData.lud16
                 contact.updated_at = Int64(Date().timeIntervalSince1970)
                 print("🟢🟢 Existing Contact metadata updated")
                 // TODO: Maybe some event.objectWillChange.send() to relations in active views? Performance?
+                let er = Event.fetchRequest()
+                er.sortDescriptors = []
+                er.predicate = NSPredicate(format: "kind == 1 && pubkey == %@", event.publicKey)
+                let contactEvents = Array(try! context.fetch(er))
+                for event in contactEvents {
+                    event.contact = contact
+                    event.objectWillChange.send()
+                }
             }
             else {
                 // Received metadata is older than stored Contact
@@ -231,6 +239,7 @@ extension Contact : Identifiable {
             }
             let newContact = Contact(context: context)
             newContact.pubkey = pTag.pubkey
+            newContact.updated_at = 0
             contactsInThisEvent.append(newContact)
         }
         

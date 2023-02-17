@@ -29,46 +29,21 @@ struct NosturTabsView: View {
             AppTopBar(showMenu: $showMenu)
             TabView(selection: $selectedTab) {
                 NavigationStack(path: $timelinePath) {
-                    if (ns.followingPublicKeys.count != 0) {
-                        Timeline(showReplies: true, followingPubkeys: $ns.followingPublicKeys, account: ns.account!)
-                            .withNavigationDestinations()
-                    } else {
-                        Text(" Ey yo")
-                    }
+//                    CleanTimeline()
+//                    TimelineX()
+                    TheTimeline()
+                        .withNavigationDestinations()
                 }
                 .tabItem { Image(systemName: "house") }.tag("Timeline")
-                
-                NavigationStack(path: $accountsPath) {
-                    AccountListView()
-                        .withNavigationDestinations()
-                    Spacer()
-                }
-                .tabItem {
-                    Image(systemName: "person.badge.key")
-                }.tag("Accounts")
-                
-                NavigationStack(path: $bookmarksPath) {
-                    if (ns.account != nil) {
-                        BookmarksView(account: ns.account!)
-                            .withNavigationDestinations()
-                    }
-                    else {
-                        Text("Select account account first on accounts tab.")
-                    }
-                    Spacer()
-                }
-                .tabItem { Image(systemName: "bookmark.circle") }
-                .tag("Bookmarks")
-                
+                                
                 NavigationStack(path: $notificationsPath) {
                     if (ns.account != nil) {
-                        NotificationsView(pubkey: ns.activeAccountPublicKey)
+                        NotificationsView()
                             .withNavigationDestinations()
                     }
                     else {
                         Text("Select account account first on accounts tab.")
                     }
-                    Spacer()
                     Spacer()
                 }
                 .tabItem { Image(systemName: "bell.fill") }

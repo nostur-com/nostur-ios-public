@@ -19,6 +19,13 @@ struct ContactPath: Hashable {
 enum ViewPath: Hashable {
     case Blocklist
     case Following(account:Account)
+    case Bookmarks(account:Account)
+    case Account(account:Account)
+    
+    case Welcome
+    case CreateNewAccount
+    case UseExistingAccount
+    case TryGuestAccount
 }
 
 extension View {
@@ -43,6 +50,19 @@ extension View {
                         BlockListView()
                     case .Following(let account):
                         AccountFollowingList(account: account)
+                    case .Bookmarks(let account):
+                        BookmarksView(account: account)
+                    case .Account(let account):
+                        AccountEditView(account: account)
+                    
+                    case .Welcome:
+                        WelcomeSheet()
+                    case .CreateNewAccount:
+                        NewAccountSheet()
+                    case .UseExistingAccount:
+                        AddExistingAccountSheet(offerTryOut: true)
+                    case .TryGuestAccount:
+                        TryGuestAccountSheet() // TODO:
                 }
             }
     }
@@ -62,6 +82,8 @@ class NavigationModel: ObservableObject {
     @Published var messagesPath = NavigationPath()
     @Published var configurationPath = NavigationPath()
     
+    @Published var onboardingPath = NavigationPath()
+    
     func navigateTo(_ path:any Hashable) -> Void {
         switch (selectedTab) {
             case "Timeline":
@@ -80,6 +102,27 @@ class NavigationModel: ObservableObject {
                 self.searchPath.append(path)
             default:
                 self.timelinePath.append(path)
+        }
+    }
+    
+    func clear() -> Void {
+        switch (selectedTab) {
+            case "Timeline":
+                self.timelinePath.removeLast(self.timelinePath.count)
+            case "Accounts":
+                self.accountsPath.removeLast(self.accountsPath.count)
+            case "Bookmarks":
+                self.bookmarksPath.removeLast(self.bookmarksPath.count)
+            case "Configuration":
+                self.configurationPath.removeLast(self.configurationPath.count)
+            case "Messages":
+                self.messagesPath.removeLast(self.messagesPath.count)
+            case "Notifications":
+                self.notificationsPath.removeLast(self.notificationsPath.count)
+            case "Search":
+                self.searchPath.removeLast(self.searchPath.count)
+            default:
+                self.timelinePath.removeLast(self.timelinePath.count)
         }
     }
 }

@@ -30,7 +30,7 @@ struct BlockListView: View {
                                 try! viewContext.save()
                                 do {
                                     try viewContext.save()
-                                    sendNotification(.blockListUpdated, nil)
+                                    sendNotification(.blockListUpdated, ns.account!.blockedContacts ?? Set<Contact>())
                                 } catch {
                                     print("🔴 could not remove contact from blocked list")
                                     print(error)

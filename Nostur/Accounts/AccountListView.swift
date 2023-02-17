@@ -9,7 +9,6 @@ import SwiftUI
 
 struct AccountListView: View {
     
-//    let accountsRunLoop = Timer.publish(every: 2, tolerance: 1, on: .main, in: .common).autoconnect()
     @EnvironmentObject var ns:NosturState
     @State var fetching = true // fetching: true or, false if parsing
     @State var isViewDisplayed = false
@@ -27,15 +26,10 @@ struct AccountListView: View {
         animation: .default)
     private var accounts: FetchedResults<Account>
     
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
-        animation: .none)
-    var contacts:FetchedResults<Contact>
-    
-    
     var body: some View {
         
             VStack {
+                Text("Accounts").font(.title3)
                 if (accounts.count == 0) {
                     NewAccountView(addReadOnlyAccountPresented: $addReadOnlyAccountPresented) { name, about in
                         
@@ -130,43 +124,7 @@ struct AccountListView: View {
                 }
             }
             .navigationDestination(for: Account.self) { account in
-                VStack {
-                    Text("Name: \(account.name != "" ? account.name : "(Unknown)")")
-                    //                Text("Priv: \(account.privateKey ?? "(Unknown)")")
-                    Text("Pub: \(account.publicKey ?? "(Unknown)")")
-                    
-                    AccountView(account: account)
-                    
-                    Button {
-                        fetchContacts(account:account)
-                    } label: {
-                        Text("Load contacts from relays")
-                    }
-                    Button {
-                        updateContacts()
-                    } label: {
-                        Text("Update contacts metadata")
-                    }
-                    Button {
-                        loadFollowers(account: account)
-                    } label: {
-                        Text("load followers from kind 3")
-                    }
-                    
-                    if activeAccountPublicKey != account.publicKey {
-                        Button {
-                            activeAccountPublicKey = account.publicKey ?? ""
-                            do {
-                                let _ = try ns.loadActiveAccount(account: account)
-                            }
-                            catch {
-                                print("🔴 error switching active account")
-                            }
-                        } label: {
-                            Text("Set as active account")
-                        }
-                    }
-                }
+                AccountEditView(account: account)
             }
             .onAppear {
                 // Fetch account metadata for accounts where who don't have the private key for
@@ -221,39 +179,6 @@ struct AccountListView: View {
         
     }
     
-    func fetchContacts(account:Account) {
-        if (account.publicKey != nil) {
-            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: account.publicKey!)))
-        }
-    }
-    
-    func loadFollowers(account:Account) {
-        let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "kind == 3 AND pubkey == %@", account.publicKey!)
-        let clEvent = try! viewContext.fetch(fr).first
-        if (clEvent != nil) {
-            
-        
-            let contactPubkeys = TagsHelpers(clEvent?.tags() ?? []).pTags().map { $0.pubkey }
-            
-            let cr = Contact.fetchRequest()
-            cr.predicate = NSPredicate(format: "pubkey IN %@", contactPubkeys)
-            let contacts = try! viewContext.fetch(cr)
-            
-            for contact in contacts {
-                account.addToFollows(contact)
-                print("Adding to followers: \(contact.name ?? "??")")
-            }
-            ns.objectWillChange.send()
-            try! viewContext.save();
-        }
-    }
-    
-    func updateContacts() { // move this method to somewhere more global maybe
-        let pubkeys = contacts.map { $0.pubkey! }
-        sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys)))
-    }
-    
     private func addItem() {
         withAnimation {
             let newItem = Account(context: viewContext)
@@ -276,6 +201,8 @@ struct AccountListView: View {
                 if (accounts[$0] == ns.account) {
                     ns.setAccount()
                 }
+                AccountManager.shared.deletePrivateKey(forPublicKeyHex: accounts[$0].publicKey!
+                )
                 return accounts[$0]
             }.forEach(viewContext.delete)
             ns.objectWillChange.send()

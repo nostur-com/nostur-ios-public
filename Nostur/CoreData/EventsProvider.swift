@@ -29,6 +29,7 @@ class EventsProvider: ObservableObject {
         account.createdAt = Date()
         account.id = UUID()
         account.publicKey = "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
+        account.display_name = "bitcoiner_since_2013 ⚡️"
         account.name = "bitcoinerrrrr"
         account.about = "test account"
         
@@ -39,7 +40,8 @@ class EventsProvider: ObservableObject {
         xaccount.id = UUID()
         xaccount.publicKey = "11707ab5c187f4534ea7b4ad67cd9914cd07f7812b5ea2fdd91685ac84c91f5b"
 //        xaccount.privateKey = "184a90b0cbdf4b4a318d33f6464593d9936430c6793fed82d9b6ec3b8f12804f"
-        xaccount.name = "Eltje"
+        xaccount.display_name = "The Ellen"
+        xaccount.name = "eltje"
         xaccount.about = "Test"
         
         let relay = Relay(context: context)
@@ -64,16 +66,17 @@ class EventsProvider: ObservableObject {
         messages.append(contentsOf: testKindMixedOldDunnoEvents())
         messages.append(contentsOf: testRepliesAndReactions())
         messages.append(contentsOf: testSnowden())
-        messages.append(contentsOf: testKind6Events())
+//        messages.append(contentsOf: testKind6Events())
         messages.append(contentsOf: testEfilter())
         messages.append(contentsOf: testZaps())
+//        messages.append(contentsOf: testNotifications())
         messages.append(contentsOf: testThread())
         
         var relayMessages:[RelayMessage] = []
         
         for text in messages {
             guard let message = try? RelayMessage.parseRelayMessage(text: text, skipValidation: true) else { continue }
-            if (1==1 || message.event?.kind == .textNote || message.event?.kind == .custom(7) || message.event?.kind == .setMetadata) {
+            if (1==1 || message.event?.kind == .textNote || message.event?.kind == .reaction || message.event?.kind == .setMetadata) {
                 
                 if (message.subscriptionId == nil) {
                     print("WHERE IS SUBSCRIPTION ID BRO")
@@ -84,13 +87,27 @@ class EventsProvider: ObservableObject {
         }
         
         for relayMessage in relayMessages {
-            let event = relayMessage.event!
+            var event = relayMessage.event!
             
             // no need for preview
 //            guard try event.verified() else {
 //                print("😡😡 hey invalid sig yo 😡😡")
 //                continue
 //            }
+            
+            // ANNOYING FIX FOR KIND 6 WITH JSON STRING OF ANOTHER EVENT IN EVENT.CONTENT. WTF
+            if event.kind == .repost && event.content.prefix(2) == #"{""# {
+                let decoder = JSONDecoder()
+                if let noteInNote = try? decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
+                    _ = Event.saveEvent(event: noteInNote, context:context)
+                    event.content = "#[0]"
+                    if let firstTag = event.tags.first {
+                        if firstTag.type == "e" {
+                            event.tags[0] = NEventTag(type: "e", otherInformation: firstTag.id, "", "mention")
+                        }
+                    }
+                }
+            }
             
             _ = Event.saveEvent(event: event, context:context)
             
@@ -145,6 +162,8 @@ class EventsProvider: ObservableObject {
         someEvent.addToBookmarkedBy(account)
         account.addToFollows(contact2!)
         account.addToFollows(contact3!)
+        
+        xaccount.addToFollows(contact1!)
         
         return provider
     }()

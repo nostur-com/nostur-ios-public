@@ -19,7 +19,7 @@ class AccountManager {
         self.keychain = Keychain(service: "nostur.com.Nostur")
     }
     
-    func generateAccount(name:String = "", about:String = "", context: NSManagedObjectContext) -> Account {
+    func generateAccount(display_name:String = "", name:String = "", about:String = "", context: NSManagedObjectContext) -> Account {
         let newKeys = NKeys.newKeys()
         storeKeys(newKeys)
         
@@ -30,6 +30,7 @@ class AccountManager {
             let account = Account(context: context)
             account.id = UUID()
             account.createdAt = Date()
+            account.display_name = display_name
             account.name = name
             account.about = about
             account.publicKey = newKeys.publicKeyHex()
@@ -46,7 +47,6 @@ class AccountManager {
         }
         return account
     }
-    
     
     func getPrivateKeyHex(pubkey:String) -> String? {
         do {
@@ -89,5 +89,69 @@ class AccountManager {
             print("🔴🔴🔴 could not remove key from keychain")
             print("🔴🔴🔴 \(error)")
         }
+    }
+    
+    static func createMetadataEvent(account:Account) throws -> NEvent? {
+        guard account.privateKey != nil else {
+            throw "Account has no private key"
+        }
+        
+        // create nostr .setMetadata event
+        var setMetadataContent = NSetMetadata(name: account.name, display_name: account.display_name, about: account.about, picture: account.picture)
+        if account.nip05 != "" { setMetadataContent.nip05 = account.nip05 }
+        if account.lud16 != "" { setMetadataContent.lud16 = account.lud16 }
+        if account.banner != "" { setMetadataContent.banner = account.banner }
+        
+        if (account.privateKey != nil) {
+            do {
+                let keys = try NKeys(privateKeyHex: account.privateKey!)
+                
+                var newKind0Event = NEvent(content: setMetadataContent)
+                
+                let newKind0EventSigned = try newKind0Event.sign(keys)
+                
+                print(newKind0EventSigned.eventJson())
+                print(newKind0EventSigned.wrappedEventJson())
+                
+                return newKind0EventSigned
+            }
+            catch {
+                print("🔴🔴🔴🔴 Could not sign/save/broadcast event 🔴🔴🔴🔴")
+                return nil
+            }
+        }
+        return nil
+    }
+    
+    static func createContactListEvent(account:Account) throws -> NEvent? {
+        guard account.privateKey != nil else {
+            throw "Account has no private key"
+        }
+        
+        
+        if (account.privateKey != nil) {
+            do {
+                let keys = try NKeys(privateKeyHex: account.privateKey!)
+                
+                var newKind3Event = NEvent(content: "")
+                newKind3Event.kind = .contactList
+                
+                for contact in Array(account.follows ?? Set<Contact>()) {
+                    newKind3Event.tags.append(NEventTag(type: "p", otherInformation: contact.pubkey! ))
+                }
+                
+                let newKind3EventSigned = try newKind3Event.sign(keys)
+                
+                print(newKind3EventSigned.eventJson())
+                print(newKind3EventSigned.wrappedEventJson())
+                
+                return newKind3EventSigned
+            }
+            catch {
+                print("🔴🔴🔴🔴 Could not sign/save/broadcast event 🔴🔴🔴🔴")
+                return nil
+            }
+        }
+        return nil
     }
 }

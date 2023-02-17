@@ -40,6 +40,7 @@ extension Event {
     @NSManaged public var firstQuoteId: String?
     @NSManaged public var likes: Int64 // Cache
     @NSManaged public var liked: Bool // Cache
+    @NSManaged public var isRepost: Bool // Cache
     @NSManaged public var repliesCount: Int64 // Cache
 //    @NSManaged public var repliesCounter: Int64 // Better Cache?
     @NSManaged public var mentions: Int64 // Cache
@@ -389,6 +390,16 @@ extension Event : Identifiable {
                 savedEvent.replyTo = reply
 //                reply.objectWillChange.send()
                 // TODO: inverse hier erbij of neit?
+            }
+        }
+        
+        if (event.kind == .repost) {
+            savedEvent.isRepost = true
+        }
+        
+        if (event.kind == .textNote && event.content == "#[0]") {
+            if event.tags.count > 0 && event.tags[0].type == "e" {
+                savedEvent.isRepost = true
             }
         }
         

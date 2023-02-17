@@ -10,6 +10,9 @@ import Foundation
 import CoreData
 
 final class NosturState : ObservableObject {
+        
+    @Published var isOnboarding = false
+
     
     // public keys of the contacts that the currently active ("logged in") account follows
     // WTF followingPublicKeys met @Published is superlangzaam... HMMM.
@@ -25,6 +28,14 @@ final class NosturState : ObservableObject {
         get { account?.publicKey }
     }
     
+    var accounts:[Account] {
+        get {
+            let r = Account.fetchRequest()
+            return (try? viewContext.fetch(r) ) ?? []
+        }
+    }
+    
+
     func setAccount(account:Account? = nil) {
         self.account = account
         if (account == nil) {
@@ -46,25 +57,29 @@ final class NosturState : ObservableObject {
         } catch {
             print("loadActiveAccount but activeAccountPublicKey is not set ")
         }
+        print("🦋🦋 ACTIVE ACCOUNT IS: \(self.account?.name ?? "NONE")")
     }
     
     func loadActiveAccount(account:Account? = nil) throws -> Account? {
-        if (activeAccountPublicKey == "") && (account == nil) {
-            throw "activeAccountPublicKey is empty"
-        }
-        
         if (account != nil) {
             self.account = account!            
         }
         else {
             let r = Account.fetchRequest()
-            r.predicate = NSPredicate(format: "publicKey == %@", activeAccountPublicKey)
+            if (activeAccountPublicKey != "") {
+                r.predicate = NSPredicate(format: "publicKey == %@", activeAccountPublicKey)
+            }
             self.account = try! viewContext.fetch(r).first
             
             if (self.account == nil) { // No account? Just fall back to (ANY) firstaccount
                 r.predicate = nil
                 self.account = try! viewContext.fetch(r).first
             }
+            if (self.account == nil) {
+                isOnboarding = true
+                return nil
+            }
+//            isOnboarding = false
         }
         loadFollowing()
         Task(priority: .userInitiated) {
@@ -112,8 +127,8 @@ final class NosturState : ObservableObject {
     func loadFollowing() {
         if (account?.follows != nil) {
             let pubkeys = account!.follows?.map { $0.pubkey! } ?? []
-            print("💿 ")
-            print(pubkeys)
+//            print("💿 follows:")
+//            print(pubkeys)
             self.followingPublicKeys = Set( pubkeys )
         }
         else {
@@ -147,7 +162,14 @@ final class NosturState : ObservableObject {
         }
         account!.addToFollows(contact)
         try! viewContext.save()
+        
         followingPublicKeys.insert(contact.pubkey!)
+        
+        guard let clEvent = try? AccountManager.createContactListEvent(account: account!) else {
+            print("🔴🔴 Could not create new clEvent")
+            return
+        }
+        _ = Unpublisher.shared.publishLast(clEvent, ofType: .contactList)
     }
     
     func unfollow(_ pubkey: String) {
@@ -161,6 +183,12 @@ final class NosturState : ObservableObject {
         }
         account!.removeFromFollows(contact)
         try! viewContext.save()
+        
+        guard let clEvent = try? AccountManager.createContactListEvent(account: account!) else {
+            print("🔴🔴 Could not create new clEvent")
+            return
+        }
+        _ = Unpublisher.shared.publishLast(clEvent, ofType: .contactList)
     }
     
     func unfollow(_ contact:Contact) {
@@ -229,7 +257,7 @@ final class NosturState : ObservableObject {
         
         var eventToSign = event
         do {
-            let keys = NKeys(privateKeyHex: account!.privateKey!)
+            let keys = try NKeys(privateKeyHex: account!.privateKey!)
             let signedEvent = try eventToSign.sign(keys)
             return signedEvent
         }

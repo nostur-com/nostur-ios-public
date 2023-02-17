@@ -22,8 +22,14 @@ struct SideBarStack<SidebarContent: View, Content: View>: View {
         sidebarContent = sidebar()
         mainContent = content()
         
-        self.sidebarOffsetX = -1 * sidebarWidth
-        self.mainContentOffsetX = 0.0
+        if (showSidebar.wrappedValue) {
+            self.sidebarOffsetX = 0
+            self.mainContentOffsetX = sidebarWidth
+        }
+        else {
+            self.sidebarOffsetX = -1 * sidebarWidth
+            self.mainContentOffsetX = 0.0
+        }
     }
     
     var body: some View {

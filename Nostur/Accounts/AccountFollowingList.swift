@@ -71,9 +71,8 @@ struct AccountFollowingList: View {
         })
         
         if (account.privateKey != nil) {
-            let keys = NKeys(privateKeyHex: account.privateKey!)
-            
             do {
+                let keys = try NKeys(privateKeyHex: account.privateKey!)
                 nEvent = try nEvent.sign(keys)
                 
                 print(nEvent.eventJson())

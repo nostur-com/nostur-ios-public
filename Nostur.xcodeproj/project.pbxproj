@@ -7,12 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1F02EA5C299F94F200FC89EB /* Onboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F02EA5B299F94F200FC89EB /* Onboarding.swift */; };
 		1F055A53296EE2A2009EF792 /* secp256k1 in Frameworks */ = {isa = PBXBuildFile; productRef = 1F055A52296EE2A2009EF792 /* secp256k1 */; };
 		1F14BA6E29854B8E00EACCD5 /* ContactList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F14BA6D29854B8E00EACCD5 /* ContactList.swift */; };
 		1F14BA7029854DFC00EACCD5 /* ProfileRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F14BA6F29854DFC00EACCD5 /* ProfileRow.swift */; };
 		1F14BA722985633300EACCD5 /* NoteRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F14BA712985633300EACCD5 /* NoteRowView.swift */; };
 		1F14BA742985949100EACCD5 /* Profile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F14BA732985949100EACCD5 /* Profile.swift */; };
 		1F14BA762985984100EACCD5 /* ProfileRelaysView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F14BA752985984100EACCD5 /* ProfileRelaysView.swift */; };
+		1F14CC43299D1D7E00131B8D /* NosturStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F14CC42299D1D7E00131B8D /* NosturStyles.swift */; };
+		1F14CC45299D432400131B8D /* AccountsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F14CC44299D432300131B8D /* AccountsSheet.swift */; };
 		1F1ABC4329810D5500D03FA9 /* LinkPresentation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F1ABC4229810D5500D03FA9 /* LinkPresentation.framework */; };
 		1F1ABC45298110D800D03FA9 /* LinkPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1ABC44298110D800D03FA9 /* LinkPreview.swift */; };
 		1F1ABC4729811A1B00D03FA9 /* LRUCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1ABC4629811A1A00D03FA9 /* LRUCache.swift */; };
@@ -21,6 +24,8 @@
 		1F1ABC4D2981AEA500D03FA9 /* ProfileNotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1ABC4C2981AEA500D03FA9 /* ProfileNotesView.swift */; };
 		1F1C31E42969A86700E60BEF /* NewAccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1C31E32969A86700E60BEF /* NewAccountView.swift */; };
 		1F1DCB8D2999290E0085223E /* LightningInvoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1DCB8C2999290E0085223E /* LightningInvoice.swift */; };
+		1F254662299E9348003BB796 /* CleanTimeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F254661299E9348003BB796 /* CleanTimeline.swift */; };
+		1F254666299EB84C003BB796 /* TheTimeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F254665299EB84C003BB796 /* TheTimeline.swift */; };
 		1F25B392297A4E3400A8A5A7 /* NosturList+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F25B390297A4E3400A8A5A7 /* NosturList+CoreDataClass.swift */; };
 		1F25B393297A4E3400A8A5A7 /* NosturList+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F25B391297A4E3400A8A5A7 /* NosturList+CoreDataProperties.swift */; };
 		1F2DE030298E5C5C00891D2E /* BlockListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2DE02F298E5C5C00891D2E /* BlockListView.swift */; };
@@ -37,10 +42,12 @@
 		1F3C3F942975347F00E813FD /* ContactProfileRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3C3F932975347F00E813FD /* ContactProfileRowView.swift */; };
 		1F3C3F9629755D4C00E813FD /* NosturState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3C3F9529755D4C00E813FD /* NosturState.swift */; };
 		1F4773A5296CA72A0049454B /* AddReadOnlyAccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4773A4296CA72A0049454B /* AddReadOnlyAccountView.swift */; };
-		1F4773A7296D4F5B0049454B /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4773A6296D4F5B0049454B /* AccountView.swift */; };
+		1F4773A7296D4F5B0049454B /* AccountEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4773A6296D4F5B0049454B /* AccountEditView.swift */; };
 		1F4773A9296D85B70049454B /* AccountListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4773A8296D85B70049454B /* AccountListView.swift */; };
 		1F4AFC4729733E2400CC1F90 /* Event+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4AFC4529733E2400CC1F90 /* Event+CoreDataClass.swift */; };
 		1F4AFC4829733E2400CC1F90 /* Event+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4AFC4629733E2400CC1F90 /* Event+CoreDataProperties.swift */; };
+		1F539DAB299D4B2A00F3B8CA /* NewAccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F539DAA299D4B2900F3B8CA /* NewAccountSheet.swift */; };
+		1F539DAD299D52E200F3B8CA /* AddExistingAccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F539DAC299D52E200F3B8CA /* AddExistingAccountSheet.swift */; };
 		1F57C54729927A0000DFE063 /* AppTopBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F57C54629927A0000DFE063 /* AppTopBar.swift */; };
 		1F57C5492992816300DFE063 /* AccountFollowingList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F57C5482992816300DFE063 /* AccountFollowingList.swift */; };
 		1F57C54B299285B300DFE063 /* Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F57C54A299285B300DFE063 /* Search.swift */; };
@@ -89,6 +96,8 @@
 		1F90E11529913C2C00E7596E /* PaginationTest4.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F90E11429913C2C00E7596E /* PaginationTest4.swift */; };
 		1F90E1172991716D00E7596E /* Timeline2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F90E1162991716D00E7596E /* Timeline2.swift */; };
 		1F927C6F297DB34A0024F665 /* Queue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F927C6E297DB3490024F665 /* Queue.swift */; };
+		1F9499C9299F568900F628B4 /* WelcomeSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9499C8299F568900F628B4 /* WelcomeSheet.swift */; };
+		1F9499CB299F715800F628B4 /* TryGuestAccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9499CA299F715800F628B4 /* TryGuestAccountSheet.swift */; };
 		1F987EB129804AA5001E352E /* NewNoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F987EB029804AA4001E352E /* NewNoteView.swift */; };
 		1F987EB329805F33001E352E /* String+matchingStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F987EB229805F33001E352E /* String+matchingStrings.swift */; };
 		1FA51FF62978441200FE60EF /* Relay+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */; };
@@ -101,7 +110,6 @@
 		1FB62D0E296FFF1400A0055B /* RelayEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB62D0D296FFF1400A0055B /* RelayEditView.swift */; };
 		1FBE8222299A6F3D00FB41CE /* LUD16.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBE8221299A6F3D00FB41CE /* LUD16.swift */; };
 		1FBE8224299A745600FB41CE /* PaymentAmountSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBE8223299A745600FB41CE /* PaymentAmountSelector.swift */; };
-		1FBE8228299AA43000FB41CE /* ZapButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBE8227299AA43000FB41CE /* ZapButton.swift */; };
 		1FC38B9D2972DD5A004769F8 /* Contact+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC38B9B2972DD5A004769F8 /* Contact+CoreDataClass.swift */; };
 		1FC38B9E2972DD5A004769F8 /* Contact+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC38B9C2972DD5A004769F8 /* Contact+CoreDataProperties.swift */; };
 		1FC38BA0297316AA004769F8 /* DummyEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC38B9F297316AA004769F8 /* DummyEvents.swift */; };
@@ -147,11 +155,14 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1F02EA5B299F94F200FC89EB /* Onboarding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Onboarding.swift; sourceTree = "<group>"; };
 		1F14BA6D29854B8E00EACCD5 /* ContactList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactList.swift; sourceTree = "<group>"; };
 		1F14BA6F29854DFC00EACCD5 /* ProfileRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileRow.swift; sourceTree = "<group>"; };
 		1F14BA712985633300EACCD5 /* NoteRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteRowView.swift; sourceTree = "<group>"; };
 		1F14BA732985949100EACCD5 /* Profile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Profile.swift; sourceTree = "<group>"; };
 		1F14BA752985984100EACCD5 /* ProfileRelaysView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileRelaysView.swift; sourceTree = "<group>"; };
+		1F14CC42299D1D7E00131B8D /* NosturStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturStyles.swift; sourceTree = "<group>"; };
+		1F14CC44299D432300131B8D /* AccountsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsSheet.swift; sourceTree = "<group>"; };
 		1F1ABC4229810D5500D03FA9 /* LinkPresentation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = LinkPresentation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/LinkPresentation.framework; sourceTree = DEVELOPER_DIR; };
 		1F1ABC44298110D800D03FA9 /* LinkPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkPreview.swift; sourceTree = "<group>"; };
 		1F1ABC4629811A1A00D03FA9 /* LRUCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LRUCache.swift; sourceTree = "<group>"; };
@@ -161,6 +172,8 @@
 		1F1C31E32969A86700E60BEF /* NewAccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewAccountView.swift; sourceTree = "<group>"; };
 		1F1C31E82969B79F00E60BEF /* CryptoKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CryptoKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/CryptoKit.framework; sourceTree = DEVELOPER_DIR; };
 		1F1DCB8C2999290E0085223E /* LightningInvoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightningInvoice.swift; sourceTree = "<group>"; };
+		1F254661299E9348003BB796 /* CleanTimeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleanTimeline.swift; sourceTree = "<group>"; };
+		1F254665299EB84C003BB796 /* TheTimeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TheTimeline.swift; sourceTree = "<group>"; };
 		1F25B390297A4E3400A8A5A7 /* NosturList+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NosturList+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1F25B391297A4E3400A8A5A7 /* NosturList+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NosturList+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1F2DE02F298E5C5C00891D2E /* BlockListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockListView.swift; sourceTree = "<group>"; };
@@ -178,10 +191,12 @@
 		1F3C3F932975347F00E813FD /* ContactProfileRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactProfileRowView.swift; sourceTree = "<group>"; };
 		1F3C3F9529755D4C00E813FD /* NosturState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturState.swift; sourceTree = "<group>"; };
 		1F4773A4296CA72A0049454B /* AddReadOnlyAccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddReadOnlyAccountView.swift; sourceTree = "<group>"; };
-		1F4773A6296D4F5B0049454B /* AccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountView.swift; sourceTree = "<group>"; };
+		1F4773A6296D4F5B0049454B /* AccountEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountEditView.swift; sourceTree = "<group>"; };
 		1F4773A8296D85B70049454B /* AccountListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountListView.swift; sourceTree = "<group>"; };
 		1F4AFC4529733E2400CC1F90 /* Event+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Event+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1F4AFC4629733E2400CC1F90 /* Event+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Event+CoreDataProperties.swift"; sourceTree = "<group>"; };
+		1F539DAA299D4B2900F3B8CA /* NewAccountSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewAccountSheet.swift; sourceTree = "<group>"; };
+		1F539DAC299D52E200F3B8CA /* AddExistingAccountSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddExistingAccountSheet.swift; sourceTree = "<group>"; };
 		1F57C54629927A0000DFE063 /* AppTopBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTopBar.swift; sourceTree = "<group>"; };
 		1F57C5482992816300DFE063 /* AccountFollowingList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountFollowingList.swift; sourceTree = "<group>"; };
 		1F57C54A299285B300DFE063 /* Search.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Search.swift; sourceTree = "<group>"; };
@@ -226,6 +241,8 @@
 		1F90E11429913C2C00E7596E /* PaginationTest4.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaginationTest4.swift; sourceTree = "<group>"; };
 		1F90E1162991716D00E7596E /* Timeline2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Timeline2.swift; sourceTree = "<group>"; };
 		1F927C6E297DB3490024F665 /* Queue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Queue.swift; sourceTree = "<group>"; };
+		1F9499C8299F568900F628B4 /* WelcomeSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeSheet.swift; sourceTree = "<group>"; };
+		1F9499CA299F715800F628B4 /* TryGuestAccountSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TryGuestAccountSheet.swift; sourceTree = "<group>"; };
 		1F987EB029804AA4001E352E /* NewNoteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewNoteView.swift; sourceTree = "<group>"; };
 		1F987EB229805F33001E352E /* String+matchingStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+matchingStrings.swift"; sourceTree = "<group>"; };
 		1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Relay+CoreDataClass.swift"; sourceTree = "<group>"; };
@@ -240,7 +257,6 @@
 		1FB62D0D296FFF1400A0055B /* RelayEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayEditView.swift; sourceTree = "<group>"; };
 		1FBE8221299A6F3D00FB41CE /* LUD16.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LUD16.swift; sourceTree = "<group>"; };
 		1FBE8223299A745600FB41CE /* PaymentAmountSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentAmountSelector.swift; sourceTree = "<group>"; };
-		1FBE8227299AA43000FB41CE /* ZapButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZapButton.swift; sourceTree = "<group>"; };
 		1FC38B9B2972DD5A004769F8 /* Contact+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Contact+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1FC38B9C2972DD5A004769F8 /* Contact+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Contact+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1FC38B9F297316AA004769F8 /* DummyEvents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DummyEvents.swift; sourceTree = "<group>"; };
@@ -288,6 +304,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1F02EA5D299FE52300FC89EB /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				1F02EA5B299F94F200FC89EB /* Onboarding.swift */,
+				1F9499CA299F715800F628B4 /* TryGuestAccountSheet.swift */,
+				1F9499C8299F568900F628B4 /* WelcomeSheet.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
 		1F1C31E52969B75500E60BEF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -310,6 +336,8 @@
 			children = (
 				1F57C545299277F400DFE063 /* Old */,
 				1F57C54629927A0000DFE063 /* AppTopBar.swift */,
+				1F254661299E9348003BB796 /* CleanTimeline.swift */,
+				1F254665299EB84C003BB796 /* TheTimeline.swift */,
 				1F1ABC482981718700D03FA9 /* BookmarksView.swift */,
 				1FDFEBB6297ED78100511AA0 /* ConfigurationView.swift */,
 				1F3C3F9529755D4C00E813FD /* NosturState.swift */,
@@ -319,6 +347,7 @@
 				1F33096429895D1600D4D8CF /* SidebarStack.swift */,
 				1F330989298A909100D4D8CF /* Timeline.swift */,
 				1FE401132993DCBA00A388A2 /* UITableTimeline.swift */,
+				1F14CC42299D1D7E00131B8D /* NosturStyles.swift */,
 			);
 			path = Screens;
 			sourceTree = "<group>";
@@ -365,13 +394,16 @@
 		1F4773A3296CA7040049454B /* Accounts */ = {
 			isa = PBXGroup;
 			children = (
+				1F14CC44299D432300131B8D /* AccountsSheet.swift */,
 				1F75652E296ADA280078474E /* AccountsView.swift */,
-				1F4773A6296D4F5B0049454B /* AccountView.swift */,
+				1F4773A6296D4F5B0049454B /* AccountEditView.swift */,
 				1F57C5482992816300DFE063 /* AccountFollowingList.swift */,
 				1F4773A8296D85B70049454B /* AccountListView.swift */,
 				1F4773A4296CA72A0049454B /* AddReadOnlyAccountView.swift */,
+				1F539DAC299D52E200F3B8CA /* AddExistingAccountSheet.swift */,
 				1F1C31E32969A86700E60BEF /* NewAccountView.swift */,
 				1FC4D4072997E126004E88CD /* AccountManager.swift */,
+				1F539DAA299D4B2900F3B8CA /* NewAccountSheet.swift */,
 			);
 			path = Accounts;
 			sourceTree = "<group>";
@@ -445,6 +477,7 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
+				1F02EA5D299FE52300FC89EB /* Onboarding */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1FB448BB2965F3D000038671 /* Products */,
 				1F1C31E52969B75500E60BEF /* Frameworks */,
@@ -514,7 +547,6 @@
 				1FCA273D299A6A1A00298881 /* LightningButton.swift */,
 				1FBE8221299A6F3D00FB41CE /* LUD16.swift */,
 				1FBE8223299A745600FB41CE /* PaymentAmountSelector.swift */,
-				1FBE8227299AA43000FB41CE /* ZapButton.swift */,
 				1FCA273B299A4F3200298881 /* Zaps.swift */,
 			);
 			path = Zaps;
@@ -668,6 +700,7 @@
 				1F5F5A692984315900DED8F4 /* TimelineView.swift in Sources */,
 				1F33098A298A909100D4D8CF /* Timeline.swift in Sources */,
 				1F4773A9296D85B70049454B /* AccountListView.swift in Sources */,
+				1F9499C9299F568900F628B4 /* WelcomeSheet.swift in Sources */,
 				1F57C54B299285B300DFE063 /* Search.swift in Sources */,
 				1FB62D0E296FFF1400A0055B /* RelayEditView.swift in Sources */,
 				1FE4011B2994CD8700A388A2 /* List+didChangeHeight.swift in Sources */,
@@ -678,14 +711,16 @@
 				1F75257C2996790D00477AF2 /* Notifications.swift in Sources */,
 				1F3309632989598600D4D8CF /* NosturRootMenuView.swift in Sources */,
 				1F14BA742985949100EACCD5 /* Profile.swift in Sources */,
+				1F539DAD299D52E200F3B8CA /* AddExistingAccountSheet.swift in Sources */,
 				1FC4D4082997E126004E88CD /* AccountManager.swift in Sources */,
 				1FCEA0B529993B2400A309DC /* Swift-Big-Number-Core.swift in Sources */,
 				1F8B135C297B36DB002EB8CF /* Data+Bytes.swift in Sources */,
 				1F5BF1B9299BCF97003A91DD /* ReplyNoteView.swift in Sources */,
 				1FD49735297FE2FE0084F14E /* ProfileRowView.swift in Sources */,
+				1F9499CB299F715800F628B4 /* TryGuestAccountSheet.swift in Sources */,
 				1F927C6F297DB34A0024F665 /* Queue.swift in Sources */,
-				1FBE8228299AA43000FB41CE /* ZapButton.swift in Sources */,
 				1F25B392297A4E3400A8A5A7 /* NosturList+CoreDataClass.swift in Sources */,
+				1F539DAB299D4B2A00F3B8CA /* NewAccountSheet.swift in Sources */,
 				1F8B1359297B36DB002EB8CF /* Bytes+UInt.swift in Sources */,
 				1FA51FF62978441200FE60EF /* Relay+CoreDataClass.swift in Sources */,
 				1F33098C298AEE5D00D4D8CF /* View+withNavigationDestinations.swift in Sources */,
@@ -712,13 +747,15 @@
 				1FE4011D29952EC800A388A2 /* NIP05.swift in Sources */,
 				1F1ABC4B29819CAC00D03FA9 /* Cache.swift in Sources */,
 				1F90E11529913C2C00E7596E /* PaginationTest4.swift in Sources */,
+				1F02EA5C299F94F200FC89EB /* Onboarding.swift in Sources */,
+				1F14CC43299D1D7E00131B8D /* NosturStyles.swift in Sources */,
 				1F75211B2986D45D00C43DF0 /* Importer.swift in Sources */,
 				1F8B134B297B3551002EB8CF /* NIP19.swift in Sources */,
 				1F1ABC4729811A1B00D03FA9 /* LRUCache.swift in Sources */,
 				1FE401142993DCBA00A388A2 /* UITableTimeline.swift in Sources */,
 				1F654F2B298EB4F30040F15D /* WebsocketConnection.swift in Sources */,
 				1F14BA7029854DFC00EACCD5 /* ProfileRow.swift in Sources */,
-				1F4773A7296D4F5B0049454B /* AccountView.swift in Sources */,
+				1F4773A7296D4F5B0049454B /* AccountEditView.swift in Sources */,
 				1FCEA0B72999413C00A309DC /* Double+clean.swift in Sources */,
 				1FD49731297FC9C80084F14E /* ProfileView.swift in Sources */,
 				1F3309832989819700D4D8CF /* Maintenance.swift in Sources */,
@@ -729,6 +766,7 @@
 				1FA51FF72978441200FE60EF /* Relay+CoreDataProperties.swift in Sources */,
 				1F75652F296ADA280078474E /* AccountsView.swift in Sources */,
 				1F1ABC4D2981AEA500D03FA9 /* ProfileNotesView.swift in Sources */,
+				1F254662299E9348003BB796 /* CleanTimeline.swift in Sources */,
 				1F30FAA929705EBD008439C8 /* NosturCloud.xcdatamodeld in Sources */,
 				1F71037D296BD9DE006245CC /* Nostr.swift in Sources */,
 				1F1C31E42969A86700E60BEF /* NewAccountView.swift in Sources */,
@@ -750,6 +788,7 @@
 				1FD49733297FCB5E0084F14E /* PreviewHelper.swift in Sources */,
 				1F14BA6E29854B8E00EACCD5 /* ContactList.swift in Sources */,
 				1F5F5A5C29838F1D00DED8F4 /* EventsProvider.swift in Sources */,
+				1F254666299EB84C003BB796 /* TheTimeline.swift in Sources */,
 				1F30FAB029706E72008439C8 /* Account+CoreDataClass.swift in Sources */,
 				1F33096129891C4800D4D8CF /* ProfileLikesView.swift in Sources */,
 				1F987EB329805F33001E352E /* String+matchingStrings.swift in Sources */,
@@ -760,6 +799,7 @@
 				1F1ABC45298110D800D03FA9 /* LinkPreview.swift in Sources */,
 				1F7525842997B21D00477AF2 /* NotificationsView.swift in Sources */,
 				1FEA785829799FE6007CC8E7 /* ProfilePicView.swift in Sources */,
+				1F14CC45299D432400131B8D /* AccountsSheet.swift in Sources */,
 				1F8B1362297B36DB002EB8CF /* Bytes+HexString.swift in Sources */,
 				1F8B1349297B34D7002EB8CF /* Bech32.swift in Sources */,
 				1F57C5492992816300DFE063 /* AccountFollowingList.swift in Sources */,

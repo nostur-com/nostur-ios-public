@@ -15,40 +15,49 @@ struct NotificationsView: View {
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var sp:SocketPool
     
-    @FetchRequest
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
+        predicate: NSPredicate(value: false)
+    )
     var kind1:FetchedResults<Event>
     
-    @FetchRequest
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
+        predicate: NSPredicate(value: false)
+    )
     var kind7:FetchedResults<Event>
     
-    @FetchRequest
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
+        predicate: NSPredicate(value: false)
+    )
     var kind9735:FetchedResults<Event>
     
     @State var tab = "NOTES"
     
-    init(pubkey:String) {
-        let kind1r:NSFetchRequest<Event> = Event.fetchRequest()
-        kind1r.fetchLimit = 100
-        kind1r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        kind1r.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", pubkey)
-        _kind1 = FetchRequest(fetchRequest: kind1r)
+    init() {
+        let fr = Event.fetchRequest()
+        fr.predicate = NSPredicate(value: false)
+        fr.fetchLimit = 125 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW (MET VSTACK).
+        fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+        _kind1 = FetchRequest(fetchRequest: fr)
         
         let kind7r:NSFetchRequest<Event> = Event.fetchRequest()
         kind7r.fetchLimit = 100
         kind7r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        kind7r.predicate = NSPredicate(format: "kind == 7 AND tagsSerialized CONTAINS %@", pubkey)
+        kind7r.predicate = NSPredicate(value: true)
         _kind7 = FetchRequest(fetchRequest: kind7r)
         
         let kind9735r:NSFetchRequest<Event> = Event.fetchRequest()
         kind9735r.fetchLimit = 100
         kind9735r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        kind9735r.predicate = NSPredicate(format: "kind == 9735 AND tagsSerialized CONTAINS %@", pubkey)
+        kind9735r.predicate = NSPredicate(value: true)
         _kind9735 = FetchRequest(fetchRequest: kind9735r)
     }
     
     var myNotifications:[Event] {
         get {
-            kind1.filter { ($0.kind == 1) && ($0.tags() ?? []).contains(where: { $0.pubkey == ns.activeAccountPublicKey })}
+            kind1.filter { ($0.kind == 1) && ($0.tags() ?? []).contains(where: { $0.pubkey == ns.account!.publicKey! })}
         }
     }
     
@@ -68,30 +77,45 @@ struct NotificationsView: View {
         VStack {
             if let account = ns.account {
                 Text("account: \(account.name)")
-                TabView(selection: $tab) {
-                    Notes(notes: myNotifications) { creationDate in
-                        lastNotificationDate = creationDate
-                    }
-                    .tabItem { Text("Notes") }
-                    
-                    Reactions(reactions: myReactions) { creationDate in
-                        lastNotificationDate = creationDate
-                    }
-                    .tabItem  { Text("Reactions") }
-                    
-                    Zaps(zaps: myZaps) { creationDate in
-                        lastNotificationDate = creationDate
-                    }
-                    .tabItem  { Text("Zaps") }
+                // TODO: MAKE TAB STYLE
+                HStack {
+                    Button { tab = "NOTES" } label: { Text("Posts") }
+                    Button { tab = "REACTIONS" } label: { Text("Reactions") }
+                    Button { tab = "ZAPS" } label: { Text("Zaps") }
                 }
-                .onAppear {
-                    fetchMentions()
+                .buttonStyle(.bordered)
+                
+                switch (tab) {
+                    case "NOTES":
+                        Notes(notes: myNotifications) { creationDate in
+                            lastNotificationDate = creationDate
+                        }
+                    case "REACTIONS":
+                        Reactions(reactions: myReactions) { creationDate in
+                            lastNotificationDate = creationDate
+                        }
+                    case "ZAPS":
+                        Zaps(zaps: myZaps) { creationDate in
+                            lastNotificationDate = creationDate
+                        }
+                    default:
+                        EmptyView()
                 }
                 Spacer()
             }
             else {
                 Text("No active account")
             }
+        }
+        .onAppear {
+            guard ns.account != nil else { return }
+            kind1.nsPredicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", ns.account!.publicKey!)
+            
+            kind7.nsPredicate = NSPredicate(format: "kind == 7 AND tagsSerialized CONTAINS %@", ns.account!.publicKey!)
+            
+            kind9735.nsPredicate = NSPredicate(format: "kind == 9735 AND tagsSerialized CONTAINS %@", ns.account!.publicKey!)
+
+            fetchMentions()
         }
     }
     
@@ -155,9 +179,7 @@ extension NotificationsView {
 
 struct NotificationsView_Previews: PreviewProvider {
     static var previews: some View {
-        let pubkey = "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
-        
-        NotificationsView(pubkey: pubkey)
+        NotificationsView()
             .withPreviewEnvironment()
     }
 }

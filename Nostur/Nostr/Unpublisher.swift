@@ -25,6 +25,11 @@ import UIKit
  */
 class Unpublisher: ObservableObject {
     
+    enum type {
+        case other
+        case contactList
+    }
+    
     let PUBLISH_DELAY = 9.0 // SECONDS
     var timer:Timer?
     var viewContext:NSManagedObjectContext
@@ -39,10 +44,18 @@ class Unpublisher: ObservableObject {
         NotificationCenter.default.addObserver(self, selector: #selector(appMovedToBackground), name: UIApplication.willResignActiveNotification, object: nil)
     }
     
+    // Removes any existing ofType from the queue, before adding this one
+    func publishLast(_ nEvent:NEvent, ofType: Unpublisher.type) -> UUID {
+        queue.removeAll(where: { $0.type == ofType })
+        let cancellationId = UUID()
+        queue.append(Unpublished(type: ofType, cancellationId: cancellationId, nEvent: nEvent, createdAt: Date.now))
+        return cancellationId
+    }
+    
     func publish(_ nEvent:NEvent) -> UUID {
         print("going to publish")
         let cancellationId = UUID()
-        queue.append(Unpublished(cancellationId: cancellationId, nEvent: nEvent, createdAt: Date.now))
+        queue.append(Unpublished(type:.other, cancellationId: cancellationId, nEvent: nEvent, createdAt: Date.now))
         return cancellationId
     }
     
@@ -96,6 +109,7 @@ class Unpublisher: ObservableObject {
 
 extension Unpublisher {
     struct Unpublished {
+        var type:Unpublisher.type
         var cancellationId:UUID
         var nEvent:NEvent
         var createdAt:Date

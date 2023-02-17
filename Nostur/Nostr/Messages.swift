@@ -112,7 +112,7 @@ struct RequestMessage {
 """
     }
     
-    static func getEvents(ids:[String?], limit:Int = 500, subscriptionId:String? = nil) -> String {
+    static func getEvents(ids:[String], limit:Int = 500, subscriptionId:String? = nil) -> String {
         return """
 ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"ids": \(JSON(ids).rawString() ?? "[]"), "limit": \(limit)}]
 """
@@ -164,7 +164,7 @@ struct RequestMessage {
 """
     }
     
-    static func getAuthorsNotes(pubkeys:[String?], limit:Int = 100, subscriptionId:String? = nil) -> String {
+    static func getAuthorsNotes(pubkeys:[String], limit:Int = 100, subscriptionId:String? = nil) -> String {
         return """
 ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "kinds": [1], "limit": \(limit)}]
 """

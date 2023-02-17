@@ -68,6 +68,7 @@ struct Profile: View {
     
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var sp:SocketPool
+    @EnvironmentObject var nav:NavigationModel
     @Environment(\.managedObjectContext) var viewContext
     
     @ObservedObject var contact:Contact
@@ -140,25 +141,35 @@ struct Profile: View {
                         
                         LightningButton(contact: contact)
                         
-                        Button {
-                            if (isFollowing) {
-                                isFollowing = false
-                                ns.unfollow(contact)
+                        if (contact.pubkey! != ns.account?.publicKey!) {
+                            Button {
+                                if (isFollowing) {
+                                    isFollowing = false
+                                    ns.unfollow(contact)
+                                }
+                                else {
+                                    print("chaning isFollowing to true 1")
+                                    isFollowing = true
+                                    ns.follow(contact)
+                                    print("chaning isFollowing to true 2")
+                                    //                                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
+                                }
+                            } label: {
+                                FollowButton(isFollowing:isFollowing)
                             }
-                            else {
-                                print("chaning isFollowing to true 1")
-                                isFollowing = true
-                                ns.follow(contact)
-                                print("chaning isFollowing to true 2")
-                                //                                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
+                            .onAppear {
+                                if (ns.isFollowing(contact)) {
+                                    isFollowing = true
+                                }
                             }
-                        } label: {
-                            FollowButton(isFollowing:isFollowing)
                         }
-                        .onAppear {
-                            if (ns.isFollowing(contact)) {
-                                isFollowing = true
+                        else {
+                            Button {
+                                navigateToAccount()
+                            } label: {
+                                Text("Edit profile")
                             }
+                            .buttonStyle(NosturButton())
                         }
                     }
                     
@@ -351,16 +362,6 @@ struct Profile: View {
         .task {
             sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
         }
-        //        .onReceive(loopyRunny) { time in
-        //            let readyForImportQueue = MessageParser.shared.readyForImportQueue
-        //            do {
-        //                try Importer.shared.importEvents(queue: readyForImportQueue)
-        //            }
-        //            catch {
-        //                print("🟣🟣🟣 something wrong")
-        //                print(error)
-        //            }
-        //        }
     }
 }
 
@@ -368,33 +369,13 @@ extension Profile {
     private func importNotes() {
         Task { await Importer.shared.importEvents() }
     }
-}
-
-struct FollowButton: View {
-    @Environment(\.colorScheme) var colorScheme
-    var isFollowing: Bool = false
     
-    var body: some View {
-        
-        let whiteColor = colorScheme == .light ? Color.white : Color.black
-        let blackColor = colorScheme == .light ? Color.black : Color.white
-        
-        Text(isFollowing ? "Following" : "Follow")
-            .lineLimit(1)
-            .frame(width: 65, height: 30)
-            .padding(.horizontal, 25)
-        //.padding(.vertical, 10)
-            .font(.caption.weight(.heavy))
-            .foregroundColor(isFollowing ? blackColor : whiteColor)
-            .background(isFollowing ? whiteColor : blackColor)
-            .cornerRadius(20)
-            .overlay {
-                RoundedRectangle(cornerRadius: 15)
-                    .stroke(.gray, lineWidth: 1)
-            }
+    private func navigateToAccount() {
+        if (ns.account != nil) {
+            nav.navigateTo(ViewPath.Account(account: ns.account!))
+        }
     }
 }
-
 
 struct Profile_Previews: PreviewProvider {
     static var previews: some View {

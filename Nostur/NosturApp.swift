@@ -21,7 +21,7 @@ struct NosturApp: App {
 
     var body: some Scene {        
         WindowGroup {
-                NosturRootMenu()
+            Onboarding()
                 .environment(\.managedObjectContext, EventsProvider.shared.container.viewContext)
                 .environmentObject(ns)
                 .environmentObject(sp)
@@ -38,6 +38,10 @@ struct NosturApp: App {
     }
 
     func startNosturing() {
+        if (ns.account == nil && ns.accounts.count >= 1) {
+            ns.setAccount(account: ns.accounts.last)
+        }
+        
         Maintenance.firstTimeStartup(context: EventsProvider.shared.container.viewContext)
         
         // Daily cleanup.

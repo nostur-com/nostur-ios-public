@@ -30,4 +30,12 @@ extension Notification.Name {
     static var willDeleteAllEvents: Notification.Name {
         return Notification.Name("willDeleteAllEvents")
     }
+    
+    static var activeAccountChanged: Notification.Name {
+        return Notification.Name("activeAccountChanged")
+    }
+    
+    static var timelinePredicateChanged: Notification.Name {
+        return Notification.Name("timelinePredicateChanged")
+    }
 }

@@ -7,12 +7,8 @@
 
 import SwiftUI
 import Foundation
-//import Starscream
 import secp256k1
 import SwiftyJSON
-
-//extension String: Error {}
-
 
 public struct NTimestamp: Codable {
     public let timestamp: Int
@@ -428,10 +424,16 @@ struct NKeys {
         self.publicKey = privateKey.publicKey
     }
 
-    init(privateKeyHex:String) {
-        let privateKeyBytes = try! privateKeyHex.bytes
-        privateKey = try! secp256k1.Signing.PrivateKey(rawRepresentation: privateKeyBytes)
-        publicKey = privateKey.publicKey
+    init(privateKeyHex:String) throws {
+        do {
+            let privateKeyBytes = try privateKeyHex.bytes
+            privateKey = try secp256k1.Signing.PrivateKey(rawRepresentation: privateKeyBytes)
+            publicKey = privateKey.publicKey
+        }
+        catch {
+            print("Nkeys.init error")
+            throw "could not init keys"
+        }
     }
 
     func privateKeyHex() -> String {

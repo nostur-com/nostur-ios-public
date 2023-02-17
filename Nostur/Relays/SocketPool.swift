@@ -50,7 +50,7 @@ class ManagedClient: WebSocketDelegate, ObservableObject {
             }
             print("🔌 DISCONNECTED \(self.url): \(reason) with code: \(code)")
         case .text(let string):
-//                print("🔌 💬 Received text: \(string)") 
+                print("🔌 💬 Received text: \(string)") 
             MessageParser.shared.socketReceivedMessage(text: string, relayUrl: self.url)
         case .binary(let data):
             print("🔌 RECEIVED DATA \(self.url): \(data.count)")
@@ -145,7 +145,8 @@ class SocketPool: ObservableObject {
                     if (!managedClient.isConnected) && (!managedClient.isConnecting) {
                         managedClient.connect()
                     }
-                    print("⬇️⬇️ REQUESTING: \(String(message.message.prefix(260)))")
+//                    print("⬇️⬇️ REQUESTING: \(String(message.message.prefix(260)))")
+                    print("⬇️⬇️ REQUESTING: \(String(message.message))")
                     managedClient.client.write(string: message.message)
                 }
                 else if  message.type == .CLOSE { // CLOSE FOR ALL RELAYS

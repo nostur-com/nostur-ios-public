@@ -98,7 +98,7 @@ struct LightningButton: View {
                 }
             }
             catch {
-                print("problem in lnurlp")
+                print("🔴 problem in lnurlp")
                 print(error)
             }
         }

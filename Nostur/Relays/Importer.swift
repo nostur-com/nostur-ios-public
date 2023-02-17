@@ -44,7 +44,7 @@ class Importer {
             
             do {
                 for message in forImports {
-                    let event = message.event!
+                    var event = message.event!
                     self.rememberTimestamp(event:event)
                     
                     guard SavedEventsCache.shared.retrieveObject(at: event.id) == nil else {
@@ -69,6 +69,16 @@ class Importer {
                         let olderKind3 = try! context.fetch(r)
                         for older in olderKind3 {
                             context.delete(older)
+                        }
+                    }
+                    
+                    // ANNOYING FIX FOR KIND 6 WITH JSON STRING OF ANOTHER EVENT IN EVENT.CONTENT. WTF
+                    if event.kind == .repost && event.content.prefix(2) == #"{""# {
+                        let decoder = JSONDecoder()
+                        if let noteInNote = try? decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
+                            _ = Event.saveEvent(event: noteInNote, context:context)
+                            event.content = "#[0]"
+                            event.tags.insert(NEventTag(type: "e", otherInformation: noteInNote.id, "", "mention"), at: 0)
                         }
                     }
                     
