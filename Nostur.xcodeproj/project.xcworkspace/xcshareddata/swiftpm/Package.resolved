@@ -10,6 +10,15 @@
       }
     },
     {
+      "identity" : "ldk-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/lightningdevkit/ldk-swift/",
+      "state" : {
+        "revision" : "b71d1afd8b60d59b7cea6eb2dde46f10114419f0",
+        "version" : "0.0.113"
+      }
+    },
+    {
       "identity" : "nuke",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/kean/Nuke",

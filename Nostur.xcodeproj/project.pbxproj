@@ -74,10 +74,7 @@
 		1F7A63C129711CCC00D8B2CB /* Playground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7A63C029711CCC00D8B2CB /* Playground.swift */; };
 		1F7C65AD29A0A530009FF3EA /* ReadOnlyAccountInformationSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7C65AC29A0A530009FF3EA /* ReadOnlyAccountInformationSheet.swift */; };
 		1F7C65AF29A11244009FF3EA /* ProfileZapsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7C65AE29A11244009FF3EA /* ProfileZapsView.swift */; };
-		1F7C65B029A13DDE009FF3EA /* LinkPresentation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F1ABC4229810D5500D03FA9 /* LinkPresentation.framework */; };
-		1F7C65B129A13DDF009FF3EA /* LinkPresentation.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1F1ABC4229810D5500D03FA9 /* LinkPresentation.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		1F7C65B729A1466D009FF3EA /* LightningDevKit-no-symlinks.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F7C65B229A140CB009FF3EA /* LightningDevKit-no-symlinks.xcframework */; };
-		1F7C65B829A1466D009FF3EA /* LightningDevKit-no-symlinks.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1F7C65B229A140CB009FF3EA /* LightningDevKit-no-symlinks.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		1F7C65BD29A14969009FF3EA /* LightningDevKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1F7C65BC29A14969009FF3EA /* LightningDevKit */; };
 		1F8B0A02298BDA9D00736B9A /* PaginationTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8B0A01298BDA9D00736B9A /* PaginationTest.swift */; };
 		1F8B1349297B34D7002EB8CF /* Bech32.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8B1348297B34D7002EB8CF /* Bech32.swift */; };
 		1F8B134B297B3551002EB8CF /* NIP19.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8B134A297B3551002EB8CF /* NIP19.swift */; };
@@ -143,8 +140,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				1F7C65B829A1466D009FF3EA /* LightningDevKit-no-symlinks.xcframework in Embed Frameworks */,
-				1F7C65B129A13DDF009FF3EA /* LinkPresentation.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -160,14 +155,12 @@
 		1F14BA752985984100EACCD5 /* ProfileRelaysView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileRelaysView.swift; sourceTree = "<group>"; };
 		1F14CC42299D1D7E00131B8D /* NosturStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturStyles.swift; sourceTree = "<group>"; };
 		1F14CC44299D432300131B8D /* AccountsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsSheet.swift; sourceTree = "<group>"; };
-		1F1ABC4229810D5500D03FA9 /* LinkPresentation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = LinkPresentation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/LinkPresentation.framework; sourceTree = DEVELOPER_DIR; };
 		1F1ABC44298110D800D03FA9 /* LinkPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkPreview.swift; sourceTree = "<group>"; };
 		1F1ABC4629811A1A00D03FA9 /* LRUCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LRUCache.swift; sourceTree = "<group>"; };
 		1F1ABC482981718700D03FA9 /* BookmarksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarksView.swift; sourceTree = "<group>"; };
 		1F1ABC4A29819CAC00D03FA9 /* Cache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cache.swift; sourceTree = "<group>"; };
 		1F1ABC4C2981AEA500D03FA9 /* ProfileNotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileNotesView.swift; sourceTree = "<group>"; };
 		1F1C31E32969A86700E60BEF /* NewAccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewAccountView.swift; sourceTree = "<group>"; };
-		1F1C31E82969B79F00E60BEF /* CryptoKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CryptoKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/CryptoKit.framework; sourceTree = DEVELOPER_DIR; };
 		1F1DCB8C2999290E0085223E /* LightningInvoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightningInvoice.swift; sourceTree = "<group>"; };
 		1F254665299EB84C003BB796 /* Timeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Timeline.swift; sourceTree = "<group>"; };
 		1F25B390297A4E3400A8A5A7 /* NosturList+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NosturList+CoreDataClass.swift"; sourceTree = "<group>"; };
@@ -217,7 +210,8 @@
 		1F7A63C029711CCC00D8B2CB /* Playground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Playground.swift; sourceTree = "<group>"; };
 		1F7C65AC29A0A530009FF3EA /* ReadOnlyAccountInformationSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadOnlyAccountInformationSheet.swift; sourceTree = "<group>"; };
 		1F7C65AE29A11244009FF3EA /* ProfileZapsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileZapsView.swift; sourceTree = "<group>"; };
-		1F7C65B229A140CB009FF3EA /* LightningDevKit-no-symlinks.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = "LightningDevKit-no-symlinks.xcframework"; sourceTree = "<group>"; };
+		1F7C65B929A14709009FF3EA /* LinkPresentation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = LinkPresentation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/LinkPresentation.framework; sourceTree = DEVELOPER_DIR; };
+		1F7C65BA29A14709009FF3EA /* CryptoKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CryptoKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/CryptoKit.framework; sourceTree = DEVELOPER_DIR; };
 		1F8B0A01298BDA9D00736B9A /* PaginationTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaginationTest.swift; sourceTree = "<group>"; };
 		1F8B1348297B34D7002EB8CF /* Bech32.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bech32.swift; sourceTree = "<group>"; };
 		1F8B134A297B3551002EB8CF /* NIP19.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP19.swift; sourceTree = "<group>"; };
@@ -279,15 +273,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1F7C65BD29A14969009FF3EA /* LightningDevKit in Frameworks */,
 				1F654F30298ED52E0040F15D /* Starscream in Frameworks */,
 				1F75257829962AA300477AF2 /* NukeExtensions in Frameworks */,
 				1F75257629962AA300477AF2 /* Nuke in Frameworks */,
 				1FC4D40B2997E58E004E88CD /* KeychainAccess in Frameworks */,
 				1FEA785529799697007CC8E7 /* Compactor in Frameworks */,
-				1F7C65B729A1466D009FF3EA /* LightningDevKit-no-symlinks.xcframework in Frameworks */,
 				1FE4011729940D6E00A388A2 /* Introspect in Frameworks */,
 				1F75257A29962AA300477AF2 /* NukeUI in Frameworks */,
-				1F7C65B029A13DDE009FF3EA /* LinkPresentation.framework in Frameworks */,
 				1F055A53296EE2A2009EF792 /* secp256k1 in Frameworks */,
 				1FEC01C0296C4A400078CC9B /* SwiftyJSON in Frameworks */,
 			);
@@ -305,17 +298,6 @@
 				1F9499C8299F568900F628B4 /* WelcomeSheet.swift */,
 			);
 			path = Onboarding;
-			sourceTree = "<group>";
-		};
-		1F1C31E52969B75500E60BEF /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				1F7C65B229A140CB009FF3EA /* LightningDevKit-no-symlinks.xcframework */,
-				1F1ABC4229810D5500D03FA9 /* LinkPresentation.framework */,
-				1F1C31E82969B79F00E60BEF /* CryptoKit.framework */,
-			);
-			name = Frameworks;
-			path = ..;
 			sourceTree = "<group>";
 		};
 		1F25B38B297A4D9400A8A5A7 /* Lists */ = {
@@ -432,6 +414,8 @@
 		1F7C65B629A1466D009FF3EA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1F7C65B929A14709009FF3EA /* LinkPresentation.framework */,
+				1F7C65BA29A14709009FF3EA /* CryptoKit.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -512,7 +496,6 @@
 				1F313DED296980D8004C7366 /* Info.plist */,
 				1FB448C62965F3D200038671 /* Assets.xcassets */,
 				1FB448C82965F3D200038671 /* Nostur.entitlements */,
-				1F1C31E52969B75500E60BEF /* Frameworks */,
 				1FB448C92965F3D200038671 /* Preview Content */,
 			);
 			path = Nostur;
@@ -610,6 +593,7 @@
 				1F75257729962AA300477AF2 /* NukeExtensions */,
 				1F75257929962AA300477AF2 /* NukeUI */,
 				1FC4D40A2997E58E004E88CD /* KeychainAccess */,
+				1F7C65BC29A14969009FF3EA /* LightningDevKit */,
 			);
 			productName = Nostur;
 			productReference = 1FB448BA2965F3D000038671 /* Nostur.app */;
@@ -647,6 +631,7 @@
 				1FE4011529940D6E00A388A2 /* XCRemoteSwiftPackageReference "SwiftUI-Introspect" */,
 				1F75257429962AA300477AF2 /* XCRemoteSwiftPackageReference "Nuke" */,
 				1FC4D4092997E58E004E88CD /* XCRemoteSwiftPackageReference "KeychainAccess" */,
+				1F7C65BB29A14969009FF3EA /* XCRemoteSwiftPackageReference "ldk-swift" */,
 			);
 			productRefGroup = 1FB448BB2965F3D000038671 /* Products */;
 			projectDirPath = "";
@@ -1045,6 +1030,14 @@
 				minimumVersion = 11.6.2;
 			};
 		};
+		1F7C65BB29A14969009FF3EA /* XCRemoteSwiftPackageReference "ldk-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/lightningdevkit/ldk-swift/";
+			requirement = {
+				kind = exactVersion;
+				version = 0.0.113;
+			};
+		};
 		1FC4D4092997E58E004E88CD /* XCRemoteSwiftPackageReference "KeychainAccess" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/kishikawakatsumi/KeychainAccess";
@@ -1104,6 +1097,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1F75257429962AA300477AF2 /* XCRemoteSwiftPackageReference "Nuke" */;
 			productName = NukeUI;
+		};
+		1F7C65BC29A14969009FF3EA /* LightningDevKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1F7C65BB29A14969009FF3EA /* XCRemoteSwiftPackageReference "ldk-swift" */;
+			productName = LightningDevKit;
 		};
 		1FC4D40A2997E58E004E88CD /* KeychainAccess */ = {
 			isa = XCSwiftPackageProductDependency;
