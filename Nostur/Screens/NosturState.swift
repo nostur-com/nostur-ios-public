@@ -10,9 +10,11 @@ import Foundation
 import CoreData
 
 final class NosturState : ObservableObject {
-        
+    
+    static let GUEST_ACCOUNT_PUBKEY = "c118d1b814a64266730e75f6c11c5ffa96d0681bfea594d564b43f3097813844"
+    
+    @Published var bitcoinPrice:Double = 0.0
     @Published var isOnboarding = false
-
     
     // public keys of the contacts that the currently active ("logged in") account follows
     // WTF followingPublicKeys met @Published is superlangzaam... HMMM.

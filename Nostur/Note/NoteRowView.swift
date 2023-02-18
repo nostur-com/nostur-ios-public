@@ -315,6 +315,9 @@ struct NoteMenu: View {
             }
             Button {
                 print("Unfollow @\(username)")
+                if (event.contact != nil) {
+                    ns.unfollow(event.contact!)
+                }
             } label: {
                 Label("Unfollow @\(username)", systemImage: "person.fill.xmark")
             }
@@ -333,7 +336,7 @@ struct NoteMenu: View {
                 }
                 do {
                     try viewContext.save()
-                    sendNotification(.blockListUpdated, nil)
+                    sendNotification(.blockListUpdated, ns.account!.blockedContacts ?? Set<Contact>())
                 }
                 catch {
                     print("Could not save after blocking contact \(error)")
@@ -377,10 +380,10 @@ struct FooterFragment: View {
                 Image(systemName: "message")
                 Text("\(event.repliesCount)")
             }
-            .background(Color(.systemBackground))
-                .onTapGesture {
-                    showingNewReply = true
-                }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                showingNewReply = true
+            }
             Spacer()
                 
 
@@ -388,7 +391,7 @@ struct FooterFragment: View {
                 Image(systemName: "arrow.2.squarepath")
                 Text("\(event.mentionsCount)")
             }
-            .background(Color(.systemBackground))
+            .contentShape(Rectangle())
             .onTapGesture {
                 guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
                 if (ns.account != nil) {
@@ -410,7 +413,6 @@ struct FooterFragment: View {
                     unpublishOriginalId = up.publish(event.toNEvent())
                 }
             }
-            
             Spacer()
             
             // LIKE
@@ -419,7 +421,7 @@ struct FooterFragment: View {
                     Image(systemName: "heart.fill").foregroundColor(.red)
                     Text("\(event.likesCount)")
                 }
-                .background(Color(.systemBackground))
+                .contentShape(Rectangle())
                 .onTapGesture {
                     if unpublishLikeId != nil && up.cancel(unpublishLikeId!) {
                         event.liked = false
@@ -431,7 +433,7 @@ struct FooterFragment: View {
                     Image(systemName: "heart")
                     Text("\(event.likesCount)")
                 }
-                .background(Color(.systemBackground))
+                .contentShape(Rectangle())
                 .onTapGesture {
                     guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
                     if (ns.account != nil) {
@@ -454,7 +456,6 @@ struct FooterFragment: View {
                        
                     }
                 }
-                
             }
             Spacer()
             
@@ -471,14 +472,14 @@ struct FooterFragment: View {
             if (ns.isBookmarked(event)) {
                 Image(systemName: "bookmark.fill")
                     .foregroundColor(.orange)
-                    .background(Color(.systemBackground))
+                    .contentShape(Rectangle())
                     .onTapGesture {
                         ns.removeBookmark(event)
                     }
             }
             else {
                 Image(systemName: "bookmark")
-                    .background(Color(.systemBackground))
+                    .contentShape(Rectangle())
                     .onTapGesture {
                         ns.addBookmark(event)
                     }

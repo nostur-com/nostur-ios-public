@@ -72,15 +72,16 @@ struct NewAccountSheet: View {
             }
             .buttonStyle(.borderedProminent)
             
-            Button {
-                nav.navigateTo(ViewPath.TryGuestAccount)
-//                dismiss()
-            } label: {
-                Text("Skip and try as guest first")
-                    .frame(maxWidth: .infinity)
+            if (ns.accounts.first(where: { $0.publicKey == NosturState.GUEST_ACCOUNT_PUBKEY}) == nil) {
+                Button {
+                    nav.navigateTo(ViewPath.TryGuestAccount)
+                } label: {
+                    Text("Skip and try as guest first")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderless)
+                .padding(.top, 20)
             }
-            .buttonStyle(.borderless)
-            .padding(.top, 20)
             
         }
         .frame(maxWidth: 300)

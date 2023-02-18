@@ -34,6 +34,7 @@ struct AccountsSheet: View {
             List {
                 ForEach(accounts) { account in
                     AccountRow(account: account)
+                        .contentShape(Rectangle())
                         .onTapGesture {
                             ns.setAccount(account: account)
                             nav.showSidebar = false
@@ -45,29 +46,6 @@ struct AccountsSheet: View {
                                 confirmDelete.toggle()
                             } label: {
                                 Label("Delete", systemImage: "trash")
-                            }
-                        }
-                        .confirmationDialog("Delete account?", isPresented: $confirmDelete) {
-                            Button(role: .destructive) {
-                                guard accountToDelete != nil else { return }
-                                AccountManager.shared.deletePrivateKey(forPublicKeyHex: accountToDelete!.publicKey!)
-                                if (ns.accounts.count <= 1) {
-                                    ns.isOnboarding = true
-                                    nav.showSidebar = false
-                                    nav.clear()
-                                    ns.setAccount(account: nil)
-                                    viewContext.delete(accountToDelete!)
-                                }
-                                else {
-                                    viewContext.delete(accountToDelete!)
-                                    ns.setAccount(account: ns.accounts.last)
-                                }
-                                
-                                
-                                dismiss()
-                                try! viewContext.save()
-                            } label: {
-                                Text("Yes, delete account")
                             }
                         }
                 }
@@ -94,6 +72,29 @@ struct AccountsSheet: View {
         }
         .sheet(isPresented: $addExistingAccountSheetShown) {
             AddExistingAccountSheet()
+        }
+        .confirmationDialog("Delete account?", isPresented: $confirmDelete) {
+            Button(role: .destructive) {
+                guard accountToDelete != nil else { return }
+                AccountManager.shared.deletePrivateKey(forPublicKeyHex: accountToDelete!.publicKey!)
+                if (ns.accounts.count <= 1) {
+                    ns.isOnboarding = true
+                    nav.showSidebar = false
+                    nav.clear()
+                    ns.setAccount(account: nil)
+                    viewContext.delete(accountToDelete!)
+                }
+                else {
+                    viewContext.delete(accountToDelete!)
+                    ns.setAccount(account: ns.accounts.last)
+                }
+                
+                
+                dismiss()
+                try! viewContext.save()
+            } label: {
+                Text("Yes, delete account")
+            }
         }
     }
 }

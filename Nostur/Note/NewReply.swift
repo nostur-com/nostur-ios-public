@@ -86,6 +86,7 @@ struct NewReply: View {
                     }
                     Spacer()
                     Button {
+                        guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
                         var nEvent = newReplyEvent
                         nEvent.content = noteText
                         if let signedEvent = try? ns.signEvent(nEvent) {

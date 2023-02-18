@@ -34,9 +34,17 @@ struct LightningButton: View {
                     }
                     else {
                         Image(systemName: "bolt")
-                        Text(event!.zapTally.description)
+                        if (ns.bitcoinPrice != 0.0) {
+                            let fiatPrice = String(format: "$%.02f",(Double(event!.zapTally) / 100000000 * Double(ns.bitcoinPrice)))
+                            
+                            Text("\(fiatPrice)")
+                        }
+                        else {
+                            Text("\(event!.zapTally.description) sats")
+                        }
                     }
                 }
+                .contentShape(Rectangle())
                 .onTapGesture {
                     buttonTapped()
                 }
@@ -76,6 +84,8 @@ struct LightningButton: View {
     }
     
     func buttonTapped() {
+        guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
+        
         isLoading = true
         let lud16 = contact.lud16!
         Task.detached(priority: .background) {

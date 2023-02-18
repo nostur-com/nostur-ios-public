@@ -53,6 +53,7 @@ extension Event {
     
     @NSManaged public var bookmarkedBy: Set<Account>?
     @NSManaged public var contact: Contact?
+    @NSManaged public var personZapping: Contact?
     @NSManaged public var replyTo: Event?
     @NSManaged public var replyToRoot: Event?
     @NSManaged public var firstQuote: Event?
@@ -322,15 +323,31 @@ extension Event : Identifiable {
         guard pTag != nil else { return false }
         let contact = Contact.fetchByPubkey(pTag!.pubkey, context: context)
         guard contact != nil else { return false }
-        guard contact!.zapperPubkey != nil else { return false }
-        guard contact!.zapperPubkey! == event.pubkey! else { return false }
+        
+        if (1 == 2) {
+            // Disable for now, because all zaps will be ignored because we havent fetched
+            // zapperPubkey for anyone yet
+            guard contact!.zapperPubkey != nil else { return false }
+            guard contact!.zapperPubkey! == event.pubkey! else { return false }
+        }
         
         
         // bolt11
-        let bolt11tag = nEvent.tags.first { $0.type == "bolt11" }
-        guard bolt11tag != nil else { return false }
-        let invoice = Invoice.fromStr(s: bolt11tag!.otherInformation[0])
+        let bolt11tag:Tag? = event.tags_.first { $0.type == "bolt11" }
+        guard bolt11tag?.index1 != nil else { return false }
+        let invoice = Invoice.fromStr(s: bolt11tag!.index1!)
         guard invoice.getValue() != nil else { return false }
+        
+//        // description, zap request, to get zap from
+//        let description:Tag? = event.tags_.first { $0.type == "description" }
+//        guard description?.index1 != nil else { return false }
+//        let decoder = JSONDecoder()
+//        if let innerEvent = try? decoder.decode(NEvent.self, from: description!.index1!.data(using: .utf8, allowLossyConversion: false)!) {
+//            if (try! innerEvent.verified()) {
+//                
+//            }
+//        }
+//        
         
         // zapped event
         let eventTag = nEvent.tags.first { $0.type == "e" }
@@ -569,5 +586,13 @@ extension Event : Identifiable {
         else {
             return nil
         }
+    }
+    
+    static func zapsForEvent(_ id:String, context:NSManagedObjectContext) -> [Event] {
+        let fr = Event.fetchRequest()
+        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        fr.predicate = NSPredicate(format: "kind == 9735 AND ANY tags.index1 == %@", id)
+        
+        return (try? context.fetch(fr)) ?? []
     }
 }

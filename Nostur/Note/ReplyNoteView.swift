@@ -163,12 +163,12 @@ struct ReplyAndParentView: View {
                     }
                     
                     if (isParent) {
-                        DetailFooterFragment(event: event)
-                            .padding(.leading, isParent ? INDENT : 0)
                         FooterFragment(event: event)
                             .padding(.leading, isParent ? INDENT : 0)
                     }
                     else {
+                        DetailFooterFragment(event: event)
+                            .padding(.leading, isParent ? INDENT : 0)
                         FooterFragment(event: event)
                         Divider()
                         
@@ -231,30 +231,35 @@ struct MaybeThreadLine: View {
 
 struct DetailFooterFragment: View {
     @ObservedObject var event:Event
+    @EnvironmentObject var nav:NavigationModel
     
     var body: some View {
-        HStack {
+        Divider()
+        HStack(spacing: 20) {
             Text("**\(event.mentionsCount)** reposts").onTapGesture { }
             
             Text("**\(event.likesCount)** reactions").onTapGesture { }
-            Text("**\(event.zapsCount)** zaps").onTapGesture { }
+            Text("**\(event.zapsCount)** zaps").onTapGesture {
+                nav.navigateTo(ViewPath.ZapList(event: event))
+            }
             
             Spacer()
         }
         .foregroundColor(.gray)
-        .padding(.trailing, 5)
+        .padding(5)
         .font(.system(size: 14))
+        Divider()
     }
 }
 
 struct ReplyAndParentView_Previews: PreviewProvider {
     static var previews: some View {
-        let lastReply = PreviewFetcher.fetchEvent("72c8419dbed6381c3a0ae3df5feeeb19f25dae450efb8cb1aebf5201a7f7a8f0")
+        let lastReply = PreviewFetcher.fetchEvent("2026c6b0f0d887aa76cc60f0b3050fe940c8eca9eb479391acb493bb40e4d964")
         
         ReplyNoteView(event: lastReply!)
             .withPreviewEnvironment()
         
-        let rootWithReplies = PreviewFetcher.fetchEvent("bc45f59a5f740399ecfbdb38709ad08988797cf56004530b8122125c76f481bd")
+        let rootWithReplies = PreviewFetcher.fetchEvent("6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81")
         
         ReplyNoteView(event: rootWithReplies!)
             .withPreviewEnvironment()

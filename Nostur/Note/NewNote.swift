@@ -30,6 +30,7 @@ struct NewNote: View {
                 }
                 Spacer()
                 Button {
+                    guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
                     let nEvent = NEvent(content: noteText)
                     if let signedEvent = try? ns.signEvent(nEvent) {
                         noteCancellationId = up.publish(signedEvent)

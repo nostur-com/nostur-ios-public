@@ -20,6 +20,7 @@ enum ViewPath: Hashable {
     case Blocklist
     case Bookmarks(account:Account)
     case Account(account:Account)
+    case ZapList(event:Event)
     
     case Welcome
     case CreateNewAccount
@@ -51,6 +52,8 @@ extension View {
                         BookmarksView(account: account)
                     case .Account(let account):
                         AccountEditView(account: account)
+                    case .ZapList(let event):
+                        ZapsList(event: event)
                     
                     case .Welcome:
                         WelcomeSheet()

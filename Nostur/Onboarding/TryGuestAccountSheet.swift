@@ -47,7 +47,7 @@ struct TryGuestAccountSheet: View {
             account.display_name = "Nostur Rookie"
             account.name = "NosturRookie"
             account.about = "Just trying things out"
-            account.publicKey = "c118d1b814a64266730e75f6c11c5ffa96d0681bfea594d564b43f3097813844"
+            account.publicKey = NosturState.GUEST_ACCOUNT_PUBKEY
             
             
             // Remove existing CL events, so can proper parse again from Importers. Else get filtered by duplicate filter

@@ -98,6 +98,26 @@ struct LightningInvoice: View {
     }
 }
 
+func fetchBitcoinPrice() async -> Double? {
+    guard let url = URL(string: "https://api.kraken.com/0/public/Ticker?pair=XXBTZUSD") else { return nil }
+    let request = URLRequest(url: url)
+    
+    do {
+        // Fetch the remote data.
+        let (data, _) = try await URLSession.shared.data(for: request)
+        
+        // Decode data to a CatFact object.
+        let response = try JSONDecoder().decode(KrakenApiResponse.self, from: data)
+        
+        // Return the fact string value.
+        return Double(response.result.XXBTZUSD.c[0])
+    }
+    catch {
+        print("could not get price from kraken")
+        return nil
+    }
+}
+
 struct LightningInvoice_Previews: PreviewProvider {
     static var previews: some View {
         let invoice = "lnbc469970n1p373e49pp5ey9mxfcy9k62clpjvqwsrju64p0378cll0mzehtccj2ulqnamkzqdqvw3jhxarfdenscqzpgxqyz5vqsp5m8zsyfs936f2vfkshvdfhntmr596079hwryr2r8dpr8ahy6hu6hq9qyyssqlcvvw6gmq09hwzw2kxfe03enc25plxzfmupxwx4xr8hddn972nzq7m0jf9sxenw23qg6nv55678nrnnr4fe3wkwm6pczmaxs0r7yftgqd6lgya"

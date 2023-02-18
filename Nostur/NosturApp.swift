@@ -6,6 +6,7 @@
 //
 import SwiftUI
 import CoreData
+import Combine
 
 @main
 struct NosturApp: App {
@@ -18,6 +19,8 @@ struct NosturApp: App {
     @State var isViewDisplayed = false
     
     let runLoop = Timer.publish(every: 2, tolerance: 1, on: .main, in: .common).autoconnect()
+    let priceLoop = Timer.publish(every: 900, tolerance: 120, on: .main, in: .common).autoconnect().receive(on: RunLoop.main)
+        .merge(with: Just(Date()))
 
     var body: some Scene {        
         WindowGroup {
@@ -32,6 +35,15 @@ struct NosturApp: App {
                 .onReceive(runLoop) { time in
                     if (!isViewDisplayed) { return }
                     Task { await Importer.shared.importEvents() }
+                }
+                .onReceive(priceLoop) { time in
+                    if (!isViewDisplayed) { return }
+                    Task {
+                        if let newPrice = await fetchBitcoinPrice() {
+                            ns.bitcoinPrice = newPrice
+                            ns.objectWillChange.send()
+                        }
+                    }
                 }
 //                .statusBarHidden(true)
         }
