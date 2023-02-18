@@ -76,6 +76,8 @@
 		1F7C65AF29A11244009FF3EA /* ProfileZapsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7C65AE29A11244009FF3EA /* ProfileZapsView.swift */; };
 		1F7C65B029A13DDE009FF3EA /* LinkPresentation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F1ABC4229810D5500D03FA9 /* LinkPresentation.framework */; };
 		1F7C65B129A13DDF009FF3EA /* LinkPresentation.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1F1ABC4229810D5500D03FA9 /* LinkPresentation.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		1F7C65B729A1466D009FF3EA /* LightningDevKit-no-symlinks.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F7C65B229A140CB009FF3EA /* LightningDevKit-no-symlinks.xcframework */; };
+		1F7C65B829A1466D009FF3EA /* LightningDevKit-no-symlinks.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1F7C65B229A140CB009FF3EA /* LightningDevKit-no-symlinks.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		1F8B0A02298BDA9D00736B9A /* PaginationTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8B0A01298BDA9D00736B9A /* PaginationTest.swift */; };
 		1F8B1349297B34D7002EB8CF /* Bech32.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8B1348297B34D7002EB8CF /* Bech32.swift */; };
 		1F8B134B297B3551002EB8CF /* NIP19.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8B134A297B3551002EB8CF /* NIP19.swift */; };
@@ -117,8 +119,6 @@
 		1FC4D40D2998ED0E004E88CD /* FollowersList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC4D40C2998ED0E004E88CD /* FollowersList.swift */; };
 		1FCA273C299A4F3200298881 /* Zaps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCA273B299A4F3200298881 /* Zaps.swift */; };
 		1FCA273E299A6A1A00298881 /* LightningButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCA273D299A6A1A00298881 /* LightningButton.swift */; };
-		1FCEA0B129992FBE00A309DC /* LightningDevKit-no-symlinks.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FCEA0B029992FBE00A309DC /* LightningDevKit-no-symlinks.xcframework */; };
-		1FCEA0B229992FBE00A309DC /* LightningDevKit-no-symlinks.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1FCEA0B029992FBE00A309DC /* LightningDevKit-no-symlinks.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		1FCEA0B529993B2400A309DC /* Swift-Big-Number-Core.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCEA0B429993B2400A309DC /* Swift-Big-Number-Core.swift */; };
 		1FCEA0B72999413C00A309DC /* Double+clean.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCEA0B62999413C00A309DC /* Double+clean.swift */; };
 		1FD49733297FCB5E0084F14E /* PreviewHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD49732297FCB5E0084F14E /* PreviewHelper.swift */; };
@@ -143,8 +143,8 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1F7C65B829A1466D009FF3EA /* LightningDevKit-no-symlinks.xcframework in Embed Frameworks */,
 				1F7C65B129A13DDF009FF3EA /* LinkPresentation.framework in Embed Frameworks */,
-				1FCEA0B229992FBE00A309DC /* LightningDevKit-no-symlinks.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -260,7 +260,6 @@
 		1FC4D40C2998ED0E004E88CD /* FollowersList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowersList.swift; sourceTree = "<group>"; };
 		1FCA273B299A4F3200298881 /* Zaps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Zaps.swift; path = ../../../../../../../Downloads/Zaps.swift; sourceTree = "<group>"; };
 		1FCA273D299A6A1A00298881 /* LightningButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightningButton.swift; sourceTree = "<group>"; };
-		1FCEA0B029992FBE00A309DC /* LightningDevKit-no-symlinks.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "LightningDevKit-no-symlinks.xcframework"; path = "../../../../../Downloads/LightningDevKit-no-symlinks.xcframework"; sourceTree = "<group>"; };
 		1FCEA0B429993B2400A309DC /* Swift-Big-Number-Core.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Swift-Big-Number-Core.swift"; sourceTree = "<group>"; };
 		1FCEA0B62999413C00A309DC /* Double+clean.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Double+clean.swift"; path = "../Double+clean.swift"; sourceTree = "<group>"; };
 		1FD49732297FCB5E0084F14E /* PreviewHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewHelper.swift; sourceTree = "<group>"; };
@@ -284,8 +283,8 @@
 				1F75257829962AA300477AF2 /* NukeExtensions in Frameworks */,
 				1F75257629962AA300477AF2 /* Nuke in Frameworks */,
 				1FC4D40B2997E58E004E88CD /* KeychainAccess in Frameworks */,
-				1FCEA0B129992FBE00A309DC /* LightningDevKit-no-symlinks.xcframework in Frameworks */,
 				1FEA785529799697007CC8E7 /* Compactor in Frameworks */,
+				1F7C65B729A1466D009FF3EA /* LightningDevKit-no-symlinks.xcframework in Frameworks */,
 				1FE4011729940D6E00A388A2 /* Introspect in Frameworks */,
 				1F75257A29962AA300477AF2 /* NukeUI in Frameworks */,
 				1F7C65B029A13DDE009FF3EA /* LinkPresentation.framework in Frameworks */,
@@ -311,7 +310,7 @@
 		1F1C31E52969B75500E60BEF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				1FCEA0B029992FBE00A309DC /* LightningDevKit-no-symlinks.xcframework */,
+				1F7C65B229A140CB009FF3EA /* LightningDevKit-no-symlinks.xcframework */,
 				1F1ABC4229810D5500D03FA9 /* LinkPresentation.framework */,
 				1F1C31E82969B79F00E60BEF /* CryptoKit.framework */,
 			);
@@ -430,6 +429,13 @@
 			path = Nostr;
 			sourceTree = "<group>";
 		};
+		1F7C65B629A1466D009FF3EA /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		1F8B1347297B34C6002EB8CF /* Crypto */ = {
 			isa = PBXGroup;
 			children = (
@@ -474,6 +480,7 @@
 			children = (
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1FB448BB2965F3D000038671 /* Products */,
+				1F7C65B629A1466D009FF3EA /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -488,7 +495,6 @@
 		1FB448BC2965F3D000038671 /* Nostur */ = {
 			isa = PBXGroup;
 			children = (
-				1F7C65B229A140CB009FF3EA /* LightningDevKit-no-symlinks.xcframework */,
 				1F4773A3296CA7040049454B /* Accounts */,
 				1F2DE02E298E5B4D00891D2E /* Blocklist */,
 				1F25B395297A508200A8A5A7 /* CoreData */,
