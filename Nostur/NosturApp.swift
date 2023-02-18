@@ -39,7 +39,7 @@ struct NosturApp: App {
 
     func startNosturing() {
         if (ns.account == nil && ns.accounts.count >= 1) {
-            ns.setAccount(account: ns.accounts.last)
+            _ = ns.loadActiveAccount()
         }
         
         Maintenance.firstTimeStartup(context: EventsProvider.shared.container.viewContext)

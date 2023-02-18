@@ -52,7 +52,7 @@ struct ProfileLikesView: View {
             
             if (reactions.count > 0) {
                 let eventIds = reactions.map { event in
-                    return TagsHelpers(event.tags() ?? [])
+                    return TagsHelpers(event.oldTags() ?? [])
                         .reactingToEventId() ?? nil
                 }.filter { id in
                     return id != nil

@@ -28,12 +28,15 @@ struct NoteById: View {
     var body: some View {
         if (events.first != nil) {
             ReplyNoteView(event: events.first!)
+                .onAppear {
+                    
+                }
         }
         else {
             Text("Trying to fetch...").onAppear {
                 // .REQ
                 print("🟢 NoteById.onAppear no event so REQ.1: \(id)")
-                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: id)))
+                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEventAndReferences(id: id)))
             }
         }
     }
@@ -92,10 +95,13 @@ struct ReplyAndParentView: View {
         VStack {
             // PARENT: IF MISSING, FETCH IT
             if (event.replyTo == nil && event.replyToId != nil) {
-                ProgressView().onAppear {
-                    print("🤩🤩 🦋🦋 Fetching .replyTo \(event.replyToId!) ")
-                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.replyToId!)))
-                }
+                
+                ProgressView()
+//                // TODO: FETCH ALL AT START WITH #E INSTEAD OF HERE?
+//                    .onAppear {
+//                    print("🤩🤩 🦋🦋 Fetching .replyTo \(event.replyToId!) ")
+//                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.replyToId!)))
+//                }
             }
             // PARENT: IF AVAILABLE, RENDER IT
             else if (event.replyTo != nil) {
@@ -150,12 +156,15 @@ struct ReplyAndParentView: View {
                             ProgressView()
                                 .padding(.leading, isParent ? INDENT : 0)
                                 .onAppear {
+                                    // TODO: CAN FETCH WITH #E OR NO?
                                 sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.firstQuoteId!)))
                             }
                         }
                     }
                     
                     if (isParent) {
+                        DetailFooterFragment(event: event)
+                            .padding(.leading, isParent ? INDENT : 0)
                         FooterFragment(event: event)
                             .padding(.leading, isParent ? INDENT : 0)
                     }
@@ -189,7 +198,15 @@ struct ReplyAndParentView: View {
                 }
                 .onAppear {
                     if (event.contact == nil) {
+                        // TODO: Still needed? or below sp.send is already taking care of this?
                         sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.pubkey!)))
+                    }
+                    
+                    if (!isParent) {
+                        // Fetch all related (e and p.kind=0)
+                        if let message = RequestMessage.getTags(event.tags_) {
+                            sp.sendMessage(ClientMessage(type: .REQ, message: message))
+                        }
                     }
                 }
             
@@ -209,6 +226,24 @@ struct MaybeThreadLine: View {
                 Spacer()
             }
         }
+    }
+}
+
+struct DetailFooterFragment: View {
+    @ObservedObject var event:Event
+    
+    var body: some View {
+        HStack {
+            Text("**\(event.mentionsCount)** reposts").onTapGesture { }
+            
+            Text("**\(event.likesCount)** reactions").onTapGesture { }
+            Text("**\(event.zapsCount)** zaps").onTapGesture { }
+            
+            Spacer()
+        }
+        .foregroundColor(.gray)
+        .padding(.trailing, 5)
+        .font(.system(size: 14))
     }
 }
 

@@ -25,6 +25,7 @@ struct AccountsSheet: View {
     private var accounts: FetchedResults<Account>
     
     @State private var confirmDelete = false
+    @State var accountToDelete:Account? = nil
     
     var body: some View {
         VStack(spacing: 15) {
@@ -40,6 +41,7 @@ struct AccountsSheet: View {
                         }
                         .swipeActions(edge: .trailing) {
                             Button(role: .destructive) {
+                                accountToDelete = account
                                 confirmDelete.toggle()
                             } label: {
                                 Label("Delete", systemImage: "trash")
@@ -47,14 +49,21 @@ struct AccountsSheet: View {
                         }
                         .confirmationDialog("Delete account?", isPresented: $confirmDelete) {
                             Button(role: .destructive) {
-                                if (ns.accounts.count == 1) {
+                                guard accountToDelete != nil else { return }
+                                AccountManager.shared.deletePrivateKey(forPublicKeyHex: accountToDelete!.publicKey!)
+                                if (ns.accounts.count <= 1) {
                                     ns.isOnboarding = true
                                     nav.showSidebar = false
                                     nav.clear()
+                                    ns.setAccount(account: nil)
+                                    viewContext.delete(accountToDelete!)
                                 }
-                                ns.setAccount(account: nil)
-                                AccountManager.shared.deletePrivateKey(forPublicKeyHex: account.publicKey!)
-                                viewContext.delete(account)
+                                else {
+                                    viewContext.delete(accountToDelete!)
+                                    ns.setAccount(account: ns.accounts.last)
+                                }
+                                
+                                
                                 dismiss()
                                 try! viewContext.save()
                             } label: {
@@ -105,8 +114,20 @@ struct AccountRow: View {
                                     .lineLimit(1)
                             }
                             
-                            Text("@\(account.name)").font(.subheadline).foregroundColor(.secondary)
-                                .lineLimit(1)
+                            HStack {
+                                Text("@\(account.name)").font(.subheadline).foregroundColor(.secondary)
+                                    .lineLimit(1)
+                                if (account.privateKey == nil) {
+                                    Text("Read only").font(.system(size: 12.0))
+                                        .padding(.horizontal, 8)
+                                        .background(.cyan)
+                                        .foregroundColor(.white)
+//                                        .background(.background)
+                                        .cornerRadius(8)
+                                        
+                                    
+                                }
+                            }
                         }.multilineTextAlignment(.leading)
                         Spacer()
                         

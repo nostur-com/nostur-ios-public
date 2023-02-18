@@ -118,20 +118,75 @@ struct RequestMessage {
 """
     }
     
-    // For fetching events posted by people you follow
-    // or reactions by others reacting to the people you follow
-    static func getFollowingEvents(pubkeys:[String?], limit:Int = 500, subscriptionId:String? = nil, since:NTimestamp? = nil) -> String {
-        
-        if since != nil {
-            return """
-    ["REQ", "\(subscriptionId ?? ("TL-"+UUID().uuidString))", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "limit": \(limit), "since": \(since!.timestamp)}, {"#p": \(JSON(pubkeys).rawString() ?? "[]"), "kinds": [0,1,6,7,9735], "limit": \(limit), "since": \(since!.timestamp)}]
-    """
-        }
+    // FETCH A SINGLE EVENT AND REFERENCES
+    static func getEventAndReferences(id:String, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? ("TL-"+UUID().uuidString))", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "kinds": [0,1,6,7,9735], "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"ids": ["\(id)"], "limit": 1}, {"#e": ["\(id)"]}]
 """
     }
     
+    // For fetching events posted by people you follow
+    // or reactions by others reacting to the people you follow
+    static func getFollowingEvents(pubkeys:[String?], limit:Int = 500, subscriptionId:String? = nil, since:NTimestamp? = nil) -> String {
+        let sub = subscriptionId ?? ("TL-"+UUID().uuidString)
+        let pubs = JSON(pubkeys).rawString()
+        if since != nil {
+            return """
+["REQ", "\(sub)", {"authors": \(pubs ?? "[]"), "kinds": [0,1,6], "limit": \(limit), "since": \(since!.timestamp)}]
+"""
+        }
+        return """
+["REQ", "\(sub)", {"authors": \(pubs ?? "[]"), "kinds": [0,1,6], "limit": \(limit)}]
+"""
+    }
+    
+    
+    // For fetching events posted by people you follow
+    // or reactions by others reacting to the people you follow
+    // HMMM #P FILTER NIET HANDIG HIER....
+//    static func getFollowingEvents(pubkeys:[String?], limit:Int = 500, subscriptionId:String? = nil, since:NTimestamp? = nil) -> String {
+//
+//        if since != nil {
+//            return """
+//    ["REQ", "\(subscriptionId ?? ("TL-"+UUID().uuidString))", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "limit": \(limit), "since": \(since!.timestamp)}, {"#p": \(JSON(pubkeys).rawString() ?? "[]"), "kinds": [0,1,6,7,9735], "limit": \(limit), "since": \(since!.timestamp)}]
+//    """
+//        }
+//        return """
+//["REQ", "\(subscriptionId ?? ("TL-"+UUID().uuidString))", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "kinds": [0,1,6,7,9735], "limit": \(limit)}]
+//"""
+//    }
+    
+    // Fetch anything that references given event ids in tags (1=REPLIES, 6=REPOSTS, 7=REACTIONS, 9735=ZAPS)
+    static func getEventReferences(ids:[String], limit:Int = 500, subscriptionId:String? = nil) -> String {
+        return """
+["REQ", "\(subscriptionId ?? ("TL-REF-"+UUID().uuidString))", {"#e": \(JSON(ids).rawString() ?? "[]"), "kinds": [1,6,7,9735], "limit": \(limit)}]
+"""
+    }
+    
+    
+    // Fetch anything in the tags (only e -> "ids" and p -> "authors" kind=0  (for now))
+    static func getTags(_ tags:[Tag], limit:Int = 500, subscriptionId:String? = nil) -> String? {
+        let ids = tags.filter { $0.type == "e" }.map { $0.index1 }
+        let authors = tags.filter { $0.type == "p" }.map { $0.index1 }
+        
+        // TODO: UGH clean up this if then mess
+        if (ids.count > 0 && authors.count > 0) {
+            return """
+    ["REQ", "\(subscriptionId ?? ("TL-TAG-"+UUID().uuidString))", {"ids": \(JSON(ids).rawString() ?? "[]")}, {"authors": \(JSON(authors).rawString() ?? "[]"), "kinds": [0], "limit": \(limit)}]
+    """
+        }
+        else if (ids.count > 0) {
+            return """
+    ["REQ", "\(subscriptionId ?? ("TL-TAG-"+UUID().uuidString))", {"ids": \(JSON(ids).rawString() ?? "[]")}]
+    """
+        }
+        else if (authors.count > 0) {
+            return """
+    ["REQ", "\(subscriptionId ?? ("TL-TAG-"+UUID().uuidString))", {"authors": \(JSON(authors).rawString() ?? "[]"), "kinds": [0], "limit": \(limit)}]
+    """
+        }
+        return nil
+    }
     
     
     static func getAuthorContactsList(pubkey:String, limit:Int = 1, subscriptionId:String? = nil) -> String {
@@ -148,7 +203,13 @@ struct RequestMessage {
     
     static func getAuthorReactions(pubkey:String, limit:Int = 100, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [7,9735], "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [7], "limit": \(limit)}]
+"""
+    }
+    
+    static func getAuthorZaps(pubkey:String, limit:Int = 100, subscriptionId:String? = nil) -> String {
+        return """
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"#p": ["\(pubkey)"], "kinds": [9735], "limit": \(limit)}]
 """
     }
     
@@ -202,7 +263,7 @@ struct EventMessageBuilder {
     }
     
     static func makeReactionEvent(reactingTo: Event) -> NEvent {
-        var tags = reactingTo.tags()!.filter { $0.type == "e" || $0.type == "p" }
+        var tags = reactingTo.oldTags()!.filter { $0.type == "e" || $0.type == "p" }
         tags.append(NEventTag(type: "e", otherInformation: reactingTo.id))
         tags.append(NEventTag(type: "p", otherInformation: reactingTo.pubkey!))
         

@@ -38,12 +38,18 @@ extension Event {
     @NSManaged public var replyToRootId: String?
     @NSManaged public var replyToId: String?
     @NSManaged public var firstQuoteId: String?
-    @NSManaged public var likes: Int64 // Cache
+    
     @NSManaged public var liked: Bool // Cache
     @NSManaged public var isRepost: Bool // Cache
-    @NSManaged public var repliesCount: Int64 // Cache
+    
 //    @NSManaged public var repliesCounter: Int64 // Better Cache?
-    @NSManaged public var mentions: Int64 // Cache
+    
+    
+    // Counters (cached)
+    @NSManaged public var likesCount: Int64 // Cache
+    @NSManaged public var repliesCount: Int64 // Cache
+    @NSManaged public var mentionsCount: Int64 // Cache
+    @NSManaged public var zapsCount: Int64 // Cache
     
     @NSManaged public var bookmarkedBy: Set<Account>?
     @NSManaged public var contact: Contact?
@@ -53,11 +59,23 @@ extension Event {
     @NSManaged public var zapTally: Int64
 
     @NSManaged public var replies: Set<Event>?
+    @NSManaged public var tags: NSOrderedSet?
+
 //    // helper
 //    var replies_: Set<Event> {
 //        get { (replies as? Set<Event>) ?? [] }
 //        set { replies = newValue as NSSet }
 //    }
+    
+    // helper
+    var replies_: Set<Event> {
+        get { replies ?? [] }
+    }
+    
+    // helper
+    var tags_:[Tag] {
+        get { tags?.array as? [Tag] ?? [] }
+    }
     
     var username: String {
         get {
@@ -106,7 +124,40 @@ extension Event {
 
 }
 
+// MARK: Generated accessors for tags
+extension Event {
 
+   @objc(insertObject:inTagsAtIndex:)
+   @NSManaged public func insertIntoTags(_ value: Tag, at idx: Int)
+
+   @objc(removeObjectFromTagsAtIndex:)
+   @NSManaged public func removeFromTags(at idx: Int)
+
+   @objc(insertTags:atIndexes:)
+   @NSManaged public func insertIntoTags(_ values: [Tag], at indexes: NSIndexSet)
+
+   @objc(removeTagsAtIndexes:)
+   @NSManaged public func removeFromTags(at indexes: NSIndexSet)
+
+   @objc(replaceObjectInTagsAtIndex:withObject:)
+   @NSManaged public func replaceTags(at idx: Int, with value: Tag)
+
+   @objc(replaceTagsAtIndexes:withTags:)
+   @NSManaged public func replaceTags(at indexes: NSIndexSet, with values: [Tag])
+
+   @objc(addTagsObject:)
+   @NSManaged public func addToTags(_ value: Tag)
+
+   @objc(removeTagsObject:)
+   @NSManaged public func removeFromTags(_ value: Tag)
+
+   @objc(addTags:)
+   @NSManaged public func addToTags(_ values: NSOrderedSet)
+
+   @objc(removeTags:)
+   @NSManaged public func removeFromTags(_ values: NSOrderedSet)
+
+}
 
 extension Event : Identifiable {
     
@@ -250,7 +301,7 @@ extension Event : Identifiable {
                 
                 if let reactingToEvent = try context.fetch(request).first {
 //                    print("updating .likes for .id = \(String(describing: reactingToEvent.id))")
-                    reactingToEvent.likes = reactingToEvent.likes + 1
+                    reactingToEvent.likesCount = reactingToEvent.likesCount + 1
 //                                            try reactingToEvent.managedObjectContext?.save()
                 }
             }
@@ -291,6 +342,8 @@ extension Event : Identifiable {
         
         if let zappedEvent = try! context.fetch(request).first {
             zappedEvent.zapTally = zappedEvent.zapTally + Int64(((invoice.getValue()!.amountMilliSatoshis() ?? 0) / 1000))
+            
+            zappedEvent.zapsCount = zappedEvent.zapsCount + 1
         }
         return true
     }
@@ -307,7 +360,7 @@ extension Event : Identifiable {
                 
                 if let reactingToEvent = try context.fetch(request).first {
 //                    print("updating .mentions for .id = \(String(describing: reactingToEvent.id))")
-                    reactingToEvent.mentions = reactingToEvent.mentions + 1
+                    reactingToEvent.mentionsCount = reactingToEvent.mentionsCount + 1
                 }
             }
         }
@@ -315,7 +368,7 @@ extension Event : Identifiable {
     }
     
     
-    func tags() -> [NEventTag]? {
+    func oldTags() -> [NEventTag]? {
         let decoder = JSONDecoder()
         
         if (tagsSerialized != nil) {
@@ -363,8 +416,41 @@ extension Event : Identifiable {
         savedEvent.content = event.content
         savedEvent.sig = event.signature
         savedEvent.pubkey = event.publicKey
-        savedEvent.likes = 0
+        savedEvent.likesCount = 0
         savedEvent.liked = false
+        
+        
+        // TAGS: do tags, for just .textNote? or all? or..?
+        savedEvent.tags = NSOrderedSet(array:
+        event.tags.map({ nTag in
+            let tag = Tag(context: context)
+            tag.type = nTag.type
+            if (tag.type == "e") {
+                tag.event = try? Event.fetchEvent(id: nTag.id, context: context)
+            }
+            else if (tag.type == "p") {
+                tag.contact = Contact.fetchByPubkey(nTag.pubkey, context: context)
+            }
+            tag.index1 = nTag.otherInformation[safe: 0]
+            tag.index2 = nTag.otherInformation[safe: 1]
+            tag.index3 = nTag.otherInformation[safe: 2]
+            tag.index4 = nTag.otherInformation[safe: 3]
+            
+            return tag
+        }))
+        
+        // TAGS INVERSE:
+        let er = NSFetchRequest<Tag>(entityName: "Tag")
+        er.predicate = NSPredicate(format: "type == 'e' AND index1 == %@", savedEvent.id!)
+        if let tags = try? context.fetch(er) {
+            for tag in tags {
+                tag.event = savedEvent
+                tag.objectWillChange.send()
+            }
+        }
+        
+        
+        
         
         if (event.kind == .textNote && TagsHelpers(event.tags).replyToRootEtag() != nil) {
             savedEvent.replyToRootId = TagsHelpers(event.tags).replyToRootEtag()!.id
@@ -462,7 +548,7 @@ extension Event : Identifiable {
         nEvent.publicKey = pubkey!
         nEvent.createdAt = NTimestamp(timestamp: Int(created_at))
         nEvent.kind = NEventKind(id: Int(kind))
-        nEvent.tags = tags() ?? []
+        nEvent.tags = oldTags() ?? []
         nEvent.signature = sig!
         return nEvent
     }

@@ -75,67 +75,70 @@ struct AddExistingAccountSheet: View {
         .buttonStyle(.bordered)
         
         .padding()
-            .alert("Invalid key", isPresented: $invalidKey) {
-                        Button("OK", role: .cancel) { }
-                    }
+        .alert("Invalid key", isPresented: $invalidKey) {
+            Button("OK", role: .cancel) { }
+        }
     }
     
     func addExistingAccount(privkey:String) {
-            ns.pendingFirstContactsFetch = true
-            let account = Account(context: viewContext)
-            account.id = UUID()
-            account.createdAt = Date()
-            // TODO: Check if valid pubkey before save.
-
-            guard let keys = try? NKeys(privateKeyHex: privkey) else {
-                invalidKey = true
-                key = ""
-                return
-            }
-
-            account.publicKey = keys.publicKeyHex()
-            account.privateKey = keys.privateKeyHex()
+        ns.pendingFirstContactsFetch = true
+        let account = Account(context: viewContext)
+        account.id = UUID()
+        account.createdAt = Date()
+        // TODO: Check if valid pubkey before save.
+        
+        guard let keys = try? NKeys(privateKeyHex: privkey) else {
+            invalidKey = true
+            key = ""
+            return
+        }
+        
+        account.publicKey = keys.publicKeyHex()
+        account.privateKey = keys.privateKeyHex()
+        
+        // 1. Prefill from cached event
+        Account.preFillReadOnlyAccountInfo(account: account, context: viewContext)
+        Account.preFillReadOnlyAccountFollowing(account: account, context: viewContext)
+        
+        do {
+            try viewContext.save()
+            _ = ns.loadActiveAccount(account: account)
             
-            // 1. Prefill from cached event
-            Account.preFillReadOnlyAccountInfo(account: account, context: viewContext)
-            Account.preFillReadOnlyAccountFollowing(account: account, context: viewContext)
-            
-            do {
-                try viewContext.save()
-                try _ = ns.loadActiveAccount(account: account)
-                
-                // 2. But also check if there are newer events
-                let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: account.publicKey!))
-                sp.sendMessage(message)
-            } catch {
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-            }
+            // 2. But also check if there are newer events
+            let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: account.publicKey!))
+            sp.sendMessage(message)
+        } catch {
+            let nsError = error as NSError
+            fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+        }
     }
     
     func addExistingReadOnlyAccount(pubkey:String) {
-            ns.pendingFirstContactsFetch = true
-            let account = Account(context: viewContext)
-            account.id = UUID()
-            account.createdAt = Date()
-            // TODO: Check if valid pubkey before save.
-            // Convert npub to hex... etc
-            account.publicKey = pubkey
-            
-            // 1. Prefill from cached event
-            Account.preFillReadOnlyAccountInfo(account: account, context: viewContext)
-            Account.preFillReadOnlyAccountFollowing(account: account, context: viewContext)
-            
-            do {
-                try viewContext.save()
-                try _ = ns.loadActiveAccount(account: account)
-                // 2. But also check if there are newer events
-                let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: pubkey))
-                sp.sendMessage(message)
-            } catch {
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+        ns.pendingFirstContactsFetch = true
+        let account = Account(context: viewContext)
+        account.id = UUID()
+        account.createdAt = Date()
+        // TODO: Check if valid pubkey before save.
+        // Convert npub to hex... etc
+        account.publicKey = pubkey
+        
+        // Remove existing CL events, so can proper parse again from Importers. Else get filtered by duplicate filter
+        if let clEvents = Event.contactListEvents(byAuthorPubkey: account.publicKey!, context: viewContext) {
+            for clEvent in clEvents {
+                viewContext.delete(clEvent)
             }
+        }
+        
+        // 1. Prefill from cached event
+        Account.preFillReadOnlyAccountInfo(account: account, context: viewContext)
+        Account.preFillReadOnlyAccountFollowing(account: account, context: viewContext)
+        
+        
+        try! viewContext.save()
+        _ = ns.loadActiveAccount(account: account)
+        // 2. But also check if there are newer events
+        let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: pubkey))
+        sp.sendMessage(message)
     }
 }
 

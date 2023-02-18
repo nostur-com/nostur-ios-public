@@ -29,9 +29,7 @@ struct NosturTabsView: View {
             AppTopBar(showMenu: $showMenu)
             TabView(selection: $selectedTab) {
                 NavigationStack(path: $timelinePath) {
-//                    CleanTimeline()
-//                    TimelineX()
-                    TheTimeline()
+                    Timeline()
                         .withNavigationDestinations()
                 }
                 .tabItem { Image(systemName: "house") }.tag("Timeline")
@@ -56,6 +54,14 @@ struct NosturTabsView: View {
                 }
                 .tabItem { Image(systemName: "magnifyingglass") }
                 .tag("Search")
+                
+                NavigationStack(path: $bookmarksPath) {
+                    BookmarksView(account: ns.account)
+                        .withNavigationDestinations()
+                    Spacer()
+                }
+                .tabItem { Image(systemName: "bookmark") }
+                .tag("Bookmarks")
                 
                 NavigationStack(path: $configurationPath) {
                     ConfigurationView()

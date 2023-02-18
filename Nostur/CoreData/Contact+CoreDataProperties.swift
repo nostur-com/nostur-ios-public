@@ -83,7 +83,7 @@ extension Contact {
 extension Contact : Identifiable {
         
     var authorKey: String {
-        get { pubkey != nil ? String(pubkey!.prefix(5)) : "?:?" }
+        get { pubkey != nil ? String(npub.prefix(9)) : "⏤⏤" }
     }
     
     // Display name, with fallbacks: (User)name, pubkey (prefix), or "?:?"
@@ -99,7 +99,7 @@ extension Contact : Identifiable {
     
     var username:String { get { name ?? authorKey } }
     
-    var npub:String { get { pubkey != nil ? try! NIP19(prefix: "npub", hexString: pubkey!).displayString : "?" } }
+    var npub:String { get { pubkey != nil ? try! NIP19(prefix: "npub", hexString: pubkey!).displayString : "⏤⏤" } }
     
     var nip05veried:Bool {
         get {
@@ -223,6 +223,16 @@ extension Contact : Identifiable {
             for event in contactEvents {
                 event.contact = contact
                 event.objectWillChange.send()
+            }
+            
+            // TAGS INVERSE:
+            let tr = NSFetchRequest<Tag>(entityName: "Tag")
+            tr.predicate = NSPredicate(format: "type == 'p' AND index1 == %@", event.publicKey)
+            if let tags = try? context.fetch(tr) {
+                for tag in tags {
+                    tag.contact = contact
+                    tag.objectWillChange.send()
+                }
             }
         }
     }
@@ -352,5 +362,11 @@ extension Contact : Identifiable {
         let r = Contact.fetchRequest()
         r.predicate = NSPredicate(format: "pubkey == %@", pubkey)
         return try? context.fetch(r).first
+    }
+    
+    static func fetchByPubkeys(_ pubkeys:[String], context:NSManagedObjectContext) -> [Contact] {
+        let r = Contact.fetchRequest()
+        r.predicate = NSPredicate(format: "pubkey IN %@", pubkeys)
+        return (try? context.fetch(r)) ?? []
     }
 }

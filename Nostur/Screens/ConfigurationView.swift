@@ -22,17 +22,32 @@ struct ConfigurationView: View {
     
     @State var deleteAll = false
     @State var showDeleteAllEventsConfirmation = false
-    @State var imageCacheSize = 0.0
     
-    // Also fixes mention ids (first Quote Id)
+    func deleteAllTags() {
+        let r = Tag.fetchRequest()
+        let allTags = try! viewContext.fetch(r)
+        
+        for tag in allTags {
+            viewContext.delete(tag)
+        }
+    }
+    
+    // SCANS 1,9735,6
+    // DELETES ALL TAGS AND RECREATES FROM 1,9735,6
+    // NILS -> replyToId, replyToRootId, firstQuoteId
+    //   AND FILLS AGAIN FROM tagsSerialized
     func rebuildReplyToIdsCache() {
         SavedEventsCache.shared.clear()
         
         
         let r = NSFetchRequest<Event>(entityName: "Event")
-        r.predicate = NSPredicate(format: "kind == 1")
+        r.predicate = NSPredicate(format: "kind IN {1,9735,6}") // Also 9735 to fix .tags on Zaps
         r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         let kind1 = try! viewContext.fetch(r)
+        
+        
+        // First delete all tags
+        deleteAllTags()
         
         // ON FIRST PASS RESET ALL TO NIL
         for event in kind1 {
@@ -43,7 +58,7 @@ struct ConfigurationView: View {
         
         let decoder = JSONDecoder()
         
-        for event in kind1 {
+        for event in kind1 {  // Also 9735 to fix .tags on Zaps
             if (event.tagsSerialized != nil) {
                 if let tags = try? decoder.decode([NEventTag].self, from: Data(event.tagsSerialized!.utf8)) {
                     
@@ -65,6 +80,34 @@ struct ConfigurationView: View {
                         }
                     }
                     
+                    
+                    // TAGS: do tags, for just .textNote? or all? or..?
+                    event.tags = NSOrderedSet(array: tags.map({ nTag in
+                        let tag = Tag(context: viewContext)
+                        tag.type = nTag.type
+                        if (tag.type == "e") {
+                            tag.event = try? Event.fetchEvent(id: nTag.id, context: viewContext)
+                        }
+                        else if (tag.type == "p") {
+                            tag.contact = Contact.fetchByPubkey(nTag.pubkey, context: viewContext)
+                        }
+                        tag.index1 = nTag.otherInformation[safe: 0]
+                        tag.index2 = nTag.otherInformation[safe: 1]
+                        tag.index3 = nTag.otherInformation[safe: 2]
+                        tag.index4 = nTag.otherInformation[safe: 3]
+                        
+                        return tag
+                    }))
+                    
+//                    // TAGS INVERSE:
+//                    let er = NSFetchRequest<Tag>(entityName: "Tag")
+//                    er.predicate = NSPredicate(format: "type == 'e' AND index1 == %@", event.id!)
+//                    if let tags = try? viewContext.fetch(er) {
+//                        for tag in tags {
+//                            tag.event = event
+//                            tag.objectWillChange.send()
+//                        }
+//                    }
                 }
             }
         }
@@ -79,6 +122,8 @@ struct ConfigurationView: View {
         
     }
     
+    // TAKES ALL 1,7,9735 (NOTES, REACTIONS, ZAPS) Not reposts? 6?
+    // RESET ALL COUNTERS TO 0
     func rebuildCountingCache() {
         SavedEventsCache.shared.clear()
         
@@ -95,9 +140,10 @@ struct ConfigurationView: View {
         // ON FIRST PASS RESET ALL COUNTERS TO 0 (FOR KIND 1)
         for event in kind1 {
             event.repliesCount = 0 // TODO: Dit allemaal kan @aggregate worden?? @count ofzo?
-            event.mentions = 0
-            event.likes = 0
+            event.mentionsCount = 0
+            event.likesCount = 0
             event.zapTally = 0
+            event.zapsCount = 0
         }
         
         // RECOUNT
@@ -147,7 +193,7 @@ struct ConfigurationView: View {
             }
             
             
-            // if reaction (KIND 7)
+            // if ZAP (KIND 9735)
             // update likes count
             if (event.kind == 9735 && event.tagsSerialized != nil) {
                 let _ = Event.updateZapTallyCache(event, context: viewContext)
@@ -378,77 +424,55 @@ struct ConfigurationView: View {
             Toggle(isOn: $devToggle) { Text("Dev mode") }.padding(10)
             if (devToggle) {
                 List {
+                    Text("Using these may hang the app for a minute:")
                     Group {
                         
                         Button { removeOlderKind3Events() } label: {
-                            Text("Remove older kind 3 events")
-                        }.padding(5)
+                            Text("Remove old contact lists (kind=3)")
+                        }
                         
                         Button { Maintenance.maintenance(context: viewContext) } label: {
-                            Text("Clean up older than 3 days!")
-                        }.padding(5)
+                            Text("Clean up older than 3 days")
+                        }
                         
                         Button { rebuildReplyToIdsCache() } label: {
-                            Text("Rebuild replyToId, replyToRootId, firstQuoteId cache")
-                        }.padding(5)
+                            Text("Rebuild reply and quote cache")
+                        }
                         
                         Button { rebuildCountingCache() } label: {
-                            Text("Rebuild counting cache (likes, mentions, replies)")
-                        }.padding(5)
+                            Text("Rebuild counter cache (likes, mentions, replies)")
+                        }
                         
                         Button { rebuildContactCache() } label: {
                             Text("Rebuild contact cache (banner, picture etc)")
-                        }.padding(5)
+                        }
                     }
                     
                     Group {
                         Button { deleteAll = true } label: {
                             Text("Delete all contacts \(allContacts.count)")
-//                            Text("Delete all contacts \(allContacts.count)")
                         }.confirmationDialog("SURE???", isPresented: $deleteAll, actions: {
                             Button("YES DELETE ALL", role: .destructive) { deleteAllContacts() }
                         })
-                        .padding(5)
                         
                         Button { showDeleteAllEventsConfirmation = true } label: {
                             Text("Delete all events \(allEvents.count)")
-//                            Text("Delete all events \(allEvents.count)")
                         }.confirmationDialog("DELETE ALL EVENTS????", isPresented: $showDeleteAllEventsConfirmation) {
                             Button("YES DELETE ALL", role: .destructive) {
                                 deleteAllEvents()
                             }
                         }
-                        .padding(5)
                         
                         Button { fixContactEventRelations() } label: {
                             Text("Fix event.contact relation")
-                        }.padding(5)
+                        }
                         
-                        Button { fixReplyToEventRelations()
-                        } label: { Text("Fix reply, quote relations") }.padding(5)
+                        Button { fixReplyToEventRelations() } label: { Text("Fix reply, quote relations") }
                         
                         Button { clearImageCache()} label: {
-                            Text("Clear image cache \(imageCacheSize) MB")
+                            Text("Clear image cache")
                         }
                     }
-                    
-                    
-                    Group {
-                        Text("**Umb** [@Snowden](nostur:p:4523be58d395b1b196a9b8c82b038b6895cb02b683d0c253a955068dba1facd0)")
-                        Text("**Umb** [@callebtc](nostur:p:50d94fc2d8580c682b071a542f8b1e31a200b0508bab95a33bef0855df281d63) 'n")
-                    }
-                }
-                .onAppear {
-                    // Kingfisher
-//                    ImageCache.default.calculateDiskStorageSize { result in
-//                        switch result {
-//                            case .success(let size):
-//                                imageCacheSize = floor(Double(size) / 1024 / 1024)
-//                                print("Disk cache size: \(imageCacheSize) MB")
-//                            case .failure(let error):
-//                                print(error)
-//                        }
-//                    }
                 }
             }
         }

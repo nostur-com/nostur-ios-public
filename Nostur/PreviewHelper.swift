@@ -31,7 +31,7 @@ extension View {
         let ns = NosturState(container: EventsProvider.preview.container)
         let nav = NavigationModel()
         let account = PreviewFetcher.fetchAccount("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", context: EventsProvider.preview.container.viewContext)
-        _ = try! ns.loadActiveAccount(account: account)
+        _ = ns.loadActiveAccount(account: account)
         
         return self.defaultAppStorage(userDefaults)
             .environment(\.managedObjectContext,

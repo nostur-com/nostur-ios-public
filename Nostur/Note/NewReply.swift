@@ -31,7 +31,7 @@ struct NewReply: View {
         var newReply = NEvent(content: "")
         newReply.kind = .textNote
         
-        let root = TagsHelpers(replyTo.tags() ?? []).replyToRootEtag()
+        let root = TagsHelpers(replyTo.oldTags() ?? []).replyToRootEtag()
         
         if (root != nil) { // ADD "ROOT" + "REPLY"
             let newRootTag = NEventTag(type: "e", otherInformation: root!.otherInformation[0], "", "root") // TODO RECOMMENDED RELAY HERE
@@ -42,12 +42,12 @@ struct NewReply: View {
             newReply.tags.append(newReplyTag)
         }
         else { // ADD ONLY "ROOT"
-            let newRootTag = NEventTag(type: "e", otherInformation: root!.otherInformation[0], "", "root") // TODO RECOMMENDED RELAY HERE
+            let newRootTag = NEventTag(type: "e", otherInformation: replyTo.id!, "", "root")
             newReply.tags.append(newRootTag)
         }
         
         // ADD ALL "P" TAGS
-        let existingPtags = TagsHelpers(replyTo.tags() ?? []).pTags()
+        let existingPtags = TagsHelpers(replyTo.oldTags() ?? []).pTags()
         newReply.tags.append(contentsOf: existingPtags)
         
         // ADD PUBKEY OF REPLYING TO EVENT
@@ -63,16 +63,17 @@ struct NewReply: View {
                 NoteRowView(event: replyTo, hideFooter: true)
                 HStack {
                     NewReplyingToFragment(contact: replyTo.contact, pubkey: replyTo.pubkey!)
-                        .offset(x:80,y:15)
+                        .offset(x:80)
                     Spacer()
                 }
-                HStack {
+                HStack(alignment: .top) {
                     ProfilePicView(pubkey: ns.activeAccountPublicKey, account: ns.account!)
                         .padding(.horizontal, 10)
-                    TextField(text: $noteText, prompt: Text("Enter your reply")) {
+                    TextField(text: $noteText, prompt: Text("Enter your reply"), axis: .vertical) {
                         EmptyView()
                     }
                     .focused($focusedField, equals: .noteText)
+                    .lineLimit(10...)
                 }
                 Spacer()
             }

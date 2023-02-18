@@ -41,7 +41,7 @@ struct NoteRowView: View {
         self.event = event
         self.hideFooter = hideFooter
         
-        let pubkeys = TagsHelpers(event.tags() ?? []).pTags().map { $0.pubkey }
+        let pubkeys = TagsHelpers(event.oldTags() ?? []).pTags().map { $0.pubkey }
         
         if (pubkeys.count == 0) {
             _taggedContacts = FetchRequest(
@@ -64,6 +64,9 @@ struct NoteRowView: View {
         
     }
     
+    @AppStorage("devToggle") var devToggle: Bool = true
+
+    
     var body: some View {
         //        NavigationLink(value: event, label: {
         
@@ -72,7 +75,14 @@ struct NoteRowView: View {
                 HStack {
                     Image(systemName: "arrow.2.squarepath")
                     Text("\(event.name) reposted")
+                    if (devToggle) {
+                        Text("id: \(String(event.id!.prefix(5)))")
+                            .onTapGesture {
+                                UIPasteboard.general.string = event.id!
+                            }
+                    }
                 }
+                .foregroundColor(.gray)
                 .onTapGesture {
                     nav.navigateTo(ContactPath(key: event.pubkey!))
                 }
@@ -129,7 +139,7 @@ struct NoteRowView: View {
             else if (event.isRepost && event.firstQuoteId != nil && event.firstQuote == nil) {
                 ProgressView().onAppear {
                     // fetch repost
-                    let mentionTag = TagsHelpers(event.tags() ?? []).mentionEtags()?.first
+                    let mentionTag = TagsHelpers(event.oldTags() ?? []).mentionEtags()?.first
                     if mentionTag != nil {
                         sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: mentionTag!.id)))
                     }
@@ -287,7 +297,7 @@ struct NoteMenu: View {
     var noteId:String { get { event.noteId } }
     var username:String {
         get {
-            event.contact?.username ?? String(event.pubkey!.prefix(5))
+            event.contact?.username ?? String((event.pubkey ?? "WTF").prefix(5))
         }
     }
     
@@ -376,14 +386,15 @@ struct FooterFragment: View {
 
             HStack {
                 Image(systemName: "arrow.2.squarepath")
-                Text("\(event.mentions)")
+                Text("\(event.mentionsCount)")
             }
             .background(Color(.systemBackground))
             .onTapGesture {
+                guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
                 if (ns.account != nil) {
                     print("🔄🔄🔄🔄🔄 REPOSTING 🔄🔄🔄")
 //                    event.reposted = true
-                    event.mentions = event.mentions + 1
+                    event.mentionsCount = event.mentionsCount + 1
 //                    ns.account?.addToLikes(event)
                     
                     // 1. create kind 7 event based on kind 1 event:    Event
@@ -406,7 +417,7 @@ struct FooterFragment: View {
             if (event.liked) {
                 HStack {
                     Image(systemName: "heart.fill").foregroundColor(.red)
-                    Text("\(event.likes)")
+                    Text("\(event.likesCount)")
                 }
                 .background(Color(.systemBackground))
                 .onTapGesture {
@@ -418,14 +429,15 @@ struct FooterFragment: View {
             else {
                 HStack {
                     Image(systemName: "heart")
-                    Text("\(event.likes)")
+                    Text("\(event.likesCount)")
                 }
                 .background(Color(.systemBackground))
                 .onTapGesture {
+                    guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
                     if (ns.account != nil) {
                         print("💖💖💖💖💖💖💖💖💖💖💖💖💖💖")
                         event.liked = true
-                        event.likes = event.likes + 1
+                        event.likesCount = event.likesCount + 1
                         ns.account?.addToLikes(event)
                         
                         // 1. create kind 7 event based on kind 1 event:    Event
@@ -509,47 +521,50 @@ struct NoteRowView_Previews: PreviewProvider {
         // maybe: 7edef20143bb4df0c65dff3993bd9f7c5fb755fe6c8fa72cc847299afe52d8fa
         
 //        let event0 = PreviewFetcher.fetchEvent("21a1b8e4083c11eab8f280dc0c0bddf3837949df75662e181ad117bd0bd5fdf3")
-        let event0 = PreviewFetcher.fetchEvent("24ad21d57d59b03f4f9a8931f8bc4ccca84ed6ab257bf62cb84b0d04e0583118")
-        
-        let event1 = PreviewFetcher.fetchEvent("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
-        
-        let event2 = PreviewFetcher.fetchEvent("dec5a86ad780edd26fb8a1b85f919ddace9cb2b2b5d3a68d5124802fc2da4ed3")
-        
+//        let event0 = PreviewFetcher.fetchEvent("24ad21d57d59b03f4f9a8931f8bc4ccca84ed6ab257bf62cb84b0d04e0583118")
+//
+//        let event1 = PreviewFetcher.fetchEvent("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
+//
+//        let event2 = PreviewFetcher.fetchEvent("dec5a86ad780edd26fb8a1b85f919ddace9cb2b2b5d3a68d5124802fc2da4ed3")
+//
 //        let event3 = PreviewFetcher.fetchEvent("d3b581761bab06fbe727b12b22c33c7b8768d7d9681b45cb6b1f4ad798496e14")
         
-//        let event4 = PreviewFetcher.fetchEvent("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe")
+        let event4 = PreviewFetcher.fetchEvent("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe")
 //
-        let event5 = PreviewFetcher.fetchEvent("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e")
+//        let event5 = PreviewFetcher.fetchEvent("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e")
 //
-//        let event6 = PreviewFetcher.fetchEvent("7d96834f60c5411be97fe9e4b07e3221c56df531543a11a1d67ff81168033e8e")
-//
-//        let event7 = PreviewFetcher.fetchEvent("fdf989cbe5d26d874a4afaf8a78861fcd3267619e7db467a549a6b33c6dbeeab")
+        let event6 = PreviewFetcher.fetchEvent("7d96834f60c5411be97fe9e4b07e3221c56df531543a11a1d67ff81168033e8e")
+
+        let event7 = PreviewFetcher.fetchEvent("fdf989cbe5d26d874a4afaf8a78861fcd3267619e7db467a549a6b33c6dbeeab")
         
         List {
             
-            NoteRowView(event: event0!)
-                .listRowInsets(EdgeInsets())
+//            NoteRowView(event: event0!)
+//                .listRowInsets(EdgeInsets())
 //
-            NoteRowView(event: event1!)
-                .listRowInsets(EdgeInsets())
+//            NoteRowView(event: event1!)
+//                .listRowInsets(EdgeInsets())
 //
-            NoteRowView(event: event2!)
-                .listRowInsets(EdgeInsets())
+//            NoteRowView(event: event2!)
+//                .listRowInsets(EdgeInsets())
 //
 //            NoteRowView(event: event3!)
 //                .listRowInsets(EdgeInsets())
 //
-//            NoteRowView(event: event4!)
-//                .listRowInsets(EdgeInsets())
-//
-            NoteRowView(event: event5!)
+            // QUOTE?
+            NoteRowView(event: event4!)
                 .listRowInsets(EdgeInsets())
+
+//            NoteRowView(event: event5!)
+//                .listRowInsets(EdgeInsets())
             
-//            NoteRowView(event: event6!)
-//                .listRowInsets(EdgeInsets())
-//
-//            NoteRowView(event: event7!)
-//                .listRowInsets(EdgeInsets())
+            // REPOST, LOADING?
+            NoteRowView(event: event6!)
+                .listRowInsets(EdgeInsets())
+
+            // REPOST
+            NoteRowView(event: event7!)
+                .listRowInsets(EdgeInsets())
             
         }
         .listStyle(PlainListStyle())

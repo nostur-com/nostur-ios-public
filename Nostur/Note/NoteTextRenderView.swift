@@ -115,7 +115,7 @@ struct NoteTextRenderView: View {
                 }
             }
             do {
-                let finalText = try AttributedString(markdown: newText)
+                let finalText = try AttributedString(markdown: newText, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
                 return finalText
             }
             catch {
@@ -128,7 +128,7 @@ struct NoteTextRenderView: View {
 
     init(event: Event, taggedContacts: [Contact] = [], useLinelimit:Bool = true) {
         self.event = event
-        self.tags = event.tags() ?? []
+        self.tags = event.oldTags() ?? []
         self.taggedContacts = taggedContacts
         let text = event.content ?? ""
         self.firstLinkInText = getFirstLinkInText(text)
@@ -140,8 +140,8 @@ struct NoteTextRenderView: View {
         VStack(alignment: .leading) {
             if (tags.count > 0) {
                 if (useLinelimit) {
-                    Text(renderedText!)
-                        .lineLimit(10, reservesSpace: false)
+                    Text(renderedText!)//.border(.cyan)
+                        .lineLimit(100, reservesSpace: false)
                         .textSelection(.enabled)
                         .multilineTextAlignment(TextAlignment.leading)
 //                            .font(.system(size: 14))
@@ -150,7 +150,7 @@ struct NoteTextRenderView: View {
                             .padding(.vertical, 5)
                 }
                 else {
-                    Text(renderedText!)
+                    Text(renderedText!)//.border(.pink)
                         .textSelection(.enabled)
                         .multilineTextAlignment(TextAlignment.leading)
 //                            .font(.system(size: 14))
@@ -161,7 +161,7 @@ struct NoteTextRenderView: View {
             }
             else if (tags.count == 0) {
                 if (useLinelimit) {
-                    Text(event.noteText)
+                    Text(event.noteText)//.border(.green)
                         .lineLimit(4, reservesSpace: false)
                         .textSelection(.enabled)
                         .multilineTextAlignment(TextAlignment.leading)
@@ -171,7 +171,7 @@ struct NoteTextRenderView: View {
                             .padding(.vertical, 5)
                 }
                 else {
-                    Text(event.noteText)
+                    Text(event.noteText)//.border(.red)
                         .textSelection(.enabled)
                         .multilineTextAlignment(TextAlignment.leading)
 //                            .font(.system(size: 14))
@@ -231,7 +231,8 @@ struct NoteTextRenderView_Previews: PreviewProvider {
         // Mention in end #[0]
         // 143efe07393c5b07efbe6ea1fc66c39cb985b98f8844650edd00fbcb041228a3
         
-        let event5 = PreviewFetcher.fetchEvent("143efe07393c5b07efbe6ea1fc66c39cb985b98f8844650edd00fbcb041228a3")
+        let event5 = PreviewFetcher.fetchEvent("b2e209b3073f24b4d6c172965ad8dd8276ada68895d4ab8837cf3a57d3f1c947")
+//        let event5 = PreviewFetcher.fetchEvent("143efe07393c5b07efbe6ea1fc66c39cb985b98f8844650edd00fbcb041228a3")
         
         let event4 = PreviewFetcher.fetchEvent("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe")
         

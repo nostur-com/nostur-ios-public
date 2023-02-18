@@ -41,7 +41,13 @@ struct ReplyingToFragment: View {
             EmptyView()
         }
         else {
-            Text(try! AttributedString(markdown:"Replying to [@\(replyToUsername())](nostur:p:\(replyToPubkeyHex()))"))
+            let pTags = event.tags_.filter { $0.type == "p" }
+            let pTagsAsStrings = Array(Set(pTags.map { tag in
+                return "[@\(tag.contactUsername)](nostur:p:\(tag.contactPubkey))"
+            }))
+            
+//            Text(try! AttributedString(markdown:"Replying to [@\(replyToUsername())](nostur:p:\(replyToPubkeyHex()))"))
+            Text(try! AttributedString(markdown:"Replying to: " + pTagsAsStrings.joined(separator: ", ")))
                 .foregroundColor(.secondary)
 //                .font(.system(size: 13))
                 .fontWeight(.light)

@@ -1,96 +1,96 @@
+////
+////  NewAccountView.swift
+////  Nostur
+////
+////  Created by Fabian Lachman on 07/01/2023.
+////
 //
-//  NewAccountView.swift
-//  Nostur
+//import SwiftUI
+//import secp256k1
+//import Foundation
 //
-//  Created by Fabian Lachman on 07/01/2023.
+//struct NewAccountView: View {
+//    
+//    @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""
+//    @Environment(\.dismiss) private var dismiss
+//    @Environment(\.managedObjectContext) private var viewContext
+//    @Binding var addReadOnlyAccountPresented: Bool
+//    
+//    @State var name = ""
+//    @State var about = ""
+//    
+//    enum FocusedField {
+//        case name
+//    }
+//    @FocusState private var focusedField: FocusedField?
+//    
+//    var accentColor: Color = .orange
+//    var grayBackground: Color = Color.gray.opacity(0.2)
+//    
+//    var onCreate: (_ name:String, _ about:String) -> ()
+//    
+//    var body: some View {
+//        
+//        VStack{
+//            Text("Create account")
+//                .font(.largeTitle)
+//                .foregroundColor(Color("OrangeColor"))
+//                .fontWeight(.semibold)
+//                .padding(.bottom, 20)
+//            TextField("Full Name", text: $name)
+//                .padding()
+//                .background(grayBackground)
+//                .cornerRadius(5.0)
+//                .padding(.bottom, 20)
+//                .focused($focusedField, equals: .name)
+//            TextField("Username/Handle", text: $name)
+//                .padding()
+//                .background(grayBackground)
+//                .cornerRadius(5.0)
+//                .padding(.bottom, 20)
+//                .focused($focusedField, equals: .name)
+//            TextField("Something about yourself (bio)", text: $about)
+//                .lineLimit(5)
+//                .padding()
+//                .background(grayBackground)
+//                .cornerRadius(5.0)
+//                .padding(.bottom, 20)
+//            
+//            Button {
+//                onCreate(name, about)
+//                dismiss()
+//            } label: {
+//                Text("Create")
+//                    .font(.headline)
+//                    .foregroundColor(.white)
+//                    .padding()
+//                    .frame(width: 220, height: 60)
+//                    .background(accentColor)
+//                    .cornerRadius(15.0)
+//            }
+//            Spacer()
+//            Button {
+//                addReadOnlyAccountPresented = true
+//                dismiss()
+//            } label: {
+//                Text("Or add read-only account")
+//            }
+////            Text("creates local account..").foregroundColor(.gray)
+//            
+//        }.padding()
+//            .onAppear {
+//                focusedField = .name
+//            }
+//    }
+//}
 //
-
-import SwiftUI
-import secp256k1
-import Foundation
-
-struct NewAccountView: View {
-    
-    @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""
-    @Environment(\.dismiss) private var dismiss
-    @Environment(\.managedObjectContext) private var viewContext
-    @Binding var addReadOnlyAccountPresented: Bool
-    
-    @State var name = ""
-    @State var about = ""
-    
-    enum FocusedField {
-        case name
-    }
-    @FocusState private var focusedField: FocusedField?
-    
-    var accentColor: Color = .orange
-    var grayBackground: Color = Color.gray.opacity(0.2)
-    
-    var onCreate: (_ name:String, _ about:String) -> ()
-    
-    var body: some View {
-        
-        VStack{
-            Text("Create account")
-                .font(.largeTitle)
-                .foregroundColor(Color("OrangeColor"))
-                .fontWeight(.semibold)
-                .padding(.bottom, 20)
-            TextField("Full Name", text: $name)
-                .padding()
-                .background(grayBackground)
-                .cornerRadius(5.0)
-                .padding(.bottom, 20)
-                .focused($focusedField, equals: .name)
-            TextField("Username/Handle", text: $name)
-                .padding()
-                .background(grayBackground)
-                .cornerRadius(5.0)
-                .padding(.bottom, 20)
-                .focused($focusedField, equals: .name)
-            TextField("Something about yourself (bio)", text: $about)
-                .lineLimit(5)
-                .padding()
-                .background(grayBackground)
-                .cornerRadius(5.0)
-                .padding(.bottom, 20)
-            
-            Button {
-                onCreate(name, about)
-                dismiss()
-            } label: {
-                Text("Create")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .padding()
-                    .frame(width: 220, height: 60)
-                    .background(accentColor)
-                    .cornerRadius(15.0)
-            }
-            Spacer()
-            Button {
-                addReadOnlyAccountPresented = true
-                dismiss()
-            } label: {
-                Text("Or add read-only account")
-            }
-//            Text("creates local account..").foregroundColor(.gray)
-            
-        }.padding()
-            .onAppear {
-                focusedField = .name
-            }
-    }
-}
-
-
-
-struct NewAccountView_Previews: PreviewProvider {
-    static var previews: some View {
-        NewAccountView(addReadOnlyAccountPresented: .constant(false), onCreate: { name, about in
-            
-        })
-            .environment(\.managedObjectContext, EventsProvider.shared.container.viewContext)
-    }
-}
+//
+//
+//struct NewAccountView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        NewAccountView(addReadOnlyAccountPresented: .constant(false), onCreate: { name, about in
+//            
+//        })
+//            .environment(\.managedObjectContext, EventsProvider.shared.container.viewContext)
+//    }
+//}

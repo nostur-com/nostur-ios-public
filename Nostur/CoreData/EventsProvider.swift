@@ -68,9 +68,9 @@ class EventsProvider: ObservableObject {
         messages.append(contentsOf: testSnowden())
 //        messages.append(contentsOf: testKind6Events())
         messages.append(contentsOf: testEfilter())
-        messages.append(contentsOf: testZaps())
+//        messages.append(contentsOf: testZaps())
 //        messages.append(contentsOf: testNotifications())
-        messages.append(contentsOf: testThread())
+//        messages.append(contentsOf: testThread())
         
         var relayMessages:[RelayMessage] = []
         

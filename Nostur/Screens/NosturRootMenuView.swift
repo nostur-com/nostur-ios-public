@@ -74,7 +74,7 @@ extension NosturRootMenu {
                 
                 Text("\(ns.account!.display_name != "" ? ns.account!.display_name : ns.account!.name)").font(.headline)
                 Text("@\(ns.account!.name)").font(.subheadline)
-                Text(try! AttributedString(markdown: "**bla**  Following  **196** Followers")).font(.caption)
+                Text(try! AttributedString(markdown: "**\(ns.account?.follows?.count ?? 0)**  Following  **?** Followers")).font(.caption)
                 
                 Button {
                     nav.navigateTo(ContactPath(key: ns.account!.publicKey!))

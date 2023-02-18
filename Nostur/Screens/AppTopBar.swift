@@ -27,6 +27,7 @@ struct AppTopBar: View {
                     .resizable()
                     .scaledToFit()
                     .frame(height:30)
+                    .clipShape(Circle())
                 Spacer()
             }
         }

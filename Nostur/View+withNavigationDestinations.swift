@@ -18,7 +18,6 @@ struct ContactPath: Hashable {
 
 enum ViewPath: Hashable {
     case Blocklist
-    case Following(account:Account)
     case Bookmarks(account:Account)
     case Account(account:Account)
     
@@ -48,8 +47,6 @@ extension View {
                 switch (path) {
                     case .Blocklist:
                         BlockListView()
-                    case .Following(let account):
-                        AccountFollowingList(account: account)
                     case .Bookmarks(let account):
                         BookmarksView(account: account)
                     case .Account(let account):

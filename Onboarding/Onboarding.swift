@@ -25,6 +25,10 @@ struct Onboarding: View {
         }
         else if (ns.account != nil) {
             NosturRootMenu()
+                .sheet(isPresented: $ns.readOnlyAccountSheetShown) {
+                    ReadOnlyAccountInformationSheet()
+                        .presentationDetents([ .large])
+                }
         }
     }
 }

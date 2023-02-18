@@ -60,12 +60,16 @@ struct ContactList: View {
         }.onAppear {
             // fetch missing
             // fetch pubkeys not in [contacts.pubkey]
+//            
+//            let missing = pubkeys.filter { pubkey in
+//                contacts.map { $0.pubkey! }.firstIndex(of: pubkey) == nil
+//            }
+//
+//            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missing)))
             
-            let missing = pubkeys.filter { pubkey in
-                contacts.map { $0.pubkey! }.firstIndex(of: pubkey) == nil
-            }
+            // ugh not working... yet.. just fetch alll kind=0 for all pubkeys
             
-            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missing)))
+            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys)))
         }
     }
     

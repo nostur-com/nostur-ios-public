@@ -23,6 +23,7 @@ final class NosturState : ObservableObject {
     @Published var account:Account? = nil
     
     @State var pendingFirstContactsFetch:Bool = false
+    @Published var readOnlyAccountSheetShown:Bool = false
     
     var pubkey:String? {
         get { account?.publicKey }
@@ -42,7 +43,8 @@ final class NosturState : ObservableObject {
             self.followingPublicKeys = []
         }
         else {
-            _ = try! loadActiveAccount(account: account)
+            _ = loadActiveAccount(account: account)
+            activeAccountPublicKey = account!.publicKey!
         }
     }
     
@@ -52,15 +54,11 @@ final class NosturState : ObservableObject {
     init(container:NSPersistentContainer) {
         self.container = container
         self.viewContext = container.viewContext
-        do {
-            try _ = loadActiveAccount()
-        } catch {
-            print("loadActiveAccount but activeAccountPublicKey is not set ")
-        }
+        _ = loadActiveAccount()
         print("🦋🦋 ACTIVE ACCOUNT IS: \(self.account?.name ?? "NONE")")
     }
     
-    func loadActiveAccount(account:Account? = nil) throws -> Account? {
+    func loadActiveAccount(account:Account? = nil) -> Account? {
         if (account != nil) {
             self.account = account!            
         }
@@ -79,7 +77,7 @@ final class NosturState : ObservableObject {
                 isOnboarding = true
                 return nil
             }
-//            isOnboarding = false
+            activeAccountPublicKey = self.account!.publicKey!
         }
         loadFollowing()
         Task(priority: .userInitiated) {
@@ -269,7 +267,7 @@ final class NosturState : ObservableObject {
     
     func followsYou(_ contact:Contact) -> Bool {
         guard contact.clEvent != nil else { return false }
-        return (contact.clEvent!.tags() ?? []).filter { $0.type == "p" && $0.otherInformation[0] == activeAccountPublicKey }.count > 0
+        return (contact.clEvent!.oldTags() ?? []).filter { $0.type == "p" && $0.otherInformation[0] == activeAccountPublicKey }.count > 0
     }
     
 }

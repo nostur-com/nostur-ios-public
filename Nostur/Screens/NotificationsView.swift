@@ -57,13 +57,13 @@ struct NotificationsView: View {
     
     var myNotifications:[Event] {
         get {
-            kind1.filter { ($0.kind == 1) && ($0.tags() ?? []).contains(where: { $0.pubkey == ns.account!.publicKey! })}
+            kind1.filter { ($0.kind == 1) && ($0.oldTags() ?? []).contains(where: { $0.pubkey == ns.account!.publicKey! })}
         }
     }
     
     var myReactions:[Event] {
         get {
-            kind7.filter { ($0.kind == 7) && ($0.tags() ?? []).contains(where: { $0.pubkey == ns.activeAccountPublicKey })}
+            kind7.filter { ($0.kind == 7) && ($0.oldTags() ?? []).contains(where: { $0.pubkey == ns.activeAccountPublicKey })}
         }
     }
     

@@ -63,17 +63,11 @@ struct TryGuestAccountSheet: View {
             Account.preFillReadOnlyAccountInfo(account: account, context: viewContext)
             Account.preFillReadOnlyAccountFollowing(account: account, context: viewContext)
             
-            do {
-                try _ = ns.loadActiveAccount(account: account)
-                let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: account.publicKey!))
-                
-                sp.sendMessage(message)
-            } catch {
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-            }
+
+            _ = ns.loadActiveAccount(account: account)
+            let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: account.publicKey!))
             
-            
+            sp.sendMessage(message)            
         }
         .onDisappear {
             // Did not continue with guest account, so undo the created account from .onAppear:

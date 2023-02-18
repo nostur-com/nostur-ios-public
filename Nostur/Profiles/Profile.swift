@@ -79,6 +79,7 @@ struct Profile: View {
     
     @State var activeTab = "NOTES"
     @State var isFollowing = false
+    @State var profilePicViewerIsShown = false
     
     init(contact:Contact) {
         self.contact = contact
@@ -127,6 +128,11 @@ struct Profile: View {
                     VStack {
                         ProfilePicView(pubkey: contact.pubkey!, contact: contact, size: 75)
                             .offset(x: 10, y: 150-37.5)
+                            .onTapGesture {
+                                if (contact.picture != nil) {
+                                    profilePicViewerIsShown = true
+                                }
+                            }
                         Spacer()
                     }
                     Spacer()
@@ -231,7 +237,7 @@ struct Profile: View {
                     }
                     
                     ControlGroup {
-//                        Button { importNotes() } label: { Text("Import") }
+                        //                        Button { importNotes() } label: { Text("Import") }
                         Button { activeTab = "NOTES" } label: {
                             Label("Notes", systemImage: "bubble.left.and.bubble.right")
                         }
@@ -240,6 +246,9 @@ struct Profile: View {
                         }
                         Button { activeTab = "LIKES" } label: {
                             Label("Likes", systemImage: "hand.thumbsup")
+                        }
+                        Button { activeTab = "ZAPS" } label: {
+                            Label("Notes", systemImage: "bolt")
                         }
                         Button { activeTab = "RELAYS"} label: {
                             Label("Relays", systemImage: "server.rack")
@@ -284,6 +293,11 @@ struct Profile: View {
                         
                         if (activeTab == "LIKES") {
                             ProfileLikesView(pubkey: pubkey)
+                                .padding(.vertical, 10)
+                        }
+                        
+                        if (activeTab == "ZAPS") {
+                            ProfileZapsView(pubkey: pubkey)
                                 .padding(.vertical, 10)
                         }
                         
@@ -361,6 +375,47 @@ struct Profile: View {
         }
         .task {
             sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
+        }
+        .fullScreenCover(isPresented: $profilePicViewerIsShown) {
+            ProfilePicFullScreenSheet(profilePicViewerIsShown: $profilePicViewerIsShown, pictureUrl:contact.picture!)
+        }
+    }
+}
+
+struct ProfilePicFullScreenSheet: View {
+    
+    @Binding var profilePicViewerIsShown:Bool
+    var pictureUrl:String
+    
+    var body: some View {
+        ZStack {
+            VStack {
+                HStack {
+                    Spacer()
+                    Image(systemName: "xmark.circle.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 30, height: 30)
+                        .padding(30)
+                        .onTapGesture {
+                            profilePicViewerIsShown = false
+                        }
+                }
+                Spacer()
+            }
+            VStack {
+                LazyImage(url: URL(string: pictureUrl)) { state in
+                    if let image = state.image {
+                        image.scaledToFit()
+                    }
+                    else {
+                        ProgressView()
+                    }
+                }
+            }
+            .onTapGesture {
+                profilePicViewerIsShown = false
+            }
         }
     }
 }
