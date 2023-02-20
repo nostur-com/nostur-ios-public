@@ -21,6 +21,7 @@ enum ViewPath: Hashable {
     case Bookmarks(account:Account)
     case Account(account:Account)
     case ZapList(event:Event)
+    case ReactionsList(event:Event)
     
     case Welcome
     case CreateNewAccount
@@ -35,7 +36,7 @@ extension View {
                 NoteById(id: path.id)
             }
             .navigationDestination(for: Event.self) { event in
-                ReplyNoteView(event: event)
+                NoteDetail(event: event)
 //                NoteDetail(event: event)
             }
             .navigationDestination(for: ContactPath.self) { path in
@@ -54,6 +55,8 @@ extension View {
                         AccountEditView(account: account)
                     case .ZapList(let event):
                         ZapsList(event: event)
+                    case .ReactionsList(let event):
+                        Reactions(id: event.id!)
                     
                     case .Welcome:
                         WelcomeSheet()

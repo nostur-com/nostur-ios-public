@@ -66,11 +66,18 @@ class Importer {
                     if event.kind == .repost && event.content.prefix(2) == #"{""# {
                         let decoder = JSONDecoder()
                         if let noteInNote = try? decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
-                            _ = Event.saveEvent(event: noteInNote, context:context)
+                            if try Event.fetchEvent(id: noteInNote.id, context: context) == nil {
+                                _ = Event.saveEvent(event: noteInNote, context:context)
+                            }
+                            else {
+                                print("🔴 noteInNote already in db")
+                            }
                             event.content = "#[0]"
                             event.tags.insert(NEventTag(type: "e", otherInformation: noteInNote.id, "", "mention"), at: 0)
                         }
                     }
+                    
+                    
                     
                     let savedEvent = Event.saveEvent(event: event, context:context)
                     

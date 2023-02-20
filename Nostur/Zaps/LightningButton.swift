@@ -94,7 +94,7 @@ struct LightningButton: View {
                 await MainActor.run {
                     // Make sure at least 1 sat, and not more than 2000000 sat (around $210)
                     min = ((response.minSendable ?? 1000) < 1000 ? 1000 : (response.minSendable ?? 1000)) / 1000
-                    max = ((response.maxSendable ?? 1000000000) > 1000000000 ? 1000000000 : (response.maxSendable ?? 1000000000)) / 1000
+                    max = ((response.maxSendable ?? 100000000) > 100000000 ? 100000000 : (response.maxSendable ?? 100000000)) / 1000
                     if response.callback != nil {
                         callback = response.callback!
                         if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {

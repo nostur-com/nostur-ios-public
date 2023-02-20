@@ -11,7 +11,7 @@ import SwiftUI
 struct ProfileZapsView: View {
     
 //    @EnvironmentObject var cm:ConnectionManager
-    var cm:SocketPool = .shared
+    var sp:SocketPool = .shared
     var pubkey:String
     
     @FetchRequest(
@@ -19,6 +19,7 @@ struct ProfileZapsView: View {
         predicate: NSPredicate(format: "kind IN {9735}"),
         animation: .none)
     var events: FetchedResults<Event>
+    var events_:[Event] { Array(events) }
     
     init(pubkey: String) {
         self.pubkey = pubkey
@@ -43,14 +44,28 @@ struct ProfileZapsView: View {
             else {
                 LazyVStack {
                     ForEach(events, id:\Event.id) { event in
-                        NoteRowView(event:event)
+//                        NoteRowView(event:event)
+                        ZapRow(event: event)
                         Divider()
                     }
                 }
             }
-        }.onAppear {
+        }
+        .onAppear {
             print("🟢 ProfileZapsView.onAppear always REQ.9735 \(pubkey)")
-            cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorZaps(pubkey: pubkey)))
+            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorZaps(pubkey: pubkey)))
+        }
+        .onChange(of: events_) { newValue in
+            var missing:[String] = []
+            
+            for event in newValue {
+                if let zapReq = event.tags_.first(where: { $0.type == "description" })?.event {
+                    if zapReq.contact == nil {
+                        missing.append(zapReq.pubkey!)
+                    }
+                }
+            }
+            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missing)))
         }
         
     }

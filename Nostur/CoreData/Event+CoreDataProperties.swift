@@ -69,8 +69,8 @@ extension Event {
 //    }
     
     // helper
-    var replies_: Set<Event> {
-        get { replies ?? [] }
+    var replies_: [Event] {
+        get { replies?.sorted(by: { $0.created_at < $1.created_at } ) ?? [] }
     }
     
     // helper
@@ -269,6 +269,7 @@ extension Event : Identifiable {
             if let reactingToEvent = try context.fetch(request).first {
 //                print("updating .replies for .id = \(String(describing: reactingToEvent.id))")
                 reactingToEvent.repliesCount = reactingToEvent.repliesCount + 1
+                reactingToEvent.objectWillChange.send()
             }
         }
         
@@ -303,6 +304,7 @@ extension Event : Identifiable {
                 if let reactingToEvent = try context.fetch(request).first {
 //                    print("updating .likes for .id = \(String(describing: reactingToEvent.id))")
                     reactingToEvent.likesCount = reactingToEvent.likesCount + 1
+                    reactingToEvent.objectWillChange.send()
 //                                            try reactingToEvent.managedObjectContext?.save()
                 }
             }
@@ -317,16 +319,21 @@ extension Event : Identifiable {
     
     static func updateZapTallyCache(_ event:Event, context:NSManagedObjectContext) -> Bool {
         let nEvent = event.toNEvent()
-        
+    
+        if (1 == 2) {
+            // Disable for now, because all zaps will be ignored because we havent fetched
+            // zapperPubkey for anyone yet
+            
+            // TODO: Consider valid on import, to immediatly show amounts. Use seperate queue to fetch and verify zapperpubkey, then invalidate if wrong later.
+            
         // we need to have contact.zapperPubkey first... ughh
         let pTag = nEvent.tags.first { $0.type == "p" }
         guard pTag != nil else { return false }
         let contact = Contact.fetchByPubkey(pTag!.pubkey, context: context)
         guard contact != nil else { return false }
         
-        if (1 == 2) {
-            // Disable for now, because all zaps will be ignored because we havent fetched
-            // zapperPubkey for anyone yet
+        
+            
             guard contact!.zapperPubkey != nil else { return false }
             guard contact!.zapperPubkey! == event.pubkey! else { return false }
         }
@@ -359,8 +366,8 @@ extension Event : Identifiable {
         
         if let zappedEvent = try! context.fetch(request).first {
             zappedEvent.zapTally = zappedEvent.zapTally + Int64(((invoice.getValue()!.amountMilliSatoshis() ?? 0) / 1000))
-            
             zappedEvent.zapsCount = zappedEvent.zapsCount + 1
+            zappedEvent.objectWillChange.send()
         }
         return true
     }
@@ -378,6 +385,7 @@ extension Event : Identifiable {
                 if let reactingToEvent = try context.fetch(request).first {
 //                    print("updating .mentions for .id = \(String(describing: reactingToEvent.id))")
                     reactingToEvent.mentionsCount = reactingToEvent.mentionsCount + 1
+                    reactingToEvent.objectWillChange.send()
                 }
             }
         }
@@ -424,6 +432,62 @@ extension Event : Identifiable {
         return try context.fetch(request).first
     }
     
+    
+    static func extractAndSaveZapRequest(event:NEvent, context:NSManagedObjectContext) -> Event? {
+        
+        let description:NEventTag? = event.tags.first(where: { $0.type == "description" })
+        guard description?.otherInformation[safe: 0] != nil else { return nil }
+        
+        let decoder = JSONDecoder()
+        if let zapReqNEvent = try? decoder.decode(NEvent.self, from: description!.otherInformation[0].data(using: .utf8, allowLossyConversion: false)!) {
+            
+            if let existingZapReq = try! Event.fetchEvent(id: zapReqNEvent.id, context: context) {
+                print("🔴 zap req already in db");
+                return existingZapReq
+            }
+            
+            do {
+                guard try zapReqNEvent.verified() else { return nil }
+                
+                
+                // CREATE ZAP REQUEST EVENT
+                let zapRequest = Event(context: context)
+                zapRequest.insertedAt = Date.now
+                
+                zapRequest.id = zapReqNEvent.id
+                zapRequest.kind = Int64(zapReqNEvent.kind.id)
+                zapRequest.created_at = Int64(zapReqNEvent.createdAt.timestamp)
+                zapRequest.content = zapReqNEvent.content
+                zapRequest.sig = zapReqNEvent.signature
+                zapRequest.pubkey = zapReqNEvent.publicKey
+                zapRequest.likesCount = 0
+                zapRequest.liked = false
+                
+                // set relation to Contact
+                let cr = NSFetchRequest<Contact>(entityName: "Contact")
+                cr.predicate = NSPredicate(format: "pubkey == %@", zapReqNEvent.publicKey)
+                cr.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)]
+                if let contact = try? context.fetch(cr).first {
+                    zapRequest.contact = contact
+                }
+                
+                let encoder = JSONEncoder()
+                encoder.outputFormatting = .withoutEscapingSlashes
+                let tagsSerialized = try? encoder.encode(zapReqNEvent.tags)
+                if (tagsSerialized != nil) {
+                    zapRequest.tagsSerialized = String(data: tagsSerialized!, encoding: .utf8)
+                }
+                
+                return zapRequest
+            }
+            catch {
+                print(error)
+                return nil
+            }
+        }
+        return nil
+    }
+    
     static func saveEvent(event:NEvent, context:NSManagedObjectContext) -> Event {
         let savedEvent = Event(context: context)
         savedEvent.insertedAt = Date.now
@@ -436,6 +500,12 @@ extension Event : Identifiable {
         savedEvent.likesCount = 0
         savedEvent.liked = false
         
+        var zapRequest:Event?
+        if event.kind == .zapNote {
+            // save 9734 seperate
+            // so later we can do --> event(9735).tags[type=description].event(9734).contact
+            zapRequest = Event.extractAndSaveZapRequest(event: event, context:context)
+        }
         
         // TAGS: do tags, for just .textNote? or all? or..?
         savedEvent.tags = NSOrderedSet(array:
@@ -444,6 +514,9 @@ extension Event : Identifiable {
             tag.type = nTag.type
             if (tag.type == "e") {
                 tag.event = try? Event.fetchEvent(id: nTag.id, context: context)
+            }
+            else if (tag.type == "description" && zapRequest != nil) {
+                tag.event = zapRequest
             }
             else if (tag.type == "p") {
                 tag.contact = Contact.fetchByPubkey(nTag.pubkey, context: context)

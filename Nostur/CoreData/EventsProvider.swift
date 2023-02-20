@@ -66,9 +66,11 @@ class EventsProvider: ObservableObject {
         messages.append(contentsOf: testKindMixedOldDunnoEvents())
         messages.append(contentsOf: testRepliesAndReactions())
         messages.append(contentsOf: testSnowden())
+        messages.append(contentsOf: testMentions())
 //        messages.append(contentsOf: testKind6Events())
 //        messages.append(contentsOf: testEfilter())
         messages.append(contentsOf: testZaps())
+        messages.append(contentsOf: testSomeFakeAndRealZaps())
 //        messages.append(contentsOf: testNotifications())
 //        messages.append(contentsOf: testThread())
         

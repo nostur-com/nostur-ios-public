@@ -49,6 +49,12 @@ struct LightningInvoice: View {
         }
     }
     
+    var isExpired:Bool {
+        get {
+            pInvoice?.isExpired() ?? false
+        }
+    }
+    
     var body: some View {
         VStack {
             if (pInvoice != nil) {
@@ -61,16 +67,17 @@ struct LightningInvoice: View {
                     }
                 Button {
                     openURL(URL(string: "lightning:\(invoice)")!)
-                } label: { Text("Pay").frame(minWidth: 150) }
+                } label: { Text(isExpired ? "Expired" : "Pay").frame(minWidth: 150) }
                     .buttonStyle(.borderedProminent)
                     .cornerRadius(20)
+                    .disabled(isExpired)
             }
             else {
                 Text("Unable to decode lightning invoice")
             }
         }
         .padding(20)
-        .background(LinearGradient(colors: [.orange, .red],
+        .background(LinearGradient(colors: isExpired ? [.gray, .black] : [.orange, .red],
                                    startPoint: .top,
                                    endPoint: .center).opacity(0.3))
         .cornerRadius(20)

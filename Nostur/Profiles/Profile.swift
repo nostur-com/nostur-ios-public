@@ -15,11 +15,16 @@ import Nuke
 struct ProfileByPubkey: View {
     
     @EnvironmentObject var sp:SocketPool
+    @EnvironmentObject var ns:NosturState
+    @EnvironmentObject var nav:NavigationModel
     
     var pubkey:String
     
     @FetchRequest
     var contacts:FetchedResults<Contact>
+    
+    let timeOut = Timer.publish(every: 8, on: .main, in: .common).autoconnect()
+        
     
     init(pubkey:String) {
         self.pubkey = pubkey
@@ -35,9 +40,15 @@ struct ProfileByPubkey: View {
             Profile(contact: contacts.first!)
         }
         else {
-            Text("Trying to fetch...").onAppear {
+            ProgressView().onAppear {
                 print("🟢 ProfileByPubkey.onAppear no contact so REQ.0: \(pubkey)")
                 sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
+            }
+            .onReceive(timeOut) { firedDate in
+                timeOut.upstream.connect().cancel()
+                if ns.account?.publicKey == pubkey {
+                    nav.navigateTo(ViewPath.Account(account: ns.account!))
+                }
             }
         }
     }

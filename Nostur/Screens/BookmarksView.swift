@@ -11,14 +11,18 @@ import SwiftUI
 struct BookmarksView: View {
 
     @Environment(\.managedObjectContext) var viewContext
+    @EnvironmentObject var ns:NosturState
     
     let account: Account?
     
     @FetchRequest(sortDescriptors: [])
     var bookmarks: FetchedResults<Event>
     
+    @State var selectedAccount:Account? = nil
+    
     init(account:Account? = nil) {
         self.account = account
+        self.selectedAccount = account
         guard account != nil else { return }
         _bookmarks = FetchRequest(
             sortDescriptors: [SortDescriptor(\Event.created_at, order: .reverse)],
@@ -27,10 +31,48 @@ struct BookmarksView: View {
     }
     
     var body: some View {
+        let _ = Self._printChanges()
         VStack {
-            // TODO: Account switcher/filter
-            Text("Account: \(account?.display_name ?? account?.name ?? "No account")")
-            Text("Your list of bookmarks is not public")
+            HStack {
+                Spacer()
+                Menu {
+                    Button {
+                        selectedAccount = nil
+                    } label: {
+                        HStack {
+                            Text("All accounts")
+                            Spacer()
+                        }
+                    }
+                    ForEach(ns.accounts) { account in
+                        Button {
+                            selectedAccount = account
+                        } label: {
+                            HStack {
+    //                            ProfilePicView(pubkey: account.publicKey!, account: account, size: 30)
+                                Text("@\(account.name)")
+                                Spacer()
+                            }
+                        }
+                    }
+                } label: {
+                    ZStack {
+                        if (selectedAccount != nil) {
+                            ProfilePicView(pubkey: selectedAccount!.publicKey!, account: selectedAccount, size: 30)
+                        }
+                        else {
+                            ForEach(ns.accounts.indices, id:\.self) { index in
+                                ProfilePicView(pubkey: ns.accounts[index].publicKey!, account: ns.accounts[index], size: 30)
+                                    .offset(x: -CGFloat(index*10))
+                                
+                            }
+                        }
+                    }
+                }
+                .menuStyle(.button)
+                .menuIndicator(.visible)
+            }
+            .padding(.horizontal)
             ScrollView {
                 ForEach(bookmarks) { bookmark in
                     NoteRowView(event: bookmark)
@@ -56,11 +98,19 @@ struct BookmarksView: View {
                                 Label("Block @\(bookmark.username)", systemImage: "slash.circle")
                             }
                         }
-                        .padding(20)
+                        .padding(.horizontal)
                     Divider()
                 }.onDelete(perform: deleteItems)
             }
             Spacer()
+        }
+        .onChange(of: selectedAccount) { newValue in
+            if (newValue != nil) {
+                bookmarks.nsPredicate = NSPredicate(format: "%@ IN bookmarkedBy", newValue!)
+            }
+            else {
+                bookmarks.nsPredicate = NSPredicate(format: "bookmarkedBy.@count > 0")
+            }
         }
     }
     

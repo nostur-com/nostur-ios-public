@@ -27,7 +27,7 @@ struct NoteById: View {
 
     var body: some View {
         if (events.first != nil) {
-            ReplyNoteView(event: events.first!)
+            NoteDetail(event: events.first!)
                 .onAppear {
                     
                 }
@@ -42,7 +42,7 @@ struct NoteById: View {
     }
 }
 
-struct ReplyNoteView: View {
+struct NoteDetail: View {
     
     @ObservedObject var event:Event // OUR MAIN NOTE (NOT ROOT)
 
@@ -50,7 +50,7 @@ struct ReplyNoteView: View {
         GeometryReader{ geometry in
             ScrollViewReader { proxy in
                 ScrollView {
-                    ReplyAndParentView(event: event, geoHeight: geometry.size.height)
+                    NoteAndParent(event: event, geoHeight: geometry.size.height)
                         .onAppear {
                             proxy.scrollTo(event.id)
                         }
@@ -64,7 +64,7 @@ struct ReplyNoteView: View {
 // Renders reply, and parent
 // the parent is another ReplyAndParentView
 // so it recursively renders up to the root
-struct ReplyAndParentView: View {
+struct NoteAndParent: View {
     
     @EnvironmentObject var sp:SocketPool
     @ObservedObject var event:Event
@@ -105,7 +105,7 @@ struct ReplyAndParentView: View {
             }
             // PARENT: IF AVAILABLE, RENDER IT
             else if (event.replyTo != nil) {
-                ReplyAndParentView(event: event.replyTo!, isParent: true)
+                NoteAndParent(event: event.replyTo!, isParent: true)
             }
             // OUR (DETAIL) REPLY:
             
@@ -174,7 +174,7 @@ struct ReplyAndParentView: View {
                         
                         // REPLIES TO OUR MAIN NOTE
                         LazyVStack {
-                            ForEach (Array(event.replies ?? []), id:\.self) { event in
+                            ForEach (event.replies_, id:\.self) { event in
                                 NoteRowView(event: event)
                                 Divider()
                             }
@@ -204,9 +204,24 @@ struct ReplyAndParentView: View {
                     
                     if (!isParent) {
                         // Fetch all related (e and p.kind=0)
+                        // (the events and contacts mentioned in this DETAIL NOTE.
                         if let message = RequestMessage.getTags(event.tags_) {
                             sp.sendMessage(ClientMessage(type: .REQ, message: message))
                         }
+                        
+                        // Fetch all that reference this detail note (Replies, zaps, reactions)
+                        sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEventReferences(ids: [event.id!])))
+                        
+                        
+                        if (event.replyToRootId != nil) {
+                            
+                            // FEtch all that reference the root note
+                            // to build the thread, maybe kind=1 is enough, or all...?
+                            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEventReferences(ids: [event.replyToRootId!], kinds: [1])))
+                        }
+                        
+                        // OR??
+//                        /sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEventAndReferences(id: id)))
                     }
                 }
             
@@ -238,7 +253,9 @@ struct DetailFooterFragment: View {
         HStack(spacing: 20) {
             Text("**\(event.mentionsCount)** reposts").onTapGesture { }
             
-            Text("**\(event.likesCount)** reactions").onTapGesture { }
+            Text("**\(event.likesCount)** reactions").onTapGesture {
+                nav.navigateTo(ViewPath.ReactionsList(event: event))
+            }
             Text("**\(event.zapsCount)** zaps").onTapGesture {
                 nav.navigateTo(ViewPath.ZapList(event: event))
             }
@@ -256,13 +273,20 @@ struct ReplyAndParentView_Previews: PreviewProvider {
     static var previews: some View {
         let lastReply = PreviewFetcher.fetchEvent("2026c6b0f0d887aa76cc60f0b3050fe940c8eca9eb479391acb493bb40e4d964")
         
-        ReplyNoteView(event: lastReply!)
+        NoteDetail(event: lastReply!)
             .withPreviewEnvironment()
         
         let rootWithReplies = PreviewFetcher.fetchEvent("6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81")
         
-        ReplyNoteView(event: rootWithReplies!)
+        NoteDetail(event: rootWithReplies!)
             .withPreviewEnvironment()
+        
+        let noteWithAsingleMention = PreviewFetcher.fetchEvent("c0d76c3c968775a62ca1dea28a73e1fc86d121e8e5e17f2e35aaad1436075f51")
+        
+        if (noteWithAsingleMention != nil) {
+            NoteDetail(event: noteWithAsingleMention!)
+                .withPreviewEnvironment()
+        }
         
     }
 }

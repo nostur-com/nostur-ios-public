@@ -31,9 +31,17 @@ struct RelayRowView: View {
             
             Image(systemName:"arrow.down.circle.fill").foregroundColor(relay.read ? .green : .gray)
                 .opacity(relay.read ? 1.0 : 0.2)
+                .onTapGesture {
+                    relay.read.toggle()
+                    try! relay.managedObjectContext!.save()
+                }
             
             Image(systemName:"arrow.up.circle.fill").foregroundColor(relay.write ? .green : .gray)
                 .opacity(relay.write ? 1.0 : 0.2)
+                .onTapGesture {
+                    relay.write.toggle()
+                    try! relay.managedObjectContext!.save()
+                }
         }
     }
 }

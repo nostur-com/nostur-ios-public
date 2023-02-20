@@ -117,7 +117,7 @@ struct ConfigurationView: View {
             try viewContext.save()
         }
         catch {
-            print("rebuildReplyToIdsCache error on save(): \(error)")
+            print("🔴 rebuildReplyToIdsCache error on save(): \(error)")
         }
         
     }
@@ -373,7 +373,7 @@ struct ConfigurationView: View {
             try viewContext.save()
         }
         catch {
-            print("fixContactEventRelations error on save(): \(error)")
+            print("🔴 fixContactEventRelations error on save(): \(error)")
             print(error)
         }
         
@@ -421,7 +421,7 @@ struct ConfigurationView: View {
         VStack {
             RelaysView()
             
-//            Toggle(isOn: $devToggle) { Text("Dev mode") }.padding(10)
+            Toggle(isOn: $devToggle) { Text("Dev mode") }.padding(10)
             if (devToggle) {
                 List {
                     Text("Using these may hang the app for a minute:")

@@ -121,7 +121,7 @@ struct RequestMessage {
     // FETCH A SINGLE EVENT AND REFERENCES
     static func getEventAndReferences(id:String, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"ids": ["\(id)"], "limit": 1}, {"#e": ["\(id)"]}]
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"ids": ["\(id)"]}, {"#e": ["\(id)"]}]
 """
     }
     
@@ -157,14 +157,17 @@ struct RequestMessage {
 //    }
     
     // Fetch anything that references given event ids in tags (1=REPLIES, 6=REPOSTS, 7=REACTIONS, 9735=ZAPS)
-    static func getEventReferences(ids:[String], limit:Int = 500, subscriptionId:String? = nil) -> String {
+    // For when you have event(s) and you want to count replies, reposts, reactions, zaps.
+    static func getEventReferences(ids:[String], limit:Int = 500, subscriptionId:String? = nil, kinds:[Int]? = nil) -> String {
+        let kindsJsonArr = kinds != nil ? JSON(kinds!).rawString() : "[1,6,7,9735]"
         return """
-["REQ", "\(subscriptionId ?? ("TL-REF-"+UUID().uuidString))", {"#e": \(JSON(ids).rawString() ?? "[]"), "kinds": [1,6,7,9735], "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? ("TL-REF-"+UUID().uuidString))", {"#e": \(JSON(ids).rawString() ?? "[]"), "kinds":\(kindsJsonArr!), "limit": \(limit)}]
 """
     }
     
     
     // Fetch anything in the tags (only e -> "ids" and p -> "authors" kind=0  (for now))
+    // For when you have 1 event, and want to fetch, reply to, mentions, contacts
     static func getTags(_ tags:[Tag], limit:Int = 500, subscriptionId:String? = nil) -> String? {
         let ids = tags.filter { $0.type == "e" }.map { $0.index1 }
         let authors = tags.filter { $0.type == "p" }.map { $0.index1 }
@@ -207,7 +210,7 @@ struct RequestMessage {
 """
     }
     
-    static func getAuthorZaps(pubkey:String, limit:Int = 100, subscriptionId:String? = nil) -> String {
+    static func getAuthorZaps(pubkey:String, limit:Int = 1000, subscriptionId:String? = nil) -> String {
         return """
 ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"#p": ["\(pubkey)"], "kinds": [9735], "limit": \(limit)}]
 """

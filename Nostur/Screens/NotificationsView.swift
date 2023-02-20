@@ -74,6 +74,7 @@ struct NotificationsView: View {
     }
     
     var body: some View {
+        let _ = Self._printChanges()
         VStack {
             if let account = ns.account {
                 Text("account: \(account.name)")
@@ -130,15 +131,15 @@ extension NotificationsView {
         var onAppear:(Int) -> ()
         
         var body: some View {
-            List {
+            let _ = Self._printChanges()
+            LazyVStack {
                 ForEach(notes) { event in
                     NoteRowView(event: event)
-                        .listRowInsets(EdgeInsets())
                         .onAppear {
                             onAppear(Int(event.created_at))
                         }
                 }
-            }.listStyle(.plain)
+            }
         }
     }
     
@@ -147,15 +148,15 @@ extension NotificationsView {
         var onAppear:(Int) -> ()
         
         var body: some View {
-            List {
+            let _ = Self._printChanges()
+            ScrollView {
                 ForEach(reactions) { event in
                     NoteRowView(event: event)
-                        .listRowInsets(EdgeInsets())
                         .onAppear {
                             onAppear(Int(event.created_at))
                         }
                 }
-            }.listStyle(.plain)
+            }
         }
     }
     
@@ -164,15 +165,15 @@ extension NotificationsView {
         var onAppear:(Int) -> ()
         
         var body: some View {
-            List {
+            let _ = Self._printChanges()
+            ScrollView {
                 ForEach(zaps) { event in
-                    NoteRowView(event: event)
-                        .listRowInsets(EdgeInsets())
+                    ZapRow(event: event)
                         .onAppear {
                             onAppear(Int(event.created_at))
                         }
                 }
-            }.listStyle(.plain)
+            }
         }
     }
 }

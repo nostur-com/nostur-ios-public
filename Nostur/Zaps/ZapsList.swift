@@ -12,6 +12,7 @@ struct ZapsList: View {
     
     @Environment(\.managedObjectContext) var viewContext
     
+    // Event that received zaps
     var event:Event
     
     var zaps:[Event] {
@@ -33,23 +34,30 @@ struct ZapsList: View {
 struct ZapRow: View {
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
+    @EnvironmentObject var nav:NavigationModel
     
     var event:Event
     
-    var zapFrom:NEvent? {
+    var zapReq:Event? {
         get {
-            let description:Tag? = event.tags_.first(where: { $0.type == "description" })
-            guard description?.index1 != nil else { return nil }
-            
-            let decoder = JSONDecoder()
-            if let event = try? decoder.decode(NEvent.self, from: description!.index1!.data(using: .utf8, allowLossyConversion: false)!) {
-                if (try! event.verified()) {
-                    return event
-                }
-            }
-            return nil
+            event.tags_.first(where: { $0.type == "description" })?.event
         }
     }
+    
+//    var zapFrom:NEvent? {
+//        get {
+//            let description:Tag? = event.tags_.first(where: { $0.type == "description" })
+//            guard description?.index1 != nil else { return nil }
+//
+//            let decoder = JSONDecoder()
+//            if let event = try? decoder.decode(NEvent.self, from: description!.index1!.data(using: .utf8, allowLossyConversion: false)!) {
+//                if (try! event.verified()) {
+//                    return event
+//                }
+//            }
+//            return nil
+//        }
+//    }
     
     var bolt11:Invoice? {
         get {
@@ -79,38 +87,50 @@ struct ZapRow: View {
     
     var contact:Contact? {
         get {
-            guard zapFrom != nil else { return nil }
-            return Contact.fetchByPubkey(zapFrom!.publicKey, context: viewContext)
+            guard zapReq != nil else { return nil }
+            return Contact.fetchByPubkey(zapReq!.pubkey!, context: viewContext)
         }
     }
     
     var body: some View {
         HStack(alignment: .top) {
-            ProfilePicView(pubkey: zapFrom?.publicKey ?? "WTF", contact: contact)
+            ProfilePicView(pubkey: zapReq?.pubkey ?? "WTF", contact: zapReq?.contact)
+//            ProfilePicView(pubkey: zapFrom?.publicKey ?? "WTF", contact: contact)
             VStack(alignment: .leading) {
                 HStack {
                     VStack(alignment: .leading) {
                         HStack(spacing:3) {
-                            Text(contact?.authorName ?? "").font(.headline).foregroundColor(.primary)
+                            Text(zapReq?.contact?.authorName ?? "").font(.headline).foregroundColor(.primary)
                                 .lineLimit(1)
                             
-                            if (contact?.nip05veried ?? false) {
+                            if (zapReq?.contact?.nip05veried ?? false) {
                                 Image(systemName: "checkmark.seal.fill")
                                     .font(.system(size: 14))
                                     .foregroundColor(.blue)
                             }
-                        }
                         
-                        Text("@\(contact?.username ?? "")").font(.subheadline).foregroundColor(.secondary)
+                            Group {
+                                Text("@\(zapReq?.contact?.username ?? zapReq?.authorKey ?? "?")").layoutPriority(1)
+                                Text(" · ") //
+                                Text(event.ago).layoutPriority(1) //
+                            }
+                            .foregroundColor(.secondary)
                             .lineLimit(1)
+                        }
                     }.multilineTextAlignment(.leading)
                     Spacer()
                     
                 }
-                Text("\(zapFrom?.publicKey.prefix(5).description ?? "Anon") zapped \(sats.clean) sats \(fiatPrice)")
+                Text("Zapped \(sats.clean) sats \(fiatPrice)")
             }
         }
         .padding()
+        .contentShape(Rectangle())
+        .onTapGesture {
+            if (zapReq != nil) {
+                nav.navigateTo(ContactPath(key: zapReq!.pubkey!))
+            }
+        }
         Divider()
     }
 }
@@ -124,5 +144,16 @@ struct ZapsList_Previews: PreviewProvider {
             ZapsList(event: event!)
         }
         .withPreviewEnvironment()
+        
+        // Some fake and real Zaps
+        
+        let odell = PreviewFetcher.fetchEvent("81b2dba2a3d2c92eedab1f966119bda65555d926b97bb41a14c07187472f6159")
+        
+        VStack {
+            ZapsList(event: odell!)
+        }
+        .withPreviewEnvironment()
+        
+    
     }
 }

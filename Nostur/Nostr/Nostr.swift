@@ -320,7 +320,7 @@ struct TagsHelpers {
 
         // OLD METHOD NIP-10:
         // One "e" tag = REPLY
-        if oneEtag() {
+        if oneEtag() && (eTags().first?.otherInformation[safe: 2] == nil) {
             return eTags().first
         }
         

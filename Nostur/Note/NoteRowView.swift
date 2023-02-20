@@ -262,10 +262,13 @@ struct NoteHeader: View {
                     }
                     
                     if (singleLine) {
-                        Text("@\(event.contact?.username ?? event.authorKey) · \(event.ago)") //
-    //                        .font(.system(size: 14))
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
+                        Group {
+                            Text("@\(event.contact?.username ?? event.authorKey)").layoutPriority(1)
+                            Text(" · ") //
+                            Text(event.ago).layoutPriority(1) //
+                        }
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
                     }
                 }
                 .onTapGesture {
@@ -553,19 +556,25 @@ struct NoteRowView_Previews: PreviewProvider {
 //                .listRowInsets(EdgeInsets())
 //
             // QUOTE?
-            NoteRowView(event: event4!)
-                .listRowInsets(EdgeInsets())
+            if (event4 != nil) {
+                NoteRowView(event: event4!)
+                    .listRowInsets(EdgeInsets())
+            }
 
 //            NoteRowView(event: event5!)
 //                .listRowInsets(EdgeInsets())
             
-            // REPOST, LOADING?
-            NoteRowView(event: event6!)
-                .listRowInsets(EdgeInsets())
+            if (event6 != nil) {
+                // REPOST, LOADING?
+                NoteRowView(event: event6!)
+                    .listRowInsets(EdgeInsets())
+            }
 
-            // REPOST
-            NoteRowView(event: event7!)
-                .listRowInsets(EdgeInsets())
+            if (event7 != nil) {
+                // REPOST
+                NoteRowView(event: event7!)
+                    .listRowInsets(EdgeInsets())
+            }
             
         }
         .listStyle(PlainListStyle())
