@@ -237,15 +237,15 @@ struct Profile: View {
                     
                     Text("\n\(String(contact.about ?? "(No information)"))")
                     
-                    HStack {
-                        Text("\n**\(contact.followingPubkeys.count)** Following")
-                        
-                        Text("\n**??** Followers")
-                            .onTapGesture {
-                                activeTab = "FOLLOWERS"
-                            }
-                        //                        Text("\n**\(contact.followingPubkeys.count)** Followers")
-                    }
+//                    HStack {
+//                        Text("\n**\(contact.followingPubkeys.count)** Following")
+//
+//                        Text("\n**??** Followers")
+//                            .onTapGesture {
+//                                activeTab = "FOLLOWERS"
+//                            }
+//                        //                        Text("\n**\(contact.followingPubkeys.count)** Followers")
+//                    }
                     
                     ControlGroup {
                         //                        Button { importNotes() } label: { Text("Import") }
@@ -259,7 +259,7 @@ struct Profile: View {
                             Label("Likes", systemImage: "hand.thumbsup")
                         }
                         Button { activeTab = "ZAPS" } label: {
-                            Label("Notes", systemImage: "bolt")
+                            Label("Zaps", systemImage: "bolt")
                         }
                         Button { activeTab = "RELAYS"} label: {
                             Label("Relays", systemImage: "server.rack")
@@ -308,7 +308,7 @@ struct Profile: View {
                         }
                         
                         if (activeTab == "ZAPS") {
-                            ProfileZapsView(pubkey: pubkey)
+                            ProfileZapsView(contact: contact)
                                 .padding(.vertical, 10)
                         }
                         

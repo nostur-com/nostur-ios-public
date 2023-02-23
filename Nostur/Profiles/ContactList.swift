@@ -51,9 +51,8 @@ struct ContactList: View {
             }
             
             VStack {
-                Text("Missing: \(missing.count)")
                 ForEach(missing, id:\.self) { pubkey in
-                    Text("Missing: \(pubkey)")
+                    ProfileRowMissing(pubkey: pubkey)
                 }
             }
             

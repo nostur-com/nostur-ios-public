@@ -38,14 +38,9 @@ struct NosturTabsView: View {
                 .tabItem { Image(systemName: "house") }.tag("Timeline")
                                 
                 NavigationStack(path: $notificationsPath) {
-//                    if (ns.account != nil) {
-//                        NotificationsView()
-//                            .withNavigationDestinations()
-//                    }
-//                    else {
-//                        Text("Select account account first on accounts tab.")
-//                    }
-//                    Spacer()
+                    NotificationsW()
+                        .withNavigationDestinations()
+                    Spacer()
                 }
                 .tabItem { Image(systemName: "bell.fill") }
                 .tag("Notifications")
@@ -59,9 +54,9 @@ struct NosturTabsView: View {
                 .tag("Search")
                 
                 NavigationStack(path: $bookmarksPath) {
-//                    BookmarksView(account: ns.account)
-//                        .withNavigationDestinations()
-//                    Spacer()
+                    BookmarksW()
+                        .withNavigationDestinations()
+                    Spacer()
                 }
                 .tabItem { Image(systemName: "bookmark") }
                 .tag("Bookmarks")

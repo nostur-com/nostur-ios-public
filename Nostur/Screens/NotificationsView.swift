@@ -8,36 +8,46 @@
 import SwiftUI
 import CoreData
 
+struct NotificationsW: View {
+    @EnvironmentObject var ns:NosturState
+    @Environment(\.managedObjectContext) var viewContext
+    
+    var body: some View {
+        let _ = Self._printChanges()
+        if (ns.account != nil) {
+            NotificationsView(account: ns.account!)
+        }
+        else {
+            Text("Select account account first")
+        }
+    }
+}
+
 struct NotificationsView: View {
+    
+    var account:Account
     
     @AppStorage("lastNotificationDate") var lastNotificationDate = 0
     
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var sp:SocketPool
     
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
-        predicate: NSPredicate(value: false)
-    )
+    @FetchRequest
     var kind1:FetchedResults<Event>
     
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
-        predicate: NSPredicate(value: false)
-    )
+    @FetchRequest
     var kind7:FetchedResults<Event>
     
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
-        predicate: NSPredicate(value: false)
-    )
+    @FetchRequest
     var kind9735:FetchedResults<Event>
     
     @State var tab = "REACTIONS"
     
-    init() {
+    init(account:Account) {
+        self.account = account
+        print("🧨🧨🧨🧨🧨 INIT NOTIFICATIONS VIEW 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(value: false)
+        fr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", account.publicKey!)
         fr.fetchLimit = 125 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW (MET VSTACK).
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         _kind1 = FetchRequest(fetchRequest: fr)
@@ -45,31 +55,31 @@ struct NotificationsView: View {
         let kind7r:NSFetchRequest<Event> = Event.fetchRequest()
         kind7r.fetchLimit = 100
         kind7r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        kind7r.predicate = NSPredicate(value: false)
+        kind7r.predicate = NSPredicate(format: "kind == 7 AND tagsSerialized CONTAINS %@", account.publicKey!)
         _kind7 = FetchRequest(fetchRequest: kind7r)
         
         let kind9735r:NSFetchRequest<Event> = Event.fetchRequest()
         kind9735r.fetchLimit = 100
         kind9735r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        kind9735r.predicate = NSPredicate(value: false)
+        kind9735r.predicate = NSPredicate(format: "kind == 9735 AND tagsSerialized CONTAINS %@", account.publicKey!)
         _kind9735 = FetchRequest(fetchRequest: kind9735r)
     }
     
     var myNotifications:[Event] {
         get {
-            kind1.filter { ($0.tags() ?? []).filter { $0.pubkey == ns.account!.publicKey! }.count > 0 }
+            kind1.filter { $0.tags().filter { $0.pubkey == account.publicKey! }.count > 0 }
         }
     }
     
     var myReactions:[Event] {
         get {
-            kind7.filter { ($0.tags() ?? []).filter { $0.pubkey == ns.account!.publicKey! }.count > 0 }
+            kind7.filter { $0.tags().filter { $0.pubkey == account.publicKey! }.count > 0 }
         }
     }
     
     var myZaps:[Event] {
         get {
-            kind9735.filter { ($0.tags() ?? []).filter { $0.pubkey == ns.account!.publicKey! }.count > 0 }
+            kind9735.filter { $0.tags().filter { $0.pubkey == account.publicKey! }.count > 0 }
         }
     }
     
@@ -110,11 +120,11 @@ struct NotificationsView: View {
         }
         .onAppear {
             guard ns.account != nil else { return }
-            kind1.nsPredicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", ns.account!.publicKey!)
+            kind1.nsPredicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", account.publicKey!)
             
-            kind7.nsPredicate = NSPredicate(format: "kind == 7 AND tagsSerialized CONTAINS %@", ns.account!.publicKey!)
+            kind7.nsPredicate = NSPredicate(format: "kind == 7 AND tagsSerialized CONTAINS %@", account.publicKey!)
             
-            kind9735.nsPredicate = NSPredicate(format: "kind == 9735 AND tagsSerialized CONTAINS %@", ns.account!.publicKey!)
+            kind9735.nsPredicate = NSPredicate(format: "kind == 9735 AND tagsSerialized CONTAINS %@", account.publicKey!)
 
             fetchMentions()
         }
@@ -186,7 +196,7 @@ extension NotificationsView {
 
 struct NotificationsView_Previews: PreviewProvider {
     static var previews: some View {
-        NotificationsView()
+        NotificationsW()
             .withPreviewEnvironment()
     }
 }

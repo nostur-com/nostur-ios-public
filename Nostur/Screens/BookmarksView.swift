@@ -8,25 +8,40 @@
 
 import SwiftUI
 
+struct BookmarksW: View {
+    @EnvironmentObject var ns:NosturState
+//    @Environment(\.managedObjectContext) var viewContext
+    
+    var body: some View {
+        let _ = Self._printChanges()
+        if (ns.account != nil) {
+            BookmarksView(account: ns.account!)
+        }
+        else {
+            Text("Select account account first")
+        }
+    }
+}
+
 struct BookmarksView: View {
 
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
     
-    let account: Account?
+    let account: Account
     
     @FetchRequest(sortDescriptors: [])
     var bookmarks: FetchedResults<Event>
     
     @State var selectedAccount:Account? = nil
     
-    init(account:Account? = nil) {
+    init(account:Account) {
+        print("🧨🧨🧨🧨🧨 INIT BOOKMARKS VIEW 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         self.account = account
         self.selectedAccount = account
-        guard account != nil else { return }
         _bookmarks = FetchRequest(
             sortDescriptors: [SortDescriptor(\Event.created_at, order: .reverse)],
-            predicate: NSPredicate(format: "%@ IN bookmarkedBy", self.account!)
+            predicate: NSPredicate(format: "%@ IN bookmarkedBy", self.account)
         )
     }
     
@@ -127,12 +142,7 @@ struct BookmarksView: View {
 
 struct BookmarksView_Previews: PreviewProvider {
     static var previews: some View {
-        
-        let account = PreviewFetcher.fetchAccount("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", context: EventsProvider.preview.container.viewContext)
-        
-        if (account != nil) {
-            BookmarksView(account: account!)
-                .withPreviewEnvironment()
-        }
+        BookmarksW()
+            .withPreviewEnvironment()
     }
 }

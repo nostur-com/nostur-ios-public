@@ -60,6 +60,6 @@ extension Notification.Name {
     }
     
     static var requestForJustAppeared: Notification.Name {
-        return Notification.Name("requestForJustAppeared")
+        return Notification.Name("requestForJustAppeared ")
     }
 }
