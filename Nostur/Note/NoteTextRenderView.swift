@@ -24,9 +24,9 @@ struct LinkView: UIViewRepresentable {
         let linkView = LPLinkView(metadata: metadata)
         return linkView
     }
-
+    
     func updateUIView(_ uiView: LPLinkView, context: Context) {
-
+        
     }
 }
 
@@ -49,22 +49,26 @@ struct LinkPreviewCache {
 }
 
 struct NoteTextRenderView: View {
-        
+    
     var event:Event
-    var taggedContacts:[Contact]
     
     var renderedText:AttributedString? = nil
     var firstLinkInText:String? = nil
     var tags:[NEventTag]
     var useLinelimit = true
-
+    
     @State private var metadata: LPLinkMetadata?
-
-    func contact(byPubkey:String?) -> Contact? {
-        guard byPubkey != nil else {
-            return nil
+    
+    func contactUsername(fromPubkey pubkey:String) -> String {
+        if let contact = event.contacts?.first(where: { $0.pubkey! == pubkey }) {
+            return contact.username
         }
-        return taggedContacts.first(where: { $0.pubkey! == byPubkey! })
+        do {
+            return String((try NIP19(prefix: "npub", hexString: pubkey).displayString).prefix(11))
+        }
+        catch {
+            return  "⏤⏤"
+        }
     }
     
     private func getFirstLinkInText(_ text:String) -> String? {
@@ -89,21 +93,13 @@ struct NoteTextRenderView: View {
                 if (tags[index].type == "p") {
                     
                     if (1 == 1) {
-                        // TODO: NIP19 bech32 is very slow, with hundreds of rows it slows down UI noticeably, so disable for now
-                        let key = try! NIP19(prefix: "npub1", hexString: tags[index].pubkey)
-                        if let contact = contact(byPubkey:tags[index].pubkey) {
-                            newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(contact.username)](nostur:p:\(tags[index].pubkey))")
-                        }
-                        else {
-                            newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(key.displayString).prefix(12))](nostur:p:\(tags[index].pubkey))")
-                        }
+                        newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(contactUsername(fromPubkey: tags[index].pubkey))](nostur:p:\(tags[index].pubkey))")
                     }
                     else {
                         newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(tags[index].pubkey).prefix(5))](nostur:p:\(tags[index].pubkey))")
                     }
                 }
                 if (tags[index].type == "e") {
-                    
                     if (1 == 1) {
                         // TODO: NIP19 bech32 is very slow, with hundreds of rows it slows down UI noticeably, so disable for now
                         let key = try! NIP19(prefix: "note1", hexString: tags[index].id)
@@ -125,11 +121,10 @@ struct NoteTextRenderView: View {
             }
         }
     }
-
-    init(event: Event, taggedContacts: [Contact] = [], useLinelimit:Bool = true) {
+    
+    init(event: Event, useLinelimit:Bool = true) {
         self.event = event
-        self.tags = event.oldTags() ?? []
-        self.taggedContacts = taggedContacts
+        self.tags = event.tags()
         let text = event.content ?? ""
         self.firstLinkInText = getFirstLinkInText(text)
         self.renderedText = renderMentions(text)
@@ -144,19 +139,17 @@ struct NoteTextRenderView: View {
                         .lineLimit(100, reservesSpace: false)
                         .textSelection(.enabled)
                         .multilineTextAlignment(TextAlignment.leading)
-//                            .font(.system(size: 14))
-                            .foregroundColor(.primary)
-                            .lineSpacing(3)
-                            .padding(.vertical, 5)
+                        .foregroundColor(.primary)
+                        .lineSpacing(3)
+                        .padding(.vertical, 5)
                 }
                 else {
                     Text(renderedText!)//.border(.pink)
                         .textSelection(.enabled)
                         .multilineTextAlignment(TextAlignment.leading)
-//                            .font(.system(size: 14))
-                            .foregroundColor(.primary)
-                            .lineSpacing(3)
-                            .padding(.vertical, 5)
+                        .foregroundColor(.primary)
+                        .lineSpacing(3)
+                        .padding(.vertical, 5)
                 }
             }
             else if (tags.count == 0) {
@@ -165,36 +158,34 @@ struct NoteTextRenderView: View {
                         .lineLimit(4, reservesSpace: false)
                         .textSelection(.enabled)
                         .multilineTextAlignment(TextAlignment.leading)
-//                            .font(.system(size: 14))
-                            .foregroundColor(.primary)
-                            .lineSpacing(3)
-                            .padding(.vertical, 5)
+                        .foregroundColor(.primary)
+                        .lineSpacing(3)
+                        .padding(.vertical, 5)
                 }
                 else {
-                    Text(event.noteText)//.border(.red)
+                    Text(event.noteText)
                         .textSelection(.enabled)
                         .multilineTextAlignment(TextAlignment.leading)
-//                            .font(.system(size: 14))
-                            .foregroundColor(.primary)
-                            .lineSpacing(3)
-                            .padding(.vertical, 5)
+                        .foregroundColor(.primary)
+                        .lineSpacing(3)
+                        .padding(.vertical, 5)
                 }
             }
             else { Text("") }
             
             if (1 == 1 && firstLinkInText != nil && !useLinelimit) {
                 VStack {
-                            if metadata != nil {
-                                LinkView(metadata: metadata!)
-                            } else {
-                                HStack {
-                                    Spacer()
-                                    ProgressView().padding(20)
-                                    Spacer()
-                                }
-                            }
+                    if metadata != nil {
+                        LinkView(metadata: metadata!)
+                    } else {
+                        HStack {
+                            Spacer()
+                            ProgressView().padding(20)
+                            Spacer()
                         }
-                        .onAppear(perform: fetchMetadata)
+                    }
+                }
+                .onAppear(perform: fetchMetadata)
             }
         }
     }
@@ -232,7 +223,7 @@ struct NoteTextRenderView_Previews: PreviewProvider {
         // 143efe07393c5b07efbe6ea1fc66c39cb985b98f8844650edd00fbcb041228a3
         
         let event5 = PreviewFetcher.fetchEvent("b2e209b3073f24b4d6c172965ad8dd8276ada68895d4ab8837cf3a57d3f1c947")
-//        let event5 = PreviewFetcher.fetchEvent("143efe07393c5b07efbe6ea1fc66c39cb985b98f8844650edd00fbcb041228a3")
+        //        let event5 = PreviewFetcher.fetchEvent("143efe07393c5b07efbe6ea1fc66c39cb985b98f8844650edd00fbcb041228a3")
         
         let event4 = PreviewFetcher.fetchEvent("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe")
         
@@ -248,31 +239,41 @@ struct NoteTextRenderView_Previews: PreviewProvider {
         
         VStack {
             Group {
-                NoteTextRenderView(event:event0!, taggedContacts: allContacts)
-                    .withPreviewEnvironment()
-                Divider()
+                if (event0 != nil) {
+                    NoteTextRenderView(event:event0!)
+                        .withPreviewEnvironment()
+                    Divider()
+                }
                 
-                NoteTextRenderView(event:event1!, taggedContacts: allContacts)
-                    .withPreviewEnvironment()
-                Divider()
+                if (event1 != nil) {
+                    NoteTextRenderView(event:event1!)
+                        .withPreviewEnvironment()
+                    Divider()
+                }
                 
-                NoteTextRenderView(event:event2!, taggedContacts: allContacts)
+                if (event2 != nil) {
+                    NoteTextRenderView(event:event2!)
+                        .withPreviewEnvironment()
+                    Divider()
+                }
+            }
+            
+            if (event3 != nil) {
+                NoteTextRenderView(event:event3!)
                     .withPreviewEnvironment()
                 Divider()
             }
             
-//            Text(allContacts.count.description)
-            NoteTextRenderView(event:event3!, taggedContacts: allContacts)
-                .withPreviewEnvironment()
-            Divider()
-            
-            NoteTextRenderView(event:event4!, taggedContacts: allContacts)
-                .withPreviewEnvironment()
-            Divider()
-            
-            NoteTextRenderView(event:event5!, taggedContacts: allContacts)
-                .withPreviewEnvironment()
-            Divider()
+            if (event4 != nil) {
+                NoteTextRenderView(event:event4!)
+                    .withPreviewEnvironment()
+                Divider()
+            }
+            if (event5 != nil) {
+                NoteTextRenderView(event:event5!)
+                    .withPreviewEnvironment()
+                Divider()
+            }
         }
     }
 }

@@ -64,21 +64,21 @@ class EventsProvider: ObservableObject {
         messages.append(contentsOf: testKind3Events())
         messages.append(contentsOf: testKind1Events())
         messages.append(contentsOf: testKindMixedOldDunnoEvents())
-        messages.append(contentsOf: testRepliesAndReactions())
+//        messages.append(contentsOf: testRepliesAndReactions())
         messages.append(contentsOf: testSnowden())
-        messages.append(contentsOf: testMentions())
+//        messages.append(contentsOf: testMentions())
 //        messages.append(contentsOf: testKind6Events())
 //        messages.append(contentsOf: testEfilter())
         messages.append(contentsOf: testZaps())
-        messages.append(contentsOf: testSomeFakeAndRealZaps())
-//        messages.append(contentsOf: testNotifications())
+//        messages.append(contentsOf: testSomeFakeAndRealZaps())
+        messages.append(contentsOf: testNotifications())
 //        messages.append(contentsOf: testThread())
         
         var relayMessages:[RelayMessage] = []
         
         for text in messages {
             guard let message = try? RelayMessage.parseRelayMessage(text: text, skipValidation: true) else { continue }
-            if (1==1 || message.event?.kind == .textNote || message.event?.kind == .reaction || message.event?.kind == .setMetadata) {
+            if (message.event?.kind == .zapNote || message.event?.kind == .textNote || message.event?.kind == .reaction || message.event?.kind == .setMetadata) {
                 
                 if (message.subscriptionId == nil) {
                     print("WHERE IS SUBSCRIPTION ID BRO")
@@ -111,11 +111,16 @@ class EventsProvider: ObservableObject {
                 }
             }
             
-            _ = Event.saveEvent(event: event, context:context)
+            let savedEvent = Event.saveEvent(event: event, context:context)
             
             if event.kind == .setMetadata {
                 Contact.saveOrUpdateContact(event: event, context: context)
             }
+            
+            // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
+//            if event.kind == .zapNote {
+//                let _ = Event.updateZapTallyCache(savedEvent, context: context)
+//            }
             
 //            // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
 //            if event.kind == .custom(7) {
@@ -141,7 +146,7 @@ class EventsProvider: ObservableObject {
         }
         
         var someEvent = PreviewFetcher.fetchEvent(
-            "b9b337e5730eb83af2f6ae71b65295db8fe241aec7beb7fd8b6c0b88cc3d05d1", context: context)!
+            "b9b337e5730eb83af2f6ae71b65295db8fe241aec7beb7fd8b6c0b88cc3d05d1", context: context)
     
         let contact1 = PreviewFetcher.fetchContact(
             "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", context: context)
@@ -158,14 +163,27 @@ class EventsProvider: ObservableObject {
         let contact3 = PreviewFetcher.fetchContact(
             "df8efff2bfc02d81f93c7ff6ae111541637e0b3a4caff9ad48939a2f2f283be2", context: context)
         
-        account.addToBookmarks(someEvent)
-        account.addToBlockedContacts(contact3!)
-        account.addToBlockedContacts(contact1!)
-        someEvent.addToBookmarkedBy(account)
-        account.addToFollows(contact2!)
-        account.addToFollows(contact3!)
+        if (someEvent != nil) {
+            account.addToBookmarks(someEvent!)
+            someEvent!.addToBookmarkedBy(account)
+        }
+        if (contact3 != nil) {
+            account.addToBlockedContacts(contact3!)
+        }
+        if (contact1 != nil) {
+            account.addToBlockedContacts(contact1!)
+        }
         
-        xaccount.addToFollows(contact1!)
+        if (contact2 != nil) {
+            account.addToFollows(contact2!)
+        }
+        if (contact3 != nil) {
+            account.addToFollows(contact3!)
+        }
+        
+        if (contact1 != nil) {
+            xaccount.addToFollows(contact1!)
+        }
         
         return provider
     }()

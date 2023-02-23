@@ -9,7 +9,8 @@ import SwiftUI
 
 struct NoteById: View {
 
-    @EnvironmentObject var sp:SocketPool
+//    @EnvironmentObject var sp:SocketPool
+    var sp:SocketPool = .shared
 
     var id:String
 
@@ -66,11 +67,13 @@ struct NoteDetail: View {
 // so it recursively renders up to the root
 struct NoteAndParent: View {
     
-    @EnvironmentObject var sp:SocketPool
+//    @EnvironmentObject var sp:SocketPool
+    var sp:SocketPool = .shared
     @ObservedObject var event:Event
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var nav:NavigationModel
+//    @EnvironmentObject var nav:NavigationModel
+    var nav:NavigationModel = .shared
 
     @FetchRequest
     var taggedContacts:FetchedResults<Contact>
@@ -137,7 +140,7 @@ struct NoteAndParent: View {
                     }
                     
                     HStack {
-                        NoteTextRenderView(event: event, taggedContacts: Array(taggedContacts), useLinelimit: false)
+                        NoteTextRenderView(event: event)
                                 .foregroundColor(.primary)
                                 .textSelection(.enabled)
 //                                .font(.system(size: 18))
@@ -205,7 +208,7 @@ struct NoteAndParent: View {
                     if (!isParent) {
                         // Fetch all related (e and p.kind=0)
                         // (the events and contacts mentioned in this DETAIL NOTE.
-                        if let message = RequestMessage.getTags(event.tags_) {
+                        if let message = RequestMessage.getTags(event.tags()) {
                             sp.sendMessage(ClientMessage(type: .REQ, message: message))
                         }
                         
@@ -254,10 +257,10 @@ struct DetailFooterFragment: View {
             Text("**\(event.mentionsCount)** reposts").onTapGesture { }
             
             Text("**\(event.likesCount)** reactions").onTapGesture {
-                nav.navigateTo(ViewPath.ReactionsList(event: event))
+                nav.navigateTo(ViewPath.NoteReactions(event: event))
             }
             Text("**\(event.zapsCount)** zaps").onTapGesture {
-                nav.navigateTo(ViewPath.ZapList(event: event))
+                nav.navigateTo(ViewPath.NoteZaps(event: event))
             }
             
             Spacer()
@@ -272,14 +275,18 @@ struct DetailFooterFragment: View {
 struct ReplyAndParentView_Previews: PreviewProvider {
     static var previews: some View {
         let lastReply = PreviewFetcher.fetchEvent("2026c6b0f0d887aa76cc60f0b3050fe940c8eca9eb479391acb493bb40e4d964")
-        
-        NoteDetail(event: lastReply!)
-            .withPreviewEnvironment()
+
+        if (lastReply != nil) {
+            NoteDetail(event: lastReply!)
+                .withPreviewEnvironment()
+        }
         
         let rootWithReplies = PreviewFetcher.fetchEvent("6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81")
         
-        NoteDetail(event: rootWithReplies!)
-            .withPreviewEnvironment()
+        if (rootWithReplies != nil) {
+            NoteDetail(event: rootWithReplies!)
+                .withPreviewEnvironment()
+        }
         
         let noteWithAsingleMention = PreviewFetcher.fetchEvent("c0d76c3c968775a62ca1dea28a73e1fc86d121e8e5e17f2e35aaad1436075f51")
         

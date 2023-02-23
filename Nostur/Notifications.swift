@@ -7,7 +7,7 @@
 
 import Foundation
 
-func sendNotification(_ name:Notification.Name, _ object: Any?) {
+func sendNotification(_ name:Notification.Name, _ object: Any? = nil) {
     NotificationCenter.default.post(Notification(name: name, object: object))
 }
 func receiveNotification(_ name: Notification.Name) -> NotificationCenter.Publisher {
@@ -37,5 +37,29 @@ extension Notification.Name {
     
     static var timelinePredicateChanged: Notification.Name {
         return Notification.Name("timelinePredicateChanged")
+    }
+    
+    static var addedNotes: Notification.Name {
+        return Notification.Name("addedNotes")
+    }
+    
+    static var shouldScrollToNote: Notification.Name {
+        return Notification.Name("shouldScrollToNote")
+    }
+    
+    static var newNotesAvailable: Notification.Name {
+        return Notification.Name("newNotesAvailable")
+    }
+    
+    static var wantsNewEvents: Notification.Name {
+        return Notification.Name("wantsNewEvents")
+    }
+    
+    static var requestEventReferences: Notification.Name {
+        return Notification.Name("requestEventReferences")
+    }
+    
+    static var requestForJustAppeared: Notification.Name {
+        return Notification.Name("requestForJustAppeared")
     }
 }

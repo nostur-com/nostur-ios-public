@@ -11,25 +11,47 @@ import Combine
 @main
 struct NosturApp: App {
     
-    let up = Unpublisher(viewContext:EventsProvider.shared.container.viewContext)
-    let ns = NosturState(container:EventsProvider.shared.container)
-    let nav:NavigationModel = .shared
-    let sp:SocketPool = .shared
+    @StateObject private var up = Unpublisher(viewContext:EventsProvider.shared.container.viewContext)
+    @StateObject private var ns = NosturState(container:EventsProvider.shared.container)
+    @StateObject private var er:ExchangeRateModel = .shared
+    @StateObject private var nav:NavigationModel = .shared
+    @StateObject private var sp:SocketPool = .shared
+    @StateObject private var ds:DataStore = .shared
+    
+//    @StateObject var model = DataModel()
+    @StateObject var ucm = UnreadCounterModel()
+    @StateObject var tm = TimelineModel()
+//    @StateObject var tl = TLModel()
     
     @State var isViewDisplayed = false
     
     let runLoop = Timer.publish(every: 2, tolerance: 1, on: .main, in: .common).autoconnect()
     let priceLoop = Timer.publish(every: 900, tolerance: 120, on: .main, in: .common).autoconnect().receive(on: RunLoop.main)
         .merge(with: Just(Date()))
+    
+//    var xbody: some Scene {
+//        WindowGroup {
+//            TL4()
+//                .environment(\.managedObjectContext, EventsProvider.shared.container.viewContext)
+//                .environmentObject(ns)
+////                .environmentObject(tl)
+//        }
+//    }
 
-    var body: some Scene {        
+    var body: some Scene {
         WindowGroup {
             Onboarding()
+//            TL2()
                 .environment(\.managedObjectContext, EventsProvider.shared.container.viewContext)
                 .environmentObject(ns)
+                .environmentObject(er)
                 .environmentObject(sp)
                 .environmentObject(nav)
                 .environmentObject(up)
+//                .environmentObject(model)
+                .environmentObject(ucm)
+                .environmentObject(tm)
+                .environmentObject(ds)
                 .onAppear {startNosturing(); self.isViewDisplayed = true }
                 .onDisappear { self.isViewDisplayed = false }
                 .onReceive(runLoop) { time in
@@ -40,8 +62,10 @@ struct NosturApp: App {
                     if (!isViewDisplayed) { return }
                     Task {
                         if let newPrice = await fetchBitcoinPrice() {
-                            ns.bitcoinPrice = newPrice
-                            ns.objectWillChange.send()
+                            if (newPrice != er.bitcoinPrice) {
+                                er.objectWillChange.send()
+                                er.bitcoinPrice = newPrice
+                            }
                         }
                     }
                 }

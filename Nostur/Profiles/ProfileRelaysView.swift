@@ -99,8 +99,10 @@ struct ProfileRelaysView_Previews: PreviewProvider {
         let clEvent = PreviewFetcher.fetchEvent(clEventId)
         
         ScrollView {
-            ProfileRelaysView(clEvent: clEvent!)
-                .withPreviewEnvironment()
+            if (clEvent != nil) {
+                ProfileRelaysView(clEvent: clEvent!)
+                    .withPreviewEnvironment()
+            }
         }
     }
 }

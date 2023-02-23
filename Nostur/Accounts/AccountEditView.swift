@@ -233,7 +233,7 @@ extension AccountEditView {
         if (clEvent != nil) {
             
         
-            let contactPubkeys = TagsHelpers(clEvent?.oldTags() ?? []).pTags().map { $0.pubkey }
+            let contactPubkeys = TagsHelpers(clEvent?.tags() ?? []).pTags().map { $0.pubkey }
             
             let cr = Contact.fetchRequest()
             cr.predicate = NSPredicate(format: "pubkey IN %@", contactPubkeys)

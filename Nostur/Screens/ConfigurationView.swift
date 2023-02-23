@@ -23,15 +23,6 @@ struct ConfigurationView: View {
     @State var deleteAll = false
     @State var showDeleteAllEventsConfirmation = false
     
-    func deleteAllTags() {
-        let r = Tag.fetchRequest()
-        let allTags = try! viewContext.fetch(r)
-        
-        for tag in allTags {
-            viewContext.delete(tag)
-        }
-    }
-    
     // SCANS 1,9735,6
     // DELETES ALL TAGS AND RECREATES FROM 1,9735,6
     // NILS -> replyToId, replyToRootId, firstQuoteId
@@ -45,15 +36,16 @@ struct ConfigurationView: View {
         r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         let kind1 = try! viewContext.fetch(r)
         
-        
-        // First delete all tags
-        deleteAllTags()
-        
         // ON FIRST PASS RESET ALL TO NIL
         for event in kind1 {
             event.replyToId = nil
             event.replyToRootId = nil
             event.firstQuoteId = nil
+            
+            event.zappedEventId = nil
+            event.zappedContactPubkey = nil
+            
+            event.reactionToId = nil
         }
         
         let decoder = JSONDecoder()
@@ -80,34 +72,25 @@ struct ConfigurationView: View {
                         }
                     }
                     
+                    if event.kind == 9735 {
+                        if let firstE = event.firstE() {
+                            event.zappedEventId = firstE
+                        }
+                        if let firstP = event.firstP() {
+                            event.zappedContactPubkey = firstP
+                        }
+                    }
                     
-                    // TAGS: do tags, for just .textNote? or all? or..?
-                    event.tags = NSOrderedSet(array: tags.map({ nTag in
-                        let tag = Tag(context: viewContext)
-                        tag.type = nTag.type
-                        if (tag.type == "e") {
-                            tag.event = try? Event.fetchEvent(id: nTag.id, context: viewContext)
+                    if event.kind == 7 {
+                        if let lastE = event.lastE() {
+                            event.reactionToId = lastE
                         }
-                        else if (tag.type == "p") {
-                            tag.contact = Contact.fetchByPubkey(nTag.pubkey, context: viewContext)
-                        }
-                        tag.index1 = nTag.otherInformation[safe: 0]
-                        tag.index2 = nTag.otherInformation[safe: 1]
-                        tag.index3 = nTag.otherInformation[safe: 2]
-                        tag.index4 = nTag.otherInformation[safe: 3]
                         
-                        return tag
-                    }))
-                    
-//                    // TAGS INVERSE:
-//                    let er = NSFetchRequest<Tag>(entityName: "Tag")
-//                    er.predicate = NSPredicate(format: "type == 'e' AND index1 == %@", event.id!)
-//                    if let tags = try? viewContext.fetch(er) {
-//                        for tag in tags {
-//                            tag.event = event
-//                            tag.objectWillChange.send()
-//                        }
-//                    }
+                        // TODO: dont need this?
+            //            if let lastP = event.lastP() {
+            //                event.reactionToContactId = lastP
+            //            }
+                    }
                 }
             }
         }
@@ -120,6 +103,27 @@ struct ConfigurationView: View {
             print("🔴 rebuildReplyToIdsCache error on save(): \(error)")
         }
         
+    }
+    
+    
+    func putContactsInEventsForPs() {
+        SavedEventsCache.shared.clear()
+        let c = Contact.fetchRequest()
+        c.predicate = NSPredicate(format: "updated_at != 0")
+        if let contacts = try? viewContext.fetch(c) {
+            for contact in contacts {
+                
+                let tr = NSFetchRequest<Event>(entityName: "Event")
+                tr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", contact.pubkey!) // OPTIMIZATION HACK
+                if let events = try? viewContext.fetch(tr) {
+                    for event in events {
+                        event.addToContacts(contact)
+                    }
+                }
+                
+            }
+        }
+        print("finished putting contacts in events for their p's")
     }
     
     // TAKES ALL 1,7,9735 (NOTES, REACTIONS, ZAPS) Not reposts? 6?
@@ -340,31 +344,38 @@ struct ConfigurationView: View {
             event.replyToRoot = nil
             event.firstQuote = nil
             
+            event.zappedEvent = nil
+            event.zappedContact = nil
+            
+            event.reactionTo = nil
+            
             if (event.replyToId != nil) {
-                let cr = NSFetchRequest<Event>(entityName: "Event")
-                cr.predicate = NSPredicate(format: "id == %@", event.replyToId!)
-                cr.sortDescriptors = []
-                if let replyToEvent = try? viewContext.fetch(cr).first {
-                    event.replyTo = replyToEvent
-                    //                        replyToEvent.addToReplies(event) // TODO: inverse hoeft niet? automatisc?
-                }
+                event.replyTo = try? Event.fetchEvent(id: event.replyToId!, context: viewContext)
             }
             if (event.replyToRootId != nil) {
-                let cr = NSFetchRequest<Event>(entityName: "Event")
-                cr.predicate = NSPredicate(format: "id == %@", event.replyToRootId!)
-                cr.sortDescriptors = []
-                if let replyToRootEvent = try? viewContext.fetch(cr).first {
-                    event.replyToRoot = replyToRootEvent
+                event.replyToRoot = try? Event.fetchEvent(id: event.replyToRootId!, context: viewContext)
+            }
+            if (event.firstQuoteId != nil) {
+                event.firstQuote = try? Event.fetchEvent(id: event.firstQuoteId!, context: viewContext)
+            }
+            if (event.kind == 9735) {
+                if let nZapReq = Event.extractZapRequest(tags: event.tags()) {
+                    event.zapFromRequest = try? Event.fetchEvent(id: nZapReq.id, context: viewContext)
+                }
+                if (event.zappedContactPubkey != nil) {
+                    event.zappedContact = Contact.fetchByPubkey(event.zappedContactPubkey!, context: viewContext)
                 }
             }
             
-            if (event.firstQuoteId != nil) {
-                let cr = NSFetchRequest<Event>(entityName: "Event")
-                cr.predicate = NSPredicate(format: "id == %@", event.firstQuoteId!)
-                cr.sortDescriptors = []
-                if let mentionedEvent = try? viewContext.fetch(cr).first {
-                    event.firstQuote = mentionedEvent
+            if event.kind == 7 {
+                if (event.reactionToId != nil) {
+                    event.reactionTo = try? Event.fetchEvent(id: event.reactionToId!, context: viewContext)
                 }
+                
+                // TODO: dont need this?
+//                if (event.reactionToContactId != nil) {
+//                    event.reactionToContact = try? Event.fetchEvent(id: event.reactionToContactId!, context: viewContext)
+//                }
             }
         }
         
@@ -466,6 +477,11 @@ struct ConfigurationView: View {
                         Button { fixContactEventRelations() } label: {
                             Text("Fix event.contact relation")
                         }
+                        
+                        Button { putContactsInEventsForPs() } label: {
+                            Text("Fix contacts (p) in event")
+                        }
+                        
                         
                         Button { fixReplyToEventRelations() } label: { Text("Fix reply, quote relations") }
                         

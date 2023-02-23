@@ -130,7 +130,9 @@ struct BookmarksView_Previews: PreviewProvider {
         
         let account = PreviewFetcher.fetchAccount("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", context: EventsProvider.preview.container.viewContext)
         
-        BookmarksView(account: account!)
-            .withPreviewEnvironment()
+        if (account != nil) {
+            BookmarksView(account: account!)
+                .withPreviewEnvironment()
+        }
     }
 }

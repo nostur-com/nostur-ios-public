@@ -92,7 +92,7 @@ struct QuotedNoteFragment: View {
                     Spacer()
                 }.frame(height: 40)
                 VStack(alignment: .leading) {
-                    NoteTextRenderView(event:event, taggedContacts:Array(taggedContacts))
+                    NoteTextRenderView(event:event)
                 }
             }
             .onTapGesture {
@@ -151,13 +151,18 @@ struct QuotedNote_Previews: PreviewProvider {
         VStack {
 //            Text(event0!.firstQuoteId!)
             Spacer()
-            NoteRowView(event: event0!)
-                .withPreviewEnvironment()
-            QuotedNoteFragment(event: event1!)
-                .withPreviewEnvironment()
-            QuotedNoteFragment(event: event2!)
-                .withPreviewEnvironment()
+            if (event0 != nil) {
+                NoteRowView(event: event0!)
+            }
+            
+            if (event1 != nil) {
+                QuotedNoteFragment(event: event1!)
+            }
+            if (event2 != nil) {
+                QuotedNoteFragment(event: event2!)
+            }
             Spacer()
         }
+        .withPreviewEnvironment()
     }
 }

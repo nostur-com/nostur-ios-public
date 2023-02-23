@@ -9,7 +9,8 @@ import SwiftUI
 
 struct LightningButton: View {
     
-    @EnvironmentObject var sp:SocketPool
+    var sp:SocketPool = .shared
+    @EnvironmentObject var er:ExchangeRateModel
     @EnvironmentObject var ns:NosturState
     
     @Environment(\.openURL) var openURL
@@ -34,8 +35,8 @@ struct LightningButton: View {
                     }
                     else {
                         Image(systemName: "bolt")
-                        if (ns.bitcoinPrice != 0.0) {
-                            let fiatPrice = String(format: "$%.02f",(Double(event!.zapTally) / 100000000 * Double(ns.bitcoinPrice)))
+                        if (er.bitcoinPrice != 0.0) {
+                            let fiatPrice = String(format: "$%.02f",(Double(event!.zapTally) / 100000000 * Double(er.bitcoinPrice)))
                             
                             Text("\(fiatPrice)")
                         }
@@ -169,17 +170,21 @@ struct LightningButton: View {
 struct LightningButton_Previews: PreviewProvider {
     static var previews: some View {
         let pubkey = "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
-        let contact = PreviewFetcher.fetchContact(pubkey)!
+        let contact = PreviewFetcher.fetchContact(pubkey)
         
-        let event = PreviewFetcher.fetchEvent("49635b590782cb1ab1580bd7e9d85ba586e6e99e48664bacf65e71821ae79df1")!
+        let event = PreviewFetcher.fetchEvent("49635b590782cb1ab1580bd7e9d85ba586e6e99e48664bacf65e71821ae79df1")
         
         VStack {
             
-            LightningButton(contact: contact)
+            if (contact != nil) {
+                LightningButton(contact: contact!)
+            }
             
             Text("\n\n")
             
-            LightningButton(contact: contact, event: event)
+            if (contact != nil && event != nil) {
+                LightningButton(contact: contact!, event: event!)
+            }
             
         }
         .withPreviewEnvironment()

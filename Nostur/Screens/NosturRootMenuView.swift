@@ -12,12 +12,13 @@ struct NosturRootMenu: View {
     
     @EnvironmentObject var nav:NavigationModel
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var sp:SocketPool
+//    @EnvironmentObject var sp:SocketPool
     
     @State var accountsSheetIsShown = false
     
     
     var body: some View {
+        let _ = Self._printChanges()
         SideBarStack(sidebarWidth: 285, showSidebar: $nav.showSidebar) {
             if (ns.account != nil) {
                 sideBar
@@ -26,7 +27,8 @@ struct NosturRootMenu: View {
         } content: {
             //TODO: Check if ns.account is loaded first
             if (ns.account != nil) {
-                NosturTabsView(showMenu: $nav.showSidebar, selectedTab: $nav.selectedTab, timelinePath: $nav.timelinePath, searchPath: $nav.searchPath, accountsPath: $nav.accountsPath, bookmarksPath: $nav.bookmarksPath, notificationsPath: $nav.notificationsPath, messagesPath: $nav.messagesPath, configurationPath: $nav.configurationPath)
+//                NosturTabsView(selectedTab: $nav.selectedTab, timelinePath: $nav.timelinePath, searchPath: $nav.searchPath, accountsPath: $nav.accountsPath, bookmarksPath: $nav.bookmarksPath, notificationsPath: $nav.notificationsPath, messagesPath: $nav.messagesPath, configurationPath: $nav.configurationPath)
+                NosturTabsView(showSidebar: $nav.showSidebar, selectedTab: $nav.selectedTab, timelinePath: $nav.timelinePath, searchPath: $nav.searchPath, accountsPath: $nav.accountsPath, bookmarksPath: $nav.bookmarksPath, notificationsPath: $nav.notificationsPath, messagesPath: $nav.messagesPath, configurationPath: $nav.configurationPath)
                     .onOpenURL { url in
                         self.handleUrl(url)
                     }
@@ -60,6 +62,7 @@ extension NosturRootMenu {
     
     private var sideBar: some View {
         VStack(alignment: .leading) {
+            let _ = Self._printChanges()
             List {
                 HStack {
                     ProfilePicView(pubkey: ns.account!.publicKey!, account: ns.account!)

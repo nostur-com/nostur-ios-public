@@ -451,8 +451,10 @@ struct Profile_Previews: PreviewProvider {
         let snowden = PreviewFetcher.fetchContact(pubkey)
         //        let clEvent = PreviewFetcher.fetchEvents(pubkey, kind: 3).first!
         //
-        Profile(contact:snowden!)
-            .withPreviewEnvironment()
+        if (snowden != nil) {
+            Profile(contact:snowden!)
+                .withPreviewEnvironment()
+        }
         
     }
 }

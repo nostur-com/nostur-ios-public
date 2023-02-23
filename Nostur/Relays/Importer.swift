@@ -12,8 +12,6 @@ import CoreData
 class Importer {
     var isImporting = false
     
-    let logger = Logger(subsystem: "com.nostir.2140.Events", category: "persistence")
-    
     static var shared = Importer()
     
     var lastTimelineEventTimestamp:NTimestamp? = nil
@@ -28,7 +26,7 @@ class Importer {
         
         let parsedBucket = MessageParser.shared.parsedBucket
         guard await parsedBucket.count() != 0 else { self.isImporting = false; return }
-        print("🦋🦋 \(await parsedBucket.count()) messages in parsedBucket.")
+//        print("🦋🦋 \(await parsedBucket.count()) messages in parsedBucket.")
         
         var forImports = [RelayMessage]()
         while let forImport = await parsedBucket.dequeue() {
@@ -41,6 +39,7 @@ class Importer {
             
             var alreadyInLRUskipped = 0
             var alreadyInDBskipped = 0
+            var saved = 0
             
             do {
                 for message in forImports {
@@ -77,9 +76,8 @@ class Importer {
                         }
                     }
                     
-                    
-                    
                     let savedEvent = Event.saveEvent(event: event, context:context)
+                    saved = saved + 1
                     
                     if event.kind == .setMetadata {
                         Contact.saveOrUpdateContact(event: event, context: context)
@@ -120,17 +118,18 @@ class Importer {
                 }
                 
                 if (alreadyInLRUskipped > 0) {
-                    print("🦋🦋 Skipped \(alreadyInLRUskipped) already in LRU cache")
+//                    print("🦋🦋 Skipped \(alreadyInLRUskipped) already in LRU cache")
                 }
                 if (alreadyInDBskipped > 0) {
-                    print("🦋🦋 Skipped \(alreadyInDBskipped) already in DB")
+//                    print("🦋🦋 Skipped \(alreadyInDBskipped) already in DB")
                 }
                 
                 //                ThreadWarning.which("importEvents")
                 if (context.hasChanges) {
                     try context.save() // TODO: is this the slowdown??
-                    
-                    //                    print("✅✅✅ context.save() ✅✅✅")
+                    if (saved > 0) {
+                        print("💾 forImports: \(forImports.count), saved: \(saved), skipped (cache): \(alreadyInLRUskipped), skipped (db): \(alreadyInDBskipped)")
+                    }
                 }
                 
                 //                self.logger.debug("Successfully inserted data.")

@@ -1,0 +1,155 @@
+//
+//  FooterFragment.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 23/02/2023.
+//
+
+import SwiftUI
+
+struct FooterFragment: View {
+    //    @EnvironmentObject var accountState:AccountState
+    @EnvironmentObject var ns:NosturState
+    @Environment(\.managedObjectContext) var viewContext
+    @ObservedObject var event:Event
+    @EnvironmentObject var up:Unpublisher
+    
+    @State var unpublishLikeId:UUID? = nil
+    
+    @State var unpublishRepostId:UUID? = nil
+    @State var unpublishOriginalId:UUID? = nil
+    
+    @State var showingNewReply = false
+    
+    var body: some View {
+        HStack {
+            
+            HStack {
+                Image(systemName: "message")
+                Text("\(event.repliesCount)")
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                showingNewReply = true
+            }
+            Spacer()
+                
+
+            HStack {
+                Image(systemName: "arrow.2.squarepath")
+                Text("\(event.mentionsCount)")
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
+                if (ns.account != nil) {
+                    print("🔄🔄🔄🔄🔄 REPOSTING 🔄🔄🔄")
+//                    event.reposted = true
+                    event.mentionsCount = event.mentionsCount + 1
+//                    ns.account?.addToLikes(event)
+                    
+                    // 1. create kind 7 event based on kind 1 event:    Event
+                    let repostEvent = EventMessageBuilder.makeRepost(original: event)
+                    
+                    // 2. sign that event with account keys             Account
+                    guard let signedEvent = try? ns.signEvent(repostEvent) else {
+                        print("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
+                        return
+                    }
+                    
+                    unpublishRepostId = up.publish(signedEvent)
+                    unpublishOriginalId = up.publish(event.toNEvent())
+                }
+            }
+            Spacer()
+            
+            // LIKE
+            if (event.liked) {
+                HStack {
+                    Image(systemName: "heart.fill").foregroundColor(.red)
+                    Text("\(event.likesCount)")
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    if unpublishLikeId != nil && up.cancel(unpublishLikeId!) {
+                        event.liked = false
+                    }
+                }
+            }
+            else {
+                HStack {
+                    Image(systemName: "heart")
+                    Text("\(event.likesCount)")
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
+                    if (ns.account != nil) {
+                        print("💖💖💖💖💖💖💖💖💖💖💖💖💖💖")
+                        event.liked = true
+                        event.likesCount = event.likesCount + 1
+                        ns.account?.addToLikes(event)
+                        
+                        // 1. create kind 7 event based on kind 1 event:    Event
+                        let likeEvent = EventMessageBuilder.makeReactionEvent(reactingTo: event)
+                        
+                        // 2. sign that event with account keys             Account
+                        guard let signedEvent = try? ns.signEvent(likeEvent) else {
+                            print("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
+                            return
+                        }
+                        
+                        unpublishLikeId = up.publish(signedEvent)
+                        
+                       
+                    }
+                }
+            }
+            Spacer()
+            
+            if (event.contact?.lud16 != nil) {
+                LightningButton(contact:event.contact!, event: event)
+                Spacer()
+            }
+            else {
+                Color.clear.frame(width: 30, height: 15)
+                Spacer()
+            }
+            
+            // BOOKMARK
+            if (ns.isBookmarked(event)) {
+                Image(systemName: "bookmark.fill")
+                    .foregroundColor(.orange)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        ns.removeBookmark(event)
+                    }
+            }
+            else {
+                Image(systemName: "bookmark")
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        ns.addBookmark(event)
+                    }
+            }
+            
+        }
+        .foregroundColor(.gray)
+            .padding(.trailing, 5)
+            .font(.system(size: 14))
+            .sheet(isPresented: $showingNewReply) {
+                NewReply(replyTo: event)
+            }
+    }
+}
+
+struct FooterFragment_Previews: PreviewProvider {
+    static var previews: some View {
+        
+        let event7 = PreviewFetcher.fetchEvent("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
+        if (event7 != nil) {
+            FooterFragment(event: event7!)
+                .withPreviewEnvironment()
+        }
+    }
+}

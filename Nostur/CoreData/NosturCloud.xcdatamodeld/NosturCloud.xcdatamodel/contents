@@ -49,21 +49,28 @@
         <attribute name="likesCount" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES" elementID="likesCount"/>
         <attribute name="mentionsCount" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES" elementID="mentionsCount"/>
         <attribute name="pubkey" optional="YES" attributeType="String"/>
+        <attribute name="reactionToId" optional="YES" attributeType="String"/>
         <attribute name="repliesCount" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES" elementID="repliesCount"/>
         <attribute name="replyToId" optional="YES" attributeType="String"/>
         <attribute name="replyToRootId" optional="YES" attributeType="String"/>
         <attribute name="sig" optional="YES" attributeType="String"/>
         <attribute name="tagsSerialized" optional="YES" attributeType="String"/>
+        <attribute name="zapFromRequestId" optional="YES" attributeType="String"/>
+        <attribute name="zappedContactPubkey" optional="YES" attributeType="String"/>
+        <attribute name="zappedEventId" optional="YES" attributeType="String"/>
         <attribute name="zapsCount" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="zapTally" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="bookmarkedBy" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Account" inverseName="bookmarks" inverseEntity="Account"/>
         <relationship name="contact" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Contact"/>
+        <relationship name="contacts" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact"/>
         <relationship name="firstQuote" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event"/>
-        <relationship name="personZapping" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Contact"/>
+        <relationship name="reactionTo" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event"/>
         <relationship name="replies" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Event" inverseName="replyTo" inverseEntity="Event" elementID="repliesRelation"/>
         <relationship name="replyTo" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event" inverseName="replies" inverseEntity="Event" elementID="replyToRelation"/>
         <relationship name="replyToRoot" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event" elementID="replyToRootRelation"/>
-        <relationship name="tags" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="Tag"/>
+        <relationship name="zapFromRequest" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event"/>
+        <relationship name="zappedContact" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Contact"/>
+        <relationship name="zappedEvent" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event"/>
         <uniquenessConstraints>
             <uniquenessConstraint>
                 <constraint value="id"/>
@@ -82,14 +89,5 @@
         <attribute name="read" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
         <attribute name="url" optional="YES" attributeType="String"/>
         <attribute name="write" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
-    </entity>
-    <entity name="Tag" representedClassName="Tag" syncable="YES">
-        <attribute name="index1" optional="YES" attributeType="String"/>
-        <attribute name="index2" optional="YES" attributeType="String"/>
-        <attribute name="index3" optional="YES" attributeType="String"/>
-        <attribute name="index4" optional="YES" attributeType="String"/>
-        <attribute name="type" attributeType="String"/>
-        <relationship name="contact" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Contact"/>
-        <relationship name="event" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event"/>
     </entity>
 </model>

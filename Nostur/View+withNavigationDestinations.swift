@@ -20,8 +20,9 @@ enum ViewPath: Hashable {
     case Blocklist
     case Bookmarks(account:Account)
     case Account(account:Account)
-    case ZapList(event:Event)
-    case ReactionsList(event:Event)
+//    case ZapList(event:Event)
+    case NoteReactions(event:Event)
+    case NoteZaps(event:Event)
     
     case Welcome
     case CreateNewAccount
@@ -53,10 +54,12 @@ extension View {
                         BookmarksView(account: account)
                     case .Account(let account):
                         AccountEditView(account: account)
-                    case .ZapList(let event):
-                        ZapsList(event: event)
-                    case .ReactionsList(let event):
-                        Reactions(id: event.id!)
+//                    case .ZapList(let event):
+//                        ZapsList(event: event)
+                    case .NoteReactions(let event):
+                        NoteReactions(id: event.id!)
+                    case .NoteZaps(let event):
+                        NoteZaps(id: event.id!)
                     
                     case .Welcome:
                         WelcomeSheet()

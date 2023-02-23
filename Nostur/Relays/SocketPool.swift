@@ -8,6 +8,7 @@
 import Foundation
 import Starscream
 import CoreData
+import OSLog
 
 class ManagedClient: WebSocketDelegate, ObservableObject {
     
@@ -36,24 +37,25 @@ class ManagedClient: WebSocketDelegate, ObservableObject {
     
     func didReceive(event: Starscream.WebSocketEvent, client: Starscream.WebSocketClient) {
         switch event {
-        case .connected(let headers):
-            print(headers.description)
+        case .connected(let _):
+//            print(headers.description)
             DispatchQueue.main.async {
                 self.isConnecting = false
                 self.isConnected = true
             }
-            print("🔌 CONNECTED \(self.url): \(headers)")
+                print("🔌 CONNECTED \(self.url)")
+//                print("🔌 CONNECTED \(self.url): \(headers)")
         case .disconnected(let reason, let code):
             DispatchQueue.main.async {
                 self.isConnecting = false
                 self.isConnected = false
             }
-            print("🔌 DISCONNECTED \(self.url): \(reason) with code: \(code)")
+                print("🔌 DISCONNECTED \(self.url): \(reason) with code: \(code)")
         case .text(let string):
-                print("🔌 💬 Received text: \(string)") 
+//                print("🔌 💬 Received text: \(string)")
             MessageParser.shared.socketReceivedMessage(text: string, relayUrl: self.url)
         case .binary(let data):
-            print("🔌 RECEIVED DATA \(self.url): \(data.count)")
+                print("🔌 RECEIVED DATA \(self.url): \(data.count)")
         case .ping(_):
             break
         case .pong(_):
@@ -79,7 +81,7 @@ class ManagedClient: WebSocketDelegate, ObservableObject {
 }
 
 class SocketPool: ObservableObject {
-
+    
     static let shared = SocketPool()
     
     var socketQueue = DispatchQueue(label: "nostur.queue", qos: .background)
@@ -145,7 +147,7 @@ class SocketPool: ObservableObject {
                     if (!managedClient.isConnected) && (!managedClient.isConnecting) {
                         managedClient.connect()
                     }
-//                    print("⬇️⬇️ REQUESTING: \(String(message.message.prefix(260)))")
+//                    print("REQUESTING: \(String(message.message.prefix(260)))")
                     print("⬇️⬇️ REQUESTING: \(String(message.message))")
                     managedClient.client.write(string: message.message)
                 }
@@ -153,14 +155,14 @@ class SocketPool: ObservableObject {
                     if (!managedClient.isConnected && managedClient.read) && (!managedClient.isConnecting) {
                         managedClient.connect()
                     }
-    //                print("🔚🔚 CLOSE: \(String(message.message.prefix(260)))")
+    //                logger.debug("🔚🔚 CLOSE: \(String(message.message.prefix(260)))")
                     managedClient.client.write(string: message.message) { }
                 }
                 else if message.type == .EVENT && managedClient.write { // EVENT IS ONLY FOR WRITE RELAYS
                     if (!managedClient.isConnected) && (!managedClient.isConnecting) {
                         managedClient.connect()
                     }
-                    print("⬆⬆⬆ PUBLISHING TO \(managedClient.url): \(message.message)")
+                    print("🚀🚀🚀 PUBLISHING TO \(managedClient.url): \(message.message)")
                     managedClient.client.write(string: message.message) { }
                 }
             }

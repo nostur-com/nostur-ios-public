@@ -81,9 +81,11 @@ extension Contact {
 }
 
 extension Contact : Identifiable {
+    
+    public var id:String { pubkey! }
         
     var authorKey: String {
-        get { pubkey != nil ? String(npub.prefix(9)) : "⏤⏤" }
+        get { pubkey != nil ? String(npub.prefix(11)) : "⏤⏤" }
     }
     
     // Display name, with fallbacks: (User)name, pubkey (prefix), or "?:?"
@@ -194,10 +196,20 @@ extension Contact : Identifiable {
                     event.contact = contact
                     event.objectWillChange.send()
                 }
+                
+                // EVENTS.CONTACTS (which come from Event.P tags:
+                let tr = NSFetchRequest<Event>(entityName: "Event")
+        //            tr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", "[\"p\",\"\(contact.pubkey!)") // OPTIMIZATION HACK WERKT NIET
+                tr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", contact.pubkey!) // OPTIMIZATION HACK
+                let events = Array(try! context.fetch(tr))
+                for event in events {
+                    event.addToContacts(contact)
+                    event.objectWillChange.send()
+                }
             }
             else {
                 // Received metadata is older than stored Contact
-                print("🟠🟠 Already have newer info stored in Contact. Skipped update.")
+//                print("🟠🟠 Already have newer info stored in Contact. Skipped update.")
             }
         }
         else {
@@ -225,14 +237,14 @@ extension Contact : Identifiable {
                 event.objectWillChange.send()
             }
             
-            // TAGS INVERSE:
-            let tr = NSFetchRequest<Tag>(entityName: "Tag")
-            tr.predicate = NSPredicate(format: "type == 'p' AND index1 == %@", event.publicKey)
-            if let tags = try? context.fetch(tr) {
-                for tag in tags {
-                    tag.contact = contact
-                    tag.objectWillChange.send()
-                }
+            // EVENTS.CONTACTS (which come from Event.P tags:
+            let tr = NSFetchRequest<Event>(entityName: "Event")
+    //            tr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", "[\"p\",\"\(contact.pubkey!)") // OPTIMIZATION HACK WERKT NIET
+            tr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", contact.pubkey!) // OPTIMIZATION HACK
+            let events = Array(try! context.fetch(tr))
+            for event in events {
+                event.addToContacts(contact)
+                event.objectWillChange.send()
             }
         }
     }

@@ -158,7 +158,7 @@ struct RequestMessage {
     
     // Fetch anything that references given event ids in tags (1=REPLIES, 6=REPOSTS, 7=REACTIONS, 9735=ZAPS)
     // For when you have event(s) and you want to count replies, reposts, reactions, zaps.
-    static func getEventReferences(ids:[String], limit:Int = 500, subscriptionId:String? = nil, kinds:[Int]? = nil) -> String {
+    static func getEventReferences(ids:[String], limit:Int = 5000, subscriptionId:String? = nil, kinds:[Int]? = nil) -> String {
         let kindsJsonArr = kinds != nil ? JSON(kinds!).rawString() : "[1,6,7,9735]"
         return """
 ["REQ", "\(subscriptionId ?? ("TL-REF-"+UUID().uuidString))", {"#e": \(JSON(ids).rawString() ?? "[]"), "kinds":\(kindsJsonArr!), "limit": \(limit)}]
@@ -168,9 +168,9 @@ struct RequestMessage {
     
     // Fetch anything in the tags (only e -> "ids" and p -> "authors" kind=0  (for now))
     // For when you have 1 event, and want to fetch, reply to, mentions, contacts
-    static func getTags(_ tags:[Tag], limit:Int = 500, subscriptionId:String? = nil) -> String? {
-        let ids = tags.filter { $0.type == "e" }.map { $0.index1 }
-        let authors = tags.filter { $0.type == "p" }.map { $0.index1 }
+    static func getTags(_ tags:[NEventTag], limit:Int = 500, subscriptionId:String? = nil) -> String? {
+        let ids = tags.filter { $0.type == "e" }.map { $0.id }
+        let authors = tags.filter { $0.type == "p" }.map { $0.pubkey }
         
         // TODO: UGH clean up this if then mess
         if (ids.count > 0 && authors.count > 0) {
@@ -266,7 +266,7 @@ struct EventMessageBuilder {
     }
     
     static func makeReactionEvent(reactingTo: Event) -> NEvent {
-        var tags = reactingTo.oldTags()!.filter { $0.type == "e" || $0.type == "p" }
+        var tags = reactingTo.tags().filter { $0.type == "e" || $0.type == "p" }
         tags.append(NEventTag(type: "e", otherInformation: reactingTo.id))
         tags.append(NEventTag(type: "p", otherInformation: reactingTo.pubkey!))
         

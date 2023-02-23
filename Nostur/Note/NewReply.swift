@@ -31,7 +31,7 @@ struct NewReply: View {
         var newReply = NEvent(content: "")
         newReply.kind = .textNote
         
-        let root = TagsHelpers(replyTo.oldTags() ?? []).replyToRootEtag()
+        let root = TagsHelpers(replyTo.tags()).replyToRootEtag()
         
         if (root != nil) { // ADD "ROOT" + "REPLY"
             let newRootTag = NEventTag(type: "e", otherInformation: root!.otherInformation[0], "", "root") // TODO RECOMMENDED RELAY HERE
@@ -47,7 +47,7 @@ struct NewReply: View {
         }
         
         // ADD ALL "P" TAGS
-        let existingPtags = TagsHelpers(replyTo.oldTags() ?? []).pTags()
+        let existingPtags = TagsHelpers(replyTo.tags()).pTags()
         newReply.tags.append(contentsOf: existingPtags)
         
         // ADD PUBKEY OF REPLYING TO EVENT
@@ -139,7 +139,9 @@ struct NewReply_Previews: PreviewProvider {
         
         let event = PreviewFetcher.fetchEvent("c3a040feac185585f984147cdaf7a7ec5774b06db29ff25017c45026e470daeb")
         
-        NewReply(replyTo:event!)
-            .withPreviewEnvironment()
+        if (event != nil) {
+            NewReply(replyTo:event!)
+                .withPreviewEnvironment()
+        }
     }
 }

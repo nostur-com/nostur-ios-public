@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct Reactions: View {
+struct NoteReactions: View {
     
     @EnvironmentObject var sp:SocketPool
     
@@ -19,7 +19,7 @@ struct Reactions: View {
     
     init(id:String) {
         self.id = id
-        _reactions = FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)], predicate: NSPredicate(format: "kind == 7 AND ANY tags.type == 'e' AND ANY tags.event.id == %@", id))
+        _reactions = FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)], predicate: NSPredicate(format: "kind == 7 AND reactionToId == %@", id))
     }
     
     var body: some View {
@@ -96,7 +96,7 @@ struct Reactions_Previews: PreviewProvider {
         
         VStack {
             if (noteWithReactions != nil) {
-                Reactions(id: noteWithReactions!.id!)
+                NoteReactions(id: noteWithReactions!.id!)
             }
         }
         .withPreviewEnvironment()

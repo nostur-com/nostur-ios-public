@@ -18,14 +18,14 @@ struct ProfileZapsView: View {
         sortDescriptors: [SortDescriptor(\Event.created_at, order: .reverse)],
         predicate: NSPredicate(format: "kind IN {9735}"),
         animation: .none)
-    var events: FetchedResults<Event>
-    var events_:[Event] { Array(events) }
+    var events: FetchedResults<Event> // ZAP EVENTS FROM CUSTODIAL PROVIDER
+    var events_:[Event] { Array(events) } // ZAP EVENTS FROM CUSTODIAL PROVIDER
     
     init(pubkey: String) {
         self.pubkey = pubkey
         _events = FetchRequest(
             sortDescriptors: [SortDescriptor(\Event.created_at, order: .reverse)],
-            predicate: NSPredicate(format: "kind = 9735 AND ANY tags.contact.pubkey = %@", pubkey)
+            predicate: NSPredicate(format: "kind = 9735 AND tagsSerialized CONTAINS %@", "[\"p\",\"\(pubkey)") // OPTIMIZATION HACK
         )
     }
     
@@ -55,17 +55,26 @@ struct ProfileZapsView: View {
             print("🟢 ProfileZapsView.onAppear always REQ.9735 \(pubkey)")
             sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorZaps(pubkey: pubkey)))
         }
-        .onChange(of: events_) { newValue in
-            var missing:[String] = []
+        .onChange(of: events_) { newZapEvents in
+            var missingContacts:[String] = []
+            var missingEvents:[String] = []
             
-            for event in newValue {
-                if let zapReq = event.tags_.first(where: { $0.type == "description" })?.event {
-                    if zapReq.contact == nil {
-                        missing.append(zapReq.pubkey!)
+            for event in newZapEvents {
+                if (event.zapFromRequest == nil) { print("🔴🔴 wheres the zap request bro. event.id: \(event.id!)");continue }
+                if (event.zapFromRequest?.contact == nil || event.zapFromRequest?.contact?.updated_at == 0) {
+                    missingContacts.append(event.zapFromRequest!.pubkey!)
+                }
+                if (event.zappedEventId != nil && event.zappedEvent == nil) {
+                    if (event.zapFromRequest?.zappedEvent == nil) {
+                        missingEvents.append(event.zappedEventId!)
                     }
                 }
             }
-            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missing)))
+            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missingContacts)))
+            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvents(ids: missingEvents)))
+            if (missingContacts.count > 0  || missingEvents.count > 0) {
+                print("🟣 Fetching \(missingContacts.count) missing contacts, and \(missingEvents.count ) missing events that received zaps")
+            }
         }
         
     }

@@ -33,43 +33,25 @@ struct ZapsList: View {
 
 struct ZapRow: View {
     @Environment(\.managedObjectContext) var viewContext
-    @EnvironmentObject var ns:NosturState
+    @EnvironmentObject var er:ExchangeRateModel
     @EnvironmentObject var nav:NavigationModel
+    @AppStorage("devToggle") var devToggle:Bool = false
     
+    // THE ZAP EVENT (FROM CUSTODIAL ZAP PROVIDER)
     var event:Event
     
-    var zapReq:Event? {
-        get {
-            event.tags_.first(where: { $0.type == "description" })?.event
-        }
-    }
-    
-//    var zapFrom:NEvent? {
-//        get {
-//            let description:Tag? = event.tags_.first(where: { $0.type == "description" })
-//            guard description?.index1 != nil else { return nil }
-//
-//            let decoder = JSONDecoder()
-//            if let event = try? decoder.decode(NEvent.self, from: description!.index1!.data(using: .utf8, allowLossyConversion: false)!) {
-//                if (try! event.verified()) {
-//                    return event
-//                }
-//            }
-//            return nil
-//        }
-//    }
-    
+    // THE INVOICE
     var bolt11:Invoice? {
         get {
-            let bolt11:Tag? = event.tags_.first(where: { $0.type == "bolt11" })
-            guard bolt11?.index1 != nil else { return nil }
-            if let pInvoice = Invoice.fromStr(s: bolt11!.index1!).getValue() {
+            guard let bolt11 = event.bolt11() else { return nil }
+            if let pInvoice = Invoice.fromStr(s: bolt11).getValue() {
                 return pInvoice
             }
             return nil
         }
     }
     
+    // THE AMOUNT PAID
     var sats:Double {
         get {
             if (bolt11?.amountMilliSatoshis() != nil) {
@@ -81,57 +63,98 @@ struct ZapRow: View {
     
     var fiatPrice:String {
         get {
-            String(format: "($%.02f)",(Double(sats / 100000000 * ns.bitcoinPrice)))
+            String(format: "($%.02f)",(Double(sats / 100000000 * er.bitcoinPrice)))
         }
     }
     
+    // THE PERSON WHO SENT THE SATS
     var contact:Contact? {
         get {
-            guard zapReq != nil else { return nil }
-            return Contact.fetchByPubkey(zapReq!.pubkey!, context: viewContext)
+            guard event.zapFromRequest != nil else { return nil }
+            return Contact.fetchByPubkey(event.zapFromRequest!.pubkey!, context: viewContext)
         }
     }
     
     var body: some View {
-        HStack(alignment: .top) {
-            ProfilePicView(pubkey: zapReq?.pubkey ?? "WTF", contact: zapReq?.contact)
-//            ProfilePicView(pubkey: zapFrom?.publicKey ?? "WTF", contact: contact)
-            VStack(alignment: .leading) {
-                HStack {
-                    VStack(alignment: .leading) {
-                        HStack(spacing:3) {
-                            Text(zapReq?.contact?.authorName ?? "").font(.headline).foregroundColor(.primary)
-                                .lineLimit(1)
-                            
-                            if (zapReq?.contact?.nip05veried ?? false) {
-                                Image(systemName: "checkmark.seal.fill")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.blue)
-                            }
-                        
-                            Group {
-                                Text("@\(zapReq?.contact?.username ?? zapReq?.authorKey ?? "?")").layoutPriority(1)
-                                Text(" · ") //
-                                Text(event.ago).layoutPriority(1) //
-                            }
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                        }
-                    }.multilineTextAlignment(.leading)
-                    Spacer()
-                    
-                }
-                Text("Zapped \(sats.clean) sats \(fiatPrice)")
+        
+        HStack {
+            Image(systemName: "bolt")
+            if (event.zappedEventId == nil) {
+                Text("\(sats.clean) sats \(fiatPrice) from")
+            }
+            
+            if (event.zapFromRequest?.name != nil ) {
+                Text(event.zapFromRequest!.name)
+            }
+            else if (event.zapFromRequest?.username != nil) { // Just to add @ to username
+                Text("@\(event.zapFromRequest!.username)")
+            }
+            else if (event.zapFromRequest != nil) {
+                Text("@\(event.zapFromRequest!.npub.prefix(11).description)")
+            }
+            if (event.zappedEventId != nil) {
+                Text("zapped \(sats.clean) sats \(fiatPrice) on:")
+            }
+            if (devToggle) {
+                Text("id: \(String(event.id!.prefix(5)))")
+                    .onTapGesture {
+                        UIPasteboard.general.string = event.id!
+                    }
+            }
+            Spacer()
+        }
+        .foregroundColor(.gray)
+        .onTapGesture {
+            if (event.zapFromRequest != nil) {
+                nav.navigateTo(ContactPath(key: event.zapFromRequest!.pubkey!))
             }
         }
-        .padding()
-        .contentShape(Rectangle())
-        .onTapGesture {
-            if (zapReq != nil) {
-                nav.navigateTo(ContactPath(key: zapReq!.pubkey!))
-            }
+//        .padding(.leading, 45)
+        
+        // TODO: What is zap is only to Pubkey, not event???
+        if (event.zappedEvent != nil) {
+            NoteRowView(event: event.zappedEvent!)
         }
         Divider()
+        
+//        HStack(alignment: .top) {
+//            ProfilePicView(pubkey: zapFromRequest?.pubkey ?? "WTF", contact: zapFromRequest?.contact)
+//            VStack(alignment: .leading) {
+//                HStack {
+//                    VStack(alignment: .leading) {
+//                        HStack(spacing:3) {
+//                            Text(zapFromRequest?.contact?.authorName ?? "").font(.headline).foregroundColor(.primary)
+//                                .lineLimit(1)
+//
+//                            if (zapFromRequest?.contact?.nip05veried ?? false) {
+//                                Image(systemName: "checkmark.seal.fill")
+//                                    .font(.system(size: 14))
+//                                    .foregroundColor(.blue)
+//                            }
+//
+//                            Group {
+//                                Text("@\(zapFromRequest?.contact?.username ?? zapFromRequest?.authorKey ?? "?")").layoutPriority(1)
+//                                Text(" · ") //
+//                                Text(event.ago).layoutPriority(1) //
+//                            }
+//                            .foregroundColor(.secondary)
+//                            .lineLimit(1)
+//                        }
+//                    }.multilineTextAlignment(.leading)
+//                    Spacer()
+//
+//                }
+//                Text("Zapped \(sats.clean) sats \(fiatPrice)")
+//            }
+//        }
+//        .padding()
+//        .contentShape(Rectangle())
+//        .onTapGesture {
+//            if (zapFromRequest != nil) {
+//                nav.navigateTo(ContactPath(key: zapFromRequest!.pubkey!))
+//            }
+//        }
+//        Divider()
     }
 }
 
@@ -141,7 +164,9 @@ struct ZapsList_Previews: PreviewProvider {
         let event = PreviewFetcher.fetchEvent("7682031bb0b06d7b9c417dae30141357a74b4f089ebd46226990d418e2def565")
         
         VStack {
-            ZapsList(event: event!)
+            if (event != nil) {
+                ZapsList(event: event!)
+            }
         }
         .withPreviewEnvironment()
         
@@ -150,7 +175,9 @@ struct ZapsList_Previews: PreviewProvider {
         let odell = PreviewFetcher.fetchEvent("81b2dba2a3d2c92eedab1f966119bda65555d926b97bb41a14c07187472f6159")
         
         VStack {
-            ZapsList(event: odell!)
+            if (odell != nil) {
+                ZapsList(event: odell!)
+            }
         }
         .withPreviewEnvironment()
         

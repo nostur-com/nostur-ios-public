@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ReplyingToFragment: View {
     
-    var cm:SocketPool = .shared
+    private let sp:SocketPool = .shared
     
     @ObservedObject var event:Event
     
@@ -35,42 +35,56 @@ struct ReplyingToFragment: View {
         return "00000"
     }
     
+    func contactUsername(fromPubkey pubkey:String) -> String {
+        if let contact = event.contacts?.first(where: { $0.pubkey! == pubkey }) {
+            return contact.username
+        }
+        do {
+            return String((try NIP19(prefix: "npub", hexString: pubkey).displayString).prefix(11))
+        }
+        catch {
+            return  "⏤⏤"
+        }
+    }
+    
     var body: some View {
-        
         if (event.replyToId == nil) && (event.replyTo == nil) {
             EmptyView()
         }
         else {
-            let pTags = event.tags_.filter { $0.type == "p" }
+            let pTags = event.tags().filter { $0.type == "p" }
             let pTagsAsStrings = Array(Set(pTags.map { tag in
-                return "[@\(tag.contactUsername)](nostur:p:\(tag.contactPubkey))"
+                // TODO: UGH SHIT. OK. Need Event.contacts
+                return "[@\(contactUsername(fromPubkey: tag.pubkey))](nostur:p:\(tag.pubkey))"
             }))
             
-//            Text(try! AttributedString(markdown:"Replying to [@\(replyToUsername())](nostur:p:\(replyToPubkeyHex()))"))
-            Text(try! AttributedString(markdown:"Replying to: " + pTagsAsStrings.joined(separator: ", ")))
-                .foregroundColor(.secondary)
-//                .font(.system(size: 13))
-                .fontWeight(.light)
-//                .onAppear {
-//                    //TODO: DOESNT HANG ANY MORE?? OR??
-//                    // TODO: THIS CODE CAUSES TOO MANY SUBSCRIPTIONS....
-//                    /// THIS CODE CAUSES HANG WHEN FAST SCROLLING!
-//                    /// THIS CODE CAUSES HANG WHEN FAST SCROLLING!
-//                    /// THIS CODE CAUSES HANG WHEN FAST SCROLLING!
-//                    if (event.replyTo == nil) && (event.replyToId != nil) {
-//                        // is this the best place for this .REQ?
-//                        // Somewhere .onAppear? Not in parse of receive because can lead to infinite fetching?
-//
-//                        print("🟢 ReplyingToFragment.onAppear .replyTo + replyToId == nil so: REQ.0+1:\(replyToPubkeyHex())+\(event.replyToId!)")
-//                        
-//                        //TODO: COMBINE IN 1 REQ:
-//                        cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: replyToPubkeyHex())))
-//
-//                        cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.replyToId!)))
-//                    }
-//                    /// THIS CODE CAUSES HANG WHEN FAST SCROLLING!
-//                    /// THIS CODE CAUSES HANG WHEN FAST SCROLLING!
-//                }
+            //            Text(try! AttributedString(markdown:"Replying to [@\(replyToUsername())](nostur:p:\(replyToPubkeyHex()))"))
+            if (pTags.count > 0) {
+                Text(try! AttributedString(markdown:"Replying to: " + pTagsAsStrings.joined(separator: ", ")))
+                    .foregroundColor(.secondary)
+                //                .font(.system(size: 13))
+                    .fontWeight(.light)
+                //                .onAppear {
+                //                    //TODO: DOESNT HANG ANY MORE?? OR??
+                //                    // TODO: THIS CODE CAUSES TOO MANY SUBSCRIPTIONS....
+                //                    /// THIS CODE CAUSES HANG WHEN FAST SCROLLING!
+                //                    /// THIS CODE CAUSES HANG WHEN FAST SCROLLING!
+                //                    /// THIS CODE CAUSES HANG WHEN FAST SCROLLING!
+                //                    if (event.replyTo == nil) && (event.replyToId != nil) {
+                //                        // is this the best place for this .REQ?
+                //                        // Somewhere .onAppear? Not in parse of receive because can lead to infinite fetching?
+                //
+                //                        print("🟢 ReplyingToFragment.onAppear .replyTo + replyToId == nil so: REQ.0+1:\(replyToPubkeyHex())+\(event.replyToId!)")
+                //
+                //                        //TODO: COMBINE IN 1 REQ:
+                //                        cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: replyToPubkeyHex())))
+                //
+                //                        cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.replyToId!)))
+                //                    }
+                //                    /// THIS CODE CAUSES HANG WHEN FAST SCROLLING!
+                //                    /// THIS CODE CAUSES HANG WHEN FAST SCROLLING!
+                //                }
+            }
         }
     }
 }
@@ -84,21 +98,27 @@ struct ReplyingToFragment_Previews: PreviewProvider {
         
         // With replyTo.contact
         let event2 = PreviewFetcher.fetchEvent("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e")
-
+        
         // No reply at all.
         let event3 = PreviewFetcher.fetchEvent("d90c63ca06c0eab08d5c79d3991cd22b6c0e2f4e56167ae918343f2a9bc98ff1")
         
         VStack {
-            ReplyingToFragment(event: event1!)
-                .withPreviewEnvironment()
-            Spacer()
-            ReplyingToFragment(event: event2!)
-                .withPreviewEnvironment()
-            Spacer()
-            ReplyingToFragment(event: event3!)
-                .withPreviewEnvironment()
-            Spacer()
+            if (event1 != nil) {
+                ReplyingToFragment(event: event1!)
+                Spacer()
+            }
+        
+            if (event2 != nil) {
+                ReplyingToFragment(event: event2!)
+                Spacer()
+            }
+            
+            if (event3 != nil) {
+                ReplyingToFragment(event: event3!)
+                Spacer()
+            }
         }
+        .withPreviewEnvironment()
         
     }
 }

@@ -33,7 +33,7 @@ struct NotificationsView: View {
     )
     var kind9735:FetchedResults<Event>
     
-    @State var tab = "NOTES"
+    @State var tab = "REACTIONS"
     
     init() {
         let fr = Event.fetchRequest()
@@ -45,31 +45,31 @@ struct NotificationsView: View {
         let kind7r:NSFetchRequest<Event> = Event.fetchRequest()
         kind7r.fetchLimit = 100
         kind7r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        kind7r.predicate = NSPredicate(value: true)
+        kind7r.predicate = NSPredicate(value: false)
         _kind7 = FetchRequest(fetchRequest: kind7r)
         
         let kind9735r:NSFetchRequest<Event> = Event.fetchRequest()
         kind9735r.fetchLimit = 100
         kind9735r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        kind9735r.predicate = NSPredicate(value: true)
+        kind9735r.predicate = NSPredicate(value: false)
         _kind9735 = FetchRequest(fetchRequest: kind9735r)
     }
     
     var myNotifications:[Event] {
         get {
-            kind1.filter { ($0.kind == 1) && ($0.oldTags() ?? []).contains(where: { $0.pubkey == ns.account!.publicKey! })}
+            kind1.filter { ($0.tags() ?? []).filter { $0.pubkey == ns.account!.publicKey! }.count > 0 }
         }
     }
     
     var myReactions:[Event] {
         get {
-            kind7.filter { ($0.kind == 7) && ($0.oldTags() ?? []).contains(where: { $0.pubkey == ns.activeAccountPublicKey })}
+            kind7.filter { ($0.tags() ?? []).filter { $0.pubkey == ns.account!.publicKey! }.count > 0 }
         }
     }
     
     var myZaps:[Event] {
         get {
-            kind9735.filter { ($0.kind == 9735) }
+            kind9735.filter { ($0.tags() ?? []).filter { $0.pubkey == ns.account!.publicKey! }.count > 0 }
         }
     }
     
@@ -132,12 +132,14 @@ extension NotificationsView {
         
         var body: some View {
             let _ = Self._printChanges()
-            LazyVStack {
-                ForEach(notes) { event in
-                    NoteRowView(event: event)
-                        .onAppear {
-                            onAppear(Int(event.created_at))
-                        }
+            ScrollView {
+                LazyVStack {
+                    ForEach(notes) { event in
+                        NoteRowView(event: event)
+                            .onAppear {
+                                onAppear(Int(event.created_at))
+                            }
+                    }
                 }
             }
         }
@@ -150,11 +152,13 @@ extension NotificationsView {
         var body: some View {
             let _ = Self._printChanges()
             ScrollView {
-                ForEach(reactions) { event in
-                    NoteRowView(event: event)
-                        .onAppear {
-                            onAppear(Int(event.created_at))
-                        }
+                LazyVStack {
+                    ForEach(reactions) { event in
+                        NoteRowView(event: event)
+                            .onAppear {
+                                onAppear(Int(event.created_at))
+                            }
+                    }
                 }
             }
         }
@@ -167,11 +171,13 @@ extension NotificationsView {
         var body: some View {
             let _ = Self._printChanges()
             ScrollView {
-                ForEach(zaps) { event in
-                    ZapRow(event: event)
-                        .onAppear {
-                            onAppear(Int(event.created_at))
-                        }
+                LazyVStack {
+                    ForEach(zaps) { event in
+                        ZapRow(event: event)
+                            .onAppear {
+                                onAppear(Int(event.created_at))
+                            }
+                    }
                 }
             }
         }

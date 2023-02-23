@@ -9,10 +9,9 @@ import SwiftUI
 import CoreData
 
 struct NosturTabsView: View {
+//    @AppStorage("showReplies") var showReplies = true // TODO: Move to Timeline
+    @Binding var showSidebar:Bool
     
-    @AppStorage("showReplies") var showReplies = true // TODO: Move to Timeline
-    @Binding var showMenu:Bool
-    @EnvironmentObject var ns:NosturState
     
     @Binding var selectedTab:String
     
@@ -25,24 +24,28 @@ struct NosturTabsView: View {
     @Binding var configurationPath:NavigationPath
     
     var body: some View {
+        let _ = Self._printChanges()
         VStack {
-            AppTopBar(showMenu: $showMenu)
             TabView(selection: $selectedTab) {
                 NavigationStack(path: $timelinePath) {
-                    Timeline()
+//                    Timeline()
+//                    TLController()
+//                    TL4(pubkeys: ns.followingPublicKeys, context: viewContext, showMenu: $showMenu)
+//                    Text("hi")
+                    TL4W()
                         .withNavigationDestinations()
                 }
                 .tabItem { Image(systemName: "house") }.tag("Timeline")
                                 
                 NavigationStack(path: $notificationsPath) {
-                    if (ns.account != nil) {
-                        NotificationsView()
-                            .withNavigationDestinations()
-                    }
-                    else {
-                        Text("Select account account first on accounts tab.")
-                    }
-                    Spacer()
+//                    if (ns.account != nil) {
+//                        NotificationsView()
+//                            .withNavigationDestinations()
+//                    }
+//                    else {
+//                        Text("Select account account first on accounts tab.")
+//                    }
+//                    Spacer()
                 }
                 .tabItem { Image(systemName: "bell.fill") }
                 .tag("Notifications")
@@ -56,9 +59,9 @@ struct NosturTabsView: View {
                 .tag("Search")
                 
                 NavigationStack(path: $bookmarksPath) {
-                    BookmarksView(account: ns.account)
-                        .withNavigationDestinations()
-                    Spacer()
+//                    BookmarksView(account: ns.account)
+//                        .withNavigationDestinations()
+//                    Spacer()
                 }
                 .tabItem { Image(systemName: "bookmark") }
                 .tag("Bookmarks")
@@ -71,10 +74,7 @@ struct NosturTabsView: View {
                 .tabItem { Image(systemName: "server.rack") }
                 .tag("Configuration")
             }
-//            .safeAreaInset(edge: .top) {
-//
-//            }.background(.regularMaterial)
-            //            .background(.regularMaterial)
+            .background(.regularMaterial)
         }
     }
     
@@ -91,9 +91,11 @@ struct ContentView_Previews: PreviewProvider {
     @State static var notificationsPath = NavigationPath()
     @State static var messagesPath = NavigationPath()
     @State static var configurationPath = NavigationPath()
+    @State static var showSidebar = false
     
     static var previews: some View {
-        NosturTabsView(showMenu: $showMenu, selectedTab: $selectedTab, timelinePath: $timelinePath, searchPath: $searchPath, accountsPath: $accountsPath, bookmarksPath: $bookmarksPath, notificationsPath: $notificationsPath, messagesPath: $messagesPath, configurationPath: $configurationPath)
+//        NosturTabsView(selectedTab: $selectedTab, timelinePath: $timelinePath, searchPath: $searchPath, accountsPath: $accountsPath, bookmarksPath: $bookmarksPath, notificationsPath: $notificationsPath, messagesPath: $messagesPath, configurationPath: $configurationPath)
+        NosturTabsView(showSidebar: $showSidebar, selectedTab: $selectedTab, timelinePath: $timelinePath, searchPath: $searchPath, accountsPath: $accountsPath, bookmarksPath: $bookmarksPath, notificationsPath: $notificationsPath, messagesPath: $messagesPath, configurationPath: $configurationPath)
             .withPreviewEnvironment()
     }
 }

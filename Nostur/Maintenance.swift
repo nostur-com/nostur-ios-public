@@ -34,6 +34,8 @@ struct Maintenance {
     // Deletes ALL KIND=0 Events (except own), because should have Contact entity.
     // Keeps bookmarks
     // Keeps own events
+    
+    //TODO: Find out which tags can be deleted..
     static func maintenance(context:NSManagedObjectContext) {
         let frA = Account.fetchRequest()
         let allACcounts = Array(try! context.fetch(frA))

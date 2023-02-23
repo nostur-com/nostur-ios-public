@@ -12,8 +12,6 @@ import CoreData
 final class NosturState : ObservableObject {
     
     static let GUEST_ACCOUNT_PUBKEY = "c118d1b814a64266730e75f6c11c5ffa96d0681bfea594d564b43f3097813844"
-    
-    @Published var bitcoinPrice:Double = 0.0
     @Published var isOnboarding = false
     
     // public keys of the contacts that the currently active ("logged in") account follows
@@ -269,7 +267,23 @@ final class NosturState : ObservableObject {
     
     func followsYou(_ contact:Contact) -> Bool {
         guard contact.clEvent != nil else { return false }
-        return (contact.clEvent!.oldTags() ?? []).filter { $0.type == "p" && $0.otherInformation[0] == activeAccountPublicKey }.count > 0
+        return (contact.clEvent!.tags()).filter { $0.type == "p" && $0.otherInformation[0] == activeAccountPublicKey }.count > 0
     }
     
+}
+
+
+final class UnreadCounterModel: ObservableObject {
+    static public var shared = UnreadCounterModel()
+    @Published var unreadCount = 0
+    @Published var mostRecentCreatedAt:Int64 = 0
+}
+
+final class TimelineModel: ObservableObject {
+    @Published var notesOnScreen:[Event] = []
+}
+
+final class ExchangeRateModel: ObservableObject {
+    static public var shared = ExchangeRateModel()
+    @Published var bitcoinPrice:Double = 0.0
 }

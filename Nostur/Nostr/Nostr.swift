@@ -264,6 +264,44 @@ struct NEvent: Codable {
     func wrappedEventJson() -> String {
         return NRelayMessage.event(self)
     }
+    
+    
+    func bolt11() -> String? {
+        tags.first(where: { $0.type == "bolt11" })?.otherInformation[safe: 0]
+    }
+    
+    func firstP() -> String? {
+        tags.first(where: { $0.type == "p" })?.pubkey
+    }
+    
+    func firstE() -> String? {
+        tags.first(where: { $0.type == "e" })?.id
+    }
+    
+    func lastP() -> String? {
+        tags.last(where: { $0.type == "p" })?.pubkey
+    }
+    
+    func lastE() -> String? {
+        tags.last(where: { $0.type == "e" })?.id
+    }
+}
+
+class TagSerializer {
+    
+    static public var shared = TagSerializer()
+    let encoder = JSONEncoder()
+    
+    init() {
+        encoder.outputFormatting = .withoutEscapingSlashes
+    }
+    
+    func encode(tags:[NEventTag]) -> String? {
+        if let tagsSerialized = try? encoder.encode(tags) {
+            return String(data: tagsSerialized, encoding: .utf8)
+        }
+        return nil
+    }
 }
 
 struct TagsHelpers {

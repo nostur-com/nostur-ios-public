@@ -6,11 +6,12 @@
 //
 
 import Foundation
+import OSLog
 
 class MessageParser {
     
     static var shared = MessageParser()
-    
+
     var sp = SocketPool.shared
     var lastTimelineEventTimestamp:NTimestamp? = nil
     var parsedBucket = ActorQueue<RelayMessage>()
@@ -21,13 +22,13 @@ class MessageParser {
             // Validation is CPU intensive. Moved it to Importer right before save step
             // so we dont waste cpu on duplicates etc
             guard let message = try? RelayMessage.parseRelayMessage(text: text, skipValidation: true) else {
-                print ("🚒🚒🚒 \(relayUrl) could not parse message. or verify sig: \(text)")
+                print("🚒🚒🚒 \(relayUrl) could not parse message. or verify sig: \(text)")
                 throw "could not parse message. or verify sig"
             }
             
             switch message.type {
-                case .OK:
-                    print("\(relayUrl): \(message.message)")
+//                case .OK:
+//                    print("\(relayUrl): \(message.message)")
                 case .NOTICE:
                     print("\(relayUrl): \(message.message)")
                 case .EOSE:

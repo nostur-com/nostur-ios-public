@@ -4,67 +4,101 @@
 //
 //  Created by Fabian Lachman on 22/02/2023.
 //
- 
-/// 5.907 events, butter smooth scrolling is possible!
-
 import SwiftUI
 import CoreData
+import Combine
 
-
-struct TL4: View {
+struct TL4W: View {
+    @EnvironmentObject var ns:NosturState
+    @Environment(\.managedObjectContext) var viewContext
     
+    var body: some View {
+        let _ = Self._printChanges()
+        TL4(pubkeys: ns.followingPublicKeys, context: viewContext)
+    }
+}
+
+struct TL4: View { /// 5.907 events in one view!, butter smooth scrolling is possible!
+    let ds:DataStore = .shared
+    @Environment(\.managedObjectContext) var viewContext
     let pubkeys:Set<String>
-    let newAtTop:Bool
-    
     @FetchRequest
     var events: FetchedResults<Event>
     
     var eventsSorted:[Event] {
-        get {
-            if (newAtTop) { return events.sorted(by: { $0.created_at < $1.created_at }) }// NEW INDEX = 0
-            return events.sorted(by: { $0.created_at < $1.created_at }) // OLD INDEX = 0
-        }
+        events.sorted(by: { $0.created_at < $1.created_at }) // OLDEST INDEX = 0
     }
     
     @State var selectedEvent:Event?
     @State private var oldEvents: [Event] = []
-
     
-    init(pubkeys:Set<String>, context:NSManagedObjectContext, newAtTop:Bool = false) {
+    @SceneStorage("selectedItemId") var selectedItemId: String?
+    @State var didRestore = false
+    
+    let FETCH_LIMIT = 120
+    
+    init(pubkeys:Set<String>, context:NSManagedObjectContext) {
+        print("🧨🧨🧨🧨🧨 I INIT AGAIN BITCH 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         self.pubkeys = pubkeys
-        self.newAtTop = newAtTop
         let r1 = Event.fetchRequest()
         r1.predicate = NSPredicate(format: "kind IN {1,6} AND pubkey IN %@", pubkeys)
-        r1.fetchLimit = 75
+        r1.fetchLimit = FETCH_LIMIT
         r1.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         let oldestCreatedAt = (try? context.fetch(r1).last?.created_at) ?? 0
         
         let r2 = Event.fetchRequest()
         r2.predicate = NSPredicate(format: "created_at >= %i AND kind IN {1,6} AND pubkey IN %@", oldestCreatedAt, pubkeys)
-        r2.fetchLimit = 75
+        r2.fetchLimit = FETCH_LIMIT
         r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         _events = FetchRequest(fetchRequest: r2)
     }
     
     var body: some View {
+        let _ = Self._printChanges()
         VStack {
-            Button { fetchEvents(pubkeys: pubkeys) } label: {
-                Text("FETCH")
-            }
-            Button {
-                fetchStuffForLastAddedNotes(ids: ids(eventsSorted))
-            } label: {
-                Text("FETCH REFS (ALL)")
-            }
             NavigationSplitView {
-                List(selection: $selectedEvent) {
-                    ForEach(eventsSorted) { event in
-                        NoteRowView(event:event).listRowInsets(EdgeInsets())
+                ZStack {
+                    ScrollViewReader { proxy in
+                        List {
+                            ForEach(eventsSorted) { event in
+                                NoteRowView(event:event)
+                                    .id(event.id!)
+                                    .listRowInsets(EdgeInsets())
+                                    .onTapGesture {
+                                        selectedEvent = event
+                                    }
+                                    .onAppear {
+    //                                    print("onAppear: \(d(event.created_at).description)")
+                                        Task.detached(priority: .userInitiated) {
+                                            ds.markAsRead.send(event)
+                                        }
+                                        if (didRestore) {
+                                            selectedItemId = event.id!
+                                            print("SceneStorage STORED: \(selectedItemId ?? "")")
+                                        }
+                                    }
+                            }
+                        }
+                        .onAppear {
+                            if (!didRestore && selectedItemId != nil) {
+                                withAnimation(.none) {
+                                    print("SceneStorage SCROLLING: \(selectedItemId ?? "")")
+                                    proxy.scrollTo(selectedItemId!, anchor: .bottom)
+                                    didRestore = true
+                                }
+                            }
+                        }
                     }
+                    .listStyle(.plain)
+                    .toolbar(content: toolbarContent)
+                    .safeAreaInset(edge: .top) {
+                        AppTopBar()
+                            .padding(5)
+                            .background(Color("BackgroundColor").opacity(0.9))
+                    }
+                    UnreadCounter()
                 }
-                .listStyle(.plain)
-                .toolbar(content: toolbarContent)
-                EmptyView()
+//                EmptyView()
             } detail: {
                 if let selectedEvent {
                     NoteDetail(event: selectedEvent)
@@ -72,7 +106,8 @@ struct TL4: View {
             }
         }
         .onAppear {
-            print("🟣🟣🟣 APPEAR: oldEvents: \(oldEvents.count) events: \(events.count) 🟣🟣🟣🟣")
+//            print("🟣🟣🟣 APPEAR: oldEvents: \(oldEvents.count) events: \(events.count)")
+            ds.notesChanged.send(eventsSorted)
         }
         .onChange(of: eventsSorted) { [eventsSorted] newEventsSorted in
             guard eventsSorted.last != nil else { return }
@@ -82,11 +117,19 @@ struct TL4: View {
 
             let newNotes = newEventsSorted.suffix(from: newIndexOfLastEvent! + 1)
 
-            print("🟣🟣🟣 CHANGE: events: \(events.count) newNotes: \(newNotes.count) 🟣🟣🟣🟣")
+            print("🟣🟣🟣 CHANGE: events: \(events.count) newNotes: \(newNotes.count)")
+            ds.notesChanged.send(newEventsSorted)
             fetchStuffForLastAddedNotes(ids: ids(newNotes))
         }
+        .onReceive(receiveNotification(.requestForJustAppeared)) { notification in
+            let events = notification.object as! [Event]
+            fetchStuffForLastAddedNotes(ids: ids(events))
+            fetchMissingReplyToContacts(events: events)
+        }
     }
-    
+}
+
+extension TL4 {
     @ToolbarContentBuilder
     private func toolbarContent() -> some ToolbarContent {
         ToolbarItemGroup(placement: .bottomBar) {
@@ -94,105 +137,18 @@ struct TL4: View {
                 Text("\(events.count) posts")
                     .foregroundStyle(Color.secondary)
                     .font(.caption)
-                Button { sendNotification(.wantsNewEvents) } label: {
-                    Text("FETCH")
-                }
+                Button { fetchEvents(pubkeys: pubkeys) } label: { Text("FETCH") }
+                Button { fetchStuffForLastAddedNotes(ids: ids(eventsSorted)) } label: { Text("REFS") }
+                Button { fetchMissingReplyToContacts(events: eventsSorted) } label: { Text("FETCH Ps") }
                 Spacer()
             }
         }
-    }
-}
-
-struct TLController: View {
-    @EnvironmentObject var ns:NosturState
-    @Environment(\.managedObjectContext) var viewContext
-    var sp: SocketPool = .shared
-    var mp: MessageParser = .shared
-    
-    @State private var oldestCreatedAt:Int64 = 0
-    @State private var newestCreatedAt:Int64?
-    
-    @State private var oldEvents: [Event] = []
-    @State private var lastEventId: [NSManagedObjectID] = []
-    
-    var body: some View {
-        
-        
-        VStack {
-            Button { fetchEvents() } label: {
-                Text("FETCH")
-            }
-            Button {
-                fetchStuffForLastAddedNotes(events: oldEvents)
-            } label: {
-                Text("FETCH REFS")
-            }
-            DynamicFetchView(predicate: NSPredicate(format: "created_at >= %i AND kind IN {1,6} AND pubkey IN %@", oldestCreatedAt, ns.followingPublicKeys), fetchLimit: 5, sortDescriptors: [NSSortDescriptor(keyPath:\Event.created_at, ascending: true)]) { (events: FetchedResults<Event>) in
-//                    let newEvents = events.filter { event in
-//                        newestCreatedAt == nil || event.created_at > newestCreatedAt!
-//                    }
-//                    let _ = fetchStuffForLastAddedNotes(events: newEvents)
-                    TLView(events: events)
-                    .onAppear {
-                        oldEvents = Array(events)
-                        print("🟣🟣🟣 APPEAR: oldEvents: \(oldEvents.count) events: \(events.count) 🟣🟣🟣🟣")
-                    }
-                    .onChange(of: events.last) { last in
-                        guard last != nil else { return }
-        
-                        let newIndexOfLastEvent = events.firstIndex(of: last!)
-                        guard newIndexOfLastEvent != nil else { return } // TODO: uuhh, apparently we totally wrong if this returns }
-        
-                        let newNotes = events.drop(while: { $0 != last! }).dropLast(1)
-        
-                        print("🟣🟣🟣 CHANGE: events: \(events.count) newNotes: \(newNotes.count) 🟣🟣🟣🟣")
-//                        let newEvents = Set(newNotes).subtracting(Set(events))
-//                        let latestQuakes = quakes.filter { latestQuakeIDs.contains($0.objectID) }
-//                        newQuakes = Array(latestQuakes.reversed())
-//                        callAnotherFunction(with: newQuakes)
-//                        latestQuakeIDs = Array(quakes.prefix(3).map { $0.objectID })
-                    }
-                
-            }.opacity(oldestCreatedAt != 0 ? 1 : 0)
-        }
-        .onAppear {
-            setOldestCreatedAt()
-        }
-        .onReceive(receiveNotification(.wantsNewEvents)) { notification in
-            fetchEvents()
-            // @TODO: fetch missing firstQuoteId + firstQuote == nil
-        }
-        .onReceive(receiveNotification(.requestEventReferences)) { notification in
-            let eventsNeedingDetails = notification.object as! [Event]
-            fetchStuffForLastAddedNotes(events: eventsNeedingDetails)
-        }
-    }
-    
-    private func fetchEvents(amount:Int? = 500) {
-        guard let pubkeys = ns.account?.follows?.map({ contact in
-            return contact.pubkey!
-        }) else { return }
-        
-        print("💿💿 getFollowingEvents for \(pubkeys.count) pubkeys 💿💿")
-        sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getFollowingEvents(pubkeys: Array(pubkeys), limit: amount!)))
-    }
-}
-
-extension TLController {
-    func setOldestCreatedAt() {
-        // NEEDED BECAUSE: INITIAL FETCHREQUEST RESPECTS FETCHLIMIT
-        // BUT AFTER IMPORTER, OLDER AND MANY MORE EVENTS START SHOWING UP IN FETCHEDRESULTS
-        let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "kind IN {1,6} AND pubkey IN %@", ns.followingPublicKeys)
-        fr.fetchLimit = 5
-        fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        oldestCreatedAt = (try? viewContext.fetch(fr).last?.created_at) ?? 0
     }
     
     func fetchMissingReplyToContacts(events:[Event]) {
         // TODO: FIXEN
         // TODO, bij importer, replyTo p in event.replyToPTag for speed up
-        let pubkeys = Array(Set(events.compactMap { TagsHelpers($0.tags()).reactingToPubkey() }))
+        let pubkeys = Array(Set(events.flatMap { TagsHelpers($0.tags()).pTags().map{ $0.pubkey } }))
         let contacts = Contact.fetchByPubkeys(pubkeys, context: viewContext)
         let missingPubkeys = pubkeys.filter {
             contacts.map { $0.pubkey! }.firstIndex(of: $0) == nil
@@ -203,80 +159,62 @@ extension TLController {
             }
             .filter { $0.updated_at == 0 }
             .map { $0.pubkey! }
-
-        sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missingPubkeys + emptyContactPubkeys )))
-    }
         
-    func fetchStuffForLastAddedNotes(events:[Event]) {
-        //TODO: Fixen
-        // Prepare #e filter
-        // Get all events that reference our event.id's on screen
-        // To update likes etc.
-
-        let eventIds = events.map { $0.id! }
-        sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEventReferences(ids: eventIds)))
+        guard (missingPubkeys + emptyContactPubkeys).count > 0 else { return }
+        SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missingPubkeys + emptyContactPubkeys )))
     }
 }
 
-
-struct TLView: View {
-    var events:FetchedResults<Event>
-    @State var selectedEvent:Event?
-    var last:Event? { events.last }
-
+struct TL4Wrapper: View {
+    @Environment(\.managedObjectContext) var viewContext
+    @EnvironmentObject var ns:NosturState
     var body: some View {
-        NavigationSplitView {
-            List(selection: $selectedEvent) {
-                ForEach(events) { event in
-                    NoteRowView(event:event).listRowInsets(EdgeInsets())
-                }
-            }
-            .listStyle(.plain)
-            .toolbar(content: toolbarContent)
-//            .onChange(of: last) { [last] newLast in
-//                guard last != nil else { return }
-//
-//                let newIndexOfLastEvent = events.firstIndex(of: last!)
-//                guard newIndexOfLastEvent != nil else { return } // TODO: uuhh, apparently we totally wrong if this returns }
-//
-//                let newNotes = events.drop(while: { $0 != last }).dropLast(1)
-//
-//                let newEvents = Set(newNotes).subtracting(Set(events))
-//                if (newEvents.count != 0) {
-//                    print("Added \(newEvents.count) new notes.")
-//                    sendNotification(.requestEventReferences, Array(newEvents))
-//                }
-//            }
-            EmptyView()
-        } detail: {
-            if let selectedEvent {
-                NoteDetail(event: selectedEvent)
-            }
-        }
+        let _ = Self._printChanges()
+        TL4(pubkeys: ns.followingPublicKeys, context: viewContext)
     }
 }
 
-// MARK: Toolbar Content
-extension TLView {
-    @ToolbarContentBuilder
-    private func toolbarContent() -> some ToolbarContent {
-        ToolbarItemGroup(placement: .bottomBar) {
+struct TL4_Previews: PreviewProvider {
+    static var previews: some View {
+        TL4Wrapper()
+            .withPreviewEnvironment()
+    }
+}
+
+
+
+
+
+struct UnreadCounter: View {
+    @EnvironmentObject var ds:DataStore
+    
+    var body: some View {
+        let _ = Self._printChanges()
+        VStack {
+            Spacer()
             HStack {
-                Text("\(events.count) posts")
-                    .foregroundStyle(Color.secondary)
-                    .font(.caption)
-                Button { sendNotification(.wantsNewEvents) } label: {
-                    Text("FETCH")
+                Spacer()
+                if (ds.unreadCount > 0) {
+                    HStack {
+                        Image(systemName: "arrow.down")
+                        Text("\(ds.unreadCount) unread")
+                        Image(systemName: "arrow.down")
+                    }
+                    .frame(minWidth: 30)
+                    .padding(10)
+                    .fontWeight(.bold)
+                    .foregroundColor(.white)
+                    .background(.blue)
+                    .opacity(0.95)
+                    .cornerRadius(20)
+                    .onTapGesture {
+//                            if let noteId = notes.dropLast(count).last?.id {
+//                                sendNotification(.shouldScrollToNote, noteId)
+//                            }
+                    }
                 }
                 Spacer()
             }
         }
-    }
-}
-
-struct TLController_Previews: PreviewProvider {
-    static var previews: some View {
-        TLController()
-            .withPreviewEnvironment()
     }
 }

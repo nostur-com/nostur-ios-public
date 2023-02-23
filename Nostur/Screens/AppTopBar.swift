@@ -9,18 +9,20 @@ import SwiftUI
 struct AppTopBar: View {
     
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var nav:NavigationModel
-    @Binding var showMenu:Bool
+//    @EnvironmentObject var nav:NavigationModel
+    var nav:NavigationModel = .shared
+//    @Binding var showSidebar:Bool
     @State var appTopBarIsHidden = false
     
     var body: some View {
         ZStack {
             if (!appTopBarIsHidden) {
                 HStack {
-                    if (ns.account != nil && !showMenu) {
+                    if (ns.account != nil && !nav.showSidebar) {
                         ProfilePicView(pubkey: ns.activeAccountPublicKey, account: ns.account, size:30)
-                            .offset(x: 30)
-                            .onTapGesture { showMenu.toggle() }
+                            .offset(x: 15)
+                            .offset(y: -5)
+                            .onTapGesture { nav.showSidebar.toggle() }
                     }
                     Spacer()
                 }
@@ -31,6 +33,7 @@ struct AppTopBar: View {
                         .scaledToFit()
                         .frame(height:30)
                         .clipShape(Circle())
+                        .offset(y: -5)
                     Spacer()
                 }
             }
@@ -56,9 +59,9 @@ struct AppTopBar: View {
 }
 
 struct AppTopBar_Previews: PreviewProvider {
-    @State static var showMenu = false
+//    @State static var showSidebar = false
     static var previews: some View {
-        AppTopBar(showMenu: $showMenu)
+        AppTopBar()
             .withPreviewEnvironment()
     }
 }
