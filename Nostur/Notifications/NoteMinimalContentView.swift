@@ -57,7 +57,7 @@ struct NoteMinimalContentView: View {
                 .padding(.trailing, 10)
             }
         }
-        .padding(.vertical, 10)
+//        .padding(.vertical, 10)
     }
 }
 

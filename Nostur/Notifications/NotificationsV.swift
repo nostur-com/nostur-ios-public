@@ -72,7 +72,7 @@ struct NotificationsV: View {
         ScrollView {
             LazyVStack(alignment:.leading) {
                 ForEach(myNotesReactedTo) { note in
-                    VStack(alignment:.leading) {
+                    VStack(alignment:.leading, spacing: 3) {
                         Group {
                             ReactionsForThisNote(reactions:reactionsForNote(note), onAppear: self.onAppear)
                             NoteMinimalContentView(event: note)
@@ -104,19 +104,26 @@ struct ReactionsForThisNote: View {
         VStack(alignment:.leading) {
             ZStack {
                 ForEach(withoutDuplicates.prefix(10).indices, id:\.self) { index in
-                    ProfilePic(event: reactions[index])
-                        .id(reactions[index].id!)
-                        .onAppear {
-                            onAppear(Int(reactions[index].created_at))
-                        }
-                        .offset(x:Double(0 + (25*index)))
+                    ZStack {
+                        ProfilePic(event: reactions[index])
+                            .id(reactions[index].id!)
+                            .onAppear {
+                                onAppear(Int(reactions[index].created_at))
+                            }
+                            .zIndex(-Double(index))
+                        Text(reactions[index].content == "+" ? "❤️" : reactions[index].content ?? "❤️")
+                            .offset(x:-10, y:+15)
+                            .zIndex(20)
+                        
+                    }
+                    .offset(x:Double(0 + (25*index)))
                 }
             }
             if (withoutDuplicates.count > 1) {
-                Text("**\(withoutDuplicates.first(where: { $0.contact?.authorName != nil })?.contact?.authorName ?? "???")** and \(withoutDuplicates.count - 1) others liked your post")
+                Text("**\(withoutDuplicates.first(where: { $0.contact?.authorName != nil })?.contact?.authorName ?? "???")** and \(withoutDuplicates.count - 1) others reacted to your post")
             }
             else {
-                Text("**\(withoutDuplicates.first(where: { $0.contact?.authorName != nil })?.contact?.authorName ?? "???")** liked your post")
+                Text("**\(withoutDuplicates.first(where: { $0.contact?.authorName != nil })?.contact?.authorName ?? "???")** reacted on your post")
             }
         }
         .onAppear {
@@ -145,8 +152,7 @@ struct ReactionsForThisNote: View {
 
 struct NotificationsV_Previews: PreviewProvider {
     static var previews: some View {
-//        let pubkey = "04c915daefee38317fa734444acee390a8269fe5810b2241e5e6dd343dfbecc9"
-        let pubkey = "6a0e6b709fb5239a3df637695764f153e56edccd48fa1c64916b8481d0ca3ab3"
+        let pubkey = "04c915daefee38317fa734444acee390a8269fe5810b2241e5e6dd343dfbecc9"
         NotificationsV(pubkey: pubkey, context: EventsProvider.preview.container.viewContext) { _ in
             
         }
