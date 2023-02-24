@@ -8,23 +8,78 @@
 import SwiftUI
 
 struct PaymentAmountSelector: View {
+    @EnvironmentObject var ns:NosturState
+    @Environment(\.openURL) var openURL
+    
+    let sp:SocketPool = .shared
+    
+    var contact:Contact?
+    var event:Event?
     var min:UInt64
     var max:UInt64
     var supportsZap:Bool
+    
+    var callback:String
     @State var amount:Float = 0.0
     @State var exchangeRate:Double? = 0.0
     @State var fiatPrice = ""
     @State var zapMessage = ""
     @Environment(\.dismiss) private var dismiss
     
-    var amountSelected: (Float, String) -> ()
-    
-    init(min: UInt64, max: UInt64, supportsZap:Bool, onAmountSelected: @escaping (Float, String) -> ()) {
-        self.min = min
-        self.max = max
-        self.supportsZap = supportsZap
-        self.amountSelected = onAmountSelected
+    func amountSelected(amount:Float, zapMessage:String) {
+        guard contact?.lud16 != nil && contact?.lud16 != "" else { return }
+        let pubkey = contact!.pubkey!
+        let eventId = event?.id ?? nil
+        let relays = sp.sockets.values
+            .filter { $0.write }
+            .map { $0.url }
+        
+        if (supportsZap) {
+            Task.detached(priority: .background) {
+                do {
+                    
+                    let zapRequestNote = zapRequest(forPubkey: pubkey, andEvent: eventId, withMessage: zapMessage, relays: relays)
+                    
+                    let signedZapRequestNote = try await ns.signEvent(zapRequestNote)
+                    
+                    let response = try await LUD16.getInvoice(url:callback, amount:UInt64(amount * 1000), zapRequestNote: signedZapRequestNote)
+                    
+                    if response.pr != nil {
+                        await MainActor.run {
+                            openURL(URL(string: "lightning:\(response.pr!)")!)
+                        }
+                    }
+                }
+                catch {
+                    print("problem fetching ln invoice / or signing zap request note")
+                    print(error)
+                }
+            }
+        }
+        else {
+            Task.detached(priority: .background) {
+                do {
+                    let response = try await LUD16.getInvoice(url:callback, amount:UInt64(amount * 1000))
+                    
+                    if response.pr != nil {
+                        await MainActor.run {
+                            openURL(URL(string: "lightning:\(response.pr!)")!)
+                        }
+                    }
+                }
+                catch {
+                    print("problem fetching ln invoice")
+                    print(error)
+                }
+            }
+        }
     }
+    
+//    init(min: UInt64, max: UInt64, supportsZap:Bool, onAmountSelected: @escaping (Float, String) -> ()) {
+//        self.min = min
+//        self.max = max
+//        self.supportsZap = supportsZap
+//    }
     
     var body: some View {
         VStack {
@@ -50,8 +105,7 @@ struct PaymentAmountSelector: View {
                 }
             }
             Button {
-                amountSelected(ceil(amount), zapMessage)
-//                dismiss()
+                amountSelected(amount:ceil(amount), zapMessage:zapMessage)
             } label: {
                 Text("Pay").padding(10)
                     .frame(minWidth: 200)
@@ -98,9 +152,7 @@ struct PaymentAmountSelector: View {
 
 struct PaymentAmountSelector_Previews: PreviewProvider {
     static var previews: some View {
-        PaymentAmountSelector(min: 1000/1000, max: 500000000/1000, supportsZap:true) { amount, zapMessage in
-            print(amount)
-            print(zapMessage)
-        }
+        PaymentAmountSelector(min: 1000/1000, max: 500000000/1000, supportsZap:true, callback: "")
+            .withPreviewEnvironment()
     }
 }

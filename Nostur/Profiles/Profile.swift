@@ -156,7 +156,7 @@ struct Profile: View {
                         
                         Spacer()
                         
-                        LightningButton(contact: contact)
+                        ProfileLightningButton(contact: contact)
                         
                         if (contact.pubkey! != ns.account?.publicKey!) {
                             Button {

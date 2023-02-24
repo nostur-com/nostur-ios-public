@@ -9,11 +9,9 @@ import SwiftUI
 
 struct LightningButton: View {
     
-    var sp:SocketPool = .shared
-    @EnvironmentObject var er:ExchangeRateModel
     @EnvironmentObject var ns:NosturState
-    
-    @Environment(\.openURL) var openURL
+    @EnvironmentObject var er:ExchangeRateModel
+
     var contact:Contact?
     var event:Event? = nil
     @State var isLoading = false
@@ -26,56 +24,30 @@ struct LightningButton: View {
     
     var body: some View {
         let _ = Self._printChanges()
-        if (event != nil) {
-            HStack {
-                if isLoading {
-                    ProgressView()
-                        .colorInvert()
+        HStack {
+            if isLoading {
+                ProgressView()
+                    .colorInvert()
+            }
+            else {
+                Image(systemName: "bolt")
+                if (er.bitcoinPrice != 0.0) {
+                    let fiatPrice = String(format: "$%.02f",(Double(event!.zapTally) / 100000000 * Double(er.bitcoinPrice)))
+                    
+                    Text("\(fiatPrice)")
                 }
                 else {
-                    Image(systemName: "bolt")
-                    if (er.bitcoinPrice != 0.0) {
-                        let fiatPrice = String(format: "$%.02f",(Double(event!.zapTally) / 100000000 * Double(er.bitcoinPrice)))
-                        
-                        Text("\(fiatPrice)")
-                    }
-                    else {
-                        Text("\(event!.zapTally.description) sats")
-                    }
+                    Text("\(event!.zapTally.description) sats")
                 }
-            }
-            .contentShape(Rectangle())
-            .onTapGesture {
-                guard contact?.lud16 != nil && contact?.lud16 != "" else { return }
-                buttonTapped()
-            }
-            .sheet(isPresented: $payAmountSelectorShown) {
-                renderPaymentSelector()
             }
         }
-        else {
-            Button {
-                buttonTapped()
-            } label: {
-                if isLoading {
-                    ProgressView()
-                        .colorInvert()
-                }
-                else {
-                    Text("⚡️")
-                }
-            }
-            .frame(width: 40, height: 30)
-            .font(.caption.weight(.heavy))
-            .background(Color("BackgroundColor"))
-            .cornerRadius(20)
-            .overlay {
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(.gray, lineWidth: 1)
-            }
-            .sheet(isPresented: $payAmountSelectorShown) {
-                renderPaymentSelector()
-            }.opacity(contact?.lud16 == nil || contact?.lud16 == "" ? 0 : 1)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            guard contact?.lud16 != nil && contact?.lud16 != "" else { return }
+            buttonTapped()
+        }
+        .sheet(isPresented: $payAmountSelectorShown) {
+            PaymentAmountSelector(contact: event?.contact, event: event, min: min, max: max, supportsZap: supportsZap, callback: callback)
         }
     }
     
@@ -107,57 +79,6 @@ struct LightningButton: View {
             catch {
                 print("🔴 problem in lnurlp")
                 print(error)
-            }
-        }
-    }
-    
-    fileprivate func renderPaymentSelector() -> PaymentAmountSelector {
-        return PaymentAmountSelector(min:min, max:max, supportsZap:supportsZap) { amount, zapMessage in
-            guard contact?.lud16 != nil && contact?.lud16 != "" else { return }
-            let pubkey = contact!.pubkey!
-            let eventId = event?.id ?? nil
-            let relays = sp.sockets.values
-                .filter { $0.write }
-                .map { $0.url }
-            
-            if (supportsZap) {
-                Task.detached(priority: .background) {
-                    do {
-                        
-                        let zapRequestNote = zapRequest(forPubkey: pubkey, andEvent: eventId, withMessage: zapMessage, relays: relays)
-                        
-                        let signedZapRequestNote = try await ns.signEvent(zapRequestNote)
-                        
-                        let response = try await LUD16.getInvoice(url:callback, amount:UInt64(amount * 1000), zapRequestNote: signedZapRequestNote)
-                        
-                        if response.pr != nil {
-                            await MainActor.run {
-                                openURL(URL(string: "lightning:\(response.pr!)")!)
-                            }
-                        }
-                    }
-                    catch {
-                        print("problem fetching ln invoice / or signing zap request note")
-                        print(error)
-                    }
-                }
-            }
-            else {
-                Task.detached(priority: .background) {
-                    do {
-                        let response = try await LUD16.getInvoice(url:callback, amount:UInt64(amount * 1000))
-                        
-                        if response.pr != nil {
-                            await MainActor.run {
-                                openURL(URL(string: "lightning:\(response.pr!)")!)
-                            }
-                        }
-                    }
-                    catch {
-                        print("problem fetching ln invoice")
-                        print(error)
-                    }
-                }
             }
         }
     }
