@@ -86,7 +86,7 @@ struct ProfileRelaysView: View {
             }
         }
         else {
-            Text("relays is nil")
+            EmptyView()
         }
         
     }

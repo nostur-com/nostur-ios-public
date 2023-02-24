@@ -54,12 +54,12 @@ struct NoteRowView: View {
                 HStack {
                     Image(systemName: "arrow.2.squarepath")
                     Text("\(event.name) reposted")
-//                    if (devToggle) {
-//                        Text("id: \(String(event.id!.prefix(5)))")
-//                            .onTapGesture {
-//                                UIPasteboard.general.string = event.id!
-//                            }
-//                    }
+                    if (devToggle) {
+                        Text("id: \(String(event.id!.prefix(5)))")
+                            .onTapGesture {
+                                UIPasteboard.general.string = event.id!
+                            }
+                    }
                 }
                 .foregroundColor(.gray)
                 .onTapGesture {
@@ -219,12 +219,6 @@ struct NoteRowView: View {
         
     }
 }
-
-
-
-
-
-
 
 struct NoteRowView_Previews: PreviewProvider {
     

@@ -97,7 +97,7 @@ final class NosturState : ObservableObject {
             }
             activeAccountPublicKey = self.account!.publicKey!
         }
-        loadFollowing()
+//        loadFollowing()
         DataStore.shared.unreadCount = 0
         Task(priority: .userInitiated) {
             self.loadLikesAndReposts()
@@ -156,19 +156,19 @@ final class NosturState : ObservableObject {
         }
     }
     
-    func loadFollowing() {
-        if (account?.follows != nil) {
-            let pubkeys = account!.follows?.map { $0.pubkey! } ?? []
-//            print("💿 follows:")
-//            print(pubkeys)
-//            self.objectWillChange.send()
-//            self.followingPublicKeys = Set( pubkeys )
-        }
-        else {
-//            self.objectWillChange.send()
-//            self.followingPublicKeys = Set([])
-        }
-    }
+//    func loadFollowing() {
+//        if (account?.follows != nil) {
+//            let pubkeys = account!.follows?.map { $0.pubkey! } ?? []
+////            print("💿 follows:")
+////            print(pubkeys)
+////            self.objectWillChange.send()
+////            self.followingPublicKeys = Set( pubkeys )
+//        }
+//        else {
+////            self.objectWillChange.send()
+////            self.followingPublicKeys = Set([])
+//        }
+//    }
     
     func follow(_ pubkey:String) {
         guard account != nil else {

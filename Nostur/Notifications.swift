@@ -47,6 +47,11 @@ extension Notification.Name {
         return Notification.Name("shouldScrollToNote")
     }
     
+    static var shouldScrollToUnreadNote: Notification.Name {
+        return Notification.Name("shouldScrollToUnreadNote")
+    }
+    
+    
     static var newNotesAvailable: Notification.Name {
         return Notification.Name("newNotesAvailable")
     }

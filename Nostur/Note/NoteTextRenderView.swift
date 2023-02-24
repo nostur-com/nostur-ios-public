@@ -235,8 +235,6 @@ struct NoteTextRenderView_Previews: PreviewProvider {
         
         let event0 = PreviewFetcher.fetchEvent("21a1b8e4083c11eab8f280dc0c0bddf3837949df75662e181ad117bd0bd5fdf3")
         
-        let allContacts = PreviewFetcher.allContacts()
-        
         VStack {
             Group {
                 if (event0 != nil) {

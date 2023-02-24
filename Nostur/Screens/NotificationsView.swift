@@ -25,6 +25,8 @@ struct NotificationsW: View {
 
 struct NotificationsView: View {
     
+    @Environment(\.managedObjectContext) var viewContext
+    
     var account:Account
     
     @AppStorage("lastNotificationDate") var lastNotificationDate = 0
@@ -99,15 +101,21 @@ struct NotificationsView: View {
                 switch (tab) {
                     case "NOTES":
                         Notes(notes: myNotifications) { creationDate in
-                            lastNotificationDate = creationDate
+                            if (creationDate > lastNotificationDate) {
+                                lastNotificationDate = creationDate
+                            }
                         }
                     case "REACTIONS":
-                        Reactions(reactions: myReactions) { creationDate in
-                            lastNotificationDate = creationDate
+                        NotificationsV(pubkey: ns.account!.publicKey!, context: viewContext) { creationDate in
+                            if (creationDate > lastNotificationDate) {
+                                lastNotificationDate = creationDate
+                            }
                         }
                     case "ZAPS":
                         Zaps(zaps: myZaps) { creationDate in
-                            lastNotificationDate = creationDate
+                            if (creationDate > lastNotificationDate) {
+                                lastNotificationDate = creationDate
+                            }
                         }
                     default:
                         EmptyView()

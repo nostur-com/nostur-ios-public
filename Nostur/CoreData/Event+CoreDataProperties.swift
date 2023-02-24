@@ -461,6 +461,10 @@ extension Event {
         tags().first(where: { $0.type == "e" })?.id
     }
     
+    func lastP() -> String? {
+        tags().first(where: { $0.type == "p" })?.pubkey
+    }
+    
     func contactPubkeys() -> [String]? {
         let decoder = JSONDecoder()
         
@@ -587,28 +591,26 @@ extension Event {
         if (event.kind == .textNote) {
             let tags = TagsHelpers(event.tags)
             
-            if let replyToRootEtag = tags.replyToRootEtag() {
-                savedEvent.replyToRootId = replyToRootEtag.id
-                
-                if let rootReply = try? Event.fetchEvent(id: replyToRootEtag.id, context: context) {
-                    savedEvent.replyToRoot = rootReply
-                    rootReply.objectWillChange.send()
-                    rootReply.addToReplies(savedEvent)
-                    rootReply.repliesCount += 1
-                }
-            }
-            
+            // THIS EVENT REPLYING TO SOMETHING
+            // CACHE THE REPLY "E" IN replyToId
             if let replyToEtag = tags.replyToEtag() {
                 savedEvent.replyToId = replyToEtag.id
                 
+                // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
                 if let replyTo = try? Event.fetchEvent(id: replyToEtag.id, context: context) {
                     savedEvent.replyTo = replyTo
                     
-                    if (savedEvent.replyToRootId != savedEvent.replyToId) { // If reply is same as reply root, dont double add.
-                        replyTo.objectWillChange.send()
-                        replyTo.addToReplies(savedEvent)
-                        replyTo.repliesCount += 1
-                    }
+                    replyTo.objectWillChange.send()
+                    replyTo.addToReplies(savedEvent)
+                    replyTo.repliesCount += 1
+                }
+            }
+            
+            // IF THE THERE IS A ROOT, AND ITS NOT THE SAME AS THE REPLY TO
+            // DO THE SAME AS WITH THE REPLY BEFORE
+            if let replyToRootEtag = tags.replyToRootEtag() {
+                if (replyToRootEtag.id != savedEvent.replyToId) { // If reply root is same as reply, dont double add.
+                    savedEvent.replyToRootId = replyToRootEtag.id
                 }
             }
               
@@ -643,7 +645,7 @@ extension Event {
         }
         
         
-        if (1 == 2) { // TODO: Temp disabled for speed up check..
+        if (1 == 1) { // TODO: Temp disabled for speed up check..
             // if other existing messages were replying, mentioning, reposting (to) this, fix the relation
             let pointingToEventReq = NSFetchRequest<Event>(entityName: "Event")
             //        pointingToEventReq.predicate = NSPredicate(format: "(kind IN {1,6} AND  (replyToId == %@ OR replyToRootId == %@ OR firstQuoteId == %@)", savedEvent.id!, savedEvent.id!, savedEvent.id!)

@@ -28,7 +28,7 @@ struct NosturRootMenu: View {
             //TODO: Check if ns.account is loaded first
             if (ns.account != nil) {
 //                NosturTabsView(selectedTab: $nav.selectedTab, timelinePath: $nav.timelinePath, searchPath: $nav.searchPath, accountsPath: $nav.accountsPath, bookmarksPath: $nav.bookmarksPath, notificationsPath: $nav.notificationsPath, messagesPath: $nav.messagesPath, configurationPath: $nav.configurationPath)
-                NosturTabsView(showSidebar: $nav.showSidebar, selectedTab: $nav.selectedTab, timelinePath: $nav.timelinePath, searchPath: $nav.searchPath, accountsPath: $nav.accountsPath, bookmarksPath: $nav.bookmarksPath, notificationsPath: $nav.notificationsPath, messagesPath: $nav.messagesPath, configurationPath: $nav.configurationPath)
+                NosturTabsView(showSidebar: $nav.showSidebar, selectedTab: $nav.selectedTab, timelinePath: $nav.timelinePath, searchPath: $nav.searchPath, accountsPath: $nav.accountsPath, bookmarksPath: $nav.bookmarksPath, notificationsPath: $nav.notificationsPath, messagesPath: $nav.messagesPath, configurationPath: $nav.configurationPath, detailPath: $nav.detailPath)
                     .onOpenURL { url in
                         self.handleUrl(url)
                     }

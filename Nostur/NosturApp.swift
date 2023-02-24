@@ -42,14 +42,12 @@ struct NosturApp: App {
     var body: some Scene {
         WindowGroup {
             Onboarding()
-//            TL2()
                 .environment(\.managedObjectContext, EventsProvider.shared.container.viewContext)
                 .environmentObject(ns)
                 .environmentObject(er)
                 .environmentObject(sp)
                 .environmentObject(nav)
                 .environmentObject(up)
-//                .environmentObject(model)
                 .environmentObject(ucm)
                 .environmentObject(tm)
                 .environmentObject(ds)

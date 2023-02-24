@@ -12,12 +12,26 @@ struct TryGuestAccountSheet: View {
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var sp:SocketPool
     @EnvironmentObject var nav:NavigationModel
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) var viewContext
     @State var letsGo = false
     
     var body: some View {
         let _ = Self._printChanges()
         VStack(alignment: .center) {
+            if UIDevice.current.userInterfaceIdiom == .pad {
+                HStack {
+                    Spacer()
+                    Image(systemName: "xmark.circle.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 30, height: 30)
+                        .padding(30)
+                        .onTapGesture {
+                            dismiss()
+                        }
+                }
+            }
             Text("Try Nostur as guest").font(.largeTitle)
             
             Text("The guest account is already following some people. You can read posts and view profiles, but you cannot post or like things until you create a new account yourself").multilineTextAlignment(.center)

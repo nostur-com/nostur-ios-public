@@ -37,7 +37,7 @@ struct NoteReactions: View {
                     missing.append(reaction.pubkey!)
                 }
             }
-            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys:   missing)))
+            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missing)))
         }
     }
 }

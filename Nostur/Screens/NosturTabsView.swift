@@ -22,17 +22,15 @@ struct NosturTabsView: View {
     @Binding var notificationsPath:NavigationPath
     @Binding var messagesPath:NavigationPath
     @Binding var configurationPath:NavigationPath
+    @Binding var detailPath:NavigationPath
     
     var body: some View {
         let _ = Self._printChanges()
-        VStack {
+        HStack {
             TabView(selection: $selectedTab) {
                 NavigationStack(path: $timelinePath) {
-//                    Timeline()
-//                    TLController()
-//                    TL4(pubkeys: ns.followingPublicKeys, context: viewContext, showMenu: $showMenu)
-//                    Text("hi")
-                    TL4W()
+                    TimelineContainer()
+                        .frame(maxWidth: 600)
                         .withNavigationDestinations()
                 }
                 .tabItem { Image(systemName: "house") }.tag("Timeline")
@@ -70,6 +68,14 @@ struct NosturTabsView: View {
                 .tag("Configuration")
             }
             .background(.regularMaterial)
+            .frame(maxWidth: 600)
+            if UIDevice.current.userInterfaceIdiom == .pad {
+                NavigationStack(path: $detailPath) {
+                    DetailContainer()
+                        .frame(maxWidth: 600)
+                        .withNavigationDestinations()
+                }
+            }
         }
     }
     
@@ -86,11 +92,12 @@ struct ContentView_Previews: PreviewProvider {
     @State static var notificationsPath = NavigationPath()
     @State static var messagesPath = NavigationPath()
     @State static var configurationPath = NavigationPath()
+    @State static var detailPath = NavigationPath()
     @State static var showSidebar = false
     
     static var previews: some View {
 //        NosturTabsView(selectedTab: $selectedTab, timelinePath: $timelinePath, searchPath: $searchPath, accountsPath: $accountsPath, bookmarksPath: $bookmarksPath, notificationsPath: $notificationsPath, messagesPath: $messagesPath, configurationPath: $configurationPath)
-        NosturTabsView(showSidebar: $showSidebar, selectedTab: $selectedTab, timelinePath: $timelinePath, searchPath: $searchPath, accountsPath: $accountsPath, bookmarksPath: $bookmarksPath, notificationsPath: $notificationsPath, messagesPath: $messagesPath, configurationPath: $configurationPath)
+        NosturTabsView(showSidebar: $showSidebar, selectedTab: $selectedTab, timelinePath: $timelinePath, searchPath: $searchPath, accountsPath: $accountsPath, bookmarksPath: $bookmarksPath, notificationsPath: $notificationsPath, messagesPath: $messagesPath, configurationPath: $configurationPath, detailPath: $detailPath)
             .withPreviewEnvironment()
     }
 }

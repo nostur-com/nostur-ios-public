@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct Settings:View {
+struct Settings: View {
     @EnvironmentObject var settings: SettingsStore
 
     var body: some View {

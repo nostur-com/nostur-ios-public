@@ -42,6 +42,20 @@ struct NewAccountSheet: View {
     var body: some View {
         
         VStack {
+            if UIDevice.current.userInterfaceIdiom == .pad {
+                HStack {
+                    Spacer()
+                    Image(systemName: "xmark.circle.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 30, height: 30)
+                        .padding(30)
+                        .onTapGesture {
+                            dismiss()
+                        }
+                }
+            }
+            
             Text("Create new account")
                 .font(.largeTitle)
                 

@@ -40,7 +40,8 @@ struct AccountsSheet: View {
                         .onTapGesture {
                             dismiss()
                         }
-                }}
+                }
+            }
             Text("Accounts").font(.title3)
             
             List {

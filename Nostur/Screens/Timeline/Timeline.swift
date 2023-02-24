@@ -8,39 +8,7 @@ import SwiftUI
 import CoreData
 import Combine
 
-struct NewNoteButton: View {
-    @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var nav:NavigationModel
-    @Binding var showingNewNote:Bool
-    
-    var body: some View {
-        VStack {
-            Spacer()
-            HStack {
-                Spacer()
-                Button {
-                    guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
-                    showingNewNote = true
-                } label: {
-                    ZStack {
-                        Circle() // Transparent plug.circle looks weird - so make white here
-                            .foregroundColor(Color(.white))
-                            .frame(width: 45, height: 45)
-                            .padding(30)
-                        Image(systemName: "plus.circle.fill")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 45, height: 45)
-                            .padding(30)
-                    }
-                }
-            }
-            //                .offset(x:-30,y:-55)
-        }
-    }
-}
-
-struct TL4W: View {
+struct TimelineContainer: View {
     @EnvironmentObject var ns:NosturState
     @Environment(\.managedObjectContext) var viewContext
     @State var showingNewNote = false
@@ -52,10 +20,10 @@ struct TL4W: View {
         let _ = Self._printChanges()
         ZStack {
             if UIDevice.current.userInterfaceIdiom == .pad {
-                TL4(pubkeys: ns.followingPublicKeys, context: viewContext)
+                Timeline(pubkeys: ns.followingPublicKeys, context: viewContext)
             }
             else {
-                TL4(pubkeys: ns.followingPublicKeys, context: viewContext)
+                Timeline(pubkeys: ns.followingPublicKeys, context: viewContext)
             }
             NewNoteButton(showingNewNote: $showingNewNote)
         }
@@ -70,7 +38,7 @@ struct TL4W: View {
     }
 }
 
-struct TL4: View { /// 5.907 events in one view!, butter smooth scrolling is possible!
+struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling is possible!
     let ds:DataStore = .shared
     @Environment(\.managedObjectContext) var viewContext
     let pubkeys:Set<String>
@@ -136,6 +104,24 @@ struct TL4: View { /// 5.907 events in one view!, butter smooth scrolling is pos
                         }
                         ds.didRestore = true
                     }
+                    .onReceive(receiveNotification(.shouldScrollToUnreadNote)) { _ in
+                        print(3333)
+                        if (ds.mostRecentReadEvent != nil) {
+                            print(1111)
+                            withAnimation {
+                                proxy.scrollTo(ds.mostRecentReadEvent!.id!, anchor: .bottom)
+                            }
+                        }
+                        else {
+                            print(22222)
+                            if (events.last != nil) {
+                                print(33333)
+                                withAnimation {
+                                    proxy.scrollTo(events.last!.id, anchor: .bottom)
+                                }
+                            }
+                        }
+                    }
                 }
                 .listStyle(.plain)
 //                .toolbar(content: toolbarContent)
@@ -187,7 +173,7 @@ struct TL4: View { /// 5.907 events in one view!, butter smooth scrolling is pos
     }
 }
 
-extension TL4 {
+extension Timeline {
     @ToolbarContentBuilder
     private func toolbarContent() -> some ToolbarContent {
         ToolbarItemGroup(placement: .bottomBar) {
@@ -223,45 +209,13 @@ extension TL4 {
     }
 }
 
-struct TL4_Previews: PreviewProvider {
+struct Timeline_Previews: PreviewProvider {
     static var previews: some View {
-        TL4W()
+        TimelineContainer()
             .withPreviewEnvironment()
     }
 }
 
 
 
-struct UnreadCounter: View {
-    @EnvironmentObject var ds:DataStore
-    
-    var body: some View {
-        let _ = Self._printChanges()
-        VStack {
-            Spacer()
-            HStack {
-                Spacer()
-                if (ds.unreadCount > 0) {
-                    HStack {
-                        Image(systemName: "arrow.down")
-                        Text("\(ds.unreadCount) unread")
-                        Image(systemName: "arrow.down")
-                    }
-                    .frame(minWidth: 30)
-                    .padding(10)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
-                    .background(.blue)
-                    .opacity(0.95)
-                    .cornerRadius(20)
-                    .onTapGesture {
-                        //                            if let noteId = notes.dropLast(count).last?.id {
-                        //                                sendNotification(.shouldScrollToNote, noteId)
-                        //                            }
-                    }
-                }
-                Spacer()
-            }
-        }
-    }
-}
+

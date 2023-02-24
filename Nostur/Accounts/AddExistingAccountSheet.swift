@@ -23,6 +23,19 @@ struct AddExistingAccountSheet: View {
     var body: some View {
         ZStack {
             VStack{
+                if UIDevice.current.userInterfaceIdiom == .pad {
+                    HStack {
+                        Spacer()
+                        Image(systemName: "xmark.circle.fill")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 30, height: 30)
+                            .padding(30)
+                            .onTapGesture {
+                                dismiss()
+                            }
+                    }
+                }
                 Text("Add existing account")
                     .font(.title)
                 

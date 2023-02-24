@@ -53,11 +53,11 @@ struct NoteHeader: View {
                 .onTapGesture {
                     nav.navigateTo(ContactPath(key: event.pubkey!))
                 }
-                Spacer()
-                Text(Date(timeIntervalSince1970: TimeInterval(event.created_at)), format: Date.VerbatimFormatStyle(format: "\(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased)):\(minute: .twoDigits)", timeZone: .current, calendar: .current))
-                    .padding(.trailing, 5)
-                    .lineLimit(1)
-                    .layoutPriority(1)
+//                Spacer()
+//                Text(Date(timeIntervalSince1970: TimeInterval(event.created_at)), format: Date.VerbatimFormatStyle(format: "\(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased)):\(minute: .twoDigits)", timeZone: .current, calendar: .current))
+//                    .padding(.trailing, 5)
+//                    .lineLimit(1)
+//                    .layoutPriority(1)
             }
             if (!singleLine) {
                 Text("@\(event.contact?.username ?? event.authorKey) · \(event.ago)") //

@@ -30,9 +30,6 @@ struct NoteById: View {
     var body: some View {
         if (events.first != nil) {
             NoteDetail(event: events.first!)
-                .onAppear {
-                    
-                }
         }
         else {
             Text("Trying to fetch...").onAppear {
@@ -59,6 +56,7 @@ struct NoteDetail: View {
                 }
             }
         }
+//        .toolbar(.hidden, for: .navigationBar)
     }
 }
 

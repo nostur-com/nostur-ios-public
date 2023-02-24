@@ -90,10 +90,15 @@ class NavigationModel: ObservableObject {
     @Published var notificationsPath = NavigationPath()
     @Published var messagesPath = NavigationPath()
     @Published var configurationPath = NavigationPath()
+    @Published var detailPath = NavigationPath()
     
     @Published var onboardingPath = NavigationPath()
     
     func navigateTo(_ path:any Hashable) -> Void {
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            self.detailPath.append(path)
+            return
+        }
         switch (selectedTab) {
             case "Timeline":
                 self.timelinePath.append(path)
@@ -118,6 +123,7 @@ class NavigationModel: ObservableObject {
         switch (selectedTab) {
             case "Timeline":
                 self.timelinePath.removeLast(self.timelinePath.count)
+                self.detailPath.removeLast(self.detailPath.count)
             case "Accounts":
                 self.accountsPath.removeLast(self.accountsPath.count)
             case "Bookmarks":

@@ -65,7 +65,7 @@ class Importer {
                     }
                     
                     // ANNOYING FIX FOR KIND 6 WITH JSON STRING OF ANOTHER EVENT IN EVENT.CONTENT. WTF
-                    if event.kind == .repost && event.content.prefix(2) == #"{""# {
+                    if event.kind == .repost && (event.content.prefix(2) == #"{""# || event.content == "") {
                         let decoder = JSONDecoder()
                         if let noteInNote = try? decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
                             if try Event.fetchEvent(id: noteInNote.id, context: context) == nil {
