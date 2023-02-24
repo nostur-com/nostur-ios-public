@@ -8,6 +8,7 @@
 import SwiftUI
 import Foundation
 import CoreData
+import Combine
 
 final class NosturState : ObservableObject {
     
@@ -17,8 +18,23 @@ final class NosturState : ObservableObject {
     // public keys of the contacts that the currently active ("logged in") account follows
     // WTF followingPublicKeys met @Published is superlangzaam... HMMM.
     //@Published var followingPublicKeys:Set<String> = Set<String>()
-    @Published var followingPublicKeys:Set<String> = Set<String>()
+//    @Published var followingPublicKeys:Set<String> = Set<String>()
+//    var followingPublicKeys = CurrentValueSubject<[String], Never>([String]())
+    var followingPublicKeys:Set<String> {
+        get {
+            if account == nil { return Set<String>() }
+            
+            let blocked = (account!.blockedContacts ?? Set<Contact>()).map { $0.pubkey! }
+            
+            let withSelfIncluded = Set([account!.publicKey!] + (account!.follows ?? Set<Contact>()).map { $0.pubkey! })
+            let withoutBlocked = withSelfIncluded.subtracting(blocked)
+            
+            return withoutBlocked
+        }
+    }
     
+    var subscriptions = Set<AnyCancellable>()
+
     @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""
     @Published var account:Account? = nil
     
@@ -40,9 +56,11 @@ final class NosturState : ObservableObject {
     func setAccount(account:Account? = nil) {
         self.account = account
         if (account == nil) {
-            self.followingPublicKeys = []
+//            self.objectWillChange.send()
+//            self.followingPublicKeys = []
         }
         else {
+//            self.objectWillChange.send()
             _ = loadActiveAccount(account: account)
             activeAccountPublicKey = account!.publicKey!
         }
@@ -80,13 +98,14 @@ final class NosturState : ObservableObject {
             activeAccountPublicKey = self.account!.publicKey!
         }
         loadFollowing()
+        DataStore.shared.unreadCount = 0
         Task(priority: .userInitiated) {
-            self.loadLikes()
+            self.loadLikesAndReposts()
         }
         return self.account
     }
     
-    func loadLikes() {
+    func loadLikesAndReposts() {
         guard self.account != nil else {
             print("🔴🔴 no account 🔴🔴")
             return
@@ -94,19 +113,21 @@ final class NosturState : ObservableObject {
         
         let backgroundContext = container.newBackgroundContext()
 
+        print("🎒🎒 LOAD LIKES/REPOSTS CACHE FOR ACCOUNT: ZEROING 🎒🎒")
         backgroundContext.perform {
             let batchUpdate = NSBatchUpdateRequest(entityName: "Event")
-            batchUpdate.propertiesToUpdate = ["liked": 0]
+            batchUpdate.propertiesToUpdate = ["liked": 0, "reposted": 0]
             batchUpdate.resultType = .updatedObjectsCountResultType
 
             do {
                 let result = try backgroundContext.execute(batchUpdate) as! NSBatchUpdateResult
-                print("Zerod .liked property for \(result.result!) events")
+                print("Zerod .liked/.reposted property for \(result.result!) events")
             } catch {
-                print("Failed to zero .liked")
+                print("Failed to zero .liked/.reposted")
             }
         }
 
+        print("🎒🎒 LOAD LIKES/REPOSTS CACHE FOR ACCOUNT: SETTING 🎒🎒")
         backgroundContext.performAndWait {
             let account = backgroundContext.object(with: self.account!.objectID) as! Account
             guard account.likes != nil else {
@@ -120,6 +141,19 @@ final class NosturState : ObservableObject {
 
             print("Updated likes cache for \(account.likes!.count) events... NEED TO SAVE HERE OR NO?")
         }
+        backgroundContext.performAndWait {
+            let account = backgroundContext.object(with: self.account!.objectID) as! Account
+            guard account.reposts != nil else {
+                print("🔴🔴 no account or account.reposts 🔴🔴")
+                return
+            }
+
+            for event in account.reposts! {
+                event.reposted = true
+            }
+
+            print("Updated reposts cache for \(account.reposts!.count) events... NEED TO SAVE HERE OR NO?")
+        }
     }
     
     func loadFollowing() {
@@ -127,10 +161,12 @@ final class NosturState : ObservableObject {
             let pubkeys = account!.follows?.map { $0.pubkey! } ?? []
 //            print("💿 follows:")
 //            print(pubkeys)
-            self.followingPublicKeys = Set( pubkeys )
+//            self.objectWillChange.send()
+//            self.followingPublicKeys = Set( pubkeys )
         }
         else {
-            self.followingPublicKeys = Set([])
+//            self.objectWillChange.send()
+//            self.followingPublicKeys = Set([])
         }
     }
     
@@ -151,7 +187,7 @@ final class NosturState : ObservableObject {
         }
 
         try! viewContext.save()
-        followingPublicKeys.insert(pubkey)
+//        followingPublicKeys.insert(pubkey)
     }
     
     func follow(_ contact:Contact) {
@@ -161,7 +197,7 @@ final class NosturState : ObservableObject {
         account!.addToFollows(contact)
         try! viewContext.save()
         
-        followingPublicKeys.insert(contact.pubkey!)
+//        followingPublicKeys.insert(contact.pubkey!)
         
         guard let clEvent = try? AccountManager.createContactListEvent(account: account!) else {
             print("🔴🔴 Could not create new clEvent")
@@ -171,7 +207,7 @@ final class NosturState : ObservableObject {
     }
     
     func unfollow(_ pubkey: String) {
-        followingPublicKeys.remove(pubkey)
+//        followingPublicKeys.remove(pubkey)
         
         guard let contact = Contact.contactBy(pubkey: pubkey, context: viewContext) else {
             return
@@ -190,7 +226,7 @@ final class NosturState : ObservableObject {
     }
     
     func unfollow(_ contact:Contact) {
-        followingPublicKeys.remove(contact.pubkey!)
+//        followingPublicKeys.remove(contact.pubkey!)
         
         guard let contact = Contact.contactBy(pubkey: contact.pubkey!, context: viewContext) else {
             return

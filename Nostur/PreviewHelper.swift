@@ -34,6 +34,7 @@ extension View {
         _ = ns.loadActiveAccount(account: account)
         let ds:DataStore = .shared
         let er:ExchangeRateModel = .shared
+        let ss = SettingsStore()
         
         return self.defaultAppStorage(userDefaults)
             .environment(\.managedObjectContext,
@@ -45,6 +46,7 @@ extension View {
             .environmentObject(nav)
             .environmentObject(er)
             .environmentObject(ds)
+            .environmentObject(ss)
     }
 }
 

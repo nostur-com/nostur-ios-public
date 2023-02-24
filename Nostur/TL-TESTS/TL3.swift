@@ -8,13 +8,65 @@ import SwiftUI
 import CoreData
 import Combine
 
+struct NewNoteButton: View {
+    @EnvironmentObject var ns:NosturState
+    @EnvironmentObject var nav:NavigationModel
+    @Binding var showingNewNote:Bool
+    
+    var body: some View {
+        VStack {
+            Spacer()
+            HStack {
+                Spacer()
+                Button {
+                    guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
+                    showingNewNote = true
+                } label: {
+                    ZStack {
+                        Circle() // Transparent plug.circle looks weird - so make white here
+                            .foregroundColor(Color(.white))
+                            .frame(width: 45, height: 45)
+                            .padding(30)
+                        Image(systemName: "plus.circle.fill")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 45, height: 45)
+                            .padding(30)
+                    }
+                }
+            }
+            //                .offset(x:-30,y:-55)
+        }
+    }
+}
+
 struct TL4W: View {
     @EnvironmentObject var ns:NosturState
     @Environment(\.managedObjectContext) var viewContext
+    @State var showingNewNote = false
+    @State var noteCancellationId:UUID?
+
     
     var body: some View {
+        let _ = print("👍👍 \(ns.followingPublicKeys)")
         let _ = Self._printChanges()
-        TL4(pubkeys: ns.followingPublicKeys, context: viewContext)
+        ZStack {
+            if UIDevice.current.userInterfaceIdiom == .pad {
+                TL4(pubkeys: ns.followingPublicKeys, context: viewContext)
+            }
+            else {
+                TL4(pubkeys: ns.followingPublicKeys, context: viewContext)
+            }
+            NewNoteButton(showingNewNote: $showingNewNote)
+        }
+        .sheet(isPresented: $showingNewNote) {
+            NewNote(noteCancellationId: $noteCancellationId)
+        }
+//        .onReceive(ns.$followingPublicKeys) { (p) in
+//            print("👍👍👍👍")
+//            print(p)
+//            print("👍👍👍👍")
+//        }
     }
 }
 
@@ -29,16 +81,17 @@ struct TL4: View { /// 5.907 events in one view!, butter smooth scrolling is pos
         events.sorted(by: { $0.created_at < $1.created_at }) // OLDEST INDEX = 0
     }
     
+    let timelineRunLoop = Timer.publish(every: 15, tolerance: 1, on: .main, in: .common).autoconnect()
+    
     @State var selectedEvent:Event?
     @State private var oldEvents: [Event] = []
-    
-    @SceneStorage("selectedItemId") var selectedItemId: String?
+    @State var isViewDisplayed = false
     @State var didRestore = false
     
     let FETCH_LIMIT = 120
     
     init(pubkeys:Set<String>, context:NSManagedObjectContext) {
-        print("🧨🧨🧨🧨🧨 I INIT AGAIN BITCH 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
+        print("🧨🧨🧨🧨🧨 I INIT AGAIN 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         self.pubkeys = pubkeys
         let r1 = Event.fetchRequest()
         r1.predicate = NSPredicate(format: "kind IN {1,6} AND pubkey IN %@", pubkeys)
@@ -56,67 +109,61 @@ struct TL4: View { /// 5.907 events in one view!, butter smooth scrolling is pos
     var body: some View {
         let _ = Self._printChanges()
         VStack {
-            NavigationSplitView {
-                ZStack {
-                    ScrollViewReader { proxy in
-                        List {
-                            ForEach(eventsSorted) { event in
-                                NoteRowView(event:event)
-                                    .id(event.id!)
-                                    .listRowInsets(EdgeInsets())
-                                    .onTapGesture {
-                                        selectedEvent = event
-                                    }
-                                    .onAppear {
-    //                                    print("onAppear: \(d(event.created_at).description)")
-                                        Task.detached(priority: .userInitiated) {
-                                            ds.markAsRead.send(event)
-                                        }
-                                        if (didRestore) {
-                                            selectedItemId = event.id!
-                                            print("SceneStorage STORED: \(selectedItemId ?? "")")
-                                        }
-                                    }
-                            }
-                        }
-                        .onAppear {
-                            if (!didRestore && selectedItemId != nil) {
-                                withAnimation(.none) {
-                                    print("SceneStorage SCROLLING: \(selectedItemId ?? "")")
-                                    proxy.scrollTo(selectedItemId!, anchor: .bottom)
-                                    didRestore = true
+            ZStack {
+                ScrollViewReader { proxy in
+                    List {
+                        ForEach(eventsSorted) { event in
+                            NoteRowView(event:event)
+                                .id(event.id!)
+                                .listRowInsets(EdgeInsets())
+                                .onTapGesture {
+                                    selectedEvent = event
                                 }
-                            }
+                                .onAppear {
+                                    //                                    print("onAppear: \(d(event.created_at).description)")
+                                    Task.detached(priority: .userInitiated) {
+                                        await ds.markAsRead.send(event)
+                                    }
+                                }
                         }
                     }
-                    .listStyle(.plain)
-                    .toolbar(content: toolbarContent)
-                    .safeAreaInset(edge: .top) {
-                        AppTopBar()
-                            .padding(5)
-                            .background(Color("BackgroundColor").opacity(0.9))
+                    .onAppear {
+                        if (!ds.didRestore && ds.selectedItemId != nil) {
+                            withAnimation(.none) {
+                                print("AppStorage SCROLLING: \(ds.selectedItemId ?? "")")
+                                proxy.scrollTo(ds.selectedItemId!, anchor: .bottom)
+                            }
+                        }
+                        ds.didRestore = true
                     }
-                    UnreadCounter()
                 }
-//                EmptyView()
-            } detail: {
-                if let selectedEvent {
-                    NoteDetail(event: selectedEvent)
+                .listStyle(.plain)
+//                .toolbar(content: toolbarContent)
+                .safeAreaInset(edge: .top) {
+                    AppTopBar()
+                        .padding(5)
+                        .background(Color("BackgroundColor").opacity(0.9))
                 }
+                UnreadCounter()
             }
+            EmptyView()
         }
         .onAppear {
-//            print("🟣🟣🟣 APPEAR: oldEvents: \(oldEvents.count) events: \(events.count)")
+            //            print("🟣🟣🟣 APPEAR: oldEvents: \(oldEvents.count) events: \(events.count)")
+            isViewDisplayed = true
             ds.notesChanged.send(eventsSorted)
+        }
+        .onDisappear {
+            isViewDisplayed = false
         }
         .onChange(of: eventsSorted) { [eventsSorted] newEventsSorted in
             guard eventsSorted.last != nil else { return }
-
+            
             let newIndexOfLastEvent = newEventsSorted.firstIndex(of: eventsSorted.last!)
             guard newIndexOfLastEvent != nil else { return } // TODO: uuhh, apparently we totally wrong if this returns }
-
+            
             let newNotes = newEventsSorted.suffix(from: newIndexOfLastEvent! + 1)
-
+            
             print("🟣🟣🟣 CHANGE: events: \(events.count) newNotes: \(newNotes.count)")
             ds.notesChanged.send(newEventsSorted)
             fetchStuffForLastAddedNotes(ids: ids(newNotes))
@@ -125,6 +172,17 @@ struct TL4: View { /// 5.907 events in one view!, butter smooth scrolling is pos
             let events = notification.object as! [Event]
             fetchStuffForLastAddedNotes(ids: ids(events))
             fetchMissingReplyToContacts(events: events)
+            NIP05.verifyBatch(contacts: events.compactMap { $0.contact }, context: viewContext)
+        }
+        .onReceive(timelineRunLoop) { time in
+            guard isViewDisplayed else { return }
+            guard !Importer.shared.isImporting else { print("⏳ Still importing, new fetch skipped."); return }
+            fetchEvents(pubkeys: pubkeys, amount: events.count == 0 ? 50 : 500)
+        }
+        .onReceive(receiveNotification(.blockListUpdated)) { notification in
+//            tm.notesOnScreen = tm.notesOnScreen.filter {
+//                !(notification.object as! Set<Contact>).map { $0.pubkey! } .contains($0.pubkey!)
+//            }
         }
     }
 }
@@ -165,23 +223,12 @@ extension TL4 {
     }
 }
 
-struct TL4Wrapper: View {
-    @Environment(\.managedObjectContext) var viewContext
-    @EnvironmentObject var ns:NosturState
-    var body: some View {
-        let _ = Self._printChanges()
-        TL4(pubkeys: ns.followingPublicKeys, context: viewContext)
-    }
-}
-
 struct TL4_Previews: PreviewProvider {
     static var previews: some View {
-        TL4Wrapper()
+        TL4W()
             .withPreviewEnvironment()
     }
 }
-
-
 
 
 
@@ -208,9 +255,9 @@ struct UnreadCounter: View {
                     .opacity(0.95)
                     .cornerRadius(20)
                     .onTapGesture {
-//                            if let noteId = notes.dropLast(count).last?.id {
-//                                sendNotification(.shouldScrollToNote, noteId)
-//                            }
+                        //                            if let noteId = notes.dropLast(count).last?.id {
+                        //                                sendNotification(.shouldScrollToNote, noteId)
+                        //                            }
                     }
                 }
                 Spacer()

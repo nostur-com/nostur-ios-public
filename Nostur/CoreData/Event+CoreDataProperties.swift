@@ -40,6 +40,7 @@ extension Event {
     @NSManaged public var firstQuoteId: String?
     
     @NSManaged public var liked: Bool // Cache
+    @NSManaged public var reposted: Bool // Cache
     @NSManaged public var isRepost: Bool // Cache
     
 //    @NSManaged public var repliesCounter: Int64 // Better Cache?
@@ -304,8 +305,8 @@ extension Event {
             
             if let reactingToEvent = try context.fetch(request).first {
 //                print("updating .replies for .id = \(String(describing: reactingToEvent.id))")
-                reactingToEvent.repliesCount = reactingToEvent.repliesCount + 1
                 reactingToEvent.objectWillChange.send()
+                reactingToEvent.repliesCount = reactingToEvent.repliesCount + 1
             }
         }
         
@@ -339,8 +340,8 @@ extension Event {
                 
                 if let reactingToEvent = try context.fetch(request).first {
 //                    print("updating .likes for .id = \(String(describing: reactingToEvent.id))")
-                    reactingToEvent.likesCount = reactingToEvent.likesCount + 1
                     reactingToEvent.objectWillChange.send()
+                    reactingToEvent.likesCount = reactingToEvent.likesCount + 1
 //                                            try reactingToEvent.managedObjectContext?.save()
                 }
             }
@@ -400,9 +401,9 @@ extension Event {
         request.fetchLimit = 1
         
         if let zappedEvent = try! context.fetch(request).first {
+            zappedEvent.objectWillChange.send()
             zappedEvent.zapTally = zappedEvent.zapTally + Int64(((invoice.getValue()!.amountMilliSatoshis() ?? 0) / 1000))
             zappedEvent.zapsCount = zappedEvent.zapsCount + 1
-            zappedEvent.objectWillChange.send()
         }
         return true
     }
@@ -418,9 +419,10 @@ extension Event {
                 request.fetchLimit = 1
                 
                 if let reactingToEvent = try context.fetch(request).first {
+                    reactingToEvent.objectWillChange.send()
 //                    print("updating .mentions for .id = \(String(describing: reactingToEvent.id))")
                     reactingToEvent.mentionsCount = reactingToEvent.mentionsCount + 1
-                    reactingToEvent.objectWillChange.send()
+                    
                 }
             }
         }
@@ -556,23 +558,23 @@ extension Event {
                 
                 savedEvent.zapFromRequest = zapRequest
                 if let firstE = event.firstE() {
+                    savedEvent.objectWillChange.send()
                     savedEvent.zappedEventId = firstE
                     savedEvent.zappedEvent = try? Event.fetchEvent(id: firstE, context: context)
-                    savedEvent.objectWillChange.send()
                 }
                 if let firstP = event.firstP() {
+                    savedEvent.objectWillChange.send()
                     savedEvent.zappedContactPubkey = firstP
                     savedEvent.zappedContact = Contact.fetchByPubkey(firstP, context: context)
-                    savedEvent.objectWillChange.send()
                 }
             }
         }
         
         if event.kind == .reaction {
             if let lastE = event.lastE() {
+                savedEvent.objectWillChange.send()
                 savedEvent.reactionToId = lastE
                 savedEvent.reactionTo = try? Event.fetchEvent(id: lastE, context: context)
-                savedEvent.objectWillChange.send()
             }
             
             // TODO: dont need this?
@@ -590,7 +592,9 @@ extension Event {
                 
                 if let rootReply = try? Event.fetchEvent(id: replyToRootEtag.id, context: context) {
                     savedEvent.replyToRoot = rootReply
-//                    rootReply.objectWillChange.send() // root heeft geen inverse
+                    rootReply.objectWillChange.send()
+                    rootReply.addToReplies(savedEvent)
+                    rootReply.repliesCount += 1
                 }
             }
             
@@ -599,9 +603,25 @@ extension Event {
                 
                 if let replyTo = try? Event.fetchEvent(id: replyToEtag.id, context: context) {
                     savedEvent.replyTo = replyTo
-//                    replyTo.objectWillChange.send() // TODO: inverse hier erbij of neit?
+                    
+                    if (savedEvent.replyToRootId != savedEvent.replyToId) { // If reply is same as reply root, dont double add.
+                        replyTo.objectWillChange.send()
+                        replyTo.addToReplies(savedEvent)
+                        replyTo.repliesCount += 1
+                    }
                 }
             }
+              
+//            let pPubkeys = event.pTags()
+//            if pPubkeys.count > 0 {
+//                let pContacts = Contact.fetchRequest()
+//                pContacts.predicate = NSPredicate(format: "pubkey IN %@", pPubkeys)
+//                let contacts = Array(try! context.fetch(pContacts))
+//                for contact in contacts {
+//                    savedEvent.objectWillChange.send()
+//                    savedEvent.addToContacts(contact)
+//                }
+//            }
             
             if (event.content == "#[0]" && event.tags.count > 0 && event.tags[0].type == "e") {
                 savedEvent.isRepost = true
@@ -610,7 +630,10 @@ extension Event {
             // NEw: Save all p's in .contacts
             // Maybe slow??
             let contacts = Contact.ensureContactsCreated(event: event, context: context)
-            savedEvent.addToContacts(NSSet(array:contacts))
+//            savedEvent.objectWillChange.send()
+            for contact in contacts {
+                savedEvent.addToContacts(contact)
+            }
         }
         
         if ((event.kind == .repost || event.kind == .textNote) && TagsHelpers(event.tags).mentionEtags() != nil) {
@@ -619,24 +642,29 @@ extension Event {
             savedEvent.firstQuote = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context)
         }
         
-        // if other existing messages were replying, mentioning, reposting (to) this, fix the relation
-        let pointingToEventReq = NSFetchRequest<Event>(entityName: "Event")
-//        pointingToEventReq.predicate = NSPredicate(format: "(kind IN {1,6} AND  (replyToId == %@ OR replyToRootId == %@ OR firstQuoteId == %@)", savedEvent.id!, savedEvent.id!, savedEvent.id!)
-        pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6} AND %@ IN {replyToId,replyToRootId,firstQuoteId}", savedEvent.id!)
-        pointingToEventReq.sortDescriptors = []
-        if let pointingToEvents = try? context.fetch(pointingToEventReq) {
-            for event in pointingToEvents {
-                if (event.replyToId != nil) && (event.replyToId == savedEvent.id!) {
-                    event.replyTo = savedEvent
-                    event.objectWillChange.send()
-                }
-                if (event.replyToRootId != nil) && (event.replyToRootId == savedEvent.id!) {
-                    event.replyToRoot = savedEvent
-                    event.objectWillChange.send()
-                }
-                if (event.firstQuoteId != nil) && (event.firstQuoteId == savedEvent.id!) {
-                    event.firstQuote = savedEvent
-                    event.objectWillChange.send()
+        
+        if (1 == 2) { // TODO: Temp disabled for speed up check..
+            // if other existing messages were replying, mentioning, reposting (to) this, fix the relation
+            let pointingToEventReq = NSFetchRequest<Event>(entityName: "Event")
+            //        pointingToEventReq.predicate = NSPredicate(format: "(kind IN {1,6} AND  (replyToId == %@ OR replyToRootId == %@ OR firstQuoteId == %@)", savedEvent.id!, savedEvent.id!, savedEvent.id!)
+            pointingToEventReq.predicate = NSPredicate(format: "kind == 1 AND %@ IN {replyToId,replyToRootId,firstQuoteId}", savedEvent.id!)
+            // TODO: NEED 6 ALSO OR NOT?
+//            pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6} AND %@ IN {replyToId,replyToRootId,firstQuoteId}", savedEvent.id!)
+            pointingToEventReq.sortDescriptors = []
+            if let pointingToEvents = try? context.fetch(pointingToEventReq) { // TODO: SLOW?? Maybe only do this when opening the 1 or 6 instead of here.
+                for event in pointingToEvents {
+                    if (event.replyToId != nil) && (event.replyToId == savedEvent.id!) {
+                        event.objectWillChange.send()
+                        event.replyTo = savedEvent
+                    }
+                    if (event.replyToRootId != nil) && (event.replyToRootId == savedEvent.id!) {
+                        event.objectWillChange.send()
+                        event.replyToRoot = savedEvent
+                    }
+                    if (event.firstQuoteId != nil) && (event.firstQuoteId == savedEvent.id!) {
+                        event.objectWillChange.send()
+                        event.firstQuote = savedEvent
+                    }
                 }
             }
         }

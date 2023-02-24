@@ -10,6 +10,7 @@ import OSLog
 import CoreData
 
 class Importer {
+    var settingsStore = SettingsStore.shared
     var isImporting = false
     
     static var shared = Importer()
@@ -56,9 +57,11 @@ class Importer {
                         continue
                     }
                     
-                    guard try event.verified() else {
-                        print("😡😡 hey invalid sig yo 😡😡")
-                        continue
+                    if (self.settingsStore.isSignatureVerificationEnabled) {
+                        guard try event.verified() else {
+                            print("😡😡 hey invalid sig yo 😡😡")
+                            continue
+                        }
                     }
                     
                     // ANNOYING FIX FOR KIND 6 WITH JSON STRING OF ANOTHER EVENT IN EVENT.CONTENT. WTF
@@ -85,6 +88,18 @@ class Importer {
                     }
                     
                     if event.kind == .contactList {
+                        if (event.publicKey == NosturState.GUEST_ACCOUNT_PUBKEY) { // TODO: skip if first time completed
+                            print("✈️✈️✈️ ONBORADING SPEED UP FETCHING P's FROM 3")
+                            let fetchPs = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: event.pTags()))
+                            SocketPool.shared.sendMessage(fetchPs)
+                            
+                            print("✈️✈️✈️ ONBORADING SPEED UP FETCHING 0,1,6 FROM P's")
+                            let fetchTimeline = ClientMessage(type: .REQ, message: RequestMessage.getFollowingEvents(pubkeys: event.pTags()))
+                            SocketPool.shared.sendMessage(fetchTimeline)
+//                            print("✈️✈️✈️ ONBORADING SPEED UP FETCHING 1,6,7,9735 FROM E's")
+//                            let fetchReferences = ClientMessage(type: .REQ, message: RequestMessage.getEventReferences(ids: ????))
+                                
+                        }
                         Account.preFillReadOnlyAccountFollowing(event: event, context: context)
                     }
                     

@@ -227,7 +227,7 @@ struct NEvent: Codable {
     }
 
     func verified() throws -> Bool {
-
+        print("✍️ VERIFYING SIG ✍️")
         let serializableEvent = NSerializableEvent(publicKey: self.publicKey, createdAt: self.createdAt, kind:self.kind, tags: self.tags, content: self.content)
 
         let encoder = JSONEncoder()
@@ -268,6 +268,14 @@ struct NEvent: Codable {
     
     func bolt11() -> String? {
         tags.first(where: { $0.type == "bolt11" })?.otherInformation[safe: 0]
+    }
+    
+    func pTags() -> [String] {
+        tags.filter { $0.type == "p" } .map { $0.pubkey }
+    }
+    
+    func eTags() -> [String] {
+        tags.filter { $0.type == "e" } .map { $0.id }
     }
     
     func firstP() -> String? {

@@ -23,6 +23,7 @@ enum ViewPath: Hashable {
 //    case ZapList(event:Event)
     case NoteReactions(event:Event)
     case NoteZaps(event:Event)
+    case Settings
     
     case Welcome
     case CreateNewAccount
@@ -60,6 +61,8 @@ extension View {
                         NoteReactions(id: event.id!)
                     case .NoteZaps(let event):
                         NoteZaps(id: event.id!)
+                    case .Settings:
+                        Settings()
                     
                     case .Welcome:
                         WelcomeSheet()

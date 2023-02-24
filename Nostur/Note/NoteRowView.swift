@@ -32,7 +32,7 @@ struct NoteRowView: View {
         self.event = event
         self.hideFooter = hideFooter
                 
-        if event.noteText.prefix(4) == "lnbc" && Invoice.fromStr(s: event.noteText).getValue() != nil {
+        if event.noteText.prefix(4).lowercased() == "lnbc" && Invoice.fromStr(s: event.noteText).getValue() != nil {
             self.type = .lightningInvoice
         }
         else {
@@ -54,12 +54,12 @@ struct NoteRowView: View {
                 HStack {
                     Image(systemName: "arrow.2.squarepath")
                     Text("\(event.name) reposted")
-                    if (devToggle) {
-                        Text("id: \(String(event.id!.prefix(5)))")
-                            .onTapGesture {
-                                UIPasteboard.general.string = event.id!
-                            }
-                    }
+//                    if (devToggle) {
+//                        Text("id: \(String(event.id!.prefix(5)))")
+//                            .onTapGesture {
+//                                UIPasteboard.general.string = event.id!
+//                            }
+//                    }
                 }
                 .foregroundColor(.gray)
                 .onTapGesture {
@@ -92,7 +92,7 @@ struct NoteRowView: View {
                                     LightningInvoice(invoice: event.firstQuote!.noteText)
                                         .id(invoice)
                                 default:
-                                    NoteTextRenderView(event:event.firstQuote!)
+                                    NoteTextRenderView(event:event.firstQuote!, useLinelimit: true)
                                         .id(text)
                                         .onTapGesture { nav.navigateTo(event.firstQuote!) }
                             }
@@ -154,7 +154,7 @@ struct NoteRowView: View {
 //                                            }
 //                                        }
                                 default:
-                                    NoteTextRenderView(event:event)
+                                    NoteTextRenderView(event:event, useLinelimit: true)
                                         .onTapGesture { nav.navigateTo(event) }
 //                                        .onAppear {
 //                                            withAnimation(.easeInOut(duration: 2.0)) {
@@ -186,7 +186,7 @@ struct NoteRowView: View {
         .background(
             Color(.systemBackground)
                 .onTapGesture {
-                    nav.navigateTo(event.isRepost ? event.firstQuote : event)
+                    nav.navigateTo(event.isRepost && event.firstQuote != nil ? event.firstQuote! : event)
 //                    if (eventOrRepost != nil) {
 //                        nav.navigateTo(eventOrRepost)
 //                    }

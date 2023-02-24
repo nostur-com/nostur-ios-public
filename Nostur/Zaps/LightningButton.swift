@@ -14,7 +14,7 @@ struct LightningButton: View {
     @EnvironmentObject var ns:NosturState
     
     @Environment(\.openURL) var openURL
-    var contact:Contact
+    var contact:Contact?
     var event:Event? = nil
     @State var isLoading = false
     
@@ -25,70 +25,66 @@ struct LightningButton: View {
     @State var supportsZap = false
     
     var body: some View {
-        if (contact.lud16 != nil && contact.lud16 != "") {
-            
-            if (event != nil) {
-                HStack {
-                    if isLoading {
-                        ProgressView()
-                            .colorInvert()
+        let _ = Self._printChanges()
+        if (event != nil) {
+            HStack {
+                if isLoading {
+                    ProgressView()
+                        .colorInvert()
+                }
+                else {
+                    Image(systemName: "bolt")
+                    if (er.bitcoinPrice != 0.0) {
+                        let fiatPrice = String(format: "$%.02f",(Double(event!.zapTally) / 100000000 * Double(er.bitcoinPrice)))
+                        
+                        Text("\(fiatPrice)")
                     }
                     else {
-                        Image(systemName: "bolt")
-                        if (er.bitcoinPrice != 0.0) {
-                            let fiatPrice = String(format: "$%.02f",(Double(event!.zapTally) / 100000000 * Double(er.bitcoinPrice)))
-                            
-                            Text("\(fiatPrice)")
-                        }
-                        else {
-                            Text("\(event!.zapTally.description) sats")
-                        }
+                        Text("\(event!.zapTally.description) sats")
                     }
-                }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    buttonTapped()
-                }
-                .sheet(isPresented: $payAmountSelectorShown) {
-                    renderPaymentSelector()
                 }
             }
-            else {
-                Button {
-                    buttonTapped()
-                } label: {
-                    if isLoading {
-                        ProgressView()
-                            .colorInvert()
-                    }
-                    else {
-                        Text("⚡️")
-                    }
-                }
-                .frame(width: 40, height: 30)
-                .font(.caption.weight(.heavy))
-                .background(Color("BackgroundColor"))
-                .cornerRadius(20)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(.gray, lineWidth: 1)
-                }
-                .sheet(isPresented: $payAmountSelectorShown) {
-                    renderPaymentSelector()
-                }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                guard contact?.lud16 != nil && contact?.lud16 != "" else { return }
+                buttonTapped()
             }
-            
+            .sheet(isPresented: $payAmountSelectorShown) {
+                renderPaymentSelector()
+            }
         }
         else {
-            EmptyView()
+            Button {
+                buttonTapped()
+            } label: {
+                if isLoading {
+                    ProgressView()
+                        .colorInvert()
+                }
+                else {
+                    Text("⚡️")
+                }
+            }
+            .frame(width: 40, height: 30)
+            .font(.caption.weight(.heavy))
+            .background(Color("BackgroundColor"))
+            .cornerRadius(20)
+            .overlay {
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(.gray, lineWidth: 1)
+            }
+            .sheet(isPresented: $payAmountSelectorShown) {
+                renderPaymentSelector()
+            }.opacity(contact?.lud16 == nil || contact?.lud16 == "" ? 0 : 1)
         }
     }
     
     func buttonTapped() {
         guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
+        guard contact?.lud16 != nil && contact?.lud16 != "" else { return }
         
         isLoading = true
-        let lud16 = contact.lud16!
+        let lud16 = contact!.lud16!
         Task.detached(priority: .background) {
             do {
                 let response = try await LUD16.getCallbackUrl(lud16: lud16)
@@ -101,7 +97,7 @@ struct LightningButton: View {
                         if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
                             supportsZap = true
                             // Store zapper nostrPubkey on contact.zapperPubkey as cache
-                            contact.zapperPubkey = response.nostrPubkey!
+                            contact!.zapperPubkey = response.nostrPubkey!
                         }
                         payAmountSelectorShown = true
                         isLoading = false
@@ -117,8 +113,8 @@ struct LightningButton: View {
     
     fileprivate func renderPaymentSelector() -> PaymentAmountSelector {
         return PaymentAmountSelector(min:min, max:max, supportsZap:supportsZap) { amount, zapMessage in
-            
-            let pubkey = contact.pubkey!
+            guard contact?.lud16 != nil && contact?.lud16 != "" else { return }
+            let pubkey = contact!.pubkey!
             let eventId = event?.id ?? nil
             let relays = sp.sockets.values
                 .filter { $0.write }

@@ -45,6 +45,7 @@ class Unpublisher: ObservableObject {
     }
     
     // Removes any existing ofType from the queue, before adding this one
+    // For example after rapid follow/unfollow, creates new clEvents, only publish the last one
     func publishLast(_ nEvent:NEvent, ofType: Unpublisher.type) -> UUID {
         queue.removeAll(where: { $0.type == ofType })
         let cancellationId = UUID()

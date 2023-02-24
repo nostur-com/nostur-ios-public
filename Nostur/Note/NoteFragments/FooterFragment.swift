@@ -33,32 +33,51 @@ struct FooterFragment: View {
                 showingNewReply = true
             }
             Spacer()
-                
-
-            HStack {
-                Image(systemName: "arrow.2.squarepath")
-                Text("\(event.mentionsCount)")
-            }
-            .contentShape(Rectangle())
-            .onTapGesture {
-                guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
-                if (ns.account != nil) {
-                    print("🔄🔄🔄🔄🔄 REPOSTING 🔄🔄🔄")
-//                    event.reposted = true
-                    event.mentionsCount = event.mentionsCount + 1
-//                    ns.account?.addToLikes(event)
-                    
-                    // 1. create kind 7 event based on kind 1 event:    Event
-                    let repostEvent = EventMessageBuilder.makeRepost(original: event)
-                    
-                    // 2. sign that event with account keys             Account
-                    guard let signedEvent = try? ns.signEvent(repostEvent) else {
-                        print("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
-                        return
+            
+            // REPOST
+            if (event.reposted) {
+                HStack {
+                    Image(systemName: "arrow.2.squarepath")
+                    Text("\(event.mentionsCount)")
+                }.foregroundColor(.green)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    if unpublishRepostId != nil && up.cancel(unpublishRepostId!) {
+                        event.reposted = false
+                        event.mentionsCount -= 1
                     }
-                    
-                    unpublishRepostId = up.publish(signedEvent)
-                    unpublishOriginalId = up.publish(event.toNEvent())
+                    if unpublishOriginalId != nil && up.cancel(unpublishOriginalId!) {
+//                        event.reposted = false
+//                        event.mentionsCount -= 1
+                    }
+                }
+            }
+            else {
+                HStack {
+                    Image(systemName: "arrow.2.squarepath")
+                    Text("\(event.mentionsCount)")
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
+                    if (ns.account != nil) {
+                        print("🔄🔄🔄🔄🔄🔄🔄🔄")
+                        event.reposted = true
+                        event.mentionsCount += 1
+                        ns.account?.addToReposts(event)
+                        
+                        // 1. create kind 7 event based on kind 1 event:    Event
+                        let repostEvent = EventMessageBuilder.makeRepost(original: event)
+                        
+                        // 2. sign that event with account keys             Account
+                        guard let signedEvent = try? ns.signEvent(repostEvent) else {
+                            print("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
+                            return
+                        }
+                        
+                        unpublishRepostId = up.publish(signedEvent)
+                        unpublishOriginalId = up.publish(event.toNEvent())
+                    }
                 }
             }
             Spacer()
@@ -66,13 +85,14 @@ struct FooterFragment: View {
             // LIKE
             if (event.liked) {
                 HStack {
-                    Image(systemName: "heart.fill").foregroundColor(.red)
+                    Image(systemName: "heart.fill")
                     Text("\(event.likesCount)")
-                }
+                }.foregroundColor(.red)
                 .contentShape(Rectangle())
                 .onTapGesture {
                     if unpublishLikeId != nil && up.cancel(unpublishLikeId!) {
                         event.liked = false
+                        event.likesCount -= 1
                     }
                 }
             }
@@ -87,7 +107,7 @@ struct FooterFragment: View {
                     if (ns.account != nil) {
                         print("💖💖💖💖💖💖💖💖💖💖💖💖💖💖")
                         event.liked = true
-                        event.likesCount = event.likesCount + 1
+                        event.likesCount += 1
                         ns.account?.addToLikes(event)
                         
                         // 1. create kind 7 event based on kind 1 event:    Event
@@ -107,14 +127,12 @@ struct FooterFragment: View {
             }
             Spacer()
             
-            if (event.contact?.lud16 != nil) {
-                LightningButton(contact:event.contact!, event: event)
-                Spacer()
-            }
-            else {
-                Color.clear.frame(width: 30, height: 15)
-                Spacer()
-            }
+
+//            LightningButton(contact:event.contact, event: event)
+//                .opacity(event.contact?.lud16 != nil ? 1 : 0)
+//                .disabled(event.contact?.lud16 == nil)
+//            Spacer()
+
             
             // BOOKMARK
             if (ns.isBookmarked(event)) {

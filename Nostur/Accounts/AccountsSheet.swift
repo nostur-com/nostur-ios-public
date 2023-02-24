@@ -29,6 +29,18 @@ struct AccountsSheet: View {
     
     var body: some View {
         VStack(spacing: 15) {
+            if UIDevice.current.userInterfaceIdiom == .pad {
+                HStack {
+                    Spacer()
+                    Image(systemName: "xmark.circle.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 30, height: 30)
+                        .padding(30)
+                        .onTapGesture {
+                            dismiss()
+                        }
+                }}
             Text("Accounts").font(.title3)
             
             List {

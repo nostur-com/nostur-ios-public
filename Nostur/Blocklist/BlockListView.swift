@@ -25,8 +25,9 @@ struct BlockListView: View {
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button {
 //                                withAnimation {
-                                ns.account!.removeFromBlockedContacts(contact)
                                 ns.objectWillChange.send()
+                                ns.account!.removeFromBlockedContacts(contact)
+//                                ns.objectWillChange.send()
                                 try! viewContext.save()
                                 do {
                                     try viewContext.save()

@@ -10,13 +10,14 @@ import Combine
 
 @main
 struct NosturApp: App {
-    
+    @AppStorage("firstTimeCompleted") var firstTimeCompleted = false
     @StateObject private var up = Unpublisher(viewContext:EventsProvider.shared.container.viewContext)
     @StateObject private var ns = NosturState(container:EventsProvider.shared.container)
     @StateObject private var er:ExchangeRateModel = .shared
     @StateObject private var nav:NavigationModel = .shared
     @StateObject private var sp:SocketPool = .shared
     @StateObject private var ds:DataStore = .shared
+    @StateObject private var ss = SettingsStore()
     
 //    @StateObject var model = DataModel()
     @StateObject var ucm = UnreadCounterModel()
@@ -52,6 +53,7 @@ struct NosturApp: App {
                 .environmentObject(ucm)
                 .environmentObject(tm)
                 .environmentObject(ds)
+                .environmentObject(ss)
                 .onAppear {startNosturing(); self.isViewDisplayed = true }
                 .onDisappear { self.isViewDisplayed = false }
                 .onReceive(runLoop) { time in
@@ -103,6 +105,20 @@ struct NosturApp: App {
                 }
             } catch {
                 print("🔴🔴🔴 Unable to Execute Fetch Request, \(error)")
+            }
+            
+            if (!firstTimeCompleted) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    // fetch guest account kind 0 + 3
+                    print("✈️✈️✈️ ONBORADING SPEED UP, FETCHING 0 + 3")
+                    let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: NosturState.GUEST_ACCOUNT_PUBKEY))
+                    sp.sendMessage(message)
+                }
+                
+                
+                // fetch p's in 3
+                
+                // fetch following events
             }
         }
     }

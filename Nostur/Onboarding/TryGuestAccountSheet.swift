@@ -50,13 +50,13 @@ struct TryGuestAccountSheet: View {
             account.publicKey = NosturState.GUEST_ACCOUNT_PUBKEY
             
             
-            // Remove existing CL events, so can proper parse again from Importers. Else get filtered by duplicate filter
-            if let clEvents = Event.contactListEvents(byAuthorPubkey: account.publicKey!, context: viewContext) {
-                for clEvent in clEvents {
-                    viewContext.delete(clEvent)
-                }
-            }
-            try! viewContext.save()
+//            // Remove existing CL events, so can proper parse again from Importers. Else get filtered by duplicate filter
+//            if let clEvents = Event.contactListEvents(byAuthorPubkey: account.publicKey!, context: viewContext) {
+//                for clEvent in clEvents {
+//                    viewContext.delete(clEvent)
+//                }
+//            }
+//            try! viewContext.save()
             
             
             // 1. Prefill from cached event (if in cache)

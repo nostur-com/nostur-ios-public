@@ -16,6 +16,13 @@ struct SavedEventsCache {
     }()
 }
 
+struct FailedURLCache {
+    static var shared:LRUCache<String, Date> = {
+        let cache = LRUCache<String, Date>(capacity: 2000)
+        return cache
+    }()
+}
+
 //// TO PREVENT SENDING DUPLICATE MESSAGES
 //struct LastSentMessagesCache {
 //    static var shared:LRUCache<EventId, NTimestamp> = {

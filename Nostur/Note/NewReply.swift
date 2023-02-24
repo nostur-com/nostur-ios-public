@@ -90,7 +90,8 @@ struct NewReply: View {
                         var nEvent = newReplyEvent
                         nEvent.content = noteText
                         if let signedEvent = try? ns.signEvent(nEvent) {
-                            let _ = up.publish(signedEvent)
+//                            let _ = up.publish(signedEvent)
+                            up.publishNow(signedEvent)
                             dismiss()
                         }
                     } label: {

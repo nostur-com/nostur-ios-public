@@ -33,7 +33,8 @@ struct NewNote: View {
                     guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
                     let nEvent = NEvent(content: noteText)
                     if let signedEvent = try? ns.signEvent(nEvent) {
-                        noteCancellationId = up.publish(signedEvent)
+                        up.publishNow(signedEvent)
+//                        noteCancellationId = up.publish(signedEvent)
                         dismiss()
                     }
                 } label: {

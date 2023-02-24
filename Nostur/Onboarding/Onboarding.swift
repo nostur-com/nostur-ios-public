@@ -19,6 +19,7 @@ struct Onboarding: View {
                 .fullScreenCover(isPresented: $ns.isOnboarding) {
                     NavigationStack(path: $nav.onboardingPath) {
                         WelcomeSheet(offerTryOut: true)
+                            .interactiveDismissDisabled()
                             .withNavigationDestinations()
                     }
                 }

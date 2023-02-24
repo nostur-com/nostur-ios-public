@@ -136,6 +136,11 @@ class SocketPool: ObservableObject {
     }
     
     func sendMessage(_ message:ClientMessage) {
+        if (message.type == .REQ) {
+            let read = sockets.values.filter { $0.read == true }.count
+            print("⬇️⬇️ REQ ON \(read) RELAYS: \(String(message.message.prefix(260)))")
+        }
+        
         Task(priority: .background) {
             for (_, managedClient) in sockets {
                 guard managedClient.read || managedClient.write else {
@@ -148,7 +153,7 @@ class SocketPool: ObservableObject {
                         managedClient.connect()
                     }
 //                    print("REQUESTING: \(String(message.message.prefix(260)))")
-                    print("⬇️⬇️ REQUESTING: \(String(message.message))")
+//                    print("⬇️⬇️ REQUESTING: \(String(message.message))")
                     managedClient.client.write(string: message.message)
                 }
                 else if  message.type == .CLOSE { // CLOSE FOR ALL RELAYS

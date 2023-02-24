@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import LightningDevKit
 
 struct NoteById: View {
 
@@ -75,23 +76,36 @@ struct NoteAndParent: View {
 //    @EnvironmentObject var nav:NavigationModel
     var nav:NavigationModel = .shared
 
-    @FetchRequest
-    var taggedContacts:FetchedResults<Contact>
+//    @FetchRequest
+//    var taggedContacts:FetchedResults<Contact>
     
     var isParent = false
     var geoHeight:CGFloat
     let INDENT = 60.0
     
+    enum type {
+        case note
+        case lightningInvoice
+    }
+    
+    let type:NoteRowView.type
+    
     init(event: Event, isParent:Bool = false, geoHeight:CGFloat = CGFloat.zero) {
         self.event = event
         self.isParent = isParent
         self.geoHeight = geoHeight
-        let pubkeys = event.contactPubkeys()
-        
-        _taggedContacts = FetchRequest(
-            sortDescriptors: [],
-            predicate: NSPredicate(format: "pubkey IN %@", pubkeys!)
-        )
+//        let pubkeys = event.contactPubkeys()
+//
+//        _taggedContacts = FetchRequest(
+//            sortDescriptors: [],
+//            predicate: NSPredicate(format: "pubkey IN %@", pubkeys!)
+//        )
+        if event.noteText.prefix(4).lowercased() == "lnbc" && Invoice.fromStr(s: event.noteText).getValue() != nil {
+            self.type = .lightningInvoice
+        }
+        else {
+            self.type = .note
+        }
     }
     
     var body: some View {
@@ -140,9 +154,28 @@ struct NoteAndParent: View {
                     }
                     
                     HStack {
-                        NoteTextRenderView(event: event)
-                                .foregroundColor(.primary)
-                                .textSelection(.enabled)
+                        
+                        switch self.type {
+                            case .lightningInvoice:
+                                LightningInvoice(invoice: event.noteText)
+//                                        .onAppear {
+//                                            withAnimation(.easeInOut(duration: 2.0)) {
+//                                                backgroundColor = Color(uiColor: .systemBackground)
+//                                            }
+//                                        }
+                            default:
+                                NoteTextRenderView(event: event, useLinelimit: false)
+                                        .foregroundColor(.primary)
+                                        .textSelection(.enabled)
+//                                    .onTapGesture { nav.navigateTo(event) }
+//                                        .onAppear {
+//                                            withAnimation(.easeInOut(duration: 2.0)) {
+//                                                backgroundColor = Color(uiColor: .systemBackground)
+//                                            }
+//                                        }
+                        }
+                        
+                        
 //                                .font(.system(size: 18))
 //                        Spacer()
                     }//.background(.pink)

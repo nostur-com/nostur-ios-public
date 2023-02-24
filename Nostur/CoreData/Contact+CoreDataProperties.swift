@@ -192,9 +192,10 @@ extension Contact : Identifiable {
                 er.sortDescriptors = []
                 er.predicate = NSPredicate(format: "kind IN {1,6,9734} && pubkey == %@", event.publicKey)
                 let contactEvents = Array(try! context.fetch(er))
+                
                 for event in contactEvents {
-                    event.contact = contact
                     event.objectWillChange.send()
+                    event.contact = contact
                 }
                 
                 // EVENTS.CONTACTS (which come from Event.P tags:
@@ -202,9 +203,11 @@ extension Contact : Identifiable {
         //            tr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", "[\"p\",\"\(contact.pubkey!)") // OPTIMIZATION HACK WERKT NIET
                 tr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", contact.pubkey!) // OPTIMIZATION HACK
                 let events = Array(try! context.fetch(tr))
+                
+                
                 for event in events {
-                    event.addToContacts(contact)
                     event.objectWillChange.send()
+                    event.addToContacts(contact)
                 }
             }
             else {
@@ -233,8 +236,8 @@ extension Contact : Identifiable {
             er.predicate = NSPredicate(format: "kind IN {1,6,9734} && pubkey == %@", event.publicKey)
             let contactEvents = Array(try! context.fetch(er))
             for event in contactEvents {
-                event.contact = contact
                 event.objectWillChange.send()
+                event.contact = contact
             }
             
             // EVENTS.CONTACTS (which come from Event.P tags:
@@ -243,8 +246,8 @@ extension Contact : Identifiable {
             tr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", contact.pubkey!) // OPTIMIZATION HACK
             let events = Array(try! context.fetch(tr))
             for event in events {
-                event.addToContacts(contact)
                 event.objectWillChange.send()
+                event.addToContacts(contact)
             }
         }
     }
@@ -252,15 +255,14 @@ extension Contact : Identifiable {
     // Create dummy Contact if not already exists.
     static func ensureContactsCreated(event:NEvent, context:NSManagedObjectContext) -> [Contact] {
         var contactsInThisEvent:[Contact] = []
-        let pTags = TagsHelpers(event.tags).pTags()
-        for pTag in pTags {
-            let contact = Contact.fetchByPubkey(pTag.pubkey, context: context)
+        for pTag in event.pTags() {
+            let contact = Contact.fetchByPubkey(pTag, context: context)
             guard contact == nil else {
                 contactsInThisEvent.append(contact!)
                 continue
             }
             let newContact = Contact(context: context)
-            newContact.pubkey = pTag.pubkey
+            newContact.pubkey = pTag
             newContact.updated_at = 0
             contactsInThisEvent.append(newContact)
         }

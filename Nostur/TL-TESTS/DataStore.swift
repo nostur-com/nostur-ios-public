@@ -5,12 +5,17 @@
 //  Created by Fabian Lachman on 23/02/2023.
 //
 
+import SwiftUI
 import Foundation
 import Combine
 
 class DataStore: ObservableObject {
     
     public static var shared = DataStore()
+    
+    @AppStorage("selectedItemId") var selectedItemId: String?
+    @Published var didRestore = false
+    
     var markAsRead = PassthroughSubject<Event?, Never>()
     var notesChanged = PassthroughSubject<[Event], Never>()
     
@@ -27,9 +32,13 @@ class DataStore: ObservableObject {
     }
     
     func addSubscriptions() {
+        
+        // STORE MOST RECENT READ EVENT
+        // + TRACK IF WE RESTORED YET
         markAsRead
             .removeDuplicates()
-            .debounce(for: .seconds(0.05), scheduler: RunLoop.current)
+            .throttle(for: .seconds(0.05), scheduler: RunLoop.current, latest: true)
+//            .debounce(for: .seconds(0.05), scheduler: RunLoop.current)
             .compactMap { $0 }
             .filter { $0.created_at > (self.mostRecentReadEvent?.created_at ?? 0) }
             .sink(receiveValue: { event in
@@ -40,6 +49,8 @@ class DataStore: ObservableObject {
             })
             .store(in: &subscriptions)
         
+        // KEEP TRACK OF LAST 6 EVENTS
+        // TO FETCH #E AND P's (NOT HERE)
         markAsRead
             .removeDuplicates()
             .compactMap { $0 }
@@ -51,16 +62,27 @@ class DataStore: ObservableObject {
             }
             .store(in: &subscriptions)
         
+        // AFTER 0.2 SEC OF STOP SCROLLING, WE WANT TO FETCH #E AND P (HERE)
         markAsRead
             .removeDuplicates()
             .compactMap { $0 }
-            .debounce(for: .seconds(0.1), scheduler: RunLoop.current)
-            .sink { _ in
+            .debounce(for: .seconds(0.2), scheduler: RunLoop.current)
+            .sink { event in
                 print("🟠🟠 fetching for ids: \(ids(self.lastFiveEvents))")
                 sendNotification(.requestForJustAppeared, self.lastFiveEvents)
+                
+                if (!self.didRestore) {
+                    self.didRestore = true
+                }
+                else {
+                    self.selectedItemId = event.id!
+                }
             }
             .store(in: &subscriptions)
         
+        
+        // WHEN NOTES ARE CHANGED, USE LAST READ INDEX TO TRACK HOW MANY UNREAD THERE ARE
+        // SAVE IN self.unReadCount
         notesChanged
             .combineLatest(markAsRead)
             .debounce(for: .seconds(0.05), scheduler: RunLoop.current)

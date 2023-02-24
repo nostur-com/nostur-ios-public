@@ -23,6 +23,7 @@ struct NoteHeader: View {
                             .foregroundColor(.primary)
                             .fontWeight(.bold)
                             .lineLimit(1)
+                            .layoutPriority(2)
                     }
                     else {
                         Text("Anon") // Name
@@ -36,6 +37,7 @@ struct NoteHeader: View {
                         Image(systemName: "checkmark.seal.fill")
 //                            .font(.system(size: 14))
                             .foregroundColor(.blue)
+                            .layoutPriority(3)
                     }
                     
                     if (singleLine) {

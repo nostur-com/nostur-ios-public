@@ -374,38 +374,6 @@ extension TimelineView {
         }
     }
     
-    struct NewNoteButton: View {
-        @EnvironmentObject var ns:NosturState
-        @EnvironmentObject var nav:NavigationModel
-        @Binding var showingNewNote:Bool
-        
-        var body: some View {
-            VStack {
-                Spacer()
-                HStack {
-                    Spacer()
-                    Button {
-                        guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
-                        showingNewNote = true
-                    } label: {
-                        ZStack {
-                            Circle() // Transparent plug.circle looks weird - so make white here
-                                .foregroundColor(Color(.white))
-                                .frame(width: 45, height: 45)
-                                .padding(30)
-                            Image(systemName: "plus.circle.fill")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 45, height: 45)
-                                .padding(30)
-                        }
-                    }
-                }
-                //                .offset(x:-30,y:-55)
-            }
-        }
-    }
-    
     struct UnreadCounter: View {
         @EnvironmentObject var ucm:UnreadCounterModel
         

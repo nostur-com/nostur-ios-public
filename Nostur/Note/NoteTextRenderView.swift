@@ -136,7 +136,7 @@ struct NoteTextRenderView: View {
             if (tags.count > 0) {
                 if (useLinelimit) {
                     Text(renderedText!)//.border(.cyan)
-                        .lineLimit(100, reservesSpace: false)
+                        .lineLimit(10, reservesSpace: false)
                         .textSelection(.enabled)
                         .multilineTextAlignment(TextAlignment.leading)
                         .foregroundColor(.primary)
@@ -155,7 +155,7 @@ struct NoteTextRenderView: View {
             else if (tags.count == 0) {
                 if (useLinelimit) {
                     Text(event.noteText)//.border(.green)
-                        .lineLimit(4, reservesSpace: false)
+                        .lineLimit(10, reservesSpace: false)
                         .textSelection(.enabled)
                         .multilineTextAlignment(TextAlignment.leading)
                         .foregroundColor(.primary)

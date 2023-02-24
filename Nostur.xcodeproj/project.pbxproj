@@ -30,6 +30,8 @@
 		1F1ABC4D2981AEA500D03FA9 /* ProfileNotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1ABC4C2981AEA500D03FA9 /* ProfileNotesView.swift */; };
 		1F1C31E42969A86700E60BEF /* NewAccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1C31E32969A86700E60BEF /* NewAccountView.swift */; };
 		1F1DCB8D2999290E0085223E /* LightningInvoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1DCB8C2999290E0085223E /* LightningInvoice.swift */; };
+		1F21442C29A797930090E78E /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F21442B29A797930090E78E /* Settings.swift */; };
+		1F21442E29A797B80090E78E /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F21442D29A797B80090E78E /* SettingsStore.swift */; };
 		1F254666299EB84C003BB796 /* Timeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F254665299EB84C003BB796 /* Timeline.swift */; };
 		1F25B392297A4E3400A8A5A7 /* NosturList+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F25B390297A4E3400A8A5A7 /* NosturList+CoreDataClass.swift */; };
 		1F25B393297A4E3400A8A5A7 /* NosturList+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F25B391297A4E3400A8A5A7 /* NosturList+CoreDataProperties.swift */; };
@@ -181,6 +183,8 @@
 		1F1ABC4C2981AEA500D03FA9 /* ProfileNotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileNotesView.swift; sourceTree = "<group>"; };
 		1F1C31E32969A86700E60BEF /* NewAccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewAccountView.swift; sourceTree = "<group>"; };
 		1F1DCB8C2999290E0085223E /* LightningInvoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightningInvoice.swift; sourceTree = "<group>"; };
+		1F21442B29A797930090E78E /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
+		1F21442D29A797B80090E78E /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
 		1F254665299EB84C003BB796 /* Timeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Timeline.swift; sourceTree = "<group>"; };
 		1F25B390297A4E3400A8A5A7 /* NosturList+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NosturList+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1F25B391297A4E3400A8A5A7 /* NosturList+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NosturList+CoreDataProperties.swift"; sourceTree = "<group>"; };
@@ -507,6 +511,8 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
+				1F21442B29A797930090E78E /* Settings.swift */,
+				1F21442D29A797B80090E78E /* SettingsStore.swift */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1FB448BB2965F3D000038671 /* Products */,
 				1F7C65B629A1466D009FF3EA /* Frameworks */,
@@ -720,6 +726,7 @@
 				1F5BBE40297BC7E600F4AF03 /* EventsError.swift in Sources */,
 				1F8B1360297B36DB002EB8CF /* String+HexBytes.swift in Sources */,
 				1F5F5A5E2983FF9D00DED8F4 /* EventsWindow.swift in Sources */,
+				1F21442C29A797930090E78E /* Settings.swift in Sources */,
 				1F4773A5296CA72A0049454B /* AddReadOnlyAccountView.swift in Sources */,
 				1F8B0A02298BDA9D00736B9A /* PaginationTest.swift in Sources */,
 				1F5F5A692984315900DED8F4 /* TimelineView.swift in Sources */,
@@ -804,6 +811,7 @@
 				1F30FAB329707719008439C8 /* Account+CoreDataProperties.swift in Sources */,
 				1F8B135B297B36DB002EB8CF /* Convert.swift in Sources */,
 				1F75257E2996A1AA00477AF2 /* Unpublisher.swift in Sources */,
+				1F21442E29A797B80090E78E /* SettingsStore.swift in Sources */,
 				1F7525802997854200477AF2 /* NewNote.swift in Sources */,
 				1F4AFC4729733E2400CC1F90 /* Event+CoreDataClass.swift in Sources */,
 				1F8B135E297B36DB002EB8CF /* HexEncoding.swift in Sources */,

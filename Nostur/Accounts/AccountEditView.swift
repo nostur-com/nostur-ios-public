@@ -232,7 +232,6 @@ extension AccountEditView {
         let clEvent = try! viewContext.fetch(fr).first
         if (clEvent != nil) {
             
-        
             let contactPubkeys = TagsHelpers(clEvent?.tags() ?? []).pTags().map { $0.pubkey }
             
             let cr = Contact.fetchRequest()
@@ -243,7 +242,6 @@ extension AccountEditView {
                 account.addToFollows(contact)
                 print("Adding to followers: \(contact.name ?? "??")")
             }
-            ns.objectWillChange.send()
             try! viewContext.save();
         }
     }

@@ -46,12 +46,12 @@ struct NoteMenu: View {
                     let newContact = Contact(context: viewContext)
                     newContact.pubkey = event.pubkey!
                     newContact.updated_at = 0
+                    ns.objectWillChange.send()
                     ns.account?.addToBlockedContacts(newContact)
-                    ns.account?.objectWillChange.send()
                 }
                 else {
+                    ns.objectWillChange.send()
                     ns.account?.addToBlockedContacts(event.contact!)
-                    ns.account?.objectWillChange.send()
                 }
                 do {
                     try viewContext.save()

@@ -77,7 +77,7 @@ extension NosturRootMenu {
                 
                 Text("\(ns.account!.display_name != "" ? ns.account!.display_name : ns.account!.name)").font(.headline)
                 Text("@\(ns.account!.name)").font(.subheadline)
-                Text(try! AttributedString(markdown: "**\(ns.account?.follows?.count ?? 0)**  Following  **?** Followers")).font(.caption)
+                Text(try! AttributedString(markdown: "**\(ns.account?.follows?.count ?? 0)**  Following")).font(.caption)
                 
                 Button {
                     nav.navigateTo(ContactPath(key: ns.account!.publicKey!))
@@ -91,7 +91,10 @@ extension NosturRootMenu {
                 } label: {
                     Label("Bookmarks", systemImage: "bookmark")
                 }
-                Button {} label: {
+                Button {
+                    nav.navigateTo(ViewPath.Settings)
+                    nav.showSidebar = false
+                } label: {
                     Label("Settings", systemImage: "gearshape")
                 }
                 Button {

@@ -31,6 +31,7 @@ extension Account {
     @NSManaged public var blockedContacts: Set<Contact>?
     
     @NSManaged public var likes: Set<Event>?
+    @NSManaged public var reposts: Set<Event>?
 }
 
 // MARK: Generated accessors for follows
@@ -101,6 +102,23 @@ extension Account {
 
 }
 
+// MARK: Generated accessors for reposts
+extension Account {
+
+    @objc(addRepostsObject:)
+    @NSManaged public func addToReposts(_ value: Event)
+
+    @objc(removeRepostObject:)
+    @NSManaged public func removeFromReposts(_ value: Event)
+
+    @objc(addReposts:)
+    @NSManaged public func addToReposts(_ values: NSSet)
+
+    @objc(removeReposts:)
+    @NSManaged public func removeFromReposts(_ values: NSSet)
+
+}
+
 extension Account : Identifiable {
 
     var npub:String {
@@ -151,6 +169,7 @@ extension Account : Identifiable {
         }
 
         if (account.privateKey == nil) { // Don't overwrite non-read-only accounts
+            account.objectWillChange.send()
             account.display_name = metaData.display_name ?? ""
             account.name = metaData.name ?? ""
             account.about = metaData.about ?? ""
@@ -158,7 +177,6 @@ extension Account : Identifiable {
             account.banner = metaData.banner ?? ""
             account.nip05 = metaData.nip05 ?? ""
             account.lud16 = metaData.lud16 ?? ""
-            account.objectWillChange.send()
         }
     }
     
@@ -174,6 +192,7 @@ extension Account : Identifiable {
         fr.predicate = NSPredicate(format: "publicKey = %@", event.publicKey)
         if let account = try? context.fetch(fr).first {
             if (account.privateKey == nil) { // Don't overwrite non-read-only accounts
+                account.objectWillChange.send()
                 account.display_name = metaData.display_name ?? ""
                 account.name = metaData.name ?? ""
                 account.about = metaData.about ?? ""
@@ -181,7 +200,6 @@ extension Account : Identifiable {
                 account.banner = metaData.banner ?? ""
                 account.nip05 = metaData.nip05 ?? ""
                 account.lud16 = metaData.lud16 ?? ""
-                account.objectWillChange.send()
             }
         }
     }
@@ -197,10 +215,10 @@ extension Account : Identifiable {
         
         // if read only account, import follows
         if (account.privateKey == nil && contacts.count > 0) {
+//            account.objectWillChange.send()
             for contact in contacts {
                 account.addToFollows(contact)
             }
-            account.objectWillChange.send()
         }
     }
     
@@ -218,11 +236,10 @@ extension Account : Identifiable {
                 // Also prefetch all metadata
                 let pubkeys = contacts.map { $0.pubkey! }
                 SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys)))
-                
+                account.objectWillChange.send()
                 for contact in contacts {
                     account.addToFollows(contact)
                 }
-                account.objectWillChange.send()
             }
         }
     }
