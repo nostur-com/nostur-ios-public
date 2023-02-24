@@ -52,7 +52,7 @@ class Importer {
                         continue
                     }
                     
-                    guard try Event.fetchEvent(id: event.id, context: context) == nil else {
+                    guard Event.eventExists(id: event.id, context: context) == false else {
                         alreadyInDBskipped = alreadyInDBskipped + 1
                         continue
                     }

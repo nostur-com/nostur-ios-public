@@ -489,6 +489,28 @@ extension Event {
         return try context.fetch(request).first
     }
     
+    static func eventExists(id:String, context:NSManagedObjectContext) -> Bool {
+        let request = NSFetchRequest<Event>()
+        request.entity = Event.entity()
+        request.predicate = NSPredicate(format: "id == %@", id)
+        request.fetchLimit = 1
+        request.includesPropertyValues = false
+
+        var count = 0
+        do {
+            count = try context.count(for: request)
+        } catch {
+            print("some error in eventExists()")
+            print(error)
+            return false
+        }
+
+        if count > 0 {
+            return true
+        }
+        return false
+    }
+    
     
     static func extractZapRequest(tags:[NEventTag]) -> NEvent? {
         let description:NEventTag? = tags.first(where: { $0.type == "description" })
