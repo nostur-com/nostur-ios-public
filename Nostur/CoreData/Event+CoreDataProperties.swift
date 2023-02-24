@@ -465,6 +465,10 @@ extension Event {
         tags().first(where: { $0.type == "p" })?.pubkey
     }
     
+    func pTags() -> [String] {
+        tags().filter { $0.type == "p" }.map { $0.pubkey }
+    }
+    
     func contactPubkeys() -> [String]? {
         let decoder = JSONDecoder()
         

@@ -105,17 +105,13 @@ struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling i
                         ds.didRestore = true
                     }
                     .onReceive(receiveNotification(.shouldScrollToUnreadNote)) { _ in
-                        print(3333)
-                        if (ds.mostRecentReadEvent != nil) {
-                            print(1111)
+                        if (ds.mostRecentReadEvent != nil) && (eventsSorted.firstIndex(of: ds.mostRecentReadEvent!) != nil) {
                             withAnimation {
                                 proxy.scrollTo(ds.mostRecentReadEvent!.id!, anchor: .bottom)
                             }
                         }
                         else {
-                            print(22222)
                             if (events.last != nil) {
-                                print(33333)
                                 withAnimation {
                                     proxy.scrollTo(events.last!.id, anchor: .bottom)
                                 }
@@ -190,6 +186,15 @@ extension Timeline {
     }
     
     func fetchMissingReplyToContacts(events:[Event]) {
+        
+        for event in events {
+            let pubkeys = Array(Set(event.pTags()))
+            if pubkeys.count > 0 {
+                let contacts = Contact.fetchByPubkeys(pubkeys, context:viewContext)
+//                event.objectWillChange.send()
+                event.addToContacts(NSSet(array: contacts))
+            }
+        }
         // TODO: FIXEN
         // TODO, bij importer, replyTo p in event.replyToPTag for speed up
         let pubkeys = Array(Set(events.flatMap { TagsHelpers($0.tags()).pTags().map{ $0.pubkey } }))
