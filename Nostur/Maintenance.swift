@@ -10,7 +10,7 @@ import CoreData
 
 struct Maintenance {
     
-    static let BOOTSTRAP_RELAYS = ["wss://relay.damus.io", "wss://brb.io" , "wss://nostr.fmt.wiz.biz" , "wss://nostr.zebedee.cloud", "wss://relay.snort.social", "wss://nostr.plebchain.org"]
+    static let BOOTSTRAP_RELAYS = ["wss://relay.damus.io", "wss://brb.io" , "wss://nostr.fmt.wiz.biz" , "wss://nostr.zebedee.cloud", "wss://relay.snort.social", "wss://nostr.plebchain.org", "wss://nostr.mutinywallet.com"]
     
     static func firstTimeStartup(context:NSManagedObjectContext) {
         context.perform {
@@ -19,7 +19,7 @@ struct Maintenance {
                 if (relaysCount == 0) {
                     for url in BOOTSTRAP_RELAYS {
                         let bootstrapRelay = Relay(context: context)
-                        bootstrapRelay.read = true
+                        bootstrapRelay.read = url == "wss://nostr.mutinywallet.com" ? false : true
                         bootstrapRelay.write = true
                         bootstrapRelay.createdAt = Date.now
                         bootstrapRelay.url = url
