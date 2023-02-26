@@ -114,7 +114,7 @@ struct ConfigurationView: View {
             for contact in contacts {
                 
                 let tr = NSFetchRequest<Event>(entityName: "Event")
-                tr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", contact.pubkey!) // OPTIMIZATION HACK
+                tr.predicate = NSPredicate(format: "kind IN {1,6,7,9734} AND tagsSerialized CONTAINS %@", contact.pubkey!) // OPTIMIZATION HACK
                 if let events = try? viewContext.fetch(tr) {
                     for event in events {
                         event.addToContacts(contact)
@@ -123,7 +123,15 @@ struct ConfigurationView: View {
                 
             }
         }
-        print("finished putting contacts in events for their p's")
+        do {
+            try viewContext.save()
+            print("finished putting contacts in events for their p's")
+        }
+        catch {
+            print("putContactsInEventsForPs error on save(): \(error)")
+            print(error)
+        }
+        
     }
     
     // TAKES ALL 1,7,9735 (NOTES, REACTIONS, ZAPS) Not reposts? 6?
@@ -225,7 +233,7 @@ struct ConfigurationView: View {
         
         let r = NSFetchRequest<Event>(entityName: "Event")
         r.predicate = NSPredicate(format: "kind == 0")
-        r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)]
+        r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         let kind0 = try! viewContext.fetch(r)
         
         for event in kind0 {
@@ -336,7 +344,7 @@ struct ConfigurationView: View {
         // TODO: MAybe dont need for all events??? just kind:1 is enough?
         let er = NSFetchRequest<Event>(entityName: "Event")
         er.sortDescriptors = []
-        er.predicate = NSPredicate(format: "kind == 1")
+        er.predicate = NSPredicate(format: "kind IN {1,6,7,9735}")
         let allKind1 = Array(try! viewContext.fetch(er))
         
         for event in allKind1 {
@@ -380,7 +388,7 @@ struct ConfigurationView: View {
         }
         
         do {
-            print("Rebuilt event.replyTo, event.replyToRoot, event.firstQuote relations")
+            print("Rebuilt event.replyTo, event.replyToRoot, event.firstQuote, event.zappedEvent, event.reactionTo relations")
             try viewContext.save()
         }
         catch {

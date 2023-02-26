@@ -96,10 +96,10 @@ struct ThreadWarning {
     
     static func which(_ description:String? = "") {
         if (Thread.isMainThread) {
-            print ("🟢🟢🟢🟢🟢 MAIN 🟢🟢🟢🟢🟢 \(description!)")
+            print ("🟢🟢🟢🟢🟢 MAIN 🟢🟢🟢🟢🟢 \(description!) 💖💖💖")
         }
         else {
-            print ("🟡🟡🟡🟡 NOT MAIN: \(Thread.current.description) 🟡🟡🟡🟡 \(description!)")
+            print ("🟡🟡🟡🟡 NOT MAIN: \(Thread.current.description) 🟡🟡🟡🟡 \(description!) 💖💖💖")
         }
     }
     

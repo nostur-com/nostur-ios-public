@@ -14,7 +14,8 @@ struct NoteRowView: View {
     @Environment(\.managedObjectContext) var viewContext
     private let sp:SocketPool = .shared
     private let nav:NavigationModel = .shared
-    @ObservedObject var event:Event
+    var event:Event
+//    @ObservedObject var event:Event
 
     var hideFooter = false // For rendering in NewReply
     
@@ -48,7 +49,7 @@ struct NoteRowView: View {
     @Namespace var text
     
     var body: some View {
-//        let _ = Self._printChanges()
+        let _ = Self._printChanges()
         VStack (alignment: .leading) {
             if (event.isRepost) {
                 HStack {
@@ -196,19 +197,19 @@ struct NoteRowView: View {
                 }
         )
         .onAppear {
-            
+//            guard 1 == 2 else { return } // performance check
 //            print("🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴 MY FACE IS APPEAR")
             // should fetch setMetaData if
             // No Contact
             // Contact updated_at is very old
             // followed contact meta data refresh should be updated at app wake up probably
             if (event.contact == nil || event.contact?.updated_at == 0) {
-                print("🟢 NoteRow.onAppear event.contact == nil so: REQ.0:\(event.pubkey!)")
+                print("🔴🔴 NoteRow.onAppear event.contact == nil so: REQ.0:\(event.pubkey!)")
                 sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.pubkey!)))
             }
             if (event.isRepost && event.firstQuote != nil && event.firstQuote!.contact != nil) {
                 if (event.firstQuote!.contact!.updated_at == 0) {
-                    print("🟢 NoteRow.onAppear event.firstQuite.contact == nil so: REQ.0:\(event.pubkey!)")
+                    print("🔴🔴 NoteRow.onAppear event.firstQuite.contact == nil so: REQ.0:\(event.pubkey!)")
                     sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.firstQuote!.pubkey!)))
                 }
             }

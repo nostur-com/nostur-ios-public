@@ -442,6 +442,7 @@ public struct NSetMetadata: Codable {
     public var banner: String?
     public var nip05: String? = nil
     public var lud16: String? = nil
+    public var lud06: String? = nil
 
     enum CodingKeys: String, CodingKey {
         case name
@@ -451,6 +452,7 @@ public struct NSetMetadata: Codable {
         case banner
         case nip05
         case lud16
+        case lud06
     }
 
     public func encodedString() throws -> String {

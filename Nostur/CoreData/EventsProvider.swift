@@ -55,6 +55,7 @@ class EventsProvider: ObservableObject {
         contact.pubkey = "11707ab5c187f4534ea7b4ad67cd9914cd07f7812b5ea2fdd91685ac84c91f5b"
         contact.about = "test"
         contact.lud16 = ""
+        contact.lud06 = ""
         contact.name = "yo"
         contact.nip05 = ""
         contact.updated_at = 0

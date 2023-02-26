@@ -637,6 +637,18 @@ extension Event {
             if let replyToRootEtag = tags.replyToRootEtag() {
                 if (replyToRootEtag.id != savedEvent.replyToId) { // If reply root is same as reply, dont double add.
                     savedEvent.replyToRootId = replyToRootEtag.id
+                    if (savedEvent.replyToId == nil) { // IF IT HAS ONLY A ROOT REPLY, NO NORMAL REPLY: THEN REPLYTOROOT = REPLYTO
+                        savedEvent.replyToId = replyToRootEtag.id
+                        
+                        // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
+                        if let replyToRoot = try? Event.fetchEvent(id: replyToRootEtag.id, context: context) {
+                            savedEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
+                            
+                            replyToRoot.objectWillChange.send()
+                            replyToRoot.addToReplies(savedEvent)
+                            replyToRoot.repliesCount += 1
+                        }
+                    }
                 }
             }
               

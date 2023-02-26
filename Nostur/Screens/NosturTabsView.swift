@@ -29,7 +29,7 @@ struct NosturTabsView: View {
         HStack {
             TabView(selection: $selectedTab) {
                 NavigationStack(path: $timelinePath) {
-                    TimelineContainer()
+                    TimelineStateIsolation()
                         .frame(maxWidth: 600)
                         .withNavigationDestinations()
                 }

@@ -52,14 +52,17 @@ struct ReplyingToFragment: View {
             EmptyView()
         }
         else {
-            let pTags = event.tags().filter { $0.type == "p" }
-            let pTagsAsStrings = Array(Set(pTags.map { tag in
-                // TODO: UGH SHIT. OK. Need Event.contacts
-                return "[@\(contactUsername(fromPubkey: tag.pubkey))](nostur:p:\(tag.pubkey))"
-            }))
-            
-            //            Text(try! AttributedString(markdown:"Replying to [@\(replyToUsername())](nostur:p:\(replyToPubkeyHex()))"))
-            if (pTags.count > 0) {
+            let pTags = Set(event.tags().filter { $0.type == "p" }.map { $0.pubkey })
+            let pTagsAsStrings = pTags.map { pubkey in
+                return "[@\(contactUsername(fromPubkey: pubkey))](nostur:p:\(pubkey))"
+            }
+            if (pTagsAsStrings.count > 6) {
+                Text(try! AttributedString(markdown:"Replying to: " + pTagsAsStrings.prefix(4).joined(separator: ", ") + " and \(pTagsAsStrings.count-4) others"))
+                    .foregroundColor(.secondary)
+                //                .font(.system(size: 13))
+                    .fontWeight(.light)
+            }
+            else if (pTagsAsStrings.count > 0) {
                 Text(try! AttributedString(markdown:"Replying to: " + pTagsAsStrings.joined(separator: ", ")))
                     .foregroundColor(.secondary)
                 //                .font(.system(size: 13))

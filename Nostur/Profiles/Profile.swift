@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-//import Kingfisher
 import NukeUI
 import Nuke
 
@@ -353,8 +352,7 @@ struct Profile: View {
             }
         }
         .task {
-            guard contact.lud16 != nil else { return }
-            guard contact.lud16! != "" else { return }
+            guard contact.lud16 != nil && contact.lud16 != "" else { return }
             let lud16 = contact.lud16!
             do {
                 let response = try await LUD16.getCallbackUrl(lud16: lud16)

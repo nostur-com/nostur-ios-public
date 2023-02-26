@@ -12,6 +12,9 @@ import Combine
 
 final class NosturState : ObservableObject {
     
+    public static let shared = NosturState(container: EventsProvider.shared.container)
+//    public static let preview = NosturState(container: EventsProvider.preview.container)
+    
     static let GUEST_ACCOUNT_PUBKEY = "c118d1b814a64266730e75f6c11c5ffa96d0681bfea594d564b43f3097813844"
     @Published var isOnboarding = false
     
@@ -98,7 +101,7 @@ final class NosturState : ObservableObject {
             activeAccountPublicKey = self.account!.publicKey!
         }
 //        loadFollowing()
-        DataStore.shared.unreadCount = 0
+        DataStore.shared.unreadCount.send(0)
         Task(priority: .userInitiated) {
             self.loadLikesAndReposts()
         }
@@ -323,3 +326,7 @@ final class ExchangeRateModel: ObservableObject {
     static public var shared = ExchangeRateModel()
     @Published var bitcoinPrice:Double = 0.0
 }
+
+
+
+let IS_IPAD = UIDevice.current.userInterfaceIdiom == .pad

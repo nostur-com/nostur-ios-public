@@ -12,7 +12,7 @@ import Combine
 struct NosturApp: App {
     @AppStorage("firstTimeCompleted") var firstTimeCompleted = false
     @StateObject private var up = Unpublisher(viewContext:EventsProvider.shared.container.viewContext)
-    @StateObject private var ns = NosturState(container:EventsProvider.shared.container)
+    @StateObject private var ns:NosturState = .shared
     @StateObject private var er:ExchangeRateModel = .shared
     @StateObject private var nav:NavigationModel = .shared
     @StateObject private var sp:SocketPool = .shared
@@ -63,7 +63,7 @@ struct NosturApp: App {
                     Task {
                         if let newPrice = await fetchBitcoinPrice() {
                             if (newPrice != er.bitcoinPrice) {
-                                er.objectWillChange.send()
+//                                er.objectWillChange.send()
                                 er.bitcoinPrice = newPrice
                             }
                         }

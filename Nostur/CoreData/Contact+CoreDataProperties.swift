@@ -34,6 +34,7 @@ extension Contact {
 
     @NSManaged public var about: String?
     @NSManaged public var lud16: String?
+    @NSManaged public var lud06: String?
     @NSManaged public var name: String?
     @NSManaged public var display_name: String?
     @NSManaged public var nip05: String?
@@ -185,12 +186,13 @@ extension Contact : Identifiable {
                 contact.banner = metaData.banner
                 contact.nip05 = metaData.nip05
                 contact.lud16 = metaData.lud16
+                contact.lud06 = metaData.lud06
                 contact.updated_at = Int64(Date().timeIntervalSince1970)
                 print("🟢🟢 Existing Contact metadata updated")
                 // TODO: Maybe some event.objectWillChange.send() to relations in active views? Performance?
                 let er = Event.fetchRequest()
                 er.sortDescriptors = []
-                er.predicate = NSPredicate(format: "kind IN {1,6,9734} && pubkey == %@", event.publicKey)
+                er.predicate = NSPredicate(format: "kind IN {1,6,7,9734} && pubkey == %@", event.publicKey)
                 let contactEvents = Array(try! context.fetch(er))
                 
                 for event in contactEvents {
@@ -227,6 +229,7 @@ extension Contact : Identifiable {
             contact.banner = metaData.banner
             contact.nip05 = metaData.nip05
             contact.lud16 = metaData.lud16
+            contact.lud06 = metaData.lud06
             contact.updated_at = Int64(Date().timeIntervalSince1970)
             print("🟢🟢 New contact stored ")
             
@@ -243,7 +246,7 @@ extension Contact : Identifiable {
             // EVENTS.CONTACTS (which come from Event.P tags:
             let tr = NSFetchRequest<Event>(entityName: "Event")
     //            tr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", "[\"p\",\"\(contact.pubkey!)") // OPTIMIZATION HACK WERKT NIET
-            tr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", contact.pubkey!) // OPTIMIZATION HACK
+            tr.predicate = NSPredicate(format: "kind IN {1,6,7,9734} AND tagsSerialized CONTAINS %@", contact.pubkey!) // OPTIMIZATION HACK
             let events = Array(try! context.fetch(tr))
             for event in events {
                 event.objectWillChange.send()
@@ -346,6 +349,7 @@ extension Contact : Identifiable {
         if let contactToUpdate = try context.fetch(request).first {
             contactToUpdate.about = metaData.about
             contactToUpdate.lud16 = metaData.lud16
+            contactToUpdate.lud06 = metaData.lud06
             contactToUpdate.name = metaData.name
             contactToUpdate.display_name = metaData.display_name
             contactToUpdate.picture = metaData.picture
@@ -361,6 +365,7 @@ extension Contact : Identifiable {
             contact.pubkey = pubkey
             contact.about = metaData.about
             contact.lud16 = metaData.lud16
+            contact.lud06 = metaData.lud06
             contact.name = metaData.name
             contact.display_name = metaData.display_name
             contact.picture = metaData.picture

@@ -6,6 +6,7 @@
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="display_name" attributeType="String" defaultValueString=""/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="lud06" attributeType="String" defaultValueString=""/>
         <attribute name="lud16" attributeType="String" defaultValueString=""/>
         <attribute name="name" attributeType="String" defaultValueString=""/>
         <attribute name="nip05" attributeType="String" defaultValueString=""/>
@@ -21,6 +22,7 @@
         <attribute name="about" optional="YES" attributeType="String"/>
         <attribute name="banner" optional="YES" attributeType="String"/>
         <attribute name="display_name" optional="YES" attributeType="String"/>
+        <attribute name="lud06" optional="YES" attributeType="String"/>
         <attribute name="lud16" optional="YES" attributeType="String"/>
         <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="nip05" optional="YES" attributeType="String"/>

@@ -64,6 +64,13 @@ struct AccountEditView: View {
                         .textInputAutocapitalization(.never)
                 }
                 
+                Section(header: Text("Lightning Address (LUD-06)") ) {
+                    TextField("", text: $account.lud06).keyboardType(.URL).disabled(shouldDisable)
+                        .keyboardType(.URL)
+                        .disableAutocorrection(true)
+                        .textInputAutocapitalization(.never)
+                }
+                
                 Section(header: Text("Profile picture URL") ) {
                     TextField("https://nostur.com/profile.jpg", text: $account.picture).keyboardType(.URL).disabled(shouldDisable)
                         .keyboardType(.URL)
@@ -193,6 +200,7 @@ extension AccountEditView {
         var setMetadataContent = NSetMetadata(name: account.name, about: account.about, picture: account.picture)
         if account.nip05 != "" { setMetadataContent.nip05 = account.nip05 }
         if account.lud16 != "" { setMetadataContent.lud16 = account.lud16 }
+        if account.lud06 != "" { setMetadataContent.lud06 = account.lud06 }
         if account.banner != "" { setMetadataContent.banner = account.banner }
         if account.display_name != "" { setMetadataContent.display_name = account.display_name }
         

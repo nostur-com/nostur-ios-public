@@ -7,6 +7,8 @@
 
 import SwiftUI
 import LightningDevKit
+import CoreData
+
 
 struct NoteById: View {
 
@@ -237,6 +239,14 @@ struct NoteAndParent: View {
                     }
                     
                     if (!isParent) {
+                        
+                        // Fix replyTo if we already have it?
+                        fixReplyToIfWeAlreadyHaveIt(event)
+                        
+                        // Here, because do all at import is slow?
+//                        fixIfWeHavePointingToAlreadyInCache(event)
+                        
+                        
                         // Fetch all related (e and p.kind=0)
                         // (the events and contacts mentioned in this DETAIL NOTE.
                         if let message = RequestMessage.getTags(event.tags()) {
@@ -260,6 +270,63 @@ struct NoteAndParent: View {
                 }
             
 //            Spacer()
+        }
+    }
+    
+    func fixReplyToIfWeAlreadyHaveIt(_ openedEvent:Event) {
+        if openedEvent.replyTo == nil && openedEvent.replyToId != nil {
+            // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
+            if let replyTo = try? Event.fetchEvent(id: openedEvent.replyToId!, context: viewContext) {
+                openedEvent.objectWillChange.send()
+                openedEvent.replyTo = replyTo
+                
+                replyTo.objectWillChange.send()
+                replyTo.addToReplies(openedEvent)
+                replyTo.repliesCount += 1 // TODO: Count again here?? or we already counted ??
+            }
+        }
+        
+        // IF THE THERE IS A ROOT, AND ITS NOT THE SAME AS THE REPLY TO
+        // DO THE SAME AS WITH THE REPLY BEFORE
+        if (openedEvent.replyToRootId != openedEvent.replyToId) { // If reply root is same as reply, dont double add.
+            if (openedEvent.replyToId == nil) { // IF IT HAS ONLY A ROOT REPLY, NO NORMAL REPLY: THEN REPLYTOROOT = REPLYTO
+                openedEvent.replyToId = openedEvent.replyToRootId
+                
+                // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
+                if let replyToRoot = try? Event.fetchEvent(id: openedEvent.replyToRootId!, context: viewContext) {
+                    openedEvent.objectWillChange.send()
+                    openedEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
+                    
+                    replyToRoot.objectWillChange.send()
+                    replyToRoot.addToReplies(openedEvent)
+                    replyToRoot.repliesCount += 1 // TODO: Count again here?? or we already counted ??
+                }
+            }
+        }
+    }
+    
+    func fixIfWeHavePointingToAlreadyInCache(_ openedEvent:Event) {
+        let pointingToEventReq = NSFetchRequest<Event>(entityName: "Event")
+        //        pointingToEventReq.predicate = NSPredicate(format: "(kind IN {1,6} AND  (replyToId == %@ OR replyToRootId == %@ OR firstQuoteId == %@)", openedEvent.id!, openedEvent.id!, openedEvent.id!)
+        pointingToEventReq.predicate = NSPredicate(format: "kind == 1 AND %@ IN {replyToId,replyToRootId,firstQuoteId}", openedEvent.id!)
+        // TODO: NEED 6 ALSO OR NOT?
+//            pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6} AND %@ IN {replyToId,replyToRootId,firstQuoteId}", savedEvent.id!)
+        pointingToEventReq.sortDescriptors = []
+        if let pointingToEvents = try? viewContext.fetch(pointingToEventReq) {
+            for event in pointingToEvents {
+                if (event.replyToId != nil) && (event.replyToId == openedEvent.id!) {
+                    event.objectWillChange.send()
+                    event.replyTo = openedEvent
+                }
+                if (event.replyToRootId != nil) && (event.replyToRootId == openedEvent.id!) {
+                    event.objectWillChange.send()
+                    event.replyToRoot = openedEvent
+                }
+                if (event.firstQuoteId != nil) && (event.firstQuoteId == openedEvent.id!) {
+                    event.objectWillChange.send()
+                    event.firstQuote = openedEvent
+                }
+            }
         }
     }
 }

@@ -9,6 +9,11 @@ import SwiftUI
 
 struct Settings: View {
     @EnvironmentObject var settings: SettingsStore
+    @EnvironmentObject var er: ExchangeRateModel
+    
+    var fiatPrice:String {
+        String(format: "$%.02f", (ceil(Double(settings.defaultZapAmount)) / 100000000 * er.bitcoinPrice))
+    }
 
     var body: some View {
         NavigationView {
@@ -16,49 +21,33 @@ struct Settings: View {
                 Section(header: Text("Message verification")) {
                     Toggle(isOn: $settings.isSignatureVerificationEnabled) {
                         Text("Verify message signatures")
-                        Text("Turn off to save battery life, but trust the relays for the authenticity of messages")
+                        Text("Turn off to save battery life and trust the relays for the authenticity of messages")
                     }
                 }
                 
-                
-                if (1 == 2) {
-                    Section(header: Text("Sleep tracking settings")) {
-                        Toggle(isOn: $settings.isSleepTrackingEnabled) {
-                            Text("Sleep tracking:")
-                        }
-                        
-                        Picker(
-                            selection: $settings.sleepTrackingMode,
-                            label: Text("Sleep tracking mode")
-                        ) {
-                            ForEach(SettingsStore.SleepTrackingMode.allCases, id: \.self) {
-                                Text($0.rawValue).tag($0)
-                            }
-                        }
-                        
-                        Stepper(value: $settings.sleepGoal, in: 6...12) {
-                            Text("Sleep goal is \(settings.sleepGoal) hours")
-                        }
-                    }
+                Section(header: Text("Zapping")) {
                     
-                    if !settings.isPro {
-                        Section {
-                            Button(action: {
-                                self.settings.unlockPro()
-                            }) {
-                                Text("Unlock PRO")
+                    VStack {
+                        Picker(selection: $settings.defaultLightningWallet) {
+                            ForEach(SettingsStore.walletOptions) {
+                                Text($0.name).tag($0)
                             }
-                            
-                            Button(action: {
-                                self.settings.restorePurchase()
-                            }) {
-                                Text("Restore purchase")
-                            }
+                        } label: {
+                            Text("Lightning wallet")
                         }
+                        
+                        Slider(value: $settings.defaultZapAmount, in: 1000...200000) {
+                            
+                        } minimumValueLabel: {
+                            Text("0")
+                        } maximumValueLabel: {
+                            Text("200000")
+                        }
+                        Text("Zap \(settings.defaultZapAmount.satsFormatted) sats by default (\(fiatPrice))")
                     }
                 }
             }
-                .navigationBarTitle(Text("Settings"))
+//            .navigationBarTitle(Text("Settings"))
         }
     }
 }

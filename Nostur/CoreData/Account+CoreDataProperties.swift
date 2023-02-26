@@ -21,6 +21,7 @@ extension Account {
     @NSManaged public var name: String
     @NSManaged public var display_name: String
     @NSManaged public var lud16: String
+    @NSManaged public var lud06: String
     @NSManaged public var nip05: String
     @NSManaged public var picture: String
     @NSManaged public var banner: String
@@ -177,6 +178,7 @@ extension Account : Identifiable {
             account.banner = metaData.banner ?? ""
             account.nip05 = metaData.nip05 ?? ""
             account.lud16 = metaData.lud16 ?? ""
+            account.lud06 = metaData.lud06 ?? ""
         }
     }
     
@@ -200,6 +202,7 @@ extension Account : Identifiable {
                 account.banner = metaData.banner ?? ""
                 account.nip05 = metaData.nip05 ?? ""
                 account.lud16 = metaData.lud16 ?? ""
+                account.lud06 = metaData.lud06 ?? ""
             }
         }
     }

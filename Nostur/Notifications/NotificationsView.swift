@@ -37,12 +37,6 @@ struct NotificationsView: View {
     @FetchRequest
     var kind1:FetchedResults<Event>
     
-    @FetchRequest
-    var kind7:FetchedResults<Event>
-    
-    @FetchRequest
-    var kind9735:FetchedResults<Event>
-    
     @State var tab = "REACTIONS"
     
     init(account:Account) {
@@ -53,18 +47,6 @@ struct NotificationsView: View {
         fr.fetchLimit = 125 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW (MET VSTACK).
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         _kind1 = FetchRequest(fetchRequest: fr)
-        
-        let kind7r:NSFetchRequest<Event> = Event.fetchRequest()
-        kind7r.fetchLimit = 100
-        kind7r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        kind7r.predicate = NSPredicate(format: "kind == 7 AND tagsSerialized CONTAINS %@", account.publicKey!)
-        _kind7 = FetchRequest(fetchRequest: kind7r)
-        
-        let kind9735r:NSFetchRequest<Event> = Event.fetchRequest()
-        kind9735r.fetchLimit = 100
-        kind9735r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        kind9735r.predicate = NSPredicate(format: "kind == 9735 AND tagsSerialized CONTAINS %@", account.publicKey!)
-        _kind9735 = FetchRequest(fetchRequest: kind9735r)
     }
     
     var myNotifications:[Event] {
@@ -73,23 +55,11 @@ struct NotificationsView: View {
         }
     }
     
-    var myReactions:[Event] {
-        get {
-            kind7.filter { $0.tags().filter { $0.pubkey == account.publicKey! }.count > 0 }
-        }
-    }
-    
-    var myZaps:[Event] {
-        get {
-            kind9735.filter { $0.tags().filter { $0.pubkey == account.publicKey! }.count > 0 }
-        }
-    }
-    
     var body: some View {
         let _ = Self._printChanges()
         VStack {
             if let account = ns.account {
-                Text("account: \(account.name)")
+//                Text("account: \(account.name)")
                 // TODO: MAKE TAB STYLE
                 HStack {
                     Button { tab = "NOTES" } label: { Text("Posts") }
@@ -112,10 +82,8 @@ struct NotificationsView: View {
                             }
                         }
                     case "ZAPS":
-                        Zaps(zaps: myZaps) { creationDate in
-                            if (creationDate > lastNotificationDate) {
-                                lastNotificationDate = creationDate
-                            }
+                        NotificationsZaps(pubkey: ns.account!.publicKey!, context: viewContext) { creationDate in
+                            lastNotificationDate = creationDate
                         }
                     default:
                         EmptyView()
@@ -129,11 +97,6 @@ struct NotificationsView: View {
         .onAppear {
             guard ns.account != nil else { return }
             kind1.nsPredicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", account.publicKey!)
-            
-            kind7.nsPredicate = NSPredicate(format: "kind == 7 AND tagsSerialized CONTAINS %@", account.publicKey!)
-            
-            kind9735.nsPredicate = NSPredicate(format: "kind == 9735 AND tagsSerialized CONTAINS %@", account.publicKey!)
-
             fetchMentions()
         }
     }

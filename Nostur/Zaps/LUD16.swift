@@ -37,6 +37,22 @@ struct LNUrlResponse: Codable {
 
 class LUD16 {
 
+    static func getCallbackUrl(lud06:String) async throws -> LUD16response {
+        print(lud06)
+        guard let lud06url = try? Bech32__.decode(lnurl: lud06) else { throw "cant decode lnurl" }
+        print(lud06url.absoluteURL)
+        
+        let request = URLRequest(url: lud06url)
+        
+        let (data, httpResponse) = try await URLSession.shared.data(for: request)
+        
+        guard (httpResponse as? HTTPURLResponse)?.statusCode == 200 else { throw "Bad response" }
+        
+        let lud16response = try JSONDecoder().decode(LUD16response.self, from: data)
+        
+        return lud16response
+    }
+    
     static func getCallbackUrl(lud16:String) async throws -> LUD16response {
         
         let lud16trimmed = lud16.trimmingCharacters(in: .whitespacesAndNewlines)

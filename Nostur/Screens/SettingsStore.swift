@@ -13,12 +13,18 @@ final class SettingsStore: ObservableObject {
     
     public static let shared = SettingsStore()
     
-    private enum Keys {
+    public enum Keys {
         static let pro = "pro"
         static let sleepGoal = "sleep_goal"
+        
         static let isSignatureVerificationEnabled = "signature_verification_enabled"
         static let sleepTrackingEnabled = "sleep_tracking_enabled"
         static let sleepTrackingMode = "sleep_tracking_mode"
+        
+        static let defaultZapAmount = "default_zap_amount"
+        static let defaultLightningWallet = "default_lightning_wallet"        
+        
+        
     }
 
     private let cancellable: Cancellable
@@ -26,13 +32,24 @@ final class SettingsStore: ObservableObject {
 
     let objectWillChange = PassthroughSubject<Void, Never>()
 
+    public static let walletOptions = [
+        LightningWallet(name: "none", scheme: "lightning:"),
+        LightningWallet(name: "Zebedee", scheme: "zebedee:lightning:"), // https://documentation.zebedee.io/docs/zbd-app-uri-schemes/
+        LightningWallet(name: "Wallet of Satoshi", scheme: "walletofsatoshi:lightning:"), // guessed. must check if works
+        LightningWallet(name: "Muun", scheme: "muun:lightning:"), // guessed. must check if works
+        LightningWallet(name: "Phoenix", scheme: "phoenix:lightning:"), // guessed. must check if works
+        LightningWallet(name: "Breez", scheme: "breez:lightning:"), // https://github.com/breez/breezmobile/issues/300
+        LightningWallet(name: "BlueWallet", scheme: "bluewallet:lightning:") // https://github.com/BlueWallet/BlueWallet/wiki/Deeplinking
+    ]
+    
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
-
+        
         defaults.register(defaults: [
             Keys.sleepGoal: 8,
+            Keys.defaultZapAmount: 10.000,
             Keys.sleepTrackingEnabled: true,
-            Keys.sleepTrackingMode: SleepTrackingMode.moderate.rawValue
+            Keys.defaultLightningWallet: SettingsStore.walletOptions.first!.id
             ])
 
         cancellable = NotificationCenter.default
@@ -60,6 +77,11 @@ final class SettingsStore: ObservableObject {
         set { defaults.set(newValue, forKey: Keys.sleepGoal) }
         get { defaults.integer(forKey: Keys.sleepGoal) }
     }
+    
+    var defaultZapAmount: Double {
+        set { defaults.set(newValue, forKey: Keys.defaultZapAmount) }
+        get { defaults.double(forKey: Keys.defaultZapAmount) }
+    }
 
     enum SleepTrackingMode: String, CaseIterable {
         case low
@@ -67,14 +89,18 @@ final class SettingsStore: ObservableObject {
         case aggressive
     }
 
-    var sleepTrackingMode: SleepTrackingMode {
+    var defaultLightningWallet: LightningWallet {
         get {
-            return defaults.string(forKey: Keys.sleepTrackingMode)
-                .flatMap { SleepTrackingMode(rawValue: $0) } ?? .moderate
+            return defaults.string(forKey: Keys.defaultLightningWallet)
+                .flatMap { id in
+                    SettingsStore.walletOptions.first(where: { wallet in
+                        return wallet.id == id
+                    })
+                } ?? SettingsStore.walletOptions.first!
         }
 
         set {
-            defaults.set(newValue.rawValue, forKey: Keys.sleepTrackingMode)
+            defaults.set(newValue.id, forKey: Keys.defaultLightningWallet)
         }
     }
 }
@@ -89,4 +115,11 @@ extension SettingsStore {
         // You can do you in-app purchase restore here
         isPro = true
     }
+}
+
+
+struct LightningWallet: Identifiable, Hashable {
+    var id:String { name }
+    let name: String
+    let scheme: String
 }

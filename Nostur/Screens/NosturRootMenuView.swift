@@ -121,6 +121,7 @@ extension NosturRootMenu {
     func handleUrl(_ url:URL) {
         // TODO: CHECK INPUT!!! SECURITY!
         print(url.absoluteString)
+        // LINKS FROM ANYWHERE (NPUB1/NOTE1)
         let nostr = url.absoluteString.matchingStrings(regex: "^(nostr:)(npub1|note1)([023456789acdefghjklmnpqrstuvwxyz]{58})$")
         if nostr.count == 1 && nostr[0].count == 4 {
             print("ok lets go to: \(nostr[0][2])\(nostr[0][3])")
@@ -134,6 +135,7 @@ extension NosturRootMenu {
             }
         }
         
+        // LINKS FROM WITHIN NOSTUR
         let nostur = url.absoluteString.matchingStrings(regex: "^(nostur:)(p:|e:)([0-9a-z]{64})$")
         if nostur.count == 1 && nostur[0].count == 4 {
             print("ok lets go to: \(nostur[0][2])\(nostur[0][3])")
@@ -142,6 +144,18 @@ extension NosturRootMenu {
             }
             if nostur[0][2] == "e:" {
                 nav.navigateTo(NotePath(id: nostur[0][3]))
+            }
+        }
+        
+        // LINKS FROM ANYWHERE (HEX)
+        let nostrHex = url.absoluteString.matchingStrings(regex: "^(nostr:)(p:|e:)([0-9a-z]{64})$")
+        if nostrHex.count == 1 && nostrHex[0].count == 4 {
+            print("ok lets go to: \(nostrHex[0][2])\(nostrHex[0][3])")
+            if nostrHex[0][2] == "p:" {
+                nav.navigateTo(ContactPath(key: nostrHex[0][3]))
+            }
+            if nostrHex[0][2] == "e:" {
+                nav.navigateTo(NotePath(id: nostrHex[0][3]))
             }
         }
     }

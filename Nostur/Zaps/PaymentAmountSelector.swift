@@ -11,42 +11,42 @@ struct PaymentAmountSelector: View {
     @EnvironmentObject var ns:NosturState
     @Environment(\.openURL) var openURL
     
+    let ss:SettingsStore = .shared
     let sp:SocketPool = .shared
+    let paymentInfo:PaymentInfo
     
-    var contact:Contact?
-    var event:Event?
-    var min:UInt64
-    var max:UInt64
-    var supportsZap:Bool
-    
-    var callback:String
-    @State var amount:Float = 0.0
-    @State var exchangeRate:Double? = 0.0
-    @State var fiatPrice = ""
+    @State var amount:Float = 0.0 // SATS (1000 SATS ~= 20 cent)
+    @State var exchangeRate:Double? = 0.0 // BTC 23167
+    @State var fiatPrice = "" // $0.00
     @State var zapMessage = ""
     @Environment(\.dismiss) private var dismiss
     
+    init(paymentInfo:PaymentInfo) {
+        self.paymentInfo = paymentInfo
+        self.amount = Float(ss.defaultZapAmount) // SATS (1000 SATS ~= 20 cent)
+    }
+    
     func amountSelected(amount:Float, zapMessage:String) {
-        guard contact?.lud16 != nil && contact?.lud16 != "" else { return }
-        let pubkey = contact!.pubkey!
-        let eventId = event?.id ?? nil
+        guard paymentInfo.contact?.lud16 != nil && paymentInfo.contact?.lud16 != "" else { return }
+        let pubkey = paymentInfo.contact!.pubkey!
+        let eventId = paymentInfo.event?.id ?? nil
         let relays = sp.sockets.values
             .filter { $0.write }
             .map { $0.url }
         
-        if (supportsZap) {
-            Task.detached(priority: .background) {
+        if (paymentInfo.supportsZap) {
+            Task {
                 do {
                     
                     let zapRequestNote = zapRequest(forPubkey: pubkey, andEvent: eventId, withMessage: zapMessage, relays: relays)
                     
-                    let signedZapRequestNote = try await ns.signEvent(zapRequestNote)
+                    let signedZapRequestNote = try ns.signEvent(zapRequestNote)
                     
-                    let response = try await LUD16.getInvoice(url:callback, amount:UInt64(amount * 1000), zapRequestNote: signedZapRequestNote)
+                    let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount:UInt64(amount * 1000), zapRequestNote: signedZapRequestNote)
                     
                     if response.pr != nil {
                         await MainActor.run {
-                            openURL(URL(string: "lightning:\(response.pr!)")!)
+                            openURL(URL(string: "\(ss.defaultLightningWallet.scheme)\(response.pr!)")!)
                         }
                     }
                 }
@@ -59,7 +59,7 @@ struct PaymentAmountSelector: View {
         else {
             Task.detached(priority: .background) {
                 do {
-                    let response = try await LUD16.getInvoice(url:callback, amount:UInt64(amount * 1000))
+                    let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount:UInt64(amount * 1000))
                     
                     if response.pr != nil {
                         await MainActor.run {
@@ -75,25 +75,32 @@ struct PaymentAmountSelector: View {
         }
     }
     
-//    init(min: UInt64, max: UInt64, supportsZap:Bool, onAmountSelected: @escaping (Float, String) -> ()) {
-//        self.min = min
-//        self.max = max
-//        self.supportsZap = supportsZap
-//    }
-    
     var body: some View {
         VStack {
-            HStack {
-                Text("Send sats:")
-                Text(ceil(Double(amount)).clean)
-                Text("sats")
-                if (fiatPrice != "") {
-                    Text("\(fiatPrice)")
+            if IS_IPAD {
+                HStack {
+                    Spacer()
+                    Image(systemName: "xmark.circle.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 30, height: 30)
+                        .padding(30)
+                        .onTapGesture {
+                            dismiss()
+                        }
                 }
             }
-            Slider(value: $amount, in: Float(min)...Float(max))
+            HStack {
+                Text("Send sats:").font(.title2)
+                Text(ceil(Double(amount)).clean).font(.title2)
+                Text("sats").font(.title2)
+                if (fiatPrice != "") {
+                    Text("\(fiatPrice)").font(.title2)
+                }
+            }
+            Slider(value: $amount, in: Float(paymentInfo.min)...Float(paymentInfo.max))
                 .padding()
-            if (supportsZap) {
+            if (paymentInfo.supportsZap) {
                 HStack(alignment: .center) {
                     TextField("Add public note (optional)", text: $zapMessage)
                         .multilineTextAlignment(.leading)
@@ -108,11 +115,12 @@ struct PaymentAmountSelector: View {
                 amountSelected(amount:ceil(amount), zapMessage:zapMessage)
             } label: {
                 Text("Pay").padding(10)
+                    .foregroundColor(.white)
                     .frame(minWidth: 200)
             }.buttonStyle(.borderedProminent)
         }
         .onAppear {
-            amount = Float(min)
+            amount = Float(ss.defaultZapAmount)
         }
         .task {
             guard let url = URL(string: "https://api.kraken.com/0/public/Ticker?pair=XXBTZUSD") else { return }
@@ -152,7 +160,8 @@ struct PaymentAmountSelector: View {
 
 struct PaymentAmountSelector_Previews: PreviewProvider {
     static var previews: some View {
-        PaymentAmountSelector(min: 1000/1000, max: 500000000/1000, supportsZap:true, callback: "")
+        let paymentInfo = PaymentInfo(min: 1000, max: 50000000, callback: "", supportsZap: true)
+        PaymentAmountSelector(paymentInfo: paymentInfo)
             .withPreviewEnvironment()
     }
 }

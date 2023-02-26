@@ -127,10 +127,10 @@ struct FooterFragment: View {
             }
             Spacer()
             
-
-            LightningButton(contact:event.contact, event: event)
-                .opacity(event.contact?.lud16 != nil ? 1 : 0.3)
-                .disabled(event.contact?.lud16 == nil)
+            
+            LightningButton(tally: event.zapTally, event:event)
+                .opacity(event.contact?.anyLud ?? false ? 1 : 0.3)
+                .disabled(!(event.contact?.anyLud ?? false))
             Spacer()
 
             

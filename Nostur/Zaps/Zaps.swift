@@ -50,3 +50,10 @@ extension Event {
         }
     }
 }
+
+
+extension Contact {
+    var anyLud:Bool {
+        (lud16 != nil && lud16 != "") || (lud06 != nil && lud06 != "")
+    }
+}

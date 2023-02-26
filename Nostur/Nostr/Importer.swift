@@ -68,7 +68,7 @@ class Importer {
                     if event.kind == .repost && (event.content.prefix(2) == #"{""# || event.content == "") {
                         let decoder = JSONDecoder()
                         if let noteInNote = try? decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
-                            if try Event.fetchEvent(id: noteInNote.id, context: context) == nil {
+                            if !Event.eventExists(id: noteInNote.id, context: context) {
                                 _ = Event.saveEvent(event: noteInNote, context:context)
                             }
                             else {
@@ -131,29 +131,18 @@ class Importer {
                     
                     SavedEventsCache.shared.setObject(for: event.id, value: event.createdAt)
                 }
-                
-                if (alreadyInLRUskipped > 0) {
-//                    print("🦋🦋 Skipped \(alreadyInLRUskipped) already in LRU cache")
-                }
-                if (alreadyInDBskipped > 0) {
-//                    print("🦋🦋 Skipped \(alreadyInDBskipped) already in DB")
-                }
-                
-                //                ThreadWarning.which("importEvents")
                 if (context.hasChanges) {
                     try context.save() // TODO: is this the slowdown??
                     if (saved > 0) {
                         print("💾 forImports: \(forImports.count), saved: \(saved), skipped (cache): \(alreadyInLRUskipped), skipped (db): \(alreadyInDBskipped)")
                     }
                 }
-                
-                //                self.logger.debug("Successfully inserted data.")
                 self.isImporting = false
             }
             catch {
                 self.isImporting = false
-                print("🦋🦋 we failed to import because:")
-                print("🦋🦋 \(error)")
+                print("🔴🔴🔴🔴🔴🔴 Failed to import because:")
+                print("🔴🔴🔴🔴🔴🔴 \(error)")
             }
         }
     }

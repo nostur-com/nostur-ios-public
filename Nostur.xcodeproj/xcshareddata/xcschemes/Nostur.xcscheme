@@ -34,7 +34,6 @@
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      enableAddressSanitizer = "YES"
       enableASanStackUseAfterReturn = "YES"
       launchStyle = "0"
       useCustomWorkingDirectory = "NO"
@@ -54,7 +53,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-com.apple.CoreData.ConcurrencyDebug 0"
+            argument = "-com.apple.CoreData.ConcurrencyDebug 1"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument

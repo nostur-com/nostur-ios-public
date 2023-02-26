@@ -53,6 +53,9 @@
 		1F4773A5296CA72A0049454B /* AddReadOnlyAccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4773A4296CA72A0049454B /* AddReadOnlyAccountView.swift */; };
 		1F4773A7296D4F5B0049454B /* AccountEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4773A6296D4F5B0049454B /* AccountEditView.swift */; };
 		1F4773A9296D85B70049454B /* AccountListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4773A8296D85B70049454B /* AccountListView.swift */; };
+		1F4820ED29A9C264000EDFDA /* SmoothTextRenderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4820EC29A9C264000EDFDA /* SmoothTextRenderView.swift */; };
+		1F4820F029A9C7D5000EDFDA /* IsScrolling in Frameworks */ = {isa = PBXBuildFile; productRef = 1F4820EF29A9C7D5000EDFDA /* IsScrolling */; };
+		1F4820F229A9F808000EDFDA /* NotificationsZaps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4820F129A9F808000EDFDA /* NotificationsZaps.swift */; };
 		1F4AFC4729733E2400CC1F90 /* Event+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4AFC4529733E2400CC1F90 /* Event+CoreDataClass.swift */; };
 		1F4AFC4829733E2400CC1F90 /* Event+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4AFC4629733E2400CC1F90 /* Event+CoreDataProperties.swift */; };
 		1F539DAB299D4B2A00F3B8CA /* NewAccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F539DAA299D4B2900F3B8CA /* NewAccountSheet.swift */; };
@@ -148,6 +151,7 @@
 		1FEA785829799FE6007CC8E7 /* ProfilePicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */; };
 		1FEC01C0296C4A400078CC9B /* SwiftyJSON in Frameworks */ = {isa = PBXBuildFile; productRef = 1FEC01BF296C4A400078CC9B /* SwiftyJSON */; };
 		1FECAC4729A08255006FEE72 /* Collection+subscript.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FECAC4629A08255006FEE72 /* Collection+subscript.swift */; };
+		1FF69B2729AAA37D0070796B /* BechLnurl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF69B2629AAA37D0070796B /* BechLnurl.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -210,6 +214,8 @@
 		1F4773A4296CA72A0049454B /* AddReadOnlyAccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddReadOnlyAccountView.swift; sourceTree = "<group>"; };
 		1F4773A6296D4F5B0049454B /* AccountEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountEditView.swift; sourceTree = "<group>"; };
 		1F4773A8296D85B70049454B /* AccountListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountListView.swift; sourceTree = "<group>"; };
+		1F4820EC29A9C264000EDFDA /* SmoothTextRenderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmoothTextRenderView.swift; sourceTree = "<group>"; };
+		1F4820F129A9F808000EDFDA /* NotificationsZaps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsZaps.swift; sourceTree = "<group>"; };
 		1F4AFC4529733E2400CC1F90 /* Event+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Event+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1F4AFC4629733E2400CC1F90 /* Event+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Event+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1F539DAA299D4B2900F3B8CA /* NewAccountSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewAccountSheet.swift; sourceTree = "<group>"; };
@@ -300,6 +306,7 @@
 		1FE4C0262982FF3B004E7750 /* ReplyingToFragment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplyingToFragment.swift; sourceTree = "<group>"; };
 		1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePicView.swift; sourceTree = "<group>"; };
 		1FECAC4629A08255006FEE72 /* Collection+subscript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Collection+subscript.swift"; sourceTree = "<group>"; };
+		1FF69B2629AAA37D0070796B /* BechLnurl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BechLnurl.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -314,6 +321,7 @@
 				1FC4D40B2997E58E004E88CD /* KeychainAccess in Frameworks */,
 				1FEA785529799697007CC8E7 /* Compactor in Frameworks */,
 				1FE4011729940D6E00A388A2 /* Introspect in Frameworks */,
+				1F4820F029A9C7D5000EDFDA /* IsScrolling in Frameworks */,
 				1F75257A29962AA300477AF2 /* NukeUI in Frameworks */,
 				1F055A53296EE2A2009EF792 /* secp256k1 in Frameworks */,
 				1FEC01C0296C4A400078CC9B /* SwiftyJSON in Frameworks */,
@@ -445,6 +453,7 @@
 			children = (
 				1F37571429672AB6007D210A /* DummyData */,
 				1F8B1348297B34D7002EB8CF /* Bech32.swift */,
+				1FF69B2629AAA37D0070796B /* BechLnurl.swift */,
 				1F75211A2986D45D00C43DF0 /* Importer.swift */,
 				1F7521162986736400C43DF0 /* Messages.swift */,
 				1F7521182986D44E00C43DF0 /* MessageParser.swift */,
@@ -464,13 +473,6 @@
 				1F7C65BA29A14709009FF3EA /* CryptoKit.framework */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		1F8B1347297B34C6002EB8CF /* Crypto */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Crypto;
 			sourceTree = "<group>";
 		};
 		1F8B134D297B36BA002EB8CF /* Utils */ = {
@@ -506,6 +508,8 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
+				1F4820F129A9F808000EDFDA /* NotificationsZaps.swift */,
+				1F4820EC29A9C264000EDFDA /* SmoothTextRenderView.swift */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1FB448BB2965F3D000038671 /* Products */,
 				1F7C65B629A1466D009FF3EA /* Frameworks */,
@@ -525,7 +529,6 @@
 			children = (
 				1F4773A3296CA7040049454B /* Accounts */,
 				1F25B395297A508200A8A5A7 /* CoreData */,
-				1F8B1347297B34C6002EB8CF /* Crypto */,
 				1F71037B296BD98D006245CC /* Nostr */,
 				1FEA78592979A18E007CC8E7 /* Note */,
 				1FC2DFF229A9328F00C8A9DA /* Notifications */,
@@ -653,6 +656,7 @@
 				1F75257929962AA300477AF2 /* NukeUI */,
 				1FC4D40A2997E58E004E88CD /* KeychainAccess */,
 				1F7C65BC29A14969009FF3EA /* LightningDevKit */,
+				1F4820EF29A9C7D5000EDFDA /* IsScrolling */,
 			);
 			productName = Nostur;
 			productReference = 1FB448BA2965F3D000038671 /* Nostur.app */;
@@ -691,6 +695,7 @@
 				1F75257429962AA300477AF2 /* XCRemoteSwiftPackageReference "Nuke" */,
 				1FC4D4092997E58E004E88CD /* XCRemoteSwiftPackageReference "KeychainAccess" */,
 				1F7C65BB29A14969009FF3EA /* XCRemoteSwiftPackageReference "ldk-swift" */,
+				1F4820EE29A9C7D5000EDFDA /* XCRemoteSwiftPackageReference "IsScrolling" */,
 			);
 			productRefGroup = 1FB448BB2965F3D000038671 /* Products */;
 			projectDirPath = "";
@@ -719,6 +724,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1F2DE030298E5C5C00891D2E /* BlockListView.swift in Sources */,
+				1FF69B2729AAA37D0070796B /* BechLnurl.swift in Sources */,
 				1F756533296AE7910078474E /* NewRelayView.swift in Sources */,
 				1F3C3F9629755D4C00E813FD /* NosturState.swift in Sources */,
 				1F7C65BF29A14BA4009FF3EA /* Zaps.swift in Sources */,
@@ -739,6 +745,7 @@
 				1F75257C2996790D00477AF2 /* Notifications.swift in Sources */,
 				1F3309632989598600D4D8CF /* NosturRootMenuView.swift in Sources */,
 				1F14BA742985949100EACCD5 /* Profile.swift in Sources */,
+				1F4820F229A9F808000EDFDA /* NotificationsZaps.swift in Sources */,
 				1F539DAD299D52E200F3B8CA /* AddExistingAccountSheet.swift in Sources */,
 				1FC4D4082997E126004E88CD /* AccountManager.swift in Sources */,
 				1FCEA0B529993B2400A309DC /* Swift-Big-Number-Core.swift in Sources */,
@@ -839,6 +846,7 @@
 				1F14BA722985633300EACCD5 /* NoteRowView.swift in Sources */,
 				1F1ABC45298110D800D03FA9 /* LinkPreview.swift in Sources */,
 				1F2F242A29A4AA41007CBB27 /* TL.swift in Sources */,
+				1F4820ED29A9C264000EDFDA /* SmoothTextRenderView.swift in Sources */,
 				1F7525842997B21D00477AF2 /* NotificationsView.swift in Sources */,
 				1FEA785829799FE6007CC8E7 /* ProfilePicView.swift in Sources */,
 				1F14CC45299D432400131B8D /* AccountsSheet.swift in Sources */,
@@ -1090,6 +1098,14 @@
 				minimumVersion = 0.9.2;
 			};
 		};
+		1F4820EE29A9C7D5000EDFDA /* XCRemoteSwiftPackageReference "IsScrolling" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/fatbobman/IsScrolling";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
 		1F654F2E298ED52E0040F15D /* XCRemoteSwiftPackageReference "Starscream" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/daltoniam/Starscream/";
@@ -1153,6 +1169,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1F055A51296EE2A2009EF792 /* XCRemoteSwiftPackageReference "secp256k1" */;
 			productName = secp256k1;
+		};
+		1F4820EF29A9C7D5000EDFDA /* IsScrolling */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1F4820EE29A9C7D5000EDFDA /* XCRemoteSwiftPackageReference "IsScrolling" */;
+			productName = IsScrolling;
 		};
 		1F654F2F298ED52E0040F15D /* Starscream */ = {
 			isa = XCSwiftPackageProductDependency;

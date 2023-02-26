@@ -161,6 +161,31 @@ public class Bech32 {
         }
         return odata
     }
+    
+    static func decode(lnurl: String) throws -> URL {
+        let bech32 = Bech32()
+        guard let (hrp, decodedData) = try? bech32.decode(lnurl) else {
+            throw "LNURLAuthError.invalidLNURL"
+        }
+        
+        guard hrp.lowercased() == "lnurl" else {
+            throw "LNURLAuthError.invalidLNURL"
+        }
+        
+        guard let data = decodedData.convertBits(fromBits: 5, toBits: 8, pad: false) else {
+            throw "LNURLAuthError.invalidLNURL"
+        }
+        
+        guard let string = String(data: data, encoding: .utf8) else {
+            throw "LNURLAuthError.invalidLNURL"
+        }
+        
+        guard let url = URL(string: string) else {
+            throw "LNURLAuthError.invalidLNURL"
+        }
+        
+        return url
+    }
 }
 
 extension Bech32 {
@@ -201,5 +226,41 @@ extension Bech32 {
                 return "Failed to perform bits conversion"
             }
         }
+    }
+}
+
+
+extension Data {
+    // ConvertBits converts a byte slice where each byte is encoding fromBits bits,
+    // to a byte slice where each byte is encoding toBits bits.
+    func convertBits(fromBits: Int, toBits: Int, pad: Bool) -> Data? {
+        var acc: Int = 0
+        var bits: Int = 0
+        var result = Data()
+        let maxv: Int = (1 << toBits) - 1
+
+        for value in self {
+            if value < 0 || (value >> fromBits) != 0 {
+                return nil
+            }
+
+            acc = (acc << fromBits) | Int(value)
+            bits += fromBits
+
+            while bits >= toBits {
+                bits -= toBits
+                result.append(UInt8((acc >> bits) & maxv))
+            }
+        }
+
+        if pad {
+            if bits > 0 {
+                result.append(UInt8((acc << (toBits - bits)) & maxv))
+            }
+        } else if bits >= fromBits || ((acc << (toBits - bits)) & maxv) != 0 {
+            return nil
+        }
+
+        return result
     }
 }

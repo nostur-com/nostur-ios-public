@@ -7,33 +7,35 @@
 import SwiftUI
 import CoreData
 import Combine
+//import IsScrolling
+
+struct TimelineStateIsolation: View {
+    
+    @State var showingNewNote = false
+    @State var noteCancellationId:UUID?
+    
+    var body: some View {
+        ZStack {
+            TimelineContainer()
+            NewNoteButton(showingNewNote: $showingNewNote)
+            UnreadCounter()
+        }
+        .sheet(isPresented: $showingNewNote) {
+            NewNote(noteCancellationId: $noteCancellationId)
+        }
+    }
+}
 
 struct TimelineContainer: View {
     @EnvironmentObject var ns:NosturState
     @Environment(\.managedObjectContext) var viewContext
     @State var showingNewNote = false
-    @State var noteCancellationId:UUID?
 
     
     var body: some View {
-        let _ = print("👍👍 \(ns.followingPublicKeys)")
         let _ = Self._printChanges()
-        ZStack {
-            if UIDevice.current.userInterfaceIdiom == .pad {
-                Timeline(pubkeys: ns.followingPublicKeys, context: viewContext)
-            }
-            else {
-                Timeline(pubkeys: ns.followingPublicKeys, context: viewContext)
-            }
-            NewNoteButton(showingNewNote: $showingNewNote)
-        }
-        .sheet(isPresented: $showingNewNote) {
-            NewNote(noteCancellationId: $noteCancellationId)
-        }
-//        .onReceive(ns.$followingPublicKeys) { (p) in
-//            print("👍👍👍👍")
-//            print(p)
-//            print("👍👍👍👍")
+//        if UIDevice.current.userInterfaceIdiom == .pad {
+            Timeline(pubkeys: ns.followingPublicKeys, context: viewContext)
 //        }
     }
 }
@@ -55,6 +57,7 @@ struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling i
     @State private var oldEvents: [Event] = []
     @State var isViewDisplayed = false
     @State var didRestore = false
+//    @State var isScrolling = false
     
     let FETCH_LIMIT = 120
     
@@ -81,6 +84,20 @@ struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling i
                 ScrollViewReader { proxy in
                     List {
                         ForEach(eventsSorted) { event in
+//                            HStack {
+//                                VStack {
+//                                    ProfilePic(event: event)
+//                                }
+//                                VStack {
+//                                    ReplyingToFragment(event: event)
+//    //                                Text(event.noteText)
+//    //                                SmoothNoteTextRenderView(event: event)
+//                                    NoteTextRenderView(event: event)
+//                                    FooterFragment(event: event)
+//                                }
+//                            }
+//                            .scrollSensor()
+//                            MinimalNoteTextRenderView(event: event)
                             NoteRowView(event:event)
                                 .id(event.id!)
                                 .listRowInsets(EdgeInsets())
@@ -88,26 +105,32 @@ struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling i
                                     selectedEvent = event
                                 }
                                 .onAppear {
-                                    //                                    print("onAppear: \(d(event.created_at).description)")
-                                    Task.detached(priority: .userInitiated) {
-                                        await ds.markAsRead.send(event)
-                                    }
+                                    ds.eventAppeared.send(event)
                                 }
                         }
                     }
+//                    .scrollStatusMonitor($isScrolling, monitorMode: .common)
                     .onAppear {
-                        if (!ds.didRestore && ds.selectedItemId != nil) {
+                        guard ds.didRestoreScrollPosition == false else { return }
+                        if let id = UserDefaults.standard.string(forKey: "restoreScrollToId") {
+                            ds.didRestoreScrollPosition = true
                             withAnimation(.none) {
-                                print("AppStorage SCROLLING: \(ds.selectedItemId ?? "")")
-                                proxy.scrollTo(ds.selectedItemId!, anchor: .bottom)
+                                print("AppStorage SCROLLING: \(id)")
+                                proxy.scrollTo(id, anchor: .bottom)
                             }
                         }
-                        ds.didRestore = true
+//                        if (!ds.didRestore && ds.selectedItemId != nil) {
+//                            withAnimation(.none) {
+//                                print("AppStorage SCROLLING: \(ds.selectedItemId ?? "")")
+//                                proxy.scrollTo(ds.selectedItemId!, anchor: .bottom)
+//                            }
+//                        }
+//                        ds.didRestore = true
                     }
                     .onReceive(receiveNotification(.shouldScrollToUnreadNote)) { _ in
-                        if (ds.mostRecentReadEvent != nil) && (eventsSorted.firstIndex(of: ds.mostRecentReadEvent!) != nil) {
+                        if (ds.mostRecentEvent != nil) && (eventsSorted.firstIndex(of: ds.mostRecentEvent!) != nil) {
                             withAnimation {
-                                proxy.scrollTo(ds.mostRecentReadEvent!.id!, anchor: .bottom)
+                                proxy.scrollTo(ds.mostRecentEvent!.id!, anchor: .bottom)
                             }
                         }
                         else {
@@ -126,7 +149,7 @@ struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling i
                         .padding(5)
                         .background(Color("BackgroundColor").opacity(0.9))
                 }
-                UnreadCounter()
+//                UnreadCounter()
             }
             EmptyView()
         }
@@ -151,12 +174,24 @@ struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling i
             fetchStuffForLastAddedNotes(ids: ids(newNotes))
         }
         .onReceive(receiveNotification(.requestForJustAppeared)) { notification in
+//            guard 1 == 2 else { return } // Performance test
+//            guard !isScrolling else { return }
             let events = notification.object as! [Event]
-            fetchStuffForLastAddedNotes(ids: ids(events))
-            fetchMissingReplyToContacts(events: events)
-            NIP05.verifyBatch(contacts: events.compactMap { $0.contact }, context: viewContext)
+            
+            let ids = ids(events)
+            let contacts = events.compactMap { $0.contact }
+            let shouldVerifyContacts = contacts.filter { NIP05.shouldVerify($0) }
+//            Task.detached(priority: .userInitiated) {
+            Task {
+                ThreadWarning.which(".onReceive(receiveNotification(.requestForJustAppeared)")
+                fetchStuffForLastAddedNotes(ids: ids)
+                await fetchMissingReplyToContacts(events: events)
+                await NIP05.verifyBatch(contacts: shouldVerifyContacts, context: viewContext)
+            }
         }
         .onReceive(timelineRunLoop) { time in
+//            guard 1 == 2 else { return } // Performance test
+//            guard !isScrolling else { return }
             guard isViewDisplayed else { return }
             guard !Importer.shared.isImporting else { print("⏳ Still importing, new fetch skipped."); return }
             fetchEvents(pubkeys: pubkeys, amount: events.count == 0 ? 50 : 500)
@@ -186,12 +221,19 @@ extension Timeline {
     }
     
     func fetchMissingReplyToContacts(events:[Event]) {
+        // PLAN
+        // FOR EVERY EVENT
+        //   TAKE P's. IF P IS NOT IN EVENT.CONTACTS, ADD IT
+        // FINALLY, EVERY MISSING OR EMPTY CONTACT
+        //  sp.fetch!
         
         for event in events {
             let pubkeys = Array(Set(event.pTags()))
             if pubkeys.count > 0 {
                 let contacts = Contact.fetchByPubkeys(pubkeys, context:viewContext)
 //                event.objectWillChange.send()
+                // dit moet op main queue?
+//                ThreadWarning.which("Event.addToContacts( 💖💖💖")
                 event.addToContacts(NSSet(array: contacts))
             }
         }
@@ -210,7 +252,9 @@ extension Timeline {
             .map { $0.pubkey! }
         
         guard (missingPubkeys + emptyContactPubkeys).count > 0 else { return }
+//        ThreadWarning.which("SocketPool.shared.sendMessag 💖💖💖")
         SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missingPubkeys + emptyContactPubkeys )))
+    
     }
 }
 

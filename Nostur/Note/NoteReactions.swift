@@ -30,9 +30,18 @@ struct NoteReactions: View {
             }
             Spacer()
         }
-        .onChange(of: reactions_) { newValue in
+        .onAppear {
             var missing:[String] = []
             for reaction in reactions_ {
+                if reaction.contact == nil || reaction.contact?.updated_at == 0 {
+                    missing.append(reaction.pubkey!)
+                }
+            }
+            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missing)))
+        }
+        .onChange(of: reactions_) { newValue in
+            var missing:[String] = []
+            for reaction in newValue {
                 if reaction.contact == nil || reaction.contact?.updated_at == 0 {
                     missing.append(reaction.pubkey!)
                 }
@@ -47,7 +56,7 @@ struct ReactionRow: View {
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var nav:NavigationModel
     
-    var reaction:Event
+    @ObservedObject var reaction:Event
     
     var body: some View {
         HStack(alignment: .top) {

@@ -10,16 +10,13 @@ import SwiftUI
 struct ProfileLightningButton: View {
     var sp:SocketPool = .shared
     @EnvironmentObject var er:ExchangeRateModel
-    @EnvironmentObject var ns:NosturState
+    let ns:NosturState = .shared
     
     var contact:Contact?
     
     @State var isLoading = false
     @State var payAmountSelectorShown = false
-    @State var min:UInt64 = 0
-    @State var max:UInt64 = 5000000
-    @State var callback = ""
-    @State var supportsZap = false
+    @State var paymentInfo:PaymentInfo?
     
     var body: some View {
         let _ = Self._printChanges()
@@ -43,40 +40,72 @@ struct ProfileLightningButton: View {
                 .stroke(.gray, lineWidth: 1)
         }
         .sheet(isPresented: $payAmountSelectorShown) {
-            PaymentAmountSelector(contact: contact, min: min, max: max, supportsZap: supportsZap, callback: callback)
-        }.opacity(contact?.lud16 == nil || contact?.lud16 == "" ? 0 : 1)
+            PaymentAmountSelector(paymentInfo: paymentInfo!)
+        }.opacity((contact?.anyLud ?? false) ? 1 : 0)
     }
     
     func buttonTapped() {
         guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
-        guard contact?.lud16 != nil && contact?.lud16 != "" else { return }
-        
+        guard (contact?.anyLud ?? false) else { return }
         isLoading = true
-        let lud16 = contact!.lud16!
-        Task.detached(priority: .background) {
-            do {
-                let response = try await LUD16.getCallbackUrl(lud16: lud16)
-                await MainActor.run {
-                    // Make sure at least 1 sat, and not more than 2000000 sat (around $210)
-                    min = ((response.minSendable ?? 1000) < 1000 ? 1000 : (response.minSendable ?? 1000)) / 1000
-                    max = ((response.maxSendable ?? 100000000) > 100000000 ? 100000000 : (response.maxSendable ?? 100000000)) / 1000
-                    if response.callback != nil {
-                        callback = response.callback!
-                        if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
-                            supportsZap = true
-                            // Store zapper nostrPubkey on contact.zapperPubkey as cache
-                            contact!.zapperPubkey = response.nostrPubkey!
+        
+        if let lud16 = contact!.lud16 {
+            Task.detached(priority: .background) {
+                do {
+                    let response = try await LUD16.getCallbackUrl(lud16: lud16)
+                    await MainActor.run {
+                        var supportsZap = false
+                        // Make sure at least 1 sat, and not more than 2000000 sat (around $210)
+                        let min = ((response.minSendable ?? 1000) < 1000 ? 1000 : (response.minSendable ?? 1000)) / 1000
+                        let max = ((response.maxSendable ?? 200000000) > 200000000 ? 200000000 : (response.maxSendable ?? 100000000)) / 1000
+                        if response.callback != nil {
+                            let callback = response.callback!
+                            if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                                supportsZap = true
+                                // Store zapper nostrPubkey on contact.zapperPubkey as cache
+                                contact!.zapperPubkey = response.nostrPubkey!
+                            }
+                            paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, contact: contact)
+                            payAmountSelectorShown = true
+                            isLoading = false
                         }
-                        payAmountSelectorShown = true
-                        isLoading = false
                     }
                 }
-            }
-            catch {
-                print("🔴 problem in lnurlp")
-                print(error)
+                catch {
+                    print("🔴 problem in lnurlp")
+                    print(error)
+                }
             }
         }
+        else if let lud06 = contact!.lud06 {
+            Task.detached(priority: .background) {
+                do {
+                    let response = try await LUD16.getCallbackUrl(lud06: lud06)
+                    await MainActor.run {
+                        var supportsZap = false
+                        // Make sure at least 1 sat, and not more than 2000000 sat (around $210)
+                        let min = ((response.minSendable ?? 1000) < 1000 ? 1000 : (response.minSendable ?? 1000)) / 1000
+                        let max = ((response.maxSendable ?? 200000000) > 200000000 ? 200000000 : (response.maxSendable ?? 200000000)) / 1000
+                        if response.callback != nil {
+                            let callback = response.callback!
+                            if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                                supportsZap = true
+                                // Store zapper nostrPubkey on contact.zapperPubkey as cache
+                                contact!.zapperPubkey = response.nostrPubkey!
+                            }
+                            paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, contact: contact)
+                            payAmountSelectorShown = true
+                            isLoading = false
+                        }
+                    }
+                }
+                catch {
+                    print("🔴 problem in lnurlp")
+                    print(error)
+                }
+            }
+        }
+        
     }
 }
 

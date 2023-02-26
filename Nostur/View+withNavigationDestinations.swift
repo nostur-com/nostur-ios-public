@@ -95,7 +95,7 @@ class NavigationModel: ObservableObject {
     @Published var onboardingPath = NavigationPath()
     
     func navigateTo(_ path:any Hashable) -> Void {
-        if UIDevice.current.userInterfaceIdiom == .pad {
+        if IS_IPAD {
             self.detailPath.append(path)
             return
         }

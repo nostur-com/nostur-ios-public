@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct UnreadCounter: View {
-    @EnvironmentObject var ds:DataStore
+    @ObservedObject var ds:DataStore = .shared
     
     var body: some View {
         let _ = Self._printChanges()
@@ -16,10 +16,10 @@ struct UnreadCounter: View {
             Spacer()
             HStack {
                 Spacer()
-                if (ds.unreadCount > 0) {
+                if (ds.unreadCount.value > 0) {
                     HStack {
                         Image(systemName: "arrow.down")
-                        Text("\(ds.unreadCount) unread")
+                        Text("\(ds.unreadCount.value) unread")
                         Image(systemName: "arrow.down")
                     }
                     .frame(minWidth: 30)
