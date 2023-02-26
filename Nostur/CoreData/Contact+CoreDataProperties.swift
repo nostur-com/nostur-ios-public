@@ -106,8 +106,8 @@ extension Contact : Identifiable {
     
     var nip05veried:Bool {
         get {
-            let twoWeeksAgo = Date.now.addingTimeInterval(-(14 * 86400))
-            if nip05verifiedAt != nil && nip05verifiedAt! > twoWeeksAgo {
+            let fourWeeksAgo = Date.now.addingTimeInterval(-(28 * 86400))
+            if nip05verifiedAt != nil && nip05verifiedAt! > fourWeeksAgo {
                 return true
             }
             return false

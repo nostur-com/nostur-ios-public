@@ -110,7 +110,7 @@ struct AddExistingAccountSheet: View {
         account.privateKey = keys.privateKeyHex()
         
         // 1. Prefill from cached event
-        Account.preFillReadOnlyAccountInfo(account: account, context: viewContext)
+        Account.preFillReadOnlyAccountInfo(account: account, context: viewContext, forceOverwrite: true)
         Account.preFillReadOnlyAccountFollowing(account: account, context: viewContext)
         
         do {
@@ -143,7 +143,7 @@ struct AddExistingAccountSheet: View {
         }
         
         // 1. Prefill from cached event
-        Account.preFillReadOnlyAccountInfo(account: account, context: viewContext)
+        Account.preFillReadOnlyAccountInfo(account: account, context: viewContext, forceOverwrite: true)
         Account.preFillReadOnlyAccountFollowing(account: account, context: viewContext)
         
         

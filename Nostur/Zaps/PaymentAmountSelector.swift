@@ -27,7 +27,7 @@ struct PaymentAmountSelector: View {
     }
     
     func amountSelected(amount:Float, zapMessage:String) {
-        guard paymentInfo.contact?.lud16 != nil && paymentInfo.contact?.lud16 != "" else { return }
+        guard paymentInfo.contact?.anyLud ?! true else { return }
         let pubkey = paymentInfo.contact!.pubkey!
         let eventId = paymentInfo.event?.id ?? nil
         let relays = sp.sockets.values
@@ -57,7 +57,7 @@ struct PaymentAmountSelector: View {
             }
         }
         else {
-            Task.detached(priority: .background) {
+            Task {
                 do {
                     let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount:UInt64(amount * 1000))
                     

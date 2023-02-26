@@ -71,20 +71,23 @@ struct BookmarksView: View {
                         }
                     }
                 } label: {
-                    ZStack {
-                        if (selectedAccount != nil) {
-                            ProfilePicView(pubkey: selectedAccount!.publicKey!, account: selectedAccount, size: 30)
-                        }
-                        else {
-                            ForEach(ns.accounts.indices, id:\.self) { index in
-                                ProfilePicView(pubkey: ns.accounts[index].publicKey!, account: ns.accounts[index], size: 30)
-                                    .offset(x: -CGFloat(index*10))
-                                
+                    HStack {
+                        ZStack {
+                            if (selectedAccount != nil) {
+                                ProfilePicView(pubkey: selectedAccount!.publicKey!, account: selectedAccount, size: 30)
+                            }
+                            else {
+                                ForEach(ns.accounts.indices, id:\.self) { index in
+                                    ProfilePicView(pubkey: ns.accounts[index].publicKey!, account: ns.accounts[index], size: 30)
+                                        .offset(x: -CGFloat(index*10))
+                                    
+                                }
                             }
                         }
                     }
+                    .frame(width: 60)
                 }
-                .menuStyle(.button)
+                .menuStyle(.borderlessButton)
                 .menuIndicator(.visible)
             }
             .padding(.horizontal)

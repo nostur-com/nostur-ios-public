@@ -14,8 +14,8 @@ struct NoteRowView: View {
     @Environment(\.managedObjectContext) var viewContext
     private let sp:SocketPool = .shared
     private let nav:NavigationModel = .shared
-    var event:Event
-//    @ObservedObject var event:Event
+//    var event:Event
+    @ObservedObject var event:Event
 
     var hideFooter = false // For rendering in NewReply
     

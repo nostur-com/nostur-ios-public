@@ -84,7 +84,8 @@ class Importer {
                     
                     if event.kind == .setMetadata {
                         Contact.saveOrUpdateContact(event: event, context: context)
-                        Account.preFillReadOnlyAccountInfo(event: event, context: context)
+                        let ns = NosturState.shared
+                        Account.preFillReadOnlyAccountInfo(event: event, context: context, forceOverwrite: ns.pendingFirstContactsFetch)
                     }
                     
                     if event.kind == .contactList {
@@ -100,7 +101,8 @@ class Importer {
 //                            let fetchReferences = ClientMessage(type: .REQ, message: RequestMessage.getEventReferences(ids: ????))
                                 
                         }
-                        Account.preFillReadOnlyAccountFollowing(event: event, context: context)
+                        let ns = NosturState.shared
+                        Account.preFillReadOnlyAccountFollowing(event: event, context: context, forceOverwrite: ns.pendingFirstContactsFetch)
                     }
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)

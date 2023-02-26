@@ -50,7 +50,7 @@ struct ProfileLightningButton: View {
         isLoading = true
         
         if let lud16 = contact!.lud16 {
-            Task.detached(priority: .background) {
+            Task {
                 do {
                     let response = try await LUD16.getCallbackUrl(lud16: lud16)
                     await MainActor.run {
@@ -72,13 +72,13 @@ struct ProfileLightningButton: View {
                     }
                 }
                 catch {
-                    print("🔴 problem in lnurlp")
+                    print("🔴🔴🔴🔴 problem in lnurlp")
                     print(error)
                 }
             }
         }
         else if let lud06 = contact!.lud06 {
-            Task.detached(priority: .background) {
+            Task {
                 do {
                     let response = try await LUD16.getCallbackUrl(lud06: lud06)
                     await MainActor.run {
@@ -100,7 +100,7 @@ struct ProfileLightningButton: View {
                     }
                 }
                 catch {
-                    print("🔴 problem in lnurlp")
+                    print("🔴🔴🔴🔴 problem in lnurlp")
                     print(error)
                 }
             }

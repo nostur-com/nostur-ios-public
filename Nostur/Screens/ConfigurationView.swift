@@ -275,8 +275,17 @@ struct ConfigurationView: View {
         for contact in allContacts {
             viewContext.delete(contact)
         }
+        
+        let e = NSFetchRequest<Event>(entityName: "Event")
+        e.predicate = NSPredicate(format: "kind == 0")
+        let allMetadata = try! viewContext.fetch(e)
+        
+        for event in allMetadata {
+            viewContext.delete(event)
+        }
+        
         do {
-            print("deleting \(allContacts.count) contacts.")
+            print("deleting \(allContacts.count) contacts. and \(allMetadata.count) events. (Contact+EVENT.0")
             try viewContext.save()
         }
         catch {
@@ -471,13 +480,13 @@ struct ConfigurationView: View {
                         Button { deleteAll = true } label: {
                             Text("Delete all contacts \(allContacts.count)")
                         }.confirmationDialog("SURE???", isPresented: $deleteAll, actions: {
-                            Button("YES DELETE ALL", role: .destructive) { deleteAllContacts() }
+                            Button("YES DELETE ALL CONTACTS", role: .destructive) { deleteAllContacts() }
                         })
                         
                         Button { showDeleteAllEventsConfirmation = true } label: {
                             Text("Delete all events \(allEvents.count)")
                         }.confirmationDialog("DELETE ALL EVENTS????", isPresented: $showDeleteAllEventsConfirmation) {
-                            Button("YES DELETE ALL", role: .destructive) {
+                            Button("YES DELETE ALL EVENTS", role: .destructive) {
                                 deleteAllEvents()
                             }
                         }

@@ -158,7 +158,7 @@ extension Account : Identifiable {
     
     
     // For when adding read only accounts, prefill with kind.0 info from relays (FROM CACHE)
-    static func preFillReadOnlyAccountInfo(account:Account, context:NSManagedObjectContext) {
+    static func preFillReadOnlyAccountInfo(account:Account, context:NSManagedObjectContext, forceOverwrite:Bool = false) {
         
         guard let kind0 = Event.setMetaDataEvents(byAuthorPubkey: account.publicKey!, context: context)?.first else {
             return
@@ -169,7 +169,7 @@ extension Account : Identifiable {
             return
         }
 
-        if (account.privateKey == nil) { // Don't overwrite non-read-only accounts
+        if (account.privateKey == nil || forceOverwrite) { // Don't overwrite non-read-only accounts
             account.objectWillChange.send()
             account.display_name = metaData.display_name ?? ""
             account.name = metaData.name ?? ""
@@ -183,7 +183,7 @@ extension Account : Identifiable {
     }
     
     // For when adding read only accounts, prefill with kind.0 info from relays (NEW EVENT FROM IMPORTER)
-    static func preFillReadOnlyAccountInfo(event:NEvent, context:NSManagedObjectContext) {
+    static func preFillReadOnlyAccountInfo(event:NEvent, context:NSManagedObjectContext, forceOverwrite:Bool = false) {
         
         let decoder = JSONDecoder()
         guard let metaData = try? decoder.decode(NSetMetadata.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) else {
@@ -193,7 +193,7 @@ extension Account : Identifiable {
         let fr = Account.fetchRequest()
         fr.predicate = NSPredicate(format: "publicKey = %@", event.publicKey)
         if let account = try? context.fetch(fr).first {
-            if (account.privateKey == nil) { // Don't overwrite non-read-only accounts
+            if (account.privateKey == nil || forceOverwrite == true) { // Don't overwrite non-read-only accounts
                 account.objectWillChange.send()
                 account.display_name = metaData.display_name ?? ""
                 account.name = metaData.name ?? ""
@@ -216,8 +216,8 @@ extension Account : Identifiable {
         
         let contacts = Contact.ensureContactsCreated(event: kind3.toNEvent(), context: context)
         
-        // if read only account, import follows
-        if (account.privateKey == nil && contacts.count > 0) {
+        // if read only account, import follows. Or pendingFirstContactsFetch
+        if (contacts.count > 0) {
 //            account.objectWillChange.send()
             for contact in contacts {
                 account.addToFollows(contact)
@@ -226,7 +226,7 @@ extension Account : Identifiable {
     }
     
     // For when adding read only accounts, prefill with kind.0 info from relays (NEW EVENT FROM IMPORTER)
-    static func preFillReadOnlyAccountFollowing(event:NEvent, context:NSManagedObjectContext) {
+    static func preFillReadOnlyAccountFollowing(event:NEvent, context:NSManagedObjectContext, forceOverwrite:Bool = false) {
         
         let fr = Account.fetchRequest()
         fr.predicate = NSPredicate(format: "publicKey == %@", event.publicKey)
@@ -234,7 +234,7 @@ extension Account : Identifiable {
             
             let contacts = Contact.ensureContactsCreated(event: event, context: context)
 
-            if (account.privateKey == nil && contacts.count > 0) {
+            if (forceOverwrite || account.privateKey == nil && contacts.count > 0) {
                 
                 // Also prefetch all metadata
                 let pubkeys = contacts.map { $0.pubkey! }

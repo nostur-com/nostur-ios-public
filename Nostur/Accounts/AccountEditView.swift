@@ -29,32 +29,34 @@ struct AccountEditView: View {
 //                    Text("Following \(account.follows?.count ?? 0)")
 //                }
 //            }
-            
+
             Form {
                 
-                Section(header: Text("Your name") ) {
-                    TextField("Enter your name", text: $account.display_name).disabled(shouldDisable)
-                        .disableAutocorrection(true)
-                }
-                
-                Section(header: Text("Your username") ) {
-                    TextField("Enter your username", text: $account.name).disabled(shouldDisable)
-                        .keyboardType(.URL)
-                        .disableAutocorrection(true)
-                        .textInputAutocapitalization(.never)
-                }
-                
-                Section(header: Text("Bio") ) {
-                    TextField("Something about yourself", text:$account.about, axis: .vertical)
-                        .lineLimit(3...5)
-                        .disabled(shouldDisable)
-                }
-                
-                Section(header: Text("NIP-05 identifier") ) {
-                    TextField("", text: $account.nip05).keyboardType(.emailAddress).disabled(shouldDisable)
-                        .keyboardType(.URL)
-                        .disableAutocorrection(true)
-                        .textInputAutocapitalization(.never)
+                Group {
+                    Section(header: Text("Your name") ) {
+                        TextField("Enter your name", text: $account.display_name).disabled(shouldDisable)
+                            .disableAutocorrection(true)
+                    }
+                    
+                    Section(header: Text("Your username") ) {
+                        TextField("Enter your username", text: $account.name).disabled(shouldDisable)
+                            .keyboardType(.URL)
+                            .disableAutocorrection(true)
+                            .textInputAutocapitalization(.never)
+                    }
+                    
+                    Section(header: Text("Bio") ) {
+                        TextField("Something about yourself", text:$account.about, axis: .vertical)
+                            .lineLimit(3...5)
+                            .disabled(shouldDisable)
+                    }
+                    
+                    Section(header: Text("NIP-05 identifier") ) {
+                        TextField("", text: $account.nip05).keyboardType(.emailAddress).disabled(shouldDisable)
+                            .keyboardType(.URL)
+                            .disableAutocorrection(true)
+                            .textInputAutocapitalization(.never)
+                    }
                 }
                 
                 Section(header: Text("Lightning Address (LUD-16)") ) {
@@ -116,12 +118,6 @@ struct AccountEditView: View {
             }
             .foregroundColor(shouldDisable ? .gray : .primary)
             
-            
-//            Button {
-//                fetchContacts(account:account)
-//            } label: {
-//                Text("Load contacts from relays")
-//            }
 //            Button {
 //                updateContacts()
 //            } label: {
@@ -132,7 +128,11 @@ struct AccountEditView: View {
 //            } label: {
 //                Text("load followers from kind 3")
 //            }
-            
+            Button {
+                loadFromRelays()
+            } label: {
+                Text("Load info and contacts from relays")
+            }
 
         }
         .onAppear {
@@ -141,47 +141,53 @@ struct AccountEditView: View {
                 sp.sendMessage(message)
             }
         }
-        .safeAreaInset(edge: .bottom) {
-            Button {
-                if newPrivateKey != "" { // TODO: Handle nsec format
-                    
-                    guard let nip19 = try? NIP19(displayString: newPrivateKey) else {
-                        invalidPrivateKey = true
-                        newPrivateKey = ""
-                        return
-                    }
-                    guard let keys = try? NKeys(privateKeyHex: nip19.hexString) else {
-                        invalidPrivateKey = true
-                        newPrivateKey = ""
-                        return
-                    }
-                    
-                    guard (keys.publicKeyHex() == account.publicKey!) else {
-                        invalidPrivateKey = true
-                        newPrivateKey = ""
-                        return
-                    }
-
-                    account.privateKey = keys.privateKeyHex()
-                }
-                do {
-                    try viewContext.save()
-                    try publishMetadataEvent()
-                    dismiss()
-                }
-                catch {
-                    print("Error saving account")
-                }
-            } label: {
-                Text("Save").frame(maxWidth: 200)
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .alert("Invalid private key", isPresented: $invalidPrivateKey) {
-                        Button("OK", role: .cancel) { }
-                    }
+        .onDisappear {
+            ns.pendingFirstContactsFetch = false
         }
-        .background(.regularMaterial)
+        .safeAreaInset(edge: .bottom) {
+            VStack {
+                Button {
+                    if newPrivateKey != "" { // TODO: Handle nsec format
+                        
+                        guard let nip19 = try? NIP19(displayString: newPrivateKey) else {
+                            invalidPrivateKey = true
+                            newPrivateKey = ""
+                            return
+                        }
+                        guard let keys = try? NKeys(privateKeyHex: nip19.hexString) else {
+                            invalidPrivateKey = true
+                            newPrivateKey = ""
+                            return
+                        }
+                        
+                        guard (keys.publicKeyHex() == account.publicKey!) else {
+                            invalidPrivateKey = true
+                            newPrivateKey = ""
+                            return
+                        }
+                        
+                        account.privateKey = keys.privateKeyHex()
+                    }
+                    do {
+                        try viewContext.save()
+                        try publishMetadataEvent()
+                        dismiss()
+                    }
+                    catch {
+                        print("Error saving account")
+                    }
+                } label: {
+                    Text("Save").frame(maxWidth: 200)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .alert("Invalid private key", isPresented: $invalidPrivateKey) {
+                    Button("OK", role: .cancel) { }
+                }
+            }
+            .background(.regularMaterial)
+        }
+        
     }
 }
 
@@ -228,12 +234,24 @@ extension AccountEditView {
         }
     }
     
-    func fetchContacts(account:Account) {
-        if (account.publicKey != nil) {
-            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: account.publicKey!)))
-        }
+    func loadFromRelays() {
+        ns.pendingFirstContactsFetch = true
+        
+        // 1. Prefill from cached event (if in cache)
+        Account.preFillReadOnlyAccountInfo(account: account, context: viewContext, forceOverwrite: true)
+        Account.preFillReadOnlyAccountFollowing(account: account, context: viewContext)
+                
+        let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: account.publicKey!))
+        
+        sp.sendMessage(message)
     }
     
+//    func fetchContacts(account:Account) {
+//        if (account.publicKey != nil) {
+//            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: account.publicKey!)))
+//        }
+//    }
+
     func loadFollowers(account:Account) {
         let fr = Event.fetchRequest()
         fr.predicate = NSPredicate(format: "kind == 3 AND pubkey == %@", account.publicKey!)

@@ -74,7 +74,7 @@ struct TryGuestAccountSheet: View {
             
             
             // 1. Prefill from cached event (if in cache)
-            Account.preFillReadOnlyAccountInfo(account: account, context: viewContext)
+            Account.preFillReadOnlyAccountInfo(account: account, context: viewContext, forceOverwrite: true)
             Account.preFillReadOnlyAccountFollowing(account: account, context: viewContext)
             
 

@@ -8,6 +8,12 @@ import SwiftUI
 import CoreData
 import Combine
 
+infix operator ?!: LogicalConjunctionPrecedence
+
+func ?!(lhs: Bool?, rhs: Bool) -> Bool {
+    return lhs ?? false && rhs
+}
+
 @main
 struct NosturApp: App {
     @AppStorage("firstTimeCompleted") var firstTimeCompleted = false
