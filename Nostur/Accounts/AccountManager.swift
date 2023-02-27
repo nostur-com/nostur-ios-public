@@ -138,7 +138,7 @@ class AccountManager {
                 newKind3Event.kind = .contactList
                 
                 for contact in Array(account.follows ?? Set<Contact>()) {
-                    newKind3Event.tags.append(NEventTag(type: "p", otherInformation: contact.pubkey! ))
+                    newKind3Event.tags.append(NEventTag(type: "p", otherInformation: contact.pubkey ))
                 }
                 
                 let newKind3EventSigned = try newKind3Event.sign(keys)

@@ -28,7 +28,7 @@ struct PaymentAmountSelector: View {
     
     func amountSelected(amount:Float, zapMessage:String) {
         guard paymentInfo.contact?.anyLud ?! true else { return }
-        let pubkey = paymentInfo.contact!.pubkey!
+        let pubkey = paymentInfo.contact!.pubkey
         let eventId = paymentInfo.event?.id ?? nil
         let relays = sp.sockets.values
             .filter { $0.write }

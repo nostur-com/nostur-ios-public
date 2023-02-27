@@ -65,14 +65,14 @@ struct Maintenance {
         let allACcounts = Array(try! context.fetch(frA))
         let ownAccountPubkeys = allACcounts.reduce([String]()) { partialResult, account in
             var newResult = Array(partialResult)
-            newResult.append(account.publicKey!)
+            newResult.append(account.publicKey)
             return newResult
         }
         
         let ownAccountBookmarkIds = allACcounts.reduce([String]()) { partialResult, account in
             var newResult = Array(partialResult)
             if (account.bookmarks != nil) {
-                let ids = account.bookmarks!.map { $0.id! }
+                let ids = account.bookmarks!.map { $0.id }
                 newResult.append(contentsOf: ids)
             }
             return newResult
@@ -151,7 +151,7 @@ struct Maintenance {
                         }
                         if metaData.banner != nil {
                             contact.banner = metaData.banner!
-                            print("🟡🟡 Updated banner \(metaData.banner!) for \(contact.pubkey!)")
+                            print("🟡🟡 Updated banner \(metaData.banner!) for \(contact.pubkey)")
                         }
                     }
                 }

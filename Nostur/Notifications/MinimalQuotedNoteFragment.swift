@@ -57,7 +57,7 @@ struct MinimalQuotedNoteFragment: View {
         )
         .onAppear {
             if (event.contact == nil) {
-                cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.pubkey!)))
+                cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.pubkey)))
             }
         }
     }

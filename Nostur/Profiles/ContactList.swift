@@ -47,7 +47,7 @@ struct ContactList: View {
             // TODO: ForEach for Fake ProfileRow view for pubkeys not in Contact
             
             let missing = pubkeys.filter { pubkey in
-                contacts.map { $0.pubkey! }.firstIndex(of: pubkey) == nil
+                contacts.map { $0.pubkey }.firstIndex(of: pubkey) == nil
             }
             
             VStack {
@@ -61,7 +61,7 @@ struct ContactList: View {
             // fetch pubkeys not in [contacts.pubkey]
 //            
 //            let missing = pubkeys.filter { pubkey in
-//                contacts.map { $0.pubkey! }.firstIndex(of: pubkey) == nil
+//                contacts.map { $0.pubkey }.firstIndex(of: pubkey) == nil
 //            }
 //
 //            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missing)))

@@ -112,7 +112,7 @@
 		1F9499CB299F715800F628B4 /* TryGuestAccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9499CA299F715800F628B4 /* TryGuestAccountSheet.swift */; };
 		1F987EB129804AA5001E352E /* NewNoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F987EB029804AA4001E352E /* NewNoteView.swift */; };
 		1F987EB329805F33001E352E /* String+matchingStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F987EB229805F33001E352E /* String+matchingStrings.swift */; };
-		1FA0C6B529A53E8A00BDD876 /* Timeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA0C6B429A53E8A00BDD876 /* Timeline.swift */; };
+		1FA0C6B529A53E8A00BDD876 /* Following.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA0C6B429A53E8A00BDD876 /* Following.swift */; };
 		1FA51FF62978441200FE60EF /* Relay+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */; };
 		1FA51FF72978441200FE60EF /* Relay+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA51FF52978441200FE60EF /* Relay+CoreDataProperties.swift */; };
 		1FB3E3BE296820C600CDA788 /* ContactProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB3E3BD296820C600CDA788 /* ContactProfileView.swift */; };
@@ -154,6 +154,7 @@
 		1FECAC4729A08255006FEE72 /* Collection+subscript.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FECAC4629A08255006FEE72 /* Collection+subscript.swift */; };
 		1FF21E7E29ACC02E00203623 /* FollowingAndExplore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF21E7D29ACC02E00203623 /* FollowingAndExplore.swift */; };
 		1FF21E8029ACC9F900203623 /* Explore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF21E7F29ACC9F900203623 /* Explore.swift */; };
+		1FF21E8229ACFEE500203623 /* Timeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF21E8129ACFEE500203623 /* Timeline.swift */; };
 		1FF69B2729AAA37D0070796B /* BechLnurl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF69B2629AAA37D0070796B /* BechLnurl.swift */; };
 /* End PBXBuildFile section */
 
@@ -273,7 +274,7 @@
 		1F9499CA299F715800F628B4 /* TryGuestAccountSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TryGuestAccountSheet.swift; sourceTree = "<group>"; };
 		1F987EB029804AA4001E352E /* NewNoteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewNoteView.swift; sourceTree = "<group>"; };
 		1F987EB229805F33001E352E /* String+matchingStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+matchingStrings.swift"; sourceTree = "<group>"; };
-		1FA0C6B429A53E8A00BDD876 /* Timeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Timeline.swift; sourceTree = "<group>"; };
+		1FA0C6B429A53E8A00BDD876 /* Following.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Following.swift; sourceTree = "<group>"; };
 		1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Relay+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1FA51FF52978441200FE60EF /* Relay+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Relay+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1FB3E3BD296820C600CDA788 /* ContactProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactProfileView.swift; sourceTree = "<group>"; };
@@ -313,6 +314,7 @@
 		1FECAC4629A08255006FEE72 /* Collection+subscript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Collection+subscript.swift"; sourceTree = "<group>"; };
 		1FF21E7D29ACC02E00203623 /* FollowingAndExplore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowingAndExplore.swift; sourceTree = "<group>"; };
 		1FF21E7F29ACC9F900203623 /* Explore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Explore.swift; sourceTree = "<group>"; };
+		1FF21E8129ACFEE500203623 /* Timeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Timeline.swift; sourceTree = "<group>"; };
 		1FF69B2629AAA37D0070796B /* BechLnurl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BechLnurl.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -387,9 +389,6 @@
 				1F30FAB229707719008439C8 /* Account+CoreDataProperties.swift */,
 				1FC38B9B2972DD5A004769F8 /* Contact+CoreDataClass.swift */,
 				1FC38B9C2972DD5A004769F8 /* Contact+CoreDataProperties.swift */,
-				1F8B1364297B3BE8002EB8CF /* ContactProfile.swift */,
-				1FB3E3BD296820C600CDA788 /* ContactProfileView.swift */,
-				1F3C3F932975347F00E813FD /* ContactProfileRowView.swift */,
 				1F065A9C29A3E9E0003421D3 /* DynamicFetchView.swift */,
 				1F4AFC4529733E2400CC1F90 /* Event+CoreDataClass.swift */,
 				1F4AFC4629733E2400CC1F90 /* Event+CoreDataProperties.swift */,
@@ -448,7 +447,9 @@
 		1F5BA91229A8C25700002652 /* Timeline */ = {
 			isa = PBXGroup;
 			children = (
-				1FA0C6B429A53E8A00BDD876 /* Timeline.swift */,
+				1FF21E7D29ACC02E00203623 /* FollowingAndExplore.swift */,
+				1FF21E8129ACFEE500203623 /* Timeline.swift */,
+				1FA0C6B429A53E8A00BDD876 /* Following.swift */,
 				1FF21E7F29ACC9F900203623 /* Explore.swift */,
 				1F5BA91329A8C27200002652 /* NewNoteButton.swift */,
 				1F5BA91529A8C33500002652 /* UnreadCounter.swift */,
@@ -517,7 +518,6 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
-				1FF21E7D29ACC02E00203623 /* FollowingAndExplore.swift */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1FB448BB2965F3D000038671 /* Products */,
 				1F7C65B629A1466D009FF3EA /* Frameworks */,
@@ -602,6 +602,9 @@
 		1FD4972F297FC99B0084F14E /* Profiles */ = {
 			isa = PBXGroup;
 			children = (
+				1F8B1364297B3BE8002EB8CF /* ContactProfile.swift */,
+				1FB3E3BD296820C600CDA788 /* ContactProfileView.swift */,
+				1F3C3F932975347F00E813FD /* ContactProfileRowView.swift */,
 				1F14BA6D29854B8E00EACCD5 /* ContactList.swift */,
 				1FC4D40C2998ED0E004E88CD /* FollowersList.swift */,
 				1F14BA732985949100EACCD5 /* Profile.swift */,
@@ -745,6 +748,7 @@
 				1F4773A9296D85B70049454B /* AccountListView.swift in Sources */,
 				1F2F242829A49AAE007CBB27 /* DataModel.swift in Sources */,
 				1F9499C9299F568900F628B4 /* WelcomeSheet.swift in Sources */,
+				1FF21E8229ACFEE500203623 /* Timeline.swift in Sources */,
 				1F57C54B299285B300DFE063 /* Search.swift in Sources */,
 				1FB62D0E296FFF1400A0055B /* RelayEditView.swift in Sources */,
 				1FF21E8029ACC9F900203623 /* Explore.swift in Sources */,
@@ -823,7 +827,7 @@
 				1F1ABC4D2981AEA500D03FA9 /* ProfileNotesView.swift in Sources */,
 				1F30FAA929705EBD008439C8 /* NosturCloud.xcdatamodeld in Sources */,
 				1F71037D296BD9DE006245CC /* Nostr.swift in Sources */,
-				1FA0C6B529A53E8A00BDD876 /* Timeline.swift in Sources */,
+				1FA0C6B529A53E8A00BDD876 /* Following.swift in Sources */,
 				1F1C31E42969A86700E60BEF /* NewAccountView.swift in Sources */,
 				1F8B135A297B36DB002EB8CF /* String+Conversion.swift in Sources */,
 				1FDBC4A529A1733F002E9AFC /* ZapsList.swift in Sources */,

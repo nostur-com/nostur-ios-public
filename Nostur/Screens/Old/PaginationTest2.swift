@@ -114,7 +114,7 @@
 //        VStack {
 //            ForEach(events) { event in
 //                HStack {
-//                    Text("\(String(event.id!.prefix(5)))")
+//                    Text("\(String(event.id.prefix(5)))")
 //                    Text(Date(timeIntervalSince1970: TimeInterval(event.created_at)), format: Date.VerbatimFormatStyle(format: " \(month:  .defaultDigits)-\(day: .defaultDigits)  \(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .oneBased)):\(minute: .twoDigits) \(second: .twoDigits)", timeZone: .current, calendar: .current))
 //                }
 ////                NoteRowView(event: event)

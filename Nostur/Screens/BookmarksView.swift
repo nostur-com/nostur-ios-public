@@ -64,7 +64,7 @@ struct BookmarksView: View {
                             selectedAccount = account
                         } label: {
                             HStack {
-    //                            ProfilePicView(pubkey: account.publicKey!, account: account, size: 30)
+    //                            ProfilePicView(pubkey: account.publicKey, account: account, size: 30)
                                 Text("@\(account.name)")
                                 Spacer()
                             }
@@ -74,11 +74,11 @@ struct BookmarksView: View {
                     HStack {
                         ZStack {
                             if (selectedAccount != nil) {
-                                ProfilePicView(pubkey: selectedAccount!.publicKey!, account: selectedAccount, size: 30)
+                                ProfilePicView(pubkey: selectedAccount!.publicKey, account: selectedAccount, size: 30)
                             }
                             else {
                                 ForEach(ns.accounts.indices, id:\.self) { index in
-                                    ProfilePicView(pubkey: ns.accounts[index].publicKey!, account: ns.accounts[index], size: 30)
+                                    ProfilePicView(pubkey: ns.accounts[index].publicKey, account: ns.accounts[index], size: 30)
                                         .offset(x: -CGFloat(index*10))
                                     
                                 }
@@ -101,9 +101,9 @@ struct BookmarksView: View {
                                 Label("Copy note id \(bookmark.noteId)", systemImage: "doc.on.clipboard")
                             }
                             Button {
-                                UIPasteboard.general.string = bookmark.id!
+                                UIPasteboard.general.string = bookmark.id
                             } label: {
-                                Label("Copy note id hex \(bookmark.id!))", systemImage: "doc.on.clipboard")
+                                Label("Copy note id hex \(bookmark.id))", systemImage: "doc.on.clipboard")
                             }
                             Button {
                                 print("Unfollow @\(bookmark.username)")

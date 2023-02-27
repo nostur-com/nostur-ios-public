@@ -55,29 +55,29 @@ func fetchStuffForLastAddedNotes(ids:[String]) {
 }
 
 func pubkeys(_ contacts:[Contact]) -> [String] {
-    return contacts.map { $0.pubkey! }
+    return contacts.map { $0.pubkey }
 }
 
 func ids(_ events:[Event]) -> [String] {
-    return events.map { $0.id! }
+    return events.map { $0.id }
 }
 
 func ids(_ events:Array<Event>.SubSequence) -> [String] {
-    return events.map { $0.id! }
+    return events.map { $0.id }
 }
 
 func pubkeys(_ events:[Event]) -> [String] {
-    return events.map { $0.pubkey! }
+    return events.map { $0.pubkey }
 }
 
 func id(_ event:Event) -> String {
-    return event.id!
+    return event.id
 }
 
 func pubkey(_ event:Event) -> String {
-    return event.pubkey!
+    return event.pubkey
 }
 
 func pubkey(_ contact:Contact) -> String {
-    return contact.pubkey!
+    return contact.pubkey
 }

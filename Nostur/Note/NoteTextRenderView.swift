@@ -60,7 +60,7 @@ struct NoteTextRenderView: View {
     @State private var metadata: LPLinkMetadata?
     
     func contactUsername(fromPubkey pubkey:String) -> String {
-        if let contact = event.contacts?.first(where: { $0.pubkey! == pubkey }) {
+        if let contact = event.contacts?.first(where: { $0.pubkey == pubkey }) {
             return contact.username
         }
         do {

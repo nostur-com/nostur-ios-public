@@ -80,7 +80,7 @@ class NIP05 {
         let ctx = EventsProvider.shared.container.newBackgroundContext()
         var unverified = [(NSManagedObjectID, String, String)]()
         for contact in contacts.prefix(8) {
-            unverified.append((contact.objectID, contact.nip05!, contact.pubkey!))
+            unverified.append((contact.objectID, contact.nip05!, contact.pubkey))
         }
                
         let unverifiedCaptured = unverified
@@ -107,7 +107,7 @@ class NIP05 {
         
 //        Task {
 //            for contact in contacts {
-//                if await NIP05.verify(nip05: contact.nip05!, expectedPubkey: contact.pubkey!) {
+//                if await NIP05.verify(nip05: contact.nip05!, expectedPubkey: contact.pubkey) {
 //
 //                }
 //            }
@@ -128,7 +128,7 @@ class NIP05 {
 //        let firstFew = contacts.prefix(8)
 ////        Task {
 //            for contact in contacts {
-//                if NIP05.verify(nip05: contact.nip05!, expectedPubkey: contact.pubkey!) {
+//                if NIP05.verify(nip05: contact.nip05!, expectedPubkey: contact.pubkey) {
 //                    contact.nip05verifiedAt = Date.now
 //                }
 //            }
@@ -149,7 +149,7 @@ class NIP05 {
 //                for cid in cIds {
 //                    guard let contact = ctx.object(with: cid) as? Contact else { continue }
 //                    let nip05 = contact.nip05!
-//                    let pubkey = contact.pubkey!
+//                    let pubkey = contact.pubkey
 //                    let ccid = cid
 //                    Task {
 //                        //                        ThreadWarning.which("Task in Task")
@@ -170,7 +170,7 @@ class NIP05 {
 //                .filter { shouldVerify($0) }
 //
 //            for contact in toCheck.prefix(8) { // Don't check more than 8 at the time, (8 = estimate amount of max posts on screen at a time)
-//                if await NIP05.verify(nip05: contact.nip05!, expectedPubkey: contact.pubkey!) {
+//                if await NIP05.verify(nip05: contact.nip05!, expectedPubkey: contact.pubkey) {
 //                    await context.perform(.enqueued) {
 //                        contact.nip05verifiedAt = Date.now
 //                    }

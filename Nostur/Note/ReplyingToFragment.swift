@@ -27,7 +27,7 @@ struct ReplyingToFragment: View {
     
     func replyToPubkeyHex() -> String {
         if (event.replyTo != nil) {
-            return event.replyTo!.pubkey!
+            return event.replyTo!.pubkey
         }
         if let firstEtagPubkey = event.contactPubkeys()?.first {
             return firstEtagPubkey
@@ -36,7 +36,7 @@ struct ReplyingToFragment: View {
     }
     
     func contactUsername(fromPubkey pubkey:String) -> String {
-        if let contact = event.contacts?.first(where: { $0.pubkey! == pubkey }) {
+        if let contact = event.contacts?.first(where: { $0.pubkey == pubkey }) {
             return contact.username
         }
         do {

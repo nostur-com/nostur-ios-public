@@ -34,7 +34,7 @@ struct NoteReactions: View {
             var missing:[String] = []
             for reaction in reactions_ {
                 if reaction.contact == nil || reaction.contact?.updated_at == 0 {
-                    missing.append(reaction.pubkey!)
+                    missing.append(reaction.pubkey)
                 }
             }
             sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missing)))
@@ -43,7 +43,7 @@ struct NoteReactions: View {
             var missing:[String] = []
             for reaction in newValue {
                 if reaction.contact == nil || reaction.contact?.updated_at == 0 {
-                    missing.append(reaction.pubkey!)
+                    missing.append(reaction.pubkey)
                 }
             }
             sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missing)))
@@ -92,7 +92,7 @@ struct ReactionRow: View {
         .padding()
         .contentShape(Rectangle())
         .onTapGesture {
-            nav.navigateTo(ContactPath(key: reaction.pubkey!))
+            nav.navigateTo(ContactPath(key: reaction.pubkey))
         }
         Divider()
     }
@@ -105,7 +105,7 @@ struct Reactions_Previews: PreviewProvider {
         
         VStack {
             if (noteWithReactions != nil) {
-                NoteReactions(id: noteWithReactions!.id!)
+                NoteReactions(id: noteWithReactions!.id)
             }
         }
         .withPreviewEnvironment()

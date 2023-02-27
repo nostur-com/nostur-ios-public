@@ -93,7 +93,7 @@ struct Profile: View {
     
     init(contact:Contact) {
         self.contact = contact
-        self.pubkey = contact.pubkey!
+        self.pubkey = contact.pubkey
         
         _clEvents = FetchRequest(
             sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
@@ -136,7 +136,7 @@ struct Profile: View {
                 
                 HStack {
                     VStack {
-                        ProfilePicView(pubkey: contact.pubkey!, contact: contact, size: 75)
+                        ProfilePicView(pubkey: contact.pubkey, contact: contact, size: 75)
                             .offset(x: 10, y: 150-37.5)
                             .onTapGesture {
                                 if (contact.picture != nil) {
@@ -157,7 +157,7 @@ struct Profile: View {
                         
                         ProfileLightningButton(contact: contact)
                         
-                        if (contact.pubkey! != ns.account?.publicKey!) {
+                        if (contact.pubkey != ns.account?.publicKey) {
                             Button {
                                 if (isFollowing) {
                                     isFollowing = false
@@ -298,7 +298,7 @@ struct Profile: View {
                             
                             Text("Followers").font(.headline).fontWeight(.heavy).padding(.vertical, 10)
                             
-                            FollowersList(pubkey: contact.pubkey!)
+                            FollowersList(pubkey: contact.pubkey)
                         }
                         
                         if (activeTab == "LIKES") {
@@ -341,13 +341,13 @@ struct Profile: View {
         .ignoresSafeArea(edges: .top)
         .task {
             if (NIP05.shouldVerify(contact)) {
-                if (await NIP05.verify(nip05: contact.nip05!, expectedPubkey: contact.pubkey!)) {
+                if (await NIP05.verify(nip05: contact.nip05!, expectedPubkey: contact.pubkey)) {
                     await viewContext.perform {
                         contact.nip05verifiedAt = Date.now
                         do { try viewContext.save() }
                         catch { print("w🚗at") }
                     }
-                    print("👍👍 nip05 verified \(contact.pubkey!) \(contact.nip05!) ")
+                    print("👍👍 nip05 verified \(contact.pubkey) \(contact.nip05!) ")
                 }
             }
         }
@@ -371,13 +371,13 @@ struct Profile: View {
         .onChange(of: contact.nip05) { nip05 in
             if (NIP05.shouldVerify(contact)) {
                 Task {
-                    if (await NIP05.verify(nip05: contact.nip05!, expectedPubkey: contact.pubkey!)) {
+                    if (await NIP05.verify(nip05: contact.nip05!, expectedPubkey: contact.pubkey)) {
                         await viewContext.perform {
                             contact.nip05verifiedAt = Date.now
                             do { try viewContext.save() }
                             catch { print("w🚗at") }
                         }
-                        print("👍👍 nip05 verified \(contact.pubkey!) \(contact.nip05!) ")
+                        print("👍👍 nip05 verified \(contact.pubkey) \(contact.nip05!) ")
                     }
                 }
             }

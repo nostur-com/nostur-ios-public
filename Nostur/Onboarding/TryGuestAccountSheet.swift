@@ -76,7 +76,7 @@ struct TryGuestAccountSheet: View {
             Account.preFillReadOnlyAccountInfo(account: account!, context: viewContext, forceOverwrite: true)
             Account.preFillReadOnlyAccountFollowing(account: account!, context: viewContext)
             ns.setAccount(account: account!)
-            let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: account!.publicKey!))
+            let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: account!.publicKey))
             sp.sendMessage(message)
         }
         .onDisappear {

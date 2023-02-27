@@ -116,7 +116,7 @@
 //        .onReceive(receiveNotification(.activeAccountChanged)) { notification in
 //            guard notification.object as? Account != self.account else { return }
 //            account = notification.object as? Account
-//            let pubkeys = (notification.object as! Account).follows?.map { $0.pubkey! } ?? []
+//            let pubkeys = (notification.object as! Account).follows?.map { $0.pubkey } ?? []
 //            events.nsPredicate = NSPredicate(format: "kind IN {1,6} AND pubkey IN %@", pubkeys)
 //            //TODO: SHould re-add blocklist in predicate
 //        }
@@ -184,7 +184,7 @@
 //                sendNotification(.newNotesAvailable, Array(newEventsSorted.suffix(25))) //Only take the last 125!
 //                return
 //            }
-//            print("eventsSorted.last.id == \(lastEvent.id!)")
+//            print("eventsSorted.last.id == \(lastEvent.id)")
 //            
 //            let newIndexOfLastEvent = newEventsSorted.firstIndex(of: lastEvent)
 //            guard newIndexOfLastEvent != nil else { return } // TODO: uuhh, apparently we totally wrong if this returns }
@@ -213,7 +213,7 @@
 //    
 //    private func fetchEventsFromFollowing(amount:Int? = 500) {
 //        if (account?.follows != nil) {
-//            let pubkeys = account!.follows?.map { $0.pubkey! } ?? []
+//            let pubkeys = account!.follows?.map { $0.pubkey } ?? []
 //            if (eventsSorted.count < 20) {
 //                print("💿💿 getFollowingEvents for \(pubkeys.count) pubkeys 💿💿")
 //                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getFollowingEvents(pubkeys: Array(pubkeys), limit: amount!)))
@@ -266,14 +266,14 @@
 ////        let pubkeys = Array(Set(notes.compactMap { TagsHelpers($0.tags()).reactingToPubkey() }))
 ////        let contacts = Contact.fetchByPubkeys(pubkeys, context: viewContext)
 ////        let missingPubkeys = pubkeys.filter {
-////            contacts.map { $0.pubkey! }.firstIndex(of: $0) == nil
+////            contacts.map { $0.pubkey }.firstIndex(of: $0) == nil
 ////        }
 ////        let emptyContactPubkeys = pubkeys
 ////            .compactMap { pubkey in
-////                contacts.first(where: { $0.pubkey! == pubkey })
+////                contacts.first(where: { $0.pubkey == pubkey })
 ////            }
 ////            .filter { $0.updated_at == 0 }
-////            .map { $0.pubkey! }
+////            .map { $0.pubkey }
 ////
 ////        sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missingPubkeys + emptyContactPubkeys )))
 ////    }
@@ -284,7 +284,7 @@
 ////        // Get all events that reference our event.id's on screen
 ////        // To update likes etc.
 ////
-////        let eventIds = lastAddedNotes.map { $0.id! }
+////        let eventIds = lastAddedNotes.map { $0.id }
 ////
 ////        sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEventReferences(ids: eventIds)))
 ////    }
@@ -300,9 +300,9 @@
 //            NoteTextRenderView(event: event)
 //        }
 //        .onTapGesture {
-//            nav.navigateTo(NotePath(id: event.id!))
+//            nav.navigateTo(NotePath(id: event.id))
 //        }
-////        Text("id: \(String(event.id!.prefix(4))) \(event.username) \(event.noteText.prefix(20).description) \(d(event.created_at).description)")
+////        Text("id: \(String(event.id.prefix(4))) \(event.username) \(event.noteText.prefix(20).description) \(d(event.created_at).description)")
 //    }
 //}
 //
@@ -334,7 +334,7 @@
 //                            }
 //                        }
 //                        .listRowInsets(EdgeInsets())
-//                        .id(note.id!)
+//                        .id(note.id)
 //                }
 //                .listStyle(.plain)
 //                .onReceive(receiveNotification(.activeAccountChanged)) { notification in
@@ -353,7 +353,7 @@
 //                }
 //                .onReceive(receiveNotification(.blockListUpdated)) { notification in
 //                    tm.notesOnScreen = tm.notesOnScreen.filter {
-//                        !(notification.object as! Set<Contact>).map { $0.pubkey! } .contains($0.pubkey!)
+//                        !(notification.object as! Set<Contact>).map { $0.pubkey } .contains($0.pubkey)
 //                    }
 //                }
 ////                .onChange(of: notesOnScreen) { [notesOnScreen = notesOnScreen] newNotesOnScreen in

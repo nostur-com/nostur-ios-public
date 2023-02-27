@@ -259,8 +259,8 @@ struct EventMessageBuilder {
     
     static func makeRepost(original: Event) -> NEvent {
         var repost = NEvent(content: "#[0]")
-        repost.tags.append(NEventTag(type: "e", otherInformation: original.id!, "", "mention"))
-        repost.tags.append(NEventTag(type: "p", otherInformation: original.pubkey!))
+        repost.tags.append(NEventTag(type: "e", otherInformation: original.id, "", "mention"))
+        repost.tags.append(NEventTag(type: "p", otherInformation: original.pubkey))
         repost.kind = .repost
         return repost
     }
@@ -268,7 +268,7 @@ struct EventMessageBuilder {
     static func makeReactionEvent(reactingTo: Event) -> NEvent {
         var tags = reactingTo.tags().filter { $0.type == "e" || $0.type == "p" }
         tags.append(NEventTag(type: "e", otherInformation: reactingTo.id))
-        tags.append(NEventTag(type: "p", otherInformation: reactingTo.pubkey!))
+        tags.append(NEventTag(type: "p", otherInformation: reactingTo.pubkey))
         
         var reactionEvent = NEvent(content: "+")
         reactionEvent.kind = .custom(7)

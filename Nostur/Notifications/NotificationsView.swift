@@ -41,7 +41,7 @@ struct NotificationsView: View {
         self.account = account
         print("🧨🧨🧨🧨🧨 INIT NOTIFICATIONS VIEW 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", account.publicKey!)
+        fr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", account.publicKey)
         fr.fetchLimit = 125 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW (MET VSTACK).
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         _kind1 = FetchRequest(fetchRequest: fr)
@@ -49,7 +49,7 @@ struct NotificationsView: View {
     
     var myNotifications:[Event] {
         get {
-            kind1.filter { $0.tags().filter { $0.pubkey == account.publicKey! }.count > 0 }
+            kind1.filter { $0.tags().filter { $0.pubkey == account.publicKey }.count > 0 }
         }
     }
     
@@ -85,13 +85,13 @@ struct NotificationsView: View {
                             }
                         }
                     case "REACTIONS":
-                        NotificationsV(pubkey: ns.account!.publicKey!, context: viewContext) { creationDate in
+                        NotificationsV(pubkey: ns.account!.publicKey, context: viewContext) { creationDate in
                             if (creationDate > account.lastNotificationDate) {
                                 account.lastNotificationDate = creationDate
                             }
                         }
                     case "ZAPS":
-                        NotificationsZaps(pubkey: ns.account!.publicKey!, context: viewContext) { creationDate in
+                        NotificationsZaps(pubkey: ns.account!.publicKey, context: viewContext) { creationDate in
                             if (creationDate > account.lastNotificationDate) {
                                 account.lastNotificationDate = creationDate
                             }
@@ -107,7 +107,7 @@ struct NotificationsView: View {
         }
         .onAppear {
             guard ns.account != nil else { return }
-            kind1.nsPredicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", account.publicKey!)
+            kind1.nsPredicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", account.publicKey)
             fetchMentions()
         }
     }
@@ -118,7 +118,7 @@ struct NotificationsView: View {
             ClientMessage(type: .REQ,
                           message:
                             RequestMessage.getMentions(
-                                pubkeys: [ns.account!.publicKey!],
+                                pubkeys: [ns.account!.publicKey],
                                 kinds: [1],
                                 limit: 500,
                                 since: NTimestamp(timestamp: Int(myNotifications.first?.created_at ?? 0)))

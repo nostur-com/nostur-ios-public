@@ -37,12 +37,12 @@ struct NewReply: View {
             let newRootTag = NEventTag(type: "e", otherInformation: root!.otherInformation[0], "", "root") // TODO RECOMMENDED RELAY HERE
             newReply.tags.append(newRootTag)
             
-            let newReplyTag = NEventTag(type: "e", otherInformation: replyTo.id!, "", "reply")
+            let newReplyTag = NEventTag(type: "e", otherInformation: replyTo.id, "", "reply")
             
             newReply.tags.append(newReplyTag)
         }
         else { // ADD ONLY "ROOT"
-            let newRootTag = NEventTag(type: "e", otherInformation: replyTo.id!, "", "root")
+            let newRootTag = NEventTag(type: "e", otherInformation: replyTo.id, "", "root")
             newReply.tags.append(newRootTag)
         }
         
@@ -51,7 +51,7 @@ struct NewReply: View {
         newReply.tags.append(contentsOf: existingPtags)
         
         // ADD PUBKEY OF REPLYING TO EVENT
-        let replyToPtag = NEventTag(type: "p", otherInformation: replyTo.pubkey!)
+        let replyToPtag = NEventTag(type: "p", otherInformation: replyTo.pubkey)
         
         newReply.tags.append(replyToPtag)
         newReplyEvent = newReply
@@ -62,7 +62,7 @@ struct NewReply: View {
             ScrollView {
                 NoteRowView(event: replyTo, hideFooter: true)
                 HStack {
-                    NewReplyingToFragment(contact: replyTo.contact, pubkey: replyTo.pubkey!)
+                    NewReplyingToFragment(contact: replyTo.contact, pubkey: replyTo.pubkey)
                         .offset(x:80)
                     Spacer()
                 }

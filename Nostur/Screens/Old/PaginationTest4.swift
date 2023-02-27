@@ -93,11 +93,11 @@
 //    
 //    var body: some View {
 //        HStack {
-//            if let pd = t[String(event.id!.prefix(5))] {
+//            if let pd = t[String(event.id.prefix(5))] {
 //                Text("\(pd)").font(.largeTitle)
 //            }
 //            else {
-//                Text("\(String(event.id!.prefix(5)))").font(.largeTitle)
+//                Text("\(String(event.id.prefix(5)))").font(.largeTitle)
 //            }
 //            Text(Date(timeIntervalSince1970: TimeInterval(event.created_at)), format: Date.VerbatimFormatStyle(format: " \(month:  .defaultDigits)-\(day: .defaultDigits)  \(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .oneBased)):\(minute: .twoDigits) \(second: .twoDigits)", timeZone: .current, calendar: .current)).font(.largeTitle)
 //                

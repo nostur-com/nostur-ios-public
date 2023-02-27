@@ -77,9 +77,9 @@ final class TimelineModel: ObservableObject {
 //                    self.didRestore.send(true)
 //                }
 //                else {
-//                    self.selectedItemId = event.id!
+//                    self.selectedItemId = event.id
 //                }
-                self.restoreScrollToId = event.id!
+                self.restoreScrollToId = event.id
             }
             .store(in: &subscriptions)
         

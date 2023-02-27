@@ -37,14 +37,14 @@ struct NotificationsV: View {
             return reaction.lastE()
         })
         r.predicate = NSPredicate(format: "id IN %@", ids)
-        return (try? viewContext.fetch(r).filter { $0.pubkey! == self.pubkey }) ?? []
+        return (try? viewContext.fetch(r).filter { $0.pubkey == self.pubkey }) ?? []
     }
     
     func reactionsForNote(_ note:Event) -> [Event] {
         // NIP-25 The last e tag MUST be the id of the note that is being reacted to.
         return reactionsForMe.filter { reaction in
             if let lastE = reaction.lastE() {
-                return note.id! == lastE
+                return note.id == lastE
             }
             return false
         }
@@ -78,7 +78,7 @@ struct NotificationsV: View {
                             ReactionsForThisNote(reactions:reactionsForNote(note), onAppear: self.onAppear)
                             NoteMinimalContentView(event: note)
                         }.onTapGesture {
-                            nav.navigateTo(NotePath(id: note.id!))
+                            nav.navigateTo(NotePath(id: note.id))
                         }
                         Divider()
                     }
@@ -96,7 +96,7 @@ struct NotificationsV: View {
             ClientMessage(type: .REQ,
                           message:
                             RequestMessage.getMentions(
-                                pubkeys: [ns.account!.publicKey!],
+                                pubkeys: [ns.account!.publicKey],
                                 kinds: [7],
                                 limit: 500,
                                 since: NTimestamp(timestamp: Int(reactions.first?.created_at ?? 0)))
@@ -113,7 +113,7 @@ struct ReactionsForThisNote: View {
     var withoutDuplicates:[Event] { // Author may accidentally like multiple times 
         reactions
             .reduce(into: [String: Event]()) { result, event in
-                result[event.pubkey!] = event
+                result[event.pubkey] = event
             }.values.sorted(by: { $0.created_at > $1.created_at })
     }
     
@@ -123,7 +123,7 @@ struct ReactionsForThisNote: View {
                 ForEach(withoutDuplicates.prefix(10).indices, id:\.self) { index in
                     ZStack {
                         ProfilePic(event: reactions[index])
-                            .id(reactions[index].id!)
+                            .id(reactions[index].id)
                             .onAppear {
                                 onAppear(reactions[index].created_at)
                             }
@@ -152,14 +152,14 @@ struct ReactionsForThisNote: View {
         let pubkeys = pubkeys(events)
         let contacts = Contact.fetchByPubkeys(pubkeys, context: viewContext)
         let missingPubkeys = pubkeys.filter {
-            contacts.map { $0.pubkey! }.firstIndex(of: $0) == nil
+            contacts.map { $0.pubkey }.firstIndex(of: $0) == nil
         }
         let emptyContactPubkeys = pubkeys
             .compactMap { pubkey in
-                contacts.first(where: { $0.pubkey! == pubkey })
+                contacts.first(where: { $0.pubkey == pubkey })
             }
             .filter { $0.updated_at == 0 }
-            .map { $0.pubkey! }
+            .map { $0.pubkey }
         
         guard (missingPubkeys + emptyContactPubkeys).count > 0 else { return }
         print("Fetching  \((missingPubkeys + emptyContactPubkeys).count) missing or empty contacts")

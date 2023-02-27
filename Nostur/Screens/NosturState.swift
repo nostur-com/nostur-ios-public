@@ -27,9 +27,9 @@ final class NosturState : ObservableObject {
         get {
             if account == nil { return Set<String>() }
             
-            let blocked = (account!.blockedContacts ?? Set<Contact>()).map { $0.pubkey! }
+            let blocked = (account!.blockedContacts ?? Set<Contact>()).map { $0.pubkey }
             
-            let withSelfIncluded = Set([account!.publicKey!] + (account!.follows ?? Set<Contact>()).map { $0.pubkey! })
+            let withSelfIncluded = Set([account!.publicKey] + (account!.follows ?? Set<Contact>()).map { $0.pubkey })
             let withoutBlocked = withSelfIncluded.subtracting(blocked)
             
             return withoutBlocked
@@ -59,7 +59,7 @@ final class NosturState : ObservableObject {
         self.objectWillChange.send()
         self.account = account
         if (account != nil) {
-            activeAccountPublicKey = account!.publicKey!
+            activeAccountPublicKey = account!.publicKey
 //            DataStore.shared.unreadCount.send(0)
             Task(priority: .userInitiated) {
                 self.loadLikesAndReposts()
@@ -135,7 +135,7 @@ final class NosturState : ObservableObject {
     
 //    func loadFollowing() {
 //        if (account?.follows != nil) {
-//            let pubkeys = account!.follows?.map { $0.pubkey! } ?? []
+//            let pubkeys = account!.follows?.map { $0.pubkey } ?? []
 ////            print("💿 follows:")
 ////            print(pubkeys)
 ////            self.objectWillChange.send()
@@ -174,7 +174,7 @@ final class NosturState : ObservableObject {
         account!.addToFollows(contact)
         try! viewContext.save()
         
-//        followingPublicKeys.insert(contact.pubkey!)
+//        followingPublicKeys.insert(contact.pubkey)
         
         guard let clEvent = try? AccountManager.createContactListEvent(account: account!) else {
             print("🔴🔴 Could not create new clEvent")
@@ -203,9 +203,9 @@ final class NosturState : ObservableObject {
     }
     
     func unfollow(_ contact:Contact) {
-//        followingPublicKeys.remove(contact.pubkey!)
+//        followingPublicKeys.remove(contact.pubkey)
         
-        guard let contact = Contact.contactBy(pubkey: contact.pubkey!, context: viewContext) else {
+        guard let contact = Contact.contactBy(pubkey: contact.pubkey, context: viewContext) else {
             return
         }
         guard account != nil else {

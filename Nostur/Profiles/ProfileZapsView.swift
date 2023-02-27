@@ -34,22 +34,22 @@ struct ProfileZapsView: View {
             self.contact = contact
             _zaps = FetchRequest(
                 sortDescriptors: [SortDescriptor(\Event.created_at, order: .reverse)],
-                predicate: NSPredicate(format: "kind = 9735 AND tagsSerialized CONTAINS %@", "[\"p\",\"\(contact!.pubkey!)") // OPTIMIZATION HACK
+                predicate: NSPredicate(format: "kind = 9735 AND tagsSerialized CONTAINS %@", "[\"p\",\"\(contact!.pubkey)") // OPTIMIZATION HACK
             )
             
             _notes = FetchRequest(
                 sortDescriptors: [SortDescriptor(\Event.zapTally, order: .reverse)],
-                predicate: NSPredicate(format: "kind = 1 AND zapTally > 0 AND pubkey == %@", contact!.pubkey!)
+                predicate: NSPredicate(format: "kind = 1 AND zapTally > 0 AND pubkey == %@", contact!.pubkey)
             )
         }
     }
     
-    var pubkey:String { contact!.pubkey! }
+    var pubkey:String { contact!.pubkey }
     
     // TODO: WHAT IS ZAPPER PUBKEY CHANGED. OLD VERIFIED ZAPS HUHH??!! KEEP TRACK
     var verifiedZaps:[Event] {
         zaps.filter { zap in
-            zap.pubkey! == (contact?.zapperPubkey ?? "WHAT")
+            zap.pubkey == (contact?.zapperPubkey ?? "WHAT")
         }
     }
     
@@ -120,7 +120,7 @@ struct ProfileZapsView: View {
                             
                             ForEach(Array(notes.filter { $0.zapTally > 0 } .prefix(10))) { event in
                                 NoteRowView(event: event)
-                                    .id(event.id!)
+                                    .id(event.id)
                             }
                         }
                     }
@@ -135,9 +135,9 @@ struct ProfileZapsView: View {
                 var missingEvents:[String] = []
                 
                 for event in newZapEvents {
-                    if (event.zapFromRequest == nil) { print("🔴🔴 wheres the zap request bro. event.id: \(event.id!)");continue }
+                    if (event.zapFromRequest == nil) { print("🔴🔴 wheres the zap request bro. event.id: \(event.id)");continue }
                     if (event.zapFromRequest?.contact == nil || event.zapFromRequest?.contact?.updated_at == 0) {
-                        missingContacts.append(event.zapFromRequest!.pubkey!)
+                        missingContacts.append(event.zapFromRequest!.pubkey)
                     }
                     if (event.zappedEventId != nil && event.zappedEvent == nil) {
                         if (event.zapFromRequest?.zappedEvent == nil) {

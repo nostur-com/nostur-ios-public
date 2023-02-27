@@ -21,38 +21,19 @@ class ContactProfile: Identifiable, Hashable, ObservableObject {
             objectWillChange.send()
         }
     }
-    
-    var npub:String {
-        get {
-            contact.pubkey != nil ? try! NIP19(prefix: "npub", hexString: contact.pubkey!).displayString : "?"
-        }
-    }
-    
+
     init(contact: Contact, metaData: NSetMetadata? = nil, clEvent: Event? = nil) {
         self.contact = contact
         self.metaData = metaData
         self.clEvent = clEvent
     }
     
-    var id:String {
-        get { contact.pubkey! }
-    }
-    
-    var authorName:String {
-        get { contact.authorName }
-    }
-    
-    var username:String {
-        get { contact.name ?? contact.authorKey }
-    }
-    
-    var publicKey:String {
-        get { contact.pubkey! }
-    }
-    
-    var about:String {
-        get { contact.about ?? "" }
-    }
+    var npub:String { try! NIP19(prefix: "npub", hexString: contact.pubkey).displayString }
+    var id:String { contact.pubkey }
+    var authorName:String { contact.authorName }
+    var username:String { contact.name ?? contact.authorKey }
+    var publicKey:String { contact.pubkey }
+    var about:String { contact.about ?? "" }
     
     static func == (lhs: ContactProfile, rhs: ContactProfile) -> Bool {
         return lhs.contact.id == rhs.contact.id

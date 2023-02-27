@@ -37,13 +37,13 @@ struct NotificationsZaps: View {
             return zap.zappedEventId
         })
         r.predicate = NSPredicate(format: "id IN %@", ids)
-        return (try? viewContext.fetch(r).filter { $0.pubkey! == self.pubkey }) ?? []
+        return (try? viewContext.fetch(r).filter { $0.pubkey == self.pubkey }) ?? []
     }
 
     func zapsForNote(_ note:Event) -> [Event] {
         return zapsForMe.filter { zap in
             if let zappedEventId = zap.zappedEventId {
-                return note.id! == zappedEventId
+                return note.id == zappedEventId
             }
             return false
         }
@@ -75,7 +75,7 @@ struct NotificationsZaps: View {
                             ZapsForThisNote(zaps:zapsForNote(note), onAppear: self.onAppear)
                             NoteMinimalContentView(event: note)
                         }.onTapGesture {
-                            nav.navigateTo(NotePath(id: note.id!))
+                            nav.navigateTo(NotePath(id: note.id))
                         }
                         Divider()
                     }
@@ -93,7 +93,7 @@ struct NotificationsZaps: View {
             ClientMessage(type: .REQ,
                           message:
                             RequestMessage.getMentions(
-                                pubkeys: [ns.account!.publicKey!],
+                                pubkeys: [ns.account!.publicKey],
                                 kinds: [9735],
                                 limit: 500,
                                 since: NTimestamp(timestamp: Int(zaps.first?.created_at ?? 0)))
@@ -117,7 +117,7 @@ struct ZapsForThisNote: View {
                 ForEach(zapsSorted.prefix(10).indices, id:\.self) { index in
                     ZStack {
                         ProfilePic(event: zapsSorted[index].zapFromRequest!)
-                            .id(zapsSorted[index].id!)
+                            .id(zapsSorted[index].id)
                             .onAppear {
                                 onAppear(zapsSorted[index].created_at)
                             }
@@ -151,14 +151,14 @@ struct ZapsForThisNote: View {
 //        let pubkeys = pubkeys(events)
 //        let contacts = Contact.fetchByPubkeys(pubkeys, context: viewContext)
 //        let missingPubkeys = pubkeys.filter {
-//            contacts.map { $0.pubkey! }.firstIndex(of: $0) == nil
+//            contacts.map { $0.pubkey }.firstIndex(of: $0) == nil
 //        }
 //        let emptyContactPubkeys = pubkeys
 //            .compactMap { pubkey in
-//                contacts.first(where: { $0.pubkey! == pubkey })
+//                contacts.first(where: { $0.pubkey == pubkey })
 //            }
 //            .filter { $0.updated_at == 0 }
-//            .map { $0.pubkey! }
+//            .map { $0.pubkey }
 //
 //        guard (missingPubkeys + emptyContactPubkeys).count > 0 else { return }
 //        print("Fetching  \((missingPubkeys + emptyContactPubkeys).count) missing or empty contacts")

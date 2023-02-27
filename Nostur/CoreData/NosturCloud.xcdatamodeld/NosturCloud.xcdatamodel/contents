@@ -12,7 +12,7 @@
         <attribute name="name" attributeType="String" defaultValueString=""/>
         <attribute name="nip05" attributeType="String" defaultValueString=""/>
         <attribute name="picture" attributeType="String" defaultValueString=""/>
-        <attribute name="publicKey" optional="YES" attributeType="String"/>
+        <attribute name="publicKey" attributeType="String"/>
         <relationship name="blockedContacts" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact" inverseName="blockedBy" inverseEntity="Contact"/>
         <relationship name="bookmarks" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Event" inverseName="bookmarkedBy" inverseEntity="Event"/>
         <relationship name="follows" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact" inverseName="followedBy" inverseEntity="Contact"/>
@@ -52,7 +52,7 @@
         <attribute name="liked" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="likesCount" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES" elementID="likesCount"/>
         <attribute name="mentionsCount" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES" elementID="mentionsCount"/>
-        <attribute name="pubkey" optional="YES" attributeType="String"/>
+        <attribute name="pubkey" attributeType="String"/>
         <attribute name="reactionToId" optional="YES" attributeType="String"/>
         <attribute name="repliesCount" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES" elementID="repliesCount"/>
         <attribute name="replyToId" optional="YES" attributeType="String"/>

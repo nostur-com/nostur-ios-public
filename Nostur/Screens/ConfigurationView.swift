@@ -114,7 +114,7 @@ struct ConfigurationView: View {
             for contact in contacts {
                 
                 let tr = NSFetchRequest<Event>(entityName: "Event")
-                tr.predicate = NSPredicate(format: "kind IN {1,6,7,9734} AND tagsSerialized CONTAINS %@", contact.pubkey!) // OPTIMIZATION HACK
+                tr.predicate = NSPredicate(format: "kind IN {1,6,7,9734} AND tagsSerialized CONTAINS %@", contact.pubkey) // OPTIMIZATION HACK
                 if let events = try? viewContext.fetch(tr) {
                     for event in events {
                         event.addToContacts(contact)
@@ -247,7 +247,7 @@ struct ConfigurationView: View {
             
             do {
                 print("trying to update for \(String(describing: event.pubkey))")
-                try Contact.updateMetadata(metaData, pubkey: event.pubkey!, context: viewContext)
+                try Contact.updateMetadata(metaData, pubkey: event.pubkey, context: viewContext)
             }
             catch {
                 print("something wrong with updating conact info cache")
@@ -328,7 +328,7 @@ struct ConfigurationView: View {
         for event in allEvents {
             // set relation to Contact
             let cr = NSFetchRequest<Contact>(entityName: "Contact")
-            cr.predicate = NSPredicate(format: "pubkey == %@", event.pubkey!)
+            cr.predicate = NSPredicate(format: "pubkey == %@", event.pubkey)
             cr.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)]
             if let contact = try? viewContext.fetch(cr).first {
                 event.contact = contact
@@ -425,11 +425,11 @@ struct ConfigurationView: View {
         var forDeletion:[Event] = []
         
         for event in kind3 {
-            if noDuplicates[event.pubkey!] != nil {
+            if noDuplicates[event.pubkey] != nil {
                 forDeletion.append(event)
             }
             else {
-                noDuplicates[event.pubkey!] = event
+                noDuplicates[event.pubkey] = event
             }
         }
         print("going to delete \(forDeletion.count) kind 3 events")

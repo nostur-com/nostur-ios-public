@@ -15,7 +15,7 @@ struct MinimalNoteTextRenderView: View {
     var useLinelimit = true
     
     func contactUsername(fromPubkey pubkey:String) -> String {
-        if let contact = event.contacts?.first(where: { $0.pubkey! == pubkey }) {
+        if let contact = event.contacts?.first(where: { $0.pubkey == pubkey }) {
             return contact.username
         }
         do {

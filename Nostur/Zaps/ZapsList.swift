@@ -17,7 +17,7 @@ struct ZapsList: View {
     
     var zaps:[Event] {
         get {
-            Event.zapsForEvent(event.id!, context: viewContext)
+            Event.zapsForEvent(event.id, context: viewContext)
         }
     }
     
@@ -71,7 +71,7 @@ struct ZapRow: View {
     var contact:Contact? {
         get {
             guard event.zapFromRequest != nil else { return nil }
-            return Contact.fetchByPubkey(event.zapFromRequest!.pubkey!, context: viewContext)
+            return Contact.fetchByPubkey(event.zapFromRequest!.pubkey, context: viewContext)
         }
     }
     
@@ -96,9 +96,9 @@ struct ZapRow: View {
                 Text("zapped \(sats.clean) sats \(fiatPrice) on:")
             }
             if (devToggle) {
-                Text("id: \(String(event.id!.prefix(5)))")
+                Text("id: \(String(event.id.prefix(5)))")
                     .onTapGesture {
-                        UIPasteboard.general.string = event.id!
+                        UIPasteboard.general.string = event.id
                     }
             }
             Spacer()
@@ -106,7 +106,7 @@ struct ZapRow: View {
         .foregroundColor(.gray)
         .onTapGesture {
             if (event.zapFromRequest != nil) {
-                nav.navigateTo(ContactPath(key: event.zapFromRequest!.pubkey!))
+                nav.navigateTo(ContactPath(key: event.zapFromRequest!.pubkey))
             }
         }
 //        .padding(.leading, 45)
@@ -151,7 +151,7 @@ struct ZapRow: View {
 //        .contentShape(Rectangle())
 //        .onTapGesture {
 //            if (zapFromRequest != nil) {
-//                nav.navigateTo(ContactPath(key: zapFromRequest!.pubkey!))
+//                nav.navigateTo(ContactPath(key: zapFromRequest!.pubkey))
 //            }
 //        }
 //        Divider()

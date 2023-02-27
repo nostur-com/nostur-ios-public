@@ -41,7 +41,7 @@ extension Contact {
     @NSManaged public var nip05verifiedAt: Date?
     @NSManaged public var picture: String?
     @NSManaged public var banner: String?
-    @NSManaged public var pubkey: String?
+    @NSManaged public var pubkey: String
     @NSManaged public var zapperPubkey: String? // used to authorize kind 9735 zap notes. fetch from lud16 endpoint
     @NSManaged public var updated_at: Int64
     @NSManaged public var followedBy: NSSet?
@@ -83,11 +83,10 @@ extension Contact {
 
 extension Contact : Identifiable {
     
-    public var id:String { pubkey! }
-        
-    var authorKey: String {
-        get { pubkey != nil ? String(npub.prefix(11)) : "⏤⏤" }
-    }
+    public var id:String { pubkey }
+    var username:String { name ?? authorKey }
+    var npub:String { try! NIP19(prefix: "npub", hexString: pubkey).displayString }
+    var authorKey:String { String(npub.prefix(11)) }
     
     // Display name, with fallbacks: (User)name, pubkey (prefix), or "?:?"
     var authorName: String {
@@ -99,10 +98,7 @@ extension Contact : Identifiable {
                 : authorKey
         }
     }
-    
-    var username:String { get { name ?? authorKey } }
-    
-    var npub:String { get { pubkey != nil ? try! NIP19(prefix: "npub", hexString: pubkey!).displayString : "⏤⏤" } }
+
     
     var nip05veried:Bool {
         get {
@@ -129,7 +125,7 @@ extension Contact : Identifiable {
         get {
             let fr = Event.fetchRequest()
             fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-            fr.predicate = NSPredicate(format: "kind == 3 AND pubkey == %@", self.pubkey!)
+            fr.predicate = NSPredicate(format: "kind == 3 AND pubkey == %@", self.pubkey)
             return try? self.managedObjectContext?.fetch(fr).first
         }
     }
@@ -202,8 +198,8 @@ extension Contact : Identifiable {
                 
                 // EVENTS.CONTACTS (which come from Event.P tags:
                 let tr = NSFetchRequest<Event>(entityName: "Event")
-        //            tr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", "[\"p\",\"\(contact.pubkey!)") // OPTIMIZATION HACK WERKT NIET
-                tr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", contact.pubkey!) // OPTIMIZATION HACK
+        //            tr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", "[\"p\",\"\(contact.pubkey)") // OPTIMIZATION HACK WERKT NIET
+                tr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", contact.pubkey) // OPTIMIZATION HACK
                 let events = Array(try! context.fetch(tr))
                 
                 
@@ -245,8 +241,8 @@ extension Contact : Identifiable {
             
             // EVENTS.CONTACTS (which come from Event.P tags:
             let tr = NSFetchRequest<Event>(entityName: "Event")
-    //            tr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", "[\"p\",\"\(contact.pubkey!)") // OPTIMIZATION HACK WERKT NIET
-            tr.predicate = NSPredicate(format: "kind IN {1,6,7,9734} AND tagsSerialized CONTAINS %@", contact.pubkey!) // OPTIMIZATION HACK
+    //            tr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", "[\"p\",\"\(contact.pubkey)") // OPTIMIZATION HACK WERKT NIET
+            tr.predicate = NSPredicate(format: "kind IN {1,6,7,9734} AND tagsSerialized CONTAINS %@", contact.pubkey) // OPTIMIZATION HACK
             let events = Array(try! context.fetch(tr))
             for event in events {
                 event.objectWillChange.send()
@@ -281,7 +277,7 @@ extension Contact : Identifiable {
     //        r.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)]
             let allContacts = try! r.execute()
     //        print(allContacts)
-            return allContacts.map { $0.pubkey! }
+            return allContacts.map { $0.pubkey }
         }
     }
 //    
@@ -297,7 +293,7 @@ extension Contact : Identifiable {
 //            r.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)]
 //            let allContacts = try! r.execute()
 //            print(allContacts)
-//            let allContactPubkeys = allContacts.map { $0.pubkey! }
+//            let allContactPubkeys = allContacts.map { $0.pubkey }
 //            var newPubkeys = [String]()
 //            var eventPubkeys = [String]()
 //            

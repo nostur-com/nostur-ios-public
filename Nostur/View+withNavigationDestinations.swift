@@ -58,9 +58,9 @@ extension View {
 //                    case .ZapList(let event):
 //                        ZapsList(event: event)
                     case .NoteReactions(let event):
-                        NoteReactions(id: event.id!)
+                        NoteReactions(id: event.id)
                     case .NoteZaps(let event):
-                        NoteZaps(id: event.id!)
+                        NoteZaps(id: event.id)
                     case .Settings:
                         Settings()
                     

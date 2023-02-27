@@ -56,15 +56,15 @@ struct NoteRowView: View {
                     Image(systemName: "arrow.2.squarepath")
                     Text("\(event.name) reposted")
                     if (devToggle) {
-                        Text("id: \(String(event.id!.prefix(5)))")
+                        Text("id: \(String(event.id.prefix(5)))")
                             .onTapGesture {
-                                UIPasteboard.general.string = event.id!
+                                UIPasteboard.general.string = event.id
                             }
                     }
                 }
                 .foregroundColor(.gray)
                 .onTapGesture {
-                    nav.navigateTo(ContactPath(key: event.pubkey!))
+                    nav.navigateTo(ContactPath(key: event.pubkey))
                 }
                 .padding(.leading, 45)
             }
@@ -76,7 +76,7 @@ struct NoteRowView: View {
                             ProfilePic(event: event.firstQuote!)
                                 .padding(.horizontal, 10)
                                 .onTapGesture {
-                                    nav.navigateTo(ContactPath(key: event.firstQuote!.pubkey!))
+                                    nav.navigateTo(ContactPath(key: event.firstQuote!.pubkey))
                                 }
                         }
                         
@@ -134,7 +134,7 @@ struct NoteRowView: View {
                             ProfilePic(event: event)
                                 .padding(.horizontal, 10)
                                 .onTapGesture {
-                                    nav.navigateTo(ContactPath(key: event.pubkey!))
+                                    nav.navigateTo(ContactPath(key: event.pubkey))
                                 }
                         }
                         
@@ -204,13 +204,13 @@ struct NoteRowView: View {
             // Contact updated_at is very old
             // followed contact meta data refresh should be updated at app wake up probably
             if (event.contact == nil || event.contact?.updated_at == 0) {
-                print("🔴🔴 NoteRow.onAppear event.contact == nil so: REQ.0:\(event.pubkey!)")
-                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.pubkey!)))
+                print("🔴🔴 NoteRow.onAppear event.contact == nil so: REQ.0:\(event.pubkey)")
+                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.pubkey)))
             }
             if (event.isRepost && event.firstQuote != nil && event.firstQuote!.contact != nil) {
                 if (event.firstQuote!.contact!.updated_at == 0) {
-                    print("🔴🔴 NoteRow.onAppear event.firstQuite.contact == nil so: REQ.0:\(event.pubkey!)")
-                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.firstQuote!.pubkey!)))
+                    print("🔴🔴 NoteRow.onAppear event.firstQuite.contact == nil so: REQ.0:\(event.pubkey)")
+                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.firstQuote!.pubkey)))
                 }
             }
         }

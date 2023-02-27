@@ -137,7 +137,7 @@ struct AccountEditView: View {
         }
         .onAppear {
             if (account.privateKey == nil) {
-                let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: account.publicKey!))
+                let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: account.publicKey))
                 sp.sendMessage(message)
             }
         }
@@ -157,7 +157,7 @@ struct AccountEditView: View {
                             return
                         }
                         
-                        guard (keys.publicKeyHex() == account.publicKey!) else {
+                        guard (keys.publicKeyHex() == account.publicKey) else {
                             invalidPrivateKey = true
                             newPrivateKey = ""
                             return
@@ -236,20 +236,20 @@ extension AccountEditView {
         Account.preFillReadOnlyAccountInfo(account: account, context: viewContext, forceOverwrite: true)
         Account.preFillReadOnlyAccountFollowing(account: account, context: viewContext)
                 
-        let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: account.publicKey!))
+        let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: account.publicKey))
         
         sp.sendMessage(message)
     }
     
 //    func fetchContacts(account:Account) {
 //        if (account.publicKey != nil) {
-//            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: account.publicKey!)))
+//            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: account.publicKey)))
 //        }
 //    }
 
     func loadFollowers(account:Account) {
         let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "kind == 3 AND pubkey == %@", account.publicKey!)
+        fr.predicate = NSPredicate(format: "kind == 3 AND pubkey == %@", account.publicKey)
         let clEvent = try! viewContext.fetch(fr).first
         if (clEvent != nil) {
             
@@ -268,7 +268,7 @@ extension AccountEditView {
     }
     
     func updateContacts() { // move this method to somewhere more global maybe
-        let pubkeys = account.follows?.map { $0.pubkey! }
+        let pubkeys = account.follows?.map { $0.pubkey }
         if (pubkeys != nil) {
             sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys!)))
         }

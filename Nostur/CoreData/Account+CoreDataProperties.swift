@@ -25,7 +25,7 @@ extension Account {
     @NSManaged public var nip05: String
     @NSManaged public var picture: String
     @NSManaged public var banner: String
-    @NSManaged public var publicKey: String?
+    @NSManaged public var publicKey: String
     @NSManaged public var id: UUID?
     @NSManaged public var follows: Set<Contact>?
     @NSManaged public var bookmarks: Set<Event>?
@@ -142,26 +142,22 @@ extension Account {
 
 extension Account : Identifiable {
 
-    var npub:String {
-        get {
-            publicKey != nil ? try! NIP19(prefix: "npub", hexString: publicKey!).displayString : "?"
-        }
-    }
+    var npub:String { try! NIP19(prefix: "npub", hexString: publicKey).displayString }
     
     var privateKey:String? {
         get {
             guard self.publicKey != nil else { return nil }
-            return AccountManager.shared.getPrivateKeyHex(pubkey: self.publicKey!)
+            return AccountManager.shared.getPrivateKeyHex(pubkey: self.publicKey)
         }
         set(privateKeyHex) {
             guard privateKeyHex != nil, self.publicKey != nil else {
                 if (self.publicKey != nil) {
-                    AccountManager.shared.deletePrivateKey(forPublicKeyHex: self.publicKey!)
+                    AccountManager.shared.deletePrivateKey(forPublicKeyHex: self.publicKey)
                 }
                 return
             }
             if (self.publicKey != nil) { // TODO: Store public key based on private?
-                AccountManager.shared.storePrivateKey(privateKeyHex: privateKeyHex!, forPublicKeyHex: self.publicKey!)
+                AccountManager.shared.storePrivateKey(privateKeyHex: privateKeyHex!, forPublicKeyHex: self.publicKey)
             }
         }
     }
@@ -180,7 +176,7 @@ extension Account : Identifiable {
     // For when adding read only accounts, prefill with kind.0 info from relays (FROM CACHE)
     static func preFillReadOnlyAccountInfo(account:Account, context:NSManagedObjectContext, forceOverwrite:Bool = false) {
         
-        guard let kind0 = Event.setMetaDataEvents(byAuthorPubkey: account.publicKey!, context: context)?.first else {
+        guard let kind0 = Event.setMetaDataEvents(byAuthorPubkey: account.publicKey, context: context)?.first else {
             return
         }
         
@@ -230,7 +226,7 @@ extension Account : Identifiable {
     // For when adding read only accounts, prefill with kind.3 info from relays (FROM CACHE)
     static func preFillReadOnlyAccountFollowing(account:Account, context:NSManagedObjectContext) {
         
-        guard let kind3 = Event.contactListEvents(byAuthorPubkey: account.publicKey!, context: context)?.first else {
+        guard let kind3 = Event.contactListEvents(byAuthorPubkey: account.publicKey, context: context)?.first else {
             return
         }
         
@@ -257,7 +253,7 @@ extension Account : Identifiable {
             if (forceOverwrite || account.privateKey == nil && contacts.count > 0) {
                 
                 // Also prefetch all metadata
-                let pubkeys = contacts.map { $0.pubkey! }
+                let pubkeys = contacts.map { $0.pubkey }
                 SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys)))
 //                account.objectWillChange.send()
 //                NosturState.shared.objectWillChange.send()

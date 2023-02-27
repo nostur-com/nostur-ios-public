@@ -91,7 +91,7 @@ struct AccountsSheet: View {
         .confirmationDialog("Delete account?", isPresented: $confirmDelete) {
             Button(role: .destructive) {
                 guard accountToDelete != nil else { return }
-                AccountManager.shared.deletePrivateKey(forPublicKeyHex: accountToDelete!.publicKey!)
+                AccountManager.shared.deletePrivateKey(forPublicKeyHex: accountToDelete!.publicKey)
                 if (ns.accounts.count <= 1) {
                     ns.onBoardingIsShown = true
                     sm.showSidebar = false
@@ -119,7 +119,7 @@ struct AccountRow: View {
     var body: some View {
         if (account.publicKey != nil) {
             HStack(alignment: .center) {
-                ProfilePicView(pubkey: account.publicKey!, account: account, size: 35)
+                ProfilePicView(pubkey: account.publicKey, account: account, size: 35)
                 VStack(alignment: .leading) {
                     HStack {
                         VStack(alignment: .leading) {

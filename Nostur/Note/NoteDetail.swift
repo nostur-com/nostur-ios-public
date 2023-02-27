@@ -129,7 +129,7 @@ struct NoteAndParent: View {
             VStack(alignment: .leading, spacing: 3) {
                     // PFP | NAME/USERNAME/AGO
                     HStack {
-                        NavigationLink(value: ContactPath(key: event.pubkey!), label: {
+                        NavigationLink(value: ContactPath(key: event.pubkey), label: {
                             ProfilePic(event: event)
                                 .frame(width:50, height:50)
                                 .clipShape(Circle())
@@ -236,7 +236,7 @@ struct NoteAndParent: View {
                 .onAppear {
                     if (event.contact == nil) {
                         // TODO: Still needed? or below sp.send is already taking care of this?
-                        sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.pubkey!)))
+                        sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.pubkey)))
                     }
                     
                     if (!isParent) {
@@ -255,7 +255,7 @@ struct NoteAndParent: View {
                         }
                         
                         // Fetch all that reference this detail note (Replies, zaps, reactions)
-                        sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEventReferences(ids: [event.id!])))
+                        sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEventReferences(ids: [event.id])))
                         
                         
                         if (event.replyToRootId != nil) {
@@ -308,22 +308,22 @@ struct NoteAndParent: View {
     
     func fixIfWeHavePointingToAlreadyInCache(_ openedEvent:Event) {
         let pointingToEventReq = NSFetchRequest<Event>(entityName: "Event")
-        //        pointingToEventReq.predicate = NSPredicate(format: "(kind IN {1,6} AND  (replyToId == %@ OR replyToRootId == %@ OR firstQuoteId == %@)", openedEvent.id!, openedEvent.id!, openedEvent.id!)
-        pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6} AND %@ IN {replyToId,replyToRootId,firstQuoteId}", openedEvent.id!)
+        //        pointingToEventReq.predicate = NSPredicate(format: "(kind IN {1,6} AND  (replyToId == %@ OR replyToRootId == %@ OR firstQuoteId == %@)", openedEvent.id, openedEvent.id, openedEvent.id)
+        pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6} AND %@ IN {replyToId,replyToRootId,firstQuoteId}", openedEvent.id)
         // TODO: NEED 6 ALSO OR NOT?
-//            pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6} AND %@ IN {replyToId,replyToRootId,firstQuoteId}", savedEvent.id!)
+//            pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6} AND %@ IN {replyToId,replyToRootId,firstQuoteId}", savedEvent.id)
         pointingToEventReq.sortDescriptors = []
         if let pointingToEvents = try? viewContext.fetch(pointingToEventReq) {
             for event in pointingToEvents {
-                if (event.replyToId != nil) && (event.replyToId == openedEvent.id!) {
+                if (event.replyToId != nil) && (event.replyToId == openedEvent.id) {
                     event.objectWillChange.send()
                     event.replyTo = openedEvent
                 }
-                if (event.replyToRootId != nil) && (event.replyToRootId == openedEvent.id!) {
+                if (event.replyToRootId != nil) && (event.replyToRootId == openedEvent.id) {
                     event.objectWillChange.send()
                     event.replyToRoot = openedEvent
                 }
-                if (event.firstQuoteId != nil) && (event.firstQuoteId == openedEvent.id!) {
+                if (event.firstQuoteId != nil) && (event.firstQuoteId == openedEvent.id) {
                     event.objectWillChange.send()
                     event.firstQuote = openedEvent
                 }

@@ -51,7 +51,7 @@ extension NosturRootMenu {
             let _ = Self._printChanges()
             List {
                 HStack {
-                    ProfilePicView(pubkey: ns.account!.publicKey!, account: ns.account!)
+                    ProfilePicView(pubkey: ns.account!.publicKey, account: ns.account!)
                     Spacer()
                     
                     Button { accountsSheetIsShown = true } label: {
@@ -66,7 +66,7 @@ extension NosturRootMenu {
                 Text(try! AttributedString(markdown: "**\(ns.account?.follows?.count ?? 0)**  Following")).font(.caption)
                 
                 Button {
-                    nav.navigateTo(ContactPath(key: ns.account!.publicKey!))
+                    nav.navigateTo(ContactPath(key: ns.account!.publicKey))
                     sm.showSidebar = false
                 } label: {
                     Label("Profile", systemImage: "person")

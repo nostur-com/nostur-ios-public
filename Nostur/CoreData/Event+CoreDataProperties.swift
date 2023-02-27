@@ -29,9 +29,9 @@ extension Event {
     
     @NSManaged public var content: String?
     @NSManaged public var created_at: Int64
-    @NSManaged public var id: String?
+    @NSManaged public var id: String
     @NSManaged public var kind: Int64
-    @NSManaged public var pubkey: String?
+    @NSManaged public var pubkey: String
     @NSManaged public var sig: String?
     @NSManaged public var tagsSerialized: String?
     
@@ -210,24 +210,18 @@ extension Event {
     }
     
     var authorKey: String {
-        get {
-            pubkey != nil ? String(pubkey!.prefix(5)) : "?:?"
-        }
+        String(pubkey.prefix(5))
     }
     
     var noteText: String {
-        get {
-            content ?? "(empty note)"
-        }
+        content ?? "(empty note)"
     }
     
     var noteId:String {
-        get {
-            id != nil ? try! NIP19(prefix: "note", hexString: id!).displayString : "?"
-        }
+        try! NIP19(prefix: "note", hexString: id).displayString
     }
     
-    var npub:String { get { pubkey != nil ? try! NIP19(prefix: "npub", hexString: pubkey!).displayString : "⏤⏤" } }
+    var npub:String { try! NIP19(prefix: "npub", hexString: pubkey).displayString }
     
     
     static func textNotes(byAuthorPubkey:String? = nil) -> NSFetchRequest<Event> {
@@ -404,7 +398,7 @@ extension Event {
         
             
             guard contact!.zapperPubkey != nil else { return false }
-            guard contact!.zapperPubkey! == event.pubkey! else { return false }
+            guard contact!.zapperPubkey! == event.pubkey else { return false }
         }
         
         
@@ -718,22 +712,22 @@ extension Event {
         if (1 == 1) { // TODO: Temp disabled for speed up check..
             // if other existing messages were replying, mentioning, reposting (to) this, fix the relation
             let pointingToEventReq = NSFetchRequest<Event>(entityName: "Event")
-            //        pointingToEventReq.predicate = NSPredicate(format: "(kind IN {1,6} AND  (replyToId == %@ OR replyToRootId == %@ OR firstQuoteId == %@)", savedEvent.id!, savedEvent.id!, savedEvent.id!)
-            pointingToEventReq.predicate = NSPredicate(format: "kind == 1 AND %@ IN {replyToId,replyToRootId,firstQuoteId}", savedEvent.id!)
+            //        pointingToEventReq.predicate = NSPredicate(format: "(kind IN {1,6} AND  (replyToId == %@ OR replyToRootId == %@ OR firstQuoteId == %@)", savedEvent.id, savedEvent.id, savedEvent.id)
+            pointingToEventReq.predicate = NSPredicate(format: "kind == 1 AND %@ IN {replyToId,replyToRootId,firstQuoteId}", savedEvent.id)
             // TODO: NEED 6 ALSO OR NOT?
-//            pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6} AND %@ IN {replyToId,replyToRootId,firstQuoteId}", savedEvent.id!)
+//            pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6} AND %@ IN {replyToId,replyToRootId,firstQuoteId}", savedEvent.id)
             pointingToEventReq.sortDescriptors = []
             if let pointingToEvents = try? context.fetch(pointingToEventReq) { // TODO: SLOW?? Maybe only do this when opening the 1 or 6 instead of here.
                 for event in pointingToEvents {
-                    if (event.replyToId != nil) && (event.replyToId == savedEvent.id!) {
+                    if (event.replyToId != nil) && (event.replyToId == savedEvent.id) {
                         event.objectWillChange.send()
                         event.replyTo = savedEvent
                     }
-                    if (event.replyToRootId != nil) && (event.replyToRootId == savedEvent.id!) {
+                    if (event.replyToRootId != nil) && (event.replyToRootId == savedEvent.id) {
                         event.objectWillChange.send()
                         event.replyToRoot = savedEvent
                     }
-                    if (event.firstQuoteId != nil) && (event.firstQuoteId == savedEvent.id!) {
+                    if (event.firstQuoteId != nil) && (event.firstQuoteId == savedEvent.id) {
                         event.objectWillChange.send()
                         event.firstQuote = savedEvent
                     }
@@ -753,8 +747,8 @@ extension Event {
     // data not exactly the same.
     func toNEvent() -> NEvent {
         var nEvent = NEvent(content: content!)
-        nEvent.id = id!
-        nEvent.publicKey = pubkey!
+        nEvent.id = id
+        nEvent.publicKey = pubkey
         nEvent.createdAt = NTimestamp(timestamp: Int(created_at))
         nEvent.kind = NEventKind(id: Int(kind))
         nEvent.tags = tags()

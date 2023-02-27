@@ -18,7 +18,7 @@ struct NoteZaps: View {
 //
 //    var zaps:[Event] {
 //        get {
-//            Event.zapsForEvent(event.id!, context: viewContext)
+//            Event.zapsForEvent(event.id, context: viewContext)
 //        }
 //    }
     
@@ -117,7 +117,7 @@ struct NoteZapRow: View {
         .contentShape(Rectangle())
         .onTapGesture {
             if (event.zapFromRequest != nil) {
-                nav.navigateTo(ContactPath(key: event.zapFromRequest!.pubkey!))
+                nav.navigateTo(ContactPath(key: event.zapFromRequest!.pubkey))
             }
         }
         Divider()

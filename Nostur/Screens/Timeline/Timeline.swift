@@ -1,67 +1,12 @@
 //
-//  TL3.swift
+//  Timeline.swift
 //  Nostur
 //
-//  Created by Fabian Lachman on 22/02/2023.
+//  Created by Fabian Lachman on 27/02/2023.
 //
+
 import SwiftUI
 import CoreData
-import Combine
-//import IsScrolling
-
-struct TimelineStateIsolation: View {
-    
-    @State var showingNewNote = false
-    @State var noteCancellationId:UUID?
-    
-    var body: some View {
-        ZStack {
-            TimelineContainer()
-            NewNoteButton(showingNewNote: $showingNewNote)
-            UnreadCounter()
-        }
-        .sheet(isPresented: $showingNewNote) {
-            NewNote(noteCancellationId: $noteCancellationId)
-        }
-    }
-}
-
-struct TimelineContainer: View {
-    @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var nav:NavigationModel
-    @Environment(\.managedObjectContext) var viewContext
-//    @State var showingNewNote = false
-
-    
-    var body: some View {
-        let _ = Self._printChanges()
-        if ns.account != nil && (ns.account!.follows?.count ?? 0) > 0 {
-            Timeline(pubkey: ns.account!.publicKey!, pubkeys: ns.followingPublicKeys, context: viewContext)
-        }
-        else if ns.account == nil {
-            Text("No account")
-                .onAppear() {
-                    if (ns.accounts.count == 0) {
-//                        ns.isOnboarding = true
-                    }
-                }
-        }
-        else {
-            VStack {
-                Text("You are not following anyone yet, visit the explore tab and follow some people")
-                    .multilineTextAlignment(.center)
-                    .padding(/*@START_MENU_TOKEN@*/.all, 30.0/*@END_MENU_TOKEN@*/)
-                    
-                Button {
-                    nav.selectedSubTab = "Explore"
-                } label: {
-                    Text("Explore")
-                }.buttonStyle(.borderedProminent)
-            }
-            // TODO: Add some follow suggestions here.
-        }
-    }
-}
 
 struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling is possible!
     ///
@@ -116,22 +61,8 @@ struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling i
                 ScrollViewReader { proxy in
                     List {
                         ForEach(eventsSorted) { event in
-//                            HStack {
-//                                VStack {
-//                                    ProfilePic(event: event)
-//                                }
-//                                VStack {
-//                                    ReplyingToFragment(event: event)
-//    //                                Text(event.noteText)
-//    //                                SmoothNoteTextRenderView(event: event)
-//                                    NoteTextRenderView(event: event)
-//                                    FooterFragment(event: event)
-//                                }
-//                            }
-//                            .scrollSensor()
-//                            MinimalNoteTextRenderView(event: event)
                             NoteRowView(event:event)
-                                .id(event.id!)
+                                .id(event.id)
                                 .listRowInsets(EdgeInsets())
                                 .onTapGesture {
                                     selectedEvent = event
@@ -141,7 +72,6 @@ struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling i
                                 }
                         }
                     }
-//                    .scrollStatusMonitor($isScrolling, monitorMode: .common)
                     .onAppear {
                         guard ds.didRestoreScrollPosition == false else { return }
                         if let id = UserDefaults.standard.string(forKey: "restoreScrollToId") {
@@ -162,7 +92,7 @@ struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling i
                     .onReceive(receiveNotification(.shouldScrollToUnreadNote)) { _ in
 //                        if (ds.mostRecentEvent != nil) && (eventsSorted.firstIndex(of: ds.mostRecentEvent!) != nil) {
 //                            withAnimation {
-//                                proxy.scrollTo(ds.mostRecentEvent!.id!, anchor: .bottom)
+//                                proxy.scrollTo(ds.mostRecentEvent!.id, anchor: .bottom)
 //                            }
 //                        }
 //                        else {
@@ -233,13 +163,23 @@ struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling i
                 firstTimeCompleted = true
             }
             else if (!ot.isOnboarding) {
-                fetchEvents(pubkeys: pubkeys)
+                let hoursAgo = Int64(Date.now.addingTimeInterval(-(28800)).timeIntervalSince1970)  // 8 hours day ago
+                if (eventsSorted.count == 0) {
+                    fetchEvents(pubkeys: pubkeys, since: hoursAgo)
+                }
+                else {
+                    
+                    // Start from first event, but not more than 8 hours ago...
+                    // Else it will load 1000 posts on timeline and Core data has some bug with fetchlimit
+                    let firstEventCreatedAt = eventsSorted.first!.created_at
+                    fetchEvents(pubkeys: pubkeys, since: firstEventCreatedAt < hoursAgo ? hoursAgo : firstEventCreatedAt)
+                }
             }
             
         }
         .onReceive(receiveNotification(.blockListUpdated)) { notification in
 //            tm.notesOnScreen = tm.notesOnScreen.filter {
-//                !(notification.object as! Set<Contact>).map { $0.pubkey! } .contains($0.pubkey!)
+//                !(notification.object as! Set<Contact>).map { $0.pubkey } .contains($0.pubkey)
 //            }
         }
     }
@@ -283,14 +223,14 @@ extension Timeline {
         let pubkeys = Array(Set(events.flatMap { TagsHelpers($0.tags()).pTags().map{ $0.pubkey } }))
         let contacts = Contact.fetchByPubkeys(pubkeys, context: viewContext)
         let missingPubkeys = pubkeys.filter {
-            contacts.map { $0.pubkey! }.firstIndex(of: $0) == nil
+            contacts.map { $0.pubkey }.firstIndex(of: $0) == nil
         }
         let emptyContactPubkeys = pubkeys
             .compactMap { pubkey in
-                contacts.first(where: { $0.pubkey! == pubkey })
+                contacts.first(where: { $0.pubkey == pubkey })
             }
             .filter { $0.updated_at == 0 }
-            .map { $0.pubkey! }
+            .map { $0.pubkey }
         
         guard (missingPubkeys + emptyContactPubkeys).count > 0 else { return }
 //        ThreadWarning.which("SocketPool.shared.sendMessag 💖💖💖")
@@ -300,13 +240,8 @@ extension Timeline {
 }
 
 struct Timeline_Previews: PreviewProvider {
-        
     static var previews: some View {
-        TimelineStateIsolation()
+        FollowingContainer()
             .withPreviewEnvironment()
     }
 }
-
-
-
-

@@ -111,7 +111,7 @@ struct AddExistingAccountSheet: View {
         account.privateKey = keys.privateKeyHex()
         
         let ot = OnboardingTracker.shared
-        ot.startOnboarding(pubkey: account.publicKey!)
+        ot.startOnboarding(pubkey: account.publicKey)
         
         
         // 1. Prefill from cached event
@@ -119,13 +119,13 @@ struct AddExistingAccountSheet: View {
         Account.preFillReadOnlyAccountFollowing(account: account, context: viewContext)
         
         // Remove existing metadata events, so can proper parse again from Importers. Else get filtered by duplicate filter
-        if let contactEvents = Event.setMetaDataEvents(byAuthorPubkey: account.publicKey!, context: viewContext) {
+        if let contactEvents = Event.setMetaDataEvents(byAuthorPubkey: account.publicKey, context: viewContext) {
             for contactEvent in contactEvents {
                 viewContext.delete(contactEvent)
             }
         }
         // Remove existing CL events, so can proper parse again from Importers. Else get filtered by duplicate filter
-        if let clEvents = Event.contactListEvents(byAuthorPubkey: account.publicKey!, context: viewContext) {
+        if let clEvents = Event.contactListEvents(byAuthorPubkey: account.publicKey, context: viewContext) {
             for clEvent in clEvents {
                 viewContext.delete(clEvent)
             }
@@ -135,7 +135,7 @@ struct AddExistingAccountSheet: View {
         ns.setAccount(account: account)
         // 2. But also check if there are newer events
         if (!ot.didFetchKind0 || !ot.didFetchKind3) {
-            let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: account.publicKey!))
+            let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: account.publicKey))
             SocketPool.shared.sendMessage(message)
         }
     }
@@ -157,13 +157,13 @@ struct AddExistingAccountSheet: View {
         Account.preFillReadOnlyAccountFollowing(account: account, context: viewContext)
         
         // Remove existing metadata events, so can proper parse again from Importers. Else get filtered by duplicate filter
-        if let contactEvents = Event.setMetaDataEvents(byAuthorPubkey: account.publicKey!, context: viewContext) {
+        if let contactEvents = Event.setMetaDataEvents(byAuthorPubkey: account.publicKey, context: viewContext) {
             for contactEvent in contactEvents {
                 viewContext.delete(contactEvent)
             }
         }
         // Remove existing CL events, so can proper parse again from Importers. Else get filtered by duplicate filter
-        if let clEvents = Event.contactListEvents(byAuthorPubkey: account.publicKey!, context: viewContext) {
+        if let clEvents = Event.contactListEvents(byAuthorPubkey: account.publicKey, context: viewContext) {
             for clEvent in clEvents {
                 viewContext.delete(clEvent)
             }

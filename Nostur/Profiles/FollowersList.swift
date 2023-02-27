@@ -69,7 +69,7 @@ struct FollowersList: View {
             VStack {
                 Text("Missing: \(clEventsFollowingPubkeyMissingContact.count)")
                 ForEach(clEventsFollowingPubkeyMissingContact) { event in
-                    Text("Missing: \(event.pubkey!)")
+                    Text("Missing: \(event.pubkey)")
                 }
             }
             
@@ -77,7 +77,7 @@ struct FollowersList: View {
             // fetch missing
             // fetch pubkeys not in [contacts.pubkey]
             
-            let missing = clEventsFollowingPubkeyMissingContact.map { $0.pubkey! }
+            let missing = clEventsFollowingPubkeyMissingContact.map { $0.pubkey }
             
             sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missing)))
         }

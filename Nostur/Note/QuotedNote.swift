@@ -55,7 +55,7 @@ struct QuotedNoteFragment: View {
                             // profile image
                             ProfilePic(event: event, size: 20)
                                 .onTapGesture {
-                                    nav.navigateTo(ContactPath(key: event.pubkey!))
+                                    nav.navigateTo(ContactPath(key: event.pubkey))
                                 }
                             
                             if (event.contact != nil) {
@@ -110,8 +110,8 @@ struct QuotedNoteFragment: View {
                 // Contact updated_at is very old
                 // followed contact meta data refresh should be updated at app wake up probably
                 if (event.contact == nil) {
-                    print("🟢 NoteRow.onAppear event.contact == nil so: REQ.0:\(event.pubkey!)")
-                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.pubkey!)))
+                    print("🟢 NoteRow.onAppear event.contact == nil so: REQ.0:\(event.pubkey)")
+                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.pubkey)))
                 }
             }
         }

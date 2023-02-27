@@ -31,7 +31,7 @@ struct FollowingAndExplore: View {
             switch nav.selectedSubTab {
                 case "Following":
                     NavigationStack(path: $nav.timelinePath) {
-                        TimelineStateIsolation()
+                        FollowingStateIsolation()
                             .environmentObject(followingModel)
                             .frame(maxWidth: 600)
                             .withNavigationDestinations()
@@ -46,6 +46,7 @@ struct FollowingAndExplore: View {
                 default:
                     EmptyView()
             }
+            Spacer()
         }
         .safeAreaInset(edge: .top) {
             AppTopBar()

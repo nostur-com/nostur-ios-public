@@ -32,7 +32,7 @@ struct NoteMenu: View {
             } label: {
                 Label("Copy note id hex \(noteIdHex))", systemImage: "doc.on.clipboard")
             }
-            if (ns.isFollowing(event.pubkey!)) {
+            if (ns.isFollowing(event.pubkey)) {
                 Button {
                     print("Unfollow @\(username)")
                     if (event.contact != nil) {
@@ -56,7 +56,7 @@ struct NoteMenu: View {
                 print("Block @\(username)")
                 if (event.contact == nil) {
                     let newContact = Contact(context: viewContext)
-                    newContact.pubkey = event.pubkey!
+                    newContact.pubkey = event.pubkey
                     newContact.updated_at = 0
                     ns.objectWillChange.send()
                     ns.account?.addToBlockedContacts(newContact)

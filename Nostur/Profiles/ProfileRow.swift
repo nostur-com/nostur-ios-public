@@ -22,7 +22,7 @@ struct ProfileRow: View {
     var body: some View {
         NavigationLink(value: contact) {
             HStack(alignment: .top) {
-                ProfilePicView(pubkey: contact.pubkey!, contact: contact)
+                ProfilePicView(pubkey: contact.pubkey, contact: contact)
                 VStack(alignment: .leading) {
                     HStack {
                         VStack(alignment: .leading) {
