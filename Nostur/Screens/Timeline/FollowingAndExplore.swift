@@ -10,8 +10,8 @@ import SwiftUI
 struct FollowingAndExplore: View {
     
     @EnvironmentObject var nav:NavigationModel
-    @StateObject var followingModel = TimelineModel()
-    @StateObject var exploreModel = TimelineModel()
+    @StateObject var followingModel = TimelineModel(id:"Following")
+    @StateObject var exploreModel = TimelineModel(id:"Explore")
     
     var body: some View {
         VStack {
@@ -28,23 +28,21 @@ struct FollowingAndExplore: View {
 //                    }
                 }, title: "Explore", selected: nav.selectedSubTab == "Explore")
             }
-            switch nav.selectedSubTab {
-                case "Following":
-                    NavigationStack(path: $nav.timelinePath) {
-                        FollowingStateIsolation()
-                            .environmentObject(followingModel)
-                            .frame(maxWidth: 600)
-                            .withNavigationDestinations()
-                    }
-                case "Explore":
-                    NavigationStack(path: $nav.explorePath) {
-                        ExploreStateIsolation()
-                            .environmentObject(exploreModel)
-                            .frame(maxWidth: 600)
-                            .withNavigationDestinations()
-                    }
-                default:
-                    EmptyView()
+            ZStack {
+                NavigationStack(path: $nav.timelinePath) {
+                    FollowingStateIsolation()
+                        .environmentObject(followingModel)
+                        .frame(maxWidth: 600)
+                        .withNavigationDestinations()
+                }
+                .opacity(nav.selectedSubTab == "Following" ? 1 : 0)
+                NavigationStack(path: $nav.explorePath) {
+                    ExploreStateIsolation()
+                        .environmentObject(exploreModel)
+                        .frame(maxWidth: 600)
+                        .withNavigationDestinations()
+                }
+                .opacity(nav.selectedSubTab == "Explore" ? 1 : 0)
             }
             Spacer()
         }
@@ -56,7 +54,7 @@ struct FollowingAndExplore: View {
     }
 }
 
-struct FollowingAndGlobal_Previews: PreviewProvider {
+struct FollowingAndExplore_Previews: PreviewProvider {
     static var previews: some View {
         FollowingAndExplore()
             .withPreviewEnvironment()

@@ -9,7 +9,7 @@ import SwiftUI
 import Foundation
 import Combine
 
-final class TimelineModel: ObservableObject {
+final class TimelineModel: ObservableObject, Identifiable {
     
     let eventAppeared = PassthroughSubject<Event?, Never>()
     let notesChanged = PassthroughSubject<[Event], Never>()
@@ -23,12 +23,15 @@ final class TimelineModel: ObservableObject {
     private let defaults: UserDefaults
     
     var restoreScrollToId: String? {
-        set { defaults.set(newValue, forKey: "restoreScrollToId") }
-        get { defaults.string(forKey: "restoreScrollToId") }
+        set { defaults.set(newValue, forKey: "restoreScrollToId-\(id)") }
+        get { defaults.string(forKey: "restoreScrollToId-\(id)") }
     }
+    
+    var id:String
 
-    init(defaults: UserDefaults = .standard) {
+    init(defaults: UserDefaults = .standard, id:String) {
         self.defaults = defaults
+        self.id = id
         
         addSubscriptions()
     }
