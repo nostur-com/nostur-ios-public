@@ -33,6 +33,17 @@ extension Account {
     
     @NSManaged public var likes: Set<Event>?
     @NSManaged public var reposts: Set<Event>?
+    
+    @NSManaged public var lastNotificationDate: Int64
+    
+    static func fetchAccount(publicKey:String, context:NSManagedObjectContext) throws -> Account? {
+        let request = NSFetchRequest<Account>()
+        request.entity = Account.entity()
+        request.predicate = NSPredicate(format: "publicKey == %@", publicKey)
+        request.fetchLimit = 1
+        request.fetchBatchSize = 1
+        return try context.fetch(request).first
+    }
 }
 
 // MARK: Generated accessors for follows
@@ -239,10 +250,12 @@ extension Account : Identifiable {
                 // Also prefetch all metadata
                 let pubkeys = contacts.map { $0.pubkey! }
                 SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys)))
-                account.objectWillChange.send()
+//                account.objectWillChange.send()
+//                NosturState.shared.objectWillChange.send()
                 for contact in contacts {
                     account.addToFollows(contact)
                 }
+                print(account.follows?.count ?? 0)
             }
         }
     }

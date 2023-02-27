@@ -41,7 +41,7 @@ struct BookmarksView: View {
         self.selectedAccount = account
         _bookmarks = FetchRequest(
             sortDescriptors: [SortDescriptor(\Event.created_at, order: .reverse)],
-            predicate: NSPredicate(format: "%@ IN bookmarkedBy", self.account)
+            predicate: NSPredicate(format: "bookmarkedBy.@count > 0")
         )
     }
     
@@ -122,6 +122,7 @@ struct BookmarksView: View {
             }
             Spacer()
         }
+        .padding()
         .onChange(of: selectedAccount) { newValue in
             if (newValue != nil) {
                 bookmarks.nsPredicate = NSPredicate(format: "%@ IN bookmarkedBy", newValue!)

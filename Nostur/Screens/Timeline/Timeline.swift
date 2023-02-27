@@ -29,20 +29,22 @@ struct TimelineStateIsolation: View {
 struct TimelineContainer: View {
     @EnvironmentObject var ns:NosturState
     @Environment(\.managedObjectContext) var viewContext
-    @State var showingNewNote = false
+//    @State var showingNewNote = false
 
     
     var body: some View {
         let _ = Self._printChanges()
-//        if UIDevice.current.userInterfaceIdiom == .pad {
-            Timeline(pubkeys: ns.followingPublicKeys, context: viewContext)
-//        }
+        Timeline(pubkey: ns.account!.publicKey!, pubkeys: ns.followingPublicKeys, context: viewContext)
     }
 }
 
 struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling is possible!
+    ///
+    @AppStorage("firstTimeCompleted") var firstTimeCompleted = false
     let ds:DataStore = .shared
+    let ot:OnboardingTracker = .shared
     @Environment(\.managedObjectContext) var viewContext
+    let pubkey:String
     let pubkeys:Set<String>
     @FetchRequest
     var events: FetchedResults<Event>
@@ -61,14 +63,23 @@ struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling i
     
     let FETCH_LIMIT = 120
     
-    init(pubkeys:Set<String>, context:NSManagedObjectContext) {
+    init(pubkey:String, pubkeys:Set<String>, context:NSManagedObjectContext) {
         print("🧨🧨🧨🧨🧨 I INIT AGAIN 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
+        self.pubkey = pubkey
         self.pubkeys = pubkeys
-        let r1 = Event.fetchRequest()
-        r1.predicate = NSPredicate(format: "kind IN {1,6} AND pubkey IN %@", pubkeys)
-        r1.fetchLimit = FETCH_LIMIT
-        r1.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        let oldestCreatedAt = (try? context.fetch(r1).last?.created_at) ?? 0
+        
+        var oldestCreatedAt:Int64 = 0
+        
+        if (ot.isOnboarding) {
+            oldestCreatedAt = Int64(Date.now.addingTimeInterval(-(28800)).timeIntervalSince1970)  // 8 hours day ago
+        }
+        else {
+            let r1 = Event.fetchRequest()
+            r1.predicate = NSPredicate(format: "kind IN {1,6} AND pubkey IN %@", pubkeys)
+            r1.fetchLimit = FETCH_LIMIT
+            r1.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+            oldestCreatedAt = (try? context.fetch(r1).last?.created_at) ?? 0
+        }
         
         let r2 = Event.fetchRequest()
         r2.predicate = NSPredicate(format: "created_at >= %i AND kind IN {1,6} AND pubkey IN %@", oldestCreatedAt, pubkeys)
@@ -128,18 +139,18 @@ struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling i
 //                        ds.didRestore = true
                     }
                     .onReceive(receiveNotification(.shouldScrollToUnreadNote)) { _ in
-                        if (ds.mostRecentEvent != nil) && (eventsSorted.firstIndex(of: ds.mostRecentEvent!) != nil) {
-                            withAnimation {
-                                proxy.scrollTo(ds.mostRecentEvent!.id!, anchor: .bottom)
-                            }
-                        }
-                        else {
-                            if (events.last != nil) {
-                                withAnimation {
-                                    proxy.scrollTo(events.last!.id, anchor: .bottom)
-                                }
-                            }
-                        }
+//                        if (ds.mostRecentEvent != nil) && (eventsSorted.firstIndex(of: ds.mostRecentEvent!) != nil) {
+//                            withAnimation {
+//                                proxy.scrollTo(ds.mostRecentEvent!.id!, anchor: .bottom)
+//                            }
+//                        }
+//                        else {
+//                            if (events.last != nil) {
+//                                withAnimation {
+//                                    proxy.scrollTo(events.last!.id, anchor: .bottom)
+//                                }
+//                            }
+//                        }
                     }
                 }
                 .listStyle(.plain)
@@ -157,6 +168,12 @@ struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling i
             //            print("🟣🟣🟣 APPEAR: oldEvents: \(oldEvents.count) events: \(events.count)")
             isViewDisplayed = true
             ds.notesChanged.send(eventsSorted)
+        
+            if (ot.isOnboarding && pubkey == ot.pubkey && ot.didFetchKind3 && !ot.didFillTimeline) {
+                fetchEvents(pubkeys: Set(ot.followingKeys), amount: 50)
+                ot.didFillTimeline = true
+                firstTimeCompleted = true
+            }
         }
         .onDisappear {
             isViewDisplayed = false
@@ -185,8 +202,8 @@ struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling i
             Task {
                 ThreadWarning.which(".onReceive(receiveNotification(.requestForJustAppeared)")
                 fetchStuffForLastAddedNotes(ids: ids)
-                await fetchMissingReplyToContacts(events: events)
-                await NIP05.verifyBatch(contacts: shouldVerifyContacts, context: viewContext)
+                fetchMissingReplyToContacts(events: events)
+                NIP05.verifyBatch(contacts: shouldVerifyContacts, context: viewContext)
             }
         }
         .onReceive(timelineRunLoop) { time in
@@ -194,7 +211,16 @@ struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling i
 //            guard !isScrolling else { return }
             guard isViewDisplayed else { return }
             guard !Importer.shared.isImporting else { print("⏳ Still importing, new fetch skipped."); return }
-            fetchEvents(pubkeys: pubkeys, amount: events.count == 0 ? 50 : 500)
+            
+            if (ot.isOnboarding && pubkey == ot.pubkey && ot.didFetchKind3 && !ot.didFillTimeline) {
+                fetchEvents(pubkeys: Set(ot.followingKeys), amount: 50)
+                ot.didFillTimeline = true
+                firstTimeCompleted = true
+            }
+            else if (!ot.isOnboarding) {
+                fetchEvents(pubkeys: pubkeys)
+            }
+            
         }
         .onReceive(receiveNotification(.blockListUpdated)) { notification in
 //            tm.notesOnScreen = tm.notesOnScreen.filter {

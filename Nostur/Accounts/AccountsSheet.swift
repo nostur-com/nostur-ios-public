@@ -13,9 +13,11 @@ struct AccountsSheet: View {
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var nav:NavigationModel
+    @EnvironmentObject var sm:SideBarModel
     @State var newAccountSheetShown = false
     @State var addExistingAccountSheetShown = false
     
+    var withDismissButton:Bool = true
     var ep: EventsProvider = .shared
     var sp: SocketPool = .shared
     
@@ -29,7 +31,7 @@ struct AccountsSheet: View {
     
     var body: some View {
         VStack(spacing: 15) {
-            if UIDevice.current.userInterfaceIdiom == .pad {
+            if UIDevice.current.userInterfaceIdiom == .pad && withDismissButton {
                 HStack {
                     Spacer()
                     Image(systemName: "xmark.circle.fill")
@@ -50,11 +52,11 @@ struct AccountsSheet: View {
                         .contentShape(Rectangle())
                         .onTapGesture {
                             ns.setAccount(account: account)
-                            nav.showSidebar = false
+                            sm.showSidebar = false
                             dismiss()
                         }
                         .swipeActions(edge: .trailing) {
-                            Button(role: .destructive) {
+                            Button() {
                                 accountToDelete = account
                                 confirmDelete.toggle()
                             } label: {
@@ -92,7 +94,7 @@ struct AccountsSheet: View {
                 AccountManager.shared.deletePrivateKey(forPublicKeyHex: accountToDelete!.publicKey!)
                 if (ns.accounts.count <= 1) {
                     ns.isOnboarding = true
-                    nav.showSidebar = false
+                    sm.showSidebar = false
                     nav.clear()
                     ns.setAccount(account: nil)
                     viewContext.delete(accountToDelete!)
@@ -101,9 +103,7 @@ struct AccountsSheet: View {
                     viewContext.delete(accountToDelete!)
                     ns.setAccount(account: ns.accounts.last)
                 }
-                
-                
-                dismiss()
+//                dismiss()
                 try! viewContext.save()
             } label: {
                 Text("Yes, delete account")

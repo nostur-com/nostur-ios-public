@@ -8,12 +8,28 @@
 import SwiftUI
 
 struct ReadOnlyAccountInformationSheet: View {
+    
+    @Environment(\.dismiss) private var dismiss
+    
     var body: some View {
         VStack {
+            if UIDevice.current.userInterfaceIdiom == .pad {
+                HStack {
+                    Spacer()
+                    Image(systemName: "xmark.circle.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 30, height: 30)
+                        .padding(30)
+                        .onTapGesture {
+                            dismiss()
+                        }
+                }
+            }
             Text("Read-only mode\n").font(.title)
             Text("You are using a read-only account.\n\nSwitch to another account or add the private key to fully use this account.")
         
-            AccountsSheet()
+            AccountsSheet(withDismissButton:false)
         }
         .padding(20)
     }

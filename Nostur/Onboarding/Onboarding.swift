@@ -26,6 +26,7 @@ struct Onboarding: View {
         }
         else if (ns.account != nil) {
             NosturRootMenu()
+//                .ignoresSafeArea()
                 .sheet(isPresented: $ns.readOnlyAccountSheetShown) {
                     ReadOnlyAccountInformationSheet()
                         .presentationDetents([ .large])

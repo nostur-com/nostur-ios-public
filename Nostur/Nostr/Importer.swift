@@ -22,6 +22,7 @@ class Importer {
             print("🟠🟠🟠 ALREADY IMPORTING. SKIPPED 🟠🟠🟠")
             return
         }
+        let ot = OnboardingTracker.shared
         
         isImporting = true
         
@@ -84,12 +85,18 @@ class Importer {
                     
                     if event.kind == .setMetadata {
                         Contact.saveOrUpdateContact(event: event, context: context)
-                        let ns = NosturState.shared
-                        Account.preFillReadOnlyAccountInfo(event: event, context: context, forceOverwrite: ns.pendingFirstContactsFetch)
+                        if (ot.isOnboarding && ot.pubkey == event.publicKey) {
+                            print("🟠🟠🟠 2")
+                            Account.preFillReadOnlyAccountInfo(event: event, context: context, forceOverwrite: true)
+                            ot.didFetchKind0 = true
+                        }
                     }
                     
                     if event.kind == .contactList {
-                        if (event.publicKey == NosturState.GUEST_ACCOUNT_PUBKEY) { // TODO: skip if first time completed
+                        if (ot.isOnboarding && ot.pubkey == event.publicKey) { // TODO: skip if first time completed
+                            print("🟠🟠🟠 3")
+                            ot.didFetchKind3 = true
+                            ot.followingKeys = event.pTags()
                             print("✈️✈️✈️ ONBORADING SPEED UP FETCHING P's FROM 3")
                             let fetchPs = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: event.pTags()))
                             SocketPool.shared.sendMessage(fetchPs)
@@ -99,10 +106,8 @@ class Importer {
                             SocketPool.shared.sendMessage(fetchTimeline)
 //                            print("✈️✈️✈️ ONBORADING SPEED UP FETCHING 1,6,7,9735 FROM E's")
 //                            let fetchReferences = ClientMessage(type: .REQ, message: RequestMessage.getEventReferences(ids: ????))
-                                
+                            Account.preFillReadOnlyAccountFollowing(event: event, context: context, forceOverwrite: true)
                         }
-                        let ns = NosturState.shared
-                        Account.preFillReadOnlyAccountFollowing(event: event, context: context, forceOverwrite: ns.pendingFirstContactsFetch)
                     }
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
@@ -126,9 +131,10 @@ class Importer {
                         
                         // NIP-10: Those marked with "reply" denote the id of the reply event being responded to.
                         // NIP-10: Those marked with "root" denote the root id of the reply thread being responded to.
-                        do { try _ = Event.updateRepliesCountCache(event.tags, context: context) } catch {
-                            print("🦋🦋🔴🔴🔴 problem updateRepliesCountCache .id \(event.id)")
-                        }
+                        // DISABLED BECAUSE ALREADY DONE IN saveEvent.
+//                        do { try _ = Event.updateRepliesCountCache(event.tags, context: context) } catch {
+//                            print("🦋🦋🔴🔴🔴 problem updateRepliesCountCache .id \(event.id)")
+//                        }
                     }
                     
                     SavedEventsCache.shared.setObject(for: event.id, value: event.createdAt)

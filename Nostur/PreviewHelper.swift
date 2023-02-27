@@ -31,10 +31,11 @@ extension View {
         let ns = NosturState(container: EventsProvider.preview.container)
         let nav = NavigationModel.shared
         let account = PreviewFetcher.fetchAccount("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", context: EventsProvider.preview.container.viewContext)
-        _ = ns.loadActiveAccount(account: account)
+        ns.setAccount(account: account)
         let ds:DataStore = .shared
         let er:ExchangeRateModel = .shared
         let ss = SettingsStore()
+        let sm = SideBarModel()
         
         return self.defaultAppStorage(userDefaults)
             .environment(\.managedObjectContext,
@@ -47,6 +48,7 @@ extension View {
             .environmentObject(er)
             .environmentObject(ds)
             .environmentObject(ss)
+            .environmentObject(sm)
     }
 }
 

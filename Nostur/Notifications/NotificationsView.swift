@@ -27,9 +27,7 @@ struct NotificationsView: View {
     
     @Environment(\.managedObjectContext) var viewContext
     
-    var account:Account
-    
-    @AppStorage("lastNotificationDate") var lastNotificationDate = 0
+    @ObservedObject var account:Account
     
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var sp:SocketPool
@@ -37,7 +35,7 @@ struct NotificationsView: View {
     @FetchRequest
     var kind1:FetchedResults<Event>
     
-    @State var tab = "REACTIONS"
+    @State var tab = "NOTES"
     
     init(account:Account) {
         self.account = account
@@ -59,31 +57,44 @@ struct NotificationsView: View {
         let _ = Self._printChanges()
         VStack {
             if let account = ns.account {
-//                Text("account: \(account.name)")
-                // TODO: MAKE TAB STYLE
                 HStack {
-                    Button { tab = "NOTES" } label: { Text("Posts") }
-                    Button { tab = "REACTIONS" } label: { Text("Reactions") }
-                    Button { tab = "ZAPS" } label: { Text("Zaps") }
+                    TabButton(action: {
+                        withAnimation {
+                            tab = "NOTES"
+                        }
+                    }, title: "Posts", selected: tab == "NOTES")
+                    
+                    TabButton(action: {
+                        withAnimation {
+                            tab = "REACTIONS"
+                        }
+                    }, title: "Reactions", selected: tab == "REACTIONS")
+                    
+                    TabButton(action: {
+                        withAnimation {
+                            tab = "ZAPS"
+                        }
+                    }, title: "Zaps", selected: tab == "ZAPS")
                 }
-                .buttonStyle(.bordered)
                 
                 switch (tab) {
                     case "NOTES":
                         Notes(notes: myNotifications) { creationDate in
-                            if (creationDate > lastNotificationDate) {
-                                lastNotificationDate = creationDate
+                            if (creationDate > account.lastNotificationDate) {
+                                account.lastNotificationDate = creationDate
                             }
                         }
                     case "REACTIONS":
                         NotificationsV(pubkey: ns.account!.publicKey!, context: viewContext) { creationDate in
-                            if (creationDate > lastNotificationDate) {
-                                lastNotificationDate = creationDate
+                            if (creationDate > account.lastNotificationDate) {
+                                account.lastNotificationDate = creationDate
                             }
                         }
                     case "ZAPS":
                         NotificationsZaps(pubkey: ns.account!.publicKey!, context: viewContext) { creationDate in
-                            lastNotificationDate = creationDate
+                            if (creationDate > account.lastNotificationDate) {
+                                account.lastNotificationDate = creationDate
+                            }
                         }
                     default:
                         EmptyView()
@@ -102,14 +113,24 @@ struct NotificationsView: View {
     }
     
     func fetchMentions() {
-        sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getMentions(pubkeys: [ns.activeAccountPublicKey], since: lastNotificationDate != 0 ? NTimestamp(timestamp: lastNotificationDate) : nil)))
+        guard ns.account != nil else { return }
+        sp.sendMessage(
+            ClientMessage(type: .REQ,
+                          message:
+                            RequestMessage.getMentions(
+                                pubkeys: [ns.account!.publicKey!],
+                                kinds: [1],
+                                limit: 500,
+                                since: NTimestamp(timestamp: Int(myNotifications.first?.created_at ?? 0)))
+                         )
+        )
     }
 }
 
 extension NotificationsView {
     struct Notes: View {
         var notes:[Event]
-        var onAppear:(Int) -> ()
+        var onAppear:(Int64) -> ()
         
         var body: some View {
             let _ = Self._printChanges()
@@ -118,8 +139,9 @@ extension NotificationsView {
                     ForEach(notes) { event in
                         NoteRowView(event: event)
                             .onAppear {
-                                onAppear(Int(event.created_at))
+                                onAppear(event.created_at)
                             }
+                        Divider()
                     }
                 }
             }
@@ -128,7 +150,7 @@ extension NotificationsView {
     
     struct Reactions: View {
         var reactions:[Event]
-        var onAppear:(Int) -> ()
+        var onAppear:(Int64) -> ()
         
         var body: some View {
             let _ = Self._printChanges()
@@ -137,7 +159,7 @@ extension NotificationsView {
                     ForEach(reactions) { event in
                         NoteRowView(event: event)
                             .onAppear {
-                                onAppear(Int(event.created_at))
+                                onAppear(event.created_at)
                             }
                     }
                 }
@@ -147,7 +169,7 @@ extension NotificationsView {
     
     struct Zaps: View {
         var zaps:[Event]
-        var onAppear:(Int) -> ()
+        var onAppear:(Int64) -> ()
         
         var body: some View {
             let _ = Self._printChanges()
@@ -156,7 +178,7 @@ extension NotificationsView {
                     ForEach(zaps) { event in
                         ZapRow(event: event)
                             .onAppear {
-                                onAppear(Int(event.created_at))
+                                onAppear(event.created_at)
                             }
                     }
                 }

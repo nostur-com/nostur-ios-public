@@ -10,19 +10,20 @@ struct AppTopBar: View {
     
     @EnvironmentObject var ns:NosturState
 //    @EnvironmentObject var nav:NavigationModel
+    @EnvironmentObject var sm:SideBarModel
     var nav:NavigationModel = .shared
 //    @Binding var showSidebar:Bool
-    @State var appTopBarIsHidden = false
+//    @State var appTopBarIsHidden = false
     
     var body: some View {
         ZStack {
-            if (!appTopBarIsHidden) {
+//            if (!appTopBarIsHidden) {
                 HStack {
-                    if (ns.account != nil && !nav.showSidebar) {
+                    if (ns.account != nil && !sm.showSidebar) {
                         ProfilePicView(pubkey: ns.activeAccountPublicKey, account: ns.account, size:30)
                             .offset(x: 15)
                             .offset(y: -5)
-                            .onTapGesture { nav.showSidebar.toggle() }
+                            .onTapGesture { sm.showSidebar.toggle() }
                     }
                     Spacer()
                 }
@@ -36,32 +37,36 @@ struct AppTopBar: View {
                         .offset(y: -5)
                     Spacer()
                 }
-            }
+//            }
         }
-        .onChange(of: nav.selectedTab) { tab in
-            if (tab == "Timeline") && (nav.timelinePath.isEmpty) {
-                withAnimation(Animation.easeInOut(duration: 0.1)) {
-                    appTopBarIsHidden = false
-                }
-            }
-            else {
-                withAnimation(Animation.easeInOut(duration: 0.1)) {
-                    appTopBarIsHidden = true
-                }
-            }
-        }
-        .onChange(of: nav.timelinePath) { newValue in
-            withAnimation(Animation.easeInOut(duration: 0.1)) {
-                appTopBarIsHidden = !newValue.isEmpty
-            }
-        }
+//        // TODO: FIXEN: NAV IS NIET MET OBSERVED
+//        .onChange(of: nav.selectedTab) { tab in
+//            if (tab == "Timeline") && (nav.timelinePath.isEmpty) {
+//                withAnimation(Animation.easeInOut(duration: 0.1)) {
+//                    appTopBarIsHidden = false
+//                }
+//            }
+//            else {
+//                withAnimation(Animation.easeInOut(duration: 0.1)) {
+//                    appTopBarIsHidden = true
+//                }
+//            }
+//        }
+//        .onChange(of: nav.timelinePath) { newValue in
+//            withAnimation(Animation.easeInOut(duration: 0.1)) {
+//                appTopBarIsHidden = !newValue.isEmpty
+//            }
+//        }
     }
 }
 
 struct AppTopBar_Previews: PreviewProvider {
 //    @State static var showSidebar = false
     static var previews: some View {
-        AppTopBar()
-            .withPreviewEnvironment()
+        VStack {
+            AppTopBar()
+                .withPreviewEnvironment()
+            Spacer()
+        }
     }
 }

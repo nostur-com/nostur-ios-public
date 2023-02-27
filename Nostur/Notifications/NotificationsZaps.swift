@@ -13,9 +13,10 @@ struct NotificationsZaps: View {
     let pubkey:String
     let FETCH_LIMIT = 500
     let nav:NavigationModel = .shared
+    let sp:SocketPool = .shared
     @EnvironmentObject var ns:NosturState
     @Environment(\.managedObjectContext) var viewContext
-    var onAppear:(Int) -> ()
+    var onAppear:(Int64) -> ()
     
     @FetchRequest
     var zaps:FetchedResults<Event>
@@ -48,7 +49,7 @@ struct NotificationsZaps: View {
         }
     }
 //    
-    init(pubkey:String, context:NSManagedObjectContext, onAppear: @escaping (Int) -> ()) {
+    init(pubkey:String, context:NSManagedObjectContext, onAppear: @escaping (Int64) -> ()) {
         print("🧨🧨🧨🧨🧨 I INIT NotificationsZaps 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         self.pubkey = pubkey
         self.onAppear = onAppear
@@ -82,13 +83,29 @@ struct NotificationsZaps: View {
             }
             .padding()
         }
+        .onAppear {
+            fetchZaps()
+        }
+    }
+    func fetchZaps() {
+        guard ns.account != nil else { return }
+        sp.sendMessage(
+            ClientMessage(type: .REQ,
+                          message:
+                            RequestMessage.getMentions(
+                                pubkeys: [ns.account!.publicKey!],
+                                kinds: [9735],
+                                limit: 500,
+                                since: NTimestamp(timestamp: Int(zaps.first?.created_at ?? 0)))
+                         )
+        )
     }
 }
 //
 struct ZapsForThisNote: View {
     var zaps:[Event]
     @Environment(\.managedObjectContext) var viewContext
-    var onAppear:(Int) -> ()
+    var onAppear:(Int64) -> ()
     
     var zapsSorted:[Event] {
         zaps.sorted(by: { $0.sats > $1.sats } )
@@ -102,7 +119,7 @@ struct ZapsForThisNote: View {
                         ProfilePic(event: zapsSorted[index].zapFromRequest!)
                             .id(zapsSorted[index].id!)
                             .onAppear {
-                                onAppear(Int(zapsSorted[index].created_at))
+                                onAppear(zapsSorted[index].created_at)
                             }
                             .zIndex(-Double(index))
                         

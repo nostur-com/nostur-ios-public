@@ -8,8 +8,29 @@
 import SwiftUI
 
 struct DetailContainer: View {
+    @State var offsetX = 200.0
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        ZStack {
+//            LinearGradient(gradient: Gradient(colors: [.black, Color("BackgroundGray")]), startPoint: .topLeading, endPoint: .bottomTrailing)
+//                .ignoresSafeArea()
+            
+            VStack{
+                Spacer()
+                HStack {
+                    Spacer()
+                    Image("NosturLogoFull")
+                        .resizable()
+                        .opacity(0.3)
+                        .frame(width: 700, height: 700)
+                        .offset(x:offsetX, y:50)
+                        .onAppear {
+                            withAnimation(.easeOut(duration: 7.5)) {
+                                offsetX = 150
+                            }
+                        }
+                }
+            }
+        }
     }
 }
 

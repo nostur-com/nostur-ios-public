@@ -12,24 +12,21 @@ struct SideBarStack<SidebarContent: View, Content: View>: View {
     let sidebarContent: SidebarContent
     let mainContent: Content
     let sidebarWidth: CGFloat
-    @Binding var showSidebar: Bool
+//    @EnvironmentObject var nav:NavigationModel
+    let nav:NavigationModel = .shared
+    @EnvironmentObject var sm:SideBarModel
+
+//    @Binding var showSidebar: Bool
     @State var sidebarOffsetX = -285.0
     @State var mainContentOffsetX = 0.0
     
-    init(sidebarWidth: CGFloat, showSidebar: Binding<Bool>, @ViewBuilder sidebar: ()->SidebarContent, @ViewBuilder content: ()->Content) {
+    init(sidebarWidth: CGFloat, @ViewBuilder sidebar: ()->SidebarContent, @ViewBuilder content: ()->Content) {
         self.sidebarWidth = sidebarWidth
-        self._showSidebar = showSidebar
         sidebarContent = sidebar()
         mainContent = content()
-        
-        if (showSidebar.wrappedValue) {
-            self.sidebarOffsetX = 0
-            self.mainContentOffsetX = sidebarWidth
-        }
-        else {
-            self.sidebarOffsetX = -1 * sidebarWidth
-            self.mainContentOffsetX = 0.0
-        }
+
+        self.sidebarOffsetX = -1 * sidebarWidth
+        self.mainContentOffsetX = 0.0
     }
     
     var body: some View {
@@ -41,27 +38,27 @@ struct SideBarStack<SidebarContent: View, Content: View>: View {
             mainContent
                 .overlay(
                     Group {
-                        if showSidebar {
+                        if sm.showSidebar {
                             Color.white
                                 .opacity(0.01)
                                 .onTapGesture {
-                                    self.showSidebar = false
+                                    sm.showSidebar = false
                                 }
                         } else {
                             Color.clear
                             .opacity(0)
                             .onTapGesture {
-                                self.showSidebar = false
+                                sm.showSidebar = false
                             }
                         }
                     }
                 )
                 .offset(x: mainContentOffsetX)
         }
-        .onChange(of: showSidebar) { shouldShowSidebar in
+        .onChange(of: sm.showSidebar) { shouldShowSidebar in
             withAnimation {
-                sidebarOffsetX = showSidebar ? 0 : -1 * sidebarWidth
-                mainContentOffsetX = showSidebar ? sidebarWidth : 0
+                sidebarOffsetX = sm.showSidebar ? 0 : -1 * sidebarWidth
+                mainContentOffsetX = sm.showSidebar ? sidebarWidth : 0
             }
         }
     }

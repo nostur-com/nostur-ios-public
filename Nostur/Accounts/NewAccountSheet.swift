@@ -119,10 +119,10 @@ struct NewAccountSheet: View {
             // broadcast to relays
             up.publishNow(newKind0EventSigned)
             
-            let _ = ns.loadActiveAccount(account: newAccount)
+            ns.setAccount(account: newAccount)
         }
         catch {
-            print("🔴🔴 could not ns.loadActiveAccount")
+            print("🔴🔴 could not ns.setAccount")
             print(error)
         }
     }

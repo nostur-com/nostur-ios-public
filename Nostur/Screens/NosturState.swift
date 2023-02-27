@@ -40,8 +40,6 @@ final class NosturState : ObservableObject {
 
     @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""
     @Published var account:Account? = nil
-    
-    @State var pendingFirstContactsFetch:Bool = false
     @Published var readOnlyAccountSheetShown:Bool = false
     
     var pubkey:String? {
@@ -57,16 +55,16 @@ final class NosturState : ObservableObject {
     
 
     func setAccount(account:Account? = nil) {
+        self.objectWillChange.send()
         self.account = account
-        if (account == nil) {
-//            self.objectWillChange.send()
-//            self.followingPublicKeys = []
-        }
-        else {
-//            self.objectWillChange.send()
-            _ = loadActiveAccount(account: account)
+        if (account != nil) {
             activeAccountPublicKey = account!.publicKey!
+            DataStore.shared.unreadCount.send(0)
+            Task(priority: .userInitiated) {
+                self.loadLikesAndReposts()
+            }
         }
+        print("🟠🟠🟠🟠🟠🟠 ACTIVE ACCOUNT IS: \(self.account?.name ?? "NONE")")
     }
     
     var container:NSPersistentContainer
@@ -75,37 +73,12 @@ final class NosturState : ObservableObject {
     init(container:NSPersistentContainer) {
         self.container = container
         self.viewContext = container.viewContext
-        _ = loadActiveAccount()
-        print("🦋🦋 ACTIVE ACCOUNT IS: \(self.account?.name ?? "NONE")")
-    }
-    
-    func loadActiveAccount(account:Account? = nil) -> Account? {
-        if (account != nil) {
-            self.account = account!            
-        }
-        else {
-            let r = Account.fetchRequest()
-            if (activeAccountPublicKey != "") {
-                r.predicate = NSPredicate(format: "publicKey == %@", activeAccountPublicKey)
+        if (activeAccountPublicKey != "") {
+            if let account = try? Account.fetchAccount(publicKey: activeAccountPublicKey, context: viewContext) {
+                self.setAccount(account: account)
             }
-            self.account = try! viewContext.fetch(r).first
-            
-            if (self.account == nil) { // No account? Just fall back to (ANY) firstaccount
-                r.predicate = nil
-                self.account = try! viewContext.fetch(r).first
-            }
-            if (self.account == nil) {
-                isOnboarding = true
-                return nil
-            }
-            activeAccountPublicKey = self.account!.publicKey!
         }
-//        loadFollowing()
-        DataStore.shared.unreadCount.send(0)
-        Task(priority: .userInitiated) {
-            self.loadLikesAndReposts()
-        }
-        return self.account
+        print("🟠🟠🟠🟠🟠🟠 ACTIVE ACCOUNT IS: \(self.account?.name ?? "NONE")")
     }
     
     func loadLikesAndReposts() {

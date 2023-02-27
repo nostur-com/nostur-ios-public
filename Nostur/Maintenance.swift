@@ -16,14 +16,40 @@ struct Maintenance {
         context.perform {
             let r = Relay.fetchRequest()
             if let relaysCount = try? context.fetch(r).count {
+                var relays:[Relay] = []
+                let ot = OnboardingTracker.shared
                 if (relaysCount == 0) {
+                    ot.startOnboarding(pubkey: NosturState.GUEST_ACCOUNT_PUBKEY)
+                    NosturState.shared.isOnboarding = true
                     for url in BOOTSTRAP_RELAYS {
                         let bootstrapRelay = Relay(context: context)
                         bootstrapRelay.read = url == "wss://nostr.mutinywallet.com" ? false : true
                         bootstrapRelay.write = true
                         bootstrapRelay.createdAt = Date.now
                         bootstrapRelay.url = url
+                        relays.append(bootstrapRelay)
                     }
+                    
+                    
+                    let account = Account(context: context)
+                    account.id = UUID()
+                    account.createdAt = Date()
+                    account.createdAt = Date()
+                    account.display_name = "Nostur Rookie"
+                    account.name = "NosturRookie"
+                    account.about = "Just trying things out"
+                    account.publicKey = NosturState.GUEST_ACCOUNT_PUBKEY
+                }
+                
+                let sp = SocketPool.shared
+                // CONNECT TO RELAYS
+                for relay in relays {
+                    _ = sp.addSocket(relayId: relay.objectID, url: relay.url!, read:relay.read, write: relay.write)
+                }
+                
+                if (!ot.didFetchKind0 || !ot.didFetchKind3) {
+                    let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: NosturState.GUEST_ACCOUNT_PUBKEY))
+                    SocketPool.shared.sendMessage(message)
                 }
             }
             try! context.save()

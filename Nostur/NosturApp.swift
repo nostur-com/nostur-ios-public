@@ -24,6 +24,7 @@ struct NosturApp: App {
     @StateObject private var sp:SocketPool = .shared
     @StateObject private var ds:DataStore = .shared
     @StateObject private var ss = SettingsStore()
+    @StateObject private var sm = SideBarModel()
     
 //    @StateObject var model = DataModel()
     @StateObject var ucm = UnreadCounterModel()
@@ -58,6 +59,7 @@ struct NosturApp: App {
                 .environmentObject(tm)
                 .environmentObject(ds)
                 .environmentObject(ss)
+                .environmentObject(sm)
                 .onAppear {startNosturing(); self.isViewDisplayed = true }
                 .onDisappear { self.isViewDisplayed = false }
                 .onReceive(runLoop) { time in
@@ -81,7 +83,7 @@ struct NosturApp: App {
 
     func startNosturing() {
         if (ns.account == nil && ns.accounts.count >= 1) {
-            _ = ns.loadActiveAccount()
+            ns.setAccount(account: ns.accounts.last!)
         }
         
         Maintenance.firstTimeStartup(context: EventsProvider.shared.container.viewContext)

@@ -94,11 +94,11 @@ struct AddExistingAccountSheet: View {
     }
     
     func addExistingAccount(privkey:String) {
-        ns.pendingFirstContactsFetch = true
         let account = Account(context: viewContext)
         account.id = UUID()
         account.createdAt = Date()
         // TODO: Check if valid pubkey before save.
+        // TODO: Check if account already exists..
         
         guard let keys = try? NKeys(privateKeyHex: privkey) else {
             invalidKey = true
@@ -109,25 +109,39 @@ struct AddExistingAccountSheet: View {
         account.publicKey = keys.publicKeyHex()
         account.privateKey = keys.privateKeyHex()
         
+        let ot = OnboardingTracker.shared
+        ot.startOnboarding(pubkey: account.publicKey!)
+        
+        
         // 1. Prefill from cached event
         Account.preFillReadOnlyAccountInfo(account: account, context: viewContext, forceOverwrite: true)
         Account.preFillReadOnlyAccountFollowing(account: account, context: viewContext)
         
-        do {
-            try viewContext.save()
-            _ = ns.loadActiveAccount(account: account)
-            
-            // 2. But also check if there are newer events
+        // Remove existing metadata events, so can proper parse again from Importers. Else get filtered by duplicate filter
+        if let contactEvents = Event.setMetaDataEvents(byAuthorPubkey: account.publicKey!, context: viewContext) {
+            for contactEvent in contactEvents {
+                viewContext.delete(contactEvent)
+            }
+        }
+        // Remove existing CL events, so can proper parse again from Importers. Else get filtered by duplicate filter
+        if let clEvents = Event.contactListEvents(byAuthorPubkey: account.publicKey!, context: viewContext) {
+            for clEvent in clEvents {
+                viewContext.delete(clEvent)
+            }
+        }
+
+        try! viewContext.save()
+        ns.setAccount(account: account)
+        // 2. But also check if there are newer events
+        if (!ot.didFetchKind0 || !ot.didFetchKind3) {
             let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: account.publicKey!))
-            sp.sendMessage(message)
-        } catch {
-            let nsError = error as NSError
-            fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+            SocketPool.shared.sendMessage(message)
         }
     }
     
     func addExistingReadOnlyAccount(pubkey:String) {
-        ns.pendingFirstContactsFetch = true
+        let ot = OnboardingTracker.shared
+        ot.startOnboarding(pubkey: pubkey)
         let account = Account(context: viewContext)
         account.id = UUID()
         account.createdAt = Date()
@@ -135,6 +149,17 @@ struct AddExistingAccountSheet: View {
         // Convert npub to hex... etc
         account.publicKey = pubkey
         
+        
+        // 1. Prefill from cached event
+        Account.preFillReadOnlyAccountInfo(account: account, context: viewContext, forceOverwrite: true)
+        Account.preFillReadOnlyAccountFollowing(account: account, context: viewContext)
+        
+        // Remove existing metadata events, so can proper parse again from Importers. Else get filtered by duplicate filter
+        if let contactEvents = Event.setMetaDataEvents(byAuthorPubkey: account.publicKey!, context: viewContext) {
+            for contactEvent in contactEvents {
+                viewContext.delete(contactEvent)
+            }
+        }
         // Remove existing CL events, so can proper parse again from Importers. Else get filtered by duplicate filter
         if let clEvents = Event.contactListEvents(byAuthorPubkey: account.publicKey!, context: viewContext) {
             for clEvent in clEvents {
@@ -142,16 +167,14 @@ struct AddExistingAccountSheet: View {
             }
         }
         
-        // 1. Prefill from cached event
-        Account.preFillReadOnlyAccountInfo(account: account, context: viewContext, forceOverwrite: true)
-        Account.preFillReadOnlyAccountFollowing(account: account, context: viewContext)
-        
-        
         try! viewContext.save()
-        _ = ns.loadActiveAccount(account: account)
+        ns.setAccount(account: account)
         // 2. But also check if there are newer events
-        let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: pubkey))
-        sp.sendMessage(message)
+        if (!ot.didFetchKind0 || !ot.didFetchKind3) {
+            let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: pubkey))
+            SocketPool.shared.sendMessage(message)
+            print("🟠🟠🟠 1")
+        }
     }
 }
 

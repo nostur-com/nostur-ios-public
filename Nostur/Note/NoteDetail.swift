@@ -201,6 +201,7 @@ struct NoteAndParent: View {
                     if (isParent) {
                         FooterFragment(event: event)
                             .padding(.leading, isParent ? INDENT : 0)
+                        Divider()
                     }
                     else {
                         DetailFooterFragment(event: event)
@@ -282,7 +283,7 @@ struct NoteAndParent: View {
                 
                 replyTo.objectWillChange.send()
                 replyTo.addToReplies(openedEvent)
-                replyTo.repliesCount += 1 // TODO: Count again here?? or we already counted ??
+//                replyTo.repliesCount += 1 // TODO: Count again here?? or we already counted ??
             }
         }
         
@@ -299,7 +300,7 @@ struct NoteAndParent: View {
                     
                     replyToRoot.objectWillChange.send()
                     replyToRoot.addToReplies(openedEvent)
-                    replyToRoot.repliesCount += 1 // TODO: Count again here?? or we already counted ??
+//                    replyToRoot.repliesCount += 1 // TODO: Count again here?? or we already counted ??
                 }
             }
         }
@@ -308,7 +309,7 @@ struct NoteAndParent: View {
     func fixIfWeHavePointingToAlreadyInCache(_ openedEvent:Event) {
         let pointingToEventReq = NSFetchRequest<Event>(entityName: "Event")
         //        pointingToEventReq.predicate = NSPredicate(format: "(kind IN {1,6} AND  (replyToId == %@ OR replyToRootId == %@ OR firstQuoteId == %@)", openedEvent.id!, openedEvent.id!, openedEvent.id!)
-        pointingToEventReq.predicate = NSPredicate(format: "kind == 1 AND %@ IN {replyToId,replyToRootId,firstQuoteId}", openedEvent.id!)
+        pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6} AND %@ IN {replyToId,replyToRootId,firstQuoteId}", openedEvent.id!)
         // TODO: NEED 6 ALSO OR NOT?
 //            pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6} AND %@ IN {replyToId,replyToRootId,firstQuoteId}", savedEvent.id!)
         pointingToEventReq.sortDescriptors = []

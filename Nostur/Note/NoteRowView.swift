@@ -174,9 +174,9 @@ struct NoteRowView: View {
                                 }
                             }
                             
-                            if (1 == 1 && !hideFooter) {
-                                FooterFragment(event: event)//.border(.red)
-                            }
+                            
+                            FooterFragment(event: event)
+                            
                             
                         }
                         .padding(.trailing, 10)

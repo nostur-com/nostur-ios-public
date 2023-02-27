@@ -10,34 +10,27 @@ import Introspect
 
 struct NosturRootMenu: View {
     
-    @EnvironmentObject var nav:NavigationModel
+//    @EnvironmentObject var nav:NavigationModel
+    let nav:NavigationModel = .shared
     @EnvironmentObject var ns:NosturState
+    @EnvironmentObject var sm:SideBarModel
 //    @EnvironmentObject var sp:SocketPool
     
     @State var accountsSheetIsShown = false
     
-    
     var body: some View {
         let _ = Self._printChanges()
-        SideBarStack(sidebarWidth: 285, showSidebar: $nav.showSidebar) {
+        SideBarStack(sidebarWidth: 285) {
             if (ns.account != nil) {
                 sideBar
                     .withNavigationDestinations() //TODO: Put back?
             }
         } content: {
-            //TODO: Check if ns.account is loaded first
             if (ns.account != nil) {
-//                NosturTabsView(selectedTab: $nav.selectedTab, timelinePath: $nav.timelinePath, searchPath: $nav.searchPath, accountsPath: $nav.accountsPath, bookmarksPath: $nav.bookmarksPath, notificationsPath: $nav.notificationsPath, messagesPath: $nav.messagesPath, configurationPath: $nav.configurationPath)
-                NosturTabsView(showSidebar: $nav.showSidebar, selectedTab: $nav.selectedTab, timelinePath: $nav.timelinePath, searchPath: $nav.searchPath, accountsPath: $nav.accountsPath, bookmarksPath: $nav.bookmarksPath, notificationsPath: $nav.notificationsPath, messagesPath: $nav.messagesPath, configurationPath: $nav.configurationPath, detailPath: $nav.detailPath)
+                NosturTabsView()
                     .onOpenURL { url in
                         self.handleUrl(url)
                     }
-            }
-            else if (ns.accounts.count == 0) {
-                NavigationStack(path: $nav.timelinePath) {
-                    WelcomeSheet(offerTryOut: true)
-                        .withNavigationDestinations()
-                }
             }
         }
         .sheet(isPresented: $accountsSheetIsShown) {
@@ -48,16 +41,9 @@ struct NosturRootMenu: View {
         .onReceive(receiveNotification(.willDeleteAllEvents)) { _ in
             ns.setAccount()
         }
-//        .onChange(of: ns.account?.follows) { newValue in
-//            ns.loadFollowing()
-//            if (ns.pendingFirstContactsFetch) {
-//                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: Array(ns.followingPublicKeys))))
-//            }
-//        }
 //        .edgesIgnoringSafeArea(.all)
     }
 }
-
 extension NosturRootMenu {
     
     private var sideBar: some View {
@@ -81,25 +67,25 @@ extension NosturRootMenu {
                 
                 Button {
                     nav.navigateTo(ContactPath(key: ns.account!.publicKey!))
-                    nav.showSidebar = false
+                    sm.showSidebar = false
                 } label: {
                     Label("Profile", systemImage: "person")
                 }
                 Button {
                     nav.navigateTo(ViewPath.Bookmarks(account: ns.account!))
-                    nav.showSidebar = false
+                    sm.showSidebar = false
                 } label: {
                     Label("Bookmarks", systemImage: "bookmark")
                 }
                 Button {
                     nav.navigateTo(ViewPath.Settings)
-                    nav.showSidebar = false
+                    sm.showSidebar = false
                 } label: {
                     Label("Settings", systemImage: "gearshape")
                 }
                 Button {
                     nav.navigateTo(ViewPath.Blocklist)
-                    nav.showSidebar = false
+                    sm.showSidebar = false
                 } label: {
                     Label("Block list", systemImage: "person.badge.minus")
                 }

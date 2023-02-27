@@ -275,6 +275,20 @@ extension Event {
         return try? context.fetch(request)
     }
     
+    static func metadataEvent(byAuthorPubkey:String? = nil, context:NSManagedObjectContext) -> [Event]? {
+        
+        let request: NSFetchRequest<Event> = Event.fetchRequest()
+        if (byAuthorPubkey != nil) {
+            request.predicate = NSPredicate(format: "kind == 0 AND pubkey == %@", byAuthorPubkey!)
+        }
+        else {
+            request.predicate = NSPredicate(format: "kind == 0")
+        }
+        request.sortDescriptors = [NSSortDescriptor(key: "created_at", ascending: false)]
+        
+        return try? context.fetch(request)
+    }
+    
     @discardableResult
     static func makePreviews(count: Int) -> [Event] {
         var events = [Event]()
@@ -297,10 +311,28 @@ extension Event {
     // NIP-10: Those marked with "root" denote the root id of the reply thread being responded to.
     static func updateRepliesCountCache(_ tags:[NEventTag], context:NSManagedObjectContext) throws -> Bool {
         // NIP-10: Those marked with "reply" denote the id of the reply event being responded to.
-        if let replyEtag = TagsHelpers(tags).replyToEtag() {
+        
+        let replyEtag = TagsHelpers(tags).replyToEtag()
+        
+        if (replyEtag != nil) {
             let request = NSFetchRequest<Event>()
             request.entity = Event.entity()
-            request.predicate = NSPredicate(format: "id == %@", replyEtag.id)
+            request.predicate = NSPredicate(format: "id == %@", replyEtag!.id)
+            request.fetchLimit = 1
+            
+            if let reactingToEvent = try context.fetch(request).first {
+//                print("updating .replies for .id = \(String(describing: reactingToEvent.id))")
+                reactingToEvent.objectWillChange.send()
+                reactingToEvent.repliesCount = reactingToEvent.repliesCount + 1
+            }
+        }
+        let replyToRootEtag = TagsHelpers(tags).replyToRootEtag()
+        
+        // There is already a replyToRoot and not a replyToId, then replyToRootId should be counted
+        if (replyToRootEtag != nil && replyEtag == nil) {
+            let request = NSFetchRequest<Event>()
+            request.entity = Event.entity()
+            request.predicate = NSPredicate(format: "id == %@", replyToRootEtag!.id)
             request.fetchLimit = 1
             
             if let reactingToEvent = try context.fetch(request).first {

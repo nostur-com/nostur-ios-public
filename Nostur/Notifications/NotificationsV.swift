@@ -12,10 +12,11 @@ struct NotificationsV: View {
     
     let pubkey:String
     let FETCH_LIMIT = 200
+    let sp:SocketPool = .shared
     let nav:NavigationModel = .shared
     @EnvironmentObject var ns:NosturState
     @Environment(\.managedObjectContext) var viewContext
-    var onAppear:(Int) -> ()
+    var onAppear:(Int64) -> ()
     
     @FetchRequest
     var reactions:FetchedResults<Event>
@@ -49,7 +50,7 @@ struct NotificationsV: View {
         }
     }
     
-    init(pubkey:String, context:NSManagedObjectContext, onAppear: @escaping (Int) -> ()) {
+    init(pubkey:String, context:NSManagedObjectContext, onAppear: @escaping (Int64) -> ()) {
         print("🧨🧨🧨🧨🧨 I INIT NotificationsV 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         self.pubkey = pubkey
         self.onAppear = onAppear
@@ -85,13 +86,29 @@ struct NotificationsV: View {
             }
             .padding()
         }
+        .onAppear {
+            fetchReactions()
+        }
+    }
+    func fetchReactions() {
+        guard ns.account != nil else { return }
+        sp.sendMessage(
+            ClientMessage(type: .REQ,
+                          message:
+                            RequestMessage.getMentions(
+                                pubkeys: [ns.account!.publicKey!],
+                                kinds: [7],
+                                limit: 500,
+                                since: NTimestamp(timestamp: Int(reactions.first?.created_at ?? 0)))
+                         )
+        )
     }
 }
 
 struct ReactionsForThisNote: View {
     var reactions:[Event]
     @Environment(\.managedObjectContext) var viewContext
-    var onAppear:(Int) -> ()
+    var onAppear:(Int64) -> ()
     
     var withoutDuplicates:[Event] { // Author may accidentally like multiple times 
         reactions
@@ -108,7 +125,7 @@ struct ReactionsForThisNote: View {
                         ProfilePic(event: reactions[index])
                             .id(reactions[index].id!)
                             .onAppear {
-                                onAppear(Int(reactions[index].created_at))
+                                onAppear(reactions[index].created_at)
                             }
                             .zIndex(-Double(index))
                         Text(reactions[index].content == "+" ? "❤️" : reactions[index].content ?? "❤️")

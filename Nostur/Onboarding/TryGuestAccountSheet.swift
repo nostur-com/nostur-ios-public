@@ -15,6 +15,7 @@ struct TryGuestAccountSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) var viewContext
     @State var letsGo = false
+    @State var didCreate = false
     
     var body: some View {
         let _ = Self._printChanges()
@@ -52,40 +53,34 @@ struct TryGuestAccountSheet: View {
         .onAppear {
             // prepare guest account in background
 
-                    
-            ns.pendingFirstContactsFetch = true
-            let account = Account(context: viewContext)
-            account.id = UUID()
-            account.createdAt = Date()
-            account.createdAt = Date()
-            account.display_name = "Nostur Rookie"
-            account.name = "NosturRookie"
-            account.about = "Just trying things out"
-            account.publicKey = NosturState.GUEST_ACCOUNT_PUBKEY
+//            let ar = Account.fetchRequest()
+//            ar.entity = Account.entity()
+//            ar.predicate = NSPredicate(format: "publicKey == %@", NosturState.GUEST_ACCOUNT_PUBKEY)
             
+            var account:Account? = nil
+            account = try? Account.fetchAccount(publicKey: NosturState.GUEST_ACCOUNT_PUBKEY, context: viewContext)
             
-//            // Remove existing CL events, so can proper parse again from Importers. Else get filtered by duplicate filter
-//            if let clEvents = Event.contactListEvents(byAuthorPubkey: account.publicKey!, context: viewContext) {
-//                for clEvent in clEvents {
-//                    viewContext.delete(clEvent)
-//                }
-//            }
-//            try! viewContext.save()
+            if (account == nil) {
+                account = Account(context: viewContext)
+                account!.id = UUID()
+                account!.createdAt = Date()
+                account!.createdAt = Date()
+                account!.display_name = "Nostur Rookie"
+                account!.name = "NosturRookie"
+                account!.about = "Just trying things out"
+                account!.publicKey = NosturState.GUEST_ACCOUNT_PUBKEY
+                didCreate = true
+            }
             
-            
-            // 1. Prefill from cached event (if in cache)
-            Account.preFillReadOnlyAccountInfo(account: account, context: viewContext, forceOverwrite: true)
-            Account.preFillReadOnlyAccountFollowing(account: account, context: viewContext)
-            
-
-            _ = ns.loadActiveAccount(account: account)
-            let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: account.publicKey!))
-            
-            sp.sendMessage(message)            
+            Account.preFillReadOnlyAccountInfo(account: account!, context: viewContext, forceOverwrite: true)
+            Account.preFillReadOnlyAccountFollowing(account: account!, context: viewContext)
+            ns.setAccount(account: account!)
+            let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: account!.publicKey!))
+            sp.sendMessage(message)
         }
         .onDisappear {
             // Did not continue with guest account, so undo the created account from .onAppear:
-            if (!letsGo && ns.accounts.last != nil) {
+            if (!letsGo && didCreate && ns.accounts.last != nil) {
                 viewContext.delete(ns.accounts.last!)
                 try! viewContext.save()
             }
