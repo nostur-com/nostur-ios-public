@@ -177,6 +177,12 @@ struct AddExistingAccountSheet: View {
             let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: pubkey))
             SocketPool.shared.sendMessage(message)
             print("🟠🟠🟠 1")
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: pubkey))
+                SocketPool.shared.sendMessage(message)
+                print("🟠🟠🟠 1")
+            }
         }
     }
 }
