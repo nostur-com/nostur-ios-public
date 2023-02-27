@@ -49,9 +49,6 @@ struct WelcomeSheet: View {
             .controlSize(.large)
             .buttonStyle(.bordered)
         }
-        .onAppear {
-            ns.isOnboarding = true
-        }
     }
 }
 

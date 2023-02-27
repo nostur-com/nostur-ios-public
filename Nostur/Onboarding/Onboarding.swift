@@ -14,9 +14,9 @@ struct Onboarding: View {
     
     var body: some View {
         let _ = Self._printChanges()
-        if (ns.isOnboarding) || (ns.account == nil) {
+        if (ns.onBoardingIsShown) {
             Color.clear
-                .fullScreenCover(isPresented: $ns.isOnboarding) {
+                .fullScreenCover(isPresented: $ns.onBoardingIsShown) {
                     NavigationStack(path: $nav.onboardingPath) {
                         WelcomeSheet(offerTryOut: true)
                             .interactiveDismissDisabled()
@@ -31,6 +31,9 @@ struct Onboarding: View {
                     ReadOnlyAccountInformationSheet()
                         .presentationDetents([ .large])
                 }
+        }
+        else {
+            Text("do... onBoardingIsShown = true")
         }
     }
 }

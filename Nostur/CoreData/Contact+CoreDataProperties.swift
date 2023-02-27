@@ -276,7 +276,7 @@ extension Contact : Identifiable {
     
     static func allContactPubkeys(context:NSManagedObjectContext) async -> [String] {
         return await context.perform {
-            let r = NSFetchRequest<Contact>()
+            let r = NSFetchRequest<Contact>(entityName: "Contact")
             r.entity = Contact.entity()
     //        r.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)]
             let allContacts = try! r.execute()
@@ -328,7 +328,7 @@ extension Contact : Identifiable {
     
     static func contactBy(pubkey:String, context:NSManagedObjectContext) -> Contact? {
         
-        let request = NSFetchRequest<Contact>()
+        let request = NSFetchRequest<Contact>(entityName: "Contact")
         request.entity = Contact.entity()
         request.predicate = NSPredicate(format: "pubkey == %@", pubkey)
         request.sortDescriptors = [NSSortDescriptor(key: "updated_at", ascending: false)]
@@ -342,7 +342,7 @@ extension Contact : Identifiable {
     
     static func updateMetadata(_ metaData:NSetMetadata, pubkey:String, context:NSManagedObjectContext) throws {
         
-        let request = NSFetchRequest<Contact>()
+        let request = NSFetchRequest<Contact>(entityName: "Contact")
         request.entity = Contact.entity()
         request.predicate = NSPredicate(format: "pubkey == %@", pubkey)
         

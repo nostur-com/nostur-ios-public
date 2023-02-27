@@ -315,7 +315,7 @@ extension Event {
         let replyEtag = TagsHelpers(tags).replyToEtag()
         
         if (replyEtag != nil) {
-            let request = NSFetchRequest<Event>()
+            let request = NSFetchRequest<Event>(entityName: "Event")
             request.entity = Event.entity()
             request.predicate = NSPredicate(format: "id == %@", replyEtag!.id)
             request.fetchLimit = 1
@@ -330,7 +330,7 @@ extension Event {
         
         // There is already a replyToRoot and not a replyToId, then replyToRootId should be counted
         if (replyToRootEtag != nil && replyEtag == nil) {
-            let request = NSFetchRequest<Event>()
+            let request = NSFetchRequest<Event>(entityName: "Event")
             request.entity = Event.entity()
             request.predicate = NSPredicate(format: "id == %@", replyToRootEtag!.id)
             request.fetchLimit = 1
@@ -365,7 +365,7 @@ extension Event {
         case "+","👍","🤙","❤️","🫂","🤗","😘","😍","💯","🤩":
             // # NIP-25: The last e tag MUST be the id of the note that is being reacted to.
             if let lastEtag = TagsHelpers(tags).eTags().last {
-                let request = NSFetchRequest<Event>()
+                let request = NSFetchRequest<Event>(entityName: "Event")
                 request.entity = Event.entity()
                 request.predicate = NSPredicate(format: "id == %@", lastEtag.id)
                 request.fetchLimit = 1
@@ -427,7 +427,7 @@ extension Event {
         // zapped event
         let eventTag = nEvent.tags.first { $0.type == "e" }
         guard eventTag != nil else { return false }
-        let request = NSFetchRequest<Event>()
+        let request = NSFetchRequest<Event>(entityName: "Event")
         request.entity = Event.entity()
         request.predicate = NSPredicate(format: "id == %@", eventTag!.id)
         request.fetchLimit = 1
@@ -445,7 +445,7 @@ extension Event {
         // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
         if let mentionEtags = TagsHelpers(tags).mentionEtags() {
             for etag in mentionEtags {
-                let request = NSFetchRequest<Event>()
+                let request = NSFetchRequest<Event>(entityName: "Event")
                 request.entity = Event.entity()
                 request.predicate = NSPredicate(format: "id == %@", etag.id)
                 request.fetchLimit = 1
@@ -517,7 +517,7 @@ extension Event {
     }
     
     static func fetchEvent(id:String, context:NSManagedObjectContext) throws -> Event? {
-        let request = NSFetchRequest<Event>()
+        let request = NSFetchRequest<Event>(entityName: "Event")
         request.entity = Event.entity()
         request.predicate = NSPredicate(format: "id == %@", id)
         request.fetchLimit = 1
@@ -526,7 +526,7 @@ extension Event {
     }
     
     static func eventExists(id:String, context:NSManagedObjectContext) -> Bool {
-        let request = NSFetchRequest<Event>()
+        let request = NSFetchRequest<Event>(entityName: "Event")
         request.entity = Event.entity()
         request.predicate = NSPredicate(format: "id == %@", id)
         request.fetchLimit = 1

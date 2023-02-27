@@ -32,13 +32,25 @@ struct NoteMenu: View {
             } label: {
                 Label("Copy note id hex \(noteIdHex))", systemImage: "doc.on.clipboard")
             }
-            Button {
-                print("Unfollow @\(username)")
-                if (event.contact != nil) {
-                    ns.unfollow(event.contact!)
+            if (ns.isFollowing(event.pubkey!)) {
+                Button {
+                    print("Unfollow @\(username)")
+                    if (event.contact != nil) {
+                        ns.unfollow(event.contact!)
+                    }
+                } label: {
+                    Label("Unfollow @\(username)", systemImage: "person.fill.xmark")
                 }
-            } label: {
-                Label("Unfollow @\(username)", systemImage: "person.fill.xmark")
+            }
+            else {
+                Button {
+                    print("Follow @\(username)")
+                    if (event.contact != nil) {
+                        ns.follow(event.contact!)
+                    }
+                } label: {
+                    Label("Follow @\(username)", systemImage: "person.fill")
+                }
             }
             Button {
                 print("Block @\(username)")

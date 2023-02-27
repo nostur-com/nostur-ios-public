@@ -8,7 +8,8 @@
 import SwiftUI
 
 struct UnreadCounter: View {
-    @ObservedObject var ds:DataStore = .shared
+//    @ObservedObject var ds:DataStore = .shared
+    @EnvironmentObject var ds:TimelineModel
     
     var body: some View {
         let _ = Self._printChanges()

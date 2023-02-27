@@ -40,7 +40,7 @@ struct TryGuestAccountSheet: View {
             
             Button {
                 letsGo = true
-                ns.isOnboarding = false
+                ns.onBoardingIsShown = false
 //                nav.clear()
             } label: {
                 Text("Let's go!")
@@ -72,6 +72,7 @@ struct TryGuestAccountSheet: View {
                 didCreate = true
             }
             
+            SavedEventsCache.shared.clear() // Because else we dont fetch new info... if we just fetched it before, maybe during onboarding
             Account.preFillReadOnlyAccountInfo(account: account!, context: viewContext, forceOverwrite: true)
             Account.preFillReadOnlyAccountFollowing(account: account!, context: viewContext)
             ns.setAccount(account: account!)
@@ -86,7 +87,7 @@ struct TryGuestAccountSheet: View {
             }
             else if (letsGo) {
                 try! viewContext.save()
-                ns.isOnboarding = false
+                ns.onBoardingIsShown = false
                 nav.onboardingPath.removeLast(nav.onboardingPath.count)
             }
         }

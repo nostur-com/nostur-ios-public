@@ -9,9 +9,7 @@ import SwiftUI
 import Foundation
 import Combine
 
-class DataStore: ObservableObject {
-    
-    public static var shared = DataStore()
+final class TimelineModel: ObservableObject {
     
     let eventAppeared = PassthroughSubject<Event?, Never>()
     let notesChanged = PassthroughSubject<[Event], Never>()
@@ -144,14 +142,15 @@ final class OnboardingTracker {
     public var didFillTimeline = false {
         didSet {
             if (didFillTimeline) {
-                ns.isOnboarding = false
+                ns.onBoardingIsShown = false
             }
             print("✈️✈️✈️✈️ didFillTimeline: \(didFillTimeline)")
         }
     }
     
     public func startOnboarding(pubkey:String) {
-        DataStore.shared.unreadCount.send(0)
+//        DataStore.shared.unreadCount.send(0)
+        self.pubkey = pubkey
         self.didStartOnboarding = true
         self.followingKeys = []
         self.didFetchKind0 = false

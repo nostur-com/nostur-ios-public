@@ -27,26 +27,26 @@ extension View {
         
         // "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
         
-        let sp:SocketPool = .shared
         let ns = NosturState(container: EventsProvider.preview.container)
-        let nav = NavigationModel.shared
-        let account = PreviewFetcher.fetchAccount("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", context: EventsProvider.preview.container.viewContext)
-        ns.setAccount(account: account)
-        let ds:DataStore = .shared
+        let sp:SocketPool = .shared
+        let nav: NavigationModel = .shared
+//        let ds:DataStore = .shared
         let er:ExchangeRateModel = .shared
+        
         let ss = SettingsStore()
         let sm = SideBarModel()
+        
+        let account = PreviewFetcher.fetchAccount("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", context: EventsProvider.preview.container.viewContext)
+        ns.setAccount(account: account)
         
         return self.defaultAppStorage(userDefaults)
             .environment(\.managedObjectContext,
                           EventsProvider.preview.container.viewContext)
             .environmentObject(ns)
             .environmentObject(sp)
-            .environmentObject(EventsProvider.preview)
-            .environmentObject(account!)
             .environmentObject(nav)
             .environmentObject(er)
-            .environmentObject(ds)
+//            .environmentObject(ds)
             .environmentObject(ss)
             .environmentObject(sm)
     }
@@ -68,7 +68,7 @@ struct PreviewFetcher {
     
     static func fetchEvents(_ pubkey:String, kind:Int? = nil, context:NSManagedObjectContext? = nil) -> [Event] {
         let request = NSFetchRequest<Event>(entityName: "Event")
-//        request.entity = Event.entity()
+        request.entity = Event.entity()
         if (kind != nil) {
             request.predicate = NSPredicate(format: "pubkey == %@ AND kind == %d", pubkey, kind!)
         } else {
@@ -113,7 +113,7 @@ struct PreviewFetcher {
     
     static func fetchContact(_ pubkey:String, context:NSManagedObjectContext? = nil) -> Contact? {
         let request = NSFetchRequest<Contact>(entityName: "Contact")
-//        request.entity = Contact.entity()
+        request.entity = Contact.entity()
         request.predicate = NSPredicate(format: "pubkey == %@", pubkey)
         request.sortDescriptors = []
         

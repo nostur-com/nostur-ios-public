@@ -270,12 +270,12 @@ struct NoteRowView_Previews: PreviewProvider {
                 NoteRowView(event: event0!)
                     .listRowInsets(EdgeInsets())
             }
-
+//
             if (event1 != nil) {
                 NoteRowView(event: event1!)
                     .listRowInsets(EdgeInsets())
             }
-//
+////
             if (event2 != nil) {
                 NoteRowView(event: event2!)
                     .listRowInsets(EdgeInsets())
@@ -284,11 +284,11 @@ struct NoteRowView_Previews: PreviewProvider {
 //            NoteRowView(event: event3!)
 //                .listRowInsets(EdgeInsets())
 //
-            // QUOTE?
-            if (event4 != nil) {
-                NoteRowView(event: event4!)
-                    .listRowInsets(EdgeInsets())
-            }
+            // QUOTE? TODO:// WAAROM CRASHED DEZE??
+//            if (event4 != nil) {
+//                NoteRowView(event: event4!)
+//                    .listRowInsets(EdgeInsets())
+//            }
 
 //            NoteRowView(event: event5!)
 //                .listRowInsets(EdgeInsets())

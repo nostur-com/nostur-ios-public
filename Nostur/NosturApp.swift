@@ -22,29 +22,18 @@ struct NosturApp: App {
     @StateObject private var er:ExchangeRateModel = .shared
     @StateObject private var nav:NavigationModel = .shared
     @StateObject private var sp:SocketPool = .shared
-    @StateObject private var ds:DataStore = .shared
+//    @StateObject private var ds:DataStore = .shared
     @StateObject private var ss = SettingsStore()
     @StateObject private var sm = SideBarModel()
-    
-//    @StateObject var model = DataModel()
+
     @StateObject var ucm = UnreadCounterModel()
-    @StateObject var tm = TimelineModel()
-//    @StateObject var tl = TLModel()
+//    @StateObject var tm = TimelineModel()
     
     @State var isViewDisplayed = false
     
     let runLoop = Timer.publish(every: 2, tolerance: 1, on: .main, in: .common).autoconnect()
     let priceLoop = Timer.publish(every: 900, tolerance: 120, on: .main, in: .common).autoconnect().receive(on: RunLoop.main)
         .merge(with: Just(Date()))
-    
-//    var xbody: some Scene {
-//        WindowGroup {
-//            TL4()
-//                .environment(\.managedObjectContext, EventsProvider.shared.container.viewContext)
-//                .environmentObject(ns)
-////                .environmentObject(tl)
-//        }
-//    }
 
     var body: some Scene {
         WindowGroup {
@@ -56,8 +45,8 @@ struct NosturApp: App {
                 .environmentObject(nav)
                 .environmentObject(up)
                 .environmentObject(ucm)
-                .environmentObject(tm)
-                .environmentObject(ds)
+//                .environmentObject(tm)
+//                .environmentObject(ds)
                 .environmentObject(ss)
                 .environmentObject(sm)
                 .onAppear {startNosturing(); self.isViewDisplayed = true }
@@ -82,11 +71,13 @@ struct NosturApp: App {
     }
 
     func startNosturing() {
-        if (ns.account == nil && ns.accounts.count >= 1) {
+        if (ns.account == nil && ns.accounts.count >= 1) { // NosturState will set last active account in .init, else we set here:
             ns.setAccount(account: ns.accounts.last!)
         }
-        
-        Maintenance.firstTimeStartup(context: EventsProvider.shared.container.viewContext)
+        else if ns.account == nil {
+            ns.onBoardingIsShown = true
+            Maintenance.firstTimeStartup(context: EventsProvider.shared.container.viewContext)
+        }
         
         // Daily cleanup.
         //TODO: Is fast or do in background task?
@@ -125,6 +116,26 @@ struct NosturApp: App {
                 // fetch p's in 3
                 
                 // fetch following events
+            }
+            else {
+                // Fetch updated contactlist for epxlorer feed
+                let message = ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: NosturState.GUEST_ACCOUNT_PUBKEY))
+                SocketPool.shared.sendMessage(message)
+            }
+            if (ns.globalPubkeys.count == 0) {
+                // Fetch updated contactlist for epxlorer feed
+                let message = ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: NosturState.GUEST_ACCOUNT_PUBKEY))
+                SocketPool.shared.sendMessage(message)
+                
+                let r = Event.fetchRequest()
+                r.predicate = NSPredicate(format: "kind == 3 && pubkey == %@", NosturState.GUEST_ACCOUNT_PUBKEY)
+                r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+                let exploreContactList = try? EventsProvider.shared.container.viewContext.fetch(r).first
+                if exploreContactList != nil {
+                    ns.objectWillChange.send()
+                    ns.globalPubkeys = Set(exploreContactList!.pTags())
+                    
+                }
             }
         }
     }

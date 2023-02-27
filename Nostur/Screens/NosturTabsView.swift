@@ -17,11 +17,13 @@ struct NosturTabsView: View {
         let _ = Self._printChanges()
         HStack {
             TabView(selection: $nav.selectedTab) {
-                NavigationStack(path: $nav.timelinePath) {
-                    TimelineStateIsolation()
-                        .frame(maxWidth: 600)
-                        .withNavigationDestinations()
-                }
+                FollowingAndExplore()
+//                TimelineStateIsolation()
+//                NavigationStack(path: $nav.timelinePath) {
+//                    TimelineStateIsolation()
+//                        .frame(maxWidth: 600)
+//                        .withNavigationDestinations()
+//                }
                 .tabItem { Image(systemName: "house") }.tag("Timeline")
                                 
                 NavigationStack(path: $nav.notificationsPath) {

@@ -20,16 +20,14 @@ struct Maintenance {
                 let ot = OnboardingTracker.shared
                 if (relaysCount == 0) {
                     ot.startOnboarding(pubkey: NosturState.GUEST_ACCOUNT_PUBKEY)
-                    NosturState.shared.isOnboarding = true
                     for url in BOOTSTRAP_RELAYS {
                         let bootstrapRelay = Relay(context: context)
-                        bootstrapRelay.read = url == "wss://nostr.mutinywallet.com" ? false : true
+                        bootstrapRelay.read = url == "wss://nostr.mutinywallet.com" ? false : true // this one is write only
                         bootstrapRelay.write = true
                         bootstrapRelay.createdAt = Date.now
                         bootstrapRelay.url = url
                         relays.append(bootstrapRelay)
                     }
-                    
                     
                     let account = Account(context: context)
                     account.id = UUID()

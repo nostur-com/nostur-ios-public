@@ -93,7 +93,7 @@ struct AccountsSheet: View {
                 guard accountToDelete != nil else { return }
                 AccountManager.shared.deletePrivateKey(forPublicKeyHex: accountToDelete!.publicKey!)
                 if (ns.accounts.count <= 1) {
-                    ns.isOnboarding = true
+                    ns.onBoardingIsShown = true
                     sm.showSidebar = false
                     nav.clear()
                     ns.setAccount(account: nil)

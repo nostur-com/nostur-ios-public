@@ -28,7 +28,7 @@ class Importer {
         
         let parsedBucket = MessageParser.shared.parsedBucket
         guard await parsedBucket.count() != 0 else { self.isImporting = false; return }
-//        print("🦋🦋 \(await parsedBucket.count()) messages in parsedBucket.")
+        print("🦋🦋 \(await parsedBucket.count()) messages in parsedBucket.")
         
         var forImports = [RelayMessage]()
         while let forImport = await parsedBucket.dequeue() {
@@ -93,6 +93,12 @@ class Importer {
                     }
                     
                     if event.kind == .contactList {
+                        if event.publicKey == NosturState.GUEST_ACCOUNT_PUBKEY {
+                            // use guest account p's for "Explorer" feed
+                            // TODO: Need objectWillChange.send() here or not?
+                            NosturState.shared.globalPubkeys = Set(event.pTags())
+                        }
+                        
                         if (ot.isOnboarding && ot.pubkey == event.publicKey) { // TODO: skip if first time completed
                             print("🟠🟠🟠 3")
                             ot.didFetchKind3 = true
@@ -103,6 +109,7 @@ class Importer {
                             
                             print("✈️✈️✈️ ONBORADING SPEED UP FETCHING 0,1,6 FROM P's")
                             let fetchTimeline = ClientMessage(type: .REQ, message: RequestMessage.getFollowingEvents(pubkeys: event.pTags()))
+                            
                             SocketPool.shared.sendMessage(fetchTimeline)
 //                            print("✈️✈️✈️ ONBORADING SPEED UP FETCHING 1,6,7,9735 FROM E's")
 //                            let fetchReferences = ClientMessage(type: .REQ, message: RequestMessage.getEventReferences(ids: ????))

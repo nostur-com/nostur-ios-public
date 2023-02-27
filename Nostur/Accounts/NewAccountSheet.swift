@@ -79,7 +79,7 @@ struct NewAccountSheet: View {
                 
             Button {
                 createAccount()
-                dismiss()
+//                dismiss()
             } label: {
                 Text("Create")
                     .frame(maxWidth: .infinity)
@@ -117,9 +117,9 @@ struct NewAccountSheet: View {
             try viewContext.save()
             
             // broadcast to relays
-            up.publishNow(newKind0EventSigned)
-            
+//            up.publishNow(newKind0EventSigned) // TODO: Publish later? its probably empty now, will fill with follow
             ns.setAccount(account: newAccount)
+            ns.onBoardingIsShown = false
         }
         catch {
             print("🔴🔴 could not ns.setAccount")

@@ -81,8 +81,10 @@ class NavigationModel: ObservableObject {
     
     static var shared = NavigationModel()
     
-    @Published var selectedTab = "Timeline"
+    @AppStorage("selected_tab") var selectedTab = "Timeline"
+    @AppStorage("selected_subtab") var selectedSubTab = "Explore"
     @Published var timelinePath = NavigationPath()
+    @Published var explorePath = NavigationPath()
     @Published var searchPath = NavigationPath()
     @Published var accountsPath = NavigationPath()
     @Published var bookmarksPath = NavigationPath()
@@ -100,7 +102,14 @@ class NavigationModel: ObservableObject {
         }
         switch (selectedTab) {
             case "Timeline":
-                self.timelinePath.append(path)
+                switch (selectedSubTab) {
+                    case "Following":
+                        self.timelinePath.append(path)
+                    case "Explore":
+                        self.explorePath.append(path)
+                    default:
+                        self.timelinePath.append(path)
+                }
             case "Accounts":
                 self.accountsPath.append(path)
             case "Bookmarks":
@@ -122,6 +131,9 @@ class NavigationModel: ObservableObject {
         switch (selectedTab) {
             case "Timeline":
                 self.timelinePath.removeLast(self.timelinePath.count)
+                self.detailPath.removeLast(self.detailPath.count)
+            case "Explorer":
+                self.explorePath.removeLast(self.explorePath.count)
                 self.detailPath.removeLast(self.detailPath.count)
             case "Accounts":
                 self.accountsPath.removeLast(self.accountsPath.count)

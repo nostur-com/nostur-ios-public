@@ -94,6 +94,7 @@ struct AddExistingAccountSheet: View {
     }
     
     func addExistingAccount(privkey:String) {
+        SavedEventsCache.shared.clear() // Because else we dont fetch new info... if we just fetched it before, maybe during onboarding
         let account = Account(context: viewContext)
         account.id = UUID()
         account.createdAt = Date()
@@ -140,6 +141,7 @@ struct AddExistingAccountSheet: View {
     }
     
     func addExistingReadOnlyAccount(pubkey:String) {
+        SavedEventsCache.shared.clear() // Because else we dont fetch new info... if we just fetched it before, maybe during onboarding
         let ot = OnboardingTracker.shared
         ot.startOnboarding(pubkey: pubkey)
         let account = Account(context: viewContext)
@@ -170,6 +172,7 @@ struct AddExistingAccountSheet: View {
         try! viewContext.save()
         ns.setAccount(account: account)
         // 2. But also check if there are newer events
+        nav.selectedSubTab = "Following"
         if (!ot.didFetchKind0 || !ot.didFetchKind3) {
             let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: pubkey))
             SocketPool.shared.sendMessage(message)

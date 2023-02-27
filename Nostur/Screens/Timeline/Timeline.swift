@@ -28,20 +28,45 @@ struct TimelineStateIsolation: View {
 
 struct TimelineContainer: View {
     @EnvironmentObject var ns:NosturState
+    @EnvironmentObject var nav:NavigationModel
     @Environment(\.managedObjectContext) var viewContext
 //    @State var showingNewNote = false
 
     
     var body: some View {
         let _ = Self._printChanges()
-        Timeline(pubkey: ns.account!.publicKey!, pubkeys: ns.followingPublicKeys, context: viewContext)
+        if ns.account != nil && (ns.account!.follows?.count ?? 0) > 0 {
+            Timeline(pubkey: ns.account!.publicKey!, pubkeys: ns.followingPublicKeys, context: viewContext)
+        }
+        else if ns.account == nil {
+            Text("No account")
+                .onAppear() {
+                    if (ns.accounts.count == 0) {
+//                        ns.isOnboarding = true
+                    }
+                }
+        }
+        else {
+            VStack {
+                Text("You are not following anyone yet, visit the explore tab and follow some people")
+                    .multilineTextAlignment(.center)
+                    .padding(/*@START_MENU_TOKEN@*/.all, 30.0/*@END_MENU_TOKEN@*/)
+                    
+                Button {
+                    nav.selectedSubTab = "Explore"
+                } label: {
+                    Text("Explore")
+                }.buttonStyle(.borderedProminent)
+            }
+            // TODO: Add some follow suggestions here.
+        }
     }
 }
 
 struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling is possible!
     ///
     @AppStorage("firstTimeCompleted") var firstTimeCompleted = false
-    let ds:DataStore = .shared
+    @EnvironmentObject var ds:TimelineModel
     let ot:OnboardingTracker = .shared
     @Environment(\.managedObjectContext) var viewContext
     let pubkey:String
@@ -68,18 +93,14 @@ struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling i
         self.pubkey = pubkey
         self.pubkeys = pubkeys
         
-        var oldestCreatedAt:Int64 = 0
+        let r1 = Event.fetchRequest()
+        r1.predicate = NSPredicate(format: "kind IN {1,6} AND pubkey IN %@", pubkeys)
+        r1.fetchLimit = FETCH_LIMIT
+        r1.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         
-        if (ot.isOnboarding) {
-            oldestCreatedAt = Int64(Date.now.addingTimeInterval(-(28800)).timeIntervalSince1970)  // 8 hours day ago
-        }
-        else {
-            let r1 = Event.fetchRequest()
-            r1.predicate = NSPredicate(format: "kind IN {1,6} AND pubkey IN %@", pubkeys)
-            r1.fetchLimit = FETCH_LIMIT
-            r1.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-            oldestCreatedAt = (try? context.fetch(r1).last?.created_at) ?? 0
-        }
+        // OLDEST IS EITHER 8 HOURS AGO MAX. OR HITTING THE 125 FETCH LIMIT.
+        let oldestCreatedAt = (try? context.fetch(r1).last?.created_at) ?? Int64(Date.now.addingTimeInterval(-(28800)).timeIntervalSince1970)
+        
         
         let r2 = Event.fetchRequest()
         r2.predicate = NSPredicate(format: "created_at >= %i AND kind IN {1,6} AND pubkey IN %@", oldestCreatedAt, pubkeys)
@@ -155,12 +176,6 @@ struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling i
                 }
                 .listStyle(.plain)
 //                .toolbar(content: toolbarContent)
-                .safeAreaInset(edge: .top) {
-                    AppTopBar()
-                        .padding(5)
-                        .background(Color("BackgroundColor").opacity(0.9))
-                }
-//                UnreadCounter()
             }
             EmptyView()
         }
@@ -285,8 +300,9 @@ extension Timeline {
 }
 
 struct Timeline_Previews: PreviewProvider {
+        
     static var previews: some View {
-        TimelineContainer()
+        TimelineStateIsolation()
             .withPreviewEnvironment()
     }
 }

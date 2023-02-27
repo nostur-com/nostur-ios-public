@@ -16,7 +16,7 @@ final class NosturState : ObservableObject {
 //    public static let preview = NosturState(container: EventsProvider.preview.container)
     
     static let GUEST_ACCOUNT_PUBKEY = "c118d1b814a64266730e75f6c11c5ffa96d0681bfea594d564b43f3097813844"
-    @Published var isOnboarding = false
+    @Published var onBoardingIsShown = false
     
     // public keys of the contacts that the currently active ("logged in") account follows
     // WTF followingPublicKeys met @Published is superlangzaam... HMMM.
@@ -41,6 +41,7 @@ final class NosturState : ObservableObject {
     @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""
     @Published var account:Account? = nil
     @Published var readOnlyAccountSheetShown:Bool = false
+    @Published var globalPubkeys:Set<String> = []
     
     var pubkey:String? {
         get { account?.publicKey }
@@ -59,7 +60,7 @@ final class NosturState : ObservableObject {
         self.account = account
         if (account != nil) {
             activeAccountPublicKey = account!.publicKey!
-            DataStore.shared.unreadCount.send(0)
+//            DataStore.shared.unreadCount.send(0)
             Task(priority: .userInitiated) {
                 self.loadLikesAndReposts()
             }
@@ -291,9 +292,9 @@ final class UnreadCounterModel: ObservableObject {
     @Published var mostRecentCreatedAt:Int64 = 0
 }
 
-final class TimelineModel: ObservableObject {
-    @Published var notesOnScreen:[Event] = []
-}
+//final class TimelineModel: ObservableObject {
+//    @Published var notesOnScreen:[Event] = []
+//}
 
 final class ExchangeRateModel: ObservableObject {
     static public var shared = ExchangeRateModel()

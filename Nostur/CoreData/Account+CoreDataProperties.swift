@@ -37,13 +37,22 @@ extension Account {
     @NSManaged public var lastNotificationDate: Int64
     
     static func fetchAccount(publicKey:String, context:NSManagedObjectContext) throws -> Account? {
-        let request = NSFetchRequest<Account>()
-        request.entity = Account.entity()
+        let request = NSFetchRequest<Account>(entityName: "Account")
+//        request.entity = Account.entity() <-- WTF MET DIT WERKT HET NIET!
         request.predicate = NSPredicate(format: "publicKey == %@", publicKey)
         request.fetchLimit = 1
         request.fetchBatchSize = 1
         return try context.fetch(request).first
     }
+    
+//    static func fetchAccount(publicKey:String, context:NSManagedObjectContext) throws -> Account? {
+//        let request = NSFetchRequest<Account>(entityName: "Account")
+//        request.entity = Account.entity()
+//        request.predicate = NSPredicate(format: "publicKey == %@", publicKey)
+//        request.fetchLimit = 1
+//        request.fetchBatchSize = 1
+//        return try context.fetch(request).first
+//    }
 }
 
 // MARK: Generated accessors for follows

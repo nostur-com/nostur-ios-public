@@ -35,9 +35,14 @@ struct DynamicFetchView<T: NSManagedObject, Content: View>: View {
 
 // TEMP ALWAYS FUNCTIONS
 
-func fetchEvents(pubkeys:Set<String>, amount:Int? = 500) {
+func fetchEvents(pubkeys:Set<String>, amount:Int? = 500, since:Int64? = nil) {
     print("💿💿 getFollowingEvents for \(pubkeys.count) pubkeys 💿💿")
-    SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getFollowingEvents(pubkeys: Array(pubkeys), limit: amount!)))
+    if (since != nil) {
+        SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getFollowingEvents(pubkeys: Array(pubkeys), limit: amount!, since: NTimestamp(timestamp: Int(since!)))))
+    }
+    else {
+        SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getFollowingEvents(pubkeys: Array(pubkeys), limit: amount!)))
+    }
 }
 
 

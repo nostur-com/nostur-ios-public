@@ -17,7 +17,7 @@ import CoreData
 
 struct QuotedNoteFragment: View {
     @Environment(\.managedObjectContext) var viewContext
-    var cm:SocketPool = .shared
+    let sp:SocketPool = .shared
     @EnvironmentObject var accountState:NosturState
     @EnvironmentObject var nav:NavigationModel
     @ObservedObject var event:Event
@@ -111,7 +111,7 @@ struct QuotedNoteFragment: View {
                 // followed contact meta data refresh should be updated at app wake up probably
                 if (event.contact == nil) {
                     print("🟢 NoteRow.onAppear event.contact == nil so: REQ.0:\(event.pubkey!)")
-                    cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.pubkey!)))
+                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.pubkey!)))
                 }
             }
         }
