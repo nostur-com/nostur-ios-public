@@ -33,6 +33,7 @@ struct RelayRowView: View {
                 .opacity(relay.read ? 1.0 : 0.2)
                 .onTapGesture {
                     relay.read.toggle()
+                    socket.read = relay.read
                     try! relay.managedObjectContext!.save()
                 }
             
@@ -40,6 +41,7 @@ struct RelayRowView: View {
                 .opacity(relay.write ? 1.0 : 0.2)
                 .onTapGesture {
                     relay.write.toggle()
+                    socket.write = relay.write
                     try! relay.managedObjectContext!.save()
                 }
         }

@@ -95,6 +95,12 @@ struct RelayEditView: View {
 
             
         }
+        .onChange(of: relay.read) { newValue in
+            socket.read = newValue
+        }
+        .onChange(of: relay.write) { newValue in
+            socket.write = newValue
+        }
     }
 }
 
