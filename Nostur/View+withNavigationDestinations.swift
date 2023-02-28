@@ -108,7 +108,6 @@ class NavigationModel: ObservableObject {
             return
         }
         if IS_IPAD {
-            print(type(of: path))
             if type(of: path) == Event.self {
                 let p = path as! Event
                 let tab = DetailTabsModel.Tab(id: p.id, event: p)

@@ -27,13 +27,17 @@ final class TimelineModel: ObservableObject, Identifiable {
         get { defaults.string(forKey: "restoreScrollToId-\(id)") }
     }
     
-    var id:String
+    var id:String = "FOLLOWING"
 
-    init(defaults: UserDefaults = .standard, id:String) {
+    init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
-        self.id = id
+//        self.id = id
         
         addSubscriptions()
+    }
+    
+    func setId(id:String) {
+        self.id = id
     }
     
     func addSubscriptions() {

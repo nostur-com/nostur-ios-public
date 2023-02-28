@@ -12,7 +12,6 @@ struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling i
     ///
     var id:String
     @AppStorage("firstTimeCompleted") var firstTimeCompleted = false
-    @EnvironmentObject var ds:TimelineModel
     @EnvironmentObject var nav:NavigationModel // Ugh... need this here just for nav.selectedSubTab == "Following" ??
     let ot:OnboardingTracker = .shared
     @Environment(\.managedObjectContext) var viewContext
@@ -34,12 +33,14 @@ struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling i
 //    @State var isScrolling = false
     
     let FETCH_LIMIT = 120
+    var ds:TimelineModel
     
-    init(pubkey:String, pubkeys:Set<String>, context:NSManagedObjectContext, id:String) {
+    init(pubkey:String, pubkeys:Set<String>, context:NSManagedObjectContext, id:String, ds:TimelineModel) {
         self.id = id
         print("🧨🧨🧨🧨🧨 I INIT AGAIN 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         self.pubkey = pubkey
         self.pubkeys = pubkeys
+        self.ds = ds
         
         let r1 = Event.fetchRequest()
         r1.predicate = NSPredicate(format: "kind IN {1,6} AND pubkey IN %@", pubkeys)
@@ -244,8 +245,9 @@ extension Timeline {
 }
 
 struct Timeline_Previews: PreviewProvider {
+    static let ds = TimelineModel()
     static var previews: some View {
-        FollowingContainer()
+        FollowingContainer(ds:ds)
             .withPreviewEnvironment()
     }
 }

@@ -14,11 +14,18 @@ struct FollowingStateIsolation: View {
     @State var showingNewNote = false
     @State var noteCancellationId:UUID?
     
+    var ds:TimelineModel
+    
+    init() {
+        self.ds = TimelineModel()
+        self.ds.setId(id: "FOLLOWING")
+    }
+    
     var body: some View {
         ZStack {
-            FollowingContainer()
+            FollowingContainer(ds:ds)
             NewNoteButton(showingNewNote: $showingNewNote)
-            UnreadCounter()
+            UnreadCounter(ds:ds)
         }
         .sheet(isPresented: $showingNewNote) {
             NewNote(noteCancellationId: $noteCancellationId)
@@ -30,13 +37,13 @@ struct FollowingContainer: View {
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var nav:NavigationModel
     @Environment(\.managedObjectContext) var viewContext
-//    @State var showingNewNote = false
+    var ds:TimelineModel
 
     
     var body: some View {
         let _ = Self._printChanges()
         if ns.account != nil && (ns.account!.follows?.count ?? 0) > 0 {
-            Timeline(pubkey: ns.account!.publicKey, pubkeys: ns.followingPublicKeys, context: viewContext, id:"FOLLOWING")
+            Timeline(pubkey: ns.account!.publicKey, pubkeys: ns.followingPublicKeys, context: viewContext, id:"FOLLOWING", ds:ds)
         }
         else if ns.account == nil {
             Text("No account")

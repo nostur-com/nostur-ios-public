@@ -28,7 +28,6 @@ struct NosturApp: App {
 
     @StateObject var ucm = UnreadCounterModel()
     @StateObject private var tm:DetailTabsModel = .shared
-//    @StateObject var tm = TimelineModel()
     
     @State var isViewDisplayed = false
     

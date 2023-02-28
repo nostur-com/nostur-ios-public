@@ -13,12 +13,18 @@ struct ExploreStateIsolation: View {
     
     @State var showingNewNote = false
     @State var noteCancellationId:UUID?
+    var ds:TimelineModel
+    
+    init() {
+        self.ds = TimelineModel()
+        self.ds.setId(id: "EXPLORE")
+    }
     
     var body: some View {
         ZStack {
-            ExploreContainer()
+            ExploreContainer(ds:ds)
             NewNoteButton(showingNewNote: $showingNewNote)
-            UnreadCounter()
+            UnreadCounter(ds:ds)
         }
         .sheet(isPresented: $showingNewNote) {
             NewNote(noteCancellationId: $noteCancellationId)
@@ -30,13 +36,13 @@ struct ExploreContainer: View {
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var nav:NavigationModel
     @Environment(\.managedObjectContext) var viewContext
-//    @State var showingNewNote = false
+    var ds:TimelineModel
 
     
     var body: some View {
         let _ = Self._printChanges()
         if ns.account != nil && ns.globalPubkeys.count > 0 {
-            Timeline(pubkey: ns.account!.publicKey, pubkeys: ns.globalPubkeys, context: viewContext, id: "EXPLORE")
+            Timeline(pubkey: ns.account!.publicKey, pubkeys: ns.globalPubkeys, context: viewContext, id: "EXPLORE", ds:ds)
         }
         else {
             ProgressView()
@@ -55,6 +61,7 @@ struct ExploreContainer: View {
 }
 
 struct Explore_Previews: PreviewProvider {
+    
     static var previews: some View {
         ExploreStateIsolation()
             .withPreviewEnvironment()

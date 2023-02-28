@@ -10,8 +10,8 @@ import SwiftUI
 struct FollowingAndExplore: View {
     
     @EnvironmentObject var nav:NavigationModel
-    @StateObject var followingModel = TimelineModel(id:"Following")
-    @StateObject var exploreModel = TimelineModel(id:"Explore")
+//    @StateObject var followingModel = TimelineModel(id:"Following")
+//    @StateObject var exploreModel = TimelineModel(id:"Explore")
     
     var body: some View {
         VStack {
@@ -31,14 +31,14 @@ struct FollowingAndExplore: View {
             ZStack {
                 NavigationStack(path: $nav.timelinePath) {
                     FollowingStateIsolation()
-                        .environmentObject(followingModel)
+//                        .environmentObject(followingModel)
                         .frame(maxWidth: 600)
                         .withNavigationDestinations()
                 }
                 .opacity(nav.selectedSubTab == "Following" ? 1 : 0)
                 NavigationStack(path: $nav.explorePath) {
                     ExploreStateIsolation()
-                        .environmentObject(exploreModel)
+//                        .environmentObject(exploreModel)
                         .frame(maxWidth: 600)
                         .withNavigationDestinations()
                 }

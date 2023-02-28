@@ -9,7 +9,7 @@ import SwiftUI
 
 struct UnreadCounter: View {
 //    @ObservedObject var ds:DataStore = .shared
-    @EnvironmentObject var ds:TimelineModel
+    var ds:TimelineModel
     
     var body: some View {
         let _ = Self._printChanges()
@@ -41,8 +41,9 @@ struct UnreadCounter: View {
 }
 
 struct UnreadCounter_Previews: PreviewProvider {
+    static let ds = TimelineModel()
     static var previews: some View {
-        UnreadCounter()
+        UnreadCounter(ds:ds)
             .withPreviewEnvironment()
     }
 }
