@@ -44,11 +44,12 @@ struct NewNote: View {
                 .cornerRadius(20)
             }
             
-            HStack {
+            HStack(alignment: .top) {
                 ProfilePicView(pubkey: ns.activeAccountPublicKey, account: ns.account!)
-                TextField(text: $noteText, prompt: Text("What's happening?")) {
+                TextField(text: $noteText, prompt: Text("What's happening?"), axis: .vertical) {
                     EmptyView()
                 }
+                .lineLimit(10...)
                 .focused($focusedField, equals: .noteText)
             }
             
