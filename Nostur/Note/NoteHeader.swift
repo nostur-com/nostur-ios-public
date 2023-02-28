@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct NoteHeader: View {
-    private let nav:NavigationModel = .shared
+    @EnvironmentObject var nav:NavigationModel
     @ObservedObject var event:Event
     var singleLine:Bool = true
     

@@ -484,11 +484,11 @@ extension Event {
     }
     
     func lastE() -> String? {
-        tags().first(where: { $0.type == "e" })?.id
+        tags().last(where: { $0.type == "e" })?.id
     }
     
     func lastP() -> String? {
-        tags().first(where: { $0.type == "p" })?.pubkey
+        tags().last(where: { $0.type == "p" })?.pubkey
     }
     
     func pTags() -> [String] {
