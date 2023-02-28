@@ -211,7 +211,14 @@ struct NoteAndParent: View {
                         
                         // REPLIES TO OUR MAIN NOTE
                         LazyVStack {
-                            ForEach (event.replies_, id:\.self) { event in
+                            ForEach (event.replies_.filter({ event in
+                                    if ns.account != nil && event.contact != nil {
+                                        return !(ns.account!.blockedContacts ?? Set<Contact>()).contains(event.contact!)
+                                    }
+                                    else {
+                                        return true
+                                    }
+                                }), id:\.self) { event in
                                 NoteRowView(event: event)
                                 Divider()
                             }
