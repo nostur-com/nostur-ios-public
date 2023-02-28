@@ -84,6 +84,7 @@ struct AccountsSheet: View {
         .padding(20)
         .sheet(isPresented: $newAccountSheetShown) {
             NewAccountSheet()
+                .environmentObject(ns) // weird fix???
         }
         .sheet(isPresented: $addExistingAccountSheetShown) {
             AddExistingAccountSheet()
