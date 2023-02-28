@@ -21,6 +21,8 @@ class ManagedClient: WebSocketDelegate, ObservableObject {
     @Published var read = true
     @Published var write = false
     
+    var activeSubscriptions:[String] = []
+    
     init(relayId: NSManagedObjectID, url: String, client:WebSocket, read: Bool = true, write: Bool = false) {
         self.relayId = relayId
         self.url = url.lowercased()
@@ -43,6 +45,7 @@ class ManagedClient: WebSocketDelegate, ObservableObject {
                 self.isConnecting = false
                 self.isConnected = true
             }
+                self.activeSubscriptions = []
                 print("🔌 CONNECTED \(self.url)")
 //                print("🔌 CONNECTED \(self.url): \(headers)")
         case .disconnected(let reason, let code):
@@ -50,6 +53,7 @@ class ManagedClient: WebSocketDelegate, ObservableObject {
                 self.isConnecting = false
                 self.isConnected = false
             }
+                self.activeSubscriptions = []
                 print("🔌 DISCONNECTED \(self.url): \(reason) with code: \(code)")
         case .text(let string):
 //                print("🔌 💬 Received text: \(string)")
@@ -69,12 +73,14 @@ class ManagedClient: WebSocketDelegate, ObservableObject {
                 self.isConnecting = false
                 self.isConnected = false
             }
+                self.activeSubscriptions = []
                 print("🔌 CANCELLED \(self.url)")
         case .error(let error):
             DispatchQueue.main.async {
                 self.isConnecting = false
                 self.isConnected = false
             }
+                self.activeSubscriptions = []
                 print("🔌🔴 ERROR \(self.url): \(error!)")
         }
     }
@@ -135,14 +141,15 @@ class SocketPool: ObservableObject {
         }
     }
     
-    func sendMessage(_ message:ClientMessage) {
-        if (message.type == .REQ) {
-            let read = sockets.values.filter { $0.read == true }.count
-            print("⬇️⬇️ REQ ON \(read) RELAYS: \(String(message.message.prefix(260)))")
-        }
+    func sendMessage(_ message:ClientMessage, subscriptionId:String? = nil) {
+//        if (message.type == .REQ) {
+//            let read = sockets.values.filter { $0.read == true }.count
+//            print("⬇️⬇️ REQ ON \(read) RELAYS: \(String(message.message.prefix(260)))")
+//        }
         
         Task(priority: .background) {
             for (_, managedClient) in sockets {
+//                print("active subscriptions \(managedClient.url): \(managedClient.activeSubscriptions.count)")
                 guard managedClient.read || managedClient.write else {
                     // Skip if relay is not selected for reading or writing events
                     continue
@@ -152,15 +159,20 @@ class SocketPool: ObservableObject {
                     if (!managedClient.isConnected) && (!managedClient.isConnecting) {
                         managedClient.connect()
                     }
+                    // skip if we already have an active subcription
+                    guard subscriptionId == nil || managedClient.activeSubscriptions.firstIndex(where: { $0 == subscriptionId }) == nil else { continue }
+                    if (subscriptionId != nil) {
+                        managedClient.activeSubscriptions.append(subscriptionId!)
+                    }
 //                    print("REQUESTING: \(String(message.message.prefix(260)))")
-//                    print("⬇️⬇️ REQUESTING: \(String(message.message))")
+                    print("⬇️⬇️ REQUESTING: \(String(message.message))")
                     managedClient.client.write(string: message.message)
                 }
                 else if  message.type == .CLOSE { // CLOSE FOR ALL RELAYS
                     if (!managedClient.isConnected && managedClient.read) && (!managedClient.isConnecting) {
                         managedClient.connect()
                     }
-    //                logger.debug("🔚🔚 CLOSE: \(String(message.message.prefix(260)))")
+//                    print("🔚🔚 CLOSE: \(String(message.message.prefix(260)))")
                     managedClient.client.write(string: message.message) { }
                 }
                 else if message.type == .EVENT && managedClient.write { // EVENT IS ONLY FOR WRITE RELAYS

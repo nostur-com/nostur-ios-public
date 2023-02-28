@@ -27,6 +27,7 @@ struct NosturApp: App {
     @StateObject private var sm = SideBarModel()
 
     @StateObject var ucm = UnreadCounterModel()
+    @StateObject private var tm:DetailTabsModel = .shared
 //    @StateObject var tm = TimelineModel()
     
     @State var isViewDisplayed = false
@@ -48,6 +49,7 @@ struct NosturApp: App {
 //                .environmentObject(tm)
 //                .environmentObject(ds)
                 .environmentObject(ss)
+                .environmentObject(tm)
                 .environmentObject(sm)
                 .onAppear {startNosturing(); self.isViewDisplayed = true }
                 .onDisappear { self.isViewDisplayed = false }

@@ -35,13 +35,31 @@ struct DynamicFetchView<T: NSManagedObject, Content: View>: View {
 
 // TEMP ALWAYS FUNCTIONS
 
-func fetchEvents(pubkeys:Set<String>, amount:Int? = 500, since:Int64? = nil) {
-    print("💿💿 getFollowingEvents for \(pubkeys.count) pubkeys 💿💿")
+func fetchEvents(pubkeys:Set<String>, amount:Int? = 500, since:Int64? = nil, subscriptionId:String? = nil) {
+//    print("💿💿 getFollowingEvents for \(pubkeys.count) pubkeys 💿💿")
     if (since != nil) {
-        SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getFollowingEvents(pubkeys: Array(pubkeys), limit: amount!, since: NTimestamp(timestamp: Int(since!)))))
+        
+        let req = RequestMessage.getFollowingEvents(
+            pubkeys: Array(pubkeys),
+            limit: amount!,
+            subscriptionId: subscriptionId,
+            since: NTimestamp(timestamp: Int(since!))
+        )
+        
+        let clientMessage = ClientMessage(
+            type: .REQ,
+            message: req
+        )
+        
+        SocketPool.shared.sendMessage(clientMessage, subscriptionId:subscriptionId)
     }
     else {
-        SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getFollowingEvents(pubkeys: Array(pubkeys), limit: amount!)))
+        let req = RequestMessage.getFollowingEvents(pubkeys: Array(pubkeys), limit: amount!)
+        let clientMessage = ClientMessage(
+            type: .REQ,
+            message: req
+        )
+        SocketPool.shared.sendMessage(clientMessage, subscriptionId:subscriptionId)
     }
 }
 

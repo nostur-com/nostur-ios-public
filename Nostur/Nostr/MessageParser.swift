@@ -27,12 +27,14 @@ class MessageParser {
             }
             
             switch message.type {
-//                case .OK:
-//                    print("\(relayUrl): \(message.message)")
+                case .OK:
+                    print("\(relayUrl): \(message.message)")
                 case .NOTICE:
                     print("\(relayUrl): \(message.message)")
                 case .EOSE:
-                    sp.sendMessage(ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: message.subscriptionId!)))
+                    if message.subscriptionId != "FOLLOWING" && message.subscriptionId != "EXPLORE" {
+                        sp.sendMessage(ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: message.subscriptionId!)))
+                    }
                 default:
                     if (message.type == .EVENT) {
                         

@@ -73,8 +73,8 @@ struct NoteAndParent: View {
     @ObservedObject var event:Event
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
-//    @EnvironmentObject var nav:NavigationModel
-    var nav:NavigationModel = .shared
+    @EnvironmentObject var nav:NavigationModel
+//    var nav:NavigationModel = .shared
 
 //    @FetchRequest
 //    var taggedContacts:FetchedResults<Contact>

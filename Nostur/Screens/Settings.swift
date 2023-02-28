@@ -46,6 +46,13 @@ struct Settings: View {
                         Text("Zap \(settings.defaultZapAmount.satsFormatted) sats by default (\(fiatPrice))")
                     }
                 }
+                
+//                Section(header: Text("Private key protector")) {
+//                    Toggle(isOn: $settings.replaceNsecWithHunter2Enabled) {
+//                        Text("Don't allow nsec in posts")
+//                        Text("Replaces any \"nsec1...\" in new posts with \"hunter2\" ")
+//                    }
+//                }
             }
 //            .navigationBarTitle(Text("Settings"))
         }

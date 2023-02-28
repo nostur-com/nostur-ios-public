@@ -93,7 +93,9 @@ struct NewReply: View {
                         nEvent.content = noteText
                         
                         nEvent = applyMentionsNip08(nEvent)
-                        
+                        if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
+                            nEvent.content = replaceNsecWithHunter2(nEvent.content)
+                        }
                         if let signedEvent = try? ns.signEvent(nEvent) {
 //                            let _ = up.publish(signedEvent)
                             up.publishNow(signedEvent)

@@ -80,9 +80,11 @@ extension View {
 class NavigationModel: ObservableObject {
     
     static var shared = NavigationModel()
+    public var modelType = "NORMAL"
     
     @AppStorage("selected_tab") var selectedTab = "Timeline"
     @AppStorage("selected_subtab") var selectedSubTab = "Explore"
+    @Published var tabPath = NavigationPath()
     @Published var timelinePath = NavigationPath()
     @Published var explorePath = NavigationPath()
     @Published var searchPath = NavigationPath()
@@ -92,13 +94,42 @@ class NavigationModel: ObservableObject {
     @Published var messagesPath = NavigationPath()
     @Published var configurationPath = NavigationPath()
     @Published var detailPath = NavigationPath()
-    
     @Published var onboardingPath = NavigationPath()
     
+    init(modelType:String = "NORMAL") {
+        self.modelType = modelType
+    }
+    
+    let tm:DetailTabsModel = .shared
+    
     func navigateTo(_ path:any Hashable) -> Void {
-        if IS_IPAD {
-            self.detailPath.append(path)
+        if modelType == "TAB" {
+            self.tabPath.append(path)
             return
+        }
+        if IS_IPAD {
+            print(type(of: path))
+            if type(of: path) == Event.self {
+                let p = path as! Event
+                let tab = DetailTabsModel.Tab(id: p.id, event: p)
+                tm.tabs.append(tab)
+                tm.selected = tab
+                return
+            }
+            else if type(of: path) == NotePath.self {
+                let p = path as! NotePath
+                let tab = DetailTabsModel.Tab(id: p.id, notePath: p)
+                tm.tabs.append(tab)
+                tm.selected = tab
+                return
+            }
+            else if type(of: path) == ContactPath.self {
+                let c = path as! ContactPath
+                let tab = DetailTabsModel.Tab(id: c.key, contactPath: c)
+                tm.tabs.append(tab)
+                tm.selected = tab
+                return
+            }
         }
         switch (selectedTab) {
             case "Timeline":

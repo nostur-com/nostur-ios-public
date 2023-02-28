@@ -10,10 +10,7 @@ import SwiftUI
 struct DetailContainer: View {
     @State var offsetX = 200.0
     var body: some View {
-        ZStack {
-//            LinearGradient(gradient: Gradient(colors: [.black, Color("BackgroundGray")]), startPoint: .topLeading, endPoint: .bottomTrailing)
-//                .ignoresSafeArea()
-            
+        ZStack {            
             VStack{
                 Spacer()
                 HStack {

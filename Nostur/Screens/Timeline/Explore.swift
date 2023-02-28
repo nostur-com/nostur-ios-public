@@ -36,7 +36,7 @@ struct ExploreContainer: View {
     var body: some View {
         let _ = Self._printChanges()
         if ns.account != nil && ns.globalPubkeys.count > 0 {
-            Timeline(pubkey: ns.account!.publicKey, pubkeys: ns.globalPubkeys, context: viewContext)
+            Timeline(pubkey: ns.account!.publicKey, pubkeys: ns.globalPubkeys, context: viewContext, id: "EXPLORE")
         }
         else {
             ProgressView()

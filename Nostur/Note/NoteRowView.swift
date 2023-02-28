@@ -13,7 +13,8 @@ struct NoteRowView: View {
     
     @Environment(\.managedObjectContext) var viewContext
     private let sp:SocketPool = .shared
-    private let nav:NavigationModel = .shared
+    @EnvironmentObject var nav:NavigationModel
+//    private let nav:NavigationModel = .shared
 //    var event:Event
     @ObservedObject var event:Event
 

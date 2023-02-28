@@ -32,6 +32,7 @@ extension View {
         let nav: NavigationModel = .shared
 //        let ds:DataStore = .shared
         let er:ExchangeRateModel = .shared
+        let tm:DetailTabsModel = .shared
         
         let ss = SettingsStore()
         let sm = SideBarModel()
@@ -49,6 +50,7 @@ extension View {
 //            .environmentObject(ds)
             .environmentObject(ss)
             .environmentObject(sm)
+            .environmentObject(tm)
     }
 }
 
