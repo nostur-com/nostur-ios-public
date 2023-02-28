@@ -19,6 +19,21 @@ final class DetailTabsModel: ObservableObject {
         var notePath:NotePath?
         var contactPath:ContactPath?
         var event:Event?
+        var contact:Contact?
+        
+        init(id:String, notePath:NotePath? = nil, contactPath:ContactPath? = nil, event:Event? = nil, contact:Contact? = nil) {
+            self.id = id
+            self.notePath = notePath
+            self.contactPath = contactPath
+            self.event = event
+            self.contact = contact
+            
+            if (notePath != nil) {
+                if let contactFromCache = Contact.fetchByPubkey(contactPath!.key, context: EventsProvider.shared.container.viewContext) {
+                    self.contact = contactFromCache
+                }
+            }
+        }
         
         static func == (lhs: Self, rhs: Self) -> Bool {
             return lhs.id == rhs.id
@@ -97,7 +112,7 @@ struct TabbedDetailContainer: View {
                             }
                         }
                         tm.tabs.remove(at: index)
-                    }, label: "\(tm.tabs[index].event?.name ?? tm.tabs[index].contactPath?.key ?? "?")")
+                    }, label: "\(tm.tabs[index].event?.name ?? tm.tabs[index].contact?.authorName ?? "...")")
                     
                     Divider().frame(height: 30).opacity(index == tm.tabs.count-1 ? 0 : 1)
                 }
