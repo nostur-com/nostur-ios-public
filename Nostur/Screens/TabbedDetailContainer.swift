@@ -105,23 +105,6 @@ struct TabbedDetailContainer: View {
             }
             Divider().opacity(tm.tabs.count > 0 ? 1 : 0)
             ZStack {
-                ForEach(tm.tabs) { tab in
-                    if (tab.event != nil) {
-                        TabContainer(event: tab.event!)
-                        .opacity(tm.selected == tab ? 1 : 0)
-                        .id(tab.event!.id)
-                    }
-                    else if (tab.notePath != nil) {
-                        NoteById(id: tab.notePath!.id).opacity(tm.selected == tab ? 1 : 0)
-                    }
-                    else if (tab.contactPath != nil) {
-                        ProfileByPubkey(pubkey: tab.contactPath!.key).opacity(tm.selected == tab ? 1 : 0)
-                    }
-                    else {
-                        EmptyView()
-                    }
-                }
-                
                 VStack{
                     Spacer()
                     HStack {
@@ -136,6 +119,22 @@ struct TabbedDetailContainer: View {
                                     offsetX = 150
                                 }
                             }
+                    }
+                }
+                ForEach(tm.tabs) { tab in
+                    if (tab.event != nil) {
+                        TabContainer(event: tab.event!)
+                        .opacity(tm.selected == tab ? 1 : 0)
+                        .id(tab.event!.id)
+                    }
+                    else if (tab.notePath != nil) {
+                        NoteById(id: tab.notePath!.id).opacity(tm.selected == tab ? 1 : 0)
+                    }
+                    else if (tab.contactPath != nil) {
+                        ProfileByPubkey(pubkey: tab.contactPath!.key).opacity(tm.selected == tab ? 1 : 0)
+                    }
+                    else {
+                        EmptyView()
                     }
                 }
             }
