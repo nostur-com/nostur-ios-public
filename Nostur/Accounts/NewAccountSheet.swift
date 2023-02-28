@@ -79,7 +79,9 @@ struct NewAccountSheet: View {
                 
             Button {
                 createAccount()
-//                dismiss()
+                if (!ns.onBoardingIsShown) {
+                    dismiss()
+                }
             } label: {
                 Text("Create")
                     .frame(maxWidth: .infinity)
