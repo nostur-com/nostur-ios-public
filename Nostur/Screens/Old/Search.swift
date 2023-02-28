@@ -110,6 +110,7 @@ public final class DebounceObject: ObservableObject {
     public init(dueTime: TimeInterval = 0.4) {
         $text
             .removeDuplicates()
+            .filter { $0.count > 2 }
             .debounce(for: .seconds(dueTime), scheduler: DispatchQueue.main)
             .sink(receiveValue: { [weak self] value in
                 self?.debouncedText = value
