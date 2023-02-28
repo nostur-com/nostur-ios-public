@@ -10,6 +10,7 @@ import CoreData
 
 struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling is possible!
     ///
+    var id:String
     @AppStorage("firstTimeCompleted") var firstTimeCompleted = false
     @EnvironmentObject var ds:TimelineModel
     @EnvironmentObject var nav:NavigationModel // Ugh... need this here just for nav.selectedSubTab == "Following" ??
@@ -24,7 +25,7 @@ struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling i
         events.sorted(by: { $0.created_at < $1.created_at }) // OLDEST INDEX = 0
     }
     
-    let timelineRunLoop = Timer.publish(every: 15, tolerance: 1, on: .main, in: .common).autoconnect()
+    let timelineRunLoop = Timer.publish(every: 3, tolerance: 1, on: .main, in: .common).autoconnect()
     
     @State var selectedEvent:Event?
     @State private var oldEvents: [Event] = []
@@ -34,7 +35,8 @@ struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling i
     
     let FETCH_LIMIT = 120
     
-    init(pubkey:String, pubkeys:Set<String>, context:NSManagedObjectContext) {
+    init(pubkey:String, pubkeys:Set<String>, context:NSManagedObjectContext, id:String) {
+        self.id = id
         print("🧨🧨🧨🧨🧨 I INIT AGAIN 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         self.pubkey = pubkey
         self.pubkeys = pubkeys
@@ -167,14 +169,14 @@ struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling i
             else if (!ot.isOnboarding) {
                 let hoursAgo = Int64(Date.now.addingTimeInterval(-(28800)).timeIntervalSince1970)  // 8 hours day ago
                 if (eventsSorted.count == 0) {
-                    fetchEvents(pubkeys: pubkeys, since: hoursAgo)
+                    fetchEvents(pubkeys: pubkeys, since: hoursAgo, subscriptionId: self.id)
                 }
                 else {
                     
                     // Start from first event, but not more than 8 hours ago...
                     // Else it will load 1000 posts on timeline and Core data has some bug with fetchlimit
                     let firstEventCreatedAt = eventsSorted.first!.created_at
-                    fetchEvents(pubkeys: pubkeys, since: firstEventCreatedAt < hoursAgo ? hoursAgo : firstEventCreatedAt)
+                    fetchEvents(pubkeys: pubkeys, since: firstEventCreatedAt < hoursAgo ? hoursAgo : firstEventCreatedAt, subscriptionId: self.id)
                 }
             }
             

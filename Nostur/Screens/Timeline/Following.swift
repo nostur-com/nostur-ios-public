@@ -36,7 +36,7 @@ struct FollowingContainer: View {
     var body: some View {
         let _ = Self._printChanges()
         if ns.account != nil && (ns.account!.follows?.count ?? 0) > 0 {
-            Timeline(pubkey: ns.account!.publicKey, pubkeys: ns.followingPublicKeys, context: viewContext)
+            Timeline(pubkey: ns.account!.publicKey, pubkeys: ns.followingPublicKeys, context: viewContext, id:"FOLLOWING")
         }
         else if ns.account == nil {
             Text("No account")
