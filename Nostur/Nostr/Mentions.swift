@@ -107,3 +107,17 @@ func replaceTagsWithIndexes(_ text:String, tags:[NEventTag]) -> String {
     }
     return newText
 }
+
+
+// Replaces any nsec1... with hunter2
+func replaceNsecWithHunter2(_ text:String) -> String {
+    var newText = text
+    let urlMatches = text.matchingStrings(regex:#"(nsec1)([023456789acdefghjklmnpqrstuvwxyz]{58})"#)
+    
+    for index in urlMatches.indices {
+        if urlMatches[index][1] == "nsec1" {
+            newText = newText.replacingOccurrences(of: urlMatches[index][0], with: "hunter2")
+        }
+    }
+    return newText
+}

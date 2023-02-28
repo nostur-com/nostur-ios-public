@@ -18,6 +18,7 @@ final class SettingsStore: ObservableObject {
         static let sleepGoal = "sleep_goal"
         
         static let isSignatureVerificationEnabled = "signature_verification_enabled"
+        static let replaceNsecWithHunter2 = "replace_nsec_with_hunter2"
         static let sleepTrackingEnabled = "sleep_tracking_enabled"
         static let sleepTrackingMode = "sleep_tracking_mode"
         
@@ -46,6 +47,7 @@ final class SettingsStore: ObservableObject {
         self.defaults = defaults
         
         defaults.register(defaults: [
+            Keys.replaceNsecWithHunter2: true,
             Keys.sleepGoal: 8,
             Keys.defaultZapAmount: 10.000,
             Keys.sleepTrackingEnabled: true,
@@ -61,6 +63,11 @@ final class SettingsStore: ObservableObject {
     var isSignatureVerificationEnabled: Bool {
         set { defaults.set(newValue, forKey: Keys.isSignatureVerificationEnabled) }
         get { defaults.bool(forKey: Keys.isSignatureVerificationEnabled) }
+    }
+    
+    var replaceNsecWithHunter2Enabled: Bool {
+        set { defaults.set(newValue, forKey: Keys.replaceNsecWithHunter2) }
+        get { defaults.bool(forKey: Keys.replaceNsecWithHunter2) }
     }
 
     var isPro: Bool {

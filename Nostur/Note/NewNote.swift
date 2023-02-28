@@ -33,6 +33,9 @@ struct NewNote: View {
                     guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
                     var nEvent = NEvent(content: noteText)
                     nEvent = applyMentionsNip08(nEvent)
+                    if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
+                        nEvent.content = replaceNsecWithHunter2(nEvent.content)
+                    }
                     if let signedEvent = try? ns.signEvent(nEvent) {
                         up.publishNow(signedEvent)
 //                        noteCancellationId = up.publish(signedEvent)
