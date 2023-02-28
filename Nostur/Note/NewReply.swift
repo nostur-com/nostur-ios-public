@@ -50,6 +50,8 @@ struct NewReply: View {
         let existingPtags = TagsHelpers(replyTo.tags()).pTags()
         newReply.tags.append(contentsOf: existingPtags)
         
+        // TODO: DEDUPLICATE P TAGS
+        
         // ADD PUBKEY OF REPLYING TO EVENT
         let replyToPtag = NEventTag(type: "p", otherInformation: replyTo.pubkey)
         
@@ -89,6 +91,9 @@ struct NewReply: View {
                         guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
                         var nEvent = newReplyEvent
                         nEvent.content = noteText
+                        
+                        nEvent = applyMentionsNip08(nEvent)
+                        
                         if let signedEvent = try? ns.signEvent(nEvent) {
 //                            let _ = up.publish(signedEvent)
                             up.publishNow(signedEvent)
