@@ -61,13 +61,7 @@ struct NosturTabsView: View {
             .background(.regularMaterial)
             .frame(maxWidth: 600)
             if UIDevice.current.userInterfaceIdiom == .pad {
-//                NavigationStack(path: $nav.detailPath) {
-                    TabbedDetailContainer()
-//                    DetailContainer()
-//                        .frame(maxWidth: 600)
-//                        .withNavigationDestinations()
-//                        .ignoresSafeArea()
-//                }
+                TabbedDetailContainer()
             }
         }
 //        .ignoresSafeArea()

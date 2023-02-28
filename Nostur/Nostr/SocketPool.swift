@@ -56,7 +56,7 @@ class ManagedClient: WebSocketDelegate, ObservableObject {
                 self.activeSubscriptions = []
                 print("🔌 DISCONNECTED \(self.url): \(reason) with code: \(code)")
         case .text(let string):
-                print("🔌 💬 Received text: \(string)")
+//                print("🔌 💬 Received text: \(string)")
             MessageParser.shared.socketReceivedMessage(text: string, relayUrl: self.url)
         case .binary(let data):
                 print("🔌 RECEIVED DATA \(self.url): \(data.count)")
@@ -149,7 +149,7 @@ class SocketPool: ObservableObject {
         
         Task(priority: .background) {
             for (_, managedClient) in sockets {
-                print("active subscriptions \(managedClient.url): \(managedClient.activeSubscriptions.count)")
+//                print("active subscriptions \(managedClient.url): \(managedClient.activeSubscriptions.count)")
                 guard managedClient.read || managedClient.write else {
                     // Skip if relay is not selected for reading or writing events
                     continue
@@ -172,7 +172,7 @@ class SocketPool: ObservableObject {
                     if (!managedClient.isConnected && managedClient.read) && (!managedClient.isConnecting) {
                         managedClient.connect()
                     }
-                    print("🔚🔚 CLOSE: \(String(message.message.prefix(260)))")
+//                    print("🔚🔚 CLOSE: \(String(message.message.prefix(260)))")
                     managedClient.client.write(string: message.message) { }
                 }
                 else if message.type == .EVENT && managedClient.write { // EVENT IS ONLY FOR WRITE RELAYS

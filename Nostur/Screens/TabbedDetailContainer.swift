@@ -150,7 +150,7 @@ struct TabbedDetailContainer: View {
 //                .opacity(0)
         }
         
-        .padding(30)
+        .padding(0)
         .onAppear {
             print(tm.tabs)
         }
