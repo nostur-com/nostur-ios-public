@@ -48,7 +48,8 @@ final class TimelineModel: ObservableObject, Identifiable {
             .removeDuplicates()
             .throttle(for: .seconds(0.05), scheduler: RunLoop.current, latest: true)
             .compactMap { $0 }
-            .sink(receiveValue: { [unowned self] appeared in
+            .sink(receiveValue: { [weak self] appeared in
+                guard let self = self else { return }
                 guard self.mostRecentEvent != nil else {
                     self.mostRecentEvent = appeared
                     return
@@ -62,7 +63,8 @@ final class TimelineModel: ObservableObject, Identifiable {
         eventAppeared
             .removeDuplicates()
             .compactMap { $0 }
-            .sink { [unowned self] event in
+            .sink { [weak self] event in
+                guard let self = self else { return }
                 self.lastFiveEvents.append(event)
                 if (self.lastFiveEvents.count > 6) {
                     _ = self.lastFiveEvents.removeFirst()
@@ -76,7 +78,8 @@ final class TimelineModel: ObservableObject, Identifiable {
             .compactMap { $0 }
             .debounce(for: .seconds(0.5), scheduler: RunLoop.current)
             .throttle(for: .seconds(1), scheduler: RunLoop.current, latest: true)
-            .sink { [unowned self] event in
+            .sink { [weak self] event in
+                guard let self = self else { return }
 //                print("🟠🟠 fetching for ids: \(ids(self.lastFiveEvents))")
 //                sendNotification(.requestForJustAppeared, self.lastFiveEvents)
                 
@@ -96,15 +99,16 @@ final class TimelineModel: ObservableObject, Identifiable {
         notesChanged
             .combineLatest(eventAppeared)
             .debounce(for: .seconds(0.05), scheduler: RunLoop.current)
-            .map({ [unowned self] (notes, mostRecentReadEvent) in
+            .map({ [weak self] (notes, mostRecentReadEvent) in
+                guard let self = self else { return notes }
                 return (notes.filter { $0.created_at > (self.mostRecentEvent?.created_at ?? 0) })
             })
-            .removeDuplicates()
-            .sink(receiveValue: { [unowned self] unreadNotes in
-                print("🟣🟣🟣 (notesChanged) unreadNotes.count: \(unreadNotes.count)")
+            .sink(receiveValue: { [weak self] unreadNotes in
+                guard let self = self else { return }
                 if (self.unreadCount.value != unreadNotes.count) {
                     self.objectWillChange.send()
                     self.unreadCount.send(unreadNotes.count)
+                    print("🟣🟣🟣 unreadCount = \(unreadNotes.count)")
                 }
             })
             .store(in: &subscriptions)
