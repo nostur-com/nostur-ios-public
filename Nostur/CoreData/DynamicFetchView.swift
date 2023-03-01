@@ -99,3 +99,8 @@ func pubkey(_ event:Event) -> String {
 func pubkey(_ contact:Contact) -> String {
     return contact.pubkey
 }
+
+
+func serializedP(_ pubkey:String) -> String {
+    return "[\"p\",\"\(pubkey)"
+}

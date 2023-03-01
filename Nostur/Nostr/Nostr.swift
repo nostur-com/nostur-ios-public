@@ -41,18 +41,24 @@ public enum NEventKind: Codable, Equatable {
     case reaction
     case zapRequest
     case zapNote
+    case badgeDefinition
+    case badgeAward
+    case profileBadges
     case custom(Int)
 
     init(id: Int) {
         switch id {
-        case    0: self = .setMetadata
-        case    1: self = .textNote
-        case    2: self = .recommentServer
-        case    3: self = .contactList
-        case    6: self = .repost
-        case    7: self = .reaction
-        case 9734: self = .zapRequest
-        case 9735: self = .zapNote
+        case     0: self = .setMetadata
+        case     1: self = .textNote
+        case     2: self = .recommentServer
+        case     3: self = .contactList
+        case     6: self = .repost
+        case     7: self = .reaction
+        case  9734: self = .zapRequest
+        case  9735: self = .zapNote
+        case 30009: self = .badgeDefinition
+        case     8: self = .badgeAward
+        case 30008: self = .profileBadges
         default:   self = .custom(id)
         }
     }
@@ -67,6 +73,10 @@ public enum NEventKind: Codable, Equatable {
         case .reaction:             return 7
         case .zapRequest:           return 9734
         case .zapNote:              return 9735
+                
+        case .badgeDefinition:      return 30009
+        case .badgeAward:           return 8
+        case .profileBadges:        return 30008
         case .custom(let customId): return customId
         }
     }
@@ -85,7 +95,7 @@ public enum NEventKind: Codable, Equatable {
 }
 
 public struct NEventTag: Codable {
-    private let underlyingData: [String]
+    public let underlyingData: [String]
 
     public var type: String {
         return underlyingData.first!
@@ -96,6 +106,10 @@ public struct NEventTag: Codable {
     }
     
     public var pubkey: String {
+        return underlyingData.suffix(from: 1).first!
+    }
+    
+    public var value: String {
         return underlyingData.suffix(from: 1).first!
     }
 

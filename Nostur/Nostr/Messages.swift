@@ -240,6 +240,12 @@ struct RequestMessage {
 """
     }
     
+    static func getUserMetadataAndBadges(pubkey:String, subscriptionId:String? = nil) -> String {
+        return """
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [0,30008], "limit": 10}]
+"""
+    }
+    
     static func getUserMetadataAndContactList(pubkey:String, subscriptionId:String? = nil) -> String {
         return """
 ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [0,3], "limit": 20}]

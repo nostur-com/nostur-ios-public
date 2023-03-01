@@ -28,6 +28,8 @@ enum ViewPath: Hashable {
     case CreateNewAccount
     case UseExistingAccount
     case TryGuestAccount
+    
+    case Badges
 }
 
 extension View {
@@ -45,6 +47,12 @@ extension View {
             .navigationDestination(for: Contact.self) { contact in
                 Profile(contact: contact)
             }
+            .navigationDestination(for: Badge.self) { badge in
+                BadgeDetailView(badge: badge.badge)
+            }
+//            .navigationDestination(for: Badge.self) { badge in
+//                BadgeDetailView(badge: badge.badge)
+//            }
             .navigationDestination(for: ViewPath.self) { path in
                 switch (path) {
                     case .Blocklist:
@@ -68,6 +76,9 @@ extension View {
                         AddExistingAccountSheet(offerTryOut: true)
                     case .TryGuestAccount:
                         TryGuestAccountSheet() // TODO:
+                        
+                    case .Badges:
+                        BadgesView()
                 }
             }
     }

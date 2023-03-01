@@ -78,6 +78,12 @@ extension NosturRootMenu {
                     Label("Bookmarks", systemImage: "bookmark")
                 }
                 Button {
+                    nav.navigateTo(ViewPath.Badges)
+                    sm.showSidebar = false
+                } label: {
+                    Label("Badges", systemImage: "trophy.circle")
+                }
+                Button {
                     nav.navigateTo(ViewPath.Settings)
                     sm.showSidebar = false
                 } label: {

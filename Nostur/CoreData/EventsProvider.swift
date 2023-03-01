@@ -33,6 +33,14 @@ class EventsProvider: ObservableObject {
         account.name = "bitcoinerrrrr"
         account.about = "test account"
         
+        let account3 = Account(context: context)
+        account3.createdAt = Date()
+        account3.id = UUID()
+        account3.publicKey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
+        account3.display_name = "Fabian"
+        account3.name = "Fabian"
+        account3.about = "Author of Nostur.com"
+                
         let keys = NKeys.newKeys()
         
         let xaccount = Account(context: context)
@@ -67,6 +75,7 @@ class EventsProvider: ObservableObject {
         messages.append(contentsOf: testKindMixedOldDunnoEvents())
         messages.append(contentsOf: testRepliesAndReactions())
         messages.append(contentsOf: testSnowden())
+        messages.append(contentsOf: testBadges())
 //        messages.append(contentsOf: testMentions())
 //        messages.append(contentsOf: testKind6Events())
 //        messages.append(contentsOf: testEfilter())
@@ -79,14 +88,17 @@ class EventsProvider: ObservableObject {
         
         for text in messages {
             guard let message = try? RelayMessage.parseRelayMessage(text: text, skipValidation: true) else { continue }
-            if (message.event?.kind == .zapNote || message.event?.kind == .textNote || message.event?.kind == .reaction || message.event?.kind == .setMetadata) {
-                
-                if (message.subscriptionId == nil) {
-                    print("WHERE IS SUBSCRIPTION ID BRO")
-                    continue
-                }
-                relayMessages.append(message)
-            }
+            // just take all:
+            relayMessages.append(message)
+            // end of just take all.
+//            if (message.event?.kind == .badgeDefinition || message.event?.kind == .zapNote || message.event?.kind == .textNote || message.event?.kind == .reaction || message.event?.kind == .setMetadata) {
+//
+//                if (message.subscriptionId == nil) {
+//                    print("WHERE IS SUBSCRIPTION ID BRO")
+//                    continue
+//                }
+//                relayMessages.append(message)
+//            }
         }
         
         for relayMessage in relayMessages {
@@ -213,6 +225,7 @@ class EventsProvider: ObservableObject {
         description.url = defaultDirectoryURL.appendingPathComponent("Nostur.sqlite") // ("Nostur-iCloud.sqlite")
         description.configuration = "Default"
         
+//        print("🎃🎃🎃🎃🎃🎃🎃🎃🎃🎃 \(description.url)")
         
         if inMemory {
             description.url = URL(fileURLWithPath: "/dev/null")
