@@ -549,6 +549,7 @@ extension Event {
         let decoder = JSONDecoder()
         if let zapReqNEvent = try? decoder.decode(NEvent.self, from: description!.otherInformation[0].data(using: .utf8, allowLossyConversion: false)!) {
             do {
+                // TODO: mmm can disable? its note in note, is this verified by relays or zapper?
                 guard try zapReqNEvent.verified() else { return nil }
                 
                 return zapReqNEvent
