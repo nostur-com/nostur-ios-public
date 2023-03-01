@@ -32,7 +32,7 @@ class MessageParser {
                 case .NOTICE:
                     print("\(relayUrl): \(message.message)")
                 case .EOSE:
-                    if message.subscriptionId != "FOLLOWING" && message.subscriptionId != "EXPLORE" {
+                    if message.subscriptionId != "Following" && message.subscriptionId != "Explore" {
                         sp.sendMessage(ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: message.subscriptionId!)))
                     }
                 default:

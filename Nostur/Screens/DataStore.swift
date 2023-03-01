@@ -27,7 +27,7 @@ final class TimelineModel: ObservableObject, Identifiable {
         get { defaults.string(forKey: "restoreScrollToId-\(id)") }
     }
     
-    var id:String = "FOLLOWING"
+    var id:String = "Following"
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults

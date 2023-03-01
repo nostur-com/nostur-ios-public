@@ -18,7 +18,7 @@ struct FollowingStateIsolation: View {
     
     init() {
         self.ds = TimelineModel()
-        self.ds.setId(id: "FOLLOWING")
+        self.ds.setId(id: "Following")
     }
     
     var body: some View {
@@ -43,7 +43,7 @@ struct FollowingContainer: View {
     var body: some View {
         let _ = Self._printChanges()
         if ns.account != nil && (ns.account!.follows?.count ?? 0) > 0 {
-            Timeline(pubkey: ns.account!.publicKey, pubkeys: ns.followingPublicKeys, context: viewContext, id:"FOLLOWING", ds:ds)
+            Timeline(pubkey: ns.account!.publicKey, pubkeys: ns.followingPublicKeys, context: viewContext, id:"Following", ds:ds)
         }
         else if ns.account == nil {
             Text("No account")
