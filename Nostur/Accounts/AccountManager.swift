@@ -13,12 +13,6 @@ class AccountManager {
     
     static var shared = AccountManager()
     
-    var keychain:Keychain
-    
-    init() {
-        self.keychain = Keychain(service: "nostur.com.Nostur")
-    }
-    
     func generateAccount(display_name:String = "", name:String = "", about:String = "", context: NSManagedObjectContext) -> Account {
         let newKeys = NKeys.newKeys()
         storeKeys(newKeys)
@@ -49,8 +43,9 @@ class AccountManager {
     }
     
     func getPrivateKeyHex(pubkey:String) -> String? {
+        let keychain = Keychain(service: "nostur.com.Nostur")
         do {
-            let privateKeyHex = try self.keychain
+            let privateKeyHex = try keychain
                 .get(pubkey)
             return privateKeyHex
         } catch let error {
@@ -61,8 +56,9 @@ class AccountManager {
     }
     
     func storeKeys(_ keys:NKeys) {
+        let keychain = Keychain(service: "nostur.com.Nostur")
         do {
-            try self.keychain
+            try keychain
                 .accessibility(.whenUnlocked)
                 .set(keys.privateKeyHex(), key: keys.publicKeyHex())
         } catch let error {
@@ -72,8 +68,9 @@ class AccountManager {
     }
     
     func storePrivateKey(privateKeyHex: String, forPublicKeyHex:String) {
+        let keychain = Keychain(service: "nostur.com.Nostur")
         do {
-            try self.keychain
+            try keychain
                 .accessibility(.whenUnlocked)
                 .set(privateKeyHex, key: forPublicKeyHex)
         } catch let error {
@@ -83,6 +80,7 @@ class AccountManager {
     }
     
     func deletePrivateKey(forPublicKeyHex: String) {
+        let keychain = Keychain(service: "nostur.com.Nostur")
         do {
             try keychain.remove(forPublicKeyHex)
         } catch let error {

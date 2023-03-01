@@ -146,19 +146,15 @@ extension Account : Identifiable {
     
     var privateKey:String? {
         get {
-            guard self.publicKey != nil else { return nil }
             return AccountManager.shared.getPrivateKeyHex(pubkey: self.publicKey)
         }
         set(privateKeyHex) {
-            guard privateKeyHex != nil, self.publicKey != nil else {
-                if (self.publicKey != nil) {
-                    AccountManager.shared.deletePrivateKey(forPublicKeyHex: self.publicKey)
-                }
+            guard privateKeyHex != nil else {
+                AccountManager.shared.deletePrivateKey(forPublicKeyHex: self.publicKey)
                 return
             }
-            if (self.publicKey != nil) { // TODO: Store public key based on private?
-                AccountManager.shared.storePrivateKey(privateKeyHex: privateKeyHex!, forPublicKeyHex: self.publicKey)
-            }
+            // TODO: Store public key based on private?
+            AccountManager.shared.storePrivateKey(privateKeyHex: privateKeyHex!, forPublicKeyHex: self.publicKey)
         }
     }
     
