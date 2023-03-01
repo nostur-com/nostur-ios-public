@@ -15,8 +15,12 @@ extension View {
         let userDefaults:UserDefaults = {
             let d = UserDefaults(suiteName: "preview_user_defaults")!
             
-            d.set("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0",
+            
+            d.set("9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
                   forKey: "activeAccountPublicKey")
+            
+//            d.set("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0",
+//                  forKey: "activeAccountPublicKey")
             
             d.set(true, forKey: "devToggle")
             
@@ -37,7 +41,10 @@ extension View {
         let ss = SettingsStore()
         let sm = SideBarModel()
         
-        let account = PreviewFetcher.fetchAccount("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", context: EventsProvider.preview.container.viewContext)
+        let account = PreviewFetcher.fetchAccount("9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", context: EventsProvider.preview.container.viewContext)
+        
+//        let account = PreviewFetcher.fetchAccount("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", context: EventsProvider.preview.container.viewContext)
+        
         ns.setAccount(account: account)
         
         return self.defaultAppStorage(userDefaults)
@@ -115,7 +122,7 @@ struct PreviewFetcher {
     
     static func fetchContact(_ pubkey:String, context:NSManagedObjectContext? = nil) -> Contact? {
         let request = NSFetchRequest<Contact>(entityName: "Contact")
-        request.entity = Contact.entity()
+//        request.entity = Contact.entity()
         request.predicate = NSPredicate(format: "pubkey == %@", pubkey)
         request.sortDescriptors = []
         

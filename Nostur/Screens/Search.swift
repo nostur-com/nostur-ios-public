@@ -1,3 +1,4 @@
+
 //
 //  Search.swift
 //  Nostur
@@ -15,14 +16,14 @@ struct Search: View {
     var sp:SocketPool = .shared
     
     @FetchRequest(
-        entity: Event.entity(),
+//        entity: Event.entity(),
         sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
         predicate: NSPredicate(value: false),
         animation: .none)
     var events:FetchedResults<Event>
     
     @FetchRequest(
-        entity: Contact.entity(),
+//        entity: Contact.entity(),
         sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
         predicate: NSPredicate(value: false),
         animation: .none)
@@ -121,7 +122,9 @@ public final class DebounceObject: ObservableObject {
 
 struct Search_Previews: PreviewProvider {
     static var previews: some View {
-        Search()
-            .withPreviewEnvironment()
+        NavigationStack {
+            Search()
+                .withPreviewEnvironment()
+        }
     }
 }

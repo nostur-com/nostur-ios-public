@@ -118,42 +118,40 @@ struct AccountRow: View {
     @EnvironmentObject var ns:NosturState
     
     var body: some View {
-        if (account.publicKey != nil) {
-            HStack(alignment: .center) {
-                ProfilePicView(pubkey: account.publicKey, account: account, size: 35)
-                VStack(alignment: .leading) {
-                    HStack {
-                        VStack(alignment: .leading) {
-                            HStack(spacing:3) {
-                                Text(account.display_name).font(.headline).foregroundColor(.primary)
-                                    .lineLimit(1)
-                            }
-                            
-                            HStack {
-                                Text("@\(account.name)").font(.subheadline).foregroundColor(.secondary)
-                                    .lineLimit(1)
-                                if (account.privateKey == nil) {
-                                    Text("Read only").font(.system(size: 12.0))
-                                        .padding(.horizontal, 8)
-                                        .background(.cyan)
-                                        .foregroundColor(.white)
-//                                        .background(.background)
-                                        .cornerRadius(8)
-                                        
-                                    
-                                }
-                            }
-                        }.multilineTextAlignment(.leading)
-                        Spacer()
+        HStack(alignment: .center) {
+            ProfilePicView(pubkey: account.publicKey, account: account, size: 35)
+            VStack(alignment: .leading) {
+                HStack {
+                    VStack(alignment: .leading) {
+                        HStack(spacing:3) {
+                            Text(account.display_name).font(.headline).foregroundColor(.primary)
+                                .lineLimit(1)
+                        }
                         
-                    }
+                        HStack {
+                            Text("@\(account.name)").font(.subheadline).foregroundColor(.secondary)
+                                .lineLimit(1)
+                            if (account.privateKey == nil) {
+                                Text("Read only").font(.system(size: 12.0))
+                                    .padding(.horizontal, 8)
+                                    .background(.cyan)
+                                    .foregroundColor(.white)
+//                                        .background(.background)
+                                    .cornerRadius(8)
+                                    
+                                
+                            }
+                        }
+                    }.multilineTextAlignment(.leading)
+                    Spacer()
+                    
                 }
-                if (account == ns.account) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .resizable()
-                        .foregroundColor(.accentColor)
-                        .frame(width: 25, height: 25)
-                }
+            }
+            if (account == ns.account) {
+                Image(systemName: "checkmark.circle.fill")
+                    .resizable()
+                    .foregroundColor(.accentColor)
+                    .frame(width: 25, height: 25)
             }
         }
     }

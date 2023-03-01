@@ -166,10 +166,10 @@ struct TabbedDetailContainer: View {
         
         .padding(0)
         .onAppear {
-            print(tm.tabs)
+//            print(tm.tabs)
         }
         .onChange(of: tm.tabs) { newValue in
-            print(newValue)
+//            print(newValue)
         }
     }
 }
