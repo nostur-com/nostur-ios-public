@@ -111,9 +111,10 @@ struct Profile: View {
                                 image // Displays the loaded image
                             }
                             else {
-                                Image("NosturBanner")
-                                    .resizable()
-                                    .scaledToFill()
+                                Rectangle()
+                                    .foregroundColor(.gray)
+//                                    .resizable()
+//                                    .scaledToFill()
                                     .frame(width: geo.size.width, height: 150)
                                 //                                .clipped()
                             }
@@ -126,9 +127,10 @@ struct Profile: View {
                     }
                     else {
                         HStack {
-                            Image("NosturBanner")
-                                .resizable()
-                                .scaledToFill()
+                            Rectangle()
+                                .foregroundColor(.gray)
+//                                .resizable()
+//                                .scaledToFill()
                                 .frame(width: geo.size.width, height: 150)
                         }
                     }
@@ -152,6 +154,7 @@ struct Profile: View {
                     Rectangle().background(.clear).foregroundColor(.clear).frame(height:150) // Spacer to push content below header pic
                     
                     HStack(alignment:.top) {
+//                        Text("What")
                         
                         Spacer()
                         
@@ -383,7 +386,7 @@ struct Profile: View {
             }
         }
         .task {
-            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
+            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndBadges(pubkey: pubkey)))
         }
         .fullScreenCover(isPresented: $profilePicViewerIsShown) {
             ProfilePicFullScreenSheet(profilePicViewerIsShown: $profilePicViewerIsShown, pictureUrl:contact.picture!)
@@ -445,7 +448,8 @@ struct Profile_Previews: PreviewProvider {
     static var previews: some View {
         // 5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0 // bitcoiner
         // snowden: 84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240
-        let pubkey = "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
+        let pubkey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
+//        let pubkey = "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
         let snowden = PreviewFetcher.fetchContact(pubkey)
         //        let clEvent = PreviewFetcher.fetchEvents(pubkey, kind: 3).first!
         //
