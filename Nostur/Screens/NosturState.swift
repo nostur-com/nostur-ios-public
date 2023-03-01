@@ -62,6 +62,9 @@ final class NosturState : ObservableObject {
         if (account != nil) {
             activeAccountPublicKey = account!.publicKey
 //            DataStore.shared.unreadCount.send(0)
+            
+            // Remove currectly active "Following" subscriptions from connected sockets
+            SocketPool.shared.removeActiveFollowingSubscriptions()
             Task(priority: .userInitiated) {
                 self.loadLikesAndReposts()
             }

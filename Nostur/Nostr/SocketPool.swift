@@ -10,83 +10,26 @@ import Starscream
 import CoreData
 import OSLog
 
-class ManagedClient: WebSocketDelegate, ObservableObject {
-    
-    var relayId:NSManagedObjectID
-    var url:String
-    var client:WebSocket
-    
-    var isConnecting = false
-    @Published var isConnected = false
-    @Published var read = true
-    @Published var write = false
-    
-    var activeSubscriptions:[String] = []
-    
-    init(relayId: NSManagedObjectID, url: String, client:WebSocket, read: Bool = true, write: Bool = false) {
-        self.relayId = relayId
-        self.url = url.lowercased()
-        self.read = read
-        self.write = write
-        self.client = client
-        self.client.delegate = self
-    }
-    
-    func connect() {
-        self.isConnecting = true
-        self.client.connect()
-    }
-    
-    func didReceive(event: Starscream.WebSocketEvent, client: Starscream.WebSocketClient) {
-        switch event {
-        case .connected(let _):
-//            print(headers.description)
-            DispatchQueue.main.async {
-                self.isConnecting = false
-                self.isConnected = true
-            }
-                self.activeSubscriptions = []
-                print("🔌 CONNECTED \(self.url)")
-//                print("🔌 CONNECTED \(self.url): \(headers)")
-        case .disconnected(let reason, let code):
-            DispatchQueue.main.async {
-                self.isConnecting = false
-                self.isConnected = false
-            }
-                self.activeSubscriptions = []
-                print("🔌 DISCONNECTED \(self.url): \(reason) with code: \(code)")
-        case .text(let string):
-//                print("🔌 💬 Received text: \(string)")
-            MessageParser.shared.socketReceivedMessage(text: string, relayUrl: self.url)
-        case .binary(let data):
-                print("🔌 RECEIVED DATA \(self.url): \(data.count)")
-        case .ping(_):
-            break
-        case .pong(_):
-            break
-        case .viabilityChanged(_):
-            break
-        case .reconnectSuggested(_):
-            break
-        case .cancelled:
-            DispatchQueue.main.async {
-                self.isConnecting = false
-                self.isConnected = false
-            }
-                self.activeSubscriptions = []
-                print("🔌 CANCELLED \(self.url)")
-        case .error(let error):
-            DispatchQueue.main.async {
-                self.isConnecting = false
-                self.isConnected = false
-            }
-                self.activeSubscriptions = []
-                print("🔌🔴 ERROR \(self.url): \(error!)")
-        }
-    }
-}
+// Structure is:
+// SocketPool
+//  .sockets
+//      [NSManagedObjectID] = ManagedClient
+//                                    .client
+//                                    .activeSubscriptions
+//
+//      [NSManagedObjectID] = ManagedClient
+//                                    .client
+//                                    .activeSubscriptions
+//
+//      [NSManagedObjectID] = ManagedClient
+//                                    .client
+//                                    .activeSubscriptions
+//
+//      [NSManagedObjectID] = ManagedClient
+//                                    .client
+//                                    .activeSubscriptions
 
-class SocketPool: ObservableObject {
+final class SocketPool: ObservableObject {
     
     static let shared = SocketPool()
     
@@ -162,6 +105,7 @@ class SocketPool: ObservableObject {
                     // skip if we already have an active subcription
                     guard subscriptionId == nil || managedClient.activeSubscriptions.firstIndex(where: { $0 == subscriptionId }) == nil else { continue }
                     if (subscriptionId != nil) {
+                        print("⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!)")
                         managedClient.activeSubscriptions.append(subscriptionId!)
                     }
 //                    print("REQUESTING: \(String(message.message.prefix(260)))")
@@ -186,8 +130,90 @@ class SocketPool: ObservableObject {
         }
     }
     
+    func removeActiveFollowingSubscriptions() {
+        for socket in sockets {
+            socket.value.activeSubscriptions.removeAll { subscriptionId in
+                subscriptionId == "Following"
+            }
+        }
+    }
 }
 
+class ManagedClient: WebSocketDelegate, ObservableObject {
+    
+    var relayId:NSManagedObjectID
+    var url:String
+    var client:WebSocket
+    
+    var isConnecting = false
+    @Published var isConnected = false
+    @Published var read = true
+    @Published var write = false
+    
+    var activeSubscriptions:[String] = []
+    
+    init(relayId: NSManagedObjectID, url: String, client:WebSocket, read: Bool = true, write: Bool = false) {
+        self.relayId = relayId
+        self.url = url.lowercased()
+        self.read = read
+        self.write = write
+        self.client = client
+        self.client.delegate = self
+    }
+    
+    func connect() {
+        self.isConnecting = true
+        self.client.connect()
+    }
+    
+    func didReceive(event: Starscream.WebSocketEvent, client: Starscream.WebSocketClient) {
+        switch event {
+        case .connected(let _):
+//            print(headers.description)
+            DispatchQueue.main.async {
+                self.isConnecting = false
+                self.isConnected = true
+            }
+                self.activeSubscriptions = []
+                print("🔌 CONNECTED \(self.url)")
+//                print("🔌 CONNECTED \(self.url): \(headers)")
+        case .disconnected(let reason, let code):
+            DispatchQueue.main.async {
+                self.isConnecting = false
+                self.isConnected = false
+            }
+                self.activeSubscriptions = []
+                print("🔌 DISCONNECTED \(self.url): \(reason) with code: \(code)")
+        case .text(let string):
+//                print("🔌 💬 Received text: \(string)")
+            MessageParser.shared.socketReceivedMessage(text: string, relayUrl: self.url)
+        case .binary(let data):
+                print("🔌 RECEIVED DATA \(self.url): \(data.count)")
+        case .ping(_):
+            break
+        case .pong(_):
+            break
+        case .viabilityChanged(_):
+            break
+        case .reconnectSuggested(_):
+            break
+        case .cancelled:
+            DispatchQueue.main.async {
+                self.isConnecting = false
+                self.isConnected = false
+            }
+                self.activeSubscriptions = []
+                print("🔌 CANCELLED \(self.url)")
+        case .error(let error):
+            DispatchQueue.main.async {
+                self.isConnecting = false
+                self.isConnected = false
+            }
+                self.activeSubscriptions = []
+                print("🔌🔴 ERROR \(self.url): \(error!)")
+        }
+    }
+}
 
 
 
