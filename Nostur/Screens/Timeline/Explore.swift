@@ -34,7 +34,6 @@ struct ExploreStateIsolation: View {
 
 struct ExploreContainer: View {
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var nav:NavigationModel
     @Environment(\.managedObjectContext) var viewContext
     var ds:TimelineModel
 

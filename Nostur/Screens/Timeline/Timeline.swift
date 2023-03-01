@@ -12,7 +12,7 @@ struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling i
     ///
     var id:String
     @AppStorage("firstTimeCompleted") var firstTimeCompleted = false
-    @EnvironmentObject var nav:NavigationModel // Ugh... need this here just for nav.selectedSubTab == "Following" ??
+    @AppStorage("selected_subtab") var selectedSubTab = "Following"
     let ot:OnboardingTracker = .shared
     @Environment(\.managedObjectContext) var viewContext
     let pubkey:String
@@ -159,7 +159,7 @@ struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling i
 //            guard 1 == 2 else { return } // Performance test
 //            guard !isScrolling else { return }
             guard isViewDisplayed else { return }
-            guard nav.selectedSubTab == ds.id else { return } // Alternative for isViewDisplayed (because opacity 1 : 0)
+            guard selectedSubTab == ds.id else { return } // Alternative for isViewDisplayed (because opacity 1 : 0)
             guard !Importer.shared.isImporting else { print("⏳ Still importing, new fetch skipped."); return }
             
             if (ot.isOnboarding && pubkey == ot.pubkey && ot.didFetchKind3 && !ot.didFillTimeline) {

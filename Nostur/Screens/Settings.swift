@@ -16,7 +16,6 @@ struct Settings: View {
     }
 
     var body: some View {
-        NavigationView {
             Form {
                 Section(header: Text("Message verification")) {
                     Toggle(isOn: $settings.isSignatureVerificationEnabled) {
@@ -54,8 +53,7 @@ struct Settings: View {
 //                    }
 //                }
             }
-//            .navigationBarTitle(Text("Settings"))
-        }
+            .navigationTitle("Settings")
     }
 }
 

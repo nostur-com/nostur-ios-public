@@ -172,7 +172,6 @@ struct AddExistingAccountSheet: View {
         try! viewContext.save()
         ns.setAccount(account: account)
         // 2. But also check if there are newer events
-        nav.selectedSubTab = "Following"
         if (!ot.didFetchKind0 || !ot.didFetchKind3) {
             let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: pubkey))
             SocketPool.shared.sendMessage(message)

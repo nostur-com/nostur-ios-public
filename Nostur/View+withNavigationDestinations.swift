@@ -20,7 +20,6 @@ enum ViewPath: Hashable {
     case Blocklist
     case Bookmarks(account:Account)
     case Account(account:Account)
-//    case ZapList(event:Event)
     case NoteReactions(event:Event)
     case NoteZaps(event:Event)
     case Settings
@@ -39,7 +38,6 @@ extension View {
             }
             .navigationDestination(for: Event.self) { event in
                 NoteDetail(event: event)
-//                NoteDetail(event: event)
             }
             .navigationDestination(for: ContactPath.self) { path in
                 ProfileByPubkey(pubkey: path.key)
@@ -55,8 +53,6 @@ extension View {
                         BookmarksView(account: account)
                     case .Account(let account):
                         AccountEditView(account: account)
-//                    case .ZapList(let event):
-//                        ZapsList(event: event)
                     case .NoteReactions(let event):
                         NoteReactions(id: event.id)
                     case .NoteZaps(let event):
@@ -82,11 +78,11 @@ class NavigationModel: ObservableObject {
     static var shared = NavigationModel()
     public var modelType = "NORMAL"
     
-    @AppStorage("selected_tab") var selectedTab = "Timeline"
-    @AppStorage("selected_subtab") var selectedSubTab = "Explore"
+    @AppStorage("selected_tab") var selectedTab = "Main"
     @Published var tabPath = NavigationPath()
-    @Published var timelinePath = NavigationPath()
-    @Published var explorePath = NavigationPath()
+    @Published var mainPath = NavigationPath()
+//    @Published var timelinePath = NavigationPath()
+//    @Published var explorePath = NavigationPath()
     @Published var searchPath = NavigationPath()
     @Published var accountsPath = NavigationPath()
     @Published var bookmarksPath = NavigationPath()
@@ -131,15 +127,8 @@ class NavigationModel: ObservableObject {
             }
         }
         switch (selectedTab) {
-            case "Timeline":
-                switch (selectedSubTab) {
-                    case "Following":
-                        self.timelinePath.append(path)
-                    case "Explore":
-                        self.explorePath.append(path)
-                    default:
-                        self.timelinePath.append(path)
-                }
+            case "Main":
+                self.mainPath.append(path)
             case "Accounts":
                 self.accountsPath.append(path)
             case "Bookmarks":
@@ -153,17 +142,14 @@ class NavigationModel: ObservableObject {
             case "Search":
                 self.searchPath.append(path)
             default:
-                self.timelinePath.append(path)
+                self.mainPath.append(path)
         }
     }
     
     func clear() -> Void {
         switch (selectedTab) {
-            case "Timeline":
-                self.timelinePath.removeLast(self.timelinePath.count)
-                self.detailPath.removeLast(self.detailPath.count)
-            case "Explorer":
-                self.explorePath.removeLast(self.explorePath.count)
+            case "Main":
+                self.mainPath.removeLast(self.accountsPath.count)
                 self.detailPath.removeLast(self.detailPath.count)
             case "Accounts":
                 self.accountsPath.removeLast(self.accountsPath.count)
@@ -178,7 +164,7 @@ class NavigationModel: ObservableObject {
             case "Search":
                 self.searchPath.removeLast(self.searchPath.count)
             default:
-                self.timelinePath.removeLast(self.timelinePath.count)
+                self.mainPath.removeLast(self.mainPath.count)
         }
     }
 }

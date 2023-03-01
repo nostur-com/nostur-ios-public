@@ -35,7 +35,7 @@ struct FollowingStateIsolation: View {
 
 struct FollowingContainer: View {
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var nav:NavigationModel
+    @AppStorage("selected_subtab") var selectedSubTab = "Following"
     @Environment(\.managedObjectContext) var viewContext
     var ds:TimelineModel
 
@@ -60,7 +60,7 @@ struct FollowingContainer: View {
                     .padding(/*@START_MENU_TOKEN@*/.all, 30.0/*@END_MENU_TOKEN@*/)
                     
                 Button {
-                    nav.selectedSubTab = "Explore"
+                    selectedSubTab = "Explore"
                 } label: {
                     Text("Explore")
                 }.buttonStyle(.borderedProminent)

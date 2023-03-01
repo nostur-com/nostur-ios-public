@@ -9,43 +9,47 @@ import SwiftUI
 
 struct FollowingAndExplore: View {
     
-    @EnvironmentObject var nav:NavigationModel
-//    @StateObject var followingModel = TimelineModel(id:"Following")
-//    @StateObject var exploreModel = TimelineModel(id:"Explore")
+    //    @EnvironmentObject var nav:NavigationModel
+    //    @State var timelinePath = NavigationPath()
+    //    @State var explorePath = NavigationPath()
+    @AppStorage("selected_subtab") var selectedSubTab = "Explore"
     
     var body: some View {
         VStack {
             HStack {
                 TabButton(action: {
-//                    withAnimation {
-                        nav.selectedSubTab = "Following"
-//                    }
-                }, title: "Following", selected: nav.selectedSubTab == "Following")
+                    //                    withAnimation {
+                    selectedSubTab = "Following"
+                    //                    }
+                }, title: "Following", selected: selectedSubTab == "Following")
                 
                 TabButton(action: {
-//                    withAnimation {
-                        nav.selectedSubTab = "Explore"
-//                    }
-                }, title: "Explore", selected: nav.selectedSubTab == "Explore")
+                    //                    withAnimation {
+                    selectedSubTab = "Explore"
+                    //                    }
+                }, title: "Explore", selected: selectedSubTab == "Explore")
             }
             ZStack {
-                NavigationStack(path: $nav.timelinePath) {
-                    FollowingStateIsolation()
-//                        .environmentObject(followingModel)
-                        .frame(maxWidth: 600)
-                        .withNavigationDestinations()
-                }
-                .opacity(nav.selectedSubTab == "Following" ? 1 : 0)
-                NavigationStack(path: $nav.explorePath) {
-                    ExploreStateIsolation()
-//                        .environmentObject(exploreModel)
-                        .frame(maxWidth: 600)
-                        .withNavigationDestinations()
-                }
-                .opacity(nav.selectedSubTab == "Explore" ? 1 : 0)
+                //                NavigationStack(path: $timelinePath) {
+                FollowingStateIsolation()
+                //                        .environmentObject(followingModel)
+                    .frame(maxWidth: 600)
+                //                        .withNavigationDestinations()
+                //                }
+                    .opacity(selectedSubTab == "Following" ? 1 : 0)
+                //                NavigationStack(path: $explorePath) {
+                ExploreStateIsolation()
+                //                        .environmentObject(exploreModel)
+                    .frame(maxWidth: 600)
+                //                        .withNavigationDestinations()
+                //                }
+                    .opacity(selectedSubTab == "Explore" ? 1 : 0)
             }
             Spacer()
         }
+        .navigationTitle(selectedSubTab)
+        .navigationBarHidden(true)
+//        .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .top) {
             AppTopBar()
                 .padding(5)
