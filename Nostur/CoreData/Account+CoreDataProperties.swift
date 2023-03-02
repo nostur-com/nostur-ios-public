@@ -30,6 +30,7 @@ extension Account {
     @NSManaged public var follows: Set<Contact>?
     @NSManaged public var bookmarks: Set<Event>?
     @NSManaged public var blockedContacts: Set<Contact>?
+    @NSManaged public var mutedConversations: Set<Event>?
     
     @NSManaged public var likes: Set<Event>?
     @NSManaged public var reposts: Set<Event>?
@@ -106,6 +107,23 @@ extension Account {
 
 }
 
+// MARK: Generated accessors for muted conversations
+extension Account {
+
+    @objc(addMutedConversationsObject:)
+    @NSManaged public func addToMutedConversations(_ value: Event)
+
+    @objc(removeMutedConversationsObject:)
+    @NSManaged public func removeFromMutedConversations(_ value: Event)
+
+    @objc(addMutedConversations:)
+    @NSManaged public func addToMutedConversations(_ values: NSSet)
+
+    @objc(removeMutedConversations:)
+    @NSManaged public func removeFromMutedConversations(_ values: NSSet)
+
+}
+
 // MARK: Generated accessors for likes
 extension Account {
 
@@ -121,6 +139,9 @@ extension Account {
     @objc(removeLikes:)
     @NSManaged public func removeFromLikes(_ values: NSSet)
 
+    var mutedConversations_: Set<Event> {
+        return mutedConversations ?? Set<Event>()
+    }
 }
 
 // MARK: Generated accessors for reposts
