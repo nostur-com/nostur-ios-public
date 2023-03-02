@@ -120,16 +120,16 @@ struct NosturApp: App {
             }
             else {
                 // Fetch updated contactlist for epxlorer feed
-                let message = ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: NosturState.GUEST_ACCOUNT_PUBKEY))
+                let message = ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: NosturState.EXPLORER_PUBKEY))
                 SocketPool.shared.sendMessage(message)
             }
             if (ns.globalPubkeys.count == 0) {
                 // Fetch updated contactlist for epxlorer feed
-                let message = ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: NosturState.GUEST_ACCOUNT_PUBKEY))
+                let message = ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: NosturState.EXPLORER_PUBKEY))
                 SocketPool.shared.sendMessage(message)
                 
                 let r = Event.fetchRequest()
-                r.predicate = NSPredicate(format: "kind == 3 && pubkey == %@", NosturState.GUEST_ACCOUNT_PUBKEY)
+                r.predicate = NSPredicate(format: "kind == 3 && pubkey == %@", NosturState.EXPLORER_PUBKEY)
                 r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
                 let exploreContactList = try? EventsProvider.shared.container.viewContext.fetch(r).first
                 if exploreContactList != nil {
