@@ -24,7 +24,6 @@ struct NotificationsW: View {
 }
 
 struct NotificationsView: View {
-    
     @Environment(\.managedObjectContext) var viewContext
     
     @ObservedObject var account:Account
@@ -41,7 +40,7 @@ struct NotificationsView: View {
         self.account = account
         print("🧨🧨🧨🧨🧨 INIT NOTIFICATIONS VIEW 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", account.publicKey)
+        fr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", serializedP(account.publicKey))
         fr.fetchLimit = 125 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW (MET VSTACK).
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         _kind1 = FetchRequest(fetchRequest: fr)
@@ -107,8 +106,11 @@ struct NotificationsView: View {
         }
         .onAppear {
             guard ns.account != nil else { return }
-            kind1.nsPredicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", account.publicKey)
+            kind1.nsPredicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@  AND NOT self IN %@ AND NOT replyToRoot IN %@ AND NOT replyTo IN %@", serializedP(account.publicKey), NSSet(set:account.mutedConversations_), NSSet(set:account.mutedConversations_), NSSet(set:account.mutedConversations_))
             fetchMentions()
+        }
+        .onChange(of: account.mutedConversations_) { newValue in
+            kind1.nsPredicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@  AND NOT self IN %@ AND NOT replyToRoot IN %@ AND NOT replyTo IN %@", serializedP(account.publicKey), NSSet(set:newValue), NSSet(set:newValue), NSSet(set:newValue))
         }
     }
     

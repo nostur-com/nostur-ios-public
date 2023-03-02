@@ -8,11 +8,37 @@
 import SwiftUI
 
 struct BlockListView: View {
+
+    @State var tab = "Blocked"
     
+    var body: some View {
+        VStack {
+            HStack {
+                TabButton(action: {
+                        tab = "Blocked"
+                }, title: "Blocked", selected: tab == "Blocked")
+                
+                TabButton(action: {
+                        tab = "Muted"
+                }, title: "Muted conversations", selected: tab == "Muted")
+            }
+            switch tab {
+                case "Blocked":
+                    BlockedAccounts()
+                case "Muted":
+                    MutedConversations()
+                default:
+                    BlockedAccounts()
+            }
+            Text("Swipe to unblock/unmute")
+            Spacer()
+        }
+    }
+}
+
+struct BlockedAccounts:View {
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
-    
-    
     var body: some View {
         if (ns.account == nil) {
             Text("Please choose account first")
@@ -38,6 +64,35 @@ struct BlockListView: View {
                                 }
 //                                }
                             } label: { Text("Unblock") }.tint(.green)
+                        }
+                }
+            }
+        }
+    }
+}
+
+struct MutedConversations:View {
+    @Environment(\.managedObjectContext) var viewContext
+    @EnvironmentObject var ns:NosturState
+    var body: some View {
+        if (ns.account == nil) {
+            Text("Please choose account first")
+        }
+        else {
+            List {
+                ForEach(Array(ns.account!.mutedConversations_)) { rootEvent in
+                    NoteRowView(event: rootEvent)
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button {
+                                ns.objectWillChange.send()
+                                ns.account!.removeFromMutedConversations(rootEvent)
+                                do {
+                                    try viewContext.save()
+                                } catch {
+                                    print("🔴 could not remove post from muted conversations")
+                                    print(error)
+                                }
+                            } label: { Text("Unmute") }.tint(.green)
                         }
                 }
             }

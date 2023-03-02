@@ -77,6 +77,30 @@ struct NoteMenu: View {
             } label: {
                 Label("Block @\(username)", systemImage: "slash.circle")
             }
+            
+            Button {
+                print("Mute conversation")
+                if let replyToRoot = event.replyToRoot {
+                    ns.account?.addToMutedConversations(replyToRoot)
+                    print("Muting \(replyToRoot.id)")
+                }
+                else if event.replyToRootId != nil {
+                    if let rootEvent = try? Event.fetchEvent(id: event.replyToRootId!, context: viewContext) {
+                        ns.account?.addToMutedConversations(rootEvent)
+                        print("Muting \(rootEvent.id)")
+                    }
+                }
+                // TODO: How to mute if we can't fetch the root? Must find solution around missing notes in Core Data.
+                
+                do {
+                    try viewContext.save()
+                }
+                catch {
+                    print("Could not save after muting thread \(error)")
+                }
+            } label: {
+                Label("Mute thread", systemImage: "bell.slash.fill")
+            }
         } label: {
             Text("···")
                 .fontWeight(.bold)
