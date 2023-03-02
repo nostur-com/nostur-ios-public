@@ -563,7 +563,6 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
-				1F71B45629B0AA1600FA0400 /* NotificationsNotes.swift */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1FB448BB2965F3D000038671 /* Products */,
 				1F7C65B629A1466D009FF3EA /* Frameworks */,
@@ -628,6 +627,7 @@
 				1FC2DFEE29A9128D00C8A9DA /* MinimalNoteTextRenderView.swift */,
 				1FC2DFEC29A90F6C00C8A9DA /* NoteMinimalContentView.swift */,
 				1F7525832997B21D00477AF2 /* NotificationsView.swift */,
+				1F71B45629B0AA1600FA0400 /* NotificationsNotes.swift */,
 				1F065A9A29A3E67F003421D3 /* NotificationsReactions.swift */,
 				1F4820F129A9F808000EDFDA /* NotificationsZaps.swift */,
 			);
