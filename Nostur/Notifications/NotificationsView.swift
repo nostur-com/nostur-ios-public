@@ -8,7 +8,7 @@
 import SwiftUI
 import CoreData
 
-struct NotificationsW: View {
+struct NotificationsContainer: View {
     @EnvironmentObject var ns:NosturState
     @Environment(\.managedObjectContext) var viewContext
     
@@ -31,25 +31,11 @@ struct NotificationsView: View {
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var sp:SocketPool
     
-    @FetchRequest
-    var kind1:FetchedResults<Event>
-    
     @State var tab = "NOTES"
     
     init(account:Account) {
         self.account = account
         print("🧨🧨🧨🧨🧨 INIT NOTIFICATIONS VIEW 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
-        let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", serializedP(account.publicKey))
-        fr.fetchLimit = 125 // 5 = FAST TIMELINE TO DETAIL. 75 = SLOW (MET VSTACK).
-        fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        _kind1 = FetchRequest(fetchRequest: fr)
-    }
-    
-    var myNotifications:[Event] {
-        get {
-            kind1.filter { $0.tags().filter { $0.pubkey == account.publicKey }.count > 0 }
-        }
     }
     
     var body: some View {
@@ -78,13 +64,13 @@ struct NotificationsView: View {
                 
                 switch (tab) {
                     case "NOTES":
-                        Notes(notes: myNotifications) { creationDate in
+                        NotificationsNotes(pubkey: ns.account!.publicKey, mutedConversations: ns.account!.mutedConversations_, context: viewContext) { creationDate in
                             if (creationDate > account.lastNotificationDate) {
                                 account.lastNotificationDate = creationDate
                             }
                         }
                     case "REACTIONS":
-                        NotificationsV(pubkey: ns.account!.publicKey, context: viewContext) { creationDate in
+                        NotificationsReactions(pubkey: ns.account!.publicKey, context: viewContext) { creationDate in
                             if (creationDate > account.lastNotificationDate) {
                                 account.lastNotificationDate = creationDate
                             }
@@ -104,94 +90,12 @@ struct NotificationsView: View {
                 Text("No active account")
             }
         }
-        .onAppear {
-            guard ns.account != nil else { return }
-            kind1.nsPredicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@  AND NOT self IN %@ AND NOT replyToRoot IN %@ AND NOT replyTo IN %@", serializedP(account.publicKey), NSSet(set:account.mutedConversations_), NSSet(set:account.mutedConversations_), NSSet(set:account.mutedConversations_))
-            fetchMentions()
-        }
-        .onChange(of: account.mutedConversations_) { newValue in
-            kind1.nsPredicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@  AND NOT self IN %@ AND NOT replyToRoot IN %@ AND NOT replyTo IN %@", serializedP(account.publicKey), NSSet(set:newValue), NSSet(set:newValue), NSSet(set:newValue))
-        }
-    }
-    
-    func fetchMentions() {
-        guard ns.account != nil else { return }
-        sp.sendMessage(
-            ClientMessage(type: .REQ,
-                          message:
-                            RequestMessage.getMentions(
-                                pubkeys: [ns.account!.publicKey],
-                                kinds: [1],
-                                limit: 500,
-                                since: NTimestamp(timestamp: Int(myNotifications.first?.created_at ?? 0)))
-                         )
-        )
-    }
-}
-
-extension NotificationsView {
-    struct Notes: View {
-        var notes:[Event]
-        var onAppear:(Int64) -> ()
-        
-        var body: some View {
-            let _ = Self._printChanges()
-            ScrollView {
-                LazyVStack {
-                    ForEach(notes) { event in
-                        NoteRowView(event: event)
-                            .onAppear {
-                                onAppear(event.created_at)
-                            }
-                        Divider()
-                    }
-                }
-            }
-        }
-    }
-    
-    struct Reactions: View {
-        var reactions:[Event]
-        var onAppear:(Int64) -> ()
-        
-        var body: some View {
-            let _ = Self._printChanges()
-            ScrollView {
-                LazyVStack {
-                    ForEach(reactions) { event in
-                        NoteRowView(event: event)
-                            .onAppear {
-                                onAppear(event.created_at)
-                            }
-                    }
-                }
-            }
-        }
-    }
-    
-    struct Zaps: View {
-        var zaps:[Event]
-        var onAppear:(Int64) -> ()
-        
-        var body: some View {
-            let _ = Self._printChanges()
-            ScrollView {
-                LazyVStack {
-                    ForEach(zaps) { event in
-                        ZapRow(event: event)
-                            .onAppear {
-                                onAppear(event.created_at)
-                            }
-                    }
-                }
-            }
-        }
     }
 }
 
 struct NotificationsView_Previews: PreviewProvider {
     static var previews: some View {
-        NotificationsW()
+        NotificationsContainer()
             .withPreviewEnvironment()
     }
 }
