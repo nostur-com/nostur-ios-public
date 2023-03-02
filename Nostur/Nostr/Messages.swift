@@ -91,6 +91,12 @@ struct RelayMessage {
 // REQ messages for requesting with filters
 struct RequestMessage {
     
+    static func getBadgesCreatedAndAwarded(pubkey:String, subscriptionId:String? = nil) -> String {
+        return """
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [30009,8], "limit": 500}]
+"""
+    }
+    
     // Get all events where [pubkeys] are mentioned (in p tag)
     static func getMentions(pubkeys:[String], kinds:[Int] = [1,7,9735], limit:Int = 500, subscriptionId:String? = nil, since:NTimestamp? = nil) -> String {
         

@@ -31,9 +31,11 @@ struct BadgesIssuedView: View {
     @State var createNewBadgeSheetShown = false
     @FetchRequest
     var badges:FetchedResults<Event>
+    var pubkey:String
     
     init(pubkey:String) {
         print("🧨🧨🧨🧨🧨 BadgesView 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
+        self.pubkey = pubkey
         let r = Event.fetchRequest()
         r.predicate = NSPredicate(format: "kind == 30009 AND pubkey == %@", pubkey)
         r.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
@@ -50,6 +52,13 @@ struct BadgesIssuedView: View {
                     }
                 }
 //            }
+        }
+        .onAppear {
+            // fetch missing batch definitions:
+            // or just all...
+            let req = RequestMessage.getBadgesCreatedAndAwarded(pubkey: pubkey)
+            let message = ClientMessage(type: .REQ, message: req)
+            SocketPool.shared.sendMessage(message)
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {

@@ -12,11 +12,11 @@ struct NoteMenu: View {
     @Environment(\.managedObjectContext) var viewContext
     var event:Event
     
-    var noteIdHex:String { get { event.id ?? "00000" } }
+    var noteIdHex:String { event.id }
     var noteId:String { get { event.noteId } }
     var username:String {
         get {
-            event.contact?.username ?? String((event.pubkey ?? "WTF").prefix(5))
+            event.contact?.username ?? String((event.pubkey).prefix(5))
         }
     }
     
