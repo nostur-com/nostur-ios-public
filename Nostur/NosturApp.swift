@@ -118,16 +118,10 @@ struct NosturApp: App {
                 
                 // fetch following events
             }
-            else {
-                // Fetch updated contactlist for epxlorer feed
-                let message = ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: NosturState.EXPLORER_PUBKEY))
-                SocketPool.shared.sendMessage(message)
-            }
             if (ns.globalPubkeys.count == 0) {
                 // Fetch updated contactlist for epxlorer feed
-                let message = ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: NosturState.EXPLORER_PUBKEY))
-                SocketPool.shared.sendMessage(message)
                 
+                // First get from cache
                 let r = Event.fetchRequest()
                 r.predicate = NSPredicate(format: "kind == 3 && pubkey == %@", NosturState.EXPLORER_PUBKEY)
                 r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
@@ -136,6 +130,14 @@ struct NosturApp: App {
                     ns.objectWillChange.send()
                     ns.globalPubkeys = Set(exploreContactList!.pTags())
                     
+                }
+                
+                // But connect also and get newest
+                SocketPool.shared.connectAll()
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    let message = ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: NosturState.EXPLORER_PUBKEY))
+                    SocketPool.shared.sendMessage(message)
                 }
             }
         }

@@ -93,10 +93,13 @@ class Importer {
                     }
                     
                     if event.kind == .contactList {
-                        if event.publicKey == NosturState.GUEST_ACCOUNT_PUBKEY {
+                        if event.publicKey == NosturState.EXPLORER_PUBKEY {
                             // use guest account p's for "Explorer" feed
                             // TODO: Need objectWillChange.send() here or not?
-                            NosturState.shared.globalPubkeys = Set(event.pTags())
+                            let pTags = event.pTags()
+                            Task { @MainActor in
+                                NosturState.shared.globalPubkeys = Set(pTags)
+                            }
                         }
                         
                         if (ot.isOnboarding && ot.pubkey == event.publicKey) { // TODO: skip if first time completed

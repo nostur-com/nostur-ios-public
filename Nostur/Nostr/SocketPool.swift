@@ -37,6 +37,14 @@ final class SocketPool: ObservableObject {
     
     @Published var sockets:[NSManagedObjectID : ManagedClient] = [:]
     
+    func connectAll() {
+        for socket in sockets {
+            if !socket.value.isConnecting && !socket.value.isConnected {
+                socket.value.client.connect()
+            }
+        }
+    }
+    
     func addSocket(relayId:NSManagedObjectID, url:String, read:Bool = true, write: Bool = false) -> ManagedClient {
         if (!sockets.keys.contains(relayId)) {
             

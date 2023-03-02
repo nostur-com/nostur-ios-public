@@ -52,6 +52,9 @@ struct ExploreContainer: View {
                         // TODO:
                         // fetch guest account kind 3
                         // add to ns.globalPubkeys
+                        // Fetch updated contactlist for epxlorer feed
+//                        let message = ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: NosturState.EXPLORER_PUBKEY))
+//                        SocketPool.shared.sendMessage(message)
                     }
                 }
         }
