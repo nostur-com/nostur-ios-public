@@ -64,7 +64,7 @@ struct NotificationsView: View {
                 
                 switch (tab) {
                     case "NOTES":
-                        NotificationsNotes(pubkey: ns.account!.publicKey, mutedConversations: ns.account!.mutedConversations_, context: viewContext) { creationDate in
+                        NotificationsNotes(pubkey: ns.account!.publicKey, mutedRootIds: ns.account!.mutedRootIds_, context: viewContext) { creationDate in
                             if (creationDate > account.lastNotificationDate) {
                                 account.lastNotificationDate = creationDate
                             }

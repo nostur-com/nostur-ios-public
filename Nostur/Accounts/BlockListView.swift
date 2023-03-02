@@ -71,21 +71,26 @@ struct BlockedAccounts:View {
     }
 }
 
-struct MutedConversations:View {
+struct MutedConversations: View {
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
+    
+    @FetchRequest(sortDescriptors: [], predicate: NSPredicate(value: false))
+    var mutedRootEvents:FetchedResults<Event>
+    
     var body: some View {
         if (ns.account == nil) {
             Text("Please choose account first")
         }
         else {
             List {
-                ForEach(Array(ns.account!.mutedConversations_)) { rootEvent in
+                ForEach(mutedRootEvents) { rootEvent in
                     NoteRowView(event: rootEvent)
+                        .listRowInsets(EdgeInsets())
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button {
                                 ns.objectWillChange.send()
-                                ns.account!.removeFromMutedConversations(rootEvent)
+                                ns.account!.mutedRootIds_.removeAll(where: { $0 == rootEvent.id })
                                 do {
                                     try viewContext.save()
                                 } catch {
@@ -95,6 +100,15 @@ struct MutedConversations:View {
                             } label: { Text("Unmute") }.tint(.green)
                         }
                 }
+            }
+            .listStyle(.plain)
+            .onAppear {
+                if let account = ns.account {
+                    mutedRootEvents.nsPredicate = NSPredicate(format: "id IN %@", account.mutedRootIds_)
+                }
+            }
+            .onChange(of: ns.account!.mutedRootIds_) { newValue in
+                mutedRootEvents.nsPredicate = NSPredicate(format: "id IN %@", newValue)
             }
         }
     }

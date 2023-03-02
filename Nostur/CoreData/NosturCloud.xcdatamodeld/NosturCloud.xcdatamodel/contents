@@ -9,6 +9,7 @@
         <attribute name="lastNotificationDate" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="lud06" attributeType="String" defaultValueString=""/>
         <attribute name="lud16" attributeType="String" defaultValueString=""/>
+        <attribute name="mutedRootIds" optional="YES" attributeType="String" customClassName="[String]"/>
         <attribute name="name" attributeType="String" defaultValueString=""/>
         <attribute name="nip05" attributeType="String" defaultValueString=""/>
         <attribute name="picture" attributeType="String" defaultValueString=""/>
@@ -17,7 +18,6 @@
         <relationship name="bookmarks" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Event" inverseName="bookmarkedBy" inverseEntity="Event"/>
         <relationship name="follows" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact" inverseName="followedBy" inverseEntity="Contact"/>
         <relationship name="likes" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Event"/>
-        <relationship name="mutedConversations" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Event"/>
         <relationship name="reposts" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Event"/>
     </entity>
     <entity name="Contact" representedClassName=".Contact" syncable="YES">

@@ -21,18 +21,18 @@ struct NotificationsNotes: View {
     @FetchRequest
     var notes:FetchedResults<Event>
         
-    init(pubkey:String, mutedConversations:Set<Event>, context:NSManagedObjectContext, onAppear: @escaping (Int64) -> ()) {
+    init(pubkey:String, mutedRootIds:[String], context:NSManagedObjectContext, onAppear: @escaping (Int64) -> ()) {
         print("🧨🧨🧨🧨🧨 I INIT NotificationsV 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         self.pubkey = pubkey
         self.onAppear = onAppear
         let r1 = Event.fetchRequest()
-        r1.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@  AND NOT self IN %@ AND NOT replyToRoot IN %@ AND NOT replyTo IN %@", serializedP(pubkey), NSSet(set:mutedConversations), NSSet(set:mutedConversations), NSSet(set:mutedConversations))
+        r1.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND NOT replyToRootId IN %@ AND NOT replyToId IN %@", serializedP(pubkey), mutedRootIds, mutedRootIds, mutedRootIds)
 //        r1.fetchLimit = FETCH_LIMIT
         r1.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         let oldestCreatedAt = (try? context.fetch(r1).last?.created_at) ?? 0
         
         let r2 = Event.fetchRequest()
-        r2.predicate = NSPredicate(format: "created_at >= %i AND kind == 1 AND tagsSerialized CONTAINS %@  AND NOT self IN %@ AND NOT replyToRoot IN %@ AND NOT replyTo IN %@", oldestCreatedAt, pubkey, NSSet(set:mutedConversations), NSSet(set:mutedConversations), NSSet(set:mutedConversations))
+        r2.predicate = NSPredicate(format: "created_at >= %i AND kind == 1 AND tagsSerialized CONTAINS %@  AND NOT id IN %@ AND NOT replyToRootId IN %@ AND NOT replyToId IN %@", oldestCreatedAt, pubkey, mutedRootIds, mutedRootIds, mutedRootIds)
 //        r2.fetchLimit = FETCH_LIMIT
         r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         _notes = FetchRequest(fetchRequest: r2)
@@ -76,7 +76,7 @@ struct NotificationsNotes: View {
 struct NotificationsNotes_Previews: PreviewProvider {
     static var previews: some View {
         let pubkey = "04c915daefee38317fa734444acee390a8269fe5810b2241e5e6dd343dfbecc9"
-        NotificationsNotes(pubkey: pubkey, mutedConversations: Set<Event>(), context: EventsProvider.preview.container.viewContext) { _ in
+        NotificationsNotes(pubkey: pubkey, mutedRootIds: [], context: EventsProvider.preview.container.viewContext) { _ in
             
         }
             .withPreviewEnvironment()

@@ -30,12 +30,13 @@ extension Account {
     @NSManaged public var follows: Set<Contact>?
     @NSManaged public var bookmarks: Set<Event>?
     @NSManaged public var blockedContacts: Set<Contact>?
-    @NSManaged public var mutedConversations: Set<Event>?
+//    @NSManaged public var mutedConversations: Set<Event>?
     
     @NSManaged public var likes: Set<Event>?
     @NSManaged public var reposts: Set<Event>?
     
     @NSManaged public var lastNotificationDate: Int64
+    @NSManaged public var mutedRootIds: String? // Serialized
     
     static func fetchAccount(publicKey:String, context:NSManagedObjectContext) throws -> Account? {
         let request = NSFetchRequest<Account>(entityName: "Account")
@@ -107,22 +108,22 @@ extension Account {
 
 }
 
-// MARK: Generated accessors for muted conversations
-extension Account {
-
-    @objc(addMutedConversationsObject:)
-    @NSManaged public func addToMutedConversations(_ value: Event)
-
-    @objc(removeMutedConversationsObject:)
-    @NSManaged public func removeFromMutedConversations(_ value: Event)
-
-    @objc(addMutedConversations:)
-    @NSManaged public func addToMutedConversations(_ values: NSSet)
-
-    @objc(removeMutedConversations:)
-    @NSManaged public func removeFromMutedConversations(_ values: NSSet)
-
-}
+//// MARK: Generated accessors for muted conversations
+//extension Account {
+//
+//    @objc(addMutedConversationsObject:)
+//    @NSManaged public func addToMutedConversations(_ value: Event)
+//
+//    @objc(removeMutedConversationsObject:)
+//    @NSManaged public func removeFromMutedConversations(_ value: Event)
+//
+//    @objc(addMutedConversations:)
+//    @NSManaged public func addToMutedConversations(_ values: NSSet)
+//
+//    @objc(removeMutedConversations:)
+//    @NSManaged public func removeFromMutedConversations(_ values: NSSet)
+//
+//}
 
 // MARK: Generated accessors for likes
 extension Account {
@@ -139,9 +140,9 @@ extension Account {
     @objc(removeLikes:)
     @NSManaged public func removeFromLikes(_ values: NSSet)
 
-    var mutedConversations_: Set<Event> {
-        return mutedConversations ?? Set<Event>()
-    }
+//    var mutedConversations_: Set<Event> {
+//        return mutedConversations ?? Set<Event>()
+//    }
 }
 
 // MARK: Generated accessors for reposts
@@ -282,4 +283,20 @@ extension Account : Identifiable {
         }
     }
     
+    var mutedRootIds_:[String] {
+        get {
+            guard mutedRootIds != nil else { return [] }
+            let decoder = JSONDecoder()
+            guard let ids = try? decoder.decode([String].self, from: Data(mutedRootIds!.utf8)) else { return [] }
+            return ids
+        }
+        set {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .withoutEscapingSlashes
+            if let idsSerialized = try? encoder.encode(newValue) {
+                objectWillChange.send()
+                mutedRootIds = String(data: idsSerialized, encoding: .utf8)
+            }
+        }
+    }
 }
