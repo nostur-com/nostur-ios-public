@@ -307,6 +307,10 @@ struct NEvent: Codable {
     func lastE() -> String? {
         tags.last(where: { $0.type == "e" })?.id
     }
+    
+    func tagNamed(_ type:String) -> String? {
+        tags.first(where: { $0.type == type })?.value
+    }
 }
 
 class TagSerializer {

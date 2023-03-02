@@ -154,7 +154,8 @@ struct Profile: View {
                     Rectangle().background(.clear).foregroundColor(.clear).frame(height:150) // Spacer to push content below header pic
                     
                     HStack(alignment:.top) {
-//                        Text("What")
+                        ProfileBadgesContainer(pubkey: contact.pubkey)
+                            .offset(x: 85, y: 0)
                         
                         Spacer()
                         
