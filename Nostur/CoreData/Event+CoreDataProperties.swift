@@ -1,5 +1,5 @@
 //
-//  Event+CoreDataProperties.swift
+//  Even+CoreDataProperties.swift
 //  Nostur
 //
 //  Created by Fabian Lachman on 15/01/2023.
@@ -59,6 +59,7 @@ extension Event {
     @NSManaged public var replyToRoot: Event?
     @NSManaged public var firstQuote: Event?
     @NSManaged public var zapTally: Int64
+//    @NSManaged public var cachedSats: Double
 
     @NSManaged public var replies: Set<Event>?
     
@@ -625,6 +626,14 @@ extension Event {
                     savedEvent.zappedContact = Contact.fetchByPubkey(firstP, context: context)
                 }
             }
+            
+            // bolt11 -- replaced with naiveBolt11Decoder
+//            if let bolt11 = event.bolt11() {
+//                let invoice = Invoice.fromStr(s: bolt11)
+//                if let parsedInvoice = invoice.getValue() {
+//                    savedEvent.cachedSats = Double((parsedInvoice.amountMilliSatoshis() ?? 0) / 1000)
+//                }
+//            }
         }
         
         if event.kind == .reaction {

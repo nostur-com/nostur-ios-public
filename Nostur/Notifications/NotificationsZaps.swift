@@ -11,7 +11,7 @@ import CoreData
 struct NotificationsZaps: View {
     
     let pubkey:String
-    let FETCH_LIMIT = 500
+    let FETCH_LIMIT = 125
     let nav:NavigationModel = .shared
     let sp:SocketPool = .shared
     @EnvironmentObject var ns:NosturState
@@ -23,10 +23,8 @@ struct NotificationsZaps: View {
 
         
     var zapsForMe:[Event] {
-        get {
-            zaps.filter {
-                $0.zappedContactPubkey != nil && $0.zappedContactPubkey == pubkey
-            }
+        zaps.filter {
+            $0.zappedContactPubkey != nil && $0.zappedContactPubkey == pubkey
         }
     }
 
@@ -107,8 +105,8 @@ struct ZapsForThisNote: View {
     @Environment(\.managedObjectContext) var viewContext
     var onAppear:(Int64) -> ()
     
-    var zapsSorted:[Event] {
-        zaps.sorted(by: { $0.sats > $1.sats } )
+    var zapsSorted:[Event] { // $0.sats > $0.sats is slow... so cached..
+        zaps.sorted(by: { $0.naiveSats > $1.naiveSats } )
     }
 
     var body: some View {
@@ -123,7 +121,7 @@ struct ZapsForThisNote: View {
                             }
                             .zIndex(-Double(index))
                         
-                        Text("\(zapsSorted[index].sats.satsFormatted)")
+                        Text("\(zapsSorted[index].naiveSats.satsFormatted)")
                             .font(.caption)
                             .padding(3)
                             .foregroundColor(.white)

@@ -39,7 +39,15 @@ extension Event {
         }
     }
     
+    
+    // Homegrown bolt11 amount decoder become LightningDevKit is sloooooooow
+    var naiveSats:Double {
+        guard let bolt11 = bolt11() else { return 0.0 }
+        return naiveBolt11AmountDecoder(bolt11)
+    }
+    
     // THE AMOUNT PAID
+    // TODO: Maybe cache at import?
     var sats:Double {
         get {
             guard bolt11Invoice != nil else { return 0 }
@@ -56,4 +64,35 @@ extension Contact {
     var anyLud:Bool {
         (lud16 != nil && lud16 != "") || (lud06 != nil && lud06 != "")
     }
+}
+
+
+func naiveBolt11AmountDecoder(_ test:String) -> Double {
+    guard test.prefix(4) == "lnbc" else { return 0.0 }
+    let noPrefix = test.dropFirst(4)
+    
+    let digitSet = CharacterSet.decimalDigits
+
+    if let range = noPrefix.rangeOfCharacter(from: digitSet.inverted) {
+        let nonDigitChar = noPrefix[range.lowerBound]
+        guard ["m","u","n","p"].firstIndex(of: nonDigitChar) != nil else { return 0.0 }
+        let nonDigitIndex = noPrefix.distance(from: noPrefix.startIndex, to: range.lowerBound)
+        switch nonDigitChar {
+                // 1 BTC = 100000000 SATS
+                // 1 SAT = 1000 mSATS
+            case "m":
+                return (Double(noPrefix.prefix(nonDigitIndex)) ?? 0.0) * 100000
+            case "u":
+                return (Double(noPrefix.prefix(nonDigitIndex)) ?? 0.0) * 100
+            case "n":
+                return (Double(noPrefix.prefix(nonDigitIndex)) ?? 0.0) * 0.1
+            case "p":
+                // BOLT11: If the p multiplier is used the last decimal of amount MUST be 0.
+                guard noPrefix.prefix(nonDigitIndex).suffix(1) == "0" else { return 0.0 }
+                return (Double(noPrefix.prefix(nonDigitIndex)) ?? 0.0) * 0.0001
+            default:
+                return 0.0
+        }
+    }
+    return 0.0
 }

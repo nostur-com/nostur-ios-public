@@ -28,7 +28,7 @@ struct NoteZaps: View {
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)], predicate: NSPredicate(value: false))
     var zaps:FetchedResults<Event>
-    var zaps_:[Event] { Array(zaps) }
+    var zapsSorted:[Event] { zaps.sorted(by: { $0.naiveSats > $1.naiveSats }) }
     
     init(id:String) {
         self.id = id
@@ -37,7 +37,7 @@ struct NoteZaps: View {
     
     var body: some View {
         ScrollView {
-            ForEach(zaps) { zap in
+            ForEach(zapsSorted) { zap in
                 NoteZapRow(event: zap)
             }
             Spacer()

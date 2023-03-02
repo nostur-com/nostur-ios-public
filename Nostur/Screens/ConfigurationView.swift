@@ -7,6 +7,7 @@
 
 import SwiftUI
 import CoreData
+import LightningDevKit
 //import Kingfisher
 
 struct ConfigurationView: View {
@@ -156,6 +157,7 @@ struct ConfigurationView: View {
             event.likesCount = 0
             event.zapTally = 0
             event.zapsCount = 0
+//            event.cachedSats = 0
         }
         
         // RECOUNT
@@ -206,8 +208,14 @@ struct ConfigurationView: View {
             
             
             // if ZAP (KIND 9735)
-            // update likes count
+            // update sats cache --- replaced with .naiveSats
             if (event.kind == 9735 && event.tagsSerialized != nil) {
+//                if let bolt11 = event.bolt11() {
+//                    let invoice = Invoice.fromStr(s: bolt11)
+//                    if let parsedInvoice = invoice.getValue() {
+//                        event.cachedSats = Double((parsedInvoice.amountMilliSatoshis() ?? 0) / 1000)
+//                    }
+//                }
                 let _ = Event.updateZapTallyCache(event, context: viewContext)
             }
         }
