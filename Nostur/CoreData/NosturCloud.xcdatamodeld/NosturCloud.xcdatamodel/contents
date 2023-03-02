@@ -17,6 +17,7 @@
         <relationship name="bookmarks" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Event" inverseName="bookmarkedBy" inverseEntity="Event"/>
         <relationship name="follows" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact" inverseName="followedBy" inverseEntity="Contact"/>
         <relationship name="likes" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Event"/>
+        <relationship name="mutedConversations" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Event"/>
         <relationship name="reposts" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Event"/>
     </entity>
     <entity name="Contact" representedClassName=".Contact" syncable="YES">
