@@ -142,6 +142,9 @@ struct TabbedDetailContainer: View {
                         .opacity(tm.selected == tab ? 1 : 0)
                         .id(tab.event!.id)
                     }
+                    else if (tab.contact != nil) {
+                        Profile(contact: tab.contact!).opacity(tm.selected == tab ? 1 : 0)
+                    }
                     else if (tab.notePath != nil) {
                         NoteById(id: tab.notePath!.id).opacity(tm.selected == tab ? 1 : 0)
                     }

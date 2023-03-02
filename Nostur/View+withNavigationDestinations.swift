@@ -136,6 +136,13 @@ class NavigationModel: ObservableObject {
                 tm.selected = tab
                 return
             }
+            else if type(of: path) == Contact.self {
+                let c = path as! Contact
+                let tab = DetailTabsModel.Tab(id: c.pubkey, contact: c)
+                tm.tabs.append(tab) 
+                tm.selected = tab
+                return
+            }
         }
         switch (selectedTab) {
             case "Main":

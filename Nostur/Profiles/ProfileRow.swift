@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ProfileRow: View {
-
+    let nav:NavigationModel = .shared
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var sp:SocketPool
 //    var sp:SocketPool = .shared
@@ -20,7 +20,7 @@ struct ProfileRow: View {
     @ObservedObject var contact:Contact
     
     var body: some View {
-        NavigationLink(value: contact) {
+//        NavigationLink(value: contact) {
             HStack(alignment: .top) {
                 ProfilePicView(pubkey: contact.pubkey, contact: contact)
                 VStack(alignment: .leading) {
@@ -63,7 +63,11 @@ struct ProfileRow: View {
                         .multilineTextAlignment(.leading)
                 }
             }
-        }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                nav.navigateTo(contact)
+            }
+//        }
         .onAppear {
             if (ns.isFollowing(contact)) {
                 isFollowing = true

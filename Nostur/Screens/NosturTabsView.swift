@@ -25,7 +25,7 @@ struct NosturTabsView: View {
                 .tag("Main")
                                 
                 NavigationStack(path: $nav.notificationsPath) {
-                    NotificationsW()
+                    NotificationsContainer()
                         .withNavigationDestinations()
                     Spacer()
                 }
