@@ -26,10 +26,10 @@ struct LightningButton: View {
                 if (er.bitcoinPrice != 0.0) {
                     let fiatPrice = String(format: "$%.02f",(Double(tally) / 100000000 * Double(er.bitcoinPrice)))
                     
-                    Text("\(fiatPrice)")
+                    Text("\(fiatPrice)").opacity(tally != 0 ? 1 : 0)
                 }
                 else {
-                    Text("\(tally.formatNumber) sats")
+                    Text("\(tally.formatNumber) sats").opacity(tally != 0 ? 1 : 0)
                 }
             }
             .onTapGesture {
