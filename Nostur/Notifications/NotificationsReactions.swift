@@ -61,6 +61,7 @@ struct NotificationsReactions: View {
                         }
                         Divider()
                     }
+                    .id(note.id)
                 }
             }
             .padding()

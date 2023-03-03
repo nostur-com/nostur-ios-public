@@ -22,17 +22,17 @@ struct NotificationsNotes: View {
     var notes:FetchedResults<Event>
         
     init(pubkey:String, mutedRootIds:[String], context:NSManagedObjectContext, onAppear: @escaping (Int64) -> ()) {
-        print("🧨🧨🧨🧨🧨 I INIT NotificationsV 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
+        print("🧨🧨🧨🧨🧨 I INIT NotificationsNotes 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         self.pubkey = pubkey
         self.onAppear = onAppear
         let r1 = Event.fetchRequest()
-        r1.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND NOT replyToRootId IN %@ AND NOT replyToId IN %@", serializedP(pubkey), mutedRootIds, mutedRootIds, mutedRootIds)
+        r1.predicate = NSPredicate(format: "pubkey != %@ AND kind == 1 AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND NOT replyToRootId IN %@ AND NOT replyToId IN %@", pubkey, serializedP(pubkey), mutedRootIds, mutedRootIds, mutedRootIds)
 //        r1.fetchLimit = FETCH_LIMIT
         r1.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         let oldestCreatedAt = (try? context.fetch(r1).last?.created_at) ?? 0
         
         let r2 = Event.fetchRequest()
-        r2.predicate = NSPredicate(format: "created_at >= %i AND kind == 1 AND tagsSerialized CONTAINS %@  AND NOT id IN %@ AND NOT replyToRootId IN %@ AND NOT replyToId IN %@", oldestCreatedAt, pubkey, mutedRootIds, mutedRootIds, mutedRootIds)
+        r2.predicate = NSPredicate(format: "created_at >= %i AND pubkey != %@ AND kind == 1 AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND NOT replyToRootId IN %@ AND NOT replyToId IN %@", oldestCreatedAt, pubkey, serializedP(pubkey), mutedRootIds, mutedRootIds, mutedRootIds)
 //        r2.fetchLimit = FETCH_LIMIT
         r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         _notes = FetchRequest(fetchRequest: r2)
