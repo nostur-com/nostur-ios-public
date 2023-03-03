@@ -64,13 +64,13 @@ struct NotificationsView: View {
                 
                 switch (tab) {
                     case "NOTES":
-                        NotificationsNotes(pubkey: ns.account!.publicKey, mutedRootIds: ns.account?.mutedRootIds_ ?? [], context: viewContext) { creationDate in
+                        NotificationsNotes(pubkey: ns.account!.publicKey, mutedRootIds: ns.account?.mutedRootIds_ ?? [], blockedPubkeys: ns.account?.blockedPubkeys_ ?? [], context: viewContext) { creationDate in
                             if (creationDate > account.lastNotificationDate) {
                                 account.lastNotificationDate = creationDate
                             }
                         }
                     case "REACTIONS":
-                        NotificationsReactions(pubkey: ns.account!.publicKey, context: viewContext) { creationDate in
+                        NotificationsReactions(pubkey: ns.account!.publicKey, blockedPubkeys: ns.account?.blockedPubkeys_ ?? [], context: viewContext) { creationDate in
                             if (creationDate > account.lastNotificationDate) {
                                 account.lastNotificationDate = creationDate
                             }

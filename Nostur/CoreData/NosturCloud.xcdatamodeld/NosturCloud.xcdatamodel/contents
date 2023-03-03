@@ -3,6 +3,7 @@
     <entity name="Account" representedClassName=".Account" syncable="YES">
         <attribute name="about" attributeType="String" defaultValueString=""/>
         <attribute name="banner" attributeType="String" defaultValueString=""/>
+        <attribute name="blockedPubkeys" optional="YES" attributeType="String"/>
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="display_name" attributeType="String" defaultValueString=""/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>

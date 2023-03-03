@@ -212,8 +212,8 @@ struct NoteAndParent: View {
                         // REPLIES TO OUR MAIN NOTE
                         LazyVStack {
                             ForEach (event.replies_.filter({ event in
-                                    if ns.account != nil && event.contact != nil {
-                                        return !(ns.account!.blockedContacts ?? Set<Contact>()).contains(event.contact!)
+                                    if ns.account != nil {
+                                        return !(Set(ns.account!.blockedPubkeys_)).contains(event.pubkey)
                                     }
                                     else {
                                         return true

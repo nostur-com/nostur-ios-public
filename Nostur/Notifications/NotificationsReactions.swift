@@ -31,18 +31,18 @@ struct NotificationsReactions: View {
         reactions.compactMap {  $0.reactionTo == note ? $0 : nil }
     }
     
-    init(pubkey:String, context:NSManagedObjectContext, onAppear: @escaping (Int64) -> ()) {
+    init(pubkey:String, blockedPubkeys:[String], context:NSManagedObjectContext, onAppear: @escaping (Int64) -> ()) {
         print("🧨🧨🧨🧨🧨 I INIT NotificationsV 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         self.pubkey = pubkey
         self.onAppear = onAppear
         let r1 = Event.fetchRequest()
-        r1.predicate = NSPredicate(format: "kind == 7 AND reactionTo.contact.pubkey == %@", pubkey)
+        r1.predicate = NSPredicate(format: "NOT pubkey IN %@ AND kind == 7 AND reactionTo.contact.pubkey == %@", blockedPubkeys, pubkey)
 //        r1.fetchLimit = FETCH_LIMIT
         r1.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         let oldestCreatedAt = (try? context.fetch(r1).last?.created_at) ?? 0
         
         let r2 = Event.fetchRequest()
-        r2.predicate = NSPredicate(format: "created_at >= %i AND kind == 7 AND reactionTo.contact.pubkey == %@", oldestCreatedAt, pubkey)
+        r2.predicate = NSPredicate(format: "NOT pubkey IN %@ AND created_at >= %i AND kind == 7 AND reactionTo.contact.pubkey == %@", blockedPubkeys, oldestCreatedAt, pubkey)
 //        r2.fetchLimit = FETCH_LIMIT
         r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         _reactions = FetchRequest(fetchRequest: r2)
@@ -150,7 +150,7 @@ struct ReactionsForThisNote: View {
 struct NotificationsV_Previews: PreviewProvider {
     static var previews: some View {
         let pubkey = "04c915daefee38317fa734444acee390a8269fe5810b2241e5e6dd343dfbecc9"
-        NotificationsReactions(pubkey: pubkey, context: EventsProvider.preview.container.viewContext) { _ in
+        NotificationsReactions(pubkey: pubkey, blockedPubkeys: [], context: EventsProvider.preview.container.viewContext) { _ in
             
         }
             .withPreviewEnvironment()

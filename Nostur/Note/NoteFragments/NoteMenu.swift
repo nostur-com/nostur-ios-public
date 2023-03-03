@@ -55,19 +55,20 @@ struct NoteMenu: View {
             Button {
                 print("Block @\(username)")
                 if (event.contact == nil) {
+                    // TODO: Contact is created so it can be unblocked in Blocklist. Should not have to create contact just for this.
                     let newContact = Contact(context: viewContext)
                     newContact.pubkey = event.pubkey
                     newContact.updated_at = 0
                     ns.objectWillChange.send()
-                    ns.account?.addToBlockedContacts(newContact)
+                    ns.account!.blockedPubkeys_ = ns.account!.blockedPubkeys_ + [event.pubkey]
                 }
                 else {
                     ns.objectWillChange.send()
-                    ns.account?.addToBlockedContacts(event.contact!)
+                    ns.account!.blockedPubkeys_ = ns.account!.blockedPubkeys_ + [event.pubkey]
                 }
                 do {
                     try viewContext.save()
-                    sendNotification(.blockListUpdated, ns.account!.blockedContacts ?? Set<Contact>())
+                    sendNotification(.blockListUpdated, ns.account!.blockedPubkeys_)
                 }
                 catch {
                     print("Could not save after blocking contact \(error)")
@@ -82,11 +83,11 @@ struct NoteMenu: View {
                 guard ns.account != nil else { return }
                 print("Mute conversation")
                 if let replyToRootId = event.replyToRootId {
-                    ns.account?.mutedRootIds_ = ns.account!.mutedRootIds_ + [replyToRootId]
+                    ns.account?.mutedRootIds_ = ns.account!.mutedRootIds_ + [replyToRootId, event.id]
                     print("Muting \(replyToRootId)")
                 }
                 else if let firstE = event.firstE() {
-                    ns.account?.mutedRootIds_ = ns.account!.mutedRootIds_ + [firstE]
+                    ns.account?.mutedRootIds_ = ns.account!.mutedRootIds_ + [firstE, event.id]
                     print("Muting \(firstE)")
                 }
                 do {

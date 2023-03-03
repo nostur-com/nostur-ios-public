@@ -29,7 +29,7 @@ extension Account {
     @NSManaged public var id: UUID?
     @NSManaged public var follows: Set<Contact>?
     @NSManaged public var bookmarks: Set<Event>?
-    @NSManaged public var blockedContacts: Set<Contact>?
+//    @NSManaged public var blockedContacts: Set<Contact>?
 //    @NSManaged public var mutedConversations: Set<Event>?
     
     @NSManaged public var likes: Set<Event>?
@@ -37,6 +37,7 @@ extension Account {
     
     @NSManaged public var lastNotificationDate: Int64
     @NSManaged public var mutedRootIds: String? // Serialized
+    @NSManaged public var blockedPubkeys: String? // Serialized
     
     static func fetchAccount(publicKey:String, context:NSManagedObjectContext) throws -> Account? {
         let request = NSFetchRequest<Account>(entityName: "Account")
@@ -71,23 +72,6 @@ extension Account {
 
     @objc(removeFollows:)
     @NSManaged public func removeFromFollows(_ values: NSSet)
-
-}
-
-// MARK: Generated accessors for blockedContacts
-extension Account {
-
-    @objc(addBlockedContactsObject:)
-    @NSManaged public func addToBlockedContacts(_ value: Contact)
-
-    @objc(removeBlockedContactsObject:)
-    @NSManaged public func removeFromBlockedContacts(_ value: Contact)
-
-    @objc(addBlockedContacts:)
-    @NSManaged public func addToBlockedContacts(_ values: NSSet)
-
-    @objc(removeBlockedContacts:)
-    @NSManaged public func removeFromBlockedContacts(_ values: NSSet)
 
 }
 
@@ -296,6 +280,23 @@ extension Account : Identifiable {
             if let idsSerialized = try? encoder.encode(newValue) {
                 objectWillChange.send()
                 mutedRootIds = String(data: idsSerialized, encoding: .utf8)
+            }
+        }
+    }
+    
+    var blockedPubkeys_:[String] {
+        get {
+            guard blockedPubkeys != nil else { return [] }
+            let decoder = JSONDecoder()
+            guard let ids = try? decoder.decode([String].self, from: Data(blockedPubkeys!.utf8)) else { return [] }
+            return ids
+        }
+        set {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .withoutEscapingSlashes
+            if let idsSerialized = try? encoder.encode(newValue) {
+                objectWillChange.send()
+                blockedPubkeys = String(data: idsSerialized, encoding: .utf8)
             }
         }
     }

@@ -181,10 +181,10 @@ class EventsProvider: ObservableObject {
             someEvent!.addToBookmarkedBy(account)
         }
         if (contact3 != nil) {
-            account.addToBlockedContacts(contact3!)
+            account.blockedPubkeys_ = account.blockedPubkeys_ + [contact3!.pubkey]
         }
         if (contact1 != nil) {
-            account.addToBlockedContacts(contact1!)
+            account.blockedPubkeys_ = account.blockedPubkeys_ + [contact1!.pubkey]
         }
         
         if (contact2 != nil) {

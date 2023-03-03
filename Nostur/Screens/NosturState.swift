@@ -28,10 +28,8 @@ final class NosturState : ObservableObject {
         get {
             if account == nil { return Set<String>() }
             
-            let blocked = (account!.blockedContacts ?? Set<Contact>()).map { $0.pubkey }
-            
             let withSelfIncluded = Set([account!.publicKey] + (account!.follows ?? Set<Contact>()).map { $0.pubkey })
-            let withoutBlocked = withSelfIncluded.subtracting(blocked)
+            let withoutBlocked = withSelfIncluded.subtracting(Set(account!.blockedPubkeys_))
             
             return withoutBlocked
         }

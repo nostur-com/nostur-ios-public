@@ -39,25 +39,28 @@ struct BlockListView: View {
 struct BlockedAccounts:View {
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
+    
+    @FetchRequest(sortDescriptors: [], predicate: NSPredicate(value: false))
+    var blockedContacts:FetchedResults<Contact>
+    
     var body: some View {
         if (ns.account == nil) {
             Text("Please choose account first")
         }
         else {
             List {
-                ForEach((ns.account!.blockedContacts ?? Set<Contact>()).sorted(by: { $0.authorName < $1.authorName })) { contact in
+                ForEach(blockedContacts.sorted(by: { $0.authorName < $1.authorName })) { contact in
                     ProfileRow(withoutFollowButton: true, contact: contact)
 //                        .id(contact.id)
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button {
 //                                withAnimation {
                                 ns.objectWillChange.send()
-                                ns.account!.removeFromBlockedContacts(contact)
-//                                ns.objectWillChange.send()
+                                ns.account!.blockedPubkeys_.removeAll(where: { $0 == contact.id })
                                 try! viewContext.save()
                                 do {
                                     try viewContext.save()
-                                    sendNotification(.blockListUpdated, ns.account!.blockedContacts ?? Set<Contact>())
+                                    sendNotification(.blockListUpdated, ns.account!.blockedPubkeys_)
                                 } catch {
                                     print("🔴 could not remove contact from blocked list")
                                     print(error)
@@ -66,6 +69,14 @@ struct BlockedAccounts:View {
                             } label: { Text("Unblock") }.tint(.green)
                         }
                 }
+            }
+            .onAppear {
+                if let account = ns.account {
+                    blockedContacts.nsPredicate = NSPredicate(format: "pubkey IN %@", account.blockedPubkeys_)
+                }
+            }
+            .onChange(of: ns.account!.blockedPubkeys_) { newValue in
+                blockedContacts.nsPredicate = NSPredicate(format: "pubkey IN %@", newValue)
             }
         }
     }
