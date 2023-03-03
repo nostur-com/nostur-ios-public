@@ -26,7 +26,7 @@ struct FooterFragment: View {
             
             HStack {
                 Image(systemName: "message")
-                Text("\(event.repliesCount)")
+                Text("\(event.repliesCount)").opacity(event.repliesCount == 0 ? 0 : 1)
             }
             .contentShape(Rectangle())
             .onTapGesture {
@@ -38,7 +38,7 @@ struct FooterFragment: View {
             if (event.reposted) {
                 HStack {
                     Image(systemName: "arrow.2.squarepath")
-                    Text("\(event.mentionsCount)")
+                    Text("\(event.mentionsCount)").opacity(event.mentionsCount == 0 ? 0 : 1)
                 }.foregroundColor(.green)
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -55,7 +55,7 @@ struct FooterFragment: View {
             else {
                 HStack {
                     Image(systemName: "arrow.2.squarepath")
-                    Text("\(event.mentionsCount)")
+                    Text("\(event.mentionsCount)").opacity(event.mentionsCount == 0 ? 0 : 1)
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -86,7 +86,7 @@ struct FooterFragment: View {
             if (event.liked) {
                 HStack {
                     Image(systemName: "heart.fill")
-                    Text("\(event.likesCount)")
+                    Text("\(event.likesCount)").opacity(event.likesCount == 0 ? 0 : 1)
                 }.foregroundColor(.red)
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -99,7 +99,7 @@ struct FooterFragment: View {
             else {
                 HStack {
                     Image(systemName: "heart")
-                    Text("\(event.likesCount)")
+                    Text("\(event.likesCount)").opacity(event.likesCount == 0 ? 0 : 1)
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {

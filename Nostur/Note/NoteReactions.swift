@@ -25,7 +25,7 @@ struct NoteReactions: View {
     var body: some View {
         let _ = Self._printChanges()
         ScrollView {
-            ForEach(reactions, id:\.self) { reaction in
+            ForEach(reactions) { reaction in
                 ReactionRow(reaction: reaction)
             }
             Spacer()
@@ -60,7 +60,7 @@ struct ReactionRow: View {
     
     var body: some View {
         HStack(alignment: .top) {
-            ProfilePicView(pubkey: reaction.pubkey ?? "WTF", contact: reaction.contact)
+            ProfilePicView(pubkey: reaction.pubkey, contact: reaction.contact)
             VStack(alignment: .leading) {
                 HStack {
                     VStack(alignment: .leading) {

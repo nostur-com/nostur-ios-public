@@ -57,7 +57,7 @@ struct ProfileBadgesContainer: View {
 
 struct ProfileBadgesView: View {
     var profileBadges:Event
-    @Environment(\.dismiss) var dismiss
+    @Environment(\.dismiss) private var dismiss
     @State var selectedBadge:Event? = nil
     @State var badgeInfoIsShown = false
     

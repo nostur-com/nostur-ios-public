@@ -89,15 +89,7 @@ extension Contact : Identifiable {
     var authorKey:String { String(npub.prefix(11)) }
     
     // Display name, with fallbacks: (User)name, pubkey (prefix), or "?:?"
-    var authorName: String {
-        get {
-            display_name != nil
-            ? display_name!
-            : name != nil
-                ? name!
-                : authorKey
-        }
-    }
+    var authorName: String { display_name ?? name ?? authorKey }
 
     
     var nip05veried:Bool {
