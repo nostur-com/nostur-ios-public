@@ -74,6 +74,8 @@
 		1F7150D029ABC6CE00AAB1C3 /* TabButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7150CF29ABC6CE00AAB1C3 /* TabButton.swift */; };
 		1F71B45529B0822300FA0400 /* ProfileBadgesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F71B45429B0822300FA0400 /* ProfileBadgesView.swift */; };
 		1F71B45729B0AA1600FA0400 /* NotificationsNotes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F71B45629B0AA1600FA0400 /* NotificationsNotes.swift */; };
+		1F7265BF29B2146200E4F9D4 /* ExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7265BE29B2146200E4F9D4 /* ExportView.swift */; };
+		1F7265C229B2148200E4F9D4 /* Exporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7265C129B2148200E4F9D4 /* Exporter.swift */; };
 		1F740D9C29AF1BF600EFCCA7 /* Badges.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F740D9B29AF1BF600EFCCA7 /* Badges.swift */; };
 		1F740D9F29AF36C800EFCCA7 /* BadgesIssuedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F740D9E29AF36C800EFCCA7 /* BadgesIssuedView.swift */; };
 		1F740DA129AF381F00EFCCA7 /* CreateNewBadgeSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F740DA029AF381F00EFCCA7 /* CreateNewBadgeSheet.swift */; };
@@ -252,6 +254,8 @@
 		1F7150CF29ABC6CE00AAB1C3 /* TabButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabButton.swift; sourceTree = "<group>"; };
 		1F71B45429B0822300FA0400 /* ProfileBadgesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileBadgesView.swift; sourceTree = "<group>"; };
 		1F71B45629B0AA1600FA0400 /* NotificationsNotes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsNotes.swift; sourceTree = "<group>"; };
+		1F7265BE29B2146200E4F9D4 /* ExportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportView.swift; sourceTree = "<group>"; };
+		1F7265C129B2148200E4F9D4 /* Exporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Exporter.swift; sourceTree = "<group>"; };
 		1F740D9B29AF1BF600EFCCA7 /* Badges.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Badges.swift; sourceTree = "<group>"; };
 		1F740D9E29AF36C800EFCCA7 /* BadgesIssuedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgesIssuedView.swift; sourceTree = "<group>"; };
 		1F740DA029AF381F00EFCCA7 /* CreateNewBadgeSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateNewBadgeSheet.swift; sourceTree = "<group>"; };
@@ -506,6 +510,15 @@
 			path = Nostr;
 			sourceTree = "<group>";
 		};
+		1F7265C029B2146900E4F9D4 /* Export */ = {
+			isa = PBXGroup;
+			children = (
+				1F7265BE29B2146200E4F9D4 /* ExportView.swift */,
+				1F7265C129B2148200E4F9D4 /* Exporter.swift */,
+			);
+			path = Export;
+			sourceTree = "<group>";
+		};
 		1F740D9D29AF36AB00EFCCA7 /* Badges */ = {
 			isa = PBXGroup;
 			children = (
@@ -583,6 +596,7 @@
 				1F4773A3296CA7040049454B /* Accounts */,
 				1F740D9D29AF36AB00EFCCA7 /* Badges */,
 				1F25B395297A508200A8A5A7 /* CoreData */,
+				1F7265C029B2146900E4F9D4 /* Export */,
 				1F71037B296BD98D006245CC /* Nostr */,
 				1FEA78592979A18E007CC8E7 /* Note */,
 				1FC2DFF229A9328F00C8A9DA /* Notifications */,
@@ -824,6 +838,7 @@
 				1F539DAB299D4B2A00F3B8CA /* NewAccountSheet.swift in Sources */,
 				1F8B1359297B36DB002EB8CF /* Bytes+UInt.swift in Sources */,
 				1FA51FF62978441200FE60EF /* Relay+CoreDataClass.swift in Sources */,
+				1F7265BF29B2146200E4F9D4 /* ExportView.swift in Sources */,
 				1F1472DC29A71F3400197393 /* NoteMenu.swift in Sources */,
 				1F33098C298AEE5D00D4D8CF /* View+withNavigationDestinations.swift in Sources */,
 				1F065A9D29A3E9E0003421D3 /* DynamicFetchView.swift in Sources */,
@@ -883,6 +898,7 @@
 				1FA51FF72978441200FE60EF /* Relay+CoreDataProperties.swift in Sources */,
 				1FECAC4729A08255006FEE72 /* Collection+subscript.swift in Sources */,
 				1F1ABC4D2981AEA500D03FA9 /* ProfileNotesView.swift in Sources */,
+				1F7265C229B2148200E4F9D4 /* Exporter.swift in Sources */,
 				1F30FAA929705EBD008439C8 /* NosturCloud.xcdatamodeld in Sources */,
 				1F71037D296BD9DE006245CC /* Nostr.swift in Sources */,
 				1FA0C6B529A53E8A00BDD876 /* Following.swift in Sources */,
@@ -1074,7 +1090,6 @@
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
 				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
@@ -1121,7 +1136,6 @@
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
 				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
