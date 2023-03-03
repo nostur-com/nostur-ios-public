@@ -53,13 +53,13 @@ struct AddExistingAccountSheet: View {
                     }
                     if (key.prefix(5) == "npub1") {
                         addExistingReadOnlyAccount(pubkey: nip19.hexString)
-                        dismiss()
                     }
                     if (key.prefix(5) == "nsec1") {
                         addExistingAccount(privkey: nip19.hexString)
+                    }
+                    if (!ns.onBoardingIsShown) {
                         dismiss()
                     }
-                    
                 } label: {
                     Text("Add")
                         .frame(maxWidth: .infinity)
@@ -132,7 +132,9 @@ struct AddExistingAccountSheet: View {
         }
 
         try! viewContext.save()
+//        ns.objectWillChange.send()
         ns.setAccount(account: account)
+        ns.onBoardingIsShown = false
         // 2. But also check if there are newer events
         if (!ot.didFetchKind0 || !ot.didFetchKind3) {
             let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: account.publicKey))
@@ -170,7 +172,9 @@ struct AddExistingAccountSheet: View {
         }
         
         try! viewContext.save()
+        ns.objectWillChange.send()
         ns.setAccount(account: account)
+        ns.onBoardingIsShown = false
         // 2. But also check if there are newer events
         if (!ot.didFetchKind0 || !ot.didFetchKind3) {
             let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: pubkey))
