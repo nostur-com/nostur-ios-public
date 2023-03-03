@@ -63,7 +63,7 @@ struct PaymentAmountSelector: View {
                     
                     if response.pr != nil {
                         await MainActor.run {
-                            openURL(URL(string: "lightning:\(response.pr!)")!)
+                            openURL(URL(string: "\(ss.defaultLightningWallet.scheme)\(response.pr!)")!)
                         }
                     }
                 }
