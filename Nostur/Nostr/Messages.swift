@@ -54,37 +54,48 @@ struct RelayMessage {
             throw error.FAILED_TO_PARSE
         }
         
-        guard let json = try? JSON(data: dataFromString) else {
-            throw error.FAILED_TO_PARSE
+        guard text.prefix(7) != ###"["EOSE""### else {
+            let decoder = JSONDecoder()
+            guard let eose = try? decoder.decode(NMessage.self, from: dataFromString) else {
+                throw error.FAILED_TO_PARSE
+            }
+            return RelayMessage(type: .EOSE, message: text, subscriptionId: eose.subscription)
         }
         
-        guard json[0] != "EOSE" else {
-            return RelayMessage(type: .EOSE, message: text, subscriptionId: json[1].stringValue)
-        }
-        
-        guard json[0] != "NOTICE" else {
+        guard text.prefix(9) != ###"["NOTICE""### else {
             return RelayMessage(type: .NOTICE, message: text)
         }
         
-        guard json[0] != "OK" else {
+        guard text.prefix(5) != ###"["OK""### else {
             return RelayMessage(type: .OK, message: text)
         }
         
-        guard json[0] == "EVENT" else {
+        guard text.prefix(8) == ###"["EVENT""### else {
             throw error.UNKNOWN_MESSAGE_TYPE
         }
         
         let decoder = JSONDecoder()
-        guard let event = try? decoder.decode(NEvent.self, from: Data(json[2].rawData())) else {
-            throw error.FAILED_TO_PARSE_EVENT
+        guard let relayMessage = try? decoder.decode(NMessage.self, from: dataFromString) else {
+            throw error.FAILED_TO_PARSE
+        }
+//        guard let json = try? JSON(data: dataFromString) else {
+//            throw error.FAILED_TO_PARSE
+//        }
+        
+//        let decoder = JSONDecoder()
+//        guard let event = try? decoder.decode(NEvent.self, from: Data(json[2].rawData())) else {
+//            throw error.FAILED_TO_PARSE_EVENT
+//        }
+        guard let nEvent = relayMessage.event else {
+            throw "WHERES THE PAYLOAD BRO"
         }
         
-        guard try skipValidation || event.verified() else {
-            print("🟣\(event)")
+        guard try skipValidation || nEvent.verified() else {
+            print("🟣\(relayMessage)")
             throw "🔴🔴🔴 NO VALID SIG 🔴🔴🔴 "
         }
         
-        return RelayMessage(type: .EVENT, message: text, subscriptionId: json[1].stringValue, event: event)
+        return RelayMessage(type: .EVENT, message: text, subscriptionId: relayMessage.subscription, event: nEvent)
     }
 }
 

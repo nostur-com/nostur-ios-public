@@ -8,7 +8,26 @@
 import SwiftUI
 import Foundation
 import secp256k1
-import SwiftyJSON
+
+struct NMessage: Decodable {
+    let values: [Any]
+
+    init(from decoder: Decoder) throws {
+        var container = try decoder.unkeyedContainer()
+        let type = try container.decode(String.self)
+        let subscription = try container.decode(String.self)
+        if let event = try? container.decode(NEvent.self) {
+            values = [type, subscription, event]
+        }
+        else {
+            values = [type, subscription]
+        }
+    }
+    
+    var type:String { values[0] as! String }
+    var subscription:String { values[1] as! String }
+    var event:NEvent? { values[2] as? NEvent }
+}
 
 public struct NTimestamp: Codable {
     public let timestamp: Int
