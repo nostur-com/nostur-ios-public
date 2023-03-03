@@ -49,23 +49,21 @@ struct NotificationsReactions: View {
     }
     
     var body: some View {
-        ScrollView {
-            LazyVStack(alignment:.leading) {
-                ForEach(myNotesReactedTo) { note in
+        List(myNotesReactedTo) { note in
+//            LazyVStack(alignment:.leading, spacing: 3) {
+//                ForEach(myNotesReactedTo) { note in
                     VStack(alignment:.leading, spacing: 3) {
-                        Group {
                             ReactionsForThisNote(reactions:reactionsForNote(note), onAppear: self.onAppear)
                             NoteMinimalContentView(event: note)
-                        }.onTapGesture {
-                            nav.navigateTo(NotePath(id: note.id))
-                        }
-                        Divider()
+                    }.onTapGesture {
+                        nav.navigateTo(NotePath(id: note.id))
                     }
-                    .id(note.id)
-                }
-            }
+                    .listRowInsets(EdgeInsets())
+//                }
+//            }
             .padding()
         }
+        .listStyle(.plain)
         .onAppear {
             fetchReactions()
         }
@@ -114,6 +112,7 @@ struct ReactionsForThisNote: View {
                         
                     }
                     .offset(x:Double(0 + (25*index)))
+                    .id(reactions[index].id)
                 }
             }
             if (withoutDuplicates.count > 1) {
