@@ -117,7 +117,7 @@ final class SocketPool: ObservableObject {
                         managedClient.activeSubscriptions.append(subscriptionId!)
                     }
 //                    print("REQUESTING: \(String(message.message.prefix(260)))")
-                    print("⬇️⬇️ REQUESTING: \(String(message.message))")
+//                    print("⬇️⬇️ REQUESTING: \(String(message.message))")
                     managedClient.client.write(string: message.message)
                 }
                 else if  message.type == .CLOSE { // CLOSE FOR ALL RELAYS
