@@ -11,7 +11,7 @@ import CoreData
 // NIP-25: The last p tag MUST be the pubkey of the event being reacted to.
 // TODO: Maybe when performance problems: store lastE + lasteE in Events table
 struct NotificationsReactions: View {
-    
+
     let pubkey:String
 //    let FETCH_LIMIT = 1000
     let sp:SocketPool = .shared
@@ -24,7 +24,22 @@ struct NotificationsReactions: View {
     var reactions:FetchedResults<Event>
     
     var myNotesReactedTo:[Event] {
-        reactions.compactMap { $0.reactionTo }
+//        Array(Set(reactions.compactMap { $0.reactionTo })) // Remove nil and duplicates
+        
+        var sortingDict:[Event: Int64] = [:] // Event and most recent reaction created_At
+
+        for reaction in reactions {
+            guard let reactionTo = reaction.reactionTo else { continue }
+            if (sortingDict.keys.contains(reactionTo)) {
+                if reaction.created_at > sortingDict[reactionTo]! {
+                    sortingDict[reactionTo] = reaction.created_at
+                }
+            }
+            else {
+                sortingDict[reactionTo] = reaction.created_at
+            }
+        }
+        return sortingDict.keys.sorted(by: { (sortingDict[$0] ?? 0) > (sortingDict[$1] ?? 0) } )
     }
     
     func reactionsForNote(_ note:Event) -> [Event] {
