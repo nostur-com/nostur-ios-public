@@ -41,8 +41,9 @@ extension Event {
     
     
     // Homegrown bolt11 amount decoder become LightningDevKit is sloooooooow
+    // Also Homegrown parsing of serializedTags because EventTags.init slow...
     var naiveSats:Double {
-        guard let bolt11 = bolt11() else { return 0.0 }
+        guard let bolt11 = naiveBolt11() else { return 0.0 }
         return naiveBolt11AmountDecoder(bolt11)
     }
     

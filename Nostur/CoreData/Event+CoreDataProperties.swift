@@ -472,6 +472,19 @@ extension Event {
         }
     }
     
+    func naiveBolt11() -> String? {
+        let prefix = ###"["bolt11",""###
+        let suffix = ###""]"###
+
+        if let rangeStart = tagsSerialized!.range(of: prefix)?.upperBound,
+           let rangeEnd = tagsSerialized!.range(of: suffix, range: rangeStart..<tagsSerialized!.endIndex)?.lowerBound {
+            let extractedString = String(tagsSerialized![rangeStart..<rangeEnd])
+
+            return extractedString
+        }
+        return nil
+    }
+    
     func bolt11() -> String? {
         tags().first(where: { $0.type == "bolt11" })?.otherInformation[safe: 0]
     }

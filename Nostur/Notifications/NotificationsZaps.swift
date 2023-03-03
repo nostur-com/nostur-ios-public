@@ -9,9 +9,9 @@ import SwiftUI
 import CoreData
 
 struct NotificationsZaps: View {
-    
+    let er:ExchangeRateModel = .shared // Not Observed for performance
     let pubkey:String
-    let FETCH_LIMIT = 125
+    let FETCH_LIMIT = 2250
     let nav:NavigationModel = .shared
     let sp:SocketPool = .shared
     @EnvironmentObject var ns:NosturState
@@ -53,13 +53,13 @@ struct NotificationsZaps: View {
         self.onAppear = onAppear
         let r1 = Event.fetchRequest()
         r1.predicate = NSPredicate(format: "kind == 9735 AND tagsSerialized CONTAINS %@", pubkey) // OPTIMISATION HACK
-        r1.fetchLimit = FETCH_LIMIT
+//        r1.fetchLimit = FETCH_LIMIT
         r1.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         let oldestCreatedAt = (try? context.fetch(r1).last?.created_at) ?? 0
 
         let r2 = Event.fetchRequest()
         r2.predicate = NSPredicate(format: "created_at >= %i AND kind == 9735 AND tagsSerialized CONTAINS %@", oldestCreatedAt, pubkey)
-        r2.fetchLimit = FETCH_LIMIT
+//        r2.fetchLimit = FETCH_LIMIT
         r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         _zaps = FetchRequest(fetchRequest: r2)
     }
@@ -68,14 +68,30 @@ struct NotificationsZaps: View {
         ScrollView {
             LazyVStack(alignment:.leading) {
                 ForEach(myNotesZapped) { note in
-                    VStack(alignment:.leading, spacing: 3) {
-                        Group {
-                            ZapsForThisNote(zaps:zapsForNote(note), onAppear: self.onAppear)
-                            NoteMinimalContentView(event: note)
-                        }.onTapGesture {
-                            nav.navigateTo(NotePath(id: note.id))
+                    HStack(alignment: .top) {
+                        VStack {
+                            Image(systemName: "bolt.fill")
+                                .foregroundColor(.green)
+                            Text(Double(note.zapTally).satsFormatted)
+                                .font(.title2)
+                            if (er.bitcoinPrice != 0.0) {
+                                let fiatPrice = String(format: "$%.02f",(Double(note.zapTally) / 100000000 * Double(er.bitcoinPrice)))
+                                
+                                Text("\(fiatPrice)")
+                                    .font(.caption)
+                                    .opacity(note.zapTally != 0 ? 0.5 : 0)
+                            }
                         }
-                        Divider()
+                        .frame(width:70)
+                        VStack(alignment:.leading, spacing: 3) {
+                            Group {
+                                ZapsForThisNote(zaps:zapsForNote(note), onAppear: self.onAppear)
+                                NoteMinimalContentView(event: note)
+                            }.onTapGesture {
+                                nav.navigateTo(NotePath(id: note.id))
+                            }
+                            Divider()
+                        }
                     }
                 }
             }
@@ -134,10 +150,10 @@ struct ZapsForThisNote: View {
                 }
             }
             if (zaps.count > 1) {
-                Text("**\(zaps.first(where: { $0.zapFromRequest?.contact?.authorName != nil })?.zapFromRequest?.contact?.authorName ?? "???")** and \(zaps.count - 1) others zapped to your post")
+                Text("**\(zaps.first(where: { $0.zapFromRequest?.contact?.authorName != nil })?.zapFromRequest?.contact?.username ?? "???")** and \(zaps.count - 1) others zapped to your post")
             }
             else {
-                Text("**\(zaps.first(where: { $0.zapFromRequest?.contact?.authorName != nil })?.zapFromRequest?.contact?.authorName ?? "???")** zapped your post")
+                Text("**\(zaps.first(where: { $0.zapFromRequest?.contact?.authorName != nil })?.zapFromRequest?.contact?.username ?? "???")** zapped your post")
             }
         }
 //        .onAppear {

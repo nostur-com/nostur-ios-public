@@ -131,9 +131,9 @@ class EventsProvider: ObservableObject {
             }
             
             // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
-//            if event.kind == .zapNote {
-//                let _ = Event.updateZapTallyCache(savedEvent, context: context)
-//            }
+            if event.kind == .zapNote {
+                let _ = Event.updateZapTallyCache(savedEvent, context: context)
+            }
             
 //            // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
 //            if event.kind == .custom(7) {
