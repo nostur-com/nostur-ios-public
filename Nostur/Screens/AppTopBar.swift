@@ -20,7 +20,7 @@ struct AppTopBar: View {
 //            if (!appTopBarIsHidden) {
                 HStack {
                     if (ns.account != nil && !sm.showSidebar) {
-                        ProfilePicView(pubkey: ns.activeAccountPublicKey, account: ns.account, size:30)
+                        ProfilePicView(pubkey: ns.account!.publicKey, account: ns.account, size:30)
                             .offset(x: 15)
                             .offset(y: -5)
                             .onTapGesture { sm.showSidebar.toggle() }

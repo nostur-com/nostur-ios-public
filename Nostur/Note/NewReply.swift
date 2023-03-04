@@ -69,7 +69,7 @@ struct NewReply: View {
                     Spacer()
                 }
                 HStack(alignment: .top) {
-                    ProfilePicView(pubkey: ns.activeAccountPublicKey, account: ns.account!)
+                    ProfilePicView(pubkey: ns.account!.publicKey, account: ns.account!)
                         .padding(.horizontal, 10)
                     TextField(text: $noteText, prompt: Text("Enter your reply"), axis: .vertical) {
                         EmptyView()

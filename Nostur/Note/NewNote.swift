@@ -49,7 +49,7 @@ struct NewNote: View {
             }
             
             HStack(alignment: .top) {
-                ProfilePicView(pubkey: ns.activeAccountPublicKey, account: ns.account!)
+                ProfilePicView(pubkey: ns.account!.publicKey, account: ns.account!)
                 TextField(text: $noteText, prompt: Text("What's happening?"), axis: .vertical) {
                     EmptyView()
                 }
