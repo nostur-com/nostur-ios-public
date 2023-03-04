@@ -38,19 +38,12 @@ struct ProfileBadgesContainer: View {
     
     var body: some View {
         if (profileBadgesSorted.first != nil) {
-            ProfileBadgesView(profileBadges:profileBadgesSorted.first!)
+            ProfileBadgesView(verifiedBadges:profileBadgesSorted.first!.verifiedBadges)
                 .task {
-                    print("FAKEREQ.. profileBadges is no longer nil")
+                    
                     // 30008 is already fetched when profile loads
                     // here we fetch any related 30009 + 8
                     if (profileBadgesSorted.first != nil) {
-                        print("WTF \(profileBadges.count)")
-                        print("WTF \(profileBadgesSorted.count)")
-                        print("WTF \(profileBadgesSorted.first!.tags())")
-                        print("WTF \(profileBadgesSorted.first!.tags())")
-                        print("WTF \(profileBadgesSorted.first!.tagsSerialized)")
-                        print("WTF \(profileBadgesSorted.first!.id)")
-
                         let allEs = profileBadgesSorted.first!.tags()
                             .filter { $0.type == "e" }
                             .map { $0.id }
@@ -64,7 +57,7 @@ struct ProfileBadgesContainer: View {
                                 filters.append(filter)
                             }
                         
-                        print("🚺🚺🚺🚺🚺 \(allEs.count)")
+                        print("🚺🚺 \(allEs.count)")
                         if (allEs.count > 0) {
                             let reqE = RequestMessage.getEvents(ids: allEs)
                             let messageE = ClientMessage(type: .REQ, message: reqE)
@@ -78,71 +71,37 @@ struct ProfileBadgesContainer: View {
                         }
                     }
                 }
-                .onReceive(receiveNotification(.profileBadgesFetched), perform: { _ in
-//                    refreshHack.toggle()
-//                    profileBadges.objectWillChange.send()
-                    
-//                    // 30008 is already fetched when profile loads
-//                    // here we fetch any related 30009 + 8
-//                    if (profileBadges.first != nil) {
-//                        let allEs = profileBadges.first!.tags()
-//                            .filter { $0.type == "e" }
-//                            .map { $0.id }
-//
-//                        var filters: [(Int64, String, String)] = []
-//                        profileBadges.first!.tags()
-//                            .filter { $0.type == "a" }
-//                            .forEach {
-//                                let a = BadgeATag($0)
-//                                let filter = (a.kind, a.badgeCode, a.pubkey)
-//                                filters.append(filter)
-//                            }
-//
-//                        let reqE = RequestMessage.getEvents(ids: allEs)
-//                        let messageE = ClientMessage(type: .REQ, message: reqE)
-//                        SocketPool.shared.sendMessage(messageE) // Get badge awards (kind .8)
-//
-//                        if (filters.count > 0) {
-//                            let reqD = RequestMessage.getBageDefinitions(filters: filters)
-//                            let messageD = ClientMessage(type: .REQ, message: reqD)
-//                            SocketPool.shared.sendMessage(messageD) // Get badge definitions (kind 30009)
-//                        }
-//                    }
-                })
-                .onReceive(receiveNotification(.badgeAwardFetched), perform: { _ in
-                    refreshHack.toggle()
-//                    profileBadges.objectWillChange.send()
-                    // 30008 is already fetched when profile loads
-                    // here we fetch any related 30009 + 8
-//                    if (profileBadges.first != nil) {
-//                        let allEs = profileBadges.first!.tags()
-//                            .filter { $0.type == "e" }
-//                            .map { $0.id }
-//
-//                        var filters: [(Int64, String, String)] = []
-//                        profileBadges.first!.tags()
-//                            .filter { $0.type == "a" }
-//                            .forEach {
-//                                let a = BadgeATag($0)
-//                                let filter = (a.kind, a.badgeCode, a.pubkey)
-//                                filters.append(filter)
-//                            }
-//
-//                        let reqE = RequestMessage.getEvents(ids: allEs)
-//                        let messageE = ClientMessage(type: .REQ, message: reqE)
-//                        SocketPool.shared.sendMessage(messageE) // Get badge awards (kind .8)
-//
-//                        if (filters.count > 0) {
-//                            let reqD = RequestMessage.getBageDefinitions(filters: filters)
-//                            let messageD = ClientMessage(type: .REQ, message: reqD)
-//                            SocketPool.shared.sendMessage(messageD) // Get badge definitions (kind 30009)
-//                        }
-//                    }
-                })
-                .onReceive(receiveNotification(.badgeDefinitionFetched), perform: { _ in
-                    refreshHack.toggle()
-//                    profileBadges.objectWillChange.send()
-                })
+                .onChange(of: profileBadgesSorted.first) { newValue in
+                    if (newValue != nil) {
+                        let allEs = newValue!.tags()
+                            .filter { $0.type == "e" }
+                            .map { $0.id }
+                        
+                        var filters: [(Int64, String, String)] = []
+                        newValue!.tags()
+                            .filter { $0.type == "a" }
+                            .forEach {
+                                let a = BadgeATag($0)
+                                let filter = (a.kind, a.badgeCode, a.pubkey)
+                                filters.append(filter)
+                            }
+                        
+                        print("🚺🚺🚺🚺🚺 \(allEs.count)")
+                        if (allEs.count > 0) {
+                            let reqE = RequestMessage.getEvents(ids: allEs)
+                            let messageE = ClientMessage(type: .REQ, message: reqE)
+                            SocketPool.shared.sendMessage(messageE) // Get badge awards (kind .8)
+                            
+                        }
+                        
+                        if (filters.count > 0) {
+                            let reqD = RequestMessage.getBageDefinitions(filters: filters)
+                            let messageD = ClientMessage(type: .REQ, message: reqD)
+                            SocketPool.shared.sendMessage(messageD) // Get badge definitions (kind 30009)
+                        }
+                        refreshHack.toggle()
+                    }
+                }
         }
         else {
             EmptyView()
@@ -152,7 +111,7 @@ struct ProfileBadgesContainer: View {
 }
 
 struct ProfileBadgesView: View {
-    @ObservedObject var profileBadges:Event
+    var verifiedBadges:[ProfileBadge]
     @Environment(\.dismiss) private var dismiss
     @State var selectedBadge:Event? = nil
     @State var badgeInfoIsShown = false
@@ -160,29 +119,11 @@ struct ProfileBadgesView: View {
     
     var body: some View {
         HStack {
-            ForEach(Array(profileBadges.verifiedBadges.prefix(3))) { profileBadge in
+            ForEach(Array(verifiedBadges.prefix(3))) { profileBadge in
                 BadgeIcon(badge: profileBadge.badge)
-                    .onTapGesture {
-                        badgeInfoIsShown = true
-                    }
-//                    .help("\(profileBadge.badge.toNEvent().tagNamed("name") ?? "Badge"): \(profileBadge.badge.toNEvent().tagNamed("description") ?? "No description")")
+                    .onTapGesture { badgeInfoIsShown = true }
             }
         }
-        .onAppear {
-//            print(profileBadges.verifiedBadges)
-        }
-        .onReceive(receiveNotification(.profileBadgesFetched), perform: { _ in
-//            profileBadges.objectWillChange.send()
-            refreshHack.toggle()
-        })
-        .onReceive(receiveNotification(.badgeAwardFetched), perform: { _ in
-//            profileBadges.objectWillChange.send()
-            refreshHack.toggle()
-        })
-        .onReceive(receiveNotification(.badgeDefinitionFetched), perform: { _ in
-//            profileBadges.objectWillChange.send()
-            refreshHack.toggle()
-        })
         .sheet(isPresented: $badgeInfoIsShown) {
             VStack(alignment: .leading) {
                 if IS_IPAD {
@@ -198,7 +139,7 @@ struct ProfileBadgesView: View {
                             }
                     }
                 }
-                ForEach(profileBadges.verifiedBadges) { profileBadge in
+                ForEach(verifiedBadges) { profileBadge in
                     BadgeRow(badge: profileBadge.badge)
                 }
                 Spacer()
@@ -241,7 +182,7 @@ struct ProfileBadgesView_Previews: PreviewProvider {
             let profileBadgesEvent = PreviewFetcher.fetchEvent(pb)
             if (profileBadgesEvent != nil) {
 //                ProfileBadgesView(pubkey:p, profileBadges: profileBadgesEvent!)
-                ProfileBadgesView(profileBadges: profileBadgesEvent!)
+                ProfileBadgesView(verifiedBadges: profileBadgesEvent?.verifiedBadges ?? [])
                     .withPreviewEnvironment()
             }
         }
