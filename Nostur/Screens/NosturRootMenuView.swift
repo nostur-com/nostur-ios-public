@@ -20,7 +20,7 @@ struct NosturRootMenu: View {
     
     var body: some View {
         let _ = Self._printChanges()
-        SideBarStack(sidebarWidth: 285) {
+        SideBarStack(sidebarWidth: 310) {
             if (ns.account != nil) {
                 sideBar
                     .withNavigationDestinations() //TODO: Put back?
@@ -50,15 +50,18 @@ extension NosturRootMenu {
         VStack(alignment: .leading) {
             let _ = Self._printChanges()
             List {
-                HStack {
+                HStack(spacing: 10) {
                     ProfilePicView(pubkey: ns.account!.publicKey, account: ns.account!)
                     Spacer()
-                    
+                    FastAccountSwitcher()
                     Button { accountsSheetIsShown = true } label: {
-                        Text("Accounts...")
+                        Image(systemName: "ellipsis.circle")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 25, height: 25)
                     }
-                    .buttonStyle(.bordered)
-                    .buttonBorderShape(.capsule)
+//                    .buttonStyle(.bordered)
+//                    .buttonBorderShape(.capsule)
                 }
                 
                 Text("\(ns.account!.display_name != "" ? ns.account!.display_name : ns.account!.name)").font(.headline)

@@ -17,7 +17,7 @@ struct SideBarStack<SidebarContent: View, Content: View>: View {
     @EnvironmentObject var sm:SideBarModel
 
 //    @Binding var showSidebar: Bool
-    @State var sidebarOffsetX = -285.0
+    @State var sidebarOffsetX = -310.0
     @State var mainContentOffsetX = 0.0
     
     init(sidebarWidth: CGFloat, @ViewBuilder sidebar: ()->SidebarContent, @ViewBuilder content: ()->Content) {

@@ -164,6 +164,7 @@
 		1FE4011B2994CD8700A388A2 /* List+didChangeHeight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4011A2994CD8700A388A2 /* List+didChangeHeight.swift */; };
 		1FE4011D29952EC800A388A2 /* NIP05.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4011C29952EC800A388A2 /* NIP05.swift */; };
 		1FE4C0272982FF3B004E7750 /* ReplyingToFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4C0262982FF3B004E7750 /* ReplyingToFragment.swift */; };
+		1FE5068E29B391CF006A16D8 /* FastAccountSwitcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE5068D29B391CF006A16D8 /* FastAccountSwitcher.swift */; };
 		1FEA785529799697007CC8E7 /* Compactor in Frameworks */ = {isa = PBXBuildFile; productRef = 1FEA785429799697007CC8E7 /* Compactor */; };
 		1FEA785829799FE6007CC8E7 /* ProfilePicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */; };
 		1FEC01C0296C4A400078CC9B /* SwiftyJSON in Frameworks */ = {isa = PBXBuildFile; productRef = 1FEC01BF296C4A400078CC9B /* SwiftyJSON */; };
@@ -342,6 +343,7 @@
 		1FE4011A2994CD8700A388A2 /* List+didChangeHeight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "List+didChangeHeight.swift"; path = "../List+didChangeHeight.swift"; sourceTree = "<group>"; };
 		1FE4011C29952EC800A388A2 /* NIP05.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP05.swift; sourceTree = "<group>"; };
 		1FE4C0262982FF3B004E7750 /* ReplyingToFragment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplyingToFragment.swift; sourceTree = "<group>"; };
+		1FE5068D29B391CF006A16D8 /* FastAccountSwitcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastAccountSwitcher.swift; sourceTree = "<group>"; };
 		1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePicView.swift; sourceTree = "<group>"; };
 		1FECAC4629A08255006FEE72 /* Collection+subscript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Collection+subscript.swift"; sourceTree = "<group>"; };
 		1FF21E7D29ACC02E00203623 /* FollowingAndExplore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowingAndExplore.swift; sourceTree = "<group>"; };
@@ -459,6 +461,7 @@
 				1F2DE02F298E5C5C00891D2E /* BlockListView.swift */,
 				1F1C31E32969A86700E60BEF /* NewAccountView.swift */,
 				1F539DAA299D4B2900F3B8CA /* NewAccountSheet.swift */,
+				1FE5068D29B391CF006A16D8 /* FastAccountSwitcher.swift */,
 			);
 			path = Accounts;
 			sourceTree = "<group>";
@@ -888,6 +891,7 @@
 				1FCEA0B72999413C00A309DC /* Double+clean.swift in Sources */,
 				1F3309832989819700D4D8CF /* Maintenance.swift in Sources */,
 				1F8B1361297B36DB002EB8CF /* Bytes+SecureRandom.swift in Sources */,
+				1FE5068E29B391CF006A16D8 /* FastAccountSwitcher.swift in Sources */,
 				1F1472D829A71B6600197393 /* DataStore.swift in Sources */,
 				1FC2DFEF29A9128D00C8A9DA /* MinimalNoteTextRenderView.swift in Sources */,
 				1F1DCB8D2999290E0085223E /* LightningInvoice.swift in Sources */,
