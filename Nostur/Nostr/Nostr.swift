@@ -311,6 +311,10 @@ struct NEvent: Codable {
         tags.filter { $0.type == "e" } .map { $0.id }
     }
     
+    func firstA() -> String? {
+        tags.first(where: { $0.type == "a" })?.value
+    }
+    
     func firstP() -> String? {
         tags.first(where: { $0.type == "p" })?.pubkey
     }

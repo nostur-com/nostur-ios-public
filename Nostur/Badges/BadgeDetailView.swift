@@ -28,7 +28,7 @@ struct BadgeDetailView: View {
         print("🧨🧨🧨🧨🧨 BadgeDetailView 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         self.badge = badge
         let r = Event.fetchRequest()
-        r.predicate = NSPredicate(format: "kind == 8 AND tagsSerialized CONTAINS %@", "[\"a\",\"\(badge.toNEvent().badgeDefinition!.value)") // OPTIMISATION HACK
+        r.predicate = NSPredicate(format: "kind == 8 AND tagsSerialized CONTAINS %@", "[\"a\",\"\(badge.toNEvent().badgeCode!.value)") // OPTIMISATION HACK
         r.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         _badgeAwards = FetchRequest(fetchRequest: r)
     }
@@ -75,7 +75,7 @@ struct BadgeDetailView: View {
         }
         .sheet(isPresented: $awardToPeopleIsShown) {
             AwardToPeopleSheet(onFinish: { contacts in
-                let newBadgeAwards = createBadgeAward(badgeDefinitionId: nBadge.id,
+                let newBadgeAwards = createBadgeAward(ns.account!.publicKey, badgeCode: nBadge.badgeCode!.definition,
                                                       pubkeys: contacts.map { $0.pubkey })
                 
                 do {

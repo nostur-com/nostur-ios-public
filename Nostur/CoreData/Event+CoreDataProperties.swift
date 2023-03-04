@@ -509,6 +509,14 @@ extension Event {
         tags().filter { $0.type == "p" }.map { $0.pubkey }
     }
     
+    func firstA() -> String? {
+        tags().first(where: { $0.type == "a" })?.value
+    }
+    
+    func firstD() -> String? {
+        tags().first(where: { $0.type == "d" })?.value
+    }
+    
     func contactPubkeys() -> [String]? {
         let decoder = JSONDecoder()
         
@@ -532,6 +540,32 @@ extension Event {
         request.fetchBatchSize = 1
         return try context.fetch(request).first
     }
+    
+    static func fetchReplacableEvent(_ kind:Int64, pubkey:String, definition:String, context:NSManagedObjectContext) throws -> Event? {
+        let request = NSFetchRequest<Event>(entityName: "Event")
+        request.entity = Event.entity()
+        request.predicate = NSPredicate(format: "kind == %d AND pubkey == %@ AND tagsSerialized CONTAINS %@", kind, pubkey, ###"[["d","###)
+        request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        let matches = try context.fetch(request).filter({ event in
+            if let firstD = event.firstD() {
+                return firstD == definition
+            }
+            return false
+        })
+        
+        return matches.sorted(by: { $0.created_at > $1.created_at }).first
+    }
+    
+    static func fetchProfileBadgesByATag(_ badgeA:String, context:NSManagedObjectContext) -> [Event] {
+        // find and notify all kind 30008 where serialized tags contains
+        // ["a","30009:aa77d356ac5a59dbedc78f0da17c6bdd3ae315778b5c78c40a718b5251391da6:test_badge"]
+        // notify any related profile badge
+        let fr = Event.fetchRequest()
+        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        fr.predicate = NSPredicate(format: "kind == 30008 AND tagsSerialized CONTAINS %@", badgeA)
+        return (try? context.fetch(fr)) ?? []
+    }
+
     
     static func eventExists(id:String, context:NSManagedObjectContext) -> Bool {
         let request = NSFetchRequest<Event>(entityName: "Event")
@@ -617,6 +651,32 @@ extension Event {
         savedEvent.likesCount = 0
         savedEvent.liked = false
         savedEvent.isRepost = event.kind == .repost
+        savedEvent.contact = Contact.fetchByPubkey(event.publicKey, context: context)
+        savedEvent.tagsSerialized = TagSerializer.shared.encode(tags: event.tags)
+        
+        if event.kind == .profileBadges {
+            savedEvent.contact?.objectWillChange.send()
+        }
+        
+//        if event.kind == .badgeAward {
+//            // find and notify all kind 30008 where serialized tags contains
+//            // ["a","30009:aa77d356ac5a59dbedc78f0da17c6bdd3ae315778b5c78c40a718b5251391da6:test_badge"]
+//            // notify any related profile badge
+//            let profileBadges = Event.fetchProfileBadgesByATag(event.badgeA, context:context)
+//            for pb in profileBadges {
+//                pb.objectWillChange.send()
+//            }
+////            sendNotification(.badgeAwardFetched)
+//        }
+        if event.kind == .badgeDefinition {
+            // notify any related profile badge
+            savedEvent.contact?.objectWillChange.send()
+            let profileBadges = Event.fetchProfileBadgesByATag(event.badgeA, context:context)
+            for pb in profileBadges {
+                pb.objectWillChange.send()
+            }
+//            sendNotification(.badgeDefinitionFetched)
+        }
         
         if event.kind == .zapNote {
             //TODO: Do we need any objectWillChange.send() here??
@@ -757,11 +817,6 @@ extension Event {
                 }
             }
         }
-        
-        // set relation to Contact
-        savedEvent.contact = Contact.fetchByPubkey(event.publicKey, context: context)
-        
-        savedEvent.tagsSerialized = TagSerializer.shared.encode(tags: event.tags)
         
         return savedEvent
     }

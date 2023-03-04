@@ -18,7 +18,7 @@ struct CreateNewBadgeSheet: View {
     @State var name = ""
     @State var description = ""
     @State var image1024 = ""
-    @State var image100 = ""
+    @State var image256 = ""
     
     enum FocusedField {
         case badgeCode
@@ -31,8 +31,6 @@ struct CreateNewBadgeSheet: View {
     
     var body: some View {
         Form {
-//            Text("Create new badge")
-//                .font(.largeTitle)
             TextField("Code (bravery, verified_human, early_adoptor)", text: $badgeCode)
                 .lineLimit(1)
                 .focused($focusedField, equals: .badgeCode)
@@ -42,7 +40,7 @@ struct CreateNewBadgeSheet: View {
                 .lineLimit(2)
             TextField("Image URL (1024x1024)", text: $image1024)
                 .lineLimit(1)
-            TextField("Thumbnail URL (100x100)", text: $image100)
+            TextField("Thumbnail URL (256x256)", text: $image256)
                 .lineLimit(1)
         }
         .toolbar {
@@ -66,12 +64,13 @@ struct CreateNewBadgeSheet: View {
         .onAppear { focusedField = .badgeCode }
     }
     func createBadge() {
-        let newBadge = createBadgeDefinition(badgeCode, name: name, description: description, image1024: image1024, thumb100: image100)
+        let newBadge = createBadgeDefinition(badgeCode, name: name, description: description, image1024: image1024, thumb256: image256)
 
         do {    
             guard let newBadgeSigned = try? ns.signEvent(newBadge) else { throw "could not create newBadgeSigned " }
             _ = Event.saveEvent(event: newBadgeSigned, context: viewContext)
             try viewContext.save()
+//            print(newBadgeSigned.wrappedEventJson())
             up.publishNow(newBadgeSigned)
         }
         catch {

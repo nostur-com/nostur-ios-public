@@ -65,6 +65,18 @@ extension Notification.Name {
     }
     
     static var requestForJustAppeared: Notification.Name {
-        return Notification.Name("requestForJustAppeared ")
+        return Notification.Name("requestForJustAppeared")
+    }
+    
+    static var badgeAwardFetched: Notification.Name {
+        return Notification.Name("badgeAwardFetched")
+    }
+    
+    static var badgeDefinitionFetched: Notification.Name {
+        return Notification.Name("badgeDefinitionFetched")
+    }
+    
+    static var profileBadgesFetched: Notification.Name {
+        return Notification.Name("profileBadgesFetched")
     }
 }
