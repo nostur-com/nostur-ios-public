@@ -45,6 +45,9 @@ struct AddExistingAccountSheet: View {
                     .cornerRadius(5.0)
                     .padding(.bottom, 20)
                 
+                Text("Keys are stored on your device in iOS keychain").foregroundColor(.gray)
+                    .font(.caption2)
+                
                 Button {
                     guard let nip19 = try? NIP19(displayString: key) else {
                         invalidKey = true
