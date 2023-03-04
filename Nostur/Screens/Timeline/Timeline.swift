@@ -81,6 +81,7 @@ struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling i
                         if let id = ds.restoreScrollToId {
                             ds.didRestoreScrollPosition = true
                             withAnimation(.none) {
+                                guard eventsSorted.map({ $0.id }).contains(id) else { return }
                                 print("AppStorage SCROLLING: \(id)")
                                 proxy.scrollTo(id, anchor: .bottom)
                             }
