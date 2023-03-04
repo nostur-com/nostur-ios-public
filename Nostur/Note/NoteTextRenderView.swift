@@ -49,7 +49,6 @@ struct LinkPreviewCache {
 }
 
 struct NoteTextRenderView: View {
-    
     var event:Event
     
     var renderedText:AttributedString? = nil
@@ -61,6 +60,10 @@ struct NoteTextRenderView: View {
     
     func contactUsername(fromPubkey pubkey:String) -> String {
         if let contact = event.contacts?.first(where: { $0.pubkey == pubkey }) {
+            return contact.username
+        }
+        // TODO: THIS IS SLOW?
+        if let contact = Contact.fetchByPubkey(pubkey, context: EventsProvider.shared.container.viewContext) {
             return contact.username
         }
         do {

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ReplyingToFragment: View {
     
+    @Environment(\.managedObjectContext) var viewContext
     private let sp:SocketPool = .shared
     
     @ObservedObject var event:Event
@@ -36,7 +37,14 @@ struct ReplyingToFragment: View {
     }
     
     func contactUsername(fromPubkey pubkey:String) -> String {
+        if let eventContact = event.contact, eventContact.pubkey == pubkey {
+            return eventContact.username
+        }
         if let contact = event.contacts?.first(where: { $0.pubkey == pubkey }) {
+            return contact.username
+        }
+        // SLOW?
+        if let contact = Contact.fetchByPubkey(pubkey, context: viewContext) {
             return contact.username
         }
         do {
