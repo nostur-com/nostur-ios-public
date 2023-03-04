@@ -65,7 +65,7 @@ struct BadgesReceivedView: View {
         .onAppear {
             // fetch missing batch definitions:
             // or just all...
-            let req = RequestMessage.getEvents(ids: badgesToMeIds)
+            let req = RequestMessage.getEvents(ids: badgeAwardsToMe.map { $0.id })
             let message = ClientMessage(type: .REQ, message: req)
             SocketPool.shared.sendMessage(message)
         }
