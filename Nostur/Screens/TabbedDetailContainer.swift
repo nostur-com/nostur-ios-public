@@ -127,7 +127,7 @@ struct TabbedDetailContainer: View {
                         Image("NosturLogoFull")
                             .resizable()
                             .opacity(0.3)
-                            .frame(width: 700, height: 700)
+                            .frame(width: 400, height: 400)
                             .offset(x:offsetX, y:50)
                             .onAppear {
                                 withAnimation(.easeOut(duration: 7.5)) {
