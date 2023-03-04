@@ -125,24 +125,26 @@ struct ProfileBadgesView: View {
             }
         }
         .sheet(isPresented: $badgeInfoIsShown) {
-            VStack(alignment: .leading) {
-                if IS_IPAD {
-                    HStack {
-                        Spacer()
-                        Image(systemName: "xmark.circle.fill")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 30, height: 30)
-                            .padding(30)
-                            .onTapGesture {
-                                badgeInfoIsShown = false
-                            }
+            ScrollView {
+                VStack(alignment: .leading) {
+                    if IS_IPAD {
+                        HStack {
+                            Spacer()
+                            Image(systemName: "xmark.circle.fill")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 30, height: 30)
+                                .padding(30)
+                                .onTapGesture {
+                                    badgeInfoIsShown = false
+                                }
+                        }
                     }
+                    ForEach(verifiedBadges) { profileBadge in
+                        BadgeRow(badge: profileBadge.badge)
+                    }
+                    Spacer()
                 }
-                ForEach(verifiedBadges) { profileBadge in
-                    BadgeRow(badge: profileBadge.badge)
-                }
-                Spacer()
             }
             .padding(20)
             .presentationDetents([.height(250), .medium])

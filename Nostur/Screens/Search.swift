@@ -37,13 +37,17 @@ struct Search: View {
             if (contacts.count == 0 && events.count == 0 && searching) {
                 ProgressView()
             }
-            ForEach(contacts) { contact in
-                ProfileRow(contact: contact)
-                Divider()
+            LazyVStack {
+                ForEach(contacts) { contact in
+                    ProfileRow(contact: contact)
+                    Divider()
+                }
             }
-            ForEach(events) { event in
-                NoteRowView(event: event)
-                Divider()
+            LazyVStack {
+                ForEach(events) { event in
+                    NoteRowView(event: event)
+                    Divider()
+                }
             }
         }
         .padding(10)

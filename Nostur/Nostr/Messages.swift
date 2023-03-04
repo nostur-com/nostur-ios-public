@@ -145,6 +145,12 @@ struct RequestMessage {
 ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"ids": \(JSON(ids).rawString() ?? "[]"), "limit": \(limit)}]
 """
     }
+    // FETCH A SINGLE EVENT AND REFERENCES
+    static func getBadgesReceived(_ pubkey:String, subscriptionId:String? = nil) -> String {
+        return """
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"kinds": [8]}, {"#p": ["\(pubkey)"]}]
+"""
+    }
     
     // FETCH A SINGLE EVENT AND REFERENCES
     static func getEventAndReferences(id:String, subscriptionId:String? = nil) -> String {
@@ -152,6 +158,7 @@ struct RequestMessage {
 ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"ids": ["\(id)"]}, {"#e": ["\(id)"]}]
 """
     }
+    
     
     // For fetching events posted by people you follow
     // or reactions by others reacting to the people you follow
