@@ -117,28 +117,28 @@ class NavigationModel: ObservableObject {
         if IS_IPAD {
             if type(of: path) == Event.self {
                 let p = path as! Event
-                let tab = DetailTabsModel.Tab(id: p.id, event: p)
+                let tab = DetailTabsModel.Tab(event: p)
                 tm.tabs.append(tab)
                 tm.selected = tab
                 return
             }
             else if type(of: path) == NotePath.self {
                 let p = path as! NotePath
-                let tab = DetailTabsModel.Tab(id: p.id, notePath: p)
+                let tab = DetailTabsModel.Tab(notePath: p)
                 tm.tabs.append(tab)
                 tm.selected = tab
                 return
             }
             else if type(of: path) == ContactPath.self {
                 let c = path as! ContactPath
-                let tab = DetailTabsModel.Tab(id: c.key, contactPath: c)
+                let tab = DetailTabsModel.Tab(contactPath: c)
                 tm.tabs.append(tab)
                 tm.selected = tab
                 return
             }
             else if type(of: path) == Contact.self {
                 let c = path as! Contact
-                let tab = DetailTabsModel.Tab(id: c.pubkey, contact: c)
+                let tab = DetailTabsModel.Tab(contact: c)
                 tm.tabs.append(tab) 
                 tm.selected = tab
                 return

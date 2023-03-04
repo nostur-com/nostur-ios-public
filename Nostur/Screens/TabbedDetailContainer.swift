@@ -15,14 +15,14 @@ final class DetailTabsModel: ObservableObject {
     @Published var selected:Tab? = nil
     
     struct Tab: Identifiable, Equatable {
-        var id:String
+        var id:UUID
         var notePath:NotePath?
         var contactPath:ContactPath?
         var event:Event?
         var contact:Contact?
         
-        init(id:String, notePath:NotePath? = nil, contactPath:ContactPath? = nil, event:Event? = nil, contact:Contact? = nil) {
-            self.id = id
+        init(notePath:NotePath? = nil, contactPath:ContactPath? = nil, event:Event? = nil, contact:Contact? = nil) {
+            self.id = UUID()
             self.notePath = notePath
             self.contactPath = contactPath
             self.event = event
@@ -99,24 +99,26 @@ struct TabbedDetailContainer: View {
     var body: some View {
         
         VStack(spacing:0) {
-            HStack(spacing:0) {
-                ForEach(tm.tabs.indices, id:\.self) { index in
-                    NosturTabButton(
-                        isSelected: tm.selected == tm.tabs[index],
-                        onSelect: {
-                        tm.selected = tm.tabs[index]
-                    }, onClose: {
-                        if (tm.selected == tm.tabs[index]) {
-                            if (index != 0) {
-                                tm.selected = tm.tabs[index - 1]
-                            }
-                        }
-                        tm.tabs.remove(at: index)
-                    }, label: "\(tm.tabs[index].event?.name ?? tm.tabs[index].contact?.authorName ?? "...")")
-                    
-                    Divider().frame(height: 30).opacity(index == tm.tabs.count-1 ? 0 : 1)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing:0) {
+                    ForEach(tm.tabs.indices, id:\.self) { index in
+                        NosturTabButton(
+                            isSelected: tm.selected == tm.tabs[index],
+                            onSelect: {
+                                tm.selected = tm.tabs[index]
+                            }, onClose: {
+                                if (tm.selected == tm.tabs[index]) {
+                                    if (index != 0) {
+                                        tm.selected = tm.tabs[index - 1]
+                                    }
+                                }
+                                tm.tabs.remove(at: index)
+                            }, label: "\(tm.tabs[index].event?.name ?? tm.tabs[index].contact?.authorName ?? "...")")
+                        
+                        Divider().frame(height: 30).opacity(index == tm.tabs.count-1 ? 0 : 1)
+                    }
+                    Spacer()
                 }
-                Spacer()
             }
             Divider().opacity(tm.tabs.count > 0 ? 1 : 0)
             ZStack {
