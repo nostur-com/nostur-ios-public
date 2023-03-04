@@ -105,7 +105,6 @@ struct ProfileLightningButton: View {
                 }
             }
         }
-        
     }
 }
 

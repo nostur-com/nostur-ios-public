@@ -65,34 +65,64 @@ class PaymentInfo {
 extension LightningButton {
     func buttonTapped() {
         guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
-        guard event?.contact?.lud16 != nil && event?.contact?.lud16 != "" else { return }
-        
+        guard (event?.contact?.anyLud ?? false) else { return }
         isLoading = true
-        let lud16 = event!.contact!.lud16!
-        Task.detached(priority: .background) {
-            do {
-                let response = try await LUD16.getCallbackUrl(lud16: lud16)
-                await MainActor.run {
-                    var supportsZap = false
-                    // Make sure at least 1 sat, and not more than 2000000 sat (around $210)
-                    let min = ((response.minSendable ?? 1000) < 1000 ? 1000 : (response.minSendable ?? 1000)) / 1000
-                    let max = ((response.maxSendable ?? 200000000) > 200000000 ? 200000000 : (response.maxSendable ?? 200000000)) / 1000
-                    if response.callback != nil {
-                        let callback = response.callback!
-                        if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
-                            supportsZap = true
-                            // Store zapper nostrPubkey on contact.zapperPubkey as cache
-                            event!.contact!.zapperPubkey = response.nostrPubkey!
+        
+        
+        if let lud16 = event!.contact!.lud16 {
+            Task {
+                do {
+                    let response = try await LUD16.getCallbackUrl(lud16: lud16)
+                    await MainActor.run {
+                        var supportsZap = false
+                        // Make sure at least 1 sat, and not more than 2000000 sat (around $210)
+                        let min = ((response.minSendable ?? 1000) < 1000 ? 1000 : (response.minSendable ?? 1000)) / 1000
+                        let max = ((response.maxSendable ?? 200000000) > 200000000 ? 200000000 : (response.maxSendable ?? 100000000)) / 1000
+                        if response.callback != nil {
+                            let callback = response.callback!
+                            if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                                supportsZap = true
+                                // Store zapper nostrPubkey on contact.zapperPubkey as cache
+                                event!.contact!.zapperPubkey = response.nostrPubkey!
+                            }
+                            paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, contact: event!.contact)
+                            payAmountSelectorShown = true
+                            isLoading = false
                         }
-                        paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, event: event!, contact: event!.contact!)
-                        payAmountSelectorShown = true
-                        isLoading = false
                     }
                 }
+                catch {
+                    print("🔴🔴🔴🔴 problem in lnurlp")
+                    print(error)
+                }
             }
-            catch {
-                print("🔴 problem in lnurlp")
-                print(error)
+        }
+        else if let lud06 = event!.contact!.lud06 {
+            Task {
+                do {
+                    let response = try await LUD16.getCallbackUrl(lud06: lud06)
+                    await MainActor.run {
+                        var supportsZap = false
+                        // Make sure at least 1 sat, and not more than 2000000 sat (around $210)
+                        let min = ((response.minSendable ?? 1000) < 1000 ? 1000 : (response.minSendable ?? 1000)) / 1000
+                        let max = ((response.maxSendable ?? 200000000) > 200000000 ? 200000000 : (response.maxSendable ?? 200000000)) / 1000
+                        if response.callback != nil {
+                            let callback = response.callback!
+                            if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                                supportsZap = true
+                                // Store zapper nostrPubkey on contact.zapperPubkey as cache
+                                event!.contact!.zapperPubkey = response.nostrPubkey!
+                            }
+                            paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, contact: event!.contact)
+                            payAmountSelectorShown = true
+                            isLoading = false
+                        }
+                    }
+                }
+                catch {
+                    print("🔴🔴🔴🔴 problem in lnurlp")
+                    print(error)
+                }
             }
         }
     }
