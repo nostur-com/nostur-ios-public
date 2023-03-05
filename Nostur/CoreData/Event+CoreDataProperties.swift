@@ -85,7 +85,7 @@ extension Event {
     
     var name: String {
         get {
-            contact?.display_name ?? contact?.username ?? authorKey
+            contact?.authorName ?? authorKey
         }
     }
 }

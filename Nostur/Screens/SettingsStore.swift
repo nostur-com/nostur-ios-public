@@ -23,7 +23,8 @@ final class SettingsStore: ObservableObject {
         static let sleepTrackingMode = "sleep_tracking_mode"
         
         static let defaultZapAmount = "default_zap_amount"
-        static let defaultLightningWallet = "default_lightning_wallet"        
+        static let defaultLightningWallet = "default_lightning_wallet"
+        static let hideEmojisInNames = "hide_emojis_in_names"        
         
         
     }
@@ -51,6 +52,7 @@ final class SettingsStore: ObservableObject {
             Keys.sleepGoal: 8,
             Keys.defaultZapAmount: 10.000,
             Keys.sleepTrackingEnabled: true,
+            Keys.hideEmojisInNames: false,
             Keys.defaultLightningWallet: SettingsStore.walletOptions.first!.id
             ])
 
@@ -60,6 +62,11 @@ final class SettingsStore: ObservableObject {
             .subscribe(objectWillChange)
     }
 
+    var hideEmojisInNames: Bool {
+        set { defaults.set(newValue, forKey: Keys.hideEmojisInNames) }
+        get { defaults.bool(forKey: Keys.hideEmojisInNames) }
+    }
+    
     var isSignatureVerificationEnabled: Bool {
         set { defaults.set(newValue, forKey: Keys.isSignatureVerificationEnabled) }
         get { defaults.bool(forKey: Keys.isSignatureVerificationEnabled) }

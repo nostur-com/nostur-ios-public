@@ -29,6 +29,12 @@ struct Settings: View {
                     }
                 }
                 
+                Section(header: Text("Display")) {
+                    Toggle(isOn: $settings.hideEmojisInNames) {
+                        Text("Hide emojis in names")
+                    }
+                }
+                
                 Section(header: Text("Zapping")) {
                     
                     VStack {
