@@ -87,16 +87,16 @@ struct Maintenance {
         // IS GEEN EIGEN EVENT
         context.perform {
             let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
-            fetchRequest.predicate = NSPredicate(format: "kind IN {1,6,7,9735} AND created_at < %i AND NOT id IN %@ AND NOT pubkey IN %@", Int64(xDaysAgo.timeIntervalSince1970), ownAccountBookmarkIds, ownAccountPubkeys)
+            fetchRequest.predicate = NSPredicate(format: "kind IN {1,6,7} AND created_at < %i AND NOT id IN %@ AND NOT pubkey IN %@", Int64(xDaysAgo.timeIntervalSince1970), ownAccountBookmarkIds, ownAccountPubkeys)
             
             let batchDelete = NSBatchDeleteRequest(fetchRequest: fetchRequest)
             batchDelete.resultType = .resultTypeCount
             
             do {
                 let result = try context.execute(batchDelete) as! NSBatchDeleteResult
-                print("Deleted \(result.result!) kind {1,6,7,9735} events")
+                print("Deleted \(result.result!) kind {1,6,7} events")
             } catch {
-                print("Failed to delete {1,6,7,9735} data")
+                print("Failed to delete {1,6,7} data")
             }
         }
         
