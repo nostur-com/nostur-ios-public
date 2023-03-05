@@ -88,6 +88,7 @@ struct AccountsSheet: View {
         }
         .sheet(isPresented: $addExistingAccountSheetShown) {
             AddExistingAccountSheet()
+                .environmentObject(ns) // need this?
         }
         .confirmationDialog("Delete account?", isPresented: $confirmDelete) {
             Button(role: .destructive) {

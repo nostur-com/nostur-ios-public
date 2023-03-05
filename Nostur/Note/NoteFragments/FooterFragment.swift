@@ -157,6 +157,8 @@ struct FooterFragment: View {
             .font(.system(size: 14))
             .sheet(isPresented: $showingNewReply) {
                 NewReply(replyTo: event)
+                    .environmentObject(ns)
+                    .environmentObject(up)
             }
     }
 }
