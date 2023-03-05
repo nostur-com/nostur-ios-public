@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct NoteMenu: View {
+    @EnvironmentObject var up:Unpublisher
     @EnvironmentObject var ns:NosturState
     @Environment(\.managedObjectContext) var viewContext
     var event:Event
@@ -98,6 +99,14 @@ struct NoteMenu: View {
                 }
             } label: {
                 Label("Mute conversation", systemImage: "bell.slash.fill")
+            }
+            
+            Button {
+                guard ns.account != nil else { return }
+                let nEvent = event.toNEvent()
+                up.publishNow(nEvent)
+            } label: {
+                Label("Rebroadcast (again)", systemImage: "radiowaves.left.and.right")
             }
         } label: {
             Text("···")
