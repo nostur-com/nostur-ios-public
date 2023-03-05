@@ -92,7 +92,12 @@ extension Contact : Identifiable {
     var authorName: String {
         if (SettingsStore.shared.hideEmojisInNames) {
             if (display_name != nil || name != nil) {
-                return (display_name ?? name)!.unicodeScalars.filter { !$0.properties.isEmoji }.reduce("") { $0 + String($1) }
+                return (display_name ?? name)!.unicodeScalars.filter {
+                    
+                    !($0.value >= 0x13000 && $0.value <= 0x1342E) && // EGYPTIAN HIEROGLYPHS
+                    !$0.properties.isEmoji  // EMOJIS
+                    
+                }.reduce("") { $0 + String($1) }
             }
             else {
                 return authorKey
