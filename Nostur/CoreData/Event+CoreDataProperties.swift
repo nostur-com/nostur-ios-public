@@ -385,10 +385,8 @@ extension Event {
         let nEvent = event.toNEvent()
     
         if (1 == 2) {
-            // Disable for now, because all zaps will be ignored because we havent fetched
-            // zapperPubkey for anyone yet
-            
-            // TODO: Consider valid on import, to immediatly show amounts. Use seperate queue to fetch and verify zapperpubkey, then invalidate if wrong later.
+        // TODO: Disabled for now, because all zaps will be ignored because we havent fetched zapperPubkey for anyone yet
+        // TODO: Consider valid on import, to immediatly show amounts. Use seperate queue to fetch and verify zapperpubkey, then invalidate if wrong later.
             
         // we need to have contact.zapperPubkey first... ughh
         let pTag = nEvent.tags.first { $0.type == "p" }

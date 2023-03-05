@@ -37,7 +37,7 @@ struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling i
     
     init(pubkey:String, pubkeys:Set<String>, context:NSManagedObjectContext, id:String, ds:TimelineModel) {
         self.id = id
-        print("🧨🧨🧨🧨🧨 I INIT AGAIN 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
+        print("🧨🧨🧨🧨🧨 TIMELINE \(id) INIT 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         self.pubkey = pubkey
         self.pubkeys = pubkeys
         self.ds = ds

@@ -12,7 +12,7 @@ import SwiftUI
 struct ProfileNotesView: View {
     
 //    @EnvironmentObject var cm:ConnectionManager
-    var cm:SocketPool = .shared
+    var sp:SocketPool = .shared
     var pubkey:String
     
     @FetchRequest(
@@ -51,7 +51,7 @@ struct ProfileNotesView: View {
             }
         }.onAppear {
             print("🟢 ProfileNotesView.onAppear always REQ.1: \(pubkey)")
-            cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorNotes(pubkey: pubkey)))
+            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorNotes(pubkey: pubkey)))
         }
         
     }
