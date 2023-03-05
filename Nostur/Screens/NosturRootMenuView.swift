@@ -84,7 +84,7 @@ extension NosturRootMenu {
                     nav.navigateTo(ViewPath.Badges)
                     sm.showSidebar = false
                 } label: {
-                    Label("Badges", systemImage: "trophy.circle")
+                    Label("Badges", systemImage: "medal")
                 }
                 Button {
                     nav.navigateTo(ViewPath.Settings)
