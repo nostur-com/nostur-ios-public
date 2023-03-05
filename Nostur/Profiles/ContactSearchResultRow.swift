@@ -34,6 +34,7 @@ struct ContactSearchResultRow: View {
                     Spacer()
                 }
                 Text(contact.about ?? "").foregroundColor(.primary)
+                    .lineLimit(3)
                     .multilineTextAlignment(.leading)
             }
         }

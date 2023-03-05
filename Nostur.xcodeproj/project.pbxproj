@@ -104,6 +104,16 @@
 		1F7C65AF29A11244009FF3EA /* ProfileZapsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7C65AE29A11244009FF3EA /* ProfileZapsView.swift */; };
 		1F7C65BD29A14969009FF3EA /* LightningDevKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1F7C65BC29A14969009FF3EA /* LightningDevKit */; };
 		1F7C65BF29A14BA4009FF3EA /* Zaps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7C65BE29A14BA3009FF3EA /* Zaps.swift */; };
+		1F88490E29B537B400145340 /* HighlightingTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F88490229B537B400145340 /* HighlightingTextEditor.swift */; };
+		1F88490F29B537B400145340 /* URL.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F88490429B537B400145340 /* URL.swift */; };
+		1F88491029B537B400145340 /* Markdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F88490529B537B400145340 /* Markdown.swift */; };
+		1F88491129B537B400145340 /* HighlightedTextEditor.AppKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F88490629B537B400145340 /* HighlightedTextEditor.AppKit.swift */; };
+		1F88491229B537B400145340 /* HighlightedTextEditor.UIKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F88490729B537B400145340 /* HighlightedTextEditor.UIKit.swift */; };
+		1F88491329B537B400145340 /* NSFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F88490929B537B400145340 /* NSFont.swift */; };
+		1F88491429B537B400145340 /* TextFormattingRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F88490A29B537B400145340 /* TextFormattingRule.swift */; };
+		1F88491529B537B400145340 /* NSRegularExpression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F88490B29B537B400145340 /* NSRegularExpression.swift */; };
+		1F88491629B537B400145340 /* UIFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F88490C29B537B400145340 /* UIFont.swift */; };
+		1F88491729B537B400145340 /* UITextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F88490D29B537B400145340 /* UITextView.swift */; };
 		1F8B0A02298BDA9D00736B9A /* PaginationTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8B0A01298BDA9D00736B9A /* PaginationTest.swift */; };
 		1F8B1349297B34D7002EB8CF /* Bech32.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8B1348297B34D7002EB8CF /* Bech32.swift */; };
 		1F8B134B297B3551002EB8CF /* NIP19.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8B134A297B3551002EB8CF /* NIP19.swift */; };
@@ -283,6 +293,16 @@
 		1F7C65B929A14709009FF3EA /* LinkPresentation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = LinkPresentation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/LinkPresentation.framework; sourceTree = DEVELOPER_DIR; };
 		1F7C65BA29A14709009FF3EA /* CryptoKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CryptoKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/CryptoKit.framework; sourceTree = DEVELOPER_DIR; };
 		1F7C65BE29A14BA3009FF3EA /* Zaps.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Zaps.swift; sourceTree = "<group>"; };
+		1F88490229B537B400145340 /* HighlightingTextEditor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HighlightingTextEditor.swift; sourceTree = "<group>"; };
+		1F88490429B537B400145340 /* URL.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = URL.swift; sourceTree = "<group>"; };
+		1F88490529B537B400145340 /* Markdown.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Markdown.swift; sourceTree = "<group>"; };
+		1F88490629B537B400145340 /* HighlightedTextEditor.AppKit.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HighlightedTextEditor.AppKit.swift; sourceTree = "<group>"; };
+		1F88490729B537B400145340 /* HighlightedTextEditor.UIKit.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HighlightedTextEditor.UIKit.swift; sourceTree = "<group>"; };
+		1F88490929B537B400145340 /* NSFont.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NSFont.swift; sourceTree = "<group>"; };
+		1F88490A29B537B400145340 /* TextFormattingRule.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextFormattingRule.swift; sourceTree = "<group>"; };
+		1F88490B29B537B400145340 /* NSRegularExpression.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NSRegularExpression.swift; sourceTree = "<group>"; };
+		1F88490C29B537B400145340 /* UIFont.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIFont.swift; sourceTree = "<group>"; };
+		1F88490D29B537B400145340 /* UITextView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UITextView.swift; sourceTree = "<group>"; };
 		1F8B0A01298BDA9D00736B9A /* PaginationTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaginationTest.swift; sourceTree = "<group>"; };
 		1F8B1348297B34D7002EB8CF /* Bech32.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bech32.swift; sourceTree = "<group>"; };
 		1F8B134A297B3551002EB8CF /* NIP19.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP19.swift; sourceTree = "<group>"; };
@@ -546,6 +566,39 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		1F88490129B537A000145340 /* HighlightedTextEditor */ = {
+			isa = PBXGroup;
+			children = (
+				1F88490629B537B400145340 /* HighlightedTextEditor.AppKit.swift */,
+				1F88490729B537B400145340 /* HighlightedTextEditor.UIKit.swift */,
+				1F88490229B537B400145340 /* HighlightingTextEditor.swift */,
+				1F88490329B537B400145340 /* Presets */,
+				1F88490829B537B400145340 /* System Extensions */,
+			);
+			path = HighlightedTextEditor;
+			sourceTree = "<group>";
+		};
+		1F88490329B537B400145340 /* Presets */ = {
+			isa = PBXGroup;
+			children = (
+				1F88490429B537B400145340 /* URL.swift */,
+				1F88490529B537B400145340 /* Markdown.swift */,
+			);
+			path = Presets;
+			sourceTree = "<group>";
+		};
+		1F88490829B537B400145340 /* System Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				1F88490929B537B400145340 /* NSFont.swift */,
+				1F88490A29B537B400145340 /* TextFormattingRule.swift */,
+				1F88490B29B537B400145340 /* NSRegularExpression.swift */,
+				1F88490C29B537B400145340 /* UIFont.swift */,
+				1F88490D29B537B400145340 /* UITextView.swift */,
+			);
+			path = "System Extensions";
+			sourceTree = "<group>";
+		};
 		1F8B134D297B36BA002EB8CF /* Utils */ = {
 			isa = PBXGroup;
 			children = (
@@ -596,6 +649,7 @@
 		1FB448BC2965F3D000038671 /* Nostur */ = {
 			isa = PBXGroup;
 			children = (
+				1F88490129B537A000145340 /* HighlightedTextEditor */,
 				1F4773A3296CA7040049454B /* Accounts */,
 				1F740D9D29AF36AB00EFCCA7 /* Badges */,
 				1F25B395297A508200A8A5A7 /* CoreData */,
@@ -811,12 +865,15 @@
 				1F5BBE40297BC7E600F4AF03 /* EventsError.swift in Sources */,
 				1F8B1360297B36DB002EB8CF /* String+HexBytes.swift in Sources */,
 				1F21442C29A797930090E78E /* Settings.swift in Sources */,
+				1F88491029B537B400145340 /* Markdown.swift in Sources */,
 				1F4773A5296CA72A0049454B /* AddReadOnlyAccountView.swift in Sources */,
 				1F8B0A02298BDA9D00736B9A /* PaginationTest.swift in Sources */,
 				1F4773A9296D85B70049454B /* AccountListView.swift in Sources */,
 				1F2F242829A49AAE007CBB27 /* DataModel.swift in Sources */,
 				1F9499C9299F568900F628B4 /* WelcomeSheet.swift in Sources */,
+				1F88491429B537B400145340 /* TextFormattingRule.swift in Sources */,
 				1F740D9C29AF1BF600EFCCA7 /* Badges.swift in Sources */,
+				1F88491329B537B400145340 /* NSFont.swift in Sources */,
 				1F740DA929AF658100EFCCA7 /* AwardToPeopleSheet.swift in Sources */,
 				1FF21E8229ACFEE500203623 /* Timeline.swift in Sources */,
 				1F57C54B299285B300DFE063 /* Search.swift in Sources */,
@@ -880,6 +937,8 @@
 				1F1472DE29A71F6C00197393 /* NoteHeader.swift in Sources */,
 				1F065A9B29A3E67F003421D3 /* NotificationsReactions.swift in Sources */,
 				1F7C65AF29A11244009FF3EA /* ProfileZapsView.swift in Sources */,
+				1F88491629B537B400145340 /* UIFont.swift in Sources */,
+				1F88491529B537B400145340 /* NSRegularExpression.swift in Sources */,
 				1F7150D029ABC6CE00AAB1C3 /* TabButton.swift in Sources */,
 				1F065A9929A37A47003421D3 /* NoteZaps.swift in Sources */,
 				1F14CC43299D1D7E00131B8D /* NosturStyles.swift in Sources */,
@@ -899,7 +958,9 @@
 				1F740DA129AF381F00EFCCA7 /* CreateNewBadgeSheet.swift in Sources */,
 				1F1472DA29A71EBC00197393 /* FooterFragment.swift in Sources */,
 				1FBE8222299A6F3D00FB41CE /* LUD16.swift in Sources */,
+				1F88491129B537B400145340 /* HighlightedTextEditor.AppKit.swift in Sources */,
 				1FA51FF72978441200FE60EF /* Relay+CoreDataProperties.swift in Sources */,
+				1F88491729B537B400145340 /* UITextView.swift in Sources */,
 				1FECAC4729A08255006FEE72 /* Collection+subscript.swift in Sources */,
 				1F1ABC4D2981AEA500D03FA9 /* ProfileNotesView.swift in Sources */,
 				1F7265C229B2148200E4F9D4 /* Exporter.swift in Sources */,
@@ -918,15 +979,18 @@
 				1F4AFC4729733E2400CC1F90 /* Event+CoreDataClass.swift in Sources */,
 				1F8B135E297B36DB002EB8CF /* HexEncoding.swift in Sources */,
 				1F4AFC4829733E2400CC1F90 /* Event+CoreDataProperties.swift in Sources */,
+				1F88490E29B537B400145340 /* HighlightingTextEditor.swift in Sources */,
 				1FC4D4062997C493004E88CD /* NewReply.swift in Sources */,
 				1F7521192986D44E00C43DF0 /* MessageParser.swift in Sources */,
 				1FC38BA0297316AA004769F8 /* DummyEvents.swift in Sources */,
 				1F740D9F29AF36C800EFCCA7 /* BadgesIssuedView.swift in Sources */,
 				1F7C65AD29A0A530009FF3EA /* ReadOnlyAccountInformationSheet.swift in Sources */,
+				1F88491229B537B400145340 /* HighlightedTextEditor.UIKit.swift in Sources */,
 				1F8B1363297B36DB002EB8CF /* BytesConvertible.swift in Sources */,
 				1FC38B9D2972DD5A004769F8 /* Contact+CoreDataClass.swift in Sources */,
 				1FC4D40D2998ED0E004E88CD /* FollowersList.swift in Sources */,
 				1F71B45729B0AA1600FA0400 /* NotificationsNotes.swift in Sources */,
+				1F88490F29B537B400145340 /* URL.swift in Sources */,
 				1FBFE8E629AC74B50039F992 /* NostrRank.swift in Sources */,
 				1FD49733297FCB5E0084F14E /* PreviewHelper.swift in Sources */,
 				1F14BA6E29854B8E00EACCD5 /* ContactList.swift in Sources */,

@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct NewReply: View {
+    let PLACEHOLDER = "Enter your reply"
+    
     var replyTo:Event
     
     @Environment(\.dismiss) private var dismiss
@@ -16,12 +18,15 @@ struct NewReply: View {
     @State var noteText = ""
 //    @Binding var noteCancellationId:UUID?
     
-    enum FocusedField {
-        case noteText
-    }
-    @FocusState private var focusedField: FocusedField?
-    
     let newReplyEvent:NEvent
+    
+    @StateObject var vm = NewNoteText()
+    
+    @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Contact.nip05verifiedAt, ascending: false)], predicate: NSPredicate(value: false))
+    var contacts:FetchedResults<Contact>
+    var firstResults:[Contact] { Array(contacts.prefix(30)) }
+    
+    @State var tapOrFirstResults:[Contact] = []
     
 //    init(replyTo:Event, noteCancellationId:Binding<UUID?>) {
     init(replyTo:Event) {
@@ -60,58 +65,136 @@ struct NewReply: View {
     }
     
     var body: some View {
-        VStack {
-            ScrollView {
-                NoteRowView(event: replyTo, hideFooter: true)
-                HStack {
-                    NewReplyingToFragment(contact: replyTo.contact, pubkey: replyTo.pubkey)
-                        .offset(x:80)
+        if ns.account != nil {
+            VStack {
+                ScrollView {
+                    NoteRowView(event: replyTo, hideFooter: true)
+                    HStack {
+                        NewReplyingToFragment(contact: replyTo.contact, pubkey: replyTo.pubkey)
+                            .offset(x:80)
+                        Spacer()
+                    }
+                    HStack(alignment: .top) {
+                        ProfilePicView(pubkey: ns.account!.publicKey, account: ns.account!)
+                            .padding(.horizontal, 10)
+                        ZStack(alignment:.leading) {
+                            VStack(alignment: .leading) {
+                                Text(PLACEHOLDER).foregroundColor(.gray)
+                                    .offset(x: 5.0, y: 7.0)
+                                    .opacity(vm.text == "" ? 1 : 0)
+                                Spacer()
+                            }
+                            VStack(alignment: .leading) {
+                                HighlightedTextEditor(text: $vm.text, shouldBecomeFirstResponder: true, highlightRules: NewNoteText.rules)
+                                // optional modifiers
+                                    .onCommit { print("commited") }
+                                    .onEditingChanged {
+                                        
+                                    }
+                                    .onTextChange { print("latest text value", $0) }
+                                    .onSelectionChange { (range: NSRange) in
+                                        print(range)
+                                    }
+                                    .introspect { editor in
+                                        if (vm.textView == nil) {
+                                            vm.textView = editor.textView
+                                            vm.textView?.backgroundColor = UIColor.clear
+                                        }
+                                    }
+                                    .frame(minHeight: 100, idealHeight: 125, maxHeight: 250, alignment: .top)
+                                Spacer()
+                            }
+                        }
+                    }
+                    
+                    
+                    if vm.mentioning {
+                        ScrollView {
+                            LazyVStack {
+                                ForEach(firstResults) { contact in
+                                    ContactSearchResultRow(contact: contact) {
+                                        guard vm.textView != nil else { return }
+                                        vm.text = vm.text.dropLast(vm.term.count) + contact.username
+                                        tapOrFirstResults.append(contact)
+                                        vm.mentioning = false
+                                        vm.lastHit = contact.username
+                                        vm.term = ""
+                                        
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.02) { // after 0.02 sec to get the new .endOfDocument
+        //                                    self.vm.mentioning = false
+                                            let newPosition = vm.textView!.endOfDocument
+                                            vm.textView!.selectedTextRange = vm.textView!.textRange(from: newPosition, to: newPosition)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                     Spacer()
                 }
-                HStack(alignment: .top) {
-                    ProfilePicView(pubkey: ns.account!.publicKey, account: ns.account!)
-                        .padding(.horizontal, 10)
-                    TextField(text: $noteText, prompt: Text("Enter your reply"), axis: .vertical) {
-                        EmptyView()
-                    }
-                    .focused($focusedField, equals: .noteText)
-                    .lineLimit(10...)
+                .safeAreaInset(edge: .top) {
+                    HStack {
+                        Button {
+                            dismiss() // TODO: If wrote something, confirm cancellation
+                        } label: {
+                            Text("Cancel")
+                        }
+                        Spacer()
+                        Button {
+                            guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
+                            var nEvent = newReplyEvent
+                            nEvent.content = noteText
+                            
+                            nEvent = applyMentionsNip08(nEvent)
+                            if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
+                                nEvent.content = replaceNsecWithHunter2(nEvent.content)
+                            }
+                            if let signedEvent = try? ns.signEvent(nEvent) {
+//                                let _ = up.publish(signedEvent)
+                                up.publishNow(signedEvent)
+                                dismiss()
+                            }
+                        } label: {
+                            Text("Post")
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .cornerRadius(20)
+                    }//.background(Color("BackgroundColor"))
                 }
-                Spacer()
             }
-            .safeAreaInset(edge: .top) {
-                HStack {
-                    Button {
-                        dismiss() // TODO: If wrote something, confirm cancellation
-                    } label: {
-                        Text("Cancel")
+            .padding(10)
+            .onChange(of: firstResults) { newResults in
+                guard let firstResult = newResults.first else { return }
+                tapOrFirstResults.append(firstResult)
+            }
+            .onChange(of: vm.debouncedText) { mentionString in
+                guard let account = ns.account else { return }
+                
+                if let mentionTerm = mentionTerm(mentionString) {
+                    print ("mentionTerm \(mentionTerm) lastHit: \(vm.lastHit)")
+
+                    if mentionTerm == vm.lastHit {
+                        vm.mentioning = false
                     }
-                    Spacer()
-                    Button {
-                        guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
-                        var nEvent = newReplyEvent
-                        nEvent.content = noteText
-                        
-                        nEvent = applyMentionsNip08(nEvent)
-                        if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
-                            nEvent.content = replaceNsecWithHunter2(nEvent.content)
-                        }
-                        if let signedEvent = try? ns.signEvent(nEvent) {
-//                            let _ = up.publish(signedEvent)
-                            up.publishNow(signedEvent)
-                            dismiss()
-                        }
-                    } label: {
-                        Text("Post")
+                    else {
+                        vm.mentioning = true
+                        vm.term = mentionTerm
+                        contacts.nsPredicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@) AND NOT pubkey IN %@", mentionTerm, mentionTerm, account.blockedPubkeys_)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .cornerRadius(20)
-                }//.background(Color("BackgroundColor"))
+                }
+                else {
+                    vm.mentioning = false
+                }
+                
+                var textToReplaceWithNpubs = vm.text
+                for contact in tapOrFirstResults {
+                    textToReplaceWithNpubs = textToReplaceWithNpubs.replacingOccurrences(of: contact.username, with: contact.npub, options: .caseInsensitive)
+                }
+                vm.nEvent = applyMentionsNip08(NEvent(content: textToReplaceWithNpubs))
             }
         }
-        .padding(10)
-        .onAppear {
-            focusedField = .noteText
+        else {
+            ProgressView()
         }
     }
 }
