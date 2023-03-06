@@ -82,6 +82,7 @@ class EventsProvider: ObservableObject {
         messages.append(contentsOf: testZaps())
 //        messages.append(contentsOf: testSomeFakeAndRealZaps())
         messages.append(contentsOf: testNotifications())
+        messages.append(contentsOf: testImages())
 //        messages.append(contentsOf: testThread())
         
         var relayMessages:[RelayMessage] = []

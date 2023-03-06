@@ -97,6 +97,7 @@ struct NoteRowView: View {
                                     NoteTextRenderView(event:event.firstQuote!, useLinelimit: true)
                                         .id(text)
                                         .onTapGesture { nav.navigateTo(event.firstQuote!) }
+                                    ImageViewer(content: event.content ?? "")
                             }
                             
                             
@@ -163,6 +164,7 @@ struct NoteRowView: View {
 //                                                backgroundColor = Color(uiColor: .systemBackground)
 //                                            }
 //                                        }
+                                        ImageViewer(content: event.content ?? "")
                             }
                             
                             
@@ -258,49 +260,86 @@ struct NoteRowView_Previews: PreviewProvider {
 
         let event7 = PreviewFetcher.fetchEvent("fdf989cbe5d26d874a4afaf8a78861fcd3267619e7db467a549a6b33c6dbeeab")
         
+        let img0 = PreviewFetcher.fetchEvent("f61016921961dfe93981f12d2eff92b0b7e8b3312c8a1cfdabf191d9536ba2ad")
+        let img1 = PreviewFetcher.fetchEvent("bf0ca9422b83a35fd3384d4149314bfff9f05e025b5138c9db85d90a41b03ad9")
+        let img2 = PreviewFetcher.fetchEvent("6687ee15b74160673449e2bf667d88e246d8101418e167679f2aa10df3bb7c06")
+        let img3 = PreviewFetcher.fetchEvent("82fcaaa11259aa5f505f1e3a6de06c2b7265179d3d05ef0b74824c4b7ff7eab8")
+        let img4 = PreviewFetcher.fetchEvent("5099246907e78edde0169c419543c01dd312fbe2645106c58f476efd65c2f66b")
+        
         List {
             
-            if (event0 != nil) {
-                NoteRowView(event: event0!)
-                    .listRowInsets(EdgeInsets())
-            }
-//
-            if (event1 != nil) {
-                NoteRowView(event: event1!)
-                    .listRowInsets(EdgeInsets())
-            }
-////
-            if (event2 != nil) {
-                NoteRowView(event: event2!)
-                    .listRowInsets(EdgeInsets())
-            }
-//
-//            NoteRowView(event: event3!)
-//                .listRowInsets(EdgeInsets())
-//
-            // QUOTE? TODO:// WAAROM CRASHED DEZE??
-//            if (event4 != nil) {
-//                NoteRowView(event: event4!)
-//                    .listRowInsets(EdgeInsets())
+//            Group {
+                if (img0 != nil) {
+                    NoteRowView(event: img0!)
+                        .listRowInsets(EdgeInsets())
+                }
+                
+                if (img1 != nil) {
+                    NoteRowView(event: img1!)
+                        .listRowInsets(EdgeInsets())
+                }
+                
+                if (img2 != nil) {
+                    NoteRowView(event: img2!)
+                        .listRowInsets(EdgeInsets())
+                }
+                
+                if (img3 != nil) {
+                    NoteRowView(event: img3!)
+                        .listRowInsets(EdgeInsets())
+                }
+                
+                if (img4 != nil) {
+                    NoteRowView(event: img4!)
+                        .listRowInsets(EdgeInsets())
+                }
+                
+                
+                if (event0 != nil) {
+                    NoteRowView(event: event0!)
+                        .listRowInsets(EdgeInsets())
+                }
+                //
+                if (event1 != nil) {
+                    NoteRowView(event: event1!)
+                        .listRowInsets(EdgeInsets())
+                }
+                ////
+                if (event2 != nil) {
+                    NoteRowView(event: event2!)
+                        .listRowInsets(EdgeInsets())
+                }
+                //
+                //            NoteRowView(event: event3!)
+                //                .listRowInsets(EdgeInsets())
+                //
+                // QUOTE? TODO:// WAAROM CRASHED DEZE??
+                //            if (event4 != nil) {
+                //                NoteRowView(event: event4!)
+                //                    .listRowInsets(EdgeInsets())
+                //            }
+                
+                //            NoteRowView(event: event5!)
+                //                .listRowInsets(EdgeInsets())
+                
+                if (event6 != nil) {
+                    // REPOST, LOADING?
+                    NoteRowView(event: event6!)
+                        .listRowInsets(EdgeInsets())
+                }
+                
+                if (event7 != nil) {
+                    // REPOST
+                    NoteRowView(event: event7!)
+                        .listRowInsets(EdgeInsets())
+                }
 //            }
-
-//            NoteRowView(event: event5!)
-//                .listRowInsets(EdgeInsets())
+//            .frame(maxHeight: 400)
+//            .listRowInsets(EdgeInsets())
             
-            if (event6 != nil) {
-                // REPOST, LOADING?
-                NoteRowView(event: event6!)
-                    .listRowInsets(EdgeInsets())
-            }
-
-            if (event7 != nil) {
-                // REPOST
-                NoteRowView(event: event7!)
-                    .listRowInsets(EdgeInsets())
-            }
             
         }
-        .listStyle(PlainListStyle())
+        .listStyle(.plain)
         .withPreviewEnvironment()
     }
 }

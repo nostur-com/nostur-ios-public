@@ -7,46 +7,7 @@
 
 import SwiftUI
 
-
-import UIKit
-import LinkPresentation
-
-
-@MainActor
-struct LinkView: UIViewRepresentable {
-    typealias UIViewType = LPLinkView
-    
-    var metadata: LPLinkMetadata?
-    
-    @MainActor
-    func makeUIView(context: Context) -> LPLinkView {
-        guard let metadata = metadata else { return LPLinkView() }
-        let linkView = LPLinkView(metadata: metadata)
-        return linkView
-    }
-    
-    func updateUIView(_ uiView: LPLinkView, context: Context) {
-        
-    }
-}
-
-
 // TODO: RESEARCH SWIFT USER GENERATED CONTEXT SANITIZING ETC.
-
-// SHOULD DO:
-// RENDER LINK PREVIEW (FIRST ONE IS ENOUGH)
-// TAPPABLE @MENTIONS
-// RENDER PICTURE THUMBNAIL, MAX 4?
-// RENDER LN INVOICE?
-// RENDER BITCOIN ADDR QR?
-
-
-struct LinkPreviewCache {
-    static var shared:LRUCache<URL, LPLinkMetadata> = {
-        let cache = LRUCache<URL, LPLinkMetadata>(capacity: 100)
-        return cache
-    }()
-}
 
 struct NoteTextRenderView: View {
     var event:Event
@@ -56,7 +17,6 @@ struct NoteTextRenderView: View {
     var tags:[NEventTag]
     var useLinelimit = true
     
-    @State private var metadata: LPLinkMetadata?
     
     func contactUsername(fromPubkey pubkey:String) -> String {
         if let contact = event.contacts?.first(where: { $0.pubkey == pubkey }) {
@@ -74,15 +34,6 @@ struct NoteTextRenderView: View {
         }
     }
     
-    private func getFirstLinkInText(_ text:String) -> String? {
-        // TODO: maybe add helpers for widely used embeds so https:// is prefixed automagically if missing
-        let urlMatches = text.matchingStrings(regex:#"(https:\/\/)[\w/\-?=%.]+\.[\w/\-?=%.]+"#)
-        
-        if urlMatches.count == 1 && urlMatches[0].count != 0 {
-            let firstLinkInText = urlMatches[0][0]
-            return firstLinkInText
-        }
-        return nil
     }
     
     private func renderMentions(_ text:String) -> AttributedString? { // This is slow??
@@ -188,25 +139,9 @@ struct NoteTextRenderView: View {
                         }
                     }
                 }
-                .onAppear(perform: fetchMetadata)
             }
         }
-    }
-    
-    private func fetchMetadata() {
-        let provider = LPMetadataProvider()
-        let url = URL(string: firstLinkInText!)!
-        Task {
-            let metadata = try await provider.startFetchingMetadata(for: url)
-            await oyooy(metadata: metadata)
-        }
-    }
-    
-    @MainActor
-    func oyooy(metadata:LPLinkMetadata?) {
-        if let md = metadata {
-            self.metadata = md
-        }
+        return newText
     }
 }
 

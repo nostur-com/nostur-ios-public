@@ -173,6 +173,7 @@ struct NoteAndParent: View {
 //                                                backgroundColor = Color(uiColor: .systemBackground)
 //                                            }
 //                                        }
+                                ImageViewer(content: event.content ?? "")
                         }
                         
                         

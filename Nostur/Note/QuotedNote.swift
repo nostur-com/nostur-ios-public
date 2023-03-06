@@ -89,6 +89,7 @@ struct QuotedNoteFragment: View {
             }.frame(height: 40)
             VStack(alignment: .leading) {
                 NoteTextRenderView(event:event)
+                ImageViewer(content: event.content ?? "")
             }
         }
         .onTapGesture {
