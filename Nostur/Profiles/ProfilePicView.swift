@@ -18,7 +18,7 @@ struct ProfilePic: View {
     init(event:Event, size: CGFloat = 50) {
         self.event = event
         self.size = size
-        self.color = randomColor(seed: event.pubkey ?? "WTF")
+        self.color = randomColor(seed: event.pubkey)
     }
     
     var body: some View {

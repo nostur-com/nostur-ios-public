@@ -187,8 +187,6 @@ struct NewNote_Previews: PreviewProvider {
 }
 
 func mentionTerm(_ text:String) -> String? {
-    let prefix = "@"
-
     if let rangeStart = text.lastIndex(of: Character("@")) {
         let extractedString = String(text[rangeStart..<text.endIndex].dropFirst(1))
         return extractedString
