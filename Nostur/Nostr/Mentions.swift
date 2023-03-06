@@ -66,7 +66,8 @@ func nip10OrderedTags(oldTags:[NEventTag], mentionedTags:[NEventTag]) -> [NEvent
     // Last "E" should always be the reply to be compatible with old clients
     if (oldTags.filter { $0.type == "e" }.count == 1) {
         // so insert before last e
-        return newTags + oldTags
+        newTags = mentionedTags + oldTags
+        return newTags
     }
     else if (oldTags.filter { $0.type == "e" }.count >= 2) {
         // insert between
@@ -79,6 +80,9 @@ func nip10OrderedTags(oldTags:[NEventTag], mentionedTags:[NEventTag]) -> [NEvent
         newTags.insert(contentsOf: mentionedTags, at: (firstIndex + 1))
         return newTags
     }
+//    else {
+//        return mentionedTags + oldTags
+//    }
     return []
 }
 
