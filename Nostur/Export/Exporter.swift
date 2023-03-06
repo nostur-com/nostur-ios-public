@@ -39,15 +39,11 @@ final class Exporter {
         var jsonl:[String] = []
         for nEvent in nEvents {
             jsonl.append(nEvent.wrappedEventJson())
-            if let last = jsonl.last {
-                print(last)
-            }
         }
-        
+
         print("Exported \(nEvents.count) events")
         
         return String(jsonl.joined(separator:"\n")).data(using: .utf8)!
-        // provide share
     }
 }
 

@@ -62,14 +62,16 @@ struct Settings: View {
                         guard ns.account != nil else { print("cannot export, no account"); return }
                         showExporter.toggle()
                     }
-//                    .buttonStyle(.borderedProminent)
-                    .fileExporter(isPresented: $showExporter, document: EventsArchive(pubkey: ns.account!.publicKey), contentType: .events) { result in
-                        switch result {
-                        case .success(let url):
-                            print("Saved to \(url)")
-                        case .failure(let error):
-                            print(error.localizedDescription)
-                        }
+                    if (showExporter) {
+                        Color.clear
+                            .fileExporter(isPresented: $showExporter, document: EventsArchive(pubkey: ns.account!.publicKey), contentType: .events) { result in
+                                switch result {
+                                    case .success(let url):
+                                        print("Saved to \(url)")
+                                    case .failure(let error):
+                                        print(error.localizedDescription)
+                                }
+                            }
                     }
                 }
                 
