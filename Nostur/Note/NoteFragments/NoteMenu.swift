@@ -33,6 +33,16 @@ struct NoteMenu: View {
             } label: {
                 Label("Copy note id hex \(noteIdHex))", systemImage: "doc.on.clipboard")
             }
+            Button {
+                UIPasteboard.general.string = event.copyPasteText()
+            } label: {
+                Label("Copy text", systemImage: "doc.on.clipboard")
+            }
+            Button {
+                UIPasteboard.general.string = event.toNEvent().eventJson()
+            } label: {
+                Label("Copy source", systemImage: "doc.on.clipboard")
+            }
             if (ns.isFollowing(event.pubkey)) {
                 Button {
                     print("Unfollow @\(username)")
