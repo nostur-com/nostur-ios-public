@@ -122,6 +122,9 @@ struct BookmarksView: View {
             }
             Spacer()
         }
+        .navigationTitle("Bookmarks")
+        .navigationBarTitleDisplayMode(.inline)
+//        .navigationBarHidden(true)
         .padding()
         .onChange(of: selectedAccount) { newValue in
             if (newValue != nil) {

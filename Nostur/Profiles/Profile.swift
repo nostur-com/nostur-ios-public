@@ -90,6 +90,7 @@ struct Profile: View {
     @State var activeTab = "NOTES"
     @State var isFollowing = false
     @State var profilePicViewerIsShown = false
+    @State var navigationTitle = ""
     
     init(contact:Contact) {
         self.contact = contact
@@ -343,6 +344,7 @@ struct Profile: View {
             }
         }
         .ignoresSafeArea(edges: .top)
+        .navigationTitle("") // dont know how to hide contact.authorName, but DO show in next view back button
         .task {
             if (NIP05.shouldVerify(contact)) {
                 if (await NIP05.verify(nip05: contact.nip05!, expectedPubkey: contact.pubkey)) {
@@ -391,6 +393,15 @@ struct Profile: View {
         }
         .fullScreenCover(isPresented: $profilePicViewerIsShown) {
             ProfilePicFullScreenSheet(profilePicViewerIsShown: $profilePicViewerIsShown, pictureUrl:contact.picture!)
+        }
+    }
+}
+
+extension Profile {
+    @ToolbarContentBuilder
+    private func toolbarContent() -> some ToolbarContent {
+        ToolbarItemGroup(placement: .navigationBarLeading) {
+
         }
     }
 }

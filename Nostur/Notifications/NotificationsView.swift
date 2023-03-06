@@ -31,7 +31,7 @@ struct NotificationsView: View {
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var sp:SocketPool
     
-    @State var tab = "NOTES"
+    @State var tab = "Posts"
     
     init(account:Account) {
         self.account = account
@@ -45,37 +45,37 @@ struct NotificationsView: View {
                 HStack {
                     TabButton(action: {
                         withAnimation {
-                            tab = "NOTES"
+                            tab = "Posts"
                         }
-                    }, title: "Posts", selected: tab == "NOTES")
+                    }, title: "Posts", selected: tab == "Posts")
                     
                     TabButton(action: {
                         withAnimation {
-                            tab = "REACTIONS"
+                            tab = "Reactions"
                         }
-                    }, title: "Reactions", selected: tab == "REACTIONS")
+                    }, title: "Reactions", selected: tab == "Reactions")
                     
                     TabButton(action: {
                         withAnimation {
-                            tab = "ZAPS"
+                            tab = "Zaps"
                         }
-                    }, title: "Zaps", selected: tab == "ZAPS")
+                    }, title: "Zaps", selected: tab == "Zaps")
                 }
                 
                 switch (tab) {
-                    case "NOTES":
+                    case "Posts":
                         NotificationsNotes(pubkey: ns.account!.publicKey, mutedRootIds: ns.account?.mutedRootIds_ ?? [], blockedPubkeys: ns.account?.blockedPubkeys_ ?? [], context: viewContext) { creationDate in
                             if (creationDate > account.lastNotificationDate) {
                                 account.lastNotificationDate = creationDate
                             }
                         }
-                    case "REACTIONS":
+                    case "Reactions":
                         NotificationsReactions(pubkey: ns.account!.publicKey, blockedPubkeys: ns.account?.blockedPubkeys_ ?? [], context: viewContext) { creationDate in
                             if (creationDate > account.lastNotificationDate) {
                                 account.lastNotificationDate = creationDate
                             }
                         }
-                    case "ZAPS":
+                    case "Zaps":
                         NotificationsZaps(pubkey: ns.account!.publicKey, context: viewContext) { creationDate in
                             if (creationDate > account.lastNotificationDate) {
                                 account.lastNotificationDate = creationDate
@@ -90,6 +90,9 @@ struct NotificationsView: View {
                 Text("No active account")
             }
         }
+        .navigationTitle(tab)
+        .navigationBarHidden(true)
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

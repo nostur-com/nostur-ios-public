@@ -517,6 +517,10 @@ struct ConfigurationView: View {
                 }
             }
         }
+        .navigationTitle("Relays")
+        .navigationBarTitleDisplayMode(.inline)
+
+//        .navigationBarHidden(true)
     }
 }
 

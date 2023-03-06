@@ -279,6 +279,7 @@ struct NoteAndParent: View {
             
 //            Spacer()
         }
+        .navigationTitle("Post")
     }
     
     func fixReplyToIfWeAlreadyHaveIt(_ openedEvent:Event) {

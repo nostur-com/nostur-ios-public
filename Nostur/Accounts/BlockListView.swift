@@ -33,6 +33,8 @@ struct BlockListView: View {
             Text("Swipe to unblock/unmute")
             Spacer()
         }
+        .navigationTitle(tab)
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

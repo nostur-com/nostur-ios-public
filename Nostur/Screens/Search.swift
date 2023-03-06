@@ -53,6 +53,8 @@ struct Search: View {
             }
         }
         .padding(10)
+        .navigationTitle("Search")
+//        .navigationBarHidden(true)
         .searchable(text: $debounceObject.text, placement: .navigationBarDrawer(displayMode: .always))
         .onChange(of: debounceObject.debouncedText) { searchString in
             

@@ -49,7 +49,7 @@ struct FollowingAndExplore: View {
         }
         .navigationTitle(selectedSubTab)
         .navigationBarHidden(true)
-//        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .top) {
             AppTopBar()
                 .padding(5)

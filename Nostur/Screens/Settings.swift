@@ -97,6 +97,7 @@ struct Settings: View {
 //            })
         }
             .navigationTitle("Settings")
+//            .navigationBarHidden(true)
     }
 }
 
