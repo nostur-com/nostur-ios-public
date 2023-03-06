@@ -8,7 +8,7 @@
 
 import SwiftUI
 
-struct BookmarksW: View {
+struct BookmarksContainer: View {
     @EnvironmentObject var ns:NosturState
 //    @Environment(\.managedObjectContext) var viewContext
     
@@ -91,35 +91,14 @@ struct BookmarksView: View {
                 .menuIndicator(.visible)
             }
             .padding(.horizontal)
-            ScrollView {
+            List {
                 ForEach(bookmarks) { bookmark in
                     NoteRowView(event: bookmark)
-                        .contextMenu {
-                            Button {
-                                UIPasteboard.general.string = bookmark.noteId
-                            } label: {
-                                Label("Copy note id \(bookmark.noteId)", systemImage: "doc.on.clipboard")
-                            }
-                            Button {
-                                UIPasteboard.general.string = bookmark.id
-                            } label: {
-                                Label("Copy note id hex \(bookmark.id))", systemImage: "doc.on.clipboard")
-                            }
-                            Button {
-                                print("Unfollow @\(bookmark.username)")
-                            } label: {
-                                Label("Unfollow @\(bookmark.username)", systemImage: "person.fill.xmark")
-                            }
-                            Button {
-                                print("Block @\(bookmark.username)")
-                            } label: {
-                                Label("Block @\(bookmark.username)", systemImage: "slash.circle")
-                            }
-                        }
-                        .padding(.horizontal)
-                    Divider()
-                }.onDelete(perform: deleteItems)
+                        .listRowInsets(EdgeInsets())
+                }
+                .onDelete(perform: deleteItems)
             }
+            .listStyle(.plain)
             Spacer()
         }
         .navigationTitle("Bookmarks")
@@ -149,7 +128,7 @@ struct BookmarksView: View {
 
 struct BookmarksView_Previews: PreviewProvider {
     static var previews: some View {
-        BookmarksW()
+        BookmarksContainer()
             .withPreviewEnvironment()
     }
 }

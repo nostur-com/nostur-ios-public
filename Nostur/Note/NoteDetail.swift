@@ -113,7 +113,7 @@ struct NoteAndParent: View {
             // PARENT: IF MISSING, FETCH IT
             if (event.replyTo == nil && event.replyToId != nil) {
                 
-                ProgressView()
+                CenteredProgressView()
 //                // TODO: FETCH ALL AT START WITH #E INSTEAD OF HERE?
 //                    .onAppear {
 //                    print("🤩🤩 🦋🦋 Fetching .replyTo \(event.replyToId!) ")
@@ -153,7 +153,7 @@ struct NoteAndParent: View {
                         }
                     }
                     
-                    HStack {
+                    VStack(alignment:.leading) {
                         
                         switch self.type {
                             case .lightningInvoice:
@@ -189,7 +189,7 @@ struct NoteAndParent: View {
                                 .padding(.leading, isParent ? INDENT : 0)
                         }
                         else {
-                            ProgressView()
+                            CenteredProgressView()
                                 .padding(.leading, isParent ? INDENT : 0)
                                 .onAppear {
                                     // TODO: CAN FETCH WITH #E OR NO?
@@ -280,6 +280,8 @@ struct NoteAndParent: View {
 //            Spacer()
         }
         .navigationTitle("Post")
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarHidden(true)
     }
     
     func fixReplyToIfWeAlreadyHaveIt(_ openedEvent:Event) {

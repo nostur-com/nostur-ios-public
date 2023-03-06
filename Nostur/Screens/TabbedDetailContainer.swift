@@ -168,7 +168,9 @@ struct TabbedDetailContainer: View {
 //                .keyboardShortcut("w")
 //                .opacity(0)
         }
-        
+        .navigationBarTitle("")
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarHidden(true)
         .padding(0)
         .onAppear {
 //            print(tm.tabs)

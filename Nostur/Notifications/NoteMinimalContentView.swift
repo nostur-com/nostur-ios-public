@@ -49,7 +49,7 @@ struct NoteMinimalContentView: View {
                         MinimalQuotedNoteFragment(event: event.firstQuote!)
                     }
                     else if (event.firstQuote != nil) {
-                        ProgressView().onAppear {
+                        CenteredProgressView().onAppear {
                             sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.firstQuoteId!)))
                         }
                     }

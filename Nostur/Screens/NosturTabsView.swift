@@ -41,7 +41,7 @@ struct NosturTabsView: View {
                 .tag("Search")
                 
                 NavigationStack(path: $nav.bookmarksPath) {
-                    BookmarksW()
+                    BookmarksContainer()
                         .withNavigationDestinations()
                     Spacer()
                 }

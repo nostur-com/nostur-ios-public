@@ -104,7 +104,7 @@ struct NoteRowView: View {
                                 QuotedNoteFragment(event: event.firstQuote!.firstQuote!)
                             }
                             else if (event.firstQuote!.firstQuote != nil) {
-                                ProgressView().onAppear {
+                                CenteredProgressView().onAppear {
                                     sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.firstQuote!.firstQuoteId!)))
                                 }
                             }
@@ -120,7 +120,7 @@ struct NoteRowView: View {
             }
             // IS REPOST BUT NEED TO FETCH THE REPOSTED POST
             else if (event.isRepost && event.firstQuoteId != nil && event.firstQuote == nil) {
-                ProgressView().onAppear {
+                CenteredProgressView().onAppear {
                     // fetch repost
                     let mentionTag = TagsHelpers(event.tags()).mentionEtags()?.first
                     if mentionTag != nil {
@@ -170,15 +170,14 @@ struct NoteRowView: View {
                                 QuotedNoteFragment(event: event.firstQuote!)
                             }
                             else if (event.firstQuote != nil) {
-                                ProgressView().onAppear {
+                                CenteredProgressView().onAppear {
                                     sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.firstQuoteId!)))
                                 }
                             }
                             
                             
                             FooterFragment(event: event)
-                            
-                            
+                                .frame(height: 30)
                         }
                         .padding(.trailing, 10)
                         //                        .padding(.bottom, 5)
@@ -189,12 +188,6 @@ struct NoteRowView: View {
             Color(.systemBackground)
                 .onTapGesture {
                     nav.navigateTo(event.isRepost && event.firstQuote != nil ? event.firstQuote! : event)
-//                    if (eventOrRepost != nil) {
-//                        nav.navigateTo(eventOrRepost)
-//                    }
-//                    else {
-//                        nav.navigateTo(NotePath(id: event.firstQuoteId!))
-//                    }
                 }
         )
         .onAppear {
