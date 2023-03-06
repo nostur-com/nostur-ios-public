@@ -15,10 +15,9 @@ struct NewReply: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var up:Unpublisher
-    @State var noteText = ""
 //    @Binding var noteCancellationId:UUID?
     
-    let newReplyEvent:NEvent
+//    @State var newReplyEvent:NEvent
     
     @StateObject var vm = NewNoteText()
     
@@ -32,36 +31,6 @@ struct NewReply: View {
     init(replyTo:Event) {
         self.replyTo = replyTo
 //        _noteCancellationId = noteCancellationId
-        
-        var newReply = NEvent(content: "")
-        newReply.kind = .textNote
-        
-        let root = TagsHelpers(replyTo.tags()).replyToRootEtag()
-        
-        if (root != nil) { // ADD "ROOT" + "REPLY"
-            let newRootTag = NEventTag(type: "e", otherInformation: root!.otherInformation[0], "", "root") // TODO RECOMMENDED RELAY HERE
-            newReply.tags.append(newRootTag)
-            
-            let newReplyTag = NEventTag(type: "e", otherInformation: replyTo.id, "", "reply")
-            
-            newReply.tags.append(newReplyTag)
-        }
-        else { // ADD ONLY "ROOT"
-            let newRootTag = NEventTag(type: "e", otherInformation: replyTo.id, "", "root")
-            newReply.tags.append(newRootTag)
-        }
-        
-        // ADD ALL "P" TAGS
-        let existingPtags = TagsHelpers(replyTo.tags()).pTags()
-        newReply.tags.append(contentsOf: existingPtags)
-        
-        // TODO: DEDUPLICATE P TAGS
-        
-        // ADD PUBKEY OF REPLYING TO EVENT
-        let replyToPtag = NEventTag(type: "p", otherInformation: replyTo.pubkey)
-        
-        newReply.tags.append(replyToPtag)
-        newReplyEvent = newReply
     }
     
     var body: some View {
@@ -142,15 +111,16 @@ struct NewReply: View {
                         Spacer()
                         Button {
                             guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
-                            var nEvent = newReplyEvent
-                            nEvent.content = noteText
-                            
-                            nEvent = applyMentionsNip08(nEvent)
+                            guard var nEvent = vm.nEvent else { return }
+//                            nEvent.content = noteText
+//
+//                            nEvent = applyMentionsNip08(nEvent)
                             if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
                                 nEvent.content = replaceNsecWithHunter2(nEvent.content)
                             }
                             if let signedEvent = try? ns.signEvent(nEvent) {
 //                                let _ = up.publish(signedEvent)
+//                                print(signedEvent.wrappedEventJson())
                                 up.publishNow(signedEvent)
                                 dismiss()
                             }
@@ -188,9 +158,41 @@ struct NewReply: View {
                 
                 var textToReplaceWithNpubs = vm.text
                 for contact in tapOrFirstResults {
-                    textToReplaceWithNpubs = textToReplaceWithNpubs.replacingOccurrences(of: contact.username, with: contact.npub, options: .caseInsensitive)
+                    textToReplaceWithNpubs = textToReplaceWithNpubs.replacingOccurrences(of: "@\(contact.username)", with: "@\(contact.npub)", options: .caseInsensitive)
                 }
-                vm.nEvent = applyMentionsNip08(NEvent(content: textToReplaceWithNpubs))
+                vm.nEvent!.content = textToReplaceWithNpubs
+                vm.nEvent = applyMentionsNip08(vm.nEvent!)
+            }
+            .onAppear {
+                var newReply = NEvent(content: "")
+                newReply.kind = .textNote
+                
+                let root = TagsHelpers(replyTo.tags()).replyToRootEtag()
+                
+                if (root != nil) { // ADD "ROOT" + "REPLY"
+                    let newRootTag = NEventTag(type: "e", otherInformation: root!.otherInformation[0], "", "root") // TODO RECOMMENDED RELAY HERE
+                    newReply.tags.append(newRootTag)
+                    
+                    let newReplyTag = NEventTag(type: "e", otherInformation: replyTo.id, "", "reply")
+                    
+                    newReply.tags.append(newReplyTag)
+                }
+                else { // ADD ONLY "ROOT"
+                    let newRootTag = NEventTag(type: "e", otherInformation: replyTo.id, "", "root")
+                    newReply.tags.append(newRootTag)
+                }
+                
+                // ADD ALL "P" TAGS
+                let existingPtags = TagsHelpers(replyTo.tags()).pTags()
+                newReply.tags.append(contentsOf: existingPtags)
+                
+                // TODO: DEDUPLICATE P TAGS
+                
+                // ADD PUBKEY OF REPLYING TO EVENT
+                let replyToPtag = NEventTag(type: "p", otherInformation: replyTo.pubkey)
+                
+                newReply.tags.append(replyToPtag)
+                vm.nEvent = newReply
             }
         }
         else {

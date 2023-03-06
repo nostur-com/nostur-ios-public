@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import HighlightedTextEditor
 import Combine
 
 public final class NewNoteText: ObservableObject {
