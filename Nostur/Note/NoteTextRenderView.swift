@@ -13,13 +13,42 @@ struct NoteTextRenderView: View {
     var event:Event
     
     var renderedText:AttributedString? = nil
-    var firstLinkInText:String? = nil
-    var tags:[NEventTag]
     var useLinelimit = true
+
     
+    init(event: Event, useLinelimit:Bool = true) {
+        self.event = event
+        self.renderedText = event.renderedText()
+        self.useLinelimit = useLinelimit
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading) {
+                if (useLinelimit) {
+                    Text(renderedText!)//.border(.cyan)
+                        .lineLimit(10, reservesSpace: false)
+                        .textSelection(.enabled)
+                        .multilineTextAlignment(TextAlignment.leading)
+                        .foregroundColor(.primary)
+                        .lineSpacing(3)
+                        .padding(.vertical, 5)
+                }
+                else {
+                    Text(renderedText!)//.border(.pink)
+                        .textSelection(.enabled)
+                        .multilineTextAlignment(TextAlignment.leading)
+                        .foregroundColor(.primary)
+                        .lineSpacing(3)
+                        .padding(.vertical, 5)
+                }
+        }
+    }
+}
+
+extension Event {
     
     func contactUsername(fromPubkey pubkey:String) -> String {
-        if let contact = event.contacts?.first(where: { $0.pubkey == pubkey }) {
+        if let contact = contacts?.first(where: { $0.pubkey == pubkey }) {
             return contact.username
         }
         // TODO: THIS IS SLOW?
@@ -34,15 +63,21 @@ struct NoteTextRenderView: View {
         }
     }
     
+    // Takes a string and replaces any link with a markdown link. Also handles subdomains
+    static func replaceURLsWithMarkdownLinks(in string: String) -> String {
+        return string
+            .replacingOccurrences(of: #"(?<!https?:\/\/)(?<!\S)[a-zA-Z0-9]+(?:\.[a-zA-Z0-9]+)+(?!\S)"#,
+                                  with: "[$0](https://$0)",
+                                  options: .regularExpression) // REPLACE ALL DOMAINS WITHOUT PROTOCOL, WITH MARKDOWN LINK AND ADD PROTOCOL
+            .replacingOccurrences(of: #"(?<!\S)([\w+]+\:\/\/)?([a-zA-Z0-9]{1,30})(\.)*([a-zA-Z0-9]{1,30})+[\.\:][a-zA-Z]{1,30}+([\/\?\=\&\#\.]@?[\w-]+)*\/?"#,
+                                  with: "[$0]($0)",
+                                  options: .regularExpression) // REPLACE THE REMAINING URLS THAT HAVE PROTOCOL, BUT IGNORE ALREADY MARKDOWNED LINKS
     }
     
-    private func renderMentions(_ text:String) -> AttributedString? { // This is slow??
-        var newText = text
-        
-        if (tags.count == 0) {
-            return AttributedString(text)
-        }
-        else {
+    func renderedText() -> AttributedString? {
+        var newText = noteText
+        let tags = tags()
+        if (tags.count > 0) {
             for index in tags.indices {
                 if (tags[index].type == "p") {
                     
@@ -64,86 +99,38 @@ struct NoteTextRenderView: View {
                     }
                 }
             }
-            do {
-                let finalText = try AttributedString(markdown: newText, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
-                return finalText
-            }
-            catch {
-                let finalText = AttributedString(text)
-                print(error)
-                return finalText
-            }
+        }
+        do {
+            var newText = Event.replaceURLsWithMarkdownLinks(in: newText)
+            let finalText = try AttributedString(markdown: newText, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
+            return finalText
+        }
+        catch {
+            let finalText = AttributedString(newText)
+            print(error)
+            return finalText
         }
     }
     
-    init(event: Event, useLinelimit:Bool = true) {
-        self.event = event
-        self.tags = event.tags()
-        let text = event.content ?? ""
-        self.firstLinkInText = getFirstLinkInText(text)
-        self.renderedText = renderMentions(text)
-        self.useLinelimit = useLinelimit
-    }
-    
-    var body: some View {
-        VStack(alignment: .leading) {
-            if (tags.count > 0) {
-                if (useLinelimit) {
-                    Text(renderedText!)//.border(.cyan)
-                        .lineLimit(10, reservesSpace: false)
-                        .textSelection(.enabled)
-                        .multilineTextAlignment(TextAlignment.leading)
-                        .foregroundColor(.primary)
-                        .lineSpacing(3)
-                        .padding(.vertical, 5)
+    func copyPasteText() -> String {
+        var newText = noteText
+        let tags = tags()
+        if (tags.count > 0) {
+            for index in tags.indices {
+                if (tags[index].type == "p") {
+                    newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "@\(contactUsername(fromPubkey: tags[index].pubkey))")
                 }
-                else {
-                    Text(renderedText!)//.border(.pink)
-                        .textSelection(.enabled)
-                        .multilineTextAlignment(TextAlignment.leading)
-                        .foregroundColor(.primary)
-                        .lineSpacing(3)
-                        .padding(.vertical, 5)
-                }
-            }
-            else if (tags.count == 0) {
-                if (useLinelimit) {
-                    Text(event.noteText)//.border(.green)
-                        .lineLimit(10, reservesSpace: false)
-                        .textSelection(.enabled)
-                        .multilineTextAlignment(TextAlignment.leading)
-                        .foregroundColor(.primary)
-                        .lineSpacing(3)
-                        .padding(.vertical, 5)
-                }
-                else {
-                    Text(event.noteText)
-                        .textSelection(.enabled)
-                        .multilineTextAlignment(TextAlignment.leading)
-                        .foregroundColor(.primary)
-                        .lineSpacing(3)
-                        .padding(.vertical, 5)
-                }
-            }
-            else { Text("") }
-            
-            if (1 == 1 && firstLinkInText != nil && !useLinelimit) {
-                VStack {
-                    if metadata != nil {
-                        LinkView(metadata: metadata!)
-                    } else {
-                        HStack {
-                            Spacer()
-                            ProgressView().padding(20)
-                            Spacer()
-                        }
-                    }
+                if (tags[index].type == "e") {
+                    // TODO: NIP19 bech32 is very slow, with hundreds of rows it slows down UI noticeably, so disable for now
+                    let key = try! NIP19(prefix: "note1", hexString: tags[index].id)
+                    newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "@\(String(key.displayString).prefix(12))")
                 }
             }
         }
         return newText
     }
 }
+
 
 struct NoteTextRenderView_Previews: PreviewProvider {
     static var previews: some View {
