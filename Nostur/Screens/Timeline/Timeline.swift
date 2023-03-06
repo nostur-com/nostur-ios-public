@@ -58,6 +58,8 @@ struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling i
         _events = FetchRequest(fetchRequest: r2)
     }
     
+    @Namespace var END_OF_LIST
+    
     var body: some View {
         let _ = Self._printChanges()
         VStack {
@@ -75,6 +77,7 @@ struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling i
                                     ds.eventAppeared.send(event)
                                 }
                         }
+                        Rectangle().frame(width: 100,height: 0).id(END_OF_LIST)
                     }
                     .onAppear {
                         guard ds.didRestoreScrollPosition == false else { return }
@@ -93,6 +96,11 @@ struct Timeline: View { /// 5.907 events in one view!, butter smooth scrolling i
 //                            }
 //                        }
 //                        ds.didRestore = true
+                    }
+                    .onReceive(receiveNotification(.shouldScrollToLast)) { _ in
+                        withAnimation {
+                            proxy.scrollTo(END_OF_LIST)
+                        }
                     }
                     .onReceive(receiveNotification(.shouldScrollToUnreadNote)) { _ in
 //                        if (ds.mostRecentEvent != nil) && (eventsSorted.firstIndex(of: ds.mostRecentEvent!) != nil) {

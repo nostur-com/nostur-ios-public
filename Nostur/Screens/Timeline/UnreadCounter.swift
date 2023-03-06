@@ -31,7 +31,8 @@ struct UnreadCounter: View {
                     .opacity(0.95)
                     .cornerRadius(20)
                     .onTapGesture {
-                        sendNotification(.shouldScrollToUnreadNote)
+//                        sendNotification(.shouldScrollToUnreadNote)
+                        sendNotification(.shouldScrollToLast)
                     }
                 }
                 Spacer()
