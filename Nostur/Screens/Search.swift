@@ -16,20 +16,22 @@ struct Search: View {
     var sp:SocketPool = .shared
     
     @FetchRequest(
-//        entity: Event.entity(),
         sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
         predicate: NSPredicate(value: false),
         animation: .none)
     var events:FetchedResults<Event>
     
     @FetchRequest(
-//        entity: Contact.entity(),
         sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
         predicate: NSPredicate(value: false),
         animation: .none)
     var contacts:FetchedResults<Contact>
     
     @State var searching = false
+    
+    init() {
+        print("🧨🧨🧨🧨🧨 INIT SEARCH 🧨🧨🧨🧨🧨")
+    }
     
     var body: some View {
         let _ = Self._printChanges()
@@ -71,6 +73,12 @@ struct Search: View {
                 }
             }
             
+            // try @account
+            else if (searchTrimmed.prefix(1) == "@") {
+                searching = true
+                contacts.nsPredicate = NSPredicate(format: "name BEGINSWITH %@", String(searchTrimmed.dropFirst(1)))
+                events.nsPredicate = NSPredicate(value: false)
+            }
             // try note1
             else if (searchTrimmed.prefix(5) == "note1") {
                 do {
@@ -115,7 +123,7 @@ public final class DebounceObject: ObservableObject {
     public init(dueTime: TimeInterval = 0.4) {
         $text
             .removeDuplicates()
-            .filter { $0.count > 2 }
+            .filter { $0.count > 1 }
             .debounce(for: .seconds(dueTime), scheduler: DispatchQueue.main)
             .sink(receiveValue: { [weak self] value in
                 self?.debouncedText = value
