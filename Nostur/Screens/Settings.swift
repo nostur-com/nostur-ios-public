@@ -18,6 +18,14 @@ struct Settings: View {
     var fiatPrice:String {
         String(format: "$%.02f", (ceil(Double(settings.defaultZapAmount)) / 100000000 * er.bitcoinPrice))
     }
+    
+    var amountS:Float {
+        mapLinearToExponential(value: Float(sliderValue), min: Float(SLIDER_MIN), max: Float(SLIDER_MAX), exponent: 7)
+    }
+    let SLIDER_MIN = 500.0
+    let SLIDER_MAX = 2000000.0
+    
+    @State var sliderValue = 0.0
 
     var body: some View {
         VStack {
@@ -46,12 +54,12 @@ struct Settings: View {
                             Text("Lightning wallet")
                         }
                         
-                        Slider(value: $settings.defaultZapAmount, in: 1000...200000) {
+                        Slider(value: $sliderValue, in: SLIDER_MIN...SLIDER_MAX) {
                             
                         } minimumValueLabel: {
-                            Text("0")
+                            Text("\(SLIDER_MIN.clean)")
                         } maximumValueLabel: {
-                            Text("200000")
+                            Text("\(SLIDER_MAX.clean)")
                         }
                         Text("Zap \(settings.defaultZapAmount.satsFormatted) sats by default (\(fiatPrice))")
                     }
@@ -98,6 +106,12 @@ struct Settings: View {
 //                    .presentationDetents([.medium])
 //            })
         }
+        .onAppear {
+            sliderValue = settings.defaultZapAmount
+        }
+        .onChange(of: amountS, perform: { newValue in
+            settings.defaultZapAmount = Double(newValue)
+        })
             .navigationTitle("Settings")
 //            .navigationBarHidden(true)
     }

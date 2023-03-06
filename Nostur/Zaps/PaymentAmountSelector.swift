@@ -21,6 +21,10 @@ struct PaymentAmountSelector: View {
     @State var zapMessage = ""
     @Environment(\.dismiss) private var dismiss
     
+    var amountS:Float {
+        mapLinearToExponential(value: amount, min: Float(paymentInfo.min), max: Float(paymentInfo.max), exponent: 7)
+    }
+    
     init(paymentInfo:PaymentInfo) {
         self.paymentInfo = paymentInfo
         self.amount = Float(ss.defaultZapAmount) // SATS (1000 SATS ~= 20 cent)
@@ -92,7 +96,7 @@ struct PaymentAmountSelector: View {
             }
             HStack {
                 Text("Send sats:").font(.title2)
-                Text(ceil(Double(amount)).clean).font(.title2)
+                Text(ceil(Double(amountS)).clean).font(.title2)
                 Text("sats").font(.title2)
                 if (fiatPrice != "") {
                     Text("\(fiatPrice)").font(.title2)
@@ -112,7 +116,7 @@ struct PaymentAmountSelector: View {
                 }
             }
             Button {
-                amountSelected(amount:ceil(amount), zapMessage:zapMessage)
+                amountSelected(amount:ceil(amountS), zapMessage:zapMessage)
             } label: {
                 Text("Pay").padding(10)
                     .foregroundColor(.white)
@@ -137,7 +141,7 @@ struct PaymentAmountSelector: View {
                 
                 exchangeRate = Double(response.result.XXBTZUSD.c[0])
                 if (exchangeRate != nil) {
-                    fiatPrice = String(format: "($%.02f)", (ceil(Double(amount)) / 100000000000 * exchangeRate!))
+                    fiatPrice = String(format: "($%.02f)", (ceil(Double(amountS)) / 100000000000 * exchangeRate!))
                 }
                 else {
                     fiatPrice = ""
@@ -149,9 +153,9 @@ struct PaymentAmountSelector: View {
             }
             
         }
-        .onChange(of: amount) { newAmount in
+        .onChange(of: amountS) { newAmountS in
             if (exchangeRate != nil) {
-                fiatPrice = String(format: "($%.02f)", (ceil(Double(newAmount)) / 100000000 * exchangeRate!))
+                fiatPrice = String(format: "($%.02f)", (ceil(Double(newAmountS)) / 100000000 * exchangeRate!))
             }
         }
     }
@@ -160,8 +164,16 @@ struct PaymentAmountSelector: View {
 
 struct PaymentAmountSelector_Previews: PreviewProvider {
     static var previews: some View {
-        let paymentInfo = PaymentInfo(min: 1000, max: 50000000, callback: "", supportsZap: true)
+        let paymentInfo = PaymentInfo(min: 100, max: 1000000, callback: "", supportsZap: true)
         PaymentAmountSelector(paymentInfo: paymentInfo)
             .withPreviewEnvironment()
     }
+}
+
+func mapLinearToExponential(value: Float, min: Float, max: Float, exponent: Float = 3) -> Float {
+//    let exponent: Float = 3 // You can adjust this value to change the sensitivity
+
+    let normalizedValue = (value - min) / (max - min)
+    let exponentialValue = pow(normalizedValue, exponent)
+    return min + (max - min) * exponentialValue
 }
