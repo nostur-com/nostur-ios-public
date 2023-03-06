@@ -365,14 +365,24 @@ struct Profile: View {
             }
         }
         .task {
-            guard contact.lud16 != nil && contact.lud16 != "" else { return }
-            let lud16 = contact.lud16!
+            guard contact.anyLud else { return }
             do {
-                let response = try await LUD16.getCallbackUrl(lud16: lud16)
-                await MainActor.run {
-                    if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
-                        contact.zapperPubkey = response.nostrPubkey!
-                        print("contact.zapperPubkey updated: \(response.nostrPubkey!)")
+                if let lud16 = contact.lud16, lud16 != "" {
+                    let response = try await LUD16.getCallbackUrl(lud16: lud16)
+                    await MainActor.run {
+                        if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                            contact.zapperPubkey = response.nostrPubkey!
+                            print("contact.zapperPubkey updated: \(response.nostrPubkey!)")
+                        }
+                    }
+                }
+                else if let lud06 = contact.lud06, lud06 != "" {
+                    let response = try await LUD16.getCallbackUrl(lud06: lud06)
+                    await MainActor.run {
+                        if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                            contact.zapperPubkey = response.nostrPubkey!
+                            print("contact.zapperPubkey updated: \(response.nostrPubkey!)")
+                        }
                     }
                 }
             }
