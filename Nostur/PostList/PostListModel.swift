@@ -58,7 +58,7 @@ final class PostListModel: ObservableObject, Identifiable {
     
     init(listState:ListState) {
         self.listState = listState
-        self.unreadCount.send(listState.unreadCount)
+        self.unreadCount.send(listState.unreadCount) // niet meer nodig?
         addSubscriptions()
     }
     

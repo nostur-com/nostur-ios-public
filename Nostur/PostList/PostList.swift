@@ -200,7 +200,7 @@ struct PostList: View {
 //        let endIndex = min(lastAppearedIndex + MAX/2, posts.count - 1)      // [MAX/2] AFTER
         let endIndex = postsNewestAtBottom.count - 1                                      // INFINITE AFTER
         visiblePosts = Array(postsNewestAtBottom[startIndex...endIndex])
-        state.unreadCount.send(visiblePosts?.count ?? 0)
+        state.unreadCount.send(visiblePosts?.count ?? 0) // werkt niet???
         // uhmm dit hierboven allemaal hier doen?
         // of send(visisibleposts) en dan daar doen?
     }
@@ -218,18 +218,20 @@ struct PostList: View {
         let endIndex = postsNewestAtBottom.count - 1 
         visiblePosts = Array(postsNewestAtBottom[startIndex...endIndex])
 
-        state.unreadCount.send(visiblePosts?.count ?? 0)
+//        state.unreadCount.send(visiblePosts?.count ?? 0) // Waarom werkt dit niet??
+        state.updateUnreadCount.send(visiblePosts ?? [])
         // uhmm dit hierboven allemaal hier doen?
         // of send(visisibleposts) en dan daar doen?
     }
     
     func restoreUnreadCount() {
-        guard let mostRecentAppeared = state.mostRecentAppeared else { return }
+//        guard let mostRecentAppeared = state.mostRecentAppeared else { return }
         guard let visiblePosts = self.visiblePosts else { return }
         
-        let lastAppearedIndex = visiblePosts.map { $0.id }.firstIndex(of: mostRecentAppeared.id) ?? 0
+//        let lastAppearedIndex = visiblePosts.map { $0.id }.firstIndex(of: mostRecentAppeared.id) ?? 0
         
-        state.unreadCount.send(visiblePosts.count - lastAppearedIndex - 1)
+//        state.unreadCount.send(visiblePosts.count - lastAppearedIndex - 1) // Werkt niet?
+        state.updateUnreadCount.send(visiblePosts)
         // uhmm dit hierboven allemaal hier doen?
         // of send(visisibleposts) en dan daar doen?
     }
