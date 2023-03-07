@@ -11,6 +11,13 @@ struct NoteHeader: View {
     @EnvironmentObject var nav:NavigationModel
     @ObservedObject var event:Event
     var singleLine:Bool = true
+    var hideEmojis:Bool
+    
+    init(event:Event, singleLine:Bool = true) {
+        self.event = event
+        self.singleLine = singleLine
+        self.hideEmojis = SettingsStore.shared.hideEmojisInNames
+    }
     
     var body: some View {
         //        NavigationLink(value: event, label: {
@@ -42,7 +49,7 @@ struct NoteHeader: View {
                     
                     if (singleLine) {
                         Group {
-                            Text("@\(event.contact?.username ?? event.authorKey)").layoutPriority(1)
+                            Text("@\(event.contact?.username ?? "")").layoutPriority(1)
                             Text(" · ") //
                             Text(event.ago).layoutPriority(1) //
                         }

@@ -38,6 +38,10 @@ struct Settings: View {
                 }
                 
                 Section(header: Text("Display")) {
+                    Toggle(isOn: $settings.hideBadges) {
+                        Text("We Don't Need No Stinkin' Badges")
+                        Text("Hides badges from profiles and feeds")
+                    }
                     Toggle(isOn: $settings.hideEmojisInNames) {
                         Text("Hide emojis in names")
                     }

@@ -24,9 +24,8 @@ final class SettingsStore: ObservableObject {
         
         static let defaultZapAmount = "default_zap_amount"
         static let defaultLightningWallet = "default_lightning_wallet"
-        static let hideEmojisInNames = "hide_emojis_in_names"        
-        
-        
+        static let hideEmojisInNames = "hide_emojis_in_names"
+        static let hideBadges = "hide_badges"
     }
 
     private let cancellable: Cancellable
@@ -53,6 +52,7 @@ final class SettingsStore: ObservableObject {
             Keys.defaultZapAmount: 10.000,
             Keys.sleepTrackingEnabled: true,
             Keys.hideEmojisInNames: false,
+            Keys.hideBadges: false,
             Keys.defaultLightningWallet: SettingsStore.walletOptions.first!.id
             ])
 
@@ -60,6 +60,11 @@ final class SettingsStore: ObservableObject {
             .publisher(for: UserDefaults.didChangeNotification)
             .map { _ in () }
             .subscribe(objectWillChange)
+    }
+    
+    var hideBadges: Bool {
+        set { defaults.set(newValue, forKey: Keys.hideBadges) }
+        get { defaults.bool(forKey: Keys.hideBadges) }
     }
 
     var hideEmojisInNames: Bool {
