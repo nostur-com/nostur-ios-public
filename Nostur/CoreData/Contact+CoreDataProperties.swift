@@ -84,9 +84,27 @@ extension Contact {
 extension Contact : Identifiable {
     
     public var id:String { pubkey }
-    var username:String { name ?? authorKey }
     var npub:String { try! NIP19(prefix: "npub", hexString: pubkey).displayString }
     var authorKey:String { String(npub.prefix(11)) }
+    
+    var username:String {
+        if (SettingsStore.shared.hideEmojisInNames) {
+            if (name != nil) {
+                return name!.unicodeScalars.filter {
+                    
+                    !($0.value >= 0x13000 && $0.value <= 0x1342E) && // EGYPTIAN HIEROGLYPHS
+                    !$0.properties.isEmoji  // EMOJIS
+                    
+                }.reduce("") { $0 + String($1) }
+            }
+            else {
+                return authorKey
+            }
+        }
+        else {
+            return name ?? authorKey
+        }
+    }
     
     // Display name, with fallbacks: (User)name, pubkey (prefix), or "?:?"
     var authorName: String {
