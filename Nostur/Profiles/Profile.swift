@@ -90,6 +90,7 @@ struct Profile: View {
     
     @ObservedObject var contact:Contact
     var pubkey:String
+    let hideBadges:Bool
     
     @FetchRequest
     var clEvents:FetchedResults<Event>
@@ -102,6 +103,7 @@ struct Profile: View {
     init(contact:Contact) {
         self.contact = contact
         self.pubkey = contact.pubkey
+        self.hideBadges = SettingsStore.shared.hideBadges
         
         _clEvents = FetchRequest(
             sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
@@ -162,8 +164,10 @@ struct Profile: View {
                     Rectangle().background(.clear).foregroundColor(.clear).frame(height:150) // Spacer to push content below header pic
                     
                     HStack(alignment:.top) {
-                        ProfileBadgesContainer(pubkey: contact.pubkey)
-                            .offset(x: 85, y: 0)
+                        if (!hideBadges) {
+                            ProfileBadgesContainer(pubkey: contact.pubkey)
+                                .offset(x: 85, y: 0)
+                        }
                         
                         Spacer()
                         
