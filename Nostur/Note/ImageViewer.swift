@@ -17,77 +17,120 @@ struct FullScreenItem : Identifiable {
 }
 
 struct ImageViewer: View {
+    @EnvironmentObject var ns:NosturState // Only needed for `eventIsRestricted`
     // TODO: DUNNO MAYBE NEED PREFETCHER SOME DAY
 //    @StateObject var model = PrefetchDemoViewModel()
 //    @State var fullImageIsShown = false
     let imgUrls:[URL]
+    let pubkey:String
     
     @State var fullScreenItem:FullScreenItem?
+    @State var imagesShown = false
     
-    init(content: String) {
+    init(content: String, pubkey:String) {
         self.imgUrls = ImageViewer.getImgUrlsFromContent(content)
+        self.pubkey = pubkey
     }
         
     var body: some View {
         VStack(alignment: .center) {
             if (imgUrls.count > 1) {
-                GeometryReader { geometry in
-                    let side = geometry.frame(in: .local).size.width / 2
-                    let item = GridItem(.fixed(side), spacing: 2)
-                    
-                    LazyVGrid(columns: Array(repeating: item, count: 2), spacing: 2) {
-                        ForEach(0..<imgUrls.count, id: \.self) { index in
-                            LazyImage(url: imgUrls[index]) { state in
-                                if let image = state.image {
-                                    image.resizingMode(.aspectFit)
+                if (imagesShown) {
+                    GeometryReader { geometry in
+                        let side = geometry.frame(in: .local).size.width / 3
+                        
+                        ScrollView(.horizontal) {
+                            LazyHStack {
+                                ForEach(0..<imgUrls.count, id: \.self) { index in
+                                    LazyImage(url: imgUrls[index]) { state in
+                                        if let image = state.image {
+                                            image.resizingMode(.aspectFit)
+                                        }
+                                        else {
+                                            CenteredProgressView()
+                                        }
+                                    }
+                                    .pipeline(ImageProcessing.shared.postContentPipeline)
+                                    .priority(.low)
+                                    .processors([ImageProcessors.Resize(width: side)])
+                                    .frame(width: side, height: 200)
+                                    // TODO: DUNNO MAYBE NEED PREFETCHER SOME DAY
+                                    //                            .onAppear { model.onAppear(index) }
+                                    //                            .onDisappear { model.onDisappear(index) }
+                                    .onTapGesture {
+                                        fullScreenItem = FullScreenItem(url: imgUrls[index])
+                                    }
                                 }
-                                else {
-                                    CenteredProgressView()
-                                }
-                            }
-                            .pipeline(ImageProcessing.shared.postContentPipeline)
-                            .priority(.low)
-                            .processors([ImageProcessors.Resize(width: side)])
-                            .frame(width: side, height: 200)
-                            // TODO: DUNNO MAYBE NEED PREFETCHER SOME DAY
-                            //                            .onAppear { model.onAppear(index) }
-                            //                            .onDisappear { model.onDisappear(index) }
-                            .onTapGesture {
-                                fullScreenItem = FullScreenItem(url: imgUrls[index])
                             }
                         }
-                        .frame(height: 200)
+                        .fullScreenCover(item: $fullScreenItem, content: { item in
+                            FullImageViewer(fullImageURL:item.url)
+                        })
                     }
-                    .fullScreenCover(item: $fullScreenItem, content: { item in
-                        FullImageViewer(fullImageURL:item.url)
-                    })
+                    .frame(height: 200)
+//                    .background(.regularMaterial)
+                }
+                else {
+                    VStack {
+                        Spacer()
+                        HStack {
+                            Spacer()
+                            Button("Tap to load images") {
+                                imagesShown = true
+                            }
+                            Spacer()
+                        }
+                        Spacer()
+                    }
+                    .frame(height: 200)
+                    .background(.regularMaterial)
                 }
             }
             else if (imgUrls.count == 1) {
-                GeometryReader { geometry in
-                    LazyImage(url: imgUrls.first!) { state in
-                        if let image = state.image {
-                            image.resizingMode(.aspectFit)
+                if (imagesShown) {
+                    GeometryReader { geometry in
+                        LazyImage(url: imgUrls.first!) { state in
+                            if let image = state.image {
+                                image.resizingMode(.aspectFit)
+                            }
+                            else {
+                                CenteredProgressView()
+                            }
                         }
-                        else {
-                            CenteredProgressView()
+                        .pipeline(ImageProcessing.shared.postContentPipeline)
+                        .priority(.low)
+                        .processors([ImageProcessors.Resize(width: geometry.frame(in: .local).size.width)])
+                        .onTapGesture {
+                            fullScreenItem = FullScreenItem(url: imgUrls.first!)
                         }
+                        .fullScreenCover(item: $fullScreenItem, content: { item in
+                            FullImageViewer(fullImageURL:item.url)
+                        })
                     }
-                    .pipeline(ImageProcessing.shared.postContentPipeline)
-                    .priority(.low)
-                    .processors([ImageProcessors.Resize(width: geometry.frame(in: .local).size.width)])
-                    .onTapGesture {
-                        fullScreenItem = FullScreenItem(url: imgUrls.first!)
-                    }
-                    .fullScreenCover(item: $fullScreenItem, content: { item in
-                        FullImageViewer(fullImageURL:item.url)
-                    })
+                    .frame(height: 200)
                 }
-                .frame(height: 200)
+                else {
+                    VStack {
+                        Spacer()
+                        HStack {
+                            Spacer()
+                            Button("Tap to load images") {
+                                imagesShown = true
+                            }
+                            Spacer()
+                        }
+                        Spacer()
+                    }
+                    .frame(height: 200)
+                    .background(.regularMaterial)
+                }
             }
             else {
                 EmptyView()
             }
+        }
+        .onAppear {
+            imagesShown = !SettingsStore.shared.restrictAutoDownload || ns.isFollowing(pubkey)
         }
     }
     
@@ -223,7 +266,7 @@ struct ImageViewer_Previews: PreviewProvider {
 //                .listRowInsets(EdgeInsets())
 //
 ////            ImageViewer(content: content1)
-            ImageViewer(content: content1)
+            ImageViewer(content: content1, pubkey: "")
                 .listRowInsets(EdgeInsets())
         }
         .listStyle(.inset)

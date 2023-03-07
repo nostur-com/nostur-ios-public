@@ -26,6 +26,7 @@ final class SettingsStore: ObservableObject {
         static let defaultLightningWallet = "default_lightning_wallet"
         static let hideEmojisInNames = "hide_emojis_in_names"
         static let hideBadges = "hide_badges"
+        static let restrictAutoDownload = "restrict_autodownload"
     }
 
     private let cancellable: Cancellable
@@ -53,6 +54,7 @@ final class SettingsStore: ObservableObject {
             Keys.sleepTrackingEnabled: true,
             Keys.hideEmojisInNames: false,
             Keys.hideBadges: false,
+            Keys.restrictAutoDownload: true,
             Keys.defaultLightningWallet: SettingsStore.walletOptions.first!.id
             ])
 
@@ -70,6 +72,11 @@ final class SettingsStore: ObservableObject {
     var hideEmojisInNames: Bool {
         set { defaults.set(newValue, forKey: Keys.hideEmojisInNames) }
         get { defaults.bool(forKey: Keys.hideEmojisInNames) }
+    }
+    
+    var restrictAutoDownload: Bool {
+        set { defaults.set(newValue, forKey: Keys.restrictAutoDownload) }
+        get { defaults.bool(forKey: Keys.restrictAutoDownload) }
     }
     
     var isSignatureVerificationEnabled: Bool {

@@ -45,6 +45,10 @@ struct Settings: View {
                     Toggle(isOn: $settings.hideEmojisInNames) {
                         Text("Hide emojis in names")
                     }
+                    Toggle(isOn: $settings.restrictAutoDownload) {
+                        Text("Restrict images to following")
+                        Text("Only auto-download images in new posts from people you follow\nToggle off to download from all")
+                    }
                 }
                 
                 Section(header: Text("Zapping")) {

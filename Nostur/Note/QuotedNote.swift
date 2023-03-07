@@ -24,7 +24,6 @@ struct QuotedNoteFragment: View {
     
     init(event: Event) {
         self.event = event
-        let pubkeys = event.contactPubkeys()
     }
     
     var body: some View {
@@ -73,7 +72,7 @@ struct QuotedNoteFragment: View {
             }.frame(height: 40)
             VStack(alignment: .leading) {
                 NoteTextRenderView(event:event)
-                ImageViewer(content: event.content ?? "")
+                ImageViewer(content: event.content ?? "", pubkey: event.pubkey)
             }
         }
         .onTapGesture {

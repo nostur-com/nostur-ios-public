@@ -14,6 +14,8 @@ struct NoteRowView: View {
     @Environment(\.managedObjectContext) var viewContext
     private let sp:SocketPool = .shared
     @EnvironmentObject var nav:NavigationModel
+//    @EnvironmentObject var ns:NosturState // Only needed for `eventIsRestricted`
+//    let ns:NosturState = .shared // Only needed for `eventIsRestricted`
 //    private let nav:NavigationModel = .shared
 //    var event:Event
     @ObservedObject var event:Event
@@ -97,7 +99,7 @@ struct NoteRowView: View {
                                     NoteTextRenderView(event:event.firstQuote!, useLinelimit: true)
                                         .id(text)
                                         .onTapGesture { nav.navigateTo(event.firstQuote!) }
-                                    ImageViewer(content: event.content ?? "")
+                                    ImageViewer(content: event.content ?? "", pubkey: event.pubkey)
                             }
                             
                             
@@ -164,7 +166,7 @@ struct NoteRowView: View {
 //                                                backgroundColor = Color(uiColor: .systemBackground)
 //                                            }
 //                                        }
-                                        ImageViewer(content: event.content ?? "")
+                                    ImageViewer(content: event.content ?? "", pubkey: event.pubkey)
                             }
                             
                             
