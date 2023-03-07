@@ -36,6 +36,7 @@ class Importer {
         }
         
         let context = EventsProvider.shared.container.newBackgroundContext()
+        let isSignatureVerificationEnabled = self.settingsStore.isSignatureVerificationEnabled
         
         await context.perform {
             
@@ -58,7 +59,7 @@ class Importer {
                         continue
                     }
                     
-                    if (self.settingsStore.isSignatureVerificationEnabled) {
+                    if (isSignatureVerificationEnabled) {
                         guard try event.verified() else {
                             print("😡😡 hey invalid sig yo 😡😡")
                             continue
