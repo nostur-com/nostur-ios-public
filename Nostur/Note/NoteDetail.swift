@@ -282,7 +282,7 @@ struct NoteAndParent: View {
         }
         .navigationTitle("Post")
         .navigationBarTitleDisplayMode(.inline)
-        .navigationBarHidden(true)
+//        .navigationBarHidden(true)
     }
     
     func fixReplyToIfWeAlreadyHaveIt(_ openedEvent:Event) {

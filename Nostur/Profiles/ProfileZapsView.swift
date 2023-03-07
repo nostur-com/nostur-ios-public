@@ -46,7 +46,7 @@ struct ProfileZapsView: View {
     
     var pubkey:String { contact!.pubkey }
     
-    // TODO: WHAT IS ZAPPER PUBKEY CHANGED. OLD VERIFIED ZAPS HUHH??!! KEEP TRACK
+    // TODO: WHAT IF ZAPPER PUBKEY CHANGED. OLD VERIFIED ZAPS HUHH??!! KEEP TRACK
     var verifiedZaps:[Event] {
         zaps.filter { zap in
             zap.pubkey == (contact?.zapperPubkey ?? "WHAT")
@@ -55,7 +55,7 @@ struct ProfileZapsView: View {
     
     var sumSats:Double {
         verifiedZaps.reduce(0) { partialResult, zap in
-            return partialResult + zap.sats
+            return partialResult + zap.naiveSats
         }
     }
     
