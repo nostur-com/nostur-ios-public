@@ -16,25 +16,36 @@ struct PostListContainer: View {
     @State var noteCancellationId:UUID?
     let id:String
     
+    @State var state:PostListModel?
+    
     var body: some View {
         VStack {
-            let state = PostListModel.fromDb(pubkey: ns.account!.publicKey, listId: id, context: viewContext)
-            ZStack {
-                PostList(pubkey: ns.account!.publicKey, pubkeys: ns.followingPublicKeys, context: viewContext, state:state)
-                NewNoteButton(showingNewNote: $showingNewNote)
-                VStack {
-                    Spacer()
-                    PostListUnreadCounter(state:state)
+            if state != nil {
+                ZStack {
+                    PostList(pubkey: ns.account!.publicKey, pubkeys: ns.followingPublicKeys, context: viewContext, state:state!)
+                    NewNoteButton(showingNewNote: $showingNewNote)
+                    VStack {
+                        Spacer()
+                        PostListUnreadCounter(state:state!)
+                    }
+                }
+                .sheet(isPresented: $showingNewNote) {
+                    NewNote(noteCancellationId: $noteCancellationId)
                 }
             }
-            .sheet(isPresented: $showingNewNote) {
-                NewNote(noteCancellationId: $noteCancellationId)
-            }
+        }
+        .onAppear {
+            guard let account = ns.account else { return }
+            self.state = PostListModel.fromDb(pubkey: account.publicKey, listId: id, context: viewContext)
+        }
+        .onChange(of: ns.activeAccountPublicKey) { newValue in
+            self.state = PostListModel.fromDb(pubkey: ns.account!.publicKey, listId: id, context: viewContext)
         }
     }
 }
 
 struct PostList: View {
+    @Environment(\.managedObjectContext) var viewContext
     let nav:NavigationModel = .shared
     let FETCH_LIMIT = 250
     let MAX = 100
@@ -59,7 +70,7 @@ struct PostList: View {
     let lastAppearedCreatedAtPlusHours:Int64
     
     init(pubkey:String, pubkeys:Set<String>, context:NSManagedObjectContext, state:PostListModel) {
-        print("🧨🧨🧨🧨🧨🧨🧨🧨 INIT PostList \(state.id) \(state.listState.pubkey ?? "")  🧨🧨🧨🧨🧨🧨🧨🧨")
+        print("🧨🧨🧨🧨🧨🧨🧨🧨 INIT PostList \(state.id) \(state.listState.pubkey)  🧨🧨🧨🧨🧨🧨🧨🧨")
         UIScrollView.appearance().bounces = false // Needed to not mess up detection of scroll direction
         self.state = state
         self.pubkey = pubkey
@@ -119,21 +130,59 @@ struct PostList: View {
                         }
                         Rectangle().frame(width: 100,height: 0).id(END_OF_LIST)
                     }
+//                    .id(pubkey)
                     .listStyle(.plain)
                     .onAppear {
                         guard !didRestoreState else { return } // Onlyif we didn't restore yet (so not like nav to post and back)
                         if let lastAppeared = state.lastAppeared {
-                            proxy.scrollTo(lastAppeared.id, anchor: state.lastAppearedAtAnchor == "TOP" ? .top : .bottom)
+                                proxy.scrollTo(lastAppeared.id, anchor: state.lastAppearedAtAnchor == "TOP" ? .top : .bottom)
                         }
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                             didRestoreState = true
                         }
                     }
-                    .onReceive(receiveNotification(.shouldScrollToLast)) { _ in
-                        withAnimation {
-                            proxy.scrollTo(END_OF_LIST)
-                        }
-                    }
+                    //crash..
+//                    .onReceive(receiveNotification(.shouldScrollToLast)) { _ in
+//                        proxy.scrollTo(END_OF_LIST)
+//                    }
+//                    .onChange(of: pubkey) { newState in
+//                        setVisiblePosts()
+//                        print("🔥🔥🔥 state pubkey \(newState.listState.pubkey)")
+//                        if let lastAppeared = newState.lastAppeared {
+//                            proxy.scrollTo(lastAppeared.id, anchor: newState.lastAppearedAtAnchor == "TOP" ? .top : .bottom)
+//                        }
+//                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+//                            didRestoreState = true
+//                        }
+////                        if let lastAppeared = state.lastAppeared {
+////                            let r1 = Event.fetchRequest()
+////                            r1.predicate = NSPredicate(format: "id == %@", lastAppeared.id)
+////                            r1.fetchLimit = 1
+////                            r1.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+////
+////                            // get .created_at of lastAppearedId. OR now if nil
+////                            let lastAppearedCreatedAt = (try? viewContext.fetch(r1).first?.created_at) ?? Int64(Date.now.timeIntervalSince1970)
+////
+////                            // then fetch posts 8 hours before .created_at, or before now if nil
+////                            let lastAppearedCreatedAtPlusHours = lastAppearedCreatedAt - (3600 * 8)
+////
+////                            posts.nsPredicate = NSPredicate(format: "created_at >= %i AND kind IN {1,6} AND pubkey IN %@", lastAppearedCreatedAtPlusHours, pubkeys)
+////                        }
+////                        else {
+////                            let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 8)
+////                            let lastAppearedCreatedAtPlusHours = hoursAgo
+////                            posts.nsPredicate = NSPredicate(format: "created_at >= %i AND kind IN {1,6} AND pubkey IN %@", hoursAgo, pubkeys)
+////                        }
+////
+////                        if let lastAppeared = state.lastAppeared {
+////                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+////                                proxy.scrollTo(lastAppeared.id, anchor: state.lastAppearedAtAnchor == "TOP" ? .top : .bottom)
+////                            }
+////                        }
+////                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+////                            didRestoreState = true
+////                        }
+//                    }
                 }
             }
         }
@@ -179,9 +228,14 @@ struct PostList: View {
             
         }
         .onChange(of: postsNewestAtBottom.last) { newestPost in
-            print("🔴🔴🔴 onChange(of:postsNewestAtBottom.last ... setVisiblePosts()")
             setVisiblePostsOnChange()
         }
+//        onChange(of: pubkey) { newValue in
+//            visiblePosts = []
+//            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+//                setVisiblePosts()
+//            }
+//        }
     }
     
     func setVisiblePosts() {

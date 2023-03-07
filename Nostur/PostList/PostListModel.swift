@@ -9,7 +9,10 @@ import Foundation
 import Combine
 import CoreData
 
-final class PostListModel: ObservableObject, Identifiable {
+final class PostListModel: ObservableObject, Identifiable, Equatable {
+    static func == (lhs: PostListModel, rhs: PostListModel) -> Bool {
+        return lhs.id == rhs.id
+    }
     
     static func fromDb(pubkey:String, listId:String, context:NSManagedObjectContext) -> PostListModel {
         var listState:ListState?
