@@ -35,6 +35,7 @@ struct NotificationsZaps: View {
             return zap.zappedEventId
         })
         r.predicate = NSPredicate(format: "id IN %@", ids)
+        r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         return (try? viewContext.fetch(r).filter { $0.pubkey == self.pubkey }) ?? []
     }
 
@@ -52,13 +53,13 @@ struct NotificationsZaps: View {
         self.pubkey = pubkey
         self.onAppear = onAppear
         let r1 = Event.fetchRequest()
-        r1.predicate = NSPredicate(format: "kind == 9735 AND tagsSerialized CONTAINS %@", pubkey) // OPTIMISATION HACK
+        r1.predicate = NSPredicate(format: "kind == 9735 AND tagsSerialized CONTAINS %@", serializedP(pubkey)) // OPTIMISATION HACK
 //        r1.fetchLimit = FETCH_LIMIT
         r1.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         let oldestCreatedAt = (try? context.fetch(r1).last?.created_at) ?? 0
 
         let r2 = Event.fetchRequest()
-        r2.predicate = NSPredicate(format: "created_at >= %i AND kind == 9735 AND tagsSerialized CONTAINS %@", oldestCreatedAt, pubkey)
+        r2.predicate = NSPredicate(format: "created_at >= %i AND kind == 9735 AND tagsSerialized CONTAINS %@", oldestCreatedAt, serializedP(pubkey))
 //        r2.fetchLimit = FETCH_LIMIT
         r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         _zaps = FetchRequest(fetchRequest: r2)
@@ -86,7 +87,7 @@ struct NotificationsZaps: View {
                         VStack(alignment:.leading, spacing: 3) {
                             Group {
                                 ZapsForThisNote(zaps:zapsForNote(note), onAppear: self.onAppear)
-                                NoteMinimalContentView(event: note)
+                                NoteMinimalContentView(event: note, lineLimit: 3)
                             }.onTapGesture {
                                 nav.navigateTo(NotePath(id: note.id))
                             }

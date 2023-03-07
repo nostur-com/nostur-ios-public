@@ -13,6 +13,7 @@ struct NoteMinimalContentView: View {
     @Environment(\.managedObjectContext) var viewContext
     private let sp:SocketPool = .shared
     var event:Event
+    let lineLimit:Int
     
     enum type {
         case note
@@ -21,8 +22,9 @@ struct NoteMinimalContentView: View {
     
     let type:NoteRowView.type
     
-    init(event: Event, hideFooter:Bool = false) {
+    init(event: Event, hideFooter:Bool = false, lineLimit:Int = 0) {
         self.event = event
+        self.lineLimit = lineLimit
         if event.noteText.prefix(4).lowercased() == "lnbc" && Invoice.fromStr(s: event.noteText).getValue() != nil {
             self.type = .lightningInvoice
         }
@@ -42,7 +44,7 @@ struct NoteMinimalContentView: View {
                         case .lightningInvoice:
                             LightningInvoice(invoice: event.noteText)
                         default:
-                            MinimalNoteTextRenderView(event:event)
+                            MinimalNoteTextRenderView(event:event, lineLimit: lineLimit)
                     }
                     
                     if (event.firstQuoteId != nil && event.firstQuote != nil) {

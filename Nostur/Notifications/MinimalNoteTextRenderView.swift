@@ -12,7 +12,7 @@ struct MinimalNoteTextRenderView: View {
     var event:Event
     var renderedText:AttributedString? = nil
     var tags:[NEventTag]
-    var useLinelimit = true
+    let lineLimit:Int
     
     func contactUsername(fromPubkey pubkey:String) -> String {
         if let contact = event.contacts?.first(where: { $0.pubkey == pubkey }) {
@@ -55,19 +55,19 @@ struct MinimalNoteTextRenderView: View {
         }
     }
     
-    init(event: Event, useLinelimit:Bool = true) {
+    init(event: Event, lineLimit:Int = 10) {
         self.event = event
+        self.lineLimit = lineLimit
         self.tags = event.tags()
         let text = event.content ?? ""
         self.renderedText = renderMentions(text)
-        self.useLinelimit = useLinelimit
     }
     
     var body: some View {
         VStack(alignment: .leading) {
             if (tags.count > 0) {
                 Text(renderedText!)//.border(.cyan)
-                    .lineLimit(10, reservesSpace: false)
+                    .lineLimit(lineLimit, reservesSpace: false)
                     .textSelection(.enabled)
                     .multilineTextAlignment(TextAlignment.leading)
                     .foregroundColor(.primary.opacity(0.5))
@@ -76,7 +76,7 @@ struct MinimalNoteTextRenderView: View {
             }
             else if (tags.count == 0) {
                 Text(event.noteText)//.border(.green)
-                    .lineLimit(10, reservesSpace: false)
+                    .lineLimit(lineLimit, reservesSpace: false)
                     .textSelection(.enabled)
                     .multilineTextAlignment(TextAlignment.leading)
                     .foregroundColor(.primary.opacity(0.5))
