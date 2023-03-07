@@ -18,26 +18,30 @@ struct AppTopBar: View {
     var body: some View {
         ZStack {
 //            if (!appTopBarIsHidden) {
-                HStack {
-                    if (ns.account != nil && !sm.showSidebar) {
-                        ProfilePicView(pubkey: ns.account!.publicKey, account: ns.account, size:30)
-                            .offset(x: 15)
-                            .offset(y: -5)
-                            .onTapGesture { sm.showSidebar.toggle() }
+                Group {
+                    HStack {
+                        if (ns.account != nil && !sm.showSidebar) {
+                            ProfilePicView(pubkey: ns.account!.publicKey, account: ns.account, size:30)
+                                .offset(x: 15)
+    //                            .offset(y: -5)
+                                .onTapGesture { sm.showSidebar.toggle() }
+                        }
+                        Spacer()
                     }
-                    Spacer()
+                    HStack {
+                        Spacer()
+                        Image("NosturLogo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height:30)
+                            .clipShape(Circle())
+    //                        .offset(y: -5)
+                        Spacer()
+                    }
                 }
-                HStack {
-                    Spacer()
-                    Image("NosturLogo")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height:30)
-                        .clipShape(Circle())
-                        .offset(y: -5)
-                    Spacer()
-                }
+                .padding(.top, 3)
 //            }
+            
         }
 //        // TODO: FIXEN: NAV IS NIET MET OBSERVED
 //        .onChange(of: nav.selectedTab) { tab in
