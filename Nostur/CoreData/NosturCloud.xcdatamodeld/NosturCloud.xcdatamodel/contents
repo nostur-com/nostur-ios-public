@@ -84,6 +84,15 @@
             </uniquenessConstraint>
         </uniquenessConstraints>
     </entity>
+    <entity name="ListState" representedClassName="ListState" syncable="YES">
+        <attribute name="lastAppearedAtAnchor" attributeType="String" defaultValueString="BOTTOM"/>
+        <attribute name="lastAppearedId" optional="YES" attributeType="String"/>
+        <attribute name="listId" attributeType="String" defaultValueString="ERRORERRORERRORERROR"/>
+        <attribute name="mostRecentAppearedId" optional="YES" attributeType="String"/>
+        <attribute name="pubkey" attributeType="String"/>
+        <attribute name="unreadCount" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="updatedAt" attributeType="Date" defaultDateTimeInterval="-978332400" usesScalarValueType="NO"/>
+    </entity>
     <entity name="NosturList" representedClassName=".NosturList" syncable="YES">
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="name" optional="YES" attributeType="String"/>

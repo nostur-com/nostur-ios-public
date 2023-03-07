@@ -16,47 +16,51 @@ struct NosturTabsView: View {
     var body: some View {
         let _ = Self._printChanges()
         HStack {
-            TabView(selection: $nav.selectedTab) {
-                NavigationStack(path: $nav.mainPath) {
-                    FollowingAndExplore()
-                        .withNavigationDestinations()
+            VStack {
+                AppTopBar()
+                    .padding(5)
+                TabView(selection: $nav.selectedTab) {
+                    NavigationStack(path: $nav.mainPath) {
+                        FollowingAndExplore()
+                            .withNavigationDestinations()
+                    }
+                    .tabItem { Image(systemName: "house") }
+                    .tag("Main")
+                    
+                    NavigationStack(path: $nav.notificationsPath) {
+                        NotificationsContainer()
+                            .withNavigationDestinations()
+                        Spacer()
+                    }
+                    .tabItem { Image(systemName: "bell.fill") }
+                    .tag("Notifications")
+                    
+                    NavigationStack(path: $nav.searchPath) {
+                        Search()
+                            .withNavigationDestinations()
+                        Spacer()
+                    }
+                    .tabItem { Image(systemName: "magnifyingglass") }
+                    .tag("Search")
+                    
+                    NavigationStack(path: $nav.bookmarksPath) {
+                        BookmarksContainer()
+                            .withNavigationDestinations()
+                        Spacer()
+                    }
+                    .tabItem { Image(systemName: "bookmark") }
+                    .tag("Bookmarks")
+                    
+                    NavigationStack(path: $nav.configurationPath) {
+                        ConfigurationView()
+                            .withNavigationDestinations()
+                        Spacer()
+                    }
+                    .tabItem { Image(systemName: "server.rack") }
+                    .tag("Configuration")
                 }
-                .tabItem { Image(systemName: "house") }
-                .tag("Main")
-                                
-                NavigationStack(path: $nav.notificationsPath) {
-                    NotificationsContainer()
-                        .withNavigationDestinations()
-                    Spacer()
-                }
-                .tabItem { Image(systemName: "bell.fill") }
-                .tag("Notifications")
-                
-                NavigationStack(path: $nav.searchPath) {
-                    Search()
-                        .withNavigationDestinations()
-                    Spacer()
-                }
-                .tabItem { Image(systemName: "magnifyingglass") }
-                .tag("Search")
-                
-                NavigationStack(path: $nav.bookmarksPath) {
-                    BookmarksContainer()
-                        .withNavigationDestinations()
-                    Spacer()
-                }
-                .tabItem { Image(systemName: "bookmark") }
-                .tag("Bookmarks")
-                
-                NavigationStack(path: $nav.configurationPath) {
-                    ConfigurationView()
-                        .withNavigationDestinations()
-                    Spacer()
-                }
-                .tabItem { Image(systemName: "server.rack") }
-                .tag("Configuration")
             }
-            .background(.regularMaterial)
+//            .background(.regularMaterial)
             .frame(maxWidth: 600)
             if UIDevice.current.userInterfaceIdiom == .pad {
                 TabbedDetailContainer()

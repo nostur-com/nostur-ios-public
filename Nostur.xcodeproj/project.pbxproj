@@ -101,10 +101,14 @@
 		1F756533296AE7910078474E /* NewRelayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F756532296AE7910078474E /* NewRelayView.swift */; };
 		1F779830298D0623000642BB /* PaginationTest2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F77982F298D0623000642BB /* PaginationTest2.swift */; };
 		1F779832298D19D3000642BB /* PaginationTest3.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F779831298D19D3000642BB /* PaginationTest3.swift */; };
+		1F794DFB29B780340013E633 /* PostListUnreadCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F794DFA29B780340013E633 /* PostListUnreadCounter.swift */; };
+		1F794DFD29B780950013E633 /* PostListModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F794DFC29B780950013E633 /* PostListModel.swift */; };
+		1F794DFF29B780C80013E633 /* View+onBecomingVisible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F794DFE29B780C80013E633 /* View+onBecomingVisible.swift */; };
 		1F7C65AD29A0A530009FF3EA /* ReadOnlyAccountInformationSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7C65AC29A0A530009FF3EA /* ReadOnlyAccountInformationSheet.swift */; };
 		1F7C65AF29A11244009FF3EA /* ProfileZapsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7C65AE29A11244009FF3EA /* ProfileZapsView.swift */; };
 		1F7C65BD29A14969009FF3EA /* LightningDevKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1F7C65BC29A14969009FF3EA /* LightningDevKit */; };
 		1F7C65BF29A14BA4009FF3EA /* Zaps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7C65BE29A14BA3009FF3EA /* Zaps.swift */; };
+		1F88490029B4EF6000145340 /* ZapValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8848FF29B4EF6000145340 /* ZapValidator.swift */; };
 		1F88490E29B537B400145340 /* HighlightingTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F88490229B537B400145340 /* HighlightingTextEditor.swift */; };
 		1F88490F29B537B400145340 /* URL.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F88490429B537B400145340 /* URL.swift */; };
 		1F88491029B537B400145340 /* Markdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F88490529B537B400145340 /* Markdown.swift */; };
@@ -145,6 +149,11 @@
 		1FB448C72965F3D200038671 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1FB448C62965F3D200038671 /* Assets.xcassets */; };
 		1FB448CB2965F3D200038671 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1FB448CA2965F3D200038671 /* Preview Assets.xcassets */; };
 		1FB62D0E296FFF1400A0055B /* RelayEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB62D0D296FFF1400A0055B /* RelayEditView.swift */; };
+		1FBDE8B929B6F01C00F4DFD0 /* PostList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBDE8B829B6F01C00F4DFD0 /* PostList.swift */; };
+		1FBDE8BB29B72DE900F4DFD0 /* PostListWorkingBackup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBDE8BA29B72DE900F4DFD0 /* PostListWorkingBackup.swift */; };
+		1FBDE8BD29B7374D00F4DFD0 /* PostListWorkingWithCounterBackup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBDE8BC29B7374D00F4DFD0 /* PostListWorkingWithCounterBackup.swift */; };
+		1FBDE8C029B74EE800F4DFD0 /* ListState+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBDE8BE29B74EE800F4DFD0 /* ListState+CoreDataClass.swift */; };
+		1FBDE8C129B74EE800F4DFD0 /* ListState+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBDE8BF29B74EE800F4DFD0 /* ListState+CoreDataProperties.swift */; };
 		1FBE8222299A6F3D00FB41CE /* LUD16.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBE8221299A6F3D00FB41CE /* LUD16.swift */; };
 		1FBE8224299A745600FB41CE /* PaymentAmountSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBE8223299A745600FB41CE /* PaymentAmountSelector.swift */; };
 		1FBFE8E629AC74B50039F992 /* NostrRank.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBFE8E529AC74B40039F992 /* NostrRank.swift */; };
@@ -290,11 +299,15 @@
 		1F756532296AE7910078474E /* NewRelayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewRelayView.swift; sourceTree = "<group>"; };
 		1F77982F298D0623000642BB /* PaginationTest2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaginationTest2.swift; sourceTree = "<group>"; };
 		1F779831298D19D3000642BB /* PaginationTest3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaginationTest3.swift; sourceTree = "<group>"; };
+		1F794DFA29B780340013E633 /* PostListUnreadCounter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostListUnreadCounter.swift; sourceTree = "<group>"; };
+		1F794DFC29B780950013E633 /* PostListModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostListModel.swift; sourceTree = "<group>"; };
+		1F794DFE29B780C80013E633 /* View+onBecomingVisible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+onBecomingVisible.swift"; sourceTree = "<group>"; };
 		1F7C65AC29A0A530009FF3EA /* ReadOnlyAccountInformationSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadOnlyAccountInformationSheet.swift; sourceTree = "<group>"; };
 		1F7C65AE29A11244009FF3EA /* ProfileZapsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileZapsView.swift; sourceTree = "<group>"; };
 		1F7C65B929A14709009FF3EA /* LinkPresentation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = LinkPresentation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/LinkPresentation.framework; sourceTree = DEVELOPER_DIR; };
 		1F7C65BA29A14709009FF3EA /* CryptoKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CryptoKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/CryptoKit.framework; sourceTree = DEVELOPER_DIR; };
 		1F7C65BE29A14BA3009FF3EA /* Zaps.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Zaps.swift; sourceTree = "<group>"; };
+		1F8848FF29B4EF6000145340 /* ZapValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZapValidator.swift; sourceTree = "<group>"; };
 		1F88490229B537B400145340 /* HighlightingTextEditor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HighlightingTextEditor.swift; sourceTree = "<group>"; };
 		1F88490429B537B400145340 /* URL.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = URL.swift; sourceTree = "<group>"; };
 		1F88490529B537B400145340 /* Markdown.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Markdown.swift; sourceTree = "<group>"; };
@@ -337,6 +350,11 @@
 		1FB448C82965F3D200038671 /* Nostur.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Nostur.entitlements; sourceTree = "<group>"; };
 		1FB448CA2965F3D200038671 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		1FB62D0D296FFF1400A0055B /* RelayEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayEditView.swift; sourceTree = "<group>"; };
+		1FBDE8B829B6F01C00F4DFD0 /* PostList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostList.swift; sourceTree = "<group>"; };
+		1FBDE8BA29B72DE900F4DFD0 /* PostListWorkingBackup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostListWorkingBackup.swift; sourceTree = "<group>"; };
+		1FBDE8BC29B7374D00F4DFD0 /* PostListWorkingWithCounterBackup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostListWorkingWithCounterBackup.swift; sourceTree = "<group>"; };
+		1FBDE8BE29B74EE800F4DFD0 /* ListState+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListState+CoreDataClass.swift"; sourceTree = "<group>"; };
+		1FBDE8BF29B74EE800F4DFD0 /* ListState+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListState+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1FBE8221299A6F3D00FB41CE /* LUD16.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LUD16.swift; sourceTree = "<group>"; };
 		1FBE8223299A745600FB41CE /* PaymentAmountSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentAmountSelector.swift; sourceTree = "<group>"; };
 		1FBFE8E529AC74B40039F992 /* NostrRank.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostrRank.swift; sourceTree = "<group>"; };
@@ -452,6 +470,8 @@
 				1F4AFC4629733E2400CC1F90 /* Event+CoreDataProperties.swift */,
 				1F5BBE3F297BC7E600F4AF03 /* EventsError.swift */,
 				1F5F5A5B29838F1D00DED8F4 /* EventsProvider.swift */,
+				1FBDE8BE29B74EE800F4DFD0 /* ListState+CoreDataClass.swift */,
+				1FBDE8BF29B74EE800F4DFD0 /* ListState+CoreDataProperties.swift */,
 				1F30FAA729705EBD008439C8 /* NosturCloud.xcdatamodeld */,
 				1F25B390297A4E3400A8A5A7 /* NosturList+CoreDataClass.swift */,
 				1F25B391297A4E3400A8A5A7 /* NosturList+CoreDataProperties.swift */,
@@ -557,6 +577,27 @@
 				1F740DA029AF381F00EFCCA7 /* CreateNewBadgeSheet.swift */,
 			);
 			path = Badges;
+			sourceTree = "<group>";
+		};
+		1F794DF829B780100013E633 /* PostList */ = {
+			isa = PBXGroup;
+			children = (
+				1F794DF929B7801A0013E633 /* Old */,
+				1FBDE8B829B6F01C00F4DFD0 /* PostList.swift */,
+				1F794DFC29B780950013E633 /* PostListModel.swift */,
+				1F794DFA29B780340013E633 /* PostListUnreadCounter.swift */,
+				1F794DFE29B780C80013E633 /* View+onBecomingVisible.swift */,
+			);
+			path = PostList;
+			sourceTree = "<group>";
+		};
+		1F794DF929B7801A0013E633 /* Old */ = {
+			isa = PBXGroup;
+			children = (
+				1FBDE8BC29B7374D00F4DFD0 /* PostListWorkingWithCounterBackup.swift */,
+				1FBDE8BA29B72DE900F4DFD0 /* PostListWorkingBackup.swift */,
+			);
+			path = Old;
 			sourceTree = "<group>";
 		};
 		1F7C65B629A1466D009FF3EA /* Frameworks */ = {
@@ -671,6 +712,7 @@
 				1FB448C62965F3D200038671 /* Assets.xcassets */,
 				1FB448C82965F3D200038671 /* Nostur.entitlements */,
 				1FB448C92965F3D200038671 /* Preview Content */,
+				1F794DF829B780100013E633 /* PostList */,
 			);
 			path = Nostur;
 			sourceTree = "<group>";
@@ -717,6 +759,7 @@
 				1FC2DFF329A9330600C8A9DA /* ProfileLightningButton.swift */,
 				1FBE8221299A6F3D00FB41CE /* LUD16.swift */,
 				1FBE8223299A745600FB41CE /* PaymentAmountSelector.swift */,
+				1F8848FF29B4EF6000145340 /* ZapValidator.swift */,
 			);
 			path = Zaps;
 			sourceTree = "<group>";
@@ -910,6 +953,7 @@
 				1F65002C29A759FB00B79AEF /* ProfileRowMissing.swift in Sources */,
 				1F33096529895D1600D4D8CF /* SidebarStack.swift in Sources */,
 				1F740DA529AF5F6900EFCCA7 /* ContactsSearch.swift in Sources */,
+				1FBDE8BB29B72DE900F4DFD0 /* PostListWorkingBackup.swift in Sources */,
 				1FB448BE2965F3D000038671 /* NosturApp.swift in Sources */,
 				1FC2DFF429A9330600C8A9DA /* ProfileLightningButton.swift in Sources */,
 				1F8B135D297B36DB002EB8CF /* Bytes+Base64.swift in Sources */,
@@ -945,6 +989,8 @@
 				1F88491629B537B400145340 /* UIFont.swift in Sources */,
 				1F88491529B537B400145340 /* NSRegularExpression.swift in Sources */,
 				1F7150D029ABC6CE00AAB1C3 /* TabButton.swift in Sources */,
+				1F794DFD29B780950013E633 /* PostListModel.swift in Sources */,
+				1FBDE8C129B74EE800F4DFD0 /* ListState+CoreDataProperties.swift in Sources */,
 				1F065A9929A37A47003421D3 /* NoteZaps.swift in Sources */,
 				1F14CC43299D1D7E00131B8D /* NosturStyles.swift in Sources */,
 				1F75211B2986D45D00C43DF0 /* Importer.swift in Sources */,
@@ -962,10 +1008,13 @@
 				1F1ABC492981718700D03FA9 /* BookmarksView.swift in Sources */,
 				1F740DA129AF381F00EFCCA7 /* CreateNewBadgeSheet.swift in Sources */,
 				1F1472DA29A71EBC00197393 /* FooterFragment.swift in Sources */,
+				1F88490029B4EF6000145340 /* ZapValidator.swift in Sources */,
 				1FBE8222299A6F3D00FB41CE /* LUD16.swift in Sources */,
 				1F88491129B537B400145340 /* HighlightedTextEditor.AppKit.swift in Sources */,
 				1FA51FF72978441200FE60EF /* Relay+CoreDataProperties.swift in Sources */,
+				1F794DFB29B780340013E633 /* PostListUnreadCounter.swift in Sources */,
 				1F88491729B537B400145340 /* UITextView.swift in Sources */,
+				1FBDE8C029B74EE800F4DFD0 /* ListState+CoreDataClass.swift in Sources */,
 				1FECAC4729A08255006FEE72 /* Collection+subscript.swift in Sources */,
 				1F1ABC4D2981AEA500D03FA9 /* ProfileNotesView.swift in Sources */,
 				1F7265C229B2148200E4F9D4 /* Exporter.swift in Sources */,
@@ -995,10 +1044,13 @@
 				1FC38B9D2972DD5A004769F8 /* Contact+CoreDataClass.swift in Sources */,
 				1FC4D40D2998ED0E004E88CD /* FollowersList.swift in Sources */,
 				1F71B45729B0AA1600FA0400 /* NotificationsNotes.swift in Sources */,
+				1FBDE8B929B6F01C00F4DFD0 /* PostList.swift in Sources */,
 				1F88490F29B537B400145340 /* URL.swift in Sources */,
 				1FBFE8E629AC74B50039F992 /* NostrRank.swift in Sources */,
 				1FD49733297FCB5E0084F14E /* PreviewHelper.swift in Sources */,
+				1FBDE8BD29B7374D00F4DFD0 /* PostListWorkingWithCounterBackup.swift in Sources */,
 				1F14BA6E29854B8E00EACCD5 /* ContactList.swift in Sources */,
+				1F794DFF29B780C80013E633 /* View+onBecomingVisible.swift in Sources */,
 				1F5F5A5C29838F1D00DED8F4 /* EventsProvider.swift in Sources */,
 				1F254666299EB84C003BB796 /* TimelineOld.swift in Sources */,
 				1F30FAB029706E72008439C8 /* Account+CoreDataClass.swift in Sources */,

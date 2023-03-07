@@ -31,14 +31,14 @@ struct FollowingAndExplore: View {
             }
             ZStack {
                 //                NavigationStack(path: $timelinePath) {
-                FollowingStateIsolation()
+                PostListContainer(id:"Following")
                 //                        .environmentObject(followingModel)
                     .frame(maxWidth: 600)
                 //                        .withNavigationDestinations()
                 //                }
                     .opacity(selectedSubTab == "Following" ? 1 : 0)
                 //                NavigationStack(path: $explorePath) {
-                ExploreStateIsolation()
+                PostListContainer(id:"Explore")
                 //                        .environmentObject(exploreModel)
                     .frame(maxWidth: 600)
                 //                        .withNavigationDestinations()
@@ -50,11 +50,6 @@ struct FollowingAndExplore: View {
         .navigationTitle(selectedSubTab)
         .navigationBarHidden(true)
         .navigationBarTitleDisplayMode(.inline)
-        .safeAreaInset(edge: .top) {
-            AppTopBar()
-                .padding(5)
-                .background(Color("BackgroundColor").opacity(0.9))
-        }
     }
 }
 
