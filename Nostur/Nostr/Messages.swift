@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftyJSON
+// TODO: Remove SwiftyJSON code so we can remove package
 
 // Message ready to sent, with envelope  EVENT/REQ/CLOSE
 struct ClientMessage {

@@ -43,6 +43,7 @@ class ContactProfile: Identifiable, Hashable, ObservableObject {
         hasher.combine(contact.id)
     }
     
+    // TODO: Remove SwiftyJSON code so we can remove package
     func contactsPubkeys() -> [String]? {
         guard let tagsSerialized = clEvent?.tagsSerialized else {
             return nil

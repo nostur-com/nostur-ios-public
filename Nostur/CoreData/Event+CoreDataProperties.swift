@@ -357,7 +357,7 @@ extension Event {
     // NIP-25: The content MAY be an emoji, in this case it MAY be interpreted as a "like" or "dislike", or the client MAY display this emoji reaction on the post.
     static func updateLikeCountCache(_ tags:[NEventTag], content:String, context:NSManagedObjectContext) throws -> Bool {
         switch content {
-        case "+","👍","🤙","❤️","🫂","🤗","😘","😍","💯","🤩":
+        case "+","👍","🤙","❤️","🫂","🤗","😘","😍","💯","🤩","⚡️","🔥","💥","🚀":
             // # NIP-25: The last e tag MUST be the id of the note that is being reacted to.
             if let lastEtag = TagsHelpers(tags).eTags().last {
                 let request = NSFetchRequest<Event>(entityName: "Event")
@@ -385,9 +385,9 @@ extension Event {
         let nEvent = event.toNEvent()
     
         if (1 == 2) {
-        // TODO: Disabled for now, because all zaps will be ignored because we havent fetched zapperPubkey for anyone yet
-        // TODO: Consider valid on import, to immediatly show amounts. Use seperate queue to fetch and verify zapperpubkey, then invalidate if wrong later.
-            
+            /*
+             TODO: Disabled for now, because all zaps will be ignored because we havent fetched zapperPubkey for anyone yet Consider valid on import, to immediatly show amounts. Use seperate queue to fetch and verify zapperpubkey, then invalidate if wrong later.
+             */
         // we need to have contact.zapperPubkey first... ughh
         let pTag = nEvent.tags.first { $0.type == "p" }
         guard pTag != nil else { return false }
@@ -595,8 +595,9 @@ extension Event {
         let decoder = JSONDecoder()
         if let zapReqNEvent = try? decoder.decode(NEvent.self, from: description!.otherInformation[0].data(using: .utf8, allowLossyConversion: false)!) {
             do {
-                // TODO: mmm can disable? its note in note, is this verified by relays or zapper?
-                guard try zapReqNEvent.verified() else { return nil }
+                
+                // Its note in note, should we verify? is this verified by relays? or zapper? should be...
+                guard try (!SettingsStore.shared.isSignatureVerificationEnabled) || (zapReqNEvent.verified()) else { return nil }
                 
                 return zapReqNEvent
             }
@@ -819,8 +820,7 @@ extension Event {
         return savedEvent
     }
     
-    // TODO: Maybe [EVENT..] to Core Data ... to NEvent will not give a valid id or sig, because
-    // data not exactly the same.
+    // Lets hope Event (Core Data) to nEvent will always keep correct id/sig and not lose integrity due to different storage
     func toNEvent() -> NEvent {
         var nEvent = NEvent(content: content!)
         nEvent.id = id

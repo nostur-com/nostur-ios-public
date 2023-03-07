@@ -159,7 +159,6 @@ extension Account : Identifiable {
                 AccountManager.shared.deletePrivateKey(forPublicKeyHex: self.publicKey)
                 return
             }
-            // TODO: Store public key based on private?
             AccountManager.shared.storePrivateKey(privateKeyHex: privateKeyHex!, forPublicKeyHex: self.publicKey)
         }
     }

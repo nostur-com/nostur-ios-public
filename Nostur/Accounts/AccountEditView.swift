@@ -144,7 +144,7 @@ struct AccountEditView: View {
         .safeAreaInset(edge: .bottom) {
             VStack {
                 Button {
-                    if newPrivateKey != "" { // TODO: Handle nsec format
+                    if newPrivateKey != "" {
                         
                         guard let nip19 = try? NIP19(displayString: newPrivateKey) else {
                             invalidPrivateKey = true
@@ -193,7 +193,6 @@ extension AccountEditView {
         
     }
     
-    // TODO: MOVE TO Event Publisher class
     func publishMetadataEvent() throws {
         guard account.privateKey != nil else {
             throw "Account has no private key"

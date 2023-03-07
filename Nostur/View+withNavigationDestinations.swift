@@ -75,7 +75,7 @@ extension View {
                     case .UseExistingAccount:
                         AddExistingAccountSheet(offerTryOut: true)
                     case .TryGuestAccount:
-                        TryGuestAccountSheet() // TODO:
+                        TryGuestAccountSheet()
                         
                     case .Badges:
                         BadgesView()

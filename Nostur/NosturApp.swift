@@ -23,7 +23,7 @@ struct NosturApp: App {
     @StateObject private var nav:NavigationModel = .shared
     @StateObject private var sp:SocketPool = .shared
 //    @StateObject private var ds:DataStore = .shared
-    @StateObject private var ss = SettingsStore()
+    @StateObject private var ss:SettingsStore = .shared
     @StateObject private var sm = SideBarModel()
 
     @StateObject var ucm = UnreadCounterModel()

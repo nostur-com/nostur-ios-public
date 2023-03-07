@@ -72,6 +72,7 @@ struct BookmarksView: View {
                     }
                 } label: {
                     HStack {
+                        Spacer()
                         ZStack {
                             if (selectedAccount != nil) {
                                 ProfilePicView(pubkey: selectedAccount!.publicKey, account: selectedAccount, size: 30)
@@ -85,7 +86,8 @@ struct BookmarksView: View {
                             }
                         }
                     }
-                    .frame(width: 60)
+                    .frame(width: 150)
+//                    .background(.green)
                 }
                 .menuStyle(.borderlessButton)
                 .menuIndicator(.visible)

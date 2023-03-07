@@ -42,10 +42,14 @@ extension View {
         let sm = SideBarModel()
         
         let account = PreviewFetcher.fetchAccount("9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", context: EventsProvider.preview.container.viewContext)
-        
+//
 //        let account = PreviewFetcher.fetchAccount("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", context: EventsProvider.preview.container.viewContext)
         
         ns.setAccount(account: account)
+
+        let clNevent = PreviewFetcher.fetchEvent("4d3003122620900ac5f39d4bd78bd5e82ef3f15d7538651700c90e9c56dcb964")!.toNEvent()
+        Account.preFillReadOnlyAccountFollowing(event: clNevent, context: EventsProvider.preview.container.viewContext, forceOverwrite: true)
+
         
         return self.defaultAppStorage(userDefaults)
             .environment(\.managedObjectContext,

@@ -27,6 +27,7 @@ struct ProfileRelaysView: View {
 //        }
 //        self.relays = relays
 //
+        // TODO: Remove SwiftyJSON code so we can remove package
         if let jsonData = clEvent.content?.data(using: .utf8, allowLossyConversion: false) {
             guard let jsonContent = try? JSON(data: jsonData) else {
                 return

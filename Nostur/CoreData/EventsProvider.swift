@@ -7,7 +7,6 @@
 
 import CoreData
 import OSLog
-import SwiftyJSON // nodig voor preview, maar preview is rommel. TODO: fixen
 
 class EventsProvider: ObservableObject {
     

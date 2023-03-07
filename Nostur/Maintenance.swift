@@ -158,8 +158,7 @@ struct Maintenance {
                 try EventsProvider.shared.container.viewContext.save()
             }
             
-            catch let error as NSError {
-                // TODO: handle the error
+            catch let error {
                 print("😢😢😢 XX \(error)")
             }
         }
@@ -183,8 +182,7 @@ struct Maintenance {
 //                }
 //
 //                try EventsProvider.shared.container.viewContext.save()
-//            } catch let error as NSError {
-//                // TODO: handle the error
+//            } catch let error  {
 //                print("😢😢😢 XX \(error)")
 //            }
 //        }

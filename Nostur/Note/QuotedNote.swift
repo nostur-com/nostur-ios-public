@@ -21,26 +21,10 @@ struct QuotedNoteFragment: View {
     @EnvironmentObject var accountState:NosturState
     @EnvironmentObject var nav:NavigationModel
     @ObservedObject var event:Event
-
-    @FetchRequest
-    var taggedContacts:FetchedResults<Contact>
     
     init(event: Event) {
         self.event = event
         let pubkeys = event.contactPubkeys()
-        
-        if (1 == 2) || (pubkeys == nil) {
-            _taggedContacts = FetchRequest(
-                sortDescriptors: [],
-                predicate: NSPredicate(format: "FALSEPREDICATE")
-            )
-        }
-        else { // TODO: IS THIS SLOW OR NOT?
-            _taggedContacts = FetchRequest(
-                sortDescriptors: [],
-                predicate: NSPredicate(format: "pubkey IN %@", pubkeys!)
-            )
-        }
     }
     
     var body: some View {

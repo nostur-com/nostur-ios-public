@@ -154,7 +154,7 @@ struct d {
     var description:String {
         get {
             if (t == nil) { return "?" }
-            return Date(timeIntervalSince1970: TimeInterval(t!)).formatted(.dateTime.hour().minute().second())
+            return Date(timeIntervalSince1970: TimeInterval(t!)).formatted(.dateTime.day().month().hour().minute().second())
         }
     }
 }
