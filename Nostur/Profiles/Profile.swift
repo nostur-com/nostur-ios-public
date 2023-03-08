@@ -9,8 +9,6 @@ import SwiftUI
 import NukeUI
 import Nuke
 
-
-
 struct ProfileByPubkey: View {
     
     @EnvironmentObject var sp:SocketPool
@@ -51,34 +49,6 @@ struct ProfileByPubkey: View {
             }
         }
     }
-}
-
-class ImageProcessing {
-    static public var shared = ImageProcessing()
-    
-    var pipeline:ImagePipeline
-    var bannerPipeline:ImagePipeline
-    var postContentPipeline:ImagePipeline
-    
-    init() {
-        pipeline = ImagePipeline {
-            $0.dataCache = try? DataCache(name: "com.nostur.2140.picture")
-            $0.dataCachePolicy = .storeEncodedImages
-            $0.imageCache = ImageCache()
-        }
-        
-        bannerPipeline = ImagePipeline {
-            $0.dataCache = try? DataCache(name: "com.nostur.2140.banner")
-            $0.dataCachePolicy = .storeEncodedImages
-        }
-        
-        postContentPipeline = ImagePipeline {
-            $0.dataCache = try? DataCache(name: "com.nostur.2140.postcontent")
-            $0.dataCachePolicy = .storeAll
-            $0.imageCache = ImageCache(countLimit: 200)
-        }
-    }
-    
 }
 
 struct Profile: View {
