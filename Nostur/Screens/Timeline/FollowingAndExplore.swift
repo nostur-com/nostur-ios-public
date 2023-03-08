@@ -31,14 +31,14 @@ struct FollowingAndExplore: View {
             }
             ZStack {
                 //                NavigationStack(path: $timelinePath) {
-                PostListContainer(id:"Following")
+                PostListContainer(id:"Following", type:.account)
                 //                        .environmentObject(followingModel)
                     .frame(maxWidth: 600)
                 //                        .withNavigationDestinations()
                 //                }
                     .opacity(selectedSubTab == "Following" ? 1 : 0)
                 //                NavigationStack(path: $explorePath) {
-                PostListContainer(id:"Explore")
+                PostListContainer(id:"Explore", type:.explore)
                 //                        .environmentObject(exploreModel)
                     .frame(maxWidth: 600)
                 //                        .withNavigationDestinations()

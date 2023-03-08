@@ -15,6 +15,13 @@ struct PostListContainer: View {
     @State var showingNewNote = false
     @State var noteCancellationId:UUID?
     let id:String
+    let type:PostListContainer.PostListType
+    
+    enum PostListType {
+        case account
+        case explore
+        case list
+    }
     
     @State var state:PostListModel?
     
@@ -22,7 +29,7 @@ struct PostListContainer: View {
         VStack {
             if state != nil && ns.account != nil {
                 ZStack {
-                    PostList(pubkey: ns.account!.publicKey, pubkeys: ns.followingPublicKeys, context: viewContext, state:state!)
+                    PostList(pubkey: ns.account!.publicKey, pubkeys: type == .explore ? ns.globalPubkeys : ns.followingPublicKeys, context: viewContext, state:state!)
                     NewNoteButton(showingNewNote: $showingNewNote)
                     VStack {
                         Spacer()
@@ -39,10 +46,12 @@ struct PostListContainer: View {
         }
         .onAppear {
             guard let account = ns.account else { return }
-            self.state = PostListModel.fromDb(pubkey: account.publicKey, listId: id, context: viewContext)
+            let pubkey = type == .explore ? NosturState.EXPLORER_PUBKEY : account.publicKey
+            self.state = PostListModel.fromDb(pubkey: pubkey, listId: id, context: viewContext)
         }
-        .onChange(of: ns.activeAccountPublicKey) { newValue in
-            self.state = PostListModel.fromDb(pubkey: ns.account!.publicKey, listId: id, context: viewContext)
+        .onChange(of: ns.activeAccountPublicKey) { activeAccountPublicKey in
+            let pubkey = type == .explore ? NosturState.EXPLORER_PUBKEY : activeAccountPublicKey
+            self.state = PostListModel.fromDb(pubkey: pubkey, listId: id, context: viewContext)
         }
     }
 }
@@ -365,7 +374,7 @@ struct PostList: View {
 struct PostList_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
-            PostListContainer(id:"Following")
+            PostListContainer(id:"Following", type:.account)
         }
         .withPreviewEnvironment()
     }
