@@ -11,7 +11,7 @@ import CoreData
 
 final class PostListModel: ObservableObject, Identifiable, Equatable {
     static func == (lhs: PostListModel, rhs: PostListModel) -> Bool {
-        return lhs.id == rhs.id
+        return lhs.listState.objectID == rhs.listState.objectID
     }
     
     static func fromDb(pubkey:String, listId:String, context:NSManagedObjectContext) -> PostListModel {
@@ -62,7 +62,7 @@ final class PostListModel: ObservableObject, Identifiable, Equatable {
     
     init(listState:ListState) {
         self.listState = listState
-        self.unreadCount.send(listState.unreadCount) // niet meer nodig?
+//        self.unreadCount.send(listState.unreadCount) // niet meer nodig?
         addSubscriptions()
     }
     

@@ -59,9 +59,9 @@ struct PostListContainer: View {
 struct PostList: View {
     @Environment(\.managedObjectContext) var viewContext
     let nav:NavigationModel = .shared
-    let FETCH_LIMIT = 250
-    let MAX = 100
-    let state:PostListModel
+    let FETCH_LIMIT = 150
+    let MAX = 75
+    var state:PostListModel
     let ot:OnboardingTracker = .shared
     let pubkeys:Set<String>
     @Namespace var END_OF_LIST
@@ -125,12 +125,14 @@ struct PostList: View {
     var body: some View {
         let _ = Self._printChanges()
         VStack {
-            HStack {
-                Text("Posts: \(visiblePosts?.count ?? 0)")
-            }
-            if (visiblePosts?.count ?? 0) > 0 {
-                ScrollViewReader { proxy in
-                    VStack {
+//            HStack {
+//                Text("Posts: \(visiblePosts?.count ?? 0)")
+//                Text(state.listState.pubkey.prefix(11).description)
+//            }
+            
+            ScrollViewReader { proxy in
+                VStack {
+                    if (visiblePosts?.count ?? 0) > 0 {
                         if (STYLE == "LAZYVSTACK") {
                             ScrollView {
                                 LazyVStack {
@@ -151,17 +153,6 @@ struct PostList: View {
                             }
                             .onReceive(receiveNotification(.shouldScrollToLast)) { _ in
                                 proxy.scrollTo(END_OF_LIST)
-                            }
-                            .onChange(of: pubkey) { newPubkey in
-                                didRestoreState = false
-                                setVisiblePosts()
-                                print("🔥🔥🔥 state pubkey \(state.listState.pubkey)")
-                                if let lastAppeared = state.lastAppeared {
-                                    proxy.scrollTo(lastAppeared.id, anchor: state.lastAppearedAtAnchor == "TOP" ? .top : .bottom)
-                                }
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                    didRestoreState = true
-                                }
                             }
                         }
                         else {
@@ -185,29 +176,47 @@ struct PostList: View {
                             .listStyle(.plain)
                         }
                     }
-                    .onAppear {
-                        guard !didRestoreState else { return } // Onlyif we didn't restore yet (so not like nav to post and back)
-                        if let lastAppeared = state.lastAppeared {
-                                proxy.scrollTo(lastAppeared.id, anchor: state.lastAppearedAtAnchor == "TOP" ? .top : .bottom)
-                        }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            didRestoreState = true
-                        }
+                    else {
+                        CenteredProgressView()
                     }
-                    .onChange(of: pubkey) { newPubkey in
-                        state.unreadCount.send(0)
-                        self.visiblePosts = []
-                        setVisiblePosts()
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            restoreUnreadCount()
-                        }
-//                        if (1==2) { // CRASHES PROBABLY APPLE BUG.
-                            if let lastAppeared = state.lastAppeared {
-                                proxy.scrollTo(lastAppeared.id, anchor: state.lastAppearedAtAnchor == "TOP" ? .top : .bottom)
-                            }
+                }
+                .onAppear {
+                    guard !didRestoreState else { return } // Onlyif we didn't restore yet (so not like nav to post and back)
+                    if let lastAppeared = state.lastAppeared {
+                            proxy.scrollTo(lastAppeared.id, anchor: state.lastAppearedAtAnchor == "TOP" ? .top : .bottom)
+                    }
+                    setVisiblePosts()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        didRestoreState = true
+                        restoreUnreadCount()
+                    }
+                }
+                .onChange(of: pubkey) { newPubkey in
+                    didRestoreState = false
+                    visiblePosts = []
+                    setVisiblePosts()
+//                        print("🔥🔥🔥 state pubkey \(state.listState.pubkey)")
+                    if let lastAppeared = state.lastAppeared {
+                        proxy.scrollTo(lastAppeared.id, anchor: state.lastAppearedAtAnchor == "TOP" ? .top : .bottom)
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        didRestoreState = true
+                    }
+                }
+//                    .onChange(of: pubkey) { newPubkey in
+//                        state.unreadCount.send(0)
+//                        self.visiblePosts = []
+//                        setVisiblePosts()
+//                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+//                            restoreUnreadCount()
 //                        }
-                    }
-                    //crash..
+////                        if (1==2) { // CRASHES PROBABLY APPLE BUG.
+//                            if let lastAppeared = state.lastAppeared {
+//                                proxy.scrollTo(lastAppeared.id, anchor: state.lastAppearedAtAnchor == "TOP" ? .top : .bottom)
+//                            }
+////                        }
+//                    }
+                //crash..
 //                    .onReceive(receiveNotification(.shouldScrollToLast)) { _ in
 //                        proxy.scrollTo(END_OF_LIST)
 //                    }
@@ -249,10 +258,6 @@ struct PostList: View {
 ////                            didRestoreState = true
 ////                        }
 //                    }
-                }
-            }
-            else {
-                CenteredProgressView()
             }
         }
         .onAppear {
@@ -265,10 +270,6 @@ struct PostList: View {
             }
             
             guard !didRestoreState else { return } // Only restore state once (so not again at like nav to post and back)
-            setVisiblePosts()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                restoreUnreadCount()
-            }
         }
         .onDisappear {
             isViewDisplayed = false
