@@ -67,11 +67,14 @@ struct NewNote: View {
                 Button {
                     guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
                     guard var nEvent = vm.nEvent else { return }
+                    
+                    nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
+                    
                     if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
                         nEvent.content = replaceNsecWithHunter2(nEvent.content)
                     }
                     if let signedEvent = try? ns.signEvent(nEvent) {
-                        print(signedEvent.wrappedEventJson())
+//                        print(signedEvent.wrappedEventJson())
                         up.publishNow(signedEvent)
 //                        noteCancellationId = up.publish(signedEvent)
                         dismiss()
@@ -101,7 +104,7 @@ struct NewNote: View {
                             .onEditingChanged {
                                 
                             }
-                            .onTextChange { print("latest text value", $0) }
+//                            .onTextChange { print("latest text value", $0) }
                             .onSelectionChange { (range: NSRange) in
                                 print(range)
                             }
@@ -173,7 +176,12 @@ struct NewNote: View {
             for contact in tapOrFirstResults {
                 textToReplaceWithNpubs = textToReplaceWithNpubs.replacingOccurrences(of: contact.username, with: contact.npub, options: .caseInsensitive)
             }
-            vm.nEvent = applyMentionsNip08(NEvent(content: textToReplaceWithNpubs))
+            if (vm.nEvent == nil) {
+                vm.nEvent = NEvent(content: textToReplaceWithNpubs)
+            } else {
+                vm.nEvent!.content = textToReplaceWithNpubs
+            }
+            
         }
     }
 }

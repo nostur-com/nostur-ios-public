@@ -60,7 +60,7 @@ struct NewReply: View {
                                     .onEditingChanged {
                                         
                                     }
-                                    .onTextChange { print("latest text value", $0) }
+//                                    .onTextChange { print("latest text value", $0) }
                                     .onSelectionChange { (range: NSRange) in
                                         print(range)
                                     }
@@ -112,9 +112,8 @@ struct NewReply: View {
                         Button {
                             guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
                             guard var nEvent = vm.nEvent else { return }
-//                            nEvent.content = noteText
-//
-//                            nEvent = applyMentionsNip08(nEvent)
+                            
+                            nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
                             if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
                                 nEvent.content = replaceNsecWithHunter2(nEvent.content)
                             }
@@ -161,7 +160,7 @@ struct NewReply: View {
                     textToReplaceWithNpubs = textToReplaceWithNpubs.replacingOccurrences(of: "@\(contact.username)", with: "@\(contact.npub)", options: .caseInsensitive)
                 }
                 vm.nEvent!.content = textToReplaceWithNpubs
-                vm.nEvent = applyMentionsNip08(vm.nEvent!)
+//                vm.nEvent = applyMentionsNip08(vm.nEvent!)
             }
             .onAppear {
                 var newReply = NEvent(content: "")
