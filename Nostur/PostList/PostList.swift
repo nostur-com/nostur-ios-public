@@ -120,30 +120,71 @@ struct PostList: View {
         }
     }
     
+    let STYLE = "LAZYVSTACK" //
+    
     var body: some View {
         let _ = Self._printChanges()
         VStack {
-//            Text("haa")
-            if let visiblePosts {
+            HStack {
+                Text("Posts: \(visiblePosts?.count ?? 0)")
+            }
+            if (visiblePosts?.count ?? 0) > 0 {
                 ScrollViewReader { proxy in
-                    List {
-                        ForEach(visiblePosts) { post in
-                            NoteRowView(event: post)
-                                .listRowInsets(EdgeInsets())
-                                .onBecomingVisible {
-                                    guard didRestoreState else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-                                    state.setLastAppeared.send(post)
-                                    state.updateUnreadCount.send(visiblePosts)
+                    VStack {
+                        if (STYLE == "LAZYVSTACK") {
+                            ScrollView {
+                                LazyVStack {
+                                    ForEach(visiblePosts!) { post in
+                                        NoteRowView(event: post)
+                                            .onBecomingVisible {
+                                                guard didRestoreState else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+                                                state.setLastAppeared.send(post)
+                                                state.updateUnreadCount.send(visiblePosts!)
+                                            }
+                                            .id(post.id)
+                                            .onTapGesture {
+                                                nav.navigateTo(post)
+                                            }
+                                    }
                                 }
-                            .id(post.id)
-                            .onTapGesture {
-                                nav.navigateTo(post)
+                                Rectangle().frame(width: 100,height: 0).id(END_OF_LIST)
+                            }
+                            .onReceive(receiveNotification(.shouldScrollToLast)) { _ in
+                                proxy.scrollTo(END_OF_LIST)
+                            }
+                            .onChange(of: pubkey) { newPubkey in
+                                didRestoreState = false
+                                setVisiblePosts()
+                                print("🔥🔥🔥 state pubkey \(state.listState.pubkey)")
+                                if let lastAppeared = state.lastAppeared {
+                                    proxy.scrollTo(lastAppeared.id, anchor: state.lastAppearedAtAnchor == "TOP" ? .top : .bottom)
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                    didRestoreState = true
+                                }
                             }
                         }
-                        Rectangle().frame(width: 100,height: 0).id(END_OF_LIST)
+                        else {
+                            List {
+                                ForEach(visiblePosts!) { post in
+                                    NoteRowView(event: post)
+                                        .listRowInsets(EdgeInsets())
+                                        .onBecomingVisible {
+                                            guard didRestoreState else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+                                            state.setLastAppeared.send(post)
+                                            state.updateUnreadCount.send(visiblePosts!)
+                                        }
+                                        .id(post.id)
+                                        .onTapGesture {
+                                            nav.navigateTo(post)
+                                        }
+                                }
+                                Rectangle().frame(width: 100,height: 0).id(END_OF_LIST)
+                            }
+                            .id(pubkey)
+                            .listStyle(.plain)
+                        }
                     }
-//                    .id(pubkey)
-                    .listStyle(.plain)
                     .onAppear {
                         guard !didRestoreState else { return } // Onlyif we didn't restore yet (so not like nav to post and back)
                         if let lastAppeared = state.lastAppeared {
@@ -160,11 +201,11 @@ struct PostList: View {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                             restoreUnreadCount()
                         }
-                        if (1==2) { // CRASHES PROBABLY APPLE BUG.
+//                        if (1==2) { // CRASHES PROBABLY APPLE BUG.
                             if let lastAppeared = state.lastAppeared {
                                 proxy.scrollTo(lastAppeared.id, anchor: state.lastAppearedAtAnchor == "TOP" ? .top : .bottom)
                             }
-                        }
+//                        }
                     }
                     //crash..
 //                    .onReceive(receiveNotification(.shouldScrollToLast)) { _ in
@@ -209,6 +250,9 @@ struct PostList: View {
 ////                        }
 //                    }
                 }
+            }
+            else {
+                CenteredProgressView()
             }
         }
         .onAppear {
