@@ -110,7 +110,8 @@ struct NoteAndParent: View {
     
     var body: some View {
         VStack {
-            // PARENT: IF MISSING, FETCH IT
+            // MARK: PARENT NOTE
+            // IF MISSING, FETCH IT
             if (event.replyTo == nil && event.replyToId != nil) {
                 
                 CenteredProgressView()
@@ -125,7 +126,7 @@ struct NoteAndParent: View {
                 NoteAndParent(event: event.replyTo!, isParent: true)
             }
             // OUR (DETAIL) REPLY:
-            
+            // MARK: DETAIL NOTE
             VStack(alignment: .leading, spacing: 3) {
                     // PFP | NAME/USERNAME/AGO
                     HStack {
@@ -183,7 +184,7 @@ struct NoteAndParent: View {
                 //.padding(.vertical,5)
                         .padding(.leading, isParent ? INDENT : 0)
                         
-                    
+                // MARK: QUOTED NOTE IN DETAIL NOTE
                     if (event.firstQuoteId != nil) {
                         if (event.firstQuote != nil) {
                             QuotedNoteFragment(event: event.firstQuote!)
@@ -210,7 +211,7 @@ struct NoteAndParent: View {
                         FooterFragment(event: event)
                         Divider()
                         
-                        // REPLIES TO OUR MAIN NOTE
+                        // MARK: REPLIES TO OUR MAIN NOTE
                         LazyVStack {
                             ForEach (event.replies_.filter({ event in
                                     if ns.account != nil {
@@ -239,7 +240,9 @@ struct NoteAndParent: View {
                 .padding(!isParent ? 10 : 0)
                 .background(MaybeThreadLine(isParent: isParent))
                 .onTapGesture {
-                    nav.navigateTo(event)
+                    if (isParent) {
+                        nav.navigateTo(event)
+                    }
                 }
                 .onAppear {
                     if (event.contact == nil) {
