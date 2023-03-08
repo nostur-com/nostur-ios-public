@@ -18,10 +18,12 @@ import Foundation
 // FIRST: ADD ANY MENTIONS TO THE .TAGS, IN THE CORRECT POSITION, BETWEEN FIRST AND LAST E (FOR NIP-10 COMPATIBILITY)
 // SECOND: REPLACE THE MENTIONS WITH THE #[INDEX]
 
-func applyMentionsNip08(_ event:NEvent) -> NEvent {
+// bumpIndex reserves index #[0] for a Quoted Event to be added later.
+// So generated indexes here will be 1 off (+1). but will be correct when the quote event tag is inserted at the first index
+func applyMentionsNip08(_ event:NEvent, bumpIndex:Bool = false) -> NEvent {
     let mentionsAsTags = getMentionsAsTags(event.content)
     let orderedTags = nip10OrderedTags(oldTags: event.tags, mentionedTags: mentionsAsTags)
-    let newText = replaceTagsWithIndexes(event.content, tags: orderedTags)
+    let newText = replaceTagsWithIndexes(event.content, tags: orderedTags, bumpIndex:bumpIndex)
     var eventWithMentions = event
     eventWithMentions.content = newText
     eventWithMentions.tags = orderedTags
@@ -34,16 +36,16 @@ func getMentionsAsTags(_ text:String) -> [NEventTag] {
     
     var mentionsAsTags:[NEventTag] = []
     
-    let urlMatches = text.matchingStrings(regex:#"@(npub1|note1)([023456789acdefghjklmnpqrstuvwxyz]{58})"#)
+    let mentionMatches = text.matchingStrings(regex:#"@(npub1|note1)([023456789acdefghjklmnpqrstuvwxyz]{58})"#)
     
-    for index in urlMatches.indices {
-        if urlMatches[index][1] == "note1" {
-            if let mention = toHex(String(urlMatches[index][0].dropFirst(1))) {
+    for index in mentionMatches.indices {
+        if mentionMatches[index][1] == "note1" {
+            if let mention = toHex(String(mentionMatches[index][0].dropFirst(1))) {
                 mentionsAsTags.append(NEventTag(type: "e", otherInformation: mention, "", "mention")) // TODO: ADD RELAY HINT
             }
         }
-        else if urlMatches[index][1] == "npub1" {
-            if let mention = toHex(String(urlMatches[index][0].dropFirst(1))) {
+        else if mentionMatches[index][1] == "npub1" {
+            if let mention = toHex(String(mentionMatches[index][0].dropFirst(1))) {
                 mentionsAsTags.append(NEventTag(type: "p", otherInformation: mention)) // TODO: ADD RELAY HINT
             }
         }
@@ -64,7 +66,7 @@ func nip10OrderedTags(oldTags:[NEventTag], mentionedTags:[NEventTag]) -> [NEvent
     var newTags:[NEventTag] = []
     
     // Last "E" should always be the reply to be compatible with old clients
-    if (oldTags.filter { $0.type == "e" }.count == 1) {
+    if (oldTags.filter { $0.type == "e" }.count == 1 && oldTags.filter { $0.type == "e" }.first?.otherInformation[safe: 2] != "mention") {
         // so insert before last e
         newTags = mentionedTags + oldTags
         return newTags
@@ -80,14 +82,13 @@ func nip10OrderedTags(oldTags:[NEventTag], mentionedTags:[NEventTag]) -> [NEvent
         newTags.insert(contentsOf: mentionedTags, at: (firstIndex + 1))
         return newTags
     }
-//    else {
-//        return mentionedTags + oldTags
-//    }
-    return []
+    else {
+        return mentionedTags + oldTags // oldTags has no e's. is only p's?
+    }
 }
 
 // Takes a text with mentions, and a list of tags, replaces the mentions with the corresponding index in the tags if found.
-func replaceTagsWithIndexes(_ text:String, tags:[NEventTag]) -> String {
+func replaceTagsWithIndexes(_ text:String, tags:[NEventTag], bumpIndex:Bool) -> String {
     var newText = text
     let urlMatches = text.matchingStrings(regex:#"@(npub1|note1)([023456789acdefghjklmnpqrstuvwxyz]{58})"#)
     
@@ -106,7 +107,8 @@ func replaceTagsWithIndexes(_ text:String, tags:[NEventTag]) -> String {
             return false
         }
         if (indexInTag != nil) {
-            newText = newText.replacingOccurrences(of: String(urlMatches[index][0]), with: "#[\(indexInTag!)]")
+            let maybeBumpedIndex = bumpIndex ? indexInTag! + 1 : indexInTag!
+            newText = newText.replacingOccurrences(of: String(urlMatches[index][0]), with: "#[\(maybeBumpedIndex)]")
         }
     }
     return newText

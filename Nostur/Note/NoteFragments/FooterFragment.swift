@@ -20,6 +20,8 @@ struct FooterFragment: View {
     @State var unpublishOriginalId:UUID? = nil
     
     @State var showingNewReply = false
+    @State var showingQuoteOrRepost = false
+    @State var showingNewQuoteRepost = false
     
     var body: some View {
         HStack {
@@ -59,25 +61,7 @@ struct FooterFragment: View {
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
-                    if (ns.account != nil) {
-                        print("🔄🔄🔄🔄🔄🔄🔄🔄")
-                        event.reposted = true
-                        event.mentionsCount += 1
-                        ns.account?.addToReposts(event)
-                        
-                        // 1. create kind 7 event based on kind 1 event:    Event
-                        let repostEvent = EventMessageBuilder.makeRepost(original: event)
-                        
-                        // 2. sign that event with account keys             Account
-                        guard let signedEvent = try? ns.signEvent(repostEvent) else {
-                            print("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
-                            return
-                        }
-                        
-                        unpublishRepostId = up.publish(signedEvent)
-                        unpublishOriginalId = up.publish(event.toNEvent())
-                    }
+                    showingQuoteOrRepost = true
                 }
             }
             Spacer()
@@ -160,8 +144,26 @@ struct FooterFragment: View {
                     .environmentObject(ns)
                     .environmentObject(up)
             }
+            .sheet(isPresented: $showingNewQuoteRepost) {
+                NewQuoteRepost(quotingEvent: event)
+                    .environmentObject(ns)
+                    .environmentObject(up)
+            }
+            .sheet(isPresented: $showingQuoteOrRepost) {
+                QuoteOrRepostChoiceSheet(event:event, unpublishRepostId: $unpublishRepostId, unpublishOriginalId: $unpublishOriginalId, showingNewQuoteRepost:$showingNewQuoteRepost)
+                    .environmentObject(ns)
+                    .environmentObject(up)
+                    .presentationDetents([.height(200)])
+                    .presentationDragIndicator(.visible)
+            }
+            .onChange(of: showingNewQuoteRepost) { newValue in
+                if (newValue == true) {
+                    showingQuoteOrRepost = false
+                }
+            }
     }
 }
+
 
 struct FooterFragment_Previews: PreviewProvider {
     static var previews: some View {

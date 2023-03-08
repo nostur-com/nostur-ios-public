@@ -136,8 +136,13 @@ public struct NEventTag: Codable {
         return Array(underlyingData.suffix(from: 1))
     }
 
-    public static func event(otherEventId: String, recommendedRelay: URL? = nil) -> NEventTag {
-        return NEventTag(type: "e", otherInformation: otherEventId, recommendedRelay?.absoluteString)
+    public static func event(otherEventId: String, recommendedRelay: URL? = nil, type: String? = nil) -> NEventTag {
+        if let type {
+            return NEventTag(type: "e", otherInformation: otherEventId, (recommendedRelay?.absoluteString ?? ""), type)
+        }
+        else {
+            return NEventTag(type: "e", otherInformation: otherEventId, recommendedRelay?.absoluteString)
+        }
     }
     
     public static func pubKey(publicKey: String, recommendedRelay: URL? = nil) -> NEventTag {
