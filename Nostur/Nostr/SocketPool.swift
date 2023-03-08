@@ -45,10 +45,10 @@ final class SocketPool: ObservableObject {
         }
     }
     
-    func addSocket(relayId:NSManagedObjectID, url:String, read:Bool = true, write: Bool = false) -> ManagedClient {
+    func addSocket(relayId:NSManagedObjectID, url:String, read:Bool = true, write: Bool = false) throws -> ManagedClient {
         if (!sockets.keys.contains(relayId)) {
-            
-            var request = URLRequest(url: URL(string: url)!)
+            guard let urlURL = URL(string: url) else { throw "invalid url" }
+            var request = URLRequest(url: urlURL)
 //             request.setValue(["wamp"].joined(separator: ","), forHTTPHeaderField: "Sec-WebSocket-Protocol")
 
             request.timeoutInterval = 15

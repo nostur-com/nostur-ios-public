@@ -24,9 +24,9 @@ struct NMessage: Decodable {
         }
     }
     
-    var type:String { values[0] as! String }
-    var subscription:String { values[1] as! String }
-    var event:NEvent? { values[2] as? NEvent }
+    var type:String { values[safe: 0] as? String ?? "NOSTUR.ERROR" }
+    var subscription:String { values[safe: 1] as? String ?? "NOSTUR.ERROR" }
+    var event:NEvent? { values[safe: 2] as? NEvent }
 }
 
 public struct NTimestamp: Codable {

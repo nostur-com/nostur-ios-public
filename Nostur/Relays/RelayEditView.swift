@@ -66,18 +66,23 @@ struct RelayEditView: View {
                 }
             }
             Button {
-                try! viewContext.save()
-                // Update existing connections
-                // url change?
-                if (socket.url != relay.url?.lowercased()) {
-                    socket.client.disconnect()
-                    sp.removeSocket(relay.objectID)
-                    _ = sp.addSocket(relayId: relay.objectID, url: relay.url!, read: relay.read, write: relay.write)
+                do {
+                    try viewContext.save()
+                    // Update existing connections
+                    // url change?
+                    if (socket.url != relay.url?.lowercased()) {
+                        socket.client.disconnect()
+                        sp.removeSocket(relay.objectID)
+                        _ = try sp.addSocket(relayId: relay.objectID, url: relay.url!, read: relay.read, write: relay.write)
+                    }
+                    else {
+                        // read/write change?
+                        socket.write = relay.write
+                        socket.read = relay.read
+                    }
                 }
-                else {
-                    // read/write change?
-                    socket.write = relay.write
-                    socket.read = relay.read
+                catch {
+                    print("problem ")
                 }
                 dismiss()
             } label: {
@@ -118,7 +123,7 @@ struct RelayEditView_Previews: PreviewProvider {
         
         func socketForRelay(relay: Relay) -> ManagedClient {
             guard let socket = sp.sockets[relay.objectID] else {
-                let addedSocket = sp.addSocket(relayId: relay.objectID, url: relay.url!, read: relay.read, write: relay.write)
+                let addedSocket = try! sp.addSocket(relayId: relay.objectID, url: relay.url!, read: relay.read, write: relay.write)
                 return addedSocket
             }
             return socket

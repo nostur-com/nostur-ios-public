@@ -64,7 +64,7 @@ struct RelaysView: View {
     
     func socketForRelay(relay: Relay) -> ManagedClient {
         guard let socket = sp.sockets[relay.objectID] else {
-            let addedSocket = sp.addSocket(relayId: relay.objectID, url: relay.url!, read: relay.read, write: relay.write)
+            let addedSocket = try! sp.addSocket(relayId: relay.objectID, url: relay.url ?? "", read: relay.read, write: relay.write)
             return addedSocket
         }
         return socket
@@ -102,7 +102,7 @@ struct RelaysView: View {
                 do {
                     try viewContext.save()
                     if (relay.read || relay.write) {
-                        _ = sp.addSocket(relayId: relay.objectID, url: relay.url!, read: relay.read, write: relay.write)
+                        _ = try sp.addSocket(relayId: relay.objectID, url: relay.url!, read: relay.read, write: relay.write)
                     }
                 } catch {
                     let nsError = error as NSError

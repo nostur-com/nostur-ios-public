@@ -42,7 +42,12 @@ struct Maintenance {
                 let sp = SocketPool.shared
                 // CONNECT TO RELAYS
                 for relay in relays {
-                    _ = sp.addSocket(relayId: relay.objectID, url: relay.url!, read:relay.read, write: relay.write)
+                    do {
+                        _ = try sp.addSocket(relayId: relay.objectID, url: relay.url!, read:relay.read, write: relay.write)
+                    }
+                    catch {
+                        print("problem adding socket \(relay.url ?? "")")
+                    }
                 }
                 
                 if (!ot.didFetchKind0 || !ot.didFetchKind3) {

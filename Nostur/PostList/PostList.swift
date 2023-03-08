@@ -20,7 +20,7 @@ struct PostListContainer: View {
     
     var body: some View {
         VStack {
-            if state != nil {
+            if state != nil && ns.account != nil {
                 ZStack {
                     PostList(pubkey: ns.account!.publicKey, pubkeys: ns.followingPublicKeys, context: viewContext, state:state!)
                     NewNoteButton(showingNewNote: $showingNewNote)
@@ -32,6 +32,9 @@ struct PostListContainer: View {
                 .sheet(isPresented: $showingNewNote) {
                     NewNote(noteCancellationId: $noteCancellationId)
                 }
+            }
+            else {
+                CenteredProgressView()
             }
         }
         .onAppear {
@@ -269,7 +272,8 @@ struct PostList: View {
                         : 0
 
         let startIndex = max(oldestPostOnScreenNewIndex, 0)
-        let endIndex = postsNewestAtBottom.count - 1 
+        let endIndex = postsNewestAtBottom.count - 1
+        guard postsNewestAtBottom.count > 0 else { return }
         visiblePosts = Array(postsNewestAtBottom[startIndex...endIndex])
 
 //        state.unreadCount.send(visiblePosts?.count ?? 0) // Waarom werkt dit niet??
