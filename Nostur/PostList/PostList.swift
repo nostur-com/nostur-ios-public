@@ -144,6 +144,19 @@ struct PostList: View {
                             didRestoreState = true
                         }
                     }
+                    .onChange(of: pubkey) { newPubkey in
+                        state.unreadCount.send(0)
+                        self.visiblePosts = []
+                        setVisiblePosts()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            restoreUnreadCount()
+                        }
+                        if (1==2) { // CRASHES PROBABLY APPLE BUG.
+                            if let lastAppeared = state.lastAppeared {
+                                proxy.scrollTo(lastAppeared.id, anchor: state.lastAppearedAtAnchor == "TOP" ? .top : .bottom)
+                            }
+                        }
+                    }
                     //crash..
 //                    .onReceive(receiveNotification(.shouldScrollToLast)) { _ in
 //                        proxy.scrollTo(END_OF_LIST)
