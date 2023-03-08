@@ -50,6 +50,7 @@ final class PostListModel: ObservableObject, Identifiable, Equatable {
     }
     var lastAppearedAtAnchor = "BOTTOM"
     var lastAppeared:Event?
+    var lastFiveEvents:[Event] = []
     var mostRecentAppeared:Event?
     
     let setLastAppeared = PassthroughSubject<Event?, Never>()
@@ -133,9 +134,31 @@ final class PostListModel: ObservableObject, Identifiable, Equatable {
         // KEEP TRACK OF LAST 6 EVENTS
         // TO FETCH #E AND P's (NOT HERE)
         // TODO: NEED THIS BACK
+        // AFTER 0.2 SEC OF STOP SCROLLING, WE WANT TO FETCH #E AND P (HERE)
+        setLastAppeared
+            .removeDuplicates()
+            .compactMap { $0 }
+            .sink { [weak self] event in
+                guard let self = self else { return }
+                self.lastFiveEvents.append(event)
+                if (self.lastFiveEvents.count > 6) {
+                    _ = self.lastFiveEvents = Array(self.lastFiveEvents.suffix(5))
+                }
+            }
+            .store(in: &subscriptions)
+        
         
         // AFTER 0.2 SEC OF STOP SCROLLING, WE WANT TO FETCH #E AND P (HERE)
-        // TODO: NEED THIS BACK
+        setLastAppeared
+            .removeDuplicates()
+            .compactMap { $0 }
+            .debounce(for: .seconds(0.5), scheduler: RunLoop.current)
+            .throttle(for: .seconds(1), scheduler: RunLoop.current, latest: true)
+            .sink { [weak self] event in
+                guard let self = self else { return }
+                sendNotification(.requestForJustAppeared, self.lastFiveEvents)
+            }
+            .store(in: &subscriptions)
     }
     
     // TODO: ERGENS BIJ ON APP BACKGROUND SAVE TO DB

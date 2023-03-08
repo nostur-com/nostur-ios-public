@@ -246,6 +246,23 @@ struct PostList: View {
         .onChange(of: postsNewestAtBottom.last) { newestPost in
             setVisiblePostsOnChange()
         }
+        .onReceive(receiveNotification(.requestForJustAppeared)) { notification in
+//            guard 1 == 2 else { return } // Performance test
+//            guard !isScrolling else { return }
+            let events = notification.object as! [Event]
+            
+            let ids = ids(events)
+            let contacts = events.compactMap { $0.contact }
+            let shouldVerifyContacts = contacts.filter { NIP05.shouldVerify($0) }
+//            Task.detached(priority: .userInitiated) {
+            Task {
+                ThreadWarning.which(".onReceive(receiveNotification(.requestForJustAppeared)")
+                print("🟠🟠 fetching for ids justAppeared")
+                fetchStuffForLastAddedNotes(ids: ids)
+                fetchMissingReplyToContacts(events: events)
+                NIP05.verifyBatch(contacts: shouldVerifyContacts, context: viewContext)
+            }
+        }
 //        onChange(of: pubkey) { newValue in
 //            visiblePosts = []
 //            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
@@ -305,6 +322,43 @@ struct PostList: View {
         state.updateUnreadCount.send(visiblePosts)
         // uhmm dit hierboven allemaal hier doen?
         // of send(visisibleposts) en dan daar doen?
+    }
+    
+    func fetchMissingReplyToContacts(events:[Event]) {
+        // PLAN
+        // FOR EVERY EVENT
+        //   TAKE P's. IF P IS NOT IN EVENT.CONTACTS, ADD IT
+        // FINALLY, EVERY MISSING OR EMPTY CONTACT
+        //  sp.fetch!
+        
+        for event in events {
+            let pubkeys = Array(Set(event.pTags()))
+            if pubkeys.count > 0 {
+                let contacts = Contact.fetchByPubkeys(pubkeys, context:viewContext)
+//                event.objectWillChange.send()
+                // dit moet op main queue?
+//                ThreadWarning.which("Event.addToContacts( 💖💖💖")
+                event.addToContacts(NSSet(array: contacts))
+            }
+        }
+        // TODO: FIXEN
+        // TODO, bij importer, replyTo p in event.replyToPTag for speed up
+        let pubkeys = Array(Set(events.flatMap { TagsHelpers($0.tags()).pTags().map{ $0.pubkey } }))
+        let contacts = Contact.fetchByPubkeys(pubkeys, context: viewContext)
+        let missingPubkeys = pubkeys.filter {
+            contacts.map { $0.pubkey }.firstIndex(of: $0) == nil
+        }
+        let emptyContactPubkeys = pubkeys
+            .compactMap { pubkey in
+                contacts.first(where: { $0.pubkey == pubkey })
+            }
+            .filter { $0.updated_at == 0 }
+            .map { $0.pubkey }
+        
+        guard (missingPubkeys + emptyContactPubkeys).count > 0 else { return }
+//        ThreadWarning.which("SocketPool.shared.sendMessag 💖💖💖")
+        SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missingPubkeys + emptyContactPubkeys )))
+    
     }
 }
 
