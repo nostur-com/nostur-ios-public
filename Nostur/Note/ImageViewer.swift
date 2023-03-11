@@ -192,7 +192,9 @@ struct ImageViewer: View {
         let matches = regex.matches(in: content, range: range)
         for match in matches {
             let url = (content as NSString).substring(with: match.range)
-            urls.append(URL(string: url)!)
+            if let urlURL = URL(string: url) {
+                urls.append(urlURL)
+            }
         }
         return urls
     }
