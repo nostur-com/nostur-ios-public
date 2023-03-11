@@ -52,6 +52,9 @@ struct ListView: View {
                         }
                         Rectangle().frame(width: 300, height: 1)
                             .id(END_OF_LIST)
+                            .onBecomingVisible {
+                                vm.didReachEnd()
+                            }
                     }
                     .onReceive(receiveNotification(.shouldScrollToLast)) { _ in
                         withAnimation { proxy.scrollTo(END_OF_LIST) }

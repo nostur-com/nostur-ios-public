@@ -20,7 +20,7 @@ class ListViewModel: NSObject, ObservableObject {
     @Published var posts:[Event] = []
     @Published var state:LIST_STATE = .AWAITING_FIRST_FETCH {
         didSet {
-            print("🟢🟢 STATE: \(oldValue) -> \(state)")
+//            print("🟢🟢 STATE: \(oldValue) -> \(state)")
         }
     }
     var frc:NSFetchedResultsController<Event>?
@@ -30,14 +30,10 @@ class ListViewModel: NSObject, ObservableObject {
         case AWAITING_FIRST_FETCH = "AWAITING_FIRST_FETCH"
         // Should restore scroll after fetch
         case AWAITING_RESTORED_FETCH = "AWAITING_RESTORED_FETCH"
-        
         // we fetched
         case COMPLETED_FIRST_FETCH = "COMPLETED_FIRST_FETCH"
         case AWAITING_SCROLL = "AWAITING_SCROLL"
-//        case COMPLETED_RESTORED_FETCH = "COMPLETED_RESTORED_FETCH"
-        
         case COMPLETED_RESTORED_FETCH_WITH_SCROLL = "COMPLETED_RESTORED_FETCH_WITH_SCROLL"
-        
         case SCROLLED_TO_END = "SCROLLED_TO_END"
         case SWITCHING_ACCOUNT = "SWITCHING_ACCOUNT"
     }
@@ -146,13 +142,9 @@ extension ListViewModel {
                     self.previousLastAppearedEvent = post
                     return
                 }
-//                guard self.state != .AWAITING_FIRST_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-//                guard self.state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-//                guard self.state != .SWITCHING_ACCOUNT else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-                
                 // ALL OTHER EVENTS:
 //                self.objectWillChange.send()
-                print(" --->>>> \(self.lastAppearedIndex)")
+//                print(" --->>>> \(self.lastAppearedIndex)")
                 self.lastAppearedAnchorSubject.send(post.created_at > previous.created_at ? "BOTTOM" : "TOP")
             })
             .store(in: &subscriptions)
@@ -161,10 +153,6 @@ extension ListViewModel {
     // .created_at is always newest
     func trackMostRecentRead() {
         lastAppearedSubject
-//            .removeDuplicates()
-//            .debounce(for: .seconds(0.5), scheduler: RunLoop.current)
-//            .throttle(for: .seconds(3), scheduler: RunLoop.current, latest: true)
-//            .compactMap { $0 }
             .sink(receiveValue: { [weak self] post in
                 guard let self = self else { return }
                 guard let post = post else { return }
@@ -194,7 +182,7 @@ extension ListViewModel {
                 self.listState.unreadCount = self.unreadCountSubject.value
                 do {
                     try self.listState.managedObjectContext?.save()
-                    print ("🟢🟢💾 LIST STATE SAVED :D")
+//                    print ("🟢🟢💾 LIST STATE SAVED :D")
                 }
                 catch {
                     print("Error saving list state \(self.id) \(self.listState.pubkey)")
@@ -204,43 +192,25 @@ extension ListViewModel {
     }
     
     func trackUnreadCount() {
-        // Only if mostRecent read changes?
         mostRecentReadSubject
-//            .removeDuplicates()
-//            .throttle(for: .seconds(0.05), scheduler: RunLoop.current, latest: true)
-//            .compactMap { $0 }
             .sink(receiveValue: { [weak self] mostRecentPost in
                 guard let self = self else { return }
                 guard let mostRecentPost = mostRecentPost else { return }
                 
-                // SO TAKE TOTAL ON SCREEN (postsNewestAtBottom.count)
+                // SO TAKE TOTAL ON SCREEN (posts.count)
                 // SUBSTRACT mostRecentPost index
-                // BUT ONLY CHANGE COUNTER lastAppearedCreatedAt is NEWER
-//                guard lastAppeared.created_at >= (self.mostRecentAppeared?.created_at ?? 0) else { return }
-
-                // COUNT FROM WHICH EVENT?
-                // IF LAST APPEARED IS NEWER THEN MOST READ, TAKE THAT
-                // ELSE COUNT FROM MOST RECENT
-//                let countFromEvent = lastAppeared.created_at >= mostRecentPost.created_at ? lastAppeared : mostRecentPost
                 let mostRecentReadIndex = self.posts.map { $0.id }.firstIndex(of: mostRecentPost.id) ?? 0
                 
                 self.objectWillChange.send()
                 self.unreadCountSubject.send(self.posts.count - mostRecentReadIndex - 1)
-//                self.mostRecentReadIndexX = mostRecentReadIndex
-//                if (self.unreadCount.value != (visiblePosts.count - mostRecentReadIndex - 1)) {
-//                    self.objectWillChange.send()
-//                    self.unreadCount.send(visiblePosts.count - mostRecentReadIndex - 1)
-//                }
-
             })
             .store(in: &subscriptions)
 
     }
     
     func requestFooterCounters() {
-        // AFTER 0.5 SEC OF STOP SCROLLING, WE WANT TO FETCH #E AND P (HERE)
+        // AFTER 1 SEC OF STOP SCROLLING, WE WANT TO FETCH #E AND P (HERE)
         lastAppearedSubject
-//            .removeDuplicates()
             .debounce(for: .seconds(1), scheduler: RunLoop.current)
             .throttle(for: .seconds(5), scheduler: RunLoop.current, latest: true)
             .sink { [weak self] post in
@@ -291,41 +261,18 @@ extension ListViewModel {
             self.lastAppearedSubject.send(self.posts.last)
         }
         
-        // TODO: ALso implement cutoff, if 1000 posts on screen, --> .suffix 100
-//        if self.posts.count > MAX_VISIBLE {
-////            self.objectWillChange.send()
-//            self.posts = Array(posts.prefix(MAX_VISIBLE)) // prefix because .posts is newest first
-//        }
-        
+        // TODO: ALso implement cutoff, if 1000 posts on screen, --> .suffix 100. PROBLEM IS SCROLL OFFSET GLITCH
         do {
             try self.listState.managedObjectContext?.save()
-            print ("🟢💾 LIST STATE SAVED :D")
         }
         catch {
             print("Error saving list state \(self.id) \(self.listState.pubkey)")
         }
     }
     
-//    func didReachEndOfList() {
-//        return
-//        state = .SCROLLED_TO_END
-//        if (self.lastAppeared != self.posts.last) {
-//            self.lastAppearedSubject.send(self.posts.last)
-//        }
-//        self.listState.lastAppearedId = self.posts.last?.id
-//        self.listState.mostRecentAppearedId = self.posts.last?.id
-//        self.listState.lastAppearedAtAnchor = "BOTTOM"
-//        self.listState.updatedAt = Date.now
-//        self.listState.unreadCount = 0
-//        self.unreadCountSubject.send(0)
-//        do {
-//            try self.listState.managedObjectContext?.save()
-//            print ("💾 LIST STATE SAVED :D")
-//        }
-//        catch {
-//            print("Error saving list state \(self.id) \(self.listState.pubkey)")
-//        }
-//    }
+    func didReachEnd() {
+        self.unreadCountSubject.send(0)
+    }
     
     func updateUnreadCount() {
         let mostRecentReadIndex = self.posts.map { $0.id }.firstIndex(of: self.mostRecentRead?.id) ?? 0
@@ -341,7 +288,6 @@ extension ListViewModel: NSFetchedResultsControllerDelegate {
     }
     
     func contentChanged(posts:[Event]) {
-        print("🟢🟢🟢🟢 contentChanged: \(posts.count)")
         switch (state) {
             case .AWAITING_FIRST_FETCH: // Show last 100
                 self.posts = posts.prefix(MAX_VISIBLE).sorted(by: { $0.created_at < $1.created_at } )
@@ -365,9 +311,9 @@ extension ListViewModel: NSFetchedResultsControllerDelegate {
                     self.state = .AWAITING_SCROLL
                 }
                 updateUnreadCount()
-                
-//            case .COMPLETED_FIRST_FETCH:
-            case .COMPLETED_RESTORED_FETCH_WITH_SCROLL, .SCROLLED_TO_END:
+            
+            default:
+//            case .COMPLETED_RESTORED_FETCH_WITH_SCROLL, .SCROLLED_TO_END, .SWITCHING_ACCOUNT:
                 // deduplicate, add new posts (can be older also..)
                 let onScreen = Set(self.posts)
                 // not older than .first or .count - 100
@@ -379,16 +325,12 @@ extension ListViewModel: NSFetchedResultsControllerDelegate {
                 let newListWithoutOnScreen = newListWithoutTooOld.subtracting(onScreen)
                 let newListWithoutOnScreenSorted = newListWithoutOnScreen.sorted(by: { $0.created_at < $1.created_at } )
                 // TODO: can we speed up, optimize above 5 lines??
-                self.posts.append(contentsOf: newListWithoutOnScreenSorted)
-                print("🟢🟢 Added \(newListWithoutOnScreenSorted.count) new")
-                updateUnreadCount()
-//            case .SCROLLED_TO_END:
-//
-//            case .AWAITING_SCROLL:
-            default:
-                print("hi")
+                if (newListWithoutOnScreenSorted.count > 0) {
+                    self.posts.append(contentsOf: newListWithoutOnScreenSorted)
+                    print("🟢🟢 Added \(newListWithoutOnScreenSorted.count) new")
+                    updateUnreadCount()
+                }
         }
-//        self.posts = posts
     }
     
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {

@@ -791,7 +791,7 @@ extension Event {
         }
         
         
-        if (1 == 1) { // TODO: Temp disabled for speed up check..
+        if (1 == 1 && event.kind == .textNote) { // TODO: Temp disabled for speed up check..
             // if other existing messages were replying, mentioning, reposting (to) this, fix the relation
             let pointingToEventReq = NSFetchRequest<Event>(entityName: "Event")
             //        pointingToEventReq.predicate = NSPredicate(format: "(kind IN {1,6} AND  (replyToId == %@ OR replyToRootId == %@ OR firstQuoteId == %@)", savedEvent.id, savedEvent.id, savedEvent.id)
