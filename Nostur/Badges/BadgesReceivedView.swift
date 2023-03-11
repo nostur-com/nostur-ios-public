@@ -31,7 +31,8 @@ struct BadgesReceivedView: View {
     
     var badgeAwardsToMe:[Event] { // ANY P's of KIND:8 == PUBKEY
         badgeAwards
-            .filter { $0.pTags().firstIndex(of: pubkey) != nil }
+//            .filter { $0.pTags().firstIndex(of: pubkey) != nil }
+            .filter { ($0.tagsSerialized ?? "").contains(serializedP(pubkey)) } // optimization hack
     }
     
     var badgesToMeIds:[String] {
@@ -68,11 +69,13 @@ struct BadgesReceivedView: View {
             // or just all...
             let req = RequestMessage.getEvents(ids: badgeAwardsToMe.map { $0.id })
             let message = ClientMessage(type: .REQ, message: req)
+//            print(message)
             SocketPool.shared.sendMessage(message)
             
             // Fetch other badges received
             let reqR = RequestMessage.getBadgesReceived(pubkey)
             let messageR = ClientMessage(type: .REQ, message: reqR)
+//            print(messageR)
             SocketPool.shared.sendMessage(messageR)
         }
         .navigationTitle("Badges received")
