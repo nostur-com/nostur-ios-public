@@ -206,12 +206,15 @@ struct NoteAndParent: View {
                     if (isParent) {
                         FooterFragment(event: event)
                             .padding(.leading, isParent ? INDENT : 0)
+                            .padding(.vertical, 5)
+                            .padding(.trailing, 5)
                         Divider()
                     }
                     else {
                         DetailFooterFragment(event: event)
                             .padding(.leading, isParent ? INDENT : 0)
                         FooterFragment(event: event)
+                            .padding(.vertical, 5)
                         Divider()
                         
                         // MARK: REPLIES TO OUR MAIN NOTE
