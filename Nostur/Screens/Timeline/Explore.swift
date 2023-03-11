@@ -39,8 +39,8 @@ struct ExploreContainer: View {
 
     var body: some View {
         let _ = Self._printChanges()
-        if ns.account != nil && ns.globalPubkeys.count > 0 {
-            Timeline(pubkey: ns.account!.publicKey, pubkeys: ns.globalPubkeys, context: viewContext, id: "Explore", ds:ds)
+        if ns.account != nil && ns.explorePubkeys.count > 0 {
+            Timeline(pubkey: ns.account!.publicKey, pubkeys: ns.explorePubkeys, context: viewContext, id: "Explore", ds:ds)
         }
         else {
             ProgressView()
@@ -48,7 +48,7 @@ struct ExploreContainer: View {
                     if (ns.accounts.count == 0) {
 //                        ns.isOnboarding = true
                     }
-                    else if (ns.globalPubkeys.count == 0) {
+                    else if (ns.explorePubkeys.count == 0) {
                         // TODO:
                         // fetch guest account kind 3
                         // add to ns.globalPubkeys

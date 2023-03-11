@@ -118,7 +118,7 @@ struct NosturApp: App {
                 
                 // fetch following events
             }
-            if (ns.globalPubkeys.count == 0) {
+            if (ns.rawExplorePubkeys.count == 0) {
                 // Fetch updated contactlist for epxlorer feed
                 
                 // First get from cache
@@ -128,7 +128,7 @@ struct NosturApp: App {
                 let exploreContactList = try? EventsProvider.shared.container.viewContext.fetch(r).first
                 if exploreContactList != nil {
                     ns.objectWillChange.send()
-                    ns.globalPubkeys = Set(exploreContactList!.pTags())
+                    ns.rawExplorePubkeys = Set(exploreContactList!.pTags())
                     
                 }
                 

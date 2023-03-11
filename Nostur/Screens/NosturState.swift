@@ -35,12 +35,23 @@ final class NosturState : ObservableObject {
         }
     }
     
+    var explorePubkeys:Set<String> {
+        get {
+            if account == nil { return rawExplorePubkeys }
+            
+            let withSelfIncluded = Set([account!.publicKey] + rawExplorePubkeys)
+            let withoutBlocked = withSelfIncluded.subtracting(Set(account!.blockedPubkeys_))
+            
+            return withoutBlocked
+        }
+    }
+    
     var subscriptions = Set<AnyCancellable>()
 
     @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""
     @Published var account:Account? = nil
     @Published var readOnlyAccountSheetShown:Bool = false
-    @Published var globalPubkeys:Set<String> = []
+    @Published var rawExplorePubkeys:Set<String> = []
     
     var pubkey:String? {
         get { account?.publicKey }
