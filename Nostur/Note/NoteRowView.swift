@@ -189,10 +189,15 @@ struct NoteRowView: View {
             }
         }
         .background(
-            Color(.systemBackground)
-                .onTapGesture {
-                    nav.navigateTo(event.isRepost && event.firstQuote != nil ? event.firstQuote! : event)
-                }
+            HStack {
+                Color(.systemBackground)
+                    .frame(width: 70)
+                    .onTapGesture {
+                        nav.navigateTo(event.isRepost && event.firstQuote != nil ? event.firstQuote! : event)
+                    }
+                Spacer()
+            }
+            
         )
         .onAppear {
 //            guard 1 == 2 else { return } // performance check
