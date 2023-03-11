@@ -75,15 +75,17 @@ struct ImageViewer: View {
                         Spacer()
                         HStack {
                             Spacer()
-                            Button("Tap to load images") {
-                                imagesShown = true
-                            }
+                            Text("Tap to load images")
                             Spacer()
                         }
                         Spacer()
                     }
                     .frame(height: 200)
                     .background(.regularMaterial)
+                    .cornerRadius(10)
+                    .onTapGesture {
+                        imagesShown = true
+                    }
                 }
             }
             else if (imgUrls.count == 1) {
@@ -114,15 +116,17 @@ struct ImageViewer: View {
                         Spacer()
                         HStack {
                             Spacer()
-                            Button("Tap to load images") {
-                                imagesShown = true
-                            }
+                            Text("Tap to load image")
                             Spacer()
                         }
                         Spacer()
                     }
                     .frame(height: 200)
                     .background(.regularMaterial)
+                    .cornerRadius(10)
+                    .onTapGesture {
+                        imagesShown = true
+                    }
                 }
             }
             else {
