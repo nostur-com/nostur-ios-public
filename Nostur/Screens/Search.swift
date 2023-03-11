@@ -10,7 +10,7 @@ import SwiftUI
 import Combine
 
 struct Search: View {
-    
+    @EnvironmentObject var nav:NavigationModel
     @StateObject var debounceObject = DebounceObject()
 
     var sp:SocketPool = .shared
@@ -35,83 +35,86 @@ struct Search: View {
     
     var body: some View {
         let _ = Self._printChanges()
-        ScrollView {
-            if (contacts.count == 0 && events.count == 0 && searching) {
-                ProgressView()
-            }
-            LazyVStack {
-                ForEach(contacts) { contact in
-                    ProfileRow(contact: contact)
-                    Divider()
+        NavigationStack(path: $nav.searchPath) {
+            ScrollView {
+                if (contacts.count == 0 && events.count == 0 && searching) {
+                    ProgressView()
+                }
+                LazyVStack {
+                    ForEach(contacts) { contact in
+                        ProfileRow(contact: contact)
+                        Divider()
+                    }
+                }
+                LazyVStack {
+                    ForEach(events) { event in
+                        NoteRowView(event: event)
+                        Divider()
+                    }
                 }
             }
-            LazyVStack {
-                ForEach(events) { event in
-                    NoteRowView(event: event)
-                    Divider()
+            .withNavigationDestinations()
+            .padding(10)
+            .navigationTitle("Search")
+            //        .navigationBarHidden(true)
+            .searchable(text: $debounceObject.text, placement: .navigationBarDrawer(displayMode: .always))
+            .onChange(of: debounceObject.debouncedText) { searchString in
+                
+                let searchTrimmed = searchString.trimmingCharacters(in: .whitespacesAndNewlines)
+                
+                // try npub
+                if (searchTrimmed.prefix(5) == "npub1") {
+                    do {
+                        searching = true
+                        let key = try NIP19(displayString: searchTrimmed)
+                        contacts.nsPredicate = NSPredicate(format: "pubkey = %@", key.hexString)
+                        events.nsPredicate = NSPredicate(value: false)
+                        sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: key.hexString)))
+                    }
+                    catch {
+                        print("npub1 search fail \(error)")
+                        searching = false
+                    }
                 }
-            }
-        }
-        .padding(10)
-        .navigationTitle("Search")
-//        .navigationBarHidden(true)
-        .searchable(text: $debounceObject.text, placement: .navigationBarDrawer(displayMode: .always))
-        .onChange(of: debounceObject.debouncedText) { searchString in
-            
-            let searchTrimmed = searchString.trimmingCharacters(in: .whitespacesAndNewlines)
-            
-            // try npub
-            if (searchTrimmed.prefix(5) == "npub1") {
-                do {
+                
+                // try @account
+                else if (searchTrimmed.prefix(1) == "@") {
                     searching = true
-                    let key = try NIP19(displayString: searchTrimmed)
-                    contacts.nsPredicate = NSPredicate(format: "pubkey = %@", key.hexString)
+                    contacts.nsPredicate = NSPredicate(format: "name BEGINSWITH %@", String(searchTrimmed.dropFirst(1)))
                     events.nsPredicate = NSPredicate(value: false)
-                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: key.hexString)))
                 }
-                catch {
-                    print("npub1 search fail \(error)")
-                    searching = false
+                // try note1
+                else if (searchTrimmed.prefix(5) == "note1") {
+                    do {
+                        searching = true
+                        let key = try NIP19(displayString: searchTrimmed)
+                        events.nsPredicate = NSPredicate(format: "id = %@", key.hexString)
+                        contacts.nsPredicate = NSPredicate(value: false)
+                        sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: key.hexString)))
+                    }
+                    catch {
+                        print("note1 search fail \(error)")
+                        searching = false
+                    }
                 }
-            }
-            
-            // try @account
-            else if (searchTrimmed.prefix(1) == "@") {
-                searching = true
-                contacts.nsPredicate = NSPredicate(format: "name BEGINSWITH %@", String(searchTrimmed.dropFirst(1)))
-                events.nsPredicate = NSPredicate(value: false)
-            }
-            // try note1
-            else if (searchTrimmed.prefix(5) == "note1") {
-                do {
+                // else try hex id or pubkey
+                else if (searchTrimmed.count == 64) {
                     searching = true
-                    let key = try NIP19(displayString: searchTrimmed)
-                    events.nsPredicate = NSPredicate(format: "id = %@", key.hexString)
-                    contacts.nsPredicate = NSPredicate(value: false)
-                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: key.hexString)))
+                    events.nsPredicate = NSPredicate(format: "id = %@", searchTrimmed)
+                    contacts.nsPredicate = NSPredicate(format: "pubkey = %@", searchTrimmed)
+                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: searchTrimmed)))
+                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: searchTrimmed)))
+                    Task {
+                        try? await Task.sleep(nanoseconds: 5_500_000_000)
+                        searching = false
+                    }
                 }
-                catch {
-                    print("note1 search fail \(error)")
+                // search in names/usernames
+                else {
                     searching = false
+                    events.nsPredicate = NSPredicate(format: "kind == 1 AND content CONTAINS[cd] %@", searchTrimmed)
+                    contacts.nsPredicate = NSPredicate(format: "name CONTAINS[cd] %@ OR display_name CONTAINS[cd] %@", searchTrimmed, searchTrimmed)
                 }
-            }
-            // else try hex id or pubkey
-            else if (searchTrimmed.count == 64) {
-                searching = true
-                events.nsPredicate = NSPredicate(format: "id = %@", searchTrimmed)
-                contacts.nsPredicate = NSPredicate(format: "pubkey = %@", searchTrimmed)
-                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: searchTrimmed)))
-                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: searchTrimmed)))
-                Task {
-                    try? await Task.sleep(nanoseconds: 5_500_000_000)
-                    searching = false
-                }
-            }
-            // search in names/usernames
-            else {
-                searching = false
-                events.nsPredicate = NSPredicate(format: "kind == 1 AND content CONTAINS[cd] %@", searchTrimmed)
-                contacts.nsPredicate = NSPredicate(format: "name CONTAINS[cd] %@ OR display_name CONTAINS[cd] %@", searchTrimmed, searchTrimmed)
             }
         }
     }

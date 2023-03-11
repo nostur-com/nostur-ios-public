@@ -12,6 +12,7 @@ import LightningDevKit
 
 struct ConfigurationView: View {
     
+    @EnvironmentObject var nav:NavigationModel
     @AppStorage("devToggle") var devToggle: Bool = false
     @Environment(\.managedObjectContext) var viewContext
 
@@ -454,64 +455,66 @@ struct ConfigurationView: View {
     }
     
     var body: some View {
-        VStack {
-            RelaysView()
-            
-            Toggle(isOn: $devToggle) { Text("Dev mode") }.padding(10)
-            if (devToggle) {
-                List {
-                    Text("Using these may hang the app for a minute:")
-                    Group {
-                        
-                        Button { removeOlderKind3Events() } label: {
-                            Text("Remove old contact lists (kind=3)")
-                        }
-                        
-                        Button { Maintenance.maintenance(context: viewContext) } label: {
-                            Text("Clean up older than 3 days")
-                        }
-                        
-                        Button { rebuildReplyToIdsCache() } label: {
-                            Text("Rebuild reply and quote cache")
-                        }
-                        
-                        Button { rebuildCountingCache() } label: {
-                            Text("Rebuild counter cache (likes, mentions, replies)")
-                        }
-                        
-                        Button { rebuildContactCache() } label: {
-                            Text("Rebuild contact cache (banner, picture etc)")
-                        }
-                    }
-                    
-                    Group {
-                        Button { deleteAll = true } label: {
-                            Text("Delete all contacts \(allContacts.count)")
-                        }.confirmationDialog("SURE???", isPresented: $deleteAll, actions: {
-                            Button("YES DELETE ALL CONTACTS", role: .destructive) { deleteAllContacts() }
-                        })
-                        
-                        Button { showDeleteAllEventsConfirmation = true } label: {
-                            Text("Delete all events \(allEvents.count)")
-                        }.confirmationDialog("DELETE ALL EVENTS????", isPresented: $showDeleteAllEventsConfirmation) {
-                            Button("YES DELETE ALL EVENTS", role: .destructive) {
-                                deleteAllEvents()
+        NavigationStack(path: $nav.configurationPath) {
+            VStack {
+                RelaysView()
+                
+                Toggle(isOn: $devToggle) { Text("Dev mode") }.padding(10)
+                if (devToggle) {
+                    List {
+                        Text("Using these may hang the app for a minute:")
+                        Group {
+                            
+                            Button { removeOlderKind3Events() } label: {
+                                Text("Remove old contact lists (kind=3)")
+                            }
+                            
+                            Button { Maintenance.maintenance(context: viewContext) } label: {
+                                Text("Clean up older than 3 days")
+                            }
+                            
+                            Button { rebuildReplyToIdsCache() } label: {
+                                Text("Rebuild reply and quote cache")
+                            }
+                            
+                            Button { rebuildCountingCache() } label: {
+                                Text("Rebuild counter cache (likes, mentions, replies)")
+                            }
+                            
+                            Button { rebuildContactCache() } label: {
+                                Text("Rebuild contact cache (banner, picture etc)")
                             }
                         }
                         
-                        Button { fixContactEventRelations() } label: {
-                            Text("Fix event.contact relation")
-                        }
-                        
-                        Button { putContactsInEventsForPs() } label: {
-                            Text("Fix contacts (p) in event")
-                        }
-                        
-                        
-                        Button { fixReplyToEventRelations() } label: { Text("Fix reply, quote relations") }
-                        
-                        Button { clearImageCache()} label: {
-                            Text("Clear image cache")
+                        Group {
+                            Button { deleteAll = true } label: {
+                                Text("Delete all contacts \(allContacts.count)")
+                            }.confirmationDialog("SURE???", isPresented: $deleteAll, actions: {
+                                Button("YES DELETE ALL CONTACTS", role: .destructive) { deleteAllContacts() }
+                            })
+                            
+                            Button { showDeleteAllEventsConfirmation = true } label: {
+                                Text("Delete all events \(allEvents.count)")
+                            }.confirmationDialog("DELETE ALL EVENTS????", isPresented: $showDeleteAllEventsConfirmation) {
+                                Button("YES DELETE ALL EVENTS", role: .destructive) {
+                                    deleteAllEvents()
+                                }
+                            }
+                            
+                            Button { fixContactEventRelations() } label: {
+                                Text("Fix event.contact relation")
+                            }
+                            
+                            Button { putContactsInEventsForPs() } label: {
+                                Text("Fix contacts (p) in event")
+                            }
+                            
+                            
+                            Button { fixReplyToEventRelations() } label: { Text("Fix reply, quote relations") }
+                            
+                            Button { clearImageCache()} label: {
+                                Text("Clear image cache")
+                            }
                         }
                     }
                 }

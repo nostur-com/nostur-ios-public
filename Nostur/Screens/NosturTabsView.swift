@@ -11,7 +11,8 @@ import CoreData
 struct NosturTabsView: View {
 //    @AppStorage("showReplies") var showReplies = true // TODO: Move to Timeline
     
-    @EnvironmentObject var nav:NavigationModel
+//    @EnvironmentObject var nav:NavigationModel
+    @AppStorage("selected_tab") var selectedTab = "Main"
     
     var body: some View {
         let _ = Self._printChanges()
@@ -19,43 +20,27 @@ struct NosturTabsView: View {
             VStack {
                 AppTopBar()
                     .padding(5)
-                TabView(selection: $nav.selectedTab) {
-                    NavigationStack(path: $nav.mainPath) {
-                        FollowingAndExplore()
-                            .withNavigationDestinations()
-                    }
+                
+                TabView(selection: $selectedTab) {
+                    FollowingAndExplore()
                     .tabItem { Image(systemName: "house") }
                     .tag("Main")
-                    
-                    NavigationStack(path: $nav.notificationsPath) {
-                        NotificationsContainer()
-                            .withNavigationDestinations()
-                        Spacer()
-                    }
+                
+                    NotificationsContainer()
                     .tabItem { Image(systemName: "bell.fill") }
                     .tag("Notifications")
                     
-                    NavigationStack(path: $nav.searchPath) {
-                        Search()
-                            .withNavigationDestinations()
-                        Spacer()
-                    }
+                    Search()
                     .tabItem { Image(systemName: "magnifyingglass") }
                     .tag("Search")
                     
-                    NavigationStack(path: $nav.bookmarksPath) {
-                        BookmarksContainer()
-                            .withNavigationDestinations()
-                        Spacer()
-                    }
+
+                    BookmarksContainer()
                     .tabItem { Image(systemName: "bookmark") }
                     .tag("Bookmarks")
                     
-                    NavigationStack(path: $nav.configurationPath) {
-                        ConfigurationView()
-                            .withNavigationDestinations()
-                        Spacer()
-                    }
+                    
+                    ConfigurationView()
                     .tabItem { Image(systemName: "server.rack") }
                     .tag("Configuration")
                 }

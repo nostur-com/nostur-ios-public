@@ -10,15 +10,25 @@ import SwiftUI
 
 struct BookmarksContainer: View {
     @EnvironmentObject var ns:NosturState
+    @EnvironmentObject var nav:NavigationModel
 //    @Environment(\.managedObjectContext) var viewContext
+    
+    init() {
+        print("🧨🧨🧨🧨🧨 INIT BOOKMARKS CONTAINER 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
+    }
     
     var body: some View {
         let _ = Self._printChanges()
-        if (ns.account != nil) {
-            BookmarksView(account: ns.account!)
-        }
-        else {
-            Text("Select account account first")
+        NavigationStack(path: $nav.bookmarksPath) {
+            VStack {
+                if (ns.account != nil) {
+                    BookmarksView(account: ns.account!)
+                }
+                else {
+                    Text("Select account account first")
+                }
+            }
+            .withNavigationDestinations()
         }
     }
 }

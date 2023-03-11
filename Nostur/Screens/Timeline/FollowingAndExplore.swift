@@ -9,47 +9,53 @@ import SwiftUI
 
 struct FollowingAndExplore: View {
     
-    //    @EnvironmentObject var nav:NavigationModel
+    @EnvironmentObject var nav:NavigationModel
     //    @State var timelinePath = NavigationPath()
     //    @State var explorePath = NavigationPath()
     @AppStorage("selected_subtab") var selectedSubTab = "Explore"
     
     var body: some View {
-        VStack {
-            HStack {
-                TabButton(action: {
-                    //                    withAnimation {
-                    selectedSubTab = "Following"
-                    //                    }
-                }, title: "Following", selected: selectedSubTab == "Following")
-                
-                TabButton(action: {
-                    //                    withAnimation {
-                    selectedSubTab = "Explore"
-                    //                    }
-                }, title: "Explore", selected: selectedSubTab == "Explore")
+        NavigationStack(path: $nav.mainPath) {
+            VStack {
+                HStack {
+                    TabButton(action: {
+                        //                    withAnimation {
+                        selectedSubTab = "Following"
+                        //                    }
+                    }, title: "Following", selected: selectedSubTab == "Following")
+                    
+                    TabButton(action: {
+                        //                    withAnimation {
+                        selectedSubTab = "Explore"
+                        //                    }
+                    }, title: "Explore", selected: selectedSubTab == "Explore")
+                }
+                ZStack {
+                    //                NavigationStack(path: $timelinePath) {
+//                    PostListContainer(id:"Following", type:.account)
+                    ListViewContainer(listId: "Following", listType: .account)
+                    //                Text("temp")
+                    //                        .environmentObject(followingModel)
+                        .frame(maxWidth: 600)
+                    //                        .withNavigationDestinations()
+                    //                }
+                        .opacity(selectedSubTab == "Following" ? 1 : 0)
+                    //                NavigationStack(path: $explorePath) {
+                    ListViewContainer(listId: "Explore", listType: .explore)
+//                                    Text("temp")
+                    //                        .environmentObject(exploreModel)
+                        .frame(maxWidth: 600)
+                    //                        .withNavigationDestinations()
+                    //                }
+                        .opacity(selectedSubTab == "Explore" ? 1 : 0)
+                }
+                Spacer()
             }
-            ZStack {
-                //                NavigationStack(path: $timelinePath) {
-                PostListContainer(id:"Following", type:.account)
-                //                        .environmentObject(followingModel)
-                    .frame(maxWidth: 600)
-                //                        .withNavigationDestinations()
-                //                }
-                    .opacity(selectedSubTab == "Following" ? 1 : 0)
-                //                NavigationStack(path: $explorePath) {
-                PostListContainer(id:"Explore", type:.explore)
-                //                        .environmentObject(exploreModel)
-                    .frame(maxWidth: 600)
-                //                        .withNavigationDestinations()
-                //                }
-                    .opacity(selectedSubTab == "Explore" ? 1 : 0)
-            }
-            Spacer()
+            .withNavigationDestinations()
+            .navigationTitle(selectedSubTab)
+            .navigationBarHidden(true)
+            .navigationBarTitleDisplayMode(.inline)
         }
-        .navigationTitle(selectedSubTab)
-        .navigationBarHidden(true)
-        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

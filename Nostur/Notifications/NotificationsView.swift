@@ -11,14 +11,25 @@ import CoreData
 struct NotificationsContainer: View {
     @EnvironmentObject var ns:NosturState
     @Environment(\.managedObjectContext) var viewContext
+    @EnvironmentObject var nav:NavigationModel
+    
+    init() {
+        print("🧨🧨🧨🧨🧨 INIT NOTIFICATIONS CONTAINER 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
+    }
+    
     
     var body: some View {
-        let _ = Self._printChanges()
-        if (ns.account != nil) {
-            NotificationsView(account: ns.account!)
-        }
-        else {
-            Text("Select account account first")
+        NavigationStack(path: $nav.notificationsPath) {
+            let _ = Self._printChanges()
+            VStack {
+                if (ns.account != nil) {
+                    NotificationsView(account: ns.account!)
+                }
+                else {
+                    Text("Select account account first")
+                }
+            }
+            .withNavigationDestinations()
         }
     }
 }
