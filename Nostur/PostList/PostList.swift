@@ -24,20 +24,59 @@ struct PostListContainer: View {
     }
     
     @State var state:PostListModel?
+    @AppStorage("selected_subtab") var selectedSubTab = "Following"
     
     var body: some View {
         VStack {
             if state != nil && ns.account != nil {
-                ZStack {
-                    PostList(pubkey: ns.account!.publicKey, pubkeys: type == .explore ? ns.globalPubkeys : ns.followingPublicKeys, context: viewContext, state:state!)
-                    NewNoteButton(showingNewNote: $showingNewNote)
-                    VStack {
-                        Spacer()
-                        PostListUnreadCounter(state:state!)
+                
+                if (type == .explore) {
+                    if (ns.rawExplorePubkeys.count == 0) {
+                        CenteredProgressView()
+                            .onAppear {
+                                let message = ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: NosturState.EXPLORER_PUBKEY))
+                                SocketPool.shared.sendMessage(message)
+                            }
+                    }
+                    else {
+                        ZStack {
+                            PostList(pubkey: ns.account!.publicKey, pubkeys: ns.explorePubkeys, context: viewContext, state:state!)
+                            NewNoteButton(showingNewNote: $showingNewNote)
+                                .sheet(isPresented: $showingNewNote) {
+                                    NewNote(noteCancellationId: $noteCancellationId)
+                                }
+                            VStack {
+                                Spacer()
+                                PostListUnreadCounter(state:state!)
+                            }
+                        }
                     }
                 }
-                .sheet(isPresented: $showingNewNote) {
-                    NewNote(noteCancellationId: $noteCancellationId)
+                else {
+                    if ((ns.account?.follows?.count ?? 0) == 0) {
+                        Text("You are not following anyone yet, visit the explore tab and follow some people")
+                            .multilineTextAlignment(.center)
+                            .padding(/*@START_MENU_TOKEN@*/.all, 30.0/*@END_MENU_TOKEN@*/)
+                            
+                        Button {
+                            selectedSubTab = "Explore"
+                        } label: {
+                            Text("Explore")
+                        }.buttonStyle(.borderedProminent)
+                    }
+                    else {
+                        ZStack {
+                            PostList(pubkey: ns.account!.publicKey, pubkeys: ns.followingPublicKeys, context: viewContext, state:state!)
+                            NewNoteButton(showingNewNote: $showingNewNote)
+                                .sheet(isPresented: $showingNewNote) {
+                                    NewNote(noteCancellationId: $noteCancellationId)
+                                }
+                            VStack {
+                                Spacer()
+                                PostListUnreadCounter(state:state!)
+                            }
+                        }
+                    }
                 }
             }
             else {
@@ -56,12 +95,13 @@ struct PostListContainer: View {
     }
 }
 
-struct PostList: View {
+struct PostList: View, Identifiable {
     @Environment(\.managedObjectContext) var viewContext
     let nav:NavigationModel = .shared
-    let FETCH_LIMIT = 150
-    let MAX = 75
-    var state:PostListModel
+    let FETCH_LIMIT = 500
+    let MAX = 100
+    @ObservedObject var state:PostListModel
+    @EnvironmentObject var ns:NosturState
     let ot:OnboardingTracker = .shared
     let pubkeys:Set<String>
     @Namespace var END_OF_LIST
@@ -75,11 +115,14 @@ struct PostList: View {
     @AppStorage("firstTimeCompleted") var firstTimeCompleted = false
     @AppStorage("selected_subtab") var selectedSubTab = "Following"
     @State var isViewDisplayed = false
-    @State var visiblePosts:[Event]?
+//    @State var visiblePosts:[Event]?
     @State var didRestoreState = false // NEED SO USER INITIATED .onAppear is not overwritten by other .onAppear (init, restore)
     let pubkey:String
     let timelineRunLoop = Timer.publish(every: 3, tolerance: 1, on: .main, in: .common).autoconnect()
-    let lastAppearedCreatedAtPlusHours:Int64
+    @State var cutOffPoint:Int64 = 0
+    var id:String {
+        state.listState.listId
+    }
     
     init(pubkey:String, pubkeys:Set<String>, context:NSManagedObjectContext, state:PostListModel) {
         print("🧨🧨🧨🧨🧨🧨🧨🧨 INIT PostList \(state.id) \(state.listState.pubkey)  🧨🧨🧨🧨🧨🧨🧨🧨")
@@ -87,83 +130,93 @@ struct PostList: View {
         self.state = state
         self.pubkey = pubkey
         self.pubkeys = pubkeys
-        if let lastAppeared = state.lastAppeared {
-            let r1 = Event.fetchRequest()
-            r1.predicate = NSPredicate(format: "id == %@", lastAppeared.id)
-            r1.fetchLimit = 1
-            r1.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-            
-            
-            // get .created_at of lastAppearedId. OR now if nil
-            let lastAppearedCreatedAt = (try? context.fetch(r1).first?.created_at) ?? Int64(Date.now.timeIntervalSince1970)
-
-            // then fetch posts 8 hours before .created_at, or before now if nil
-            self.lastAppearedCreatedAtPlusHours = lastAppearedCreatedAt - (3600 * 8)
-            
-                
-                                                 
-            let r2 = Event.fetchRequest()
-            r2.predicate = NSPredicate(format: "created_at >= %i AND kind IN {1,6} AND pubkey IN %@", self.lastAppearedCreatedAtPlusHours, pubkeys)
-            r2.fetchLimit = FETCH_LIMIT
-            r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-            _posts = FetchRequest(fetchRequest: r2)
-        }
-        else {
-            let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 8)
-            self.lastAppearedCreatedAtPlusHours = hoursAgo
-                                                    
-            let r2 = Event.fetchRequest()
-            r2.predicate = NSPredicate(format: "created_at >= %i AND kind IN {1,6} AND pubkey IN %@", hoursAgo, pubkeys)
-            r2.fetchLimit = FETCH_LIMIT
-            r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-            _posts = FetchRequest(fetchRequest: r2)
-        }
+        
+        let startEmpty = Event.fetchRequest()
+        startEmpty.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        startEmpty.predicate = NSPredicate(value: false)
+        startEmpty.fetchLimit = FETCH_LIMIT
+        _posts = FetchRequest(fetchRequest: startEmpty)
     }
     
     let STYLE = "LAZYVSTACK" //
     
+    var visiblePosts:[Event] {
+        self.state.visiblePostsSubject.value
+    }
+    
+    var lastAppeared:Event? {
+        self.state.lastAppearedSubject.value
+    }
+    
+    var mostRecentRead:Event? {
+        self.state.mostRecentReadSubject.value
+    }
+    
+    @AppStorage("devToggle") var devToggle:Bool = false
+    
     var body: some View {
         let _ = Self._printChanges()
         VStack {
-//            HStack {
-//                Text("Posts: \(visiblePosts?.count ?? 0)")
-//                Text(state.listState.pubkey.prefix(11).description)
-//            }
-            
+            if 1 == 1 && devToggle {
+                VStack {
+                    Text(posts.nsPredicate?.description ?? "").lineLimit(1)
+                        .onTapGesture {
+                            setPredicate(state: state)
+                        }
+                    Text("[Dev] Results: \(posts.count)  || Visible:\(visiblePosts.count) || LA: \(lastAppeared != nil ? visiblePosts.firstIndex(of: lastAppeared!) ?? -1 : -1 ) || MRR: \(mostRecentRead != nil ? visiblePosts.firstIndex(of: mostRecentRead!) ?? -1 : -1 )")
+                    Text(state.listState.pubkey.prefix(11).description)
+                }
+            }
             ScrollViewReader { proxy in
                 VStack {
-                    if (visiblePosts?.count ?? 0) > 0 {
+                    if (visiblePosts.count > 0) {
                         if (STYLE == "LAZYVSTACK") {
                             ScrollView {
                                 LazyVStack {
-                                    ForEach(visiblePosts!) { post in
+                                    ForEach(visiblePosts) { post in
                                         NoteRowView(event: post)
                                             .onBecomingVisible {
                                                 guard didRestoreState else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-                                                state.setLastAppeared.send(post)
-                                                state.updateUnreadCount.send(visiblePosts!)
+                                                state.lastAppearedSubject.send(post)
+//                                                state.updateUnreadCount.send(visiblePosts!)
                                             }
                                             .id(post.id)
                                             .onTapGesture {
                                                 nav.navigateTo(post)
                                             }
+                                        Divider()
                                     }
                                 }
                                 Rectangle().frame(width: 100,height: 0).id(END_OF_LIST)
                             }
                             .onReceive(receiveNotification(.shouldScrollToLast)) { _ in
-                                proxy.scrollTo(END_OF_LIST)
+                                withAnimation {
+                                    proxy.scrollTo(END_OF_LIST)
+                                }
+                            }
+                            .onAppear {
+                                // ONLY SCROLL BACK TO RESTORE STATE IN THIS .onAppear!
+                                // NOTHING ELSE!
+                                guard !didRestoreState else { return } // Onlyif we didn't restore yet (so not like nav to post and back)
+                                
+                                if let lastAppeared = state.lastAppearedSubject.value {
+                                    proxy.scrollTo(lastAppeared.id, anchor: state.lastAppearedAnchorSubject.value == "TOP" ? .top : .bottom)
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                    didRestoreState = true
+//                                    restoreUnreadCount()
+                                }
                             }
                         }
                         else {
                             List {
-                                ForEach(visiblePosts!) { post in
+                                ForEach(visiblePosts) { post in
                                     NoteRowView(event: post)
                                         .listRowInsets(EdgeInsets())
                                         .onBecomingVisible {
                                             guard didRestoreState else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-                                            state.setLastAppeared.send(post)
-                                            state.updateUnreadCount.send(visiblePosts!)
+                                            state.lastAppearedSubject.send(post)
+//                                            state.updateUnreadCount.send(visiblePosts!)
                                         }
                                         .id(post.id)
                                         .onTapGesture {
@@ -181,23 +234,19 @@ struct PostList: View {
                     }
                 }
                 .onAppear {
+                    return
+                    // ONLY SET VISIBLE POSTS HERE, DONT SCROLL BACK HERE! TO IN OTHER .ONAPPEAR
                     guard !didRestoreState else { return } // Onlyif we didn't restore yet (so not like nav to post and back)
-                    if let lastAppeared = state.lastAppeared {
-                            proxy.scrollTo(lastAppeared.id, anchor: state.lastAppearedAtAnchor == "TOP" ? .top : .bottom)
-                    }
                     setVisiblePosts()
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        didRestoreState = true
-                        restoreUnreadCount()
-                    }
                 }
                 .onChange(of: pubkey) { newPubkey in
+                    return
                     didRestoreState = false
-                    visiblePosts = []
-                    setVisiblePosts()
+                    state.visiblePostsSubject.send([])
+                    setVisiblePosts() // maybe someone do this here .send(newPosts)...
 //                        print("🔥🔥🔥 state pubkey \(state.listState.pubkey)")
-                    if let lastAppeared = state.lastAppeared {
-                        proxy.scrollTo(lastAppeared.id, anchor: state.lastAppearedAtAnchor == "TOP" ? .top : .bottom)
+                    if let lastAppeared = state.lastAppearedSubject.value {
+                        proxy.scrollTo(lastAppeared.id, anchor: state.lastAppearedAnchorSubject.value == "TOP" ? .top : .bottom)
                     }
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                         didRestoreState = true
@@ -286,21 +335,22 @@ struct PostList: View {
             }
             else if (!ot.isOnboarding) {
                 let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 8)  // 8 hours  ago
-                if (visiblePosts == nil) {
-                    fetchEvents(pubkeys: pubkeys, since: hoursAgo, subscriptionId: state.id)
-                }
-                else {
-                    // Start from first event, but not more than 8 hours ago...
-                    // Else it will load 1000 posts on timeline and Core data has some bug with fetchlimit
-                    fetchEvents(pubkeys: pubkeys, since: lastAppearedCreatedAtPlusHours < hoursAgo ? hoursAgo : lastAppearedCreatedAtPlusHours, subscriptionId: state.id)
-                }
+//                print("🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣 put back after fixes" )
+//                print("🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣 put back after fixes" )
+//                print("🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣 put back after fixes" )
+                fetchEvents(pubkeys: pubkeys, since: cutOffPoint, subscriptionId: state.id)
             }
             
         }
         .onChange(of: postsNewestAtBottom.last) { newestPost in
+            print("🟢🟢 2 onChange \(state.listState.listId)")
             setVisiblePostsOnChange()
         }
         .onReceive(receiveNotification(.requestForJustAppeared)) { notification in
+//            print("🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣 put back after fixes" )
+//            print("🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣 put back after fixes" )
+//            print("🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣 put back after fixes" )
+//            return
 //            guard 1 == 2 else { return } // Performance test
 //            guard !isScrolling else { return }
             let events = notification.object as! [Event]
@@ -310,38 +360,86 @@ struct PostList: View {
             let shouldVerifyContacts = contacts.filter { NIP05.shouldVerify($0) }
 //            Task.detached(priority: .userInitiated) {
             Task {
-                ThreadWarning.which(".onReceive(receiveNotification(.requestForJustAppeared)")
+//                ThreadWarning.which(".onReceive(receiveNotification(.requestForJustAppeared)")
                 print("🟠🟠 fetching for ids justAppeared")
                 fetchStuffForLastAddedNotes(ids: ids)
                 fetchMissingReplyToContacts(events: events)
                 NIP05.verifyBatch(contacts: shouldVerifyContacts, context: viewContext)
             }
         }
-//        onChange(of: pubkey) { newValue in
-//            visiblePosts = []
-//            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-//                setVisiblePosts()
+        .onAppear {
+            guard !didRestoreState else { return }
+            print("🟢🟢 1 \(state.listState.listId)")
+            print("PUBKEYS: \(pubkey) \(state.listState.listId)")
+            setPredicate(state:state)
+            
+//            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+//
 //            }
-//        }
+        }
+        .onChange(of: state) { newState in
+            print("🟢🟢 3 \(newState.listState.listId)")
+            print("PUBKEYS: \(pubkey) \(state.listState.listId)")
+            setPredicate(state:newState)
+//            setVisiblePosts()
+        }
+        .onChange(of: ns.explorePubkeys) { explorePubkeys in
+            print("🟢🟢 4 \(state.listState.listId)")
+            print("PUBKEYS: \(pubkey) \(state.listState.listId) \(explorePubkeys.count)")
+            setPredicate(state:state)
+//            setVisiblePosts()
+        }
+    }
+    
+    func setPredicate(state:PostListModel) {
+        print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
+        posts.nsPredicate = NSPredicate(value: false)
+        DispatchQueue.main.asyncAfter(deadline: .now() +  0.5) {
+            let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 8) // 8 hours ago
+            if let lastAppeared = state.lastAppearedSubject.value {
+                let r1 = Event.fetchRequest()
+                r1.predicate = NSPredicate(format: "id == %@", lastAppeared.id)
+                r1.fetchLimit = 1
+                r1.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+                
+                
+                // get .created_at of lastAppearedId. OR now if nil
+                let lastAppearedCreatedAt = (try? viewContext.fetch(r1).first?.created_at) ?? Int64(Date.now.timeIntervalSince1970)
+                
+                cutOffPoint = min(lastAppearedCreatedAt, hoursAgo) // 8 hours ago or longer until lastAppeared Event
+                posts.sortDescriptors = [SortDescriptor(\Event.created_at, order: .reverse)]
+                posts.nsPredicate = NSPredicate(format: "created_at >= %i AND kind IN {1,6} AND pubkey IN %@", cutOffPoint,  pubkeys)
+                print("🟢🟢 0.1 setPredicate \(pubkeys.count) ")
+            }
+            else {
+                cutOffPoint = hoursAgo
+                posts.nsPredicate = NSPredicate(format: "created_at >= %i AND kind IN {1,6} AND pubkey IN %@", cutOffPoint, pubkeys)
+                print("🟢🟢 0.2 setPredicate \(pubkeys.count) ")
+            }
+        }
     }
     
     func setVisiblePosts() {
+        print("🟢🟢🟢🟢 yo you should not call me")
+        return
         // @TODO: BECAUSE SCROLL GLITCHES: Only remove prefix items when scrolled at bottom, so we can rescroll after removing prefix, so UI doesnt snap!
-        guard state.lastAppeared != nil else {
-            visiblePosts = postsNewestAtBottom.suffix(MAX) // IF FIRST TIME, SHOW LAST 100
+        guard state.lastAppearedSubject.value != nil else {
+            state.visiblePostsSubject.send(postsNewestAtBottom.suffix(MAX)) // IF FIRST TIME, SHOW LAST 100
             return
         }
 
         // GET INDEX OF LAST APPEARED POST, PREFIX AND SUFFIX MAX/2
-        guard let lastAppearedIndex = posts.firstIndex(where: { $0.id == state.lastAppeared!.id }) else {
-            visiblePosts = postsNewestAtBottom.suffix(MAX) // IF NOT FOUND, SHOW LAST 100
+        guard let lastAppearedIndex = posts.firstIndex(where: { $0.id == state.lastAppearedSubject.value!.id }) else {
+            state.visiblePostsSubject.send(postsNewestAtBottom.suffix(MAX)) // IF NOT FOUND, SHOW LAST 100
             return
         }
         let startIndex = max(lastAppearedIndex - MAX/2, 0)                  // [MAX/2] BEFORE
 //        let endIndex = min(lastAppearedIndex + MAX/2, posts.count - 1)      // [MAX/2] AFTER
         let endIndex = postsNewestAtBottom.count - 1                                      // INFINITE AFTER
-        visiblePosts = Array(postsNewestAtBottom[startIndex...endIndex])
-        state.unreadCount.send(visiblePosts?.count ?? 0) // werkt niet???
+        state.visiblePostsSubject.send(Array(postsNewestAtBottom[startIndex...endIndex]))
+//        state.unreadCount.send(visiblePosts?.count ?? 0) // werkt niet???
+
+//        state.updateUnreadCount.send(visiblePosts ?? [])
         // uhmm dit hierboven allemaal hier doen?
         // of send(visisibleposts) en dan daar doen?
     }
@@ -349,31 +447,105 @@ struct PostList: View {
     func setVisiblePostsOnChange() {
         // @TODO: BECAUSE SCROLL GLITCHES: Only remove prefix items when scrolled at bottom, so we can rescroll after removing prefix, so UI doesnt snap!
 
-        
-        let oldestPostOnScreen = visiblePosts?.first
-        let oldestPostOnScreenNewIndex = oldestPostOnScreen != nil
-                        ? (postsNewestAtBottom.firstIndex(where: { $0.id == oldestPostOnScreen!.id }) ?? 0)
-                        : 0
-
-        let startIndex = max(oldestPostOnScreenNewIndex, 0)
-        let endIndex = postsNewestAtBottom.count - 1
-        guard postsNewestAtBottom.count > 0 else { return }
-        visiblePosts = Array(postsNewestAtBottom[startIndex...endIndex])
-
-//        state.unreadCount.send(visiblePosts?.count ?? 0) // Waarom werkt dit niet??
-        state.updateUnreadCount.send(visiblePosts ?? [])
+        if (visiblePosts.count == 0) {
+        // NOTHING ON SCREEN YET:
+            if let lastAppeared {
+                if let lastAppearedIndex = posts.firstIndex(where: { $0.id == lastAppeared.id }) {
+                    if lastAppearedIndex > (posts.count - MAX) {
+                        // INCREASE CUTOFF SO LAST APPEARED STILL GETS IN
+                        state.visiblePostsSubject.send(postsNewestAtBottom)
+                        print("🟢🟢 2.1 visiblePosts.count \(visiblePosts.count) \(state.listState.listId)")
+                    }
+                    else {
+                        // NORMAL CUTOFF
+                        state.visiblePostsSubject.send(postsNewestAtBottom.suffix(MAX))
+                        print("🟢🟢 2.2 visiblePosts.count \(visiblePosts.count) \(state.listState.listId)")
+                    }
+                }
+                else {
+                    // DUNNO where lastappeared post is.
+                    state.visiblePostsSubject.send(postsNewestAtBottom.suffix(MAX))
+                }
+            }
+            else {
+                // NORMAL CUTOFF
+                state.visiblePostsSubject.send(postsNewestAtBottom.suffix(MAX))
+                print("🟢🟢 2.2 visiblePosts.count \(visiblePosts.count) \(state.listState.listId)")
+            }
+        }
+        else {
+        // UPDATE WITH ALREADY POSTS ON SCREEN
+            let oldestPostOnScreen = visiblePosts.first
+            let oldestPostOnScreenNewIndex = oldestPostOnScreen != nil
+                ? (postsNewestAtBottom.firstIndex(where: { $0.id == oldestPostOnScreen!.id }) ?? 0)
+                : 0
+            
+            let startIndex = max(oldestPostOnScreenNewIndex, 0)
+            let endIndex = postsNewestAtBottom.count - 1
+            if postsNewestAtBottom.count > 0 {
+                let send = Array(postsNewestAtBottom[startIndex...endIndex])
+                state.visiblePostsSubject.send(send)
+                print("🟢🟢 2.3 send.count \(send.count) \(state.listState.listId)")
+            }
+            else {
+                state.visiblePostsSubject.send(postsNewestAtBottom)
+                print("🟢🟢 2.4 send.count \(postsNewestAtBottom.count) \(state.listState.listId)")
+            }
+            
+            
+            
+        }
+            
+            
+//
+//
+//            guard state.lastAppearedSubject.value != nil else {
+//                state.visiblePostsSubject.send(postsNewestAtBottom.suffix(MAX)) // IF FIRST TIME, SHOW LAST 100
+//                print("🟢🟢 2.1 visiblePosts.count \(visiblePosts.count)")
+//                return
+//            }
+//
+//            // GET INDEX OF LAST APPEARED POST, PREFIX AND SUFFIX MAX/2
+//            guard let lastAppearedIndex = posts.firstIndex(where: { $0.id == state.lastAppearedSubject.value!.id }) else {
+//                state.visiblePostsSubject.send(postsNewestAtBottom.suffix(MAX)) // IF NOT FOUND, SHOW LAST 100
+//                print("🟢🟢 2.2 visiblePosts.count \(visiblePosts.count)")
+//                return
+//            }
+//            let startIndex = max(lastAppearedIndex - MAX/2, 0)                  // [MAX/2] BEFORE
+//    //        let endIndex = min(lastAppearedIndex + MAX/2, posts.count - 1)      // [MAX/2] AFTER
+//            let endIndex = postsNewestAtBottom.count - 1                                      // INFINITE AFTER
+//            state.visiblePostsSubject.send(Array(postsNewestAtBottom[startIndex...endIndex]))
+//            print("🟢🟢 2.3 visiblePosts.count \(visiblePosts.count)")
+//        }
+//        else {
+//
+//
+//            let oldestPostOnScreen = visiblePosts.first
+//            let oldestPostOnScreenNewIndex = oldestPostOnScreen != nil
+//            ? (postsNewestAtBottom.firstIndex(where: { $0.id == oldestPostOnScreen!.id }) ?? 0)
+//            : 0
+//
+//            let startIndex = max(oldestPostOnScreenNewIndex, 0)
+//            let endIndex = postsNewestAtBottom.count - 1
+//            guard postsNewestAtBottom.count > 0 else { return }
+//            state.visiblePostsSubject.send(Array(postsNewestAtBottom[startIndex...endIndex]))
+//            print("🟢🟢 4 visiblePosts.count \(visiblePosts.count)")
+//        }
+////        state.unreadCount.send(visiblePosts?.count ?? 0) // Waarom werkt dit niet??
+//        state.updateUnreadCount.send(visiblePosts ?? [])
         // uhmm dit hierboven allemaal hier doen?
         // of send(visisibleposts) en dan daar doen?
     }
     
     func restoreUnreadCount() {
+        return
 //        guard let mostRecentAppeared = state.mostRecentAppeared else { return }
-        guard let visiblePosts = self.visiblePosts else { return }
+//        guard let visiblePosts = state.visiblePosts else { return }
         
 //        let lastAppearedIndex = visiblePosts.map { $0.id }.firstIndex(of: mostRecentAppeared.id) ?? 0
         
 //        state.unreadCount.send(visiblePosts.count - lastAppearedIndex - 1) // Werkt niet?
-        state.updateUnreadCount.send(visiblePosts)
+//        state.updateUnreadCount.send(visiblePosts)
         // uhmm dit hierboven allemaal hier doen?
         // of send(visisibleposts) en dan daar doen?
     }

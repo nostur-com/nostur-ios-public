@@ -16,10 +16,10 @@ struct PostListUnreadCounter: View {
             Spacer()
             HStack {
                 Spacer()
-                if (state.unreadCount.value > 0) {
+                if (state.unreadCountSubject.value > 0) {
                     HStack {
                         Image(systemName: "arrow.down")
-                        Text("\(state.unreadCount.value) unread")
+                        Text("\(state.unreadCountSubject.value) unread")
                         Image(systemName: "arrow.down")
                     }
                     .frame(minWidth: 30)
