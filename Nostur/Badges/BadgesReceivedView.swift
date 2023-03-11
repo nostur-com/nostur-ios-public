@@ -62,6 +62,7 @@ struct BadgesReceivedView: View {
             
             Spacer()
         }
+        .navigationTitle("")
         .onAppear {
             // fetch missing batch definitions:
             // or just all...

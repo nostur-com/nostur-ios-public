@@ -84,7 +84,7 @@ struct TabContainer: View {
     var event:Event
     var body: some View {
         NavigationStack(path: $nav.tabPath) {
-            NoteDetail(event: event)
+            NoteDetail(event: event, navTitleHidden:true)
                 .withNavigationDestinations()
                 .environmentObject(nav)
         }

@@ -109,7 +109,9 @@ struct BadgeRow: View {
                 Text("Awarded to \(badge.awardedTo.count) people").font(.caption)
             }.padding(10)
         }
+        .navigationTitle("")
     }
+    
 }
 
 struct BadgesIssuedView_Previews: PreviewProvider {

@@ -46,12 +46,13 @@ struct NoteById: View {
 struct NoteDetail: View {
     
     @ObservedObject var event:Event // OUR MAIN NOTE (NOT ROOT)
-
+    var navTitleHidden:Bool = false
+    
     var body: some View {
         GeometryReader{ geometry in
             ScrollViewReader { proxy in
                 ScrollView {
-                    NoteAndParent(event: event, geoHeight: geometry.size.height)
+                    NoteAndParent(event: event, geoHeight: geometry.size.height, navTitleHidden:navTitleHidden)
                         .onAppear {
                             proxy.scrollTo(event.id)
                         }
@@ -75,6 +76,7 @@ struct NoteAndParent: View {
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var nav:NavigationModel
 //    var nav:NavigationModel = .shared
+    var navTitleHidden:Bool = false
 
 //    @FetchRequest
 //    var taggedContacts:FetchedResults<Contact>
@@ -90,10 +92,11 @@ struct NoteAndParent: View {
     
     let type:NoteRowView.type
     
-    init(event: Event, isParent:Bool = false, geoHeight:CGFloat = CGFloat.zero) {
+    init(event: Event, isParent:Bool = false, geoHeight:CGFloat = CGFloat.zero, navTitleHidden:Bool = false) {
         self.event = event
         self.isParent = isParent
         self.geoHeight = geoHeight
+        self.navTitleHidden = navTitleHidden
 //        let pubkeys = event.contactPubkeys()
 //
 //        _taggedContacts = FetchRequest(
@@ -285,7 +288,7 @@ struct NoteAndParent: View {
         }
         .navigationTitle("Post")
         .navigationBarTitleDisplayMode(.inline)
-//        .navigationBarHidden(true)
+        .navigationBarHidden(navTitleHidden)
     }
     
     func fixReplyToIfWeAlreadyHaveIt(_ openedEvent:Event) {
