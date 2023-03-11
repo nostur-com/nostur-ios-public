@@ -96,6 +96,26 @@ struct TabbedDetailContainer: View {
     @EnvironmentObject var tm:DetailTabsModel
     @State var offsetX = 200.0
     
+    func tabName(tab:DetailTabsModel.Tab) -> String {
+        if let event = tab.event {
+            if event.name != "" {
+                return event.name
+            }
+            else {
+                return String(event.npub.prefix(11))
+            }
+        }
+        if let contact = tab.contact {
+            if contact.authorName != "" {
+                return contact.authorName
+            }
+            else {
+                return String(contact.npub.prefix(11))
+            }
+        }
+        return "＿"
+    }
+    
     var body: some View {
         
         VStack(spacing:0) {
@@ -111,9 +131,12 @@ struct TabbedDetailContainer: View {
                                     if (index != 0) {
                                         tm.selected = tm.tabs[index - 1]
                                     }
+                                    else if (tm.tabs.count > 1) {
+                                        tm.selected = tm.tabs[1]
+                                    }
                                 }
                                 tm.tabs.remove(at: index)
-                            }, label: "\(tm.tabs[index].event?.name ?? tm.tabs[index].contact?.authorName ?? "...")")
+                            }, label: "\(tabName(tab: tm.tabs[index]))")
                         
                         Divider().frame(height: 30).opacity(index == tm.tabs.count-1 ? 0 : 1)
                     }
