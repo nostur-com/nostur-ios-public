@@ -99,6 +99,7 @@ class Importer {
                             // TODO: Need objectWillChange.send() here or not?
                             let pTags = event.pTags()
                             Task { @MainActor in
+//                                NosturState.shared.objectWillChange.send()
                                 NosturState.shared.rawExplorePubkeys = Set(pTags)
                             }
                         }

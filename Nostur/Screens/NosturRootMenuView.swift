@@ -48,7 +48,7 @@ extension NosturRootMenu {
     
     private var sideBar: some View {
         VStack(alignment: .leading) {
-            let _ = Self._printChanges()
+//            let _ = Self._printChanges()
             List {
                 HStack(spacing: 10) {
                     ProfilePicView(pubkey: ns.account!.publicKey, account: ns.account!)

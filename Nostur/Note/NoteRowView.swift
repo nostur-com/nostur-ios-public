@@ -99,7 +99,7 @@ struct NoteRowView: View {
                                     NoteTextRenderView(event:event.firstQuote!, useLinelimit: true)
                                         .id(text)
                                         .onTapGesture { nav.navigateTo(event.firstQuote!) }
-                                    ImageViewer(content: event.content ?? "", pubkey: event.pubkey)
+                                    ImageViewer(content: event.firstQuote!.content ?? "", pubkey: event.firstQuote!.pubkey)
                             }
                             
                             

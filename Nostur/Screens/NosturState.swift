@@ -164,7 +164,7 @@ final class NosturState : ObservableObject {
         guard account != nil else {
             return
         }
-        
+        self.objectWillChange.send()
         // find existing contact
         if let contact = Contact.contactBy(pubkey: pubkey, context: viewContext) {
             account!.addToFollows(contact)
@@ -184,6 +184,7 @@ final class NosturState : ObservableObject {
         guard account != nil else {
             return
         }
+        self.objectWillChange.send()
         account!.addToFollows(contact)
         try! viewContext.save()
         
@@ -205,6 +206,7 @@ final class NosturState : ObservableObject {
         guard account != nil else {
             return
         }
+        self.objectWillChange.send()
         account!.removeFromFollows(contact)
         try! viewContext.save()
         
@@ -224,6 +226,7 @@ final class NosturState : ObservableObject {
         guard account != nil else {
             return
         }
+        self.objectWillChange.send()
         account!.removeFromFollows(contact)
         try! viewContext.save()
     }

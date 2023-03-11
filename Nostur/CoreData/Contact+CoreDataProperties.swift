@@ -110,7 +110,7 @@ extension Contact : Identifiable {
     var authorName: String {
         if (SettingsStore.shared.hideEmojisInNames) {
             if (display_name != nil || name != nil) {
-                return (display_name ?? name)!.unicodeScalars.filter {
+                return (((display_name != nil && display_name != "") ? display_name : nil) ?? name)!.unicodeScalars.filter {
                     
                     !($0.value >= 0x13000 && $0.value <= 0x1342E) && // EGYPTIAN HIEROGLYPHS
                     !$0.properties.isEmoji  // EMOJIS
@@ -122,7 +122,7 @@ extension Contact : Identifiable {
             }
         }
         else {
-            return display_name ?? name ?? authorKey
+            return (display_name != nil && display_name != "" ? display_name : nil) ?? name ?? authorKey
         }
     }
     
