@@ -27,7 +27,7 @@ struct FooterFragment: View {
         HStack {
             HStack {
                 Image(systemName: "message")
-                RollingNumberLabel(event.repliesCount).opacity(event.repliesCount == 0 ? 0 : 1)
+                RollingOnUpdateNumber(event.repliesCount).opacity(event.repliesCount == 0 ? 0 : 1)
             }
             .contentShape(Rectangle())
             .onTapGesture {
@@ -39,7 +39,7 @@ struct FooterFragment: View {
             if (event.reposted) {
                 HStack {
                     Image(systemName: "arrow.2.squarepath")
-                    RollingNumberLabel(event.mentionsCount).opacity(event.mentionsCount == 0 ? 0 : 1)
+                    RollingOnUpdateNumber(event.mentionsCount).opacity(event.mentionsCount == 0 ? 0 : 1)
                 }.foregroundColor(.green)
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -56,7 +56,7 @@ struct FooterFragment: View {
             else {
                 HStack {
                     Image(systemName: "arrow.2.squarepath")
-                    RollingNumberLabel(event.mentionsCount).opacity(event.mentionsCount == 0 ? 0 : 1)
+                    RollingOnUpdateNumber(event.mentionsCount).opacity(event.mentionsCount == 0 ? 0 : 1)
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -69,7 +69,7 @@ struct FooterFragment: View {
             if (event.liked) {
                 HStack {
                     Image(systemName: "heart.fill")
-                    RollingNumberLabel(event.likesCount).opacity(event.likesCount == 0 ? 0 : 1)
+                    RollingOnUpdateNumber(event.likesCount).opacity(event.likesCount == 0 ? 0 : 1)
                 }.foregroundColor(.red)
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -82,7 +82,7 @@ struct FooterFragment: View {
             else {
                 HStack {
                     Image(systemName: "heart")
-                    RollingNumberLabel(event.likesCount).opacity(event.likesCount == 0 ? 0 : 1)
+                    RollingOnUpdateNumber(event.likesCount).opacity(event.likesCount == 0 ? 0 : 1)
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -137,6 +137,7 @@ struct FooterFragment: View {
         }
         .foregroundColor(.gray)
             .padding(.trailing, 5)
+            .padding(.leading, 5)
             .font(.system(size: 14))
             .sheet(isPresented: $showingNewReply) {
                 NewReply(replyTo: event)

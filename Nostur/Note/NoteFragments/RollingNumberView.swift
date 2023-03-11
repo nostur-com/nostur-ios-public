@@ -50,6 +50,10 @@ struct RollingOnUpdateNumber: View {
         self.number = number
     }
     
+    init(_ number:Int64) {
+        self.number = Int(number)
+    }
+    
     var body: some View {
         if (didUpdate) {
             RollingNumberLabel(number)
