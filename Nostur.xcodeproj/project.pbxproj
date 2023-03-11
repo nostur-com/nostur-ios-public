@@ -151,6 +151,9 @@
 		1FB448C52965F3D000038671 /* NosturTabsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB448C42965F3D000038671 /* NosturTabsView.swift */; };
 		1FB448C72965F3D200038671 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1FB448C62965F3D200038671 /* Assets.xcassets */; };
 		1FB448CB2965F3D200038671 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1FB448CA2965F3D200038671 /* Preview Assets.xcassets */; };
+		1FB4D3FB29BAEB0C004DB537 /* ListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB4D3FA29BAEB0C004DB537 /* ListViewModel.swift */; };
+		1FB4D3FD29BAF1A6004DB537 /* ListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB4D3FC29BAF1A6004DB537 /* ListView.swift */; };
+		1FB4D3FF29BB3C7E004DB537 /* ListUnreadCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB4D3FE29BB3C7E004DB537 /* ListUnreadCounter.swift */; };
 		1FB4FCD629B87D3D0034D03A /* ImageProcessing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB4FCD529B87D3D0034D03A /* ImageProcessing.swift */; };
 		1FB62D0E296FFF1400A0055B /* RelayEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB62D0D296FFF1400A0055B /* RelayEditView.swift */; };
 		1FBDE8B929B6F01C00F4DFD0 /* PostList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBDE8B829B6F01C00F4DFD0 /* PostList.swift */; };
@@ -356,6 +359,9 @@
 		1FB448C62965F3D200038671 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1FB448C82965F3D200038671 /* Nostur.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Nostur.entitlements; sourceTree = "<group>"; };
 		1FB448CA2965F3D200038671 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		1FB4D3FA29BAEB0C004DB537 /* ListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListViewModel.swift; sourceTree = "<group>"; };
+		1FB4D3FC29BAF1A6004DB537 /* ListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListView.swift; sourceTree = "<group>"; };
+		1FB4D3FE29BB3C7E004DB537 /* ListUnreadCounter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListUnreadCounter.swift; sourceTree = "<group>"; };
 		1FB4FCD529B87D3D0034D03A /* ImageProcessing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageProcessing.swift; sourceTree = "<group>"; };
 		1FB62D0D296FFF1400A0055B /* RelayEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayEditView.swift; sourceTree = "<group>"; };
 		1FBDE8B829B6F01C00F4DFD0 /* PostList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostList.swift; sourceTree = "<group>"; };
@@ -437,6 +443,7 @@
 			children = (
 				1F1472D929A71EBC00197393 /* FooterFragment.swift */,
 				1F1472DB29A71F3400197393 /* NoteMenu.swift */,
+				1F49C80929B900AD005C960D /* RollingNumberView.swift */,
 			);
 			path = NoteFragments;
 			sourceTree = "<group>";
@@ -685,7 +692,6 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
-				1F49C80929B900AD005C960D /* RollingNumberView.swift */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1FB448BB2965F3D000038671 /* Products */,
 				1F7C65B629A1466D009FF3EA /* Frameworks */,
@@ -703,6 +709,7 @@
 		1FB448BC2965F3D000038671 /* Nostur */ = {
 			isa = PBXGroup;
 			children = (
+				1FB4D3F929BAEAE4004DB537 /* List */,
 				1F88490129B537A000145340 /* HighlightedTextEditor */,
 				1F4773A3296CA7040049454B /* Accounts */,
 				1F740D9D29AF36AB00EFCCA7 /* Badges */,
@@ -733,6 +740,16 @@
 				1FB448CA2965F3D200038671 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		1FB4D3F929BAEAE4004DB537 /* List */ = {
+			isa = PBXGroup;
+			children = (
+				1FB4D3FA29BAEB0C004DB537 /* ListViewModel.swift */,
+				1FB4D3FC29BAF1A6004DB537 /* ListView.swift */,
+				1FB4D3FE29BB3C7E004DB537 /* ListUnreadCounter.swift */,
+			);
+			path = List;
 			sourceTree = "<group>";
 		};
 		1FB62D0C296FFEBF00A0055B /* Relays */ = {
@@ -949,6 +966,7 @@
 				1F3309632989598600D4D8CF /* NosturRootMenuView.swift in Sources */,
 				1F14BA742985949100EACCD5 /* Profile.swift in Sources */,
 				1F4820F229A9F808000EDFDA /* NotificationsZaps.swift in Sources */,
+				1FB4D3FB29BAEB0C004DB537 /* ListViewModel.swift in Sources */,
 				1F539DAD299D52E200F3B8CA /* AddExistingAccountSheet.swift in Sources */,
 				1FC4D4082997E126004E88CD /* AccountManager.swift in Sources */,
 				1FCEA0B529993B2400A309DC /* Swift-Big-Number-Core.swift in Sources */,
@@ -1064,6 +1082,7 @@
 				1FBFE8E629AC74B50039F992 /* NostrRank.swift in Sources */,
 				1FD49733297FCB5E0084F14E /* PreviewHelper.swift in Sources */,
 				1FBDE8BD29B7374D00F4DFD0 /* PostListWorkingWithCounterBackup.swift in Sources */,
+				1FB4D3FD29BAF1A6004DB537 /* ListView.swift in Sources */,
 				1F14BA6E29854B8E00EACCD5 /* ContactList.swift in Sources */,
 				1F794DFF29B780C80013E633 /* View+onBecomingVisible.swift in Sources */,
 				1F5F5A5C29838F1D00DED8F4 /* EventsProvider.swift in Sources */,
@@ -1086,6 +1105,7 @@
 				1FEA785829799FE6007CC8E7 /* ProfilePicView.swift in Sources */,
 				1F14CC45299D432400131B8D /* AccountsSheet.swift in Sources */,
 				1F2F242D29A4B532007CBB27 /* TL2.swift in Sources */,
+				1FB4D3FF29BB3C7E004DB537 /* ListUnreadCounter.swift in Sources */,
 				1FC82F3429AE261C00B81CE5 /* TabbedDetailContainer.swift in Sources */,
 				1F8B1362297B36DB002EB8CF /* Bytes+HexString.swift in Sources */,
 				1FC2DFF129A9142400C8A9DA /* MinimalQuotedNoteFragment.swift in Sources */,
