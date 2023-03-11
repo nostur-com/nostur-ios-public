@@ -12,6 +12,7 @@ struct NosturTabsView: View {
 //    @AppStorage("showReplies") var showReplies = true // TODO: Move to Timeline
     
 //    @EnvironmentObject var nav:NavigationModel
+//    @EnvironmentObject var nm:NotificationsManager
     @AppStorage("selected_tab") var selectedTab = "Main"
     
     var body: some View {
@@ -29,6 +30,7 @@ struct NosturTabsView: View {
                     NotificationsContainer()
                     .tabItem { Image(systemName: "bell.fill") }
                     .tag("Notifications")
+//                    .badge(nm.unread)
                     
                     Search()
                     .tabItem { Image(systemName: "magnifyingglass") }

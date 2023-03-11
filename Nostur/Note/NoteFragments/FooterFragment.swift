@@ -88,6 +88,8 @@ struct FooterFragment: View {
                 .onTapGesture {
                     guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
                     if (ns.account != nil) {
+                        let impactMed = UIImpactFeedbackGenerator(style: .medium)
+                        impactMed.impactOccurred()
                         print("💖💖💖💖💖💖💖💖💖💖💖💖💖💖")
                         event.liked = true
                         event.likesCount += 1
@@ -130,6 +132,8 @@ struct FooterFragment: View {
                 Image(systemName: "bookmark")
                     .contentShape(Rectangle())
                     .onTapGesture {
+                        let impactMed = UIImpactFeedbackGenerator(style: .medium)
+                        impactMed.impactOccurred()
                         ns.addBookmark(event)
                     }
             }

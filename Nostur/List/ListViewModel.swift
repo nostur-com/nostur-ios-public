@@ -271,6 +271,7 @@ extension ListViewModel {
     }
     
     func didReachEnd() {
+        self.objectWillChange.send()
         self.unreadCountSubject.send(0)
     }
     
