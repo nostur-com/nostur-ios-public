@@ -20,19 +20,6 @@ struct TryGuestAccountSheet: View {
     var body: some View {
         let _ = Self._printChanges()
         VStack(alignment: .center) {
-            if UIDevice.current.userInterfaceIdiom == .pad {
-                HStack {
-                    Spacer()
-                    Image(systemName: "xmark.circle.fill")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 30, height: 30)
-                        .padding(30)
-                        .onTapGesture {
-                            dismiss()
-                        }
-                }
-            }
             Text("Try Nostur as guest").font(.largeTitle)
             
             Text("The guest account is already following some people. You can read posts and view profiles, but you cannot post or like things until you create a new account yourself").multilineTextAlignment(.center)
@@ -91,6 +78,8 @@ struct TryGuestAccountSheet: View {
                 nav.onboardingPath.removeLast(nav.onboardingPath.count)
             }
         }
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

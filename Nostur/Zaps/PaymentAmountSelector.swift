@@ -80,83 +80,79 @@ struct PaymentAmountSelector: View {
     }
     
     var body: some View {
-        VStack {
-            if IS_IPAD {
+        NavigationStack {
+            VStack {
                 HStack {
-                    Spacer()
-                    Image(systemName: "xmark.circle.fill")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 30, height: 30)
-                        .padding(30)
-                        .onTapGesture {
-                            dismiss()
-                        }
+                    Text("Send sats:").font(.title2)
+                    Text(ceil(Double(amountS)).clean).font(.title2)
+                    Text("sats").font(.title2)
+                    if (fiatPrice != "") {
+                        Text("\(fiatPrice)").font(.title2)
+                    }
                 }
-            }
-            HStack {
-                Text("Send sats:").font(.title2)
-                Text(ceil(Double(amountS)).clean).font(.title2)
-                Text("sats").font(.title2)
-                if (fiatPrice != "") {
-                    Text("\(fiatPrice)").font(.title2)
+                Slider(value: $amount, in: Float(paymentInfo.min)...Float(paymentInfo.max))
+                    .padding()
+                if (paymentInfo.supportsZap) {
+                    HStack(alignment: .center) {
+                        TextField("Add public note (optional)", text: $zapMessage)
+                            .multilineTextAlignment(.leading)
+                            .lineLimit(5, reservesSpace: true)
+                            .textFieldStyle(.roundedBorder)
+                            .padding(20)
+                            .frame(height: 100)
+                            
+                    }
                 }
+                Button {
+                    amountSelected(amount:ceil(amountS), zapMessage:zapMessage)
+                } label: {
+                    Text("Pay").padding(10)
+                        .foregroundColor(.white)
+                        .frame(minWidth: 200)
+                }.buttonStyle(.borderedProminent)
             }
-            Slider(value: $amount, in: Float(paymentInfo.min)...Float(paymentInfo.max))
-                .padding()
-            if (paymentInfo.supportsZap) {
-                HStack(alignment: .center) {
-                    TextField("Add public note (optional)", text: $zapMessage)
-                        .multilineTextAlignment(.leading)
-                        .lineLimit(5, reservesSpace: true)
-                        .textFieldStyle(.roundedBorder)
-                        .padding(20)
-                        .frame(height: 100)
-                        
+            .onAppear {
+                amount = Float(ss.defaultZapAmount)
+            }
+            .task {
+                guard let url = URL(string: "https://api.kraken.com/0/public/Ticker?pair=XXBTZUSD") else { return }
+                let request = URLRequest(url: url)
+                
+                do {
+                    // Fetch the remote data.
+                    let (data, _) = try await URLSession.shared.data(for: request)
+                    
+                    // Decode data to a CatFact object.
+                    let response = try JSONDecoder().decode(KrakenApiResponse.self, from: data)
+                    
+                    // Return the fact string value.
+                    
+                    exchangeRate = Double(response.result.XXBTZUSD.c[0])
+                    if (exchangeRate != nil) {
+                        fiatPrice = String(format: "($%.02f)", (ceil(Double(amountS)) / 100000000000 * exchangeRate!))
+                    }
+                    else {
+                        fiatPrice = ""
+                    }
+       
                 }
+                catch {
+                    print("could not get price from kraken")
+                }
+                
             }
-            Button {
-                amountSelected(amount:ceil(amountS), zapMessage:zapMessage)
-            } label: {
-                Text("Pay").padding(10)
-                    .foregroundColor(.white)
-                    .frame(minWidth: 200)
-            }.buttonStyle(.borderedProminent)
-        }
-        .onAppear {
-            amount = Float(ss.defaultZapAmount)
-        }
-        .task {
-            guard let url = URL(string: "https://api.kraken.com/0/public/Ticker?pair=XXBTZUSD") else { return }
-            let request = URLRequest(url: url)
-            
-            do {
-                // Fetch the remote data.
-                let (data, _) = try await URLSession.shared.data(for: request)
-                
-                // Decode data to a CatFact object.
-                let response = try JSONDecoder().decode(KrakenApiResponse.self, from: data)
-                
-                // Return the fact string value.
-                
-                exchangeRate = Double(response.result.XXBTZUSD.c[0])
+            .onChange(of: amountS) { newAmountS in
                 if (exchangeRate != nil) {
-                    fiatPrice = String(format: "($%.02f)", (ceil(Double(amountS)) / 100000000000 * exchangeRate!))
+                    fiatPrice = String(format: "($%.02f)", (ceil(Double(newAmountS)) / 100000000 * exchangeRate!))
                 }
-                else {
-                    fiatPrice = ""
+            }
+            .navigationTitle("Zap")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(content: {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Close") { dismiss() }
                 }
-   
-            }
-            catch {
-                print("could not get price from kraken")
-            }
-            
-        }
-        .onChange(of: amountS) { newAmountS in
-            if (exchangeRate != nil) {
-                fiatPrice = String(format: "($%.02f)", (ceil(Double(newAmountS)) / 100000000 * exchangeRate!))
-            }
+            })
         }
     }
     

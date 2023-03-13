@@ -90,7 +90,7 @@ extension NosturRootMenu {
                     Label("Badges", systemImage: "medal")
                 }
                 Button {
-                    selectedTab = "Settings"
+                    nav.navigateTo(ViewPath.Settings)
                     sm.showSidebar = false
                 } label: {
                     Label("Settings", systemImage: "gearshape")

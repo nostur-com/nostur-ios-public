@@ -40,70 +40,54 @@ struct NewAccountSheet: View {
     var grayBackground: Color = Color.gray.opacity(0.2)
     
     var body: some View {
-        
-        VStack {
-            if UIDevice.current.userInterfaceIdiom == .pad {
-                HStack {
-                    Spacer()
-                    Image(systemName: "xmark.circle.fill")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 30, height: 30)
-                        .padding(30)
-                        .onTapGesture {
-                            dismiss()
-                        }
-                }
-            }
-            
-            Text("Create new account")
-                .font(.largeTitle)
-                
-            TextField("Full Name", text: $display_name)
-                .padding()
-                .background(grayBackground)
-                .cornerRadius(5.0)
-                .padding(.bottom, 20)
-                .focused($focusedField, equals: .display_name)
-            TextField("Username/Handle", text: $name)
-                .padding()
-                .background(grayBackground)
-                .cornerRadius(5.0)
-                .padding(.bottom, 20)
-            TextField("Something about yourself (bio)", text: $about)
-                .lineLimit(5)
-                .padding()
-                .background(grayBackground)
-                .cornerRadius(5.0)
-                .padding(.bottom, 20)
-                
-            Button {
-                createAccount()
-                if (!ns.onBoardingIsShown) {
-                    dismiss()
-                }
-            } label: {
-                Text("Create")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
-            
-            if (ns.accounts.first(where: { $0.publicKey == NosturState.GUEST_ACCOUNT_PUBKEY}) == nil) {
+            VStack {
+                TextField("Full Name", text: $display_name)
+                    .padding()
+                    .background(grayBackground)
+                    .cornerRadius(5.0)
+                    .padding(.bottom, 20)
+                    .focused($focusedField, equals: .display_name)
+                TextField("Username/Handle", text: $name)
+                    .padding()
+                    .background(grayBackground)
+                    .cornerRadius(5.0)
+                    .padding(.bottom, 20)
+                TextField("Something about yourself (bio)", text: $about)
+                    .lineLimit(5)
+                    .padding()
+                    .background(grayBackground)
+                    .cornerRadius(5.0)
+                    .padding(.bottom, 20)
+                    
                 Button {
-                    nav.navigateTo(ViewPath.TryGuestAccount)
+                    createAccount()
+                    if (!ns.onBoardingIsShown) {
+                        dismiss()
+                    }
                 } label: {
-                    Text("Skip and try as guest first")
+                    Text("Create")
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderless)
-                .padding(.top, 20)
+                .buttonStyle(.borderedProminent)
+                
+                if (ns.accounts.first(where: { $0.publicKey == NosturState.GUEST_ACCOUNT_PUBKEY}) == nil) {
+                    Button {
+                        nav.navigateTo(ViewPath.TryGuestAccount)
+                    } label: {
+                        Text("Skip and try as guest first")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderless)
+                    .padding(.top, 20)
+                }
+                
             }
-            
-        }
-        .frame(maxWidth: 300)
-        .controlSize(.large)
-        .buttonStyle(.bordered)
-        .onAppear { focusedField = .display_name }
+            .frame(maxWidth: 300)
+            .controlSize(.large)
+            .buttonStyle(.bordered)
+            .onAppear { focusedField = .display_name }
+            .navigationTitle("Create new account")
+            .navigationBarTitleDisplayMode(.inline)
     }
     
     func createAccount() {

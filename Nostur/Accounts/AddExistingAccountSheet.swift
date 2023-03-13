@@ -21,79 +21,63 @@ struct AddExistingAccountSheet: View {
     var grayBackground: Color = Color.gray.opacity(0.2)
     
     var body: some View {
-        ZStack {
-            VStack{
-                if UIDevice.current.userInterfaceIdiom == .pad {
-                    HStack {
-                        Spacer()
-                        Image(systemName: "xmark.circle.fill")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 30, height: 30)
-                            .padding(30)
-                            .onTapGesture {
-                                dismiss()
-                            }
-                    }
-                }
-                Text("Add existing account")
-                    .font(.title)
-                
-                TextField("Public or private key (npub or nsec)", text: $key)
-                    .padding()
-                    .background(grayBackground)
-                    .cornerRadius(5.0)
-                    .padding(.bottom, 20)
-                
-                Text("Keys are stored on your device in iOS keychain").foregroundColor(.gray)
-                    .font(.caption2)
-                
-                Button {
-                    guard let nip19 = try? NIP19(displayString: key) else {
-                        invalidKey = true
-                        key = ""
-                        return
-                    }
-                    if (key.prefix(5) == "npub1") {
-                        addExistingReadOnlyAccount(pubkey: nip19.hexString)
-                    }
-                    if (key.prefix(5) == "nsec1") {
-                        addExistingAccount(privkey: nip19.hexString)
-                    }
-                    if (!ns.onBoardingIsShown) {
-                        dismiss()
-                    }
-                } label: {
-                    Text("Add")
-                        .frame(maxWidth: .infinity)
-                }
-                .frame(maxWidth: 300)
-                .buttonStyle(.borderedProminent)
-                
-                if (offerTryOut) {
+
+            ZStack {
+                VStack {
+                    TextField("Public or private key (npub or nsec)", text: $key)
+                        .padding()
+                        .background(grayBackground)
+                        .cornerRadius(5.0)
+                        .padding(.bottom, 20)
+                    
+                    Text("Keys are stored on your device in iOS keychain").foregroundColor(.gray)
+                        .font(.caption2)
+                    
                     Button {
-                        nav.navigateTo(ViewPath.TryGuestAccount)
-                        //                dismiss()
+                        guard let nip19 = try? NIP19(displayString: key) else {
+                            invalidKey = true
+                            key = ""
+                            return
+                        }
+                        if (key.prefix(5) == "npub1") {
+                            addExistingReadOnlyAccount(pubkey: nip19.hexString)
+                        }
+                        if (key.prefix(5) == "nsec1") {
+                            addExistingAccount(privkey: nip19.hexString)
+                        }
+                        if (!ns.onBoardingIsShown) {
+                            dismiss()
+                        }
                     } label: {
-                        Text("Skip and try as guest first")
+                        Text("Add")
                             .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.borderless)
-                    .padding(.top, 20)
+                    .frame(maxWidth: 300)
+                    .buttonStyle(.borderedProminent)
+                    
+                    if (offerTryOut) {
+                        NavigationLink {
+                            TryGuestAccountSheet()
+                        } label: {
+                            Text("Skip and try as guest first")
+                        }
+                        .buttonStyle(.borderless)   
+                        .padding(.top, 20)
+                    }
+                }
+                VStack {
+                    Spacer()
+                    Text("Note: You can also add someone elses public key to try out Nostur from their perspective.").foregroundColor(.gray)
                 }
             }
-            VStack {
-                Spacer()
-                Text("Note: You can also add someone elses public key to try out Nostur from their perspective.").foregroundColor(.gray)
+            .controlSize(.large)
+            .buttonStyle(.bordered)
+            .padding()
+            .alert("Invalid key", isPresented: $invalidKey) {
+                Button("OK", role: .cancel) { }
             }
-        }
-        .controlSize(.large)
-        .buttonStyle(.bordered)
-        
-        .padding()
-        .alert("Invalid key", isPresented: $invalidKey) {
-            Button("OK", role: .cancel) { }
-        }
+            .navigationTitle("Add existing account")
+            .navigationBarTitleDisplayMode(.inline)
     }
     
     func addExistingAccount(privkey:String) {

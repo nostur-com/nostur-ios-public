@@ -30,82 +30,68 @@ struct AccountsSheet: View {
     @State var accountToDelete:Account? = nil
     
     var body: some View {
-        VStack(spacing: 15) {
-//            Text("Accounts").font(.title3)
-            
-            List {
-                ForEach(accounts) { account in
-                    AccountRow(account: account)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            ns.setAccount(account: account)
-                            sm.showSidebar = false
-                            dismiss()
-                        }
-                        .swipeActions(edge: .trailing) {
-                            Button() {
-                                accountToDelete = account
-                                confirmDelete.toggle()
-                            } label: {
-                                Label("Delete", systemImage: "trash")
+        NavigationStack {
+            VStack(spacing: 15) {
+                List {
+                    ForEach(accounts) { account in
+                        AccountRow(account: account)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                ns.setAccount(account: account)
+                                sm.showSidebar = false
+                                dismiss()
                             }
-                        }
+                            .swipeActions(edge: .trailing) {
+                                Button() {
+                                    accountToDelete = account
+                                    confirmDelete.toggle()
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                            }
+                    }
                 }
-            }
-            .listStyle(.plain)
-            
-            HStack {
-                Button {
-                    newAccountSheetShown = true
+                .listStyle(.plain)
+                
+                NavigationLink {
+                    NewAccountSheet()
                 } label: { Text("Create new account") }
-                Spacer()
-            }
-            HStack {
-                Button {
-                    addExistingAccountSheetShown = true
+                
+                NavigationLink {
+                    AddExistingAccountSheet()
                 } label: { Text("Add existing account") }
                 Spacer()
             }
-            Spacer()
-        }
-        .padding(20)
-        .navigationTitle("Accounts")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar(content: {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Close") { dismiss() }
-            }
-//            ToolbarItem(placement: .principal) {
-//                Text("Accounts")
-//            }
-        })
-        .sheet(isPresented: $newAccountSheetShown) {
-            NewAccountSheet()
-                .environmentObject(ns) // weird fix???
-        }
-        .sheet(isPresented: $addExistingAccountSheetShown) {
-            AddExistingAccountSheet()
-                .environmentObject(ns) // need this?
-        }
-        .confirmationDialog("Delete account?", isPresented: $confirmDelete) {
-            Button(role: .destructive) {
-                guard accountToDelete != nil else { return }
-                AccountManager.shared.deletePrivateKey(forPublicKeyHex: accountToDelete!.publicKey)
-                if (ns.accounts.count <= 1) {
-                    ns.onBoardingIsShown = true
-                    sm.showSidebar = false
-                    nav.clear()
-                    ns.setAccount(account: nil)
-                    viewContext.delete(accountToDelete!)
+            .padding(20)
+            .navigationTitle("Accounts")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(content: {
+                if (withDismissButton) {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Close") { dismiss() }
+                    }
                 }
-                else {
-                    viewContext.delete(accountToDelete!)
-                    ns.setAccount(account: ns.accounts.last)
+            })
+            .confirmationDialog("Delete account?", isPresented: $confirmDelete) {
+                Button(role: .destructive) {
+                    guard accountToDelete != nil else { return }
+                    AccountManager.shared.deletePrivateKey(forPublicKeyHex: accountToDelete!.publicKey)
+                    if (ns.accounts.count <= 1) {
+                        ns.onBoardingIsShown = true
+                        sm.showSidebar = false
+                        nav.clear()
+                        ns.setAccount(account: nil)
+                        viewContext.delete(accountToDelete!)
+                    }
+                    else {
+                        viewContext.delete(accountToDelete!)
+                        ns.setAccount(account: ns.accounts.last)
+                    }
+    //                dismiss()
+                    try! viewContext.save()
+                } label: {
+                    Text("Yes, delete account")
                 }
-//                dismiss()
-                try! viewContext.save()
-            } label: {
-                Text("Yes, delete account")
             }
         }
     }

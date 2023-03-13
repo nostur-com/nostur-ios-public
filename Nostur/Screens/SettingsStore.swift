@@ -50,7 +50,7 @@ final class SettingsStore: ObservableObject {
         defaults.register(defaults: [
             Keys.replaceNsecWithHunter2: true,
             Keys.sleepGoal: 8,
-            Keys.defaultZapAmount: 10.000,
+            Keys.defaultZapAmount: 1000,
             Keys.sleepTrackingEnabled: true,
             Keys.hideEmojisInNames: false,
             Keys.hideBadges: false,
