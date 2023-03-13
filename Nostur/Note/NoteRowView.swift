@@ -96,10 +96,7 @@ struct NoteRowView: View {
                             HStack { // name + reply + context menu
                                 NoteHeader(event:event.firstQuote!)
                                     .padding(.bottom, 5)
-                                Color.clear
-                                    .frame(height: 25)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture { nav.navigateTo(event) } // Needed to make tappable the space between name and notemenu (instead of Spacer()
+                                Spacer()
 //                                PrivateNoteToggle(post: event.firstQuote!)
                                 NoteMenu(event: event.firstQuote!)//.opacity(0)
                             }
@@ -172,11 +169,7 @@ struct NoteRowView: View {
                             HStack { // name + reply + context menu
                                 NoteHeader(event:event)
                                     .padding(.bottom, 5)
-//                                    .background(.blue)
-                                Color.clear
-                                    .frame(height: 25)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture { nav.navigateTo(event) } // Needed to make tappable the space between name and notemenu (instead of Spacer()
+                                Spacer()
 //                                PrivateNoteToggle(post: event)
                                 NoteMenu(event: event)//.opacity(0)
 //                                    .background(.orange)

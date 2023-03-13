@@ -827,7 +827,7 @@ extension Event {
             batchDelete.resultType = .resultTypeCount
             
             do {
-                let result = try context.execute(batchDelete) as! NSBatchDeleteResult
+                _ = try context.execute(batchDelete) as! NSBatchDeleteResult
             } catch {
                 print("🔴🔴 Failed to delete older kind 3 events")
             }
