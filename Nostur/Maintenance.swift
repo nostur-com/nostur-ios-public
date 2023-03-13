@@ -63,18 +63,19 @@ struct Maintenance {
     // Deletes ALL KIND=0 Events (except own), because should have Contact entity.
     // Keeps bookmarks
     // Keeps own events
+    // Keeps contacts/posts with private notes
     
     //TODO: Find out which tags can be deleted..
     static func maintenance(context:NSManagedObjectContext) {
         let frA = Account.fetchRequest()
-        let allACcounts = Array(try! context.fetch(frA))
-        let ownAccountPubkeys = allACcounts.reduce([String]()) { partialResult, account in
+        let allAccounts = Array(try! context.fetch(frA))
+        let ownAccountPubkeys = allAccounts.reduce([String]()) { partialResult, account in
             var newResult = Array(partialResult)
             newResult.append(account.publicKey)
             return newResult
         }
         
-        let ownAccountBookmarkIds = allACcounts.reduce([String]()) { partialResult, account in
+        let ownAccountBookmarkIds = allAccounts.reduce([String]()) { partialResult, account in
             var newResult = Array(partialResult)
             if (account.bookmarks != nil) {
                 let ids = account.bookmarks!.map { $0.id }
@@ -83,27 +84,95 @@ struct Maintenance {
             return newResult
         }
         
-        let xDaysAgo = Date.now.addingTimeInterval(-5 * 86400) // 5 days
+        let ownAccountPrivateNoteEventIds = allAccounts.reduce([String]()) { partialResult, account in
+            var newResult = Array(partialResult)
+            if (account.privateNotes != nil) {
+                let ids = account.privateNotes!.compactMap { $0.post?.id }
+                newResult.append(contentsOf: ids)
+            }
+            return newResult
+        }
+        
+        let xDaysAgo = Date.now.addingTimeInterval(-4 * 86400) // 4 days
         
         
-        // KIND 1,6,7
+        // KIND 1,6
         // OUDER DAN X DAGEN
         // IS GEEN BOOKMARK
         // IS GEEN EIGEN EVENT
         context.perform {
             let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
-            fetchRequest.predicate = NSPredicate(format: "kind IN {1,6,7} AND created_at < %i AND NOT id IN %@ AND NOT pubkey IN %@", Int64(xDaysAgo.timeIntervalSince1970), ownAccountBookmarkIds, ownAccountPubkeys)
+            fetchRequest.predicate = NSPredicate(format: "kind IN {1,6} AND created_at < %i AND NOT id IN %@ AND NOT id IN %@ AND NOT pubkey IN %@", Int64(xDaysAgo.timeIntervalSince1970), ownAccountBookmarkIds, ownAccountPrivateNoteEventIds, ownAccountPubkeys)
             
             let batchDelete = NSBatchDeleteRequest(fetchRequest: fetchRequest)
             batchDelete.resultType = .resultTypeCount
             
             do {
                 let result = try context.execute(batchDelete) as! NSBatchDeleteResult
-                print("Deleted \(result.result!) kind {1,6,7} events")
+                print("🧹🧹Deleted \(result.result!) kind {1,6} events")
             } catch {
-                print("Failed to delete {1,6,7} data")
+                print("🔴🔴 Failed to delete {1,6} data")
             }
         }
+        
+        do {
+            try context.save()
+        }
+        catch {
+            print("maintenance error on save(): \(error)")
+        }
+        
+        
+        // KIND 9734,7,8
+        // OUDER DAN X DAGEN
+        // PUBKEY NOT IN OWN ACCOUNTS
+        context.perform {
+            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
+            fetchRequest.predicate = NSPredicate(format: "kind IN {9734,8,7} AND created_at < %i AND NOT pubkey IN %@", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys)
+            
+            let batchDelete = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+            batchDelete.resultType = .resultTypeCount
+            
+            do {
+                let result = try context.execute(batchDelete) as! NSBatchDeleteResult
+                print("🧹🧹Deleted \(result.result!) kind 9734 events")
+            } catch {
+                print("🔴🔴 Failed to delete 9734,7,8 data")
+            }
+        }
+        
+        do {
+            try context.save()
+        }
+        catch {
+            print("maintenance error on save(): \(error)")
+        }
+        
+        // KIND 9735
+        // OUDER DAN X DAGEN
+        // zappedContactPubkey NOT IN OWN ACCOUNTS
+        context.perform {
+            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
+            fetchRequest.predicate = NSPredicate(format: "kind == 9735 AND created_at < %i AND NOT zappedContactPubkey IN %@", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys)
+            
+            let batchDelete = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+            batchDelete.resultType = .resultTypeCount
+            
+            do {
+                let result = try context.execute(batchDelete) as! NSBatchDeleteResult
+                print("🧹🧹Deleted \(result.result!) kind 9735 events")
+            } catch {
+                print("🔴🔴 Failed to delete 9734 data")
+            }
+        }
+        
+        do {
+            try context.save()
+        }
+        catch {
+            print("maintenance error on save(): \(error)")
+        }
+        
         
         // KIND 0
         // ALLES WEG WANT IEDERE KIND 0 HEEFT EEN CONTACT
@@ -120,6 +189,37 @@ struct Maintenance {
                 print("Deleted \(result.result!) kind=0 events")
             } catch {
                 print("Failed to delete kind=0 data")
+            }
+        }
+        
+        do {
+            try context.save()
+        }
+        catch {
+            print("maintenance error on save(): \(error)")
+        }
+        
+        // DELETE OLDER KIND 3 EVENTS
+        context.perform {
+            let r = NSFetchRequest<Event>(entityName: "Event")
+            r.predicate = NSPredicate(format: "kind == 3")
+            r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+            let kind3 = try! context.fetch(r)
+            
+            var noDuplicates:Dictionary<String, Event> = [:]
+            var forDeletion:[Event] = []
+            
+            for event in kind3 {
+                if noDuplicates[event.pubkey] != nil {
+                    forDeletion.append(event)
+                }
+                else {
+                    noDuplicates[event.pubkey] = event
+                }
+            }
+            print("going to delete \(forDeletion.count) kind 3 events")
+            for toDelete in forDeletion {
+                context.delete(toDelete)
             }
         }
         
