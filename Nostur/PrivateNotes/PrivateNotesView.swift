@@ -141,6 +141,8 @@ struct PrivateNoteRow: View {
         VStack(spacing: 0) {
             HStack(alignment:.top) {
                 Text(note.content_ == "" ? "(Empty note)" : note.content_)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
                     .onTapGesture {
                         sendNotification(.editingPrivateNote, note)
                     }

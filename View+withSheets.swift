@@ -40,22 +40,17 @@ private struct WithSheets: ViewModifier {
                 self.privateNote = privateNote
             }
             .onReceive(receiveNotification(.newPrivateNoteOnPost)) { notification in
-                let post = notification.object as! Event
-                if let newPrivateNote = PrivateNote.createNewFor(ns.account!, andPost: post, context: viewContext) {
-                    privateNote = newPrivateNote
-                }
+                post = notification.object as? Event
             }
             .onReceive(receiveNotification(.newPrivateNoteOnContact)) { notification in
-                let contact = notification.object as! Contact
-                if let newPrivateNote = PrivateNote.createNewFor(ns.account!, andContact:contact, context: viewContext) {
-                    privateNote = newPrivateNote
-                }
+                contact = notification.object as? Contact
             }
     }
     
     func onDismiss() {
         privateNote = nil
         post = nil
+        contact = nil
     }
 
 }

@@ -34,6 +34,8 @@ struct NewPrivateNoteSheet: View {
                     Text("Private note")
                 }.lineLimit(10, reservesSpace: true)
             }
+            .navigationTitle("New private note")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
