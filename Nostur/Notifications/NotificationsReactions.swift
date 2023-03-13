@@ -64,25 +64,45 @@ struct NotificationsReactions: View {
     }
     
     var body: some View {
-        List(myNotesReactedTo) { note in
-//            LazyVStack(alignment:.leading, spacing: 3) {
-//                ForEach(myNotesReactedTo) { note in
-                    VStack(alignment:.leading, spacing: 3) {
-                            ReactionsForThisNote(reactions:reactionsForNote(note), onAppear: self.onAppear)
-                            NoteMinimalContentView(event: note)
-                    }.onTapGesture {
-                        nav.navigateTo(NotePath(id: note.id))
-                    }
-                    .listRowInsets(EdgeInsets())
-//                }
+        VStack {
+            List(myNotesReactedTo) { note in
+    //            LazyVStack(alignment:.leading, spacing: 3) {
+    //                ForEach(myNotesReactedTo) { note in
+                        VStack(alignment:.leading, spacing: 3) {
+                                ReactionsForThisNote(reactions:reactionsForNote(note), onAppear: self.onAppear)
+                                NoteMinimalContentView(event: note)
+                        }.onTapGesture {
+                            nav.navigateTo(NotePath(id: note.id))
+                        }
+                        .listRowInsets(EdgeInsets())
+    //                }
+    //            }
+                .padding()
+            }
+            .listStyle(.plain)
+            .onAppear {
+                fetchReactions()
+            }
+//            Button("Fetch older") {
+//                fetchOlderReactions()
 //            }
-            .padding()
-        }
-        .listStyle(.plain)
-        .onAppear {
-            fetchReactions()
         }
     }
+    
+    func fetchOlderReactions() {
+        guard ns.account != nil else { return }
+        sp.sendMessage(
+            ClientMessage(type: .REQ,
+                          message:
+                            RequestMessage.getMentions(
+                                pubkeys: [ns.account!.publicKey],
+                                kinds: [7],
+                                limit: 500,
+                                until: NTimestamp(timestamp: Int(reactions.last?.created_at ?? 0)))
+                         )
+        )
+    }
+    
     func fetchReactions() {
         guard ns.account != nil else { return }
         sp.sendMessage(

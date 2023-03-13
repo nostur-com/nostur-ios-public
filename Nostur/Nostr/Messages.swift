@@ -121,11 +121,16 @@ struct RequestMessage {
     }
     
     // Get all events where [pubkeys] are mentioned (in p tag)
-    static func getMentions(pubkeys:[String], kinds:[Int] = [1,7,9735], limit:Int = 500, subscriptionId:String? = nil, since:NTimestamp? = nil) -> String {
+    static func getMentions(pubkeys:[String], kinds:[Int] = [1,7,9735], limit:Int = 500, subscriptionId:String? = nil, since:NTimestamp? = nil, until:NTimestamp? = nil) -> String {
         
         if since != nil {
             return """
     ["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"#p": \(JSON(pubkeys).rawString()!), "limit": \(limit), "since": \(since!.timestamp), "kinds": \(JSON(kinds).rawString() ?? "[]") }]
+    """
+        }
+        else if until != nil {
+            return """
+    ["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"#p": \(JSON(pubkeys).rawString()!), "limit": \(limit), "until": \(until!.timestamp), "kinds": \(JSON(kinds).rawString() ?? "[]") }]
     """
         }
         return """
