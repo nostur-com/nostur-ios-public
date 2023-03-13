@@ -126,9 +126,15 @@ struct Maintenance {
         // KIND 9734,7,8
         // OUDER DAN X DAGEN
         // PUBKEY NOT IN OWN ACCOUNTS
+        // OR PUBKEY OF OWN ACCOUNTS NOT IN SERIALIZED TAGS
         context.perform {
             let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
-            fetchRequest.predicate = NSPredicate(format: "kind IN {9734,8,7} AND created_at < %i AND NOT pubkey IN %@", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys)
+            
+            let regex = ".*(" + ownAccountPubkeys.map {
+                NSRegularExpression.escapedPattern(for: $0)
+            }.joined(separator: "|") + ").*"
+            
+            fetchRequest.predicate = NSPredicate(format: "kind IN {9734,8,7} AND created_at < %i AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys, regex)
             
             let batchDelete = NSBatchDeleteRequest(fetchRequest: fetchRequest)
             batchDelete.resultType = .resultTypeCount
