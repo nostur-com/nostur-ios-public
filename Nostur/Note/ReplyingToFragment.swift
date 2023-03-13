@@ -72,6 +72,7 @@ struct ReplyingToFragment: View {
             }
             else if (pTagsAsStrings.count > 0) {
                 Text(try! AttributedString(markdown:"Replying to: " + pTagsAsStrings.joined(separator: ", ")))
+                    .frame(maxWidth:.infinity, alignment: .leading)
                     .foregroundColor(.secondary)
                 //                .font(.system(size: 13))
                     .fontWeight(.light)

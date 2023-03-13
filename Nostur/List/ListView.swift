@@ -46,7 +46,6 @@ struct ListView: View {
                                     }
 //                                    .border(vm.posts.firstIndex(of: post) == vm.lastAppearedIndex ? .green : .clear)
                                     .id(post.id)
-                                    .onTapGesture { nav.navigateTo(post) }
                                 Divider()
                             }
                         }

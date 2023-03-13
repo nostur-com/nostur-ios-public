@@ -23,7 +23,7 @@ struct NoteTextRenderView: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading) {
+        HStack(alignment: .top) {
                 if (useLinelimit) {
                     Text(renderedText!)//.border(.cyan)
                         .lineLimit(10, reservesSpace: false)
@@ -32,6 +32,7 @@ struct NoteTextRenderView: View {
                         .foregroundColor(.primary)
                         .lineSpacing(3)
                         .padding(.vertical, 5)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 else {
                     Text(renderedText!)//.border(.pink)
@@ -40,7 +41,9 @@ struct NoteTextRenderView: View {
                         .foregroundColor(.primary)
                         .lineSpacing(3)
                         .padding(.vertical, 5)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
+            Spacer()
         }
     }
 }

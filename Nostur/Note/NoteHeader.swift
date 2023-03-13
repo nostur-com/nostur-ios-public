@@ -22,7 +22,7 @@ struct NoteHeader: View {
     var body: some View {
         //        NavigationLink(value: event, label: {
         
-        VStack(alignment: .leading) { // Name + menu "replying to"
+        VStack(alignment: .leading, spacing:0) { // Name + menu "replying to"
             HStack(spacing:2) {
                 Group {
                     if (event.contact != nil) {

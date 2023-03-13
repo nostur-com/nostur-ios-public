@@ -75,21 +75,37 @@ struct NoteRowView: View {
             // IS REPOST AND ALL DATA IS HERE
             if (event.isRepost && event.firstQuoteId != nil && event.firstQuote != nil) {
                 HStack(alignment: .top) {
-                        VStack {
-                            ProfilePic(event: event.firstQuote!)
-                                .padding(.horizontal, 10)
-                                .onTapGesture {
-                                    nav.navigateTo(ContactPath(key: event.firstQuote!.pubkey))
-                                }
+                    VStack {
+                        ProfilePic(event: event.firstQuote!)
+                            .padding(.horizontal, 10)
+//                                .frame(maxHeight: .infinity)
+//                            .background(.red)
+                            .onTapGesture {
+                                nav.navigateTo(ContactPath(key: event.firstQuote!.pubkey))
+                            }
+                        if let contact = event.firstQuote!.contact {
+                            PrivateNoteToggle(contact: contact)
                         }
+                        Color.clear // Needed to "fill" whole VStack to make it tappable
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture { nav.navigateTo(event.firstQuote!) }
+                    .frame(maxWidth: 70)
                         
                         VStack(alignment:.leading, spacing: 3) {// Tweet container
                             HStack { // name + reply + context menu
                                 NoteHeader(event:event.firstQuote!)
-                                Spacer()
+                                    .padding(.bottom, 5)
+                                Color.clear
+                                    .frame(height: 25)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture { nav.navigateTo(event) } // Needed to make tappable the space between name and notemenu (instead of Spacer()
+//                                PrivateNoteToggle(post: event.firstQuote!)
                                 NoteMenu(event: event.firstQuote!)//.opacity(0)
                             }
                             ReplyingToFragment(event: event.firstQuote!)
+                                .contentShape(Rectangle())
+                                .onTapGesture { nav.navigateTo(event.firstQuote!) }
                             
                             switch self.type {
                                 case .lightningInvoice:
@@ -98,6 +114,7 @@ struct NoteRowView: View {
                                 default:
                                     NoteTextRenderView(event:event.firstQuote!, useLinelimit: true)
                                         .id(text)
+                                        .contentShape(Rectangle())
                                         .onTapGesture { nav.navigateTo(event.firstQuote!) }
                                     ImageViewer(content: event.firstQuote!.content ?? "", pubkey: event.firstQuote!.pubkey)
                             }
@@ -137,37 +154,61 @@ struct NoteRowView: View {
                         VStack {
                             ProfilePic(event: event)
                                 .padding(.horizontal, 10)
+//                                .frame(maxHeight: .infinity)
+//                                .background(.red)
                                 .onTapGesture {
                                     nav.navigateTo(ContactPath(key: event.pubkey))
                                 }
+                            if let contact = event.contact {
+                                PrivateNoteToggle(contact: contact)
+                            }
+                            Color.clear // Needed to "fill" whole VStack to make it tappable
                         }
+                        .contentShape(Rectangle())
+                        .onTapGesture { nav.navigateTo(event) }
+                        .frame(maxWidth: 70)
                         
-                        VStack(alignment:.leading, spacing: 3) {// Tweet container
+                        VStack(alignment:.leading, spacing: 0) {// Post container
                             HStack { // name + reply + context menu
                                 NoteHeader(event:event)
-                                Spacer()
+                                    .padding(.bottom, 5)
+//                                    .background(.blue)
+                                Color.clear
+                                    .frame(height: 25)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture { nav.navigateTo(event) } // Needed to make tappable the space between name and notemenu (instead of Spacer()
+//                                PrivateNoteToggle(post: event)
                                 NoteMenu(event: event)//.opacity(0)
+//                                    .background(.orange)
                             }
                             ReplyingToFragment(event: event)
+                                .contentShape(Rectangle())
+                                .onTapGesture { nav.navigateTo(event) }
                             
-                            switch self.type {
-                                case .lightningInvoice:
-                                    LightningInvoice(invoice: event.noteText)
-//                                        .onAppear {
-//                                            withAnimation(.easeInOut(duration: 2.0)) {
-//                                                backgroundColor = Color(uiColor: .systemBackground)
-//                                            }
-//                                        }
-                                default:
-                                    NoteTextRenderView(event:event, useLinelimit: true)
-                                        .onTapGesture { nav.navigateTo(event) }
-//                                        .onAppear {
-//                                            withAnimation(.easeInOut(duration: 2.0)) {
-//                                                backgroundColor = Color(uiColor: .systemBackground)
-//                                            }
-//                                        }
-                                    ImageViewer(content: event.content ?? "", pubkey: event.pubkey)
-                            }
+                            
+                            
+                                switch self.type {
+                                    case .lightningInvoice:
+                                        LightningInvoice(invoice: event.noteText)
+                                        //                                        .onAppear {
+                                        //                                            withAnimation(.easeInOut(duration: 2.0)) {
+                                        //                                                backgroundColor = Color(uiColor: .systemBackground)
+                                        //                                            }
+                                        //                                        }
+                                        
+                                    default:
+                                            NoteTextRenderView(event:event, useLinelimit: true)
+                                                .contentShape(Rectangle())
+                                                .onTapGesture { nav.navigateTo(event) }
+                                        //                                        .onAppear {
+                                        //                                            withAnimation(.easeInOut(duration: 2.0)) {
+                                        //                                                backgroundColor = Color(uiColor: .systemBackground)
+                                        //                                            }
+                                        //                                        }
+                                        ImageViewer(content: event.content ?? "", pubkey: event.pubkey)
+                                }
+                                
+                            
                             
                             
                             if (event.firstQuoteId != nil && event.firstQuote != nil) {
@@ -188,17 +229,6 @@ struct NoteRowView: View {
                     }
             }
         }
-        .background(
-            HStack {
-                Color(.systemBackground)
-                    .frame(width: 70)
-                    .onTapGesture {
-                        nav.navigateTo(event.isRepost && event.firstQuote != nil ? event.firstQuote! : event)
-                    }
-                Spacer()
-            }
-            
-        )
         .onAppear {
 //            guard 1 == 2 else { return } // performance check
 //            print("🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴 MY FACE IS APPEAR")
