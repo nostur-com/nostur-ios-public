@@ -183,9 +183,7 @@ struct ConfigurationView: View {
             // update likes count
             if (event.kind == 7 && event.tagsSerialized != nil) {
                 do {
-                    if let tags = try? decoder.decode([NEventTag].self, from: Data(event.tagsSerialized!.utf8)) {
-                        try _ = Event.updateLikeCountCache(tags, content:event.content ?? "", context: viewContext)
-                    }
+                    try _ = Event.updateLikeCountCache(event, content:event.content ?? "", context: viewContext)
                 }
                 catch {
                     print("something wrong with updating likes/reactions cache")

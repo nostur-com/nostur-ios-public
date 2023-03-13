@@ -355,20 +355,22 @@ extension Event {
     
     // NIP-25: The generic reaction, represented by the content set to a + string, SHOULD be interpreted as a "like" or "upvote".
     // NIP-25: The content MAY be an emoji, in this case it MAY be interpreted as a "like" or "dislike", or the client MAY display this emoji reaction on the post.
-    static func updateLikeCountCache(_ tags:[NEventTag], content:String, context:NSManagedObjectContext) throws -> Bool {
+    static func updateLikeCountCache(_ event:Event, content:String, context:NSManagedObjectContext) throws -> Bool {
         switch content {
         case "+","👍","🤙","❤️","🫂","🤗","😘","😍","💯","🤩","⚡️","🔥","💥","🚀":
             // # NIP-25: The last e tag MUST be the id of the note that is being reacted to.
-            if let lastEtag = TagsHelpers(tags).eTags().last {
+                if let lastEtag = event.lastE() {
                 let request = NSFetchRequest<Event>(entityName: "Event")
                 request.entity = Event.entity()
-                request.predicate = NSPredicate(format: "id == %@", lastEtag.id)
+                request.predicate = NSPredicate(format: "id == %@", lastEtag)
                 request.fetchLimit = 1
                 
                 if let reactingToEvent = try context.fetch(request).first {
 //                    print("updating .likes for .id = \(String(describing: reactingToEvent.id))")
                     reactingToEvent.objectWillChange.send()
                     reactingToEvent.likesCount = reactingToEvent.likesCount + 1
+                    event.reactionTo = reactingToEvent
+                    event.reactionToId = reactingToEvent.id
 //                                            try reactingToEvent.managedObjectContext?.save()
                 }
             }

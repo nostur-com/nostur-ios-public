@@ -124,7 +124,7 @@ class Importer {
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
                     if event.kind == .reaction {
-                        do { try _ = Event.updateLikeCountCache(event.tags, content:event.content, context: context) } catch {
+                        do { try _ = Event.updateLikeCountCache(savedEvent, content:event.content, context: context) } catch {
                             print("🦋🦋🔴🔴🔴 problem updating Like Count Cache .id \(event.id)")
                         }
                     }
