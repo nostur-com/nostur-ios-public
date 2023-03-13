@@ -74,10 +74,11 @@ struct NotificationsReactions: View {
                         }.onTapGesture {
                             nav.navigateTo(NotePath(id: note.id))
                         }
+                        .padding()
                         .listRowInsets(EdgeInsets())
     //                }
     //            }
-                .padding()
+                
             }
             .listStyle(.plain)
             .onAppear {
