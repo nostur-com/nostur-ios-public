@@ -38,6 +38,7 @@ class EventsProvider: ObservableObject {
         account3.publicKey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
         account3.display_name = "Fabian"
         account3.name = "Fabian"
+        account3.nip05 = "Fabian@nostur.com"
         account3.about = "Author of Nostur.com"
                 
         let keys = NKeys.newKeys()
@@ -72,17 +73,17 @@ class EventsProvider: ObservableObject {
         messages.append(contentsOf: testKind3Events())
         messages.append(contentsOf: testKind1Events())
         messages.append(contentsOf: testKindMixedOldDunnoEvents())
-        messages.append(contentsOf: testRepliesAndReactions())
+//        messages.append(contentsOf: testRepliesAndReactions())
         messages.append(contentsOf: testSnowden())
         messages.append(contentsOf: testBadges())
-//        messages.append(contentsOf: testMentions())
+        messages.append(contentsOf: testMentions())
 //        messages.append(contentsOf: testKind6Events())
 //        messages.append(contentsOf: testEfilter())
         messages.append(contentsOf: testZaps())
-//        messages.append(contentsOf: testSomeFakeAndRealZaps())
+        messages.append(contentsOf: testSomeFakeAndRealZaps())
         messages.append(contentsOf: testNotifications())
         messages.append(contentsOf: testImages())
-//        messages.append(contentsOf: testThread())
+        messages.append(contentsOf: testThread())
         
         var relayMessages:[RelayMessage] = []
         

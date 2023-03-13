@@ -49,7 +49,7 @@ struct NoteMenu: View {
             Button {
                 UIPasteboard.general.string = noteIdHex
             } label: {
-                Label("Copy note id hex \(noteIdHex))", systemImage: "doc.on.clipboard")
+                Label("Copy note id hex \(String(noteIdHex.prefix(11)))", systemImage: "doc.on.clipboard")
             }
             Button {
                 UIPasteboard.general.string = event.copyPasteText()
@@ -141,16 +141,19 @@ struct NoteMenu: View {
                 .fontWeight(.bold)
                 .foregroundColor(.secondary)
                 .padding(.top, 0)
-                .padding(.bottom, 10)
+                .padding(.bottom, 5)
                 .padding(.leading, 20)
                 .padding(.trailing, 10)
             
         }
     }
+    
 }
+
+
 struct NoteMenu_Previews: PreviewProvider {
     static var previews: some View {
-        let event7 = PreviewFetcher.fetchEvent("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
+        let event7 = PreviewFetcher.fetchEvent()
         if (event7 != nil) {
             NoteMenu(event: event7!)
                 .withPreviewEnvironment()

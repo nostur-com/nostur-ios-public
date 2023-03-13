@@ -10,7 +10,8 @@ import SwiftUI
 struct ProfileLightningButton: View {
     var sp:SocketPool = .shared
     @EnvironmentObject var er:ExchangeRateModel
-    let ns:NosturState = .shared
+    @EnvironmentObject var ns:NosturState
+//    let ns:NosturState = .shared // else preview is broken..
     
     var contact:Contact?
     

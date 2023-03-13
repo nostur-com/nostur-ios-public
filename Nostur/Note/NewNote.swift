@@ -93,8 +93,8 @@ struct NewNote: View {
                 ZStack(alignment:.leading) {
                     VStack(alignment: .leading) {
                         Text(PLACEHOLDER).foregroundColor(.gray)
-                            .offset(x: 5.0, y: 7.0)
                             .opacity(vm.text == "" ? 1 : 0)
+                            .offset(x: 5.0, y: 7.0)
                         Spacer()
                     }
                     VStack(alignment: .leading) {
