@@ -22,7 +22,7 @@ struct FollowersList: View {
         let fr = Event.fetchRequest()
         fr.sortDescriptors = []
         // Not parsing and filtering tags, but searching for string. Ugly hack but works fast
-        fr.predicate = NSPredicate(format: "kind == 3 AND tagsSerialized CONTAINS %@", pubkey)
+        fr.predicate = NSPredicate(format: "kind == 3 AND tagsSerialized CONTAINS %@", serializedP(pubkey))
         
         
         _clEvents = FetchRequest(fetchRequest: fr)
