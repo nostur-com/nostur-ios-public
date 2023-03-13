@@ -819,6 +819,20 @@ extension Event {
             }
         }
         
+        if (event.kind == .contactList) {
+            // delete older events
+            let r = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
+            r.predicate = NSPredicate(format: "kind == 3 AND pubkey == %@ AND insertedAt < %$", event.publicKey, savedEvent.insertedAt as NSDate)
+            let batchDelete = NSBatchDeleteRequest(fetchRequest: r)
+            batchDelete.resultType = .resultTypeCount
+            
+            do {
+                let result = try context.execute(batchDelete) as! NSBatchDeleteResult
+            } catch {
+                print("🔴🔴 Failed to delete older kind 3 events")
+            }
+        }
+        
         return savedEvent
     }
     
