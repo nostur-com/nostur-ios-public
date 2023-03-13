@@ -31,20 +31,7 @@ struct AccountsSheet: View {
     
     var body: some View {
         VStack(spacing: 15) {
-            if UIDevice.current.userInterfaceIdiom == .pad && withDismissButton {
-                HStack {
-                    Spacer()
-                    Image(systemName: "xmark.circle.fill")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 30, height: 30)
-                        .padding(30)
-                        .onTapGesture {
-                            dismiss()
-                        }
-                }
-            }
-            Text("Accounts").font(.title3)
+//            Text("Accounts").font(.title3)
             
             List {
                 ForEach(accounts) { account in
@@ -82,6 +69,16 @@ struct AccountsSheet: View {
             Spacer()
         }
         .padding(20)
+        .navigationTitle("Accounts")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(content: {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Close") { dismiss() }
+            }
+//            ToolbarItem(placement: .principal) {
+//                Text("Accounts")
+//            }
+        })
         .sheet(isPresented: $newAccountSheetShown) {
             NewAccountSheet()
                 .environmentObject(ns) // weird fix???

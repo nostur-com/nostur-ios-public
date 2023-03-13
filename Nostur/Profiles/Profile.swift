@@ -192,22 +192,17 @@ struct Profile: View {
                             Button {
                                 UIPasteboard.general.string = pubkey
                             } label: {
-                                Label("Copy public key hex \(pubkey)...", systemImage: "doc.on.clipboard")
+                                Label("Copy public key hex \(String(pubkey.prefix(11)))...", systemImage: "doc.on.clipboard")
                             }
                             Button {
                                 UIPasteboard.general.string = Contact.npub(pubkey)
                             } label: {
-                                Label("Copy npub \(Contact.npub(pubkey))...", systemImage: "doc.on.clipboard")
+                                Label("Copy npub \(String(Contact.npub(pubkey).prefix(11)))...", systemImage: "doc.on.clipboard")
                             }
                         } label: {
                             Image(systemName: "person.badge.key.fill")
-                            //                            Text("···")
-                            //                                .foregroundColor(.secondary)
-                            //                                .padding(.top, 0)
-                            //                                .padding(.bottom, 10)
-                            //                                .padding(.leading, 20)
-                            //                                .padding(.trailing, 10)
                         }
+                        PrivateNoteToggle(contact: contact)
                         if (ns.followsYou(contact)) {
                             Text("Follows you").font(.system(size: 12))
                                 .foregroundColor(.white)
@@ -222,15 +217,15 @@ struct Profile: View {
                     
                     Text("\n\(String(contact.about ?? "(No information)"))")
                     
-//                    HStack {
-//                        Text("\n**\(contact.followingPubkeys.count)** Following")
-//
-//                        Text("\n**??** Followers")
-//                            .onTapGesture {
-//                                activeTab = "FOLLOWERS"
-//                            }
-//                        //                        Text("\n**\(contact.followingPubkeys.count)** Followers")
-//                    }
+                    HStack {
+                        Text("\n**\(contact.followingPubkeys.count)** Following")
+
+                        Text("\n**??** Followers")
+                            .onTapGesture {
+                                activeTab = "FOLLOWERS"
+                            }
+                        //                        Text("\n**\(contact.followingPubkeys.count)** Followers")
+                    }
                     
                     ControlGroup {
                         //                        Button { importNotes() } label: { Text("Import") }
@@ -331,7 +326,8 @@ struct Profile: View {
                 if (await NIP05.verify(nip05: contact.nip05!, expectedPubkey: contact.pubkey)) {
                     await viewContext.perform {
                         contact.nip05verifiedAt = Date.now
-                        do { try viewContext.save() }
+                        // TODO: Crashed preview???
+                        do { try! viewContext.save() }
                         catch { print("w🚗at") }
                     }
                     print("👍👍 nip05 verified \(contact.pubkey) \(contact.nip05!) ")

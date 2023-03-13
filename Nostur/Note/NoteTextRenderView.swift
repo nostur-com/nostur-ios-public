@@ -95,10 +95,10 @@ extension Event {
                     if (1 == 1) {
                         // TODO: NIP19 bech32 is very slow, with hundreds of rows it slows down UI noticeably, so disable for now
                         let key = try! NIP19(prefix: "note1", hexString: tags[index].id)
-                        newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(key.displayString).prefix(12))](nostur:e:\(tags[index].id))")
+                        newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(key.displayString).prefix(11))](nostur:e:\(tags[index].id))")
                     }
                     else {
-                        newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(tags[index].id).prefix(10))](nostur:e:\(tags[index].id))")
+                        newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(tags[index].id).prefix(11))](nostur:e:\(tags[index].id))")
                     }
                 }
             }

@@ -9,7 +9,8 @@ import SwiftUI
 import Introspect
 
 struct NosturRootMenu: View {
-    
+    @AppStorage("selected_tab") var selectedTab = "Main"
+
 //    @EnvironmentObject var nav:NavigationModel
     let nav:NavigationModel = .shared
     @EnvironmentObject var ns:NosturState
@@ -34,9 +35,11 @@ struct NosturRootMenu: View {
             }
         }
         .sheet(isPresented: $accountsSheetIsShown) {
-            AccountsSheet()
-                .presentationDetents([.fraction(0.45), .medium, .large])
-//                .presentationDragIndicator(.hidden)
+            NavigationStack {
+                AccountsSheet()
+                    .presentationDetents([.fraction(0.45), .medium, .large])
+                //                .presentationDragIndicator(.hidden)
+            }
         }
         .onReceive(receiveNotification(.willDeleteAllEvents)) { _ in
             ns.setAccount()
@@ -75,7 +78,7 @@ extension NosturRootMenu {
                     Label("Profile", systemImage: "person")
                 }
                 Button {
-                    nav.navigateTo(ViewPath.Bookmarks(account: ns.account!))
+                    selectedTab = "Bookmarks"
                     sm.showSidebar = false
                 } label: {
                     Label("Bookmarks", systemImage: "bookmark")
@@ -87,7 +90,7 @@ extension NosturRootMenu {
                     Label("Badges", systemImage: "medal")
                 }
                 Button {
-                    nav.navigateTo(ViewPath.Settings)
+                    selectedTab = "Settings"
                     sm.showSidebar = false
                 } label: {
                     Label("Settings", systemImage: "gearshape")
