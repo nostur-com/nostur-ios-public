@@ -28,6 +28,7 @@ extension Account {
     @NSManaged public var publicKey: String
     @NSManaged public var id: UUID?
     @NSManaged public var follows: Set<Contact>?
+    @NSManaged public var privateNotes: Set<PrivateNote>?
     @NSManaged public var bookmarks: Set<Event>?
 //    @NSManaged public var blockedContacts: Set<Contact>?
 //    @NSManaged public var mutedConversations: Set<Event>?
@@ -90,6 +91,29 @@ extension Account {
     @objc(removeBookmarks:)
     @NSManaged public func removeFromBookmarks(_ values: NSSet)
 
+}
+
+// MARK: Generated accessors for private notes
+extension Account {
+
+    @objc(addPrivateNotesObject:)
+    @NSManaged public func addToPrivateNotes(_ value: Event)
+
+    @objc(removePrivateNotesObject:)
+    @NSManaged public func removeFromPrivateNotes(_ value: Event)
+
+    @objc(addPrivateNotes:)
+    @NSManaged public func addToPrivateNotes(_ values: NSSet)
+
+    @objc(removePrivateNotes:)
+    @NSManaged public func removeFromPrivateNotes(_ values: NSSet)
+
+    var privateNotes_:Set<PrivateNote> {
+        get {
+            guard privateNotes != nil else { return [] }
+            return Set(privateNotes!)
+        }
+    }
 }
 
 //// MARK: Generated accessors for muted conversations

@@ -198,6 +198,39 @@ class EventsProvider: ObservableObject {
             xaccount.addToFollows(contact1!)
         }
         
+        // make some random private notes
+        
+        let randomTextEventsR = Event.fetchRequest()
+        randomTextEventsR.fetchLimit = 10
+        randomTextEventsR.fetchOffset = Int.random(in: 0..<100)
+        randomTextEventsR.predicate = NSPredicate(format: "kind == 1")
+        let randomTextEvents = try? context.fetch(randomTextEventsR)
+        if let randomTextEvents {
+            for i in 0..<10 {
+                let privateNote = PrivateNote(context: context)
+                privateNote.content = ["Some more text here, I think I need to fix this in some way or another, I don't know how yet. But this text is a bit longer.","I made a private note here\nYo!","I made a private note here\nWith some more lines\n\nCool", "This is good"].randomElement()!
+                privateNote.by = [account,account3].randomElement()
+                privateNote.post = randomTextEvents.randomElement()
+                privateNote.createdAt = Date.now
+                privateNote.updatedAt = Date.now
+            }
+        }
+        
+        let randomContactsR = Contact.fetchRequest()
+        randomContactsR.fetchLimit = 10
+        randomContactsR.fetchOffset = Int.random(in: 0..<100)
+        let randomContacts = try? context.fetch(randomContactsR)
+        if let randomContacts {
+            for i in 0..<10 {
+                let privateNote = PrivateNote(context: context)
+                privateNote.content = ["Some more text here, I think I need to fix this in some way or another, I don't know how yet. But this text is a bit longer.","I made a private note here\nYo!","I made a private note here\nWith some more lines\n\nCool", "This is good"].randomElement()!
+                privateNote.by = [account,account3].randomElement()
+                privateNote.contact = randomContacts.randomElement()
+                privateNote.createdAt = Date.now
+                privateNote.updatedAt = Date.now
+            }
+        }
+        
         return provider
     }()
     

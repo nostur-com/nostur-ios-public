@@ -146,6 +146,7 @@ struct NoteAndParent: View {
                             }
                         }//.background(.red)
                         Spacer()
+                        PrivateNoteToggle(post: event)
                         NoteMenu(event: event)
                     }//.background(.yellow)
                     .id(event.id)

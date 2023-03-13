@@ -1,0 +1,68 @@
+//
+//  EditPrivateNoteSheet.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 13/03/2023.
+//
+
+import SwiftUI
+
+struct EditPrivateNoteSheet: View {
+    @Environment(\.managedObjectContext) var viewContext
+    @Environment(\.dismiss) var dismiss
+    
+    @ObservedObject var privateNote:PrivateNote
+    var onDismiss:() -> Void
+    
+    init(privateNote: PrivateNote, onDismiss: @escaping () -> Void) {
+        self.privateNote = privateNote
+        self.onDismiss = onDismiss
+    }
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                TextField(
+                    text: $privateNote.content_,
+                    prompt: Text("Enter private note for yourself"),
+                    axis: .vertical) {
+                    Text("Private note")
+                }.lineLimit(10, reservesSpace: true)
+            }
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Save") {
+                        do {
+//                            privateNote.post?.objectWillChange.send()
+                            try viewContext.save()
+                        }
+                        catch { print("problem saving private note \(error)") }
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct EditPrivateNoteSheet_Previews: PreviewProvider {
+    static var previews: some View {
+        
+        let note:PrivateNote = {
+            let note = PrivateNote(context: EventsProvider.preview.container.viewContext)
+            note.createdAt = Date.now
+            note.updatedAt = Date.now
+            note.content = ""
+            note.by = PreviewFetcher.fetchAccount()
+            note.post = PreviewFetcher.fetchEvent()
+            return note
+        }()
+        
+        
+        EditPrivateNoteSheet(privateNote: note, onDismiss: {})
+            .withPreviewEnvironment()
+    }
+}

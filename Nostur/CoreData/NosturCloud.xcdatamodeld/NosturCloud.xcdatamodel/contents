@@ -19,6 +19,7 @@
         <relationship name="bookmarks" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Event" inverseName="bookmarkedBy" inverseEntity="Event"/>
         <relationship name="follows" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact" inverseName="followedBy" inverseEntity="Contact"/>
         <relationship name="likes" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Event"/>
+        <relationship name="privateNotes" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="PrivateNote" inverseName="by" inverseEntity="PrivateNote"/>
         <relationship name="reposts" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Event"/>
     </entity>
     <entity name="Contact" representedClassName=".Contact" syncable="YES">
@@ -99,6 +100,14 @@
         <attribute name="refreshedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="type" optional="YES" attributeType="String"/>
         <relationship name="contacts" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact" inverseName="lists" inverseEntity="Contact"/>
+    </entity>
+    <entity name="PrivateNote" representedClassName="PrivateNote" syncable="YES">
+        <attribute name="content" attributeType="String" defaultValueString=""/>
+        <attribute name="createdAt" attributeType="Date" defaultDateTimeInterval="-978332400" usesScalarValueType="NO"/>
+        <attribute name="updatedAt" attributeType="Date" defaultDateTimeInterval="-978332400" usesScalarValueType="NO"/>
+        <relationship name="by" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Account" inverseName="privateNotes" inverseEntity="Account"/>
+        <relationship name="contact" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Contact"/>
+        <relationship name="post" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event"/>
     </entity>
     <entity name="Relay" representedClassName=".Relay" syncable="YES">
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>

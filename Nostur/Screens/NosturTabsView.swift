@@ -37,7 +37,7 @@ struct NosturTabsView: View {
                     .tag("Search")
                     
 
-                    BookmarksContainer()
+                    BookmarksAndPrivateNotes()
                     .tabItem { Image(systemName: "bookmark") }
                     .tag("Bookmarks")
                     
@@ -46,6 +46,7 @@ struct NosturTabsView: View {
                     .tabItem { Image(systemName: "server.rack") }
                     .tag("Configuration")
                 }
+                .withSheets()
             }
 //            .background(.regularMaterial)
             .frame(maxWidth: 600)

@@ -24,9 +24,27 @@ struct NoteMenu: View {
     var body: some View {
         Menu {
             Button {
+                guard let account = ns.account else { return }
+                if let privateNote = PrivateNote.fetchByAccount(account, andPost: event, context: viewContext) {
+                    // EXISTING PRIVATE NOTE
+//                    self.privateNote = privateNote
+                    sendNotification(.editingPrivateNote, privateNote)
+                }
+                else if let privateNote = PrivateNote.createNewFor(account, andPost: event, context: viewContext) {
+                    // NEW PRIVATE NOTE
+                    //                    self.privateNote = privateNote
+                    sendNotification(.editingPrivateNote, privateNote)
+                }
+                else {
+                    print("Problem creating new private note")
+                }
+            } label: {
+                Label("Add private note", systemImage: "note.text")
+            }
+            Button {
                 UIPasteboard.general.string = noteId
             } label: {
-                Label("Copy note id \(noteId)", systemImage: "doc.on.clipboard")
+                Label("Copy note id \(String(noteId.prefix(11)))", systemImage: "doc.on.clipboard")
             }
             Button {
                 UIPasteboard.general.string = noteIdHex
