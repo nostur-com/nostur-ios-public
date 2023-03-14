@@ -19,7 +19,7 @@ struct ListView: View {
     let timelineRunLoop = Timer.publish(every: 3, tolerance: 1, on: .main, in: .common).autoconnect()
     @AppStorage("firstTimeCompleted") var firstTimeCompleted = false
     
-    @State private var scrollPosition: CGPoint = .zero
+    @State var scrollResetId = 1
     
     var body: some View {
         VStack {
@@ -32,7 +32,7 @@ struct ListView: View {
 //            Text("vm.listState.listId: \(vm.listState.listId)")
 //            Text("Following: \(vm.pubkeys.count.description)")
 //            Text("Following: \(ns.explorePubkeys.count.description)")
-            if vm.posts.count != 0 {
+            if "LAZYVSTACK" != "LAZYVSTACK" && vm.posts.count != 0 {
                 ScrollViewReader { proxy in
                     ScrollView {
                         LazyVStack {
@@ -57,6 +57,54 @@ struct ListView: View {
                     }
                     .onReceive(receiveNotification(.shouldScrollToLast)) { _ in
                         withAnimation { proxy.scrollTo(END_OF_LIST) }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            vm.state = .SCROLLED_TO_END
+                        }
+                    }
+                    .onAppear { restoreScrollPosition(vm: vm, proxy: proxy) }
+                    .onChange(of: vm) { newValue in
+                        newValue.state = .SWITCHING_ACCOUNT
+                        restoreScrollPosition(vm: newValue, proxy: proxy)
+                    }
+                }
+            }
+            
+            if "LIST" == "LIST" && vm.posts.count != 0 {
+                ScrollViewReader { proxy in
+                    List(vm.posts) { post in
+                        VStack {
+                            NoteRowView(event: post)
+                                .id(post)
+                                .listRowInsets(EdgeInsets())
+                                .onBecomingVisible {
+                                    guard vm.state != .AWAITING_FIRST_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+                                    guard vm.state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+                                    guard vm.state != .SWITCHING_ACCOUNT else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+                                    vm.lastAppearedSubject.send(post)
+                                    if (post == vm.posts.last) {
+                                        vm.didReachEnd()
+                                    }
+                                }
+        //                                    .border(vm.posts.firstIndex(of: post) == vm.lastAppearedIndex ? .green : .clear)
+        //                            Rectangle().frame(width: 300, height: 1)
+                        }
+                    }
+                    .id(scrollResetId)
+                    .listStyle(.plain)
+                    .onReceive(receiveNotification(.shouldScrollToLast)) { _ in
+//                        withAnimation {
+//                            proxy.scrollTo(vm.posts.last)
+//                        }
+                        scrollResetId += 1
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            withAnimation {
+                                if let value = vm.posts.last?.id {
+//                                    proxy.scrollTo(value)
+                                    proxy.scrollTo(value, anchor: .top)
+//                                    proxy.scrollTo(value, anchor: .center)
+                                }
+                            }
+                        }
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                             vm.state = .SCROLLED_TO_END
                         }
