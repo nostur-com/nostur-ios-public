@@ -36,7 +36,8 @@ struct ProfilePic: View {
                     Circle().foregroundColor(color).frame(width: size, height: size)
                 }
             }
-            .processors([ImageProcessors.Resize(width: 100), ImageProcessors.Circle()])
+            .processors([ImageProcessors.Resize(width: 100)])
+//            .processors([ImageProcessors.Resize(width: 100), ImageProcessors.Circle()])
 //            .processors([ImageProcessors.Resize(size: CGSize(width: 50, height: 150), unit: .pixels, contentMode: .aspectFit, crop: true, upscale: true)])
             .animation(nil)
             .priority(.low)
@@ -88,6 +89,7 @@ struct ProfilePicView: View {
                     Circle().foregroundColor(color).frame(width: size, height: size)
                 }
             }
+            .processors([ImageProcessors.Resize(width: 100)])
             .processors([ImageProcessors.Resize(width: 100), ImageProcessors.Circle()])
 //            .processors([ImageProcessors.Resize(size: CGSize(width: 50, height: 150), unit: .pixels, contentMode: .aspectFit, crop: true, upscale: true)])
             .animation(nil)
