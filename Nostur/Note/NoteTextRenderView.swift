@@ -104,7 +104,7 @@ extension Event {
             }
         }
         do {
-            var newText = Event.replaceURLsWithMarkdownLinks(in: newText)
+            let newText = Event.replaceURLsWithMarkdownLinks(in: newText)
             let finalText = try AttributedString(markdown: newText, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
             return finalText
         }
