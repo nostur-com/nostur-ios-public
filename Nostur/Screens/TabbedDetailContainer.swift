@@ -19,14 +19,16 @@ final class DetailTabsModel: ObservableObject {
         var notePath:NotePath?
         var contactPath:ContactPath?
         var event:Event?
+        var vPost:VPost?
         var contact:Contact?
         
-        init(notePath:NotePath? = nil, contactPath:ContactPath? = nil, event:Event? = nil, contact:Contact? = nil) {
+        init(notePath:NotePath? = nil, contactPath:ContactPath? = nil, event:Event? = nil, contact:Contact? = nil, vPost:VPost? = nil) {
             self.id = UUID()
             self.notePath = notePath
             self.contactPath = contactPath
             self.event = event
             self.contact = contact
+            self.vPost = vPost
             
             if (contactPath != nil) {
                 if let contactFromCache = Contact.fetchByPubkey(contactPath!.key, context: EventsProvider.shared.container.viewContext) {
@@ -81,10 +83,10 @@ struct TabContainer: View {
     @State var path = NavigationPath()
     @StateObject var nav = NavigationModel(modelType: "TAB")
     
-    var event:Event
+    var vPost:VPost
     var body: some View {
         NavigationStack(path: $nav.tabPath) {
-            NoteDetail(event: event, navTitleHidden:true)
+            PostDetailView(vPost: vPost, navTitleHidden: true)
                 .withNavigationDestinations()
                 .environmentObject(nav)
         }
@@ -97,6 +99,14 @@ struct TabbedDetailContainer: View {
     @State var offsetX = 200.0
     
     func tabName(tab:DetailTabsModel.Tab) -> String {
+        if let vPost = tab.vPost {
+            if vPost.displayName != "" {
+                return vPost.displayName
+            }
+            else {
+                return String(vPost.npub.prefix(11))
+            }
+        }
         if let event = tab.event {
             if event.name != "" {
                 return event.name
@@ -162,10 +172,10 @@ struct TabbedDetailContainer: View {
                     }
                 }
                 ForEach(tm.tabs) { tab in
-                    if (tab.event != nil) {
-                        TabContainer(event: tab.event!)
+                    if (tab.vPost != nil) {
+                        TabContainer(vPost: tab.vPost!)
                         .opacity(tm.selected == tab ? 1 : 0)
-                        .id(tab.event!.id)
+                        .id(tab.vPost!.id)
                     }
                     else if (tab.contact != nil) {
                         Profile(contact: tab.contact!).opacity(tm.selected == tab ? 1 : 0)

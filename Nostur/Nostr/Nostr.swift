@@ -436,11 +436,11 @@ struct TagsHelpers {
         }
 
         // OLD METHOD
-        if oneEtag() {
+        if oneEtag() && (eTags().first?.otherInformation[safe: 2] == nil) {
             return eTags().first
 
         }
-        if (twoEtags() || manyEtags()) {
+        if (twoEtags() || manyEtags()) && (eTags().first?.otherInformation[safe: 2] == nil) {
             return eTags().first
 
         }

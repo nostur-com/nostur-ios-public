@@ -9,6 +9,41 @@ import SwiftUI
 import NukeUI
 import Nuke
 
+struct PFP: View {
+    
+    var pubkey:String
+    var pictureUrl:String?
+    var size:CGFloat = 50
+    var color:Color
+    
+    init(pubkey:String, pictureUrl:String? = nil, size: CGFloat = 50) {
+        self.pubkey = pubkey
+        self.pictureUrl = pictureUrl
+        self.size = size
+        self.color = randomColor(seed: pubkey)
+    }
+    
+    var body: some View {
+        if (pictureUrl == nil || (pictureUrl != nil && pictureUrl!.prefix(7) == "http://")) { // TODO: is this slow??
+            Circle().foregroundColor(color).frame(width: size, height: size)
+        }
+        else {
+            LazyImage(url: URL(string: pictureUrl!)) { state in
+                if let image = state.image {
+                    image.frame(width: size, height: size).clipShape(Circle())
+                }
+                else {
+                    Circle().foregroundColor(color).frame(width: size, height: size)
+                }
+            }
+            .processors([ImageProcessors.Resize(width: size)])
+            .animation(.default)
+            .priority(.low)
+            .pipeline(ImageProcessing.shared.pipeline)
+        }
+    }
+}
+
 struct ProfilePic: View {
     
     @ObservedObject var event:Event

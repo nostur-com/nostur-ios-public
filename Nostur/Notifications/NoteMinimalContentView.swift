@@ -12,7 +12,7 @@ struct NoteMinimalContentView: View {
     
     @Environment(\.managedObjectContext) var viewContext
     private let sp:SocketPool = .shared
-    var event:Event
+    let vPost:VPost
     let lineLimit:Int
     
     enum type {
@@ -20,12 +20,12 @@ struct NoteMinimalContentView: View {
         case lightningInvoice
     }
     
-    let type:NoteRowView.type
+    let type:NoteRow.type
     
-    init(event: Event, hideFooter:Bool = false, lineLimit:Int = 0) {
-        self.event = event
+    init(vPost:VPost, hideFooter:Bool = false, lineLimit:Int = 0) {
+        self.vPost = vPost
         self.lineLimit = lineLimit
-        if event.noteText.prefix(4).lowercased() == "lnbc" && Invoice.fromStr(s: event.noteText).getValue() != nil {
+        if vPost.plainText.prefix(4).lowercased() == "lnbc" && Invoice.fromStr(s: vPost.plainText).getValue() != nil {
             self.type = .lightningInvoice
         }
         else {
@@ -42,17 +42,17 @@ struct NoteMinimalContentView: View {
                 VStack(alignment:.leading, spacing: 3) {
                     switch self.type {
                         case .lightningInvoice:
-                            LightningInvoice(invoice: event.noteText)
+                            LightningInvoice(invoice: vPost.plainText)
                         default:
-                            MinimalNoteTextRenderView(event:event, lineLimit: lineLimit)
+                            MinimalNoteTextRenderView(vPost: vPost, lineLimit: lineLimit)
                     }
                     
-                    if (event.firstQuoteId != nil && event.firstQuote != nil) {
-                        MinimalQuotedNoteFragment(event: event.firstQuote!)
+                    if (vPost.firstQuote != nil && vPost.post.firstQuoteId != nil) {
+                        MinimalQuotedNoteFragment(vPost: vPost.firstQuote!)
                     }
-                    else if (event.firstQuote != nil) {
+                    else if (vPost.firstQuote == nil && vPost.post.firstQuoteId != nil) {
                         CenteredProgressView().onAppear {
-                            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.firstQuoteId!)))
+                            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: vPost.post.firstQuoteId!)))
                         }
                     }
                 }
@@ -89,60 +89,60 @@ struct NoteMinimalContentView_Previews: PreviewProvider {
         // TODO: find repost of 97a1a5dab19064061b45937c4e3523782d34608bd13278def9af4d5107ece65c
         // maybe: 7edef20143bb4df0c65dff3993bd9f7c5fb755fe6c8fa72cc847299afe52d8fa
         
-        let event0 = PreviewFetcher.fetchEvent("21a1b8e4083c11eab8f280dc0c0bddf3837949df75662e181ad117bd0bd5fdf3")
-//        let event0 = PreviewFetcher.fetchEvent("24ad21d57d59b03f4f9a8931f8bc4ccca84ed6ab257bf62cb84b0d04e0583118")
+        let event0 = PreviewFetcher.fetchVPost("21a1b8e4083c11eab8f280dc0c0bddf3837949df75662e181ad117bd0bd5fdf3")
+//        let event0 = PreviewFetcher.fetchVPost("24ad21d57d59b03f4f9a8931f8bc4ccca84ed6ab257bf62cb84b0d04e0583118")
 //
-        let event1 = PreviewFetcher.fetchEvent("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
+        let event1 = PreviewFetcher.fetchVPost("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
 //
-        let event2 = PreviewFetcher.fetchEvent("dec5a86ad780edd26fb8a1b85f919ddace9cb2b2b5d3a68d5124802fc2da4ed3")
+        let event2 = PreviewFetcher.fetchVPost("dec5a86ad780edd26fb8a1b85f919ddace9cb2b2b5d3a68d5124802fc2da4ed3")
 //
-//        let event3 = PreviewFetcher.fetchEvent("d3b581761bab06fbe727b12b22c33c7b8768d7d9681b45cb6b1f4ad798496e14")
+//        let event3 = PreviewFetcher.fetchVPost("d3b581761bab06fbe727b12b22c33c7b8768d7d9681b45cb6b1f4ad798496e14")
         
-        let event4 = PreviewFetcher.fetchEvent("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe")
+        let event4 = PreviewFetcher.fetchVPost("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe")
 //
-//        let event5 = PreviewFetcher.fetchEvent("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e")
+//        let event5 = PreviewFetcher.fetchVPost("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e")
 //
-        let event6 = PreviewFetcher.fetchEvent("7d96834f60c5411be97fe9e4b07e3221c56df531543a11a1d67ff81168033e8e")
+        let event6 = PreviewFetcher.fetchVPost("7d96834f60c5411be97fe9e4b07e3221c56df531543a11a1d67ff81168033e8e")
 
-        let event7 = PreviewFetcher.fetchEvent("fdf989cbe5d26d874a4afaf8a78861fcd3267619e7db467a549a6b33c6dbeeab")
+        let event7 = PreviewFetcher.fetchVPost("fdf989cbe5d26d874a4afaf8a78861fcd3267619e7db467a549a6b33c6dbeeab")
         
         List {
             Group {
                 if (event0 != nil) {
-                    NoteMinimalContentView(event: event0!)
+                    NoteMinimalContentView(vPost: event0!)
                         
                 }
                 
                 if (event1 != nil) {
-                    NoteMinimalContentView(event: event1!)
+                    NoteMinimalContentView(vPost: event1!)
                         
                 }
                 //
                 if (event2 != nil) {
-                    NoteMinimalContentView(event: event2!)
+                    NoteMinimalContentView(vPost: event2!)
                         
                 }
                 //
-                //            NoteMinimalContentView(event: event3!)
+                //            NoteMinimalContentView(vPost: event3!)
                 //
                 //
                 // QUOTE?
                 if (event4 != nil) {
-                    NoteMinimalContentView(event: event4!)
+                    NoteMinimalContentView(vPost: event4!)
                         
                 }
                 
-                //            NoteMinimalContentView(event: event5!)
+                //            NoteMinimalContentView(vPost: event5!)
                 //                .listRowInsets(EdgeInsets())
                 
                 if (event6 != nil) {
                     // REPOST, LOADING?
-                    NoteMinimalContentView(event: event6!)
+                    NoteMinimalContentView(vPost: event6!)
                 }
                 
                 if (event7 != nil) {
                     // REPOST
-                    NoteMinimalContentView(event: event7!)
+                    NoteMinimalContentView(vPost: event7!)
                 }
             }
             .listRowInsets(EdgeInsets())

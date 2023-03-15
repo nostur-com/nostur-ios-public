@@ -53,6 +53,7 @@ struct NewPrivateNoteSheet: View {
                             }
 //                            privateNote.post?.objectWillChange.send()
                             try viewContext.save()
+                            sendNotification(.viewNeedsUpdate)
                         }
                         catch { print("problem saving private note \(error)") }
                         dismiss()

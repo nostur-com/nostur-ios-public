@@ -789,7 +789,16 @@ extension Event {
         if ((event.kind == .repost || event.kind == .textNote) && TagsHelpers(event.tags).mentionEtags() != nil) {
             let tags = TagsHelpers(event.tags)
             savedEvent.firstQuoteId = tags.mentionEtags()!.first!.id
-            savedEvent.firstQuote = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context)
+            
+            // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
+            if let firstQuote = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
+                savedEvent.firstQuote = firstQuote
+                
+                if (tags.mentionEtags()!.first?.otherInformation[safe: 2] == "mention") {
+                    firstQuote.objectWillChange.send()
+                    firstQuote.mentionsCount += 1
+                }
+            }
         }
         
         
@@ -872,5 +881,24 @@ extension Event {
         fr.predicate = NSPredicate(format: "kind == 9735 AND zappedEventId == %@", id)
         
         return (try? context.fetch(fr)) ?? []
+    }
+    
+    func toVPost(pubkey: String? = nil, context: NSManagedObjectContext? = nil) -> VPost {
+        let p = pubkey ?? NosturState.shared.activeAccountPublicKey
+        let ctx = context ?? managedObjectContext ?? DataProvider.shared().viewContext
+        let vTransformer = VTransformer(pubkey: p, context: ctx)
+        return vTransformer.eventToVPost(self)
+    }
+}
+
+
+extension DataProvider {
+    func fetchEvent(id:String, context:NSManagedObjectContext? = nil) throws -> Event? {
+        let request = NSFetchRequest<Event>(entityName: "Event")
+        request.entity = Event.entity()
+        request.predicate = NSPredicate(format: "id == %@", id)
+        request.fetchLimit = 1
+        request.fetchBatchSize = 1
+        return try (context ?? viewContext).fetch(request).first
     }
 }

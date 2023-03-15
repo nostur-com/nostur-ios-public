@@ -98,7 +98,7 @@ struct MutedConversations: View {
         else {
             List {
                 ForEach(mutedRootEvents) { rootEvent in
-                    NoteRowView(event: rootEvent)
+                    NoteRow(vPost: rootEvent.toVPost())
                         .listRowInsets(EdgeInsets())
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button {

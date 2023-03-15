@@ -9,18 +9,37 @@ import Foundation
 import CoreData
 import Combine
 
-@MainActor
+//@MainActor
 class ListViewModel: NSObject, ObservableObject {
+    let ot:OnboardingTracker = .shared
+    
     let MAX_VISIBLE = 100 // Will only be ignored if last appeared is older
+    let FETCH_FEED_INTERVAL = 3.0
     let listState:ListState
     let pubkey:String
     @Published var pubkeys:Set<String>
     private let context: NSManagedObjectContext
+    private let bg: NSManagedObjectContext
+    private let vTransformer: VTransformer
     
-    @Published var posts:[Event] = []
+    @Published var vPosts = [VPost]()
+    
+    var posts:[Event] = [] {
+        didSet {
+            let vPosts = self.posts.map(self.vTransformer.eventToVPost)
+            DispatchQueue.main.async {
+                self.setVPosts(posts: vPosts)
+            }
+        }
+    }
+    
+    func setVPosts(posts:[VPost]) {
+        vPosts = posts
+    }
+    
     @Published var state:LIST_STATE = .AWAITING_FIRST_FETCH {
         didSet {
-//            print("🟢🟢 STATE: \(oldValue) -> \(state)")
+            print("🟢🟢 STATE: \(oldValue) -> \(state)")
         }
     }
     var frc:NSFetchedResultsController<Event>?
@@ -38,11 +57,17 @@ class ListViewModel: NSObject, ObservableObject {
         case SWITCHING_ACCOUNT = "SWITCHING_ACCOUNT"
     }
     
-    var previousLastAppearedEvent:Event?
-    let lastAppearedSubject:CurrentValueSubject<Event?, Never>
+    private var fetchFeedTimer: Timer?
+    
+    var previousLastAppearedEvent:VPost?
+    let lastAppearedSubject:CurrentValueSubject<VPost?, Never>
     let lastAppearedAnchorSubject:CurrentValueSubject<String, Never>
-    let mostRecentReadSubject:CurrentValueSubject<Event?, Never>
+    let mostRecentReadSubject:CurrentValueSubject<VPost?, Never>
     let unreadCountSubject = CurrentValueSubject<Int, Never>(0)
+//    let setVPostsYoo = PassthroughSubject<[VPost], Never>()
+//    let transFormPostsyodd = PassthroughSubject<[Event], Never>()
+    let viewIsVisibleSubject = CurrentValueSubject<Bool, Never>(false)
+    let selectedSubTabSubject = CurrentValueSubject<String?, Never>(nil)
     
     private var subscriptions = Set<AnyCancellable>()
     
@@ -81,39 +106,73 @@ class ListViewModel: NSObject, ObservableObject {
     }
     
     init(listState:ListState, pubkey:String, pubkeys:Set<String>, context: NSManagedObjectContext, lastAppeared:Event?, mostRecent:Event?, anchor:String) {
+        self.bg = EventsProvider.shared.container.newBackgroundContext() // TODO: how Fix for Preview???
+        self.bg.automaticallyMergesChangesFromParent = true
+        self.bg.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        self.bg.undoManager = nil
         self.listState = listState
         self.pubkey = pubkey
         self.pubkeys = pubkeys
         self.context = context
-        self.previousLastAppearedEvent = lastAppeared
-        self.lastAppearedSubject = CurrentValueSubject<Event?, Never>(lastAppeared)
+        self.previousLastAppearedEvent = lastAppeared?.toVPost(pubkey: pubkey, context: bg)
+        self.lastAppearedSubject = CurrentValueSubject<VPost?, Never>(lastAppeared?.toVPost(pubkey: pubkey, context: bg))
         self.lastAppearedAnchorSubject = CurrentValueSubject<String, Never>(anchor)
-        self.mostRecentReadSubject = CurrentValueSubject<Event?, Never>(mostRecent)
+        self.mostRecentReadSubject = CurrentValueSubject<VPost?, Never>(mostRecent?.toVPost(pubkey: pubkey, context: bg))
         if (lastAppeared != nil) {
             state = .AWAITING_RESTORED_FETCH
         }
+        self.vTransformer = VTransformer(pubkey:pubkey, context: bg)
+        self.fetchFeedTimer?.invalidate()
         super.init()
+        self.fetchFeedTimer = Timer.scheduledTimer(withTimeInterval: FETCH_FEED_INTERVAL, repeats: true) { [weak self] _ in
+            self?.fetchFeedTimerNextTick()
+        }
         addSubscriptions()
     }
     
-    func performFetch() {
-        self.frc = NSFetchedResultsController(fetchRequest: Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: self.lastAppearedSubject.value?.created_at ?? 0), managedObjectContext: context, sectionNameKeyPath: nil, cacheName: nil) // TODO: Try cache?
-        frc?.delegate = self
-        do {
-            try frc?.performFetch()
-            guard let posts = frc?.fetchedObjects else { return }
-            contentChanged(posts:posts)
-        } catch {
-            print("🔴🔴🔴 failed to fetch items")
+    func fetchFeedTimerNextTick() {
+        guard self.viewIsVisible else { return }
+        guard !Importer.shared.isImporting else { print("⏳ Still importing, new fetch skipped."); return }
+        
+        if (ot.isOnboarding && self.pubkey == ot.pubkey && ot.didFetchKind3 && !ot.didFillTimeline) {
+            fetchEvents(pubkeys: Set(ot.followingKeys), amount: 50)
+            ot.didFillTimeline = true
+//            firstTimeCompleted = true
+            UserDefaults.standard.set(true, forKey: "firstTimeCompleted")
         }
+        else if (!ot.isOnboarding) {
+            let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 4)  // 4 hours  ago
+//                print("🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣 put back after fixes" )
+//                print("🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣 put back after fixes" )
+//                print("🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣 put back after fixes" )
+            let cutOffPoint = min(self.lastAppeared?.created_at ?? hoursAgo, hoursAgo) // 8 hours ago or longer until lastAppeared Event
+            fetchEvents(pubkeys: self.pubkeys, since: cutOffPoint, subscriptionId: self.id)
+        }
+    }
+    
+    func performFetch() {
+        self.frc = NSFetchedResultsController(fetchRequest: Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: self.lastAppearedSubject.value?.created_at ?? 0), managedObjectContext: bg, sectionNameKeyPath: nil, cacheName: nil) // TODO: Try cache?
+        frc?.delegate = self
+        
+            
+            self.bg.perform {
+                do {
+                    try self.frc?.performFetch()
+                    guard let posts = self.frc?.fetchedObjects else { return }
+                    self.contentChanged(posts:posts)
+                } catch {
+                    print("🔴🔴🔴 failed to fetch items")
+                }
+            }
     }
 }
 
 extension ListViewModel {
-    var lastAppeared:Event? { self.lastAppearedSubject.value }
-    var lastAppearedIndex:Int { lastAppeared != nil ? posts.firstIndex(of: lastAppeared!) ?? -1 : -1 }
-    var mostRecentRead:Event? { self.mostRecentReadSubject.value }
-    var mostRecentReadIndex:Int { mostRecentRead != nil ? posts.firstIndex(of: mostRecentRead!) ?? -1 : -1 }
+    var lastAppeared:VPost? { self.lastAppearedSubject.value }
+    var lastAppearedIndex:Int { lastAppeared != nil ? vPosts.firstIndex(of: lastAppeared!) ?? -1 : -1 }
+    var mostRecentRead:VPost? { self.mostRecentReadSubject.value }
+    var mostRecentReadIndex:Int { mostRecentRead != nil ? vPosts.firstIndex(of: mostRecentRead!) ?? -1 : -1 }
+    var viewIsVisible:Bool { self.viewIsVisibleSubject.value }
 }
 
 extension ListViewModel {
@@ -123,7 +182,67 @@ extension ListViewModel {
         keepListStateSaved()
         trackUnreadCount()
         requestFooterCounters()
+        updateViewModel()
+//        setVpostsYouu()
+//        transFormPostsyo()
+        trackSelectedSubtab()
     }
+    
+    func trackSelectedSubtab() {
+        selectedSubTabSubject
+            .sink(receiveValue: { [weak self] tab in
+                guard let self = self else { return }
+                self.viewIsVisibleSubject.send(tab == self.id)
+            })
+            .store(in: &subscriptions)
+
+    }
+    
+    func updateViewModel() {
+//        return
+        NotificationCenter.default.publisher(for: .viewNeedsUpdate)
+//            .receive(on: DispatchQueue.global())
+            .sink { [weak self] notification in
+                guard let self = self else { return }
+//                self.objectWillChange.send()
+//                self.transFormPostsyodd.send(self.posts)
+                self.bg.perform {
+                    let vPosts = self.posts.map(self.vTransformer.eventToVPost)
+                    DispatchQueue.main.async {
+                        self.setVPosts(posts: vPosts)
+                    }
+                }
+            }
+        .store(in: &subscriptions)
+    }
+//
+//    func transFormPostsyo() {
+//        transFormPostsyodd
+//            .sink { [weak self] posts in
+//                guard let self = self else { return }
+//
+//                self.bg.perform {
+//                    let vPosts = self.posts.map(self.vTransformer.eventToVPost)
+//                    self.setVPostsYoo.send(vPosts)
+//                }
+//            }
+//            .store(in: &subscriptions)
+//    }
+//
+//    func setVpostsYouu() {
+//        setVPostsYoo
+//            .receive(on: RunLoop.main)
+//            .sink { [weak self] vPosts in
+//                guard let self = self else { return }
+//                self.objectWillChange.send()
+//                self.vPosts = vPosts
+//            }
+//            .store(in: &subscriptions)
+//    }
+    
+    
+    
+    
     
     // can be old or new, depending on scroll back or not
     func trackLastAppeared() {
@@ -199,10 +318,10 @@ extension ListViewModel {
                 
                 // SO TAKE TOTAL ON SCREEN (posts.count)
                 // SUBSTRACT mostRecentPost index
-                let mostRecentReadIndex = self.posts.map { $0.id }.firstIndex(of: mostRecentPost.id) ?? 0
+                let mostRecentReadIndex = self.vPosts.map { $0.id }.firstIndex(of: mostRecentPost.id) ?? 0
                 
                 self.objectWillChange.send()
-                self.unreadCountSubject.send(self.posts.count - mostRecentReadIndex - 1)
+                self.unreadCountSubject.send(self.vPosts.count - mostRecentReadIndex - 1)
             })
             .store(in: &subscriptions)
 
@@ -220,28 +339,30 @@ extension ListViewModel {
                 print("🟢🟢 .requestForJustAppeared")
                 if post.created_at > (self.lastAppearedSubject.value?.created_at ?? 0) {
                     // get before
-                    if let indexOfPost = self.posts.firstIndex(of: post) {
+                    if let indexOfPost = self.vPosts.firstIndex(of: post) {
                         let five = [
-                            self.posts[safe: indexOfPost],
-                            self.posts[safe: indexOfPost - 1],
-                            self.posts[safe: indexOfPost - 2],
-                            self.posts[safe: indexOfPost - 3],
-                            self.posts[safe: indexOfPost - 4]
+                            self.vPosts[safe: indexOfPost],
+                            self.vPosts[safe: indexOfPost - 1],
+                            self.vPosts[safe: indexOfPost - 2],
+                            self.vPosts[safe: indexOfPost - 3],
+                            self.vPosts[safe: indexOfPost - 4]
                         ]
-                        sendNotification(.requestForJustAppeared, five.compactMap { $0} )
+                        sendNotification(.requestForJustAppeared, five.compactMap { $0 } )
+                        self.requestForJustAppeared(five.compactMap { $0 })
                     }
                 }
                 else {
                     // get after
-                    if let indexOfPost = self.posts.firstIndex(of: post) {
+                    if let indexOfPost = self.vPosts.firstIndex(of: post) {
                         let five = [
-                            self.posts[safe: indexOfPost],
-                            self.posts[safe: indexOfPost + 1],
-                            self.posts[safe: indexOfPost + 2],
-                            self.posts[safe: indexOfPost + 3],
-                            self.posts[safe: indexOfPost + 4]
+                            self.vPosts[safe: indexOfPost],
+                            self.vPosts[safe: indexOfPost + 1],
+                            self.vPosts[safe: indexOfPost + 2],
+                            self.vPosts[safe: indexOfPost + 3],
+                            self.vPosts[safe: indexOfPost + 4]
                         ]
-                        sendNotification(.requestForJustAppeared, five.compactMap { $0 } )
+                        self.requestForJustAppeared(five.compactMap { $0 })
+//                        sendNotification(.requestForJustAppeared, five.compactMap { $0 } )
                     }
                 }
             }
@@ -257,8 +378,8 @@ extension ListViewModel {
         self.listState.updatedAt = Date.now
         self.listState.unreadCount = 0
         self.unreadCountSubject.send(0)
-        if (self.lastAppeared != self.posts.last) {
-            self.lastAppearedSubject.send(self.posts.last)
+        if (self.lastAppeared != self.vPosts.last) {
+            self.lastAppearedSubject.send(self.vPosts.last)
         }
         
         // TODO: ALso implement cutoff, if 1000 posts on screen, --> .suffix 100. PROBLEM IS SCROLL OFFSET GLITCH
@@ -280,6 +401,21 @@ extension ListViewModel {
 //        self.objectWillChange.send()
         self.unreadCountSubject.send(self.posts.count - mostRecentReadIndex - 1)
     }
+    
+    func requestForJustAppeared(_ vPosts:[VPost]) {
+        guard self.viewIsVisible else { return }
+        let ids = ids(vPosts)
+        let vContacts = vPosts.compactMap { $0.vContact }
+        let shouldVerifyContacts = vContacts.filter { NIP05.shouldVerify($0) }
+
+        Task { // TODO: MOVE ALL THIS TO VIEWMODEL SOMEHOW..
+//                ThreadWarning.which(".onReceive(receiveNotification(.requestForJustAppeared)")
+            print("🟠🟠 fetching for ids justAppeared on \(self.id)")
+            fetchStuffForLastAddedNotes(ids: ids)
+//            fetchMissingReplyToContacts(events: events) // TODO: FIXME
+            NIP05.verifyBatch(vContacts: shouldVerifyContacts, context: self.bg)
+        }
+    }
 }
 
 extension ListViewModel: NSFetchedResultsControllerDelegate {
@@ -292,24 +428,32 @@ extension ListViewModel: NSFetchedResultsControllerDelegate {
         switch (state) {
             case .AWAITING_FIRST_FETCH: // Show last 100
                 self.posts = posts.prefix(MAX_VISIBLE).sorted(by: { $0.created_at < $1.created_at } )
-                self.state = .COMPLETED_FIRST_FETCH
+                DispatchQueue.main.async {
+                    self.state = .COMPLETED_FIRST_FETCH
+                }
                 
             case .AWAITING_RESTORED_FETCH: // Show last read, until end
                 // show last 100 if LR is within it
                 // else show all
-                let lastAppearedIndex = self.lastAppearedSubject.value != nil ? posts.firstIndex(of: self.lastAppearedSubject.value!) ?? -1 : -1
+                let lastAppearedIndex = self.lastAppearedSubject.value != nil ? vPosts.firstIndex(where: { $0.id == self.lastAppearedSubject.value!.id }) ?? -1 : -1
                 
                 if (lastAppearedIndex == -1) {
                     self.posts = posts.prefix(MAX_VISIBLE).sorted(by: { $0.created_at < $1.created_at } )
-                    self.state = .COMPLETED_FIRST_FETCH
+                    DispatchQueue.main.async {
+                        self.state = .COMPLETED_FIRST_FETCH
+                    }
                 }
                 if (lastAppearedIndex < MAX_VISIBLE) {
+                    DispatchQueue.main.async {
+                        self.state = .AWAITING_SCROLL
+                    }
                     self.posts = posts.prefix(MAX_VISIBLE).sorted(by: { $0.created_at < $1.created_at } )
-                    self.state = .AWAITING_SCROLL
                 }
                 else {
+                    DispatchQueue.main.async {
+                        self.state = .AWAITING_SCROLL
+                    }
                     self.posts = posts.sorted(by: { $0.created_at < $1.created_at } )
-                    self.state = .AWAITING_SCROLL
                 }
                 updateUnreadCount()
             

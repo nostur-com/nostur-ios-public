@@ -48,7 +48,7 @@ struct Search: View {
                 }
                 LazyVStack {
                     ForEach(events) { event in
-                        NoteRowView(event: event)
+                        NoteRow(vPost: event.toVPost())
                         Divider()
                     }
                 }

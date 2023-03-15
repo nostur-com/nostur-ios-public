@@ -8,51 +8,55 @@
 import SwiftUI
 
 struct PrivateNoteToggle: View {
-    @Environment(\.managedObjectContext) var viewContext
-    @EnvironmentObject var ns:NosturState
-    var post:Event?
-    var contact:Contact?
-    var existingPrivateNote:PrivateNote? {
-        ns.account?
-            .privateNotes?
-            .filter { ($0.post != nil && $0.post == post) || ($0.contact != nil && $0.contact == contact) }
-            .first
-    }
-    var postHasPrivateNote:Bool {
-        (ns.account?
-            .privateNotes?
-            .filter { ($0.post != nil && $0.post == post) || ($0.contact != nil && $0.contact == contact) }
-            .count ?? 0) != 0
+    let vPost:VPost?
+    let vContact:VContact?
+    
+    init(vPost: VPost? = nil, vContact: VContact? = nil) {
+        self.vPost = vPost
+        self.vContact = vContact
     }
     
     var body: some View {
-        HStack {
-            Button {
-                if let existingPrivateNote {
-                    sendNotification(.editingPrivateNote, existingPrivateNote)
-                }
-                else {
-                    if let post {
-                        sendNotification(.newPrivateNoteOnPost, post)
+        if let vPost {
+            HStack {
+                Button {
+                    if vPost.hasPrivateNote {
+                        sendNotification(.editingPrivateNoteOnPost, vPost.id)
                     }
-                    if let contact {
-                        sendNotification(.newPrivateNoteOnContact, contact)
+                    else {
+                        sendNotification(.newPrivateNoteOnPost, vPost.id)
                     }
+                } label: {
+                    Image(systemName: "note.text")
+                        .padding(5)
                 }
-            } label: {
-                Image(systemName: "note.text")
+                .opacity(vPost.hasPrivateNote ? 1 : 0.2)
             }
-            .opacity(postHasPrivateNote ? 1 : 0.2)
         }
-        
+        else if let vContact {
+            HStack {
+                Button {
+                    if vContact.hasPrivateNote {
+                        sendNotification(.editingPrivateNoteOnContact, vContact.pubkey)
+                    }
+                    else {
+                        sendNotification(.newPrivateNoteOnContact, vContact.pubkey)
+                    }
+                } label: {
+                    Image(systemName: "note.text")
+                        .padding(5)
+                }
+                .opacity(vContact.hasPrivateNote ? 1 : 0.2)
+            }
+        }
     }
 }
 
 struct PrivateNoteToggle_Previews: PreviewProvider {
     static var previews: some View {
-        let post = PreviewFetcher.fetchEvent("21a1b8e4083c11eab8f280dc0c0bddf3837949df75662e181ad117bd0bd5fdf3")
+        let post = PreviewFetcher.fetchVPost("21a1b8e4083c11eab8f280dc0c0bddf3837949df75662e181ad117bd0bd5fdf3")
         if (post != nil) {
-            PrivateNoteToggle(post: post!)
+            PrivateNoteToggle(vPost: post)
                 .withPreviewEnvironment()
         }
     }

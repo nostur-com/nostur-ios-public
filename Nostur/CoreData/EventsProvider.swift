@@ -8,18 +8,40 @@
 import CoreData
 import OSLog
 
+class DataProvider: ObservableObject {
+    let viewContext:NSManagedObjectContext
+//    let bgContext:NSManagedObjectContext
+    
+    static let live = DataProvider(viewContext: EventsProvider.shared.container.viewContext)
+    static let preview = DataProvider(viewContext: EventsProvider.preview.container.viewContext)
+    
+    init(viewContext: NSManagedObjectContext) {
+        self.viewContext = viewContext
+    }
+    
+    static func shared() -> DataProvider {
+        // Use an in-memory store for previews
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+            return DataProvider.preview
+        }
+        #endif
+        return DataProvider.live
+    }
+    
+}
+
 class EventsProvider: ObservableObject {
     
     // MARK: Logging
-    
-    let logger = Logger(subsystem: "com.nostir.2140.Events", category: "persistence")
+    let logger = Logger(subsystem: "com.nostur.Events", category: "persistence")
     
     // MARK: Core Data
     
-    /// A shared quakes provider for use within the main app bundle.
+    /// A shared data provider for use within the main app bundle.
     static let shared = EventsProvider()
     
-    /// A quakes provider for use with canvas previews.
+    /// A data provider for use with canvas previews.
     static let preview: EventsProvider = {
         let provider = EventsProvider(inMemory: true)
         let context = provider.container.viewContext

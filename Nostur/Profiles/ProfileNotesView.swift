@@ -11,9 +11,9 @@ import SwiftUI
 // NOTES ON USER PROFILE SCREEN
 struct ProfileNotesView: View {
     
-//    @EnvironmentObject var cm:ConnectionManager
-    var sp:SocketPool = .shared
-    var pubkey:String
+    let vTransformer:VTransformer
+    let sp:SocketPool = .shared
+    let pubkey:String
     
     @FetchRequest(
         sortDescriptors: [SortDescriptor(\Event.created_at, order: .reverse)],
@@ -21,8 +21,13 @@ struct ProfileNotesView: View {
         animation: .none)
     var events: FetchedResults<Event>
     
+    var vPosts:[VPost] {
+        events.map(vTransformer.eventToVPost)
+    }
+    
     init(pubkey: String) {
         self.pubkey = pubkey
+        self.vTransformer = VTransformer(pubkey: pubkey)
         _events = FetchRequest(
             sortDescriptors: [SortDescriptor(\Event.created_at, order: .reverse)],
             predicate: NSPredicate(format: "pubkey == %@ AND kind IN {1,6}", pubkey)
@@ -43,8 +48,8 @@ struct ProfileNotesView: View {
             }
             else {
                 LazyVStack {
-                    ForEach(events, id:\Event.id) { event in
-                        NoteRowView(event:event)
+                    ForEach(vPosts) { vPost in
+                        NoteRow(vPost: vPost)
                         Divider()
                     }
                 }

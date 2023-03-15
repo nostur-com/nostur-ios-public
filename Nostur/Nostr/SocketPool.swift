@@ -39,6 +39,7 @@ final class SocketPool: ObservableObject {
     
     func connectAll() {
         for socket in sockets {
+            guard socket.value.read || socket.value.write else { continue }
             if !socket.value.isConnecting && !socket.value.isConnected {
                 socket.value.client.connect()
             }
@@ -177,8 +178,8 @@ class ManagedClient: WebSocketDelegate, ObservableObject {
     
     func didReceive(event: Starscream.WebSocketEvent, client: Starscream.WebSocketClient) {
         switch event {
-        case .connected(let _):
-//            print(headers.description)
+        case .connected(let headers):
+            print(headers.description)
             DispatchQueue.main.async {
                 self.isConnecting = false
                 self.isConnected = true

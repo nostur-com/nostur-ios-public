@@ -37,7 +37,7 @@ struct NewReply: View {
         if ns.account != nil {
             VStack {
                 ScrollView {
-                    NoteRowView(event: replyTo, hideFooter: true)
+                    NoteRow(vPost: replyTo.toVPost(), hideFooter: true)
                     HStack {
                         NewReplyingToFragment(contact: replyTo.contact, pubkey: replyTo.pubkey)
                             .offset(x:80)
@@ -83,10 +83,11 @@ struct NewReply: View {
                                 ForEach(firstResults) { contact in
                                     ContactSearchResultRow(contact: contact) {
                                         guard vm.textView != nil else { return }
-                                        vm.text = vm.text.dropLast(vm.term.count) + contact.username
+                                        let mentionName = contact.username != "" ? contact.username : contact.npub
+                                        vm.text = vm.text.dropLast(vm.term.count) + mentionName
                                         tapOrFirstResults.append(contact)
                                         vm.mentioning = false
-                                        vm.lastHit = contact.username
+                                        vm.lastHit = mentionName
                                         vm.term = ""
                                         
                                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.02) { // after 0.02 sec to get the new .endOfDocument

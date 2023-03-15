@@ -242,29 +242,36 @@ final class NosturState : ObservableObject {
         return account!.follows?.contains(contact) ?? false
     }    
     
-    func addBookmark(_ event:Event) {
-        guard account != nil else {
-            return
-        }
-        account!.addToBookmarks(event)
+    func addBookmark(_ vPost:VPost) {
+        guard account != nil else { return }
+        account!.addToBookmarks(vPost.post)
         do {
             try viewContext.save()
+            sendNotification(.viewNeedsUpdate)
         }
         catch {
             print("Could not add bookmark: \(error)")
         }
     }
     
-    func removeBookmark(_ event:Event) {
-        guard account != nil else {
-            return
-        }
-        account!.removeFromBookmarks(event)
+    func removeBookmark(_ vPost:VPost) {
+        guard account != nil else { return }
+        account!.removeFromBookmarks(vPost.post)
         do {
             try viewContext.save()
+            sendNotification(.viewNeedsUpdate)
         }
         catch {
             print("Could not remove bookmark: \(error)")
+        }
+    }
+    
+    func toggleBookmark(_ vPost:VPost) {
+        if isBookmarked(vPost.post) {
+            removeBookmark(vPost)
+        }
+        else {
+            addBookmark(vPost)
         }
     }
     
@@ -300,6 +307,56 @@ final class NosturState : ObservableObject {
         return (contact.clEvent!.tags()).filter { $0.type == "p" && $0.otherInformation[0] == account!.publicKey }.count > 0
     }
     
+    func muteConversation(_ vPost:VPost) {
+        guard let account = account else { return }
+        if let replyToRootId = vPost.post.replyToRootId {
+            account.mutedRootIds_ = account.mutedRootIds_ + [replyToRootId, vPost.id]
+            print("Muting \(replyToRootId)")
+        }
+        else if let firstE = vPost.post.firstE() {
+            account.mutedRootIds_ = account.mutedRootIds_ + [firstE, vPost.id]
+            print("Muting \(firstE)")
+        }
+        do {
+            try viewContext.save()
+            //sendNotification(.viewNeedsUpdate) // TODO: NEED THIS??
+        }
+        catch {
+            print("Could not save after muting thread \(error)")
+        }
+    }
+    
+    func likePost(_ vPost:VPost) -> NEvent? {
+        guard account?.privateKey != nil else { readOnlyAccountSheetShown = true; return nil }
+        guard let account = account else { return nil }
+        let impactMed = UIImpactFeedbackGenerator(style: .medium)
+        impactMed.impactOccurred()
+        print("💖💖💖💖💖💖💖💖💖💖💖💖💖💖")
+        vPost.post.liked = true
+        vPost.post.likesCount += 1
+        account.addToLikes(vPost.post)
+        
+//      1. create kind 7 event based on kind 1 event:
+        let likeEvent = EventMessageBuilder.makeReactionEvent(reactingTo: vPost.post)
+//      2. sign that event with account keys
+        guard let signedEvent = try? signEvent(likeEvent) else {
+            print("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
+            return nil
+        }
+        return signedEvent
+    }
+    
+    func unlikePost(_ vPost:VPost) {
+        vPost.post.liked = false
+        vPost.post.likesCount -= 1
+        do {
+            try viewContext.save()
+            sendNotification(.viewNeedsUpdate)
+        }
+        catch {
+            print("Could save after unlike \(error)")
+        }
+    }
 }
 
 

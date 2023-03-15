@@ -10,7 +10,7 @@ import SwiftUI
 // NOTES ON USER PROFILE SCREEN
 struct ProfileZapsView: View {
     
-//    @EnvironmentObject var cm:ConnectionManager
+    let vTransformer:VTransformer
     @EnvironmentObject var er:ExchangeRateModel
     var sp:SocketPool = .shared
     var contact:Contact?
@@ -29,7 +29,12 @@ struct ProfileZapsView: View {
         animation: .none)
     var notes: FetchedResults<Event> // AUTHORS NOTES
     
-    init(contact:Contact? = nil) {
+    var vPosts:[VPost] {
+        notes.map(vTransformer.eventToVPost)
+    }
+    
+    init(pubkey:String, contact:Contact? = nil) {
+        self.vTransformer = VTransformer(pubkey: pubkey)
         if (contact != nil) {
             self.contact = contact
             _zaps = FetchRequest(
@@ -118,9 +123,11 @@ struct ProfileZapsView: View {
                                 .foregroundColor(.gray)
                                 .font(.system(size: 20))
                             
-                            ForEach(Array(notes.filter { $0.zapTally > 0 } .prefix(10))) { event in
-                                NoteRowView(event: event)
-                                    .id(event.id)
+                            LazyVStack {
+                                ForEach(Array(vPosts.filter { $0.zapTally > 0 } .prefix(10))) { vPost in
+                                    NoteRow(vPost: vPost)
+                                    Divider()
+                                }
                             }
                         }
                     }
@@ -166,7 +173,7 @@ struct ProfileZapsView_Previews: PreviewProvider {
         
         if (contact != nil) {
             ScrollView {
-                ProfileZapsView(contact: contact)
+                ProfileZapsView(pubkey:pubkey, contact: contact)
                     .withPreviewEnvironment()
             }
         }

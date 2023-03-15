@@ -413,3 +413,17 @@ extension Contact : Identifiable {
         return (try? context.fetch(r)) ?? []
     }
 }
+
+
+extension DataProvider {
+    func newContact(pubkey:String, context:NSManagedObjectContext? = nil, dontSave:Bool = false) -> Contact {
+        let ctx = context ?? viewContext
+        let newContact = Contact(context: ctx)
+        newContact.pubkey = pubkey
+        newContact.updated_at = 0
+        if (!dontSave) {
+            try? ctx.save()
+        }
+        return newContact
+    }
+}

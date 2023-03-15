@@ -84,6 +84,10 @@ func ids(_ events:Array<Event>.SubSequence) -> [String] {
     return events.map { $0.id }
 }
 
+func ids(_ vPosts:[VPost]) -> [String] {
+    return vPosts.map { $0.id }
+}
+
 func pubkeys(_ events:[Event]) -> [String] {
     return events.map { $0.pubkey }
 }

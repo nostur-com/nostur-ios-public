@@ -10,9 +10,9 @@ import CoreData
 
 
 struct ProfileLikesView: View {
-    
-//    @EnvironmentObject var cm:ConnectionManager
-    var cm:SocketPool = .shared
+
+    let vTransformer:VTransformer
+    var sp:SocketPool = .shared
     var pubkey:String
     
     @FetchRequest(
@@ -28,27 +28,33 @@ struct ProfileLikesView: View {
         animation: .none)
     var reactionsTo: FetchedResults<Event>
     
+    
+    var vPosts:[VPost] {
+        reactionsTo.map(vTransformer.eventToVPost)
+    }
+    
     init(pubkey: String) {
         self.pubkey = pubkey
+        self.vTransformer = VTransformer(pubkey: pubkey)
         _reactions = FetchRequest(
             sortDescriptors: [SortDescriptor(\Event.created_at, order: .reverse)],
             predicate: NSPredicate(format: "pubkey == %@ AND kind == 7", pubkey)
         )
     }
     
-    
     var body: some View {
         
         VStack {
             LazyVStack {
-                ForEach(reactionsTo, id:\Event.id) { event in
-                    NoteRowView(event:event)
+                ForEach(vPosts) { vPost in
+                    NoteRow(vPost: vPost)
+                    Divider()
                 }
             }
         }
         .onAppear {
             print("🟢 ProfileLikesView.onAppear always REQ.7: \(pubkey)")
-            cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorReactions(pubkey: pubkey)))
+            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorReactions(pubkey: pubkey)))
             
             if (reactions.count > 0) {
                 let eventIds = reactions.map { event in

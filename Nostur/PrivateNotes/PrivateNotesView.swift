@@ -144,7 +144,12 @@ struct PrivateNoteRow: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        sendNotification(.editingPrivateNote, note)
+                        if let post = note.post {
+                            sendNotification(.editingPrivateNoteOnPost, post.id)
+                        }
+                        else if let contact = note.contact {
+                            sendNotification(.editingPrivateNoteOnContact, contact.pubkey)
+                        }
                     }
                 Spacer()
                 Text(note.ago)
@@ -155,15 +160,15 @@ struct PrivateNoteRow: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.bottom, 10)
-            if let post = note.post {
+            if let vPost = note.post?.toVPost() {
                 HStack {
-                    ProfilePic(event: post, size: 25)
+                    PFP(pubkey: vPost.pubkey, pictureUrl: vPost.vContact?.pictureUrl, size: 25)
                         .onTapGesture {
-                            nav.navigateTo(ContactPath(key: post.pubkey))
+                            nav.navigateTo(ContactPath(key: vPost.pubkey))
                         }
-                    MinimalNoteTextRenderView(event: post, lineLimit: 1)
+                    MinimalNoteTextRenderView(vPost: vPost, lineLimit: 1)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .onTapGesture { nav.navigateTo(post) }
+                        .onTapGesture { nav.navigateTo(vPost) }
                 }
             }
             else if let contact = note.contact {

@@ -23,8 +23,9 @@ struct NotificationsReactions: View {
     @FetchRequest
     var reactions:FetchedResults<Event>
     
+    let vTransformer:VTransformer
+    
     var myNotesReactedTo:[Event] {
-//        Array(Set(reactions.compactMap { $0.reactionTo })) // Remove nil and duplicates
         
         var sortingDict:[Event: Int64] = [:] // Event and most recent reaction created_At
 
@@ -42,6 +43,10 @@ struct NotificationsReactions: View {
         return sortingDict.keys.sorted(by: { (sortingDict[$0] ?? 0) > (sortingDict[$1] ?? 0) } )
     }
     
+    var myNotesReactedToAsVPosts:[VPost] {
+        myNotesReactedTo.map(vTransformer.eventToVPost)
+    }
+    
     func reactionsForNote(_ note:Event) -> [Event] {
         reactions.compactMap {  $0.reactionTo == note ? $0 : nil }
     }
@@ -50,6 +55,8 @@ struct NotificationsReactions: View {
         print("🧨🧨🧨🧨🧨 I INIT NotificationsV 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         self.pubkey = pubkey
         self.onAppear = onAppear
+        self.vTransformer = VTransformer(pubkey:pubkey, context: DataProvider.shared().viewContext)
+//        le
         let r1 = Event.fetchRequest()
         r1.predicate = NSPredicate(format: "NOT pubkey IN %@ AND kind == 7 AND reactionTo.contact.pubkey == %@", blockedPubkeys, pubkey)
 //        r1.fetchLimit = FETCH_LIMIT
@@ -65,28 +72,37 @@ struct NotificationsReactions: View {
     
     var body: some View {
         VStack {
-            List(myNotesReactedTo) { note in
-    //            LazyVStack(alignment:.leading, spacing: 3) {
-    //                ForEach(myNotesReactedTo) { note in
+            List {
+                Section {
+                    ForEach(myNotesReactedToAsVPosts) { vPost in
                         VStack(alignment:.leading, spacing: 3) {
-                                ReactionsForThisNote(reactions:reactionsForNote(note), onAppear: self.onAppear)
-                                NoteMinimalContentView(event: note)
-                        }.onTapGesture {
-                            nav.navigateTo(NotePath(id: note.id))
+                            ReactionsForThisNote(reactions:reactionsForNote(vPost.post), onAppear: self.onAppear)
+                            NoteMinimalContentView(vPost: vPost)
                         }
                         .padding()
                         .listRowInsets(EdgeInsets())
-    //                }
-    //            }
-                
+                        .onTapGesture {
+                            nav.navigateTo(vPost)
+                        }
+                    }
+                }
+                Section {
+                    HStack {
+                        Spacer()
+                        Button("Fetch older") {
+                            fetchOlderReactions()
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(.accentColor)
+                        Spacer()
+                    }
+                    .listRowInsets(EdgeInsets())
+                }
             }
             .listStyle(.plain)
             .onAppear {
                 fetchReactions()
             }
-//            Button("Fetch older") {
-//                fetchOlderReactions()
-//            }
         }
     }
     

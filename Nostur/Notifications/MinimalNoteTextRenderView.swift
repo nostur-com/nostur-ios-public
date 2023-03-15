@@ -9,81 +9,24 @@ import SwiftUI
 
 struct MinimalNoteTextRenderView: View {
     
-    var event:Event
-    var renderedText:AttributedString? = nil
-    var tags:[NEventTag]
+    let vPost:VPost
     let lineLimit:Int
     
-    func contactUsername(fromPubkey pubkey:String) -> String {
-        if let contact = event.contacts?.first(where: { $0.pubkey == pubkey }) {
-            return contact.username
-        }
-        do {
-            return String((try NIP19(prefix: "npub", hexString: pubkey).displayString).prefix(11))
-        }
-        catch {
-            return  "⏤⏤"
-        }
-    }
     
-    private func renderMentions(_ text:String) -> AttributedString? { // This is slow??
-        var newText = text
-        
-        if (tags.count == 0) {
-            return AttributedString(text)
-        }
-        else {
-            for index in tags.indices {
-                if (tags[index].type == "p") {
-                    newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "@\(contactUsername(fromPubkey: tags[index].pubkey))")
-                }
-                if (tags[index].type == "e") {
-                    // TODO: NIP19 bech32 is very slow, with hundreds of rows it slows down UI noticeably, so disable for now
-                    let key = try! NIP19(prefix: "note1", hexString: tags[index].id)
-                    newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "@\(String(key.displayString).prefix(12))")
-                }
-            }
-            do {
-                let finalText = try AttributedString(markdown: newText, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
-                return finalText
-            }
-            catch {
-                let finalText = AttributedString(text)
-                print(error)
-                return finalText
-            }
-        }
-    }
-    
-    init(event: Event, lineLimit:Int = 10) {
-        self.event = event
+    init(vPost:VPost, lineLimit:Int = 10) {
+        self.vPost = vPost
         self.lineLimit = lineLimit
-        self.tags = event.tags()
-        let text = event.content ?? ""
-        self.renderedText = renderMentions(text)
     }
     
     var body: some View {
         VStack(alignment: .leading) {
-            if (tags.count > 0) {
-                Text(renderedText!)//.border(.cyan)
-                    .lineLimit(lineLimit, reservesSpace: false)
-                    .textSelection(.enabled)
-                    .multilineTextAlignment(TextAlignment.leading)
-                    .foregroundColor(.primary.opacity(0.5))
-                    .lineSpacing(3)
-                    .padding(.vertical, 5)
-            }
-            else if (tags.count == 0) {
-                Text(event.noteText)//.border(.green)
-                    .lineLimit(lineLimit, reservesSpace: false)
-                    .textSelection(.enabled)
-                    .multilineTextAlignment(TextAlignment.leading)
-                    .foregroundColor(.primary.opacity(0.5))
-                    .lineSpacing(3)
-                    .padding(.vertical, 5)
-            }
-            else { Text("") }
+            Text(vPost.renderedText)//.border(.cyan)
+                .lineLimit(lineLimit, reservesSpace: false)
+                .textSelection(.enabled)
+                .multilineTextAlignment(TextAlignment.leading)
+                .foregroundColor(.primary.opacity(0.5))
+                .lineSpacing(3)
+                .padding(.vertical, 5)
         }
     }
 }
@@ -103,53 +46,53 @@ struct MinimalNoteTextRenderView_Previews: PreviewProvider {
         // Mention in end #[0]
         // 143efe07393c5b07efbe6ea1fc66c39cb985b98f8844650edd00fbcb041228a3
         
-        let event5 = PreviewFetcher.fetchEvent("b2e209b3073f24b4d6c172965ad8dd8276ada68895d4ab8837cf3a57d3f1c947")
-        //        let event5 = PreviewFetcher.fetchEvent("143efe07393c5b07efbe6ea1fc66c39cb985b98f8844650edd00fbcb041228a3")
+        let event5 = PreviewFetcher.fetchVPost("b2e209b3073f24b4d6c172965ad8dd8276ada68895d4ab8837cf3a57d3f1c947")
+        //        let event5 = PreviewFetcher.fetchVPost("143efe07393c5b07efbe6ea1fc66c39cb985b98f8844650edd00fbcb041228a3")
         
-        let event4 = PreviewFetcher.fetchEvent("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe")
+        let event4 = PreviewFetcher.fetchVPost("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe")
         
-        let event3 = PreviewFetcher.fetchEvent("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
+        let event3 = PreviewFetcher.fetchVPost("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
         
-        let event2 = PreviewFetcher.fetchEvent("115eab2976aee4ca562d83ea6b1d805c6d4e0acf54fe2e6a4e1a62f73c2850cc")
+        let event2 = PreviewFetcher.fetchVPost("115eab2976aee4ca562d83ea6b1d805c6d4e0acf54fe2e6a4e1a62f73c2850cc")
         
-        let event1 = PreviewFetcher.fetchEvent("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
+        let event1 = PreviewFetcher.fetchVPost("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
         
-        let event0 = PreviewFetcher.fetchEvent("21a1b8e4083c11eab8f280dc0c0bddf3837949df75662e181ad117bd0bd5fdf3")
+        let event0 = PreviewFetcher.fetchVPost("21a1b8e4083c11eab8f280dc0c0bddf3837949df75662e181ad117bd0bd5fdf3")
         
         VStack {
             Group {
                 if (event0 != nil) {
-                    MinimalNoteTextRenderView(event:event0!)
+                    MinimalNoteTextRenderView(vPost:event0!)
                         .withPreviewEnvironment()
                     Divider()
                 }
                 
                 if (event1 != nil) {
-                    MinimalNoteTextRenderView(event:event1!)
+                    MinimalNoteTextRenderView(vPost:event1!)
                         .withPreviewEnvironment()
                     Divider()
                 }
                 
                 if (event2 != nil) {
-                    MinimalNoteTextRenderView(event:event2!)
+                    MinimalNoteTextRenderView(vPost:event2!)
                         .withPreviewEnvironment()
                     Divider()
                 }
             }
             
             if (event3 != nil) {
-                MinimalNoteTextRenderView(event:event3!)
+                MinimalNoteTextRenderView(vPost:event3!)
                     .withPreviewEnvironment()
                 Divider()
             }
             
             if (event4 != nil) {
-                MinimalNoteTextRenderView(event:event4!)
+                MinimalNoteTextRenderView(vPost:event4!)
                     .withPreviewEnvironment()
                 Divider()
             }
             if (event5 != nil) {
-                MinimalNoteTextRenderView(event:event5!)
+                MinimalNoteTextRenderView(vPost:event5!)
                     .withPreviewEnvironment()
                 Divider()
             }

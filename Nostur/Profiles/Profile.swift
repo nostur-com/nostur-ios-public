@@ -202,7 +202,7 @@ struct Profile: View {
                         } label: {
                             Image(systemName: "person.badge.key.fill")
                         }
-                        PrivateNoteToggle(contact: contact)
+//                        PrivateNoteToggle(contact: contact) // TODO: FIXME
                         if (ns.followsYou(contact)) {
                             Text("Follows you").font(.system(size: 12))
                                 .foregroundColor(.white)
@@ -288,7 +288,7 @@ struct Profile: View {
                         }
                         
                         if (activeTab == "ZAPS") {
-                            ProfileZapsView(contact: contact)
+                            ProfileZapsView(pubkey:pubkey, contact: contact)
                                 .padding(.vertical, 10)
                         }
                         
@@ -322,17 +322,18 @@ struct Profile: View {
         .ignoresSafeArea(edges: .top)
         .navigationTitle("") // dont know how to hide contact.authorName, but DO show in next view back button
         .task {
-            if (NIP05.shouldVerify(contact)) {
-                if (await NIP05.verify(nip05: contact.nip05!, expectedPubkey: contact.pubkey)) {
-                    await viewContext.perform {
-                        contact.nip05verifiedAt = Date.now
-                        // TODO: Crashed preview???
-                        do { try! viewContext.save() }
-                        catch { print("w🚗at") }
-                    }
-                    print("👍👍 nip05 verified \(contact.pubkey) \(contact.nip05!) ")
-                }
-            }
+            // TODO: FIXME
+//            if (NIP05.shouldVerify(contact)) {
+//                if (await NIP05.verify(nip05: contact.nip05!, expectedPubkey: contact.pubkey)) {
+//                    await viewContext.perform {
+//                        contact.nip05verifiedAt = Date.now
+//                        // TODO: Crashed preview???
+//                        do { try! viewContext.save() }
+//                        catch { print("w🚗at") }
+//                    }
+//                    print("👍👍 nip05 verified \(contact.pubkey) \(contact.nip05!) ")
+//                }
+//            }
         }
         .task {
             guard contact.anyLud else { return }
@@ -362,18 +363,19 @@ struct Profile: View {
             }
         }
         .onChange(of: contact.nip05) { nip05 in
-            if (NIP05.shouldVerify(contact)) {
-                Task {
-                    if (await NIP05.verify(nip05: contact.nip05!, expectedPubkey: contact.pubkey)) {
-                        await viewContext.perform {
-                            contact.nip05verifiedAt = Date.now
-                            do { try viewContext.save() }
-                            catch { print("w🚗at") }
-                        }
-                        print("👍👍 nip05 verified \(contact.pubkey) \(contact.nip05!) ")
-                    }
-                }
-            }
+            // TODO: FIXME
+//            if (NIP05.shouldVerify(contact)) {
+//                Task {
+//                    if (await NIP05.verify(nip05: contact.nip05!, expectedPubkey: contact.pubkey)) {
+//                        await viewContext.perform {
+//                            contact.nip05verifiedAt = Date.now
+//                            do { try viewContext.save() }
+//                            catch { print("w🚗at") }
+//                        }
+//                        print("👍👍 nip05 verified \(contact.pubkey) \(contact.nip05!) ")
+//                    }
+//                }
+//            }
         }
         .task {
             sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndBadges(pubkey: pubkey)))

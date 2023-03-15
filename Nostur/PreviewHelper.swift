@@ -30,7 +30,7 @@ extension View {
         }()
         
         // "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
-        
+        let dp = DataProvider(viewContext: EventsProvider.preview.container.viewContext)
         let ns = NosturState(container: EventsProvider.preview.container)
         let sp:SocketPool = .shared
         let nav: NavigationModel = .shared
@@ -54,6 +54,7 @@ extension View {
         return self.defaultAppStorage(userDefaults)
             .environment(\.managedObjectContext,
                           EventsProvider.preview.container.viewContext)
+            .environmentObject(dp)
             .environmentObject(ns)
             .environmentObject(sp)
             .environmentObject(nav)
@@ -122,6 +123,14 @@ struct PreviewFetcher {
             return try! context!.fetch(request).randomElement()
         }
         return try! PreviewFetcher.viewContext.fetch(request).randomElement()
+    }
+    
+    static func fetchVPost(_ id:String? = nil, context:NSManagedObjectContext? = nil) -> VPost? {
+        let vTransformer = VTransformer(pubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",context: context ?? PreviewFetcher.viewContext)
+        if let event = fetchEvent(id) {
+            return vTransformer.eventToVPost(event)
+        }
+        return nil
     }
     
     static func fetchContact(_ pubkey:String, context:NSManagedObjectContext? = nil) -> Contact? {

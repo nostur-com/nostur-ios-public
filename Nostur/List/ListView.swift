@@ -14,7 +14,7 @@ struct ListView: View {
     @EnvironmentObject var ns:NosturState
     @ObservedObject var vm:ListViewModel
     @AppStorage("selected_subtab") var selectedSubTab = "Following"
-    @State var isViewDisplayed = false
+//    @State var isViewDisplayed = false
     let ot:OnboardingTracker = .shared
     let timelineRunLoop = Timer.publish(every: 3, tolerance: 1, on: .main, in: .common).autoconnect()
     @AppStorage("firstTimeCompleted") var firstTimeCompleted = false
@@ -23,99 +23,6 @@ struct ListView: View {
     
     var body: some View {
         VStack {
-//            Text("State: \(vm.state.rawValue)").lineLimit(1).onTapGesture {
-//                vm.testDropFirst()
-//            }
-//            Text("[Dev] Results: \(vm.posts.count) || LA: \(vm.lastAppearedIndex) || MRR: \(vm.mostRecentReadIndex)")
-//            Text("unreadCountSubject: \(vm.unreadCountSubject.value)")
-//            Text("vm.id: \(vm.id)")
-//            Text("vm.listState.listId: \(vm.listState.listId)")
-//            Text("Following: \(vm.pubkeys.count.description)")
-//            Text("Following: \(ns.explorePubkeys.count.description)")
-            if "LAZYVSTACK" != "LAZYVSTACK" && vm.posts.count != 0 {
-                ScrollViewReader { proxy in
-                    ScrollView {
-                        LazyVStack {
-                            ForEach(vm.posts) { post in
-                                NoteRowView(event: post)
-                                    .onBecomingVisible {
-                                        guard vm.state != .AWAITING_FIRST_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-                                        guard vm.state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-                                        guard vm.state != .SWITCHING_ACCOUNT else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-                                        vm.lastAppearedSubject.send(post)
-                                    }
-//                                    .border(vm.posts.firstIndex(of: post) == vm.lastAppearedIndex ? .green : .clear)
-                                    .id(post.id)
-                                Divider()
-                            }
-                        }
-                        Rectangle().frame(width: 300, height: 1)
-                            .id(END_OF_LIST)
-                            .onBecomingVisible {
-                                vm.didReachEnd()
-                            }
-                    }
-                    .onReceive(receiveNotification(.shouldScrollToLast)) { _ in
-                        withAnimation { proxy.scrollTo(END_OF_LIST) }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                            vm.state = .SCROLLED_TO_END
-                        }
-                    }
-                    .onAppear { restoreScrollPosition(vm: vm, proxy: proxy) }
-                    .onChange(of: vm) { newValue in
-                        newValue.state = .SWITCHING_ACCOUNT
-                        restoreScrollPosition(vm: newValue, proxy: proxy)
-                    }
-                }
-            }
-            
-            if "LIST" == "LIST" && vm.posts.count != 0 {
-                ScrollViewReader { proxy in
-                    List(vm.posts) { post in
-                        VStack {
-                            NoteRowView(event: post)
-                                .id(post)
-                                .listRowInsets(EdgeInsets())
-                                .onBecomingVisible {
-                                    guard vm.state != .AWAITING_FIRST_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-                                    guard vm.state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-                                    guard vm.state != .SWITCHING_ACCOUNT else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-                                    vm.lastAppearedSubject.send(post)
-                                    if (post == vm.posts.last) {
-                                        vm.didReachEnd()
-                                    }
-                                }
-        //                                    .border(vm.posts.firstIndex(of: post) == vm.lastAppearedIndex ? .green : .clear)
-        //                            Rectangle().frame(width: 300, height: 1)
-                        }
-                    }
-                    .id(scrollResetId)
-                    .listStyle(.plain)
-                    .onReceive(receiveNotification(.shouldScrollToLast)) { _ in
-//                        withAnimation {
-//                            proxy.scrollTo(vm.posts.last)
-//                        }
-                        scrollResetId += 1
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            withAnimation {
-                                if let value = vm.posts.last?.id {
-//                                    proxy.scrollTo(value)
-                                    proxy.scrollTo(value, anchor: .top)
-//                                    proxy.scrollTo(value, anchor: .center)
-                                }
-                            }
-                        }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                            vm.state = .SCROLLED_TO_END
-                        }
-                    }
-                    .onAppear { restoreScrollPosition(vm: vm, proxy: proxy) }
-                    .onChange(of: vm) { newValue in
-                        newValue.state = .SWITCHING_ACCOUNT
-                        restoreScrollPosition(vm: newValue, proxy: proxy)
-                    }
-                }
-            }
             
             if ((selectedSubTab != "Explore") && (ns.account?.follows?.count ?? 0) == 0) && ((ns.account?.publicKey ?? "NOACCOUNT") != NosturState.GUEST_ACCOUNT_PUBKEY) {
                 Text("You are not following anyone yet, visit the explore tab and follow some people")
@@ -128,9 +35,87 @@ struct ListView: View {
                     Text("Explore")
                 }.buttonStyle(.borderedProminent)
             }
+            
+            Text("State: \(vm.state.rawValue)").lineLimit(1).onTapGesture {
+                vm.testDropFirst()
+            }
+//            Text("[Dev] Results: \(vm.posts.count) || LA: \(vm.lastAppearedIndex) || MRR: \(vm.mostRecentReadIndex)")
+//            Text("unreadCountSubject: \(vm.unreadCountSubject.value)")
+//            Text("vm.id: \(vm.id)")
+//            Text("vm.listState.listId: \(vm.listState.listId)")
+//            Text("Following: \(vm.pubkeys.count.description)")
+//            Text("Following: \(ns.explorePubkeys.count.description)")
+            
+            if vm.vPosts.count != 0 {
+                ScrollViewReader { proxy in
+                    List {
+                        Section {
+                            ForEach(vm.vPosts) { vPost in
+                                NoteRow(vPost:vPost)
+                                    .id(vPost.id)
+                                    .listRowInsets(EdgeInsets())
+                                    .onBecomingVisible {
+                                        guard vm.state != .AWAITING_FIRST_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+                                        guard vm.state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+                                        guard vm.state != .SWITCHING_ACCOUNT else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+                                        vm.lastAppearedSubject.send(vPost)
+                                    }
+                                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                        Button {
+                                            ns.toggleBookmark(vPost)
+                                        } label: {
+                                            Image(systemName: "bookmark")
+                                        }
+                                        .tint(.orange)
+
+                                    }
+                            }
+                        }
+                        Section {
+                            HStack {
+                                Spacer()
+                                Rectangle().frame(width: 300, height: 1)
+                                Spacer()
+                            }
+                            .id(END_OF_LIST)
+                            .onBecomingVisible {
+                                guard vm.state != .AWAITING_FIRST_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+                                guard vm.state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+                                guard vm.state != .SWITCHING_ACCOUNT else { return } // Only set last appeared if we
+                                
+                                vm.didReachEnd()
+                            }
+                            .listRowInsets(EdgeInsets())
+                        }
+                    }
+                    .id(scrollResetId)
+                    .listStyle(.plain)
+                    .onReceive(receiveNotification(.shouldScrollToLast)) { _ in
+//                        withAnimation {
+//                            proxy.scrollTo(vm.posts.last)
+//                        }
+                        scrollResetId += 1
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            withAnimation {
+                                    proxy.scrollTo(END_OF_LIST)
+                                    vm.state = .SCROLLED_TO_END
+                            }
+                        }
+//                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+//                            vm.state = .SCROLLED_TO_END
+//                        }
+                    }
+                    .onAppear { restoreScrollPosition(vm: vm, proxy: proxy) }
+                    .onChange(of: vm) { newValue in
+                        newValue.state = .SWITCHING_ACCOUNT
+                        restoreScrollPosition(vm: newValue, proxy: proxy)
+                    }
+                }
+            }
         }
         .onAppear {
-            isViewDisplayed = true
+            vm.viewIsVisibleSubject.send(true)
+//            isViewDisplayed = true
             
             if (ot.isOnboarding && vm.pubkey == ot.pubkey && ot.didFetchKind3 && !ot.didFillTimeline) {
                 fetchEvents(pubkeys: Set(ot.followingKeys), amount: 50)
@@ -139,49 +124,12 @@ struct ListView: View {
             }
         }
         .onDisappear {
-            isViewDisplayed = false
+            vm.viewIsVisibleSubject.send(false)
+//            isViewDisplayed = false
         }
-        .onReceive(timelineRunLoop) { time in
-            guard isViewDisplayed else { return }
-            guard selectedSubTab == vm.id else { return } // Alternative for isViewDisplayed (because opacity 1 : 0)
-            guard !Importer.shared.isImporting else { print("⏳ Still importing, new fetch skipped."); return }
-            
-            if (ot.isOnboarding && vm.pubkey == ot.pubkey && ot.didFetchKind3 && !ot.didFillTimeline) {
-                fetchEvents(pubkeys: Set(ot.followingKeys), amount: 50)
-                ot.didFillTimeline = true
-                firstTimeCompleted = true
-            }
-            else if (!ot.isOnboarding) {
-                let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 4)  // 4 hours  ago
-//                print("🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣 put back after fixes" )
-//                print("🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣 put back after fixes" )
-//                print("🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣 put back after fixes" )
-                let cutOffPoint = min(vm.lastAppeared?.created_at ?? hoursAgo, hoursAgo) // 8 hours ago or longer until lastAppeared Event
-                fetchEvents(pubkeys: vm.pubkeys, since: cutOffPoint, subscriptionId: vm.id)
-            }
-            
-        }
-        .onReceive(receiveNotification(.requestForJustAppeared)) { notification in
-//            print("🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣 put back after fixes" )
-//            print("🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣 put back after fixes" )
-//            print("🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣 put back after fixes" )
-//            return
-//            guard 1 == 2 else { return } // Performance test
-//            guard !isScrolling else { return }
-            let events = notification.object as! [Event]
-            
-            let ids = ids(events)
-            let contacts = events.compactMap { $0.contact }
-            let shouldVerifyContacts = contacts.filter { NIP05.shouldVerify($0) }
-//            Task.detached(priority: .userInitiated) {
-            Task {
-//                ThreadWarning.which(".onReceive(receiveNotification(.requestForJustAppeared)")
-                print("🟠🟠 fetching for ids justAppeared")
-                fetchStuffForLastAddedNotes(ids: ids)
-                fetchMissingReplyToContacts(events: events)
-                NIP05.verifyBatch(contacts: shouldVerifyContacts, context: viewContext)
-            }
-        }
+        .onChange(of: selectedSubTab, perform: { newValue in
+            vm.selectedSubTabSubject.send(newValue) // Listen for changes in ViewModel too much code, here just 1 line.. soo
+        })
     }
     
     func fetchMissingReplyToContacts(events:[Event]) {
@@ -232,7 +180,9 @@ struct ListView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 vm.state = .COMPLETED_RESTORED_FETCH_WITH_SCROLL
             }
-            
+        }
+        else {
+            vm.state = .COMPLETED_FIRST_FETCH
         }
     }
     enum ListType {

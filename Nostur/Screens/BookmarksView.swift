@@ -35,16 +35,23 @@ struct BookmarksView: View {
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
     
+    let vTransformer:VTransformer
     let account: Account
     
     @FetchRequest(sortDescriptors: [])
     var bookmarks: FetchedResults<Event>
     
+    var vBookmarks:[VPost] {
+        bookmarks.map(vTransformer.eventToVPost)
+    }
+    
     @State var selectedAccount:Account? = nil
+    @State var viewNeedsUpdate = false
     
     init(account:Account) {
         print("🧨🧨🧨🧨🧨 INIT BOOKMARKS VIEW 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         self.account = account
+        self.vTransformer = VTransformer(pubkey:account.publicKey, context: DataProvider.shared().viewContext)
         self.selectedAccount = account
         _bookmarks = FetchRequest(
             sortDescriptors: [SortDescriptor(\Event.created_at, order: .reverse)],
@@ -101,11 +108,17 @@ struct BookmarksView: View {
             }
             .padding(.horizontal)
             List {
-                ForEach(bookmarks) { bookmark in
-                    NoteRowView(event: bookmark)
+                ForEach(vBookmarks) { vBookmark in
+                    NoteRow(vPost: vBookmark)
                         .listRowInsets(EdgeInsets())
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button(role: .destructive) {
+                                removeBookmark(vBookmark.post)
+                            } label: {
+                                Label("Remove", systemImage: "trash")
+                            }
+                        }
                 }
-                .onDelete(perform: deleteItems)
             }
             .listStyle(.plain)
             Spacer()
@@ -114,6 +127,15 @@ struct BookmarksView: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarHidden(true)
         .padding()
+        .onReceive(receiveNotification(.viewNeedsUpdate), perform: { _ in
+            if (selectedAccount != nil) {
+                bookmarks.nsPredicate = NSPredicate(format: "%@ IN bookmarkedBy", selectedAccount!)
+            }
+            else {
+                bookmarks.nsPredicate = NSPredicate(format: "bookmarkedBy.@count > 0")
+            }
+            viewNeedsUpdate.toggle()
+        })
         .onChange(of: selectedAccount) { newValue in
             if (newValue != nil) {
                 bookmarks.nsPredicate = NSPredicate(format: "%@ IN bookmarkedBy", newValue!)
@@ -123,14 +145,17 @@ struct BookmarksView: View {
             }
         }
     }
-    
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            offsets.map { bookmarks[$0] }.forEach(viewContext.delete)
-            do { try viewContext.save() } catch {
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-            }
+    private func removeBookmark(_ post:Event) {
+        for account in ns.accounts {
+            post.removeFromBookmarkedBy(account)
+        }
+        do {
+            try viewContext.save()
+            sendNotification(.viewNeedsUpdate)
+            
+        } catch {
+            let nsError = error as NSError
+            fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
         }
     }
 }

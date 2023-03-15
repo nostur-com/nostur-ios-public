@@ -18,17 +18,19 @@ struct FullScreenItem : Identifiable {
 
 struct ImageViewer: View {
     @EnvironmentObject var ns:NosturState // Only needed for `eventIsRestricted`
-    // TODO: DUNNO MAYBE NEED PREFETCHER SOME DAY
-//    @StateObject var model = PrefetchDemoViewModel()
-//    @State var fullImageIsShown = false
     let imgUrls:[URL]
     let pubkey:String
     
     @State var fullScreenItem:FullScreenItem?
     @State var imagesShown = false
     
-    init(content: String, pubkey:String) {
-        self.imgUrls = ImageViewer.getImgUrlsFromContent(content)
+    init(imgUrls: [URL], pubkey:String) {
+        self.imgUrls = imgUrls
+        self.pubkey = pubkey
+    }
+    
+    init(content:String, pubkey:String) {
+        self.imgUrls = getImgUrlsFromContent(content)
         self.pubkey = pubkey
     }
         
@@ -188,20 +190,6 @@ struct ImageViewer: View {
 //            FullImageViewer(fullImageURL:item.url)
 //        })
 //    }
-    
-    static func getImgUrlsFromContent(_ content:String) -> [URL] {
-        var urls:[URL] =  []
-        let regex = try! NSRegularExpression(pattern: "(?i)\\bhttps?:\\/\\/\\S+?\\.(?:png|jpe?g|gif|webp|bmp)\\b")
-        let range = NSRange(content.startIndex..<content.endIndex, in: content)
-        let matches = regex.matches(in: content, range: range)
-        for match in matches {
-            let url = (content as NSString).substring(with: match.range)
-            if let urlURL = URL(string: url) {
-                urls.append(urlURL)
-            }
-        }
-        return urls
-    }
 }
 
 struct FullImageViewer: View {
@@ -257,6 +245,20 @@ struct FullImageViewer: View {
     }
 }
 
+func getImgUrlsFromContent(_ content:String) -> [URL] {
+    var urls:[URL] =  []
+    let regex = try! NSRegularExpression(pattern: "(?i)\\bhttps?:\\/\\/\\S+?\\.(?:png|jpe?g|gif|webp|bmp)\\b")
+    let range = NSRange(content.startIndex..<content.endIndex, in: content)
+    let matches = regex.matches(in: content, range: range)
+    for match in matches {
+        let url = (content as NSString).substring(with: match.range)
+        if let urlURL = URL(string: url) {
+            urls.append(urlURL)
+        }
+    }
+    return urls
+}
+
 struct ImageViewer_Previews: PreviewProvider {
     static var previews: some View {
         
@@ -265,14 +267,16 @@ struct ImageViewer_Previews: PreviewProvider {
         
         let content1 = "one image: https://nostur.com/screenshots/badges.png dunno"
         
+        let urlsFromContent = getImgUrlsFromContent(content1)
+        
         List {
 //            LazyImage(url: URL(string: "https://nostur.com/screenshots/badges.png")!)
 //                .frame(height: 200)
 //                .padding(20)
 //                .listRowInsets(EdgeInsets())
 //
-////            ImageViewer(content: content1)
-            ImageViewer(content: content1, pubkey: "")
+//            ImageViewer(content: content1)
+            ImageViewer(imgUrls: urlsFromContent, pubkey: "")
                 .listRowInsets(EdgeInsets())
         }
         .listStyle(.inset)

@@ -6,10 +6,16 @@
 //
 
 import SwiftUI
+import Compactor
 
 struct MinimalQuotedNoteFragment: View {
-    var cm:SocketPool = .shared
-    var event:Event
+    var sp:SocketPool = .shared
+    var vPost:VPost
+    
+    var ago: String {
+        let f = TimeCompactor(ifZero: nil, style: .short, roundSmallToWhole: true)
+        return f.string(from: Double(Date.now.timeIntervalSince(vPost.createdAt)) as NSNumber)!
+    }
     
     var body: some View {
         VStack(alignment:.leading) {
@@ -17,14 +23,15 @@ struct MinimalQuotedNoteFragment: View {
                 VStack(alignment: .leading) { // Name + menu "replying to"
                     HStack(spacing:2) {
                         // profile image
-                        ProfilePic(event: event, size: 20).opacity(0.5)
-                        if (event.contact != nil) {
-                            Text(event.contact!.authorName) // Name
+                        PFP(pubkey: vPost.pubkey, pictureUrl: vPost.vContact?.pictureUrl, size: 20)
+                        .opacity(0.5)
+                        if (vPost.vContact != nil) {
+                            Text(vPost.displayName) // Name
                                 .font(.system(size: 14))
                                 .foregroundColor(.primary.opacity(0.5))
                                 .fontWeight(.bold)
                                 .lineLimit(1)
-                            Text("@\(event.contact!.username)") //
+                            Text("@\(vPost.username)") //
                                 .font(.system(size: 14))
                                 .foregroundColor(.secondary.opacity(0.5))
                         }
@@ -39,7 +46,7 @@ struct MinimalQuotedNoteFragment: View {
                                 .foregroundColor(.secondary.opacity(0.5))
                                 .redacted(reason: .placeholder)
                         }
-                        Text(" · \(event.ago)") //
+                        Text(" · \(ago)") //
                             .font(.system(size: 14))
                             .foregroundColor(.secondary)
                     }
@@ -47,7 +54,7 @@ struct MinimalQuotedNoteFragment: View {
                 Spacer()
             }
             VStack(alignment: .leading) {
-                MinimalNoteTextRenderView(event:event)
+                MinimalNoteTextRenderView(vPost: vPost)
             }
         }
         .padding(10)
@@ -56,8 +63,8 @@ struct MinimalQuotedNoteFragment: View {
                 .stroke(.regularMaterial, lineWidth: 1)
         )
         .onAppear {
-            if (event.contact == nil) {
-                cm.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.pubkey)))
+            if (vPost.vContact == nil) {
+                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: vPost.pubkey)))
             }
         }
     }
@@ -86,24 +93,24 @@ struct MinimalQuotedNote_Previews: PreviewProvider {
         // f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e
     
         // Mention at #[5]
-        let event0 = PreviewFetcher.fetchEvent("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe")
+        let event0 = PreviewFetcher.fetchVPost("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe")
     
         
-        let event1 = PreviewFetcher.fetchEvent("dec5a86ad780edd26fb8a1b85f919ddace9cb2b2b5d3a68d5124802fc2da4ed3")
+        let event1 = PreviewFetcher.fetchVPost("dec5a86ad780edd26fb8a1b85f919ddace9cb2b2b5d3a68d5124802fc2da4ed3")
         
-        let event2 = PreviewFetcher.fetchEvent("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e")
+        let event2 = PreviewFetcher.fetchVPost("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e")
         
         VStack {
             Spacer()
             if (event0 != nil) {
-                NoteMinimalContentView(event: event0!)
+                NoteMinimalContentView(vPost: event0!)
             }
             
             if (event1 != nil) {
-                MinimalQuotedNoteFragment(event: event1!)
+                MinimalQuotedNoteFragment(vPost: event1!)
             }
             if (event2 != nil) {
-                MinimalQuotedNoteFragment(event: event2!)
+                MinimalQuotedNoteFragment(vPost: event2!)
             }
             Spacer()
         }

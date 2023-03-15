@@ -36,6 +36,8 @@ class Importer {
         }
         
         let context = EventsProvider.shared.container.newBackgroundContext()
+        context.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        context.undoManager = nil
         let isSignatureVerificationEnabled = self.settingsStore.isSignatureVerificationEnabled
         
         await context.perform {
@@ -155,6 +157,9 @@ class Importer {
                     try context.save() // TODO: is this the slowdown??
                     if (saved > 0) {
                         print("💾 forImports: \(forImports.count), saved: \(saved), skipped (cache): \(alreadyInLRUskipped), skipped (db): \(alreadyInDBskipped)")
+                    }
+                    DispatchQueue.main.async {
+                        sendNotification(.viewNeedsUpdate)
                     }
                 }
                 self.isImporting = false

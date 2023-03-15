@@ -129,10 +129,10 @@ struct LightningInvoice_Previews: PreviewProvider {
     static var previews: some View {
         let invoice = "lnbc469970n1p373e49pp5ey9mxfcy9k62clpjvqwsrju64p0378cll0mzehtccj2ulqnamkzqdqvw3jhxarfdenscqzpgxqyz5vqsp5m8zsyfs936f2vfkshvdfhntmr596079hwryr2r8dpr8ahy6hu6hq9qyyssqlcvvw6gmq09hwzw2kxfe03enc25plxzfmupxwx4xr8hddn972nzq7m0jf9sxenw23qg6nv55678nrnnr4fe3wkwm6pczmaxs0r7yftgqd6lgya"
         
-        let event = { () -> Event in
+        let event = { () -> VPost in
             let event = PreviewFetcher.fetchEvent()
             event?.content = invoice
-            return event!
+            return event!.toVPost()
         }()
         
         
@@ -143,7 +143,7 @@ struct LightningInvoice_Previews: PreviewProvider {
             Text("\n\n\n")
             
             Text("In a note")
-            NoteRowView(event: event)
+            NoteRow(vPost: event)
         }.padding(20)
             .withPreviewEnvironment()
         

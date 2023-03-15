@@ -83,13 +83,20 @@ extension Notification.Name {
     static var profileBadgesFetched: Notification.Name {
         return Notification.Name("profileBadgesFetched")
     }
-    static var editingPrivateNote: Notification.Name {
-        return Notification.Name("editingPrivateNote")
+    static var editingPrivateNoteOnPost: Notification.Name {
+        return Notification.Name("editingPrivateNoteOnPost")
+    }
+    static var editingPrivateNoteOnContact: Notification.Name {
+        return Notification.Name("editingPrivateNoteOnContact")
     }
     static var newPrivateNoteOnPost: Notification.Name {
         return Notification.Name("newPrivateNoteOnPost")
     }
     static var newPrivateNoteOnContact: Notification.Name {
         return Notification.Name("newPrivateNoteOnContact")
+    }
+    
+    static var viewNeedsUpdate: Notification.Name {
+        return Notification.Name("viewNeedsUpdate")
     }
 }

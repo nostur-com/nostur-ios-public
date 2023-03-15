@@ -13,8 +13,6 @@ struct QuoteOrRepostChoiceSheet: View {
     @Environment(\.dismiss) var dismiss
     
     let event:Event
-    @Binding var unpublishRepostId:UUID?
-    @Binding var unpublishOriginalId:UUID?
     @Binding var showingNewQuoteRepost:Bool
     
     var body: some View {
@@ -37,8 +35,8 @@ struct QuoteOrRepostChoiceSheet: View {
                         return
                     }
                     
-                    unpublishRepostId = up.publish(signedEvent)
-                    unpublishOriginalId = up.publish(event.toNEvent())
+                    up.publishNow(signedEvent)
+                    up.publishNow(event.toNEvent())
                     dismiss()
                 }
             } label: { Label("Repost", systemImage: "arrow.2.squarepath").padding(.vertical, 5) }
@@ -63,8 +61,6 @@ struct QuoteOrRepostChoiceSheet: View {
 
 struct QuoteOrRepostChoiceSheet_Previews: PreviewProvider {
     
-    @State static var unpublishRepostId:UUID? = UUID()
-    @State static var unpublishOriginalId:UUID? = UUID()
     @State static var showingNewQuoteRepost:Bool = true
     
     static var previews: some View {
@@ -72,7 +68,7 @@ struct QuoteOrRepostChoiceSheet_Previews: PreviewProvider {
         let event = PreviewFetcher.fetchEvent("c3a040feac185585f984147cdaf7a7ec5774b06db29ff25017c45026e470daeb")
         VStack {
             if let event {
-                QuoteOrRepostChoiceSheet(event: event, unpublishRepostId: $unpublishRepostId, unpublishOriginalId: $unpublishOriginalId, showingNewQuoteRepost: $showingNewQuoteRepost)
+                QuoteOrRepostChoiceSheet(event: event, showingNewQuoteRepost: $showingNewQuoteRepost)
                     .withPreviewEnvironment()
             }
         }

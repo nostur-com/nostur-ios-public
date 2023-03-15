@@ -66,8 +66,8 @@ struct NotificationsZaps: View {
     }
 //    
     var body: some View {
-        ScrollView {
-            LazyVStack(alignment:.leading) {
+        List {
+            Section {
                 ForEach(myNotesZapped) { note in
                     HStack(alignment: .top) {
                         VStack {
@@ -87,21 +87,36 @@ struct NotificationsZaps: View {
                         VStack(alignment:.leading, spacing: 3) {
                             Group {
                                 ZapsForThisNote(zaps:zapsForNote(note), onAppear: self.onAppear)
-                                NoteMinimalContentView(event: note, lineLimit: 3)
+                                NoteMinimalContentView(vPost: note.toVPost(), lineLimit: 3)
                             }.onTapGesture {
-                                nav.navigateTo(NotePath(id: note.id))
+                                nav.navigateTo(note.toVPost())
                             }
                             Divider()
                         }
                     }
+                    .id(note.id)
+                    .listRowInsets(EdgeInsets())
                 }
             }
-            .padding()
+            Section {
+                HStack {
+                    Spacer()
+                    Button("Fetch older") {
+                        fetchOlderZaps()
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(.accentColor)
+                    Spacer()
+                }
+                .listRowInsets(EdgeInsets())
+            }
         }
+        .listStyle(.plain)
         .onAppear {
             fetchZaps()
         }
     }
+    
     func fetchZaps() {
         guard ns.account != nil else { return }
         sp.sendMessage(
@@ -112,6 +127,20 @@ struct NotificationsZaps: View {
                                 kinds: [9735],
                                 limit: 500,
                                 since: NTimestamp(timestamp: Int(zaps.first?.created_at ?? 0)))
+                         )
+        )
+    }
+    
+    func fetchOlderZaps() {
+        guard ns.account != nil else { return }
+        sp.sendMessage(
+            ClientMessage(type: .REQ,
+                          message:
+                            RequestMessage.getMentions(
+                                pubkeys: [ns.account!.publicKey],
+                                kinds: [9735],
+                                limit: 500,
+                                until: NTimestamp(timestamp: Int(zaps.last?.created_at ?? 0)))
                          )
         )
     }

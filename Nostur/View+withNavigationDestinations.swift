@@ -17,6 +17,7 @@ struct ContactPath: Hashable {
 }
 
 enum ViewPath: Hashable {
+    case Post(vPost:VPost)
     case Blocklist
     case Bookmarks(account:Account)
     case Account(account:Account)
@@ -35,12 +36,15 @@ enum ViewPath: Hashable {
 extension View {
     func withNavigationDestinations() -> some View {
         return self
+            .navigationDestination(for: VPost.self) { vPost in
+                PostDetailView(vPost: vPost)
+            }
             .navigationDestination(for: NotePath.self) { path in
                 NoteById(id: path.id)
             }
-            .navigationDestination(for: Event.self) { event in
-                NoteDetail(event: event)
-            }
+//            .navigationDestination(for: Event.self) { event in
+//                NoteDetail(event: event)
+//            }
             .navigationDestination(for: ContactPath.self) { path in
                 ProfileByPubkey(pubkey: path.key)
             }
@@ -55,6 +59,8 @@ extension View {
 //            }
             .navigationDestination(for: ViewPath.self) { path in
                 switch (path) {
+                    case .Post(let post):
+                        PostDetailView(vPost: post)
                     case .Blocklist:
                         BlockListView()
                     case .Bookmarks(let account):
@@ -115,7 +121,14 @@ class NavigationModel: ObservableObject {
             return
         }
         if IS_IPAD {
-            if type(of: path) == Event.self {
+            if type(of: path) == VPost.self {
+                let p = path as! VPost
+                let tab = DetailTabsModel.Tab(vPost: p)
+                tm.tabs.append(tab)
+                tm.selected = tab
+                return
+            }
+            else if type(of: path) == Event.self {
                 let p = path as! Event
                 let tab = DetailTabsModel.Tab(event: p)
                 tm.tabs.append(tab)
