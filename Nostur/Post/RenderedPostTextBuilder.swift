@@ -81,10 +81,10 @@ class RenderedPostTextBuilder {
     // Takes a string and replaces any link with a markdown link. Also handles subdomains
     static func replaceURLsWithMarkdownLinks(in string: String) -> String {
         return string
-            .replacingOccurrences(of: #"(?<!https?:\/\/)(?<!\S)[a-zA-Z0-9\.]+(?:\.[a-zA-Z]+)+([\/\?\=\&\#\.]\@?[\w-]+)*\/?"#,
+            .replacingOccurrences(of: #"(?<!https?:\/\/)(?<!\S)[a-zA-Z0-9\-\.]+(?:\.[a-zA-Z]+)+([\/\?\=\&\#\.]\@?[\w-]+)*\/?"#,
                                   with: "[$0](https://$0)",
                                   options: .regularExpression) // REPLACE ALL DOMAINS WITHOUT PROTOCOL, WITH MARKDOWN LINK AND ADD PROTOCOL
-            .replacingOccurrences(of: #"(?<!\S)([\w+]+\:\/\/)?[a-zA-Z0-9\.]+(?:\.[a-zA-Z]+)+([\/\?\=\&\#\.]\@?[\w-]+)*\/?"#,
+            .replacingOccurrences(of: #"(?<!\S)([\w+]+\:\/\/)?[a-zA-Z0-9\-\.]+(?:\.[a-zA-Z]+)+([\/\?\=\&\#\.]\@?[\w-]+)*\/?"#,
                                   with: "[$0]($0)",
                                   options: .regularExpression) // REPLACE THE REMAINING URLS THAT HAVE PROTOCOL, BUT IGNORE ALREADY MARKDOWNED LINKS
     }
