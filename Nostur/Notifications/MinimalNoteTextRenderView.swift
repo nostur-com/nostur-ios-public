@@ -20,7 +20,7 @@ struct MinimalNoteTextRenderView: View {
     
     var body: some View {
         VStack(alignment: .leading) {
-            Text(vPost.renderedText)//.border(.cyan)
+            Text(vPost.plainText)//.border(.cyan)
                 .lineLimit(lineLimit, reservesSpace: false)
                 .textSelection(.enabled)
                 .multilineTextAlignment(TextAlignment.leading)
