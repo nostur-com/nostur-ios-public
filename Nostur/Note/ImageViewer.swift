@@ -33,7 +33,7 @@ struct ImageViewer: View {
         self.imgUrls = getImgUrlsFromContent(content)
         self.pubkey = pubkey
     }
-        
+    
     var body: some View {
         VStack(alignment: .center) {
             if (imgUrls.count > 1) {
@@ -70,7 +70,7 @@ struct ImageViewer: View {
                         })
                     }
                     .frame(height: 200)
-//                    .background(.regularMaterial)
+                    //                    .background(.regularMaterial)
                 }
                 else {
                     VStack {
@@ -140,71 +140,103 @@ struct ImageViewer: View {
         }
     }
     
-//    var bodyx: some View {
-//        GeometryReader { geometry in
-//            let side = geometry.size.width / 2
-//            let item = GridItem(.fixed(side), spacing: 2)
-//            if (imgUrls_.count > 1) {
-//                LazyVGrid(columns: Array(repeating: item, count: 2), spacing: 2) {
-//                    ForEach(0..<imgUrls_.count, id: \.self) { index in
-//                        LazyImage(url: imgUrls_[index])
-//                            .pipeline(ImageProcessing.shared.postContentPipeline)
-//                            .priority(.low)
-//                            .processors([ImageProcessors.Resize(width: side)])
-//                            .frame(width: side, height: side)
-//                        // TODO: DUNNO MAYBE NEED PREFETCHER SOME DAY
-//                        //                            .onAppear { model.onAppear(index) }
-//                        //                            .onDisappear { model.onDisappear(index) }
-//                            .onTapGesture {
-//                                fullScreenItem = FullScreenItem(url: imgUrls_[index])
-//                            }
-//                    }
-//                }
-//            }
-//            else if (!imgUrls_.isEmpty) {
-////                Text("WTF")
-//                LazyVGrid(columns: [GridItem(.fixed(geometry.size.width))], spacing: 2) {
-//                    LazyImage(url: imgUrls_[0])
-//
-//                        .pipeline(ImageProcessing.shared.postContentPipeline)
-//                        .priority(.low)
-//                        .processors([ImageProcessors.Resize(width: geometry.size.width)])
-//                        .frame(width: geometry.size.width)
-////                        .scaledToFit()
-//                        .frame(height: 350)
-//                    // TODO: DUNNO MAYBE NEED PREFETCHER SOME DAY
-//                    //                            .onAppear { model.onAppear(0) }
-//                    //                            .onDisappear { model.onDisappear(0) }
-//                        .onTapGesture {
-//                            fullScreenItem = FullScreenItem(url: imgUrls_[0])
-//                        }
-//                }
-//                .frame(height: 350)
-//
-//            }
-//        }
-//        .onAppear {
-//            imgUrls = getImgUrlsFromContent(content)
-//        }
-//        .fullScreenCover(item: $fullScreenItem, content: { item in
-//            FullImageViewer(fullImageURL:item.url)
-//        })
-//    }
+    //    var bodyx: some View {
+    //        GeometryReader { geometry in
+    //            let side = geometry.size.width / 2
+    //            let item = GridItem(.fixed(side), spacing: 2)
+    //            if (imgUrls_.count > 1) {
+    //                LazyVGrid(columns: Array(repeating: item, count: 2), spacing: 2) {
+    //                    ForEach(0..<imgUrls_.count, id: \.self) { index in
+    //                        LazyImage(url: imgUrls_[index])
+    //                            .pipeline(ImageProcessing.shared.postContentPipeline)
+    //                            .priority(.low)
+    //                            .processors([ImageProcessors.Resize(width: side)])
+    //                            .frame(width: side, height: side)
+    //                        // TODO: DUNNO MAYBE NEED PREFETCHER SOME DAY
+    //                        //                            .onAppear { model.onAppear(index) }
+    //                        //                            .onDisappear { model.onDisappear(index) }
+    //                            .onTapGesture {
+    //                                fullScreenItem = FullScreenItem(url: imgUrls_[index])
+    //                            }
+    //                    }
+    //                }
+    //            }
+    //            else if (!imgUrls_.isEmpty) {
+    ////                Text("WTF")
+    //                LazyVGrid(columns: [GridItem(.fixed(geometry.size.width))], spacing: 2) {
+    //                    LazyImage(url: imgUrls_[0])
+    //
+    //                        .pipeline(ImageProcessing.shared.postContentPipeline)
+    //                        .priority(.low)
+    //                        .processors([ImageProcessors.Resize(width: geometry.size.width)])
+    //                        .frame(width: geometry.size.width)
+    ////                        .scaledToFit()
+    //                        .frame(height: 350)
+    //                    // TODO: DUNNO MAYBE NEED PREFETCHER SOME DAY
+    //                    //                            .onAppear { model.onAppear(0) }
+    //                    //                            .onDisappear { model.onDisappear(0) }
+    //                        .onTapGesture {
+    //                            fullScreenItem = FullScreenItem(url: imgUrls_[0])
+    //                        }
+    //                }
+    //                .frame(height: 350)
+    //
+    //            }
+    //        }
+    //        .onAppear {
+    //            imgUrls = getImgUrlsFromContent(content)
+    //        }
+    //        .fullScreenCover(item: $fullScreenItem, content: { item in
+    //            FullImageViewer(fullImageURL:item.url)
+    //        })
+    //    }
 }
 
 struct FullImageViewer: View {
     
     @Environment(\.dismiss) var dismiss
-//    @Binding var fullImageIsShown:Bool
+    //    @Binding var fullImageIsShown:Bool
     var fullImageURL:URL
+    @State private var scale: CGFloat = 1.0
+    @State private var lastScale: CGFloat = 1.0
+    @State private var position: CGSize = .zero
+    @State private var newPosition: CGSize = .zero
     
     var body: some View {
+        
+        let magnifyAndDragGesture = MagnificationGesture()
+                    .onChanged { value in
+                        let delta = value / self.lastScale
+                        self.lastScale = value
+                        self.scale *= delta
+                    }
+                    .onEnded { value in
+                        self.lastScale = 1.0
+                    }
+                    .simultaneously(with: DragGesture()
+                        .onChanged { value in
+                            self.position.width = self.newPosition.width + value.translation.width
+                            self.position.height = self.newPosition.height + value.translation.height
+                        }
+                        .onEnded { value in
+                            self.newPosition = self.position
+                        }
+                    )
+        
         ZStack {
             VStack {
                 LazyImage(url: fullImageURL) { state in
                     if let image = state.image {
                         image
                             .resizingMode(.aspectFit)
+                            .scaleEffect(scale)
+                            .offset(position)
+                            .gesture(magnifyAndDragGesture)
+                            .onTapGesture {
+                                withAnimation {
+                                    scale = 1.0
+                                }
+                            }
                     }
                     else {
                         CenteredProgressView()
@@ -227,16 +259,16 @@ struct FullImageViewer: View {
             }
             .onTapGesture {
                 dismiss()
-//                fullImageIsShown = false
+                //                fullImageIsShown = false
             }
         }
         .gesture(DragGesture(minimumDistance: 3.0, coordinateSpace: .local)
             .onEnded { value in
                 print(value.translation)
                 switch(value.translation.width, value.translation.height) {
-//                    case (...0, -30...30):  print("left swipe")
-//                    case (0..., -30...30):  print("right swipe")
-//                    case (-100...100, ...0):  print("up swipe")
+                        //                    case (...0, -30...30):  print("left swipe")
+                        //                    case (0..., -30...30):  print("right swipe")
+                        //                    case (-100...100, ...0):  print("up swipe")
                     case (-100...100, 0...):  dismiss()
                     default:  print("no clue")
                 }
@@ -270,17 +302,17 @@ struct ImageViewer_Previews: PreviewProvider {
         let urlsFromContent = getImgUrlsFromContent(content1)
         
         List {
-//            LazyImage(url: URL(string: "https://nostur.com/screenshots/badges.png")!)
-//                .frame(height: 200)
-//                .padding(20)
-//                .listRowInsets(EdgeInsets())
-//
-//            ImageViewer(content: content1)
+            //            LazyImage(url: URL(string: "https://nostur.com/screenshots/badges.png")!)
+            //                .frame(height: 200)
+            //                .padding(20)
+            //                .listRowInsets(EdgeInsets())
+            //
+            //            ImageViewer(content: content1)
             ImageViewer(imgUrls: urlsFromContent, pubkey: "")
                 .listRowInsets(EdgeInsets())
         }
         .listStyle(.inset)
-            .withPreviewEnvironment()
+        .withPreviewEnvironment()
     }
 }
 

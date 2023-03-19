@@ -401,8 +401,32 @@ struct ProfilePicFullScreenSheet: View {
     
     @Binding var profilePicViewerIsShown:Bool
     var pictureUrl:String
+    @State private var scale: CGFloat = 1.0
+    @State private var lastScale: CGFloat = 1.0
+    @State private var position: CGSize = .zero
+    @State private var newPosition: CGSize = .zero
     
     var body: some View {
+        
+        let magnifyAndDragGesture = MagnificationGesture()
+                    .onChanged { value in
+                        let delta = value / self.lastScale
+                        self.lastScale = value
+                        self.scale *= delta
+                    }
+                    .onEnded { value in
+                        self.lastScale = 1.0
+                    }
+                    .simultaneously(with: DragGesture()
+                        .onChanged { value in
+                            self.position.width = self.newPosition.width + value.translation.width
+                            self.position.height = self.newPosition.height + value.translation.height
+                        }
+                        .onEnded { value in
+                            self.newPosition = self.position
+                        }
+                    )
+        
         ZStack {
             VStack {
                 HStack {
@@ -422,6 +446,15 @@ struct ProfilePicFullScreenSheet: View {
                 LazyImage(url: URL(string: pictureUrl)) { state in
                     if let image = state.image {
                         image.scaledToFit()
+                            .scaleEffect(scale)
+                            .offset(position)
+                            .gesture(magnifyAndDragGesture)
+                            .onTapGesture {
+                                withAnimation {
+                                    scale = 1.0
+                                }
+                            }
+                        
                     }
                     else {
                         ProgressView()
