@@ -11,7 +11,6 @@ import CoreData
 
 struct ProfileLikesView: View {
 
-    let vTransformer:VTransformer
     var sp:SocketPool = .shared
     var pubkey:String
     
@@ -30,12 +29,11 @@ struct ProfileLikesView: View {
     
     
     var vPosts:[VPost] {
-        reactionsTo.map(vTransformer.eventToVPost)
+        reactionsTo.map(VPostTransformer.shared.toVPost)
     }
     
     init(pubkey: String) {
         self.pubkey = pubkey
-        self.vTransformer = VTransformer(pubkey: pubkey)
         _reactions = FetchRequest(
             sortDescriptors: [SortDescriptor(\Event.created_at, order: .reverse)],
             predicate: NSPredicate(format: "pubkey == %@ AND kind == 7", pubkey)

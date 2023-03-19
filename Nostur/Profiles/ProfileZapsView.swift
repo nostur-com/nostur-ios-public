@@ -10,7 +10,6 @@ import SwiftUI
 // NOTES ON USER PROFILE SCREEN
 struct ProfileZapsView: View {
     
-    let vTransformer:VTransformer
     @EnvironmentObject var er:ExchangeRateModel
     var sp:SocketPool = .shared
     var contact:Contact?
@@ -20,29 +19,27 @@ struct ProfileZapsView: View {
         predicate: NSPredicate(value: false),
         animation: .none)
     var zaps: FetchedResults<Event> // ZAP EVENTS FROM CUSTODIAL PROVIDER
-    var zaps_:[Event] { Array(zaps) } // ZAP EVENTS FROM CUSTODIAL PROVIDER
-    
+    var zaps_:[Event] { Array(zaps) } // For onChange()
     
     @FetchRequest(
         sortDescriptors: [SortDescriptor(\Event.zapTally, order: .reverse)],
         predicate: NSPredicate(value: false),
         animation: .none)
-    var notes: FetchedResults<Event> // AUTHORS NOTES
+    var posts: FetchedResults<Event> // AUTHORS POSTS
     
     var vPosts:[VPost] {
-        notes.map(vTransformer.eventToVPost)
+        posts.map(VPostTransformer.shared.toVPost)
     }
     
     init(pubkey:String, contact:Contact? = nil) {
-        self.vTransformer = VTransformer(pubkey: pubkey)
         if (contact != nil) {
             self.contact = contact
             _zaps = FetchRequest(
                 sortDescriptors: [SortDescriptor(\Event.created_at, order: .reverse)],
-                predicate: NSPredicate(format: "kind = 9735 AND tagsSerialized CONTAINS %@", "[\"p\",\"\(contact!.pubkey)") // OPTIMIZATION HACK
+                predicate: NSPredicate(format: "kind = 9735 AND tagsSerialized CONTAINS %@", serializedP(contact!.pubkey)) // OPTIMIZATION HACK
             )
             
-            _notes = FetchRequest(
+            _posts = FetchRequest(
                 sortDescriptors: [SortDescriptor(\Event.zapTally, order: .reverse)],
                 predicate: NSPredicate(format: "kind = 1 AND zapTally > 0 AND pubkey == %@", contact!.pubkey)
             )
@@ -124,7 +121,7 @@ struct ProfileZapsView: View {
                                 .font(.system(size: 20))
                             
                             LazyVStack {
-                                ForEach(Array(vPosts.filter { $0.zapTally > 0 } .prefix(10))) { vPost in
+                                ForEach(vPosts.filter { $0.event.zapTally > 0  } .prefix(10)) { vPost in
                                     NoteRow(vPost: vPost)
                                     Divider()
                                 }
@@ -143,7 +140,7 @@ struct ProfileZapsView: View {
                 
                 for event in newZapEvents {
                     if (event.zapFromRequest == nil) { print("🔴🔴 wheres the zap request bro. event.id: \(event.id)");continue }
-                    if (event.zapFromRequest?.contact == nil || event.zapFromRequest?.contact?.updated_at == 0) {
+                    if (event.zapFromRequest?.contact == nil || event.zapFromRequest?.contact?.metadata_created_at == 0) {
                         missingContacts.append(event.zapFromRequest!.pubkey)
                     }
                     if (event.zappedEventId != nil && event.zappedEvent == nil) {
@@ -179,3 +176,4 @@ struct ProfileZapsView_Previews: PreviewProvider {
         }
     }
 }
+

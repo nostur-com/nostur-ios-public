@@ -27,14 +27,15 @@ struct ProfileByPubkey: View {
         self.pubkey = pubkey
         
         _contacts = FetchRequest(
-            sortDescriptors: [],
+            sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
             predicate: NSPredicate(format: "pubkey == %@", pubkey)
         )
     }
     
     var body: some View {
         if (contacts.first != nil) {
-            Profile(contact: contacts.first!)
+            ProfileView(contact: contacts.first!)
+//            Profile(contact: contacts.first!)
         }
         else {
             ProgressView().onAppear {
@@ -65,10 +66,11 @@ struct Profile: View {
     @FetchRequest
     var clEvents:FetchedResults<Event>
     
-    @State var activeTab = "NOTES"
+    @State var activeTab = "POSTS"
     @State var isFollowing = false
     @State var profilePicViewerIsShown = false
     @State var navigationTitle = ""
+    @State var postsLimit = 20 // Initial limit on posts (else slow)
     
     init(contact:Contact) {
         self.contact = contact
@@ -118,7 +120,8 @@ struct Profile: View {
                 
                 HStack {
                     VStack {
-                        ProfilePicView(pubkey: contact.pubkey, contact: contact, size: 75)
+                        PFP(pubkey: contact.pubkey, pictureUrl: contact.picture, size: 75)
+//                        ProfilePicView(pubkey: contact.pubkey, contact: contact, size: 75)
                             .offset(x: 10, y: 150-37.5)
                             .onTapGesture {
                                 if (contact.picture != nil) {
@@ -228,9 +231,8 @@ struct Profile: View {
                     }
                     
                     ControlGroup {
-                        //                        Button { importNotes() } label: { Text("Import") }
-                        Button { activeTab = "NOTES" } label: {
-                            Label("Notes", systemImage: "bubble.left.and.bubble.right")
+                        Button { activeTab = "POSTS" } label: {
+                            Label("Posts", systemImage: "bubble.left.and.bubble.right")
                         }
                         Button { activeTab = "FOLLOWING" } label: {
                             Label("Following", systemImage: "person.3.sequence")
@@ -247,7 +249,7 @@ struct Profile: View {
                     }
                     
                     Group {
-                        if (activeTab == "NOTES") {
+                        if (activeTab == "POSTS") {
                             ProfileNotesView(pubkey: pubkey)
                                 .padding(.vertical, 10)
                         }

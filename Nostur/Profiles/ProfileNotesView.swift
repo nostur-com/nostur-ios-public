@@ -6,59 +6,48 @@
 //
 
 import SwiftUI
-
+import CoreData
 
 // NOTES ON USER PROFILE SCREEN
 struct ProfileNotesView: View {
     
-    let vTransformer:VTransformer
     let sp:SocketPool = .shared
     let pubkey:String
-    
-    @FetchRequest(
-        sortDescriptors: [SortDescriptor(\Event.created_at, order: .reverse)],
-        predicate: NSPredicate(format: "kind IN {1,6}"),
-        animation: .none)
-    var events: FetchedResults<Event>
-    
-    var vPosts:[VPost] {
-        events.map(vTransformer.eventToVPost)
-    }
-    
-    init(pubkey: String) {
-        self.pubkey = pubkey
-        self.vTransformer = VTransformer(pubkey: pubkey)
-        _events = FetchRequest(
-            sortDescriptors: [SortDescriptor(\Event.created_at, order: .reverse)],
-            predicate: NSPredicate(format: "pubkey == %@ AND kind IN {1,6}", pubkey)
-        )
-    }
-    
+    @State var limit = 10
     
     var body: some View {
-        
-        VStack {
-            if (events.count == 0) {
-                HStack {
-                    Spacer()
-                    ProgressView()
-                        .padding(50)
-                    Spacer()
-                }
-            }
-            else {
+        DynamicFetchView(
+            predicate: NSPredicate(format: "pubkey == %@ AND kind IN {1,6}", pubkey),
+            fetchLimit: limit,
+            sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]) { (events: FetchedResults<Event>)  in
                 LazyVStack {
-                    ForEach(vPosts) { vPost in
-                        NoteRow(vPost: vPost)
-                        Divider()
+                    if (events.count > 0) {
+                        ForEach(events.map(VPostTransformer.shared.toVPost)) { vPost in
+                            NoteRow(vPost: vPost)
+                                .id(vPost.id)
+                        }
+                        VStack {
+                            if (events.count == limit) {
+                                HStack {
+                                    Spacer()
+                                    Button("Load more") {
+                                        limit = limit + 25
+                                    }
+                                    .padding(30)
+                                    Spacer()
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        CenteredProgressView()
+                            .onAppear {
+                                print("🟢 ProfileNotesView.onAppear always REQ.1: \(pubkey)")
+                                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorNotes(pubkey: pubkey)))
+                            }
                     }
                 }
             }
-        }.onAppear {
-            print("🟢 ProfileNotesView.onAppear always REQ.1: \(pubkey)")
-            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorNotes(pubkey: pubkey)))
-        }
-        
     }
 }
 
@@ -69,9 +58,9 @@ struct ProfileNotesView_Previews: PreviewProvider {
         
         let pubkey = "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240"
         
-        ScrollView {
+//        VStack {
             ProfileNotesView(pubkey: pubkey)
                 .withPreviewEnvironment()
-        }
+//        }
     }
 }

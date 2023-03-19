@@ -42,49 +42,47 @@ struct ProfileRelaysView: View {
     var body: some View {
         if relays != nil {
             VStack {
-                List {
-                    ForEach(Array(relays!.keys), id:\.self) { relay in
-                        HStack {
-                            Text("\(relay)")
-                            Spacer()
-                            Button {
-                                let url = String(relay)
-                                do {
-                                    let maybeSocket = sp.socketByUrl(url.description)
-                                    if (maybeSocket != nil) {
-                                        maybeSocket!.client.connect()
-                                    }
-                                    else {
-                                        // create new
-                                        let newRelay = Relay(context: viewContext)
-                                        newRelay.url = url.description
-                                        newRelay.read = true
-                                        newRelay.write = true
-                                        newRelay.createdAt = Date.now
-                                        
-                                        
-                                        try viewContext.save()
-                                        let managedSocket = try sp.addSocket(relayId: newRelay.objectID, url: url.description, read: true, write: true)
-                                        managedSocket.client.connect()
-                                    }
-                                }
-                                catch {
-                                    print("🔌🔴 Could not add relay \(error)")
-                                }
-                                
-                            } label: {
-                                if (sp.isUrlConnected(relay.description)) {
-                                    Text("")
+                ForEach(Array(relays!.keys), id:\.self) { relay in
+                    HStack {
+                        Text("\(relay)")
+                        Spacer()
+                        Button {
+                            let url = String(relay)
+                            do {
+                                let maybeSocket = sp.socketByUrl(url.description)
+                                if (maybeSocket != nil) {
+                                    maybeSocket!.client.connect()
                                 }
                                 else {
-                                    Text("Connect")
+                                    // create new
+                                    let newRelay = Relay(context: viewContext)
+                                    newRelay.url = url.description
+                                    newRelay.read = true
+                                    newRelay.write = true
+                                    newRelay.createdAt = Date.now
+                                    
+                                    
+                                    try viewContext.save()
+                                    let managedSocket = try sp.addSocket(relayId: newRelay.objectID, url: url.description, read: true, write: true)
+                                    managedSocket.client.connect()
                                 }
+                            }
+                            catch {
+                                print("🔌🔴 Could not add relay \(error)")
+                            }
+                            
+                        } label: {
+                            if (sp.isUrlConnected(relay.description)) {
+                                Text("")
+                            }
+                            else {
+                                Text("Connect")
                             }
                         }
                     }
-                }.listStyle(.insetGrouped)
-                    .frame(height: 400)
-                Spacer()
+                    .padding()
+                    Divider()
+                }
             }
         }
         else {
