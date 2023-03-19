@@ -49,7 +49,6 @@ struct NotificationsZaps: View {
     }
 //    
     init(pubkey:String, context:NSManagedObjectContext, onAppear: @escaping (Int64) -> ()) {
-        print("🧨🧨🧨🧨🧨 I INIT NotificationsZaps 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         self.pubkey = pubkey
         self.onAppear = onAppear
         let r1 = Event.fetchRequest()
@@ -66,6 +65,8 @@ struct NotificationsZaps: View {
     }
 //    
     var body: some View {
+        let _ = print("🧨🧨🧨🧨🧨 NOTIFICATONSZAPS 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
+        let _ = Self._printChanges()
         List {
             Section {
                 ForEach(myNotesZapped) { note in

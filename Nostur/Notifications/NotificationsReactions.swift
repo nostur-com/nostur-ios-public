@@ -50,10 +50,8 @@ struct NotificationsReactions: View {
     }
     
     init(pubkey:String, blockedPubkeys:[String], context:NSManagedObjectContext, onAppear: @escaping (Int64) -> ()) {
-        print("🧨🧨🧨🧨🧨 I INIT NotificationsV 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         self.pubkey = pubkey
         self.onAppear = onAppear
-        self.vTransformer = VTransformer(pubkey:pubkey, context: DataProvider.shared().viewContext)
 //        le
         let r1 = Event.fetchRequest()
         r1.predicate = NSPredicate(format: "NOT pubkey IN %@ AND kind == 7 AND reactionTo.contact.pubkey == %@", blockedPubkeys, pubkey)
@@ -69,6 +67,8 @@ struct NotificationsReactions: View {
     }
     
     var body: some View {
+        let _ = print("🧨🧨🧨🧨🧨  NOTIFICATONS REACTIONS 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
+        let _ = Self._printChanges()
         VStack {
             List {
                 Section {

@@ -25,7 +25,6 @@ struct BadgeDetailView: View {
 //    var nBadgeAwards:[NEvent] { badgeAwards.map { $0.toNEvent() }.filter { $0.badgeDescription != nil && $0.badgeDefinition!.value == nBadge.badgeDefinition!.value } }
     
     init(badge:Event) {
-        print("🧨🧨🧨🧨🧨 BadgeDetailView 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         self.badge = badge
         let r = Event.fetchRequest()
         r.predicate = NSPredicate(format: "kind == 8 AND tagsSerialized CONTAINS %@", "[\"a\",\"\(badge.toNEvent().badgeCode!.value)") // OPTIMISATION HACK
@@ -34,6 +33,8 @@ struct BadgeDetailView: View {
     }
     
     var body: some View {
+        let _ = print("🧨🧨🧨🧨🧨 BadgeDetailView 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
+        let _ = Self._printChanges()
         ScrollView {
             HStack(alignment: .top) {
                 VStack(alignment: .center) {

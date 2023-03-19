@@ -13,14 +13,10 @@ struct NotificationsContainer: View {
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var nav:NavigationModel
     
-    init() {
-        print("🧨🧨🧨🧨🧨 INIT NOTIFICATIONS CONTAINER 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
-    }
-    
-    
     var body: some View {
+        let _ = print("🧨🧨🧨🧨🧨 BODY NOTIFICATIONS CONTAINER 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
+        let _ = Self._printChanges()
         NavigationStack(path: $nav.notificationsPath) {
-            let _ = Self._printChanges()
             VStack {
                 if (ns.account != nil) {
                     NotificationsView(account: ns.account!)
@@ -44,12 +40,9 @@ struct NotificationsView: View {
     
     @State var tab = "Posts"
     
-    init(account:Account) {
-        self.account = account
-        print("🧨🧨🧨🧨🧨 INIT NOTIFICATIONS VIEW 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
-    }
     
     var body: some View {
+        let _ = print("🧨🧨🧨🧨🧨  NOTIFICATIONS VIEW 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         let _ = Self._printChanges()
         VStack {
             if let account = ns.account {

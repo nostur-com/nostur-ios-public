@@ -26,7 +26,6 @@ struct NotificationsNotes: View {
     }
         
     init(pubkey:String, mutedRootIds:[String], blockedPubkeys:[String], context:NSManagedObjectContext, onAppear: @escaping (Int64) -> ()) {
-        print("🧨🧨🧨🧨🧨 I INIT NotificationsNotes 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         self.pubkey = pubkey
         self.onAppear = onAppear
 //        let r1 = Event.fetchRequest()
@@ -45,6 +44,8 @@ struct NotificationsNotes: View {
     }
     
     var body: some View {
+        let _ = print("🧨🧨🧨🧨🧨 NotificationsNotes 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
+        let _ = Self._printChanges()
         List {
             Section {
                 ForEach(vPosts) { vPost in

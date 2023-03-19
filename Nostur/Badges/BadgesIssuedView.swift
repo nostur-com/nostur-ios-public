@@ -34,7 +34,6 @@ struct BadgesIssuedView: View {
     var pubkey:String
     
     init(pubkey:String) {
-        print("🧨🧨🧨🧨🧨 BadgesView 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         self.pubkey = pubkey
         let r = Event.fetchRequest()
         r.predicate = NSPredicate(format: "kind == 30009 AND pubkey == %@", pubkey)
@@ -43,6 +42,8 @@ struct BadgesIssuedView: View {
     }
     
     var body: some View {
+        let _ = print("🧨🧨🧨🧨🧨 BadgesView 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
+        let _ = Self._printChanges()
         VStack {
 //            Button { createNewBadgeSheetShown = true } label: { Text("Create new badge") }
 //            NavigationStack {

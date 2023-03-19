@@ -41,7 +41,6 @@ struct BadgesReceivedView: View {
     
     init(pubkey:String) {
         self.pubkey = pubkey
-        print("🧨🧨🧨🧨🧨 BadgesReceived🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         let r = Event.fetchRequest()
         r.predicate = NSPredicate(format: "kind == 8 AND tagsSerialized CONTAINS %@", serializedP(pubkey)) // optimization hack
         r.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
@@ -49,6 +48,8 @@ struct BadgesReceivedView: View {
     }
     
     var body: some View {
+        let _ = print("🧨🧨🧨🧨🧨 BadgesReceived🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
+        let _ = Self._printChanges()
         VStack {
             List(Array(Set(badgeAwardsToMe.compactMap { $0.badgeDefinition }).sorted(by: { $0.created_at > $1.created_at })), id:\.self, selection: $selection) { badge in
                     BadgeRow(badge: badge)
