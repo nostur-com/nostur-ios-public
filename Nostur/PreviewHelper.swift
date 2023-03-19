@@ -126,9 +126,8 @@ struct PreviewFetcher {
     }
     
     static func fetchVPost(_ id:String? = nil, context:NSManagedObjectContext? = nil) -> VPost? {
-        let vTransformer = VTransformer(pubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",context: context ?? PreviewFetcher.viewContext)
         if let event = fetchEvent(id) {
-            return vTransformer.eventToVPost(event)
+            return event.toVPost()
         }
         return nil
     }

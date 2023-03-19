@@ -11,8 +11,8 @@ import CoreData
 class RenderedPostTextBuilder {
     let context:NSManagedObjectContext
     
-    init(context: NSManagedObjectContext) {
-        self.context = context
+    init(_ context:NSManagedObjectContext? = nil) {
+        self.context = context ?? DataProvider.shared().viewContext
     }
     
     func renderedText(_ event:Event) -> AttributedString {

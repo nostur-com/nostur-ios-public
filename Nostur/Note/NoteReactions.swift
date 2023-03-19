@@ -15,17 +15,17 @@ struct NoteReactions: View {
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)], predicate: NSPredicate(value: false))
     var reactions:FetchedResults<Event>
-    var reactions_:[Event] { Array(reactions) }
+    var reactions_:[Event] { reactions.filter { $0.lastE() == id }  }
     
     init(id:String) {
         self.id = id
-        _reactions = FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)], predicate: NSPredicate(format: "kind == 7 AND reactionToId == %@", id))
+        _reactions = FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)], predicate: NSPredicate(format: "kind == 7 AND tagsSerialized CONTAINS %@", serializedE(id)))
     }
     
     var body: some View {
         let _ = Self._printChanges()
         ScrollView {
-            ForEach(reactions) { reaction in
+            ForEach(reactions_) { reaction in
                 ReactionRow(reaction: reaction)
             }
             Spacer()
@@ -33,7 +33,7 @@ struct NoteReactions: View {
         .onAppear {
             var missing:[String] = []
             for reaction in reactions_ {
-                if reaction.contact == nil || reaction.contact?.updated_at == 0 {
+                if reaction.contact == nil || reaction.contact?.metadata_created_at == 0 {
                     missing.append(reaction.pubkey)
                 }
             }
@@ -42,7 +42,7 @@ struct NoteReactions: View {
         .onChange(of: reactions_) { newValue in
             var missing:[String] = []
             for reaction in newValue {
-                if reaction.contact == nil || reaction.contact?.updated_at == 0 {
+                if reaction.contact == nil || reaction.contact?.metadata_created_at == 0 {
                     missing.append(reaction.pubkey)
                 }
             }

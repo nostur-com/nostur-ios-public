@@ -11,27 +11,18 @@ struct NoteHeaderView: View {
     let nav:NavigationModel = .shared
     let vPost:VPost
     var singleLine:Bool = true
-    var hideEmojis:Bool
-    
-    var ago: String {
-        get {
-            let f = TimeCompactor(ifZero: nil, style: .short, roundSmallToWhole: true)
-            return f.string(from: Double(Date.now.timeIntervalSince(vPost.createdAt)) as NSNumber)!
-        }
-    }
     
     init(vPost:VPost, singleLine:Bool = true) {
         self.vPost = vPost
         self.singleLine = singleLine
-        self.hideEmojis = SettingsStore.shared.hideEmojisInNames
     }
     
     var body: some View {
         VStack(alignment: .leading, spacing:0) { // Name + menu "replying to"
             HStack(spacing:2) {
                 Group {
-                    if (vPost.vContact != nil) {
-                        Text(vPost.vContact!.displayName) // Name
+                    if (vPost.event.contact != nil) {
+                        Text(vPost.event.contact!.authorName) // Name
                             .foregroundColor(.primary)
                             .fontWeight(.bold)
                             .lineLimit(1)
@@ -44,8 +35,8 @@ struct NoteHeaderView: View {
                             .lineLimit(1)
                             .redacted(reason: .placeholder)
                     }
-                    
-                    if (vPost.vContact?.isNip05Verified ?? false) {
+//
+                    if (vPost.event.contact?.nip05veried ?? false) {
                         Image(systemName: "checkmark.seal.fill")
                             .foregroundColor(.blue)
                             .layoutPriority(3)
@@ -53,20 +44,20 @@ struct NoteHeaderView: View {
                     
                     if (singleLine) {
                         Group {
-                            Text("@\(vPost.vContact?.username ?? "")").layoutPriority(1)
+                            Text("@\(vPost.event.username)").layoutPriority(1)
                             Text(" · ") //
-                            Text(ago).layoutPriority(1) //
+                            Text(vPost.event.ago).layoutPriority(1) //
                         }
                         .foregroundColor(.secondary)
                         .lineLimit(1)
                     }
                 }
                 .onTapGesture {
-                    nav.navigateTo(ContactPath(key: vPost.pubkey))
+                    nav.navigateTo(ContactPath(key: vPost.event.pubkey))
                 }
             }
             if (!singleLine) {
-                Text("@\(vPost.vContact?.username ?? String(vPost.npub.prefix(11))) · \(ago)")
+                Text("@\(vPost.event.username) · \(vPost.event.ago)")
                     .foregroundColor(.secondary)
                     .lineLimit(1)
             }

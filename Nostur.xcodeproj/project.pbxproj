@@ -671,6 +671,8 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
+				1F65121A29C75AC9009FD4AE /* ProfileView.swift */,
+				1F65121829C743B7009FD4AE /* ShimmerAnimation.swift */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1FB448BB2965F3D000038671 /* Products */,
 				1F7C65B629A1466D009FF3EA /* Frameworks */,

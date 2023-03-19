@@ -20,17 +20,27 @@ struct NoteMinimalContentView: View {
         case lightningInvoice
     }
     
-    let type:NoteRow.type
+    var type:NoteRow.type = .note
+    
+//    var vvPost:VPost?
     
     init(vPost:VPost, hideFooter:Bool = false, lineLimit:Int = 0) {
         self.vPost = vPost
         self.lineLimit = lineLimit
-        if vPost.plainText.prefix(4).lowercased() == "lnbc" && Invoice.fromStr(s: vPost.plainText).getValue() != nil {
-            self.type = .lightningInvoice
-        }
-        else {
-            self.type = .note
-        }
+//        if vPost.plainText.prefix(4).lowercased() == "lnbc" && Invoice.fromStr(s: vPost.plainText).getValue() != nil {
+//            self.type = .lightningInvoice
+//        }
+//
+//        if let firstQuoteObjectId = vPost.firstQuoteObjectId {
+//            let event = DataProvider.shared().viewContext.object(with: firstQuoteObjectId) as? Event
+//
+//            if event != nil {
+//                self.vvPost = self.vPostTransformer.toVPost(event!)
+//            }
+//            print("🟢🟢🟢🟢🟢🟢 🟢🟢🟢 🟢🟢🟢 🟢🟢🟢 VPOST \(self.vPost.id)")
+//            print("🟢🟢🟢🟢🟢🟢 🟢🟢🟢 🟢🟢🟢 🟢🟢🟢 EVENT: \(event?.id ?? "") ")
+//            print("🟢🟢🟢🟢🟢🟢 🟢🟢🟢 🟢🟢🟢 🟢🟢🟢 VVPOST: \(self.vvPost?.id ?? "")  ///\(firstQuoteObjectId)")
+//        }
     }
     
     @Namespace var invoice
@@ -47,12 +57,12 @@ struct NoteMinimalContentView: View {
                             MinimalNoteTextRenderView(vPost: vPost, lineLimit: lineLimit)
                     }
                     
-                    if (vPost.firstQuote != nil && vPost.post.firstQuoteId != nil) {
-                        MinimalQuotedNoteFragment(vPost: vPost.firstQuote!)
+                    if (vPost.event.firstQuote != nil && vPost.event.firstQuoteId != nil) {
+                        MinimalQuotedNoteFragment(vPost: vPost.event.firstQuote!.toVPost())
                     }
-                    else if (vPost.firstQuote == nil && vPost.post.firstQuoteId != nil) {
+                    else if (vPost.event.firstQuote == nil && vPost.event.firstQuoteId != nil) {
                         CenteredProgressView().onAppear {
-                            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: vPost.post.firstQuoteId!)))
+                            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: vPost.event.firstQuoteId!)))
                         }
                     }
                 }

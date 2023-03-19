@@ -12,26 +12,21 @@ struct MinimalQuotedNoteFragment: View {
     var sp:SocketPool = .shared
     var vPost:VPost
     
-    var ago: String {
-        let f = TimeCompactor(ifZero: nil, style: .short, roundSmallToWhole: true)
-        return f.string(from: Double(Date.now.timeIntervalSince(vPost.createdAt)) as NSNumber)!
-    }
-    
     var body: some View {
         VStack(alignment:.leading) {
             HStack { // name + reply + context menu
                 VStack(alignment: .leading) { // Name + menu "replying to"
                     HStack(spacing:2) {
                         // profile image
-                        PFP(pubkey: vPost.pubkey, pictureUrl: vPost.vContact?.pictureUrl, size: 20)
+                        PFP(pubkey: vPost.event.pubkey, pictureUrl: vPost.event.contact?.picture, size: 20)
                         .opacity(0.5)
-                        if (vPost.vContact != nil) {
-                            Text(vPost.displayName) // Name
+                        if (vPost.event.contact != nil) {
+                            Text(vPost.event.contact!.authorName) // Name
                                 .font(.system(size: 14))
                                 .foregroundColor(.primary.opacity(0.5))
                                 .fontWeight(.bold)
                                 .lineLimit(1)
-                            Text("@\(vPost.username)") //
+                            Text("@\(vPost.event.contact!.username)") //
                                 .font(.system(size: 14))
                                 .foregroundColor(.secondary.opacity(0.5))
                         }
@@ -46,7 +41,7 @@ struct MinimalQuotedNoteFragment: View {
                                 .foregroundColor(.secondary.opacity(0.5))
                                 .redacted(reason: .placeholder)
                         }
-                        Text(" · \(ago)") //
+                        Text(" · \(vPost.event.ago)") //
                             .font(.system(size: 14))
                             .foregroundColor(.secondary)
                     }
@@ -63,8 +58,8 @@ struct MinimalQuotedNoteFragment: View {
                 .stroke(.regularMaterial, lineWidth: 1)
         )
         .onAppear {
-            if (vPost.vContact == nil) {
-                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: vPost.pubkey)))
+            if (vPost.event.contact == nil) {
+                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: vPost.event.pubkey)))
             }
         }
     }

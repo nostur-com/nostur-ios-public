@@ -23,8 +23,6 @@ struct NotificationsReactions: View {
     @FetchRequest
     var reactions:FetchedResults<Event>
     
-    let vTransformer:VTransformer
-    
     var myNotesReactedTo:[Event] {
         
         var sortingDict:[Event: Int64] = [:] // Event and most recent reaction created_At
@@ -44,7 +42,7 @@ struct NotificationsReactions: View {
     }
     
     var myNotesReactedToAsVPosts:[VPost] {
-        myNotesReactedTo.map(vTransformer.eventToVPost)
+        myNotesReactedTo.map(VPostTransformer.shared.toVPost)
     }
     
     func reactionsForNote(_ note:Event) -> [Event] {
@@ -76,7 +74,12 @@ struct NotificationsReactions: View {
                 Section {
                     ForEach(myNotesReactedToAsVPosts) { vPost in
                         VStack(alignment:.leading, spacing: 3) {
-                            ReactionsForThisNote(reactions:reactionsForNote(vPost.post), onAppear: self.onAppear)
+                            ReactionsForThisNote(reactions:reactionsForNote(vPost.event), onAppear: self.onAppear)
+//                            Text("vPost.post.id \(vPost.ev.id.prefix(10).description)")
+//                            Text("vPost.post.firstQuoteId \(vPost.post.firstQuoteId?.prefix(10).description ?? "")")
+//                            Text("vPost.firstQuoteObjectId \(vPost.firstQuoteObjectId?.description.prefix(10).description ?? "")")
+//                            Text("vPost.firstQuoteEvent.id \(vPost.firstQuoteEvent?.id.prefix(10).description ?? "")")
+                            Divider()
                             NoteMinimalContentView(vPost: vPost)
                         }
                         .padding()
@@ -121,17 +124,19 @@ struct NotificationsReactions: View {
     }
     
     func fetchReactions() {
-        guard ns.account != nil else { return }
-        sp.sendMessage(
-            ClientMessage(type: .REQ,
-                          message:
-                            RequestMessage.getMentions(
-                                pubkeys: [ns.account!.publicKey],
-                                kinds: [7],
-                                limit: 500,
-                                since: NTimestamp(timestamp: Int(reactions.first?.created_at ?? 0)))
-                         )
-        )
+        guard let account = ns.account else { return }
+        let req = RequestMessage.getMentions(
+            pubkeys: [account.publicKey],
+            kinds: [7],
+            limit: 500,
+            since: NTimestamp(timestamp: Int(reactions.first?.created_at ?? 0)))
+        
+        print(req)
+//        sp.sendMessage(
+//            ClientMessage(type: .REQ,
+//                          message: req
+//                         )
+//        )
     }
 }
 

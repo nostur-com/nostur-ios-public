@@ -158,7 +158,7 @@ struct PostAndParent: View {
                             }
                         }//.background(.red)
                         Spacer()
-                        PrivateNoteToggle(vPost: vPost)
+//                        PrivateNoteToggle(vPost: vPost) // TODO:FIXME
                         NoteMenuView(vPost: vPost)
                     }//.background(.yellow)
                     .id(event.id)
@@ -185,15 +185,15 @@ struct PostAndParent: View {
                                     .foregroundColor(.primary)
                                     .textSelection(.enabled)
                                     .onTapGesture { nav.navigateTo(vPost) }
-                                ImageViewer(imgUrls: vPost.imageUrls, pubkey: vPost.pubkey)
+                                ImageViewer(imgUrls: vPost.imageUrls, pubkey: vPost.event.pubkey)
                         }
                     }
                     .padding(.leading, isParent ? INDENT : 0)
                         
                 // MARK: QUOTED NOTE IN DETAIL NOTE
                     if (event.firstQuoteId != nil) {
-                        if (vPost.firstQuote != nil) {
-                            QuotedNoteFragmentView(vPost: vPost.firstQuote!)
+                        if (vPost.event.firstQuote != nil) {
+                            QuotedNoteFragmentView(vPost: vPost.event.firstQuote!.toVPost())
                                 .padding(.leading, isParent ? INDENT : 0)
                         }
                         else {
@@ -207,7 +207,7 @@ struct PostAndParent: View {
                     }
                     
                     if (isParent) {
-                        FooterFragmentView(vPost: vPost)
+                        FooterFragmentView(event: vPost.event)
                             .padding(.leading, isParent ? INDENT : 0)
                             .padding(.vertical, 5)
                             .padding(.trailing, 5)
@@ -216,7 +216,7 @@ struct PostAndParent: View {
                     else {
                         DetailFooterFragment(event: event)
                             .padding(.leading, isParent ? INDENT : 0)
-                        FooterFragmentView(vPost: vPost)
+                        FooterFragmentView(event: vPost.event)
                             .padding(.vertical, 5)
                         Divider()
                         

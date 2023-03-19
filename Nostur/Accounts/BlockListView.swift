@@ -91,19 +91,23 @@ struct MutedConversations: View {
     @FetchRequest(sortDescriptors: [], predicate: NSPredicate(value: false))
     var mutedRootEvents:FetchedResults<Event>
     
+    var vPosts:[VPost] {
+        mutedRootEvents.map(VPostTransformer.shared.toVPost)
+    }
+    
     var body: some View {
         if (ns.account == nil) {
             Text("Please choose account first")
         }
         else {
             List {
-                ForEach(mutedRootEvents) { rootEvent in
-                    NoteRow(vPost: rootEvent.toVPost())
+                ForEach(vPosts) { vPost in
+                    NoteRow(vPost: vPost)
                         .listRowInsets(EdgeInsets())
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button {
                                 ns.objectWillChange.send()
-                                ns.account!.mutedRootIds_.removeAll(where: { $0 == rootEvent.id })
+                                ns.account!.mutedRootIds_.removeAll(where: { $0 == vPost.id })
                                 do {
                                     try viewContext.save()
                                 } catch {

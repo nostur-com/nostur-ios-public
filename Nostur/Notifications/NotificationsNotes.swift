@@ -17,20 +17,18 @@ struct NotificationsNotes: View {
     @EnvironmentObject var ns:NosturState
     @Environment(\.managedObjectContext) var viewContext
     var onAppear:(Int64) -> ()
-    let vTransformer:VTransformer
     
     @FetchRequest
     var notes:FetchedResults<Event>
     
     var vPosts:[VPost] {
-        notes.map(vTransformer.eventToVPost)
+        notes.map(VPostTransformer.shared.toVPost)
     }
         
     init(pubkey:String, mutedRootIds:[String], blockedPubkeys:[String], context:NSManagedObjectContext, onAppear: @escaping (Int64) -> ()) {
         print("🧨🧨🧨🧨🧨 I INIT NotificationsNotes 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         self.pubkey = pubkey
         self.onAppear = onAppear
-        self.vTransformer = VTransformer(pubkey:pubkey, context: DataProvider.shared().viewContext)
 //        let r1 = Event.fetchRequest()
 //        r1.predicate = NSPredicate(format: "NOT pubkey IN %@ AND kind == 1 AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (NOT replyToRootId IN %@ OR replyToRootId == nil) AND (NOT replyToId IN %@ OR replyToId == nil)", blockedPubkeys + [pubkey], serializedP(pubkey), mutedRootIds, mutedRootIds, mutedRootIds)
 ////        r1.fetchLimit = FETCH_LIMIT

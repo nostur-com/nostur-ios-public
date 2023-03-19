@@ -11,7 +11,7 @@ import CoreData
 struct NotificationsZaps: View {
     let er:ExchangeRateModel = .shared // Not Observed for performance
     let pubkey:String
-    let FETCH_LIMIT = 2250
+    let FETCH_LIMIT = 13250
     let nav:NavigationModel = .shared
     let sp:SocketPool = .shared
     @EnvironmentObject var ns:NosturState

@@ -21,6 +21,12 @@ struct Search: View {
         animation: .none)
     var events:FetchedResults<Event>
     
+    var vPosts:[VPost] {
+        events
+            .prefix(150)
+            .map(VPostTransformer.shared.toVPost)
+    }
+    
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
         predicate: NSPredicate(value: false),
@@ -47,8 +53,9 @@ struct Search: View {
                     }
                 }
                 LazyVStack {
-                    ForEach(events) { event in
-                        NoteRow(vPost: event.toVPost())
+                    ForEach(vPosts) { vPost in
+                        NoteRow(vPost: vPost)
+//                        NoteRow(vPost: event.toVPost(vPostTransformer))
                         Divider()
                     }
                 }

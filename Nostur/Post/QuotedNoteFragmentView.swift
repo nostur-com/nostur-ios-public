@@ -24,7 +24,7 @@ struct QuotedNoteFragmentView: View {
     var ago: String {
         get {
             let f = TimeCompactor(ifZero: nil, style: .short, roundSmallToWhole: true)
-            return f.string(from: Double(Date.now.timeIntervalSince(vPost.createdAt)) as NSNumber)!
+            return f.string(from: Double(Date.now.timeIntervalSince(Date(timeIntervalSince1970: Double(vPost.event.created_at)))) as NSNumber)!
         }
     }
     
@@ -34,18 +34,18 @@ struct QuotedNoteFragmentView: View {
                 VStack(alignment: .leading) { // Name + menu "replying to"
                     HStack(spacing:2) {
                         // profile image
-                        PFP(pubkey: vPost.pubkey, pictureUrl: vPost.vContact?.pictureUrl, size: 20)
+                        PFP(pubkey: vPost.event.pubkey, pictureUrl: vPost.event.contact?.picture, size: 20)
                             .onTapGesture {
-                                nav.navigateTo(ContactPath(key: vPost.pubkey)) // TODO: Direct to vPost.vContact if possible
+                                nav.navigateTo(ContactPath(key: vPost.event.pubkey)) // TODO: Direct to vPost.vContact if possible
                             }
                             
-                        if (vPost.vContact != nil) {
-                            Text(vPost.vContact!.displayName) // Name
+                        if (vPost.event.contact != nil) {
+                            Text(vPost.event.contact!.authorName) // Name
                                 .font(.system(size: 14))
                                 .foregroundColor(.primary)
                                 .fontWeight(.bold)
                                 .lineLimit(1)
-                            Text("@\(vPost.vContact!.username)") //
+                            Text("@\(vPost.event.contact!.username)") //
                                 .font(.system(size: 14))
                                 .foregroundColor(.secondary)
                         }
@@ -73,7 +73,7 @@ struct QuotedNoteFragmentView: View {
             }.frame(height: 40)
             VStack(alignment: .leading) {
                 NoteTextRenderView(vPost: vPost)
-                ImageViewer(imgUrls: vPost.imageUrls, pubkey: vPost.pubkey)
+                ImageViewer(imgUrls: vPost.imageUrls, pubkey: vPost.event.pubkey)
             }
         }
         .onTapGesture {
@@ -90,9 +90,9 @@ struct QuotedNoteFragmentView: View {
             // No Contact
             // Contact updated_at is very old
             // followed contact meta data refresh should be updated at app wake up probably
-            if (vPost.vContact == nil) {
-                print("🟢 NoteRow.onAppear event.contact == nil so: REQ.0:\(vPost.pubkey)")
-                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: vPost.pubkey)))
+            if (vPost.event.contact == nil) {
+                print("🟢 NoteRow.onAppear event.contact == nil so: REQ.0:\(vPost.event.pubkey)")
+                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: vPost.event.pubkey)))
             }
         }
     }

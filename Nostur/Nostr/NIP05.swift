@@ -18,7 +18,7 @@ class NIP05 {
         get { Date.now.addingTimeInterval(-(28 * 86400)) }
     }
     
-    static func shouldVerify(_ contact:VContact) -> Bool {
+    static func shouldVerify(_ contact:Contact) -> Bool {
         guard contact.nip05 != nil else {
             return false
         }
@@ -75,12 +75,10 @@ class NIP05 {
         }
     }
     
-    static func verifyBatch(vContacts:[VContact], context:NSManagedObjectContext) {
-        let cIds = vContacts.prefix(8).map { $0.contact.objectID }
-//        let ctx = EventsProvider.shared.container.newBackgroundContext()
+    static func verifyBatch(contacts:[Contact], context:NSManagedObjectContext) {
         var unverified = [(NSManagedObjectID, String, String)]()
-        for vContact in vContacts.prefix(8) {
-            unverified.append((vContact.contact.objectID, vContact.nip05!, vContact.pubkey))
+        for contact in contacts.prefix(8) {
+            unverified.append((contact.objectID, contact.nip05!, contact.pubkey))
         }
                
         let unverifiedCaptured = unverified

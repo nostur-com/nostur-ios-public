@@ -11,7 +11,7 @@ struct FooterFragmentView: View {
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var up:Unpublisher
     
-    var vPost:VPost
+    @ObservedObject var event:Event
     @State var unpublishLikeId:UUID? = nil
 //    @State var unpublishRepostId:UUID? = nil
 //    @State var unpublishOriginalId:UUID? = nil
@@ -24,7 +24,7 @@ struct FooterFragmentView: View {
         HStack {
             HStack {
                 Image(systemName: "message")
-                RollingOnUpdateNumber(vPost.repliesCount).opacity(vPost.repliesCount == 0 ? 0 : 1)
+                RollingOnUpdateNumber(event.repliesCount).opacity(event.repliesCount == 0 ? 0 : 1)
             }
             .padding(5)
             .contentShape(Rectangle())
@@ -34,10 +34,10 @@ struct FooterFragmentView: View {
             Spacer()
             
             // REPOST
-            if (vPost.reposted) {
+            if (event.reposted) {
                 HStack {
                     Image(systemName: "arrow.2.squarepath")
-                    RollingOnUpdateNumber(vPost.mentionsCount).opacity(vPost.mentionsCount == 0 ? 0 : 1)
+                    RollingOnUpdateNumber(event.mentionsCount).opacity(event.mentionsCount == 0 ? 0 : 1)
                 }
                 .foregroundColor(.green)
                 .padding(5)
@@ -45,7 +45,7 @@ struct FooterFragmentView: View {
             else {
                 HStack {
                     Image(systemName: "arrow.2.squarepath")
-                    RollingOnUpdateNumber(vPost.mentionsCount).opacity(vPost.mentionsCount == 0 ? 0 : 1)
+                    RollingOnUpdateNumber(event.mentionsCount).opacity(event.mentionsCount == 0 ? 0 : 1)
                 }
                 .padding(5)
                 .contentShape(Rectangle())
@@ -56,29 +56,29 @@ struct FooterFragmentView: View {
             Spacer()
             
             // LIKE
-            if (vPost.liked) {
+            if (event.liked) {
                 HStack {
                     Image(systemName: "heart.fill")
-                    RollingOnUpdateNumber(vPost.likesCount).opacity(vPost.likesCount == 0 ? 0 : 1)
+                    RollingOnUpdateNumber(event.likesCount).opacity(event.likesCount == 0 ? 0 : 1)
                 }
                 .foregroundColor(.red)
                 .contentShape(Rectangle())
                 .padding(5)
                 .onTapGesture {
                     if unpublishLikeId != nil && up.cancel(unpublishLikeId!) {
-                        ns.unlikePost(vPost)
+                        ns.unlikePost(event)
                     }
                 }
             }
             else {
                 HStack {
                     Image(systemName: "heart")
-                    RollingOnUpdateNumber(vPost.likesCount).opacity(vPost.likesCount == 0 ? 0 : 1)
+                    RollingOnUpdateNumber(event.likesCount).opacity(event.likesCount == 0 ? 0 : 1)
                 }
                 .padding(5)
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    if let signedEvent = ns.likePost(vPost) {
+                    if let signedEvent = ns.likePost(event) {
                         unpublishLikeId = up.publish(signedEvent)
                         sendNotification(.viewNeedsUpdate)
                     }
@@ -87,21 +87,22 @@ struct FooterFragmentView: View {
             Spacer()
             
             
-            LightningButton(tally: vPost.zapTally, event: vPost.post)
-                .opacity(vPost.vContact?.anyLud ?? false ? 1 : 0.3)
-                .disabled(!(vPost.vContact?.anyLud ?? false))
+            LightningButton(tally: event.zapTally, event: event)
+                .opacity(event.contact?.anyLud ?? false ? 1 : 0.3)
+                .disabled(!(event.contact?.anyLud ?? false))
             Spacer()  // TODO: FIXME
 
             
             // BOOKMARK
-            if (vPost.isBookmarked) {
+//            if (event.bookmarkedBy_.contains(ns.account!)) {
+            if (ns.isBookmarked(event)) { // TODO: FIXME
                 Image(systemName: "bookmark.fill")
                     .foregroundColor(.orange)
                     .contentShape(Rectangle())
                     .padding(5)
                     .padding(.leading, 10)
                     .onTapGesture {
-                        ns.removeBookmark(vPost)
+                        ns.removeBookmark(event)
                     }
             }
             else {
@@ -112,7 +113,7 @@ struct FooterFragmentView: View {
                     .onTapGesture {
                         let impactMed = UIImpactFeedbackGenerator(style: .medium)
                         impactMed.impactOccurred()
-                        ns.addBookmark(vPost)
+                        ns.addBookmark(event)
                     }
             }
             
@@ -122,17 +123,17 @@ struct FooterFragmentView: View {
             .padding(.leading, 5)
             .font(.system(size: 14))
             .sheet(isPresented: $showingNewReply) {
-                NewReply(replyTo: vPost.post)
+                NewReply(replyTo: event)
                     .environmentObject(ns)
                     .environmentObject(up)
             }
             .sheet(isPresented: $showingNewQuoteRepost) {
-                NewQuoteRepost(quotingEvent: vPost.post)
+                NewQuoteRepost(quotingEvent: event)
                     .environmentObject(ns)
                     .environmentObject(up)
             }
             .sheet(isPresented: $showingQuoteOrRepost) {
-                QuoteOrRepostChoiceSheet(event:vPost.post, showingNewQuoteRepost:$showingNewQuoteRepost)
+                QuoteOrRepostChoiceSheet(event:event, showingNewQuoteRepost:$showingNewQuoteRepost)
                     .environmentObject(ns)
                     .environmentObject(up)
                     .presentationDetents([.height(200)])
@@ -150,9 +151,9 @@ struct FooterFragmentView: View {
 struct FooterFragmentView_Previews: PreviewProvider {
     static var previews: some View {
         
-        let event7 = PreviewFetcher.fetchVPost("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
+        let event7 = PreviewFetcher.fetchEvent("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
         if (event7 != nil) {
-            FooterFragmentView(vPost: event7!)
+            FooterFragmentView(event: event7!)
                 .withPreviewEnvironment()
         }
     }

@@ -35,14 +35,13 @@ struct BookmarksView: View {
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
     
-    let vTransformer:VTransformer
     let account: Account
     
     @FetchRequest(sortDescriptors: [])
     var bookmarks: FetchedResults<Event>
     
     var vBookmarks:[VPost] {
-        bookmarks.map(vTransformer.eventToVPost)
+        bookmarks.map(VPostTransformer.shared.toVPost)
     }
     
     @State var selectedAccount:Account? = nil
@@ -51,7 +50,6 @@ struct BookmarksView: View {
     init(account:Account) {
         print("🧨🧨🧨🧨🧨 INIT BOOKMARKS VIEW 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         self.account = account
-        self.vTransformer = VTransformer(pubkey:account.publicKey, context: DataProvider.shared().viewContext)
         self.selectedAccount = account
         _bookmarks = FetchRequest(
             sortDescriptors: [SortDescriptor(\Event.created_at, order: .reverse)],
@@ -113,7 +111,7 @@ struct BookmarksView: View {
                         .listRowInsets(EdgeInsets())
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button(role: .destructive) {
-                                removeBookmark(vBookmark.post)
+                                removeBookmark(vBookmark.event)
                             } label: {
                                 Label("Remove", systemImage: "trash")
                             }

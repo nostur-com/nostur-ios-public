@@ -13,11 +13,8 @@ struct PrivateNotesContainer: View {
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var nav:NavigationModel
     
-    init() {
-        print("🧨🧨🧨🧨🧨 INIT PRIVATE NOTES CONTAINER 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
-    }
-    
     var body: some View {
+        let _ = print("🧨🧨🧨🧨🧨 PrivateNotesContainer 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         let _ = Self._printChanges()
         VStack {
             if (ns.account != nil) {
@@ -42,7 +39,6 @@ struct PrivateNotesView: View {
     @State var selectedAccount:Account? = nil
     
     init(account:Account) {
-        print("🧨🧨🧨🧨🧨 INIT PRIVATE NOTES VIEW 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         self.account = account
         self.selectedAccount = account
         _notes = FetchRequest(
@@ -52,6 +48,7 @@ struct PrivateNotesView: View {
     }
     
     var body: some View {
+        let _ = print("🧨🧨🧨🧨🧨 PrivateNotesView 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         let _ = Self._printChanges()
         VStack {
             HStack {
@@ -162,12 +159,13 @@ struct PrivateNoteRow: View {
             .padding(.bottom, 10)
             if let vPost = note.post?.toVPost() {
                 HStack {
-                    PFP(pubkey: vPost.pubkey, pictureUrl: vPost.vContact?.pictureUrl, size: 25)
+                    PFP(pubkey: vPost.event.pubkey, pictureUrl: vPost.event.contact?.picture, size: 25)
                         .onTapGesture {
-                            nav.navigateTo(ContactPath(key: vPost.pubkey))
+                            nav.navigateTo(ContactPath(key: vPost.event.pubkey))
                         }
                     MinimalNoteTextRenderView(vPost: vPost, lineLimit: 1)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
                         .onTapGesture { nav.navigateTo(vPost) }
                 }
             }
