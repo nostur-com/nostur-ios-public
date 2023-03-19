@@ -18,10 +18,7 @@ struct NosturTabsView: View {
     var body: some View {
         let _ = Self._printChanges()
         HStack {
-            VStack {
-                AppTopBar()
-                    .padding(5)
-                
+            VStack {                
                 TabView(selection: $selectedTab) {
                     FollowingAndExplore()
                     .tabItem { Image(systemName: "house") }
