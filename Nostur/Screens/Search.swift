@@ -38,13 +38,13 @@ struct Search: View {
     var body: some View {
         let _ = print("🧨🧨🧨🧨🧨 Search 🧨🧨🧨🧨🧨")
         let _ = Self._printChanges()
-        NavigationStack(path: $nav.searchPath) {
+        NavigationStack(path: $searchNav) {
             ScrollView {
                 if (contacts.count == 0 && events.count == 0 && searching) {
                     ProgressView()
                 }
                 LazyVStack {
-                    ForEach(contacts) { contact in
+                    ForEach(contacts.prefix(150)) { contact in
                         ProfileRow(contact: contact)
                         Divider()
                     }
@@ -116,7 +116,7 @@ struct Search: View {
                 // search in names/usernames
                 else {
                     searching = false
-                    events.nsPredicate = NSPredicate(format: "kind == 1 AND content CONTAINS[cd] %@", searchTrimmed)
+                    events.nsPredicate = NSPredicate(format: "kind == 1 AND content CONTAINS[cd] %@ AND NOT content BEGINSWITH %@", searchTrimmed, "lnbc")
                     contacts.nsPredicate = NSPredicate(format: "name CONTAINS[cd] %@ OR display_name CONTAINS[cd] %@", searchTrimmed, searchTrimmed)
                 }
             }
