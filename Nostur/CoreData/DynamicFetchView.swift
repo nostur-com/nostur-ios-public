@@ -108,3 +108,8 @@ func pubkey(_ contact:Contact) -> String {
 func serializedP(_ pubkey:String) -> String {
     return "[\"p\",\"\(pubkey)"
 }
+
+
+func serializedE(_ id:String) -> String {
+    return "[\"e\",\"\(id)"
+}

@@ -99,4 +99,8 @@ extension Notification.Name {
     static var viewNeedsUpdate: Notification.Name {
         return Notification.Name("viewNeedsUpdate")
     }
+    
+    static var updateUnreadCount: Notification.Name {
+        return Notification.Name("updateUnreadCount")
+    }
 }

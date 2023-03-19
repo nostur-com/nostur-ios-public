@@ -15,12 +15,12 @@ struct NoteMenuView: View {
     var body: some View {
         Menu {
             Button {
-                if vPost.hasPrivateNote {
-                    sendNotification(.editingPrivateNoteOnPost, vPost.id)
-                }
-                else {
-                    sendNotification(.newPrivateNoteOnPost, vPost.id)
-                }
+//                if vPost.hasPrivateNote { // TODO: FIXME
+//                    sendNotification(.editingPrivateNoteOnPost, vPost.id)
+//                }
+//                else {
+//                    sendNotification(.newPrivateNoteOnPost, vPost.id)
+//                }
             } label: {
                 Label("Add private note", systemImage: "note.text")
             }

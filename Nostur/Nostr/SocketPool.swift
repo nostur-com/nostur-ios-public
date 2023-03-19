@@ -179,7 +179,7 @@ class ManagedClient: WebSocketDelegate, ObservableObject {
     func didReceive(event: Starscream.WebSocketEvent, client: Starscream.WebSocketClient) {
         switch event {
         case .connected(let headers):
-            print(headers.description)
+            _ = headers.description
             DispatchQueue.main.async {
                 self.isConnecting = false
                 self.isConnected = true

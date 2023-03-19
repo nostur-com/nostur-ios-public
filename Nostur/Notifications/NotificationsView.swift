@@ -34,7 +34,6 @@ struct NotificationsView: View {
     @Environment(\.managedObjectContext) var viewContext
     
     @ObservedObject var account:Account
-//    @EnvironmentObject var nm:NotificationsManager
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var sp:SocketPool
     

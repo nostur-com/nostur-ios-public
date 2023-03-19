@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct FollowingAndExplore: View {
-    
+    @EnvironmentObject var ns:NosturState
     @EnvironmentObject var nav:NavigationModel
     //    @State var timelinePath = NavigationPath()
     //    @State var explorePath = NavigationPath()
@@ -17,37 +17,34 @@ struct FollowingAndExplore: View {
     var body: some View {
         NavigationStack(path: $nav.mainPath) {
             VStack {
+                AppTopBar()
+                    .padding(5)
                 HStack {
-                    TabButton(action: {
-                        //                    withAnimation {
-                        selectedSubTab = "Following"
-                        //                    }
-                    }, title: "Following", selected: selectedSubTab == "Following")
+                    TabButton(
+                        action: { selectedSubTab = "Following" },
+                        title: "Following",
+                        selected: selectedSubTab == "Following")
                     
-                    TabButton(action: {
-                        //                    withAnimation {
-                        selectedSubTab = "Explore"
-                        //                    }
-                    }, title: "Explore", selected: selectedSubTab == "Explore")
+                    TabButton(
+                        action: { selectedSubTab = "Explore"},
+                        title: "Explore",
+                        selected: selectedSubTab == "Explore")
                 }
                 ZStack {
-                    //                NavigationStack(path: $timelinePath) {
-//                    PostListContainer(id:"Following", type:.account)
-                    ListViewContainer(listId: "Following", listType: .account)
-                    //                Text("temp")
-                    //                        .environmentObject(followingModel)
+                    ListViewContainer(pubkey: ns.activeAccountPublicKey, pubkeys: ns.followingPublicKeys, listId: "Following", listType: .account)
                         .frame(maxWidth: 600)
-                    //                        .withNavigationDestinations()
-                    //                }
                         .opacity(selectedSubTab == "Following" ? 1 : 0)
-                    //                NavigationStack(path: $explorePath) {
-                    ListViewContainer(listId: "Explore", listType: .explore)
-//                                    Text("temp")
-                    //                        .environmentObject(exploreModel)
-                        .frame(maxWidth: 600)
-                    //                        .withNavigationDestinations()
-                    //                }
-                        .opacity(selectedSubTab == "Explore" ? 1 : 0)
+                    
+//                    if (ns.rawExplorePubkeys.count > 0) {
+//                        ListViewContainer(pubkey: ns.activeAccountPublicKey, pubkeys: ns.explorePubkeys, listId: "Explore", listType: .explore)
+//                            .frame(maxWidth: 600)
+//                            .opacity(selectedSubTab == "Explore" ? 1 : 0)
+//                    }
+//                    else {
+//                        CenteredProgressView()
+//                            .frame(maxWidth: 600)
+//                            .opacity(selectedSubTab == "Explore" ? 1 : 0)
+//                    }
                 }
                 Spacer()
             }

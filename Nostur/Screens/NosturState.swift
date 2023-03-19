@@ -78,7 +78,7 @@ final class NosturState : ObservableObject {
                 self.loadLikesAndReposts()
             }
         }
-        print("🟠🟠🟠🟠🟠🟠 ACTIVE ACCOUNT IS: \(self.account?.name ?? "NONE")")
+        print("🟠🟠🟠🟠🟠🟠 ACTIVE ACCOUNT IS: \((self.account?.name != "") ? self.account?.name ?? (self.account?.display_name ?? "NONE") : (self.account?.display_name ?? "NONE"))")
     }
     
     var container:NSPersistentContainer
@@ -92,7 +92,6 @@ final class NosturState : ObservableObject {
                 self.setAccount(account: account)
             }
         }
-        print("🟠🟠🟠🟠🟠🟠 ACTIVE ACCOUNT IS: \(self.account?.name ?? "NONE")")
     }
     
     func loadLikesAndReposts() {
@@ -117,7 +116,7 @@ final class NosturState : ObservableObject {
             }
         }
 
-        print("🎒🎒 LOAD LIKES/REPOSTS CACHE FOR ACCOUNT: SETTING 🎒🎒")
+//        print("🎒🎒 LOAD LIKES/REPOSTS CACHE FOR ACCOUNT: SETTING 🎒🎒")
         backgroundContext.performAndWait {
             let account = backgroundContext.object(with: self.account!.objectID) as! Account
             guard account.likes != nil else {

@@ -33,7 +33,7 @@ struct TabButton: View {
                     .opacity(selected ? 1 : 0.2)
             }
         }
-        .frame(minWidth: 100)
+//        .frame(minWidth: 100)
         
         
     }

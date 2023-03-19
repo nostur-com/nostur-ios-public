@@ -124,7 +124,7 @@ struct NotificationsZaps: View {
             ClientMessage(type: .REQ,
                           message:
                             RequestMessage.getMentions(
-                                pubkeys: [ns.account!.publicKey],
+                                pubkeys: [pubkey],
                                 kinds: [9735],
                                 limit: 500,
                                 since: NTimestamp(timestamp: Int(zaps.first?.created_at ?? 0)))
@@ -153,7 +153,9 @@ struct ZapsForThisNote: View {
     var onAppear:(Int64) -> ()
     
     var zapsSorted:[Event] { // $0.sats > $0.sats is slow... so cached..
-        zaps.sorted(by: { $0.naiveSats > $1.naiveSats } )
+        zaps
+            .filter { $0.zapFromRequest != nil }
+            .sorted(by: { $0.naiveSats > $1.naiveSats } )
     }
 
     var body: some View {

@@ -11,13 +11,9 @@ import SwiftUI
 struct BookmarksContainer: View {
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var nav:NavigationModel
-//    @Environment(\.managedObjectContext) var viewContext
-    
-    init() {
-        print("🧨🧨🧨🧨🧨 INIT BOOKMARKS CONTAINER 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
-    }
     
     var body: some View {
+        let _ = print("🧨🧨🧨🧨🧨 BookmarksContainer 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         let _ = Self._printChanges()
         VStack {
             if (ns.account != nil) {
@@ -48,7 +44,6 @@ struct BookmarksView: View {
     @State var viewNeedsUpdate = false
     
     init(account:Account) {
-        print("🧨🧨🧨🧨🧨 INIT BOOKMARKS VIEW 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         self.account = account
         self.selectedAccount = account
         _bookmarks = FetchRequest(
@@ -58,6 +53,7 @@ struct BookmarksView: View {
     }
     
     var body: some View {
+        let _ = print("🧨🧨🧨🧨🧨 BookmarksView 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         let _ = Self._printChanges()
         VStack {
             HStack {

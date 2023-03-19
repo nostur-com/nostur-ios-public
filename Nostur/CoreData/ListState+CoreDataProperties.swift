@@ -22,7 +22,7 @@ extension ListState {
     @NSManaged public var lastAppearedId: String?
     @NSManaged public var mostRecentAppearedId: String?
     @NSManaged public var updatedAt: Date
-    @NSManaged public var unreadCount:Int
+    @NSManaged public var unreadCount:Int64
 
 }
 

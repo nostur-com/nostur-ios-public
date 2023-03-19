@@ -12,18 +12,12 @@ import Compactor
 import LightningDevKit
 
 extension Event {
-    
+
     @nonobjc public class func fetchRequest() -> NSFetchRequest<Event> {
         let fr = NSFetchRequest<Event>(entityName: "Event")
         fr.sortDescriptors = []
         return fr
     }
-    
-//    @nonobjc public class func fetchRequest2() -> NSFetchRequest<Event> {
-//        let fr = NSFetchRequest<Event>(entityName: "Event")
-//        fr.sortDescriptors = []
-//        return fr
-//    }
     
     @NSManaged public var insertedAt: Date // Needed for correct ordering of events in timeline
     
@@ -43,9 +37,6 @@ extension Event {
     @NSManaged public var reposted: Bool // Cache
     @NSManaged public var isRepost: Bool // Cache
     
-//    @NSManaged public var repliesCounter: Int64 // Better Cache?
-    
-    
     // Counters (cached)
     @NSManaged public var likesCount: Int64 // Cache
     @NSManaged public var repliesCount: Int64 // Cache
@@ -59,7 +50,6 @@ extension Event {
     @NSManaged public var replyToRoot: Event?
     @NSManaged public var firstQuote: Event?
     @NSManaged public var zapTally: Int64
-//    @NSManaged public var cachedSats: Double
 
     @NSManaged public var replies: Set<Event>?
     
@@ -73,21 +63,9 @@ extension Event {
 //    }
     
     // helper
-    var replies_: [Event] {
-        get { replies?.sorted(by: { $0.created_at < $1.created_at } ) ?? [] }
-    }
-    
-    var username: String {
-        get {
-            contact?.username ?? authorKey
-        }
-    }
-    
-    var name: String {
-        get {
-            contact?.authorName ?? authorKey
-        }
-    }
+    var replies_: [Event] { replies?.sorted(by: { $0.created_at < $1.created_at } ) ?? [] }
+    var username: String { contact?.username ?? authorKey }
+    var name: String { contact?.authorName ?? authorKey }
 }
 
 // MARK: Generated accessors for contacts
@@ -121,6 +99,10 @@ extension Event {
 
     @objc(removeBookmarkedBy:)
     @NSManaged public func removeFromBookmarkedBy(_ values: NSSet)
+    
+    var bookmarkedBy_:Set<Account> {
+        get { bookmarkedBy ?? [] }
+    }
 
 }
 
@@ -293,7 +275,7 @@ extension Event {
             event.insertedAt = Date.now
             event.pubkey = "pubkey\(index)" //rand from preview keys
             event.id = "id\(index)"
-            event.created_at = Int64(Date().timeIntervalSinceNow)
+            event.created_at = Int64(Date().timeIntervalSince1970)
             event.content = "Preview event"
             event.kind = 0
             event.sig = "ddd"
@@ -494,7 +476,7 @@ extension Event {
     }
     
     func firstE() -> String? {
-        tags().first(where: { $0.type == "p" })?.id
+        tags().first(where: { $0.type == "e" })?.id
     }
     
     func lastE() -> String? {
@@ -801,6 +783,19 @@ extension Event {
             }
         }
         
+        // hmm above firstQuote doesn't seem to handle #[0] at .content end and "e" without "mention as first tag, so special case?
+        if event.kind == .textNote && event.content.contains("#[0]") && event.tags[safe: 0]?.type == "e" {
+            savedEvent.firstQuoteId = event.tags[safe: 0]?.id
+            
+            // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
+            if let firstQuote = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
+                savedEvent.firstQuote = firstQuote
+                
+                firstQuote.objectWillChange.send()
+                firstQuote.mentionsCount += 1
+            }
+        }
+        
         
         if (1 == 1 && event.kind == .textNote) { // TODO: Temp disabled for speed up check..
             // if other existing messages were replying, mentioning, reposting (to) this, fix the relation
@@ -883,12 +878,23 @@ extension Event {
         return (try? context.fetch(fr)) ?? []
     }
     
-    func toVPost(pubkey: String? = nil, context: NSManagedObjectContext? = nil) -> VPost {
-        let p = pubkey ?? NosturState.shared.activeAccountPublicKey
-        let ctx = context ?? managedObjectContext ?? DataProvider.shared().viewContext
-        let vTransformer = VTransformer(pubkey: p, context: ctx)
-        return vTransformer.eventToVPost(self)
-    }
+//    func toVPost(pubkey: String? = nil, context: NSManagedObjectContext? = nil) -> VPost {
+//        let p = pubkey ?? NosturState.shared.activeAccountPublicKey
+////        let ctx = context ?? managedObjectContext ?? DataProvider.shared().viewContext
+//        var vPost:VPost?
+//        if (Thread.isMainThread) {
+//            let vTransformer = VTransformer(pubkey: p)
+//            vPost = vTransformer.eventToVPost(self)
+//        }
+//        else {
+//            let bg = DataProvider.shared().bg
+//            bg.performAndWait {
+//                let vTransformer = VTransformer(pubkey: p)
+//                vPost = vTransformer.eventToVPost(self)
+//            }
+//        }
+//        return vPost!
+//    }
 }
 
 

@@ -10,7 +10,6 @@ import SwiftUI
 import Combine
 
 struct Search: View {
-    @EnvironmentObject var nav:NavigationModel
     @StateObject var debounceObject = DebounceObject()
 
     var sp:SocketPool = .shared
@@ -34,12 +33,10 @@ struct Search: View {
     var contacts:FetchedResults<Contact>
     
     @State var searching = false
-    
-    init() {
-        print("🧨🧨🧨🧨🧨 INIT SEARCH 🧨🧨🧨🧨🧨")
-    }
+    @State var searchNav = NavigationPath()
     
     var body: some View {
+        let _ = print("🧨🧨🧨🧨🧨 Search 🧨🧨🧨🧨🧨")
         let _ = Self._printChanges()
         NavigationStack(path: $nav.searchPath) {
             ScrollView {

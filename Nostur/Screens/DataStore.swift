@@ -115,7 +115,6 @@ final class TimelineModel: ObservableObject, Identifiable {
     }
 }
 
-
 final class OnboardingTracker {
     
     let ns = NosturState.shared
@@ -153,7 +152,9 @@ final class OnboardingTracker {
     public var didFillTimeline = false {
         didSet {
             if (didFillTimeline) {
-                ns.onBoardingIsShown = false
+                DispatchQueue.main.async {
+                    self.ns.onBoardingIsShown = false
+                }
             }
             print("✈️✈️✈️✈️ didFillTimeline: \(didFillTimeline)")
         }

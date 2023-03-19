@@ -194,7 +194,7 @@ struct ReactionsForThisNote: View {
             .compactMap { pubkey in
                 contacts.first(where: { $0.pubkey == pubkey })
             }
-            .filter { $0.updated_at == 0 }
+            .filter { $0.metadata_created_at == 0 }
             .map { $0.pubkey }
         
         guard (missingPubkeys + emptyContactPubkeys).count > 0 else { return }

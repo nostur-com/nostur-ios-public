@@ -17,7 +17,6 @@ func ?!(lhs: Bool?, rhs: Bool) -> Bool {
 @main
 struct NosturApp: App {
     @AppStorage("firstTimeCompleted") var firstTimeCompleted = false
-    @StateObject private var dp = DataProvider(viewContext: EventsProvider.shared.container.viewContext)
     @StateObject private var up = Unpublisher(viewContext:EventsProvider.shared.container.viewContext)
 //    @StateObject private var nm = NotificationsManager(bgContext:EventsProvider.shared.container.newBackgroundContext())
     @StateObject private var ns:NosturState = .shared
@@ -41,7 +40,6 @@ struct NosturApp: App {
         WindowGroup {
             Onboarding()
                 .environment(\.managedObjectContext, EventsProvider.shared.container.viewContext)
-                .environmentObject(dp)
                 .environmentObject(ns)
                 .environmentObject(er)
                 .environmentObject(sp)

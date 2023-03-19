@@ -30,7 +30,7 @@ extension View {
         }()
         
         // "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
-        let dp = DataProvider(viewContext: EventsProvider.preview.container.viewContext)
+        let dp = DataProvider(container: EventsProvider.preview.container)
         let ns = NosturState(container: EventsProvider.preview.container)
         let sp:SocketPool = .shared
         let nav: NavigationModel = .shared

@@ -20,25 +20,25 @@ struct NoteTextRenderView: View {
     
     var body: some View {
         HStack(alignment: .top) {
-                if (useLinelimit) {
-                    Text(vPost.renderedText)//.border(.cyan)
-                        .lineLimit(10, reservesSpace: false)
-                        .textSelection(.enabled)
-                        .multilineTextAlignment(TextAlignment.leading)
-                        .foregroundColor(.primary)
-                        .lineSpacing(3)
-                        .padding(.vertical, 5)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                else {
-                    Text(vPost.renderedText)//.border(.pink)
-                        .textSelection(.enabled)
-                        .multilineTextAlignment(TextAlignment.leading)
-                        .foregroundColor(.primary)
-                        .lineSpacing(3)
-                        .padding(.vertical, 5)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
+            if (useLinelimit) {
+                Text(vPost.renderedText)//.border(.cyan)
+                    .lineLimit(10, reservesSpace: false)
+                    .textSelection(.enabled)
+                    .multilineTextAlignment(TextAlignment.leading)
+                    .foregroundColor(.primary)
+                    .lineSpacing(3)
+                    .padding(.vertical, 5)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            else {
+                Text(vPost.renderedText)//.border(.pink)
+                    .textSelection(.enabled)
+                    .multilineTextAlignment(TextAlignment.leading)
+                    .foregroundColor(.primary)
+                    .lineSpacing(3)
+                    .padding(.vertical, 5)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
             Spacer()
         }
     }

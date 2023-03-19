@@ -10,6 +10,7 @@
 		1F00337129BEF141007CE040 /* View+withSheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F00337029BEF141007CE040 /* View+withSheets.swift */; };
 		1F00337529BF0A44007CE040 /* BookmarksAndPrivateNotes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F00337429BF0A44007CE040 /* BookmarksAndPrivateNotes.swift */; };
 		1F00337729BF0BF0007CE040 /* PrivateNotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F00337629BF0BF0007CE040 /* PrivateNotesView.swift */; };
+		1F00E8C329C2FE7800797B78 /* LVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F00E8C229C2FE7800797B78 /* LVM.swift */; };
 		1F02EA5C299F94F200FC89EB /* Onboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F02EA5B299F94F200FC89EB /* Onboarding.swift */; };
 		1F055A53296EE2A2009EF792 /* secp256k1 in Frameworks */ = {isa = PBXBuildFile; productRef = 1F055A52296EE2A2009EF792 /* secp256k1 */; };
 		1F065A9929A37A47003421D3 /* NoteZaps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F065A9829A37A47003421D3 /* NoteZaps.swift */; };
@@ -66,6 +67,8 @@
 		1F5BBE40297BC7E600F4AF03 /* EventsError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5BBE3F297BC7E600F4AF03 /* EventsError.swift */; };
 		1F5F5A5C29838F1D00DED8F4 /* EventsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5F5A5B29838F1D00DED8F4 /* EventsProvider.swift */; };
 		1F65002C29A759FB00B79AEF /* ProfileRowMissing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F65002B29A759FB00B79AEF /* ProfileRowMissing.swift */; };
+		1F65121929C743B7009FD4AE /* ShimmerAnimation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F65121829C743B7009FD4AE /* ShimmerAnimation.swift */; };
+		1F65121B29C75AC9009FD4AE /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F65121A29C75AC9009FD4AE /* ProfileView.swift */; };
 		1F654F30298ED52E0040F15D /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 1F654F2F298ED52E0040F15D /* Starscream */; };
 		1F71037D296BD9DE006245CC /* Nostr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F71037C296BD9DE006245CC /* Nostr.swift */; };
 		1F7150D029ABC6CE00AAB1C3 /* TabButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7150CF29ABC6CE00AAB1C3 /* TabButton.swift */; };
@@ -214,6 +217,7 @@
 		1F00337029BEF141007CE040 /* View+withSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "View+withSheets.swift"; path = "../View+withSheets.swift"; sourceTree = "<group>"; };
 		1F00337429BF0A44007CE040 /* BookmarksAndPrivateNotes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarksAndPrivateNotes.swift; sourceTree = "<group>"; };
 		1F00337629BF0BF0007CE040 /* PrivateNotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateNotesView.swift; sourceTree = "<group>"; };
+		1F00E8C229C2FE7800797B78 /* LVM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LVM.swift; sourceTree = "<group>"; };
 		1F02EA5B299F94F200FC89EB /* Onboarding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Onboarding.swift; sourceTree = "<group>"; };
 		1F065A9829A37A47003421D3 /* NoteZaps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteZaps.swift; sourceTree = "<group>"; };
 		1F065A9A29A3E67F003421D3 /* NotificationsReactions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsReactions.swift; sourceTree = "<group>"; };
@@ -270,6 +274,8 @@
 		1F5BBE3F297BC7E600F4AF03 /* EventsError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsError.swift; sourceTree = "<group>"; };
 		1F5F5A5B29838F1D00DED8F4 /* EventsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsProvider.swift; sourceTree = "<group>"; };
 		1F65002B29A759FB00B79AEF /* ProfileRowMissing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileRowMissing.swift; sourceTree = "<group>"; };
+		1F65121829C743B7009FD4AE /* ShimmerAnimation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ShimmerAnimation.swift; path = Nostur/ShimmerAnimation.swift; sourceTree = "<group>"; };
+		1F65121A29C75AC9009FD4AE /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ProfileView.swift; path = Nostur/Profiles/ProfileView.swift; sourceTree = "<group>"; };
 		1F71037C296BD9DE006245CC /* Nostr.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nostr.swift; sourceTree = "<group>"; };
 		1F7150CF29ABC6CE00AAB1C3 /* TabButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabButton.swift; sourceTree = "<group>"; };
 		1F71B45429B0822300FA0400 /* ProfileBadgesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileBadgesView.swift; sourceTree = "<group>"; };
@@ -728,6 +734,7 @@
 			isa = PBXGroup;
 			children = (
 				1FB4D3FA29BAEB0C004DB537 /* ListViewModel.swift */,
+				1F00E8C229C2FE7800797B78 /* LVM.swift */,
 				1FB4D3FC29BAF1A6004DB537 /* ListView.swift */,
 				1FB4D3FE29BB3C7E004DB537 /* ListUnreadCounter.swift */,
 			);
@@ -915,6 +922,7 @@
 				1F756533296AE7910078474E /* NewRelayView.swift in Sources */,
 				1F96792F29BF613C00E78173 /* NewPrivateNoteSheet.swift in Sources */,
 				1F3C3F9629755D4C00E813FD /* NosturState.swift in Sources */,
+				1F65121929C743B7009FD4AE /* ShimmerAnimation.swift in Sources */,
 				1F7C65BF29A14BA4009FF3EA /* Zaps.swift in Sources */,
 				1F8B1365297B3BE8002EB8CF /* ContactProfile.swift in Sources */,
 				1F33EC3929B6849800615FB9 /* Centered.swift in Sources */,
@@ -978,6 +986,7 @@
 				1F740DAB29AF898400EFCCA7 /* BadgesView.swift in Sources */,
 				1F987EB129804AA5001E352E /* NewNoteView.swift in Sources */,
 				1F8B135F297B36DB002EB8CF /* Bytes+TrimLeadingZeros.swift in Sources */,
+				1F00E8C329C2FE7800797B78 /* LVM.swift in Sources */,
 				1F5BA91429A8C27200002652 /* NewNoteButton.swift in Sources */,
 				1FD49737298029600084F14E /* NoteTextRenderView.swift in Sources */,
 				1F37571629672AD0007D210A /* DummyData.swift in Sources */,
@@ -1056,6 +1065,7 @@
 				1F8B1363297B36DB002EB8CF /* BytesConvertible.swift in Sources */,
 				1FC38B9D2972DD5A004769F8 /* Contact+CoreDataClass.swift in Sources */,
 				1FC4D40D2998ED0E004E88CD /* FollowersList.swift in Sources */,
+				1F65121B29C75AC9009FD4AE /* ProfileView.swift in Sources */,
 				1F71B45729B0AA1600FA0400 /* NotificationsNotes.swift in Sources */,
 				1F88490F29B537B400145340 /* URL.swift in Sources */,
 				1FB130B529C0E8D8004AC98D /* ReplyingToFragmentView.swift in Sources */,

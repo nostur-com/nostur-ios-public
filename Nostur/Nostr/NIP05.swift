@@ -92,8 +92,7 @@ class NIP05 {
             return verified
         }
         
-        
-        let secondTask = Task {
+        Task {
             let verifiedCaptured = await basicTask.value
             await context.perform {
                 for tuple in verifiedCaptured {
@@ -102,78 +101,5 @@ class NIP05 {
                 }
             }
         }
-        
-//        Task {
-//            for contact in contacts {
-//                if await NIP05.verify(nip05: contact.nip05!, expectedPubkey: contact.pubkey) {
-//
-//                }
-//            }
-//        }
-//
-        return
-//        Task {
-//            await ctx.perform(schedule: NSManagedObjectContext.ScheduledTaskType.enqueued) {
-//                for cid in cIds {
-//                    guard let contact = ctx.object(with: cid) as? Contact else { continue }
-//
-//
-//                }
-//            }
-//        }
-        
-        return
-//        let firstFew = contacts.prefix(8)
-////        Task {
-//            for contact in contacts {
-//                if NIP05.verify(nip05: contact.nip05!, expectedPubkey: contact.pubkey) {
-//                    contact.nip05verifiedAt = Date.now
-//                }
-//            }
-////        }
-//
-//        return
-////        print("💖💖💖 verifyBatch")
-//        let ctx = EventsProvider.shared.container.newBackgroundContext()
-//        let cIds = contacts.prefix(8).map { $0.objectID }
-//        Task.detached(priority: .userInitiated) {
-////            print("💖💖💖 detached")
-////            ThreadWarning.which("Task.detached(priority: .userInitiated)")
-//            await ctx.perform(schedule: NSManagedObjectContext.ScheduledTaskType.enqueued) {
-////                print("💖💖💖 ctx.perform")
-////                ThreadWarning.which("ctx.perform(")
-////                let toCheck = contacts
-////                    .filter { shouldVerify($0) }
-//                for cid in cIds {
-//                    guard let contact = ctx.object(with: cid) as? Contact else { continue }
-//                    let nip05 = contact.nip05!
-//                    let pubkey = contact.pubkey
-//                    let ccid = cid
-//                    Task {
-//                        //                        ThreadWarning.which("Task in Task")
-//                        //                        print("💖💖💖 Task in Task")
-//                        if await NIP05.verify(nip05: nip05, expectedPubkey: pubkey) {
-//                            //                            print("💖💖💖 set contact.nip05verifiedAt")
-//                            //                            ThreadWarning.which("set contact.nip05verifiedAt")
-//                            guard let contact = context.object(with: cid) as? Contact else { return}
-//                            contact.nip05verifiedAt = Date.now
-//                        }
-//                    }
-//                }
-//            }
-//        }
-        
-//        Task.detached(priority: .background) {
-//            let toCheck = contacts
-//                .filter { shouldVerify($0) }
-//
-//            for contact in toCheck.prefix(8) { // Don't check more than 8 at the time, (8 = estimate amount of max posts on screen at a time)
-//                if await NIP05.verify(nip05: contact.nip05!, expectedPubkey: contact.pubkey) {
-//                    await context.perform(.enqueued) {
-//                        contact.nip05verifiedAt = Date.now
-//                    }
-//                }
-//            }
-//        }
     }
 }
