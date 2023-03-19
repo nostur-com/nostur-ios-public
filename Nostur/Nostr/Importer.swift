@@ -35,12 +35,11 @@ class Importer {
             forImports.append(forImport)
         }
         
-        let context = EventsProvider.shared.container.newBackgroundContext()
-        context.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
-        context.undoManager = nil
+//        let context = DataProvider.shared().bg
         let isSignatureVerificationEnabled = self.settingsStore.isSignatureVerificationEnabled
         
-        await context.perform {
+//        context.performAndWait {
+        await EventsProvider.shared.container.performBackgroundTask { context in
             
             var alreadyInLRUskipped = 0
             var alreadyInDBskipped = 0
@@ -76,7 +75,7 @@ class Importer {
                                 _ = Event.saveEvent(event: noteInNote, context:context)
                             }
                             else {
-                                print("🔴 noteInNote already in db")
+//                                print("🔴 noteInNote already in db")
                             }
                             event.content = "#[0]"
                             event.tags.insert(NEventTag(type: "e", otherInformation: noteInNote.id, "", "mention"), at: 0)
@@ -158,9 +157,9 @@ class Importer {
                     if (saved > 0) {
                         print("💾 forImports: \(forImports.count), saved: \(saved), skipped (cache): \(alreadyInLRUskipped), skipped (db): \(alreadyInDBskipped)")
                     }
-                    DispatchQueue.main.async {
-                        sendNotification(.viewNeedsUpdate)
-                    }
+//                    DispatchQueue.main.async {
+//                        sendNotification(.viewNeedsUpdate)
+//                    }
                 }
                 self.isImporting = false
             }

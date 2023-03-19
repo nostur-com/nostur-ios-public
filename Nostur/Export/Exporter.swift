@@ -21,7 +21,7 @@ final class Exporter {
     
     func exportAllEventsForPubkey() -> Data {
         // create background context
-        let bg = EventsProvider.shared.container.newBackgroundContext()
+        let bg = DataProvider.shared().newTaskContext()
         
         // query
         let r = Event.fetchRequest()

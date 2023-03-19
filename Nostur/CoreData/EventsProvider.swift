@@ -8,15 +8,46 @@
 import CoreData
 import OSLog
 
+extension Event {
+    func toVPost() -> VPost {
+        VPostTransformer.shared.toVPost(self)
+    }
+}
+
+extension VPost {
+    func toEvent() -> Event {
+        self.event
+    }
+}
+
 class DataProvider: ObservableObject {
-    let viewContext:NSManagedObjectContext
-//    let bgContext:NSManagedObjectContext
+    let container:NSPersistentContainer
     
-    static let live = DataProvider(viewContext: EventsProvider.shared.container.viewContext)
-    static let preview = DataProvider(viewContext: EventsProvider.preview.container.viewContext)
+    let viewContext:NSManagedObjectContext // VIEW
+    let bg:NSManagedObjectContext // IMPORTING, PREPARING, TRANSFORMING FOR VIEW
     
-    init(viewContext: NSManagedObjectContext) {
-        self.viewContext = viewContext
+    static let live = DataProvider(container: EventsProvider.shared.container)
+    static let preview = DataProvider(container: EventsProvider.preview.container)
+    
+    init(container: NSPersistentContainer) {
+        self.container = container
+        self.viewContext = container.viewContext
+        self.bg = container.newBackgroundContext()
+        self.bg.automaticallyMergesChangesFromParent = true
+        self.bg.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        self.bg.undoManager = nil
+    }
+    
+    /// Creates and configures a private queue context.
+    public func newTaskContext() -> NSManagedObjectContext {
+        // Create a private queue context.
+        /// - Tag: newBackgroundContext
+        let taskContext = container.newBackgroundContext()
+        taskContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        // Set unused undoManager to nil for macOS (it is nil by default on iOS)
+        // to reduce resource requirements.
+        taskContext.undoManager = nil
+        return taskContext
     }
     
     static func shared() -> DataProvider {
@@ -29,6 +60,9 @@ class DataProvider: ObservableObject {
         return DataProvider.live
     }
     
+//    func ctx() -> NSManagedObjectContext {
+//        return Thread.isMainThread ? self.viewContext : self.bg
+//    }
 }
 
 class EventsProvider: ObservableObject {
@@ -89,6 +123,7 @@ class EventsProvider: ObservableObject {
         contact.name = "yo"
         contact.nip05 = ""
         contact.updated_at = 0
+        contact.metadata_created_at = 0
         
         var messages:[String] = []
         messages.append(contentsOf: testKind0Events())
@@ -309,20 +344,6 @@ class EventsProvider: ObservableObject {
         
         return container
     }()
-    
-    
-    
-    /// Creates and configures a private queue context.
-    private func newTaskContext() -> NSManagedObjectContext {
-        // Create a private queue context.
-        /// - Tag: newBackgroundContext
-        let taskContext = container.newBackgroundContext()
-        taskContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
-        // Set unused undoManager to nil for macOS (it is nil by default on iOS)
-        // to reduce resource requirements.
-        taskContext.undoManager = nil
-        return taskContext
-    }
     
     /// Synchronously deletes given records in the Core Data store with the specified object IDs.
     func deleteEvents(identifiedBy objectIDs: [NSManagedObjectID]) {

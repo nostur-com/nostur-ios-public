@@ -101,9 +101,9 @@ final class NosturState : ObservableObject {
             return
         }
         
-        let backgroundContext = container.newBackgroundContext()
+        let backgroundContext = DataProvider.shared().newTaskContext()
 
-        print("🎒🎒 LOAD LIKES/REPOSTS CACHE FOR ACCOUNT: ZEROING 🎒🎒")
+        print("🎒🎒 LOAD LIKES/REPOSTS CACHE FOR ACCOUNT: ZEROING/SETTING 🎒🎒")
         backgroundContext.perform {
             let batchUpdate = NSBatchUpdateRequest(entityName: "Event")
             batchUpdate.propertiesToUpdate = ["liked": 0, "reposted": 0]
