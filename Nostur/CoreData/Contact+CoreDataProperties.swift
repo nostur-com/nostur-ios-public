@@ -44,6 +44,7 @@ extension Contact {
     @NSManaged public var pubkey: String
     @NSManaged public var zapperPubkey: String? // used to authorize kind 9735 zap notes. fetch from lud16 endpoint
     @NSManaged public var updated_at: Int64
+    @NSManaged public var metadata_created_at: Int64
     @NSManaged public var followedBy: NSSet?
 }
 
@@ -200,7 +201,7 @@ extension Contact : Identifiable {
         if let contact = try! context.fetch(request).first {
             
             // Received metadata is newer than stored Contact
-            if contact.updated_at < event.createdAt.timestamp {
+            if contact.metadata_created_at < event.createdAt.timestamp {
                 
                 // update contact
                 contact.name = metaData.name
@@ -211,7 +212,8 @@ extension Contact : Identifiable {
                 contact.nip05 = metaData.nip05
                 contact.lud16 = metaData.lud16
                 contact.lud06 = metaData.lud06
-                contact.updated_at = Int64(Date().timeIntervalSince1970)
+                contact.metadata_created_at = Int64(event.createdAt.timestamp) // By Author (kind 0)
+                contact.updated_at = Int64(Date().timeIntervalSince1970) // By Nostur
                 print("🟢🟢 Existing Contact metadata updated")
                 // TODO: Maybe some event.objectWillChange.send() to relations in active views? Performance?
                 let er = Event.fetchRequest()
@@ -226,8 +228,7 @@ extension Contact : Identifiable {
                 
                 // EVENTS.CONTACTS (which come from Event.P tags:
                 let tr = NSFetchRequest<Event>(entityName: "Event")
-        //            tr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", "[\"p\",\"\(contact.pubkey)") // OPTIMIZATION HACK WERKT NIET
-                tr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", contact.pubkey) // OPTIMIZATION HACK
+                tr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", serializedP(contact.pubkey)) // OPTIMIZATION HACK
                 let events = Array(try! context.fetch(tr))
                 
                 
@@ -254,7 +255,8 @@ extension Contact : Identifiable {
             contact.nip05 = metaData.nip05
             contact.lud16 = metaData.lud16
             contact.lud06 = metaData.lud06
-            contact.updated_at = Int64(Date().timeIntervalSince1970)
+            contact.metadata_created_at = Int64(event.createdAt.timestamp) // by author kind 0
+            contact.updated_at = Int64(Date.now.timeIntervalSince1970) // by Nostur
             print("🟢🟢 New contact stored ")
             
             // Update relation on already existing events
@@ -269,8 +271,7 @@ extension Contact : Identifiable {
             
             // EVENTS.CONTACTS (which come from Event.P tags:
             let tr = NSFetchRequest<Event>(entityName: "Event")
-    //            tr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", "[\"p\",\"\(contact.pubkey)") // OPTIMIZATION HACK WERKT NIET
-            tr.predicate = NSPredicate(format: "kind IN {1,6,7,9734} AND tagsSerialized CONTAINS %@", contact.pubkey) // OPTIMIZATION HACK
+            tr.predicate = NSPredicate(format: "kind IN {1,6,7,9734} AND tagsSerialized CONTAINS %@", serializedP(contact.pubkey)) // OPTIMIZATION HACK
             let events = Array(try! context.fetch(tr))
             for event in events {
                 event.objectWillChange.send()
@@ -290,6 +291,7 @@ extension Contact : Identifiable {
             }
             let newContact = Contact(context: context)
             newContact.pubkey = pTag
+            newContact.metadata_created_at = 0
             newContact.updated_at = 0
             contactsInThisEvent.append(newContact)
         }
@@ -364,11 +366,11 @@ extension Contact : Identifiable {
         return try! NIP19(prefix: "npub", hexString: pubkey).displayString
     }
     
-    static func updateMetadata(_ metaData:NSetMetadata, pubkey:String, context:NSManagedObjectContext) throws {
+    static func updateMetadata(_ metaData:NSetMetadata, event:Event, context:NSManagedObjectContext) throws {
         
         let request = NSFetchRequest<Contact>(entityName: "Contact")
         request.entity = Contact.entity()
-        request.predicate = NSPredicate(format: "pubkey == %@", pubkey)
+        request.predicate = NSPredicate(format: "pubkey == %@", event.pubkey)
         
         if let contactToUpdate = try context.fetch(request).first {
             contactToUpdate.about = metaData.about
@@ -382,11 +384,12 @@ extension Contact : Identifiable {
                 contactToUpdate.nip05verifiedAt = nil // WHEN SET
             }
             contactToUpdate.nip05 = metaData.nip05
-            contactToUpdate.updated_at = Int64(Date().timeIntervalSinceNow)
+            contactToUpdate.metadata_created_at = event.created_at
+            contactToUpdate.updated_at = Int64(Date().timeIntervalSince1970)
         }
         else {
             let contact = Contact(context: context)
-            contact.pubkey = pubkey
+            contact.pubkey = event.pubkey
             contact.about = metaData.about
             contact.lud16 = metaData.lud16
             contact.lud06 = metaData.lud06
@@ -396,7 +399,8 @@ extension Contact : Identifiable {
             contact.banner = metaData.banner
             contact.nip05verifiedAt = nil // WHEN SET
             contact.nip05 = metaData.nip05
-            contact.updated_at = Int64(Date().timeIntervalSinceNow)
+            contact.metadata_created_at = event.created_at
+            contact.updated_at = Int64(Date().timeIntervalSince1970)
         }
     }
     
@@ -421,6 +425,7 @@ extension DataProvider {
         let newContact = Contact(context: ctx)
         newContact.pubkey = pubkey
         newContact.updated_at = 0
+        newContact.metadata_created_at = 0
         if (!dontSave) {
             try? ctx.save()
         }
