@@ -23,25 +23,28 @@ final class Exporter {
         // create background context
         let bg = DataProvider.shared().newTaskContext()
         
-        // query
+        
         let r = Event.fetchRequest()
         r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)]
         r.predicate = NSPredicate(format: "pubkey == %@", pubkey)
         
-        var nEvents:[NEvent] = []
-        if let events = try? bg.fetch(r) {
-            for event in events {
-                nEvents.append(event.toNEvent())
+        
+        var jsonl:[String] = []
+        
+        bg.performAndWait {
+            var nEvents:[NEvent] = []
+            if let events = try? bg.fetch(r) {
+                for event in events {
+                    nEvents.append(event.toNEvent())
+                }
+            }
+            
+            for nEvent in nEvents {
+                jsonl.append(nEvent.wrappedEventJson())
             }
         }
-        
-        // convert to json
-        var jsonl:[String] = []
-        for nEvent in nEvents {
-            jsonl.append(nEvent.wrappedEventJson())
-        }
-
-        print("Exported \(nEvents.count) events")
+       
+        print("Exported \(jsonl.count) events")
         
         return String(jsonl.joined(separator:"\n")).data(using: .utf8)!
     }

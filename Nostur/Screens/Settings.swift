@@ -80,7 +80,7 @@ struct Settings: View {
                     }
                     if (showExporter) {
                         Color.clear
-                            .fileExporter(isPresented: $showExporter, document: EventsArchive(pubkey: ns.account!.publicKey), contentType: .events) { result in
+                            .fileExporter(isPresented: $showExporter, document: EventsArchive(pubkey: ns.account!.publicKey), contentType: .events, defaultFilename: "Exported Nostur Events - \(String(ns.account!.npub.prefix(11)))") { result in
                                 switch result {
                                     case .success(let url):
                                         print("Saved to \(url)")
