@@ -63,6 +63,8 @@ struct ProfileView: View {
     let hideBadges:Bool
     @FetchRequest
     var clEvents:FetchedResults<Event>
+    @FetchRequest
+    var kind0Events:FetchedResults<Event>
     
     @State var isFollowing = false
     @State var profilePicViewerIsShown = false
@@ -78,6 +80,11 @@ struct ProfileView: View {
         _clEvents = FetchRequest(
             sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
             predicate: NSPredicate(format: "pubkey == %@ AND kind == 3", pubkey)
+        )
+        
+        _kind0Events = FetchRequest(
+            sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
+            predicate: NSPredicate(format: "pubkey == %@ AND kind == 0", pubkey)
         )
     }
     
@@ -250,6 +257,13 @@ struct ProfileView: View {
                                         } label: {
                                             Label("Copy npub \(String(Contact.npub(pubkey).prefix(11)))...", systemImage: "doc.on.clipboard")
                                         }
+                                        if let kind0 = kind0Events.first {
+                                            Button {
+                                                UIPasteboard.general.string = kind0.toNEvent().eventJson()
+                                            } label: {
+                                                Label("Copy profile source", systemImage: "doc.on.clipboard")
+                                            }
+                                        }
                                     } label: {
                                         Image(systemName: "person.badge.key.fill")
                                     }
@@ -373,6 +387,12 @@ struct ProfileView: View {
                     }
                 }
             }
+        }
+        .onAppear {
+            // Check if there is new contact info
+            sp.sendMessage(
+                ClientMessage(type: .REQ,
+                              message: RequestMessage.getUserMetadata(pubkey: pubkey)))
         }
         //        .edgesIgnoringSafeArea(.top)
         //        .ignoresSafeArea(edges: .top)
