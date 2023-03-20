@@ -8,6 +8,7 @@
 import SwiftUI
 import NukeUI
 import Nuke
+import AnimatedImage
 
 struct PFP: View {
     
@@ -28,120 +29,51 @@ struct PFP: View {
             Circle().foregroundColor(color).frame(width: size, height: size)
         }
         else {
-            LazyImage(url: URL(string: pictureUrl!)) { state in
-                if let image = state.image {
-                    image.frame(width: size, height: size).clipShape(Circle())
+            VStack {
+                if (pictureUrl!.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
+                    LazyImage(url: URL(string: pictureUrl!)) { state in
+                        if let container = state.imageContainer {
+                            if container.type == .gif, let gifData = container.data {
+                                AnimatedImage(data: gifData)
+                                           .scaledToFill()
+                                           .clipShape(Circle())
+                            }
+                            else if let image = state.image {
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: size, height: size)
+                                    .clipShape(Circle())
+                            }
+                            else {
+                                Circle().foregroundColor(color).frame(width: size, height: size)
+                            }
+                        }
+                        else {
+                            Circle().foregroundColor(color).frame(width: size, height: size)
+                        }
+                    }
+                    .pipeline(ImageProcessing.shared.pipeline)
                 }
                 else {
-                    Circle().foregroundColor(color).frame(width: size, height: size)
+                    LazyImage(url: URL(string: pictureUrl!)) { state in
+                        if let image = state.image {
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: size, height: size)
+                                .clipShape(Circle())
+                        }
+                        else {
+                            Circle().foregroundColor(color).frame(width: size, height: size)
+                        }
+                    }
+                    .processors([.resize(width: size)])
+                    .pipeline(ImageProcessing.shared.pipeline)
+                    .priority(.low)
                 }
             }
-            .processors([ImageProcessors.Resize(width: size)])
-            .animation(.default)
-            .priority(.low)
-            .pipeline(ImageProcessing.shared.pipeline)
-        }
-    }
-}
-
-struct ProfilePic: View {
-    
-    @ObservedObject var event:Event
-    var size:CGFloat = 50
-    var color:Color
-    
-    init(event:Event, size: CGFloat = 50) {
-        self.event = event
-        self.size = size
-        self.color = randomColor(seed: event.pubkey)
-    }
-    
-    var body: some View {
-        let picture = event.contact?.picture
-        
-        if (picture == nil || (picture != nil && picture!.prefix(7) == "http://")) { // TODO: is this slow??
-            Circle().foregroundColor(color).frame(width: size, height: size)
-        }
-        else {
-            LazyImage(url: URL(string: picture!)) { state in
-                if let image = state.image {
-                    image.frame(width: size, height: size).clipShape(Circle())
-                }
-                else {
-                    Circle().foregroundColor(color).frame(width: size, height: size)
-                }
-            }
-            .processors([ImageProcessors.Resize(width: 100)])
-//            .processors([ImageProcessors.Resize(width: 100), ImageProcessors.Circle()])
-//            .processors([ImageProcessors.Resize(size: CGSize(width: 50, height: 150), unit: .pixels, contentMode: .aspectFit, crop: true, upscale: true)])
-            .animation(nil)
-            .priority(.low)
-            .pipeline(ImageProcessing.shared.pipeline)
-//                .pipeline(ImagePipeline {
-//                    $0.dataLoader = DataLoader(configuration: {
-//                        // Disable disk caching built into URLSession
-//                        let conf = DataLoader.defaultConfiguration
-//                        conf.urlCache = nil
-//                        return conf
-//                    }())
-//
-//                    $0.dataCachePolicy = .storeEncodedImages
-//                    $0.imageCache = ImageCache.shared
-//                    $0.dataCache = try! DataCache(name: "com.nostur.2140.picture")
-//                })
-        }
-    }
-}
-
-struct ProfilePicView: View {
-    
-    var pubkey:String
-    var contact:Contact?
-    var account:Account?
-    var size:CGFloat = 50
-    var color:Color
-    
-    init(pubkey: String, contact: Contact? = nil, account: Account? = nil, size: CGFloat = 50) {
-        self.pubkey = pubkey
-        self.contact = contact
-        self.account = account
-        self.size = size
-        self.color = randomColor(seed: pubkey)
-    }
-    
-    var body: some View {
-        let picture = contact != nil ? contact!.picture : account?.picture
-        
-        if (picture == nil || (picture != nil && picture!.prefix(7) == "http://")) { // TODO: is this slow??
-            Circle().foregroundColor(color).frame(width: size, height: size)
-        }
-        else {
-            LazyImage(url: URL(string: picture!)) { state in
-                if let image = state.image {
-                    image.frame(width: size, height: size).clipShape(Circle())
-                }
-                else {
-                    Circle().foregroundColor(color).frame(width: size, height: size)
-                }
-            }
-            .processors([ImageProcessors.Resize(width: 100)])
-            .processors([ImageProcessors.Resize(width: 100), ImageProcessors.Circle()])
-//            .processors([ImageProcessors.Resize(size: CGSize(width: 50, height: 150), unit: .pixels, contentMode: .aspectFit, crop: true, upscale: true)])
-            .animation(nil)
-            .priority(.low)
-            .pipeline(ImageProcessing.shared.pipeline)
-//                .pipeline(ImagePipeline {
-//                    $0.dataLoader = DataLoader(configuration: {
-//                        // Disable disk caching built into URLSession
-//                        let conf = DataLoader.defaultConfiguration
-//                        conf.urlCache = nil
-//                        return conf
-//                    }())
-//
-//                    $0.dataCachePolicy = .storeEncodedImages
-//                    $0.imageCache = ImageCache.shared
-//                    $0.dataCache = try! DataCache(name: "com.nostur.2140.picture")
-//                })
+            .frame(width: size, height: size)
         }
     }
 }
@@ -164,7 +96,7 @@ struct ProfilePicViewWrapper: View {
     
     var body: some View {
         //        EmptyView()
-        ProfilePicView(pubkey: "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", contact: contacts.first)
+        PFP(pubkey: "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", pictureUrl: contacts.first?.picture)
             .frame(width: 150, height: 150)
     }
 }

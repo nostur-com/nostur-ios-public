@@ -8,6 +8,50 @@
 import SwiftUI
 import Nuke
 import NukeUI
+import AnimatedImage
+
+struct ProfileByPubkey: View {
+    
+    @EnvironmentObject var sp:SocketPool
+    @EnvironmentObject var ns:NosturState
+    @EnvironmentObject var nav:NavigationModel
+    
+    var pubkey:String
+    
+    @FetchRequest
+    var contacts:FetchedResults<Contact>
+    
+    let timeOut = Timer.publish(every: 8, on: .main, in: .common).autoconnect()
+        
+    
+    init(pubkey:String) {
+        self.pubkey = pubkey
+        
+        _contacts = FetchRequest(
+            sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
+            predicate: NSPredicate(format: "pubkey == %@", pubkey)
+        )
+    }
+    
+    var body: some View {
+        if (contacts.first != nil) {
+            ProfileView(contact: contacts.first!)
+//            Profile(contact: contacts.first!)
+        }
+        else {
+            ProgressView().onAppear {
+                print("🟢 ProfileByPubkey.onAppear no contact so REQ.0: \(pubkey)")
+                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
+            }
+            .onReceive(timeOut) { firedDate in
+                timeOut.upstream.connect().cancel()
+                if ns.account?.publicKey == pubkey {
+                    nav.navigateTo(ViewPath.Account(account: ns.account!))
+                }
+            }
+        }
+    }
+}
 
 struct ProfileView: View {
     @Environment(\.managedObjectContext) var viewContext
@@ -46,31 +90,82 @@ struct ProfileView: View {
                             ZStack() {
                                 if (contact.banner != nil) {
                                     LazyImage(url: URL(string: contact.banner!)) { state in
-                                        if let image = state.image {
-                                            image // Displays the loaded image
-    //                                            .ignoresSafeArea(edges: .top)
-    //                                            .edgesIgnoringSafeArea(.top)
+                                        if let container = state.imageContainer {
+                                            if container.type == .gif, let gifData = container.data {
+                                                AnimatedImage(data: gifData)
+//                                                           .aspectRatio(contentMode: .fill)
+                                                           .scaledToFill()
+                                                           .frame(height: 150)
+//                                                           .clipShape(Circle())
+                                            }
+                                            else if let image = state.image {
+                                                image
+                                                    .resizable()
+//                                                    .aspectRatio(contentMode: .fill)
+                                                    .scaledToFill()
+                                                    .frame(height: 150)
+                                            }
+                                            else {
+                                                Rectangle()
+                                                    .foregroundColor(.gray)
+                                                    .frame(width: geo.size.width, height: 150)
+                                            }
                                         }
                                         else {
                                             Rectangle()
                                                 .foregroundColor(.gray)
                                                 .frame(width: geo.size.width, height: 150)
-    //                                            .ignoresSafeArea(edges: .top)
                                         }
+                                        
+                                        
+//                                        if let container = state.imageContainer {
+//                                            if container.type == .gif {
+//                                                if let gifData = container.data {
+//                                                    AnimatedImage(data: gifData)
+//                                                               .scaledToFit()
+//                                                               .frame(width: geo.size.width, height: 150)
+////                                                        GIFImageViewWrapper(gifData: gifData, width: geo.size.width, height: 150)
+//                                                }
+//                                                else {
+//                                                    Rectangle()
+//                                                        .foregroundColor(.gray)
+//                                                        .frame(width: geo.size.width, height: 150)
+//                                                }
+//                                            } else {
+//                                                if let image = state.image {
+//                                                    image
+//                                                        .resizable()
+//                                                        .aspectRatio(contentMode: .fill)
+//                                                        .frame(maxHeight: 150)
+//                                                }
+//                                                else {
+//                                                    Rectangle()
+//                                                        .foregroundColor(.gray)
+//                                                        .frame(width: geo.size.width, height: 150)
+//                                                }
+//                                            }
+//                                        }
+//                                        if state.isLoading {
+//                                            Rectangle()
+//                                                .foregroundColor(.gray)
+//                                                .frame(width: geo.size.width, height: 150)
+//                                        }
                                     }
-                                    .processors([ImageProcessors.Resize(width: geo.size.width)])
-                                    .animation(nil)
-                                    .priority(.normal)
+//                                    .processors([ImageProcessors.Resize(width: geo.size.width)])
+                                    //                                    .animation(nil)
+                                    //                                    .priority(.normal)
                                     .pipeline(ImageProcessing.shared.bannerPipeline)
-                                    .frame(width: geo.size.width, height: 150)
+//                                    .frame(width: geo.size.width, height: 150)
+                                    .ignoresSafeArea(edges: .top)
                                 }
                                 else {
                                     HStack {
                                         Rectangle()
                                             .foregroundColor(.gray)
                                             .frame(width: geo.size.width, height: 150)
-//                                            .ignoresSafeArea(edges: .top)
+                                        //                                            .ignoresSafeArea(edges: .top)
                                     }
+                                    .ignoresSafeArea(edges: .top)
                                 }
                                 
                                 HStack {
@@ -86,7 +181,7 @@ struct ProfileView: View {
                                     }
                                     Spacer()
                                 }
-//                                .ignoresSafeArea(edges: .top)
+                                //                                .ignoresSafeArea(edges: .top)
                             }
                             
                             VStack(alignment: .leading) {
@@ -95,11 +190,11 @@ struct ProfileView: View {
                                         ProfileBadgesContainer(pubkey: contact.pubkey)
                                             .offset(x: 85, y: 0)
                                     }
-
+                                    
                                     Spacer()
-
+                                    
                                     ProfileLightningButton(contact: contact)
-
+                                    
                                     if (contact.pubkey != ns.account?.publicKey) {
                                         Button {
                                             if (isFollowing) {
@@ -123,12 +218,12 @@ struct ProfileView: View {
                                         }
                                     }
                                     else {
-//                                        Button {
-//                                            navigateToAccount()
-//                                        } label: {
-//                                            Text("Edit profile")
-//                                        }
-//                                        .buttonStyle(NosturButton())
+                                        //                                        Button {
+                                        //                                            navigateToAccount()
+                                        //                                        } label: {
+                                        //                                            Text("Edit profile")
+                                        //                                        }
+                                        //                                        .buttonStyle(NosturButton())
                                     }
                                 }
                                 
@@ -158,7 +253,7 @@ struct ProfileView: View {
                                     } label: {
                                         Image(systemName: "person.badge.key.fill")
                                     }
-            //                        PrivateNoteToggle(contact: contact) // TODO: FIXME
+                                    //                        PrivateNoteToggle(contact: contact) // TODO: FIXME
                                     if (ns.followsYou(contact)) {
                                         Text("Follows you").font(.system(size: 12))
                                             .foregroundColor(.white)
@@ -168,27 +263,27 @@ struct ProfileView: View {
                                             .opacity(0.7)
                                             .cornerRadius(13)
                                     }
-
+                                    
                                 }
                                 
                                 Text("\n\(String(contact.about ?? "(No information)"))")
                                 
                                 HStack {
                                     Text("\n**\(contact.followingPubkeys.count)** Following")
-
+                                    
                                     Text("\n**??** Followers")
                                         .onTapGesture {
                                             selectedSubTab = "FOLLOWERS"
                                         }
                                     //                        Text("\n**\(contact.followingPubkeys.count)** Followers")
                                 }
-//                                Spacer()
+                                //                                Spacer()
                             }
-                                .padding(10)
-//                                .ignoresSafeArea(edges: .top)
+                            .padding(10)
+                            //                                .ignoresSafeArea(edges: .top)
                             
                         }
-//                        .frame(maxHeight: (geo.size.height / 2))
+                        //                        .frame(maxHeight: (geo.size.height / 2))
                     }
                     Section {
                         VStack {
@@ -274,13 +369,13 @@ struct ProfileView: View {
                         }
                         .padding(.top, 10)
                         .background(.regularMaterial)
-//                        .ignoresSafeArea(edges: .top)
+                        //                        .ignoresSafeArea(edges: .top)
                     }
                 }
             }
         }
-//        .edgesIgnoringSafeArea(.top)
-//        .ignoresSafeArea(edges: .top)
+        //        .edgesIgnoringSafeArea(.top)
+        //        .ignoresSafeArea(edges: .top)
         .fullScreenCover(isPresented: $profilePicViewerIsShown) {
             ProfilePicFullScreenSheet(profilePicViewerIsShown: $profilePicViewerIsShown, pictureUrl:contact.picture!)
         }
@@ -289,6 +384,109 @@ struct ProfileView: View {
     private func navigateToAccount() {
         if (ns.account != nil) {
             nav.navigateTo(ViewPath.Account(account: ns.account!))
+        }
+    }
+}
+
+struct ProfilePicFullScreenSheet: View {
+    
+    @Binding var profilePicViewerIsShown:Bool
+    var pictureUrl:String
+    @State private var scale: CGFloat = 1.0
+    @State private var lastScale: CGFloat = 1.0
+    @State private var position: CGSize = .zero
+    @State private var newPosition: CGSize = .zero
+    
+    var body: some View {
+        
+        let magnifyAndDragGesture = MagnificationGesture()
+                    .onChanged { value in
+                        let delta = value / self.lastScale
+                        self.lastScale = value
+                        self.scale *= delta
+                    }
+                    .onEnded { value in
+                        self.lastScale = 1.0
+                    }
+                    .simultaneously(with: DragGesture()
+                        .onChanged { value in
+                            self.position.width = self.newPosition.width + value.translation.width
+                            self.position.height = self.newPosition.height + value.translation.height
+                        }
+                        .onEnded { value in
+                            self.newPosition = self.position
+                        }
+                    )
+                    .simultaneously(with: DragGesture(minimumDistance: 3.0, coordinateSpace: .local)
+                        .onEnded { value in
+                            print(value.translation)
+                            switch(value.translation.width, value.translation.height) {
+                                    //                    case (...0, -30...30):  print("left swipe")
+                                    //                    case (0..., -30...30):  print("right swipe")
+                                    //                    case (-100...100, ...0):  print("up swipe")
+                                case (-100...100, 0...):  profilePicViewerIsShown = false
+                                default:  print("no clue")
+                            }
+                        }
+                    )
+        
+        ZStack {
+            VStack {
+                HStack {
+                    Spacer()
+                    Image(systemName: "xmark.circle.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 30, height: 30)
+                        .padding(30)
+                        .onTapGesture {
+                            profilePicViewerIsShown = false
+                        }
+                }
+                Spacer()
+            }
+            VStack {
+                LazyImage(url: URL(string: pictureUrl)) { state in
+                    if let container = state.imageContainer {
+                        if container.type == .gif {
+                            if let gifData = container.data {
+                                AnimatedImage(data: gifData)
+                                    .scaledToFit()
+                                    .scaleEffect(scale)
+                                    .offset(position)
+                                    .gesture(magnifyAndDragGesture)
+                                    .onTapGesture {
+                                        withAnimation {
+                                            scale = 1.0
+                                        }
+                                    }
+                            }
+                        }
+                        else {
+                            if let image = state.image {
+                                image
+                                    .resizable()
+                                    .scaledToFit()
+                                    .scaleEffect(scale)
+                                    .offset(position)
+                                    .gesture(magnifyAndDragGesture)
+                                    .onTapGesture {
+                                        withAnimation {
+                                            scale = 1.0
+                                        }
+                                    }
+                                
+                            }
+                            else {
+                                ProgressView()
+                            }
+                        }
+                    }
+                }
+            }
+            .onTapGesture {
+                profilePicViewerIsShown = false
+            }
         }
     }
 }

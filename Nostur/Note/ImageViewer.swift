@@ -8,8 +8,21 @@
 import SwiftUI
 import Nuke
 import NukeUI
+import AnimatedImage
+//import AVKit
 
 
+//extension Data {
+//    func getAVAsset() -> AVAsset {
+//        let directory = NSTemporaryDirectory()
+//        let fileName = "\(NSUUID().uuidString).mov"
+//        let fullURL = NSURL.fileURL(withPathComponents: [directory, fileName])
+//        try! self.write(to: fullURL!)
+//        let asset = AVAsset(url: fullURL!)
+//        return asset
+//    }
+//}
+    
 
 struct FullScreenItem : Identifiable {
     var url:URL
@@ -45,16 +58,30 @@ struct ImageViewer: View {
                             LazyHStack {
                                 ForEach(0..<imgUrls.prefix(20).count, id: \.self) { index in
                                     LazyImage(url: imgUrls[index]) { state in
-                                        if let image = state.image {
-                                            image.resizingMode(.aspectFit)
+                                        if let container = state.imageContainer {
+                                            if container.type == .gif, let gifData = container.data {
+                                                AnimatedImage(data: gifData)
+//                                                           .aspectRatio(contentMode: .fill)
+                                                           .scaledToFit()
+//                                                           .clipShape(Circle())
+                                            }
+                                            else if let image = state.image {
+                                                image
+                                                    .resizable()
+//                                                    .aspectRatio(contentMode: .fill)
+                                                    .scaledToFit()
+                                            }
+                                            else {
+                                                CenteredProgressView()
+                                            }
                                         }
                                         else {
                                             CenteredProgressView()
                                         }
                                     }
                                     .pipeline(ImageProcessing.shared.postContentPipeline)
-                                    .priority(.low)
-                                    .processors([ImageProcessors.Resize(width: side)])
+//                                    .priority(.low)
+//                                    .processors([ImageProcessors.Resize(width: side)])
                                     .frame(width: side, height: 200)
                                     // TODO: DUNNO MAYBE NEED PREFETCHER SOME DAY
                                     //                            .onAppear { model.onAppear(index) }
@@ -93,25 +120,49 @@ struct ImageViewer: View {
             else if (imgUrls.count == 1) {
                 if (imagesShown) {
                     GeometryReader { geometry in
-                        LazyImage(url: imgUrls.first!) { state in
-                            if let image = state.image {
-                                image.resizingMode(.aspectFit)
+                        
+                            LazyImage(url: imgUrls.first!) { state in
+                                if let container = state.imageContainer {
+                                    if container.type == .gif, let gifData = container.data {
+                                        AnimatedImage(data: gifData)
+                                        //                                                           .aspectRatio(contentMode: .fill)
+                                            .scaledToFit()
+                                        //                                                           .clipShape(Circle())
+                                    }
+//                                    if container.type == .mp4, let data = container.data {
+//                                        NosturVideo(asset: data.getAVAsset(), width: geometry.size.width, height: 300)
+//                                        //                                                           .aspectRatio(contentMode: .fill)
+//                                            .scaledToFit()
+//                                        //                                                           .clipShape(Circle())
+//                                    }
+                                    else if let image = state.image {
+                                        image
+                                            .resizable()
+                                        //                                                    .aspectRatio(contentMode: .fill)
+                                            .scaledToFit()
+                                    }
+                                    else {
+                                        CenteredProgressView()
+                                    }
+                                }
+                                else {
+                                    CenteredProgressView()
+                                }
                             }
-                            else {
-                                CenteredProgressView()
+                            .pipeline(ImageProcessing.shared.postContentPipeline)
+                            //                        .priority(.low)
+                            //                        .processors([ImageProcessors.Resize(width: geometry.frame(in: .local).size.width)])
+                            .onTapGesture {
+                                fullScreenItem = FullScreenItem(url: imgUrls.first!)
                             }
-                        }
-                        .pipeline(ImageProcessing.shared.postContentPipeline)
-                        .priority(.low)
-                        .processors([ImageProcessors.Resize(width: geometry.frame(in: .local).size.width)])
-                        .onTapGesture {
-                            fullScreenItem = FullScreenItem(url: imgUrls.first!)
-                        }
-                        .fullScreenCover(item: $fullScreenItem, content: { item in
-                            FullImageViewer(fullImageURL:item.url)
-                        })
+                        
+                        
+                        
                     }
                     .frame(height: 200)
+                    .fullScreenCover(item: $fullScreenItem, content: { item in
+                        FullImageViewer(fullImageURL:item.url)
+                    })
                 }
                 else {
                     VStack {
@@ -222,21 +273,51 @@ struct FullImageViewer: View {
                             self.newPosition = self.position
                         }
                     )
+                    .simultaneously(with: DragGesture(minimumDistance: 3.0, coordinateSpace: .local)
+                        .onEnded { value in
+                            print(value.translation)
+                            switch(value.translation.width, value.translation.height) {
+                                    //                    case (...0, -30...30):  print("left swipe")
+                                    //                    case (0..., -30...30):  print("right swipe")
+                                    //                    case (-100...100, ...0):  print("up swipe")
+                                case (-100...100, 0...):  dismiss()
+                                default:  print("no clue")
+                            }
+                        }
+                    )
         
         ZStack {
             VStack {
                 LazyImage(url: fullImageURL) { state in
-                    if let image = state.image {
-                        image
-                            .resizingMode(.aspectFit)
-                            .scaleEffect(scale)
-                            .offset(position)
-                            .gesture(magnifyAndDragGesture)
-                            .onTapGesture {
-                                withAnimation {
-                                    scale = 1.0
+                    if let container = state.imageContainer {
+                        if container.type == .gif, let gifData = container.data {
+                            AnimatedImage(data: gifData)
+                                       .scaledToFit()
+                                       .scaleEffect(scale)
+                                       .offset(position)
+                                       .gesture(magnifyAndDragGesture)
+                                       .onTapGesture {
+                                           withAnimation {
+                                               scale = 1.0
+                                           }
+                                       }
+                        }
+                        else if let image = state.image {
+                            image
+                                .resizable()
+                                .scaledToFit()
+                                .scaleEffect(scale)
+                                .offset(position)
+                                .gesture(magnifyAndDragGesture)
+                                .onTapGesture {
+                                    withAnimation {
+                                        scale = 1.0
+                                    }
                                 }
-                            }
+                        }
+                        else {
+                            CenteredProgressView()
+                        }
                     }
                     else {
                         CenteredProgressView()
@@ -262,18 +343,6 @@ struct FullImageViewer: View {
                 //                fullImageIsShown = false
             }
         }
-        .gesture(DragGesture(minimumDistance: 3.0, coordinateSpace: .local)
-            .onEnded { value in
-                print(value.translation)
-                switch(value.translation.width, value.translation.height) {
-                        //                    case (...0, -30...30):  print("left swipe")
-                        //                    case (0..., -30...30):  print("right swipe")
-                        //                    case (-100...100, ...0):  print("up swipe")
-                    case (-100...100, 0...):  dismiss()
-                    default:  print("no clue")
-                }
-            }
-        )
     }
 }
 
