@@ -65,7 +65,7 @@ struct ProfileBadgesContainer: View {
                         }
                         
                         if (filters.count > 0) {
-                            let reqD = RequestMessage.getBageDefinitions(filters: filters)
+                            let reqD = RequestMessage.getBadgeDefinitions(filters: Array(filters.prefix(10)))
                             let messageD = ClientMessage(type: .REQ, message: reqD)
                             SocketPool.shared.sendMessage(messageD) // Get badge definitions (kind 30009)
                         }
@@ -95,7 +95,7 @@ struct ProfileBadgesContainer: View {
                         }
                         
                         if (filters.count > 0) {
-                            let reqD = RequestMessage.getBageDefinitions(filters: filters)
+                            let reqD = RequestMessage.getBadgeDefinitions(filters: filters)
                             let messageD = ClientMessage(type: .REQ, message: reqD)
                             SocketPool.shared.sendMessage(messageD) // Get badge definitions (kind 30009)
                         }

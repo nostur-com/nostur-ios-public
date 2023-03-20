@@ -103,7 +103,7 @@ struct RelayMessage {
 // REQ messages for requesting with filters
 struct RequestMessage {
     
-    static func getBageDefinitions(filters:[(Int64, String, String)], subscriptionId:String? = nil) -> String {
+    static func getBadgeDefinitions(filters:[(Int64, String, String)], subscriptionId:String? = nil) -> String {
         // (kinds, badgeCode, author)
         let stringFilters = filters.map {
             "{ \"#d\": [\"\($0.1)\"], \"authors\": [\"\($0.2)\"], \"kinds\": [\($0.0)] }"

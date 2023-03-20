@@ -43,7 +43,7 @@ struct ImageViewer: View {
                         
                         ScrollView(.horizontal) {
                             LazyHStack {
-                                ForEach(0..<imgUrls.count, id: \.self) { index in
+                                ForEach(0..<imgUrls.prefix(20).count, id: \.self) { index in
                                     LazyImage(url: imgUrls[index]) { state in
                                         if let image = state.image {
                                             image.resizingMode(.aspectFit)
