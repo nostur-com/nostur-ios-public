@@ -218,12 +218,12 @@ struct ProfileView: View {
                                         }
                                     }
                                     else {
-                                        //                                        Button {
-                                        //                                            navigateToAccount()
-                                        //                                        } label: {
-                                        //                                            Text("Edit profile")
-                                        //                                        }
-                                        //                                        .buttonStyle(NosturButton())
+                                        Button {
+                                            navigateToAccount()
+                                        } label: {
+                                            Text("Edit profile")
+                                        }
+                                        .buttonStyle(NosturButton())
                                     }
                                 }
                                 

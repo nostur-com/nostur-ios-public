@@ -239,7 +239,7 @@ class LVM: NSObject, ObservableObject {
             self.lvmState.state = .AWAITING_RESTORED_FETCH
             self.lvmState.restoreScrollTo = self.lastAppeared
             self.lvmState.restoreScrollToAnchor = ls?.lastAppearedAtAnchor ?? "BOTTOM"
-            print("🟢🟢 lastAppeared.id on init: \(self.lastAppeared?.id ?? "")")
+//            print("🟢🟢 lastAppeared.id on init: \(self.lastAppeared?.id ?? "")")
         }
         self.performFetch()
         self.fetchFeedTimer?.invalidate()
@@ -359,7 +359,7 @@ extension LVM {
     
     func updatePostFeed() {
         contentChangedSubject
-            .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
+            .debounce(for: .seconds(2.5), scheduler: RunLoop.main)
             .throttle(for: .seconds(10), scheduler: RunLoop.main, latest: true)
         //            .debounce(for: .seconds(0.5), scheduler: DispatchQueue.global())
         //            .throttle(for: .seconds(4), scheduler: DispatchQueue.global(), latest: false)
@@ -405,7 +405,7 @@ extension LVM {
                 }
                 //                self.lastAppeared = event
                 self.lastAppearedId = event.id // So dont need to mangle contexts if we just need an id (for saving ListState)
-                print("🟢🟢 lastAppearedId set to: \(self.lastAppearedId ?? "")")
+//                print("🟢🟢 lastAppearedId set to: \(self.lastAppearedId ?? "")")
                 
                 // TRACK MOST RECENT READ
                 if let recent = self.mostRecentRead, event.created_at > recent.created_at {
