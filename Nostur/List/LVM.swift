@@ -39,13 +39,14 @@ class LVMState: ObservableObject {
             .eraseToAnyPublisher()
         
         let throttledLatestEvent = $events
-            .throttle(for: .seconds(5), scheduler: DispatchQueue.main, latest: true)
-            .dropFirst() // Drop the initial event that will be emitted by the firstEvent publisher
+            .throttle(for: .seconds(3), scheduler: DispatchQueue.main, latest: true)
+//            .dropFirst() // Drop the initial event that will be emitted by the firstEvent publisher
             .eraseToAnyPublisher()
         
         let combined = Publishers.Merge(firstEvent, throttledLatestEvent)
 
         combined
+            .removeDuplicates()
             .sink { posts in
                 self.processPostsInBackground(posts)
             }
@@ -244,6 +245,7 @@ class LVM: NSObject, ObservableObject {
     }
     
     func changeLVM(pubkey:String, pubkeys:Set<String>, listId:String) {
+        self.lvmState.events = []
         self.lvmState.vPosts = []
 
         self.pubkey = pubkey
@@ -343,12 +345,13 @@ extension LVM {
         requestFooterCounters()
 //        onlyFetchItemsWhenVisible()
         updatePostFeed()
+        trackLastAppeared()
     }
     
     func updatePostFeed() {
         contentChangedSubject
-            .debounce(for: .seconds(2), scheduler: RunLoop.main)
-            .throttle(for: .seconds(4), scheduler: RunLoop.main, latest: true)
+            .debounce(for: .seconds(0.3), scheduler: RunLoop.main)
+            .throttle(for: .seconds(2), scheduler: RunLoop.main, latest: true)
 //            .debounce(for: .seconds(0.5), scheduler: DispatchQueue.global())
 //            .throttle(for: .seconds(4), scheduler: DispatchQueue.global(), latest: false)
             .sink { events in
@@ -381,35 +384,62 @@ extension LVM {
 //            .store(in: &subscriptions)
 //    }
     
-    // can be old or new, depending on scroll back or not
-    func onPostAppeared(_ event:Event) {
-        // TRACK ANCHOR
-        if let previous = lastAppeared {
-            lastAppearedAnchor = event.created_at > previous.created_at ? "BOTTOM" : "TOP"
-        }
-        lastAppeared = event
-        lastAppearedId = event.id // So dont need to mangle contexts if we just need an id (for saving ListState)
-        print("🟢🟢 lastAppearedId set to: \(self.lastAppearedId ?? "")")
-        
-        // TRACK MOST RECENT READ
-        if let recent = mostRecentRead, event.created_at > recent.created_at {
-            mostRecentRead = event
-        }
-        else if mostRecentRead == nil {
-            mostRecentRead = event
-        }
-        
-        // TRACK UNREAD COUNT // TODO: NEED TO DO THIS IN BACKGROUND MAYBE? OR NOT
-        if let mostRecentRead {
-//            DispatchQueue.global().async {
-            let mostRecentReadIndex = self.lvmState.events.map { $0.id }.firstIndex(of: mostRecentRead.id) ?? 0
-            let unreadCount = max((self.lvmState.events.count - mostRecentReadIndex - 1), 0)
-//                DispatchQueue.main.async {
+    func trackLastAppeared() {
+        lastAppearedSubject
+//            .debounce(for: .seconds(0.01), scheduler: RunLoop.main)
+            .compactMap { $0 }
+            .sink { [weak self] event in
+                guard let self = self else { return }
+                // TRACK ANCHOR
+                if let previous = self.lastAppeared {
+                    self.lastAppearedAnchor = event.created_at > previous.created_at ? "BOTTOM" : "TOP"
+                }
+//                self.lastAppeared = event
+                self.lastAppearedId = event.id // So dont need to mangle contexts if we just need an id (for saving ListState)
+                print("🟢🟢 lastAppearedId set to: \(self.lastAppearedId ?? "")")
+                
+                // TRACK MOST RECENT READ
+                if let recent = self.mostRecentRead, event.created_at > recent.created_at {
+                    self.mostRecentRead = event
+                }
+                else if self.mostRecentRead == nil {
+                    self.mostRecentRead = event
+                }
+                
+                // TRACK UNREAD COUNT // TODO: NEED TO DO THIS IN BACKGROUND MAYBE? OR NOT
+                if let mrr = self.mostRecentRead {
+                    let mostRecentReadIndex = self.lvmState.vPosts.map { $0.id }.firstIndex(of: mrr.id) ?? 0
+                    let unreadCount = max((self.lvmState.vPosts.count - mostRecentReadIndex - 1), 0)
                     self.unreadCount = unreadCount
-//                }
-//            }
-        }
+                }
+            }
+            .store(in: &subscriptions)
     }
+    // can be old or new, depending on scroll back or not
+//    func onPostAppeared(_ event:Event) {
+//        // TRACK ANCHOR
+//        if let previous = lastAppeared {
+//            lastAppearedAnchor = event.created_at > previous.created_at ? "BOTTOM" : "TOP"
+//        }
+//        lastAppeared = event
+//        lastAppearedId = event.id // So dont need to mangle contexts if we just need an id (for saving ListState)
+//        print("🟢🟢 lastAppearedId set to: \(self.lastAppearedId ?? "")")
+//
+//        // TRACK MOST RECENT READ
+//        if let recent = mostRecentRead, event.created_at > recent.created_at {
+//            mostRecentRead = event
+//        }
+//        else if mostRecentRead == nil {
+//            mostRecentRead = event
+//        }
+//
+//        // TRACK UNREAD COUNT // TODO: NEED TO DO THIS IN BACKGROUND MAYBE? OR NOT
+//        if let mostRecentRead {
+//            let mostRecentReadIndex = self.lvmState.vPosts.map { $0.id }.firstIndex(of: mostRecentRead.id) ?? 0
+//            let unreadCount = max((self.lvmState.vPosts.count - mostRecentReadIndex - 1), 0)
+//            self.unreadCount = unreadCount
+//        }
+//    }
     
     func keepListStateSaved() {
 //        $lastAppeared
@@ -531,12 +561,12 @@ extension LVM {
 //        sendNotification(.updateUnreadCount, self.unreadCount)
     }
     
-    func updateUnreadCount() {
-        let mostRecentReadIndex = self.lvmState.events.firstIndex(where: { $0.id == self.mostRecentReadId }) ?? 0
-        
-//        DispatchQueue.main.async {
-            self.unreadCount = max((self.lvmState.events.count - mostRecentReadIndex - 1),0)
-//        }
+    func updateUnreadCount() {        
+        if let mostRecentRead {
+            let mostRecentReadIndex = self.lvmState.vPosts.map { $0.id }.firstIndex(of: mostRecentRead.id) ?? 0
+            let unreadCount = max((self.lvmState.vPosts.count - mostRecentReadIndex - 1), 0)
+            self.unreadCount = unreadCount
+        }
     }
     
     func requestForJustAppeared(_ events:[Event]) {
@@ -629,44 +659,12 @@ extension LVM: NSFetchedResultsControllerDelegate {
 //                    self.updateUnreadCount()
                 
                 default:
-                    // NEW PLAN
-                    // 1. UPDATE EXISTING vPosts (changes)
-                    // 2. APPEND NEW vPosts at end (new)
-                    
-                    // STEPS
-                    // GET LAST POST ON SCREEN. (SHOULD BE NEW BUT CAN BE OLD)
-                    // PUT ALL FETCHED NOT ON SCREEN AFTER LAST POST
-                    // REFRESH ALL ON SCREEN IF IN FETCHED
-                    // DONT PUT TOO OLD FROM FETCHED ON SCREEN AFTER LAST POST ON SCREEN
-                    
-                    // FROM CHATGPT 4:
                     self.lvmState.events = events
                         .sorted(by: { $0.created_at < $1.created_at } )
+                        .suffix(LVM_MAX_VISIBLE * 2)
+                    self.updateUnreadCount()
                     return
-                    
-//    //            case .COMPLETED_RESTORED_FETCH_WITH_SCROLL, .SCROLLED_TO_END, .SWITCHING_ACCOUNT:
-//                    // deduplicate, add new posts (can be older also..)
-//                    let onScreen = Set(self.vPosts) // lastIndex is newest
-//                    let newPosts = posts
-//                            .sorted(by: { $0.created_at < $1.created_at } ) //make lastIndex newest
-//                            .map(self.vTransformer.eventToVPost)
-//                    // not older than .first or .count - 100
-//
-//                    // newPosts also has has items from BEFORE, that were removed with .prefix. so handle it
-//                    let last100 = newPosts.suffix(100)
-//                    let notTooOldCreatedAt = last100.first?.created_at ?? 0
-//                    let newListWithoutTooOld = Set(newPosts.filter { $0.created_at > notTooOldCreatedAt })
-//
-//                    let newListWithoutOnScreen = newListWithoutTooOld.subtracting(onScreen)
-//                    let newListWithoutOnScreenSorted = newListWithoutOnScreen.sorted(by: { $0.created_at < $1.created_at } )
-//                    // TODO: can we speed up, optimize above 5 lines??
-//                    if (newListWithoutOnScreenSorted.count > 0) {
-//                        self.vPosts.append(contentsOf: newListWithoutOnScreenSorted)
-//                        ThreadWarning.which("self.vPosts.append() Added \(newListWithoutOnScreenSorted.count) new to \(self.id)")
-//                        self.updateUnreadCount()
-//                    }
             }
-//        }
     }
     
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
@@ -674,7 +672,6 @@ extension LVM: NSFetchedResultsControllerDelegate {
         self.contentChangedSubject.send(posts)
     }
 }
-
 
 extension Event {
     static func postsByPubkeys(_ pubkeys:Set<String>, lastAppearedCreatedAt:Int64 = 0) -> NSFetchRequest<Event> {
@@ -686,68 +683,4 @@ extension Event {
         fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN {1,6} AND pubkey IN %@", cutOffPoint,  pubkeys)
         return fr
     }
-}
-
-
-
-func updatePosts(postsOnScreen: [VPost], postsFromCoreData: [VPost], maxNewPosts: Int = 100) -> (updatedPosts: [VPost], newPostsCount: Int, updatedPostsCount: Int) {
-    
-    var newPostsOnScreen = postsOnScreen // first put the existing posts in our final result
-    var postsAddedToTheEnd = [VPost]() // create an empty array that will hold all the things appended to the end
-    var replacedCount = 0
-    
-    for fetchedPost in postsFromCoreData {
-        // If a post from core data is on screen, get the index, and replace it
-        if let index = newPostsOnScreen.firstIndex(where: { $0.id == fetchedPost.id }) {
-            if newPostsOnScreen[index].hashValue != fetchedPost.hashValue {
-                newPostsOnScreen[index] = fetchedPost
-                replacedCount += 1
-            }
-        }
-        else {
-            postsAddedToTheEnd.append(fetchedPost)
-        }
-    }
-    
-    postsAddedToTheEnd
-        .sort { $0.event.created_at < $1.event.created_at }
-    
-    
-    // postsAddedToTheEnd also has has items from BEFORE, that were removed with .prefix. from postsOnScreen so handle it again
-    let last = postsAddedToTheEnd
-    // post added to the end should not be older than the first one already on screen...
-        .filter { $0.event.created_at > (postsOnScreen.first?.event.created_at ?? 0) }
-        .suffix(maxNewPosts)
-//        .suffix(max(0,maxNewPosts - replacedCount))
-//    let notTooOldCreatedAt = last100.first?.created_at ?? 0
-//    let postsAddedToTheEndNotToOld = last100.filter { $0.created_at > notTooOldCreatedAt }
-    
-//    let numberOfNewPosts = min(postsAddedToTheEndNotToOld.count, maxNewPosts)
-    newPostsOnScreen.append(contentsOf: last)
-//    newPostsOnScreen.append(contentsOf: postsAddedToTheEndNotToOld.suffix(numberOfNewPosts))
-    
-    return (newPostsOnScreen, last.count, replacedCount)
-    
-//    var updatedPosts = posts
-//    var newPosts = [VPost]()
-//
-//
-//    for changedPost in changedPosts {
-//        if let index = updatedPosts.firstIndex(of: changedPost) {
-//            // This is an updated post
-//            updatedPosts[index] = changedPost
-//        } else {
-//            // This is a new post
-//            newPosts.append(changedPost)
-//        }
-//    }
-//
-//    // Sort the new posts by createdAt in descending order (latest first)
-//    newPosts.sort { $0.created_at < $1.created_at }
-//
-//    // Append the latest new posts to the end of updatedPosts, limited by maxNewPosts
-//    let numberOfNewPosts = min(newPosts.count, maxNewPosts)
-//    updatedPosts.append(contentsOf: newPosts.prefix(numberOfNewPosts))
-//
-//    return (updatedPosts, numberOfNewPosts)
 }

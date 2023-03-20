@@ -126,7 +126,8 @@ struct ListView: View {
                                         guard vmState.state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
                                         guard vmState.state != .SWITCHING_ACCOUNT else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
 //                                        lastAppeared = vPost.event
-                                        vm.onPostAppeared(vPost.event)
+                                        vm.lastAppearedSubject.send(vPost.event)
+//                                        vm.onPostAppeared(vPost.event)
                                     }
                                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                         Button { ns.toggleBookmark(vPost.event) //TODO:FIXME
