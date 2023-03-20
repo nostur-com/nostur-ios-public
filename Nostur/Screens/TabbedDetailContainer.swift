@@ -55,15 +55,24 @@ struct NosturTabButton: View {
     
     var body: some View {
         HStack(spacing:5) {
-            Image(systemName: "xmark").foregroundColor(isHoveringTab ? .gray : .clear)
-                .padding(2)
-                .background(isHoveringCloseButton ? .gray.opacity(0.1) : .clear)
-                .onHover { over in
-                    isHoveringCloseButton = over
-                }
-                .onTapGesture {
-                    self.onClose()
-                }
+            if IS_IPAD { // IPAD HAS NO HOVER
+                Image(systemName: "xmark").foregroundColor(.gray)
+                    .padding(2)
+                    .onTapGesture {
+                        self.onClose()
+                    }
+            }
+            else {
+                Image(systemName: "xmark").foregroundColor(isHoveringTab ? .gray : .clear)
+                    .padding(2)
+                    .background(isHoveringCloseButton ? .gray.opacity(0.1) : .clear)
+                    .onHover { over in
+                        isHoveringCloseButton = over
+                    }
+                    .onTapGesture {
+                        self.onClose()
+                    }
+            }
             Text(label)
         }
         .padding(.trailing, 23)
@@ -129,28 +138,37 @@ struct TabbedDetailContainer: View {
     var body: some View {
         
         VStack(spacing:0) {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing:0) {
-                    ForEach(tm.tabs.indices, id:\.self) { index in
-                        NosturTabButton(
-                            isSelected: tm.selected == tm.tabs[index],
-                            onSelect: {
-                                tm.selected = tm.tabs[index]
-                            }, onClose: {
-                                if (tm.selected == tm.tabs[index]) {
-                                    if (index != 0) {
-                                        tm.selected = tm.tabs[index - 1]
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing:0) {
+                        ForEach(tm.tabs.indices, id:\.self) { index in
+                            NosturTabButton(
+                                isSelected: tm.selected == tm.tabs[index],
+                                onSelect: {
+                                    tm.selected = tm.tabs[index]
+                                }, onClose: {
+                                    if (tm.selected == tm.tabs[index]) {
+                                        if (index != 0) {
+                                            tm.selected = tm.tabs[index - 1]
+                                        }
+                                        else if (tm.tabs.count > 1) {
+                                            tm.selected = tm.tabs[1]
+                                        }
                                     }
-                                    else if (tm.tabs.count > 1) {
-                                        tm.selected = tm.tabs[1]
-                                    }
-                                }
-                                tm.tabs.remove(at: index)
-                            }, label: "\(tabName(tab: tm.tabs[index]))")
-                        
-                        Divider().frame(height: 30).opacity(index == tm.tabs.count-1 ? 0 : 1)
+                                    tm.tabs.remove(at: index)
+                                }, label: "\(tabName(tab: tm.tabs[index]))")
+                            .id(tm.tabs[index].id)
+                            Divider().frame(height: 30).opacity(index == tm.tabs.count-1 ? 0 : 1)
+                        }
+                        Spacer()
                     }
-                    Spacer()
+                }
+                .onChange(of: tm.tabs) {newTabs in
+//                    if (newTabs.count > oldTabs.count) {
+                        if let lastTab = newTabs.last {
+                            proxy.scrollTo(lastTab.id)
+                        }
+//                    }
                 }
             }
             Divider().opacity(tm.tabs.count > 0 ? 1 : 0)
