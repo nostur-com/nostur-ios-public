@@ -89,8 +89,8 @@ struct ListView: View {
     var body: some View {
         let _ = Self._printChanges()
         VStack {
-            Text("posts: \(vmState.vPosts.count)")
-            Text("state: \(vmState.state.rawValue)")
+//            Text("posts: \(vmState.vPosts.count)")
+//            Text("state: \(vmState.state.rawValue)")
 //                .onTapGesture {
 //                    vm.state = .COMPLETED_RESTORED_FETCH_WITH_SCROLL
 //                }
