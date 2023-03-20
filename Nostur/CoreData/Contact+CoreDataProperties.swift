@@ -83,8 +83,8 @@ extension Contact {
 }
 
 extension Contact : Identifiable {
-    
-    public var id:String { pubkey }
+  
+//    public var id:String { pubkey } // <--- This gives Core data multithreading errors
     var npub:String { try! NIP19(prefix: "npub", hexString: pubkey).displayString }
     var authorKey:String { String(npub.prefix(11)) }
     
