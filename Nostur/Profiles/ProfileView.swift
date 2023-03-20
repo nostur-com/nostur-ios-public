@@ -287,7 +287,7 @@ struct ProfileView: View {
                                     
                                     Text("\n**??** Followers")
                                         .onTapGesture {
-                                            selectedSubTab = "FOLLOWERS"
+                                            selectedSubTab = "Followers"
                                         }
                                     //                        Text("\n**\(contact.followingPubkeys.count)** Followers")
                                 }

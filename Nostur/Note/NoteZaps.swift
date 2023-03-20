@@ -111,6 +111,7 @@ struct NoteZapRow: View {
 
                 }
                 Text("Zapped \(sats.clean) sats \(fiatPrice)")
+                Text(event.zapFromRequest?.content ?? "")
             }
         }
         .padding()

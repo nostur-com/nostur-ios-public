@@ -25,6 +25,7 @@ struct ProfileNotesView: View {
                         ForEach(events.map(VPostTransformer.shared.toVPost)) { vPost in
                             NoteRow(vPost: vPost)
                                 .id(vPost.id)
+                            Divider()
                         }
                         VStack {
                             if (events.count == limit) {
