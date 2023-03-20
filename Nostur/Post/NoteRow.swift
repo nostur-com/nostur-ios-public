@@ -84,7 +84,7 @@ struct NoteRow: View {
                                 NoteHeaderView(vPost: event.firstQuote!.toVPost())
                                     .padding(.bottom, 5)
                                 Spacer()
-//                                PrivateNoteToggle(post: event.firstQuote!)
+                                EventPrivateNoteToggle(event: event.firstQuote!)
                                 NoteMenuView(vPost: event.firstQuote!.toVPost())
                             }
                             ReplyingToFragmentView(vPost: event.firstQuote!.toVPost())
@@ -154,7 +154,7 @@ struct NoteRow: View {
                                 NoteHeaderView(vPost: vPost)
                                     .padding(.bottom, 5)
                                 Spacer()
-//                                PrivateNoteToggle(vPost: event)
+                                EventPrivateNoteToggle(event: event)
                                 NoteMenuView(vPost: vPost)
                             }
                             ReplyingToFragmentView(vPost: vPost)

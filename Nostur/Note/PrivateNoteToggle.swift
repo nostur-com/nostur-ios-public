@@ -7,47 +7,44 @@
 
 import SwiftUI
 
-struct PrivateNoteToggle: View {
-    let event:Event?
-    let contact:Contact?
-    
-    init(event: Event? = nil, contact: Contact? = nil) {
-        self.event = event
-        self.contact = contact
-    }
+struct ContactPrivateNoteToggle: View {
+    @ObservedObject var contact:Contact
     
     var body: some View {
-        if let event {
-            HStack {
-                Button {
-                    if event.hasPrivateNote {
-                        sendNotification(.editingPrivateNoteOnPost, event.id)
-                    }
-                    else {
-                        sendNotification(.newPrivateNoteOnPost, event.id)
-                    }
-                } label: {
-                    Image(systemName: "note.text")
-                        .padding(5)
+        HStack {
+            Button {
+                if contact.hasPrivateNote {
+                    sendNotification(.editingPrivateNoteOnContact, contact.pubkey)
                 }
-                .opacity(event.hasPrivateNote ? 1 : 0.2)
+                else {
+                    sendNotification(.newPrivateNoteOnContact, contact.pubkey)
+                }
+            } label: {
+                Image(systemName: "note.text")
+                    .padding(5)
             }
+            .opacity(contact.hasPrivateNote ? 1 : 0.2)
         }
-        else if let contact {
-            HStack {
-                Button {
-                    if contact.hasPrivateNote {
-                        sendNotification(.editingPrivateNoteOnContact, contact.pubkey)
-                    }
-                    else {
-                        sendNotification(.newPrivateNoteOnContact, contact.pubkey)
-                    }
-                } label: {
-                    Image(systemName: "note.text")
-                        .padding(5)
+    }
+}
+
+struct EventPrivateNoteToggle: View {
+    @ObservedObject var event:Event
+
+    var body: some View {
+        HStack {
+            Button {
+                if event.hasPrivateNote {
+                    sendNotification(.editingPrivateNoteOnPost, event.id)
                 }
-                .opacity(contact.hasPrivateNote ? 1 : 0.2)
+                else {
+                    sendNotification(.newPrivateNoteOnPost, event.id)
+                }
+            } label: {
+                Image(systemName: "note.text")
+                    .padding(5)
             }
+            .opacity(event.hasPrivateNote ? 1 : 0.2)
         }
     }
 }

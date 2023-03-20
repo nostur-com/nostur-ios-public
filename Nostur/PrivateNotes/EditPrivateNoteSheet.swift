@@ -13,6 +13,9 @@ struct EditPrivateNoteSheet: View {
     @EnvironmentObject var ns:NosturState
     
     @ObservedObject var privateNote:PrivateNote
+    
+    @State var privateNoteToRemove:PrivateNote?
+    
     var onDismiss:() -> Void
     
     init(privateNote: PrivateNote, onDismiss: @escaping () -> Void) {
@@ -36,6 +39,13 @@ struct EditPrivateNoteSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
+                ToolbarItem(placement: .destructiveAction) {
+                    Button(role: .destructive) {
+                        privateNoteToRemove = privateNote
+                    } label: {
+                        Image(systemName: "trash")
+                    }
+                }
                 ToolbarItem(placement: .primaryAction) {
                     Button("Save") {
                         do {
@@ -48,6 +58,33 @@ struct EditPrivateNoteSheet: View {
                         dismiss()
                     }
                 }
+            }
+            .actionSheet(item: $privateNoteToRemove) { pNote in
+                ActionSheet(
+                    title: Text("Delete private note"),
+//                    message: account.privateKey != nil
+//                    ? Text("""
+//                             Make sure you have a back-up of your private key (nsec)
+//                             Nostur cannot recover your account without it
+//                             """)
+//                    : Text("""
+//                             Account: @\(account.name) / \(account.display_name)
+//                             """)
+//                    ,
+                    buttons: [
+                        .destructive(Text("Delete"), action: {
+                            do {
+                                ns.objectWillChange.send()
+                                privateNote.post?.objectWillChange.send()
+                                privateNote.contact?.objectWillChange.send()
+                                viewContext.delete(privateNote)
+                                try viewContext.save()
+                                dismiss()
+                            }
+                            catch { print("problem deleting private note \(error)") }
+                        }),
+                        .cancel(Text("Cancel"))
+                    ])
             }
         }
     }
