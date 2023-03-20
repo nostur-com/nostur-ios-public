@@ -85,7 +85,7 @@ extension LightningButton {
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
                                 event!.contact!.zapperPubkey = response.nostrPubkey!
                             }
-                            paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, contact: event!.contact)
+                            paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, event:event!, contact: event!.contact)
                             payAmountSelectorShown = true
                             isLoading = false
                         }
@@ -113,7 +113,7 @@ extension LightningButton {
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
                                 event!.contact!.zapperPubkey = response.nostrPubkey!
                             }
-                            paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, contact: event!.contact)
+                            paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, event:event!, contact: event!.contact)
                             payAmountSelectorShown = true
                             isLoading = false
                         }
