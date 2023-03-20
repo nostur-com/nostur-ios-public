@@ -163,7 +163,7 @@ struct ZapsForThisNote: View {
             ZStack {
                 ForEach(zapsSorted.prefix(10).indices, id:\.self) { index in
                     ZStack {
-                        ProfilePic(event: zapsSorted[index].zapFromRequest!)
+                        PFP(pubkey: zapsSorted[index].zapFromRequest!.pubkey, pictureUrl: zapsSorted[index].zapFromRequest!.contact?.picture)
                             .id(zapsSorted[index].id)
                             .onAppear {
                                 onAppear(zapsSorted[index].created_at)

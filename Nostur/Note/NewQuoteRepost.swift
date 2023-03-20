@@ -36,7 +36,7 @@ struct NewQuoteRepost: View {
             VStack {
                 ScrollView {
                     HStack(alignment: .top) {
-                        ProfilePicView(pubkey: ns.account!.publicKey, account: ns.account!)
+                        PFP(pubkey: ns.account!.publicKey, pictureUrl: ns.account?.picture)
                             .padding(.horizontal, 10)
                         ZStack(alignment:.leading) {
                             VStack(alignment: .leading) {

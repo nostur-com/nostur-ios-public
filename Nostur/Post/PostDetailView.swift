@@ -146,7 +146,7 @@ struct PostAndParent: View {
                     // PFP | NAME/USERNAME/AGO
                     HStack {
                         NavigationLink(value: ContactPath(key: event.pubkey), label: {
-                            ProfilePic(event: event)
+                            PFP(pubkey: event.pubkey, pictureUrl: event.contact?.picture)
                                 .frame(width:50, height:50)
                                 .clipShape(Circle())
                         })

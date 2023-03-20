@@ -157,7 +157,7 @@ struct ReactionsForThisNote: View {
             ZStack {
                 ForEach(withoutDuplicates.prefix(10).indices, id:\.self) { index in
                     ZStack {
-                        ProfilePic(event: reactions[index])
+                        PFP(pubkey: reactions[index].pubkey, pictureUrl: reactions[index].contact?.picture)
                             .id(reactions[index].id)
                             .onAppear {
                                 onAppear(reactions[index].created_at)

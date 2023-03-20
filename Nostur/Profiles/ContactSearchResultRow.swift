@@ -13,7 +13,7 @@ struct ContactSearchResultRow: View {
     
     var body: some View {
         HStack(alignment: .top) {
-            ProfilePicView(pubkey: contact.pubkey, contact: contact)
+            PFP(pubkey: contact.pubkey, pictureUrl: contact.picture)
             VStack(alignment: .leading) {
                 HStack {
                     VStack(alignment: .leading) {

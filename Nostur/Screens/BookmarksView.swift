@@ -83,11 +83,11 @@ struct BookmarksView: View {
                         Spacer()
                         ZStack {
                             if (selectedAccount != nil) {
-                                ProfilePicView(pubkey: selectedAccount!.publicKey, account: selectedAccount, size: 30)
+                                PFP(pubkey: selectedAccount!.publicKey, pictureUrl: selectedAccount?.picture, size: 30)
                             }
                             else {
                                 ForEach(ns.accounts.indices, id:\.self) { index in
-                                    ProfilePicView(pubkey: ns.accounts[index].publicKey, account: ns.accounts[index], size: 30)
+                                    PFP(pubkey: ns.accounts[index].publicKey, pictureUrl: ns.accounts[index].picture, size: 30)
                                         .offset(x: -CGFloat(index*10))
                                     
                                 }

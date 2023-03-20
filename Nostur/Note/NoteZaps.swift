@@ -84,7 +84,7 @@ struct NoteZapRow: View {
     var body: some View {
         
         HStack(alignment: .top) {
-            ProfilePicView(pubkey: event.zapFromRequest?.pubkey ?? "WTF", contact: event.zapFromRequest?.contact)
+            PFP(pubkey: event.zapFromRequest?.pubkey ?? "WTF", pictureUrl: event.zapFromRequest?.contact?.picture)
             VStack(alignment: .leading) {
                 HStack {
                     VStack(alignment: .leading) {

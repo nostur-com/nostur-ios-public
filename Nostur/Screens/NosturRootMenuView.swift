@@ -54,7 +54,7 @@ extension NosturRootMenu {
 //            let _ = Self._printChanges()
             List {
                 HStack(spacing: 10) {
-                    ProfilePicView(pubkey: ns.account!.publicKey, account: ns.account!)
+                    PFP(pubkey: ns.account!.publicKey, pictureUrl: ns.account?.picture)
                     Spacer()
                     FastAccountSwitcher()
                     Button { accountsSheetIsShown = true } label: {

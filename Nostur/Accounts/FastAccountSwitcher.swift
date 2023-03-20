@@ -20,7 +20,7 @@ struct FastAccountSwitcher: View {
     var body: some View {
         HStack(spacing:10) {
             ForEach(fewAccounts.indices, id:\.self) { index in
-                ProfilePicView(pubkey: fewAccounts[index].publicKey, account: fewAccounts[index], size: 25)
+                PFP(pubkey: fewAccounts[index].publicKey, pictureUrl: fewAccounts[index].picture, size: 25)
                     .onTapGesture {
                         ns.setAccount(account: fewAccounts[index])
                         sm.showSidebar = false

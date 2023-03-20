@@ -103,7 +103,7 @@ struct AccountRow: View {
     
     var body: some View {
         HStack(alignment: .center) {
-            ProfilePicView(pubkey: account.publicKey, account: account, size: 35)
+            PFP(pubkey: account.publicKey, pictureUrl: account.picture, size: 35)
             VStack(alignment: .leading) {
                 HStack {
                     VStack(alignment: .leading) {

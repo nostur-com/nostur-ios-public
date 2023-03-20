@@ -88,15 +88,24 @@ struct BadgeRow: View {
             VStack(alignment: .center) {
                 if nBadge.badgeImage?.otherInformation[safe: 0] != nil {
                     LazyImage(url: URL(string: nBadge.badgeImage!.otherInformation[safe: 0]!)) { state in
-                        if let image = state.image {
-                            image.frame(width: 50, height: 50)
-                        }
-                        else {
-                            ProgressView()
+                        if let container = state.imageContainer {
+                            if container.type == .gif {
+                                // Use a view capable of displaying animated images
+                            } else {
+                                if let image = state.image {
+                                    image
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 50, height: 50)
+                                }
+                                else {
+                                    ProgressView()
+                                }
+                            }
                         }
                     }
                     .processors([ImageProcessors.Resize(width: 50)])
-                    .animation(nil)
+//                    .animation(nil)
                     .pipeline(ImageProcessing.shared.pipeline)
                     .padding(10)
                 }

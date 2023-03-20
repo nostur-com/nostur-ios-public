@@ -159,16 +159,25 @@ struct BadgeIcon: View {
     var body: some View {
         if nBadge.badgeImage?.otherInformation[safe: 0] != nil {
             LazyImage(url: URL(string: nBadge.badgeImage!.otherInformation[safe: 0]!)) { state in
-                if let image = state.image {
-                    image.frame(width: 32, height: 32)
-                }
-                else {
-                    ProgressView()
+                if let container = state.imageContainer {
+                    if container.type == .gif {
+                        // Use a view capable of displaying animated images
+                    } else {
+                        if let image = state.image {
+                            image
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width:32, height:32)
+                        }
+                        else {
+                            ProgressView()
+                        }
+                    }
                 }
             }
             .processors([ImageProcessors.Resize(width: 32)])
-            .animation(nil)
-            .pipeline(ImageProcessing.shared.pipeline)
+//            .animation(nil)
+//            .pipeline(ImageProcessing.shared.pipeline)
             .padding(0)
             .frame(width: 32, height: 32)
         }

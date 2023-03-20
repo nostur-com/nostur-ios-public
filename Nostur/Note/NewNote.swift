@@ -88,7 +88,7 @@ struct NewNote: View {
             
             
             HStack(alignment: .top) {
-                ProfilePicView(pubkey: ns.account!.publicKey, account: ns.account!)
+                PFP(pubkey: ns.account!.publicKey, pictureUrl: ns.account?.picture)
                 
                 ZStack(alignment:.leading) {
                     VStack(alignment: .leading) {

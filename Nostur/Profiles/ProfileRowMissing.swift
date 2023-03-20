@@ -14,7 +14,7 @@ struct ProfileRowMissing: View {
     var body: some View {
         NavigationLink(value: ContactPath(key: pubkey)) {
             HStack(alignment: .top) {
-                ProfilePicView(pubkey: pubkey)
+                PFP(pubkey: pubkey)
                 VStack(alignment: .leading) {
                     HStack {
                         VStack(alignment: .leading) {

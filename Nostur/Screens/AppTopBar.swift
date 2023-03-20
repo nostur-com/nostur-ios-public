@@ -21,7 +21,7 @@ struct AppTopBar: View {
                 Group {
                     HStack {
                         if (ns.account != nil && !sm.showSidebar) {
-                            ProfilePicView(pubkey: ns.account!.publicKey, account: ns.account, size:30)
+                            PFP(pubkey: ns.account!.publicKey, pictureUrl: ns.account?.picture, size:30)
                                 .offset(x: 15)
     //                            .offset(y: -5)
                                 .onTapGesture { sm.showSidebar.toggle() }

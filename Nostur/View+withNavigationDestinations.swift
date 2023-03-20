@@ -49,7 +49,7 @@ extension View {
                 ProfileByPubkey(pubkey: path.key)
             }
             .navigationDestination(for: Contact.self) { contact in
-                Profile(contact: contact)
+                ProfileView(contact: contact)
             }
             .navigationDestination(for: Badge.self) { badge in
                 BadgeDetailView(badge: badge.badge)

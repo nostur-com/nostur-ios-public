@@ -58,7 +58,7 @@ struct BlockedAccounts:View {
                             Button {
 //                                withAnimation {
                                 ns.objectWillChange.send()
-                                ns.account!.blockedPubkeys_.removeAll(where: { $0 == contact.id })
+                                ns.account!.blockedPubkeys_.removeAll(where: { $0 == contact.pubkey })
                                 try! viewContext.save()
                                 do {
                                     try viewContext.save()
