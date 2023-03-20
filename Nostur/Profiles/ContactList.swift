@@ -14,10 +14,14 @@ struct ContactList: View {
     @FetchRequest
     var contacts:FetchedResults<Contact>
     var pubkeys:[String]
+    var missing:[String] {
+        contacts
+            .filter { $0.metadata_created_at == 0 }
+            .map { $0.pubkey }
+    }
 
     init(pubkeys:[String]) {
         self.pubkeys = pubkeys
-        
         _contacts = FetchRequest(
             sortDescriptors: [],
             predicate: NSPredicate(format: "pubkey IN %@", pubkeys),
@@ -27,27 +31,12 @@ struct ContactList: View {
     var body: some View {
         VStack {
             Text("Total: \(pubkeys.count)")
-            if (contacts.count > 75) {
-                LazyVStack {
-                    ForEach(contacts) { contact in
-                        ProfileRow(contact: contact)
-                            .frame(height: 120)
-                        Divider()
-                    }
-                }
-            }
-            else {
+            LazyVStack {
                 ForEach(contacts) { contact in
                     ProfileRow(contact: contact)
+                        .frame(height: 120)
                     Divider()
                 }
-            }
-            
-            
-            // TODO: ForEach for Fake ProfileRow view for pubkeys not in Contact
-            
-            let missing = pubkeys.filter { pubkey in
-                contacts.map { $0.pubkey }.firstIndex(of: pubkey) == nil
             }
             
             VStack {
@@ -56,19 +45,13 @@ struct ContactList: View {
                 }
             }
             
-        }.onAppear {
-            // fetch missing
-            // fetch pubkeys not in [contacts.pubkey]
-//            
-//            let missing = pubkeys.filter { pubkey in
-//                contacts.map { $0.pubkey }.firstIndex(of: pubkey) == nil
-//            }
-//
-//            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missing)))
+        }
+        .onAppear {
+            guard missing.count != 0 else { return }
+            print("Fetching \(missing.count) missing contacts")
+            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missing)))
             
-            // ugh not working... yet.. just fetch alll kind=0 for all pubkeys
-            
-            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys)))
+            // TODO: ADD FETCH NEW CONTACT INFO ON APPEAR, SIMILAR TO REQUESTFORLATEST ON LISTVIEW
         }
     }
     
