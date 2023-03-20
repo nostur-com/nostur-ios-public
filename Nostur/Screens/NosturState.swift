@@ -357,6 +357,23 @@ final class NosturState : ObservableObject {
             print("Could save after unlike \(error)")
         }
     }
+    
+    func logout(_ account:Account) {
+        if (account.privateKey != nil) {
+            AccountManager.shared.deletePrivateKey(forPublicKeyHex: account.publicKey)
+        }
+        if (accounts.count <= 1) {
+            onBoardingIsShown = true
+            NavigationModel.shared.clear()
+            setAccount(account: nil)
+            viewContext.delete(account)
+        }
+        else {
+            viewContext.delete(account)
+            setAccount(account: accounts.last)
+        }
+        try! viewContext.save()
+    }
 }
 
 

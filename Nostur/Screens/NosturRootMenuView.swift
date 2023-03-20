@@ -17,6 +17,7 @@ struct NosturRootMenu: View {
 //    @EnvironmentObject var sp:SocketPool
     
     @State var accountsSheetIsShown = false
+    @State var logoutAccount:Account? = nil
     
     var body: some View {
         let _ = Self._printChanges()
@@ -40,6 +41,30 @@ struct NosturRootMenu: View {
                 //                .presentationDragIndicator(.hidden)
             }
         }
+        .actionSheet(item: $logoutAccount) { account in
+                    ActionSheet(
+                        title: Text("Confirm log out"),
+                        message: account.privateKey != nil
+                        ? Text("""
+                                 Make sure you have a back-up of your private key (nsec)
+                                 Nostur cannot recover your account without it
+                                 """)
+                        : Text("""
+                                 Account: @\(account.name) / \(account.display_name)
+                                 """)
+                        ,
+                        buttons: [
+                            .destructive(Text("Log out"), action: {
+                                ns.logout(account)
+                                
+                                if (ns.accounts.count <= 1) {
+                                    sm.showSidebar = false
+                                }
+                                
+                            }),
+                            .cancel(Text("Cancel"))
+                        ])
+                }
         .onReceive(receiveNotification(.willDeleteAllEvents)) { _ in
             ns.setAccount()
         }
@@ -66,9 +91,11 @@ extension NosturRootMenu {
 //                    .buttonBorderShape(.capsule)
                 }
                 
-                Text("\(ns.account!.display_name != "" ? ns.account!.display_name : ns.account!.name)").font(.headline)
-                Text("@\(ns.account!.name)").font(.subheadline)
-                Text(try! AttributedString(markdown: "**\(ns.account?.follows?.count ?? 0)**  Following")).font(.caption)
+                VStack {
+                    Text("\(ns.account!.display_name != "" ? ns.account!.display_name : ns.account!.name)").font(.headline)
+                    Text("@\(ns.account!.name)").font(.subheadline)
+                    Text(try! AttributedString(markdown: "**\(ns.account?.follows?.count ?? 0)**  Following")).font(.caption)
+                }
                 
                 Button {
                     nav.navigateTo(ContactPath(key: ns.account!.publicKey))
@@ -100,8 +127,13 @@ extension NosturRootMenu {
                 } label: {
                     Label("Block list", systemImage: "person.badge.minus")
                 }
-                Button {} label: {
-                    Label("About", systemImage: "info")
+//                Button {} label: {
+//                    Label("About", systemImage: "info")
+//                }
+                Button {
+                    logoutAccount = ns.account
+                } label: {
+                    Label("Log out", systemImage: "rectangle.portrait.and.arrow.right")
                 }
             }
             .listStyle(.plain)

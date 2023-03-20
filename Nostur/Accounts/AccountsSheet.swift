@@ -26,8 +26,7 @@ struct AccountsSheet: View {
         animation: .default)
     private var accounts: FetchedResults<Account>
     
-    @State private var confirmDelete = false
-    @State var accountToDelete:Account? = nil
+    @State var logoutAccount:Account? = nil
     
     var body: some View {
         NavigationStack {
@@ -42,11 +41,8 @@ struct AccountsSheet: View {
                                 dismiss()
                             }
                             .swipeActions(edge: .trailing) {
-                                Button() {
-                                    accountToDelete = account
-                                    confirmDelete.toggle()
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
+                                Button("Log out", role: .destructive) {
+                                    logoutAccount = account
                                 }
                             }
                     }
@@ -72,27 +68,30 @@ struct AccountsSheet: View {
                     }
                 }
             })
-            .confirmationDialog("Delete account?", isPresented: $confirmDelete) {
-                Button(role: .destructive) {
-                    guard accountToDelete != nil else { return }
-                    AccountManager.shared.deletePrivateKey(forPublicKeyHex: accountToDelete!.publicKey)
-                    if (ns.accounts.count <= 1) {
-                        ns.onBoardingIsShown = true
-                        sm.showSidebar = false
-                        nav.clear()
-                        ns.setAccount(account: nil)
-                        viewContext.delete(accountToDelete!)
+            .actionSheet(item: $logoutAccount) { account in
+                        ActionSheet(
+                            title: Text("Confirm log out"),
+                            message: account.privateKey != nil
+                            ? Text("""
+                                     Make sure you have a back-up of your private key (nsec)
+                                     Nostur cannot recover your account without it
+                                     """)
+                            : Text("""
+                                     Account: @\(account.name) / \(account.display_name)
+                                     """)
+                            ,
+                            buttons: [
+                                .destructive(Text("Log out"), action: {
+                                    ns.logout(account)
+                                    
+                                    if (ns.accounts.count <= 1) {
+                                        sm.showSidebar = false
+                                    }
+                                    
+                                }),
+                                .cancel(Text("Cancel"))
+                            ])
                     }
-                    else {
-                        viewContext.delete(accountToDelete!)
-                        ns.setAccount(account: ns.accounts.last)
-                    }
-    //                dismiss()
-                    try! viewContext.save()
-                } label: {
-                    Text("Yes, delete account")
-                }
-            }
         }
     }
 }
