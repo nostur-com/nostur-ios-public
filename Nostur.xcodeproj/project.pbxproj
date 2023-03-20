@@ -20,7 +20,6 @@
 		1F1472DE29A71F6C00197393 /* NoteHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1472DD29A71F6C00197393 /* NoteHeader.swift */; };
 		1F14BA6E29854B8E00EACCD5 /* ContactList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F14BA6D29854B8E00EACCD5 /* ContactList.swift */; };
 		1F14BA7029854DFC00EACCD5 /* ProfileRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F14BA6F29854DFC00EACCD5 /* ProfileRow.swift */; };
-		1F14BA742985949100EACCD5 /* Profile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F14BA732985949100EACCD5 /* Profile.swift */; };
 		1F14BA762985984100EACCD5 /* ProfileRelaysView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F14BA752985984100EACCD5 /* ProfileRelaysView.swift */; };
 		1F14CC43299D1D7E00131B8D /* NosturStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F14CC42299D1D7E00131B8D /* NosturStyles.swift */; };
 		1F14CC45299D432400131B8D /* AccountsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F14CC44299D432300131B8D /* AccountsSheet.swift */; };
@@ -227,7 +226,6 @@
 		1F1472DD29A71F6C00197393 /* NoteHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteHeader.swift; sourceTree = "<group>"; };
 		1F14BA6D29854B8E00EACCD5 /* ContactList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactList.swift; sourceTree = "<group>"; };
 		1F14BA6F29854DFC00EACCD5 /* ProfileRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileRow.swift; sourceTree = "<group>"; };
-		1F14BA732985949100EACCD5 /* Profile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Profile.swift; sourceTree = "<group>"; };
 		1F14BA752985984100EACCD5 /* ProfileRelaysView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileRelaysView.swift; sourceTree = "<group>"; };
 		1F14CC42299D1D7E00131B8D /* NosturStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturStyles.swift; sourceTree = "<group>"; };
 		1F14CC44299D432300131B8D /* AccountsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsSheet.swift; sourceTree = "<group>"; };
@@ -789,7 +787,6 @@
 				1F8B1364297B3BE8002EB8CF /* ContactProfile.swift */,
 				1F14BA6D29854B8E00EACCD5 /* ContactList.swift */,
 				1FC4D40C2998ED0E004E88CD /* FollowersList.swift */,
-				1F14BA732985949100EACCD5 /* Profile.swift */,
 				1F33096029891C4800D4D8CF /* ProfileLikesView.swift */,
 				1F1ABC4C2981AEA500D03FA9 /* ProfileNotesView.swift */,
 				1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */,
@@ -953,7 +950,6 @@
 				1F75257C2996790D00477AF2 /* Notifications.swift in Sources */,
 				1F3309632989598600D4D8CF /* NosturRootMenuView.swift in Sources */,
 				1FB130BF29C1A314004AC98D /* QuotedNoteFragmentView.swift in Sources */,
-				1F14BA742985949100EACCD5 /* Profile.swift in Sources */,
 				1F4820F229A9F808000EDFDA /* NotificationsZaps.swift in Sources */,
 				1F1B55B329BD07CC006E1930 /* NotificationsManager.swift in Sources */,
 				1FB4D3FB29BAEB0C004DB537 /* ListViewModel.swift in Sources */,

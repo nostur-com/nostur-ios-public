@@ -96,8 +96,8 @@ final class SocketPool: ObservableObject {
     func sendMessage(_ message:ClientMessage, subscriptionId:String? = nil) {
 //        if (message.type == .REQ) {
 //            let read = sockets.values.filter { $0.read == true }.count
-////            print("⬇️⬇️ REQ ON \(read) RELAYS: \(String(message.message.prefix(260)))")
-//            print("⬇️⬇️ REQ ON \(read) RELAYS: \(String(message.message))")
+//            print("⬇️⬇️ REQ ON \(read) RELAYS: \(String(message.message.prefix(260)))")
+////            print("⬇️⬇️ REQ ON \(read) RELAYS: \(String(message.message))")
 //        }
         
         Task(priority: .background) {
@@ -116,9 +116,11 @@ final class SocketPool: ObservableObject {
                     guard subscriptionId == nil || managedClient.activeSubscriptions.firstIndex(where: { $0 == subscriptionId }) == nil else { continue }
                     if (subscriptionId != nil) {
                         print("⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!)")
-                        managedClient.activeSubscriptions.append(subscriptionId!)
+                        DispatchQueue.main.async {
+                            managedClient.activeSubscriptions.append(subscriptionId!)
+                        }
                     }
-//                    print("REQUESTING: \(String(message.message.prefix(260)))")
+                    print("REQUESTING: \(String(message.message.prefix(260)))")
 //                    print("⬇️⬇️ REQUESTING: \(String(message.message))")
                     managedClient.client.write(string: message.message)
                 }
