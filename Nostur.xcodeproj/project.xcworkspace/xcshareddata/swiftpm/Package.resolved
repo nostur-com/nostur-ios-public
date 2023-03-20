@@ -23,8 +23,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/kean/Nuke",
       "state" : {
-        "revision" : "67bd45931180f652159e3342575277a7f197b3ab",
-        "version" : "11.6.2"
+        "revision" : "6241e100294a2aa70d1811641585ab7da780bd0f",
+        "version" : "12.0.0"
       }
     },
     {
@@ -55,12 +55,12 @@
       }
     },
     {
-      "identity" : "swiftui-introspect",
+      "identity" : "swiftui.animatedimage",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/siteline/SwiftUI-Introspect",
+      "location" : "https://github.com/krzyzanowskim/SwiftUI.AnimatedImage",
       "state" : {
-        "branch" : "master",
-        "revision" : "63a079f102964a6987eaaf70f8fdc39b84feeece"
+        "revision" : "d8ea744fd506cd291b2cd6c5580b806e01ee5912",
+        "version" : "1.0.0"
       }
     },
     {

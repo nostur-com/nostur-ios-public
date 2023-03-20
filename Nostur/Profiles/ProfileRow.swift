@@ -10,12 +10,9 @@ import SwiftUI
 struct ProfileRow: View {
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var sp:SocketPool
-//    var sp:SocketPool = .shared
-    
     // Following/Unfollowing tap is slow so update UI and do in background:
     @State var isFollowing = false
     var withoutFollowButton = false
-    
     @ObservedObject var contact:Contact
     
     var body: some View {
@@ -28,14 +25,14 @@ struct ProfileRow: View {
                             HStack(spacing:3) {
                                 Text(contact.authorName).font(.headline).foregroundColor(.primary)
                                     .lineLimit(1)
-                                
+
                                 if (contact.nip05veried) {
                                     Image(systemName: "checkmark.seal.fill")
                                         .font(.system(size: 14))
                                         .foregroundColor(.blue)
                                 }
                             }
-                            
+
                             Text("@\(contact.username)").font(.subheadline).foregroundColor(.secondary)
                                 .lineLimit(1)
                         }.multilineTextAlignment(.leading)

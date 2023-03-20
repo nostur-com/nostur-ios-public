@@ -48,6 +48,9 @@
 		1F33EC3929B6849800615FB9 /* Centered.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F33EC3829B6849800615FB9 /* Centered.swift */; };
 		1F37571629672AD0007D210A /* DummyData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F37571529672AD0007D210A /* DummyData.swift */; };
 		1F3C3F9629755D4C00E813FD /* NosturState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3C3F9529755D4C00E813FD /* NosturState.swift */; };
+		1F3E134F29C87BF400D076EA /* GifImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3E134E29C87BF400D076EA /* GifImageView.swift */; };
+		1F3E135229C88EFC00D076EA /* AnimatedImage in Frameworks */ = {isa = PBXBuildFile; productRef = 1F3E135129C88EFC00D076EA /* AnimatedImage */; };
+		1F3E135429C89B9F00D076EA /* NukeVideo in Frameworks */ = {isa = PBXBuildFile; productRef = 1F3E135329C89B9F00D076EA /* NukeVideo */; };
 		1F4773A5296CA72A0049454B /* AddReadOnlyAccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4773A4296CA72A0049454B /* AddReadOnlyAccountView.swift */; };
 		1F4773A7296D4F5B0049454B /* AccountEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4773A6296D4F5B0049454B /* AccountEditView.swift */; };
 		1F4773A9296D85B70049454B /* AccountListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4773A8296D85B70049454B /* AccountListView.swift */; };
@@ -187,8 +190,6 @@
 		1FD49737298029600084F14E /* NoteTextRenderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD49736298029600084F14E /* NoteTextRenderView.swift */; };
 		1FDBC4A529A1733F002E9AFC /* ZapsList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FDBC4A429A1733F002E9AFC /* ZapsList.swift */; };
 		1FDFEBB7297ED78100511AA0 /* ConfigurationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FDFEBB6297ED78100511AA0 /* ConfigurationView.swift */; };
-		1FE4011729940D6E00A388A2 /* Introspect in Frameworks */ = {isa = PBXBuildFile; productRef = 1FE4011629940D6E00A388A2 /* Introspect */; };
-		1FE4011B2994CD8700A388A2 /* List+didChangeHeight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4011A2994CD8700A388A2 /* List+didChangeHeight.swift */; };
 		1FE4011D29952EC800A388A2 /* NIP05.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4011C29952EC800A388A2 /* NIP05.swift */; };
 		1FE4C0272982FF3B004E7750 /* ReplyingToFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4C0262982FF3B004E7750 /* ReplyingToFragment.swift */; };
 		1FE5068E29B391CF006A16D8 /* FastAccountSwitcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE5068D29B391CF006A16D8 /* FastAccountSwitcher.swift */; };
@@ -255,6 +256,7 @@
 		1F33EC3829B6849800615FB9 /* Centered.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Centered.swift; sourceTree = "<group>"; };
 		1F37571529672AD0007D210A /* DummyData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DummyData.swift; sourceTree = "<group>"; };
 		1F3C3F9529755D4C00E813FD /* NosturState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturState.swift; sourceTree = "<group>"; };
+		1F3E134E29C87BF400D076EA /* GifImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GifImageView.swift; path = Nostur/GifImageView.swift; sourceTree = "<group>"; };
 		1F4773A4296CA72A0049454B /* AddReadOnlyAccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddReadOnlyAccountView.swift; sourceTree = "<group>"; };
 		1F4773A6296D4F5B0049454B /* AccountEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountEditView.swift; sourceTree = "<group>"; };
 		1F4773A8296D85B70049454B /* AccountListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountListView.swift; sourceTree = "<group>"; };
@@ -392,7 +394,6 @@
 		1FD49736298029600084F14E /* NoteTextRenderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteTextRenderView.swift; sourceTree = "<group>"; };
 		1FDBC4A429A1733F002E9AFC /* ZapsList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZapsList.swift; sourceTree = "<group>"; };
 		1FDFEBB6297ED78100511AA0 /* ConfigurationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationView.swift; sourceTree = "<group>"; };
-		1FE4011A2994CD8700A388A2 /* List+didChangeHeight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "List+didChangeHeight.swift"; path = "../List+didChangeHeight.swift"; sourceTree = "<group>"; };
 		1FE4011C29952EC800A388A2 /* NIP05.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP05.swift; sourceTree = "<group>"; };
 		1FE4C0262982FF3B004E7750 /* ReplyingToFragment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplyingToFragment.swift; sourceTree = "<group>"; };
 		1FE5068D29B391CF006A16D8 /* FastAccountSwitcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastAccountSwitcher.swift; sourceTree = "<group>"; };
@@ -410,13 +411,14 @@
 				1F7C65BD29A14969009FF3EA /* LightningDevKit in Frameworks */,
 				1F654F30298ED52E0040F15D /* Starscream in Frameworks */,
 				1F75257829962AA300477AF2 /* NukeExtensions in Frameworks */,
+				1F3E135429C89B9F00D076EA /* NukeVideo in Frameworks */,
 				1F75257629962AA300477AF2 /* Nuke in Frameworks */,
 				1FC4D40B2997E58E004E88CD /* KeychainAccess in Frameworks */,
 				1FEA785529799697007CC8E7 /* Compactor in Frameworks */,
-				1FE4011729940D6E00A388A2 /* Introspect in Frameworks */,
 				1F75257A29962AA300477AF2 /* NukeUI in Frameworks */,
 				1F055A53296EE2A2009EF792 /* secp256k1 in Frameworks */,
 				1FEC01C0296C4A400078CC9B /* SwiftyJSON in Frameworks */,
+				1F3E135229C88EFC00D076EA /* AnimatedImage in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -645,7 +647,6 @@
 				1F8B1351297B36DB002EB8CF /* Data+Bytes.swift */,
 				1FCEA0B62999413C00A309DC /* Double+clean.swift */,
 				1F8B1353297B36DB002EB8CF /* HexEncoding.swift */,
-				1FE4011A2994CD8700A388A2 /* List+didChangeHeight.swift */,
 				1F1ABC4629811A1A00D03FA9 /* LRUCache.swift */,
 				1F3309822989819700D4D8CF /* Maintenance.swift */,
 				1F75257B2996790D00477AF2 /* Notifications.swift */,
@@ -677,6 +678,7 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
+				1F3E134E29C87BF400D076EA /* GifImageView.swift */,
 				1F65121A29C75AC9009FD4AE /* ProfileView.swift */,
 				1F65121829C743B7009FD4AE /* ShimmerAnimation.swift */,
 				1FB448BC2965F3D000038671 /* Nostur */,
@@ -845,12 +847,13 @@
 				1F055A52296EE2A2009EF792 /* secp256k1 */,
 				1FEA785429799697007CC8E7 /* Compactor */,
 				1F654F2F298ED52E0040F15D /* Starscream */,
-				1FE4011629940D6E00A388A2 /* Introspect */,
 				1F75257529962AA300477AF2 /* Nuke */,
 				1F75257729962AA300477AF2 /* NukeExtensions */,
 				1F75257929962AA300477AF2 /* NukeUI */,
 				1FC4D40A2997E58E004E88CD /* KeychainAccess */,
 				1F7C65BC29A14969009FF3EA /* LightningDevKit */,
+				1F3E135129C88EFC00D076EA /* AnimatedImage */,
+				1F3E135329C89B9F00D076EA /* NukeVideo */,
 			);
 			productName = Nostur;
 			productReference = 1FB448BA2965F3D000038671 /* Nostur.app */;
@@ -885,10 +888,10 @@
 				1F055A51296EE2A2009EF792 /* XCRemoteSwiftPackageReference "secp256k1" */,
 				1FEA785329799697007CC8E7 /* XCRemoteSwiftPackageReference "SwiftCompactor" */,
 				1F654F2E298ED52E0040F15D /* XCRemoteSwiftPackageReference "Starscream" */,
-				1FE4011529940D6E00A388A2 /* XCRemoteSwiftPackageReference "SwiftUI-Introspect" */,
 				1F75257429962AA300477AF2 /* XCRemoteSwiftPackageReference "Nuke" */,
 				1FC4D4092997E58E004E88CD /* XCRemoteSwiftPackageReference "KeychainAccess" */,
 				1F7C65BB29A14969009FF3EA /* XCRemoteSwiftPackageReference "ldk-swift" */,
+				1F3E135029C88EFC00D076EA /* XCRemoteSwiftPackageReference "SwiftUI" */,
 			);
 			productRefGroup = 1FB448BB2965F3D000038671 /* Products */;
 			projectDirPath = "";
@@ -945,7 +948,6 @@
 				1F57C54B299285B300DFE063 /* Search.swift in Sources */,
 				1FB62D0E296FFF1400A0055B /* RelayEditView.swift in Sources */,
 				1F7E40EB29BD9AD6003F9F71 /* PrivateNote+CoreDataProperties.swift in Sources */,
-				1FE4011B2994CD8700A388A2 /* List+didChangeHeight.swift in Sources */,
 				1F71B45529B0822300FA0400 /* ProfileBadgesView.swift in Sources */,
 				1FC38B9E2972DD5A004769F8 /* Contact+CoreDataProperties.swift in Sources */,
 				1F75257C2996790D00477AF2 /* Notifications.swift in Sources */,
@@ -997,6 +999,7 @@
 				1FCA273E299A6A1A00298881 /* LightningButton.swift in Sources */,
 				1FC2DFEB29A8FBA100C8A9DA /* DetailContainer.swift in Sources */,
 				1FB448C52965F3D000038671 /* NosturTabsView.swift in Sources */,
+				1F3E134F29C87BF400D076EA /* GifImageView.swift in Sources */,
 				1F756531296AE4260078474E /* RelaysView.swift in Sources */,
 				1FBE8224299A745600FB41CE /* PaymentAmountSelector.swift in Sources */,
 				1FE4011D29952EC800A388A2 /* NIP05.swift in Sources */,
@@ -1336,6 +1339,14 @@
 				minimumVersion = 0.9.2;
 			};
 		};
+		1F3E135029C88EFC00D076EA /* XCRemoteSwiftPackageReference "SwiftUI" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/krzyzanowskim/SwiftUI.AnimatedImage";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
 		1F654F2E298ED52E0040F15D /* XCRemoteSwiftPackageReference "Starscream" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/daltoniam/Starscream/";
@@ -1349,7 +1360,7 @@
 			repositoryURL = "https://github.com/kean/Nuke";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 11.6.2;
+				minimumVersion = 12.0.0;
 			};
 		};
 		1F7C65BB29A14969009FF3EA /* XCRemoteSwiftPackageReference "ldk-swift" */ = {
@@ -1363,14 +1374,6 @@
 		1FC4D4092997E58E004E88CD /* XCRemoteSwiftPackageReference "KeychainAccess" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/kishikawakatsumi/KeychainAccess";
-			requirement = {
-				branch = master;
-				kind = branch;
-			};
-		};
-		1FE4011529940D6E00A388A2 /* XCRemoteSwiftPackageReference "SwiftUI-Introspect" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/siteline/SwiftUI-Introspect";
 			requirement = {
 				branch = master;
 				kind = branch;
@@ -1399,6 +1402,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1F055A51296EE2A2009EF792 /* XCRemoteSwiftPackageReference "secp256k1" */;
 			productName = secp256k1;
+		};
+		1F3E135129C88EFC00D076EA /* AnimatedImage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1F3E135029C88EFC00D076EA /* XCRemoteSwiftPackageReference "SwiftUI" */;
+			productName = AnimatedImage;
+		};
+		1F3E135329C89B9F00D076EA /* NukeVideo */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1F75257429962AA300477AF2 /* XCRemoteSwiftPackageReference "Nuke" */;
+			productName = NukeVideo;
 		};
 		1F654F2F298ED52E0040F15D /* Starscream */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -1429,11 +1442,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1FC4D4092997E58E004E88CD /* XCRemoteSwiftPackageReference "KeychainAccess" */;
 			productName = KeychainAccess;
-		};
-		1FE4011629940D6E00A388A2 /* Introspect */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1FE4011529940D6E00A388A2 /* XCRemoteSwiftPackageReference "SwiftUI-Introspect" */;
-			productName = Introspect;
 		};
 		1FEA785429799697007CC8E7 /* Compactor */ = {
 			isa = XCSwiftPackageProductDependency;

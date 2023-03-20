@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import Introspect
 
 struct NosturRootMenu: View {
     @AppStorage("selected_tab") var selectedTab = "Main"
@@ -104,14 +103,8 @@ extension NosturRootMenu {
                 Button {} label: {
                     Label("About", systemImage: "info")
                 }
-            }.listStyle(.plain)
-                .introspect(selector: TargetViewSelector.ancestorOrSiblingContaining, customize: { (collectionView: UICollectionView) in
-                    guard #available(iOS 16, *) else { return }
-                    var config = UICollectionLayoutListConfiguration(appearance: .plain)
-                    config.showsSeparators = false
-                    let layout = UICollectionViewCompositionalLayout.list(using: config)
-                    collectionView.collectionViewLayout = layout
-                })
+            }
+            .listStyle(.plain)
             Spacer()
         }
     }
