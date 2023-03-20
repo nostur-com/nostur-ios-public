@@ -102,7 +102,8 @@ struct ProfileView: View {
                                                 AnimatedImage(data: gifData)
 //                                                           .aspectRatio(contentMode: .fill)
                                                            .scaledToFill()
-                                                           .frame(height: 150)
+                                                           .frame(width: geo.size.width, height: 150)
+                                                           .clipped()
 //                                                           .clipShape(Circle())
                                             }
                                             else if let image = state.image {
@@ -110,7 +111,8 @@ struct ProfileView: View {
                                                     .resizable()
 //                                                    .aspectRatio(contentMode: .fill)
                                                     .scaledToFill()
-                                                    .frame(height: 150)
+                                                    .frame(width: geo.size.width, height: 150)
+                                                    .clipped()
                                             }
                                             else {
                                                 Rectangle()
@@ -267,7 +269,7 @@ struct ProfileView: View {
                                     } label: {
                                         Image(systemName: "person.badge.key.fill")
                                     }
-                                    //                        PrivateNoteToggle(contact: contact) // TODO: FIXME
+                                    PrivateNoteToggle(contact: contact) // TODO: FIXME
                                     if (ns.followsYou(contact)) {
                                         Text("Follows you").font(.system(size: 12))
                                             .foregroundColor(.white)
