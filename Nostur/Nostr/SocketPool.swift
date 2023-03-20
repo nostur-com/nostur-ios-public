@@ -120,7 +120,7 @@ final class SocketPool: ObservableObject {
                             managedClient.activeSubscriptions.append(subscriptionId!)
                         }
                     }
-                    print("REQUESTING: \(String(message.message.prefix(260)))")
+//                    print("REQUESTING: \(String(message.message.prefix(260)))")
 //                    print("⬇️⬇️ REQUESTING: \(String(message.message))")
                     managedClient.client.write(string: message.message)
                 }

@@ -91,7 +91,7 @@ extension NosturRootMenu {
 //                    .buttonBorderShape(.capsule)
                 }
                 
-                VStack {
+                VStack(alignment: .leading) {
                     Text("\(ns.account!.display_name != "" ? ns.account!.display_name : ns.account!.name)").font(.headline)
                     Text("@\(ns.account!.name)").font(.subheadline)
                     Text(try! AttributedString(markdown: "**\(ns.account?.follows?.count ?? 0)**  Following")).font(.caption)

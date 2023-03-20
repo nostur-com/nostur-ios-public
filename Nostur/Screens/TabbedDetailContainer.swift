@@ -168,7 +168,7 @@ struct TabbedDetailContainer: View {
                         if let lastTab = newTabs.last {
                             proxy.scrollTo(lastTab.id)
                         }
-//                    }
+//                    } 
                 }
             }
             Divider().opacity(tm.tabs.count > 0 ? 1 : 0)
