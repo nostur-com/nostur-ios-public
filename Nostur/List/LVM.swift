@@ -89,6 +89,7 @@ class LVMState: ObservableObject {
                         note1: newVPostData.note1,
                         plainText: newVPostData.plainText,
                         renderedText: newVPostData.renderedText,
+                        replyingToUsernamesMarkDown: newVPostData.replyingToUsernamesMarkDown,
                         imageUrls: newVPostData.imageUrls,
                         displayName: newVPostData.displayName)
                     newVPosts.append(newVPost)

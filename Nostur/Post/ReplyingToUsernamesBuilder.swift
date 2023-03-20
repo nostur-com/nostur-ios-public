@@ -19,6 +19,7 @@ class ReplyingToUsernamesBuilder {
         guard event.replyToId != nil || event.replyTo != nil else { return nil }
         
         let pTags = Set(event.tags().filter { $0.type == "p" }.map { $0.pubkey })
+            .sorted()
         
         let pTagsAsStrings = pTags.map { pubkey in
             return "[@\(contactUsername(fromPubkey: pubkey, event: event))](nostur:p:\(pubkey))"

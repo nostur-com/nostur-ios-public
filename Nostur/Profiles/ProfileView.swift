@@ -269,7 +269,7 @@ struct ProfileView: View {
                                     } label: {
                                         Image(systemName: "person.badge.key.fill")
                                     }
-                                    PrivateNoteToggle(contact: contact) // TODO: FIXME
+                                    ContactPrivateNoteToggle(contact: contact)
                                     if (ns.followsYou(contact)) {
                                         Text("Follows you").font(.system(size: 12))
                                             .foregroundColor(.white)
