@@ -31,19 +31,23 @@ struct FollowingAndExplore: View {
                         selected: selectedSubTab == "Explore")
                 }
                 ZStack {
-                    ListViewContainer(pubkey: ns.activeAccountPublicKey, pubkeys: ns.followingPublicKeys, listId: "Following", listType: .account)
-                        .frame(maxWidth: 600)
-                        .opacity(selectedSubTab == "Following" ? 1 : 0)
-                    
-                    if (ns.rawExplorePubkeys.count > 0) {
-                        ListViewContainer(pubkey: ns.activeAccountPublicKey, pubkeys: ns.explorePubkeys, listId: "Explore", listType: .explore)
-                            .frame(maxWidth: 600)
-                            .opacity(selectedSubTab == "Explore" ? 1 : 0)
-                    }
-                    else {
-                        CenteredProgressView()
-                            .frame(maxWidth: 600)
-                            .opacity(selectedSubTab == "Explore" ? 1 : 0)
+                    switch selectedSubTab {
+                        case "Following":
+                            ListViewContainer(pubkey: ns.activeAccountPublicKey, pubkeys: ns.followingPublicKeys, listId: "Following", listType: .account)
+                                .frame(maxWidth: 600)
+                                .opacity(selectedSubTab == "Following" ? 1 : 0)
+                            
+                        default:
+                            if (ns.rawExplorePubkeys.count > 0) {
+                                ListViewContainer(pubkey: ns.activeAccountPublicKey, pubkeys: ns.explorePubkeys, listId: "Explore", listType: .explore)
+                                    .frame(maxWidth: 600)
+                                    .opacity(selectedSubTab == "Explore" ? 1 : 0)
+                            }
+                            else {
+                                CenteredProgressView()
+                                    .frame(maxWidth: 600)
+                                    .opacity(selectedSubTab == "Explore" ? 1 : 0)
+                            }
                     }
                 }
                 Spacer()

@@ -34,25 +34,32 @@ class LVMState: ObservableObject {
         self.privateContext = privateContext
         self.transformer = VPostTransformer(privateContext)
         
-        let firstEvent = $events
-            .first()
-            .eraseToAnyPublisher()
+        //        let firstEvent = $events
+        //            .first()
+        //            .eraseToAnyPublisher()
+        //
+        //        let throttledLatestEvent = $events
+        //            .throttle(for: .seconds(3), scheduler: DispatchQueue.main, latest: true)
+        ////            .dropFirst() // Drop the initial event that will be emitted by the firstEvent publisher
+        //            .eraseToAnyPublisher()
+        //
+        //        let combined = Publishers.Merge(firstEvent, throttledLatestEvent)
+        //
+        //        combined
+        //            .removeDuplicates()
+        //            .sink { posts in
+        //                self.processPostsInBackground(posts)
+        //            }
+        //            .store(in: &subscriptions)
         
-        let throttledLatestEvent = $events
-            .throttle(for: .seconds(3), scheduler: DispatchQueue.main, latest: true)
-//            .dropFirst() // Drop the initial event that will be emitted by the firstEvent publisher
-            .eraseToAnyPublisher()
-        
-        let combined = Publishers.Merge(firstEvent, throttledLatestEvent)
-
-        combined
-            .removeDuplicates()
+        $events
+//            .removeDuplicates()
             .sink { posts in
                 self.processPostsInBackground(posts)
             }
             .store(in: &subscriptions)
         
-
+        
     }
     
     private func processPostsInBackground(_ events:[Event]) {
@@ -93,41 +100,41 @@ class LVMState: ObservableObject {
             // post added to the end should not be older than the first one already on screen...
                 .filter { $0.created_at > (currentVPosts.first?.created_at ?? 0) }
                 .suffix(LVM_MAX_VISIBLE)
-        
+            
             DispatchQueue.main.async {
                 self.vPosts = currentVPosts + last
             }
             
             
-//            var updatedPosts: [VPost] = []
-//
-//                    for event in events {
-//                        // Get the corresponding post in the private context
-//                        guard let privateEvent = try? privateContext.existingObject(with: event.objectID) as? Event,
-//                              let plainText = privatePost.plainText else { continue }
-//                        let processedText = parseText(plainText)
-//                        // Update the post object with the processed text
-//                        privatePost.content = processedText
-//                        updatedPosts.append(privatePost)
-//                    }
-//
-//                    DispatchQueue.main.async {
-//                        self.processedPosts = updatedPosts
-//                    }
-//            
-//            guard let privatePost = try? privateContext.existingObject(with: post.objectID) as? Post,
-//                              let plainText = privatePost.plainText else { continue }
-//            let newPosts = posts
-////                            .sorted(by: { $0.created_at < $1.created_at } ) //make lastIndex newest
-//                .map(VPostTransformer.shared.toVPost)
-//            let result = updatePosts(postsOnScreen: self.vPosts, postsFromCoreData: newPosts)
-//            DispatchQueue.main.async {
-//                self.vPosts = result.updatedPosts
-//            }
-//            if (result.newPostsCount > 0 || result.updatedPostsCount > 0) {
-//                ThreadWarning.which("self.vPosts.append() Added \(result.newPostsCount) new and replaced \(result.updatedPostsCount) on (self.id)")
-////                    self.updateUnreadCount()
-//            }
+            //            var updatedPosts: [VPost] = []
+            //
+            //                    for event in events {
+            //                        // Get the corresponding post in the private context
+            //                        guard let privateEvent = try? privateContext.existingObject(with: event.objectID) as? Event,
+            //                              let plainText = privatePost.plainText else { continue }
+            //                        let processedText = parseText(plainText)
+            //                        // Update the post object with the processed text
+            //                        privatePost.content = processedText
+            //                        updatedPosts.append(privatePost)
+            //                    }
+            //
+            //                    DispatchQueue.main.async {
+            //                        self.processedPosts = updatedPosts
+            //                    }
+            //
+            //            guard let privatePost = try? privateContext.existingObject(with: post.objectID) as? Post,
+            //                              let plainText = privatePost.plainText else { continue }
+            //            let newPosts = posts
+            ////                            .sorted(by: { $0.created_at < $1.created_at } ) //make lastIndex newest
+            //                .map(VPostTransformer.shared.toVPost)
+            //            let result = updatePosts(postsOnScreen: self.vPosts, postsFromCoreData: newPosts)
+            //            DispatchQueue.main.async {
+            //                self.vPosts = result.updatedPosts
+            //            }
+            //            if (result.newPostsCount > 0 || result.updatedPostsCount > 0) {
+            //                ThreadWarning.which("self.vPosts.append() Added \(result.newPostsCount) new and replaced \(result.updatedPostsCount) on (self.id)")
+            ////                    self.updateUnreadCount()
+            //            }
         }
     }
 }
@@ -141,7 +148,7 @@ class LVM: NSObject, ObservableObject {
     var pubkey:String
     var pubkeys:Set<String>
     private let viewContext: NSManagedObjectContext
-
+    
     var unreadCount:Int {
         get { lvmCounter.unreadCount }
         set { lvmCounter.unreadCount = newValue }
@@ -207,7 +214,7 @@ class LVM: NSObject, ObservableObject {
         let ctx = viewContext
         var ls:ListState?
         ls = ListState.fetchListState(pubkey, listId: listId, context: ctx)
-    
+        
         if (ls == nil) {
             ls = ListState(context: ctx)
             ls!.listId = listId
@@ -218,12 +225,12 @@ class LVM: NSObject, ObservableObject {
         }
         
         let lastAppeared = ls!.lastAppearedId != nil
-            ? (try? Event.fetchEvent(id: ls!.lastAppearedId!, context: ctx))
-            : nil
+        ? (try? Event.fetchEvent(id: ls!.lastAppearedId!, context: ctx))
+        : nil
         
         let mostRecent = ls!.mostRecentAppearedId != nil
-            ? (try? Event.fetchEvent(id: ls!.mostRecentAppearedId!, context: ctx))
-            : nil
+        ? (try? Event.fetchEvent(id: ls!.mostRecentAppearedId!, context: ctx))
+        : nil
         
         self.listStateObjectId = ls!.objectID
         self.mostRecentRead = mostRecent
@@ -247,7 +254,7 @@ class LVM: NSObject, ObservableObject {
     func changeLVM(pubkey:String, pubkeys:Set<String>, listId:String) {
         self.lvmState.events = []
         self.lvmState.vPosts = []
-
+        
         self.pubkey = pubkey
         self.pubkeys = pubkeys
         self.listId = listId
@@ -265,12 +272,12 @@ class LVM: NSObject, ObservableObject {
         }
         
         let lastAppeared = ls!.lastAppearedId != nil
-            ? (try? Event.fetchEvent(id: ls!.lastAppearedId!, context: ctx))
-            : nil
+        ? (try? Event.fetchEvent(id: ls!.lastAppearedId!, context: ctx))
+        : nil
         
         let mostRecent = ls!.mostRecentAppearedId != nil
-            ? (try? Event.fetchEvent(id: ls!.mostRecentAppearedId!, context: ctx))
-            : nil
+        ? (try? Event.fetchEvent(id: ls!.mostRecentAppearedId!, context: ctx))
+        : nil
         
         self.listStateObjectId = ls!.objectID
         self.mostRecentRead = mostRecent
@@ -294,6 +301,7 @@ class LVM: NSObject, ObservableObject {
     
     func changeFollowers(pubkeys:Set<String>) {
         self.pubkeys = pubkeys
+        self.frc = nil
         performFetch()
     }
     
@@ -304,16 +312,16 @@ class LVM: NSObject, ObservableObject {
         if (ot.isOnboarding && self.pubkey == ot.pubkey && ot.didFetchKind3 && !ot.didFillTimeline) {
             fetchEvents(pubkeys: Set(ot.followingKeys), amount: 50)
             ot.didFillTimeline = true
-//            firstTimeCompleted = true
+            //            firstTimeCompleted = true
             DispatchQueue.main.async {
                 UserDefaults.standard.set(true, forKey: "firstTimeCompleted")
             }
         }
         else if (!ot.isOnboarding) {
             let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 4)  // 4 hours  ago
-//                print("🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣 put back after fixes" )
-//                print("🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣 put back after fixes" )
-//                print("🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣 put back after fixes" )
+            //                print("🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣 put back after fixes" )
+            //                print("🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣 put back after fixes" )
+            //                print("🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣🟣 put back after fixes" )
             DispatchQueue.main.async {
                 let cutOffPoint = min(self.lastAppeared?.created_at ?? hoursAgo, hoursAgo) // 8 hours ago or longer until lastAppeared Event
                 fetchEvents(pubkeys: self.pubkeys, since: cutOffPoint, subscriptionId: self.id)
@@ -324,13 +332,14 @@ class LVM: NSObject, ObservableObject {
     func performFetch() {
         self.frc = NSFetchedResultsController(fetchRequest: Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: self.lastAppeared?.created_at ?? 0), managedObjectContext: viewContext, sectionNameKeyPath: nil, cacheName: nil) // TODO: Try cache?
         frc?.delegate = self
-    
+        
         
         if viewIsVisible {
             do {
                 try self.frc?.performFetch()
                 guard let posts = self.frc?.fetchedObjects else { return }
-                self.contentChangedSubject.send(posts)
+                //                self.contentChangedSubject.send(posts) // Disabled, no debounce/throttle on first fetch
+                self.sendToView(events: posts)
             } catch {
                 print("🔴🔴🔴 failed to fetch items")
             }
@@ -343,50 +352,50 @@ extension LVM {
     func addSubscriptions() {
         keepListStateSaved()
         requestFooterCounters()
-//        onlyFetchItemsWhenVisible()
+        //        onlyFetchItemsWhenVisible()
         updatePostFeed()
         trackLastAppeared()
     }
     
     func updatePostFeed() {
         contentChangedSubject
-            .debounce(for: .seconds(0.3), scheduler: RunLoop.main)
-            .throttle(for: .seconds(2), scheduler: RunLoop.main, latest: true)
-//            .debounce(for: .seconds(0.5), scheduler: DispatchQueue.global())
-//            .throttle(for: .seconds(4), scheduler: DispatchQueue.global(), latest: false)
+            .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
+            .throttle(for: .seconds(10), scheduler: RunLoop.main, latest: true)
+        //            .debounce(for: .seconds(0.5), scheduler: DispatchQueue.global())
+        //            .throttle(for: .seconds(4), scheduler: DispatchQueue.global(), latest: false)
             .sink { events in
                 self.sendToView(events: events)
             }
             .store(in: &subscriptions)
     }
     
-//    func onlyFetchItemsWhenVisible() {
-//        lvmState.$viewIsVisible
-//            .removeDuplicates() // Dont trigger if the visibility is updated but the same.. (double set by different views/subviews
-//            .sink { isVisible in
-//                print("🟢🟢 \(self.id): isVisible:\(isVisible)")
-//                if (isVisible) {
-//                    print("🟢🟢 Activating FRC: \(self.id) 🟢🟢")
-//                    self.frc?.delegate = self
-//                    do {
-//                        try self.frc?.performFetch()
-//                        guard let posts = self.frc?.fetchedObjects else { return }
-//                        self.contentChangedSubject.send(posts)
-//                    } catch {
-//                        print("🔴🔴🔴 failed to fetch items")
-//                    }
-//                }
-//                else {
-//                    print("🟢🟢 Deactivating FRC:\(self.id) 🟣🟣")
-//                    self.frc?.delegate = nil
-//                }
-//            }
-//            .store(in: &subscriptions)
-//    }
+    //    func onlyFetchItemsWhenVisible() {
+    //        lvmState.$viewIsVisible
+    //            .removeDuplicates() // Dont trigger if the visibility is updated but the same.. (double set by different views/subviews
+    //            .sink { isVisible in
+    //                print("🟢🟢 \(self.id): isVisible:\(isVisible)")
+    //                if (isVisible) {
+    //                    print("🟢🟢 Activating FRC: \(self.id) 🟢🟢")
+    //                    self.frc?.delegate = self
+    //                    do {
+    //                        try self.frc?.performFetch()
+    //                        guard let posts = self.frc?.fetchedObjects else { return }
+    //                        self.contentChangedSubject.send(posts)
+    //                    } catch {
+    //                        print("🔴🔴🔴 failed to fetch items")
+    //                    }
+    //                }
+    //                else {
+    //                    print("🟢🟢 Deactivating FRC:\(self.id) 🟣🟣")
+    //                    self.frc?.delegate = nil
+    //                }
+    //            }
+    //            .store(in: &subscriptions)
+    //    }
     
     func trackLastAppeared() {
         lastAppearedSubject
-//            .debounce(for: .seconds(0.01), scheduler: RunLoop.main)
+        //            .debounce(for: .seconds(0.01), scheduler: RunLoop.main)
             .compactMap { $0 }
             .sink { [weak self] event in
                 guard let self = self else { return }
@@ -394,7 +403,7 @@ extension LVM {
                 if let previous = self.lastAppeared {
                     self.lastAppearedAnchor = event.created_at > previous.created_at ? "BOTTOM" : "TOP"
                 }
-//                self.lastAppeared = event
+                //                self.lastAppeared = event
                 self.lastAppearedId = event.id // So dont need to mangle contexts if we just need an id (for saving ListState)
                 print("🟢🟢 lastAppearedId set to: \(self.lastAppearedId ?? "")")
                 
@@ -416,46 +425,46 @@ extension LVM {
             .store(in: &subscriptions)
     }
     // can be old or new, depending on scroll back or not
-//    func onPostAppeared(_ event:Event) {
-//        // TRACK ANCHOR
-//        if let previous = lastAppeared {
-//            lastAppearedAnchor = event.created_at > previous.created_at ? "BOTTOM" : "TOP"
-//        }
-//        lastAppeared = event
-//        lastAppearedId = event.id // So dont need to mangle contexts if we just need an id (for saving ListState)
-//        print("🟢🟢 lastAppearedId set to: \(self.lastAppearedId ?? "")")
-//
-//        // TRACK MOST RECENT READ
-//        if let recent = mostRecentRead, event.created_at > recent.created_at {
-//            mostRecentRead = event
-//        }
-//        else if mostRecentRead == nil {
-//            mostRecentRead = event
-//        }
-//
-//        // TRACK UNREAD COUNT // TODO: NEED TO DO THIS IN BACKGROUND MAYBE? OR NOT
-//        if let mostRecentRead {
-//            let mostRecentReadIndex = self.lvmState.vPosts.map { $0.id }.firstIndex(of: mostRecentRead.id) ?? 0
-//            let unreadCount = max((self.lvmState.vPosts.count - mostRecentReadIndex - 1), 0)
-//            self.unreadCount = unreadCount
-//        }
-//    }
+    //    func onPostAppeared(_ event:Event) {
+    //        // TRACK ANCHOR
+    //        if let previous = lastAppeared {
+    //            lastAppearedAnchor = event.created_at > previous.created_at ? "BOTTOM" : "TOP"
+    //        }
+    //        lastAppeared = event
+    //        lastAppearedId = event.id // So dont need to mangle contexts if we just need an id (for saving ListState)
+    //        print("🟢🟢 lastAppearedId set to: \(self.lastAppearedId ?? "")")
+    //
+    //        // TRACK MOST RECENT READ
+    //        if let recent = mostRecentRead, event.created_at > recent.created_at {
+    //            mostRecentRead = event
+    //        }
+    //        else if mostRecentRead == nil {
+    //            mostRecentRead = event
+    //        }
+    //
+    //        // TRACK UNREAD COUNT // TODO: NEED TO DO THIS IN BACKGROUND MAYBE? OR NOT
+    //        if let mostRecentRead {
+    //            let mostRecentReadIndex = self.lvmState.vPosts.map { $0.id }.firstIndex(of: mostRecentRead.id) ?? 0
+    //            let unreadCount = max((self.lvmState.vPosts.count - mostRecentReadIndex - 1), 0)
+    //            self.unreadCount = unreadCount
+    //        }
+    //    }
     
     func keepListStateSaved() {
-//        $lastAppeared
+        //        $lastAppeared
         lastAppearedSubject
             .dropFirst()
             .debounce(for: .seconds(1), scheduler: RunLoop.main)
             .throttle(for: .seconds(5), scheduler: RunLoop.main, latest: false)
-//            .debounce(for: .seconds(1), scheduler: DispatchQueue.global())
-//            .throttle(for: .seconds(5), scheduler: DispatchQueue.global(), latest: false)
+        //            .debounce(for: .seconds(1), scheduler: DispatchQueue.global())
+        //            .throttle(for: .seconds(5), scheduler: DispatchQueue.global(), latest: false)
             .receive(on: DispatchQueue.global(qos: .background))
             .sink { [weak self] _ in
                 guard let self = self else { return }
-//                guard self.state != .AWAITING_RESTORED_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-//                guard self.state != .AWAITING_FIRST_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-//                guard self.state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-//                guard self.state != .SWITCHING_ACCOUNT else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+                //                guard self.state != .AWAITING_RESTORED_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+                //                guard self.state != .AWAITING_FIRST_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+                //                guard self.state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+                //                guard self.state != .SWITCHING_ACCOUNT else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
                 
                 
                 self.privateContext.perform {
@@ -481,16 +490,16 @@ extension LVM {
     
     func requestFooterCounters() {
         // AFTER 1 SEC OF STOP SCROLLING, WE WANT TO FETCH #E AND P (HERE)
-//        $lastAppeared
+        //        $lastAppeared
         lastAppearedSubject
             .filter({ _ in
                 self.lvmState.vPosts.count > 0 // Don't do anything if there is nothing on screen yet!
             })
             .debounce(for: .seconds(1), scheduler: RunLoop.main)
             .throttle(for: .seconds(5), scheduler: RunLoop.main, latest: true)
-//            .debounce(for: .seconds(1), scheduler: DispatchQueue.global())
-//            .throttle(for: .seconds(5), scheduler: DispatchQueue.global(), latest: true)
-//            .receive(on: DispatchQueue.global())
+        //            .debounce(for: .seconds(1), scheduler: DispatchQueue.global())
+        //            .throttle(for: .seconds(5), scheduler: DispatchQueue.global(), latest: true)
+        //            .receive(on: DispatchQueue.global())
             .sink { [weak self] event in
                 guard let self = self else { return }
                 guard let event = event else { return }
@@ -556,12 +565,12 @@ extension LVM {
         guard state != .AWAITING_FIRST_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
         guard state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
         guard state != .SWITCHING_ACCOUNT else { return } // Only set last appeared if we
-
+        
         self.unreadCount = 0
-//        sendNotification(.updateUnreadCount, self.unreadCount)
+        //        sendNotification(.updateUnreadCount, self.unreadCount)
     }
     
-    func updateUnreadCount() {        
+    func updateUnreadCount() {
         if let mostRecentRead {
             let mostRecentReadIndex = self.lvmState.vPosts.map { $0.id }.firstIndex(of: mostRecentRead.id) ?? 0
             let unreadCount = max((self.lvmState.vPosts.count - mostRecentReadIndex - 1), 0)
@@ -570,18 +579,18 @@ extension LVM {
     }
     
     func requestForJustAppeared(_ events:[Event]) {
-//        return // TODO: FIXME
+        //        return // TODO: FIXME
         guard self.viewIsVisible else { return }
         let ids = ids(events)
         let contacts = events.compactMap { $0.contact }
         let shouldVerifyContacts = contacts.filter { NIP05.shouldVerify($0) }
-
-//        Task {
-            ThreadWarning.which("requestForJustAppeared on \(self.id)")
-            fetchStuffForLastAddedNotes(ids: ids)
-//            fetchMissingReplyToContacts(events: events) // TODO: FIXME
-            NIP05.verifyBatch(contacts: shouldVerifyContacts, context: self.privateContext)
-//        }
+        
+        //        Task {
+        ThreadWarning.which("requestForJustAppeared on \(self.id)")
+        fetchStuffForLastAddedNotes(ids: ids)
+        //            fetchMissingReplyToContacts(events: events) // TODO: FIXME
+        NIP05.verifyBatch(contacts: shouldVerifyContacts, context: self.privateContext)
+        //        }
     }
     
     // TODO: WE NEED TO USE THIS.. JUST MOVED FROM ListView TO LVM but not updated yet
@@ -596,9 +605,9 @@ extension LVM {
             let pubkeys = Array(Set(event.pTags()))
             if pubkeys.count > 0 {
                 let contacts = Contact.fetchByPubkeys(pubkeys, context: self.privateContext)
-//                event.objectWillChange.send()
+                //                event.objectWillChange.send()
                 // dit moet op main queue?
-//                ThreadWarning.which("Event.addToContacts( 💖💖💖")
+                //                ThreadWarning.which("Event.addToContacts( 💖💖💖")
                 event.addToContacts(NSSet(array: contacts))
             }
         }
@@ -617,54 +626,54 @@ extension LVM {
             .map { $0.pubkey }
         
         guard (missingPubkeys + emptyContactPubkeys).count > 0 else { return }
-//        ThreadWarning.which("SocketPool.shared.sendMessag 💖💖💖")
+        //        ThreadWarning.which("SocketPool.shared.sendMessag 💖💖💖")
         SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missingPubkeys + emptyContactPubkeys )))
-    
+        
     }
 }
 
 extension LVM: NSFetchedResultsControllerDelegate {
     
     func sendToView(events:[Event]) {
-            switch (self.state) {
-                case .AWAITING_FIRST_FETCH: // Show last X (FORCED CUTOFF)
+        switch (self.state) {
+            case .AWAITING_FIRST_FETCH: // Show last X (FORCED CUTOFF)
+                self.lvmState.events = events
+                    .prefix(LVM_MAX_VISIBLE)
+                    .sorted(by: { $0.created_at < $1.created_at } )
+                
+                self.lvmState.state = .COMPLETED_FIRST_FETCH
+                
+            case .AWAITING_RESTORED_FETCH: // Show last read, until end
+                // show last 100 if LR is within it
+                // else show all
+                let lastAppearedIndex = self.lastAppeared != nil ? self.lvmState.events.firstIndex(where: { $0.id == self.lastAppearedId }) ?? -1 : -1
+                
+                if (lastAppearedIndex == -1) { // LAST APPEARED NOT IN EVENTS (FORCED CUTOFF)
                     self.lvmState.events = events
                         .prefix(LVM_MAX_VISIBLE)
                         .sorted(by: { $0.created_at < $1.created_at } )
-                        
-                    self.lvmState.state = .COMPLETED_FIRST_FETCH
-                    
-                case .AWAITING_RESTORED_FETCH: // Show last read, until end
-                    // show last 100 if LR is within it
-                    // else show all
-                    let lastAppearedIndex = self.lastAppeared != nil ? self.lvmState.events.firstIndex(where: { $0.id == self.lastAppearedId }) ?? -1 : -1
-                    
-                    if (lastAppearedIndex == -1) { // LAST APPEARED NOT IN EVENTS (FORCED CUTOFF)
-                        self.lvmState.events = events
-                            .prefix(LVM_MAX_VISIBLE)
-                            .sorted(by: { $0.created_at < $1.created_at } )
-                            self.state = .COMPLETED_FIRST_FETCH // POST NOT IN LIST, SO DONT RESTORE SCROLL.
-                    }
-                    if (lastAppearedIndex < LVM_MAX_VISIBLE) {
-                        self.lvmState.state = .AWAITING_RESTORE_SCROLL // POST IS IN LIST, SO WE CAN RESTORE SCROLL. (FORCED CUTOFF)
-                        self.lvmState.events = events
-                            .prefix(LVM_MAX_VISIBLE)
-                            .sorted(by: { $0.created_at < $1.created_at } )
-                    }
-                    else {
-                        self.lvmState.state = .AWAITING_RESTORE_SCROLL // POST IN LIST, BUT OUTSIDE MAX VISIBLE.. TODO: HANDLE THIS. NO CUTOFF NOW
-                        self.lvmState.events = events
-                            .sorted(by: { $0.created_at < $1.created_at } )
-                    }
-//                    self.updateUnreadCount()
-                
-                default:
+                    self.state = .COMPLETED_FIRST_FETCH // POST NOT IN LIST, SO DONT RESTORE SCROLL.
+                }
+                if (lastAppearedIndex < LVM_MAX_VISIBLE) {
+                    self.lvmState.state = .AWAITING_RESTORE_SCROLL // POST IS IN LIST, SO WE CAN RESTORE SCROLL. (FORCED CUTOFF)
+                    self.lvmState.events = events
+                        .prefix(LVM_MAX_VISIBLE)
+                        .sorted(by: { $0.created_at < $1.created_at } )
+                }
+                else {
+                    self.lvmState.state = .AWAITING_RESTORE_SCROLL // POST IN LIST, BUT OUTSIDE MAX VISIBLE.. TODO: HANDLE THIS. NO CUTOFF NOW
                     self.lvmState.events = events
                         .sorted(by: { $0.created_at < $1.created_at } )
-                        .suffix(LVM_MAX_VISIBLE * 2)
-                    self.updateUnreadCount()
-                    return
-            }
+                }
+                //                    self.updateUnreadCount()
+                
+            default:
+                self.lvmState.events = events
+                    .sorted(by: { $0.created_at < $1.created_at } )
+                    .suffix(LVM_MAX_VISIBLE * 2)
+                self.updateUnreadCount()
+                return
+        }
     }
     
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
@@ -679,7 +688,7 @@ extension Event {
         let cutOffPoint = lastAppearedCreatedAt == 0 ? hoursAgo : min(lastAppearedCreatedAt, hoursAgo) // 8 hours ago or longer until lastAppeared Event
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-//        fr.fetchLimit = 500 //TODO: need this even?
+        //        fr.fetchLimit = 500 //TODO: need this even?
         fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN {1,6} AND pubkey IN %@", cutOffPoint,  pubkeys)
         return fr
     }
