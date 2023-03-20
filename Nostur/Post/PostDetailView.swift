@@ -43,31 +43,24 @@ struct NoteById: View {
 }
 
 struct PostDetailView: View {
-//    @Environment(\.managedObjectContext) var viewContext
-//    let context:NSManagedObjectContext
-    let post:Event?
+    let vPost:VPost
     var navTitleHidden:Bool = false
     
     init(vPost: VPost, navTitleHidden: Bool = false) {
-        self.post = try? DataProvider.shared().fetchEvent(id: vPost.id)
+        self.vPost = vPost
         self.navTitleHidden = navTitleHidden
     }
     
     var body: some View {
-        if let post = self.post {
-            GeometryReader{ geometry in
-                ScrollViewReader { proxy in
-                    ScrollView {
-                        PostAndParent(event: post, geoHeight: geometry.size.height, navTitleHidden:navTitleHidden)
-                            .onAppear {
-                                proxy.scrollTo(post.id)
-                            }
-                    }
+        GeometryReader{ geometry in
+            ScrollViewReader { proxy in
+                ScrollView {
+                    PostAndParent(vPost: vPost, geoHeight: geometry.size.height, navTitleHidden:navTitleHidden)
+                        .onAppear {
+                            proxy.scrollTo(vPost.id)
+                        }
                 }
             }
-        }
-        else {
-            Text("Post not found")
         }
     }
 }
@@ -77,21 +70,13 @@ struct PostDetailView: View {
 // the parent is another PostAndParent
 // so it recursively renders up to the root
 struct PostAndParent: View {
-    
-//    @EnvironmentObject var sp:SocketPool
     var sp:SocketPool = .shared
-    @ObservedObject var event:Event // TODO: MAYBE EASIER TO USE THE @ObservedObject Event again here?
+    let vPost:VPost
+    @ObservedObject var event:Event
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var nav:NavigationModel
-//    var nav:NavigationModel = .shared
     var navTitleHidden:Bool = false
-    var vPost:VPost {
-        event.toVPost()
-    }
-    
-//    @FetchRequest
-//    var taggedContacts:FetchedResults<Contact>
     
     var isParent = false
     var geoHeight:CGFloat
@@ -104,18 +89,13 @@ struct PostAndParent: View {
     
     let type:NoteRow.type
     
-    init(event: Event, isParent:Bool = false, geoHeight:CGFloat = CGFloat.zero, navTitleHidden:Bool = false) {
-        self.event = event
+    init(vPost: VPost, isParent:Bool = false, geoHeight:CGFloat = CGFloat.zero, navTitleHidden:Bool = false) {
+        self.vPost = vPost
+        self.event = vPost.event
         self.isParent = isParent
         self.geoHeight = geoHeight
         self.navTitleHidden = navTitleHidden
-//        let pubkeys = event.contactPubkeys()
-//
-//        _taggedContacts = FetchRequest(
-//            sortDescriptors: [],
-//            predicate: NSPredicate(format: "pubkey IN %@", pubkeys!)
-//        )
-        if event.noteText.prefix(4).lowercased() == "lnbc" && Invoice.fromStr(s: event.noteText).getValue() != nil {
+        if vPost.event.noteText.prefix(4).lowercased() == "lnbc" && Invoice.fromStr(s: vPost.event.noteText).getValue() != nil {
             self.type = .lightningInvoice
         }
         else {
@@ -138,7 +118,7 @@ struct PostAndParent: View {
             }
             // PARENT: IF AVAILABLE, RENDER IT
             else if (event.replyTo != nil) {
-                PostAndParent(event: event.replyTo!, isParent: true)
+                PostAndParent(vPost: event.replyTo!.toVPost(), isParent: true)
             }
             // OUR (DETAIL) REPLY:
             // MARK: DETAIL NOTE
@@ -146,9 +126,7 @@ struct PostAndParent: View {
                     // PFP | NAME/USERNAME/AGO
                     HStack {
                         NavigationLink(value: ContactPath(key: event.pubkey), label: {
-                            PFP(pubkey: event.pubkey, pictureUrl: event.contact?.picture)
-                                .frame(width:50, height:50)
-                                .clipShape(Circle())
+                            PFP(pubkey: event.pubkey, pictureUrl: event.contact?.picture, size: 50)
                         })
                         
                         VStack(alignment: .leading) { // name + reply + context menu
@@ -158,7 +136,7 @@ struct PostAndParent: View {
                             }
                         }//.background(.red)
                         Spacer()
-//                        PrivateNoteToggle(vPost: vPost) // TODO:FIXME
+                        PrivateNoteToggle(event: vPost.event)
                         NoteMenuView(vPost: vPost)
                     }//.background(.yellow)
                     .id(event.id)
@@ -175,17 +153,12 @@ struct PostAndParent: View {
                         switch self.type {
                             case .lightningInvoice:
                                 LightningInvoice(invoice: event.noteText)
-//                                        .onAppear {
-//                                            withAnimation(.easeInOut(duration: 2.0)) {
-//                                                backgroundColor = Color(uiColor: .systemBackground)
-//                                            }
-//                                        }
                             default:
                                 NoteTextRenderView(vPost: vPost, useLinelimit: false)
                                     .foregroundColor(.primary)
                                     .textSelection(.enabled)
                                     .onTapGesture { nav.navigateTo(vPost) }
-                                ImageViewer(imgUrls: vPost.imageUrls, pubkey: vPost.event.pubkey)
+                                ImageViewer(imgUrls: vPost.imageUrls, pubkey: event.pubkey)
                         }
                     }
                     .padding(.leading, isParent ? INDENT : 0)
@@ -193,7 +166,7 @@ struct PostAndParent: View {
                 // MARK: QUOTED NOTE IN DETAIL NOTE
                     if (event.firstQuoteId != nil) {
                         if (vPost.event.firstQuote != nil) {
-                            QuotedNoteFragmentView(vPost: vPost.event.firstQuote!.toVPost())
+                            QuotedNoteFragmentView(vPost: event.firstQuote!.toVPost())
                                 .padding(.leading, isParent ? INDENT : 0)
                         }
                         else {
@@ -207,7 +180,7 @@ struct PostAndParent: View {
                     }
                     
                     if (isParent) {
-                        FooterFragmentView(event: vPost.event)
+                        FooterFragmentView(event: event)
                             .padding(.leading, isParent ? INDENT : 0)
                             .padding(.vertical, 5)
                             .padding(.trailing, 5)

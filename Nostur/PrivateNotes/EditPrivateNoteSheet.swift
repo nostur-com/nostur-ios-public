@@ -10,6 +10,7 @@ import SwiftUI
 struct EditPrivateNoteSheet: View {
     @Environment(\.managedObjectContext) var viewContext
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var ns:NosturState
     
     @ObservedObject var privateNote:PrivateNote
     var onDismiss:() -> Void
@@ -38,9 +39,10 @@ struct EditPrivateNoteSheet: View {
                 ToolbarItem(placement: .primaryAction) {
                     Button("Save") {
                         do {
-//                            privateNote.post?.objectWillChange.send()
+                            ns.objectWillChange.send()
+                            privateNote.post?.objectWillChange.send()
+                            privateNote.contact?.objectWillChange.send()
                             try viewContext.save()
-                            sendNotification(.viewNeedsUpdate)
                         }
                         catch { print("problem saving private note \(error)") }
                         dismiss()

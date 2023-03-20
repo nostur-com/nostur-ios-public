@@ -45,6 +45,8 @@ struct NewPrivateNoteSheet: View {
                         do {
                             guard post != nil || contact != nil else { return }
                             ns.objectWillChange.send()
+                            post?.objectWillChange.send()
+                            contact?.objectWillChange.send()
                             if let newPrivateNote = post != nil
                                 ? PrivateNote.createNewFor(ns.account!, andPost: post!, context: viewContext)
                                 : PrivateNote.createNewFor(ns.account!, andContact: contact!, context: viewContext) {
@@ -53,7 +55,6 @@ struct NewPrivateNoteSheet: View {
                             }
 //                            privateNote.post?.objectWillChange.send()
                             try viewContext.save()
-                            sendNotification(.viewNeedsUpdate)
                         }
                         catch { print("problem saving private note \(error)") }
                         dismiss()
