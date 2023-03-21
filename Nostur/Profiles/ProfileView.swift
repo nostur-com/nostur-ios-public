@@ -8,7 +8,7 @@
 import SwiftUI
 import Nuke
 import NukeUI
-import AnimatedImage
+//import AnimatedImage
 
 struct ProfileByPubkey: View {
     

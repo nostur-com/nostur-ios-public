@@ -8,7 +8,7 @@
 import SwiftUI
 import Nuke
 import NukeUI
-import AnimatedImage
+//import AnimatedImage
 //import AVKit
 
 
@@ -57,37 +57,53 @@ struct ImageViewer: View {
                         ScrollView(.horizontal) {
                             LazyHStack {
                                 ForEach(0..<imgUrls.prefix(20).count, id: \.self) { index in
-                                    LazyImage(url: imgUrls[index]) { state in
-                                        if let container = state.imageContainer {
-                                            if container.type == .gif, let gifData = container.data {
-                                                AnimatedImage(data: gifData)
-//                                                           .aspectRatio(contentMode: .fill)
-                                                           .scaledToFit()
-//                                                           .clipShape(Circle())
-                                            }
-                                            else if let image = state.image {
-                                                image
-                                                    .resizable()
-//                                                    .aspectRatio(contentMode: .fill)
-                                                    .scaledToFit()
+                                    if (imgUrls[index].absoluteString.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
+                                        LazyImage(url: imgUrls[index]) { state in
+                                            if let container = state.imageContainer {
+                                                if container.type == .gif, let gifData = container.data {
+                                                    AnimatedGifView(gifData: gifData, width: side, height: 200, contentMode: .scaleAspectFit)
+                                                        .frame(width: side, height: 200)
+                                                        .onTapGesture {
+                                                            fullScreenItem = FullScreenItem(url: imgUrls[index])
+                                                        }
+                                                }
+                                                else if let image = state.image {
+                                                    image
+                                                        .resizable()
+                                                        .scaledToFit()
+                                                        .frame(width: side, height: 200)
+                                                        .onTapGesture {
+                                                            fullScreenItem = FullScreenItem(url: imgUrls[index])
+                                                        }
+                                                }
+                                                else {
+                                                    CenteredProgressView()
+                                                }
                                             }
                                             else {
                                                 CenteredProgressView()
                                             }
                                         }
-                                        else {
-                                            CenteredProgressView()
-                                        }
+                                        .pipeline(ImageProcessing.shared.content) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
+                                        .priority(.low)
                                     }
-                                    .pipeline(ImageProcessing.shared.content)
-//                                    .priority(.low)
-//                                    .processors([ImageProcessors.Resize(width: side)])
-                                    .frame(width: side, height: 200)
-                                    // TODO: DUNNO MAYBE NEED PREFETCHER SOME DAY
-                                    //                            .onAppear { model.onAppear(index) }
-                                    //                            .onDisappear { model.onDisappear(index) }
-                                    .onTapGesture {
-                                        fullScreenItem = FullScreenItem(url: imgUrls[index])
+                                    else {
+                                        LazyImage(url: imgUrls[index]) { state in
+                                            if let image = state.image {
+                                                image
+                                                    .resizable()
+                                                    .scaledToFit()
+                                                    .frame(width: side, height: 200)
+                                                    .onTapGesture {
+                                                        fullScreenItem = FullScreenItem(url: imgUrls[index])
+                                                    }
+                                            }
+                                            else {
+                                                CenteredProgressView()
+                                            }
+                                        }
+                                        .pipeline(ImageProcessing.shared.content) // No processing again here, we probably never show the image again
+
                                     }
                                 }
                             }
@@ -119,27 +135,24 @@ struct ImageViewer: View {
             }
             else if (imgUrls.count == 1) {
                 if (imagesShown) {
-                    GeometryReader { geometry in
-                        
+                    GeometryReader { geo in
+                        if (imgUrls.first?.absoluteString.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
                             LazyImage(url: imgUrls.first!) { state in
                                 if let container = state.imageContainer {
                                     if container.type == .gif, let gifData = container.data {
-                                        AnimatedImage(data: gifData)
-                                        //                                                           .aspectRatio(contentMode: .fill)
-                                            .scaledToFit()
-                                        //                                                           .clipShape(Circle())
+                                        AnimatedGifView(gifData: gifData, width: geo.size.width, height: geo.size.height, contentMode: .scaleAspectFit)
+                                            .frame(width: geo.size.width, height: geo.size.height)
+                                            .onTapGesture {
+                                                fullScreenItem = FullScreenItem(url: imgUrls.first!)
+                                            }
                                     }
-//                                    if container.type == .mp4, let data = container.data {
-//                                        NosturVideo(asset: data.getAVAsset(), width: geometry.size.width, height: 300)
-//                                        //                                                           .aspectRatio(contentMode: .fill)
-//                                            .scaledToFit()
-//                                        //                                                           .clipShape(Circle())
-//                                    }
                                     else if let image = state.image {
                                         image
                                             .resizable()
-                                        //                                                    .aspectRatio(contentMode: .fill)
                                             .scaledToFit()
+                                            .onTapGesture {
+                                                fullScreenItem = FullScreenItem(url: imgUrls.first!)
+                                            }
                                     }
                                     else {
                                         CenteredProgressView()
@@ -149,15 +162,26 @@ struct ImageViewer: View {
                                     CenteredProgressView()
                                 }
                             }
-                            .pipeline(ImageProcessing.shared.content)
-                            //                        .priority(.low)
-                            //                        .processors([ImageProcessors.Resize(width: geometry.frame(in: .local).size.width)])
-                            .onTapGesture {
-                                fullScreenItem = FullScreenItem(url: imgUrls.first!)
+                            .pipeline(ImageProcessing.shared.content) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
+                            .priority(.low)
+                        }
+                        else {
+                            LazyImage(url: imgUrls.first!) { state in
+                                if let image = state.image {
+                                    image
+                                        .resizable()
+                                        .scaledToFit()
+                                        .onTapGesture {
+                                            fullScreenItem = FullScreenItem(url: imgUrls.first!)
+                                        }
+                                }
+                                else {
+                                    CenteredProgressView()
+                                }
                             }
-                        
-                        
-                        
+                            .pipeline(ImageProcessing.shared.content) // No processing again here, we probably never show the image again
+
+                        }
                     }
                     .frame(height: 200)
                     .fullScreenCover(item: $fullScreenItem, content: { item in

@@ -8,7 +8,7 @@
 import SwiftUI
 import NukeUI
 import Nuke
-import AnimatedImage
+//import AnimatedImage
 
 struct PFP: View {
     
