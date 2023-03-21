@@ -26,3 +26,22 @@ struct Centered_Previews: PreviewProvider {
         CenteredProgressView()
     }
 }
+
+func randomColor(seed: String) -> Color {
+    
+    var total: Int = 0
+    for u in seed.unicodeScalars {
+        total += Int(UInt32(u))
+    }
+    
+    srand48(total * 200)
+    let r = CGFloat(drand48())
+    
+    srand48(total)
+    let g = CGFloat(drand48())
+    
+    srand48(total / 200)
+    let b = CGFloat(drand48())
+    
+    return Color(cgColor: CGColor(red: r, green: g, blue: b, alpha: 0.7))
+}

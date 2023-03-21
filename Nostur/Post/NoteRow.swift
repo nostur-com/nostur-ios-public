@@ -11,8 +11,8 @@ import LightningDevKit
 struct NoteRow: View {
     private let sp:SocketPool = .shared
     private let nav:NavigationModel = .shared
-    @ObservedObject var event:Event
     let vPost:VPost
+    @ObservedObject var event:Event
     var hideFooter = true // For rendering in NewReply
 
     enum type {
@@ -20,39 +20,27 @@ struct NoteRow: View {
         case lightningInvoice
     }
     
-    let type:NoteRow.type
+    
     
     init(vPost:VPost, hideFooter:Bool = false) {
-//        print("🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴 MY FACE IS INIT")
         self.vPost = vPost
         self.event = vPost.event
         self.hideFooter = hideFooter
-                
-        if vPost.plainText.prefix(4).lowercased() == "lnbc" && Invoice.fromStr(s: vPost.plainText).getValue() != nil {
-            self.type = .lightningInvoice
-        }
-        else if vPost.event.isRepost && vPost.event.firstQuote != nil && (vPost.event.firstQuote!.content ?? "").prefix(4).lowercased() == "lnbc" && Invoice.fromStr(s: vPost.event.firstQuote!.content ?? "").getValue() != nil {
-            self.type = .lightningInvoice
-        }
-        else {
-            self.type = .note
-        }
-        
     }
         
     @Namespace var invoice
     @Namespace var text
     
     var body: some View {
-//        let _ = Self._printChanges()
+        let _ = Self._printChanges()
         VStack (alignment: .leading) {
-            if (vPost.event.isRepost) {
+            if (event.isRepost) {
                 HStack {
                     Image(systemName: "arrow.2.squarepath")
                     Text("\(vPost.displayName) reposted")
-//                        .onTapGesture {
-//                            UIPasteboard.general.string = vPost.event.toNEvent().eventJson()
-//                        }
+                        .onTapGesture {
+                            UIPasteboard.general.string = event.toNEvent().eventJson()
+                        }
                 }
                 .foregroundColor(.gray)
                 .onTapGesture {
@@ -62,67 +50,11 @@ struct NoteRow: View {
             }
             
             // IS REPOST AND ALL DATA IS HERE
-            if (event.isRepost && event.firstQuoteId != nil && event.firstQuote != nil) {
-                HStack(alignment: .top) {
-                    VStack {
-                        PFP(pubkey: vPost.event.firstQuote!.pubkey, pictureUrl: event.firstQuote?.contact?.picture)
-                            .padding(.horizontal, 10)
-                            .onTapGesture {
-                                nav.navigateTo(ContactPath(key: vPost.event.firstQuote!.pubkey))
-                            }
-//                        if let vContact = vPost.firstQuote?.vContact {
-////                            PrivateNoteToggle(vContact: vContact)  // TODO:FIXME
-//                        }
-                        Color.clear // Needed to "fill" whole VStack to make it tappable
-                    }
-                    .contentShape(Rectangle())
-                    .onTapGesture { nav.navigateTo(event.firstQuote!.toVPost()) }
-                    .frame(maxWidth: 70)
-
-                        VStack(alignment:.leading, spacing: 3) {// Post container
-                            HStack { // name + reply + context menu
-                                NoteHeaderView(vPost: event.firstQuote!.toVPost())
-                                    .padding(.bottom, 5)
-                                Spacer()
-                                EventPrivateNoteToggle(event: event.firstQuote!)
-                                NoteMenuView(vPost: event.firstQuote!.toVPost())
-                            }
-                            ReplyingToFragmentView(vPost: event.firstQuote!.toVPost())
-                                .contentShape(Rectangle())
-                                .onTapGesture { nav.navigateTo(event.firstQuote!.toVPost()) }
-
-                            switch self.type {
-                                case .lightningInvoice:
-                                    LightningInvoice(invoice: event.firstQuote!.content ?? "")
-                                    
-                                default:
-                                    NoteTextRenderView(vPost:event.firstQuote!.toVPost(), useLinelimit: true)
-                                            .contentShape(Rectangle())
-                                            .onTapGesture { nav.navigateTo(
-                                                event.firstQuote!.toVPost()) }
-                                    if event.firstQuote!.toVPost().imageUrls.count > 0 {
-                                        ImageViewer(imgUrls: event.firstQuote!.toVPost().imageUrls, pubkey: vPost.event.firstQuote!.pubkey)
-                                    }
-                            }
-                            if (event.firstQuote!.firstQuoteId != nil && event.firstQuote!.firstQuote != nil) {
-                                QuotedNoteFragmentView(vPost: event.firstQuote!.firstQuote!.toVPost())
-                            }
-                            else if (event.firstQuote!.firstQuote != nil) {
-                                CenteredProgressView().onAppear {
-                                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.firstQuote!.firstQuoteId!)))
-                                }
-                            }
-                            
-                            if (!hideFooter) {
-                                FooterFragmentView(event: event.firstQuote!)
-                                    .frame(height: 30)
-                            }
-                        }
-                        .padding(.trailing, 10)
-                    }
+            if event.isRepost, let vPostRepost = event.firstQuote?.toVPost() {
+                Kind1(vPost: vPostRepost)
             }
-            // IS REPOST BUT NEED TO FETCH THE REPOSTED POST
-            else if (event.isRepost && event.firstQuote == nil) {
+            else if event.firstQuoteId != nil {
+                // IS REPOST BUT NEED TO FETCH THE REPOSTED POST
                 CenteredProgressView().onAppear {
                     // fetch repost
                     let mentionTag = TagsHelpers(event.tags()).mentionEtags()?.first
@@ -133,63 +65,7 @@ struct NoteRow: View {
             }
             // IS NOT A REPOST
             else {
-                HStack(alignment: .top) {
-                        VStack {
-                            PFP(pubkey: event.pubkey, pictureUrl: event.contact?.picture)
-                                .padding(.horizontal, 10)
-                                .onTapGesture {
-                                    nav.navigateTo(ContactPath(key: event.pubkey)) // TODO: if vPost.contact navigate with that else by .pubkey
-                                }
-//                            if let vContact = vPost.vContact {
-//                                PrivateNoteToggle(vContact: vContact)  // TODO:FIXME
-//                            }
-                            Color.clear // Needed to "fill" whole VStack to make it tappable
-                        }
-                        .contentShape(Rectangle())
-                        .onTapGesture { nav.navigateTo(vPost) }
-                        .frame(maxWidth: 70)
-                        
-                        VStack(alignment:.leading, spacing: 0) {// Post container
-                            HStack { // name + reply + context menu
-                                NoteHeaderView(vPost: vPost)
-                                    .padding(.bottom, 5)
-                                Spacer()
-                                EventPrivateNoteToggle(event: event)
-                                NoteMenuView(vPost: vPost)
-                            }
-                            ReplyingToFragmentView(vPost: vPost)
-                                .contentShape(Rectangle())
-                                .onTapGesture { nav.navigateTo(vPost) }
-//
-                                switch self.type {
-                                    case .lightningInvoice:
-                                        LightningInvoice(invoice: vPost.plainText)
-
-                                    default:
-                                        NoteTextRenderView(vPost:vPost, useLinelimit: true)
-                                                .contentShape(Rectangle())
-                                                .onTapGesture { nav.navigateTo(vPost) }
-                                        if vPost.imageUrls.count > 0 {
-                                            ImageViewer(imgUrls: vPost.imageUrls, pubkey: vPost.event.pubkey)
-                                        }
-                                }
-                                
-                            if let firstQuote = event.firstQuote {
-                                QuotedNoteFragmentView(vPost: firstQuote.toVPost())
-                            }
-                            else if (event.firstQuoteId != nil) {
-                                CenteredProgressView().onAppear { // TODO: MOVE TO VM
-                                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.firstQuoteId!)))
-                                }
-                            }
-
-                            if (!hideFooter) {
-                                FooterFragmentView(event: event)
-                                    .frame(height: 30)
-                            }
-                        }
-                        .padding(.trailing, 10)
-                    }
+                Kind1(vPost: vPost)
 //                .background(Color.random)
             }
         }
@@ -214,6 +90,90 @@ struct NoteRow: View {
         .padding(.vertical, 10)
         
     }
+    
+    
+    struct Kind1: View {
+        let vPost:VPost
+        let hideFooter:Bool // For rendering in NewReply
+        @ObservedObject var event:Event
+        let nav:NavigationModel = .shared
+        let type:NoteRow.type
+        let sp:SocketPool = .shared
+        
+        init(vPost: VPost, hideFooter:Bool = true) {
+            self.vPost = vPost
+            self.event = vPost.event
+            self.hideFooter = hideFooter
+            if vPost.plainText.prefix(4).lowercased() == "lnbc" && Invoice.fromStr(s: vPost.plainText).getValue() != nil {
+                self.type = .lightningInvoice
+            }
+            else if vPost.event.isRepost && vPost.event.firstQuote != nil && (vPost.event.firstQuote!.content ?? "").prefix(4).lowercased() == "lnbc" && Invoice.fromStr(s: vPost.event.firstQuote!.content ?? "").getValue() != nil {
+                self.type = .lightningInvoice
+            }
+            else {
+                self.type = .note
+            }
+        }
+        
+        var body: some View {
+            HStack(alignment: .top) {
+                    VStack {
+                        PFP(pubkey: event.pubkey, pictureUrl: event.contact?.picture)
+                            .padding(.horizontal, 10)
+                            .onTapGesture {
+                                nav.navigateTo(ContactPath(key: event.pubkey)) // TODO: if vPost.contact navigate with that else by .pubkey
+                            }
+                        Color.clear // Needed to "fill" whole VStack to make it tappable
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture { nav.navigateTo(vPost) }
+                    .frame(maxWidth: 70)
+                    
+                    VStack(alignment:.leading, spacing: 0) {// Post container
+                        HStack { // name + reply + context menu
+                            NoteHeaderView(vPost: vPost)
+                                .padding(.bottom, 5)
+                            Spacer()
+                            EventPrivateNoteToggle(event: event)
+                            NoteMenuView(vPost: vPost)
+                        }
+                        ReplyingToFragmentView(vPost: vPost)
+                            .contentShape(Rectangle())
+                            .onTapGesture { nav.navigateTo(vPost) }
+//
+                            switch self.type {
+                                case .lightningInvoice:
+                                    LightningInvoice(invoice: vPost.plainText)
+
+                                default:
+                                    NoteTextRenderView(vPost:vPost, useLinelimit: true)
+                                            .contentShape(Rectangle())
+                                            .onTapGesture { nav.navigateTo(vPost) }
+                                    if vPost.imageUrls.count > 0 {
+                                        ImageViewer(imgUrls: vPost.imageUrls, pubkey: vPost.event.pubkey)
+                                    }
+                            }
+                            
+                        if let firstQuote = event.firstQuote {
+                            QuotedNoteFragmentView(vPost: firstQuote.toVPost())
+                        }
+                        else if (event.firstQuoteId != nil) {
+                            CenteredProgressView().onAppear { // TODO: MOVE TO VM
+                                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.firstQuoteId!)))
+                            }
+                        }
+
+                        if (!hideFooter) {
+                            FooterFragmentView(event: event)
+                                .frame(height: 30)
+                        }
+                    }
+                    .padding(.trailing, 10)
+                }
+        }
+    }
+    
+    
 }
 
 struct NoteRow_Previews: PreviewProvider {
