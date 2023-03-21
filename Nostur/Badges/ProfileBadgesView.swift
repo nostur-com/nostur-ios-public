@@ -125,29 +125,28 @@ struct ProfileBadgesView: View {
             }
         }
         .sheet(isPresented: $badgeInfoIsShown) {
-            ScrollView {
-                VStack(alignment: .leading) {
-                    if IS_IPAD {
-                        HStack {
-                            Spacer()
-                            Image(systemName: "xmark.circle.fill")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 30, height: 30)
-                                .padding(30)
-                                .onTapGesture {
-                                    badgeInfoIsShown = false
-                                }
+            NavigationStack {
+                ScrollView {
+                    VStack(alignment: .leading) {
+                        ForEach(verifiedBadges) { profileBadge in
+                            BadgeRow(badge: profileBadge.badge)
                         }
+                        Spacer()
                     }
-                    ForEach(verifiedBadges) { profileBadge in
-                        BadgeRow(badge: profileBadge.badge)
+                }
+                .padding(20)
+                .presentationDetents([.height(250), .medium])
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button(role: .cancel) {
+                            badgeInfoIsShown = false
+                        } label: {
+                            Text("Close")
+                        }
+
                     }
-                    Spacer()
                 }
             }
-            .padding(20)
-            .presentationDetents([.height(250), .medium])
         }
     }
 }
@@ -157,29 +156,50 @@ struct BadgeIcon: View {
     var nBadge:NEvent { badge.toNEvent() }
 
     var body: some View {
-        if nBadge.badgeImage?.otherInformation[safe: 0] != nil {
-            LazyImage(url: URL(string: nBadge.badgeImage!.otherInformation[safe: 0]!)) { state in
-                if let container = state.imageContainer {
-                    if container.type == .gif {
-                        // Use a view capable of displaying animated images
-                    } else {
-                        if let image = state.image {
+        if let pictureUrl = nBadge.badgeImage?.otherInformation[safe: 0] {
+            if (pictureUrl.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
+                LazyImage(url: URL(string: pictureUrl)) { state in
+                    if let container = state.imageContainer {
+                        if container.type == .gif, let gifData = container.data {
+                            AnimatedGifView(gifData: gifData, width: 32, height: 32)
+                                .frame(width: 32, height: 32)
+                                .clipped()
+                        }
+                        else if let image = state.image {
                             image
                                 .resizable()
-                                .scaledToFit()
-                                .frame(width:32, height:32)
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 32, height: 32)
+                                .clipped()
                         }
                         else {
-                            ProgressView()
+                            CenteredProgressView()
                         }
                     }
+                    else {
+                        CenteredProgressView()
+                    }
                 }
+                .pipeline(ImageProcessing.shared.badges) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
+                .priority(.low)
             }
-            .processors([ImageProcessors.Resize(width: 32)])
-//            .animation(nil)
-//            .pipeline(ImageProcessing.shared.pipeline)
-            .padding(0)
-            .frame(width: 32, height: 32)
+            else {
+                LazyImage(url: URL(string: pictureUrl)) { state in
+                    if let image = state.image {
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 32, height: 32)
+                            .clipped()
+                    }
+                    else {
+                        CenteredProgressView()
+                    }
+                }
+                .processors([.resize(width: 32)])
+                .pipeline(ImageProcessing.shared.badges)
+//                    .priority(.low)
+            }
         }
     }
 }

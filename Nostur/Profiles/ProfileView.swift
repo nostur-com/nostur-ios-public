@@ -95,77 +95,69 @@ struct ProfileView: View {
                     Section {
                         VStack {
                             ZStack() {
-                                if (contact.banner != nil) {
-                                    LazyImage(url: URL(string: contact.banner!)) { state in
-                                        if let container = state.imageContainer {
-                                            if container.type == .gif, let gifData = container.data {
-                                                AnimatedImage(data: gifData)
-//                                                           .aspectRatio(contentMode: .fill)
-                                                           .scaledToFill()
-                                                           .frame(width: geo.size.width, height: 150)
-                                                           .clipped()
-//                                                           .clipShape(Circle())
-                                            }
-                                            else if let image = state.image {
-                                                image
-                                                    .resizable()
-//                                                    .aspectRatio(contentMode: .fill)
-                                                    .scaledToFill()
-                                                    .frame(width: geo.size.width, height: 150)
-                                                    .clipped()
+                                if let banner = contact.banner {
+                                    if (banner.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
+                                        LazyImage(url: URL(string: banner)) { state in
+                                            if let container = state.imageContainer {
+                                                if container.type == .gif, let gifData = container.data {
+                                                    AnimatedGifView(gifData: gifData, width: geo.size.width, height: 150)
+                                                        .frame(width: geo.size.width, height: 150)
+                                                        .clipped()
+                                                        .ignoresSafeArea(edges: .top)
+                                                        
+                                                }
+                                                else if let image = state.image {
+                                                    image
+                                                        .resizable()
+                                                        .aspectRatio(contentMode: .fill)
+                                                        .frame(width: geo.size.width, height: 150)
+                                                        .clipped()
+                                                        .ignoresSafeArea(edges: .top)
+                                                }
+                                                else {
+                                                    HStack {
+                                                        Rectangle()
+                                                            .foregroundColor(.gray)
+                                                            .frame(width: geo.size.width, height: 150)
+                                                            .ignoresSafeArea(edges: .top)
+                                                    }
+                                                }
                                             }
                                             else {
-                                                Rectangle()
-                                                    .foregroundColor(.gray)
-                                                    .frame(width: geo.size.width, height: 150)
+                                                HStack {
+                                                    Rectangle()
+                                                        .foregroundColor(.gray)
+                                                        .frame(width: geo.size.width, height: 150)
+                                                        .ignoresSafeArea(edges: .top)
+                                                }
                                             }
                                         }
-                                        else {
-                                            Rectangle()
-                                                .foregroundColor(.gray)
-                                                .frame(width: geo.size.width, height: 150)
-                                        }
-                                        
-                                        
-//                                        if let container = state.imageContainer {
-//                                            if container.type == .gif {
-//                                                if let gifData = container.data {
-//                                                    AnimatedImage(data: gifData)
-//                                                               .scaledToFit()
-//                                                               .frame(width: geo.size.width, height: 150)
-////                                                        GIFImageViewWrapper(gifData: gifData, width: geo.size.width, height: 150)
-//                                                }
-//                                                else {
-//                                                    Rectangle()
-//                                                        .foregroundColor(.gray)
-//                                                        .frame(width: geo.size.width, height: 150)
-//                                                }
-//                                            } else {
-//                                                if let image = state.image {
-//                                                    image
-//                                                        .resizable()
-//                                                        .aspectRatio(contentMode: .fill)
-//                                                        .frame(maxHeight: 150)
-//                                                }
-//                                                else {
-//                                                    Rectangle()
-//                                                        .foregroundColor(.gray)
-//                                                        .frame(width: geo.size.width, height: 150)
-//                                                }
-//                                            }
-//                                        }
-//                                        if state.isLoading {
-//                                            Rectangle()
-//                                                .foregroundColor(.gray)
-//                                                .frame(width: geo.size.width, height: 150)
-//                                        }
+                                        .pipeline(ImageProcessing.shared.banner) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
+//                                        .priority(.low) // lower prio for animated gif, saves bandwidth?
                                     }
-//                                    .processors([ImageProcessors.Resize(width: geo.size.width)])
-                                    //                                    .animation(nil)
-                                    //                                    .priority(.normal)
-                                    .pipeline(ImageProcessing.shared.bannerPipeline)
-//                                    .frame(width: geo.size.width, height: 150)
-                                    .ignoresSafeArea(edges: .top)
+                                    else {
+                                        LazyImage(url: URL(string: banner)) { state in
+                                            if let image = state.image {
+                                                image
+                                                    .resizable()
+                                                    .aspectRatio(contentMode: .fill)
+                                                    .frame(width: geo.size.width, height: 150)
+                                                    .clipped()
+                                                    .ignoresSafeArea(edges: .top)
+                                            }
+                                            else {
+                                                HStack {
+                                                    Rectangle()
+                                                        .foregroundColor(.gray)
+                                                        .frame(width: geo.size.width, height: 150)
+                                                        .ignoresSafeArea(edges: .top)
+                                                }
+                                            }
+                                        }
+//                                        .processors([.resize(height: 150)])
+                                        .pipeline(ImageProcessing.shared.banner)
+                    //                    .priority(.low)
+                                    }
                                 }
                                 else {
                                     HStack {
@@ -452,39 +444,56 @@ struct ProfilePicFullScreenSheet: View {
                         }
                     )
         
-        ZStack {
-            VStack {
-                HStack {
+        GeometryReader { geo in
+            ZStack {
+                VStack {
+                    HStack {
+                        Spacer()
+                        Image(systemName: "xmark.circle.fill")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 30, height: 30)
+                            .padding(30)
+                            .onTapGesture {
+                                profilePicViewerIsShown = false
+                            }
+                    }
                     Spacer()
-                    Image(systemName: "xmark.circle.fill")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 30, height: 30)
-                        .padding(30)
-                        .onTapGesture {
-                            profilePicViewerIsShown = false
-                        }
                 }
-                Spacer()
-            }
-            VStack {
-                LazyImage(url: URL(string: pictureUrl)) { state in
-                    if let container = state.imageContainer {
-                        if container.type == .gif {
-                            if let gifData = container.data {
-                                AnimatedImage(data: gifData)
-                                    .scaledToFit()
-                                    .scaleEffect(scale)
-                                    .offset(position)
-                                    .gesture(magnifyAndDragGesture)
-                                    .onTapGesture {
-                                        withAnimation {
-                                            scale = 1.0
+                VStack {
+                    if (pictureUrl.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
+                        LazyImage(url: URL(string: pictureUrl)) { state in
+                            if let container = state.imageContainer {
+                                if container.type == .gif, let gifData = container.data {
+                                    AnimatedGifView(gifData: gifData, width: geo.size.width, height: geo.size.height, contentMode: .scaleAspectFit)
+                                        .scaledToFit()
+                                        .scaleEffect(scale)
+                                        .offset(position)
+                                        .gesture(magnifyAndDragGesture)
+                                        .onTapGesture {
+                                            withAnimation {
+                                                scale = 1.0
+                                            }
                                         }
-                                    }
+                                }
+                                else if let image = state.image {
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                }
+                                else {
+                                    Text("🧨")
+                                }
+                            }
+                            else {
+                                CenteredProgressView()
                             }
                         }
-                        else {
+                        .pipeline(ImageProcessing.shared.pfp) // CACHING BUT. NO PROCESSING, BREAKS ANIMATED GIF
+                        .priority(.high)
+                    }
+                    else {
+                        LazyImage(url: URL(string: pictureUrl)) { state in
                             if let image = state.image {
                                 image
                                     .resizable()
@@ -500,14 +509,16 @@ struct ProfilePicFullScreenSheet: View {
                                 
                             }
                             else {
-                                ProgressView()
+                                CenteredProgressView()
                             }
                         }
+                        .pipeline(ImageProcessing.shared.pfp)
+                        .priority(.high)
                     }
                 }
-            }
-            .onTapGesture {
-                profilePicViewerIsShown = false
+                .onTapGesture {
+                    profilePicViewerIsShown = false
+                }
             }
         }
     }

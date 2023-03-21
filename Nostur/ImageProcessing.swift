@@ -11,51 +11,77 @@ import Nuke
 class ImageProcessing {
     static public var shared = ImageProcessing()
     
-    var pipeline:ImagePipeline
-    var bannerPipeline:ImagePipeline
-    var postContentPipeline:ImagePipeline
+    var pfp:ImagePipeline
+    var banner:ImagePipeline
+    var content:ImagePipeline
+    var badges:ImagePipeline
     
     init() {
-        ImagePipeline.shared = ImagePipeline(configuration: .withDataCache)
-
-        pipeline = ImagePipeline {
-                    $0.dataLoader = DataLoader(configuration: {
-                        // Disable disk caching built into URLSession
-                        let conf = DataLoader.defaultConfiguration
-                        conf.urlCache = nil
-                        return conf
-                    }())
-
-                    $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 100)  // 100 MB
-                    $0.dataCache = try! DataCache(name: "com.nostur.2140.picture")
-                    $0.dataCachePolicy = .storeAll
-                }
+        //        ImagePipeline.shared = ImagePipeline(configuration: .withDataCache)
         
-        bannerPipeline = ImagePipeline {
-                    $0.dataLoader = DataLoader(configuration: {
-                        // Disable disk caching built into URLSession
-                        let conf = DataLoader.defaultConfiguration
-                        conf.urlCache = nil
-                        return conf
-                    }())
+        pfp = ImagePipeline {
+            $0.dataLoader = DataLoader(configuration: {
+                // Disable disk caching built into URLSession
+                let conf = DataLoader.defaultConfiguration
+                conf.urlCache = nil
+                return conf
+            }())
             
-                    $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 100)  // 100 MB
-                    $0.dataCache = try! DataCache(name: "com.nostur.image.banner")
-                    $0.dataCachePolicy = .storeAll
-                }
+            let dataCache = try! DataCache(name: "com.nostur.image.pfp")
+            dataCache.sizeLimit = 1024 * 1024 * 150
+            
+            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 150)  // 100 MB
+            $0.dataCache = dataCache
+            $0.dataCachePolicy = .storeAll
+        }
         
-        postContentPipeline = ImagePipeline {
-                    $0.dataLoader = DataLoader(configuration: {
-                        // Disable disk caching built into URLSession
-                        let conf = DataLoader.defaultConfiguration
-                        conf.urlCache = nil
-                        return conf
-                    }())
+        banner = ImagePipeline {
+            $0.dataLoader = DataLoader(configuration: {
+                // Disable disk caching built into URLSession
+                let conf = DataLoader.defaultConfiguration
+                conf.urlCache = nil
+                return conf
+            }())
             
-                    $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 100, countLimit: 100)  // 100 MB
-                    $0.dataCache = try! DataCache(name: "com.nostur.2140.postcontent")
-                    $0.dataCachePolicy = .storeAll
-                }
+            let dataCache = try! DataCache(name: "com.nostur.image.banner")
+            dataCache.sizeLimit = 1024 * 1024 * 150
+            
+            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 50)  // 100 MB
+            $0.dataCache = dataCache
+            $0.dataCachePolicy = .storeOriginalData
+        }
+        
+        content = ImagePipeline {
+            $0.dataLoader = DataLoader(configuration: {
+                // Disable disk caching built into URLSession
+                let conf = DataLoader.defaultConfiguration
+                conf.urlCache = nil
+                return conf
+            }())
+            
+            let dataCache = try! DataCache(name: "com.nostur.image.content")
+            dataCache.sizeLimit = 1024 * 1024 * 100
+            
+            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 50, countLimit: 100)  // 100 MB
+            $0.dataCache = dataCache
+            $0.dataCachePolicy = .storeOriginalData
+        }
+        
+        badges = ImagePipeline {
+            $0.dataLoader = DataLoader(configuration: {
+                // Disable disk caching built into URLSession
+                let conf = DataLoader.defaultConfiguration
+                conf.urlCache = nil
+                return conf
+            }())
+            
+            let dataCache = try! DataCache(name: "com.nostur.image.badges")
+            dataCache.sizeLimit = 1024 * 1024 * 100
+            
+            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 50, countLimit: 200)  // 100 MB
+            $0.dataCache = dataCache
+            $0.dataCachePolicy = .storeAll
+        }
         
     }
     

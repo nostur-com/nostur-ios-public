@@ -38,29 +38,52 @@ struct BadgeDetailView: View {
         ScrollView {
             HStack(alignment: .top) {
                 VStack(alignment: .center) {
-                    if nBadge.badgeImage?.otherInformation[safe: 0] != nil {
-                        LazyImage(url: URL(string: nBadge.badgeImage!.otherInformation[safe: 0]!)) { state in
-                            if let container = state.imageContainer {
-                                if container.type == .gif {
-                                    // Use a view capable of displaying animated images
-                                } else {
-                                    if let image = state.image {
+                    if let pictureUrl = nBadge.badgeImage?.otherInformation[safe: 0] {
+                        if (pictureUrl.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
+                            LazyImage(url: URL(string: pictureUrl)) { state in
+                                if let container = state.imageContainer {
+                                    if container.type == .gif, let gifData = container.data {
+                                        AnimatedGifView(gifData: gifData, width: 50, height: 50)
+                                            .frame(width: 50, height: 50)
+                                            .clipped()
+                                            .padding(10)
+                                    }
+                                    else if let image = state.image {
                                         image
                                             .resizable()
-                                            .scaledToFit()
+                                            .aspectRatio(contentMode: .fill)
                                             .frame(width: 50, height: 50)
+                                            .clipped()
+                                            .padding(10)
                                     }
                                     else {
-                                        ProgressView()
+                                        CenteredProgressView()
                                     }
                                 }
+                                else {
+                                    CenteredProgressView()
+                                }
                             }
+                            .pipeline(ImageProcessing.shared.badges) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
                         }
-                        .processors([ImageProcessors.Resize(width: 50)])
-                        .pipeline(ImageProcessing.shared.pipeline)
-//                        .animation(nil)
-//                        .pipeline(ImageProcessing.shared.pipeline)
-                        .padding(10)
+                        else {
+                            LazyImage(url: URL(string: pictureUrl)) { state in
+                                if let image = state.image {
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(width: 50, height: 50)
+                                        .clipped()
+                                        .padding(10)
+                                }
+                                else {
+                                    CenteredProgressView()
+                                }
+                            }
+                            .processors([.resize(width: 50)])
+                            .pipeline(ImageProcessing.shared.badges)
+        //                    .priority(.low)
+                        }
                     }
                 }
                 .frame(width: 60)

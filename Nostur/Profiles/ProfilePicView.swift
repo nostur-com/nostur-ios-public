@@ -34,9 +34,9 @@ struct PFP: View {
                     LazyImage(url: URL(string: pictureUrl!)) { state in
                         if let container = state.imageContainer {
                             if container.type == .gif, let gifData = container.data {
-                                AnimatedImage(data: gifData)
-                                           .scaledToFill()
-                                           .clipShape(Circle())
+                                AnimatedGifView(gifData: gifData, width: size, height: size)
+                                    .frame(width: size, height: size)
+                                    .clipShape(Circle())
                             }
                             else if let image = state.image {
                                 image
@@ -53,7 +53,8 @@ struct PFP: View {
                             Circle().foregroundColor(color).frame(width: size, height: size)
                         }
                     }
-                    .pipeline(ImageProcessing.shared.pipeline)
+                    .pipeline(ImageProcessing.shared.pfp) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
+                    .priority(.low) // lower prio for animated gif, saves bandwidth?
                 }
                 else {
                     LazyImage(url: URL(string: pictureUrl!)) { state in
@@ -69,8 +70,8 @@ struct PFP: View {
                         }
                     }
                     .processors([.resize(width: size)])
-                    .pipeline(ImageProcessing.shared.pipeline)
-                    .priority(.low)
+                    .pipeline(ImageProcessing.shared.pfp)
+//                    .priority(.low)
                 }
             }
             .frame(width: size, height: size)

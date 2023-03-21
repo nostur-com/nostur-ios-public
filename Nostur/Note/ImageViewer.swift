@@ -79,7 +79,7 @@ struct ImageViewer: View {
                                             CenteredProgressView()
                                         }
                                     }
-                                    .pipeline(ImageProcessing.shared.postContentPipeline)
+                                    .pipeline(ImageProcessing.shared.content)
 //                                    .priority(.low)
 //                                    .processors([ImageProcessors.Resize(width: side)])
                                     .frame(width: side, height: 200)
@@ -149,7 +149,7 @@ struct ImageViewer: View {
                                     CenteredProgressView()
                                 }
                             }
-                            .pipeline(ImageProcessing.shared.postContentPipeline)
+                            .pipeline(ImageProcessing.shared.content)
                             //                        .priority(.low)
                             //                        .processors([ImageProcessors.Resize(width: geometry.frame(in: .local).size.width)])
                             .onTapGesture {
@@ -199,7 +199,7 @@ struct ImageViewer: View {
     //                LazyVGrid(columns: Array(repeating: item, count: 2), spacing: 2) {
     //                    ForEach(0..<imgUrls_.count, id: \.self) { index in
     //                        LazyImage(url: imgUrls_[index])
-    //                            .pipeline(ImageProcessing.shared.postContentPipeline)
+    //                            .pipeline(ImageProcessing.shared.content)
     //                            .priority(.low)
     //                            .processors([ImageProcessors.Resize(width: side)])
     //                            .frame(width: side, height: side)
@@ -217,7 +217,7 @@ struct ImageViewer: View {
     //                LazyVGrid(columns: [GridItem(.fixed(geometry.size.width))], spacing: 2) {
     //                    LazyImage(url: imgUrls_[0])
     //
-    //                        .pipeline(ImageProcessing.shared.postContentPipeline)
+    //                        .pipeline(ImageProcessing.shared.content)
     //                        .priority(.low)
     //                        .processors([ImageProcessors.Resize(width: geometry.size.width)])
     //                        .frame(width: geometry.size.width)
@@ -286,61 +286,90 @@ struct FullImageViewer: View {
                         }
                     )
         
-        ZStack {
-            VStack {
-                LazyImage(url: fullImageURL) { state in
-                    if let container = state.imageContainer {
-                        if container.type == .gif, let gifData = container.data {
-                            AnimatedImage(data: gifData)
-                                       .scaledToFit()
-                                       .scaleEffect(scale)
-                                       .offset(position)
-                                       .gesture(magnifyAndDragGesture)
-                                       .onTapGesture {
-                                           withAnimation {
-                                               scale = 1.0
-                                           }
-                                       }
-                        }
-                        else if let image = state.image {
-                            image
-                                .resizable()
-                                .scaledToFit()
-                                .scaleEffect(scale)
-                                .offset(position)
-                                .gesture(magnifyAndDragGesture)
-                                .onTapGesture {
-                                    withAnimation {
-                                        scale = 1.0
-                                    }
+        GeometryReader { geo in
+            ZStack {
+                VStack {
+                    if (fullImageURL.absoluteString.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
+                        LazyImage(url: fullImageURL) { state in
+                            if let container = state.imageContainer {
+                                if container.type == .gif, let gifData = container.data {
+                                    AnimatedGifView(gifData: gifData, width: geo.size.width, height: geo.size.height, contentMode: .scaleAspectFit)
+                                        .frame(width: geo.size.width, height: geo.size.height)
+                                        .scaleEffect(scale)
+                                        .offset(position)
+                                        .gesture(magnifyAndDragGesture)
+                                        .onTapGesture {
+                                            withAnimation {
+                                                scale = 1.0
+                                            }
+                                        }
                                 }
+                                else if let image = state.image {
+                                    image
+                                        .resizable()
+                                        .scaledToFit()
+                                        .scaleEffect(scale)
+                                        .offset(position)
+                                        .gesture(magnifyAndDragGesture)
+                                        .onTapGesture {
+                                            withAnimation {
+                                                scale = 1.0
+                                            }
+                                        }
+                                }
+                                else {
+                                    CenteredProgressView()
+                                }
+                            }
+                            else {
+                                CenteredProgressView()
+                            }
                         }
-                        else {
-                            CenteredProgressView()
-                        }
+                        .pipeline(ImageProcessing.shared.content) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
+                        .priority(.high)
                     }
                     else {
-                        CenteredProgressView()
+                        LazyImage(url: fullImageURL) { state in
+                            if let image = state.image {
+                                image
+                                    .resizable()
+                                    .scaledToFit()
+                                    .scaleEffect(scale)
+                                    .offset(position)
+                                    .gesture(magnifyAndDragGesture)
+                                    .onTapGesture {
+                                        withAnimation {
+                                            scale = 1.0
+                                        }
+                                    }
+                            }
+                            else {
+                                CenteredProgressView()
+                            }
+                        }
+    //                                        .processors([.resize(height: 150)])
+                        .pipeline(ImageProcessing.shared.content)
+                        .priority(.high)
                     }
                 }
-            }
-            VStack {
-                HStack {
+                VStack {
+                    HStack {
+                        Spacer()
+                        Image(systemName: "xmark.circle.fill")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 30, height: 30)
+                            .padding(30)
+                            .onTapGesture {
+                                dismiss()
+                            }
+                    }
                     Spacer()
-                    Image(systemName: "xmark.circle.fill")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 30, height: 30)
-                        .padding(30)
-                        .onTapGesture {
-                            dismiss()
-                        }
                 }
-                Spacer()
-            }
-            .onTapGesture {
-                dismiss()
-                //                fullImageIsShown = false
+                .onTapGesture {
+                    dismiss()
+                    //                fullImageIsShown = false
+                }
             }
         }
     }
