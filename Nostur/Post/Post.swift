@@ -9,37 +9,37 @@ import Foundation
 import CoreData
 
 //Equatable
+//struct VPost: Identifiable {
 struct VPost: Identifiable, Equatable, Hashable {
-    
     static func == (lhs: VPost, rhs: VPost) -> Bool {
         lhs.id == rhs.id
-        && lhs.replyingToUsernamesMarkDown == rhs.replyingToUsernamesMarkDown
-        && lhs.plainText == rhs.plainText
-        && lhs.renderedText == rhs.renderedText
-        && lhs.event.liked == rhs.event.liked
-        && lhs.event.likesCount == rhs.event.likesCount
-        && lhs.event.reposted == rhs.event.reposted
-        && lhs.event.firstQuote == rhs.event.firstQuote
-        && lhs.event.zapsCount == rhs.event.zapsCount
-        && lhs.event.mentionsCount == rhs.event.mentionsCount
-        && lhs.event.bookmarkedBy == rhs.event.bookmarkedBy
-        && lhs.event.repliesCount == rhs.event.repliesCount
+//        && lhs.replyingToUsernamesMarkDown == rhs.replyingToUsernamesMarkDown
+//        && lhs.plainText == rhs.plainText
+//        && lhs.renderedText == rhs.renderedText
+//        && lhs.event.liked == rhs.event.liked
+//        && lhs.event.likesCount == rhs.event.likesCount
+//        && lhs.event.reposted == rhs.event.reposted
+//        && lhs.event.firstQuote == rhs.event.firstQuote
+//        && lhs.event.zapsCount == rhs.event.zapsCount
+//        && lhs.event.mentionsCount == rhs.event.mentionsCount
+//        && lhs.event.bookmarkedBy == rhs.event.bookmarkedBy
+//        && lhs.event.repliesCount == rhs.event.repliesCount
     }
     
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
-        hasher.combine(replyingToUsernamesMarkDown)
-        hasher.combine(plainText)
-        hasher.combine(renderedText)
-        hasher.combine(event.liked)
-        hasher.combine(event.likesCount)
-        hasher.combine(event.reposted)
-        hasher.combine(event.firstQuote)
-        hasher.combine(event.zapsCount)
-        hasher.combine(event.mentionsCount)
-        hasher.combine(event.bookmarkedBy)
-        hasher.combine(event.contacts)
-        hasher.combine(event.repliesCount)
+//        hasher.combine(replyingToUsernamesMarkDown)
+//        hasher.combine(plainText)
+//        hasher.combine(renderedText)
+//        hasher.combine(event.liked)
+//        hasher.combine(event.likesCount)
+//        hasher.combine(event.reposted)
+//        hasher.combine(event.firstQuote)
+//        hasher.combine(event.zapsCount)
+//        hasher.combine(event.mentionsCount)
+//        hasher.combine(event.bookmarkedBy)
+//        hasher.combine(event.contacts)
+//        hasher.combine(event.repliesCount)
     }
     
     let id:String

@@ -65,21 +65,25 @@ class LVMState: ObservableObject {
     private func processPostsInBackground(_ events:[Event]) {
         privateContext.perform { [unowned self] in
             
-            var currentVPosts = self.vPosts
+            let currentVPosts = self.vPosts
             var newVPosts:[VPost] = []
             
             for event in events {
-                guard let privateEvent = try? privateContext.existingObject(with: event.objectID) as? Event else { continue }
+//                guard let privateEvent = try? privateContext.existingObject(with: event.objectID) as? Event else { continue }
                 
-                if let existingVPostIndex = currentVPosts.firstIndex(where: { $0.id == privateEvent.id } ) {
-                    let newVPostData = self.transformer.vPostData(privateEvent)
-                    currentVPosts[existingVPostIndex].plainText = newVPostData.plainText
-                    currentVPosts[existingVPostIndex].renderedText = newVPostData.renderedText
-                    currentVPosts[existingVPostIndex].replyingToUsernamesMarkDown = newVPostData.replyingToUsernamesMarkDown
-                    currentVPosts[existingVPostIndex].imageUrls = newVPostData.imageUrls
-                    currentVPosts[existingVPostIndex].displayName = newVPostData.displayName
+                if currentVPosts.firstIndex(where: { $0.event.objectID == event.objectID } ) != nil {
+//                if let existingVPostIndex = currentVPosts.firstIndex(where: { $0.id == event.id } ) {
+                    // Already on screen, skip! do changed otherwise via .objectWillChange.send/sink
+                    continue
+//                    let newVPostData = self.transformer.vPostData(privateEvent)
+//                    currentVPosts[existingVPostIndex].plainText = newVPostData.plainText
+//                    currentVPosts[existingVPostIndex].renderedText = newVPostData.renderedText
+//                    currentVPosts[existingVPostIndex].replyingToUsernamesMarkDown = newVPostData.replyingToUsernamesMarkDown
+//                    currentVPosts[existingVPostIndex].imageUrls = newVPostData.imageUrls
+//                    currentVPosts[existingVPostIndex].displayName = newVPostData.displayName
                 }
                 else {
+                    guard let privateEvent = try? privateContext.existingObject(with: event.objectID) as? Event else { continue }
                     let newVPostData = self.transformer.vPostData(privateEvent) // need to get event from bg instead?
                     let newVPost = VPost(
                         id: privateEvent.id,
