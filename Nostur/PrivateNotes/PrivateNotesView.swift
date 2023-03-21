@@ -149,7 +149,7 @@ struct PrivateNoteRow: View {
                         }
                     }
                 Spacer()
-                Text(note.ago)
+                Ago(note.createdAt_)
                     .frame(alignment: .trailing)
                     .foregroundColor(.secondary)
                     .padding(.trailing, 5)

@@ -51,7 +51,7 @@ struct NoteHeader: View {
                         Group {
                             Text("@\(event.contact?.username ?? "")").layoutPriority(1)
                             Text(" · ") //
-                            Text(event.ago).layoutPriority(1) //
+                            Ago(event.date).layoutPriority(1) //
                         }
                         .foregroundColor(.secondary)
                         .lineLimit(1)

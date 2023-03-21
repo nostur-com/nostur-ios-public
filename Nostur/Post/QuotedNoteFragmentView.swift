@@ -54,8 +54,10 @@ struct QuotedNoteFragmentView: View {
                                 .redacted(reason: .placeholder)
                         }
                         
-                        
-                        Text(" · \(ago)") //
+                        Group {
+                            Text(" ·") //
+                            Ago(vPost.event.date)
+                        }
                             .font(.system(size: 14))
                             .foregroundColor(.secondary)
                     }

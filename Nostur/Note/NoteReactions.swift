@@ -77,7 +77,7 @@ struct ReactionRow: View {
                             Group {
                                 Text("@\(reaction.contact?.username ?? reaction.authorKey )").layoutPriority(1)
                                 Text(" · ") //
-                                Text(reaction.ago).layoutPriority(1) //
+                                Ago(reaction.date).layoutPriority(1) //
                             }
                             .foregroundColor(.secondary)
                             .lineLimit(1)

@@ -31,7 +31,7 @@ struct NoteHeaderView: View {
                         Group {
                             Text("@\(vPost.event.username)").layoutPriority(1)
                             Text(" · ") //
-                            Text(vPost.event.ago).layoutPriority(1) //
+                            Ago(vPost.event.date).layoutPriority(1) //
                         }
                         .foregroundColor(.secondary)
                         .lineLimit(1)

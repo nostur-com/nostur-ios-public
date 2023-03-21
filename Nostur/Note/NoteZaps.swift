@@ -101,7 +101,7 @@ struct NoteZapRow: View {
                             Group {
                                 Text("@\(event.zapFromRequest?.contact?.username ?? event.zapFromRequest?.authorKey ?? "?")").layoutPriority(1)
                                 Text(" · ") //
-                                Text(event.ago).layoutPriority(1) //
+                                Ago(event.date).layoutPriority(1) //
                             }
                             .foregroundColor(.secondary)
                             .lineLimit(1)
