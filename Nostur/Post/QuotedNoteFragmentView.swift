@@ -39,15 +39,8 @@ struct QuotedNoteFragmentView: View {
                                 nav.navigateTo(ContactPath(key: vPost.event.pubkey)) // TODO: Direct to vPost.vContact if possible
                             }
                             
-                        if (vPost.event.contact != nil) {
-                            Text(vPost.event.contact!.authorName) // Name
-                                .font(.system(size: 14))
-                                .foregroundColor(.primary)
-                                .fontWeight(.bold)
-                                .lineLimit(1)
-                            Text("@\(vPost.event.contact!.username)") //
-                                .font(.system(size: 14))
-                                .foregroundColor(.secondary)
+                        if let contact = vPost.event.contact {
+                            NameAndNip(contact: contact)
                         }
                         else {
                             Text("Anon")
@@ -94,6 +87,25 @@ struct QuotedNoteFragmentView: View {
                 print("🟢 NoteRow.onAppear event.contact == nil so: REQ.0:\(vPost.event.pubkey)")
                 sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: vPost.event.pubkey)))
             }
+        }
+    }
+    
+    struct NameAndNip: View {
+        @ObservedObject var contact:Contact
+        var body: some View {
+            Text(contact.authorName) // Name
+                .font(.system(size: 14))
+                .foregroundColor(.primary)
+                .fontWeight(.bold)
+                .lineLimit(1)
+            if (contact.nip05veried) {
+                Image(systemName: "checkmark.seal.fill")
+                    .foregroundColor(.blue)
+                    .layoutPriority(3)
+            }
+            Text("@\(contact.username)") //
+                .font(.system(size: 14))
+                .foregroundColor(.secondary)
         }
     }
 }

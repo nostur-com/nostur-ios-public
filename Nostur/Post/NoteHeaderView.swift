@@ -12,21 +12,12 @@ struct NoteHeaderView: View {
     let vPost:VPost
     var singleLine:Bool = true
     
-    init(vPost:VPost, singleLine:Bool = true) {
-        self.vPost = vPost
-        self.singleLine = singleLine
-    }
-    
     var body: some View {
         VStack(alignment: .leading, spacing:0) { // Name + menu "replying to"
             HStack(spacing:2) {
                 Group {
-                    if (vPost.event.contact != nil) {
-                        Text(vPost.event.contact!.authorName) // Name
-                            .foregroundColor(.primary)
-                            .fontWeight(.bold)
-                            .lineLimit(1)
-                            .layoutPriority(2)
+                    if let contact = vPost.event.contact {
+                        NameAndNip(contact: contact)
                     }
                     else {
                         Text("Anon") // Name
@@ -34,12 +25,6 @@ struct NoteHeaderView: View {
                             .fontWeight(.bold)
                             .lineLimit(1)
                             .redacted(reason: .placeholder)
-                    }
-//
-                    if (vPost.event.contact?.nip05veried ?? false) {
-                        Image(systemName: "checkmark.seal.fill")
-                            .foregroundColor(.blue)
-                            .layoutPriority(3)
                     }
                     
                     if (singleLine) {
@@ -60,6 +45,24 @@ struct NoteHeaderView: View {
                 Text("@\(vPost.event.username) · \(vPost.event.ago)")
                     .foregroundColor(.secondary)
                     .lineLimit(1)
+            }
+        }
+    }
+    
+    struct NameAndNip: View {
+        @ObservedObject var contact:Contact // for rendering nip check (after just verified) etc
+ 
+        var body: some View {
+            Text(contact.authorName) // Name
+                .foregroundColor(.primary)
+                .fontWeight(.bold)
+                .lineLimit(1)
+                .layoutPriority(2)
+
+            if (contact.nip05veried) {
+                Image(systemName: "checkmark.seal.fill")
+                    .foregroundColor(.blue)
+                    .layoutPriority(3)
             }
         }
     }

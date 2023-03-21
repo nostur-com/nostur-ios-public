@@ -583,7 +583,11 @@ extension LVM {
         //        return // TODO: FIXME
         guard self.viewIsVisible else { return }
         let ids = ids(events)
-        let contacts = events.compactMap { $0.contact }
+        let contacts = events.compactMap {
+            $0.isRepost
+                ? $0.firstQuote?.contact
+                : $0.contact
+        }
         let shouldVerifyContacts = contacts.filter { NIP05.shouldVerify($0) }
         
         //        Task {

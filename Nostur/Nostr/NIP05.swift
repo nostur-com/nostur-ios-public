@@ -94,10 +94,19 @@ class NIP05 {
         
         Task {
             let verifiedCaptured = await basicTask.value
-            await context.perform {
+            let vC = DataProvider.shared().viewContext
+            await vC.perform {
                 for tuple in verifiedCaptured {
-                    guard let contact = context.object(with: tuple.0) as? Contact else { continue }
+                    guard let contact = vC.object(with: tuple.0) as? Contact else { continue }
+                    contact.objectWillChange.send()
                     contact.nip05verifiedAt = Date.now
+                }
+                if vC.hasChanges {
+                    do {
+                        try vC.save()
+                    } catch {
+                        print("1) What \(error)")
+                    }
                 }
             }
         }

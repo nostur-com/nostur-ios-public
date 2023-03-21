@@ -20,15 +20,8 @@ struct MinimalQuotedNoteFragment: View {
                         // profile image
                         PFP(pubkey: vPost.event.pubkey, pictureUrl: vPost.event.contact?.picture, size: 20)
                         .opacity(0.5)
-                        if (vPost.event.contact != nil) {
-                            Text(vPost.event.contact!.authorName) // Name
-                                .font(.system(size: 14))
-                                .foregroundColor(.primary.opacity(0.5))
-                                .fontWeight(.bold)
-                                .lineLimit(1)
-                            Text("@\(vPost.event.contact!.username)") //
-                                .font(.system(size: 14))
-                                .foregroundColor(.secondary.opacity(0.5))
+                        if let contact = vPost.event.contact {
+                            NameAndNip(contact: contact)
                         }
                         else {
                             Text("Anon")
@@ -61,6 +54,28 @@ struct MinimalQuotedNoteFragment: View {
             if (vPost.event.contact == nil) {
                 sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: vPost.event.pubkey)))
             }
+        }
+    }
+    
+    struct NameAndNip: View {
+        @ObservedObject var contact:Contact // for rendering nip check (after just verified) etc
+ 
+        var body: some View {
+            Text(contact.authorName) // Name
+                .font(.system(size: 14))
+                .foregroundColor(.primary.opacity(0.5))
+                .fontWeight(.bold)
+                .lineLimit(1)
+            
+            if (contact.nip05veried) {
+                Image(systemName: "checkmark.seal.fill")
+                    .foregroundColor(.blue)
+                    .layoutPriority(3)
+            }
+            
+            Text("@\(contact.username)") //
+                .font(.system(size: 14))
+                .foregroundColor(.secondary.opacity(0.5))
         }
     }
 }

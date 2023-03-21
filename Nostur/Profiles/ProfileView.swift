@@ -382,12 +382,70 @@ struct ProfileView: View {
                 }
             }
         }
-        .onAppear {
-            // Check if there is new contact info
-            sp.sendMessage(
-                ClientMessage(type: .REQ,
-                              message: RequestMessage.getUserMetadata(pubkey: pubkey)))
+        .task {
+            // TODO: FIXME
+            if (NIP05.shouldVerify(contact)) {
+               if (await NIP05.verify(nip05: contact.nip05!, expectedPubkey: contact.pubkey)) {
+                   await viewContext.perform {
+                       contact.nip05verifiedAt = Date.now
+                       do { try viewContext.save() }
+                       catch { print("1) What") }
+                   }
+                   print("👍👍 nip05 verified \(contact.pubkey) \(contact.nip05!) ")
+               }
+            }
         }
+        .task {
+           guard contact.anyLud else { return }
+           do {
+               if let lud16 = contact.lud16, lud16 != "" {
+                   let response = try await LUD16.getCallbackUrl(lud16: lud16)
+                   await MainActor.run {
+                       if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                           contact.zapperPubkey = response.nostrPubkey!
+                           print("contact.zapperPubkey updated: \(response.nostrPubkey!)")
+                       }
+                   }
+               }
+               else if let lud06 = contact.lud06, lud06 != "" {
+                   let response = try await LUD16.getCallbackUrl(lud06: lud06)
+                   await MainActor.run {
+                       if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                           contact.zapperPubkey = response.nostrPubkey!
+                           print("contact.zapperPubkey updated: \(response.nostrPubkey!)")
+                       }
+                   }
+               }
+           }
+           catch {
+               print("problem in lnurlp")
+               print(error)
+           }
+        }
+        .onChange(of: contact.nip05) { nip05 in
+           // TODO: FIXME
+            if (NIP05.shouldVerify(contact)) {
+                Task {
+                    if (await NIP05.verify(nip05: contact.nip05!, expectedPubkey: contact.pubkey)) {
+                        await viewContext.perform {
+                            contact.nip05verifiedAt = Date.now
+                            do { try viewContext.save() }
+                            catch { print("w🚗at") }
+                        }
+                        print("👍👍 nip05 verified \(contact.pubkey) \(contact.nip05!) ")
+                    }
+                }
+            }
+        }
+        .task {
+           sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndBadges(pubkey: pubkey)))
+        }
+//        .onAppear {
+//            // Check if there is new contact info
+//            sp.sendMessage(
+//                ClientMessage(type: .REQ,
+//                              message: RequestMessage.getUserMetadata(pubkey: pubkey)))
+//        }
         //        .edgesIgnoringSafeArea(.top)
         //        .ignoresSafeArea(edges: .top)
         .fullScreenCover(isPresented: $profilePicViewerIsShown) {
