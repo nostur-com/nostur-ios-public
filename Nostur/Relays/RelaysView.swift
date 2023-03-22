@@ -51,17 +51,17 @@ struct RelayRowView: View {
 struct RelaysView: View {
     
     @State var createRelayPresented = false
-    
+    @State var editRelay:Relay?
+
     @Environment(\.managedObjectContext) private var viewContext
-    
+
     @FetchRequest(
         sortDescriptors: [SortDescriptor(\Relay.createdAt, order: .forward)],
         animation: .default)
     var relays: FetchedResults<Relay>
-    
-//    @EnvironmentObject var cm:ConnectionManager
-    var sp:SocketPool = .shared
-    
+
+    let sp:SocketPool = .shared
+
     func socketForRelay(relay: Relay) -> ManagedClient {
         guard let socket = sp.sockets[relay.objectID] else {
             let addedSocket = try! sp.addSocket(relayId: relay.objectID, url: relay.url ?? "", read: relay.read, write: relay.write)
@@ -71,51 +71,69 @@ struct RelaysView: View {
     }
     
     var body: some View {
-        List {
-            ForEach(relays, id:\.objectID) { relay in
-                NavigationLink(value: relay) {
-                    RelayRowView(relay: relay, socket: socketForRelay(relay: relay))
-                }
-                
-            }.onDelete(perform: deleteItems)
-        }
-        .navigationTitle("Relays")
-        .toolbar {
-            ToolbarItem {
-                Button {
-                    createRelayPresented = true
-                } label: {
-                    Label("Add relay", systemImage: "plus")
-                }
+        VStack {
+            ForEach(relays, id: \.objectID) { relay in
+                RelayRowView(relay: relay, socket: socketForRelay(relay: relay))
+                    .onTapGesture {
+                        editRelay = relay
+                    }
+                Divider()
             }
+            .onDelete(perform: deleteItems)
         }
+//        .navigationTitle("Relays")
+//        .toolbar {
+//            ToolbarItem {
+//                Button {
+//                    createRelayPresented = true
+//                } label: {
+//                    Label("Add relay", systemImage: "plus")
+//                }
+//            }
+//        }
+        .sheet(item: $editRelay, content: { relay in
+            NavigationStack {
+                RelayEditView(relay: relay, socket: socketForRelay(relay: relay))
+            }
+        })
+//        .sheet(isPresented: $createRelayPresented) {
+//            NewRelayView { url in
+//                let relay = Relay(context: viewContext)
+//                relay.id = UUID()
+//                relay.createdAt = Date()
+//                relay.url = url
+//
+//                do {
+//                    try viewContext.save()
+//                    if (relay.read || relay.write) {
+//                        _ = try sp.addSocket(relayId: relay.objectID, url: relay.url!, read: relay.read, write: relay.write)
+//                    }
+//                } catch {
+//                    let nsError = error as NSError
+//                    fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+//                }
+//            }
+//        }
+    }
+    
+    var bodyx: some View {
+        VStack {
+            ForEach(relays, id: \.objectID) { relay in
+                RelayRowView(relay: relay, socket: socketForRelay(relay: relay))
+            }
+            .onDelete(perform: deleteItems)
+        }
+        
         .navigationDestination(for: Relay.self) { relay in
             RelayEditView(relay: relay, socket: socketForRelay(relay: relay))
         }
-        .navigationDestination(isPresented: $createRelayPresented) {
-            NewRelayView { url in
-                let relay = Relay(context: viewContext)
-                relay.id = UUID()
-                relay.createdAt = Date()
-                relay.url = url
-                
-                do {
-                    try viewContext.save()
-                    if (relay.read || relay.write) {
-                        _ = try sp.addSocket(relayId: relay.objectID, url: relay.url!, read: relay.read, write: relay.write)
-                    }
-                } catch {
-                    let nsError = error as NSError
-                    fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-                }
-            }
-        }
+        
     }
     
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
             offsets.map { relays[$0] }.forEach(viewContext.delete)
-            
+
             do {
                 try viewContext.save()
             } catch {

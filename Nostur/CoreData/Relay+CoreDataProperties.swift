@@ -13,7 +13,9 @@ import CoreData
 extension Relay {
 
     @nonobjc public class func fetchRequest() -> NSFetchRequest<Relay> {
-        return NSFetchRequest<Relay>(entityName: "Relay")
+        let fr = NSFetchRequest<Relay>(entityName: "Relay")
+        fr.sortDescriptors = []
+        return fr
     }
 
     @NSManaged public var createdAt: Date?

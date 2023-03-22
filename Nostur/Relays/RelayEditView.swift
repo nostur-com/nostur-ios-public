@@ -19,8 +19,7 @@ struct RelayEditView: View {
     
     
     var body: some View {
-        return VStack {
-            
+        VStack {
             Form {
                 Section(header: Text("Relay URL") ) {
                     TextField("wss://nostr.relay.url.here", text: Binding($relay.url)!)
@@ -65,40 +64,36 @@ struct RelayEditView: View {
                     }
                 }
             }
-            Button {
-                do {
-                    try viewContext.save()
-                    // Update existing connections
-                    // url change?
-                    if (socket.url != relay.url?.lowercased()) {
-                        socket.client.disconnect()
-                        sp.removeSocket(relay.objectID)
-                        _ = try sp.addSocket(relayId: relay.objectID, url: relay.url!, read: relay.read, write: relay.write)
-                    }
-                    else {
-                        // read/write change?
-                        socket.write = relay.write
-                        socket.read = relay.read
-                    }
-                }
-                catch {
-                    print("problem ")
-                }
-                dismiss()
-            } label: {
-                Text("Save")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .padding()
-                    .frame(width: 220, height: 50)
-                    .background(Color.accentColor)
-                    .cornerRadius(15.0)
+        }
+        .navigationTitle("Edit relay")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") { dismiss() }
             }
-            Spacer()
-            
-        }.onAppear {
-
-            
+            ToolbarItem(placement: .primaryAction) {
+                Button("Save") {
+                    do {
+                        try viewContext.save()
+                        // Update existing connections
+                        // url change?
+                        if (socket.url != relay.url?.lowercased()) {
+                            socket.client.disconnect()
+                            sp.removeSocket(relay.objectID)
+                            _ = try sp.addSocket(relayId: relay.objectID, url: relay.url!, read: relay.read, write: relay.write)
+                        }
+                        else {
+                            // read/write change?
+                            socket.write = relay.write
+                            socket.read = relay.read
+                        }
+                    }
+                    catch {
+                        print("problem ")
+                    }
+                    dismiss()
+                }
+            }
         }
         .onChange(of: relay.read) { newValue in
             socket.read = newValue
