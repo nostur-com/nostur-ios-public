@@ -24,6 +24,7 @@ enum ViewPath: Hashable {
     case NoteReactions(event:Event)
     case NoteZaps(event:Event)
     case Settings
+    case Relays
     
     case Welcome
     case CreateNewAccount
@@ -70,9 +71,11 @@ extension View {
                     case .NoteReactions(let event):
                         NoteReactions(id: event.id)
                     case .NoteZaps(let event):
-                        NoteZaps(id: event.id)
+                        NoteZaps(event: event)
                     case .Settings:
                         Settings()
+                    case .Relays:
+                        RelaysView()
                     
                     case .Welcome:
                         WelcomeSheet()
@@ -98,14 +101,10 @@ class NavigationModel: ObservableObject {
     @AppStorage("selected_tab") var selectedTab = "Main"
     @Published var tabPath = NavigationPath()
     @Published var mainPath = NavigationPath()
-//    @Published var timelinePath = NavigationPath()
-//    @Published var explorePath = NavigationPath()
     @Published var searchPath = NavigationPath()
-    @Published var accountsPath = NavigationPath()
     @Published var bookmarksPath = NavigationPath()
     @Published var notificationsPath = NavigationPath()
     @Published var messagesPath = NavigationPath()
-    @Published var configurationPath = NavigationPath()
     @Published var detailPath = NavigationPath()
     @Published var onboardingPath = NavigationPath()
     
@@ -160,12 +159,8 @@ class NavigationModel: ObservableObject {
         switch (selectedTab) {
             case "Main":
                 self.mainPath.append(path)
-            case "Accounts":
-                self.accountsPath.append(path)
             case "Bookmarks":
                 self.bookmarksPath.append(path)
-            case "Configuration":
-                self.configurationPath.append(path)
             case "Messages":
                 self.messagesPath.append(path)
             case "Notifications":
@@ -180,14 +175,10 @@ class NavigationModel: ObservableObject {
     func clear() -> Void {
         switch (selectedTab) {
             case "Main":
-                self.mainPath.removeLast(self.accountsPath.count)
+                self.mainPath.removeLast(self.mainPath.count)
                 self.detailPath.removeLast(self.detailPath.count)
-            case "Accounts":
-                self.accountsPath.removeLast(self.accountsPath.count)
             case "Bookmarks":
                 self.bookmarksPath.removeLast(self.bookmarksPath.count)
-            case "Configuration":
-                self.configurationPath.removeLast(self.configurationPath.count)
             case "Messages":
                 self.messagesPath.removeLast(self.messagesPath.count)
             case "Notifications":
