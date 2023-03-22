@@ -257,6 +257,18 @@ struct RequestMessage {
 """
     }
     
+    static func getAuthorDMs(pubkey:String, limit:Int = 1000, subscriptionId:String? = nil) -> String {
+        return """
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"#p": ["\(pubkey)"], "kinds": [4], "limit": \(limit)}, {"authors": ["\(pubkey)"], "kinds": [4], "limit": \(limit)}]
+"""
+    }
+    
+    static func getDMConversation(pubkey:String, theirPubkey:String, limit:Int = 1000, subscriptionId:String? = nil) -> String {
+        return """
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors", ["\(pubkey)"], #p": ["\(theirPubkey)"], "kinds": [4], "limit": \(limit)}, {"authors", ["\(theirPubkey)"], #p": ["\(pubkey)"], "kinds": [4], "limit": \(limit)}]
+"""
+    }
+    
     static func getAuthorsEvents(pubkeys:[String], limit:Int = 200, subscriptionId:String? = nil, since:NTimestamp? = nil) -> String {
         
         if since != nil {

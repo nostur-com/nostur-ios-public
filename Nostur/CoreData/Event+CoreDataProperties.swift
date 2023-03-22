@@ -197,7 +197,20 @@ extension Event {
     }
     
     var noteText: String {
-        content ?? "(empty note)"
+        if kind == 4 {
+            guard let account = NosturState.shared.account, let pk = account.privateKey, let encrypted = content else {
+                return "(Encrypted content)"
+            }
+            if pubkey == account.publicKey, let firstP = self.firstP() {
+                return NKeys.decryptDirectMessageContent(withPrivateKey: pk, pubkey: firstP, content: encrypted) ?? "(Encrypted content)"
+            }
+            else {
+                return NKeys.decryptDirectMessageContent(withPrivateKey: pk, pubkey: pubkey, content: encrypted) ?? "(Encrypted content)"
+            }
+        }
+        else {
+            return content ?? "(empty note)"
+        }
     }
     
     var noteId:String {
@@ -763,6 +776,13 @@ extension Event {
             // Maybe slow??
             let contacts = Contact.ensureContactsCreated(event: event, context: context)
 //            savedEvent.objectWillChange.send()
+            for contact in contacts {
+                savedEvent.addToContacts(contact)
+            }
+        }
+        
+        if (event.kind == .directMessage) { // needed to fetch contact in DMS: so event.firstP is in event.contacts
+            let contacts = Contact.ensureContactsCreated(event: event, context: context)
             for contact in contacts {
                 savedEvent.addToContacts(contact)
             }

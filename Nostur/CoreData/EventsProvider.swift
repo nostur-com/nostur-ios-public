@@ -141,6 +141,7 @@ class EventsProvider: ObservableObject {
         messages.append(contentsOf: testNotifications())
         messages.append(contentsOf: testImages())
         messages.append(contentsOf: testThread())
+        messages.append(contentsOf: testDMs())
         
         var relayMessages:[RelayMessage] = []
         

@@ -175,6 +175,10 @@
 		1FC38B9D2972DD5A004769F8 /* Contact+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC38B9B2972DD5A004769F8 /* Contact+CoreDataClass.swift */; };
 		1FC38B9E2972DD5A004769F8 /* Contact+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC38B9C2972DD5A004769F8 /* Contact+CoreDataProperties.swift */; };
 		1FC38BA0297316AA004769F8 /* DummyEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC38B9F297316AA004769F8 /* DummyEvents.swift */; };
+		1FC4555F29CB673200DE3239 /* NewDMToSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC4555E29CB673200DE3239 /* NewDMToSelector.swift */; };
+		1FC4556129CB677F00DE3239 /* NewDMButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC4556029CB677E00DE3239 /* NewDMButton.swift */; };
+		1FC4556329CB71CF00DE3239 /* NewDM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC4556229CB71CF00DE3239 /* NewDM.swift */; };
+		1FC4556529CB75EB00DE3239 /* NewDMComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC4556429CB75EB00DE3239 /* NewDMComposer.swift */; };
 		1FC4D4062997C493004E88CD /* NewReply.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC4D4052997C493004E88CD /* NewReply.swift */; };
 		1FC4D4082997E126004E88CD /* AccountManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC4D4072997E126004E88CD /* AccountManager.swift */; };
 		1FC4D40B2997E58E004E88CD /* KeychainAccess in Frameworks */ = {isa = PBXBuildFile; productRef = 1FC4D40A2997E58E004E88CD /* KeychainAccess */; };
@@ -182,6 +186,11 @@
 		1FC78F6529C980000009C1C7 /* Gifu in Frameworks */ = {isa = PBXBuildFile; productRef = 1FC78F6429C980000009C1C7 /* Gifu */; };
 		1FC78F6729CA18410009C1C7 /* Ago.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC78F6629CA18410009C1C7 /* Ago.swift */; };
 		1FC78F6929CA28940009C1C7 /* NKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC78F6829CA28940009C1C7 /* NKeys.swift */; };
+		1FC78F6B29CA2B000009C1C7 /* DirectMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC78F6A29CA2B000009C1C7 /* DirectMessages.swift */; };
+		1FC78F6F29CAD3510009C1C7 /* DMConversationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC78F6E29CAD3510009C1C7 /* DMConversationView.swift */; };
+		1FC78F7129CADEED0009C1C7 /* View+centered.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC78F7029CADEED0009C1C7 /* View+centered.swift */; };
+		1FC78F7429CB45750009C1C7 /* BalloonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC78F7329CB45750009C1C7 /* BalloonView.swift */; };
+		1FC78F7629CB4A920009C1C7 /* ChatInputField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC78F7529CB4A920009C1C7 /* ChatInputField.swift */; };
 		1FC82F3229AE0C0700B81CE5 /* Mentions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC82F3129AE0C0700B81CE5 /* Mentions.swift */; };
 		1FC82F3429AE261C00B81CE5 /* TabbedDetailContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC82F3329AE261C00B81CE5 /* TabbedDetailContainer.swift */; };
 		1FC82F3629AE327700B81CE5 /* SmartRelayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC82F3529AE327700B81CE5 /* SmartRelayManager.swift */; };
@@ -384,11 +393,20 @@
 		1FC38B9B2972DD5A004769F8 /* Contact+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Contact+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1FC38B9C2972DD5A004769F8 /* Contact+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Contact+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1FC38B9F297316AA004769F8 /* DummyEvents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DummyEvents.swift; sourceTree = "<group>"; };
+		1FC4555E29CB673200DE3239 /* NewDMToSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewDMToSelector.swift; sourceTree = "<group>"; };
+		1FC4556029CB677E00DE3239 /* NewDMButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewDMButton.swift; sourceTree = "<group>"; };
+		1FC4556229CB71CF00DE3239 /* NewDM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewDM.swift; sourceTree = "<group>"; };
+		1FC4556429CB75EB00DE3239 /* NewDMComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewDMComposer.swift; sourceTree = "<group>"; };
 		1FC4D4052997C493004E88CD /* NewReply.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewReply.swift; sourceTree = "<group>"; };
 		1FC4D4072997E126004E88CD /* AccountManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountManager.swift; sourceTree = "<group>"; };
 		1FC4D40C2998ED0E004E88CD /* FollowersList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowersList.swift; sourceTree = "<group>"; };
 		1FC78F6629CA18410009C1C7 /* Ago.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Ago.swift; path = Nostur/Ago.swift; sourceTree = "<group>"; };
 		1FC78F6829CA28940009C1C7 /* NKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NKeys.swift; sourceTree = "<group>"; };
+		1FC78F6A29CA2B000009C1C7 /* DirectMessages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectMessages.swift; sourceTree = "<group>"; };
+		1FC78F6E29CAD3510009C1C7 /* DMConversationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DMConversationView.swift; sourceTree = "<group>"; };
+		1FC78F7029CADEED0009C1C7 /* View+centered.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "View+centered.swift"; path = "Nostur/View+centered.swift"; sourceTree = "<group>"; };
+		1FC78F7329CB45750009C1C7 /* BalloonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalloonView.swift; sourceTree = "<group>"; };
+		1FC78F7529CB4A920009C1C7 /* ChatInputField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInputField.swift; sourceTree = "<group>"; };
 		1FC82F3129AE0C0700B81CE5 /* Mentions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mentions.swift; sourceTree = "<group>"; };
 		1FC82F3329AE261C00B81CE5 /* TabbedDetailContainer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TabbedDetailContainer.swift; sourceTree = "<group>"; };
 		1FC82F3529AE327700B81CE5 /* SmartRelayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartRelayManager.swift; sourceTree = "<group>"; };
@@ -568,6 +586,7 @@
 				1FBFE8E529AC74B40039F992 /* NostrRank.swift */,
 				1F75211429865F2D00C43DF0 /* SocketPool.swift */,
 				1F75257D2996A1A900477AF2 /* Unpublisher.swift */,
+				1FC78F6829CA28940009C1C7 /* NKeys.swift */,
 			);
 			path = Nostr;
 			sourceTree = "<group>";
@@ -648,11 +667,13 @@
 				1F8B134E297B36DA002EB8CF /* Bytes+UInt.swift */,
 				1F8B1358297B36DB002EB8CF /* BytesConvertible.swift */,
 				1F1ABC4A29819CAC00D03FA9 /* Cache.swift */,
+				1F33EC3829B6849800615FB9 /* Centered.swift */,
 				1FECAC4629A08255006FEE72 /* Collection+subscript.swift */,
 				1F8B1350297B36DB002EB8CF /* Convert.swift */,
 				1F8B1351297B36DB002EB8CF /* Data+Bytes.swift */,
 				1FCEA0B62999413C00A309DC /* Double+clean.swift */,
 				1F8B1353297B36DB002EB8CF /* HexEncoding.swift */,
+				1FB4FCD529B87D3D0034D03A /* ImageProcessing.swift */,
 				1F1ABC4629811A1A00D03FA9 /* LRUCache.swift */,
 				1F3309822989819700D4D8CF /* Maintenance.swift */,
 				1F75257B2996790D00477AF2 /* Notifications.swift */,
@@ -665,8 +686,6 @@
 				1F33098B298AEE5D00D4D8CF /* View+withNavigationDestinations.swift */,
 				1F00337029BEF141007CE040 /* View+withSheets.swift */,
 				1F794DFE29B780C80013E633 /* View+onBecomingVisible.swift */,
-				1F33EC3829B6849800615FB9 /* Centered.swift */,
-				1FB4FCD529B87D3D0034D03A /* ImageProcessing.swift */,
 			);
 			name = Utils;
 			sourceTree = "<group>";
@@ -686,6 +705,7 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
+				1FC78F7029CADEED0009C1C7 /* View+centered.swift */,
 				1FC78F6629CA18410009C1C7 /* Ago.swift */,
 				1F3E134E29C87BF400D076EA /* GifImageView.swift */,
 				1F65121A29C75AC9009FD4AE /* ProfileView.swift */,
@@ -707,6 +727,7 @@
 		1FB448BC2965F3D000038671 /* Nostur */ = {
 			isa = PBXGroup;
 			children = (
+				1FC78F7229CB45520009C1C7 /* DMs */,
 				1F4773A3296CA7040049454B /* Accounts */,
 				1F740D9D29AF36AB00EFCCA7 /* Badges */,
 				1F25B395297A508200A8A5A7 /* CoreData */,
@@ -776,6 +797,21 @@
 				1F1B55B229BD07CC006E1930 /* NotificationsManager.swift */,
 			);
 			path = Notifications;
+			sourceTree = "<group>";
+		};
+		1FC78F7229CB45520009C1C7 /* DMs */ = {
+			isa = PBXGroup;
+			children = (
+				1FC78F7329CB45750009C1C7 /* BalloonView.swift */,
+				1FC78F7529CB4A920009C1C7 /* ChatInputField.swift */,
+				1FC78F6A29CA2B000009C1C7 /* DirectMessages.swift */,
+				1FC4556229CB71CF00DE3239 /* NewDM.swift */,
+				1FC4556429CB75EB00DE3239 /* NewDMComposer.swift */,
+				1FC78F6E29CAD3510009C1C7 /* DMConversationView.swift */,
+				1FC4555E29CB673200DE3239 /* NewDMToSelector.swift */,
+				1FC4556029CB677E00DE3239 /* NewDMButton.swift */,
+			);
+			path = DMs;
 			sourceTree = "<group>";
 		};
 		1FCA273A299A4F2100298881 /* Zaps */ = {
@@ -969,10 +1005,13 @@
 				1F96792D29BF611800E78173 /* EditPrivateNoteSheet.swift in Sources */,
 				1F539DAD299D52E200F3B8CA /* AddExistingAccountSheet.swift in Sources */,
 				1FC4D4082997E126004E88CD /* AccountManager.swift in Sources */,
+				1FC78F6F29CAD3510009C1C7 /* DMConversationView.swift in Sources */,
 				1FCEA0B529993B2400A309DC /* Swift-Big-Number-Core.swift in Sources */,
 				1F8B135C297B36DB002EB8CF /* Data+Bytes.swift in Sources */,
+				1FC78F7629CB4A920009C1C7 /* ChatInputField.swift in Sources */,
 				1F9499CB299F715800F628B4 /* TryGuestAccountSheet.swift in Sources */,
 				1F927C6F297DB34A0024F665 /* Queue.swift in Sources */,
+				1FC78F6929CA28940009C1C7 /* NKeys.swift in Sources */,
 				1F84840529C1A84B00AF129A /* NoteMenuView.swift in Sources */,
 				1F00337529BF0A44007CE040 /* BookmarksAndPrivateNotes.swift in Sources */,
 				1F25B392297A4E3400A8A5A7 /* NosturList+CoreDataClass.swift in Sources */,
@@ -997,6 +1036,7 @@
 				1F740DAB29AF898400EFCCA7 /* BadgesView.swift in Sources */,
 				1F987EB129804AA5001E352E /* NewNoteView.swift in Sources */,
 				1F8B135F297B36DB002EB8CF /* Bytes+TrimLeadingZeros.swift in Sources */,
+				1FC78F7429CB45750009C1C7 /* BalloonView.swift in Sources */,
 				1F00E8C329C2FE7800797B78 /* LVM.swift in Sources */,
 				1F5BA91429A8C27200002652 /* NewNoteButton.swift in Sources */,
 				1FD49737298029600084F14E /* NoteTextRenderView.swift in Sources */,
@@ -1033,6 +1073,7 @@
 				1F4773A7296D4F5B0049454B /* AccountEditView.swift in Sources */,
 				1FCEA0B72999413C00A309DC /* Double+clean.swift in Sources */,
 				1FB130BB29C0F9A6004AC98D /* FooterFragmentView.swift in Sources */,
+				1FC4556129CB677F00DE3239 /* NewDMButton.swift in Sources */,
 				1F3309832989819700D4D8CF /* Maintenance.swift in Sources */,
 				1F8B1361297B36DB002EB8CF /* Bytes+SecureRandom.swift in Sources */,
 				1FE5068E29B391CF006A16D8 /* FastAccountSwitcher.swift in Sources */,
@@ -1076,6 +1117,7 @@
 				1F7C65AD29A0A530009FF3EA /* ReadOnlyAccountInformationSheet.swift in Sources */,
 				1F88491229B537B400145340 /* HighlightedTextEditor.UIKit.swift in Sources */,
 				1F8B1363297B36DB002EB8CF /* BytesConvertible.swift in Sources */,
+				1FC78F7129CADEED0009C1C7 /* View+centered.swift in Sources */,
 				1FC38B9D2972DD5A004769F8 /* Contact+CoreDataClass.swift in Sources */,
 				1FC4D40D2998ED0E004E88CD /* FollowersList.swift in Sources */,
 				1F65121B29C75AC9009FD4AE /* ProfileView.swift in Sources */,
@@ -1086,13 +1128,16 @@
 				1FD49733297FCB5E0084F14E /* PreviewHelper.swift in Sources */,
 				1FB4D3FD29BAF1A6004DB537 /* ListView.swift in Sources */,
 				1F14BA6E29854B8E00EACCD5 /* ContactList.swift in Sources */,
+				1FC4556329CB71CF00DE3239 /* NewDM.swift in Sources */,
 				1F794DFF29B780C80013E633 /* View+onBecomingVisible.swift in Sources */,
 				1F5F5A5C29838F1D00DED8F4 /* EventsProvider.swift in Sources */,
 				1F30FAB029706E72008439C8 /* Account+CoreDataClass.swift in Sources */,
 				1FC2DFED29A90F6C00C8A9DA /* NoteMinimalContentView.swift in Sources */,
 				1F33096129891C4800D4D8CF /* ProfileLikesView.swift in Sources */,
 				1F740DA729AF61A700EFCCA7 /* ContactSearchResultRow.swift in Sources */,
+				1FC4556529CB75EB00DE3239 /* NewDMComposer.swift in Sources */,
 				1F987EB329805F33001E352E /* String+matchingStrings.swift in Sources */,
+				1FC4555F29CB673200DE3239 /* NewDMToSelector.swift in Sources */,
 				1F25B393297A4E3400A8A5A7 /* NosturList+CoreDataProperties.swift in Sources */,
 				1F57C54729927A0000DFE063 /* AppTopBar.swift in Sources */,
 				1FC82F3629AE327700B81CE5 /* SmartRelayManager.swift in Sources */,
@@ -1102,6 +1147,7 @@
 				1F7525842997B21D00477AF2 /* NotificationsView.swift in Sources */,
 				1FEA785829799FE6007CC8E7 /* ProfilePicView.swift in Sources */,
 				1F14CC45299D432400131B8D /* AccountsSheet.swift in Sources */,
+				1FC78F6B29CA2B000009C1C7 /* DirectMessages.swift in Sources */,
 				1FB4D3FF29BB3C7E004DB537 /* ListUnreadCounter.swift in Sources */,
 				1FC82F3429AE261C00B81CE5 /* TabbedDetailContainer.swift in Sources */,
 				1F8B1362297B36DB002EB8CF /* Bytes+HexString.swift in Sources */,

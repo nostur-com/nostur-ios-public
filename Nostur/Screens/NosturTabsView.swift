@@ -38,6 +38,9 @@ struct NosturTabsView: View {
                     .tabItem { Image(systemName: "bookmark") }
                     .tag("Bookmarks")
                     
+                    DirectMessagesContainer()
+                    .tabItem { Image(systemName: "envelope.fill") }
+                    .tag("Messages")
                     
                     
 //                    ConfigurationView() // TODO: MOVE TO SETTINGS

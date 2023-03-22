@@ -41,3 +41,11 @@ struct NIP19 {
         self.key = try bech32.convertBits(from: 5, to: 8, pad: false, idata: checksum).makeBytes()
     }
 }
+
+func npub(_ hex:String) -> String {
+    return try! NIP19(prefix: "npub", hexString: hex).displayString
+}
+
+func pubkey(_ npub:String) -> String {
+    return try! NIP19(displayString: npub).hexString
+}
