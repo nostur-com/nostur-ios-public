@@ -11,16 +11,22 @@ struct NoteMenuView: View {
     @EnvironmentObject var up:Unpublisher
     @EnvironmentObject var ns:NosturState
     var vPost:VPost
+    @ObservedObject var event:Event
+    
+    init(vPost: VPost) {
+        self.vPost = vPost
+        self.event = vPost.event
+    }
     
     var body: some View {
         Menu {
             Button {
-//                if vPost.hasPrivateNote { // TODO: FIXME
-//                    sendNotification(.editingPrivateNoteOnPost, vPost.id)
-//                }
-//                else {
-//                    sendNotification(.newPrivateNoteOnPost, vPost.id)
-//                }
+                if event.hasPrivateNote {
+                    sendNotification(.editingPrivateNoteOnPost, event.id)
+                }
+                else {
+                    sendNotification(.newPrivateNoteOnPost, event.id)
+                }
             } label: {
                 Label("Add private note", systemImage: "note.text")
             }

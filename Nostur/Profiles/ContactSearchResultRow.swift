@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ContactSearchResultRow: View {
     @ObservedObject var contact:Contact
-    var onSelect:() -> Void
+    var onSelect:(() -> Void)?
     
     var body: some View {
         HStack(alignment: .top) {
@@ -40,7 +40,9 @@ struct ContactSearchResultRow: View {
         }
         .contentShape(Rectangle())
         .onTapGesture {
-            onSelect()
+            if let onSelect {
+                onSelect()
+            }
         }
     }
 }

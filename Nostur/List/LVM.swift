@@ -584,7 +584,6 @@ extension LVM {
     }
     
     func requestForJustAppeared(_ events:[Event]) {
-        //        return // TODO: FIXME
         guard self.viewIsVisible else { return }
         let ids = ids(events)
         let contacts = events.compactMap {
@@ -594,12 +593,10 @@ extension LVM {
         }
         let shouldVerifyContacts = contacts.filter { NIP05.shouldVerify($0) }
         
-        //        Task {
         ThreadWarning.which("requestForJustAppeared on \(self.id)")
         fetchStuffForLastAddedNotes(ids: ids)
         //            fetchMissingReplyToContacts(events: events) // TODO: FIXME
         NIP05.verifyBatch(contacts: shouldVerifyContacts, context: self.privateContext)
-        //        }
     }
     
     // TODO: WE NEED TO USE THIS.. JUST MOVED FROM ListView TO LVM but not updated yet

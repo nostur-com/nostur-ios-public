@@ -51,9 +51,9 @@ struct NoteRow: View {
             
             // IS REPOST AND ALL DATA IS HERE
             if event.isRepost, let vPostRepost = event.firstQuote?.toVPost() {
-                Kind1(vPost: vPostRepost)
+                Kind1(vPost: vPostRepost, hideFooter: false)
             }
-            else if event.firstQuoteId != nil {
+            else if event.isRepost && event.firstQuoteId != nil {
                 // IS REPOST BUT NEED TO FETCH THE REPOSTED POST
                 CenteredProgressView().onAppear {
                     // fetch repost
@@ -65,7 +65,7 @@ struct NoteRow: View {
             }
             // IS NOT A REPOST
             else {
-                Kind1(vPost: vPost)
+                Kind1(vPost: vPost, hideFooter: false)
 //                .background(Color.random)
             }
         }

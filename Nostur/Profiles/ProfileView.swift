@@ -383,7 +383,6 @@ struct ProfileView: View {
             }
         }
         .task {
-            // TODO: FIXME
             if (NIP05.shouldVerify(contact)) {
                if (await NIP05.verify(nip05: contact.nip05!, expectedPubkey: contact.pubkey)) {
                    await viewContext.perform {
@@ -423,7 +422,6 @@ struct ProfileView: View {
            }
         }
         .onChange(of: contact.nip05) { nip05 in
-           // TODO: FIXME
             if (NIP05.shouldVerify(contact)) {
                 Task {
                     if (await NIP05.verify(nip05: contact.nip05!, expectedPubkey: contact.pubkey)) {

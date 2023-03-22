@@ -94,8 +94,7 @@ struct FooterFragmentView: View {
 
             
             // BOOKMARK
-//            if (event.bookmarkedBy_.contains(ns.account!)) {
-            if (ns.isBookmarked(event)) { // TODO: FIXME
+            if (ns.isBookmarked(event)) {
                 Image(systemName: "bookmark.fill")
                     .foregroundColor(.orange)
                     .contentShape(Rectangle())

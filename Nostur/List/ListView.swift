@@ -130,7 +130,7 @@ struct ListView: View {
 //                                        vm.onPostAppeared(vPost.event)
                                     }
                                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                        Button { ns.toggleBookmark(vPost.event) //TODO:FIXME
+                                        Button { ns.toggleBookmark(vPost.event)
                                         } label: { Image(systemName: "bookmark") }.tint(.orange)
 
                                     }

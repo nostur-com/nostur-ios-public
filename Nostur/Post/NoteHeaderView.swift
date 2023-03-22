@@ -48,22 +48,22 @@ struct NoteHeaderView: View {
             }
         }
     }
-    
-    struct NameAndNip: View {
-        @ObservedObject var contact:Contact // for rendering nip check (after just verified) etc
- 
-        var body: some View {
-            Text(contact.authorName) // Name
-                .foregroundColor(.primary)
-                .fontWeight(.bold)
-                .lineLimit(1)
-                .layoutPriority(2)
+}
 
-            if (contact.nip05veried) {
-                Image(systemName: "checkmark.seal.fill")
-                    .foregroundColor(.blue)
-                    .layoutPriority(3)
-            }
+struct NameAndNip: View {
+    @ObservedObject var contact:Contact // for rendering nip check (after just verified) etc
+
+    var body: some View {
+        Text(contact.authorName) // Name
+            .foregroundColor(.primary)
+            .fontWeight(.bold)
+            .lineLimit(1)
+            .layoutPriority(2)
+
+        if (contact.nip05veried) {
+            Image(systemName: "checkmark.seal.fill")
+                .foregroundColor(.blue)
+                .layoutPriority(3)
         }
     }
 }
