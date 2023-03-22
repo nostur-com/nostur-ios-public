@@ -396,35 +396,17 @@ extension Event {
             guard contact!.zapperPubkey != nil else { return false }
             guard contact!.zapperPubkey! == event.pubkey else { return false }
         }
-        
-        
-        // bolt11
-        guard let bolt11 = event.bolt11() else { return false }
-        let invoice = Invoice.fromStr(s: bolt11)
-        guard invoice.getValue() != nil else { return false }
-        
-//        // description, zap request, to get zap from
-//        let description:Tag? = event.tags_.first { $0.type == "description" }
-//        guard description?.index1 != nil else { return false }
-//        let decoder = JSONDecoder()
-//        if let innerEvent = try? decoder.decode(NEvent.self, from: description!.index1!.data(using: .utf8, allowLossyConversion: false)!) {
-//            if (try! innerEvent.verified()) {
-//                
-//            }
-//        }
-//        
-        
+                
         // zapped event
-        let eventTag = nEvent.tags.first { $0.type == "e" }
-        guard eventTag != nil else { return false }
+        guard let firstE = nEvent.firstE() else { return false }
         let request = NSFetchRequest<Event>(entityName: "Event")
         request.entity = Event.entity()
-        request.predicate = NSPredicate(format: "id == %@", eventTag!.id)
+        request.predicate = NSPredicate(format: "id == %@", firstE)
         request.fetchLimit = 1
         
         if let zappedEvent = try! context.fetch(request).first {
             zappedEvent.objectWillChange.send()
-            zappedEvent.zapTally = zappedEvent.zapTally + Int64(((invoice.getValue()!.amountMilliSatoshis() ?? 0) / 1000))
+            zappedEvent.zapTally = zappedEvent.zapTally + Int64(event.naiveSats)
             zappedEvent.zapsCount = zappedEvent.zapsCount + 1
         }
         return true

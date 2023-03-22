@@ -10,29 +10,17 @@ import LightningDevKit
 
 
 struct NoteZaps: View {
-    
-    @Environment(\.managedObjectContext) var viewContext
-    
-//    // Event that received zaps
-//    var event:Event
-//
-//    var zaps:[Event] {
-//        get {
-//            Event.zapsForEvent(event.id, context: viewContext)
-//        }
-//    }
-    
+//    @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var sp:SocketPool
-    
-    let id:String
+    @ObservedObject var event:Event
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)], predicate: NSPredicate(value: false))
     var zaps:FetchedResults<Event>
     var zapsSorted:[Event] { zaps.sorted(by: { $0.naiveSats > $1.naiveSats }) }
     
-    init(id:String) {
-        self.id = id
-        _zaps = FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)], predicate: NSPredicate(format: "kind == 9735 AND zappedEventId == %@", id))
+    init(event:Event) {
+        self.event = event
+        _zaps = FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)], predicate: NSPredicate(format: "kind == 9735 AND zappedEventId == %@", event.id))
     }
     
     var body: some View {
@@ -41,6 +29,18 @@ struct NoteZaps: View {
                 NoteZapRow(event: zap)
             }
             Spacer()
+        }
+        .task {
+            // Fix zaps afterwards??
+            let tally = zaps.reduce((0, 0)) { partialResult, zap in
+                return (partialResult.0 + Int64(zap.naiveSats), partialResult.1 + Int64(1))
+            }
+            if event.zapsCount != tally.1 {
+                event.objectWillChange.send()
+                event.zapsCount = tally.1
+                event.zapTally = tally.0
+            }
+            
         }
     }
 }
@@ -85,6 +85,11 @@ struct NoteZapRow: View {
         
         HStack(alignment: .top) {
             PFP(pubkey: event.zapFromRequest?.pubkey ?? "WTF", pictureUrl: event.zapFromRequest?.contact?.picture)
+                .onTapGesture {
+                    if let pubkey = event.zapFromRequest?.pubkey {
+                        nav.navigateTo(ContactPath(key: pubkey))
+                    }
+                }
             VStack(alignment: .leading) {
                 HStack {
                     VStack(alignment: .leading) {
@@ -131,11 +136,16 @@ struct NoteZaps_Previews: PreviewProvider {
         
         let odell = PreviewFetcher.fetchEvent("81b2dba2a3d2c92eedab1f966119bda65555d926b97bb41a14c07187472f6159")
         
+        let dunno = PreviewFetcher.fetchEvent("7682031bb0b06d7b9c417dae30141357a74b4f089ebd46226990d418e2def565")
+        
         VStack {
-            NoteZaps(id: "7682031bb0b06d7b9c417dae30141357a74b4f089ebd46226990d418e2def565")
+            
+            if dunno != nil {
+                NoteZaps(event: dunno!)
+            }
             
             if (odell != nil) {
-                NoteZaps(id:"81b2dba2a3d2c92eedab1f966119bda65555d926b97bb41a14c07187472f6159")
+                NoteZaps(event: odell!)
             }
         }
         .withPreviewEnvironment()
