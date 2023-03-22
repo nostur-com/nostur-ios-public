@@ -26,6 +26,8 @@ class MessageParser {
             }
             
             switch message.type {
+                case .AUTH:
+                    print("🟢🟢 \(relayUrl): \(message.message)")
                 case .OK:
                     print("\(relayUrl): \(message.message)")
                 case .NOTICE:

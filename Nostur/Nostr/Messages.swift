@@ -37,6 +37,7 @@ struct RelayMessage {
         case NOTICE
         case EOSE
         case OK
+        case AUTH
     }
     
     enum error:Error {
@@ -61,6 +62,10 @@ struct RelayMessage {
                 throw error.FAILED_TO_PARSE
             }
             return RelayMessage(type: .EOSE, message: text, subscriptionId: eose.subscription)
+        }
+        
+        guard text.prefix(7) != ###"["AUTH""### else {
+            return RelayMessage(type: .AUTH, message: text)
         }
         
         guard text.prefix(9) != ###"["NOTICE""### else {
