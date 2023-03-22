@@ -116,6 +116,7 @@ extension NosturRootMenu {
                     Label("Badges", systemImage: "medal")
                 }
                 Button {
+                    selectedTab = "Main"
                     nav.navigateTo(ViewPath.Settings)
                     sm.showSidebar = false
                 } label: {

@@ -39,9 +39,10 @@ struct NosturTabsView: View {
                     .tag("Bookmarks")
                     
                     
-                    ConfigurationView()
-                    .tabItem { Image(systemName: "server.rack") }
-                    .tag("Configuration")
+                    
+//                    ConfigurationView() // TODO: MOVE TO SETTINGS
+//                    .tabItem { Image(systemName: "server.rack") }
+//                    .tag("Configuration")
                 }
                 .withSheets()
             }
