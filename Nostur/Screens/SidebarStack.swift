@@ -54,6 +54,7 @@ struct SideBarStack<SidebarContent: View, Content: View>: View {
                     }
                 )
                 .offset(x: mainContentOffsetX)
+                .opacity(sm.showSidebar ? 0.25 : 1.0)
         }
         .onChange(of: sm.showSidebar) { shouldShowSidebar in
             withAnimation(.easeOut(duration: 0.1)) {
