@@ -770,6 +770,7 @@ extension Event {
             }
         }
         
+        var alreadyCounted = false
         if ((event.kind == .repost || event.kind == .textNote) && TagsHelpers(event.tags).mentionEtags() != nil) {
             let tags = TagsHelpers(event.tags)
             savedEvent.firstQuoteId = tags.mentionEtags()!.first!.id
@@ -781,12 +782,13 @@ extension Event {
                 if (tags.mentionEtags()!.first?.otherInformation[safe: 2] == "mention") {
                     firstQuote.objectWillChange.send()
                     firstQuote.mentionsCount += 1
+                    alreadyCounted = true
                 }
             }
         }
         
         // hmm above firstQuote doesn't seem to handle #[0] at .content end and "e" without "mention as first tag, so special case?
-        if event.kind == .textNote && event.content.contains("#[0]") && event.tags[safe: 0]?.type == "e" {
+        if !alreadyCounted && event.kind == .textNote && event.content.contains("#[0]") && event.tags[safe: 0]?.type == "e" {
             savedEvent.firstQuoteId = event.tags[safe: 0]?.id
             
             // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
