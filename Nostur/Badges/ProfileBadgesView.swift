@@ -173,11 +173,11 @@ struct BadgeIcon: View {
                                 .clipped()
                         }
                         else {
-                            CenteredProgressView()
+                            ProgressView()
                         }
                     }
                     else {
-                        CenteredProgressView()
+                        ProgressView()
                     }
                 }
                 .pipeline(ImageProcessing.shared.badges) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
