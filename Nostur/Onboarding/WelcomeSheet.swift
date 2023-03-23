@@ -11,8 +11,6 @@ struct WelcomeSheet: View {
     
     var offerTryOut = false
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var nav:NavigationModel
-    
     
     var body: some View {
         let _ = Self._printChanges()
@@ -21,24 +19,24 @@ struct WelcomeSheet: View {
             Text("See what's happening on nostr right now").font(.callout)
             
             VStack {
-                Button {
-                    nav.onboardingPath.append(ViewPath.CreateNewAccount)
+                NavigationLink {
+                    NewAccountSheet()
                 } label: {
                     Text("Create new account")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
-                
-                Button {
-                    nav.onboardingPath.append(ViewPath.UseExistingAccount)
+
+                NavigationLink {
+                    AddExistingAccountSheet(offerTryOut: true)
                 } label: {
                     Text("Use existing account")
                         .frame(maxWidth: .infinity)
                 }
                 
                 if (offerTryOut) {
-                    Button {
-                        nav.onboardingPath.append(ViewPath.TryGuestAccount)
+                    NavigationLink {
+                        TryGuestAccountSheet()
                     } label: {
                         Text("Try guest account")
                             .frame(maxWidth: .infinity)

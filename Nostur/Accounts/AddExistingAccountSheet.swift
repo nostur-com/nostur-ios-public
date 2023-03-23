@@ -9,7 +9,6 @@ import SwiftUI
 
 struct AddExistingAccountSheet: View {
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var nav:NavigationModel
     @Environment(\.managedObjectContext) var viewContext
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var sp:SocketPool
@@ -21,7 +20,6 @@ struct AddExistingAccountSheet: View {
     var grayBackground: Color = Color.gray.opacity(0.2)
     
     var body: some View {
-
             ZStack {
                 VStack {
                     TextField("Public or private key (npub or nsec)", text: $key)

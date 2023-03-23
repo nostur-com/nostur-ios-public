@@ -33,12 +33,12 @@ struct Search: View {
     var contacts:FetchedResults<Contact>
     
     @State var searching = false
-    @State var searchNav = NavigationPath()
+    @EnvironmentObject var nav:NavigationModel
     
     var body: some View {
         let _ = print("🧨🧨🧨🧨🧨 Search 🧨🧨🧨🧨🧨")
         let _ = Self._printChanges()
-        NavigationStack(path: $searchNav) {
+        NavigationStack(path: $nav.searchPath) {
             ScrollView {
                 if (contacts.count == 0 && events.count == 0 && searching) {
                     ProgressView()

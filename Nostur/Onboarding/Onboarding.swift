@@ -10,14 +10,14 @@ import SwiftUI
 struct Onboarding: View {
     
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var nav:NavigationModel
+    @State var path = NavigationPath()
     
     var body: some View {
         let _ = Self._printChanges()
         if (ns.onBoardingIsShown) {
             Color.clear
                 .fullScreenCover(isPresented: $ns.onBoardingIsShown) {
-                    NavigationStack(path: $nav.onboardingPath) {
+                    NavigationStack() {
                         WelcomeSheet(offerTryOut: true)
                             .interactiveDismissDisabled()
                             .withNavigationDestinations()

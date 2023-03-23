@@ -11,7 +11,6 @@ struct TryGuestAccountSheet: View {
     
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var sp:SocketPool
-    @EnvironmentObject var nav:NavigationModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) var viewContext
     @State var letsGo = false
@@ -28,7 +27,6 @@ struct TryGuestAccountSheet: View {
             Button {
                 letsGo = true
                 ns.onBoardingIsShown = false
-//                nav.clear()
             } label: {
                 Text("Let's go!")
                     .frame(maxWidth: .infinity)
@@ -75,7 +73,7 @@ struct TryGuestAccountSheet: View {
             else if (letsGo) {
                 try! viewContext.save()
                 ns.onBoardingIsShown = false
-                nav.onboardingPath.removeLast(nav.onboardingPath.count)
+                dismiss()
             }
         }
         .navigationTitle("")

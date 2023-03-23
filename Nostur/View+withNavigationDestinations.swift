@@ -25,12 +25,6 @@ enum ViewPath: Hashable {
     case NoteZaps(event:Event)
     case Settings
     case Relays
-    
-    case Welcome
-    case CreateNewAccount
-    case UseExistingAccount
-    case TryGuestAccount
-    
     case Badges
 }
 
@@ -76,15 +70,6 @@ extension View {
                         Settings()
                     case .Relays:
                         RelaysView()
-                    
-                    case .Welcome:
-                        WelcomeSheet()
-                    case .CreateNewAccount:
-                        NewAccountSheet()
-                    case .UseExistingAccount:
-                        AddExistingAccountSheet(offerTryOut: true)
-                    case .TryGuestAccount:
-                        TryGuestAccountSheet()
                         
                     case .Badges:
                         BadgesView()

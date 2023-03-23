@@ -21,7 +21,6 @@ import Foundation
 struct NewAccountSheet: View {
     
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var nav:NavigationModel
     @EnvironmentObject var up:Unpublisher
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) private var viewContext
@@ -71,8 +70,8 @@ struct NewAccountSheet: View {
                 .buttonStyle(.borderedProminent)
                 
                 if (ns.accounts.first(where: { $0.publicKey == NosturState.GUEST_ACCOUNT_PUBKEY}) == nil) {
-                    Button {
-                        nav.navigateTo(ViewPath.TryGuestAccount)
+                    NavigationLink {
+                        TryGuestAccountSheet()
                     } label: {
                         Text("Skip and try as guest first")
                             .frame(maxWidth: .infinity)
