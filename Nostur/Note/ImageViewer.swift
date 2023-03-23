@@ -57,7 +57,10 @@ struct ImageViewer: View {
                         ScrollView(.horizontal) {
                             LazyHStack {
                                 ForEach(0..<imgUrls.prefix(20).count, id: \.self) { index in
-                                    if (imgUrls[index].absoluteString.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
+                                    if ([".mp4",".mov"].contains(imgUrls[index].absoluteString.suffix(4))) {
+                                        VideoPlayerView(videoURL: imgUrls[index])
+                                    }
+                                    else if (imgUrls[index].absoluteString.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
                                         LazyImage(url: imgUrls[index]) { state in
                                             if let container = state.imageContainer {
                                                 if container.type == .gif, let gifData = container.data {
@@ -120,7 +123,7 @@ struct ImageViewer: View {
                         Spacer()
                         HStack {
                             Spacer()
-                            Text("Tap to load images")
+                            Text("Tap to load media")
                             Spacer()
                         }
                         Spacer()
@@ -136,7 +139,10 @@ struct ImageViewer: View {
             else if (imgUrls.count == 1) {
                 if (imagesShown) {
                     GeometryReader { geo in
-                        if (imgUrls.first?.absoluteString.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
+                        if ([".mp4",".mov"].contains(imgUrls.first?.absoluteString.suffix(4))) {
+                            VideoPlayerView(videoURL: imgUrls.first!)
+                        }
+                        else if (imgUrls.first?.absoluteString.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
                             LazyImage(url: imgUrls.first!) { state in
                                 if let container = state.imageContainer {
                                     if container.type == .gif, let gifData = container.data {
@@ -193,7 +199,7 @@ struct ImageViewer: View {
                         Spacer()
                         HStack {
                             Spacer()
-                            Text("Tap to load image")
+                            Text("Tap to load media")
                             Spacer()
                         }
                         Spacer()
@@ -313,7 +319,10 @@ struct FullImageViewer: View {
         GeometryReader { geo in
             ZStack {
                 VStack {
-                    if (fullImageURL.absoluteString.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
+                    if ([".mp4",".mov"].contains(fullImageURL.absoluteString.suffix(4))) {
+                        VideoPlayerView(videoURL: fullImageURL)
+                    }
+                    else if (fullImageURL.absoluteString.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
                         LazyImage(url: fullImageURL) { state in
                             if let container = state.imageContainer {
                                 if container.type == .gif, let gifData = container.data {
@@ -401,7 +410,7 @@ struct FullImageViewer: View {
 
 func getImgUrlsFromContent(_ content:String) -> [URL] {
     var urls:[URL] =  []
-    let regex = try! NSRegularExpression(pattern: "(?i)\\bhttps?:\\/\\/\\S+?\\.(?:png|jpe?g|gif|webp|bmp)\\b")
+    let regex = try! NSRegularExpression(pattern: "(?i)\\bhttps?:\\/\\/\\S+?\\.(?:mp4|mov|png|jpe?g|gif|webp|bmp)\\b")
     let range = NSRange(content.startIndex..<content.endIndex, in: content)
     let matches = regex.matches(in: content, range: range)
     for match in matches {

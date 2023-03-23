@@ -72,6 +72,7 @@
 		1F65002C29A759FB00B79AEF /* ProfileRowMissing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F65002B29A759FB00B79AEF /* ProfileRowMissing.swift */; };
 		1F65121B29C75AC9009FD4AE /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F65121A29C75AC9009FD4AE /* ProfileView.swift */; };
 		1F654F30298ED52E0040F15D /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 1F654F2F298ED52E0040F15D /* Starscream */; };
+		1F6E448429CC51600037D947 /* VideoPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6E448329CC515F0037D947 /* VideoPlayerView.swift */; };
 		1F71037D296BD9DE006245CC /* Nostr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F71037C296BD9DE006245CC /* Nostr.swift */; };
 		1F7150D029ABC6CE00AAB1C3 /* TabButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7150CF29ABC6CE00AAB1C3 /* TabButton.swift */; };
 		1F71B45529B0822300FA0400 /* ProfileBadgesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F71B45429B0822300FA0400 /* ProfileBadgesView.swift */; };
@@ -287,6 +288,7 @@
 		1F5F5A5B29838F1D00DED8F4 /* EventsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsProvider.swift; sourceTree = "<group>"; };
 		1F65002B29A759FB00B79AEF /* ProfileRowMissing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileRowMissing.swift; sourceTree = "<group>"; };
 		1F65121A29C75AC9009FD4AE /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		1F6E448329CC515F0037D947 /* VideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = VideoPlayerView.swift; path = Nostur/VideoPlayerView.swift; sourceTree = "<group>"; };
 		1F71037C296BD9DE006245CC /* Nostr.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nostr.swift; sourceTree = "<group>"; };
 		1F7150CF29ABC6CE00AAB1C3 /* TabButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabButton.swift; sourceTree = "<group>"; };
 		1F71B45429B0822300FA0400 /* ProfileBadgesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileBadgesView.swift; sourceTree = "<group>"; };
@@ -702,6 +704,7 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
+				1F6E448329CC515F0037D947 /* VideoPlayerView.swift */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1FB448BB2965F3D000038671 /* Products */,
 				1F7C65B629A1466D009FF3EA /* Frameworks */,
@@ -1058,6 +1061,7 @@
 				1F8B134B297B3551002EB8CF /* NIP19.swift in Sources */,
 				1F1ABC4729811A1B00D03FA9 /* LRUCache.swift in Sources */,
 				1F14BA7029854DFC00EACCD5 /* ProfileRow.swift in Sources */,
+				1F6E448429CC51600037D947 /* VideoPlayerView.swift in Sources */,
 				1F4773A7296D4F5B0049454B /* AccountEditView.swift in Sources */,
 				1FCEA0B72999413C00A309DC /* Double+clean.swift in Sources */,
 				1FB130BB29C0F9A6004AC98D /* FooterFragmentView.swift in Sources */,
