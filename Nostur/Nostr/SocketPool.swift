@@ -142,11 +142,15 @@ final class SocketPool: ObservableObject {
         }
     }
     
-    func removeActiveFollowingSubscriptions() {
+    func removeActiveAccountSubscriptions() {
         for socket in sockets {
             socket.value.activeSubscriptions.removeAll { subscriptionId in
-                subscriptionId == "Following"
+                subscriptionId == "Following" || subscriptionId == "Notifications"
             }
+            let closeFollowing = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "Following"))
+            socket.value.client.write(string: closeFollowing.message)
+            let closeNotifications = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "Notifications"))
+            socket.value.client.write(string: closeNotifications.message)
         }
     }
 }
