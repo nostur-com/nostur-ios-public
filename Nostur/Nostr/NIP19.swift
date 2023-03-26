@@ -46,6 +46,10 @@ func npub(_ hex:String) -> String {
     return try! NIP19(prefix: "npub", hexString: hex).displayString
 }
 
+func nsec(_ hex:String) -> String {
+    return try! NIP19(prefix: "nsec", hexString: hex).displayString
+}
+
 func pubkey(_ npub:String) -> String {
     return try! NIP19(displayString: npub).hexString
 }
