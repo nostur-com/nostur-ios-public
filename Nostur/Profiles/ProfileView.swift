@@ -22,7 +22,8 @@ struct ProfileByPubkey: View {
     var contacts:FetchedResults<Contact>
     
     let timeOut = Timer.publish(every: 8, on: .main, in: .common).autoconnect()
-        
+    
+    @State var editingAccount:Account?
     
     init(pubkey:String) {
         self.pubkey = pubkey
@@ -34,19 +35,23 @@ struct ProfileByPubkey: View {
     }
     
     var body: some View {
-        if (contacts.first != nil) {
-            ProfileView(contact: contacts.first!)
-//            Profile(contact: contacts.first!)
+        if let contact = contacts.first {
+            ProfileView(contact: contact)
         }
         else {
             ProgressView().onAppear {
                 print("🟢 ProfileByPubkey.onAppear no contact so REQ.0: \(pubkey)")
                 sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
             }
+            .sheet(item: $editingAccount) { account in
+                NavigationStack {
+                    AccountEditView(account: account)
+                }
+            }
             .onReceive(timeOut) { firedDate in
                 timeOut.upstream.connect().cancel()
                 if ns.account?.publicKey == pubkey {
-                    nav.navigateTo(ViewPath.Account(account: ns.account!))
+                    editingAccount = ns.account!
                 }
             }
         }
@@ -71,6 +76,7 @@ struct ProfileView: View {
     @State var selectedSubTab = "Posts"
     @State var limit = 10
     @State var tabOffset = 0.0
+    @State var editingAccount:Account?
     
     init(contact:Contact) {
         self.contact = contact
@@ -104,7 +110,7 @@ struct ProfileView: View {
                                                         .frame(width: geo.size.width, height: 150)
                                                         .clipped()
                                                         .ignoresSafeArea(edges: .top)
-                                                        
+                                                    
                                                 }
                                                 else if let image = state.image {
                                                     image
@@ -133,7 +139,7 @@ struct ProfileView: View {
                                             }
                                         }
                                         .pipeline(ImageProcessing.shared.banner) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
-//                                        .priority(.low) // lower prio for animated gif, saves bandwidth?
+                                        //                                        .priority(.low) // lower prio for animated gif, saves bandwidth?
                                     }
                                     else {
                                         LazyImage(url: URL(string: banner)) { state in
@@ -154,9 +160,9 @@ struct ProfileView: View {
                                                 }
                                             }
                                         }
-//                                        .processors([.resize(height: 150)])
+                                        //                                        .processors([.resize(height: 150)])
                                         .pipeline(ImageProcessing.shared.banner)
-                    //                    .priority(.low)
+                                        //                    .priority(.low)
                                     }
                                 }
                                 else {
@@ -220,7 +226,9 @@ struct ProfileView: View {
                                     }
                                     else {
                                         Button {
-                                            navigateToAccount()
+                                            if let account = ns.account {
+                                                editingAccount = account
+                                            }
                                         } label: {
                                             Text("Edit profile")
                                         }
@@ -384,42 +392,42 @@ struct ProfileView: View {
         }
         .task {
             if (NIP05.shouldVerify(contact)) {
-               if (await NIP05.verify(nip05: contact.nip05!, expectedPubkey: contact.pubkey)) {
-                   await viewContext.perform {
-                       contact.nip05verifiedAt = Date.now
-                       do { try viewContext.save() }
-                       catch { print("1) What") }
-                   }
-                   print("👍👍 nip05 verified \(contact.pubkey) \(contact.nip05!) ")
-               }
+                if (await NIP05.verify(nip05: contact.nip05!, expectedPubkey: contact.pubkey)) {
+                    await viewContext.perform {
+                        contact.nip05verifiedAt = Date.now
+                        do { try viewContext.save() }
+                        catch { print("1) What") }
+                    }
+                    print("👍👍 nip05 verified \(contact.pubkey) \(contact.nip05!) ")
+                }
             }
         }
         .task {
-           guard contact.anyLud else { return }
-           do {
-               if let lud16 = contact.lud16, lud16 != "" {
-                   let response = try await LUD16.getCallbackUrl(lud16: lud16)
-                   await MainActor.run {
-                       if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
-                           contact.zapperPubkey = response.nostrPubkey!
-                           print("contact.zapperPubkey updated: \(response.nostrPubkey!)")
-                       }
-                   }
-               }
-               else if let lud06 = contact.lud06, lud06 != "" {
-                   let response = try await LUD16.getCallbackUrl(lud06: lud06)
-                   await MainActor.run {
-                       if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
-                           contact.zapperPubkey = response.nostrPubkey!
-                           print("contact.zapperPubkey updated: \(response.nostrPubkey!)")
-                       }
-                   }
-               }
-           }
-           catch {
-               print("problem in lnurlp")
-               print(error)
-           }
+            guard contact.anyLud else { return }
+            do {
+                if let lud16 = contact.lud16, lud16 != "" {
+                    let response = try await LUD16.getCallbackUrl(lud16: lud16)
+                    await MainActor.run {
+                        if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                            contact.zapperPubkey = response.nostrPubkey!
+                            print("contact.zapperPubkey updated: \(response.nostrPubkey!)")
+                        }
+                    }
+                }
+                else if let lud06 = contact.lud06, lud06 != "" {
+                    let response = try await LUD16.getCallbackUrl(lud06: lud06)
+                    await MainActor.run {
+                        if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                            contact.zapperPubkey = response.nostrPubkey!
+                            print("contact.zapperPubkey updated: \(response.nostrPubkey!)")
+                        }
+                    }
+                }
+            }
+            catch {
+                print("problem in lnurlp")
+                print(error)
+            }
         }
         .onChange(of: contact.nip05) { nip05 in
             if (NIP05.shouldVerify(contact)) {
@@ -436,145 +444,14 @@ struct ProfileView: View {
             }
         }
         .task {
-           sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndBadges(pubkey: pubkey)))
+            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndBadges(pubkey: pubkey)))
         }
-//        .onAppear {
-//            // Check if there is new contact info
-//            sp.sendMessage(
-//                ClientMessage(type: .REQ,
-//                              message: RequestMessage.getUserMetadata(pubkey: pubkey)))
-//        }
-        //        .edgesIgnoringSafeArea(.top)
-        //        .ignoresSafeArea(edges: .top)
         .fullScreenCover(isPresented: $profilePicViewerIsShown) {
             ProfilePicFullScreenSheet(profilePicViewerIsShown: $profilePicViewerIsShown, pictureUrl:contact.picture!)
         }
-    }
-    
-    private func navigateToAccount() {
-        if (ns.account != nil) {
-            nav.navigateTo(ViewPath.Account(account: ns.account!))
-        }
-    }
-}
-
-struct ProfilePicFullScreenSheet: View {
-    
-    @Binding var profilePicViewerIsShown:Bool
-    var pictureUrl:String
-    @State private var scale: CGFloat = 1.0
-    @State private var lastScale: CGFloat = 1.0
-    @State private var position: CGSize = .zero
-    @State private var newPosition: CGSize = .zero
-    
-    var body: some View {
-        
-        let magnifyAndDragGesture = MagnificationGesture()
-                    .onChanged { value in
-                        let delta = value / self.lastScale
-                        self.lastScale = value
-                        self.scale *= delta
-                    }
-                    .onEnded { value in
-                        self.lastScale = 1.0
-                    }
-                    .simultaneously(with: DragGesture()
-                        .onChanged { value in
-                            self.position.width = self.newPosition.width + value.translation.width
-                            self.position.height = self.newPosition.height + value.translation.height
-                        }
-                        .onEnded { value in
-                            self.newPosition = self.position
-                        }
-                    )
-                    .simultaneously(with: DragGesture(minimumDistance: 3.0, coordinateSpace: .local)
-                        .onEnded { value in
-                            print(value.translation)
-                            switch(value.translation.width, value.translation.height) {
-                                    //                    case (...0, -30...30):  print("left swipe")
-                                    //                    case (0..., -30...30):  print("right swipe")
-                                    //                    case (-100...100, ...0):  print("up swipe")
-                                case (-100...100, 0...):  profilePicViewerIsShown = false
-                                default:  print("no clue")
-                            }
-                        }
-                    )
-        
-        GeometryReader { geo in
-            ZStack {
-                VStack {
-                    HStack {
-                        Spacer()
-                        Image(systemName: "xmark.circle.fill")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 30, height: 30)
-                            .padding(30)
-                            .onTapGesture {
-                                profilePicViewerIsShown = false
-                            }
-                    }
-                    Spacer()
-                }
-                VStack {
-                    if (pictureUrl.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
-                        LazyImage(url: URL(string: pictureUrl)) { state in
-                            if let container = state.imageContainer {
-                                if container.type == .gif, let gifData = container.data {
-                                    AnimatedGifView(gifData: gifData, width: geo.size.width, height: geo.size.height, contentMode: .scaleAspectFit)
-                                        .scaledToFit()
-                                        .scaleEffect(scale)
-                                        .offset(position)
-                                        .gesture(magnifyAndDragGesture)
-                                        .onTapGesture {
-                                            withAnimation {
-                                                scale = 1.0
-                                            }
-                                        }
-                                }
-                                else if let image = state.image {
-                                    image
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fill)
-                                }
-                                else {
-                                    Text("🧨")
-                                }
-                            }
-                            else {
-                                CenteredProgressView()
-                            }
-                        }
-                        .pipeline(ImageProcessing.shared.pfp) // CACHING BUT. NO PROCESSING, BREAKS ANIMATED GIF
-                        .priority(.high)
-                    }
-                    else {
-                        LazyImage(url: URL(string: pictureUrl)) { state in
-                            if let image = state.image {
-                                image
-                                    .resizable()
-                                    .scaledToFit()
-                                    .scaleEffect(scale)
-                                    .offset(position)
-                                    .gesture(magnifyAndDragGesture)
-                                    .onTapGesture {
-                                        withAnimation {
-                                            scale = 1.0
-                                        }
-                                    }
-                                
-                            }
-                            else {
-                                CenteredProgressView()
-                            }
-                        }
-                        .pipeline(ImageProcessing.shared.pfp)
-                        .priority(.high)
-                    }
-                }
-                .onTapGesture {
-                    profilePicViewerIsShown = false
-                }
+        .sheet(item: $editingAccount) { account in
+            NavigationStack {
+                AccountEditView(account: account)
             }
         }
     }
@@ -587,9 +464,15 @@ struct ProfileView_Previews: PreviewProvider {
         let snowden = PreviewFetcher.fetchContact(pubkey)
         let fabian = PreviewFetcher.fetchContact(f)
         
-        if let contact = snowden {
-            ProfileView(contact: contact)
-                .withPreviewEnvironment()
+        Group {
+            if let contact = snowden {
+                ProfileView(contact: contact)
+            }
+            
+            if let contact = fabian {
+                ProfileView(contact: contact)
+            }
         }
+        .withPreviewEnvironment()
     }
 }

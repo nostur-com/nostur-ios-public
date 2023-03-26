@@ -20,7 +20,7 @@ enum ViewPath: Hashable {
     case Post(vPost:VPost)
     case Blocklist
     case Bookmarks(account:Account)
-    case Account(account:Account)
+//    case Account(account:Account)
     case NoteReactions(event:Event)
     case NoteZaps(event:Event)
     case Settings
@@ -60,8 +60,8 @@ extension View {
                         BlockListView()
                     case .Bookmarks(let account):
                         BookmarksView(account: account)
-                    case .Account(let account):
-                        AccountEditView(account: account)
+//                    case .Account(let account):
+//                        AccountEditView(account: account)
                     case .NoteReactions(let event):
                         NoteReactions(id: event.id)
                     case .NoteZaps(let event):

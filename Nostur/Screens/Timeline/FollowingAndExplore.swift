@@ -10,15 +10,18 @@ import SwiftUI
 struct FollowingAndExplore: View {
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var nav:NavigationModel
-    //    @State var timelinePath = NavigationPath()
-    //    @State var explorePath = NavigationPath()
     @AppStorage("selected_subtab") var selectedSubTab = "Explore"
     
+    @State var showingNewNote = false
+    @State var noteCancellationId:UUID?
+    
     var body: some View {
+        let _ = Self._printChanges()
         NavigationStack(path: $nav.mainPath) {
             VStack {
                 AppTopBar()
                     .padding(5)
+                
                 HStack {
                     TabButton(
                         action: { selectedSubTab = "Following" },
@@ -30,25 +33,23 @@ struct FollowingAndExplore: View {
                         title: "Explore",
                         selected: selectedSubTab == "Explore")
                 }
-                ZStack {
-                    switch selectedSubTab {
-                        case "Following":
-                            ListViewContainer(pubkey: ns.activeAccountPublicKey, pubkeys: ns.followingPublicKeys, listId: "Following", listType: .account)
-                                .frame(maxWidth: 600)
-                                .opacity(selectedSubTab == "Following" ? 1 : 0)
-                            
-                        default:
-                            if (ns.rawExplorePubkeys.count > 0) {
-                                ListViewContainer(pubkey: ns.activeAccountPublicKey, pubkeys: ns.explorePubkeys, listId: "Explore", listType: .explore)
-                                    .frame(maxWidth: 600)
-                                    .opacity(selectedSubTab == "Explore" ? 1 : 0)
-                            }
-                            else {
-                                CenteredProgressView()
-                                    .frame(maxWidth: 600)
-                                    .opacity(selectedSubTab == "Explore" ? 1 : 0)
-                            }
-                    }
+                
+                
+                //                Picker(selection: $selectedSubTab, label: Text("List")) {
+                //                    Text("Following").tag("Following")
+                //                    Text("Explore").tag("Explore")
+                //                }
+                //                .pickerStyle(.segmented)
+                
+                switch selectedSubTab {
+                    case "Following":
+                        ListViewContainer(pubkey: ns.activeAccountPublicKey, pubkeys: ns.followingPublicKeys, listId: "Following", listType: .account)
+                    case "Explore":
+                        ListViewContainer(pubkey: ns.activeAccountPublicKey, pubkeys: ns.explorePubkeys, listId: "Explore", listType: .explore)
+                    default:
+                        Text("🥪")
+                        
+                        
                 }
                 Spacer()
             }
@@ -56,6 +57,9 @@ struct FollowingAndExplore: View {
             .navigationTitle(selectedSubTab)
             .navigationBarHidden(true)
             .navigationBarTitleDisplayMode(.inline)
+            //            .onChange(of: selectedSubTab) { listId in
+            //
+            //            }
         }
     }
 }

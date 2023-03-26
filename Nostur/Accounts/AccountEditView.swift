@@ -24,12 +24,6 @@ struct AccountEditView: View {
     var body: some View {
         let shouldDisable = account.privateKey == nil || account.privateKey == ""
         VStack {
-//            Button { contactsPresented = true } label: {
-//                NavigationLink(value: ViewPath.Following(account:account)) {
-//                    Text("Following \(account.follows?.count ?? 0)")
-//                }
-//            }
-
             Form {
                 
                 Group {
@@ -108,6 +102,7 @@ struct AccountEditView: View {
                     if (!shouldDisable && account.nsec != nil) {
                         HStack {
                             Text("**PRIVATE KEY:** \(String(account.nsec!.prefix(7)))∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗").lineLimit(1)
+                            Spacer()
                             Image(systemName: "doc.on.doc.fill")
                                 .onTapGesture {
                                     UIPasteboard.general.string = account.nsec!
@@ -133,7 +128,24 @@ struct AccountEditView: View {
             } label: {
                 Text("Load info and contacts from relays")
             }
-
+        }
+        .navigationTitle("Edit profile")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") {
+                    dismiss()
+                }
+            }
+            
+            ToolbarItem(placement: .primaryAction) {
+                Button("Save") {
+                    save()
+                }
+            }
+        }
+        .alert("Invalid private key", isPresented: $invalidPrivateKey) {
+            Button("OK", role: .cancel) { }
         }
         .onAppear {
             if (account.privateKey == nil) {
@@ -141,56 +153,41 @@ struct AccountEditView: View {
                 sp.sendMessage(message)
             }
         }
-        .safeAreaInset(edge: .bottom) {
-            VStack {
-                Button {
-                    if newPrivateKey != "" {
-                        
-                        guard let nip19 = try? NIP19(displayString: newPrivateKey) else {
-                            invalidPrivateKey = true
-                            newPrivateKey = ""
-                            return
-                        }
-                        guard let keys = try? NKeys(privateKeyHex: nip19.hexString) else {
-                            invalidPrivateKey = true
-                            newPrivateKey = ""
-                            return
-                        }
-                        
-                        guard (keys.publicKeyHex() == account.publicKey) else {
-                            invalidPrivateKey = true
-                            newPrivateKey = ""
-                            return
-                        }
-                        
-                        account.privateKey = keys.privateKeyHex()
-                    }
-                    do {
-                        try viewContext.save()
-                        try publishMetadataEvent()
-                        dismiss()
-                    }
-                    catch {
-                        print("Error saving account")
-                    }
-                } label: {
-                    Text("Save").frame(maxWidth: 200)
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .alert("Invalid private key", isPresented: $invalidPrivateKey) {
-                    Button("OK", role: .cancel) { }
-                }
-            }
-            .background(.regularMaterial)
-        }
-        
     }
 }
 
 extension AccountEditView {
-    func saveAccount() throws {
-        
+    
+    func save() {
+        if newPrivateKey != "" {
+            
+            guard let nip19 = try? NIP19(displayString: newPrivateKey) else {
+                invalidPrivateKey = true
+                newPrivateKey = ""
+                return
+            }
+            guard let keys = try? NKeys(privateKeyHex: nip19.hexString) else {
+                invalidPrivateKey = true
+                newPrivateKey = ""
+                return
+            }
+            
+            guard (keys.publicKeyHex() == account.publicKey) else {
+                invalidPrivateKey = true
+                newPrivateKey = ""
+                return
+            }
+            
+            account.privateKey = keys.privateKeyHex()
+        }
+        do {
+            try viewContext.save()
+            try publishMetadataEvent()
+            dismiss()
+        }
+        catch {
+            print("Error saving account")
+        }
     }
     
     func publishMetadataEvent() throws {
@@ -239,12 +236,6 @@ extension AccountEditView {
         
         sp.sendMessage(message)
     }
-    
-//    func fetchContacts(account:Account) {
-//        if (account.publicKey != nil) {
-//            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: account.publicKey)))
-//        }
-//    }
 
     func loadFollowers(account:Account) {
         let fr = Event.fetchRequest()
@@ -273,7 +264,6 @@ extension AccountEditView {
         }
     }
 }
-
 
 
 struct AccountView_Previews: PreviewProvider {

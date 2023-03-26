@@ -150,7 +150,7 @@ struct RelaysView: View {
 struct RelaysView_Previews: PreviewProvider {
     static var previews: some View {
         
-        let accountState = NosturState(container: EventsProvider.preview.container)
+        let ns:NosturState = .shared
         
 //        let cm = ConnectionManager()
 //        var cm:SocketPool = .shared
@@ -158,7 +158,7 @@ struct RelaysView_Previews: PreviewProvider {
         NavigationStack {
             RelaysView()
                 .environment(\.managedObjectContext, EventsProvider.preview.container.viewContext)
-                .environmentObject(accountState)
+                .environmentObject(ns)
 //                .environmentObject(cm)
         }
     }

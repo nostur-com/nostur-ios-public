@@ -16,49 +16,51 @@ struct ProfileRow: View {
     @ObservedObject var contact:Contact
     
     var body: some View {
-        NavigationLink(value: contact) {
-            HStack(alignment: .top) {
-                PFP(pubkey: contact.pubkey, pictureUrl: contact.picture)
-                VStack(alignment: .leading) {
-                    HStack {
-                        VStack(alignment: .leading) {
-                            HStack(spacing:3) {
-                                Text(contact.authorName).font(.headline).foregroundColor(.primary)
-                                    .lineLimit(1)
-
-                                if (contact.nip05veried) {
-                                    Image(systemName: "checkmark.seal.fill")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.blue)
-                                }
-                            }
-
-                            Text("@\(contact.username)").font(.subheadline).foregroundColor(.secondary)
+        HStack(alignment: .top) {
+            PFP(pubkey: contact.pubkey, pictureUrl: contact.picture)
+            VStack(alignment: .leading) {
+                HStack {
+                    VStack(alignment: .leading) {
+                        HStack(spacing:3) {
+                            Text(contact.authorName).font(.headline).foregroundColor(.primary)
                                 .lineLimit(1)
-                        }.multilineTextAlignment(.leading)
-                        Spacer()
-                        if (!withoutFollowButton) {
-                            Button {
-                                if (isFollowing) {
-                                    isFollowing = false
-                                    ns.unfollow(contact)
-                                }
-                                else {
-                                    print("chaning isFollowing to true 1")
-                                    isFollowing = true
-                                    ns.follow(contact)
-                                    print("chaning isFollowing to true 2")
-                                    //                                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
-                                }
-                            } label: {
-                                FollowButton(isFollowing:isFollowing)
+
+                            if (contact.nip05veried) {
+                                Image(systemName: "checkmark.seal.fill")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.blue)
                             }
                         }
+
+                        Text("@\(contact.username)").font(.subheadline).foregroundColor(.secondary)
+                            .lineLimit(1)
+                    }.multilineTextAlignment(.leading)
+                    Spacer()
+                    if (!withoutFollowButton) {
+                        Button {
+                            if (isFollowing) {
+                                isFollowing = false
+                                ns.unfollow(contact)
+                            }
+                            else {
+                                print("chaning isFollowing to true 1")
+                                isFollowing = true
+                                ns.follow(contact)
+                                print("chaning isFollowing to true 2")
+                                //                                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
+                            }
+                        } label: {
+                            FollowButton(isFollowing:isFollowing)
+                        }
                     }
-                    Text(contact.about ?? "").foregroundColor(.primary)
-                        .multilineTextAlignment(.leading)
                 }
+                Text(contact.about ?? "").foregroundColor(.primary)
+                    .multilineTextAlignment(.leading)
             }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            NavigationModel.shared.navigateTo(ContactPath(key: contact.pubkey))
         }
         .onAppear {
             if (ns.isFollowing(contact)) {
