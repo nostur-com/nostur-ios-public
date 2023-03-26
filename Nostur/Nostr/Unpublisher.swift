@@ -36,10 +36,10 @@ class Unpublisher: ObservableObject {
     var queue:[Unpublished] = []
     let sp:SocketPool = .shared
     
-    static var shared = Unpublisher(viewContext: EventsProvider.shared.container.viewContext)
+    static var shared = Unpublisher()
     
-    init(viewContext:NSManagedObjectContext) {
-        self.viewContext = viewContext
+    init() {
+        self.viewContext = DataProvider.shared().viewContext
         self.timer = Timer.scheduledTimer(timeInterval: 3, target: self, selector: #selector(onNextTick), userInfo: nil, repeats: true)
         NotificationCenter.default.addObserver(self, selector: #selector(appMovedToBackground), name: UIApplication.willResignActiveNotification, object: nil)
     }
@@ -88,6 +88,9 @@ class Unpublisher: ObservableObject {
         guard queue.count != 0 else { return }
         queue.forEach({ sendToRelays($0.nEvent) })
         queue.removeAll()
+        
+        // lets also save context here...
+        DataProvider.shared().save()
     }
     
     private func sendToRelays(_ nEvent:NEvent) {

@@ -60,6 +60,18 @@ class DataProvider: ObservableObject {
         return DataProvider.live
     }
     
+    func save() {
+        if viewContext.hasChanges {
+            do {
+                try viewContext.save()
+                print("🟢🟢 viewContext saved")
+            }
+            catch {
+                print("🔴🔴 Could not save viewContext")
+            }
+        }
+    }
+    
 //    func ctx() -> NSManagedObjectContext {
 //        return Thread.isMainThread ? self.viewContext : self.bg
 //    }
@@ -317,7 +329,7 @@ class EventsProvider: ObservableObject {
         description.url = defaultDirectoryURL.appendingPathComponent("Nostur.sqlite") // ("Nostur-iCloud.sqlite")
         description.configuration = "Default"
         
-//        print("🎃🎃🎃🎃🎃🎃🎃🎃🎃🎃 \(description.url)")
+        print("🎃🎃🎃🎃🎃🎃🎃🎃🎃🎃 \(description.url)")
         
         if inMemory {
             description.url = URL(fileURLWithPath: "/dev/null")

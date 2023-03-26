@@ -35,7 +35,6 @@ class Importer {
             forImports.append(forImport)
         }
         
-//        let context = DataProvider.shared().bg
         let isSignatureVerificationEnabled = self.settingsStore.isSignatureVerificationEnabled
         
 //        context.performAndWait {
