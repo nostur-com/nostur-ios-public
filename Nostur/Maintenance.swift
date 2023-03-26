@@ -75,6 +75,10 @@ struct Maintenance {
             return newResult
         }
         
+        let regex = ".*(" + ownAccountPubkeys.map {
+            NSRegularExpression.escapedPattern(for: $0)
+        }.joined(separator: "|") + ").*"
+        
         let ownAccountBookmarkIds = allAccounts.reduce([String]()) { partialResult, account in
             var newResult = Array(partialResult)
             if (account.bookmarks != nil) {
@@ -100,9 +104,12 @@ struct Maintenance {
         // OUDER DAN X DAGEN
         // IS GEEN BOOKMARK
         // IS GEEN EIGEN EVENT
+        // DOES NOT HAVE OUR PUBKEY IN P (Notifications)
+        // DONT DELETE MUTED BLOCKED, SO OUR BLOCK LIST STILL FUNCTIONS....
+        // TODO: DONT EXPORT MUTED / BLOCKED. KEEP HERE SO WE DONT HAVE TO KEEP ..REPARSING
         context.perform {
             let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
-            fetchRequest.predicate = NSPredicate(format: "kind IN {1,6} AND created_at < %i AND NOT id IN %@ AND NOT id IN %@ AND NOT pubkey IN %@", Int64(xDaysAgo.timeIntervalSince1970), ownAccountBookmarkIds, ownAccountPrivateNoteEventIds, ownAccountPubkeys)
+            fetchRequest.predicate = NSPredicate(format: "kind IN {1,6} AND created_at < %i AND NOT id IN %@ AND NOT id IN %@ AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountBookmarkIds, ownAccountPrivateNoteEventIds, ownAccountPubkeys, regex)
             
             let batchDelete = NSBatchDeleteRequest(fetchRequest: fetchRequest)
             batchDelete.resultType = .resultTypeCount
@@ -130,10 +137,6 @@ struct Maintenance {
         context.perform {
             let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
             
-            let regex = ".*(" + ownAccountPubkeys.map {
-                NSRegularExpression.escapedPattern(for: $0)
-            }.joined(separator: "|") + ").*"
-            
             fetchRequest.predicate = NSPredicate(format: "kind IN {9734,8,7} AND created_at < %i AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys, regex)
             
             let batchDelete = NSBatchDeleteRequest(fetchRequest: fetchRequest)
@@ -141,7 +144,7 @@ struct Maintenance {
             
             do {
                 let result = try context.execute(batchDelete) as! NSBatchDeleteResult
-                print("🧹🧹Deleted \(result.result!) kind 9734 events")
+                print("🧹🧹Deleted \(result.result!) kind {9734,8,7} events")
             } catch {
                 print("🔴🔴 Failed to delete 9734,7,8 data")
             }

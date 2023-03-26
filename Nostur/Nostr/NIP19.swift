@@ -40,6 +40,9 @@ struct NIP19 {
         let (_, checksum) = try bech32.decode(displayString)
         self.key = try bech32.convertBits(from: 5, to: 8, pad: false, idata: checksum).makeBytes()
     }
+    
+    // NIP-19 nprofile
+    
 }
 
 func npub(_ hex:String) -> String {

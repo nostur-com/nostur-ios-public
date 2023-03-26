@@ -23,6 +23,9 @@ struct Onboarding: View {
                             .withNavigationDestinations()
                     }
                 }
+                .onReceive(receiveNotification(.endOnboarding)) { _ in
+                    ns.onBoardingIsShown = false
+                }
         }
         else if (ns.account != nil) {
             NosturRootMenu()

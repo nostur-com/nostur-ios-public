@@ -366,13 +366,18 @@ extension Settings {
         SavedEventsCache.shared.clear()
         
         let bg = DataProvider.shared().newTaskContext()
-        bg.perform {
+        bg.performAndWait {
             let c = Contact.fetchRequest()
-            c.predicate = NSPredicate(format: "updated_at != 0")
+            c.predicate = NSPredicate(
+                format:
+                    "metadata_created_at != 0 " +
+                    "AND (name != nil OR display_name != nil)"
+            )
             if let contacts = try? bg.fetch(c) {
                 
                 
                 var progress = 0
+                viewPrint("Processing \(progress)/\(contacts.count)")
                 for contact in contacts {
                     progress += 1
                     if (progress % 100 == 0) {
@@ -387,7 +392,8 @@ extension Settings {
                     }
                     
                     let tr = NSFetchRequest<Event>(entityName: "Event")
-                    tr.predicate = NSPredicate(format: "kind IN {1,6,7,9734} AND tagsSerialized CONTAINS %@", contact.pubkey) // OPTIMIZATION HACK
+                    // ONLY {1,4} because .contacts only needed for replytousernames and text replacements?
+                    tr.predicate = NSPredicate(format: "kind IN {1,4} AND tagsSerialized CONTAINS %@", serializedP(contact.pubkey)) // OPTIMIZATION HACK
                     if let events = try? bg.fetch(tr) {
                         for event in events {
                             event.addToContacts(contact)
@@ -404,6 +410,7 @@ extension Settings {
                 viewPrint("putContactsInEventsForPs error on save(): \(error)")
             }
         }
+        DataProvider.shared().save()
         
     }
     
