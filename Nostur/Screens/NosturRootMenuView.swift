@@ -53,7 +53,7 @@ struct NosturRootMenu: View {
                                  Account: @\(account.name) / \(account.display_name)
                                  """)
                         ,
-                        buttons: [
+                        buttons: account.privateKey != nil ? [
                             .destructive(Text("Log out"), action: {
                                 ns.logout(account)
                                 
@@ -66,6 +66,16 @@ struct NosturRootMenu: View {
                                 if let pk = ns.account?.privateKey {
                                     UIPasteboard.general.string = nsec(pk)
                                 }
+                            }),
+                            .cancel(Text("Cancel"))
+                        ] : [
+                            .destructive(Text("Log out"), action: {
+                                ns.logout(account)
+                                
+                                if (ns.accounts.count <= 1) {
+                                    sm.showSidebar = false
+                                }
+                                
                             }),
                             .cancel(Text("Cancel"))
                         ])

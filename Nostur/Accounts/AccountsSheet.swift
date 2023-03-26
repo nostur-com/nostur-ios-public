@@ -69,34 +69,45 @@ struct AccountsSheet: View {
                 }
             })
             .actionSheet(item: $logoutAccount) { account in
-                        ActionSheet(
-                            title: Text("Confirm log out"),
-                            message: account.privateKey != nil
-                            ? Text("""
+                ActionSheet(
+                    title: Text("Confirm log out"),
+                    message: account.privateKey != nil
+                    ? Text("""
                                      Make sure you have a back-up of your private key (nsec)
                                      Nostur cannot recover your account without it
                                      """)
-                            : Text("""
+                    : Text("""
                                      Account: @\(account.name) / \(account.display_name)
                                      """)
-                            ,
-                            buttons: [
-                                .destructive(Text("Log out"), action: {
-                                    ns.logout(account)
-                                    
-                                    if (ns.accounts.count <= 1) {
-                                        sm.showSidebar = false
-                                    }
-                                    
-                                }),
-                                .default(Text("Copy private key (nsec) to clipboard"), action: {
-                                    if let pk = ns.account?.privateKey {
-                                        UIPasteboard.general.string = nsec(pk)
-                                    }
-                                }),
-                                .cancel(Text("Cancel"))
-                            ])
-                    }
+                    ,
+                    buttons: account.privateKey != nil
+                    ? [
+                        .destructive(Text("Log out"), action: {
+                            ns.logout(account)
+                            
+                            if (ns.accounts.count <= 1) {
+                                sm.showSidebar = false
+                            }
+                            
+                        }),
+                        .default(Text("Copy private key (nsec) to clipboard"), action: {
+                            if let pk = ns.account?.privateKey {
+                                UIPasteboard.general.string = nsec(pk)
+                            }
+                        }),
+                        .cancel(Text("Cancel"))
+                    ] : [
+                        .destructive(Text("Log out"), action: {
+                            ns.logout(account)
+                            
+                            if (ns.accounts.count <= 1) {
+                                sm.showSidebar = false
+                            }
+                            
+                        }),
+                        .cancel(Text("Cancel"))
+                    ])
+            }
         }
     }
 }
@@ -124,9 +135,9 @@ struct AccountRow: View {
                                     .padding(.horizontal, 8)
                                     .background(.cyan)
                                     .foregroundColor(.white)
-//                                        .background(.background)
+                                //                                        .background(.background)
                                     .cornerRadius(8)
-                                    
+                                
                                 
                             }
                         }
