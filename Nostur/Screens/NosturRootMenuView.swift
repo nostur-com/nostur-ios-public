@@ -62,6 +62,11 @@ struct NosturRootMenu: View {
                                 }
                                 
                             }),
+                            .default(Text("Copy private key (nsec) to clipboard"), action: {
+                                if let pk = ns.account?.privateKey {
+                                    UIPasteboard.general.string = nsec(pk)
+                                }
+                            }),
                             .cancel(Text("Cancel"))
                         ])
                 }
