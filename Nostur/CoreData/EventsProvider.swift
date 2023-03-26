@@ -146,7 +146,7 @@ class EventsProvider: ObservableObject {
         messages.append(contentsOf: testSnowden())
         messages.append(contentsOf: testBadges())
         messages.append(contentsOf: testMentions())
-//        messages.append(contentsOf: testKind6Events())
+        messages.append(contentsOf: testKind6Events())
 //        messages.append(contentsOf: testEfilter())
         messages.append(contentsOf: testZaps())
         messages.append(contentsOf: testSomeFakeAndRealZaps())

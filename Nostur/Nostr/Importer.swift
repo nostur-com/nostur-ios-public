@@ -67,6 +67,7 @@ class Importer {
                     }
                     
                     // ANNOYING FIX FOR KIND 6 WITH JSON STRING OF ANOTHER EVENT IN EVENT.CONTENT. WTF
+                    var kind6firstQuote:Event?
                     if event.kind == .repost && (event.content.prefix(2) == #"{""# || event.content == "") {
                         let decoder = JSONDecoder()
                         if let noteInNote = try? decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
@@ -83,6 +84,9 @@ class Importer {
                     
                     let savedEvent = Event.saveEvent(event: event, context:context)
                     saved = saved + 1
+                    if (kind6firstQuote != nil) {
+                        savedEvent.firstQuote = kind6firstQuote
+                    }
                     
                     if event.kind == .setMetadata {
                         Contact.saveOrUpdateContact(event: event, context: context)
