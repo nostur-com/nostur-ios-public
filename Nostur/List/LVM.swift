@@ -11,11 +11,11 @@ import Combine
 
 let LVM_MAX_VISIBLE = 150 // Will only be ignored if last appeared is older
 
-
 class LVMState: ObservableObject {
     let privateContext:NSManagedObjectContext
     let transformer:VPostTransformer
     
+    @Published var listId = "Following"
     @Published var viewIsVisible = true
     @Published var restoreScrollTo:Event? = nil // @TODO: Maybe doesn't need to be @Published?
     @Published var restoreScrollToAnchor = "BOTTOM"  // @TODO: Maybe doesn't need to be @Published?
@@ -23,7 +23,7 @@ class LVMState: ObservableObject {
     @Published var vPosts:[VPost] = [] // events.count and vPosts.count should be equal! So .prefix BEFORE setting events, not after. (For unreadIndex etc)
     @Published var state:LVM.LIST_STATE = .AWAITING_FIRST_FETCH {
         didSet {
-            ThreadWarning.which("STATE: \(oldValue) -> \(state) ---  vPosts: \(vPosts.count) visible: \(viewIsVisible)")
+            print("LVMState.state: \(oldValue) -> \(state) vPosts: \(vPosts.count) visible: \(viewIsVisible) id:\(listId)")
         }
     }
     
@@ -34,32 +34,12 @@ class LVMState: ObservableObject {
         self.privateContext = privateContext
         self.transformer = VPostTransformer(privateContext)
         
-        //        let firstEvent = $events
-        //            .first()
-        //            .eraseToAnyPublisher()
-        //
-        //        let throttledLatestEvent = $events
-        //            .throttle(for: .seconds(3), scheduler: DispatchQueue.main, latest: true)
-        ////            .dropFirst() // Drop the initial event that will be emitted by the firstEvent publisher
-        //            .eraseToAnyPublisher()
-        //
-        //        let combined = Publishers.Merge(firstEvent, throttledLatestEvent)
-        //
-        //        combined
-        //            .removeDuplicates()
-        //            .sink { posts in
-        //                self.processPostsInBackground(posts)
-        //            }
-        //            .store(in: &subscriptions)
-        
         $events
-//            .removeDuplicates()
             .sink { posts in
                 self.processPostsInBackground(posts)
             }
             .store(in: &subscriptions)
-        
-        
+
     }
     
     private func processPostsInBackground(_ events:[Event]) {
@@ -69,18 +49,8 @@ class LVMState: ObservableObject {
             var newVPosts:[VPost] = []
             
             for event in events {
-//                guard let privateEvent = try? privateContext.existingObject(with: event.objectID) as? Event else { continue }
-                
                 if currentVPosts.firstIndex(where: { $0.event.objectID == event.objectID } ) != nil {
-//                if let existingVPostIndex = currentVPosts.firstIndex(where: { $0.id == event.id } ) {
-                    // Already on screen, skip! do changed otherwise via .objectWillChange.send/sink
                     continue
-//                    let newVPostData = self.transformer.vPostData(privateEvent)
-//                    currentVPosts[existingVPostIndex].plainText = newVPostData.plainText
-//                    currentVPosts[existingVPostIndex].renderedText = newVPostData.renderedText
-//                    currentVPosts[existingVPostIndex].replyingToUsernamesMarkDown = newVPostData.replyingToUsernamesMarkDown
-//                    currentVPosts[existingVPostIndex].imageUrls = newVPostData.imageUrls
-//                    currentVPosts[existingVPostIndex].displayName = newVPostData.displayName
                 }
                 else {
                     guard let privateEvent = try? privateContext.existingObject(with: event.objectID) as? Event else { continue }
@@ -109,37 +79,6 @@ class LVMState: ObservableObject {
             DispatchQueue.main.async {
                 self.vPosts = currentVPosts + last
             }
-            
-            
-            //            var updatedPosts: [VPost] = []
-            //
-            //                    for event in events {
-            //                        // Get the corresponding post in the private context
-            //                        guard let privateEvent = try? privateContext.existingObject(with: event.objectID) as? Event,
-            //                              let plainText = privatePost.plainText else { continue }
-            //                        let processedText = parseText(plainText)
-            //                        // Update the post object with the processed text
-            //                        privatePost.content = processedText
-            //                        updatedPosts.append(privatePost)
-            //                    }
-            //
-            //                    DispatchQueue.main.async {
-            //                        self.processedPosts = updatedPosts
-            //                    }
-            //
-            //            guard let privatePost = try? privateContext.existingObject(with: post.objectID) as? Post,
-            //                              let plainText = privatePost.plainText else { continue }
-            //            let newPosts = posts
-            ////                            .sorted(by: { $0.created_at < $1.created_at } ) //make lastIndex newest
-            //                .map(VPostTransformer.shared.toVPost)
-            //            let result = updatePosts(postsOnScreen: self.vPosts, postsFromCoreData: newPosts)
-            //            DispatchQueue.main.async {
-            //                self.vPosts = result.updatedPosts
-            //            }
-            //            if (result.newPostsCount > 0 || result.updatedPostsCount > 0) {
-            //                ThreadWarning.which("self.vPosts.append() Added \(result.newPostsCount) new and replaced \(result.updatedPostsCount) on (self.id)")
-            ////                    self.updateUnreadCount()
-            //            }
         }
     }
 }
@@ -214,6 +153,7 @@ class LVM: NSObject, ObservableObject {
         self.pubkey = pubkey
         self.pubkeys = pubkeys
         self.listId = listId
+        self.lvmState.listId = listId
         super.init()
         
         let ctx = viewContext
@@ -257,8 +197,10 @@ class LVM: NSObject, ObservableObject {
     }
     
     func changeLVM(pubkey:String, pubkeys:Set<String>, listId:String) {
+        self.lvmState.state = .AWAITING_FIRST_FETCH
         self.lvmState.events = []
         self.lvmState.vPosts = []
+        self.lvmState.listId = listId
         
         self.pubkey = pubkey
         self.pubkeys = pubkeys
@@ -333,23 +275,6 @@ class LVM: NSObject, ObservableObject {
             }
         }
     }
-    
-    func performFetch() {
-        self.frc = NSFetchedResultsController(fetchRequest: Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: self.lastAppeared?.created_at ?? 0), managedObjectContext: viewContext, sectionNameKeyPath: nil, cacheName: nil) // TODO: Try cache?
-        frc?.delegate = self
-        
-        
-        if viewIsVisible {
-            do {
-                try self.frc?.performFetch()
-                guard let posts = self.frc?.fetchedObjects else { return }
-                //                self.contentChangedSubject.send(posts) // Disabled, no debounce/throttle on first fetch
-                self.sendToView(events: posts)
-            } catch {
-                print("🔴🔴🔴 failed to fetch items")
-            }
-        }
-    }
 }
 
 
@@ -360,18 +285,6 @@ extension LVM {
         //        onlyFetchItemsWhenVisible()
         updatePostFeed()
         trackLastAppeared()
-    }
-    
-    func updatePostFeed() {
-        contentChangedSubject
-            .debounce(for: .seconds(2.5), scheduler: RunLoop.main)
-            .throttle(for: .seconds(10), scheduler: RunLoop.main, latest: true)
-        //            .debounce(for: .seconds(0.5), scheduler: DispatchQueue.global())
-        //            .throttle(for: .seconds(4), scheduler: DispatchQueue.global(), latest: false)
-            .sink { events in
-                self.sendToView(events: events)
-            }
-            .store(in: &subscriptions)
     }
     
     //    func onlyFetchItemsWhenVisible() {
@@ -640,6 +553,23 @@ extension LVM {
 
 extension LVM: NSFetchedResultsControllerDelegate {
     
+    func performFetch() {
+        self.frc = NSFetchedResultsController(fetchRequest: Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: self.lastAppeared?.created_at ?? 0), managedObjectContext: viewContext, sectionNameKeyPath: nil, cacheName: nil) // TODO: Try cache?
+        frc?.delegate = self
+        
+        
+        if viewIsVisible {
+            do {
+                try self.frc?.performFetch()
+                guard let posts = self.frc?.fetchedObjects else { return }
+                //                self.contentChangedSubject.send(posts) // Disabled, no debounce/throttle on first fetch
+                self.sendToView(events: posts)
+            } catch {
+                print("🔴🔴🔴 failed to fetch items")
+            }
+        }
+    }
+    
     func sendToView(events:[Event]) {
         switch (self.state) {
             case .AWAITING_FIRST_FETCH: // Show last X (FORCED CUTOFF)
@@ -685,6 +615,18 @@ extension LVM: NSFetchedResultsControllerDelegate {
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
         guard let posts = controller.fetchedObjects as? [Event] else { return }
         self.contentChangedSubject.send(posts)
+    }
+    
+    func updatePostFeed() {
+        contentChangedSubject
+            .debounce(for: .seconds(2.5), scheduler: RunLoop.main)
+            .throttle(for: .seconds(10), scheduler: RunLoop.main, latest: true)
+        //            .debounce(for: .seconds(0.5), scheduler: DispatchQueue.global())
+        //            .throttle(for: .seconds(4), scheduler: DispatchQueue.global(), latest: false)
+            .sink { events in
+                self.sendToView(events: events)
+            }
+            .store(in: &subscriptions)
     }
 }
 
