@@ -27,6 +27,7 @@ struct NosturApp: App {
     @StateObject private var ss:SettingsStore = .shared
     @StateObject private var sm = SideBarModel()
     @StateObject private var tm:DetailTabsModel = .shared
+    @StateObject private var nm:NotificationsManager = .shared
     
     @State var isViewDisplayed = false
     
@@ -46,6 +47,7 @@ struct NosturApp: App {
                 .environmentObject(ss)
                 .environmentObject(tm)
                 .environmentObject(sm)
+                .environmentObject(nm)
                 .onAppear {startNosturing(); self.isViewDisplayed = true }
                 .onDisappear { self.isViewDisplayed = false }
                 .onReceive(runLoop) { time in

@@ -12,20 +12,22 @@ struct TabButton: View {
     var action:() -> Void
     var title:String = ""
     var selected:Bool = false
-//    var unread:Int = 2
+    var unread:Int?
     
     var body: some View {
         Button { action() } label: {
             VStack{
                 HStack {
                     Text(title)
-//                    Text("\(unread)")
-//                        .font(.footnote)
-//                        .foregroundColor(.white)
-//                        .padding(.horizontal,6)
-//                        .background(Capsule().foregroundColor(.red))
-//                        .offset(x:-4, y: 0)
-//                        .opacity(unread > 0 ? 1 : 0)
+                    if let unread {
+                        Text("\(unread)")
+                            .font(.footnote)
+                            .foregroundColor(.white)
+                            .padding(.horizontal,6)
+                            .background(Capsule().foregroundColor(.red))
+                            .offset(x:-4, y: 0)
+                            .opacity(unread > 0 ? 1 : 0)
+                    }
                 }
                 Divider()
                     .frame(height: 4)

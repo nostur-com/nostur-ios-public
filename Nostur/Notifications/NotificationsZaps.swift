@@ -8,15 +8,22 @@
 import SwiftUI
 import CoreData
 
-struct NotificationsZaps: View {
+struct NotificationsZaps: View, Equatable {
+    
+    static func == (lhs: NotificationsZaps, rhs: NotificationsZaps) -> Bool {
+        lhs.pubkey == rhs.pubkey
+        && lhs.blockedPubkeys == rhs.blockedPubkeys
+    }
+    
     let er:ExchangeRateModel = .shared // Not Observed for performance
     let pubkey:String
-    let FETCH_LIMIT = 13250
+    let blockedPubkeys:[String]
+    let FETCH_LIMIT = 300
     let nav:NavigationModel = .shared
     let sp:SocketPool = .shared
     @EnvironmentObject var ns:NosturState
     @Environment(\.managedObjectContext) var viewContext
-    var onAppear:(Int64) -> ()
+    var onAppear:(Date) -> ()
     
     @FetchRequest
     var zaps:FetchedResults<Event>
@@ -48,24 +55,40 @@ struct NotificationsZaps: View {
         }
     }
 //    
-    init(pubkey:String, context:NSManagedObjectContext, onAppear: @escaping (Int64) -> ()) {
+    init(pubkey:String, blockedPubkeys:[String], context:NSManagedObjectContext, onAppear: @escaping (Date) -> ()) {
         self.pubkey = pubkey
+        self.blockedPubkeys = blockedPubkeys
         self.onAppear = onAppear
         let r1 = Event.fetchRequest()
-        r1.predicate = NSPredicate(format: "kind == 9735 AND tagsSerialized CONTAINS %@", serializedP(pubkey)) // OPTIMISATION HACK
-//        r1.fetchLimit = FETCH_LIMIT
+        r1.predicate = NSPredicate(
+            format:
+                "kind == 9735 " + // ONLY ZAPS
+                "AND zappedContactPubkey == %@" + // ONLY TO ME
+                "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS
+            pubkey,
+            blockedPubkeys
+        )
+        r1.fetchLimit = FETCH_LIMIT
         r1.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         let oldestCreatedAt = (try? context.fetch(r1).last?.created_at) ?? 0
 
         let r2 = Event.fetchRequest()
-        r2.predicate = NSPredicate(format: "created_at >= %i AND kind == 9735 AND tagsSerialized CONTAINS %@", oldestCreatedAt, serializedP(pubkey))
-//        r2.fetchLimit = FETCH_LIMIT
+        r2.predicate = NSPredicate(
+            format:
+                "created_at >= %i " +
+                "AND kind == 9735 " +
+                "AND zappedContactPubkey == %@" + // ONLY TO ME
+                "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS) // OPTIMISATION HACK
+            oldestCreatedAt,
+            pubkey,
+            blockedPubkeys
+        )
+        r2.fetchLimit = FETCH_LIMIT
         r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         _zaps = FetchRequest(fetchRequest: r2)
     }
 //    
     var body: some View {
-        let _ = print("🧨🧨🧨🧨🧨 NOTIFICATONSZAPS 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         let _ = Self._printChanges()
         List {
             Section {
@@ -92,9 +115,10 @@ struct NotificationsZaps: View {
                             }.onTapGesture {
                                 nav.navigateTo(note.toVPost())
                             }
-                            Divider()
+//                            Divider()
                         }
                     }
+                    .padding(.vertical, 10)
                     .id(note.id)
                     .listRowInsets(EdgeInsets())
                 }
@@ -109,12 +133,17 @@ struct NotificationsZaps: View {
                     .tint(.accentColor)
                     Spacer()
                 }
+                .padding(.vertical, 10)
                 .listRowInsets(EdgeInsets())
             }
         }
         .listStyle(.plain)
         .onAppear {
             fetchZaps()
+            if let first = zaps.first {
+                ns.account?.lastSeenZapCreatedAt = first.created_at
+            }
+            DataProvider.shared().save()
         }
     }
     
@@ -150,7 +179,7 @@ struct NotificationsZaps: View {
 struct ZapsForThisNote: View {
     var zaps:[Event]
     @Environment(\.managedObjectContext) var viewContext
-    var onAppear:(Int64) -> ()
+    var onAppear:(Date) -> ()
     
     var zapsSorted:[Event] { // $0.sats > $0.sats is slow... so cached..
         zaps
@@ -166,7 +195,7 @@ struct ZapsForThisNote: View {
                         PFP(pubkey: zapsSorted[index].zapFromRequest!.pubkey, pictureUrl: zapsSorted[index].zapFromRequest!.contact?.picture)
                             .id(zapsSorted[index].id)
                             .onAppear {
-                                onAppear(zapsSorted[index].created_at)
+                                onAppear(zapsSorted[index].insertedAt)
                             }
                             .zIndex(-Double(index))
                         
@@ -216,7 +245,7 @@ struct ZapsForThisNote: View {
 struct NotificationsZaps_Previews: PreviewProvider {
     static var previews: some View {
         let pubkey = "32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245"
-        NotificationsZaps(pubkey: pubkey, context: EventsProvider.preview.container.viewContext) { _ in
+        NotificationsZaps(pubkey: pubkey, blockedPubkeys:[],  context: EventsProvider.preview.container.viewContext) { _ in
             
         }
             .withPreviewEnvironment()

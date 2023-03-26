@@ -12,8 +12,9 @@ struct NosturTabsView: View {
 //    @AppStorage("showReplies") var showReplies = true // TODO: Move to Timeline
     
 //    @EnvironmentObject var nav:NavigationModel
-//    @EnvironmentObject var nm:NotificationsManager
     @AppStorage("selected_tab") var selectedTab = "Main"
+    @State var unread = 0
+    @State var unreadDMs = 0
     
     var body: some View {
         let _ = Self._printChanges()
@@ -27,7 +28,7 @@ struct NosturTabsView: View {
                     NotificationsContainer()
                     .tabItem { Image(systemName: "bell.fill") }
                     .tag("Notifications")
-//                    .badge(nm.unread)
+                    .badge(unread)
                     
                     Search()
                     .tabItem { Image(systemName: "magnifyingglass") }
@@ -41,6 +42,7 @@ struct NosturTabsView: View {
                     DirectMessagesContainer()
                     .tabItem { Image(systemName: "envelope.fill") }
                     .tag("Messages")
+                    .badge(unreadDMs)
                     
                     
 //                    ConfigurationView() // TODO: MOVE TO SETTINGS
@@ -49,11 +51,16 @@ struct NosturTabsView: View {
                 }
                 .withSheets()
             }
-//            .background(.regularMaterial)
             .frame(maxWidth: 600)
             if UIDevice.current.userInterfaceIdiom == .pad {
                 TabbedDetailContainer()
             }
+        }
+        .onReceive(receiveNotification(.updateNotificationsCount)) { notification in
+            unread = (notification.object as! Int)
+        }
+        .onReceive(receiveNotification(.updateDMsCount)) { notification in
+            unreadDMs = (notification.object as! Int)
         }
 //        .ignoresSafeArea()
     }

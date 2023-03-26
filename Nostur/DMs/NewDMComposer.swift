@@ -15,6 +15,7 @@ struct NewDMComposer: View {
     @Binding var toContact:Contact?
     @Binding var message:String
     @Binding var showingNewDM:Bool
+    @Binding var tab:String
     
     var body: some View {
         VStack {
@@ -50,6 +51,7 @@ struct NewDMComposer: View {
                     message = ""
                     
                     showingNewDM = false
+                    tab = "Accepted" // Set tab to accepted so we can see our just sent message
                     dismiss()
                     // spinner
                     // then go to saved event from db after 1 second
@@ -81,10 +83,11 @@ struct NewDMComposer_Previews: PreviewProvider {
     @State static var toContact:Contact? = nil
     @State static var message = ""
     @State static var showingNewDM = true
+    @State static var tab = "Accepted"
     
     static var previews: some View {
         NavigationStack {
-            NewDMComposer(toPubkey: $toPubkey, toContact: $toContact, message: $message, showingNewDM: $showingNewDM)
+            NewDMComposer(toPubkey: $toPubkey, toContact: $toContact, message: $message, showingNewDM: $showingNewDM, tab: $tab)
         }
         .withPreviewEnvironment()
     }

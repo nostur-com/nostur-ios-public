@@ -6,12 +6,13 @@
 //
 
 import SwiftUI
+import Algorithms
 
 struct DMConversationView: View {
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var up:Unpublisher
     let nav:NavigationModel = .shared
-    let rootDM:Event
+    @ObservedObject var rootDM:Event
     let pubkey:String
     let theirPubkey:String?
     let dateHeaderFormatter:DateFormatter
@@ -58,6 +59,15 @@ struct DMConversationView: View {
         }
     }
     
+    var isAccepted:Bool {
+        // if possible infer accepted by checking if we responded (mine)
+        (contact?.dmAccepted ?? false) || (mine.count > 0)
+    }
+    
+    var allMessagesSorted:[Event] {
+        chain(theirs, mine).sorted(by: { $0.created_at < $1.created_at })
+    }
+    
     init(rootDM:Event, pubkey:String) {
         self.pubkey = pubkey
         self.rootDM = rootDM
@@ -66,9 +76,7 @@ struct DMConversationView: View {
             : rootDM.firstP()
         self.dateHeaderFormatter = DateFormatter()
         self.dateHeaderFormatter.dateStyle = .short
-//        dateHeaderFormatter.dateStyle = .short
-        
-        
+
         let theirs = Event.fetchRequest()
         
         theirs.predicate = NSPredicate(
@@ -103,11 +111,22 @@ struct DMConversationView: View {
                                             .id(message.event.id)
                                             .onTapGesture {
                                                 UIPasteboard.general.string = message.event.toNEvent().eventJson()
+                                                // fix contacts
+                                                let vc = DataProvider.shared().viewContext
+                                                let cs = Contact.ensureContactsCreated(event: message.event.toNEvent(), context: vc)
+                                                message.event.addToContacts(NSSet(array: cs))
+                                                do {
+                                                    try vc.save()
+                                                }
+                                                catch {
+                                                    print(error)
+                                                }
                                             }
                                         }
                                     }
                                 }
-                            } header: {
+                            }
+                        header: {
                                 VStack {
                                     PFP(pubkey: contactPubkey, pictureUrl: contact?.picture, size: 100)
                                         .onTapGesture { nav.navigateTo(ContactPath(key: contactPubkey)) }
@@ -186,30 +205,54 @@ struct DMConversationView: View {
                                 .task {
                                     SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndBadges(pubkey: contactPubkey)))
                                 }
-                            } footer: {
-                                ChatInputField(message: $text) {
-                                    // Create and send DM (via unpublisher?)
-                                    guard let pk = ns.account?.privateKey else { ns.readOnlyAccountSheetShown = true; return }
-                                    guard let theirPubkey = self.theirPubkey else { return }
-                                    var nEvent = NEvent(content: text)
-                                    if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
-                                        nEvent.content = replaceNsecWithHunter2(nEvent.content)
+                            }
+                        footer: {
+                                Group {
+                                    if isAccepted {
+                                        ChatInputField(message: $text) {
+                                            // Create and send DM (via unpublisher?)
+                                            guard let pk = ns.account?.privateKey else { ns.readOnlyAccountSheetShown = true; return }
+                                            guard let theirPubkey = self.theirPubkey else { return }
+                                            var nEvent = NEvent(content: text)
+                                            if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
+                                                nEvent.content = replaceNsecWithHunter2(nEvent.content)
+                                            }
+                                            nEvent.kind = .directMessage
+                                            guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: pk, pubkey: theirPubkey, content: nEvent.content) else {
+                                                print("🔴🔴 Could encrypt content")
+                                                return
+                                            }
+                                            
+                                            nEvent.content = encrypted
+                                            nEvent.tags.append(NEventTag(type: "p", otherInformation: theirPubkey))
+                                            
+                                            
+                                            if let signedEvent = try? ns.signEvent(nEvent) {
+                                                //                        print(signedEvent.wrappedEventJson())
+                                                up.publishNow(signedEvent)
+                                                //                        noteCancellationId = up.publish(signedEvent)
+                                                text = ""
+                                            }
+                                        }
                                     }
-                                    nEvent.kind = .directMessage
-                                    guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: pk, pubkey: theirPubkey, content: nEvent.content) else {
-                                        print("🔴🔴 Could encrypt content")
-                                        return
-                                    }
-                                    
-                                    nEvent.content = encrypted
-                                    nEvent.tags.append(NEventTag(type: "p", otherInformation: theirPubkey))
-                                    
-                                    
-                                    if let signedEvent = try? ns.signEvent(nEvent) {
-                //                        print(signedEvent.wrappedEventJson())
-                                        up.publishNow(signedEvent)
-                //                        noteCancellationId = up.publish(signedEvent)
-                                        text = ""
+                                    else {
+                                        Divider()
+                                        Button("Accept message request") {
+                                            if let contact = contact {
+                                                contact.dmAccepted = true // Save context here or onAppclose..
+                                            }
+                                            else {
+                                                var newContact = Contact(context: DataProvider.shared().viewContext)
+                                                newContact.pubkey = contactPubkey
+                                                newContact.metadata_created_at = 0
+                                                newContact.updated_at = 0
+                                                newContact.dmAccepted = true
+                                                // objectWillChange?
+                                                rootDM.contact = newContact
+                                                // sp fetch info..
+                                            }
+                                        }
+                                        .buttonStyle(.borderedProminent)
                                     }
                                 }
                                 .padding(.vertical, 10)
@@ -220,6 +263,21 @@ struct DMConversationView: View {
                             guard let lastMessage = messagesByDay[lastDay]?.sorted(by: { $0.event.created_at < $1.event.created_at }).last else { return }
                                 
                             proxy.scrollTo(lastMessage.id)
+                        }
+                        .onAppear {
+                            if (contact == nil) {
+                                SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: contactPubkey)))
+                            }
+                        }
+                        .onAppear {
+                            // Update lastSeenDMCreatedAt, which updates unread count
+                            if let root = allMessagesSorted.first {
+                                
+                                root.objectWillChange.send()
+                                root.lastSeenDMCreatedAt = allMessagesSorted.last!.created_at
+                                // Save context here? or on go to background
+                                DataProvider.shared().save()
+                            }
                         }
                     }
                 }

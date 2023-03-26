@@ -31,7 +31,7 @@ struct NotificationsContainer: View {
 
 struct NotificationsView: View {
     @Environment(\.managedObjectContext) var viewContext
-    
+    @ObservedObject var nm:NotificationsManager = .shared
     @ObservedObject var account:Account
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var sp:SocketPool
@@ -47,41 +47,38 @@ struct NotificationsView: View {
                     TabButton(action: {
                         withAnimation {
                             tab = "Posts"
+                            nm.unreadMentions = 0
                         }
-                    }, title: "Posts", selected: tab == "Posts")
+                    }, title: "Posts", selected: tab == "Posts", unread: nm.unreadMentions)
                     
                     TabButton(action: {
                         withAnimation {
                             tab = "Reactions"
+                            nm.unreadReactions = 0
                         }
-                    }, title: "Reactions", selected: tab == "Reactions")
+                    }, title: "Reactions", selected: tab == "Reactions", unread: nm.unreadReactions)
                     
                     TabButton(action: {
                         withAnimation {
                             tab = "Zaps"
+                            nm.unreadZaps = 0
                         }
-                    }, title: "Zaps", selected: tab == "Zaps")
+                    }, title: "Zaps", selected: tab == "Zaps", unread: nm.unreadZaps)
                 }
                 
                 switch (tab) {
                     case "Posts":
-                        NotificationsNotes(pubkey: ns.account!.publicKey, mutedRootIds: ns.account?.mutedRootIds_ ?? [], blockedPubkeys: ns.account?.blockedPubkeys_ ?? [], context: viewContext) { creationDate in
-                            if (creationDate > account.lastNotificationDate) {
-                                account.lastNotificationDate = creationDate
-                            }
-                        }
+                        NotificationsPosts(pubkey: account.publicKey, mutedRootIds: account.mutedRootIds_, blockedPubkeys: account.blockedPubkeys_, context: viewContext, onAppear: saveLastSeenPost)
+                            .equatable()
+                            .padding(.horizontal, 10)
                     case "Reactions":
-                        NotificationsReactions(pubkey: ns.account!.publicKey, blockedPubkeys: ns.account?.blockedPubkeys_ ?? [], context: viewContext) { creationDate in
-                            if (creationDate > account.lastNotificationDate) {
-                                account.lastNotificationDate = creationDate
-                            }
-                        }
+                        NotificationsReactions(pubkey: account.publicKey, blockedPubkeys: account.blockedPubkeys_, context: viewContext, onAppear: saveLastSeenReaction)
+                            .equatable()
+                            .padding(.horizontal, 10)
                     case "Zaps":
-                        NotificationsZaps(pubkey: ns.account!.publicKey, context: viewContext) { creationDate in
-                            if (creationDate > account.lastNotificationDate) {
-                                account.lastNotificationDate = creationDate
-                            }
-                        }
+                        NotificationsZaps(pubkey: account.publicKey, blockedPubkeys: account.blockedPubkeys_, context: viewContext, onAppear: saveLastSeenZap)
+                            .equatable()
+                            .padding(.horizontal, 10)
                     default:
                         EmptyView()
                 }
@@ -94,6 +91,30 @@ struct NotificationsView: View {
         .navigationTitle(tab)
         .navigationBarHidden(true)
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            nm.unreadMentions = 0
+        }
+    }
+    
+    func saveLastSeenPost(_ insertedAt:Date) {
+//        if (insertedAt > lst.lastSeenPostInsertedAt ?? Date.init(timeIntervalSince1970: 0)) {
+//            lst.lastSeenPostInsertedAt = insertedAt
+//            nm.saveContext.send()
+//        }
+    }
+    
+    func saveLastSeenReaction(_ insertedAt:Date) {
+//        if (insertedAt > lst.lastSeenReactionInsertedAt ?? Date.init(timeIntervalSince1970: 0)) {
+//            lst.lastSeenReactionInsertedAt = insertedAt
+//            nm.saveContext.send()
+//        }
+    }
+    
+    func saveLastSeenZap(_ insertedAt:Date) {
+//        if (insertedAt > lst.lastSeenZapInsertedAt ?? Date.init(timeIntervalSince1970: 0)) {
+//            lst.lastSeenZapInsertedAt = insertedAt
+//            nm.saveContext.send()
+//        }
     }
 }
 

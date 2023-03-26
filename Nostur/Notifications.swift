@@ -103,4 +103,20 @@ extension Notification.Name {
     static var updateUnreadCount: Notification.Name {
         return Notification.Name("updateUnreadCount")
     }
+    
+    static var endOnboarding: Notification.Name {
+        return Notification.Name("endOnboarding")
+    }
+    
+    static var updateNotificationsCount: Notification.Name {
+        return Notification.Name("updateNotificationsCount")
+    }
+    
+    static var updateDMsCount: Notification.Name {
+        return Notification.Name("updateDMsCount")
+    }
+    
+    static var newPostsForView: Notification.Name {
+        return Notification.Name("newPostsForView")
+    }
 }

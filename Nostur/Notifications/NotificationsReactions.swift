@@ -10,15 +10,21 @@ import CoreData
 
 // NIP-25: The last p tag MUST be the pubkey of the event being reacted to.
 // TODO: Maybe when performance problems: store lastE + lasteE in Events table
-struct NotificationsReactions: View {
-
+struct NotificationsReactions: View, Equatable {
+    
+    static func == (lhs: NotificationsReactions, rhs: NotificationsReactions) -> Bool {
+        lhs.pubkey == rhs.pubkey
+        && lhs.blockedPubkeys == rhs.blockedPubkeys
+    }
+    
     let pubkey:String
-//    let FETCH_LIMIT = 1000
+    let blockedPubkeys:[String]
+    let FETCH_LIMIT = 300
     let sp:SocketPool = .shared
     let nav:NavigationModel = .shared
     @EnvironmentObject var ns:NosturState
     @Environment(\.managedObjectContext) var viewContext
-    var onAppear:(Int64) -> ()
+    var onAppear:(Date) -> ()
     
     @FetchRequest
     var reactions:FetchedResults<Event>
@@ -26,7 +32,7 @@ struct NotificationsReactions: View {
     var myNotesReactedTo:[Event] {
         
         var sortingDict:[Event: Int64] = [:] // Event and most recent reaction created_At
-
+        
         for reaction in reactions {
             guard let reactionTo = reaction.reactionTo else { continue }
             if (sortingDict.keys.contains(reactionTo)) {
@@ -49,40 +55,43 @@ struct NotificationsReactions: View {
         reactions.compactMap {  $0.reactionTo == note ? $0 : nil }
     }
     
-    init(pubkey:String, blockedPubkeys:[String], context:NSManagedObjectContext, onAppear: @escaping (Int64) -> ()) {
+    init(pubkey:String, blockedPubkeys:[String], context:NSManagedObjectContext, onAppear: @escaping (Date) -> ()) {
         self.pubkey = pubkey
+        self.blockedPubkeys = blockedPubkeys
         self.onAppear = onAppear
-//        le
+        
         let r1 = Event.fetchRequest()
         r1.predicate = NSPredicate(format: "NOT pubkey IN %@ AND kind == 7 AND reactionTo.contact.pubkey == %@", blockedPubkeys, pubkey)
-//        r1.fetchLimit = FETCH_LIMIT
+        r1.fetchLimit = FETCH_LIMIT
         r1.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         let oldestCreatedAt = (try? context.fetch(r1).last?.created_at) ?? 0
         
         let r2 = Event.fetchRequest()
-        r2.predicate = NSPredicate(format: "NOT pubkey IN %@ AND created_at >= %i AND kind == 7 AND reactionTo.contact.pubkey == %@", blockedPubkeys, oldestCreatedAt, pubkey)
-//        r2.fetchLimit = FETCH_LIMIT
+        r2.predicate = NSPredicate(format:
+                                    "NOT pubkey IN %@ " +
+                                   "AND created_at >= %i " +
+                                   "AND kind == 7 " +
+                                   "AND reactionTo.contact.pubkey == %@",
+                                   blockedPubkeys + [pubkey],
+                                   oldestCreatedAt,
+                                   pubkey)
+        r2.fetchLimit = FETCH_LIMIT
         r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         _reactions = FetchRequest(fetchRequest: r2)
     }
     
     var body: some View {
-        let _ = print("🧨🧨🧨🧨🧨  NOTIFICATONS REACTIONS 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         let _ = Self._printChanges()
         VStack {
+            Text("my vPosts: \(myNotesReactedToAsVPosts.count), reactions: \(reactions.count)")
             List {
                 Section {
                     ForEach(myNotesReactedToAsVPosts) { vPost in
                         VStack(alignment:.leading, spacing: 3) {
                             ReactionsForThisNote(reactions:reactionsForNote(vPost.event), onAppear: self.onAppear)
-//                            Text("vPost.post.id \(vPost.ev.id.prefix(10).description)")
-//                            Text("vPost.post.firstQuoteId \(vPost.post.firstQuoteId?.prefix(10).description ?? "")")
-//                            Text("vPost.firstQuoteObjectId \(vPost.firstQuoteObjectId?.description.prefix(10).description ?? "")")
-//                            Text("vPost.firstQuoteEvent.id \(vPost.firstQuoteEvent?.id.prefix(10).description ?? "")")
-                            Divider()
                             NoteMinimalContentView(vPost: vPost)
                         }
-                        .padding()
+                        .padding(.vertical, 10)
                         .listRowInsets(EdgeInsets())
                         .onTapGesture {
                             nav.navigateTo(vPost)
@@ -99,12 +108,17 @@ struct NotificationsReactions: View {
                         .tint(.accentColor)
                         Spacer()
                     }
+                    .padding(.vertical, 10)
                     .listRowInsets(EdgeInsets())
                 }
             }
             .listStyle(.plain)
             .onAppear {
                 fetchReactions()
+                if let first = reactions.first {
+                    ns.account?.lastSeenReactionCreatedAt = first.created_at
+                }
+                DataProvider.shared().save()
             }
         }
     }
@@ -132,20 +146,20 @@ struct NotificationsReactions: View {
             since: NTimestamp(timestamp: Int(reactions.first?.created_at ?? 0)))
         
         print(req)
-//        sp.sendMessage(
-//            ClientMessage(type: .REQ,
-//                          message: req
-//                         )
-//        )
+        //        sp.sendMessage(
+        //            ClientMessage(type: .REQ,
+        //                          message: req
+        //                         )
+        //        )
     }
 }
 
 struct ReactionsForThisNote: View {
     var reactions:[Event]
     @Environment(\.managedObjectContext) var viewContext
-    var onAppear:(Int64) -> ()
+    var onAppear:(Date) -> ()
     
-    var withoutDuplicates:[Event] { // Author may accidentally like multiple times 
+    var withoutDuplicates:[Event] { // Author may accidentally like multiple times
         reactions
             .reduce(into: [String: Event]()) { result, event in
                 result[event.pubkey] = event
@@ -160,7 +174,7 @@ struct ReactionsForThisNote: View {
                         PFP(pubkey: reactions[index].pubkey, pictureUrl: reactions[index].contact?.picture)
                             .id(reactions[index].id)
                             .onAppear {
-                                onAppear(reactions[index].created_at)
+                                onAppear(reactions[index].insertedAt)
                             }
                             .zIndex(-Double(index))
                         Text(reactions[index].content == "+" ? "❤️" : reactions[index].content ?? "❤️")
@@ -209,6 +223,6 @@ struct NotificationsV_Previews: PreviewProvider {
         NotificationsReactions(pubkey: pubkey, blockedPubkeys: [], context: EventsProvider.preview.container.viewContext) { _ in
             
         }
-            .withPreviewEnvironment()
+        .withPreviewEnvironment()
     }
 }

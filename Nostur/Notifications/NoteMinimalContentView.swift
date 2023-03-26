@@ -13,6 +13,7 @@ struct NoteMinimalContentView: View {
     @Environment(\.managedObjectContext) var viewContext
     private let sp:SocketPool = .shared
     let vPost:VPost
+    @ObservedObject var event:Event
     let lineLimit:Int
     
     enum type {
@@ -26,6 +27,7 @@ struct NoteMinimalContentView: View {
     
     init(vPost:VPost, hideFooter:Bool = false, lineLimit:Int = 0) {
         self.vPost = vPost
+        self.event = vPost.event
         self.lineLimit = lineLimit
 //        if vPost.plainText.prefix(4).lowercased() == "lnbc" && Invoice.fromStr(s: vPost.plainText).getValue() != nil {
 //            self.type = .lightningInvoice
@@ -57,12 +59,12 @@ struct NoteMinimalContentView: View {
                             MinimalNoteTextRenderView(vPost: vPost, lineLimit: lineLimit)
                     }
                     
-                    if (vPost.event.firstQuote != nil && vPost.event.firstQuoteId != nil) {
-                        MinimalQuotedNoteFragment(vPost: vPost.event.firstQuote!.toVPost())
+                    if (event.firstQuote != nil && event.firstQuoteId != nil) {
+                        MinimalQuotedNoteFragment(vPost: event.firstQuote!.toVPost())
                     }
-                    else if (vPost.event.firstQuote == nil && vPost.event.firstQuoteId != nil) {
+                    else if (event.firstQuote == nil && event.firstQuoteId != nil) {
                         CenteredProgressView().onAppear {
-                            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: vPost.event.firstQuoteId!)))
+                            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.firstQuoteId!)))
                         }
                     }
                 }

@@ -1,0 +1,28 @@
+//
+//  Account+Notifications.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 23/03/2023.
+//
+
+import Foundation
+import CoreData
+
+extension Account {
+    @NSManaged public var lastSeenPostCreatedAt:Int64
+    @NSManaged public var lastSeenReactionCreatedAt:Int64
+    @NSManaged public var lastSeenZapCreatedAt:Int64
+    @NSManaged public var lastSeenDMCreatedAt:Int64
+    @NSManaged public var lastSeenDMRequestCreatedAt:Int64
+    
+//    public override func willChangeValue(forKey key: String) {
+//        // Don't refresh views when these properties change. Not needed.
+//        if !["lastSeenPostInsertedAt",
+//             "lastSeenReactionInsertedAt",
+//             "lastSeenZapInsertedAt",
+//             "lastSeenDMInsertedAt"].contains(key) {
+//            super.willChangeValue(forKey: key)
+//        }
+//    }
+}
+
