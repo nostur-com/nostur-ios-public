@@ -281,9 +281,9 @@ extension Contact : Identifiable {
     }
 
     // Create dummy Contact if not already exists.
-    static func ensureContactsCreated(event:NEvent, context:NSManagedObjectContext) -> [Contact] {
+    static func ensureContactsCreated(event:NEvent, context:NSManagedObjectContext, limit:Int = 25) -> [Contact] {
         var contactsInThisEvent:[Contact] = []
-        for pTag in event.pTags().prefix(25) { // sanity... limit 25
+        for pTag in event.pTags().prefix(limit) { // sanity... limit 25
             let contact = Contact.fetchByPubkey(pTag, context: context)
             guard contact == nil else {
                 contactsInThisEvent.append(contact!)

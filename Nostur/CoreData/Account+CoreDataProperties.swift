@@ -255,7 +255,7 @@ extension Account : Identifiable {
             return
         }
         
-        let contacts = Contact.ensureContactsCreated(event: kind3.toNEvent(), context: context)
+        let contacts = Contact.ensureContactsCreated(event: kind3.toNEvent(), context: context, limit:999)
         
         // if read only account, import follows. Or pendingFirstContactsFetch
         if (contacts.count > 0) {
@@ -273,7 +273,7 @@ extension Account : Identifiable {
         fr.predicate = NSPredicate(format: "publicKey == %@", event.publicKey)
         if let account = try? context.fetch(fr).first {
             
-            let contacts = Contact.ensureContactsCreated(event: event, context: context)
+            let contacts = Contact.ensureContactsCreated(event: event, context: context, limit: 999)
 
             if (forceOverwrite || account.privateKey == nil && contacts.count > 0) {
                 
