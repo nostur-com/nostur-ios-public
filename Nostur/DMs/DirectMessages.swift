@@ -20,14 +20,82 @@ struct DirectMessagesContainer: View {
     }
 }
 
+func computeOnlyMostRecentAll(sent:[Event],received:[Event],pubkey:String) -> [String: ([Event], Bool, Int, Int64)] {
+    var recent = [String: ([Event], Bool, Int, Int64)]() // dict: [pubkey: [dm], isAccepted, unreadCount, rootDM.createdAt]
+    
+    // combine all dms, initiated by me and others, and sort them
+    let allDms = (sent + received)
+        .sorted(by: { $0.created_at < $1.created_at }) // Root DMs will be index 0
+    
+    
+    for dm in allDms {
+        if dm.pubkey == pubkey { // dm by me (take event.firstP)
+            if let contactPubkey = dm.firstP() {
+                if recent[contactPubkey] == nil {
+                    recent[contactPubkey] = ([dm], true, 0, dm.created_at) // sent so consider accepted
+                }
+                else {
+                    let dms = recent[contactPubkey]!.0 + [dm]
+                    let unread = recent[contactPubkey]!.2 + 0 // +0 because sent by me.
+                    recent[contactPubkey] = (dms, true, unread, recent[contactPubkey]!.3) // maybe this dict key was received before, but now also responded so consider accepted
+                }
+            }
+        }
+        else { // dm by someone else (take event.pubkey)
+            if recent[dm.pubkey] == nil {
+                let count = dm.created_at > dm.lastSeenDMCreatedAt ? 1 : 0
+                recent[dm.pubkey] = ([dm], dm.dmAccepted, count, dm.created_at) // The first, rootDM, controls isAccepted or not
+                                                             // check rootDM.lastSeenUnreadDM for +1 or +0
+            }
+            else {
+                let current = recent[dm.pubkey]
+                let count = dm.created_at > current?.0.first?.lastSeenDMCreatedAt ?? 0 ? 1 : 0
+                let dms = current!.0 + [dm]
+                let unread = current!.2 + count // check rootDM.lastSeenUnreadDM for +1 or +0
+                let isAccepted = current!.1 || (current?.0.first?.dmAccepted ?? false)
+                recent[dm.pubkey] = (dms, isAccepted, unread, recent[dm.pubkey]!.3)
+            }
+        }
+    }
+    
+    return recent
+}
+
+func computeOnlyMostRecentAccepted(_ onlyMostRecentAll:[String: ([Event], Bool, Int, Int64)]) -> [(Event, Int)] {
+    onlyMostRecentAll
+        .filter { $0.value.1 == true }
+        .compactMap {
+            // Take newest message from the conversation and unread count
+            if let newestMessage = $0.value.0.sorted(by: { $0.created_at > $1.created_at }).first {
+                return (
+                            newestMessage, // newest message
+                            $0.value.2 // unread count
+                       )
+            }
+            else {
+                return nil
+            }
+        }
+        .sorted(by: { $0.0.created_at > $1.0.created_at }) // not sure if need to sort again?
+}
+
+func computeOnlyMostRecentRequests(_ onlyMostRecentAll:[String: ([Event], Bool, Int, Int64)]) -> [(Event, Int64)] {
+    onlyMostRecentAll
+        .filter { $0.value.1 == false }
+        .compactMap {
+            if let first = $0.value.0.sorted(by: { $0.created_at > $1.created_at }).first {
+                return (first, $0.value.3)
+            }
+            return nil
+        }
+        .sorted(by: { $0.0.created_at > $1.0.created_at }) // not sure if need to sort again?
+}
+
 struct DirectMessages: View {
     @ObservedObject var nm:NotificationsManager = .shared
     @EnvironmentObject var nav:NavigationModel
     @EnvironmentObject var ns:NosturState
     let pubkey:String
-    
-//    @FetchRequest
-//    var receivedAccepted:FetchedResults<Event>
     
     @FetchRequest
     var received:FetchedResults<Event>
@@ -38,85 +106,15 @@ struct DirectMessages: View {
     // TODO: Use Algorithms, and .chunked for performance? chain?
     var onlyMostRecentAll:[String: ([Event], Bool, Int, Int64)] { // [pubkey: [dm], isAccepted, unreadCount, rootDM.createdAt]
         // The final list of contacts (key) and latest dm (value)
-        var recent = [String: ([Event], Bool, Int, Int64)]() // dict: [pubkey: [dm], isAccepted, unreadCount, rootDM.createdAt]
-        
-        // combine all dms, initiated by me and others, and sort them
-        let allDms = (Array(sent) + Array(received))
-            .sorted(by: { $0.created_at < $1.created_at }) // Root DMs will be index 0
-        
-        
-        for dm in allDms {
-            if dm.pubkey == self.pubkey { // dm by me (take event.firstP)
-                if let contactPubkey = dm.firstP() {
-                    if recent[contactPubkey] == nil {
-                        recent[contactPubkey] = ([dm], true, 0, dm.created_at) // sent so consider accepted
-                    }
-                    else {
-                        let dms = recent[contactPubkey]!.0 + [dm]
-                        let unread = recent[contactPubkey]!.2 + 0 // +0 because sent by me.
-                        recent[contactPubkey] = (dms, true, unread, recent[contactPubkey]!.3) // maybe this dict key was received before, but now also responded so consider accepted
-                    }
-                }
-            }
-            else { // dm by someone else (take event.pubkey)
-                if recent[dm.pubkey] == nil {
-                    let count = dm.created_at > dm.lastSeenDMCreatedAt ? 1 : 0
-                    recent[dm.pubkey] = ([dm], dm.dmAccepted, count, dm.created_at) // The first, rootDM, controls isAccepted or not
-                                                                 // TODO: check rootDM.lastSeenUnreadDM for +1 or +0
-                }
-                else {
-                    let count = dm.created_at > recent[dm.pubkey]?.0.first?.lastSeenDMCreatedAt ?? 0 ? 1 : 0
-                    let dms = recent[dm.pubkey]!.0 + [dm]
-                    let unread = recent[dm.pubkey]!.2 + count // TODO: check rootDM.lastSeenUnreadDM for +1 or +0
-                    recent[dm.pubkey] = (dms, recent[dm.pubkey]?.1 ?? false, unread, recent[dm.pubkey]!.3)
-                }
-            }
-        }
-        
-        return recent
+        return computeOnlyMostRecentAll(sent: Array(sent), received: Array(received), pubkey: pubkey)
     }
     
     var onlyMostRecentAccepted:[(Event, Int)] {
-        onlyMostRecentAll
-            .filter { $0.value.1 == true }
-            .compactMap {
-                // Take newest message from the conversation and unread count
-                if let newestMessage = $0.value.0.sorted(by: { $0.created_at > $1.created_at }).first {
-                    return (
-                                newestMessage, // newest message
-                                $0.value.2 // unread count
-                           )
-                }
-                else {
-                    return nil
-                }
-            }
-            .sorted(by: { $0.0.created_at > $1.0.created_at }) // not sure if need to sort again?
+        return computeOnlyMostRecentAccepted(onlyMostRecentAll)
     }
     
     var onlyMostRecentRequests:[(Event, Int64)] {
-        onlyMostRecentAll
-            .filter { $0.value.1 == false }
-            .compactMap {
-                if let first = $0.value.0.sorted(by: { $0.created_at > $1.created_at }).first {
-                    return (first, $0.value.3)
-                }
-                return nil
-            }
-            .sorted(by: { $0.0.created_at > $1.0.created_at }) // not sure if need to sort again?
-//            .compactMap {
-//                // Take newest message from the conversation and unread count
-//                if let newestMessage = $0.value.0.sorted(by: { $0.created_at > $1.created_at }).first {
-//                    return (
-//                                newestMessage, // newest message
-//                                $0.value.2 // unread count
-//                           )
-//                }
-//                else {
-//                    return nil
-//                }
-//            }
-//            .sorted(by: { $0.0.created_at > $1.0.created_at }) // not sure if need to sort again?
+        return computeOnlyMostRecentRequests(onlyMostRecentAll)
     }
     
     var onlyMostRecentAcceptedTotalUnread:Int {
@@ -137,64 +135,6 @@ struct DirectMessages: View {
         }
     }
     
-//    var onlyMostRecentRequests:[Event] {
-//        // The final list of contacts (key) and latest dm (value)
-//        var recent = [String: ([Event], Bool)]() // dict: pubkey: (message, isAccepted)
-//
-//        // combine all dms, initiated by me and others, and sort them
-//        let allDms = (Array(sent) + Array(received))
-//            .sorted(by: { $0.created_at < $1.created_at })
-//
-//
-//        for dm in allDms {
-//            if dm.pubkey == self.pubkey { // dm by me (take event.firstP)
-//                if let contactPubkey = dm.firstP() {
-//                    if recent[contactPubkey] == nil {
-//                        recent[contactPubkey] = ([dm], true) // sent so consider accepted
-//                    }
-//                    else {
-//                        let dms = recent[contactPubkey]!.0 + [dm]
-//                        recent[contactPubkey] = (dms, true) // received, but now also responded so consider accepted
-//                    }
-//                }
-//            }
-//            else { // dm by someone else (take event.pubkey)
-//                if recent[dm.pubkey] == nil {
-//                    recent[dm.pubkey] = ([dm], dm.dmAccepted) // The first, rootDM, controls isAccepted or not
-//                }
-//                else {
-//                    let dms = recent[dm.pubkey]!.0 + [dm]
-//                    recent[dm.pubkey] = (dms, recent[dm.pubkey]?.1 ?? false)
-//                }
-//            }
-//        }
-//
-//        return recent
-//            .filter { $0.value.1 == false } // only not accepted
-//            .compactMap { $0.value.0.sorted(by: { $0.created_at > $1.created_at }).first }
-//            .sorted(by: { $0.created_at > $1.created_at }) // not sure if need to sort again?
-//    }
-    
-//    var onlyMostRecentRequests:[Event] {
-//        // The final list of contacts (key) and latest dm (value)
-//        var recent = [String: Event]()
-//
-//        // combine all dms, initiated by me and others, and sort them
-//        let allRequests = receivedNotAccepted
-//            .sorted(by: { $0.created_at > $1.created_at })
-//
-//
-//        for dm in allRequests {
-//            if recent[dm.pubkey] == nil {
-//                recent[dm.pubkey] = dm
-//            }
-//        }
-//
-//        return recent
-//            .map { $0.value }
-//            .sorted(by: { $0.created_at > $1.created_at }) // not sure if need to sort again?
-//    }
-    
     @State var selectedRoot:Event?
     @State var showingNewDM = false
     @State var tab = "Accepted"
@@ -213,12 +153,12 @@ struct DirectMessages: View {
         received.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         _received = FetchRequest(fetchRequest: received)
         
-        let me = Event.fetchRequest()
-        me.predicate = NSPredicate(
+        let sent = Event.fetchRequest()
+        sent.predicate = NSPredicate(
             format: "kind == 4 AND pubkey == %@", pubkey)
-        me.fetchLimit = 500
-        me.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        _sent = FetchRequest(fetchRequest: me)
+        sent.fetchLimit = 500
+        sent.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+        _sent = FetchRequest(fetchRequest: sent)
     }
     
     var body: some View {
@@ -254,11 +194,13 @@ struct DirectMessages: View {
                                 if onlyMostRecentAccepted.count > 0 {
                                     List(onlyMostRecentAccepted, id:\.0) { (dm, unread) in
                                         NavigationLink(value: dm) {
-                                            DMRow(rootDM: dm, pubkey: pubkey, unread: unread)
-                                              
+                                            DMRow(recentDM: dm, pubkey: pubkey, unread: unread)
                                         }
                                     }
                                     .listStyle(.plain)
+                                    .onAppear {
+                                        sendNotification(.updateDMsCount, requestsTotalUnread + onlyMostRecentAcceptedTotalUnread)
+                                    }
                                 }
                                 else {
                                     Text("You have not received any messages")
@@ -268,7 +210,7 @@ struct DirectMessages: View {
                                 if onlyMostRecentRequests.count > 0 {
                                     List(onlyMostRecentRequests, id:\.0) { (dm, rootDMcreatedAt) in
                                         NavigationLink(value: dm) {
-                                            DMRow(rootDM: dm, pubkey: pubkey)
+                                            DMRow(recentDM: dm, pubkey: pubkey)
                                         }
                                     }
                                     .listStyle(.plain)
@@ -297,7 +239,7 @@ struct DirectMessages: View {
                 }
             }
             .navigationDestination(for: Event.self) { rootDM in
-                DMConversationView(rootDM: rootDM, pubkey: self.pubkey)
+                DMConversationView(recentDM: rootDM, pubkey: self.pubkey)
             }
             .navigationTitle("Messages")
             .navigationBarTitleDisplayMode(.inline)
@@ -318,32 +260,33 @@ struct DirectMessages: View {
         guard let latestRootDMcreatedAt = onlyMostRecentRequests.map({ $0.1 }).max() else { return }
         
         account.lastSeenDMRequestCreatedAt = latestRootDMcreatedAt
+        sendNotification(.updateDMsCount, requestsTotalUnread + onlyMostRecentAcceptedTotalUnread)
         // view context save here?? or on close / app background..
     }
 }
 
 struct DMRow: View {
-    @ObservedObject var rootDM:Event
+    @ObservedObject var recentDM:Event
     let pubkey:String // own account pubkey
     var unread:Int?
     
     var contact:Contact? {
         // contact is in .pubkey or in .firstP (depending on incoming/outgoing DM.)
-        if rootDM.pubkey == self.pubkey, let firstP = rootDM.firstP() {
-            return rootDM.contacts?.first(where: { $0.pubkey == firstP })
+        if recentDM.pubkey == self.pubkey, let firstP = recentDM.firstP() {
+            return recentDM.contacts?.first(where: { $0.pubkey == firstP })
         }
         else {
-            return rootDM.contact
+            return recentDM.contact
         }
     }
     
     var contactPubkey:String {
         // pubkey is .pubkey or .firstP (depending on incoming/outgoing DM.)
-        if rootDM.pubkey == self.pubkey, let firstP = rootDM.firstP() {
+        if recentDM.pubkey == self.pubkey, let firstP = recentDM.firstP() {
             return firstP
         }
         else {
-            return rootDM.pubkey
+            return recentDM.pubkey
         }
     }
     
@@ -371,7 +314,7 @@ struct DMRow: View {
                             Group {
                                 Text("@\(contact?.username ?? String(npub(contactPubkey).prefix(11)))").layoutPriority(1)
                                 Text(" · ") //
-                                Ago(rootDM.date).layoutPriority(1) //
+                                Ago(recentDM.date).layoutPriority(1) //
                             }
                             .foregroundColor(.secondary)
                             .lineLimit(1)
@@ -379,7 +322,7 @@ struct DMRow: View {
                     }.multilineTextAlignment(.leading)
                     Spacer()
                 }
-                Text(rootDM.noteText).foregroundColor(.primary)
+                Text(recentDM.noteText).foregroundColor(.primary)
                     .lineLimit(3)
                     .multilineTextAlignment(.leading)
             }

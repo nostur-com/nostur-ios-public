@@ -35,8 +35,6 @@ extension Account {
     
     @NSManaged public var likes: Set<Event>?
     @NSManaged public var reposts: Set<Event>?
-    
-    @NSManaged public var lastNotificationDate: Int64
     @NSManaged public var mutedRootIds: String? // Serialized
     @NSManaged public var blockedPubkeys: String? // Serialized
     

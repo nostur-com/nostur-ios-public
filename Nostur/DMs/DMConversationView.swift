@@ -12,7 +12,7 @@ struct DMConversationView: View {
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var up:Unpublisher
     let nav:NavigationModel = .shared
-    @ObservedObject var rootDM:Event
+    let recentDM:Event
     let pubkey:String
     let theirPubkey:String?
     let dateHeaderFormatter:DateFormatter
@@ -25,17 +25,16 @@ struct DMConversationView: View {
     @FetchRequest
     var mine:FetchedResults<Event>
     
-    var messagesVPosts:[VPost] {
-        (Array(theirs) + Array(mine))
+    var messages:[Event] {
+        chain(theirs,mine)
             .sorted(by: { $0.created_at < $1.created_at })
-            .map(VPostTransformer.shared.toVPost)
     }
     
-    var messagesByDay:[Date: [VPost]] {
+    var messagesByDay:[Date: [Event]] {
         let calendar = Calendar.current
 
-        return Dictionary(grouping: messagesVPosts) { vPost in
-            calendar.startOfDay(for: vPost.event.date)
+        return Dictionary(grouping: messages) { event in
+            calendar.startOfDay(for: event.date)
         }
     }
     
@@ -59,21 +58,25 @@ struct DMConversationView: View {
         }
     }
     
+    var rootDM:Event {
+        allMessagesSorted.first!
+    }
+    
     var isAccepted:Bool {
         // if possible infer accepted by checking if we responded (mine)
-        (contact?.dmAccepted ?? false) || (mine.count > 0)
+        rootDM.dmAccepted || (mine.count > 0)
     }
     
     var allMessagesSorted:[Event] {
         chain(theirs, mine).sorted(by: { $0.created_at < $1.created_at })
     }
     
-    init(rootDM:Event, pubkey:String) {
+    init(recentDM:Event, pubkey:String) {
         self.pubkey = pubkey
-        self.rootDM = rootDM
-        self.theirPubkey = rootDM.pubkey != pubkey
-            ? rootDM.pubkey
-            : rootDM.firstP()
+        self.recentDM = recentDM
+        self.theirPubkey = recentDM.pubkey != pubkey
+            ? recentDM.pubkey
+            : recentDM.firstP()
         self.dateHeaderFormatter = DateFormatter()
         self.dateHeaderFormatter.dateStyle = .short
 
@@ -105,21 +108,13 @@ struct DMConversationView: View {
                                         Text(dateHeaderFormatter.string(from: date))
                                             .font(.caption).foregroundColor(.gray)
                                             .padding(.top, 15)
-                                        ForEach(messages.sorted(by: { $0.event.created_at < $1.event.created_at })) { message in
-                                            BalloonView(message: message.event.noteText,
-                                                        isSentByCurrentUser: message.event.pubkey == pubkey)
-                                            .id(message.event.id)
-                                            .onTapGesture {
-                                                UIPasteboard.general.string = message.event.toNEvent().eventJson()
-                                                // fix contacts
-                                                let vc = DataProvider.shared().viewContext
-                                                let cs = Contact.ensureContactsCreated(event: message.event.toNEvent(), context: vc)
-                                                message.event.addToContacts(NSSet(array: cs))
-                                                do {
-                                                    try vc.save()
-                                                }
-                                                catch {
-                                                    print(error)
+                                        LazyVStack {
+                                            ForEach(messages.sorted(by: { $0.created_at < $1.created_at })) { event in
+                                                BalloonView(message: event.noteText,
+                                                            isSentByCurrentUser: event.pubkey == pubkey)
+                                                .id(event.id)
+                                                .onTapGesture {
+                                                    UIPasteboard.general.string = event.toNEvent().eventJson()
                                                 }
                                             }
                                         }
@@ -238,19 +233,8 @@ struct DMConversationView: View {
                                     else {
                                         Divider()
                                         Button("Accept message request") {
-                                            if let contact = contact {
-                                                contact.dmAccepted = true // Save context here or onAppclose..
-                                            }
-                                            else {
-                                                var newContact = Contact(context: DataProvider.shared().viewContext)
-                                                newContact.pubkey = contactPubkey
-                                                newContact.metadata_created_at = 0
-                                                newContact.updated_at = 0
-                                                newContact.dmAccepted = true
-                                                // objectWillChange?
-                                                rootDM.contact = newContact
-                                                // sp fetch info..
-                                            }
+                                            rootDM.objectWillChange.send()
+                                            rootDM.dmAccepted = true
                                         }
                                         .buttonStyle(.borderedProminent)
                                     }
@@ -260,7 +244,7 @@ struct DMConversationView: View {
                         }
                         .onAppear {
                             guard let lastDay = messagesByDay.keys.sorted(by: { $0 < $1 }).last else { return }
-                            guard let lastMessage = messagesByDay[lastDay]?.sorted(by: { $0.event.created_at < $1.event.created_at }).last else { return }
+                            guard let lastMessage = messagesByDay[lastDay]?.sorted(by: { $0.created_at < $1.created_at }).last else { return }
                                 
                             proxy.scrollTo(lastMessage.id)
                         }
@@ -276,7 +260,25 @@ struct DMConversationView: View {
                                 root.objectWillChange.send()
                                 root.lastSeenDMCreatedAt = allMessagesSorted.last!.created_at
                                 // Save context here? or on go to background
-                                DataProvider.shared().save()
+//                                DataProvider.shared().save()
+                            }
+                        }
+                        .onAppear {
+                            // fix rootDM contacts missing?
+                            // fix contacts
+                            if let root = allMessagesSorted.first {
+                                guard root.contacts?.count ?? 0 == 0 else { return }
+                                
+                                let vc = DataProvider.shared().viewContext
+                                let cs = Contact.ensureContactsCreated(event: root.toNEvent(), context: vc)
+                                root.objectWillChange.send()
+                                root.addToContacts(NSSet(array: cs))
+                                do {
+                                    try vc.save()
+                                }
+                                catch {
+                                    print(error)
+                                }
                             }
                         }
                     }
@@ -309,10 +311,10 @@ struct Previews_DMConversationView_Previews: PreviewProvider {
     static var previews: some View {
         
         let preston = "85080d3bad70ccdcd7f74c29a44f55bb85cbcd3dd0cbb957da1d215bdb931204"
-        let rootDM = PreviewFetcher.fetchEvent("96500cec51f30a7bee4bf15984f574550064913ec8d00e164e9efad34a989236")
-        if let root = rootDM {
+        let recentDM = PreviewFetcher.fetchEvent("96500cec51f30a7bee4bf15984f574550064913ec8d00e164e9efad34a989236")
+        if let recent = recentDM {
             NavigationStack {
-                DMConversationView(rootDM: root, pubkey: preston)
+                DMConversationView(recentDM: recent, pubkey: preston)
                     .withPreviewEnvironment()
             }
         }

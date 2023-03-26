@@ -126,7 +126,7 @@ struct RequestMessage {
     }
     
     // Get all events where [pubkeys] are mentioned (in p tag)
-    static func getMentions(pubkeys:[String], kinds:[Int] = [1,7,9735], limit:Int = 500, subscriptionId:String? = nil, since:NTimestamp? = nil, until:NTimestamp? = nil) -> String {
+    static func getMentions(pubkeys:[String], kinds:[Int] = [1,7,9735,4], limit:Int = 500, subscriptionId:String? = nil, since:NTimestamp? = nil, until:NTimestamp? = nil) -> String {
         
         if since != nil {
             return """

@@ -7,7 +7,10 @@
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="display_name" attributeType="String" defaultValueString=""/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
-        <attribute name="lastNotificationDate" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="lastSeenDMRequestCreatedAt" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="lastSeenPostCreatedAt" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="lastSeenReactionCreatedAt" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="lastSeenZapCreatedAt" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="lud06" attributeType="String" defaultValueString=""/>
         <attribute name="lud16" attributeType="String" defaultValueString=""/>
         <attribute name="mutedRootIds" optional="YES" attributeType="String" customClassName="[String]"/>
@@ -48,11 +51,13 @@
     <entity name="Event" representedClassName=".Event" elementID="mentionsCount" syncable="YES">
         <attribute name="content" optional="YES" attributeType="String"/>
         <attribute name="created_at" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="dmAccepted" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="firstQuoteId" optional="YES" attributeType="String"/>
         <attribute name="id" attributeType="String"/>
         <attribute name="insertedAt" attributeType="Date" defaultDateTimeInterval="-978332400" usesScalarValueType="NO"/>
         <attribute name="isRepost" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="kind" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="lastSeenDMCreatedAt" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="liked" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="likesCount" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES" elementID="likesCount"/>
         <attribute name="mentionsCount" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES" elementID="mentionsCount"/>
@@ -92,7 +97,7 @@
         <attribute name="listId" attributeType="String" defaultValueString="ERRORERRORERRORERROR"/>
         <attribute name="mostRecentAppearedId" optional="YES" attributeType="String"/>
         <attribute name="pubkey" attributeType="String"/>
-        <attribute name="unreadCount" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="unreadCount" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="updatedAt" attributeType="Date" defaultDateTimeInterval="-978332400" usesScalarValueType="NO"/>
     </entity>
     <entity name="NosturList" representedClassName=".NosturList" syncable="YES">

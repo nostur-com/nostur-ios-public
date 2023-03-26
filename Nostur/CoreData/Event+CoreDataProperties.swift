@@ -199,7 +199,7 @@ extension Event {
     var noteText: String {
         if kind == 4 {
             guard let account = NosturState.shared.account, let pk = account.privateKey, let encrypted = content else {
-                return "(Encrypted content)"
+                return convertToHieroglyphs(text: "(Encrypted content)")
             }
             if pubkey == account.publicKey, let firstP = self.firstP() {
                 return NKeys.decryptDirectMessageContent(withPrivateKey: pk, pubkey: firstP, content: encrypted) ?? "(Encrypted content)"
@@ -548,6 +548,7 @@ extension Event {
         let request = NSFetchRequest<Event>(entityName: "Event")
         request.entity = Event.entity()
         request.predicate = NSPredicate(format: "id == %@", id)
+        request.resultType = .countResultType
         request.fetchLimit = 1
         request.includesPropertyValues = false
 
@@ -758,16 +759,18 @@ extension Event {
             // Maybe slow??
             let contacts = Contact.ensureContactsCreated(event: event, context: context)
 //            savedEvent.objectWillChange.send()
-            for contact in contacts {
-                savedEvent.addToContacts(contact)
-            }
+            savedEvent.addToContacts(NSSet(array: contacts))
+//            for contact in contacts {
+//                savedEvent.addToContacts(contact)
+//            }
         }
         
         if (event.kind == .directMessage) { // needed to fetch contact in DMS: so event.firstP is in event.contacts
             let contacts = Contact.ensureContactsCreated(event: event, context: context)
-            for contact in contacts {
-                savedEvent.addToContacts(contact)
-            }
+            savedEvent.addToContacts(NSSet(array: contacts))
+//            for contact in contacts {
+//                savedEvent.addToContacts(contact)
+//            }
         }
         
         var alreadyCounted = false

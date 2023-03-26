@@ -218,7 +218,7 @@ extension Contact : Identifiable {
                 // TODO: Maybe some event.objectWillChange.send() to relations in active views? Performance?
                 let er = Event.fetchRequest()
                 er.sortDescriptors = []
-                er.predicate = NSPredicate(format: "kind IN {1,6,7,9734} && pubkey == %@", event.publicKey)
+                er.predicate = NSPredicate(format: "kind IN {1,6,7,9734,4} && pubkey == %@", event.publicKey)
                 let contactEvents = Array(try! context.fetch(er))
                 
                 for event in contactEvents {
@@ -228,7 +228,7 @@ extension Contact : Identifiable {
                 
                 // EVENTS.CONTACTS (which come from Event.P tags:
                 let tr = NSFetchRequest<Event>(entityName: "Event")
-                tr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", serializedP(contact.pubkey)) // OPTIMIZATION HACK
+                tr.predicate = NSPredicate(format: "kind IN {1,4} AND tagsSerialized CONTAINS %@", serializedP(contact.pubkey)) // OPTIMIZATION HACK
                 let events = Array(try! context.fetch(tr))
                 
                 
@@ -271,7 +271,7 @@ extension Contact : Identifiable {
             
             // EVENTS.CONTACTS (which come from Event.P tags:
             let tr = NSFetchRequest<Event>(entityName: "Event")
-            tr.predicate = NSPredicate(format: "kind IN {1,6,7,9734} AND tagsSerialized CONTAINS %@", serializedP(contact.pubkey)) // OPTIMIZATION HACK
+            tr.predicate = NSPredicate(format: "kind IN {1,4,6,7,9734} AND tagsSerialized CONTAINS %@", serializedP(contact.pubkey)) // OPTIMIZATION HACK
             let events = Array(try! context.fetch(tr))
             for event in events {
                 event.objectWillChange.send()
