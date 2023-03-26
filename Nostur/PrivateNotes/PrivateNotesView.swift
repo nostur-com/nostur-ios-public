@@ -14,7 +14,6 @@ struct PrivateNotesContainer: View {
     @EnvironmentObject var nav:NavigationModel
     
     var body: some View {
-        let _ = print("🧨🧨🧨🧨🧨 PrivateNotesContainer 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         let _ = Self._printChanges()
         VStack {
             if (ns.account != nil) {
@@ -48,7 +47,6 @@ struct PrivateNotesView: View {
     }
     
     var body: some View {
-        let _ = print("🧨🧨🧨🧨🧨 PrivateNotesView 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         let _ = Self._printChanges()
         VStack {
             HStack {

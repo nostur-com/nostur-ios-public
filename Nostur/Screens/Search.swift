@@ -36,7 +36,6 @@ struct Search: View {
     @EnvironmentObject var nav:NavigationModel
     
     var body: some View {
-        let _ = print("🧨🧨🧨🧨🧨 Search 🧨🧨🧨🧨🧨")
         let _ = Self._printChanges()
         NavigationStack(path: $nav.searchPath) {
             ScrollView {

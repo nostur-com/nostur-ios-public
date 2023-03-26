@@ -42,7 +42,6 @@ struct BadgesIssuedView: View {
     }
     
     var body: some View {
-        let _ = print("🧨🧨🧨🧨🧨 BadgesView 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         let _ = Self._printChanges()
         VStack {
 //            Button { createNewBadgeSheetShown = true } label: { Text("Create new badge") }

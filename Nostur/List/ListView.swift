@@ -36,7 +36,6 @@ struct ListViewContainer: View, Equatable {
     }
     
     var body: some View {
-        let _ = print("🔴🔴🔴🔴 ListViewContainer 🔴🔴🔴🔴")
         let _ = Self._printChanges()
         ZStack {
             ListView(vm:vm, vmState:vm.lvmState)

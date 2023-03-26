@@ -33,7 +33,6 @@ struct BadgeDetailView: View {
     }
     
     var body: some View {
-        let _ = print("🧨🧨🧨🧨🧨 BadgeDetailView 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         let _ = Self._printChanges()
         ScrollView {
             HStack(alignment: .top) {
