@@ -173,7 +173,7 @@ struct TabbedDetailContainer: View {
             }
             Divider().opacity(tm.tabs.count > 0 ? 1 : 0)
             ZStack {
-                VStack{
+                VStack {
                     Spacer()
                     HStack {
                         Spacer()
@@ -192,17 +192,21 @@ struct TabbedDetailContainer: View {
                 ForEach(tm.tabs) { tab in
                     if (tab.vPost != nil) {
                         TabContainer(vPost: tab.vPost!)
-                        .opacity(tm.selected == tab ? 1 : 0)
-                        .id(tab.vPost!.id)
+                            .padding(.horizontal, 10)
+                            .opacity(tm.selected == tab ? 1 : 0)
+                            .id(tab.vPost!.id)
                     }
                     else if (tab.contact != nil) {
                         ProfileView(contact: tab.contact!).opacity(tm.selected == tab ? 1 : 0)
+                            .padding(.horizontal, 10)
                     }
                     else if (tab.notePath != nil) {
                         NoteById(id: tab.notePath!.id).opacity(tm.selected == tab ? 1 : 0)
+                            .padding(.horizontal, 10)
                     }
                     else if (tab.contactPath != nil) {
                         ProfileByPubkey(pubkey: tab.contactPath!.key).opacity(tm.selected == tab ? 1 : 0)
+                            .padding(.horizontal, 10)
                     }
                     else {
                         EmptyView()

@@ -106,11 +106,11 @@ struct NoteMenuView: View {
         } label: {
             Text("···")
                 .fontWeight(.bold)
-                .foregroundColor(.secondary)
+                .foregroundColor(Color.init(red: 113/255, green: 118/255, blue: 123/255))
                 .padding(.top, 0)
                 .padding(.bottom, 5)
                 .padding(.leading, 20)
-                .padding(.trailing, 10)
+//                .padding(.trailing, 10)
             
         }
     }

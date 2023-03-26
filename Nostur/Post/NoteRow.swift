@@ -35,9 +35,11 @@ struct NoteRow: View {
         let _ = Self._printChanges()
         VStack (alignment: .leading) {
             if (event.isRepost) {
-                HStack {
+                HStack(spacing:4) {
                     Image(systemName: "arrow.2.squarepath")
-                    Text("\(vPost.displayName) reposted")
+                        .fontWeight(.bold)
+                        .scaleEffect(0.6)
+                    Text("**\(vPost.displayName) reposted**").font(.subheadline)
                         .onTapGesture {
                             UIPasteboard.general.string = event.toNEvent().eventJson()
                         }
@@ -46,7 +48,7 @@ struct NoteRow: View {
                 .onTapGesture {
                     nav.navigateTo(ContactPath(key: vPost.event.pubkey))
                 }
-                .padding(.leading, 45)
+                .padding(.leading, 30)
             }
             
             // IS REPOST AND ALL DATA IS HERE
@@ -116,10 +118,10 @@ struct NoteRow: View {
         }
         
         var body: some View {
-            HStack(alignment: .top) {
+            HStack(alignment: .top, spacing:10) {
                     VStack {
                         PFP(pubkey: event.pubkey, pictureUrl: event.contact?.picture)
-                            .padding(.horizontal, 10)
+//                            .padding(.horizontal, 10)
                             .onTapGesture {
                                 nav.navigateTo(ContactPath(key: event.pubkey)) // TODO: if vPost.contact navigate with that else by .pubkey
                             }
@@ -127,14 +129,14 @@ struct NoteRow: View {
                     }
                     .contentShape(Rectangle())
                     .onTapGesture { nav.navigateTo(vPost) }
-                    .frame(maxWidth: 70)
+                    .frame(maxWidth: 50)
                     
                     VStack(alignment:.leading, spacing: 0) {// Post container
                         HStack { // name + reply + context menu
                             NoteHeaderView(vPost: vPost)
                                 .padding(.bottom, 5)
                             Spacer()
-                            EventPrivateNoteToggle(event: event)
+//                            EventPrivateNoteToggle(event: event)
                             NoteMenuView(vPost: vPost)
                         }
                         ReplyingToFragmentView(vPost: vPost)
@@ -150,7 +152,7 @@ struct NoteRow: View {
                                             .contentShape(Rectangle())
                                             .onTapGesture { nav.navigateTo(vPost) }
                                     if vPost.imageUrls.count > 0 {
-                                        ImageViewer(imgUrls: vPost.imageUrls, pubkey: vPost.event.pubkey)
+                                        MediaViewer(imgUrls: vPost.imageUrls, pubkey: vPost.event.pubkey)
                                     }
                             }
                             
@@ -228,36 +230,36 @@ struct NoteRow_Previews: PreviewProvider {
         List {
             
 //            Group {
-                if (img0 != nil) {
-                    NoteRow(vPost: img0!)
-                        .listRowInsets(EdgeInsets())
-                }
+//                if (img0 != nil) {
+//                    NoteRow(vPost: img0!)
+//                        .listRowInsets(EdgeInsets())
+//                }
+//
+//                if (img1 != nil) {
+//                    NoteRow(vPost: img1!)
+//                        .listRowInsets(EdgeInsets())
+//                }
+//
+//                if (img2 != nil) {
+//                    NoteRow(vPost: img2!)
+//                        .listRowInsets(EdgeInsets())
+//                }
+//
+//                if (img3 != nil) {
+//                    NoteRow(vPost: img3!)
+//                        .listRowInsets(EdgeInsets())
+//                }
+//
+//                if (img4 != nil) {
+//                    NoteRow(vPost: img4!)
+//                        .listRowInsets(EdgeInsets())
+//                }
                 
-                if (img1 != nil) {
-                    NoteRow(vPost: img1!)
-                        .listRowInsets(EdgeInsets())
-                }
                 
-                if (img2 != nil) {
-                    NoteRow(vPost: img2!)
-                        .listRowInsets(EdgeInsets())
-                }
-                
-                if (img3 != nil) {
-                    NoteRow(vPost: img3!)
-                        .listRowInsets(EdgeInsets())
-                }
-                
-                if (img4 != nil) {
-                    NoteRow(vPost: img4!)
-                        .listRowInsets(EdgeInsets())
-                }
-                
-                
-                if (event0 != nil) {
-                    NoteRow(vPost: event0!)
-                        .listRowInsets(EdgeInsets())
-                }
+//                if (event0 != nil) {
+//                    NoteRow(vPost: event0!)
+//                        .listRowInsets(EdgeInsets())
+//                }
                 //
                 if (event1 != nil) {
                     NoteRow(vPost: event1!)

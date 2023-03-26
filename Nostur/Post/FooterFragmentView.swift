@@ -26,7 +26,7 @@ struct FooterFragmentView: View {
                 Image(systemName: "message")
                 RollingOnUpdateNumber(event.repliesCount).opacity(event.repliesCount == 0 ? 0 : 1)
             }
-            .padding(5)
+            .padding([.vertical, .trailing], 5)
             .contentShape(Rectangle())
             .onTapGesture {
                 showingNewReply = true
@@ -98,7 +98,7 @@ struct FooterFragmentView: View {
                 Image(systemName: "bookmark.fill")
                     .foregroundColor(.orange)
                     .contentShape(Rectangle())
-                    .padding(5)
+                    .padding(.vertical, 5)
                     .padding(.leading, 10)
                     .onTapGesture {
                         ns.removeBookmark(event)
@@ -106,7 +106,7 @@ struct FooterFragmentView: View {
             }
             else {
                 Image(systemName: "bookmark")
-                    .padding(5)
+                    .padding(.vertical, 5)
                     .padding(.leading, 10)
                     .contentShape(Rectangle())
                     .onTapGesture {
@@ -117,9 +117,9 @@ struct FooterFragmentView: View {
             }
             
         }
-            .foregroundColor(.gray)
-            .padding(.trailing, 5)
-            .padding(.leading, 5)
+        .foregroundColor(Color.init(red: 113/255, green: 118/255, blue: 123/255))
+//            .padding(.trailing, 5)
+//            .padding(.leading, 5)
             .font(.system(size: 14))
             .sheet(isPresented: $showingNewReply) {
                 NewReply(replyTo: event)
