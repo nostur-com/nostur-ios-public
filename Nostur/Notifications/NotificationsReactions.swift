@@ -83,7 +83,7 @@ struct NotificationsReactions: View, Equatable {
     var body: some View {
         let _ = Self._printChanges()
         VStack {
-            Text("my vPosts: \(myNotesReactedToAsVPosts.count), reactions: \(reactions.count)")
+//            Text("my vPosts: \(myNotesReactedToAsVPosts.count), reactions: \(reactions.count)")
             List {
                 Section {
                     ForEach(myNotesReactedToAsVPosts) { vPost in
