@@ -29,7 +29,7 @@ struct FullScreenItem : Identifiable {
     var id:String { url.absoluteString }
 }
 
-struct ImageViewer: View {
+struct MediaViewer: View {
     @EnvironmentObject var ns:NosturState // Only needed for `eventIsRestricted`
     let imgUrls:[URL]
     let pubkey:String
@@ -58,13 +58,14 @@ struct ImageViewer: View {
                             LazyHStack {
                                 ForEach(0..<imgUrls.prefix(20).count, id: \.self) { index in
                                     if ([".mp4",".mov"].contains(imgUrls[index].absoluteString.suffix(4))) {
-                                        VideoPlayerView(videoURL: imgUrls[index])
+                                        AVP(videoURL: imgUrls[index])
                                     }
                                     else if (imgUrls[index].absoluteString.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
                                         LazyImage(url: imgUrls[index]) { state in
                                             if let container = state.imageContainer {
                                                 if container.type == .gif, let gifData = container.data {
                                                     AnimatedGifView(gifData: gifData, width: side, height: 200, contentMode: .scaleAspectFit)
+                                                        .scaledToFit()
                                                         .frame(width: side, height: 200)
                                                         .onTapGesture {
                                                             fullScreenItem = FullScreenItem(url: imgUrls[index])
@@ -139,54 +140,57 @@ struct ImageViewer: View {
             else if (imgUrls.count == 1) {
                 if (imagesShown) {
                     GeometryReader { geo in
-                        if ([".mp4",".mov"].contains(imgUrls.first?.absoluteString.suffix(4))) {
-                            VideoPlayerView(videoURL: imgUrls.first!)
-                        }
-                        else if (imgUrls.first?.absoluteString.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
-                            LazyImage(url: imgUrls.first!) { state in
-                                if let container = state.imageContainer {
-                                    if container.type == .gif, let gifData = container.data {
-                                        AnimatedGifView(gifData: gifData, width: geo.size.width, height: geo.size.height, contentMode: .scaleAspectFit)
-                                            .frame(width: geo.size.width, height: geo.size.height)
-                                            .onTapGesture {
-                                                fullScreenItem = FullScreenItem(url: imgUrls.first!)
-                                            }
+                        if let imgUrl = imgUrls.first {
+                            if ([".mp4",".mov"].contains(imgUrl.absoluteString.suffix(4))) {
+                                AVP(videoURL: imgUrl)
+                            }
+                            else if (imgUrl.absoluteString.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
+                                LazyImage(url: imgUrl) { state in
+                                    if let container = state.imageContainer {
+                                        if container.type == .gif, let gifData = container.data {
+                                            AnimatedGifView(gifData: gifData, width: geo.size.width, height: geo.size.height, contentMode: .scaleAspectFit)
+                                                .scaledToFit()
+                                                .frame(width: geo.size.width, height: geo.size.height)
+                                                .onTapGesture {
+                                                    fullScreenItem = FullScreenItem(url: imgUrl)
+                                                }
+                                        }
+                                        else if let image = state.image {
+                                            image
+                                                .resizable()
+                                                .scaledToFit()
+                                                .onTapGesture {
+                                                    fullScreenItem = FullScreenItem(url: imgUrl)
+                                                }
+                                        }
+                                        else {
+                                            CenteredProgressView()
+                                        }
                                     }
-                                    else if let image = state.image {
+                                    else {
+                                        CenteredProgressView()
+                                    }
+                                }
+                                .pipeline(ImageProcessing.shared.content) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
+                                .priority(.low)
+                            }
+                            else {
+                                LazyImage(url: imgUrl) { state in
+                                    if let image = state.image {
                                         image
                                             .resizable()
                                             .scaledToFit()
                                             .onTapGesture {
-                                                fullScreenItem = FullScreenItem(url: imgUrls.first!)
+                                                fullScreenItem = FullScreenItem(url: imgUrl)
                                             }
                                     }
                                     else {
                                         CenteredProgressView()
                                     }
                                 }
-                                else {
-                                    CenteredProgressView()
-                                }
+                                .pipeline(ImageProcessing.shared.content) // No processing again here, we probably never show the image again
+                                
                             }
-                            .pipeline(ImageProcessing.shared.content) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
-                            .priority(.low)
-                        }
-                        else {
-                            LazyImage(url: imgUrls.first!) { state in
-                                if let image = state.image {
-                                    image
-                                        .resizable()
-                                        .scaledToFit()
-                                        .onTapGesture {
-                                            fullScreenItem = FullScreenItem(url: imgUrls.first!)
-                                        }
-                                }
-                                else {
-                                    CenteredProgressView()
-                                }
-                            }
-                            .pipeline(ImageProcessing.shared.content) // No processing again here, we probably never show the image again
-
                         }
                     }
                     .frame(height: 200)
@@ -320,7 +324,7 @@ struct FullImageViewer: View {
             ZStack {
                 VStack {
                     if ([".mp4",".mov"].contains(fullImageURL.absoluteString.suffix(4))) {
-                        VideoPlayerView(videoURL: fullImageURL)
+                        AVP(videoURL: fullImageURL)
                     }
                     else if (fullImageURL.absoluteString.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
                         LazyImage(url: fullImageURL) { state in
@@ -439,7 +443,7 @@ struct ImageViewer_Previews: PreviewProvider {
             //                .listRowInsets(EdgeInsets())
             //
             //            ImageViewer(content: content1)
-            ImageViewer(imgUrls: urlsFromContent, pubkey: "")
+            MediaViewer(imgUrls: urlsFromContent, pubkey: "")
                 .listRowInsets(EdgeInsets())
         }
         .listStyle(.inset)

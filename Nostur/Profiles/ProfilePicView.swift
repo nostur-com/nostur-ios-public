@@ -35,6 +35,7 @@ struct PFP: View {
                         if let container = state.imageContainer {
                             if container.type == .gif, let gifData = container.data {
                                 AnimatedGifView(gifData: gifData, width: size, height: size)
+                                    .scaledToFit()
                                     .frame(width: size, height: size)
                                     .clipShape(Circle())
                             }

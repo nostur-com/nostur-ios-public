@@ -9,7 +9,7 @@ import SwiftUI
 import UIKit
 import Gifu
 
-struct AnimatedGifView: View {
+struct AnimatedGifViewX: View {
     let gifData:Data
     let width:CGFloat
     let height:CGFloat

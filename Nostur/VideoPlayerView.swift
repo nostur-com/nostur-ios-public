@@ -7,6 +7,78 @@
 
 import SwiftUI
 import AVKit
+import AVFoundation
+
+struct AVP: UIViewControllerRepresentable {
+    let videoURL: URL
+    func makeUIViewController(context: Context) -> AVPlayerViewController {
+        let player = AVPlayer(url: videoURL)
+        let controller = AVPlayerViewController()
+        controller.player = player
+        controller.showsPlaybackControls = true
+        controller.entersFullScreenWhenPlaybackBegins = false
+        controller.exitsFullScreenWhenPlaybackEnds = true
+        controller.allowsPictureInPicturePlayback = true
+        return controller
+    }
+    
+    func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {
+        
+    }
+}
+
+struct AVPW: UIViewControllerRepresentable {
+    let player: AVPlayer
+
+    init(videoURL: URL) {
+        self.player = AVPlayer(playerItem: AVPlayerItem(url: videoURL))
+    }
+
+    func makeUIViewController(context: Context) -> AVPlayerViewController {
+        let controller = AVPlayerViewController()
+        controller.player = player
+        return controller
+    }
+
+    func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {
+    }
+
+    func play() {
+        player.play()
+    }
+
+    func pause() {
+        player.pause()
+    }
+}
+
+struct AVPlayerView: UIViewRepresentable {
+    let videoURL: URL
+    let player = AVPlayer()
+
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView()
+
+        let playerLayer = AVPlayerLayer(player: player)
+        playerLayer.frame = view.bounds
+        playerLayer.videoGravity = .resizeAspectFill
+        view.layer.addSublayer(playerLayer)
+
+        player.replaceCurrentItem(with: AVPlayerItem(url: videoURL))
+        return view
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {
+    }
+
+    func play() {
+        player.play()
+    }
+
+    func pause() {
+        player.pause()
+    }
+}
 
 struct VideoPlayerView: UIViewControllerRepresentable {
     var videoURL: URL
@@ -14,7 +86,7 @@ struct VideoPlayerView: UIViewControllerRepresentable {
     func makeUIViewController(context: UIViewControllerRepresentableContext<VideoPlayerView>) -> AVPlayerViewController {
         let player = AVPlayer(url: videoURL)
         let playerViewController = AVPlayerViewController()
-        playerViewController.delegate = context.coordinator
+//        playerViewController.delegate = context.coordinator
         playerViewController.player = player
         playerViewController.showsPlaybackControls = true
         playerViewController.entersFullScreenWhenPlaybackBegins = false
@@ -24,18 +96,17 @@ struct VideoPlayerView: UIViewControllerRepresentable {
     }
     
     func updateUIViewController(_ uiViewController: AVPlayerViewController, context: UIViewControllerRepresentableContext<VideoPlayerView>) {
-        // Add full screen and PiP support
     }
     
-    func makeCoordinator() -> Coordinator {
-            return Coordinator()
-        }
-        
-        class Coordinator: NSObject, AVPlayerViewControllerDelegate {
-            func playerViewControllerShouldAutomaticallyDismissAtPictureInPictureStart(_ playerViewController: AVPlayerViewController) -> Bool {
-                return false
-            }
-        }
+//    func makeCoordinator() -> Coordinator {
+//            return Coordinator()
+//        }
+//
+//        class Coordinator: NSObject, AVPlayerViewControllerDelegate {
+//            func playerViewControllerShouldAutomaticallyDismissAtPictureInPictureStart(_ playerViewController: AVPlayerViewController) -> Bool {
+//                return false
+//            }
+//        }
 }
 
 
