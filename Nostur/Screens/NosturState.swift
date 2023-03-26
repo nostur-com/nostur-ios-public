@@ -12,18 +12,13 @@ import Combine
 
 final class NosturState : ObservableObject {
     
-    public static let shared = NosturState(container: EventsProvider.shared.container)
-//    public static let preview = NosturState(container: EventsProvider.preview.container)
+    public static let shared = NosturState()
     
     static let GUEST_ACCOUNT_PUBKEY = "c118d1b814a64266730e75f6c11c5ffa96d0681bfea594d564b43f3097813844"
     static let EXPLORER_PUBKEY = "afba415fa31944f579eaf8d291a1d76bc237a527a878e92d7e3b9fc669b14320"
     @Published var onBoardingIsShown = false
     
-    // public keys of the contacts that the currently active ("logged in") account follows
-    // WTF followingPublicKeys met @Published is superlangzaam... HMMM.
-    //@Published var followingPublicKeys:Set<String> = Set<String>()
-//    @Published var followingPublicKeys:Set<String> = Set<String>()
-//    var followingPublicKeys = CurrentValueSubject<[String], Never>([String]())
+
     var followingPublicKeys:Set<String> {
         get {
             if account == nil { return Set<String>() }
@@ -64,19 +59,18 @@ final class NosturState : ObservableObject {
         }
     }
     
-
     func setAccount(account:Account? = nil) {
         self.objectWillChange.send()
         self.account = account
-        if (account != nil) {
-            activeAccountPublicKey = account!.publicKey
-//            DataStore.shared.unreadCount.send(0)
+        if let account {
+            activeAccountPublicKey = account.publicKey
             
             // Remove currectly active "Following" subscriptions from connected sockets
-            SocketPool.shared.removeActiveFollowingSubscriptions()
+            SocketPool.shared.removeActiveAccountSubscriptions()
             Task(priority: .userInitiated) {
                 self.loadLikesAndReposts()
             }
+            sendNotification(.activeAccountChanged, account)
         }
         print("🟠🟠🟠🟠🟠🟠 ACTIVE ACCOUNT IS: \((self.account?.name != "") ? self.account?.name ?? (self.account?.display_name ?? "NONE") : (self.account?.display_name ?? "NONE"))")
     }
@@ -84,9 +78,9 @@ final class NosturState : ObservableObject {
     var container:NSPersistentContainer
     var viewContext:NSManagedObjectContext
     
-    init(container:NSPersistentContainer) {
-        self.container = container
-        self.viewContext = container.viewContext
+    init() {
+        self.container = DataProvider.shared().container
+        self.viewContext = self.container.viewContext
         if (activeAccountPublicKey != "") {
             if let account = try? Account.fetchAccount(publicKey: activeAccountPublicKey, context: viewContext) {
                 self.setAccount(account: account)
@@ -174,9 +168,8 @@ final class NosturState : ObservableObject {
             contact.pubkey = pubkey
             account!.addToFollows(contact)
         }
-
+//        followingLVM?.changeFollowers(pubkeys:followingPublicKeys)
         try! viewContext.save()
-//        followingPublicKeys.insert(pubkey)
     }
     
     func follow(_ contact:Contact) {
@@ -188,7 +181,7 @@ final class NosturState : ObservableObject {
         try! viewContext.save()
         
 //        followingPublicKeys.insert(contact.pubkey)
-        
+//        followingLVM?.changeFollowers(pubkeys:followingPublicKeys)
         guard let clEvent = try? AccountManager.createContactListEvent(account: account!) else {
             print("🔴🔴 Could not create new clEvent")
             return
@@ -209,6 +202,7 @@ final class NosturState : ObservableObject {
         account!.removeFromFollows(contact)
         try! viewContext.save()
         
+//        followingLVM?.changeFollowers(pubkeys:followingPublicKeys)
         guard let clEvent = try? AccountManager.createContactListEvent(account: account!) else {
             print("🔴🔴 Could not create new clEvent")
             return
@@ -227,6 +221,7 @@ final class NosturState : ObservableObject {
         }
         self.objectWillChange.send()
         account!.removeFromFollows(contact)
+//        followingLVM?.changeFollowers(pubkeys:followingPublicKeys)
         try! viewContext.save()
     }
     
@@ -376,16 +371,6 @@ final class NosturState : ObservableObject {
     }
 }
 
-
-final class UnreadCounterModel: ObservableObject {
-    static public var shared = UnreadCounterModel()
-    @Published var unreadCount = 0
-    @Published var mostRecentCreatedAt:Int64 = 0
-}
-
-//final class TimelineModel: ObservableObject {
-//    @Published var notesOnScreen:[Event] = []
-//}
 
 final class ExchangeRateModel: ObservableObject {
     static public var shared = ExchangeRateModel()
