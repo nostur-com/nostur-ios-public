@@ -53,7 +53,7 @@ struct ListViewContainer: View, Equatable {
                          pubkeys: newListId == "Following" ? ns.followingPublicKeys : ns.explorePubkeys,
                          listId: listId)
             
-            vm.performFetch()
+//            vm.performFetch()
         }
         .onChange(of: ns.activeAccountPublicKey) { newPubkey in
             print("🟣🟣🟣🟣🟣🟣🟣🟣 ACCOUNT CHANGED 🟣🟣🟣🟣🟣🟣🟣")
