@@ -158,7 +158,7 @@ struct PostAndParent: View {
                                     .foregroundColor(.primary)
                                     .textSelection(.enabled)
                                     .onTapGesture { nav.navigateTo(vPost) }
-                                ImageViewer(imgUrls: vPost.imageUrls, pubkey: event.pubkey)
+                                MediaViewer(imgUrls: vPost.imageUrls, pubkey: event.pubkey)
                         }
                     }
                     .padding(.leading, isParent ? INDENT : 0)

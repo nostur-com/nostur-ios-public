@@ -91,6 +91,7 @@ struct BadgeRow: View {
                             if let container = state.imageContainer {
                                 if container.type == .gif, let gifData = container.data {
                                     AnimatedGifView(gifData: gifData, width: 50, height: 50)
+                                        .scaledToFit()
                                         .frame(width: 50, height: 50)
                                         .clipped()
                                         .padding(10)
