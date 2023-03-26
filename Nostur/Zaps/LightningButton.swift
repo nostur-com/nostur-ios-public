@@ -29,7 +29,7 @@ struct LightningButton: View {
                     Text("\(fiatPrice)").opacity(tally != 0 ? 1 : 0)
                 }
                 else {
-                    Text("\(tally.formatNumber) sats").opacity(tally != 0 ? 1 : 0)
+                    Text("\(tally.formatNumber)").opacity(tally != 0 ? 1 : 0)
                 }
             }
             .onTapGesture {

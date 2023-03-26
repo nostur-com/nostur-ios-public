@@ -14,7 +14,6 @@ struct NotificationsContainer: View {
     @EnvironmentObject var nav:NavigationModel
     
     var body: some View {
-        let _ = print("🧨🧨🧨🧨🧨 BODY NOTIFICATIONS CONTAINER 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         let _ = Self._printChanges()
         NavigationStack(path: $nav.notificationsPath) {
             VStack {
@@ -41,7 +40,6 @@ struct NotificationsView: View {
     
     
     var body: some View {
-        let _ = print("🧨🧨🧨🧨🧨  NOTIFICATIONS VIEW 🧨🧨🧨🧨🧨🧨🧨🧨🧨🧨")
         let _ = Self._printChanges()
         VStack {
             if let account = ns.account {

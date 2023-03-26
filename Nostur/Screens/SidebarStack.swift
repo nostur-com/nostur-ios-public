@@ -7,6 +7,10 @@
 
 import SwiftUI
 
+final class SideBarModel: ObservableObject {
+    @Published var showSidebar = false
+}
+
 struct SideBarStack<SidebarContent: View, Content: View>: View {
     
     let sidebarContent: SidebarContent
