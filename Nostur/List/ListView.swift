@@ -167,6 +167,18 @@ struct ListView: View {
                         print ("🟢🟢 List (count>0) onAppear -- restoreToScrollPos")
                         restoreScrollPosition(proxy: proxy)
                     }
+                    .onAppear {
+                        // FIRST FETCH?? DONT KNOW WHERE TO RESTORE?? JUST GO TO NEWEST!
+                        guard vmState.state == .COMPLETED_FIRST_FETCH else { return }
+                        guard vmState.viewIsVisible else { return }
+                        scrollResetId += 1
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            withAnimation {
+                                proxy.scrollTo(END_OF_LIST)
+                                vmState.state = .SCROLLED_TO_END
+                            }
+                        }
+                    }
 //                    .onChange(of: selectedSubTab) { newTab in
 //                        guard vmState.state == .AWAITING_RESTORE_SCROLL else { return }
 //                        print ("🟢🟢 List (count>0) onChange selectedSubtab -- restoreToScrollPos")
