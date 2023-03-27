@@ -143,9 +143,20 @@ struct DirectMessages: View {
         return computeRequestTotalUnread(onlyMostRecentRequests)
     }
     
+    var onlyMostRecentAcceptedFiltered:[(Event, Int)] {
+        if debounceObject.debouncedText != "" {
+            return onlyMostRecentAccepted.filter { (dm, _) in
+                return (dm.contact?.name?.contains(debounceObject.debouncedText) ?? false) ||
+                (dm.contact?.display_name?.contains(debounceObject.debouncedText) ?? false)
+            }
+        }
+        return onlyMostRecentAccepted
+    }
+    
     @State var selectedRoot:Event?
     @State var showingNewDM = false
     @State var tab = "Accepted"
+    @StateObject var debounceObject = DebounceObject()
     
     init(pubkey:String, blockedPubkeys:[String]) {
         self.pubkey = pubkey
@@ -200,7 +211,7 @@ struct DirectMessages: View {
                         switch (tab) {
                             case "Accepted":
                                 if onlyMostRecentAccepted.count > 0 {
-                                    List(onlyMostRecentAccepted, id:\.0) { (dm, unread) in
+                                    List(onlyMostRecentAcceptedFiltered, id:\.0) { (dm, unread) in
                                         NavigationLink(value: dm) {
                                             DMRow(recentDM: dm, pubkey: pubkey, unread: unread)
                                         }
@@ -209,6 +220,7 @@ struct DirectMessages: View {
                                     .onAppear {
                                         sendNotification(.updateDMsCount, requestsTotalUnread + onlyMostRecentAcceptedTotalUnread)
                                     }
+//                                    .searchable(text: $debounceObject.text, placement: .navigationBarDrawer(displayMode: .automatic), prompt: Text("Filter by name"))
                                 }
                                 else {
                                     Text("You have not received any messages")
