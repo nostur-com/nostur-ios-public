@@ -94,11 +94,11 @@ final class SocketPool: ObservableObject {
     }
     
     func sendMessage(_ message:ClientMessage, subscriptionId:String? = nil) {
-//        if (message.type == .REQ) {
-//            let read = sockets.values.filter { $0.read == true }.count
+        if (message.type == .REQ) {
+            let read = sockets.values.filter { $0.read == true }.count
 //            print("⬇️⬇️ REQ ON \(read) RELAYS: \(String(message.message.prefix(260)))")
-////            print("⬇️⬇️ REQ ON \(read) RELAYS: \(String(message.message))")
-//        }
+//            print("⬇️⬇️ REQ ON \(read) RELAYS: \(String(message.message))")
+        }
         
         Task(priority: .background) {
             for (_, managedClient) in sockets {
@@ -113,7 +113,7 @@ final class SocketPool: ObservableObject {
                         managedClient.connect()
                     }
                     // skip if we already have an active subcription
-                    guard subscriptionId == nil || managedClient.activeSubscriptions.contains(subscriptionId!) else { continue }
+                    guard subscriptionId == nil || !managedClient.activeSubscriptions.contains(subscriptionId!) else { continue }
                     if (subscriptionId != nil) {
                         print("⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!)")
                         DispatchQueue.main.async {
