@@ -184,7 +184,6 @@
 		1FC4D4082997E126004E88CD /* AccountManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC4D4072997E126004E88CD /* AccountManager.swift */; };
 		1FC4D40B2997E58E004E88CD /* KeychainAccess in Frameworks */ = {isa = PBXBuildFile; productRef = 1FC4D40A2997E58E004E88CD /* KeychainAccess */; };
 		1FC4D40D2998ED0E004E88CD /* FollowersList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC4D40C2998ED0E004E88CD /* FollowersList.swift */; };
-		1FC78F6529C980000009C1C7 /* Gifu in Frameworks */ = {isa = PBXBuildFile; productRef = 1FC78F6429C980000009C1C7 /* Gifu */; };
 		1FC78F6729CA18410009C1C7 /* Ago.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC78F6629CA18410009C1C7 /* Ago.swift */; };
 		1FC78F6929CA28940009C1C7 /* NKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC78F6829CA28940009C1C7 /* NKeys.swift */; };
 		1FC78F6B29CA2B000009C1C7 /* DirectMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC78F6A29CA2B000009C1C7 /* DirectMessages.swift */; };
@@ -210,7 +209,6 @@
 		1FECAC4729A08255006FEE72 /* Collection+subscript.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FECAC4629A08255006FEE72 /* Collection+subscript.swift */; };
 		1FF21E7E29ACC02E00203623 /* FollowingAndExplore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF21E7D29ACC02E00203623 /* FollowingAndExplore.swift */; };
 		1FF69B2729AAA37D0070796B /* BechLnurl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF69B2629AAA37D0070796B /* BechLnurl.swift */; };
-		1FFF997929CEE12300ADAE23 /* CodeScanner in Frameworks */ = {isa = PBXBuildFile; productRef = 1FFF997829CEE12300ADAE23 /* CodeScanner */; };
 		1FFF997B29CEE15000ADAE23 /* About.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFF997A29CEE15000ADAE23 /* About.swift */; };
 		1FFF997D29CF4AF100ADAE23 /* ProfilePicFullScreenSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFF997C29CF4AF100ADAE23 /* ProfilePicFullScreenSheet.swift */; };
 /* End PBXBuildFile section */
@@ -445,8 +443,6 @@
 				1F75257A29962AA300477AF2 /* NukeUI in Frameworks */,
 				1F055A53296EE2A2009EF792 /* secp256k1 in Frameworks */,
 				1FEC01C0296C4A400078CC9B /* SwiftyJSON in Frameworks */,
-				1FC78F6529C980000009C1C7 /* Gifu in Frameworks */,
-				1FFF997929CEE12300ADAE23 /* CodeScanner in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -892,9 +888,7 @@
 				1FC4D40A2997E58E004E88CD /* KeychainAccess */,
 				1F7C65BC29A14969009FF3EA /* LightningDevKit */,
 				1F3E135329C89B9F00D076EA /* NukeVideo */,
-				1FC78F6429C980000009C1C7 /* Gifu */,
 				1F517BED29CDB2FE00F7A97F /* FLAnimatedImage */,
-				1FFF997829CEE12300ADAE23 /* CodeScanner */,
 				1F006B0929D0A9BE0048C6DD /* Algorithms */,
 			);
 			productName = Nostur;
@@ -933,9 +927,7 @@
 				1F75257429962AA300477AF2 /* XCRemoteSwiftPackageReference "Nuke" */,
 				1FC4D4092997E58E004E88CD /* XCRemoteSwiftPackageReference "KeychainAccess" */,
 				1F7C65BB29A14969009FF3EA /* XCRemoteSwiftPackageReference "ldk-swift" */,
-				1FC78F6329C980000009C1C7 /* XCRemoteSwiftPackageReference "Gifu" */,
 				1F517BEC29CDB2FD00F7A97F /* XCRemoteSwiftPackageReference "FLAnimatedImage" */,
-				1FFF997729CEE12300ADAE23 /* XCRemoteSwiftPackageReference "CodeScanner" */,
 				1F006B0829D0A9BE0048C6DD /* XCRemoteSwiftPackageReference "swift-algorithms" */,
 			);
 			productRefGroup = 1FB448BB2965F3D000038671 /* Products */;
@@ -1443,14 +1435,6 @@
 				kind = branch;
 			};
 		};
-		1FC78F6329C980000009C1C7 /* XCRemoteSwiftPackageReference "Gifu" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/kaishin/Gifu";
-			requirement = {
-				kind = exactVersion;
-				version = 3.4.1;
-			};
-		};
 		1FEA785329799697007CC8E7 /* XCRemoteSwiftPackageReference "SwiftCompactor" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/openalloc/SwiftCompactor";
@@ -1465,14 +1449,6 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 5.0.0;
-			};
-		};
-		1FFF997729CEE12300ADAE23 /* XCRemoteSwiftPackageReference "CodeScanner" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/twostraws/CodeScanner";
-			requirement = {
-				kind = upToNextMinorVersion;
-				minimumVersion = 2.3.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -1528,11 +1504,6 @@
 			package = 1FC4D4092997E58E004E88CD /* XCRemoteSwiftPackageReference "KeychainAccess" */;
 			productName = KeychainAccess;
 		};
-		1FC78F6429C980000009C1C7 /* Gifu */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1FC78F6329C980000009C1C7 /* XCRemoteSwiftPackageReference "Gifu" */;
-			productName = Gifu;
-		};
 		1FEA785429799697007CC8E7 /* Compactor */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 1FEA785329799697007CC8E7 /* XCRemoteSwiftPackageReference "SwiftCompactor" */;
@@ -1542,11 +1513,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1FEC01BE296C4A400078CC9B /* XCRemoteSwiftPackageReference "SwiftyJSON" */;
 			productName = SwiftyJSON;
-		};
-		1FFF997829CEE12300ADAE23 /* CodeScanner */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1FFF997729CEE12300ADAE23 /* XCRemoteSwiftPackageReference "CodeScanner" */;
-			productName = CodeScanner;
 		};
 /* End XCSwiftPackageProductDependency section */
 

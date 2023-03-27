@@ -9,6 +9,7 @@ import SwiftUI
 import UIKit
 import FLAnimatedImage
 
+// TODO: SHOULD TRY GIFU AGAIN... SEEMED MORE SMOOTH
 struct AnimatedGifView: UIViewRepresentable {
     let animatedView = FLAnimatedImageView()
     let gifData:Data
