@@ -21,8 +21,8 @@ struct NoteMenuView: View {
     var body: some View {
         Menu {
             Button {
-                if event.hasPrivateNote {
-                    sendNotification(.editingPrivateNoteOnPost, event.id)
+                if let pn = event.privateNote {
+                    sendNotification(.editingPrivateNote, pn)
                 }
                 else {
                     sendNotification(.newPrivateNoteOnPost, event.id)

@@ -8,8 +8,8 @@
 import Foundation
 
 extension Contact {
-    var hasPrivateNote:Bool {
-        guard let account = NosturState.shared.account else { return false }
-        return account.privateNotes_.contains { $0.contact == self }
+    var privateNote:PrivateNote? {
+        guard let account = NosturState.shared.account else { return nil }
+        return account.privateNotes_.first(where: {$0.contact == self })
     }
 }

@@ -13,8 +13,8 @@ struct ContactPrivateNoteToggle: View {
     var body: some View {
         HStack {
             Button {
-                if contact.hasPrivateNote {
-                    sendNotification(.editingPrivateNoteOnContact, contact.pubkey)
+                if let pn = contact.privateNote {
+                    sendNotification(.editingPrivateNote, pn)
                 }
                 else {
                     sendNotification(.newPrivateNoteOnContact, contact.pubkey)
@@ -23,7 +23,7 @@ struct ContactPrivateNoteToggle: View {
                 Image(systemName: "note.text")
                     .padding(5)
             }
-            .opacity(contact.hasPrivateNote ? 1 : 0.2)
+            .opacity(contact.privateNote != nil ? 1 : 0.2)
         }
     }
 }
@@ -34,8 +34,8 @@ struct EventPrivateNoteToggle: View {
     var body: some View {
         HStack {
             Button {
-                if event.hasPrivateNote {
-                    sendNotification(.editingPrivateNoteOnPost, event.id)
+                if let pn = event.privateNote {
+                    sendNotification(.editingPrivateNote, pn)
                 }
                 else {
                     sendNotification(.newPrivateNoteOnPost, event.id)
@@ -44,7 +44,7 @@ struct EventPrivateNoteToggle: View {
                 Image(systemName: "note.text")
                     .padding(5)
             }
-            .opacity(event.hasPrivateNote ? 1 : 0.2)
+            .opacity(event.privateNote != nil ? 1 : 0.2)
         }
     }
 }

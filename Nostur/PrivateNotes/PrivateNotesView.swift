@@ -139,12 +139,7 @@ struct PrivateNoteRow: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        if let post = note.post {
-                            sendNotification(.editingPrivateNoteOnPost, post.id)
-                        }
-                        else if let contact = note.contact {
-                            sendNotification(.editingPrivateNoteOnContact, contact.pubkey)
-                        }
+                        sendNotification(.editingPrivateNote, note)
                     }
                 Spacer()
                 Ago(note.createdAt_)

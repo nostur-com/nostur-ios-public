@@ -25,18 +25,6 @@ private struct WithSheets: ViewModifier {
     @State var post:Event? = nil
     @State var contact:Contact? = nil
     
-    func existingPrivateNoteBy(pubkey:String) -> PrivateNote? {
-            ns.account?
-                .privateNotes?
-                .first(where: { $0.contact != nil && $0.contact!.pubkey == pubkey })
-    }
-    
-    func existingPrivateNoteBy(id:String) -> PrivateNote? {
-            ns.account?
-                .privateNotes?
-                .first(where: { $0.post != nil && $0.post!.id == id })
-    }
-    
     func body(content: Content) -> some View {
         content
             .sheet(item: $privateNote) { note in
@@ -48,13 +36,9 @@ private struct WithSheets: ViewModifier {
             .sheet(item: $contact) { contact in
                 NewPrivateNoteSheet(contact: contact, onDismiss: onDismiss)
             }
-            .onReceive(receiveNotification(.editingPrivateNoteOnContact)) { notification in
-                let pubkey = notification.object as! String
-                self.privateNote = existingPrivateNoteBy(pubkey: pubkey)
-            }
-            .onReceive(receiveNotification(.editingPrivateNoteOnPost)) { notification in
-                let id = notification.object as! String
-                self.privateNote = existingPrivateNoteBy(id: id)
+            .onReceive(receiveNotification(.editingPrivateNote)) { notification in
+                let note = notification.object as! PrivateNote
+                self.privateNote = note
             }
             .onReceive(receiveNotification(.newPrivateNoteOnPost)) { notification in
                 let id = notification.object as! String
