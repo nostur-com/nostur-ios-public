@@ -45,13 +45,13 @@ func computeOnlyMostRecentAll(sent:[Event],received:[Event],pubkey:String) -> [S
             if recent[dm.pubkey] == nil {
                 let count = dm.created_at > dm.lastSeenDMCreatedAt ? 1 : 0
                 recent[dm.pubkey] = ([dm], dm.dmAccepted, count, dm.created_at) // The first, rootDM, controls isAccepted or not
-                                                             // check rootDM.lastSeenUnreadDM for +1 or +0
+                                                             // check rootDM.lastSeenDMCreatedAt for +1 or +0
             }
             else {
                 let current = recent[dm.pubkey]
                 let count = dm.created_at > current?.0.first?.lastSeenDMCreatedAt ?? 0 ? 1 : 0
                 let dms = current!.0 + [dm]
-                let unread = current!.2 + count // check rootDM.lastSeenUnreadDM for +1 or +0
+                let unread = current!.2 + count // check rootDM.lastSeenDMCreatedAt for +1 or +0
                 let isAccepted = current!.1 || (current?.0.first?.dmAccepted ?? false)
                 recent[dm.pubkey] = (dms, isAccepted, unread, recent[dm.pubkey]!.3)
             }
@@ -91,6 +91,24 @@ func computeOnlyMostRecentRequests(_ onlyMostRecentAll:[String: ([Event], Bool, 
         .sorted(by: { $0.0.created_at > $1.0.created_at }) // not sure if need to sort again?
 }
 
+func computeOnlyMostRecentAcceptedTotalUnread(_ onlyMostRecentAccepted:[(Event, Int)]) -> Int {
+    onlyMostRecentAccepted.reduce(0) { (partialResult, recentDMtuple) in
+        let (_, unread) = recentDMtuple
+        return partialResult + unread
+    }
+}
+
+func computeRequestTotalUnread(_ onlyMostRecentRequests:[(Event, Int64)] ) -> Int {
+    guard let account = NosturState.shared.account else { return 0 }
+    return onlyMostRecentRequests.reduce(0) { (partialResult, requestDMtuple) in
+        let (_, createdAt) = requestDMtuple
+        if (createdAt > account.lastSeenDMRequestCreatedAt) {
+            return partialResult + 1
+        }
+        return partialResult
+    }
+}
+
 struct DirectMessages: View {
     @ObservedObject var nm:NotificationsManager = .shared
     @EnvironmentObject var nav:NavigationModel
@@ -118,21 +136,11 @@ struct DirectMessages: View {
     }
     
     var onlyMostRecentAcceptedTotalUnread:Int {
-        onlyMostRecentAccepted.reduce(0) { (partialResult, recentDMtuple) in
-            let (_, unread) = recentDMtuple
-            return partialResult + unread
-        }
+        return computeOnlyMostRecentAcceptedTotalUnread(onlyMostRecentAccepted)
     }
     
     var requestsTotalUnread:Int {
-        guard let account = ns.account else { return 0 }
-        return onlyMostRecentRequests.reduce(0) { (partialResult, requestDMtuple) in
-            let (_, createdAt) = requestDMtuple
-            if (createdAt > account.lastSeenDMRequestCreatedAt) {
-                return partialResult + 1
-            }
-            return partialResult
-        }
+        return computeRequestTotalUnread(onlyMostRecentRequests)
     }
     
     @State var selectedRoot:Event?

@@ -260,7 +260,7 @@ struct DMConversationView: View {
                                 root.objectWillChange.send()
                                 root.lastSeenDMCreatedAt = allMessagesSorted.last!.created_at
                                 // Save context here? or on go to background
-//                                DataProvider.shared().save()
+                                DataProvider.shared().save()
                             }
                         }
                         .onAppear {

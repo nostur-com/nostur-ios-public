@@ -110,8 +110,10 @@ class NotificationsManager: ObservableObject {
         r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         r2.resultType = .countResultType
         
-        let unreadMentions = try? DataProvider.shared().viewContext.count(for: r2)
-        self.unreadMentions = unreadMentions ?? 0
+        let unreadMentions = (try? DataProvider.shared().viewContext.count(for: r2)) ?? 0
+        if unreadMentions != self.unreadMentions {
+            self.unreadMentions = unreadMentions
+        }
     }
     
     func checkForNewReactions() {
@@ -134,8 +136,10 @@ class NotificationsManager: ObservableObject {
         r2.fetchLimit = FETCH_LIMIT
         r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         r2.resultType = .countResultType
-        let unreadReactions = try? DataProvider.shared().viewContext.count(for: r2)
-        self.unreadReactions = unreadReactions ?? 0
+        let unreadReactions = (try? DataProvider.shared().viewContext.count(for: r2)) ?? 0
+        if unreadReactions != self.unreadReactions {
+            self.unreadReactions = unreadReactions
+        }
     }
     
     func checkForNewZaps() {
@@ -162,9 +166,11 @@ class NotificationsManager: ObservableObject {
         r2.fetchLimit = FETCH_LIMIT
         r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         r2.resultType = .countResultType
-        let unreadZaps = try? DataProvider.shared().viewContext.count(for: r2)
+        let unreadZaps = (try? DataProvider.shared().viewContext.count(for: r2)) ?? 0
         
-        self.unreadZaps = unreadZaps ?? 0
+        if unreadZaps != self.unreadZaps {
+            self.unreadZaps = unreadZaps
+        }
 
     }
     
@@ -218,69 +224,18 @@ class NotificationsManager: ObservableObject {
         let onlyMostRecentAll = computeOnlyMostRecentAll(sent: sent, received: received, pubkey: pubkey)
         let onlyMostRecentAccepted = computeOnlyMostRecentAccepted(onlyMostRecentAll)
         let onlyMostRecentRequests = computeOnlyMostRecentRequests(onlyMostRecentAll)
+        let newUnreadDMsAccepted = computeOnlyMostRecentAcceptedTotalUnread(onlyMostRecentAccepted)
+        let newUnreadDMRequests = computeRequestTotalUnread(onlyMostRecentRequests)
         
-        unreadDMsAccepted = onlyMostRecentAccepted.reduce(0) { (partialResult, recentDMtuple) in
-            let (_, unread) = recentDMtuple
-            return partialResult + unread
+        // Only set if changed. (else rerender because _nm changed.)
+        if newUnreadDMsAccepted != unreadDMsAccepted {
+            unreadDMsAccepted = newUnreadDMsAccepted
         }
-        
-        unreadDMRequests = onlyMostRecentRequests.reduce(0) { (partialResult, requestDMtuple) in
-            let (_, createdAt) = requestDMtuple
-            if (createdAt > account.lastSeenDMRequestCreatedAt) {
-                return partialResult + 1
-            }
-            return partialResult
+
+        if newUnreadDMRequests != unreadDMRequests {
+            unreadDMRequests = newUnreadDMRequests
         }
     }
-    
-//    func checkForNewDMRequests() {
-//        guard let account = ns.account else { return }
-//        let pubkey = account.publicKey
-//        let blockedPubkeys = account.blockedPubkeys_
-//
-//
-//        // Same query as in DirectMessages.init. should be kept in sync, refactor to 1 function source someday
-//        // except oldestCreatedAt = lastSeenDMRequestCreatedAt
-//        let r2 = Event.fetchRequest()
-//        r2.predicate = NSPredicate(
-//            format:
-//                "created_at > %i " + // AFTER LAST SEEN
-//                "AND kind == 4 " +
-//                "AND tagsSerialized CONTAINS %@ " +
-//                "AND contact.dmAccepted == false " +
-//                "AND NOT pubkey IN %@",
-//            account.lastSeenDMRequestCreatedAt,
-//            serializedP(pubkey),
-//            blockedPubkeys)
-//        r2.fetchLimit = FETCH_LIMIT
-//        r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-//        r2.resultType = .countResultType
-//        let unreadDMRequests = try? DataProvider.shared().viewContext.count(for: r2)
-//        self.unreadDMRequests = unreadDMRequests ?? 0
-//    }
-    
-//    func checkForNewDMsAccepted() {
-//        guard let account = ns.account else { return }
-//        let pubkey = account.publicKey
-//        let blockedPubkeys = account.blockedPubkeys_
-//
-//
-//        // Same query as in DirectMessages.init. should be kept in sync, refactor to 1 function source someday
-//        // except oldestCreatedAt = lastSeenDMRequestCreatedAt
-//        let r2 = Event.fetchRequest()
-//        r2.predicate = NSPredicate(
-//            format:
-//                "kind == 4 " +
-//                "AND tagsSerialized CONTAINS %@ " +
-//                "AND NOT pubkey IN %@",
-//            serializedP(pubkey),
-//            blockedPubkeys)
-//        r2.fetchLimit = FETCH_LIMIT
-//        r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-//        r2.resultType = .countResultType
-//        let unreadDMsAccepted = try? DataProvider.shared().viewContext.count(for: r2)
-//        self.unreadDMsAccepted = unreadDMsAccepted ?? 0
-//    }
     
     func startTimer() {
         timer = Timer.scheduledTimer(withTimeInterval: 15.0, repeats: true) { [weak self] timer in
