@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import LightningDevKit
+//import LightningDevKit
 import CoreData
 
 struct NoteById: View {
@@ -95,7 +95,7 @@ struct PostAndParent: View {
         self.isParent = isParent
         self.geoHeight = geoHeight
         self.navTitleHidden = navTitleHidden
-        if vPost.event.noteText.prefix(4).lowercased() == "lnbc" && Invoice.fromStr(s: vPost.event.noteText).getValue() != nil {
+        if vPost.event.noteText.prefix(4).lowercased() == "lnbc" {
             self.type = .lightningInvoice
         }
         else {

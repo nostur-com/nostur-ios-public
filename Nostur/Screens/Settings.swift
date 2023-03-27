@@ -8,7 +8,7 @@
 import SwiftUI
 import Combine
 import CoreData
-import LightningDevKit
+//import LightningDevKit
 
 struct Settings: View {
     @EnvironmentObject var ns: NosturState

@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import LightningDevKit
+//import LightningDevKit
 
 
 func zapRequest(forPubkey pubkey: String, andEvent eventId: String? = nil, withMessage message:String = "", relays:[String]) -> NEvent {
@@ -29,15 +29,15 @@ func zapRequest(forPubkey pubkey: String, andEvent eventId: String? = nil, withM
 
 
 extension Event {
-    var bolt11Invoice:Invoice? {
-        get {
-            guard let bolt11 = bolt11() else { return nil }
-            if let pInvoice = Invoice.fromStr(s: bolt11).getValue() {
-                return pInvoice
-            }
-            return nil
-        }
-    }
+//    var bolt11Invoice:Invoice? {
+//        get {
+//            guard let bolt11 = bolt11() else { return nil }
+//            if let pInvoice = Invoice.fromStr(s: bolt11).getValue() {
+//                return pInvoice
+//            }
+//            return nil
+//        }
+//    }
     
     
     // Homegrown bolt11 amount decoder become LightningDevKit is sloooooooow
@@ -49,15 +49,15 @@ extension Event {
     
     // THE AMOUNT PAID
     // TODO: Maybe cache at import?
-    var sats:Double {
-        get {
-            guard bolt11Invoice != nil else { return 0 }
-            if (bolt11Invoice!.amountMilliSatoshis() != nil) {
-                return Double(bolt11Invoice!.amountMilliSatoshis()!)/1000
-            }
-            return 0
-        }
-    }
+//    var sats:Double {
+//        get {
+//            guard bolt11Invoice != nil else { return 0 }
+//            if (bolt11Invoice!.amountMilliSatoshis() != nil) {
+//                return Double(bolt11Invoice!.amountMilliSatoshis()!)/1000
+//            }
+//            return 0
+//        }
+//    }
 }
 
 

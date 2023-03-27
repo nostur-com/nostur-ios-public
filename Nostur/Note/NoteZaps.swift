@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import LightningDevKit
+//import LightningDevKit
 
 
 struct NoteZaps: View {
@@ -54,30 +54,9 @@ struct NoteZapRow: View {
     // THE ZAP EVENT (FROM CUSTODIAL ZAP PROVIDER)
     var event:Event
     
-    // THE INVOICE
-    var bolt11:Invoice? {
-        get {
-            guard let bolt11 = event.bolt11() else { return nil }
-            if let pInvoice = Invoice.fromStr(s: bolt11).getValue() {
-                return pInvoice
-            }
-            return nil
-        }
-    }
-    
-    // THE AMOUNT PAID
-    var sats:Double {
-        get {
-            if (bolt11?.amountMilliSatoshis() != nil) {
-                return Double(bolt11!.amountMilliSatoshis()!)/1000
-            }
-            return 0
-        }
-    }
-    
     var fiatPrice:String {
         get {
-            String(format: "($%.02f)",(Double(sats / 100000000 * er.bitcoinPrice)))
+            String(format: "($%.02f)",(Double(event.naiveSats / 100000000 * er.bitcoinPrice)))
         }
     }
     
@@ -115,7 +94,7 @@ struct NoteZapRow: View {
                     Spacer()
 
                 }
-                Text("Zapped \(sats.clean) sats \(fiatPrice)")
+                Text("Zapped \(event.naiveSats.clean) sats \(fiatPrice)")
                 Text(event.zapFromRequest?.content ?? "")
             }
         }
