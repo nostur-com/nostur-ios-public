@@ -46,7 +46,7 @@ struct SmoothNoteTextRenderView: View {
         else {
             for index in tags.indices {
                 if (tags[index].type == "p") {
-                    newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(contactUsername(fromPubkey: tags[index].pubkey))](nostur:p:\(tags[index].pubkey))")
+                    newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(contactUsername(fromPubkey: tags[index].pubkey).escapeMD())](nostur:p:\(tags[index].pubkey))")
                 }
                 if (tags[index].type == "e") {
                     // TODO: NIP19 bech32 is very slow, with hundreds of rows it slows down UI noticeably, so disable for now

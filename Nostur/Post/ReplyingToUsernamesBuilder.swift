@@ -22,7 +22,9 @@ class ReplyingToUsernamesBuilder {
             .sorted()
         
         let pTagsAsStrings = pTags.map { pubkey in
-            return "[@\(contactUsername(fromPubkey: pubkey, event: event))](nostur:p:\(pubkey))"
+            let username = contactUsername(fromPubkey: pubkey, event: event)
+                .escapeMD()
+            return "[@\(username)](nostur:p:\(pubkey))"
         }
         if (pTagsAsStrings.count > 6) {
             return "Replying to: " + pTagsAsStrings.prefix(4).joined(separator: ", ") + " and \(pTagsAsStrings.count-4) others"
@@ -50,5 +52,17 @@ class ReplyingToUsernamesBuilder {
         catch {
             return  "⏤⏤"
         }
+    }
+}
+
+extension String {
+    func escapeMD() -> String {
+        return self
+            .replacingOccurrences(of: "_", with: "\\_")
+            .replacingOccurrences(of: "*", with: "\\*")
+            .replacingOccurrences(of: "[", with: "\\[")
+            .replacingOccurrences(of: "]", with: "\\]")
+            .replacingOccurrences(of: "/", with: "\\/")
+            .replacingOccurrences(of: "\\", with: "\\\\")
     }
 }
