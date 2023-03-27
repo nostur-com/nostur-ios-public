@@ -55,20 +55,23 @@ struct NosturTabButton: View {
     
     var body: some View {
         HStack(spacing:5) {
-            if IS_IPAD { // IPAD HAS NO HOVER
-                Image(systemName: "xmark").foregroundColor(.gray)
+            if IS_CATALYST {
+                Image(systemName: "xmark")
+                    .foregroundColor(isHoveringTab ? .gray : .clear)
                     .padding(2)
+                    .contentShape(Rectangle())
+                    .background(isHoveringCloseButton ? .gray.opacity(0.1) : .clear)
+                    .onHover { over in
+                        isHoveringCloseButton = over
+                    }
                     .onTapGesture {
                         self.onClose()
                     }
             }
             else {
-                Image(systemName: "xmark").foregroundColor(isHoveringTab ? .gray : .clear)
+                Image(systemName: "xmark").foregroundColor(.gray)
                     .padding(2)
-                    .background(isHoveringCloseButton ? .gray.opacity(0.1) : .clear)
-                    .onHover { over in
-                        isHoveringCloseButton = over
-                    }
+                    .contentShape(Rectangle())
                     .onTapGesture {
                         self.onClose()
                     }
