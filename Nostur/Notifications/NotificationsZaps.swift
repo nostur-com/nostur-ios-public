@@ -18,7 +18,7 @@ struct NotificationsZaps: View, Equatable {
     let er:ExchangeRateModel = .shared // Not Observed for performance
     let pubkey:String
     let blockedPubkeys:[String]
-    let FETCH_LIMIT = 300
+    let FETCH_LIMIT = 200
     let nav:NavigationModel = .shared
     let sp:SocketPool = .shared
     @EnvironmentObject var ns:NosturState

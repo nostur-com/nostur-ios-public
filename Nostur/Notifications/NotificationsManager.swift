@@ -11,7 +11,7 @@ import Combine
 
 class NotificationsManager: ObservableObject {
     
-    let FETCH_LIMIT = 500
+    let FETCH_LIMIT = 200
     
     static let shared = NotificationsManager()
     

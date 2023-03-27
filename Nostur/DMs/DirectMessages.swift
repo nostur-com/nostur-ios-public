@@ -157,14 +157,14 @@ struct DirectMessages: View {
                 "AND NOT pubkey IN %@",
             serializedP(pubkey),
             blockedPubkeys)
-        received.fetchLimit = 500
+        received.fetchLimit = 200
         received.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         _received = FetchRequest(fetchRequest: received)
         
         let sent = Event.fetchRequest()
         sent.predicate = NSPredicate(
             format: "kind == 4 AND pubkey == %@", pubkey)
-        sent.fetchLimit = 500
+        sent.fetchLimit = 200
         sent.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         _sent = FetchRequest(fetchRequest: sent)
     }

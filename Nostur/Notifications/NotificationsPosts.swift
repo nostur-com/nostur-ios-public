@@ -19,7 +19,7 @@ struct NotificationsPosts: View, Equatable {
     let pubkey:String
     let mutedRootIds:[String]
     let blockedPubkeys:[String]
-    let FETCH_LIMIT = 300
+    let FETCH_LIMIT = 200
     let sp:SocketPool = .shared
     let nav:NavigationModel = .shared
     @EnvironmentObject var ns:NosturState
