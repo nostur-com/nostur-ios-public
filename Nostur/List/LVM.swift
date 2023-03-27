@@ -479,6 +479,10 @@ extension LVM {
         }
     }
     
+    func scrollABit() {
+        sendNotification(.scrollABit)
+    }
+    
     func didReachEnd() {
         guard state != .AWAITING_FIRST_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
         guard state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)

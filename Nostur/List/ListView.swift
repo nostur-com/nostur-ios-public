@@ -94,7 +94,16 @@ struct ListView: View {
     @ObservedObject var vmState:LVMState
     @State var vPosts:[VPost] = []
     
-    //    @State var lastAppeared:Event? // For local rendering (border)
+    @State var lastAppearedId:String? // For local rendering (border)
+    var nextId:String? {
+        guard let lastAppearedId = lastAppearedId else { return vmState.vPosts.last?.id ?? "" }
+        if let currentIndex = vmState.vPosts.firstIndex(where: { $0.id == lastAppearedId }) {
+            var nextIndex = min(currentIndex + 1, (vmState.vPosts.count-1))
+            nextIndex = max(nextIndex-1, 0)
+            return vmState.vPosts[nextIndex].id
+        }
+        return nil
+    }
     
     var body: some View {
         let _ = Self._printChanges()
@@ -135,7 +144,7 @@ struct ListView: View {
                                         guard vmState.state != .AWAITING_FIRST_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
                                         guard vmState.state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
                                         guard vmState.state != .SWITCHING_ACCOUNT else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-                                        //                                        lastAppeared = vPost.event
+//                                        lastAppearedId = vPost.id
                                         vm.lastAppearedSubject.send(vPost.event)
                                         //                                        vm.onPostAppeared(vPost.event)
                                     }
@@ -191,6 +200,18 @@ struct ListView: View {
                             withAnimation {
                                 proxy.scrollTo(END_OF_LIST)
                                 vmState.state = .SCROLLED_TO_END
+                            }
+                        }
+                    }
+                    .onReceive(receiveNotification(.scrollABit)) { _ in
+                        guard vmState.viewIsVisible else { return }
+//                        guard let lastAppearedId = lastAppearedId else { return }
+                        withAnimation {
+                            if lastAppearedId != nil && nextId != nil {
+                                proxy.scrollTo(nextId, anchor: .top)
+                            }
+                            else {
+                                
                             }
                         }
                     }

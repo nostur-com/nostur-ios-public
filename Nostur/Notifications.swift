@@ -54,6 +54,10 @@ extension Notification.Name {
     static var shouldScrollToLast: Notification.Name {
         return Notification.Name("shouldScrollToLast")
     }
+        
+    static var scrollABit: Notification.Name {
+        return Notification.Name("scrollABit")
+    }
     
     
     static var newNotesAvailable: Notification.Name {

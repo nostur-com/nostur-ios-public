@@ -34,9 +34,18 @@ struct ListUnreadCounter: View {
                     .opacity(0.95)
                     .cornerRadius(20)
                     .shadow(radius: 90)
+//                    .onTapGesture(count: 2, perform: {
+//                     
+//                    })
                     .onTapGesture {
                         vm.scrollToEnd()
                     }
+//                    .onTapGesture(count: 2, perform: {
+//                        vm.scrollToEnd()
+//                    })
+//                    .onTapGesture {
+//                        vm.scrollABit()
+//                    }
                 }
                 Spacer()
             }
