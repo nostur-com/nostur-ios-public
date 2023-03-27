@@ -20,8 +20,6 @@ struct NoteRow: View {
         case lightningInvoice
     }
     
-    
-    
     init(vPost:VPost, hideFooter:Bool = false) {
         self.vPost = vPost
         self.event = vPost.event

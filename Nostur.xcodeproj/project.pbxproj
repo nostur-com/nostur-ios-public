@@ -201,6 +201,7 @@
 		1FD3DE0329BE325B007E1E6E /* PrivateNoteToggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD3DE0229BE325B007E1E6E /* PrivateNoteToggle.swift */; };
 		1FD49733297FCB5E0084F14E /* PreviewHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD49732297FCB5E0084F14E /* PreviewHelper.swift */; };
 		1FD49737298029600084F14E /* NoteTextRenderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD49736298029600084F14E /* NoteTextRenderView.swift */; };
+		1FD7CD1D29D1A2540012BD9A /* ListProcessingStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD7CD1C29D1A2540012BD9A /* ListProcessingStatus.swift */; };
 		1FE4011D29952EC800A388A2 /* NIP05.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4011C29952EC800A388A2 /* NIP05.swift */; };
 		1FE5068E29B391CF006A16D8 /* FastAccountSwitcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE5068D29B391CF006A16D8 /* FastAccountSwitcher.swift */; };
 		1FEA785529799697007CC8E7 /* Compactor in Frameworks */ = {isa = PBXBuildFile; productRef = 1FEA785429799697007CC8E7 /* Compactor */; };
@@ -416,6 +417,7 @@
 		1FD3DE0229BE325B007E1E6E /* PrivateNoteToggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateNoteToggle.swift; sourceTree = "<group>"; };
 		1FD49732297FCB5E0084F14E /* PreviewHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewHelper.swift; sourceTree = "<group>"; };
 		1FD49736298029600084F14E /* NoteTextRenderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteTextRenderView.swift; sourceTree = "<group>"; };
+		1FD7CD1C29D1A2540012BD9A /* ListProcessingStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListProcessingStatus.swift; sourceTree = "<group>"; };
 		1FE4011C29952EC800A388A2 /* NIP05.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP05.swift; sourceTree = "<group>"; };
 		1FE5068D29B391CF006A16D8 /* FastAccountSwitcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastAccountSwitcher.swift; sourceTree = "<group>"; };
 		1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePicView.swift; sourceTree = "<group>"; };
@@ -755,9 +757,10 @@
 		1FB4D3F929BAEAE4004DB537 /* List */ = {
 			isa = PBXGroup;
 			children = (
-				1F00E8C229C2FE7800797B78 /* LVM.swift */,
+				1FD7CD1C29D1A2540012BD9A /* ListProcessingStatus.swift */,
 				1FB4D3FC29BAF1A6004DB537 /* ListView.swift */,
 				1FB4D3FE29BB3C7E004DB537 /* ListUnreadCounter.swift */,
+				1F00E8C229C2FE7800797B78 /* LVM.swift */,
 			);
 			path = List;
 			sourceTree = "<group>";
@@ -1057,6 +1060,7 @@
 				1F88491529B537B400145340 /* NSRegularExpression.swift in Sources */,
 				1F7150D029ABC6CE00AAB1C3 /* TabButton.swift in Sources */,
 				1FFF997B29CEE15000ADAE23 /* About.swift in Sources */,
+				1FD7CD1D29D1A2540012BD9A /* ListProcessingStatus.swift in Sources */,
 				1FBDE8C129B74EE800F4DFD0 /* ListState+CoreDataProperties.swift in Sources */,
 				1F065A9929A37A47003421D3 /* NoteZaps.swift in Sources */,
 				1F49C80829B8FB73005C960D /* QuoteOrRepostChoiceSheet.swift in Sources */,
