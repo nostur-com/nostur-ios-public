@@ -130,16 +130,16 @@ struct RequestMessage {
         
         if since != nil {
             return """
-    ["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"#p": \(JSON(pubkeys).rawString()!), "limit": \(limit), "since": \(since!.timestamp), "kinds": \(JSON(kinds).rawString() ?? "[]") }]
+    ["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"#p": \(JSON(pubkeys).rawString(.utf8, options: .init(rawValue: 0))!), "limit": \(limit), "since": \(since!.timestamp), "kinds": \(JSON(kinds).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]") }]
     """
         }
         else if until != nil {
             return """
-    ["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"#p": \(JSON(pubkeys).rawString()!), "limit": \(limit), "until": \(until!.timestamp), "kinds": \(JSON(kinds).rawString() ?? "[]") }]
+    ["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"#p": \(JSON(pubkeys).rawString(.utf8, options: .init(rawValue: 0))!), "limit": \(limit), "until": \(until!.timestamp), "kinds": \(JSON(kinds).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]") }]
     """
         }
         return """
-["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"#p": \(JSON(pubkeys).rawString()!), "limit": \(limit), "kinds": \(JSON(kinds).rawString() ?? "[]") }]
+["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"#p": \(JSON(pubkeys).rawString(.utf8, options: .init(rawValue: 0))!), "limit": \(limit), "kinds": \(JSON(kinds).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]") }]
 """
     }
     
@@ -153,7 +153,7 @@ struct RequestMessage {
     
     static func getEvents(ids:[String], limit:Int = 500, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"ids": \(JSON(ids).rawString() ?? "[]"), "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"ids": \(JSON(ids).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]"), "limit": \(limit)}]
 """
     }
     // FETCH A SINGLE EVENT AND REFERENCES
@@ -175,7 +175,7 @@ struct RequestMessage {
     // or reactions by others reacting to the people you follow
     static func getFollowingEvents(pubkeys:[String], limit:Int = 500, subscriptionId:String? = nil, since:NTimestamp? = nil) -> String {
         let sub = subscriptionId ?? ("TL-"+UUID().uuidString)
-        let pubs = JSON(short(pubkeys)).rawString()
+        let pubs = JSON(short(pubkeys)).rawString(.utf8, options: .init(rawValue: 0))
         if since != nil {
             return """
 ["REQ", "\(sub)", {"authors": \(pubs ?? "[]"), "kinds": [0,1,6], "limit": \(limit), "since": \(since!.timestamp)}]
@@ -194,20 +194,20 @@ struct RequestMessage {
 //
 //        if since != nil {
 //            return """
-//    ["REQ", "\(subscriptionId ?? ("TL-"+UUID().uuidString))", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "limit": \(limit), "since": \(since!.timestamp)}, {"#p": \(JSON(pubkeys).rawString() ?? "[]"), "kinds": [0,1,6,7,9735], "limit": \(limit), "since": \(since!.timestamp)}]
+//    ["REQ", "\(subscriptionId ?? ("TL-"+UUID().uuidString))", {"authors": \(JSON(pubkeys).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]"), "limit": \(limit), "since": \(since!.timestamp)}, {"#p": \(JSON(pubkeys).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]"), "kinds": [0,1,6,7,9735], "limit": \(limit), "since": \(since!.timestamp)}]
 //    """
 //        }
 //        return """
-//["REQ", "\(subscriptionId ?? ("TL-"+UUID().uuidString))", {"authors": \(JSON(pubkeys).rawString() ?? "[]"), "kinds": [0,1,6,7,9735], "limit": \(limit)}]
+//["REQ", "\(subscriptionId ?? ("TL-"+UUID().uuidString))", {"authors": \(JSON(pubkeys).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]"), "kinds": [0,1,6,7,9735], "limit": \(limit)}]
 //"""
 //    }
     
     // Fetch anything that references given event ids in tags (1=REPLIES, 6=REPOSTS, 7=REACTIONS, 9735=ZAPS)
     // For when you have event(s) and you want to count replies, reposts, reactions, zaps.
     static func getEventReferences(ids:[String], limit:Int = 5000, subscriptionId:String? = nil, kinds:[Int]? = nil) -> String {
-        let kindsJsonArr = kinds != nil ? JSON(kinds!).rawString() : "[1,6,7,9735]"
+        let kindsJsonArr = kinds != nil ? JSON(kinds!).rawString(.utf8, options: .init(rawValue: 0)) : "[1,6,7,9735]"
         return """
-["REQ", "\(subscriptionId ?? ("TL-REF-"+UUID().uuidString))", {"#e": \(JSON(ids).rawString() ?? "[]"), "kinds":\(kindsJsonArr!), "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? ("TL-REF-"+UUID().uuidString))", {"#e": \(JSON(ids).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]"), "kinds":\(kindsJsonArr!), "limit": \(limit)}]
 """
     }
     
@@ -221,17 +221,17 @@ struct RequestMessage {
         // TODO: UGH clean up this if then mess
         if (ids.count > 0 && authors.count > 0) {
             return """
-    ["REQ", "\(subscriptionId ?? ("TL-TAG-"+UUID().uuidString))", {"ids": \(JSON(ids).rawString() ?? "[]")}, {"authors": \(JSON(authors).rawString() ?? "[]"), "kinds": [0], "limit": \(limit)}]
+    ["REQ", "\(subscriptionId ?? ("TL-TAG-"+UUID().uuidString))", {"ids": \(JSON(ids).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]")}, {"authors": \(JSON(authors).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]"), "kinds": [0], "limit": \(limit)}]
     """
         }
         else if (ids.count > 0) {
             return """
-    ["REQ", "\(subscriptionId ?? ("TL-TAG-"+UUID().uuidString))", {"ids": \(JSON(ids).rawString() ?? "[]")}]
+    ["REQ", "\(subscriptionId ?? ("TL-TAG-"+UUID().uuidString))", {"ids": \(JSON(ids).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]")}]
     """
         }
         else if (authors.count > 0) {
             return """
-    ["REQ", "\(subscriptionId ?? ("TL-TAG-"+UUID().uuidString))", {"authors": \(JSON(authors).rawString() ?? "[]"), "kinds": [0], "limit": \(limit)}]
+    ["REQ", "\(subscriptionId ?? ("TL-TAG-"+UUID().uuidString))", {"authors": \(JSON(authors).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]"), "kinds": [0], "limit": \(limit)}]
     """
         }
         return nil
@@ -278,17 +278,17 @@ struct RequestMessage {
         
         if since != nil {
             return """
-    ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON(short(pubkeys)).rawString() ?? "[]"), "limit": \(limit), "since": \(since!.timestamp)}]
+    ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON(short(pubkeys)).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]"), "limit": \(limit), "since": \(since!.timestamp)}]
     """
         }
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON(short(pubkeys)).rawString() ?? "[]"), "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON(short(pubkeys)).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]"), "limit": \(limit)}]
 """
     }
     
     static func getAuthorsNotes(pubkeys:[String], limit:Int = 100, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON(short(pubkeys)).rawString() ?? "[]"), "kinds": [1], "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON(short(pubkeys)).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]"), "kinds": [1], "limit": \(limit)}]
 """
     }
     
@@ -313,7 +313,7 @@ struct RequestMessage {
     static func getUserMetadata(pubkeys:[String], limit:Int? = nil, subscriptionId:String? = nil) -> String {
         let limit = limit ?? (pubkeys.count + 20) // add 20 in case of multiple setMetadata's for a pubkey maybe?? not sure
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON(short(pubkeys)).rawString() ?? "[]"), "kinds": [0], "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON(short(pubkeys)).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]"), "kinds": [0], "limit": \(limit)}]
 """
     }
 }
