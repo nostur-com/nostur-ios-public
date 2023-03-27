@@ -158,7 +158,7 @@ class EventsProvider: ObservableObject {
         var relayMessages:[RelayMessage] = []
         
         for text in messages {
-            guard let message = try? RelayMessage.parseRelayMessage(text: text, skipValidation: true) else { continue }
+            guard let message = try? RelayMessage.parseRelayMessage(text: text, relay: "wss://memory", skipValidation: true) else { continue }
             // just take all:
             relayMessages.append(message)
             // end of just take all.

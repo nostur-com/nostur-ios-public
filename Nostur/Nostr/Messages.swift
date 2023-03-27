@@ -46,12 +46,16 @@ struct RelayMessage {
         case FAILED_TO_PARSE_EVENT // Could parse raw websocket but not event
     }
     
+    var relay:String
     var type:RelayMessage.type?
     var message:String
     var subscriptionId:String?
     var event:NEvent?
     
-    static func parseRelayMessage(text:String, skipValidation:Bool = false) throws -> RelayMessage {
+    var id:String?
+    var success:Bool?
+    
+    static func parseRelayMessage(text:String, relay:String, skipValidation:Bool = false) throws -> RelayMessage {
         guard let dataFromString = text.data(using: .utf8, allowLossyConversion: false) else {
             throw error.FAILED_TO_PARSE
         }
@@ -61,19 +65,23 @@ struct RelayMessage {
             guard let eose = try? decoder.decode(NMessage.self, from: dataFromString) else {
                 throw error.FAILED_TO_PARSE
             }
-            return RelayMessage(type: .EOSE, message: text, subscriptionId: eose.subscription)
+            return RelayMessage(relay:relay, type: .EOSE, message: text, subscriptionId: eose.subscription)
         }
         
         guard text.prefix(7) != ###"["AUTH""### else {
-            return RelayMessage(type: .AUTH, message: text)
+            return RelayMessage(relay:relay, type: .AUTH, message: text)
         }
         
         guard text.prefix(9) != ###"["NOTICE""### else {
-            return RelayMessage(type: .NOTICE, message: text)
+            return RelayMessage(relay:relay, type: .NOTICE, message: text)
         }
         
         guard text.prefix(5) != ###"["OK""### else {
-            return RelayMessage(type: .OK, message: text)
+            let decoder = JSONDecoder()
+            guard let result = try? decoder.decode(CommandResult.self, from: dataFromString) else {
+                throw error.FAILED_TO_PARSE
+            }
+            return RelayMessage(relay:relay, type: .OK, message: text, id:result.id, success:result.success)
         }
         
         guard text.prefix(8) == ###"["EVENT""### else {
@@ -101,7 +109,7 @@ struct RelayMessage {
             throw "🔴🔴🔴 NO VALID SIG 🔴🔴🔴 "
         }
         
-        return RelayMessage(type: .EVENT, message: text, subscriptionId: relayMessage.subscription, event: nEvent)
+        return RelayMessage(relay:relay, type: .EVENT, message: text, subscriptionId: relayMessage.subscription, event: nEvent)
     }
 }
 

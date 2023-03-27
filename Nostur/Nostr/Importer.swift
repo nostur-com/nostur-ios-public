@@ -82,7 +82,7 @@ class Importer {
                         }
                     }
                     
-                    let savedEvent = Event.saveEvent(event: event, context:context)
+                    let savedEvent = Event.saveEvent(event: event, context:context, relay: message.relay)
                     saved = saved + 1
                     if (kind6firstQuote != nil) {
                         savedEvent.firstQuote = kind6firstQuote

@@ -28,6 +28,7 @@ extension Event {
     @NSManaged public var pubkey: String
     @NSManaged public var sig: String?
     @NSManaged public var tagsSerialized: String?
+    @NSManaged public var relays: String
     
     @NSManaged public var replyToRootId: String?
     @NSManaged public var replyToId: String?
@@ -617,7 +618,32 @@ extension Event {
             return zapRequest
     }
     
-    static func saveEvent(event:NEvent, context:NSManagedObjectContext) -> Event {
+    static func updateRelays(_ id:String, relay: String) {
+        let request = NSFetchRequest<Event>(entityName: "Event")
+        request.entity = Event.entity()
+        request.predicate = NSPredicate(format: "id == %@", id)
+        request.fetchLimit = 1
+        request.fetchBatchSize = 1
+        
+        let bg = DataProvider.shared().newTaskContext()
+        bg.perform {
+            if let event = try? bg.fetch(request).first {
+                var relays = event.relays.split(separator: " ").map { String($0) }
+                relays.append(relay)
+                event.relays = relays.joined(separator: " ")
+                if bg.hasChanges {
+                    do {
+                        try bg.save()
+                    }
+                    catch {
+                        print("🔴🔴 error updateRelays \(error)")
+                    }
+                }
+            }
+        }
+    }
+    
+    static func saveEvent(event:NEvent, context:NSManagedObjectContext, relay:String? = nil) -> Event {
         
         let savedEvent = Event(context: context)
         savedEvent.insertedAt = Date.now
@@ -632,6 +658,7 @@ extension Event {
         savedEvent.isRepost = event.kind == .repost
         savedEvent.contact = Contact.fetchByPubkey(event.publicKey, context: context)
         savedEvent.tagsSerialized = TagSerializer.shared.encode(tags: event.tags)
+        savedEvent.relays = relay ?? ""
         
         if event.kind == .profileBadges {
             savedEvent.contact?.objectWillChange.send()

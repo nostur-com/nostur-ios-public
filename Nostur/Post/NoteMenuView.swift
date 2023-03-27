@@ -101,8 +101,16 @@ struct NoteMenuView: View {
                 let nEvent = vPost.event.toNEvent()
                 up.publishNow(nEvent)
             } label: {
-                Label("Rebroadcast\(vPost.event.pubkey == ns.activeAccountPublicKey ? " (again)" : "")", systemImage: "radiowaves.left.and.right")
+                Label("Rebroadcast\(vPost.event.pubkey == ns.activeAccountPublicKey ? " (again)" : "")", systemImage: "dot.radiowaves.left.and.right")
             }
+            if event.relays != "" {
+                Divider()
+                ForEach(event.relays.split(separator: " "), id:\.self) { relay in
+                    Button(String(relay)) { }
+                        .disabled(true)
+                }
+            }
+            
         } label: {
             Text("···")
                 .fontWeight(.bold)

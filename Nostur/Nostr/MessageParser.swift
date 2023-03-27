@@ -20,7 +20,7 @@ class MessageParser {
             //            ThreadWarning.which("socketReceivedMessage")
             // Validation is CPU intensive. Moved it to Importer right before save step
             // so we dont waste cpu on duplicates etc
-            guard let message = try? RelayMessage.parseRelayMessage(text: text, skipValidation: true) else {
+            guard let message = try? RelayMessage.parseRelayMessage(text: text, relay: relayUrl, skipValidation: true) else {
                 print("🚒🚒🚒 \(relayUrl) could not parse message. or verify sig: \(text)")
                 throw "could not parse message. or verify sig"
             }
@@ -30,6 +30,11 @@ class MessageParser {
                     print("🟢🟢 \(relayUrl): \(message.message)")
                 case .OK:
                     print("\(relayUrl): \(message.message)")
+                    if message.success ?? false {
+                        if let id = message.id {
+                            Event.updateRelays(id, relay: message.relay)
+                        }
+                    }
                 case .NOTICE:
                     print("\(relayUrl): \(message.message)")
                 case .EOSE:
