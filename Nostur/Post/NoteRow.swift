@@ -141,6 +141,7 @@ struct NoteRow: View {
                             .contentShape(Rectangle())
                             .onTapGesture { nav.navigateTo(vPost) }
 //
+//                        DetailContentRenderer(event: event)
                             switch self.type {
                                 case .lightningInvoice:
                                     LightningInvoice(invoice: vPost.plainText)
@@ -151,6 +152,7 @@ struct NoteRow: View {
                                             .onTapGesture { nav.navigateTo(vPost) }
                                     if vPost.imageUrls.count > 0 {
                                         MediaViewer(imgUrls: vPost.imageUrls, pubkey: vPost.event.pubkey)
+                                            .onTapGesture { nav.navigateTo(vPost) }
                                     }
                             }
                             
@@ -225,6 +227,8 @@ struct NoteRow_Previews: PreviewProvider {
         let img3 = PreviewFetcher.fetchVPost("82fcaaa11259aa5f505f1e3a6de06c2b7265179d3d05ef0b74824c4b7ff7eab8")
         let img4 = PreviewFetcher.fetchVPost("5099246907e78edde0169c419543c01dd312fbe2645106c58f476efd65c2f66b")
         
+        let eventLong = PreviewFetcher.fetchVPost("9b34fd9a53398fb51493d68ecfd0d64ff922d0cdf5ffd8f0ffab46c9a3cf54e3")
+        
         List {
             
 //            Group {
@@ -259,6 +263,13 @@ struct NoteRow_Previews: PreviewProvider {
 //                        .listRowInsets(EdgeInsets())
 //                }
                 //
+            
+            
+            if (eventLong != nil) {
+                NoteRow(vPost: eventLong!)
+                    .listRowInsets(EdgeInsets())
+            }
+            
                 if (event1 != nil) {
                     NoteRow(vPost: event1!)
                         .listRowInsets(EdgeInsets())

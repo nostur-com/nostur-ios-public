@@ -6,8 +6,6 @@
 //
 
 import SwiftUI
-import NukeUI
-import Nuke
 
 // Renders embeds (VIEWS), not links (in TEXT)
 struct DetailContentRenderer: View { // VIEW things
@@ -105,23 +103,7 @@ struct DetailContentRenderer: View { // VIEW things
                     case .video(let url):
                         VideoPlayerView(videoURL: url)
                     case .image(let url):
-                        LazyImage(url: url) { state in
-                            if let image = state.image {
-                                image
-                                    .resizable()
-                                    .scaledToFit()
-                                //                                    .aspectRatio(contentMode: .fit)
-                                //                                    .frame(maxWidth: .infinity)
-                                //                                    .frame(width: side, height: 200)
-                                    .onTapGesture {
-                                        //                                        fullScreenItem = FullScreenItem(url: url)
-                                    }
-                            }
-                            else {
-                                CenteredProgressView()
-                            }
-                        }
-                        .pipeline(ImageProcessing.shared.content) // No processing again here, we probably never show the image again
+                        SingleMediaViewer(url: url)
                     default:
                         Text("dunno")
                 }

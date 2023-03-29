@@ -23,12 +23,12 @@ import NukeUI
 //    }
 //}
     
-
 struct FullScreenItem : Identifiable {
     var url:URL
     var id:String { url.absoluteString }
 }
 
+// For use in NoteRow, not PostDetail
 struct MediaViewer: View {
     @EnvironmentObject var ns:NosturState // Only needed for `eventIsRestricted`
     let imgUrls:[URL]
@@ -59,6 +59,7 @@ struct MediaViewer: View {
                                 ForEach(0..<imgUrls.prefix(20).count, id: \.self) { index in
                                     if ([".mp4",".mov"].contains(imgUrls[index].absoluteString.suffix(4))) {
                                         AVP(videoURL: imgUrls[index])
+//                                        AVP(videoURL: imgUrls[index], width: side, height: 200, contentMode: .scaleAspectFit)
                                     }
                                     else if (imgUrls[index].absoluteString.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
                                         LazyImage(url: imgUrls[index]) { state in
@@ -66,7 +67,7 @@ struct MediaViewer: View {
                                                 if container.type == .gif, let gifData = container.data {
                                                     AnimatedGifView(gifData: gifData, width: side, height: 200, contentMode: .scaleAspectFit)
                                                         .scaledToFit()
-                                                        .frame(width: side, height: 200)
+//                                                        .frame(width: side, height: 200)
                                                         .onTapGesture {
                                                             fullScreenItem = FullScreenItem(url: imgUrls[index])
                                                         }
@@ -143,14 +144,15 @@ struct MediaViewer: View {
                         if let imgUrl = imgUrls.first {
                             if ([".mp4",".mov"].contains(imgUrl.absoluteString.suffix(4))) {
                                 AVP(videoURL: imgUrl)
+//                                AVP(videoURL: imgUrl, width: geo.size.width, height: geo.size.height, contentMode: .scaleAspectFit)
                             }
                             else if (imgUrl.absoluteString.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
                                 LazyImage(url: imgUrl) { state in
                                     if let container = state.imageContainer {
                                         if container.type == .gif, let gifData = container.data {
-                                            AnimatedGifView(gifData: gifData, width: geo.size.width, height: geo.size.height, contentMode: .scaleAspectFit)
-                                                .scaledToFit()
-                                                .frame(width: geo.size.width, height: geo.size.height)
+                                            AnimatedGifView(gifData: gifData, width: geo.size.width, height: 200, contentMode: .scaleAspectFit)
+//                                                .scaledToFit()
+//                                                .frame(width: geo.size.width, height: 200)
                                                 .onTapGesture {
                                                     fullScreenItem = FullScreenItem(url: imgUrl)
                                                 }
@@ -159,6 +161,7 @@ struct MediaViewer: View {
                                             image
                                                 .resizable()
                                                 .scaledToFit()
+//                                                .frame(width: geo.size.width, height: 200)
                                                 .onTapGesture {
                                                     fullScreenItem = FullScreenItem(url: imgUrl)
                                                 }
@@ -189,11 +192,11 @@ struct MediaViewer: View {
                                     }
                                 }
                                 .pipeline(ImageProcessing.shared.content) // No processing again here, we probably never show the image again
-                                
                             }
                         }
                     }
                     .frame(height: 200)
+//                    .background(.green)
                     .fullScreenCover(item: $fullScreenItem, content: { item in
                         FullImageViewer(fullImageURL:item.url)
                     })
@@ -224,57 +227,6 @@ struct MediaViewer: View {
             imagesShown = !SettingsStore.shared.restrictAutoDownload || ns.isFollowing(pubkey)
         }
     }
-    
-    //    var bodyx: some View {
-    //        GeometryReader { geometry in
-    //            let side = geometry.size.width / 2
-    //            let item = GridItem(.fixed(side), spacing: 2)
-    //            if (imgUrls_.count > 1) {
-    //                LazyVGrid(columns: Array(repeating: item, count: 2), spacing: 2) {
-    //                    ForEach(0..<imgUrls_.count, id: \.self) { index in
-    //                        LazyImage(url: imgUrls_[index])
-    //                            .pipeline(ImageProcessing.shared.content)
-    //                            .priority(.low)
-    //                            .processors([ImageProcessors.Resize(width: side)])
-    //                            .frame(width: side, height: side)
-    //                        // TODO: DUNNO MAYBE NEED PREFETCHER SOME DAY
-    //                        //                            .onAppear { model.onAppear(index) }
-    //                        //                            .onDisappear { model.onDisappear(index) }
-    //                            .onTapGesture {
-    //                                fullScreenItem = FullScreenItem(url: imgUrls_[index])
-    //                            }
-    //                    }
-    //                }
-    //            }
-    //            else if (!imgUrls_.isEmpty) {
-    ////                Text("WTF")
-    //                LazyVGrid(columns: [GridItem(.fixed(geometry.size.width))], spacing: 2) {
-    //                    LazyImage(url: imgUrls_[0])
-    //
-    //                        .pipeline(ImageProcessing.shared.content)
-    //                        .priority(.low)
-    //                        .processors([ImageProcessors.Resize(width: geometry.size.width)])
-    //                        .frame(width: geometry.size.width)
-    ////                        .scaledToFit()
-    //                        .frame(height: 350)
-    //                    // TODO: DUNNO MAYBE NEED PREFETCHER SOME DAY
-    //                    //                            .onAppear { model.onAppear(0) }
-    //                    //                            .onDisappear { model.onDisappear(0) }
-    //                        .onTapGesture {
-    //                            fullScreenItem = FullScreenItem(url: imgUrls_[0])
-    //                        }
-    //                }
-    //                .frame(height: 350)
-    //
-    //            }
-    //        }
-    //        .onAppear {
-    //            imgUrls = getImgUrlsFromContent(content)
-    //        }
-    //        .fullScreenCover(item: $fullScreenItem, content: { item in
-    //            FullImageViewer(fullImageURL:item.url)
-    //        })
-    //    }
 }
 
 struct FullImageViewer: View {
@@ -325,6 +277,7 @@ struct FullImageViewer: View {
                 VStack {
                     if ([".mp4",".mov"].contains(fullImageURL.absoluteString.suffix(4))) {
                         AVP(videoURL: fullImageURL)
+//                        AVP(videoURL: fullImageURL, width: geo.size.width, height: geo.size.height, contentMode: .scaleAspectFit)
                     }
                     else if (fullImageURL.absoluteString.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
                         LazyImage(url: fullImageURL) { state in
@@ -450,125 +403,3 @@ struct ImageViewer_Previews: PreviewProvider {
         .withPreviewEnvironment()
     }
 }
-
-// TODO: DUNNO MAYBE NEED PREFETCHER SOME DAY
-//final class PrefetchDemoViewModel: ObservableObject, ScrollViewPrefetcherDelegate {
-//    private let imagePrefetcher: ImagePrefetcher
-//    private let scrollViewPrefetcer: ScrollViewPrefetcher
-//    let urls: [URL]
-//
-//    init() {
-//        self.imagePrefetcher = ImagePrefetcher()
-//        self.scrollViewPrefetcer = ScrollViewPrefetcher()
-//        self.urls = imgUrls
-//
-//        self.scrollViewPrefetcer.delegate = self
-//    }
-//
-//    func onAppear(_ index: Int) {
-//        scrollViewPrefetcer.onAppear(index)
-//    }
-//
-//    func onDisappear(_ index: Int) {
-//        scrollViewPrefetcer.onDisappear(index)
-//    }
-//
-//    // MARK: ScrollViewPrefetcherDelegate
-//    func getAllIndicesForPrefetcher(_ prefetcher: ScrollViewPrefetcher) -> Range<Int> {
-//        urls.indices
-//    }
-//
-//    func prefetcher(_ prefetcher: ScrollViewPrefetcher, prefetchItemsAt indices: [Int]) {
-//        imagePrefetcher.startPrefetching(with: indices.map { urls[$0] })
-//    }
-//
-//    func prefetcher(_ prefetcher: ScrollViewPrefetcher, cancelPrefechingForItemAt indices: [Int]) {
-//        imagePrefetcher.stopPrefetching(with: indices.map { urls[$0] })
-//    }
-//}
-//
-//
-//// MARK: - ScrollViewPrefetcher
-//protocol ScrollViewPrefetcherDelegate: AnyObject {
-//    /// Returns all valid indices for the collection.
-//    func getAllIndicesForPrefetcher(_ prefetcher: ScrollViewPrefetcher) -> Range<Int>
-//    func prefetcher(_ prefetcher: ScrollViewPrefetcher, prefetchItemsAt indices: [Int])
-//    func prefetcher(_ prefetcher: ScrollViewPrefetcher, cancelPrefechingForItemAt indices: [Int])
-//}
-//
-//final class ScrollViewPrefetcher {
-//    private let prefetchWindowSize: Int
-//
-//    weak var delegate: ScrollViewPrefetcherDelegate?
-//
-//    private var visibleIndices: Set<Int> = []
-//    private var flushedVisibleIndices: Set<Int> = []
-//    private var isRefreshScheduled = false
-//    private var prefetchWindow = 0..<0
-//
-//    init(prefetchWindowSize: Int = 12) {
-//        self.prefetchWindowSize = prefetchWindowSize
-//    }
-//
-//    func onAppear(_ index: Int) {
-//        visibleIndices.insert(index)
-//        scheduleRefreshIfNeeded()
-//    }
-//
-//    func onDisappear(_ index: Int) {
-//        visibleIndices.remove(index)
-//        scheduleRefreshIfNeeded()
-//    }
-//
-//    /// SwiftUI sometimes calls onAppear in unexpected order, buffer takes care of it.
-//    private func scheduleRefreshIfNeeded() {
-//        guard !isRefreshScheduled else { return }
-//        isRefreshScheduled = true
-//        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(100)) { [weak self] in
-//            self?.updatePrefetchWindow()
-//        }
-//    }
-//
-//    private func updatePrefetchWindow() {
-//        isRefreshScheduled = false
-//        guard !visibleIndices.isEmpty else { return } // Should never happen
-//        if flushedVisibleIndices.isEmpty {
-//            // Showing screen for the first time
-//            let lowerBound = visibleIndices.max()! + 1
-//            updatePrefetchWindow(lowerBound..<(lowerBound + prefetchWindowSize))
-//        } else {
-//            // Need to figure out in which direction we the user is scrolling
-//            let isScrollingDown = visibleIndices.max()! > flushedVisibleIndices.max()!
-//            if isScrollingDown || visibleIndices.contains(0) {
-//                let lowerBound = visibleIndices.max()! + 1
-//                updatePrefetchWindow(lowerBound..<(lowerBound + prefetchWindowSize))
-//            } else {
-//                let upperBound = visibleIndices.min()! - 1
-//                updatePrefetchWindow((upperBound - prefetchWindowSize)..<upperBound)
-//            }
-//        }
-//
-//        flushedVisibleIndices = visibleIndices
-//    }
-//
-//    private func updatePrefetchWindow(_ newPrefetchWindow: Range<Int>) {
-//        let oldPrefetchIndices = Set(prefetchWindow)
-//        let newPrefetchIndices = Set(newPrefetchWindow)
-//
-//        prefetchWindow = newPrefetchWindow
-//
-//        let allIndices = Set(delegate?.getAllIndicesForPrefetcher(self) ?? 0..<0)
-//
-//        let removedIndicides = oldPrefetchIndices
-//            .subtracting(newPrefetchIndices)
-//            .intersection(allIndices) // Only call for visible items
-//            .sorted()
-//        let addedIndices = newPrefetchIndices
-//            .subtracting(oldPrefetchIndices)
-//            .intersection(allIndices) // Only call for visible items
-//            .sorted()
-//
-//        delegate?.prefetcher(self, prefetchItemsAt: addedIndices)
-//        delegate?.prefetcher(self, cancelPrefechingForItemAt: removedIndicides)
-//    }
-//}

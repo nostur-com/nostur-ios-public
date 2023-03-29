@@ -23,6 +23,11 @@ class ContentLinkRenderer { // TEXT things
     func renderedText(_ event:Event, text: String) -> AttributedString {
 //        var newText = text
         
+        // Remove image links
+        // because they get rendered as embers in PostDetail.
+        // and NoteRow shows them in ImageViewer
+        var newText = removeImageLinks(event: event, text: text)
+        
         // NIP-08, handle #[0] #[1] etc
         var newText = parseTagIndexedMentions(event: event, text: text)
         
@@ -142,6 +147,12 @@ class ContentLinkRenderer { // TEXT things
         }
 
         return replacedString
+    }
+    
+    func removeImageLinks(event: Event, text:String) -> String {
+        text.replacingOccurrences(of: #"(?i)\bhttps?:\/\/\S+?\.(?:mp4|mov|png|jpe?g|gif|webp|bmp)\b"#,
+                                  with: "",
+                                  options: .regularExpression)
     }
     
     // Takes a string and replaces any link with a markdown link. Also handles subdomains
