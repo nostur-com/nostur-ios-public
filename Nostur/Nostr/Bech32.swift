@@ -1,11 +1,5 @@
-//
-//  Bech32.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 21/01/2023.
-//
-
 import Foundation
+import Algorithms
 
 public class Bech32 {
     private let gen: [UInt32] = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3]
@@ -16,24 +10,134 @@ public class Bech32 {
     /// Bech32 character set for decoding
     private let decCharset: [Int8] = [
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-        15, -1, 10, 17, 21, 20, 26, 30,  7,  5, -1, -1, -1, -1, -1, -1,
-        -1, 29, -1, 24, 13, 25,  9,  8, 23, -1, 18, 22, 31, 27, 19, -1,
-        1,  0,  3, 16, 11, 28, 12, 14,  6,  4,  2, -1, -1, -1, -1, -1,
-        -1, 29, -1, 24, 13, 25,  9,  8, 23, -1, 18, 22, 31, 27, 19, -1,
-        1,  0,  3, 16, 11, 28, 12, 14,  6,  4,  2, -1, -1, -1, -1, -1
+         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+         15, -1, 10, 17, 21, 20, 26, 30,  7,  5, -1, -1, -1, -1, -1, -1,
+         -1, 29, -1, 24, 13, 25,  9,  8, 23, -1, 18, 22, 31, 27, 19, -1,
+         1,  0,  3, 16, 11, 28, 12, 14,  6,  4,  2, -1, -1, -1, -1, -1,
+         -1, 29, -1, 24, 13, 25,  9,  8, 23, -1, 18, 22, 31, 27, 19, -1,
+         1,  0,  3, 16, 11, 28, 12, 14,  6,  4,  2, -1, -1, -1, -1, -1
     ]
     
     /// Find the polynomial with value coefficients mod the generator as 30-bit.
+    /// This one is CPU intensive
+//    private func ORIGINALpolymod(_ values: Data) -> UInt32 {
+//        var chk: UInt32 = 1
+//        for v in values {
+//            let top = (chk >> 25)
+//            chk = (chk & 0x1ffffff) << 5 ^ UInt32(v)
+//            for i: UInt8 in 0..<5 {
+//                chk ^= ((top >> i) & 1) == 0 ? 0 : gen[Int(i)]
+//            }
+//        }
+//        return chk
+//    }
+    
+    // Optimized by ChatGTP 3.5, seems much better
+//    private func polymodGTP35(_ values: Data) -> UInt32 {
+//        let chk: UInt32 = 1
+//        return values.reduce(into: chk) { chk, v in
+//            let top = (chk >> 25)
+//            let newChk = (chk & 0x1ffffff) << 5 ^ UInt32(v)
+//            chk = (0..<5).reduce(newChk) { chk, i in
+//                chk ^ ((top >> i) & 1) == 0 ? 0 : gen[Int(i)]
+//            }
+//        }
+//    }
+    
+    // By GPT-4, asked again and gave input from its own 3.5 output
+//    private func polymodBROKEN(_ values: Data) -> UInt32 {
+//        let gen: [UInt32] = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3]
+//        let chk: UInt32 = 1
+//
+//        var precomputedTop: [UInt32] = Array(repeating: 0, count: 32)
+//        for i in 0..<32 {
+//            // swiftlint:disable:next identifier_name
+//            precomputedTop[i] = gen[0] &* (i & 1) ^ gen[1] &* (i >> 1 & 1) ^ gen[2] &* (i >> 2 & 1) ^ gen[3] &* (i >> 3 & 1) ^ gen[4] &* (i >> 4 & 1)
+//        }
+//
+//        return values.reduce(into: chk) { chk, v in
+//            let top = (chk >> 25)
+//            let newChk = (chk & 0x1ffffff) << 5 ^ UInt32(v)
+//            chk = newChk ^ precomputedTop[Int(top)]
+//        }
+//    }
+    
+    // Asked GPT4 to fix it:
     private func polymod(_ values: Data) -> UInt32 {
+//        let gen: [UInt32] = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3]
+        let chk: UInt32 = 1
+        
+        var precomputedTop: [UInt32] = Array(repeating: 0, count: 32)
+        for i in 0..<32 {
+            let mask0 = UInt32(i & 1)
+            let mask1 = UInt32((i >> 1) & 1)
+            let mask2 = UInt32((i >> 2) & 1)
+            let mask3 = UInt32((i >> 3) & 1)
+            let mask4 = UInt32((i >> 4) & 1)
+            
+            precomputedTop[i] = gen[0] &* mask0 ^ gen[1] &* mask1 ^ gen[2] &* mask2 ^ gen[3] &* mask3 ^ gen[4] &* mask4
+        }
+        
+        return values.reduce(into: chk) { chk, v in
+            let top = (chk >> 25)
+            let newChk = (chk & 0x1ffffff) << 5 ^ UInt32(v)
+            chk = newChk ^ precomputedTop[Int(top)]
+        }
+    }
+
+
+    
+    // Suggestion by ChatGPT 4, should try
+//    private func polymodDOESNTWORK(_ values: Data) -> UInt32 {
+////        let gen: [UInt32] = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3]
+//        var chk: UInt32 = 1
+//        var precomputedTop: [UInt32] = Array(repeating: 0, count: 32)
+//
+//        for i in 0..<32 {
+//            precomputedTop[i] = gen[0] &* (i & 1) ^ gen[1] &* (i >> 1 & 1) ^ gen[2] &* (i >> 2 & 1) ^ gen[3] &* (i >> 3 & 1) ^ gen[4] &* (i >> 4 & 1)
+//        }
+//
+//        for v in values {
+//            let top = (chk >> 25)
+//            chk = (chk & 0x1ffffff) << 5 ^ UInt32(v)
+//            chk ^= precomputedTop[Int(top)]
+//        }
+//
+//        return chk
+//    }
+
+    
+    private func TryAlsooopolymod(_ values: Data) -> UInt32 {
         var chk: UInt32 = 1
-        for v in values {
+        values.map { v in
             let top = (chk >> 25)
             chk = (chk & 0x1ffffff) << 5 ^ UInt32(v)
             for i: UInt8 in 0..<5 {
                 chk ^= ((top >> i) & 1) == 0 ? 0 : gen[Int(i)]
             }
+        }
+        return chk
+    }
+    
+    private func TryAlsopolymod(_ values: Data) -> UInt32 {
+        var chk: UInt32 = 1
+        let count = values.count
+        var index = 0
+        while index < count {
+            let top = (chk >> 25)
+            chk = (chk & 0x1ffffff) << 5 ^ UInt32(values[index])
+            for i: UInt8 in 0..<4 {
+                index += 1
+                chk ^= ((top >> i) & 1) == 0 ? 0 : gen[Int(i)]
+                let v = index < count ? values[index] : 0
+                chk ^= ((top >> 4) & 1) == 0 ? 0 : gen[4 + Int(i)]
+                chk ^= ((top >> (5 + i)) & 1) == 0 ? 0 : gen[8 + Int(i)]
+                chk ^= ((top >> 9) & 1) == 0 ? 0 : gen[12]
+                chk ^= UInt32(v) << 8
+            }
+            index += 1
+            chk ^= ((top >> 4) & 1) == 0 ? 0 : gen[4]
         }
         return chk
     }
@@ -89,7 +193,7 @@ public class Bech32 {
         guard let strBytes = str.data(using: .utf8) else {
             throw DecodingError.nonUTF8String
         }
-        guard strBytes.count <= 90 else {
+        guard !["npub1","nsec1"].contains(str.prefix(5)) || strBytes.count <= 90 else {
             throw DecodingError.stringLengthExceeded
         }
         var lower: Bool = false
@@ -185,6 +289,25 @@ public class Bech32 {
         }
         
         return url
+    }
+    
+    static func decode(other: String) throws -> (String, Data) {
+        let bech32 = Bech32()
+        guard let (hrp, decodedData) = try? bech32.decode(other) else {
+            throw "LNURLAuthError.invalidLNURL"
+        }
+        
+        
+        guard let data = decodedData.convertBits(fromBits: 5, toBits: 8, pad: false) else {
+            throw "LNURLAuthError.invalidLNURL"
+        }
+        
+        return (hrp, data)
+        
+        //        guard let string = String(data: data, encoding: .utf8) else {
+        //            throw "LNURLAuthError.invalidLNURL"
+        //        }
+        
     }
 }
 
