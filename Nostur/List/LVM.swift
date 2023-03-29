@@ -566,7 +566,7 @@ extension LVM: NSFetchedResultsControllerDelegate {
             do {
                 try self.frc?.performFetch()
                 guard let posts = self.frc?.fetchedObjects else { return }
-                //                self.contentChangedSubject.send(posts) // Disabled, no debounce/throttle on first fetch
+                // self.contentChangedSubject.send(posts) // Disabled, no debounce/throttle on first fetch
                 self.sendToView(events: posts)
             } catch {
                 print("🔴🔴🔴 failed to fetch items")
