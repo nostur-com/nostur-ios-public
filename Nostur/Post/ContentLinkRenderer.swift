@@ -29,7 +29,7 @@ class ContentLinkRenderer { // TEXT things
         var newText = removeImageLinks(event: event, text: text)
         
         // NIP-08, handle #[0] #[1] etc
-        var newText = parseTagIndexedMentions(event: event, text: text)
+        newText = parseTagIndexedMentions(event: event, text: newText)
         
         // NIP-28 handle nostr:npub1, nostr:nprofile ...
         newText = parseUserMentions(event: event, text: newText)
