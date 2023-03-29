@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ProcessingStatus: View {
     
-    @State var message:String? = "Processing new items..."
+    @State var message:String? = nil
     
     var body: some View {
         VStack {
@@ -25,12 +25,19 @@ struct ProcessingStatus: View {
                 EmptyView()
             }
         }
+        .onAppear {
+            setTemporaryMessage("Checking for new items...")
+        }
         .onReceive(receiveNotification(.listStatus)) { notification in
-            message = notification.object as? String
-            DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(3)) {
-                withAnimation {
-                    self.message = nil
-                }
+            let message = notification.object as? String
+            setTemporaryMessage(message)
+        }
+    }
+    func setTemporaryMessage(_ message:String?) {
+        self.message = message
+        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(2)) {
+            withAnimation {
+                self.message = nil
             }
         }
     }

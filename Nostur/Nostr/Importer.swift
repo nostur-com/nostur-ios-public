@@ -31,8 +31,13 @@ class Importer {
         let itemsCount = await parsedBucket.count()
         guard itemsCount != 0 else { self.isImporting = false; return }
         print("🦋🦋 \(itemsCount) messages in parsedBucket.")
-        sendNotification(.listStatus, "Processing \(itemsCount) items...")
-        
+        if itemsCount == 1 {
+            print(await parsedBucket.all().description)
+        }
+        DispatchQueue.main.async {
+            sendNotification(.listStatus, "Processing \(itemsCount) items...")
+        }
+
         var forImports = [RelayMessage]()
         while let forImport = await parsedBucket.dequeue() {
             forImports.append(forImport)
