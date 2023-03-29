@@ -78,12 +78,12 @@ class VPostTransformer {
     
     let context:NSManagedObjectContext
     let replyingToBuilder:ReplyingToUsernamesBuilder
-    let postTextRenderer:RenderedPostTextBuilder
+    let contentLinkRenderer:ContentLinkRenderer
     
     init(_ context:NSManagedObjectContext? = nil) {
         self.context = context ?? DataProvider.shared().viewContext
         self.replyingToBuilder = ReplyingToUsernamesBuilder(self.context)
-        self.postTextRenderer = RenderedPostTextBuilder(self.context)
+        self.contentLinkRenderer = ContentLinkRenderer(self.context)
     }
     
     func toVPost(_ event:Event) -> VPost {
@@ -93,8 +93,8 @@ class VPostTransformer {
             created_at: event.created_at,
             npub: event.npub,
             note1: event.noteId,
-            plainText: postTextRenderer.copyPasteText(event),
-            renderedText: postTextRenderer.renderedText(event),
+            plainText: contentLinkRenderer.copyPasteText(event, text: event.noteText),
+            renderedText: contentLinkRenderer.renderedText(event, text: event.noteText),
             replyingToUsernamesMarkDown: replyingToBuilder.replyingToUsernamesMarkDownString(event),
             imageUrls: event.content != nil ? getImgUrlsFromContent(event.content!) : [],
             displayName: event.contact?.authorName ?? String((event.npub.prefix(11)))
@@ -106,8 +106,8 @@ class VPostTransformer {
             created_at: event.created_at,
             npub: event.npub,
             note1: event.noteId,
-            plainText: postTextRenderer.copyPasteText(event),
-            renderedText: postTextRenderer.renderedText(event),
+            plainText: contentLinkRenderer.copyPasteText(event, text: event.noteText),
+            renderedText: contentLinkRenderer.renderedText(event, text: event.noteText),
             replyingToUsernamesMarkDown: replyingToBuilder.replyingToUsernamesMarkDownString(event),
             imageUrls: event.content != nil ? getImgUrlsFromContent(event.content!) : [],
             displayName: event.contact?.authorName ?? String((event.npub.prefix(11)))

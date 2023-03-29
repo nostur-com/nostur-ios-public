@@ -45,6 +45,10 @@ struct NIP19 {
     
 }
 
+func note1(_ hex:String) -> String {
+    return try! NIP19(prefix: "note", hexString: hex).displayString
+}
+
 func npub(_ hex:String) -> String {
     return try! NIP19(prefix: "npub", hexString: hex).displayString
 }
@@ -55,4 +59,76 @@ func nsec(_ hex:String) -> String {
 
 func pubkey(_ npub:String) -> String {
     return try! NIP19(displayString: npub).hexString
+}
+
+func hex(_ note1:String) -> String {
+    return try! NIP19(displayString: note1).hexString
+}
+
+
+class ShareableIdentifier {
+
+    let bech32string:String
+    let prefix:String
+    
+    var pubkey: String?
+    var eventId: String?
+    var relayUrl: String?
+    var relays: [String] = []
+    var kind: Int64?
+    
+    init(_ bech32string:String) throws {
+        self.bech32string = bech32string
+        let (prefix, tlvData) = try Bech32.decode(other: bech32string)
+        self.prefix = prefix
+        
+        var currentIndex = 0
+        while currentIndex < tlvData.count {
+            guard currentIndex + 2 < tlvData.count else {
+                throw "EncodingError.invalidFormat"
+            }
+            let type = tlvData[currentIndex]
+            let length = Int(tlvData[currentIndex + 1])
+            guard currentIndex + 2 + length <= tlvData.count else {
+                throw "EncodingError.invalidFormat"
+            }
+            let value = tlvData.subdata(in: (currentIndex + 2)..<(currentIndex + 2 + length))
+            currentIndex += 2 + length
+            
+            switch type {
+                case 0:
+                    switch prefix {
+                        case "nprofile":
+                            pubkey = value.hexEncodedString()
+                        case "nevent":
+                            eventId = value.hexEncodedString()
+                        case "nrelay":
+                            relayUrl = String(data: value, encoding: .utf8)
+                        case "naddr":
+                            eventId = value.hexEncodedString() // or: String(data: value, encoding: .utf8) ??
+                        default:
+                            throw "EncodingError.invalidPrefix"
+                    }
+                case 1:
+                    let relay = String(data: value, encoding: .utf8)!
+                    relays.append(relay)
+                case 2:
+                    switch prefix {
+                        case "naddr":
+                            pubkey = value.hexEncodedString()
+                        case "nevent":
+                            pubkey = value.hexEncodedString()
+                        default:
+                            throw "EncodingError.invalidPrefix"
+                    }
+                case 3:
+                    guard prefix == "naddr" else {
+                        throw "EncodingError.invalidPrefix"
+                    }
+                    kind = Int64(value.withUnsafeBytes { $0.load(as: UInt32.self) }.bigEndian)
+                default:
+                    print("EncodingError.invalidType")
+            }
+        }
+    }
 }

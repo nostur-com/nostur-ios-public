@@ -214,6 +214,22 @@ extension Event {
         }
     }
     
+    var noteTextPrepared: String {
+        let tags = tags()
+        guard tags.count > 0 else { return content ?? "" }
+        
+        var newText = content ?? ""
+        for index in tags.indices {
+            if (tags[index].type == "e") {
+                
+                let key = try! NIP19(prefix: "note1", hexString: tags[index].id)
+                newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "nostr:\(note1(tags[index].id))")
+
+            }
+        }
+        return newText
+    }
+    
     var noteId:String {
         try! NIP19(prefix: "note", hexString: id).displayString
     }
