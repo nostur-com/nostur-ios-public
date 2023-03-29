@@ -80,7 +80,8 @@ struct NosturApp: App {
         
         // Daily cleanup.
         //TODO: Is fast or do in background task?
-        Maintenance.maintenance(context: EventsProvider.shared.container.viewContext)
+        Maintenance.maintenance(context: DataProvider.shared().container.newBackgroundContext())
+//        Maintenance.maintenance(context: EventsProvider.shared.container.viewContext)
         
         // One time fix
         //        repairDb()

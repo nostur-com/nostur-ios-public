@@ -67,149 +67,151 @@ struct Maintenance {
     
     //TODO: Find out which tags can be deleted..
     static func maintenance(context:NSManagedObjectContext) {
-        let frA = Account.fetchRequest()
-        let allAccounts = Array(try! context.fetch(frA))
-        let ownAccountPubkeys = allAccounts.reduce([String]()) { partialResult, account in
-            var newResult = Array(partialResult)
-            newResult.append(account.publicKey)
-            return newResult
-        }
         
-        let regex = ".*(" + ownAccountPubkeys.map {
-            NSRegularExpression.escapedPattern(for: $0)
-        }.joined(separator: "|") + ").*"
-        
-        let ownAccountBookmarkIds = allAccounts.reduce([String]()) { partialResult, account in
-            var newResult = Array(partialResult)
-            if (account.bookmarks != nil) {
-                let ids = account.bookmarks!.map { $0.id }
-                newResult.append(contentsOf: ids)
-            }
-            return newResult
-        }
-        
-        let ownAccountPrivateNoteEventIds = allAccounts.reduce([String]()) { partialResult, account in
-            var newResult = Array(partialResult)
-            if (account.privateNotes != nil) {
-                let ids = account.privateNotes!.compactMap { $0.post?.id }
-                newResult.append(contentsOf: ids)
-            }
-            return newResult
-        }
-        
-        let xDaysAgo = Date.now.addingTimeInterval(-4 * 86400) // 4 days
-        
-        
-        // KIND 1,6
-        // OUDER DAN X DAGEN
-        // IS GEEN BOOKMARK
-        // IS GEEN EIGEN EVENT
-        // DOES NOT HAVE OUR PUBKEY IN P (Notifications)
-        // DONT DELETE MUTED BLOCKED, SO OUR BLOCK LIST STILL FUNCTIONS....
-        // TODO: DONT EXPORT MUTED / BLOCKED. KEEP HERE SO WE DONT HAVE TO KEEP ..REPARSING
         context.perform {
-            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
-            fetchRequest.predicate = NSPredicate(format: "kind IN {1,6} AND created_at < %i AND NOT id IN %@ AND NOT id IN %@ AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountBookmarkIds, ownAccountPrivateNoteEventIds, ownAccountPubkeys, regex)
+            let frA = Account.fetchRequest()
+            let allAccounts = Array(try! context.fetch(frA))
+            let ownAccountPubkeys = allAccounts.reduce([String]()) { partialResult, account in
+                var newResult = Array(partialResult)
+                newResult.append(account.publicKey)
+                return newResult
+            }
             
-            let batchDelete = NSBatchDeleteRequest(fetchRequest: fetchRequest)
-            batchDelete.resultType = .resultTypeCount
+            let regex = ".*(" + ownAccountPubkeys.map {
+                NSRegularExpression.escapedPattern(for: $0)
+            }.joined(separator: "|") + ").*"
+            
+            let ownAccountBookmarkIds = allAccounts.reduce([String]()) { partialResult, account in
+                var newResult = Array(partialResult)
+                if (account.bookmarks != nil) {
+                    let ids = account.bookmarks!.map { $0.id }
+                    newResult.append(contentsOf: ids)
+                }
+                return newResult
+            }
+            
+            let ownAccountPrivateNoteEventIds = allAccounts.reduce([String]()) { partialResult, account in
+                var newResult = Array(partialResult)
+                if (account.privateNotes != nil) {
+                    let ids = account.privateNotes!.compactMap { $0.post?.id }
+                    newResult.append(contentsOf: ids)
+                }
+                return newResult
+            }
+            
+            let xDaysAgo = Date.now.addingTimeInterval(-4 * 86400) // 4 days
+            
+            
+            // KIND 1,6
+            // OUDER DAN X DAGEN
+            // IS GEEN BOOKMARK
+            // IS GEEN EIGEN EVENT
+            // DOES NOT HAVE OUR PUBKEY IN P (Notifications)
+            // DONT DELETE MUTED BLOCKED, SO OUR BLOCK LIST STILL FUNCTIONS....
+            // TODO: DONT EXPORT MUTED / BLOCKED. KEEP HERE SO WE DONT HAVE TO KEEP ..REPARSING
+            
+            let fr16 = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
+            fr16.predicate = NSPredicate(format: "kind IN {1,6} AND created_at < %i AND NOT id IN %@ AND NOT id IN %@ AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountBookmarkIds, ownAccountPrivateNoteEventIds, ownAccountPubkeys, regex)
+            
+            let fr16batchDelete = NSBatchDeleteRequest(fetchRequest: fr16)
+            fr16batchDelete.resultType = .resultTypeCount
             
             do {
-                let result = try context.execute(batchDelete) as! NSBatchDeleteResult
+                let result = try context.execute(fr16batchDelete) as! NSBatchDeleteResult
                 print("🧹🧹Deleted \(result.result!) kind {1,6} events")
             } catch {
                 print("🔴🔴 Failed to delete {1,6} data")
             }
-        }
-        
-        do {
-            try context.save()
-        }
-        catch {
-            print("maintenance error on save(): \(error)")
-        }
-        
-        
-        // KIND 9734,7,8
-        // OUDER DAN X DAGEN
-        // PUBKEY NOT IN OWN ACCOUNTS
-        // OR PUBKEY OF OWN ACCOUNTS NOT IN SERIALIZED TAGS
-        context.perform {
-            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
             
-            fetchRequest.predicate = NSPredicate(format: "kind IN {9734,8,7} AND created_at < %i AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys, regex)
             
-            let batchDelete = NSBatchDeleteRequest(fetchRequest: fetchRequest)
-            batchDelete.resultType = .resultTypeCount
+            //            do {
+            //                try context.save()
+            //            }
+            //            catch {
+            //                print("maintenance error on save(): \(error)")
+            //            }
+            //
+            
+            // KIND 9734,7,8
+            // OUDER DAN X DAGEN
+            // PUBKEY NOT IN OWN ACCOUNTS
+            // OR PUBKEY OF OWN ACCOUNTS NOT IN SERIALIZED TAGS
+            //            context.perform {
+            let fr9734 = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
+            
+            fr9734.predicate = NSPredicate(format: "kind IN {9734,8,7} AND created_at < %i AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys, regex)
+            
+            let fr9734batchDelete = NSBatchDeleteRequest(fetchRequest: fr9734)
+            fr9734batchDelete.resultType = .resultTypeCount
             
             do {
-                let result = try context.execute(batchDelete) as! NSBatchDeleteResult
+                let result = try context.execute(fr9734batchDelete) as! NSBatchDeleteResult
                 print("🧹🧹Deleted \(result.result!) kind {9734,8,7} events")
             } catch {
                 print("🔴🔴 Failed to delete 9734,7,8 data")
             }
-        }
-        
-        do {
-            try context.save()
-        }
-        catch {
-            print("maintenance error on save(): \(error)")
-        }
-        
-        // KIND 9735
-        // OUDER DAN X DAGEN
-        // zappedContactPubkey NOT IN OWN ACCOUNTS
-        context.perform {
-            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
-            fetchRequest.predicate = NSPredicate(format: "kind == 9735 AND created_at < %i AND NOT zappedContactPubkey IN %@", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys)
+            //            }
             
-            let batchDelete = NSBatchDeleteRequest(fetchRequest: fetchRequest)
-            batchDelete.resultType = .resultTypeCount
+            //            do {
+            //                try context.save()
+            //            }
+            //            catch {
+            //                print("maintenance error on save(): \(error)")
+            //            }
+            
+            // KIND 9735
+            // OUDER DAN X DAGEN
+            // zappedContactPubkey NOT IN OWN ACCOUNTS
+            //            context.perform {
+            let fr9735 = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
+            fr9735.predicate = NSPredicate(format: "kind == 9735 AND created_at < %i AND NOT zappedContactPubkey IN %@", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys)
+            
+            let fr9735batchDelete = NSBatchDeleteRequest(fetchRequest: fr9735)
+            fr9735batchDelete.resultType = .resultTypeCount
             
             do {
-                let result = try context.execute(batchDelete) as! NSBatchDeleteResult
+                let result = try context.execute(fr9735batchDelete) as! NSBatchDeleteResult
                 print("🧹🧹Deleted \(result.result!) kind 9735 events")
             } catch {
                 print("🔴🔴 Failed to delete 9734 data")
             }
-        }
-        
-        do {
-            try context.save()
-        }
-        catch {
-            print("maintenance error on save(): \(error)")
-        }
-        
-        
-        // KIND 0
-        // ALLES WEG WANT IEDERE KIND 0 HEEFT EEN CONTACT
-        // EIGEN KIND 0 NIET WEG
-        context.perform {
-            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
-            fetchRequest.predicate = NSPredicate(format: "(kind == 0) AND NOT pubkey IN %@", ownAccountPubkeys)
+            //            }
             
-            let batchDelete = NSBatchDeleteRequest(fetchRequest: fetchRequest)
-            batchDelete.resultType = .resultTypeCount
+            //            do {
+            //                try context.save()
+            //            }
+            //            catch {
+            //                print("maintenance error on save(): \(error)")
+            //            }
+            
+            
+            // KIND 0
+            // ALLES WEG WANT IEDERE KIND 0 HEEFT EEN CONTACT
+            // EIGEN KIND 0 NIET WEG
+            //            context.perform {
+            let fr0 = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
+            fr0.predicate = NSPredicate(format: "(kind == 0) AND NOT pubkey IN %@", ownAccountPubkeys)
+            
+            let fr0batchDelete = NSBatchDeleteRequest(fetchRequest: fr0)
+            fr0batchDelete.resultType = .resultTypeCount
             
             do {
-                let result = try context.execute(batchDelete) as! NSBatchDeleteResult
+                let result = try context.execute(fr0batchDelete) as! NSBatchDeleteResult
                 print("Deleted \(result.result!) kind=0 events")
             } catch {
                 print("Failed to delete kind=0 data")
             }
-        }
-        
-        do {
-            try context.save()
-        }
-        catch {
-            print("maintenance error on save(): \(error)")
-        }
-        
-        // DELETE OLDER KIND 3 EVENTS
-        context.perform {
+            //            }
+            
+            //            do {
+            //                try context.save()
+            //            }
+            //            catch {
+            //                print("maintenance error on save(): \(error)")
+            //            }
+            //
+            // DELETE OLDER KIND 3 EVENTS
+            //            context.perform {
             let r = NSFetchRequest<Event>(entityName: "Event")
             r.predicate = NSPredicate(format: "kind == 3")
             r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
@@ -230,13 +232,14 @@ struct Maintenance {
             for toDelete in forDeletion {
                 context.delete(toDelete)
             }
-        }
-        
-        do {
-            try context.save()
-        }
-        catch {
-            print("maintenance error on save(): \(error)")
+            //            }
+            
+            do {
+                try context.save()
+            }
+            catch {
+                print("maintenance error on save(): \(error)")
+            }
         }
     }
     
@@ -279,26 +282,26 @@ struct Maintenance {
     }
     
     func deleteAllContacts() {
-//        if (1 == 1) { return }
-//        EventsProvider.shared.container.viewContext.perform {
-//            do {
-//                let r = NSFetchRequest<Contact>()
-//                r.entity = Contact.entity()
-//                r.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)]
-//
-//                guard let allContacts = try? r.execute() else {
-//                    print("😢 XX")
-//                    return
-//                }
-//
-//                for contact in allContacts {
-//                    EventsProvider.shared.container.viewContext.delete(contact)
-//                }
-//
-//                try EventsProvider.shared.container.viewContext.save()
-//            } catch let error  {
-//                print("😢😢😢 XX \(error)")
-//            }
-//        }
+        //        if (1 == 1) { return }
+        //        EventsProvider.shared.container.viewContext.perform {
+        //            do {
+        //                let r = NSFetchRequest<Contact>()
+        //                r.entity = Contact.entity()
+        //                r.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)]
+        //
+        //                guard let allContacts = try? r.execute() else {
+        //                    print("😢 XX")
+        //                    return
+        //                }
+        //
+        //                for contact in allContacts {
+        //                    EventsProvider.shared.container.viewContext.delete(contact)
+        //                }
+        //
+        //                try EventsProvider.shared.container.viewContext.save()
+        //            } catch let error  {
+        //                print("😢😢😢 XX \(error)")
+        //            }
+        //        }
     }
 }
