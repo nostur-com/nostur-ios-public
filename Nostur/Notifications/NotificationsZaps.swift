@@ -186,20 +186,48 @@ struct ZapsForThisNote: View {
             .filter { $0.zapFromRequest != nil }
             .sorted(by: { $0.naiveSats > $1.naiveSats } )
     }
+    
+    var deduplicated:[String: (String, String?, Double, Date, String?)] { // [string: (pubkey, picturUrl?, amount, created_at)]
+        var d = [String: (String, String?, Double, Date, String?)]()
+        // show only 1 zap per pubkey, combine total amount, track most recent created_at
+        zaps
+            .map {
+                ($0.zapFromRequest, $0.date, $0.naiveSats, $0.zapFromRequest?.contact?.authorName)
+            }
+            .filter {
+                $0.0 != nil
+            }
+            .forEach { tuple in
+                guard tuple.0 != nil else { return }
+                let (req, createdAt, sats, authorName) = tuple
+                if d[req!.pubkey] != nil {
+                    // additional entry, add up sats, and only keep most recent date
+                    let current = d[req!.pubkey]!
+                    let mostRecentDate = current.3 > createdAt ? current.3 : createdAt
+                    d[req!.pubkey] = (current.0, current.1, current.2 + sats, mostRecentDate, current.4)
+                }
+                else {
+                    // first entry
+                    d[req!.pubkey] = (req!.pubkey, req!.contact?.picture, sats, createdAt, authorName)
+                }
+            }
+        return d
+    }
+    
 
     var body: some View {
         VStack(alignment:.leading) {
             ZStack {
-                ForEach(zapsSorted.prefix(10).indices, id:\.self) { index in
+                ForEach(Array(deduplicated.keys.enumerated()), id: \.1) { index, key in
                     ZStack {
-                        PFP(pubkey: zapsSorted[index].zapFromRequest!.pubkey, pictureUrl: zapsSorted[index].zapFromRequest!.contact?.picture)
-                            .id(zapsSorted[index].id)
+                        PFP(pubkey: deduplicated[key]!.0 , pictureUrl: deduplicated[key]!.1)
+//                            .id(zapsSorted[index].id)
                             .onAppear {
-                                onAppear(zapsSorted[index].insertedAt)
+                                onAppear(deduplicated[key]!.3)
                             }
                             .zIndex(-Double(index))
                         
-                        Text("\(zapsSorted[index].naiveSats.satsFormatted)")
+                        Text("\(deduplicated[key]!.2.satsFormatted)")
                             .font(.caption)
                             .padding(3)
                             .foregroundColor(.white)
@@ -211,11 +239,11 @@ struct ZapsForThisNote: View {
                     .offset(x:Double(0 + (35*index)))
                 }
             }
-            if (zaps.count > 1) {
-                Text("**\(zaps.first(where: { $0.zapFromRequest?.contact?.authorName != nil })?.zapFromRequest?.contact?.username ?? "???")** and \(zaps.count - 1) others zapped to your post")
+            if (deduplicated.values.count > 1) {
+                Text("**\(deduplicated.values.first(where: { $0.4 != nil })?.4 ?? "???")** and \(deduplicated.values.count - 1) others zapped to your post")
             }
             else {
-                Text("**\(zaps.first(where: { $0.zapFromRequest?.contact?.authorName != nil })?.zapFromRequest?.contact?.username ?? "???")** zapped your post")
+                Text("**\(deduplicated.values.first(where: { $0.4 != nil })?.4 ?? "???")** zapped your post")
             }
         }
 //        .onAppear {
