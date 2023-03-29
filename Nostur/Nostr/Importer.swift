@@ -20,6 +20,7 @@ class Importer {
     public func importEvents() async {
         if (isImporting) {
             print("🟠🟠🟠 ALREADY IMPORTING. SKIPPED 🟠🟠🟠")
+            sendNotification(.listStatus, "Processing items...")
             return
         }
         let ot = OnboardingTracker.shared
@@ -27,8 +28,10 @@ class Importer {
         isImporting = true
         
         let parsedBucket = MessageParser.shared.parsedBucket
-        guard await parsedBucket.count() != 0 else { self.isImporting = false; return }
-        print("🦋🦋 \(await parsedBucket.count()) messages in parsedBucket.")
+        let itemsCount = await parsedBucket.count()
+        guard itemsCount != 0 else { self.isImporting = false; return }
+        print("🦋🦋 \(itemsCount) messages in parsedBucket.")
+        sendNotification(.listStatus, "Processing \(itemsCount) items...")
         
         var forImports = [RelayMessage]()
         while let forImport = await parsedBucket.dequeue() {

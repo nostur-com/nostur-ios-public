@@ -120,4 +120,8 @@ extension Notification.Name {
     static var newPostsForView: Notification.Name {
         return Notification.Name("newPostsForView")
     }
+    
+    static var listStatus: Notification.Name {
+        return Notification.Name("listStatus")
+    }
 }

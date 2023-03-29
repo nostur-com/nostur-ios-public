@@ -157,10 +157,13 @@ struct ListView: View {
                             }
                         }
                         Section {
-                            HStack {
-                                Spacer()
-                                Rectangle().frame(width: 300, height: 1)
-                                Spacer()
+                            VStack {
+                                ProcessingStatus()
+                                HStack {
+                                    Spacer()
+                                    Rectangle().frame(width: 300, height: 1)
+                                    Spacer()
+                                }
                             }
                             .id(END_OF_LIST)
                             .onBecomingVisible {
