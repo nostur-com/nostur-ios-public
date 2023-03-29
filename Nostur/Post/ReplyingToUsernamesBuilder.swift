@@ -58,8 +58,8 @@ class ReplyingToUsernamesBuilder {
 extension String {
     func escapeMD() -> String {
         return self
-            .replacingOccurrences(of: "_", with: "\\_")
-            .replacingOccurrences(of: "*", with: "\\*")
+            .replacingOccurrences(of: "__", with: "\\_\\_")
+            .replacingOccurrences(of: "**", with: "\\*\\*")
             .replacingOccurrences(of: "[", with: "\\[")
             .replacingOccurrences(of: "]", with: "\\]")
             .replacingOccurrences(of: "/", with: "\\/")
