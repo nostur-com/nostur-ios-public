@@ -38,6 +38,7 @@ struct MediaViewer: View {
     
     @State var fullScreenItem:FullScreenItem?
     @State var imagesShown = false
+    @State var isPlaying = false
     
     init(imgUrls: [URL], pubkey:String) {
         self.imgUrls = imgUrls
@@ -61,10 +62,11 @@ struct MediaViewer: View {
                                 ForEach(0..<imgUrls.prefix(20).count, id: \.self) { index in
                                     if ([".mp4",".mov"].contains(imgUrls[index].absoluteString.suffix(4))) {
                                         //                                        AVP(videoURL: imgUrls[index])
-                                        AVP(videoURL: imgUrls[index], width: side, height: 200, contentMode: .scaleAspectFit)
-                                            .onTapGesture {
-                                                
-                                            }
+//                                        AVP(videoURL: imgUrls[index], width: side, height: 200, contentMode: .scaleAspectFit, isPlaying: $isPlaying)
+                                        VideoPlayerViewer(videoURL: imgUrls[index], width: side, height: 200)
+//                                            .onTapGesture {
+//                                                isPlaying.toggle()
+//                                            }
                                             .onAppear {
                                                 configureAudioSession()
                                             }
@@ -152,10 +154,11 @@ struct MediaViewer: View {
                         if let imgUrl = imgUrls.first {
                             if ([".mp4",".mov"].contains(imgUrl.absoluteString.suffix(4))) {
                                 //                                AVP(videoURL: imgUrl)
-                                AVP(videoURL: imgUrl, width: geo.size.width, height: geo.size.height, contentMode: .scaleAspectFit)
-                                    .onTapGesture {
-                                        
-                                    }
+//                                AVP(videoURL: imgUrl, width: geo.size.width, height: geo.size.height, contentMode: .scaleAspectFit, isPlaying: $isPlaying)
+                                VideoPlayerViewer(videoURL: imgUrl, width: geo.size.width, height: geo.size.height)
+//                                    .onTapGesture {
+//                                        isPlaying.toggle()
+//                                    }
                                     .onAppear {
                                         configureAudioSession()
                                     }
@@ -261,6 +264,7 @@ struct FullImageViewer: View {
     @State private var lastScale: CGFloat = 1.0
     @State private var position: CGSize = .zero
     @State private var newPosition: CGSize = .zero
+    @State var isPlaying = true
     
     var body: some View {
         
@@ -300,7 +304,11 @@ struct FullImageViewer: View {
                 VStack {
                     if ([".mp4",".mov"].contains(fullImageURL.absoluteString.suffix(4))) {
                         //                        AVP(videoURL: fullImageURL)
-                        AVP(videoURL: fullImageURL, width: geo.size.width, height: geo.size.height, contentMode: .scaleAspectFit)
+//                        AVP(videoURL: fullImageURL, width: geo.size.width, height: geo.size.height, contentMode: .scaleAspectFit, isPlaying: $isPlaying)
+//                            .onTapGesture {
+//                                isPlaying.toggle()
+//                            }
+                        VideoPlayerViewer(videoURL: fullImageURL, width: geo.size.width, height: geo.size.height)
                     }
                     else if (fullImageURL.absoluteString.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
                         LazyImage(url: fullImageURL) { state in

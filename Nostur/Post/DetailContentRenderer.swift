@@ -101,9 +101,10 @@ struct DetailContentRenderer: View { // VIEW things
                     case .lnbc(let text):
                         LightningInvoice(invoice: text)
                     case .video(let url):
-                        VideoPlayerView(videoURL: url)
+                        VideoPlayerViewer(videoURL: url, width: 640, height: 360)
                     case .image(let url):
                         SingleMediaViewer(url: url)
+                            .frame(maxHeight: 800)
                     default:
                         Text("dunno")
                 }
