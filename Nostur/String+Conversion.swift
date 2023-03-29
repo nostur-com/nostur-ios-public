@@ -23,28 +23,38 @@ public extension String {
             return nil
         }).joined()
     }
-
+    
     func hexToBinary() -> String {
         return self.hexToBytes().map({ byte in
             return String(byte, radix: 2).paddingLeft(toLength: 8, withPad: "0")
         }).joined()
     }
-
+    
+    //    func hexToBytes() -> [UInt8] {
+    //        var value = self
+    //        if self.count % 2 > 0 {
+    //            value = "0" + value
+    //        }
+    //        let bytesCount = value.count / 2
+    //        return (0..<bytesCount).compactMap({ i in
+    //            let offset = i * 2
+    //            if let str = value.substr(offset, 2) {
+    //                return UInt8(str, radix: 16)
+    //            }
+    //            return nil
+    //        })
+    //    }
+    
+    // CHATGPT3.5 version
     func hexToBytes() -> [UInt8] {
-        var value = self
-        if self.count % 2 > 0 {
-            value = "0" + value
+        var startIndex = self.startIndex
+        return stride(from: 0, to: self.count, by: 2).compactMap { _ in
+            let endIndex = self.index(startIndex, offsetBy: 2, limitedBy: self.endIndex) ?? self.endIndex
+            defer { startIndex = endIndex }
+            return UInt8(self[startIndex..<endIndex], radix: 16)
         }
-        let bytesCount = value.count / 2
-        return (0..<bytesCount).compactMap({ i in
-            let offset = i * 2
-            if let str = value.substr(offset, 2) {
-                return UInt8(str, radix: 16)
-            }
-            return nil
-        })
     }
-
+    
     func substr(_ offset: Int,  _ length: Int) -> String? {
         guard offset + length <= self.count else { return nil }
         let start = index(startIndex, offsetBy: offset)
@@ -69,7 +79,7 @@ public extension String {
         let end = self.endIndex
         return String(self[start..<end])
     }
-
+    
     func paddingLeft(toLength length: Int, withPad character: Character) -> String {
         if self.count < length {
             return String(repeatElement(character, count: length - self.count)) + self
@@ -77,12 +87,12 @@ public extension String {
             return String(self.prefix(length))
         }
     }
-
+    
     func paddingLeft(toMultipleOf base: Int, withPad character: Character) -> String {
         let newLength = Int(ceil(Double(count) / Double(base))) * base
         return self.paddingLeft(toLength: newLength, withPad: character)
     }
-
+    
     func padding(toMultipleOf base: Int, withPad character: Character) -> String {
         let newLength = Int(ceil(Double(count) / Double(base))) * base
         return self.padding(toLength: newLength, withPad: String(character), startingAt: 0)
