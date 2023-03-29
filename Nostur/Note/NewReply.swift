@@ -115,6 +115,8 @@ struct NewReply: View {
                             guard var nEvent = vm.nEvent else { return }
                             
                             nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
+                            nEvent = putHashtagsInTags(nEvent)
+                            
                             if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
                                 nEvent.content = replaceNsecWithHunter2(nEvent.content)
                             }

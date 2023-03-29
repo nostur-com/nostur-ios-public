@@ -108,8 +108,9 @@ struct NewQuoteRepost: View {
                             guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
                             guard var nEvent = vm.nEvent else { return }
                             
+                            nEvent = putHashtagsInTags(nEvent)
                             nEvent = applyMentionsNip08(nEvent, bumpIndex: true)
-                                nEvent.content = nEvent.content + "\n#[0]"
+                            nEvent.content = nEvent.content + "\n#[0]"
                             nEvent.tags.insert(NEventTag.event(otherEventId: quotingEvent.id, type: "mention"), at: 0)
 //                            nEvent.content = noteText
 //

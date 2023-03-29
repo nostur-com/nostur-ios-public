@@ -127,3 +127,18 @@ func replaceNsecWithHunter2(_ text:String) -> String {
     }
     return newText
 }
+
+func putHashtagsInTags(_ event:NEvent) -> NEvent {
+    let hashtagMatches = event.content.matchingStrings(regex:"#\\w+")
+    var eventWithHashtags = event
+    for index in hashtagMatches.indices {
+        eventWithHashtags
+            .tags
+            .append(
+                NEventTag(type: "t",
+                          otherInformation: String(hashtagMatches[index][0].dropFirst())
+                         )
+            )
+    }
+    return eventWithHashtags
+}

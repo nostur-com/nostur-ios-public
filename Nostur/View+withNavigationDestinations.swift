@@ -16,6 +16,10 @@ struct ContactPath: Hashable {
     var key:String
 }
 
+struct HashtagPath: Hashable {
+    var hashTag:String
+}
+
 enum ViewPath: Hashable {
     case Post(vPost:VPost)
     case Blocklist
@@ -42,6 +46,9 @@ extension View {
 //            }
             .navigationDestination(for: ContactPath.self) { path in
                 ProfileByPubkey(pubkey: path.key)
+            }
+            .navigationDestination(for: HashtagPath.self) { path in
+                Search(hashtag: path.hashTag)
             }
             .navigationDestination(for: Contact.self) { contact in
                 ProfileView(contact: contact)

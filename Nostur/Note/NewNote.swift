@@ -24,7 +24,7 @@ public final class NewNoteText: ObservableObject {
             TextFormattingRule(fontTraits: .traitBold)
         ])
    ]
-    static let mentionRegex = try! NSRegularExpression(pattern: "(@\\w+)", options: [])
+    static let mentionRegex = try! NSRegularExpression(pattern: "(@\\w+|#\\w+)", options: [])
     private var bag = Set<AnyCancellable>()
 
     public init(dueTime: TimeInterval = 0.2) {
@@ -69,6 +69,7 @@ struct NewNote: View {
                     guard var nEvent = vm.nEvent else { return }
                     
                     nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
+                    nEvent = putHashtagsInTags(nEvent)
                     
                     if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
                         nEvent.content = replaceNsecWithHunter2(nEvent.content)

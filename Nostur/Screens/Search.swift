@@ -34,6 +34,11 @@ struct Search: View {
     
     @State var searching = false
     @EnvironmentObject var nav:NavigationModel
+    let initialHashtag:String?
+    
+    init(hashtag:String = "") {
+        self.initialHashtag = hashtag
+    }
     
     var body: some View {
         let _ = Self._printChanges()
@@ -86,6 +91,11 @@ struct Search: View {
                     contacts.nsPredicate = NSPredicate(format: "name BEGINSWITH %@", String(searchTrimmed.dropFirst(1)))
                     events.nsPredicate = NSPredicate(value: false)
                 }
+                else if (searchTrimmed.prefix(1) == "#") {
+                    searching = true
+                    events.nsPredicate = NSPredicate(format: "kind == 1 && tagsSerialized CONTAINS %@", String(searchTrimmed.dropFirst(1)))
+                    contacts.nsPredicate = NSPredicate(value: false)
+                }
                 // try note1
                 else if (searchTrimmed.prefix(5) == "note1") {
                     do {
@@ -117,6 +127,12 @@ struct Search: View {
                     searching = false
                     events.nsPredicate = NSPredicate(format: "kind == 1 AND content CONTAINS[cd] %@ AND NOT content BEGINSWITH %@", searchTrimmed, "lnbc")
                     contacts.nsPredicate = NSPredicate(format: "name CONTAINS[cd] %@ OR display_name CONTAINS[cd] %@", searchTrimmed, searchTrimmed)
+                }
+            }
+            .onAppear {
+                if initialHashtag != "" {
+                    debounceObject.text = "#\(initialHashtag ?? "")"
+//                    debounceObject.debouncedText = initialHashtag ?? ""
                 }
             }
         }

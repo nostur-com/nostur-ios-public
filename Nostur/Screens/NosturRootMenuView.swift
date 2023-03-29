@@ -197,6 +197,14 @@ extension NosturRootMenu {
                 nav.navigateTo(NotePath(id: nostrHex[0][3]))
             }
         }
+        
+        // HASHTAG LINKS FROM WITHIN NOSTUR
+        let nosturHashtag = url.absoluteString.matchingStrings(regex: "^(nostur:t:)(\\S+)$")
+        if nosturHashtag.count == 1 && nosturHashtag[0].count == 3 {
+            print("ok lets go to: \(nosturHashtag[0][2])")
+            selectedTab = "Search"
+            nav.navigateTo(HashtagPath(hashTag: nosturHashtag[0][2]))
+        }
     }
 }
 

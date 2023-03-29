@@ -157,8 +157,8 @@ class ContentLinkRenderer { // TEXT things
     
     static func replaceHashtagsWithMarkdownLinks(in string: String) -> String {
         return string
-            .replacingOccurrences(of: "\\#\\S+",
-                                  with: "[$0](nostur:t:$0)",
+            .replacingOccurrences(of: "(\\#)(\\S+)",
+                                  with: "[$0](nostur:t:$2)",
                                   options: .regularExpression)
     }
 }

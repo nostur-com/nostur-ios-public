@@ -113,3 +113,7 @@ func serializedP(_ pubkey:String) -> String {
 func serializedE(_ id:String) -> String {
     return "[\"e\",\"\(id)"
 }
+
+func serializedT(_ tag:String) -> String {
+    return "[\"t\",\"\(tag)"
+}
