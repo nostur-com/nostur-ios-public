@@ -140,6 +140,7 @@ struct ListView: View {
                         Section {
                             ForEach(vmState.vPosts) { vPost in
                                 NoteRow(vPost:vPost)
+//                                    .equatable()
                                     .id(vPost.id)
                                     .listRowInsets(EdgeInsets())
                                     .onBecomingVisible {
@@ -172,7 +173,6 @@ struct ListView: View {
                                 vm.didReachEnd()
                             }
                             .listRowInsets(EdgeInsets())
-//                            ListProcessingStatus()
                         }
                     }
                     .id(scrollResetId)
@@ -209,18 +209,18 @@ struct ListView: View {
                             }
                         }
                     }
-                    .onReceive(receiveNotification(.scrollABit)) { _ in
-                        guard vmState.viewIsVisible else { return }
-//                        guard let lastAppearedId = lastAppearedId else { return }
-                        withAnimation {
-                            if lastAppearedId != nil && nextId != nil {
-                                proxy.scrollTo(nextId, anchor: .top)
-                            }
-                            else {
-                                
-                            }
-                        }
-                    }
+//                    .onReceive(receiveNotification(.scrollABit)) { _ in
+//                        guard vmState.viewIsVisible else { return }
+////                        guard let lastAppearedId = lastAppearedId else { return }
+//                        withAnimation {
+//                            if lastAppearedId != nil && nextId != nil {
+//                                proxy.scrollTo(nextId, anchor: .top)
+//                            }
+//                            else {
+//
+//                            }
+//                        }
+//                    }
                     //                    .onChange(of: vm.vPosts.count, perform: { newCount in
                     //                        guard vm.viewIsVisible else { return }
                     //                        guard vm.state == .AWAITING_SCROLL else { return }
