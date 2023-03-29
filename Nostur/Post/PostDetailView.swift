@@ -149,17 +149,22 @@ struct PostAndParent: View {
                     }
                     
                     VStack(alignment:.leading) {
-                        
-                        switch self.type {
-                            case .lightningInvoice:
-                                LightningInvoice(invoice: event.noteText)
-                            default:
-                                NoteTextRenderView(vPost: vPost, useLinelimit: false)
-                                    .foregroundColor(.primary)
-                                    .textSelection(.enabled)
-                                    .onTapGesture { nav.navigateTo(vPost) }
-                                MediaViewer(imgUrls: vPost.imageUrls, pubkey: event.pubkey)
-                        }
+                        DetailContentRenderer(event: event)
+//                        switch self.type {
+//                            case .lightningInvoice:
+//                                LightningInvoice(invoice: event.noteText)
+//                            default:
+//                                if (isParent) {
+//                                    NoteTextRenderView(vPost: vPost, useLinelimit: false)
+//                                        .foregroundColor(.primary)
+//                                        .textSelection(.enabled)
+//                                        .onTapGesture { nav.navigateTo(vPost) }
+//                                    MediaViewer(imgUrls: vPost.imageUrls, pubkey: event.pubkey)
+//                                }
+//                                else {
+//                                    DetailContentRenderer(event: event)
+//                                }
+//                        }
                     }
                     .padding(.leading, isParent ? INDENT : 0)
                         

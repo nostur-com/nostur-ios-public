@@ -67,8 +67,9 @@ struct QuotedNoteFragmentView: View {
                 Spacer()
             }.frame(height: 40)
             VStack(alignment: .leading) {
-                NoteTextRenderView(vPost: vPost)
-                MediaViewer(imgUrls: vPost.imageUrls, pubkey: vPost.event.pubkey)
+                DetailContentRenderer(event: vPost.event)
+//                NoteTextRenderView(vPost: vPost)
+//                MediaViewer(imgUrls: vPost.imageUrls, pubkey: vPost.event.pubkey)
             }
         }
         .onTapGesture {
