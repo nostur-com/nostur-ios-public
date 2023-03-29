@@ -21,10 +21,16 @@ struct AppTopBar: View {
                 Group {
                     HStack {
                         if (ns.account != nil && !sm.showSidebar) {
-                            PFP(pubkey: ns.account!.publicKey, pictureUrl: ns.account?.picture, size:30)
-                                .offset(x: 15)
+                            Button {
+                                sm.showSidebar.toggle()
+                            } label: {
+                                PFP(pubkey: ns.account!.publicKey, pictureUrl: ns.account?.picture, size:30)
+                            }
+                            .accessibilityLabel("Account menu")
+                            .offset(x: 15)
+
     //                            .offset(y: -5)
-                                .onTapGesture { sm.showSidebar.toggle() }
+//                                .onTapGesture { sm.showSidebar.toggle() }
                         }
                         Spacer()
                     }

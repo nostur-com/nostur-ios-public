@@ -33,6 +33,7 @@ struct NewNoteButton: View {
                             .padding(30)
                     }
                 }
+                .accessibilityLabel("New post")
             }
             //                .offset(x:-30,y:-55)
         }
