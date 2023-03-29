@@ -24,7 +24,7 @@ public final class NewNoteText: ObservableObject {
             TextFormattingRule(fontTraits: .traitBold)
         ])
    ]
-    static let mentionRegex = try! NSRegularExpression(pattern: "(@\\w+|#\\w+)", options: [])
+    static let mentionRegex = try! NSRegularExpression(pattern: "(@\\w+|(?<![/\\?])#\\S+)", options: [])
     private var bag = Set<AnyCancellable>()
 
     public init(dueTime: TimeInterval = 0.2) {
