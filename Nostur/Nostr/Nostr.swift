@@ -9,6 +9,26 @@ import SwiftUI
 import Foundation
 import secp256k1
 
+// NIP-20: ["OK", <event_id>, <true|false>, <message>]
+// Example: ["OK", "b1a649ebe8b435ec71d3784793f3bbf4b93e64e17568a741aecd4c7ddeafce30", true, ""]
+struct CommandResult: Decodable {
+    let values: [Any]
+
+    init(from decoder: Decoder) throws {
+        var container = try decoder.unkeyedContainer()
+        let ok = try container.decode(String.self)
+        let id = try container.decode(String.self)
+        let success = try container.decode(Bool.self)
+        let message = try container.decode(String.self)
+        
+        values = [id, success, message]
+    }
+    
+    var id:String { values[safe: 0] as? String ?? "NOSTUR.ERROR" }
+    var success:Bool { values[safe: 1] as? Bool ?? false }
+    var message:String { values[safe: 2] as? String ?? "" }
+}
+
 struct NMessage: Decodable {
     let values: [Any]
 
