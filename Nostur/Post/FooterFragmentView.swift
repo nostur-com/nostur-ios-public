@@ -122,14 +122,18 @@ struct FooterFragmentView: View {
 //            .padding(.leading, 5)
             .font(.system(size: 14))
             .sheet(isPresented: $showingNewReply) {
-                NewReply(replyTo: event)
-                    .environmentObject(ns)
-                    .environmentObject(up)
+                NavigationStack {
+                    NewReply(replyTo: event)
+                        .environmentObject(ns)
+                        .environmentObject(up)
+                }
             }
             .sheet(isPresented: $showingNewQuoteRepost) {
-                NewQuoteRepost(quotingEvent: event)
-                    .environmentObject(ns)
-                    .environmentObject(up)
+                NavigationStack {
+                    NewQuoteRepost(quotingEvent: event)
+                        .environmentObject(ns)
+                        .environmentObject(up)
+                }
             }
             .sheet(isPresented: $showingQuoteOrRepost) {
                 QuoteOrRepostChoiceSheet(event:event, showingNewQuoteRepost:$showingNewQuoteRepost)

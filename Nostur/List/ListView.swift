@@ -43,7 +43,9 @@ struct ListViewContainer: View, Equatable {
             ListUnreadCounter(vm:vm, vmCounter: vm.lvmCounter)
             NewNoteButton(showingNewNote: $showingNewNote)
                 .sheet(isPresented: $showingNewNote) {
-                    NewNote(noteCancellationId: $noteCancellationId)
+                    NavigationStack {
+                        NewNote(noteCancellationId: $noteCancellationId)
+                    }
                 }
         }
         .onChange(of: listId) { newListId in

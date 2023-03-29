@@ -96,44 +96,6 @@ struct NewQuoteRepost: View {
                     }
                     Spacer()
                 }
-                .safeAreaInset(edge: .top) {
-                    HStack {
-                        Button {
-                            dismiss() // TODO: If wrote something, confirm cancellation
-                        } label: {
-                            Text("Cancel")
-                        }
-                        Spacer()
-                        Button {
-                            guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
-                            guard var nEvent = vm.nEvent else { return }
-                            
-                            nEvent = putHashtagsInTags(nEvent)
-                            nEvent = applyMentionsNip08(nEvent, bumpIndex: true)
-                            nEvent.content = nEvent.content + "\n#[0]"
-                            nEvent.tags.insert(NEventTag.event(otherEventId: quotingEvent.id, type: "mention"), at: 0)
-//                            nEvent.content = noteText
-//
-//                            nEvent = applyMentionsNip08(nEvent)
-                            if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
-                                nEvent.content = replaceNsecWithHunter2(nEvent.content)
-                            }
-                            if let signedEvent = try? ns.signEvent(nEvent) {
-//                                let _ = up.publish(signedEvent)
-//                                print(signedEvent.wrappedEventJson())
-                                quotingEvent.reposted = true
-                                // .needsviewupdate?
-                                up.publishNow(signedEvent)
-                                sendNotification(.viewNeedsUpdate)
-                                dismiss()
-                            }
-                        } label: {
-                            Text("Post")
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .cornerRadius(20)
-                    }//.background(Color("BackgroundColor"))
-                }
             }
             .padding(10)
             .onChange(of: firstResults) { newResults in
@@ -170,9 +132,52 @@ struct NewQuoteRepost: View {
                 newQuoteRepost.kind = .textNote
                 vm.nEvent = newQuoteRepost
             }
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        dismiss() // TODO: If wrote something, confirm cancellation
+                    } label: {
+                        Text("Cancel")
+                    }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        sendNow()
+                    } label: {
+                        Text("Post")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .cornerRadius(20)
+                }
+            }
         }
         else {
             ProgressView()
+        }
+    }
+    
+    func sendNow() {
+        guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
+        guard var nEvent = vm.nEvent else { return }
+        
+        nEvent = putHashtagsInTags(nEvent)
+        nEvent = applyMentionsNip08(nEvent, bumpIndex: true)
+        nEvent.content = nEvent.content + "\n#[0]"
+        nEvent.tags.insert(NEventTag.event(otherEventId: quotingEvent.id, type: "mention"), at: 0)
+//                            nEvent.content = noteText
+//
+//                            nEvent = applyMentionsNip08(nEvent)
+        if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
+            nEvent.content = replaceNsecWithHunter2(nEvent.content)
+        }
+        if let signedEvent = try? ns.signEvent(nEvent) {
+//                                let _ = up.publish(signedEvent)
+//                                print(signedEvent.wrappedEventJson())
+            quotingEvent.reposted = true
+            // .needsviewupdate?
+            up.publishNow(signedEvent)
+            sendNotification(.viewNeedsUpdate)
+            dismiss()
         }
     }
 }

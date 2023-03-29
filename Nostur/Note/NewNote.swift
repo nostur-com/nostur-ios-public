@@ -57,37 +57,6 @@ struct NewNote: View {
     
     var body: some View {
         VStack {
-            HStack {
-                Button {
-                    dismiss() // TODO: If wrote something, confirm cancellation
-                } label: {
-                    Text("Cancel")
-                }
-                Spacer()
-                Button {
-                    guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
-                    guard var nEvent = vm.nEvent else { return }
-                    
-                    nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
-                    nEvent = putHashtagsInTags(nEvent)
-                    
-                    if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
-                        nEvent.content = replaceNsecWithHunter2(nEvent.content)
-                    }
-                    if let signedEvent = try? ns.signEvent(nEvent) {
-//                        print(signedEvent.wrappedEventJson())
-                        up.publishNow(signedEvent)
-//                        noteCancellationId = up.publish(signedEvent)
-                        dismiss()
-                    }
-                } label: {
-                    Text("Post")
-                }
-                .buttonStyle(.borderedProminent)
-                .cornerRadius(20)
-            }
-            
-            
             HStack(alignment: .top) {
                 PFP(pubkey: ns.account!.publicKey, pictureUrl: ns.account?.picture)
                 
@@ -182,6 +151,42 @@ struct NewNote: View {
                 vm.nEvent!.content = textToReplaceWithNpubs
             }
             
+        }
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    dismiss() // TODO: If wrote something, confirm cancellation
+                } label: {
+                    Text("Cancel")
+                }
+            }
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    sendNow()
+                } label: {
+                    Text("Post")
+                }
+                .buttonStyle(.borderedProminent)
+                .cornerRadius(20)
+            }
+        }
+    }
+    
+    func sendNow() {
+        guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
+        guard var nEvent = vm.nEvent else { return }
+        
+        nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
+        nEvent = putHashtagsInTags(nEvent)
+        
+        if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
+            nEvent.content = replaceNsecWithHunter2(nEvent.content)
+        }
+        if let signedEvent = try? ns.signEvent(nEvent) {
+//                        print(signedEvent.wrappedEventJson())
+            up.publishNow(signedEvent)
+//                        noteCancellationId = up.publish(signedEvent)
+            dismiss()
         }
     }
 }

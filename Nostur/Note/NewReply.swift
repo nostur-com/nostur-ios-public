@@ -102,37 +102,6 @@ struct NewReply: View {
                     }
                     Spacer()
                 }
-                .safeAreaInset(edge: .top) {
-                    HStack {
-                        Button {
-                            dismiss() // TODO: If wrote something, confirm cancellation
-                        } label: {
-                            Text("Cancel")
-                        }
-                        Spacer()
-                        Button {
-                            guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
-                            guard var nEvent = vm.nEvent else { return }
-                            
-                            nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
-                            nEvent = putHashtagsInTags(nEvent)
-                            
-                            if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
-                                nEvent.content = replaceNsecWithHunter2(nEvent.content)
-                            }
-                            if let signedEvent = try? ns.signEvent(nEvent) {
-//                                let _ = up.publish(signedEvent)
-//                                print(signedEvent.wrappedEventJson())
-                                up.publishNow(signedEvent)
-                                dismiss()
-                            }
-                        } label: {
-                            Text("Post")
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .cornerRadius(20)
-                    }//.background(Color("BackgroundColor"))
-                }
             }
             .padding(10)
             .onChange(of: firstResults) { newResults in
@@ -196,9 +165,45 @@ struct NewReply: View {
                 newReply.tags.append(replyToPtag)
                 vm.nEvent = newReply
             }
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        dismiss() // TODO: If wrote something, confirm cancellation
+                    } label: {
+                        Text("Cancel")
+                    }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        sendNow()
+                    } label: {
+                        Text("Post")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .cornerRadius(20)
+                }
+            }
         }
         else {
             ProgressView()
+        }
+    }
+    
+    func sendNow() {
+        guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
+        guard var nEvent = vm.nEvent else { return }
+        
+        nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
+        nEvent = putHashtagsInTags(nEvent)
+        
+        if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
+            nEvent.content = replaceNsecWithHunter2(nEvent.content)
+        }
+        if let signedEvent = try? ns.signEvent(nEvent) {
+//                                let _ = up.publish(signedEvent)
+//                                print(signedEvent.wrappedEventJson())
+            up.publishNow(signedEvent)
+            dismiss()
         }
     }
 }
