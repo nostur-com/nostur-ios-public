@@ -10,6 +10,8 @@ import Nuke
 import NukeUI
 //import AnimatedImage
 //import AVKit
+import AVKit
+import AVFoundation
 
 
 //extension Data {
@@ -22,7 +24,7 @@ import NukeUI
 //        return asset
 //    }
 //}
-    
+
 struct FullScreenItem : Identifiable {
     var url:URL
     var id:String { url.absoluteString }
@@ -58,8 +60,14 @@ struct MediaViewer: View {
                             LazyHStack {
                                 ForEach(0..<imgUrls.prefix(20).count, id: \.self) { index in
                                     if ([".mp4",".mov"].contains(imgUrls[index].absoluteString.suffix(4))) {
-                                        AVP(videoURL: imgUrls[index])
-//                                        AVP(videoURL: imgUrls[index], width: side, height: 200, contentMode: .scaleAspectFit)
+                                        //                                        AVP(videoURL: imgUrls[index])
+                                        AVP(videoURL: imgUrls[index], width: side, height: 200, contentMode: .scaleAspectFit)
+                                            .onTapGesture {
+                                                
+                                            }
+                                            .onAppear {
+                                                configureAudioSession()
+                                            }
                                     }
                                     else if (imgUrls[index].absoluteString.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
                                         LazyImage(url: imgUrls[index]) { state in
@@ -67,7 +75,7 @@ struct MediaViewer: View {
                                                 if container.type == .gif, let gifData = container.data {
                                                     AnimatedGifView(gifData: gifData, width: side, height: 200, contentMode: .scaleAspectFit)
                                                         .scaledToFit()
-//                                                        .frame(width: side, height: 200)
+                                                    //                                                        .frame(width: side, height: 200)
                                                         .onTapGesture {
                                                             fullScreenItem = FullScreenItem(url: imgUrls[index])
                                                         }
@@ -108,7 +116,7 @@ struct MediaViewer: View {
                                             }
                                         }
                                         .pipeline(ImageProcessing.shared.content) // No processing again here, we probably never show the image again
-
+                                        
                                     }
                                 }
                             }
@@ -143,16 +151,22 @@ struct MediaViewer: View {
                     GeometryReader { geo in
                         if let imgUrl = imgUrls.first {
                             if ([".mp4",".mov"].contains(imgUrl.absoluteString.suffix(4))) {
-                                AVP(videoURL: imgUrl)
-//                                AVP(videoURL: imgUrl, width: geo.size.width, height: geo.size.height, contentMode: .scaleAspectFit)
+                                //                                AVP(videoURL: imgUrl)
+                                AVP(videoURL: imgUrl, width: geo.size.width, height: geo.size.height, contentMode: .scaleAspectFit)
+                                    .onTapGesture {
+                                        
+                                    }
+                                    .onAppear {
+                                        configureAudioSession()
+                                    }
                             }
                             else if (imgUrl.absoluteString.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
                                 LazyImage(url: imgUrl) { state in
                                     if let container = state.imageContainer {
                                         if container.type == .gif, let gifData = container.data {
                                             AnimatedGifView(gifData: gifData, width: geo.size.width, height: 200, contentMode: .scaleAspectFit)
-//                                                .scaledToFit()
-//                                                .frame(width: geo.size.width, height: 200)
+                                            //                                                .scaledToFit()
+                                            //                                                .frame(width: geo.size.width, height: 200)
                                                 .onTapGesture {
                                                     fullScreenItem = FullScreenItem(url: imgUrl)
                                                 }
@@ -161,7 +175,7 @@ struct MediaViewer: View {
                                             image
                                                 .resizable()
                                                 .scaledToFit()
-//                                                .frame(width: geo.size.width, height: 200)
+                                            //                                                .frame(width: geo.size.width, height: 200)
                                                 .onTapGesture {
                                                     fullScreenItem = FullScreenItem(url: imgUrl)
                                                 }
@@ -196,7 +210,7 @@ struct MediaViewer: View {
                         }
                     }
                     .frame(height: 200)
-//                    .background(.green)
+                    //                    .background(.green)
                     .fullScreenCover(item: $fullScreenItem, content: { item in
                         FullImageViewer(fullImageURL:item.url)
                     })
@@ -227,6 +241,15 @@ struct MediaViewer: View {
             imagesShown = !SettingsStore.shared.restrictAutoDownload || ns.isFollowing(pubkey)
         }
     }
+    
+    func configureAudioSession() {
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            print("Failed to configure audio session: \(error.localizedDescription)")
+        }
+    }
 }
 
 struct FullImageViewer: View {
@@ -242,42 +265,42 @@ struct FullImageViewer: View {
     var body: some View {
         
         let magnifyAndDragGesture = MagnificationGesture()
-                    .onChanged { value in
-                        let delta = value / self.lastScale
-                        self.lastScale = value
-                        self.scale *= delta
+            .onChanged { value in
+                let delta = value / self.lastScale
+                self.lastScale = value
+                self.scale *= delta
+            }
+            .onEnded { value in
+                self.lastScale = 1.0
+            }
+            .simultaneously(with: DragGesture()
+                .onChanged { value in
+                    self.position.width = self.newPosition.width + value.translation.width
+                    self.position.height = self.newPosition.height + value.translation.height
+                }
+                .onEnded { value in
+                    self.newPosition = self.position
+                }
+            )
+            .simultaneously(with: DragGesture(minimumDistance: 3.0, coordinateSpace: .local)
+                .onEnded { value in
+                    print(value.translation)
+                    switch(value.translation.width, value.translation.height) {
+                            //                    case (...0, -30...30):  print("left swipe")
+                            //                    case (0..., -30...30):  print("right swipe")
+                            //                    case (-100...100, ...0):  print("up swipe")
+                        case (-100...100, 0...):  dismiss()
+                        default:  print("no clue")
                     }
-                    .onEnded { value in
-                        self.lastScale = 1.0
-                    }
-                    .simultaneously(with: DragGesture()
-                        .onChanged { value in
-                            self.position.width = self.newPosition.width + value.translation.width
-                            self.position.height = self.newPosition.height + value.translation.height
-                        }
-                        .onEnded { value in
-                            self.newPosition = self.position
-                        }
-                    )
-                    .simultaneously(with: DragGesture(minimumDistance: 3.0, coordinateSpace: .local)
-                        .onEnded { value in
-                            print(value.translation)
-                            switch(value.translation.width, value.translation.height) {
-                                    //                    case (...0, -30...30):  print("left swipe")
-                                    //                    case (0..., -30...30):  print("right swipe")
-                                    //                    case (-100...100, ...0):  print("up swipe")
-                                case (-100...100, 0...):  dismiss()
-                                default:  print("no clue")
-                            }
-                        }
-                    )
+                }
+            )
         
         GeometryReader { geo in
             ZStack {
                 VStack {
                     if ([".mp4",".mov"].contains(fullImageURL.absoluteString.suffix(4))) {
-                        AVP(videoURL: fullImageURL)
-//                        AVP(videoURL: fullImageURL, width: geo.size.width, height: geo.size.height, contentMode: .scaleAspectFit)
+                        //                        AVP(videoURL: fullImageURL)
+                        AVP(videoURL: fullImageURL, width: geo.size.width, height: geo.size.height, contentMode: .scaleAspectFit)
                     }
                     else if (fullImageURL.absoluteString.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
                         LazyImage(url: fullImageURL) { state in
@@ -337,7 +360,7 @@ struct FullImageViewer: View {
                                 CenteredProgressView()
                             }
                         }
-    //                                        .processors([.resize(height: 150)])
+                        //                                        .processors([.resize(height: 150)])
                         .pipeline(ImageProcessing.shared.content)
                         .priority(.high)
                     }

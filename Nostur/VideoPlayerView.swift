@@ -8,14 +8,77 @@
 import SwiftUI
 import AVKit
 import AVFoundation
-//import UIKit
 
-struct AVP: View {
+struct AVP: UIViewControllerRepresentable {
+    //    let player:AVPlayer
     let videoURL: URL
-    var body: some View {
-        Text("video playback broken")
+    let width:CGFloat
+    let height:CGFloat
+    let contentMode:UIView.ContentMode
+    
+    init(videoURL: URL, width: CGFloat, height: CGFloat, contentMode: UIView.ContentMode = .scaleAspectFill) {
+        //        self.player = AVPlayer(url: videoURL)
+        self.videoURL = videoURL
+        self.width = width
+        self.height = height
+        self.contentMode = contentMode
     }
+    
+    func makeUIViewController(context: Context) -> AVPlayerViewController {
+        let playerViewController = AVPlayerViewController()
+        playerViewController.player = AVPlayer(url: videoURL)
+        playerViewController.showsPlaybackControls = true
+        playerViewController.allowsPictureInPicturePlayback = true
+        playerViewController.delegate = context.coordinator
+        playerViewController.player?.play()
+        
+        
+        return playerViewController
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    //    func makeUIView(context: Context) -> UIView {
+    //        let playerView = UIView(frame: CGRect(x: 0, y: 0, width: width, height: height))
+    //        let player = AVPlayer(url: videoURL)
+    //        let playerLayer = AVPlayerLayer(player: player)
+    //        playerLayer.videoGravity = .resizeAspectFill
+    //        playerLayer.frame = playerView.bounds
+    //        playerView.layer.addSublayer(playerLayer)
+    //
+    //        player.play()
+    //
+    //        return playerView
+    //    }
+    
+    func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {}
+    
+    class Coordinator: NSObject, AVPlayerViewControllerDelegate {
+        var parent: AVP
+        
+        init(_ parent: AVP) {
+            self.parent = parent
+        }
+    }
+    
+    //    class Coordinator: NSObject, AVPlayerViewControllerDelegate {
+    //        var parent: AVP
+    //
+    //        init(_ parent: AVP) {
+    //            self.parent = parent
+    //        }
+    //    }
 }
+
+
+//struct AVP: View {
+//    let videoURL: URL
+//    var body: some View {
+//        Text("video playback broken")
+//    }
+//}
 
 //struct AVP: UIViewControllerRepresentable {
 //    
@@ -220,9 +283,9 @@ struct AVPKAP: UIViewRepresentable {
     
     func updateUIView(_ uiView: UIView, context: Context) {}
     
-//    func didMoveToSuperview(_ view: UIView) {
-//        player.view.frame = view.bounds
-//    }
+    //    func didMoveToSuperview(_ view: UIView) {
+    //        player.view.frame = view.bounds
+    //    }
     
     func makeCoordinator() -> Coordinator {
         Coordinator(player: player)
