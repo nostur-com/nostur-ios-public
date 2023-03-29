@@ -169,20 +169,20 @@ struct PostAndParent: View {
                     .padding(.leading, isParent ? INDENT : 0)
                         
                 // MARK: QUOTED NOTE IN DETAIL NOTE
-                    if (event.firstQuoteId != nil) {
-                        if (vPost.event.firstQuote != nil) {
-                            QuotedNoteFragmentView(vPost: event.firstQuote!.toVPost())
-                                .padding(.leading, isParent ? INDENT : 0)
-                        }
-                        else {
-                            CenteredProgressView()
-                                .padding(.leading, isParent ? INDENT : 0)
-                                .onAppear {
-                                    // TODO: CAN FETCH WITH #E OR NO?
-                                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.firstQuoteId!)))
-                            }
-                        }
-                    }
+//                    if (event.firstQuoteId != nil) {
+//                        if (vPost.event.firstQuote != nil) {
+//                            QuotedNoteFragmentView(vPost: event.firstQuote!.toVPost())
+//                                .padding(.leading, isParent ? INDENT : 0)
+//                        }
+//                        else {
+//                            CenteredProgressView()
+//                                .padding(.leading, isParent ? INDENT : 0)
+//                                .onAppear {
+//                                    // TODO: CAN FETCH WITH #E OR NO?
+//                                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.firstQuoteId!)))
+//                            }
+//                        }
+//                    }
                     
                     if (isParent) {
                         FooterFragmentView(event: event)

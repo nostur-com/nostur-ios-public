@@ -126,34 +126,48 @@ enum MarkdownElement: Hashable {
     case video(URL)
 }
 
+import CoreData
+
+//class EventVM: ObservableObject {
+//    var event:Event?
+//
+//    init(id: String) {
+//        let fr = Event.fetchRequest()
+//        fr.predicate = NSPredicate(format: "id == %@", id)
+//        fr.fetchLimit = 1
+//        if let event = try? DataProvider.shared().viewContext.fetch(fr).first {
+//            self.event = event
+//        }
+//    }
+//}
+
 
 struct QuoteById: View {
     
-    var sp:SocketPool = .shared
-    var id:String
+    let id:String
+//    @ObservedObject var vm:EventVM // no vm want fr is not updating after receiving from websocket
     
     @FetchRequest
     var events:FetchedResults<Event>
-    
+//
     init(id:String) {
         self.id = id
-        
-        _events = FetchRequest(
-            sortDescriptors: [],
-            predicate: NSPredicate(format: "id == %@", id)
-        )
+        let fr = Event.fetchRequest()
+        fr.predicate = NSPredicate(format: "id == %@", id)
+        fr.fetchLimit = 1
+        _events = FetchRequest(fetchRequest: fr)
     }
     
     var body: some View {
-        if (events.first != nil) {
-            QuotedNoteFragmentView(vPost: events.first!.toVPost())
+        if let event = events.first {
+            QuotedNoteFragmentView(vPost: event.toVPost())
         }
         else {
             ProgressView()
                 .hCentered()
                 .onAppear {
                     print("🟢 Fetching for QuotedNoteFragmentView \(id)")
-                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEventAndReferences(id: id)))
+                    SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEventAndReferences(id: id)))
                 }
         }
     }
