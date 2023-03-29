@@ -156,8 +156,9 @@ struct NoteRow: View {
                                     }
                             }
                             
-                        if let firstQuote = event.firstQuote {
-                            QuotedNoteFragmentView(vPost: firstQuote.toVPost())
+                        if let firstQuoteId = event.firstQuoteId {
+                            QuoteById(id: firstQuoteId)
+//                            QuotedNoteFragmentView(vPost: firstQuote.toVPost())
                         }
                         else if (event.firstQuoteId != nil) {
                             CenteredProgressView().onAppear { // TODO: MOVE TO VM
