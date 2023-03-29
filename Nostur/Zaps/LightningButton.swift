@@ -33,6 +33,10 @@ struct LightningButton: View {
                 }
             }
             .onTapGesture {
+                guard ns.account?.privateKey != nil else {
+                    ns.readOnlyAccountSheetShown = true
+                    return
+                }
                 guard event != nil else { return }
                 isLoading = true
                 buttonTapped()

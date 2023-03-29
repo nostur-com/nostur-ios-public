@@ -33,6 +33,7 @@ struct Onboarding: View {
                 .sheet(isPresented: $ns.readOnlyAccountSheetShown) {
                     ReadOnlyAccountInformationSheet()
                         .presentationDetents([ .large])
+                        .environmentObject(ns)
                 }
         }
         else {

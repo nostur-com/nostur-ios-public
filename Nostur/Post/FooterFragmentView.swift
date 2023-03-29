@@ -29,6 +29,10 @@ struct FooterFragmentView: View {
             .padding([.vertical, .trailing], 5)
             .contentShape(Rectangle())
             .onTapGesture {
+                guard ns.account?.privateKey != nil else {
+                    ns.readOnlyAccountSheetShown = true
+                    return
+                }
                 showingNewReply = true
             }
             Spacer()
@@ -50,6 +54,10 @@ struct FooterFragmentView: View {
                 .padding(5)
                 .contentShape(Rectangle())
                 .onTapGesture {
+                    guard ns.account?.privateKey != nil else {
+                        ns.readOnlyAccountSheetShown = true
+                        return
+                    }
                     showingQuoteOrRepost = true
                 }
             }
@@ -78,6 +86,10 @@ struct FooterFragmentView: View {
                 .padding(5)
                 .contentShape(Rectangle())
                 .onTapGesture {
+                    guard ns.account?.privateKey != nil else {
+                        ns.readOnlyAccountSheetShown = true
+                        return
+                    }
                     if let signedEvent = ns.likePost(event) {
                         unpublishLikeId = up.publish(signedEvent)
                         sendNotification(.viewNeedsUpdate)

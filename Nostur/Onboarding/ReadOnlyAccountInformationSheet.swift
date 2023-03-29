@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ReadOnlyAccountInformationSheet: View {
     
+    @EnvironmentObject var ns:NosturState
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
@@ -23,7 +24,10 @@ struct ReadOnlyAccountInformationSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(content: {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Close") { dismiss() }
+                    Button("Close") {
+                        ns.readOnlyAccountSheetShown = false
+                        dismiss()
+                    }
                 }
             })
             .padding(20)
