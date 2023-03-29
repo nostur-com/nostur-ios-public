@@ -8,7 +8,11 @@
 import SwiftUI
 import LightningDevKit
 
-struct NoteRow: View {
+struct NoteRow: View {//}, Equatable {
+//    static func == (lhs: NoteRow, rhs: NoteRow) -> Bool {
+//        lhs.vPost.id == rhs.vPost.id
+//    }
+    
     private let sp:SocketPool = .shared
     private let nav:NavigationModel = .shared
     let vPost:VPost
@@ -25,9 +29,6 @@ struct NoteRow: View {
         self.event = vPost.event
         self.hideFooter = hideFooter
     }
-        
-    @Namespace var invoice
-    @Namespace var text
     
     var body: some View {
         let _ = Self._printChanges()
@@ -51,6 +52,7 @@ struct NoteRow: View {
             
             // IS REPOST AND ALL DATA IS HERE
             if event.isRepost, let vPostRepost = event.firstQuote?.toVPost() {
+//                Text("Repost")
                 Kind1(vPost: vPostRepost, hideFooter: false)
             }
             else if event.isRepost && event.firstQuoteId != nil {
@@ -65,6 +67,7 @@ struct NoteRow: View {
             }
             // IS NOT A REPOST
             else {
+//                Text("The Post \(vPost.id)")
                 Kind1(vPost: vPost, hideFooter: false)
 //                .background(Color.random)
             }
@@ -152,7 +155,7 @@ struct NoteRow: View {
                                             .onTapGesture { nav.navigateTo(vPost) }
                                     if vPost.imageUrls.count > 0 {
                                         MediaViewer(imgUrls: vPost.imageUrls, pubkey: vPost.event.pubkey)
-                                            .onTapGesture { nav.navigateTo(vPost) }
+//                                            .onTapGesture { nav.navigateTo(vPost) }
                                     }
                             }
                             
