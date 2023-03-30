@@ -81,7 +81,7 @@ struct DetailContentRenderer: View { // VIEW things
         result.append(MarkdownElement.text(textBuilder.renderedText(event, text:nonMatch)))
         
         return
-        VStack {
+        LazyVStack {
             ForEach(result.indices, id:\.self) { index in
                 switch result[index] {
                     case .plain(let text):
