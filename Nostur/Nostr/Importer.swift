@@ -78,7 +78,12 @@ class Importer {
                     var kind6firstQuote:Event?
                     if event.kind == .repost && (event.content.prefix(2) == #"{""# || event.content == "") {
                         let decoder = JSONDecoder()
-                        if let noteInNote = try? decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
+                        if event.content == "" {
+                            if let firstE = event.firstE() {
+                                kind6firstQuote = try? Event.fetchEvent(id: firstE, context: context)
+                            }
+                        }
+                        else if let noteInNote = try? decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
                             if !Event.eventExists(id: noteInNote.id, context: context) {
                                 _ = Event.saveEvent(event: noteInNote, context:context)
                             }
