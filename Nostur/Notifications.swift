@@ -27,6 +27,10 @@ extension Notification.Name {
         return Notification.Name("blockListUpdated")
     }
     
+    static var muteListUpdated: Notification.Name {
+        return Notification.Name("muteListUpdated")
+    }
+    
     static var willDeleteAllEvents: Notification.Name {
         return Notification.Name("willDeleteAllEvents")
     }

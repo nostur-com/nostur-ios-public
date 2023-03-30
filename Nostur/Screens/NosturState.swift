@@ -312,8 +312,13 @@ final class NosturState : ObservableObject {
             account.mutedRootIds_ = account.mutedRootIds_ + [firstE, vPost.id]
             print("Muting \(firstE)")
         }
+        else {
+            account.mutedRootIds_ = account.mutedRootIds_ + [vPost.id]
+            print("Muting \(vPost.id)")
+        }
         do {
             try viewContext.save()
+            sendNotification(.muteListUpdated)
             //sendNotification(.viewNeedsUpdate) // TODO: NEED THIS??
         }
         catch {

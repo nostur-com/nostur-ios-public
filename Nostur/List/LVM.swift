@@ -125,8 +125,9 @@ class LVM: NSObject, ObservableObject {
                 .suffix(LVM_MAX_VISIBLE)
             
             DispatchQueue.main.async {
-                self.lvmState.vPosts = currentVPosts + last
-                self.lvmCounter.unreadCounterNew = self.lvmCounter.unreadCounterNew + last.count
+                let lastWithoutMuted = last.filter(notMuted)
+                self.lvmState.vPosts = (currentVPosts + lastWithoutMuted)
+                self.lvmCounter.count = self.lvmCounter.count + lastWithoutMuted.count
             }
         }
     }
@@ -271,6 +272,15 @@ extension LVM {
         updatePostFeed()
         trackLastAppeared()
         processNewEventsInBg()
+        keepFilteringMuted()
+    }
+    
+    func keepFilteringMuted() {
+        receiveNotification(.muteListUpdated)
+            .sink { notification in
+                self.lvmState.vPosts = self.lvmState.vPosts.filter(notMuted)
+            }
+            .store(in: &subscriptions)
     }
     
     func processNewEventsInBg() {
@@ -304,8 +314,8 @@ extension LVM {
                 
                 // unread should only go down, not up
                 // only way to go up is when new posts are added.
-                if self.itemsAfterLastAppeared < self.lvmCounter.unreadCounterNew {
-                    self.lvmCounter.unreadCounterNew = self.itemsAfterLastAppeared
+                if self.itemsAfterLastAppeared < self.lvmCounter.count {
+                    self.lvmCounter.count = self.itemsAfterLastAppeared
                     self.lastRead = event
                 }
                 else if self.lastRead == nil {
@@ -316,10 +326,10 @@ extension LVM {
     }
     
     // 1 2 3 [4] 5 6 7 8 9 10
-    // 0 1 2  [3]  4 5 6 7 8 9
+    // 0 1 2 [3] 4 5 6 7 8 9
     var itemsAfterLastAppeared:Int {
         guard let lastAppearedIndex = self.lastAppearedIndex else { return self.lvmState.vPosts.count }
-        return max(0,(self.lvmState.vPosts.count - lastAppearedIndex - 1))
+        return max(0,((self.lvmState.vPosts.count - lastAppearedIndex) - 1))
     }
     
     func keepListStateSaved() {
@@ -401,7 +411,7 @@ extension LVM {
     func scrollToEnd() {
         state = .AWAITING_SCROLL
         sendNotification(.shouldScrollToLast)
-        self.lvmCounter.unreadCounterNew = 0
+        self.lvmCounter.count = 0
         if (self.lastAppeared != self.events.last) {
             self.lastAppeared = self.events.last
         }
@@ -434,7 +444,7 @@ extension LVM {
         guard state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
         guard state != .SWITCHING_ACCOUNT else { return } // Only set last appeared if we
         
-        self.lvmCounter.unreadCounterNew = 0
+        self.lvmCounter.count = 0
     }
     
     func requestForJustAppeared(_ events:[Event]) {
@@ -519,7 +529,7 @@ extension LVM: NSFetchedResultsControllerDelegate {
     func sendToView(events:[Event]) {
         switch (self.state) {
             case .AWAITING_FIRST_FETCH: // Show last X (FORCED CUTOFF)
-                self.events = events
+                self.events = events.filter(onlyRootOrReplyingToFollower)
                     .prefix(LVM_MAX_VISIBLE)
                     .sorted(by: { $0.created_at < $1.created_at } )
                 
@@ -531,26 +541,26 @@ extension LVM: NSFetchedResultsControllerDelegate {
                 let lastAppearedIndex = self.lastAppeared != nil ? self.events.firstIndex(where: { $0.id == self.lastAppearedId }) ?? -1 : -1
                 
                 if (lastAppearedIndex == -1) { // LAST APPEARED NOT IN EVENTS (FORCED CUTOFF)
-                    self.events = events
+                    self.events = events.filter(onlyRootOrReplyingToFollower)
                         .prefix(LVM_MAX_VISIBLE)
                         .sorted(by: { $0.created_at < $1.created_at } )
                     self.state = .COMPLETED_FIRST_FETCH // POST NOT IN LIST, SO DONT RESTORE SCROLL.
                 }
                 if (lastAppearedIndex < LVM_MAX_VISIBLE) {
                     self.state = .AWAITING_RESTORE_SCROLL // POST IS IN LIST, SO WE CAN RESTORE SCROLL. (FORCED CUTOFF)
-                    self.events = events
+                    self.events = events.filter(onlyRootOrReplyingToFollower)
                         .prefix(LVM_MAX_VISIBLE)
                         .sorted(by: { $0.created_at < $1.created_at } )
                 }
                 else {
                     self.state = .AWAITING_RESTORE_SCROLL // POST IN LIST, BUT OUTSIDE MAX VISIBLE.. TODO: HANDLE THIS. NO CUTOFF NOW
-                    self.events = events
+                    self.events = events.filter(onlyRootOrReplyingToFollower)
                         .sorted(by: { $0.created_at < $1.created_at } )
                 }
                 self.updateUnreadCount()
                 
             default:
-                self.events = events
+                self.events = events.filter(onlyRootOrReplyingToFollower)
                     .sorted(by: { $0.created_at < $1.created_at } )
                     .suffix(LVM_MAX_VISIBLE * 2)
                 self.updateUnreadCount()
@@ -575,17 +585,31 @@ extension LVM: NSFetchedResultsControllerDelegate {
     
     func updateUnreadCount() {
         guard let lastReadId = self.lastReadId else {
-            self.lvmCounter.unreadCounterNew = lvmState.vPosts.count
+            self.lvmCounter.count = lvmState.vPosts.count
             return
         }
         if let index = lvmState.vPosts.firstIndex(where: { $0.id == lastReadId }) {
             let count = lvmState.vPosts.suffix(from: index + 1).count
-            self.lvmCounter.unreadCounterNew = count
+            self.lvmCounter.count = count
         }
         else {
-            self.lvmCounter.unreadCounterNew = lvmState.vPosts.count
+            self.lvmCounter.count = lvmState.vPosts.count
         }
     }
+    
+    func onlyRootOrReplyingToFollower(_ event:Event) -> Bool {
+        if let replyToPubkey = event.replyTo?.pubkey {
+            if pubkeys.contains(replyToPubkey) {
+                return true
+            }
+        }
+        return event.replyToId == nil
+    }
+}
+
+func notMuted(_ vPost:VPost) -> Bool {
+    let mutedRootIds = NosturState.shared.account?.mutedRootIds_ ?? []
+    return !mutedRootIds.contains(vPost.id) && !mutedRootIds.contains(vPost.event.replyToRootId ?? "NIL")
 }
 
 extension Event {

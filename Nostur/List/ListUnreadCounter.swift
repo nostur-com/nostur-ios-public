@@ -8,7 +8,7 @@
 import SwiftUI
 
 class LVMCounter: ObservableObject {
-    @Published var unreadCounterNew = 0 // New one based on index
+    @Published var count = 0 // New one based on index
 }
 
 struct ListUnreadCounter: View {
@@ -20,10 +20,10 @@ struct ListUnreadCounter: View {
             Spacer()
             HStack {
                 Spacer()
-                if (vmCounter.unreadCounterNew > 0) {
+                if (vmCounter.count > 0) {
                     HStack {
                         Image(systemName: "arrow.down")
-                        Text("\(vmCounter.unreadCounterNew) unread")
+                        Text("\(vmCounter.count) unread")
                         Image(systemName: "arrow.down")
                     }
                     .frame(minWidth: 30)
