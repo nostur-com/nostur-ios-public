@@ -132,6 +132,14 @@ struct RequestMessage {
 ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [30009,8], "limit": 500}]
 """
     }
+    // Get all events where [pubkeys] are mentioned (in p tag)
+    static func getHashtag(hashtag:String, kinds:[Int] = [1], limit:Int = 500,  subscriptionId:String? = nil) -> String {
+        return """
+["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"#t": \(hashtag), "limit": \(limit), "kinds": \(JSON(kinds).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]") }]
+"""
+    }
+    
+                
     
     // Get all events where [pubkeys] are mentioned (in p tag)
     static func getMentions(pubkeys:[String], kinds:[Int] = [1,7,9735,4], limit:Int = 500, subscriptionId:String? = nil, since:NTimestamp? = nil, until:NTimestamp? = nil) -> String {
