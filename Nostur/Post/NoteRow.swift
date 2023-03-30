@@ -9,25 +9,27 @@ import SwiftUI
 import LightningDevKit
 
 struct NoteRow: View {//}, Equatable {
-//    static func == (lhs: NoteRow, rhs: NoteRow) -> Bool {
-//        lhs.vPost.id == rhs.vPost.id
-//    }
+    //    static func == (lhs: NoteRow, rhs: NoteRow) -> Bool {
+    //        lhs.vPost.id == rhs.vPost.id
+    //    }
     
     private let sp:SocketPool = .shared
     private let nav:NavigationModel = .shared
     let vPost:VPost
     @ObservedObject var event:Event
     var hideFooter = true // For rendering in NewReply
-
+    var inThread = false // For rendering in thread, hide "Replying to.."
+    
     enum type {
         case note
         case lightningInvoice
     }
     
-    init(vPost:VPost, hideFooter:Bool = false) {
+    init(vPost:VPost, hideFooter:Bool = false, inThread:Bool = false) {
         self.vPost = vPost
         self.event = vPost.event
         self.hideFooter = hideFooter
+        self.inThread = inThread
     }
     
     var body: some View {
@@ -47,12 +49,12 @@ struct NoteRow: View {//}, Equatable {
                 .onTapGesture {
                     nav.navigateTo(ContactPath(key: vPost.event.pubkey))
                 }
-                .padding(.leading, 30)
+                .padding(.leading, 40)
             }
             
             // IS REPOST AND ALL DATA IS HERE
             if event.isRepost, let vPostRepost = event.firstQuote?.toVPost() {
-//                Text("Repost")
+                //                Text("Repost")
                 Kind1(vPost: vPostRepost, hideFooter: false)
             }
             else if event.isRepost && event.firstQuoteId != nil {
@@ -67,14 +69,15 @@ struct NoteRow: View {//}, Equatable {
             }
             // IS NOT A REPOST
             else {
-//                Text("The Post \(vPost.id)")
-                Kind1(vPost: vPost, hideFooter: false)
-//                .background(Color.random)
+                //                Text("The Post \(vPost.id)")
+                Kind1(vPost: vPost, hideFooter: false, inThread:inThread)
+                //                .background(Color.random)
             }
         }
+        .padding(.top, 20)
         .onAppear {
-//            guard 1 == 2 else { return } // performance check
-//            print("🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴 MY FACE IS APPEAR")
+            //            guard 1 == 2 else { return } // performance check
+            //            print("🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴 MY FACE IS APPEAR")
             // should fetch setMetaData if
             // No Contact
             // Contact updated_at is very old
@@ -90,7 +93,7 @@ struct NoteRow: View {//}, Equatable {
                 }
             }
         }
-        .padding(.vertical, 10)
+        //        .padding(.top, 10)
         
     }
     
@@ -98,15 +101,17 @@ struct NoteRow: View {//}, Equatable {
     struct Kind1: View {
         let vPost:VPost
         let hideFooter:Bool // For rendering in NewReply
+        let inThread:Bool // For rendering in thread
         @ObservedObject var event:Event
         let nav:NavigationModel = .shared
         let type:NoteRow.type
         let sp:SocketPool = .shared
         
-        init(vPost: VPost, hideFooter:Bool = true) {
+        init(vPost: VPost, hideFooter:Bool = true, inThread:Bool = false) {
             self.vPost = vPost
             self.event = vPost.event
             self.hideFooter = hideFooter
+            self.inThread = inThread
             if vPost.plainText.prefix(4).lowercased() == "lnbc" && Invoice.fromStr(s: vPost.plainText).getValue() != nil {
                 self.type = .lightningInvoice
             }
@@ -119,63 +124,57 @@ struct NoteRow: View {//}, Equatable {
         }
         
         var body: some View {
-            HStack(alignment: .top, spacing:10) {
-                    VStack {
-                        PFP(pubkey: event.pubkey, pictureUrl: event.contact?.picture)
-//                            .padding(.horizontal, 10)
-                            .onTapGesture {
-                                nav.navigateTo(ContactPath(key: event.pubkey)) // TODO: if vPost.contact navigate with that else by .pubkey
-                            }
-                        Color.clear // Needed to "fill" whole VStack to make it tappable
+            HStack(alignment: .top, spacing:0) {
+                PFP(pubkey: event.pubkey, pictureUrl: event.contact?.picture)
+                    .onTapGesture {
+                        nav.navigateTo(ContactPath(key: event.pubkey)) // TODO: if vPost.contact navigate with that else by .pubkey
                     }
-                    .contentShape(Rectangle())
-                    .onTapGesture { nav.navigateTo(vPost) }
-                    .frame(maxWidth: 50)
-                    
-                    VStack(alignment:.leading, spacing: 0) {// Post container
-                        HStack { // name + reply + context menu
-                            NoteHeaderView(vPost: vPost)
-                                .padding(.bottom, 5)
-                            Spacer()
-//                            EventPrivateNoteToggle(event: event)
-                            NoteMenuView(vPost: vPost)
-                        }
+                    .padding(.horizontal, 10)
+                
+                VStack(alignment:.leading, spacing: 0) {// Post container
+                    HStack { // name + reply + context menu
+                        NoteHeaderView(vPost: vPost)
+                            .padding(.bottom, 5)
+                        Spacer()
+                        //                            EventPrivateNoteToggle(event: event)
+                        NoteMenuView(vPost: vPost)
+                    }
+                    if !inThread {
                         ReplyingToFragmentView(vPost: vPost)
                             .contentShape(Rectangle())
                             .onTapGesture { nav.navigateTo(vPost) }
-//
-//                        DetailContentRenderer(event: event)
-                            switch self.type {
-                                case .lightningInvoice:
-                                    LightningInvoice(invoice: vPost.plainText)
-
-                                default:
-                                    NoteTextRenderView(vPost:vPost, useLinelimit: true)
-                                            .contentShape(Rectangle())
-                                            .onTapGesture { nav.navigateTo(vPost) }
-                                    if vPost.imageUrls.count > 0 {
-                                        MediaViewer(imgUrls: vPost.imageUrls, pubkey: vPost.event.pubkey)
-//                                            .onTapGesture { nav.navigateTo(vPost) }
-                                    }
-                            }
-                            
-                        if let firstQuoteId = event.firstQuoteId {
-                            QuoteById(id: firstQuoteId)
-//                            QuotedNoteFragmentView(vPost: firstQuote.toVPost())
-                        }
-                        else if (event.firstQuoteId != nil) {
-                            CenteredProgressView().onAppear { // TODO: MOVE TO VM
-                                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.firstQuoteId!)))
-                            }
-                        }
-
-                        if (!hideFooter) {
-                            FooterFragmentView(event: event)
-                                .frame(height: 30)
-                        }
                     }
-                    .padding(.trailing, 10)
+                    //
+                    //                        DetailContentRenderer(event: event)
+                    switch self.type {
+                        case .lightningInvoice:
+                            LightningInvoice(invoice: vPost.plainText)
+                            
+                        default:
+                            NoteTextRenderView(vPost:vPost, useLinelimit: true)
+                                .contentShape(Rectangle())
+                                .onTapGesture { nav.navigateTo(vPost) }
+                            if vPost.imageUrls.count > 0 {
+                                MediaViewer(imgUrls: vPost.imageUrls, pubkey: vPost.event.pubkey)
+                                //                                            .onTapGesture { nav.navigateTo(vPost) }
+                            }
+                    }
+                    
+                    if let firstQuoteId = event.firstQuoteId {
+                        QuoteById(id: firstQuoteId)
+//                        QuotedNoteFragmentView(vPost: firstQuote.toVPost())
+//                        QuotedNoteFragmentView(vPost: firstQuote.toVPost())
+                    }
+                    
+                    if (!hideFooter) {
+                        FooterFragmentView(event: event)
+                            .frame(height: 30)
+                            .padding(.bottom, 10)
+                    }
                 }
+//                .background(Color.random)
+//                .padding(.trailing, 10)
+            }
         }
     }
     
@@ -209,20 +208,20 @@ struct NoteRow_Previews: PreviewProvider {
         // maybe: 7edef20143bb4df0c65dff3993bd9f7c5fb755fe6c8fa72cc847299afe52d8fa
         
         let event0 = PreviewFetcher.fetchVPost("21a1b8e4083c11eab8f280dc0c0bddf3837949df75662e181ad117bd0bd5fdf3")
-//        let event0 = PreviewFetcher.fetchVPost("24ad21d57d59b03f4f9a8931f8bc4ccca84ed6ab257bf62cb84b0d04e0583118")
-//
+        //        let event0 = PreviewFetcher.fetchVPost("24ad21d57d59b03f4f9a8931f8bc4ccca84ed6ab257bf62cb84b0d04e0583118")
+        //
         let event1 = PreviewFetcher.fetchVPost("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
-//
+        //
         let event2 = PreviewFetcher.fetchVPost("dec5a86ad780edd26fb8a1b85f919ddace9cb2b2b5d3a68d5124802fc2da4ed3")
-//
-//        let event3 = PreviewFetcher.fetchVPost("d3b581761bab06fbe727b12b22c33c7b8768d7d9681b45cb6b1f4ad798496e14")
-//        
-//        let event4 = PreviewFetcher.fetchVPost("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe")
-//
-//        let event5 = PreviewFetcher.fetchVPost("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e")
-//
+        //
+        //        let event3 = PreviewFetcher.fetchVPost("d3b581761bab06fbe727b12b22c33c7b8768d7d9681b45cb6b1f4ad798496e14")
+        //
+        //        let event4 = PreviewFetcher.fetchVPost("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe")
+        //
+        //        let event5 = PreviewFetcher.fetchVPost("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e")
+        //
         let event6 = PreviewFetcher.fetchVPost("7d96834f60c5411be97fe9e4b07e3221c56df531543a11a1d67ff81168033e8e")
-
+        
         let event7 = PreviewFetcher.fetchVPost("fdf989cbe5d26d874a4afaf8a78861fcd3267619e7db467a549a6b33c6dbeeab")
         
         let img0 = PreviewFetcher.fetchVPost("f61016921961dfe93981f12d2eff92b0b7e8b3312c8a1cfdabf191d9536ba2ad")
@@ -235,38 +234,38 @@ struct NoteRow_Previews: PreviewProvider {
         
         List {
             
-//            Group {
-//                if (img0 != nil) {
-//                    NoteRow(vPost: img0!)
-//                        .listRowInsets(EdgeInsets())
-//                }
-//
-//                if (img1 != nil) {
-//                    NoteRow(vPost: img1!)
-//                        .listRowInsets(EdgeInsets())
-//                }
-//
-//                if (img2 != nil) {
-//                    NoteRow(vPost: img2!)
-//                        .listRowInsets(EdgeInsets())
-//                }
-//
-//                if (img3 != nil) {
-//                    NoteRow(vPost: img3!)
-//                        .listRowInsets(EdgeInsets())
-//                }
-//
-//                if (img4 != nil) {
-//                    NoteRow(vPost: img4!)
-//                        .listRowInsets(EdgeInsets())
-//                }
-                
-                
-//                if (event0 != nil) {
-//                    NoteRow(vPost: event0!)
-//                        .listRowInsets(EdgeInsets())
-//                }
-                //
+            //            Group {
+            //                if (img0 != nil) {
+            //                    NoteRow(vPost: img0!)
+            //                        .listRowInsets(EdgeInsets())
+            //                }
+            //
+            //                if (img1 != nil) {
+            //                    NoteRow(vPost: img1!)
+            //                        .listRowInsets(EdgeInsets())
+            //                }
+            //
+            //                if (img2 != nil) {
+            //                    NoteRow(vPost: img2!)
+            //                        .listRowInsets(EdgeInsets())
+            //                }
+            //
+            //                if (img3 != nil) {
+            //                    NoteRow(vPost: img3!)
+            //                        .listRowInsets(EdgeInsets())
+            //                }
+            //
+            //                if (img4 != nil) {
+            //                    NoteRow(vPost: img4!)
+            //                        .listRowInsets(EdgeInsets())
+            //                }
+            
+            
+            //                if (event0 != nil) {
+            //                    NoteRow(vPost: event0!)
+            //                        .listRowInsets(EdgeInsets())
+            //                }
+            //
             
             
             if (eventLong != nil) {
@@ -274,42 +273,42 @@ struct NoteRow_Previews: PreviewProvider {
                     .listRowInsets(EdgeInsets())
             }
             
-                if (event1 != nil) {
-                    NoteRow(vPost: event1!)
-                        .listRowInsets(EdgeInsets())
-                }
-                ////
-                if (event2 != nil) {
-                    NoteRow(vPost: event2!)
-                        .listRowInsets(EdgeInsets())
-                }
-                //
-                //            NoteRowView(event: event3!)
-                //                .listRowInsets(EdgeInsets())
-                //
-                // QUOTE? TODO:// WAAROM CRASHED DEZE??
-                //            if (event4 != nil) {
-                //                NoteRowView(event: event4!)
-                //                    .listRowInsets(EdgeInsets())
-                //            }
-                
-                //            NoteRowView(event: event5!)
-                //                .listRowInsets(EdgeInsets())
-                
-                if (event6 != nil) {
-                    // REPOST, LOADING?
-                    NoteRow(vPost: event6!)
-                        .listRowInsets(EdgeInsets())
-                }
-                
-                if (event7 != nil) {
-                    // REPOST
-                    NoteRow(vPost: event7!)
-                        .listRowInsets(EdgeInsets())
-                }
-//            }
-//            .frame(maxHeight: 400)
-//            .listRowInsets(EdgeInsets())
+            if (event1 != nil) {
+                NoteRow(vPost: event1!)
+                    .listRowInsets(EdgeInsets())
+            }
+            ////
+            if (event2 != nil) {
+                NoteRow(vPost: event2!)
+                    .listRowInsets(EdgeInsets())
+            }
+            //
+            //            NoteRowView(event: event3!)
+            //                .listRowInsets(EdgeInsets())
+            //
+            // QUOTE? TODO:// WAAROM CRASHED DEZE??
+            //            if (event4 != nil) {
+            //                NoteRowView(event: event4!)
+            //                    .listRowInsets(EdgeInsets())
+            //            }
+            
+            //            NoteRowView(event: event5!)
+            //                .listRowInsets(EdgeInsets())
+            
+            if (event6 != nil) {
+                // REPOST, LOADING?
+                NoteRow(vPost: event6!)
+                    .listRowInsets(EdgeInsets())
+            }
+            
+            if (event7 != nil) {
+                // REPOST
+                NoteRow(vPost: event7!)
+                    .listRowInsets(EdgeInsets())
+            }
+            //            }
+            //            .frame(maxHeight: 400)
+            //            .listRowInsets(EdgeInsets())
             
             
         }

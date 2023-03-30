@@ -139,7 +139,8 @@ struct ListView: View {
                     List {
                         Section {
                             ForEach(vmState.vPosts) { vPost in
-                                NoteRow(vPost:vPost)
+                                PostOrThread(vPost: vPost)
+//                                NoteRow(vPost:vPost)
 //                                    .equatable()
                                     .id(vPost.id)
                                     .listRowInsets(EdgeInsets())
@@ -422,3 +423,4 @@ struct ListView: View {
 //        }
 //    }
 //}
+

@@ -96,6 +96,23 @@ struct PreviewFetcher {
         return try! PreviewFetcher.viewContext.fetch(request)
     }
     
+    static func fetchEvents(_ pubkeys:Set<String>, kind:Int? = nil, context:NSManagedObjectContext? = nil) -> [Event] {
+        let request = NSFetchRequest<Event>(entityName: "Event")
+        request.entity = Event.entity()
+        if (kind != nil) {
+            request.predicate = NSPredicate(format: "pubkey IN %@ AND kind == %d", pubkeys, kind!)
+        } else {
+            request.predicate = NSPredicate(format: "pubkey IN %@", pubkeys)
+        }
+        
+        request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        
+        if (context != nil) {
+            return try! context!.fetch(request)
+        }
+        return try! PreviewFetcher.viewContext.fetch(request)
+    }
+    
     static func fetchAccount(_ pubkey:String? = nil, context:NSManagedObjectContext? = nil) -> Account? {
         let accountKey = pubkey ?? "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
         let request = NSFetchRequest<Account>(entityName: "Account")

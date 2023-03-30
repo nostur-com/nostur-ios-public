@@ -154,6 +154,7 @@ class EventsProvider: ObservableObject {
         messages.append(contentsOf: testImages())
         messages.append(contentsOf: testThread())
         messages.append(contentsOf: testDMs())
+        messages.append(contentsOf: testTimelineThreads())
         
         var relayMessages:[RelayMessage] = []
         
@@ -268,6 +269,30 @@ class EventsProvider: ObservableObject {
         if (contact1 != nil) {
             xaccount.addToFollows(contact1!)
         }
+        
+        if let contact4 = PreviewFetcher.fetchContact(
+            "4742221ccfbe3bee6d5823715df6864ec45dd8e6bf619527463716fe79a06427", context: context) {
+            account3.addToFollows(contact4) 
+        }
+        
+        if let contact5 = PreviewFetcher.fetchContact(
+            "4eb88310d6b4ed95c6d66a395b3d3cf559b85faec8f7691dafd405a92e055d6d", context: context) {
+            account3.addToFollows(contact5)
+        }
+        
+        if let c = PreviewFetcher.fetchContact("3d2e51508699f98f0f2bdbe7a45b673c687fe6420f466dc296d90b908d51d594", context: context) {
+            account3.addToFollows(c) // MATT
+        }
+        if let c = PreviewFetcher.fetchContact("6f35047caf7432fc0ab54a28fed6c82e7b58230bf98302bf18350ff71e10430a", context: context) {
+            account3.addToFollows(c) // WILL
+        }
+        if let c = PreviewFetcher.fetchContact("de7ecd1e2976a6adb2ffa5f4db81a7d812c8bb6698aa00dcf1e76adb55efd645", context: context) {
+            account3.addToFollows(c) // MELVIN
+        }
+        
+        account3.blockedPubkeys_.append("743416b4943b20b8e1ed6c6d8fc81bbb7a27797c4cd3acafae4cc3d1ed67dd4d;")
+        
+        
         
         // make some random private notes
         
