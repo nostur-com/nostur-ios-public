@@ -49,6 +49,7 @@ struct Settings: View {
     let SLIDER_MAX = 2000000.0
     
     @State var sliderValue = 0.0
+    @State var deleteAccountIsShown = false
 
     var body: some View {
 
@@ -216,8 +217,16 @@ struct Settings: View {
 //                        Text("Replaces any \"nsec1...\" in new posts with \"hunter2\" ")
 //                    }
 //                }
+            if ns.account?.privateKey != nil {
+                Section(header: Text("Account")) {
+                    Button(role: .destructive) {
+                        deleteAccountIsShown = true
+                    } label: {
+                        Label("Delete account", systemImage: "trash")
+                    }                    
+                }
+            }
         }
-
         .onAppear {
             sliderValue = settings.defaultZapAmount
         }
@@ -225,6 +234,12 @@ struct Settings: View {
             settings.defaultZapAmount = Double(newValue)
         })
         .navigationTitle("Settings")
+        .sheet(isPresented: $deleteAccountIsShown) {
+            NavigationStack {
+                DeleteAccountSheet()
+                    .environmentObject(ns)
+            }
+        }
     }
 }
 

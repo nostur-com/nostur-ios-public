@@ -89,6 +89,50 @@ class AccountManager {
         }
     }
     
+    // Wipes kind 0 and 3, publishes wiped events. Deletes key fron keychain, account from db
+    func wipeAccount(_ account:Account) {
+        guard let pk = account.privateKey else { return }
+    
+        var metaData = NSetMetadata(name: "ACCOUNT_DELETED", display_name: "ACCOUNT_DELETED", about: "", picture: "", banner: "", nip05: "", lud16: "", lud06: "")
+
+        // wipe kind 0
+        var newKind0Event = NEvent(content: metaData)
+        newKind0Event.kind = .setMetadata
+        
+        // wipe kind 3
+        var newKind3Event = NEvent(content: "")
+        newKind3Event.kind = .contactList
+
+        do {
+            let keys = try NKeys(privateKeyHex: pk)
+            let newKind0EventSigned = try newKind0Event.sign(keys)
+            let newKind3EventSigned = try newKind3Event.sign(keys)
+
+            Unpublisher.shared.publishNow(newKind0EventSigned)
+            Unpublisher.shared.publishNow(newKind3EventSigned)
+            
+            // delete key from keychain
+            deletePrivateKey(forPublicKeyHex: account.publicKey)
+            
+            // delete account
+            let accounts = NosturState.shared.accounts
+            if (accounts.count <= 1) { 
+                NosturState.shared.onBoardingIsShown = true
+                NavigationModel.shared.clear()
+                NosturState.shared.setAccount(account: nil)
+                DataProvider.shared().viewContext.delete(account)
+            }
+            else {
+                DataProvider.shared().viewContext.delete(account)
+                NosturState.shared.setAccount(account: accounts.first)
+            }
+            try DataProvider.shared().viewContext.save()
+        }
+        catch {
+            print("🔴🔴🔴🔴🔴 Could not wipe or delete account 🔴🔴🔴🔴🔴")
+        }
+    }
+    
     static func createMetadataEvent(account:Account) throws -> NEvent? {
         guard account.privateKey != nil else {
             throw "Account has no private key"
