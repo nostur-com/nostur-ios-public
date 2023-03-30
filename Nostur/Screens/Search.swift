@@ -95,6 +95,7 @@ struct Search: View {
                     searching = true
                     events.nsPredicate = NSPredicate(format: "kind == 1 && tagsSerialized CONTAINS %@", String(searchTrimmed.dropFirst(1)))
                     contacts.nsPredicate = NSPredicate(value: false)
+                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getHashtag(hashtag: String(searchTrimmed.dropFirst(1)))))
                 }
                 // try note1
                 else if (searchTrimmed.prefix(5) == "note1") {
