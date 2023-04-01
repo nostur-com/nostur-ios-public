@@ -38,6 +38,7 @@ struct BookmarksAndPrivateNotes: View {
             .navigationTitle(selectedSubTab)
             .navigationBarHidden(true)
             .navigationBarTitleDisplayMode(.inline)
+//            .background(Color("ListBackground"))
         }
     }
 }

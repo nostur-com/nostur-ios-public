@@ -58,6 +58,7 @@ struct ProfileRow: View {
                     .multilineTextAlignment(.leading)
             }
         }
+        .padding()
         .contentShape(Rectangle())
         .onTapGesture {
             NavigationModel.shared.navigateTo(ContactPath(key: contact.pubkey))
@@ -79,14 +80,16 @@ struct ProfileRow_Previews: PreviewProvider {
         
         let contact = PreviewFetcher.fetchContact(pubkey)
         
-        VStack {
-            ProfileRow(contact: contact!)
-            
-            ProfileRow(contact: contact!)
-            
-            ProfileRow(contact: contact!)
-         
-            Spacer()
+        ScrollView {
+            LazyVStack {
+                ProfileRow(contact: contact!)
+                
+                ProfileRow(contact: contact!)
+                
+                ProfileRow(contact: contact!)
+             
+                Spacer()
+            }
         }
         .withPreviewEnvironment()
         

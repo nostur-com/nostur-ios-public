@@ -26,9 +26,10 @@ struct BookmarksContainer: View {
 }
 
 struct BookmarksView: View {
-
+    
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
+    let nav:NavigationModel = .shared
     
     let account: Account
     
@@ -70,7 +71,7 @@ struct BookmarksView: View {
                             selectedAccount = account
                         } label: {
                             HStack {
-    //                            ProfilePicView(pubkey: account.publicKey, account: account, size: 30)
+                                //                            ProfilePicView(pubkey: account.publicKey, account: account, size: 30)
                                 Text("@\(account.name)")
                                 Spacer()
                             }
@@ -93,7 +94,7 @@ struct BookmarksView: View {
                         }
                     }
                     .frame(width: 150)
-//                    .background(.green)
+                    //                    .background(.green)
                 }
                 .menuStyle(.borderlessButton)
                 .menuIndicator(.visible)
@@ -103,6 +104,9 @@ struct BookmarksView: View {
                 ForEach(vBookmarks) { vBookmark in
                     NoteRow(vPost: vBookmark)
                         .listRowInsets(EdgeInsets())
+                        .onTapGesture {
+                            nav.navigateTo(vBookmark)
+                        }
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button(role: .destructive) {
                                 removeBookmark(vBookmark.event)
@@ -118,7 +122,8 @@ struct BookmarksView: View {
         .navigationTitle("Bookmarks")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarHidden(true)
-        .padding()
+//        .padding()
+//        .background(Color("ListBackground"))
         .onReceive(receiveNotification(.viewNeedsUpdate), perform: { _ in
             if (selectedAccount != nil) {
                 bookmarks.nsPredicate = NSPredicate(format: "%@ IN bookmarkedBy", selectedAccount!)

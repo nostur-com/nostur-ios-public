@@ -96,8 +96,17 @@ struct PrivateNotesView: View {
                 ForEach(notes) { note in
                     PrivateNoteRow(note:note)
                         .listRowInsets(EdgeInsets())
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button(role: .destructive) {
+                                do {
+                                    viewContext.delete(note)
+                                    try viewContext.save()
+                                } catch {}
+                            } label: {
+                                Label("Remove", systemImage: "trash")
+                            }
+                        }
                 }
-                .onDelete(perform: deleteItems)
             }
             .listStyle(.plain)
             Spacer()
@@ -112,17 +121,6 @@ struct PrivateNotesView: View {
             }
             else {
                 notes.nsPredicate = NSPredicate(value: true)
-            }
-        }
-    }
-    
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-//            ns.objectWillChange.send()
-            offsets.map { notes[$0] }.forEach(viewContext.delete)
-            do { try viewContext.save() } catch {
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
             }
         }
     }
@@ -178,8 +176,8 @@ struct PrivateNoteRow: View {
                     }
                     
                     Text("@\(contact.username)").layoutPriority(1)
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
                     Text(contact.about ?? "").lineLimit(1)
                         .foregroundColor(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -191,7 +189,7 @@ struct PrivateNoteRow: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.vertical, 10)
+        .padding(10)
         
     }
 }

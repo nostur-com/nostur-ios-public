@@ -16,7 +16,7 @@ struct ContactSearchResultRow: View {
             PFP(pubkey: contact.pubkey, pictureUrl: contact.picture)
             VStack(alignment: .leading) {
                 HStack {
-                    VStack(alignment: .leading) {
+                    VStack(alignment: .leading) {                        
                         HStack(spacing:3) {
                             Text(contact.authorName).font(.headline).foregroundColor(.primary)
                                 .lineLimit(1)

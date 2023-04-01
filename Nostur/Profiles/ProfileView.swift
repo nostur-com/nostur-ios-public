@@ -359,7 +359,6 @@ struct ProfileView: View {
                                     Text("🥪")
                             }
                         }
-                        .padding()
                     } header: {
                         HStack {
                             TabButton(
