@@ -10,9 +10,7 @@ import Foundation
 import CoreData
 
 
-public class Event: NSManagedObject, Identifiable {
-
-    
-    
+public class Event: NSManagedObject, Identifiable {    
+    var parentEvents:[Event] = []
 }
 

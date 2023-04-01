@@ -98,23 +98,12 @@ class LVM: NSObject, ObservableObject {
             
             for event in self.events {
                 if currentVPosts.firstIndex(where: { $0.event.objectID == event.objectID } ) != nil {
-                    continue
+                    continue // Skip if the post is already on screen
                 }
                 else {
-                    guard let privateEvent = try? context.existingObject(with: event.objectID) as? Event else { continue }
-                    let newVPostData = transformer.vPostData(privateEvent) // need to get event from bg instead?
-                    let newVPost = VPost(
-                        id: privateEvent.id,
-                        event: event, // Main context event here? not privateEvent, right?
-                        created_at: privateEvent.created_at,
-                        npub: newVPostData.npub,
-                        note1: newVPostData.note1,
-                        plainText: newVPostData.plainText,
-                        renderedText: newVPostData.renderedText,
-                        replyingToUsernamesMarkDown: newVPostData.replyingToUsernamesMarkDown,
-                        imageUrls: newVPostData.imageUrls,
-                        displayName: newVPostData.displayName)
-                    newVPosts.append(newVPost)
+                    if let newVPost = transformer.toVPost(event) {
+                        newVPosts.append(newVPost)
+                    }
                 }
             }
             
@@ -123,13 +112,38 @@ class LVM: NSObject, ObservableObject {
             // post added to the end should not be older than the first one already on screen...
                 .filter { $0.created_at > (currentVPosts.first?.created_at ?? 0) }
                 .suffix(LVM_MAX_VISIBLE)
+                        
+            
+            let currentVPostsCount = threadCount(currentVPosts)
             
             DispatchQueue.main.async {
                 let lastWithoutMuted = last.filter(notMuted)
-                self.lvmState.vPosts = (currentVPosts + lastWithoutMuted)
-                self.lvmCounter.count = self.lvmCounter.count + lastWithoutMuted.count
+                let dupRemoved = self.removeDuplicates(currentVPosts + lastWithoutMuted)
+                self.lvmState.vPosts = dupRemoved
+                self.lvmCounter.count = self.lvmCounter.count + (threadCount(dupRemoved) - currentVPostsCount)
             }
         }
+    }
+    
+    func removeDuplicates(_ vPosts:[VPost]) -> [VPost] {
+        /**
+         A2 (ROOT)
+              A1.1
+                A1.1.1
+              A2
+         
+            Should remove A1.1 if A1.1.1 is also on screen
+              So get replyToId or first parent, and that ID should be removed from list
+         */
+        
+        // 1. Get all replyToId's
+        var replyToIds = [String]()
+        for vPost in vPosts {
+            if let replyToId = vPost.parentPosts.last?.id {
+                replyToIds.append(replyToId)
+            }
+        }
+        return vPosts.filter { !replyToIds.contains($0.id) }
     }
     
     var lvmState:LVMState
@@ -327,9 +341,18 @@ extension LVM {
     
     // 1 2 3 [4] 5 6 7 8 9 10
     // 0 1 2 [3] 4 5 6 7 8 9
+    // Old version, without threads
+//    var itemsAfterLastAppeared:Int {
+//        guard let lastAppearedIndex = self.lastAppearedIndex else { return self.lvmState.vPosts.count }
+//        return max(0,((self.lvmState.vPosts.count - lastAppearedIndex) - 1))
+//    }
+    
+    // With threads. cannot simply count, need to use the thread count value
     var itemsAfterLastAppeared:Int {
-        guard let lastAppearedIndex = self.lastAppearedIndex else { return self.lvmState.vPosts.count }
-        return max(0,((self.lvmState.vPosts.count - lastAppearedIndex) - 1))
+        guard let lastAppearedIndex = self.lastAppearedIndex else { return threadCount(self.lvmState.vPosts) }
+        let postsAfterLastAppeared = self.lvmState.vPosts.suffix(from: lastAppearedIndex + 1)
+        let count = threadCount(Array(postsAfterLastAppeared)) // TODO: Performance, can use ArraySlice somehow? swift-algorithms?
+        return max(0,count)
     }
     
     func keepListStateSaved() {
@@ -531,6 +554,10 @@ extension LVM: NSFetchedResultsControllerDelegate {
             case .AWAITING_FIRST_FETCH: // Show last X (FORCED CUTOFF)
                 self.events = events.filter(onlyRootOrReplyingToFollower)
                     .prefix(LVM_MAX_VISIBLE)
+                    .map {
+                        $0.parentEvents = Event.getParentEvents($0)
+                        return $0
+                    }
                     .sorted(by: { $0.created_at < $1.created_at } )
                 
                 self.lvmState.state = .COMPLETED_FIRST_FETCH
@@ -543,6 +570,10 @@ extension LVM: NSFetchedResultsControllerDelegate {
                 if (lastAppearedIndex == -1) { // LAST APPEARED NOT IN EVENTS (FORCED CUTOFF)
                     self.events = events.filter(onlyRootOrReplyingToFollower)
                         .prefix(LVM_MAX_VISIBLE)
+                        .map {
+                            $0.parentEvents = Event.getParentEvents($0)
+                            return $0
+                        }
                         .sorted(by: { $0.created_at < $1.created_at } )
                     self.state = .COMPLETED_FIRST_FETCH // POST NOT IN LIST, SO DONT RESTORE SCROLL.
                 }
@@ -550,11 +581,19 @@ extension LVM: NSFetchedResultsControllerDelegate {
                     self.state = .AWAITING_RESTORE_SCROLL // POST IS IN LIST, SO WE CAN RESTORE SCROLL. (FORCED CUTOFF)
                     self.events = events.filter(onlyRootOrReplyingToFollower)
                         .prefix(LVM_MAX_VISIBLE)
+                        .map {
+                            $0.parentEvents = Event.getParentEvents($0)
+                            return $0
+                        }
                         .sorted(by: { $0.created_at < $1.created_at } )
                 }
                 else {
                     self.state = .AWAITING_RESTORE_SCROLL // POST IN LIST, BUT OUTSIDE MAX VISIBLE.. TODO: HANDLE THIS. NO CUTOFF NOW
                     self.events = events.filter(onlyRootOrReplyingToFollower)
+                        .map {
+                            $0.parentEvents = Event.getParentEvents($0)
+                            return $0
+                        }
                         .sorted(by: { $0.created_at < $1.created_at } )
                 }
                 self.updateUnreadCount()
@@ -563,6 +602,10 @@ extension LVM: NSFetchedResultsControllerDelegate {
                 self.events = events.filter(onlyRootOrReplyingToFollower)
                     .sorted(by: { $0.created_at < $1.created_at } )
                     .suffix(LVM_MAX_VISIBLE * 2)
+                    .map {
+                        $0.parentEvents = Event.getParentEvents($0)
+                        return $0
+                    }
                 self.updateUnreadCount()
                 return
         }
@@ -585,15 +628,15 @@ extension LVM: NSFetchedResultsControllerDelegate {
     
     func updateUnreadCount() {
         guard let lastReadId = self.lastReadId else {
-            self.lvmCounter.count = lvmState.vPosts.count
+            self.lvmCounter.count = 0 //threadCount(lvmState.vPosts)
             return
         }
         if let index = lvmState.vPosts.firstIndex(where: { $0.id == lastReadId }) {
-            let count = lvmState.vPosts.suffix(from: index + 1).count
-            self.lvmCounter.count = count
+            let postsAfterLastRead = lvmState.vPosts.suffix(from: index + 1)
+            self.lvmCounter.count = threadCount(Array(postsAfterLastRead))
         }
         else {
-            self.lvmCounter.count = lvmState.vPosts.count
+            self.lvmCounter.count = 0 //threadCount(lvmState.vPosts)
         }
     }
     
@@ -636,5 +679,11 @@ extension Event {
         //        fr.fetchLimit = 500 //TODO: need this even?
         fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN {1,6} AND pubkey IN %@", newCutOffPoint,  pubkeys)
         return fr
+    }
+}
+
+func threadCount(_ vPosts:[VPost]) -> Int {
+    vPosts.reduce(0) { partialResult, vPost in
+        (partialResult + vPost.threadPostsCount)
     }
 }

@@ -20,11 +20,6 @@ struct NoteRow: View {//}, Equatable {
     var hideFooter = true // For rendering in NewReply
     var inThread = false // For rendering in thread, hide "Replying to.."
     
-    enum type {
-        case note
-        case lightningInvoice
-    }
-    
     init(vPost:VPost, hideFooter:Bool = false, inThread:Bool = false) {
         self.vPost = vPost
         self.event = vPost.event
@@ -69,7 +64,6 @@ struct NoteRow: View {//}, Equatable {
             }
             // IS NOT A REPOST
             else {
-                //                Text("The Post \(vPost.id)")
                 Kind1(vPost: vPost, hideFooter: false, inThread:inThread)
                 //                .background(Color.random)
             }
@@ -93,8 +87,6 @@ struct NoteRow: View {//}, Equatable {
                 }
             }
         }
-        //        .padding(.top, 10)
-        
     }
     
     
@@ -104,23 +96,16 @@ struct NoteRow: View {//}, Equatable {
         let inThread:Bool // For rendering in thread
         @ObservedObject var event:Event
         let nav:NavigationModel = .shared
-        let type:NoteRow.type
         let sp:SocketPool = .shared
+        @State var contextForVPost:VPost?
+        @EnvironmentObject var ns:NosturState
+        @EnvironmentObject var up:Unpublisher
         
         init(vPost: VPost, hideFooter:Bool = true, inThread:Bool = false) {
             self.vPost = vPost
             self.event = vPost.event
             self.hideFooter = hideFooter
             self.inThread = inThread
-            if vPost.plainText.prefix(4).lowercased() == "lnbc" && Invoice.fromStr(s: vPost.plainText).getValue() != nil {
-                self.type = .lightningInvoice
-            }
-            else if vPost.event.isRepost && vPost.event.firstQuote != nil && (vPost.event.firstQuote!.content ?? "").prefix(4).lowercased() == "lnbc" && Invoice.fromStr(s: vPost.event.firstQuote!.content ?? "").getValue() != nil {
-                self.type = .lightningInvoice
-            }
-            else {
-                self.type = .note
-            }
         }
         
         var body: some View {
@@ -144,37 +129,16 @@ struct NoteRow: View {//}, Equatable {
                             .contentShape(Rectangle())
                             .onTapGesture { nav.navigateTo(vPost) }
                     }
-                    //
-                    //                        DetailContentRenderer(event: event)
-                    switch self.type {
-                        case .lightningInvoice:
-                            LightningInvoice(invoice: vPost.plainText)
-                            
-                        default:
-                            NoteTextRenderView(vPost:vPost, useLinelimit: true)
-                                .contentShape(Rectangle())
-                                .onTapGesture { nav.navigateTo(vPost) }
-                            if vPost.imageUrls.count > 0 {
-                                MediaViewer(imgUrls: vPost.imageUrls, pubkey: vPost.event.pubkey)
-                                //                                            .onTapGesture { nav.navigateTo(vPost) }
-                            }
-                    }
-                    
-                    if let firstQuoteId = event.firstQuoteId {
-                        QuoteById(id: firstQuoteId)
-//                        QuotedNoteFragmentView(vPost: firstQuote.toVPost())
-//                        QuotedNoteFragmentView(vPost: firstQuote.toVPost())
-                    }
-                    
+                    ContentRenderer(vPost: vPost)
                     if (!hideFooter) {
                         FooterFragmentView(event: event)
                             .frame(height: 30)
+                            .padding(.top, 10)
                             .padding(.bottom, 10)
                     }
                 }
-//                .background(Color.random)
-//                .padding(.trailing, 10)
             }
+            .padding(.trailing, 10)
         }
     }
     
@@ -266,50 +230,53 @@ struct NoteRow_Previews: PreviewProvider {
             //                        .listRowInsets(EdgeInsets())
             //                }
             //
-            
-            
-            if (eventLong != nil) {
-                NoteRow(vPost: eventLong!)
-                    .listRowInsets(EdgeInsets())
+            Group {
+                if let vPost = PreviewFetcher.fetchVPost("102177a51af895883e9256b70b2caff6b9ef90230359ee20f6dc7851ec9e5d5a") {
+                    NoteRow(vPost: vPost)
+                }
+                if let vPost = PreviewFetcher.fetchVPost("6701067d37887024cd221c45e77cf3f0e1ef76589006739617ccc8962719a024") {
+                    NoteRow(vPost: vPost)
+                }
+                
+                
+                if (eventLong != nil) {
+                    NoteRow(vPost: eventLong!)
+                }
+                
+                if (event1 != nil) {
+                    NoteRow(vPost: event1!)
+                }
+                ////
+                if (event2 != nil) {
+                    NoteRow(vPost: event2!)
+                }
+                //
+                //            NoteRowView(event: event3!)
+                //                .listRowInsets(EdgeInsets())
+                //
+                // QUOTE? TODO:// WAAROM CRASHED DEZE??
+                //            if (event4 != nil) {
+                //                NoteRowView(event: event4!)
+                //                    .listRowInsets(EdgeInsets())
+                //            }
+                
+                //            NoteRowView(event: event5!)
+                //                .listRowInsets(EdgeInsets())
+                
+                if (event6 != nil) {
+                    // REPOST, LOADING?
+                    NoteRow(vPost: event6!)
+                }
+                
+                if (event7 != nil) {
+                    // REPOST
+                    NoteRow(vPost: event7!)
+                }
+                //            }
+                //            .frame(maxHeight: 400)
+                
             }
-            
-            if (event1 != nil) {
-                NoteRow(vPost: event1!)
-                    .listRowInsets(EdgeInsets())
-            }
-            ////
-            if (event2 != nil) {
-                NoteRow(vPost: event2!)
-                    .listRowInsets(EdgeInsets())
-            }
-            //
-            //            NoteRowView(event: event3!)
-            //                .listRowInsets(EdgeInsets())
-            //
-            // QUOTE? TODO:// WAAROM CRASHED DEZE??
-            //            if (event4 != nil) {
-            //                NoteRowView(event: event4!)
-            //                    .listRowInsets(EdgeInsets())
-            //            }
-            
-            //            NoteRowView(event: event5!)
-            //                .listRowInsets(EdgeInsets())
-            
-            if (event6 != nil) {
-                // REPOST, LOADING?
-                NoteRow(vPost: event6!)
-                    .listRowInsets(EdgeInsets())
-            }
-            
-            if (event7 != nil) {
-                // REPOST
-                NoteRow(vPost: event7!)
-                    .listRowInsets(EdgeInsets())
-            }
-            //            }
-            //            .frame(maxHeight: 400)
-            //            .listRowInsets(EdgeInsets())
-            
+            .listRowInsets(EdgeInsets())
             
         }
         .listStyle(.plain)

@@ -41,6 +41,18 @@ struct HorizontallyCenteredView: ViewModifier {
     }
 }
 
+struct BoxShadow: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .padding(5)
+            .background(
+                Rectangle().foregroundColor(Color.systemBackground)
+                    .shadow(color: Color.gray.opacity(0.4), radius: 5, x: 0, y: 0)
+                    .padding(5)
+            )
+    }
+}
+
 extension View {
     func centered() -> some View {
         modifier(CenteredView())
@@ -50,5 +62,9 @@ extension View {
     }
     func hCentered() -> some View {
         modifier(HorizontallyCenteredView())
+    }
+    
+    func boxShadow() -> some View {
+        modifier(BoxShadow())
     }
 }

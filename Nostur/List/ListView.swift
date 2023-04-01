@@ -7,233 +7,94 @@
 
 import SwiftUI
 
-struct ListViewContainer: View, Equatable {
-    static func == (lhs: ListViewContainer, rhs: ListViewContainer) -> Bool {
-        lhs.pubkey == rhs.pubkey
-        && lhs.pubkeys.count == rhs.pubkeys.count
-        && lhs.listId == rhs.listId
-    }
-    
-    @EnvironmentObject var ns:NosturState
-    @StateObject var vm:LVM
-    @State var showingNewNote = false
-    @State var noteCancellationId:UUID?
-    let listId:String
-    let listType:ListView.ListType
-    @State var pubkey:String = ""
-    @State var pubkeys:Set<String> = []
-    
-    init(pubkey:String, pubkeys:Set<String>, listId: String, listType: ListView.ListType) {
-        self.listId = listId
-        self.listType = listType
-        let lvm = LVM(pubkey: pubkey, pubkeys: pubkeys, listId: listId)
-        self._vm = StateObject(wrappedValue: lvm)
-        self.showingNewNote = showingNewNote
-        self.noteCancellationId = noteCancellationId
-        self.pubkey = pubkey
-        self.pubkeys = pubkeys
-        
-    }
-    
-    var body: some View {
-        let _ = Self._printChanges()
-        ZStack {
-            ListView(vm:vm, vmState:vm.lvmState)
-                .padding(.horizontal, 10)
-            ListUnreadCounter(vm:vm, vmCounter: vm.lvmCounter)
-            NewNoteButton(showingNewNote: $showingNewNote)
-                .sheet(isPresented: $showingNewNote) {
-                    NavigationStack {
-                        NewNote(noteCancellationId: $noteCancellationId)
-                    }
-                }
-        }
-        .onChange(of: listId) { newListId in
-            pubkeys =  listType == .account ? ns.followingPublicKeys : ns.explorePubkeys
-            
-            vm.changeLVM(pubkey:pubkey,
-                         pubkeys: newListId == "Following" ? ns.followingPublicKeys : ns.explorePubkeys,
-                         listId: listId)
-            
-//            vm.performFetch()
-        }
-        .onChange(of: ns.activeAccountPublicKey) { newPubkey in
-            print("🟣🟣🟣🟣🟣🟣🟣🟣 ACCOUNT CHANGED 🟣🟣🟣🟣🟣🟣🟣")
-            print("🟣🟣🟣🟣🟣🟣🟣🟣 following: \(ns.followingPublicKeys.count) 🟣🟣🟣🟣🟣🟣🟣")
-            print("🟣🟣🟣🟣🟣🟣🟣🟣 explore: \(ns.explorePubkeys.count) 🟣🟣🟣🟣🟣🟣🟣")
-            pubkey = newPubkey
-            pubkeys =  listType == .account ? ns.followingPublicKeys : ns.explorePubkeys
-            
-            vm.changeLVM(pubkey:newPubkey,
-                         pubkeys: listType == .account ? ns.followingPublicKeys : ns.explorePubkeys,
-                         listId: listId)
-            vm.performFetch()
-        }
-        .onChange(of: ns.followingPublicKeys) { pubkeys in
-            guard listType == .account else { return }
-            vm.changeFollowers(pubkeys:pubkeys)
-        }
-        .onChange(of: ns.explorePubkeys) { pubkeys in
-            guard listType == .explore else { return }
-            vm.changeFollowers(pubkeys:pubkeys)
-        }
-    }
-}
-
 struct ListView: View {
-    enum ListType {
-        case account
-        case explore
-        case list
-    }
-    //    @AppStorage("firstTimeCompleted") var firstTimeCompleted = false // TODO: FIND SOLUTION FOR THIS
     @AppStorage("selected_subtab") var selectedSubTab = "Following"
     @EnvironmentObject var ns:NosturState
     @Namespace var END_OF_LIST
     @State var scrollResetId = 0
-    //    let vPosts:[VPost]
+
     let vm:LVM
     @ObservedObject var vmState:LVMState
-    @State var vPosts:[VPost] = []
     
-    @State var lastAppearedId:String? // For local rendering (border)
-    var nextId:String? {
-        guard let lastAppearedId = lastAppearedId else { return vmState.vPosts.last?.id ?? "" }
-        if let currentIndex = vmState.vPosts.firstIndex(where: { $0.id == lastAppearedId }) {
-            var nextIndex = min(currentIndex + 1, (vmState.vPosts.count-1))
-            nextIndex = max(nextIndex-1, 0)
-            return vmState.vPosts[nextIndex].id
-        }
-        return nil
-    }
     
     var body: some View {
         let _ = Self._printChanges()
-        VStack {
-//                        Text("vmState.vPosts: \(vmState.vPosts.count)")
-//                        Text("state: \(vmState.state.rawValue)")
-            //                .onTapGesture {
-            //                    vm.state = .COMPLETED_RESTORED_FETCH_WITH_SCROLL
-            //                }
-            //            if ((selectedSubTab != "Explore") && (ns.account?.follows?.count ?? 0) == 0) && ((ns.account?.publicKey ?? "NOACCOUNT") != NosturState.GUEST_ACCOUNT_PUBKEY) {
-            //                Text("You are not following anyone yet, visit the explore tab and follow some people")
-            //                    .multilineTextAlignment(.center)
-            //                    .padding(/*@START_MENU_TOKEN@*/.all, 30.0/*@END_MENU_TOKEN@*/)
-            //
-            //                Button {
-            //                    selectedSubTab = "Explore"
-            //                } label: {
-            //                    Text("Explore")
-            //                }.buttonStyle(.borderedProminent)
-            //            }
-            
-            //            Text("State: \(vm.state.rawValue)").lineLimit(1) // TODO: FIXME
-            //            Text("[Dev] Results: \(vm.posts.count) || LA: \(vm.lastAppearedIndex) || MRR: \(vm.mostRecentReadIndex)")
-            //            Text("vm.id: \(vm.id)")
-            //            Text("vm.listState.listId: \(vm.listState.listId)")
-            //            Text("Following: \(vm.pubkeys.count.description)")
-            //            Text("Explore: \(ns.explorePubkeys.count.description)")
-            
+        ScrollViewReader { proxy in
             if vmState.vPosts.count > 0 {
-                ScrollViewReader { proxy in
-                    List {
-                        Section {
-                            ForEach(vmState.vPosts) { vPost in
-                                PostOrThread(vPost: vPost)
-//                                NoteRow(vPost:vPost)
-//                                    .equatable()
-                                    .id(vPost.id)
-                                    .listRowInsets(EdgeInsets())
-                                    .onBecomingVisible {
-                                        guard vmState.state != .AWAITING_FIRST_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-                                        guard vmState.state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-                                        guard vmState.state != .SWITCHING_ACCOUNT else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-//                                        lastAppearedId = vPost.id
-                                        vm.lastAppearedSubject.send(vPost.event)
-                                        //                                        vm.onPostAppeared(vPost.event)
-                                    }
-                                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                        Button { ns.toggleBookmark(vPost.event)
-                                        } label: { Image(systemName: "bookmark") }.tint(.orange)
-                                        
-                                    }
-                                //                                    .border(lastAppeared?.id == vPost.id ? .green : .white)
-                            }
-                        }
-                        Section {
-                            VStack {
-                                ProcessingStatus()
-                                HStack {
-                                    Spacer()
-                                    Rectangle().frame(width: 300, height: 1)
-                                    Spacer()
+                ScrollView {
+                    LazyVStack {
+                        ForEach(vmState.vPosts) { vPost in
+                            PostOrThread(vPost: vPost)
+                                .padding(5)
+                                .background(
+                                    Rectangle().foregroundColor(Color.systemBackground)
+                                        .shadow(color: Color.gray.opacity(0.4), radius: 5, x: 0, y: 0)
+                                        .padding(5)
+                                )
+                            //                                NoteRow(vPost:vPost)
+                            //                                    .equatable()
+                                .id(vPost.id)
+                                .onBecomingVisible {
+                                    guard vmState.state != .AWAITING_FIRST_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+                                    guard vmState.state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+                                    guard vmState.state != .SWITCHING_ACCOUNT else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+                                    //                                        lastAppearedId = vPost.id
+                                    vm.lastAppearedSubject.send(vPost.event)
+                                    //                                        vm.onPostAppeared(vPost.event)
                                 }
-                            }
-                            .id(END_OF_LIST)
-                            .onBecomingVisible {
-                                vm.didReachEnd()
-                            }
-                            .listRowInsets(EdgeInsets())
+                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                    Button { ns.toggleBookmark(vPost.event)
+                                    } label: { Image(systemName: "bookmark") }.tint(.orange)
+                                    
+                                }
+                            //                                    .border(lastAppeared?.id == vPost.id ? .green : .white)
+                        }
+                        
+                        ProcessingStatus()
+                        HStack {
+                            Spacer()
+                            Rectangle().frame(width: 300, height: 1)
+                                .id(END_OF_LIST)
+                                .onBecomingVisible {
+                                    vm.didReachEnd()
+                                }
+                            Spacer()
                         }
                     }
-                    .id(scrollResetId)
-                    .listStyle(.plain)
-                    .onAppear {
-                        guard vmState.state == .AWAITING_RESTORE_SCROLL else { return }
-                        print ("🟢🟢 List (count>0) onAppear -- restoreToScrollPos")
-                        restoreScrollPosition(proxy: proxy)
+                }
+//                .padding(.top, 1)
+                .onAppear {
+                    guard vmState.state == .AWAITING_RESTORE_SCROLL else { return }
+                    print ("🟢🟢 List (count>0) onAppear -- restoreToScrollPos")
+                    restoreScrollPosition(proxy: proxy)
+                }
+                .onAppear {
+                    // FIRST FETCH?? DONT KNOW WHERE TO RESTORE?? JUST GO TO NEWEST!
+                    guard vmState.state == .COMPLETED_FIRST_FETCH else { return }
+                    guard vmState.viewIsVisible else { return }
+                    //                    scrollResetId += 1
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        withAnimation {
+                            if let last = vmState.vPosts.last {
+                                proxy.scrollTo(last.id)
+                                //                                proxy.scrollTo(END_OF_LIST)
+                                vmState.state = .SCROLLED_TO_END
+                            }
+                        }
                     }
-                    .onAppear {
-                        // FIRST FETCH?? DONT KNOW WHERE TO RESTORE?? JUST GO TO NEWEST!
-                        guard vmState.state == .COMPLETED_FIRST_FETCH else { return }
-                        guard vmState.viewIsVisible else { return }
-                        scrollResetId += 1
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            withAnimation {
+                }
+                .onReceive(receiveNotification(.shouldScrollToLast)) { _ in
+                    guard vmState.viewIsVisible else { return }
+                    //                        scrollResetId += 1
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        withAnimation {
+                            if let last = vmState.vPosts.last {
+                                proxy.scrollTo(last.id)
                                 proxy.scrollTo(END_OF_LIST)
                                 vmState.state = .SCROLLED_TO_END
                             }
                         }
                     }
-//                    .onChange(of: selectedSubTab) { newTab in
-//                        guard vmState.state == .AWAITING_RESTORE_SCROLL else { return }
-//                        print ("🟢🟢 List (count>0) onChange selectedSubtab -- restoreToScrollPos")
-//                        restoreScrollPosition(proxy: proxy)
-//                    }
-                    .onReceive(receiveNotification(.shouldScrollToLast)) { _ in
-                        guard vmState.viewIsVisible else { return }
-                        scrollResetId += 1
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            withAnimation {
-                                proxy.scrollTo(END_OF_LIST)
-                                vmState.state = .SCROLLED_TO_END
-                            }
-                        }
-                    }
-//                    .onReceive(receiveNotification(.scrollABit)) { _ in
-//                        guard vmState.viewIsVisible else { return }
-////                        guard let lastAppearedId = lastAppearedId else { return }
-//                        withAnimation {
-//                            if lastAppearedId != nil && nextId != nil {
-//                                proxy.scrollTo(nextId, anchor: .top)
-//                            }
-//                            else {
-//
-//                            }
-//                        }
-//                    }
-                    //                    .onChange(of: vm.vPosts.count, perform: { newCount in
-                    //                        guard vm.viewIsVisible else { return }
-                    //                        guard vm.state == .AWAITING_SCROLL else { return }
-                    //                        guard vPosts.count == 0 && newCount > 0 else { return } // FIRST LOAD. FROM 0 TO >0
-                    //
-                    //                        restoreScrollPosition(proxy: proxy)
-                    //                    })
-                    //                .onChange(of: vm.pubkey) { newValue in // TODO: FIXME
-                    //                    vm.state = .SWITCHING_ACCOUNT
-                    //                    print("🟢🟢 SWITCHING ACCOUNT TO: \(newValue)")
-                    //                    restoreScrollPosition(proxy: proxy)
-                    //                }
                 }
                 .onChange(of: selectedSubTab) { selectedTab in
                     vmState.viewIsVisible = selectedTab == vm.id
@@ -244,7 +105,7 @@ struct ListView: View {
                     Text("You are not following anyone yet, visit the explore tab and follow some people")
                         .multilineTextAlignment(.center)
                         .padding(.all, 30.0)
-
+                    
                     Button {
                         selectedSubTab = "Explore"
                     } label: {
@@ -298,142 +159,3 @@ struct ListView: View {
         }
     }
 }
-
-//struct ListViewBackup: View {
-//    enum ListType {
-//        case account
-//        case explore
-//        case list
-//    }
-//    //    @AppStorage("firstTimeCompleted") var firstTimeCompleted = false // TODO: FIND SOLUTION FOR THIS
-//    //    @AppStorage("selected_subtab") var selectedSubTab = "Following"
-//    @EnvironmentObject var ns:NosturState
-//    @Namespace var END_OF_LIST
-//    @State var scrollResetId = 0
-//    let vPosts:[VPost]
-//    @ObservedObject var vm:LVM
-//
-//    var body: some View {
-//        let _ = Self._printChanges()
-//        VStack {
-//            Text("posts: \(vPosts.count)")
-//            Text("state: \(vm.state.rawValue)")
-//                .onTapGesture {
-//                    vm.state = .COMPLETED_RESTORED_FETCH_WITH_SCROLL
-//                }
-//            //            if ((selectedSubTab != "Explore") && (ns.account?.follows?.count ?? 0) == 0) && ((ns.account?.publicKey ?? "NOACCOUNT") != NosturState.GUEST_ACCOUNT_PUBKEY) {
-//            //                Text("You are not following anyone yet, visit the explore tab and follow some people")
-//            //                    .multilineTextAlignment(.center)
-//            //                    .padding(/*@START_MENU_TOKEN@*/.all, 30.0/*@END_MENU_TOKEN@*/)
-//            //
-//            //                Button {
-//            //                    selectedSubTab = "Explore"
-//            //                } label: {
-//            //                    Text("Explore")
-//            //                }.buttonStyle(.borderedProminent)
-//            //            }
-//
-//            //            Text("State: \(vm.state.rawValue)").lineLimit(1) // TODO: FIXME
-//            //            Text("[Dev] Results: \(vm.posts.count) || LA: \(vm.lastAppearedIndex) || MRR: \(vm.mostRecentReadIndex)")
-//            //            Text("vm.id: \(vm.id)")
-//            //            Text("vm.listState.listId: \(vm.listState.listId)")
-//            //            Text("Following: \(vm.pubkeys.count.description)")
-//            //            Text("Explore: \(ns.explorePubkeys.count.description)")
-//
-//            if vPosts.count > 0 {
-//                ScrollViewReader { proxy in
-//                    List {
-//                        Section {
-//                            ForEach(vPosts) { vPost in
-//                                NoteRow(vPost:vPost)
-//                                    .id(vPost.id)
-//                                    .listRowInsets(EdgeInsets())
-//                                    .onBecomingVisible { vm.onPostAppeared(vPost) }
-//                                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-//                                        Button { ns.toggleBookmark(vPost.event) //TODO:FIXME
-//                                        } label: { Image(systemName: "bookmark") }.tint(.orange)
-//
-//                                    }
-//                                    .border(vm.lastAppearedSubject.value?.id == vPost.id ? .green : .clear)
-//                            }
-//                        }
-//                        Section {
-//                            HStack {
-//                                Spacer()
-//                                Rectangle().frame(width: 300, height: 1)
-//                                Spacer()
-//                            }
-//                            .id(END_OF_LIST)
-//                            .onBecomingVisible {
-//                                vm.didReachEnd()
-//                            }
-//                            .listRowInsets(EdgeInsets())
-//                        }
-//                    }
-//                    .id(scrollResetId)
-//                    .listStyle(.plain)
-//                    .onAppear {
-//                        guard vm.state == .AWAITING_RESTORE_SCROLL else { return }
-//                        restoreScrollPosition(proxy: proxy)
-//                    }
-//                    //                .onReceive(receiveNotification(.shouldScrollToLast)) { _ in
-//                    //                    guard vm.viewIsVisible else { return }
-//                    //                    scrollResetId += 1
-//                    //                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-//                    //                        withAnimation {
-//                    //                            proxy.scrollTo(END_OF_LIST)
-//                    //                            vm.state = .SCROLLED_TO_END
-//                    //                        }
-//                    //                    }
-//                    //                }
-//                    .onChange(of: vPosts.count, perform: { newCount in
-//                        guard vm.viewIsVisible else { return }
-//                        guard vm.state == .AWAITING_SCROLL else { return }
-//                        guard vPosts.count == 0 && newCount > 0 else { return } // FIRST LOAD. FROM 0 TO >0
-//
-//                        restoreScrollPosition(proxy: proxy)
-//                    })
-//                    //                .onChange(of: vm.pubkey) { newValue in // TODO: FIXME
-//                    //                    vm.state = .SWITCHING_ACCOUNT
-//                    //                    print("🟢🟢 SWITCHING ACCOUNT TO: \(newValue)")
-//                    //                    restoreScrollPosition(proxy: proxy)
-//                    //                }
-//                }
-//            }
-//            else {
-//                CenteredProgressView()
-//            }
-//        }
-//    }
-//
-//    func restoreScrollPosition(proxy:ScrollViewProxy) {
-//        print("🟢🟢 restoreScrollPosition:  \(vm.state.rawValue) ")
-//        guard vm.state == .AWAITING_RESTORE_SCROLL || vm.state == .SWITCHING_ACCOUNT else { return } // Onlyif we didn't restore yet (so not like nav to post and back)
-//        print("🟢🟢 restoreScrollPosition PASSED THE GUARD:  \(vm.state.rawValue) ")
-//        if let lastAppeared = self.vm.lastAppeared {
-//            print("🟢🟢🟢")
-//            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-//                print("🟢🟢🟢🟢")
-//                //                proxy.scrollTo(lastAppeared.id, anchor: vm.lastAppearedAnchorSubject.value == "TOP" ? .top : .bottom)
-//
-//                if (vPosts.map { $0.id } .contains(lastAppeared.id)) {
-//                    proxy.scrollTo(lastAppeared.id, anchor: .bottom)
-//                }
-//                else {
-//                    print("🔴🔴🔴🔴 YO WHERE IS THE POST YO I CANT SCROLL ON \(vm.id)")
-//                    print("🔴🔴🔴🔴 LOOKING FOR \(lastAppeared.id), vPosts: \(vPosts.count) ")
-//                }
-//
-//            }
-//            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-//                print("🟢🟢🟢🟢🟢")
-//                vm.state = .COMPLETED_RESTORED_FETCH_WITH_SCROLL
-//            }
-//        }
-//        else {
-//            print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
-//            vm.state = .COMPLETED_FIRST_FETCH
-//        }
-//    }
-//}
-

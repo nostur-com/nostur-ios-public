@@ -80,11 +80,13 @@ struct DetailContentRenderer: View { // VIEW things
         result.append(MarkdownElement.text(textBuilder.renderedText(event, text:nonMatch)))
         
         return
-        LazyVStack {
+        VStack(alignment:.leading, spacing:0) {
             ForEach(result.indices, id:\.self) { index in
                 switch result[index] {
                     case .plain(let text):
                         Text(text)
+                            .textSelection(.enabled)
+                            .multilineTextAlignment(.leading)
                     case .note1(let noteId):
                         QuoteById(id: hex(noteId))
                     case .noteId(let hex):
@@ -95,21 +97,32 @@ struct DetailContentRenderer: View { // VIEW things
                             .multilineTextAlignment(TextAlignment.leading)
                             .foregroundColor(.primary)
                             .lineSpacing(3)
-                            .padding(.vertical, 5)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+//                            .padding(0)
+//                            .frame(maxWidth: .infinity)
+//                            .padding(.vertical, 5)
+//                                                    .frame(maxWidth: .infinity, alignment: .leading)
                     case .lnbc(let text):
                         LightningInvoice(invoice: text)
                     case .video(let url):
-                        VideoPlayerViewer(videoURL: url, width: 640, height: 360)
+                        Group {
+                            Text("VIDEO BREAKS WIDTH")
+                            Text("VIDEO BREAKS WIDTH")
+                            Text("VIDEO BREAKS WIDTH")
+                            Text("VIDEO BREAKS WIDTH")
+                            Text("VIDEO BREAKS WIDTH")
+                            Text("VIDEO BREAKS WIDTH")
+                        }
+                        //                        VideoPlayerViewer(videoURL: url, width: 640, height: 360)
                     case .image(let url):
                         SingleMediaViewer(url: url)
-                            .frame(maxHeight: 800)
+//                            .frame(height: 500)
+                            .padding(.vertical, 5)
                     default:
                         Text("dunno")
                 }
             }
         }
-//        .border(.green)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -144,11 +157,11 @@ import CoreData
 struct QuoteById: View {
     
     let id:String
-//    @ObservedObject var vm:EventVM // no vm want fr is not updating after receiving from websocket
+    //    @ObservedObject var vm:EventVM // no vm want fr is not updating after receiving from websocket
     
     @FetchRequest
     var events:FetchedResults<Event>
-//
+    //
     init(id:String) {
         self.id = id
         let fr = Event.fetchRequest()
@@ -177,10 +190,15 @@ struct QuoteById: View {
 struct DetailContentRenderer_Previews: PreviewProvider {
     
     static var previews: some View {
-        let event = PreviewFetcher.fetchEvent("e560475e1ea5166dfc968ef9ffbe79d87e801aa56b4098aeee4ad1aed4ace64b")
-//        let event = PreviewFetcher.fetchEvent("9b34fd9a53398fb51493d68ecfd0d64ff922d0cdf5ffd8f0ffab46c9a3cf54e3")
-        ScrollView {
-            DetailContentRenderer(event: event!)
+        
+        VStack {
+            if let event = PreviewFetcher.fetchEvent("9b34fd9a53398fb51493d68ecfd0d64ff922d0cdf5ffd8f0ffab46c9a3cf54e3") {
+                DetailContentRenderer(event: event)
+            }
+            if let event = PreviewFetcher.fetchEvent("102177a51af895883e9256b70b2caff6b9ef90230359ee20f6dc7851ec9e5d5a") {
+                DetailContentRenderer(event: event)
+            }
         }
+        
     }
 }

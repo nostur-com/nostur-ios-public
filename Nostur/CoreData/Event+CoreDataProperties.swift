@@ -67,6 +67,28 @@ extension Event {
     var replies_: [Event] { replies?.sorted(by: { $0.created_at < $1.created_at } ) ?? [] }
     var username: String { contact?.username ?? authorKey }
     var name: String { contact?.authorName ?? authorKey }
+    
+    static func getParentEvents(_ event:Event) -> [Event] {
+        let RECURSION_LIMIT = 35 // PREVENT SPAM THREADS
+        var parentEvents = [Event]()
+        var currentEvent:Event? = event
+        var i = 0
+        while (currentEvent != nil) {
+            if i > RECURSION_LIMIT {
+                break
+            }
+            if let replyTo = currentEvent?.replyTo {
+                parentEvents.append(replyTo)
+                currentEvent = replyTo
+                i = i + 1
+            }
+            else {
+                currentEvent = nil
+            }
+        }
+        return parentEvents
+            .sorted(by: { $0.created_at < $1.created_at })
+    }
 }
 
 // MARK: Generated accessors for contacts
@@ -608,7 +630,7 @@ extension Event {
     
     static func saveZapRequest(event:NEvent, context:NSManagedObjectContext) -> Event? {
             if let existingZapReq = try! Event.fetchEvent(id: event.id, context: context) {
-                print("🔴 zap req already in db");
+//                print("🔴 zap req already in db");
                 return existingZapReq
             }
             
@@ -746,11 +768,9 @@ extension Event {
         }
         
         if (event.kind == .textNote) {
-            let tags = TagsHelpers(event.tags)
-            
             // THIS EVENT REPLYING TO SOMETHING
             // CACHE THE REPLY "E" IN replyToId
-            if let replyToEtag = tags.replyToEtag() {
+            if let replyToEtag = event.replyToEtag() {
                 savedEvent.replyToId = replyToEtag.id
                 
                 // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
@@ -765,7 +785,7 @@ extension Event {
             
             // IF THE THERE IS A ROOT, AND ITS NOT THE SAME AS THE REPLY TO
             // DO THE SAME AS WITH THE REPLY BEFORE
-            if let replyToRootEtag = tags.replyToRootEtag() {
+            if let replyToRootEtag = event.replyToRootEtag() {
                 if (replyToRootEtag.id != savedEvent.replyToId) { // If reply root is same as reply, dont double add.
                     savedEvent.replyToRootId = replyToRootEtag.id
                     if (savedEvent.replyToId == nil) { // IF IT HAS ONLY A ROOT REPLY, NO NORMAL REPLY: THEN REPLYTOROOT = REPLYTO
@@ -817,15 +837,14 @@ extension Event {
         }
         
         var alreadyCounted = false
-        if ((event.kind == .repost || event.kind == .textNote) && TagsHelpers(event.tags).mentionEtags() != nil) {
-            let tags = TagsHelpers(event.tags)
-            savedEvent.firstQuoteId = tags.mentionEtags()!.first!.id
+        if ((event.kind == .repost || event.kind == .textNote) && event.firstMentionETag() != nil) {
+            savedEvent.firstQuoteId = event.firstMentionETag()!.id
             
             // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
             if let firstQuote = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
                 savedEvent.firstQuote = firstQuote
                 
-                if (tags.mentionEtags()!.first?.otherInformation[safe: 2] == "mention") {
+                if (event.firstMentionETag()!.otherInformation[safe: 2] == "mention") {
                     firstQuote.objectWillChange.send()
                     firstQuote.mentionsCount += 1
                     alreadyCounted = true
@@ -958,3 +977,81 @@ extension DataProvider {
         return try (context ?? viewContext).fetch(request).first
     }
 }
+
+
+// FIX ALL REPLY MENTION ROOT DETECTION ETC
+extension NEvent {
+    
+    
+    var mentionOnlyTags:[NEventTag] {
+        let matches = content.matches(of: /#\[(\d+)\]/)
+        let matchIndexes = matches.compactMap { Int($0.output.1) }
+        let t = tags.enumerated().filter { matchIndexes.contains($0.offset) }.map { $0.element }
+        let noRootOrReply = t.filter {
+            $0.type == "e" && $0.otherInformation[safe: 2] != "root" && $0.otherInformation[safe: 2] != "reply"
+        }
+        return noRootOrReply
+    }
+    
+    var threadETags:[NEventTag] {
+        let mentionStrings = mentionOnlyTags.map { $0.id }
+        return tags.filter {
+            $0.type == "e" && !mentionStrings.contains($0.id)
+        }
+    }
+    
+    // E TAGS
+    func replyToEtag() -> NEventTag? {
+        if threadETags.count == 0 {
+            return nil
+        }
+        // PREFERRED NEW METHOD
+        // NIP-10: Those marked with "reply" denote the id of the reply event being responded to.
+        let replyEtags = threadETags.filter { $0.otherInformation.count == 3 && $0.otherInformation[safe: 2] == "reply" }
+        if (replyEtags.count != 0) {
+            return replyEtags.first
+        }
+
+        // OLD METHOD NIP-10:
+        // One "e" tag = REPLY
+        if threadETags.count == 1 && (threadETags.first?.otherInformation[safe: 2] == nil) {
+            return threadETags.first
+        }
+        
+        // OLD METHOD NIP-10:
+        // Two "e" tags: FIRST = ROOT, LAST = REPLY
+        // Many "e" tags: SAME
+        if (threadETags.count >= 2) {
+            return threadETags.last
+        }
+        return nil
+    }
+    
+    func replyToRootEtag() -> NEventTag? {
+        if threadETags.count == 0 {
+            return nil
+        }
+        let rootEtag = threadETags.filter { $0.otherInformation.count == 3 && $0.otherInformation[safe: 2] == "root" }.first
+        // PREFERRED NEW METHOD
+        if (rootEtag != nil) {
+            return rootEtag
+        }
+
+        // OLD METHOD
+        if threadETags.count == 1 && (threadETags.first?.otherInformation[safe: 2] == nil) {
+            return threadETags.first
+
+        }
+        if (threadETags.count >= 2) && (threadETags.first?.otherInformation[safe: 2] == nil) {
+            return threadETags.first
+
+        }
+        return nil
+    }
+    
+    func firstMentionETag() -> NEventTag? {
+        if mentionOnlyTags.count == 0 {
+            return nil
+        }
+        return mentionOnlyTags.first
+    }}

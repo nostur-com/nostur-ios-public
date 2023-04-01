@@ -10,7 +10,7 @@ import OSLog
 
 extension Event {
     func toVPost() -> VPost {
-        VPostTransformer.shared.toVPost(self)
+        VPostTransformer.shared.toVPost(self)!
     }
 }
 
@@ -142,19 +142,20 @@ class EventsProvider: ObservableObject {
         messages.append(contentsOf: testKind3Events())
         messages.append(contentsOf: testKind1Events())
         messages.append(contentsOf: testKindMixedOldDunnoEvents())
-//        messages.append(contentsOf: testRepliesAndReactions())
-        messages.append(contentsOf: testSnowden())
+        messages.append(contentsOf: testRepliesAndReactions())
+//        messages.append(contentsOf: testSnowden())
         messages.append(contentsOf: testBadges())
-        messages.append(contentsOf: testMentions())
+//        messages.append(contentsOf: testMentions())
         messages.append(contentsOf: testKind6Events())
 //        messages.append(contentsOf: testEfilter())
-        messages.append(contentsOf: testZaps())
-        messages.append(contentsOf: testSomeFakeAndRealZaps())
-        messages.append(contentsOf: testNotifications())
+//        messages.append(contentsOf: testZaps())
+//        messages.append(contentsOf: testSomeFakeAndRealZaps())
+//        messages.append(contentsOf: testNotifications())
         messages.append(contentsOf: testImages())
         messages.append(contentsOf: testThread())
-        messages.append(contentsOf: testDMs())
+//        messages.append(contentsOf: testDMs())
         messages.append(contentsOf: testTimelineThreads())
+        messages.append(contentsOf: testGifAndVideo())
         
         var relayMessages:[RelayMessage] = []
         
@@ -230,45 +231,36 @@ class EventsProvider: ObservableObject {
             
         }
         
-        var someEvent = PreviewFetcher.fetchEvent(
-            "b9b337e5730eb83af2f6ae71b65295db8fe241aec7beb7fd8b6c0b88cc3d05d1", context: context)
-    
-        let contact1 = PreviewFetcher.fetchContact(
-            "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", context: context)
-        account.addToFollows(contact1!)
-        
-        
-        let contact2 = PreviewFetcher.fetchContact(
-            "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240", context: context)
-        account.addToFollows(contact2!)
-        contact2!.nip05 = "snowden@citizenfour.com"
-        contact2!.nip05verifiedAt = Date.now
-        
-        
-        let contact3 = PreviewFetcher.fetchContact(
-            "df8efff2bfc02d81f93c7ff6ae111541637e0b3a4caff9ad48939a2f2f283be2", context: context)
-        
-        if (someEvent != nil) {
-            account.addToBookmarks(someEvent!)
-            someEvent!.addToBookmarkedBy(account)
-        }
-        if (contact3 != nil) {
-            account.blockedPubkeys_ = account.blockedPubkeys_ + [contact3!.pubkey]
-        }
-        if (contact1 != nil) {
-            account.blockedPubkeys_ = account.blockedPubkeys_ + [contact1!.pubkey]
+        if let someEvent = PreviewFetcher.fetchEvent(
+            "b9b337e5730eb83af2f6ae71b65295db8fe241aec7beb7fd8b6c0b88cc3d05d1", context: context) {
+            account.addToBookmarks(someEvent)
+            someEvent.addToBookmarkedBy(account)
         }
         
-        if (contact2 != nil) {
-            account.addToFollows(contact2!)
-        }
-        if (contact3 != nil) {
-            account.addToFollows(contact3!)
+        if let contact1 = PreviewFetcher.fetchContact(
+            "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", context: context) {
+            account.addToFollows(contact1)
+            account.blockedPubkeys_ = account.blockedPubkeys_ + [contact1.pubkey]
+            xaccount.addToFollows(contact1)
         }
         
-        if (contact1 != nil) {
-            xaccount.addToFollows(contact1!)
+        
+        if let contact2 = PreviewFetcher.fetchContact(
+            "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240", context: context) {
+            account.addToFollows(contact2)
+            contact2.nip05 = "snowden@citizenfour.com"
+            contact2.nip05verifiedAt = Date.now
+            account.addToFollows(contact2)
         }
+        
+        
+        if let contact3 = PreviewFetcher.fetchContact(
+            "df8efff2bfc02d81f93c7ff6ae111541637e0b3a4caff9ad48939a2f2f283be2", context: context) {
+            account.blockedPubkeys_ = account.blockedPubkeys_ + [contact3.pubkey]
+            account.addToFollows(contact3)
+        }
+        
+       
         
         if let contact4 = PreviewFetcher.fetchContact(
             "4742221ccfbe3bee6d5823715df6864ec45dd8e6bf619527463716fe79a06427", context: context) {

@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct PostOrThread: View {
+struct PostOrThreadMaxOneParent: View {
     let vPost:VPost
     let THREAD_LINE_OFFSET = 35.0
     let nav:NavigationModel = .shared
@@ -18,26 +18,37 @@ struct PostOrThread: View {
     
     var body: some View {
         if let replyToVPost = vPost.event.replyTo?.toVPost() {
-            VStack(spacing:0) {
+            VStack(spacing: 0) {
                 ZStack {
-                    VStack(spacing:0) {
-                        HStack(spacing:0) {
-                            Color.secondary
+                    VStack(spacing: 0) {
+                        HStack(spacing: 0) {
+                            Color("lightGray")
                                 .frame(maxWidth: 1, maxHeight: .infinity)
                                 .padding(.top, 40)
-                                .offset(x:THREAD_LINE_OFFSET, y: 30)
+                                .offset(x:THREAD_LINE_OFFSET, y: 32)
                             Spacer()
                         }
                     }
                     NoteRow(vPost: replyToVPost)
                 }
-                .background(Color.clear)
+                .background(Color.systemBackground)
                 .onTapGesture {
                     nav.navigateTo(replyToVPost)
                 }
-
-                NoteRow(vPost: vPost, inThread:true)
-                .background(Color.clear)
+                
+                ZStack {
+                    VStack(spacing:0) {
+                        HStack(spacing:0) {
+                            Color("lightGray")
+                                .frame(width: 1, height: 17)
+                                .offset(x:THREAD_LINE_OFFSET, y: 0)
+                            Spacer()
+                        }
+                        Spacer()
+                    }
+                    NoteRow(vPost: vPost, inThread: true)
+                }
+                .background(Color.systemBackground)
                 .onTapGesture {
                     nav.navigateTo(vPost)
                 }
@@ -45,9 +56,94 @@ struct PostOrThread: View {
         }
         else {
             NoteRow(vPost: vPost)
-                .background(Color.clear)
+                .background(Color.systemBackground)
+                .onTapGesture {
+                    if (vPost.event.isRepost) {
+                        if let vPostRepost = vPost.event.firstQuote?.toVPost() {
+                            nav.navigateTo(vPostRepost)
+                        }
+                        else if let firstQuoteId = vPost.event.firstQuoteId {
+                            nav.navigateTo(NotePath(id: firstQuoteId))
+                        }
+                        else {
+                            nav.navigateTo(vPost)
+                        }
+                    }
+                    else {
+                        nav.navigateTo(vPost)
+                    }
+                }
+        }
+    }
+}
+
+struct PostOrThread: View {
+    let vPost:VPost
+    let THREAD_LINE_OFFSET = 35.0
+    let nav:NavigationModel = .shared
+    
+    @State var color1 = Color.purple
+    @State var color2 = Color.green
+    @State var color3 = Color.pink
+    
+    var body: some View {
+        if vPost.parentPosts.count > 0 {
+            VStack(spacing: 0) {
+                ForEach(vPost.parentPosts) { parent in
+                    ZStack {
+                        VStack(spacing: 0) {
+                            HStack(spacing: 0) {
+                                Color("lightGray")
+                                    .frame(maxWidth: 1, maxHeight: .infinity)
+                                    .padding(.top, parent.event.replyToId == nil ? 40 : 0)
+                                    .offset(x:THREAD_LINE_OFFSET, y: parent.event.replyToId == nil  ? 32 : 0)
+                                Spacer()
+                            }
+                        }
+                        NoteRow(vPost: parent)
+//                            .background(Color.random)
+                    }
+                    .background(Color.systemBackground)
+                    .onTapGesture {
+                        nav.navigateTo(parent)
+                    }
+                }
+                ZStack {
+                    VStack(spacing:0) {
+                        HStack(spacing:0) {
+                            Color("lightGray")
+                                .frame(width: 1, height: 17)
+                                .offset(x:THREAD_LINE_OFFSET, y: 0)
+                            Spacer()
+                        }
+                        Spacer()
+                    }
+                    NoteRow(vPost: vPost, inThread: true)
+                }
+                .background(Color.systemBackground)
                 .onTapGesture {
                     nav.navigateTo(vPost)
+                }
+            }
+        }
+        else {
+            NoteRow(vPost: vPost)
+                .background(Color.systemBackground)
+                .onTapGesture {
+                    if (vPost.event.isRepost) {
+                        if let vPostRepost = vPost.event.firstQuote?.toVPost() {
+                            nav.navigateTo(vPostRepost)
+                        }
+                        else if let firstQuoteId = vPost.event.firstQuoteId {
+                            nav.navigateTo(NotePath(id: firstQuoteId))
+                        }
+                        else {
+                            nav.navigateTo(vPost)
+                        }
+                    }
+                    else {
+                        nav.navigateTo(vPost)
+                    }
                 }
         }
     }
@@ -59,15 +155,24 @@ struct PostOrThread_Previews: PreviewProvider {
         let events = PreviewFetcher.fetchEvents(ns.followingPublicKeys, kind: 1)
         
         let onlyRootEvents = events
+            .map {
+                $0.parentEvents = Event.getParentEvents($0)
+                return $0
+            }
             .filter(onlyRootOrReplyingToFollower)
         
         let vPosts = onlyRootEvents.map { $0.toVPost() }
         
-        VStack(spacing:0) {
-            //            Text("following: \(ns.followingPublicKeys.count)")
-            //            Text("vPosts: \(vPosts.count)")
-            TimelineTest(vPosts: vPosts)
+        ScrollView {
+            LazyVStack(spacing: 0) {
+                ForEach(vPosts) { vPost in
+//                ForEach(Array(vPosts.dropFirst(2))) { vPost in
+                    PostOrThread(vPost: vPost)
+                        .boxShadow()
+                }
+            }
         }
+        .background(.gray)
         .withPreviewEnvironment()
     }
 }
@@ -80,21 +185,4 @@ func onlyRootOrReplyingToFollower(_ event:Event) -> Bool {
         }
     }
     return event.replyToId == nil
-}
-
-
-struct TimelineTest: View {
-    var vPosts:[VPost] = []
-    
-    var body: some View {
-        VStack(spacing:0) {
-            List(vPosts) { vPost in
-                PostOrThread(vPost: vPost)
-//                    .background(.yellow)
-                    .listRowInsets(EdgeInsets())
-            }
-            .listStyle(.plain)
-        }
-        .padding()
-    }
 }

@@ -16,33 +16,10 @@ struct NoteMinimalContentView: View {
     @ObservedObject var event:Event
     let lineLimit:Int
     
-    enum type {
-        case note
-        case lightningInvoice
-    }
-    
-    var type:NoteRow.type = .note
-    
-//    var vvPost:VPost?
-    
     init(vPost:VPost, hideFooter:Bool = false, lineLimit:Int = 0) {
         self.vPost = vPost
         self.event = vPost.event
         self.lineLimit = lineLimit
-//        if vPost.plainText.prefix(4).lowercased() == "lnbc" && Invoice.fromStr(s: vPost.plainText).getValue() != nil {
-//            self.type = .lightningInvoice
-//        }
-//
-//        if let firstQuoteObjectId = vPost.firstQuoteObjectId {
-//            let event = DataProvider.shared().viewContext.object(with: firstQuoteObjectId) as? Event
-//
-//            if event != nil {
-//                self.vvPost = self.vPostTransformer.toVPost(event!)
-//            }
-//            print("🟢🟢🟢🟢🟢🟢 🟢🟢🟢 🟢🟢🟢 🟢🟢🟢 VPOST \(self.vPost.id)")
-//            print("🟢🟢🟢🟢🟢🟢 🟢🟢🟢 🟢🟢🟢 🟢🟢🟢 EVENT: \(event?.id ?? "") ")
-//            print("🟢🟢🟢🟢🟢🟢 🟢🟢🟢 🟢🟢🟢 🟢🟢🟢 VVPOST: \(self.vvPost?.id ?? "")  ///\(firstQuoteObjectId)")
-//        }
     }
     
     @Namespace var invoice
@@ -52,12 +29,7 @@ struct NoteMinimalContentView: View {
         VStack (alignment: .leading) {
             HStack(alignment: .top) {
                 VStack(alignment:.leading, spacing: 3) {
-                    switch self.type {
-                        case .lightningInvoice:
-                            LightningInvoice(invoice: vPost.plainText)
-                        default:
-                            MinimalNoteTextRenderView(vPost: vPost, lineLimit: lineLimit)
-                    }
+                    MinimalNoteTextRenderView(vPost: vPost, lineLimit: lineLimit)
                     
                     if (event.firstQuote != nil && event.firstQuoteId != nil) {
                         MinimalQuotedNoteFragment(vPost: event.firstQuote!.toVPost())

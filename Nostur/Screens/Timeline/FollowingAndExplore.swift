@@ -43,9 +43,19 @@ struct FollowingAndExplore: View {
                 
                 switch selectedSubTab {
                     case "Following":
-                        ListViewContainer(pubkey: ns.activeAccountPublicKey, pubkeys: ns.followingPublicKeys, listId: "Following", listType: .account)
+                        if ns.followingPublicKeys.count > 0 {
+                            ListViewContainer(pubkey: ns.activeAccountPublicKey, pubkeys: ns.followingPublicKeys, listId: "Following", listType: .account)
+                        }
+                        else {
+                            ProgressView()
+                        }
                     case "Explore":
-                        ListViewContainer(pubkey: ns.activeAccountPublicKey, pubkeys: ns.explorePubkeys, listId: "Explore", listType: .explore)
+                        if ns.rawExplorePubkeys.count > 0 {
+                            ListViewContainer(pubkey: ns.activeAccountPublicKey, pubkeys: ns.explorePubkeys, listId: "Explore", listType: .explore)
+                        }
+                        else {
+                            ProgressView()
+                        }
                     default:
                         Text("🥪")
                         

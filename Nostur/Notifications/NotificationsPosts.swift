@@ -31,7 +31,7 @@ struct NotificationsPosts: View, Equatable {
         predicate: NSPredicate(value: false))
     var notes:FetchedResults<Event>
     var vPosts:[VPost] {
-        notes.map(VPostTransformer.shared.toVPost)
+        notes.compactMap { VPostTransformer.shared.toVPost($0, skipParents: true) }
     }
     
     init(pubkey:String, mutedRootIds:[String], blockedPubkeys:[String], context:NSManagedObjectContext, onAppear: @escaping (Date) -> ()) {
@@ -62,34 +62,32 @@ struct NotificationsPosts: View, Equatable {
     
     var body: some View {
         let _ = Self._printChanges()
-        VStack {
-//            Text("notes:\(notes.count) vPosts:\(vPosts.count)")
-            List {
-                Section {
-                    ForEach(vPosts) { vPost in
-                        NoteRow(vPost: vPost)
-                            .id(vPost.id)
-                            .listRowInsets(EdgeInsets())
-                            .onAppear {
-                                onAppear(vPost.event.insertedAt)
-                            }
-                    }
-                }
-                Section {
-                    HStack {
-                        Spacer()
-                        Button("Fetch older") {
-                            fetchOlderMentions()
+        ScrollView {
+            LazyVStack {
+                ForEach(vPosts) { vPost in
+                    NoteRow(vPost: vPost)
+                        .padding(10)
+                        .background(
+                            Rectangle().foregroundColor(Color.systemBackground)
+                                .shadow(color: Color.gray.opacity(0.4), radius: 5, x: 0, y: 2)
+                                .padding(10)
+                        )
+                        .id(vPost.id)
+                        .onAppear {
+                            onAppear(vPost.event.insertedAt)
                         }
-                        .buttonStyle(.bordered)
-                        .tint(.accentColor)
-                        Spacer()
+                }
+                HStack {
+                    Spacer()
+                    Button("Fetch older") {
+                        fetchOlderMentions()
                     }
-                    .listRowInsets(EdgeInsets())
+                    .buttonStyle(.bordered)
+                    .tint(.accentColor)
+                    Spacer()
                 }
             }
         }
-        .listStyle(.plain)
         .onAppear {
             fetchNewerMentions()
             if let first = notes.first {

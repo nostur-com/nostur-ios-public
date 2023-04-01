@@ -36,7 +36,7 @@ struct BookmarksView: View {
     var bookmarks: FetchedResults<Event>
     
     var vBookmarks:[VPost] {
-        bookmarks.map(VPostTransformer.shared.toVPost)
+        bookmarks.compactMap { VPostTransformer.shared.toVPost($0, skipParents: true) }
     }
     
     @State var selectedAccount:Account? = nil

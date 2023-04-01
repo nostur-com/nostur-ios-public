@@ -92,7 +92,7 @@ struct MutedConversations: View {
     var mutedRootEvents:FetchedResults<Event>
     
     var vPosts:[VPost] {
-        mutedRootEvents.map(VPostTransformer.shared.toVPost)
+        mutedRootEvents.compactMap { VPostTransformer.shared.toVPost($0, skipParents: true) }
     }
     
     var body: some View {

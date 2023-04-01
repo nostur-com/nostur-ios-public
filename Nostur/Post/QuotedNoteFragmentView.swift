@@ -67,8 +67,9 @@ struct QuotedNoteFragmentView: View {
                 Spacer()
             }.frame(height: 40)
             VStack(alignment: .leading) {
-                DetailContentRenderer(event: vPost.event)
-//                NoteTextRenderView(vPost: vPost)
+//                RowContentRenderer(vPost: vPost)
+//                DetailContentRenderer(event: vPost.event)
+                NoteTextRenderView(vPost: vPost)
 //                MediaViewer(imgUrls: vPost.imageUrls, pubkey: vPost.event.pubkey)
             }
         }
