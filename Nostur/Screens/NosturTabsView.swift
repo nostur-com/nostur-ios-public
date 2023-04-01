@@ -49,6 +49,13 @@ struct NosturTabsView: View {
 //                    .tabItem { Image(systemName: "server.rack") }
 //                    .tag("Configuration")
                 }
+                .onTapGesture { location in
+                    let tabWidth = UIScreen.main.bounds.width / CGFloat(5 + 1)
+                    let tappedTab = Int((location.x + tabWidth / 2) / tabWidth)
+                    if (selectedTab == "Main") && (tappedTab == 1) {
+                        sendNotification(.shouldScrollToLast)
+                    }
+                }
                 .withSheets()
             }
             .frame(maxWidth: 600)
