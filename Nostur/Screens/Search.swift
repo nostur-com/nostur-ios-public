@@ -50,19 +50,23 @@ struct Search: View {
                 LazyVStack {
                     ForEach(contacts.prefix(150)) { contact in
                         ProfileRow(contact: contact)
-                        Divider()
+                            .boxShadow()
                     }
                 }
                 LazyVStack {
                     ForEach(vPosts) { vPost in
                         NoteRow(vPost: vPost)
-//                        NoteRow(vPost: event.toVPost(vPostTransformer))
-                        Divider()
+                            .boxShadow()
+                            .onTapGesture {
+                                nav.navigateTo(vPost)
+                            }
                     }
                 }
             }
-            .withNavigationDestinations()
             .padding(10)
+            .background(Color("ListBackground"))
+            .withNavigationDestinations()
+            
             .navigationTitle("Search")
             //        .navigationBarHidden(true)
             .searchable(text: $debounceObject.text, placement: .navigationBarDrawer(displayMode: .always))
