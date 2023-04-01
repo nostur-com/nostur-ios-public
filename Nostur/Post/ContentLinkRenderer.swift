@@ -33,6 +33,9 @@ class ContentLinkRenderer { // TEXT things
         
         // NIP-28 handle nostr:npub1, nostr:nprofile ...
         newText = parseUserMentions(event: event, text: newText)
+        if newText.suffix(1) == "\n" {
+            newText = String(newText.dropLast(1))
+        }
         
         do {
 //            newText = Self.replaceURLsWithMarkdownLinks(in: newText)
