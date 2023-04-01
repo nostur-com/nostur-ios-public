@@ -275,7 +275,7 @@ extension Settings {
         SavedEventsCache.shared.clear()
     
         let bg = DataProvider.shared().newTaskContext()
-        bg.perform {
+        bg.performAndWait {
             let r = NSFetchRequest<Event>(entityName: "Event")
             r.predicate = NSPredicate(format: "kind IN {1,9735,6}") // Also 9735 to fix .tags on Zaps
             r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
@@ -304,8 +304,6 @@ extension Settings {
                 event.reactionToId = nil
             }
             
-            let decoder = JSONDecoder()
-            
             progress = 0
             for event in kind1 {  // Also 9735 to fix .tags on Zaps
                 progress += 1
@@ -318,49 +316,46 @@ extension Settings {
                         print("🔴 failed to save at batch \(progress): \(error)")
                     }
                 }
-                if (event.tagsSerialized != nil) {
-                    if let tags = try? decoder.decode([NEventTag].self, from: Data(event.tagsSerialized!.utf8)) {
+                
+                let nEvent = event.toNEvent()
+                if nEvent.kind == .textNote {
+                    if let replyToEtag = nEvent.replyToEtag() {
+                        event.replyToId = replyToEtag.id
+                    }
                         
-                        if event.kind == 1 {
-                            if let replyToEtag = TagsHelpers(tags).replyToEtag() {
-                                event.replyToId = replyToEtag.id
-                            }
-                            
-                            if let replyToRootEtag = TagsHelpers(tags).replyToRootEtag() {
-                                event.replyToRootId = replyToRootEtag.id
-                                if (event.replyToId == nil) {
-                                    event.replyToId = replyToRootEtag.id
-                                }
-                            }
-                            
-                            if let firstMentionEtag = TagsHelpers(tags).mentionEtags()?.first {
-                                event.firstQuoteId = firstMentionEtag.id
-                                if (event.firstQuoteId == nil) {
-                                    event.firstQuoteId = firstMentionEtag.id
-                                }
-                            }
-                        }
-                        
-                        if event.kind == 9735 {
-                            if let firstE = event.firstE() {
-                                event.zappedEventId = firstE
-                            }
-                            if let firstP = event.firstP() {
-                                event.zappedContactPubkey = firstP
-                            }
-                        }
-                        
-                        if event.kind == 7 {
-                            if let lastE = event.lastE() {
-                                event.reactionToId = lastE
-                            }
-                            
-                            // TODO: dont need this?
-                //            if let lastP = event.lastP() {
-                //                event.reactionToContactId = lastP
-                //            }
+                    if let replyToRootEtag = nEvent.replyToRootEtag() {
+                        event.replyToRootId = replyToRootEtag.id
+                        if (event.replyToId == nil) {
+                            event.replyToId = replyToRootEtag.id
                         }
                     }
+                        
+                    if let firstMentionEtag = nEvent.firstMentionETag() {
+                        event.firstQuoteId = firstMentionEtag.id
+                        if (event.firstQuoteId == nil) {
+                            event.firstQuoteId = firstMentionEtag.id
+                        }
+                    }
+                }
+                    
+                if event.kind == 9735 {
+                    if let firstE = event.firstE() {
+                        event.zappedEventId = firstE
+                    }
+                    if let firstP = event.firstP() {
+                        event.zappedContactPubkey = firstP
+                    }
+                }
+                    
+                if event.kind == 7 {
+                    if let lastE = event.lastE() {
+                        event.reactionToId = lastE
+                    }
+                    
+                    // TODO: dont need this?
+        //            if let lastP = event.lastP() {
+        //                event.reactionToContactId = lastP
+        //            }
                 }
             }
             
@@ -373,7 +368,7 @@ extension Settings {
                 print(error)
             }
         }
-        
+        DataProvider.shared().save()
     }
     
     
@@ -752,7 +747,7 @@ extension Settings {
         SavedEventsCache.shared.clear()
         let bg = DataProvider.shared().newTaskContext()
         viewPrint("Starting...")
-        bg.perform {
+        bg.performAndWait {
             // TODO: MAybe dont need for all events??? just kind:1 is enough?
             let er = NSFetchRequest<Event>(entityName: "Event")
             er.sortDescriptors = []
@@ -827,6 +822,7 @@ extension Settings {
             }
         }
         
+        DataProvider.shared().save()
     }
     
     
