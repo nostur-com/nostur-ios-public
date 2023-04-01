@@ -22,7 +22,7 @@ struct PostOrThreadMaxOneParent: View {
                 ZStack {
                     VStack(spacing: 0) {
                         HStack(spacing: 0) {
-                            Color("lightGray")
+                            Color("LightGray")
                                 .frame(maxWidth: 1, maxHeight: .infinity)
                                 .padding(.top, 40)
                                 .offset(x:THREAD_LINE_OFFSET, y: 32)
@@ -39,7 +39,7 @@ struct PostOrThreadMaxOneParent: View {
                 ZStack {
                     VStack(spacing:0) {
                         HStack(spacing:0) {
-                            Color("lightGray")
+                            Color("LightGray")
                                 .frame(width: 1, height: 17)
                                 .offset(x:THREAD_LINE_OFFSET, y: 0)
                             Spacer()
@@ -93,7 +93,7 @@ struct PostOrThread: View {
                     ZStack {
                         VStack(spacing: 0) {
                             HStack(spacing: 0) {
-                                Color("lightGray")
+                                Color("LightGray")
                                     .frame(maxWidth: 1, maxHeight: .infinity)
                                     .padding(.top, parent.event.replyToId == nil ? 40 : 0)
                                     .offset(x:THREAD_LINE_OFFSET, y: parent.event.replyToId == nil  ? 32 : 0)
@@ -111,7 +111,7 @@ struct PostOrThread: View {
                 ZStack {
                     VStack(spacing:0) {
                         HStack(spacing:0) {
-                            Color("lightGray")
+                            Color("LightGray")
                                 .frame(width: 1, height: 17)
                                 .offset(x:THREAD_LINE_OFFSET, y: 0)
                             Spacer()

@@ -99,7 +99,7 @@ struct ContentRenderer: View { // VIEW things
                                                 isPlaying.toggle()
                                             }
                                             .frame(height: 250)
-                                            .background(Color("lightGray"))
+                                            .background(Color("LightGray"))
                                             .onAppear {
                                                 configureAudioSession()
                                             }
@@ -127,7 +127,7 @@ struct ContentRenderer: View { // VIEW things
                             }
                             .pipeline(ImageProcessing.shared.video)
                             .frame(height: 250)
-                            .background(Color("lightGray"))
+                            .background(Color("LightGray"))
                         }
                     case .image(let url):
                         SingleMediaViewer(url: url)
