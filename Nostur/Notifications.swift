@@ -128,4 +128,8 @@ extension Notification.Name {
     static var listStatus: Notification.Name {
         return Notification.Name("listStatus")
     }
+    
+    static var fullScreenView: Notification.Name {
+        return Notification.Name("fullScreenView")
+    }
 }

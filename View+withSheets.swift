@@ -24,9 +24,13 @@ private struct WithSheets: ViewModifier {
     @State var privateNote:PrivateNote? = nil
     @State var post:Event? = nil
     @State var contact:Contact? = nil
+    @State var fullImage:FullScreenItem? = nil
     
     func body(content: Content) -> some View {
         content
+            .fullScreenCover(item: $fullImage) { f in
+                FullImageViewer(fullImageURL: f.url)
+            }
             .sheet(item: $privateNote) { note in
                 EditPrivateNoteSheet(privateNote: note, onDismiss: onDismiss)
             }
@@ -47,6 +51,10 @@ private struct WithSheets: ViewModifier {
             .onReceive(receiveNotification(.newPrivateNoteOnContact)) { notification in
                 let pubkey = notification.object as! String
                 contact = Contact.fetchByPubkey(pubkey, context: viewContext)
+            }
+            .onReceive(receiveNotification(.fullScreenView)) { notification in
+                let item = notification.object as! FullScreenItem
+                fullImage = item
             }
     }
     
