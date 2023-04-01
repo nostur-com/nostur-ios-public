@@ -169,7 +169,7 @@ class VPostTransformer {
         let videoUrlPattern = ###"(?i)http(s?):\/\/\S+\.(mp4|mov)"###
         let hashtagPattern = ###"\#\S+"###
         let lightningInvoicePattern = ###"lnbc\S+"###
-        let notePattern = ###"nostr:note1\S+"###
+        let notePattern = ###"nostr:note1[023456789acdefghjklmnpqrstuvwxyz]{58}"###
         let neventPattern = ###"nostr:nevent1\S+"###
         let pattern = "(?i)\(imageUrlPattern)|\(lightningInvoicePattern)|\(notePattern)|\(neventPattern)|\(videoUrlPattern)"
         //        let pattern = ###"\\n"###
