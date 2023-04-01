@@ -23,7 +23,7 @@ struct Search: View {
     var vPosts:[VPost] {
         events
             .prefix(150)
-            .map(VPostTransformer.shared.toVPost)
+            .compactMap { VPostTransformer.shared.toVPost($0, skipParents: true) }
     }
     
     @FetchRequest(

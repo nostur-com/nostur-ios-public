@@ -28,7 +28,7 @@ struct ProfileZapsView: View {
     var posts: FetchedResults<Event> // AUTHORS POSTS
     
     var vPosts:[VPost] {
-        posts.map(VPostTransformer.shared.toVPost)
+        posts.compactMap { VPostTransformer.shared.toVPost($0, skipParents: true) }
     }
     
     init(pubkey:String, contact:Contact? = nil) {

@@ -29,7 +29,7 @@ struct ProfileLikesView: View {
             sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]) { (events: FetchedResults<Event>)  in
                 LazyVStack {
                     if (reactionsTo.count > 0) {
-                        ForEach(reactionsTo.map(VPostTransformer.shared.toVPost)) { vPost in
+                        ForEach(reactionsTo.compactMap { VPostTransformer.shared.toVPost($0, skipParents: true) }) { vPost in
                             NoteRow(vPost: vPost)
                                 .id(vPost.id)
                             Divider()
