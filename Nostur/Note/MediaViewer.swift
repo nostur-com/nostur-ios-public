@@ -398,7 +398,7 @@ struct FullImageViewer: View {
 
 func getImgUrlsFromContent(_ content:String) -> [URL] {
     var urls:[URL] =  []
-    let regex = try! NSRegularExpression(pattern: "(?i)\\bhttps?:\\/\\/\\S+?\\.(?:mp4|mov|png|jpe?g|gif|webp|bmp)\\b")
+    let regex = try! NSRegularExpression(pattern: "(?i)https?:\\/\\/\\S+?\\.(?:mp4|mov|png|jpe?g|gif|webp|bmp)(\\?\\S+){0,1}\\b")
     let range = NSRange(content.startIndex..<content.endIndex, in: content)
     let matches = regex.matches(in: content, range: range)
     for match in matches {
