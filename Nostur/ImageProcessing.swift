@@ -8,6 +8,7 @@
 import Foundation
 import Nuke
 
+
 class ImageProcessing {
     static public var shared = ImageProcessing()
     
@@ -15,6 +16,7 @@ class ImageProcessing {
     var banner:ImagePipeline
     var content:ImagePipeline
     var badges:ImagePipeline
+    var video:ImagePipeline
     
     init() {
         //        ImagePipeline.shared = ImagePipeline(configuration: .withDataCache)
@@ -81,6 +83,22 @@ class ImageProcessing {
             $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 50, countLimit: 200)  // 100 MB
             $0.dataCache = dataCache
             $0.dataCachePolicy = .storeAll
+        }
+        
+        video = ImagePipeline {
+            $0.dataLoader = DataLoader(configuration: {
+                // Disable disk caching built into URLSession
+                let conf = DataLoader.defaultConfiguration
+                conf.urlCache = nil
+                return conf
+            }())
+            
+            let dataCache = try! DataCache(name: "com.nostur.video.content")
+            dataCache.sizeLimit = 1024 * 1024 * 100
+            
+            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 50, countLimit: 100)  // 100 MB
+            $0.dataCache = dataCache
+            $0.dataCachePolicy = .storeOriginalData
         }
         
     }
