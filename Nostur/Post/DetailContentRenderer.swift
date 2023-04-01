@@ -16,13 +16,13 @@ struct DetailContentRenderer: View { // VIEW things
     var body: some View {
         let input = event.noteTextPrepared
         //        let input = "The quick brown fox jumps over the lazy lazy dog."
-        let imageUrlPattern = ###"http(s?):\/\/\S+\.(png|jpe?g|gif|webp|bmp|heic)"###
-        let videoUrlPattern = ###"http(s?):\/\/\S+\.(mp4|mov)"###
-        let hashtagPattarn = ###"\#\S+"###
+        let imageUrlPattern = ###"(?i)https?:\/\/\S+?\.(?:png|jpe?g|gif|webp|bmp)(\?\S+){0,1}\b"###
+        let videoUrlPattern = ###"(?i)http(s?):\/\/\S+\.(mp4|mov)"###
+        let hashtagPattern = ###"\#\S+"###
         let lightningInvoicePattern = ###"lnbc\S+"###
         let notePattern = ###"nostr:note1\S+"###
         let neventPattern = ###"nostr:nevent1\S+"###
-        let pattern = "\(imageUrlPattern)|\(lightningInvoicePattern)|\(notePattern)|\(neventPattern)|\(videoUrlPattern)"
+        let pattern = "(?i)\(imageUrlPattern)|\(lightningInvoicePattern)|\(notePattern)|\(neventPattern)|\(videoUrlPattern)"
         //        let pattern = ###"\\n"###
         
         let regex = try! NSRegularExpression(pattern: pattern)
@@ -72,7 +72,6 @@ struct DetailContentRenderer: View { // VIEW things
                 
                 lastMatchEnd = matchRange.location + matchRange.length
             }
-            
         }
         
         let nonMatchRange = NSRange(location: lastMatchEnd, length: input.utf16.count - lastMatchEnd)

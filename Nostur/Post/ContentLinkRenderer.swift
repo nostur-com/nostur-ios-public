@@ -153,7 +153,7 @@ class ContentLinkRenderer { // TEXT things
     }
     
     func removeImageLinks(event: Event, text:String) -> String {
-        text.replacingOccurrences(of: #"(?i)\bhttps?:\/\/\S+?\.(?:mp4|mov|png|jpe?g|gif|webp|bmp)\b"#,
+        text.replacingOccurrences(of: #"(?i)https?:\/\/\S+?\.(?:png|jpe?g|gif|webp|bmp)(\?\S+){0,1}\b"#,
                                   with: "",
                                   options: .regularExpression)
     }
@@ -171,7 +171,7 @@ class ContentLinkRenderer { // TEXT things
     
     static func replaceHashtagsWithMarkdownLinks(in string: String) -> String {
         return string
-            .replacingOccurrences(of: "(?<![/\\?])(\\#)(\\S+)",
+            .replacingOccurrences(of: ###"(?<![/\?]|\b)(\#)(\S+)"###,
                                   with: "[$0](nostur:t:$2)",
                                   options: .regularExpression)
     }
