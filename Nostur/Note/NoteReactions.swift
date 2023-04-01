@@ -82,7 +82,7 @@ struct ReactionRow: View {
                             .foregroundColor(.secondary)
                             .lineLimit(1)
                             Spacer()
-                            NoteMenuView(vPost: reaction.toVPost())
+                            NoteMenuView(vPost: reaction.toVPost()!)
                         }
                     }.multilineTextAlignment(.leading)
                     Spacer()

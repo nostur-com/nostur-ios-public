@@ -132,7 +132,7 @@ struct LightningInvoice_Previews: PreviewProvider {
         let event = { () -> VPost in
             let event = PreviewFetcher.fetchEvent()
             event?.content = invoice
-            return event!.toVPost()
+            return event!.toVPost()!
         }()
         
         

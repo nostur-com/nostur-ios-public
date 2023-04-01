@@ -30,7 +30,7 @@ struct NoteById: View {
     
     var body: some View {
         if (events.first != nil) {
-            PostDetailView(vPost: events.first!.toVPost())
+            PostDetailView(vPost: events.first!.toVPost()!)
         }
         else {
             Text("Trying to fetch...").onAppear {
@@ -105,7 +105,7 @@ struct PostAndParent: View {
             }
             // PARENT: IF AVAILABLE, RENDER IT
             else if (event.replyTo != nil) {
-                PostAndParent(vPost: event.replyTo!.toVPost(), isParent: true)
+                PostAndParent(vPost: event.replyTo!.toVPost()!, isParent: true)
             }
             // OUR (DETAIL) REPLY:
             // MARK: DETAIL NOTE
@@ -164,7 +164,7 @@ struct PostAndParent: View {
                                 return true
                             }
                         }), id:\.self) { event in
-                            NoteRow(vPost: event.toVPost(), hideFooter: false)
+                            NoteRow(vPost: event.toVPost()!, hideFooter: false)
                             Divider()
                         }
                     }
@@ -293,7 +293,7 @@ struct MaybeThreadLine: View {
     var body: some View {
         if (isParent) {
             HStack {
-                Rectangle().frame(width: 1).foregroundColor(Color("lightGray"))
+                Rectangle().frame(width: 1).foregroundColor(Color("LightGray"))
                     .padding(.leading, 33)
                 Spacer()
             }

@@ -32,7 +32,7 @@ struct NoteMinimalContentView: View {
                     MinimalNoteTextRenderView(vPost: vPost, lineLimit: lineLimit)
                     
                     if (event.firstQuote != nil && event.firstQuoteId != nil) {
-                        MinimalQuotedNoteFragment(vPost: event.firstQuote!.toVPost())
+                        MinimalQuotedNoteFragment(vPost: event.firstQuote!.toVPost()!)
                     }
                     else if (event.firstQuote == nil && event.firstQuoteId != nil) {
                         CenteredProgressView().onAppear {

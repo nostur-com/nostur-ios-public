@@ -111,7 +111,7 @@ struct NotificationsZaps: View, Equatable {
                         VStack(alignment:.leading, spacing: 3) {
                             Group {
                                 ZapsForThisNote(zaps:zapsForNote(note), onAppear: self.onAppear)
-                                NoteMinimalContentView(vPost: note.toVPost(), lineLimit: 3)
+                                NoteMinimalContentView(vPost: note.toVPost()!, lineLimit: 3)
                             }.onTapGesture {
                                 nav.navigateTo(note.toVPost())
                             }

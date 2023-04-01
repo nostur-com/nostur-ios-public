@@ -161,7 +161,7 @@ struct PostOrThread_Previews: PreviewProvider {
             }
             .filter(onlyRootOrReplyingToFollower)
         
-        let vPosts = onlyRootEvents.map { $0.toVPost() }
+        let vPosts = onlyRootEvents.compactMap { $0.toVPost() }
         
         ScrollView {
             LazyVStack(spacing: 0) {

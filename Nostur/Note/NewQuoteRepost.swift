@@ -64,7 +64,7 @@ struct NewQuoteRepost: View {
                                     }
                                     .frame(minHeight: 50, maxHeight: 500)
 //                                    .frame(minHeight: 60, idealHeight: 175, maxHeight: 250, alignment: .top)
-                                MinimalQuotedNoteFragment(vPost: quotingEvent.toVPost())
+                                MinimalQuotedNoteFragment(vPost: quotingEvent.toVPost()!)
                                     .frame(minHeight: 250, maxHeight: 500)
                                 Spacer()
                             }

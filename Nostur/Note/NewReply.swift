@@ -37,7 +37,7 @@ struct NewReply: View {
         if ns.account != nil {
             VStack {
                 ScrollView {
-                    NoteRow(vPost: replyTo.toVPost(), hideFooter: true)
+                    NoteRow(vPost: replyTo.toVPost()!, hideFooter: true)
                     HStack {
                         NewReplyingToFragment(contact: replyTo.contact, pubkey: replyTo.pubkey)
                             .offset(x:80)

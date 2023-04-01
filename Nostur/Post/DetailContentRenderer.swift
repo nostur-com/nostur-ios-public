@@ -172,7 +172,7 @@ struct QuoteById: View {
     
     var body: some View {
         if let event = events.first {
-            QuotedNoteFragmentView(vPost: event.toVPost())
+            QuotedNoteFragmentView(vPost: event.toVPost()!)
         }
         else {
             ProgressView()
