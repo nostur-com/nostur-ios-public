@@ -62,13 +62,16 @@ struct ListViewContainer: View, Equatable {
             print("🟣🟣🟣🟣🟣🟣🟣🟣 ACCOUNT CHANGED 🟣🟣🟣🟣🟣🟣🟣")
             print("🟣🟣🟣🟣🟣🟣🟣🟣 following: \(ns.followingPublicKeys.count) 🟣🟣🟣🟣🟣🟣🟣")
             print("🟣🟣🟣🟣🟣🟣🟣🟣 explore: \(ns.explorePubkeys.count) 🟣🟣🟣🟣🟣🟣🟣")
-            pubkey = newPubkey
-            pubkeys =  listType == .account ? ns.followingPublicKeys : ns.explorePubkeys
             
-            vm.changeLVM(pubkey:newPubkey,
-                         pubkeys: listType == .account ? ns.followingPublicKeys : ns.explorePubkeys,
-                         listId: listId)
-            vm.performFetch()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                pubkey = newPubkey
+                pubkeys =  listType == .account ? ns.followingPublicKeys : ns.explorePubkeys
+                
+                vm.changeLVM(pubkey:newPubkey,
+                             pubkeys: listType == .account ? ns.followingPublicKeys : ns.explorePubkeys,
+                             listId: listId)
+                vm.performFetch()
+            }
         }
         .onChange(of: ns.followingPublicKeys) { pubkeys in
             guard listType == .account else { return }
