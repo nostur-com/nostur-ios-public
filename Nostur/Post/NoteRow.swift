@@ -47,18 +47,17 @@ struct NoteRow: View {//}, Equatable {
                 .padding(.leading, 40)
             }
             
-            // IS REPOST AND ALL DATA IS HERE
-            if event.isRepost, let vPostRepost = event.firstQuote?.toVPost() {
-                //                Text("Repost")
-                Kind1(vPost: vPostRepost, hideFooter: false)
-            }
-            else if event.isRepost && event.firstQuoteId != nil {
+            if event.isRepost {
                 // IS REPOST BUT NEED TO FETCH THE REPOSTED POST
-                CenteredProgressView().onAppear {
-                    // fetch repost
-                    let mentionTag = TagsHelpers(event.tags()).mentionEtags()?.first
-                    if mentionTag != nil {
-                        sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: mentionTag!.id)))
+                if (event.firstQuoteId != nil && event.firstQuote == nil) {
+                    CenteredProgressView().onAppear {
+                        // fetch repost
+                        sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.firstQuoteId!)))
+                    }
+                }
+                else {
+                    if let firstQuoteId = event.firstQuoteId {
+                        Kind1ById(id: firstQuoteId)
                     }
                 }
             }
