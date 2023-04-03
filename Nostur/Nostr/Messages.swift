@@ -326,6 +326,13 @@ struct RequestMessage {
 """
     }
     
+    static func getUserProfileKinds(pubkey:String, subscriptionId:String? = nil, kinds:[Int]? = nil) -> String {
+        let kindsJsonArr = kinds != nil ? JSON(kinds!).rawString(.utf8, options: .init(rawValue: 0)) : "[0,3,30008]"
+        return """
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": \(kindsJsonArr!), "limit": 20}]
+"""
+    }
+    
     static func getUserMetadata(pubkeys:[String], limit:Int? = nil, subscriptionId:String? = nil) -> String {
         let limit = limit ?? (pubkeys.count + 20) // add 20 in case of multiple setMetadata's for a pubkey maybe?? not sure
         return """
@@ -368,6 +375,31 @@ struct EventMessageBuilder {
         
         return reactionEvent
     }
+    
+    static func makeReportEvent(pubkey:String, eventId:String, type:ReportType, note:String = "") -> NEvent {
+        var event = NEvent(content: note)
+        event.kind = .report
+        event.tags = [
+            NEventTag(type: "e", otherInformation: [eventId, type.rawValue]),
+            NEventTag(type: "p", otherInformation: pubkey)
+        ]
+        return event
+    }
+    
+    static func makeReportContact(pubkey:String, type:ReportType, note:String = "") -> NEvent {
+        var event = NEvent(content: note)
+        event.kind = .report
+        event.tags = [NEventTag(type: "p", otherInformation: [pubkey, type.rawValue])]
+        return event
+    }
+}
+
+enum ReportType:String {
+    case nudity = "nudity"
+    case profanity = "profanity"
+    case illegal = "illegal"
+    case spam = "spam"
+    case impersonation = "impersonation"
 }
 
 func short(_ pubkeys:[String], prefixLength:Int = 10) -> [String] {

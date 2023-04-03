@@ -369,6 +369,30 @@ final class NosturState : ObservableObject {
         }
         try! viewContext.save()
     }
+    
+    func report(_ event:Event, reportType:ReportType, note:String = "") -> NEvent? {
+        guard account?.privateKey != nil else { readOnlyAccountSheetShown = true; return nil }
+        
+        let report = EventMessageBuilder.makeReportEvent(pubkey: event.pubkey, eventId: event.id, type: reportType, note: note)
+
+        guard let signedEvent = try? signEvent(report) else {
+            print("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
+            return nil
+        }
+        return signedEvent
+    }
+    
+    func reportContact(pubkey:String, reportType:ReportType, note:String = "") -> NEvent? {
+        guard account?.privateKey != nil else { readOnlyAccountSheetShown = true; return nil }
+        
+        let report = EventMessageBuilder.makeReportContact(pubkey: pubkey, type: reportType, note: note)
+
+        guard let signedEvent = try? signEvent(report) else {
+            print("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
+            return nil
+        }
+        return signedEvent
+    }
 }
 
 

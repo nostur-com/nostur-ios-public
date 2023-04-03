@@ -79,8 +79,10 @@ public enum NEventKind: Codable, Equatable {
     case directMessage
     case repost
     case reaction
+    case report
     case zapRequest
     case zapNote
+    case relayList
     case badgeDefinition
     case badgeAward
     case profileBadges
@@ -95,12 +97,14 @@ public enum NEventKind: Codable, Equatable {
         case     4: self = .directMessage
         case     6: self = .repost
         case     7: self = .reaction
+        case  1984: self = .report
         case  9734: self = .zapRequest
         case  9735: self = .zapNote
+        case 10002: self = .relayList
         case 30009: self = .badgeDefinition
         case     8: self = .badgeAward
         case 30008: self = .profileBadges
-        default:   self = .custom(id)
+        default   : self = .custom(id)
         }
     }
 
@@ -113,8 +117,10 @@ public enum NEventKind: Codable, Equatable {
         case .directMessage:        return 4
         case .repost:               return 6
         case .reaction:             return 7
+        case .report:               return 1984
         case .zapRequest:           return 9734
         case .zapNote:              return 9735
+        case .relayList:            return 10002
                 
         case .badgeDefinition:      return 30009
         case .badgeAward:           return 8
