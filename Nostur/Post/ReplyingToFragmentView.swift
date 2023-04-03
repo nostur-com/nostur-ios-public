@@ -19,6 +19,8 @@ struct ReplyingToFragmentView: View {
             Text(try! AttributedString(markdown: vPost.replyingToUsernamesMarkDown!))
                 .fontWeight(.light)
                 .foregroundColor(.secondary)
+                .accentColor(Color("AccentColor"))
+                .tint(Color("AccentColor"))
                 .frame(maxWidth:.infinity, alignment: .leading)
         }
         else {
