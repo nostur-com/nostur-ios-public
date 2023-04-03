@@ -126,7 +126,9 @@ final class SocketPool: ObservableObject {
                 }
                 else if  message.type == .CLOSE { // CLOSE FOR ALL RELAYS
                     if (!managedClient.isConnected && managedClient.read) && (!managedClient.isConnecting) {
-                        managedClient.connect()
+                        // Already closed? no need to connect and send CLOSE message
+                        continue
+//                        managedClient.connect()
                     }
 //                    print("🔚🔚 CLOSE: \(String(message.message.prefix(260)))")
                     managedClient.client.write(string: message.message) { }
