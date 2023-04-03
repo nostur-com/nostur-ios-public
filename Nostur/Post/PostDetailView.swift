@@ -165,6 +165,9 @@ struct PostAndParent: View {
                             }
                         }), id:\.self) { event in
                             NoteRow(vPost: event.toVPost()!, hideFooter: false)
+                                .onTapGesture {
+                                    nav.navigateTo(event.toVPost()!)
+                                }
                             Divider()
                         }
                     }

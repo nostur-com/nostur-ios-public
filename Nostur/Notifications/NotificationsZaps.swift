@@ -112,13 +112,14 @@ struct NotificationsZaps: View, Equatable {
                             Group {
                                 ZapsForThisNote(zaps:zapsForNote(note), onAppear: self.onAppear)
                                 NoteMinimalContentView(vPost: note.toVPost()!, lineLimit: 3)
-                            }.onTapGesture {
-                                nav.navigateTo(note.toVPost())
                             }
-//                            Divider()
                         }
                     }
                     .padding(.vertical, 10)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        nav.navigateTo(note.toVPost())
+                    }
                     .id(note.id)
                     .listRowInsets(EdgeInsets())
                 }

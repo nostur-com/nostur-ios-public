@@ -66,12 +66,10 @@ struct NotificationsPosts: View, Equatable {
             LazyVStack {
                 ForEach(vPosts) { vPost in
                     NoteRow(vPost: vPost)
-                        .padding(10)
-                        .background(
-                            Rectangle().foregroundColor(Color.systemBackground)
-                                .shadow(color: Color.gray.opacity(0.4), radius: 5, x: 0, y: 2)
-                                .padding(10)
-                        )
+                        .boxShadow()
+                        .onTapGesture {
+                            nav.navigateTo(vPost)
+                        }
                         .id(vPost.id)
                         .onAppear {
                             onAppear(vPost.event.insertedAt)
