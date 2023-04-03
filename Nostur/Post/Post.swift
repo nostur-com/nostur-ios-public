@@ -59,6 +59,9 @@ struct VPost: Identifiable, Equatable, Hashable {
     // So to get the counter correct we can no longer just do vPosts.count
     // We need vPosts.reduce ... .parentPosts.count
     var threadPostsCount:Int
+    var isTruncated = false
+    var isRepost = false
+    var firstQuoteId:String?
         
     var name:String {
         "testttt" // TODO replace with .authorName... emoji check etc
@@ -111,7 +114,9 @@ class VPostTransformer {
                 displayName: mainEvent.contact?.authorName ?? String((mainEvent.npub.prefix(11))),
                 renderedElements: renderElements(mainEvent),
                 parentPosts: !skipParents! ? mainEvent.parentEvents.compactMap { toVPost($0, skipParents: true) } : [],
-                threadPostsCount: 1 + mainEvent.parentEvents.count
+                threadPostsCount: 1 + mainEvent.parentEvents.count,
+                isRepost: mainEvent.isRepost,
+                firstQuoteId: mainEvent.firstQuoteId
             )
         }
         
@@ -129,8 +134,10 @@ class VPostTransformer {
             imageUrls: privateEvent.content != nil ? getImgUrlsFromContent(privateEvent.content!) : [],
             displayName: privateEvent.contact?.authorName ?? String((privateEvent.npub.prefix(11))),
             renderedElements: renderElements(privateEvent),
-            parentPosts: !skipParents! ? mainEvent.parentEvents.compactMap { toVPost($0, skipParents: true) } : [],
-            threadPostsCount: 1 + mainEvent.parentEvents.count
+            parentPosts: !skipParents! ? privateEvent.parentEvents.compactMap { toVPost($0, skipParents: true) } : [],
+            threadPostsCount: 1 + privateEvent.parentEvents.count,
+            isRepost: privateEvent.isRepost,
+            firstQuoteId: privateEvent.firstQuoteId
         )
     }
     

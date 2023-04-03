@@ -89,23 +89,28 @@ struct PostOrThread: View {
     var body: some View {
         if vPost.parentPosts.count > 0 {
             VStack(spacing: 0) {
-                ForEach(vPost.parentPosts) { parent in
+                if vPost.isTruncated {
+                    Button("Show this thread") {
+                        nav.navigateTo(vPost)
+                    }.padding(.top, 10)
+                }
+                ForEach(vPost.parentPosts.indices, id:\.self) { index in
                     ZStack {
                         VStack(spacing: 0) {
                             HStack(spacing: 0) {
                                 Color("LightGray")
                                     .frame(maxWidth: 1, maxHeight: .infinity)
-                                    .padding(.top, parent.event.replyToId == nil ? 40 : 0)
-                                    .offset(x:THREAD_LINE_OFFSET, y: parent.event.replyToId == nil  ? 32 : 0)
+                                    .padding(.top, vPost.parentPosts[index].event.replyToId == nil ? 40 : 0)
+                                    .offset(x:THREAD_LINE_OFFSET, y: vPost.parentPosts[index].event.replyToId == nil  ? 32 : 0)
                                 Spacer()
                             }
                         }
-                        NoteRow(vPost: parent)
-//                            .background(Color.random)
+                        NoteRow(vPost: vPost.parentPosts[index], inThread: index == 0 ? false : true)
                     }
+                    .id(vPost.id + vPost.parentPosts[index].id)
                     .background(Color.systemBackground)
                     .onTapGesture {
-                        nav.navigateTo(parent)
+                        nav.navigateTo(vPost.parentPosts[index])
                     }
                 }
                 ZStack {
@@ -119,6 +124,7 @@ struct PostOrThread: View {
                         Spacer()
                     }
                     NoteRow(vPost: vPost, inThread: true)
+                        .id(vPost.id)
                 }
                 .background(Color.systemBackground)
                 .onTapGesture {
@@ -128,6 +134,7 @@ struct PostOrThread: View {
         }
         else {
             NoteRow(vPost: vPost)
+                .id(vPost.id)
                 .background(Color.systemBackground)
                 .onTapGesture {
                     if (vPost.event.isRepost) {
