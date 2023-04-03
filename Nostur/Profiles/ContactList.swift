@@ -14,11 +14,18 @@ struct ContactList: View {
     @FetchRequest
     var contacts:FetchedResults<Contact>
     var pubkeys:[String]
-    var missing:[String] {
+    
+    var notInContacts:[String] {
+        Array(Set(pubkeys).subtracting(Set(contacts.map { $0.pubkey })))
+    }
+    
+    var noMetadata:[String] {
         contacts
             .filter { $0.metadata_created_at == 0 }
             .map { $0.pubkey }
     }
+    
+    var missing:[String] { notInContacts + noMetadata }
 
     init(pubkeys:[String]) {
         self.pubkeys = pubkeys
@@ -40,7 +47,7 @@ struct ContactList: View {
             }
             
             VStack {
-                ForEach(missing, id:\.self) { pubkey in
+                ForEach(noMetadata, id:\.self) { pubkey in
                     ProfileRowMissing(pubkey: pubkey)
                 }
             }
