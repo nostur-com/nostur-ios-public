@@ -49,18 +49,24 @@ struct ListView: View {
                                 }
                             //                                    .border(lastAppeared?.id == vPost.id ? .green : .white)
                         }
-                        
-                        ProcessingStatus()
-                        HStack {
-                            Spacer()
-                            Rectangle().frame(width: 300, height: 1)
-                                .id(END_OF_LIST)
-                                .onBecomingVisible {
-                                    vm.didReachEnd()
-                                }
-                            Spacer()
-                        }
                     }
+                    VStack {
+                        ZStack {
+                            HStack {
+                                Spacer()
+                                Rectangle().frame(width: 300, height: 1)
+                                    .id(END_OF_LIST)
+                                    .onBecomingVisible {
+                                        vm.didReachEnd()
+                                    }
+                                Spacer()
+                            }
+                            ProcessingStatus()
+                        }
+                        .frame(height: 70)
+                    }
+                    .frame(height: 70)
+                    .fixedSize()
                 }
 //                .padding(.top, 1)
                 .onAppear {
