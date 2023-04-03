@@ -25,12 +25,12 @@ struct NewNoteButton: View {
                         Circle() // Transparent plug.circle looks weird - so make white here
                             .foregroundColor(Color(.white))
                             .frame(width: 45, height: 45)
-                            .padding(30)
+                            .padding(10)
                         Image(systemName: "plus.circle.fill")
                             .resizable()
                             .scaledToFit()
                             .frame(width: 45, height: 45)
-                            .padding(30)
+                            .padding(10)
                     }
                 }
                 .accessibilityLabel("New post")
