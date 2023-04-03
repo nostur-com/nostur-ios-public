@@ -10,6 +10,7 @@ import SwiftUI
 struct ProcessingStatus: View {
     
     @State var message:String? = nil
+    @State var dismissTask:Task<Void, Never>? = nil
     
     var body: some View {
         VStack {
@@ -35,10 +36,15 @@ struct ProcessingStatus: View {
     }
     func setTemporaryMessage(_ message:String?) {
         self.message = message
-        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(2)) {
-            withAnimation {
-                self.message = nil
-            }
+        self.dismissTask?.cancel()
+        self.dismissTask = Task {
+            // dismiss message after 2.1 seconds
+            do {
+                try await Task.sleep(nanoseconds: 2_100_000_000)
+                withAnimation {
+                    self.message = nil
+                }
+            } catch { }
         }
     }
 }
