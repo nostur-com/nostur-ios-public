@@ -832,15 +832,17 @@ extension Event {
 //            }
         }
         
+        // handle REPOST with normal mentions in .kind 1
+        // todo handle first nostr:nevent or not?
         var alreadyCounted = false
-        if ((event.kind == .repost || event.kind == .textNote) && event.firstMentionETag() != nil) {
-            savedEvent.firstQuoteId = event.firstMentionETag()!.id
+        if event.kind == .textNote, let firstE = event.firstMentionETag() {
+            savedEvent.firstQuoteId = firstE.id
             
             // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
             if let firstQuote = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
                 savedEvent.firstQuote = firstQuote
                 
-                if (event.firstMentionETag()!.otherInformation[safe: 2] == "mention") {
+                if (firstE.otherInformation[safe: 2] == "mention") {
                     firstQuote.objectWillChange.send()
                     firstQuote.mentionsCount += 1
                     alreadyCounted = true
@@ -849,8 +851,21 @@ extension Event {
         }
         
         // hmm above firstQuote doesn't seem to handle #[0] at .content end and "e" without "mention as first tag, so special case?
-        if !alreadyCounted && event.kind == .textNote && event.content.contains("#[0]") && event.tags[safe: 0]?.type == "e" {
-            savedEvent.firstQuoteId = event.tags[safe: 0]?.id
+        if !alreadyCounted && event.kind == .textNote && event.content.contains("#[0]"), let firstE = event.firstE() {
+            savedEvent.firstQuoteId = firstE
+            
+            // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
+            if let firstQuote = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
+                savedEvent.firstQuote = firstQuote
+                
+                firstQuote.objectWillChange.send()
+                firstQuote.mentionsCount += 1
+            }
+        }
+        
+        // kind6 sigh
+        if event.kind == .repost, let firstE = event.firstE() {
+            savedEvent.firstQuoteId = firstE
             
             // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
             if let firstQuote = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
