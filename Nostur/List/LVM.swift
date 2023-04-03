@@ -108,42 +108,254 @@ class LVM: NSObject, ObservableObject {
             }
             
             // newVPosts also has has items from BEFORE, that were removed with .prefix. from vPosts so handle it again
-            let last = newVPosts
-            // post added to the end should not be older than the first one already on screen...
+            let added = newVPosts
+//                .filter(notMuted) // TODO ADD BACK NOT MUtED IN RIGHT CONTEXT / THREAD
+                // post added to the end should not be older than the first one already on screen...
                 .filter { $0.created_at > (currentVPosts.first?.created_at ?? 0) }
                 .suffix(LVM_MAX_VISIBLE)
-                        
             
-            let currentVPostsCount = threadCount(currentVPosts)
             
-            DispatchQueue.main.async {
-                let lastWithoutMuted = last.filter(notMuted)
-                let dupRemoved = self.removeDuplicates(currentVPosts + lastWithoutMuted)
-                self.lvmState.vPosts = dupRemoved
-                self.lvmCounter.count = self.lvmCounter.count + (threadCount(dupRemoved) - currentVPostsCount)
+            if currentVPosts.count == 0 {
+                // remove duplicates
+                let dupsRemoved = self.renderLeafs(added)
+                print("🟢🟢🟢🟢🟢🟢🟢🟢🟢")
+                print("🟢🟢🟢🟢🟢🟢🟢🟢🟢")
+                print("🟢🟢🟢🟢🟢🟢🟢🟢🟢")
+                
+                DispatchQueue.main.async {
+                    self.lvmState.vPosts = dupsRemoved
+                    self.lvmCounter.count = threadCount(dupsRemoved)
+                }
+            }
+            else {
+//                return // TODO: FIXME
+                // truncate new replies for threads already on screen
+                let addedTruncated = self.renderNewLeafs(added, onScreen: currentVPosts)
+                let currentVPostsCount = threadCount(currentVPosts)
+                
+                DispatchQueue.main.async {
+                    self.lvmState.vPosts = currentVPosts + addedTruncated
+                    self.lvmCounter.count = self.lvmCounter.count + (threadCount(addedTruncated) - currentVPostsCount)
+                }
             }
         }
     }
     
-    func removeDuplicates(_ vPosts:[VPost]) -> [VPost] {
+    func renderLeafs(_ vPosts:ArraySlice<VPost>) -> [VPost] {
+        let sortedByLongest = vPosts.sorted(by: { $0.parentPosts.count > $1.parentPosts.count })
+
+        var renderedIds = [String]()
+        var renderedPosts = [VPost]()
+        for post in sortedByLongest {
+            if post.isRepost && post.firstQuoteId != nil && renderedIds.contains(post.firstQuoteId!) {
+                // Reposted post already on screen
+                continue
+            }
+            guard !renderedIds.contains(post.id) else { continue } // Post is already in screen
+            
+            guard !post.isRepost else {
+                // Render a repost, but track firstQuoteId instead of .id in renderedIds
+                if let firstQuoteId = post.firstQuoteId {
+                    renderedIds.append(firstQuoteId)
+                    renderedPosts.append(post)
+                }
+                continue
+            }
+            
+            guard post.parentPosts.count > 0 else {
+                // Render a root post, that has no parents
+                renderedIds.append(post.id)
+                renderedPosts.append(post)
+                continue
+            }
+            // render thread, truncated
+            var truncatedPost = post
+            truncatedPost.parentPosts = post.parentPosts.filter { !renderedIds.contains($0.id) }
+            truncatedPost.isTruncated = post.parentPosts.count > truncatedPost.parentPosts.count
+            renderedIds.append(contentsOf: [truncatedPost.id] + truncatedPost.parentPosts.map { $0.id })
+            renderedPosts.append(truncatedPost)
+        }
+        return renderedPosts
+            .sorted(by: { $0.parentPosts.first?.created_at ?? $0.created_at < $1.parentPosts.first?.created_at ?? $1.created_at })
+    }
+    
+    func renderNewLeafs(_ added:ArraySlice<VPost>, onScreen:[VPost]) -> [VPost] {
+        let newSortedByLongest = added.sorted(by: { $0.parentPosts.count > $1.parentPosts.count })
+
+        var onScreenIds = onScreen.flatMap { [$0.id] + $0.parentPosts.map { $0.id }  }
+
+        var newRenderedPosts = [VPost]()
+        for post in newSortedByLongest {
+            if post.isRepost && post.firstQuoteId != nil && onScreenIds.contains(post.firstQuoteId!) {
+                // Reposted post already on screen
+                continue
+            }
+            guard !onScreenIds.contains(post.id) else { continue } // Post is already in screen
+            
+            guard !post.isRepost else {
+                // Render a repost, but track firstQuoteId instead of .id in renderedIds
+                if let firstQuoteId = post.firstQuoteId {
+                    onScreenIds.append(firstQuoteId)
+                    newRenderedPosts.append(post)
+                }
+                continue
+            }
+            
+            guard post.parentPosts.count > 0 else {
+                // Render a root post, that has no parents
+                onScreenIds.append(post.id)
+                newRenderedPosts.append(post)
+                continue
+            }
+            // render thread, truncated
+            var truncatedPost = post
+            truncatedPost.parentPosts = post.parentPosts.filter { !onScreenIds.contains($0.id) }
+            truncatedPost.isTruncated = post.parentPosts.count > truncatedPost.parentPosts.count
+            onScreenIds.append(contentsOf: [truncatedPost.id] + truncatedPost.parentPosts.map { $0.id })
+            newRenderedPosts.append(truncatedPost)
+        }
+        return newRenderedPosts
+            .sorted(by: { $0.parentPosts.first?.created_at ?? $0.created_at < $1.parentPosts.first?.created_at ?? $1.created_at })
+    }
+    
+    func removeDuplicates(_ vPosts:ArraySlice<VPost>) -> [VPost] {
+  
+        
+        
+        
+        
+        // KEEP if post.id IS NOT in replyToIds
+        // REMOVE if post.id IS in replyToIds
+        // example:
+        // --
+        // ROOT A   (vPost.id == A)
+        // --
+        // ROOT A
+        // REPLY TO A   (vPost.id == B)
+        // --
+        // A will be removed because already rendered by B
+//        let threads = vPosts.filter { !replyToIds.contains($0.id) }
+        let threads = vPosts
+//            .sorted(by: { $0.parentPosts.first?.created_at ?? $0.created_at < $1.parentPosts.first?.created_at ?? $1.created_at }) // Longest threads first, so we render 1 long thread and a few small ones, instead of many small disconnected threads
+            .sorted(by: { $0.parentPosts.count > $1.parentPosts.count }) // Longest threads first, so we render 1 long thread and a few small ones, instead of many small disconnected threads
+        
+        // --
+        // ROOT A
+        // REPLY B TO A (.id == B)
+        // REPLY C TO B (.id == C)
+        // FORK 1 REPLY TO C (vPost.id == 1)
+        
+        // --
+        // ROOT A
+        // REPLY B TO A (.id == B)
+        // REPLY C TO B (.id == C)
+        // FORK 2 REPLY TO C (vPost.id == 2)
+        
+        // Should truncate vPost.id == 2, because ROOT A until REPLY C is already on screen
+        var renderedIds = [String]()
+        var truncatedPosts = [VPost]()
+        for thread in threads {
+            guard thread.parentPosts.last?.id != nil else {
+                renderedIds.append(thread.id)
+                truncatedPosts.append(thread)
+                continue // single post, no special handling needed
+            }
+            let parentIds = Set(thread.parentPosts.map { $0.id })
+            let onlyNewParentIds = parentIds.subtracting(renderedIds)
+            if onlyNewParentIds.count < parentIds.count {
+                var truncatedPost = thread
+                truncatedPost.parentPosts = thread.parentPosts.filter { onlyNewParentIds.contains($0.id) }
+                truncatedPost.threadPostsCount = truncatedPost.parentPosts.count
+                truncatedPost.isTruncated = true
+                truncatedPosts.append(truncatedPost)
+                renderedIds.append(contentsOf: [truncatedPost.id] + truncatedPost.parentPosts.map { $0.id })
+            }
+            else {
+                truncatedPosts.append(thread)
+                renderedIds.append(contentsOf: [thread.id] + thread.parentPosts.map { $0.id })
+            }
+        }
+        
         /**
          A2 (ROOT)
               A1.1
                 A1.1.1
+                A1.1.2.3
               A2
          
             Should remove A1.1 if A1.1.1 is also on screen
               So get replyToId or first parent, and that ID should be removed from list
+         
+            Should also truncate A1.1.2.3 to .2.3 because A1.1. was already rendered in other thread
          */
         
         // 1. Get all replyToId's
         var replyToIds = [String]()
-        for vPost in vPosts {
-            if let replyToId = vPost.parentPosts.last?.id {
-                replyToIds.append(replyToId)
-            }
+        for vPost in truncatedPosts {
+//            if let replyToId = vPost.parentPosts.last?.id {
+//                replyToIds.append(replyToId)
+//            }
+            
+            replyToIds.append(contentsOf: vPost.parentPosts.map { $0.id })
+            
         }
-        return vPosts.filter { !replyToIds.contains($0.id) }
+        
+        // KEEP if post.id IS NOT in replyToIds
+        // REMOVE if post.id IS in replyToIds
+        // example:
+        // --
+        // ROOT A   (vPost.id == A)
+        // --
+        // ROOT A
+        // REPLY TO A   (vPost.id == B)
+        // --
+        // A will be removed because already rendered by B
+        let hmm = truncatedPosts.filter { !replyToIds.contains($0.id) }
+        
+        return hmm
+            .sorted(by: { $0.parentPosts.first?.created_at ?? $0.created_at < $1.parentPosts.first?.created_at ?? $1.created_at })
+//            .sorted(by: { $0.created_at < $1.created_at }) // hmm not right long threads with recent reply and ROOT come below less recent replies that dont have ROOT. confusing.
+    }
+    
+    // For new posts being added (in "last"), if the thread is already on screen
+    // only show 2 posts, and then link to detail or something
+    func truncateRepliesToThreadOnScreen(_ added:ArraySlice<VPost>, onScreen:[VPost]) -> [VPost] {
+        let onScreenIds = onScreen.reduce([String]()) { partialResult, vPost in
+            let idsOfThisPostAndItsParents = [vPost.id] + vPost.parentPosts.map { $0.id }
+            return partialResult + idsOfThisPostAndItsParents
+        }
+        var truncatedPosts = [VPost]()
+        for newPost in added {
+            guard let replyToId = newPost.parentPosts.last?.id else {
+                truncatedPosts.append(newPost)
+                continue
+            }
+            // If the reply to is already on screen, keep that but remove all further parents.
+            if onScreenIds.contains(replyToId) {
+                var truncatedPost = newPost
+                truncatedPost.parentPosts = Array(newPost.parentPosts.suffix(1)) // or suffix(1) ??
+                truncatedPost.threadPostsCount = 1 // Just count as 1 become rest is already on screen
+                truncatedPost.isTruncated = true
+                truncatedPosts.append(truncatedPost)
+            }
+            else {
+                truncatedPosts.append(newPost)
+            }
+            
+//            let parentIds = Set(newPost.parentPosts.map { $0.id })
+//            let onlyNewParentIds = parentIds.subtracting(onScreenIds)
+//            if onlyNewParentIds.count < parentIds.count {
+//                var truncatedPost = newPost
+//                truncatedPost.parentPosts = newPost.parentPosts.filter { onlyNewParentIds.contains($0.id) }
+//                truncatedPost.threadPostsCount = truncatedPost.parentPosts.count
+//                truncatedPost.isTruncated = true
+//                truncatedPosts.append(truncatedPost)
+//            }
+//            else {
+//                truncatedPosts.append(newPost)
+//            }
+        }
+        return truncatedPosts
     }
     
     var lvmState:LVMState
