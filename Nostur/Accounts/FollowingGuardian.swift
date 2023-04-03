@@ -84,6 +84,7 @@ class FollowingGuardian {
                 account.addToFollows(newContact)
             }
         }
+        DataProvider.shared().save()
     }
     
     func restoreFollowing() {
