@@ -334,8 +334,7 @@ struct ProfileView: View {
                                 case "Relays":
                                     VStack {
                                         if clEvents.count != 0 {
-                                            ProfileRelaysView(clEvent: clEvents.first!)
-                                            
+                                            ProfileRelaysView(clEvent: clEvents.first!)    
                                         }
                                         else {
                                             HStack {
@@ -443,7 +442,8 @@ struct ProfileView: View {
             }
         }
         .task {
-            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndBadges(pubkey: pubkey)))
+//            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndBadges(pubkey: pubkey)))
+            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserProfileKinds(pubkey: pubkey, kinds: [0,3,30008])))
         }
         .fullScreenCover(isPresented: $profilePicViewerIsShown) {
             ProfilePicFullScreenSheet(profilePicViewerIsShown: $profilePicViewerIsShown, pictureUrl:contact.picture!)
