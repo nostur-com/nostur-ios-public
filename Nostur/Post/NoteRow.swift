@@ -57,7 +57,7 @@ struct NoteRow: View {//}, Equatable {
                 }
                 else {
                     if let firstQuoteId = event.firstQuoteId {
-                        Kind1ById(id: firstQuoteId)
+                        Kind1ById(id: firstQuoteId, hideFooter: false)
                     }
                 }
             }

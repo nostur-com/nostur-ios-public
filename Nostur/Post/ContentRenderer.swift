@@ -329,13 +329,15 @@ struct QuoteById: View {
 struct Kind1ById: View {
 
     let id:String
+    let hideFooter:Bool
     //    @ObservedObject var vm:EventVM // no vm want fr is not updating after receiving from websocket
 
     @FetchRequest
     var events:FetchedResults<Event>
     //
-    init(id:String) {
+    init(id:String, hideFooter:Bool = true) {
         self.id = id
+        self.hideFooter = hideFooter
         let fr = Event.fetchRequest()
         fr.predicate = NSPredicate(format: "id == %@", id)
         fr.fetchLimit = 1
@@ -344,7 +346,7 @@ struct Kind1ById: View {
 
     var body: some View {
         if let event = events.first {
-            NoteRow.Kind1(vPost: event.toVPost()!)
+            NoteRow.Kind1(vPost: event.toVPost()!, hideFooter:hideFooter)
         }
         else {
             ProgressView()

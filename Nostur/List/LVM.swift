@@ -157,6 +157,7 @@ class LVM: NSObject, ObservableObject {
                 // Render a repost, but track firstQuoteId instead of .id in renderedIds
                 if let firstQuoteId = post.firstQuoteId {
                     renderedIds.append(firstQuoteId)
+                    renderedIds.append(post.id)
                     renderedPosts.append(post)
                 }
                 continue
@@ -182,7 +183,14 @@ class LVM: NSObject, ObservableObject {
     func renderNewLeafs(_ added:ArraySlice<VPost>, onScreen:[VPost]) -> [VPost] {
         let newSortedByLongest = added.sorted(by: { $0.parentPosts.count > $1.parentPosts.count })
 
-        var onScreenIds = onScreen.flatMap { [$0.id] + $0.parentPosts.map { $0.id }  }
+        var onScreenIds = onScreen.flatMap {
+            if $0.isRepost {
+                return [$0.id] + [$0.firstQuoteId]
+            }
+            else {
+                return [$0.id] + $0.parentPosts.map { $0.id }
+            }
+        }
 
         var newRenderedPosts = [VPost]()
         for post in newSortedByLongest {
@@ -196,6 +204,7 @@ class LVM: NSObject, ObservableObject {
                 // Render a repost, but track firstQuoteId instead of .id in renderedIds
                 if let firstQuoteId = post.firstQuoteId {
                     onScreenIds.append(firstQuoteId)
+                    onScreenIds.append(post.id)
                     newRenderedPosts.append(post)
                 }
                 continue
