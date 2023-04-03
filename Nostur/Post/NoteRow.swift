@@ -125,6 +125,7 @@ struct NoteRow: View {//}, Equatable {
                     }
                     if !inThread {
                         ReplyingToFragmentView(vPost: vPost)
+                            .padding(.bottom, 5)
                             .contentShape(Rectangle())
                             .onTapGesture { nav.navigateTo(vPost) }
                     }

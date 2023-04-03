@@ -29,15 +29,24 @@ struct PFP: View {
             Circle().foregroundColor(color).frame(width: size, height: size)
         }
         else {
-            VStack {
+
                 if (pictureUrl!.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
                     LazyImage(url: URL(string: pictureUrl!)) { state in
                         if let container = state.imageContainer {
                             if container.type == .gif, let gifData = container.data {
-                                AnimatedGifView(gifData: gifData, width: size, height: size)
-                                    .scaledToFit()
-                                    .frame(width: size, height: size)
-                                    .clipShape(Circle())
+                                ZStack {
+                                    if let image = state.image {
+                                        image
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fill)
+                                            .frame(width: size, height: size)
+                                            .clipShape(Circle())
+                                    }
+                                    AnimatedGifView(gifData: gifData, width: size, height: size)
+                                        .scaledToFit()
+                                        .frame(width: size, height: size)
+                                        .clipShape(Circle())
+                                }
                             }
                             else if let image = state.image {
                                 image
@@ -56,26 +65,28 @@ struct PFP: View {
                     }
                     .pipeline(ImageProcessing.shared.pfp) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
                     .priority(.low) // lower prio for animated gif, saves bandwidth?
+                    .frame(width: size, height: size)
                 }
                 else {
                     LazyImage(url: URL(string: pictureUrl!)) { state in
                         if let image = state.image {
                             image
                                 .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: size, height: size)
-                                .clipShape(Circle())
+//                                .aspectRatio(contentMode: .fill)
+//                                .frame(width: size, height: size)
+//                                .clipShape(Circle())
                         }
                         else {
-                            Circle().foregroundColor(color).frame(width: size, height: size)
+                            Circle().foregroundColor(color)//.frame(width: size, height: size)
                         }
                     }
-                    .processors([.resize(width: size)])
                     .pipeline(ImageProcessing.shared.pfp)
+                    .processors([.resize(width: size, unit: .points), .circle()])
+//                    .processors([.resize(width: size, unit: .pixels), .circle()])
 //                    .priority(.low)
+                    .frame(width: size, height: size)
                 }
-            }
-            .frame(width: size, height: size)
+            
         }
     }
 }
