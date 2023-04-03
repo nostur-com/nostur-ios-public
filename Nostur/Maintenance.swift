@@ -10,7 +10,7 @@ import CoreData
 
 struct Maintenance {
     
-    static let BOOTSTRAP_RELAYS = ["wss://relay.damus.io", "wss://brb.io" , "wss://nostr.fmt.wiz.biz" , "wss://nostr.zebedee.cloud", "wss://relay.snort.social", "wss://nostr.plebchain.org", "wss://nostr.mutinywallet.com"]
+    static let BOOTSTRAP_RELAYS = ["wss://relay.damus.io" , "wss://nostr.fmt.wiz.biz" , "wss://nostr.zebedee.cloud", "wss://relay.snort.social", "wss://nostr.mutinywallet.com", "wss://purplepag.es"]
     
     static func firstTimeStartup(context:NSManagedObjectContext) {
         context.perform {
