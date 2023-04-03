@@ -69,6 +69,9 @@ struct ContentRenderer: View { // VIEW things
                         Text(text)
                             .textSelection(.enabled)
                             .multilineTextAlignment(.leading)
+                            .accentColor(Color("AccentColor"))
+                            .tint(Color("AccentColor"))
+                            .lineSpacing(3)
                     case .note1(let noteId):
                         QuoteById(id: hex(noteId))
                             .padding(.vertical, 5)
@@ -82,6 +85,8 @@ struct ContentRenderer: View { // VIEW things
                             .textSelection(.enabled)
                             .multilineTextAlignment(TextAlignment.leading)
                             .foregroundColor(.primary)
+                            .accentColor(Color("AccentColor"))
+                            .tint(Color("AccentColor"))
                             .lineSpacing(3)
 //                            .padding(0)
 //                            .frame(maxWidth: .infinity)
@@ -276,3 +281,79 @@ struct VPV: UIViewRepresentable {
 //    //        }
 //    //    }
 //}
+
+
+enum MarkdownElement: Hashable {
+    case plain(String)
+    case text(AttributedString)
+    case note1(String)
+    case noteId(String)
+    case lnbc(String)
+    case link(String, URL)
+    case image(URL)
+    case video(URL)
+}
+
+
+struct QuoteById: View {
+
+    let id:String
+    //    @ObservedObject var vm:EventVM // no vm want fr is not updating after receiving from websocket
+
+    @FetchRequest
+    var events:FetchedResults<Event>
+    //
+    init(id:String) {
+        self.id = id
+        let fr = Event.fetchRequest()
+        fr.predicate = NSPredicate(format: "id == %@", id)
+        fr.fetchLimit = 1
+        _events = FetchRequest(fetchRequest: fr)
+    }
+
+    var body: some View {
+        if let event = events.first {
+            QuotedNoteFragmentView(vPost: event.toVPost()!)
+        }
+        else {
+            ProgressView()
+                .hCentered()
+                .onAppear {
+                    print("🟢 Fetching for QuotedNoteFragmentView \(id)")
+                    SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEventAndReferences(id: id)))
+                }
+        }
+    }
+}
+
+struct Kind1ById: View {
+
+    let id:String
+    //    @ObservedObject var vm:EventVM // no vm want fr is not updating after receiving from websocket
+
+    @FetchRequest
+    var events:FetchedResults<Event>
+    //
+    init(id:String) {
+        self.id = id
+        let fr = Event.fetchRequest()
+        fr.predicate = NSPredicate(format: "id == %@", id)
+        fr.fetchLimit = 1
+        _events = FetchRequest(fetchRequest: fr)
+    }
+
+    var body: some View {
+        if let event = events.first {
+            NoteRow.Kind1(vPost: event.toVPost()!)
+        }
+        else {
+            ProgressView()
+                .hCentered()
+                .onAppear {
+                    print("🟢 Fetching for Kind1ById \(id)")
+                    SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: id)))
+//                    SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEventAndReferences(id: id)))
+                }
+        }
+    }
+}

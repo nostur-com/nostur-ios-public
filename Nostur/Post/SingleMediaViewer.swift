@@ -8,34 +8,73 @@
 import SwiftUI
 import NukeUI
 import Nuke
+//import NukeVideo
 
 struct SingleMediaViewer: View {
     
     let url:URL
+    var height:CGFloat?
     @State var fullScreenItem:FullScreenItem?
     
     var body: some View {
-        LazyImage(url: url) { state in
-            if let image = state.image {
-                image
-                    .resizable()
-                    .scaledToFit()
-                //                                    .aspectRatio(contentMode: .fit)
-                //                                    .frame(maxWidth: .infinity)
-                //                                    .frame(width: side, height: 200)
-                    .onTapGesture {
-                        fullScreenItem = FullScreenItem(url: url)
+        if (url.absoluteString.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
+            GeometryReader { geo in
+                LazyVStack {
+                    LazyImage(url: url) { state in
+                        if let container = state.imageContainer {
+                            if container.type == .gif, let gifData = container.data {
+                                AnimatedGifView(gifData: gifData, width: geo.size.width, height: geo.size.height, contentMode: .scaleAspectFit)
+//                                        .scaledToFill()
+//                                        .clipped()
+                                    .frame(width: geo.size.width, height: geo.size.height)
+                                    .onTapGesture {
+                                        sendNotification(.fullScreenView, FullScreenItem(url: url))
+                                    }
+                            }
+                            else if let image = state.image {
+                                image
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: geo.size.width, height: geo.size.height)
+                                    .onTapGesture {
+                                        sendNotification(.fullScreenView, FullScreenItem(url: url))
+                                    }
+                            }
+                            else {
+                                CenteredProgressView()
+                                    .background(Color("LightGray"))
+                            }
+                        }
+                        else {
+                            CenteredProgressView()
+                                .background(Color("LightGray"))
+                        }
                     }
-            }
-            else {
-                CenteredProgressView()
+                    .pipeline(ImageProcessing.shared.content) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
+                    .priority(.low)
+                    .frame(width: geo.size.width, height: geo.size.height)
+                }
             }
         }
-        .pipeline(ImageProcessing.shared.content) // No processing again here, we probably never show the image again
-        .fullScreenCover(item: $fullScreenItem, content: { item in
-            FullImageViewer(fullImageURL:item.url)
-        })
+        else {
+            LazyImage(url: url) { state in
+                if let image = state.image {
+                    image
+                        .resizable()
+                        .scaledToFit()
+                        .onTapGesture {
+                            sendNotification(.fullScreenView, FullScreenItem(url: url))
+                        }
+                }
+                else {
+                    CenteredProgressView()
+                        .background(Color("LightGray"))
+                }
+            }
+            .pipeline(ImageProcessing.shared.content) // No processing again here, we probably never show the image again
+        }
     }
+    
 }
 
 struct SingleMediaViewer_Previews: PreviewProvider {
@@ -45,5 +84,26 @@ struct SingleMediaViewer_Previews: PreviewProvider {
         let urlsFromContent = getImgUrlsFromContent(content1)
         
         SingleMediaViewer(url:urlsFromContent[0])
+    }
+}
+
+
+struct Gif_Previews: PreviewProvider {
+    
+    static var previews: some View {
+        ScrollView {
+            LazyVStack {
+                if let vPost = PreviewFetcher.fetchVPost("8d49bc0204aad2c0e8bb292b9c99b7dc1bdd6c520a877d908724c27eb5ab8ce8") {
+                    NoteRow(vPost: vPost)
+                        .boxShadow()
+                }
+                if let vPost = PreviewFetcher.fetchVPost("1c0ba51ba48e5228e763f72c5c936d610088959fe44535f9c861627287fe8f6d") {
+                    NoteRow(vPost: vPost)
+                        .boxShadow()
+                }
+            }
+        }
+        .background(Color("ListBackground"))
+        .withPreviewEnvironment()
     }
 }
