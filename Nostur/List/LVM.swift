@@ -124,7 +124,7 @@ class LVM: NSObject, ObservableObject {
                 
                 DispatchQueue.main.async {
                     self.lvmState.vPosts = dupsRemoved
-                    self.lvmCounter.count = threadCount(dupsRemoved)
+                    self.lvmCounter.count = self.itemsAfterLastAppeared
                 }
             }
             else {
@@ -135,7 +135,7 @@ class LVM: NSObject, ObservableObject {
                 
                 DispatchQueue.main.async {
                     self.lvmState.vPosts = currentVPosts + addedTruncated
-                    self.lvmCounter.count = self.lvmCounter.count + (threadCount(addedTruncated) - currentVPostsCount)
+                    self.lvmCounter.count = self.lvmCounter.count + threadCount(addedTruncated)
                 }
             }
         }
@@ -172,6 +172,7 @@ class LVM: NSObject, ObservableObject {
             // render thread, truncated
             var truncatedPost = post
             truncatedPost.parentPosts = post.parentPosts.filter { !renderedIds.contains($0.id) }
+            truncatedPost.threadPostsCount = 1 + truncatedPost.parentPosts.count
             truncatedPost.isTruncated = post.parentPosts.count > truncatedPost.parentPosts.count
             renderedIds.append(contentsOf: [truncatedPost.id] + truncatedPost.parentPosts.map { $0.id })
             renderedPosts.append(truncatedPost)
@@ -220,6 +221,7 @@ class LVM: NSObject, ObservableObject {
             var truncatedPost = post
             truncatedPost.parentPosts = post.parentPosts.filter { !onScreenIds.contains($0.id) }
             truncatedPost.isTruncated = post.parentPosts.count > truncatedPost.parentPosts.count
+            truncatedPost.threadPostsCount = 1 + truncatedPost.parentPosts.count
             onScreenIds.append(contentsOf: [truncatedPost.id] + truncatedPost.parentPosts.map { $0.id })
             newRenderedPosts.append(truncatedPost)
         }

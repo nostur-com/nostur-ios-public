@@ -134,8 +134,8 @@ class VPostTransformer {
             imageUrls: privateEvent.content != nil ? getImgUrlsFromContent(privateEvent.content!) : [],
             displayName: privateEvent.contact?.authorName ?? String((privateEvent.npub.prefix(11))),
             renderedElements: renderElements(privateEvent),
-            parentPosts: !skipParents! ? privateEvent.parentEvents.compactMap { toVPost($0, skipParents: true) } : [],
-            threadPostsCount: 1 + privateEvent.parentEvents.count,
+            parentPosts: !skipParents! ? mainEvent.parentEvents.compactMap { toVPost($0, skipParents: true) } : [],
+            threadPostsCount: 1 + mainEvent.parentEvents.count,
             isRepost: privateEvent.isRepost,
             firstQuoteId: privateEvent.firstQuoteId
         )
