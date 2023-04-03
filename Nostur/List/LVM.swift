@@ -131,7 +131,7 @@ class LVM: NSObject, ObservableObject {
 //                return // TODO: FIXME
                 // truncate new replies for threads already on screen
                 let addedTruncated = self.renderNewLeafs(added, onScreen: currentVPosts)
-                let currentVPostsCount = threadCount(currentVPosts)
+//                let currentVPostsCount = threadCount(currentVPosts)
                 
                 DispatchQueue.main.async {
                     self.lvmState.vPosts = currentVPosts + addedTruncated
