@@ -20,7 +20,9 @@ class Importer {
     public func importEvents() async {
         if (isImporting) {
             print("🟠🟠🟠 ALREADY IMPORTING. SKIPPED 🟠🟠🟠")
-            sendNotification(.listStatus, "Processing items...")
+            DispatchQueue.main.async {
+                sendNotification(.listStatus, "Processing items...")
+            }
             return
         }
         let ot = OnboardingTracker.shared

@@ -362,13 +362,13 @@ extension Settings {
                 
                 // handle REPOST with normal mentions in .kind 1
                 // todo handle first nostr:nevent or not?
-                var alreadyCounted = false
+
                 if nEvent.kind == .textNote, let firstE = nEvent.firstMentionETag() {
                     event.firstQuoteId = firstE.id
                 }
                 
                 // hmm above firstQuote doesn't seem to handle #[0] at .content end and "e" without "mention as first tag, so special case?
-                if !alreadyCounted && nEvent.kind == .textNote && nEvent.content.contains("#[0]"), let firstE = nEvent.firstE() {
+                if nEvent.kind == .textNote && nEvent.content.contains("#[0]"), let firstE = nEvent.firstE() {
                     event.firstQuoteId = firstE
                 }
                 
