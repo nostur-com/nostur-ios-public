@@ -132,4 +132,12 @@ extension Notification.Name {
     static var fullScreenView: Notification.Name {
         return Notification.Name("fullScreenView")
     }
+    
+    static var newFollowingListFromRelay: Notification.Name {
+        return Notification.Name("newFollowingListFromRelay")
+    }
+    
+    static var requestConfirmationChangedFollows: Notification.Name {
+        return Notification.Name("requestConfirmationChangedFollows")
+    }
 }

@@ -168,8 +168,17 @@ final class NosturState : ObservableObject {
             contact.pubkey = pubkey
             account!.addToFollows(contact)
         }
-//        followingLVM?.changeFollowers(pubkeys:followingPublicKeys)
+
         try! viewContext.save()
+        publishNewContactList()
+    }
+    
+    func publishNewContactList() {
+        guard let clEvent = try? AccountManager.createContactListEvent(account: account!) else {
+            print("🔴🔴 Could not create new clEvent")
+            return
+        }
+        _ = Unpublisher.shared.publishLast(clEvent, ofType: .contactList)
     }
     
     func follow(_ contact:Contact) {
@@ -179,19 +188,11 @@ final class NosturState : ObservableObject {
         self.objectWillChange.send()
         account!.addToFollows(contact)
         try! viewContext.save()
-        
-//        followingPublicKeys.insert(contact.pubkey)
-//        followingLVM?.changeFollowers(pubkeys:followingPublicKeys)
-        guard let clEvent = try? AccountManager.createContactListEvent(account: account!) else {
-            print("🔴🔴 Could not create new clEvent")
-            return
-        }
-        _ = Unpublisher.shared.publishLast(clEvent, ofType: .contactList)
+
+        publishNewContactList()
     }
     
     func unfollow(_ pubkey: String) {
-//        followingPublicKeys.remove(pubkey)
-        
         guard let contact = Contact.contactBy(pubkey: pubkey, context: viewContext) else {
             return
         }
@@ -202,17 +203,10 @@ final class NosturState : ObservableObject {
         account!.removeFromFollows(contact)
         try! viewContext.save()
         
-//        followingLVM?.changeFollowers(pubkeys:followingPublicKeys)
-        guard let clEvent = try? AccountManager.createContactListEvent(account: account!) else {
-            print("🔴🔴 Could not create new clEvent")
-            return
-        }
-        _ = Unpublisher.shared.publishLast(clEvent, ofType: .contactList)
+        publishNewContactList()
     }
     
     func unfollow(_ contact:Contact) {
-//        followingPublicKeys.remove(contact.pubkey)
-        
         guard let contact = Contact.contactBy(pubkey: contact.pubkey, context: viewContext) else {
             return
         }
@@ -221,8 +215,9 @@ final class NosturState : ObservableObject {
         }
         self.objectWillChange.send()
         account!.removeFromFollows(contact)
-//        followingLVM?.changeFollowers(pubkeys:followingPublicKeys)
         try! viewContext.save()
+        
+        publishNewContactList()
     }
     
     func isFollowing(_ pubkey:String) -> Bool {

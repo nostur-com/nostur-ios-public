@@ -28,6 +28,9 @@ extension Account {
     @NSManaged public var publicKey: String
     @NSManaged public var id: UUID?
     @NSManaged public var follows: Set<Contact>?
+    var follows_:Set<Contact> {
+        follows ?? Set<Contact>()
+    }
     @NSManaged public var privateNotes: Set<PrivateNote>?
     @NSManaged public var bookmarks: Set<Event>?
 //    @NSManaged public var blockedContacts: Set<Contact>?

@@ -95,21 +95,6 @@ class Importer {
                         }
                     }
                     
-                    let savedEvent = Event.saveEvent(event: event, context:context, relay: message.relay)
-                    saved = saved + 1
-                    if (kind6firstQuote != nil) {
-                        savedEvent.firstQuote = kind6firstQuote
-                    }
-                    
-                    if event.kind == .setMetadata {
-                        Contact.saveOrUpdateContact(event: event, context: context)
-                        if (ot.isOnboarding && ot.pubkey == event.publicKey) {
-                            print("🟠🟠🟠 2")
-                            Account.preFillReadOnlyAccountInfo(event: event, context: context, forceOverwrite: true)
-                            ot.didFetchKind0 = true
-                        }
-                    }
-                    
                     if event.kind == .contactList {
                         if event.publicKey == NosturState.EXPLORER_PUBKEY {
                             // use guest account p's for "Explorer" feed
@@ -136,6 +121,26 @@ class Importer {
 //                            print("✈️✈️✈️ ONBORADING SPEED UP FETCHING 1,6,7,9735 FROM E's")
 //                            let fetchReferences = ClientMessage(type: .REQ, message: RequestMessage.getEventReferences(ids: ????))
                             Account.preFillReadOnlyAccountFollowing(event: event, context: context, forceOverwrite: true)
+                        }
+                        
+                        let n = event
+                        DispatchQueue.main.async {
+                            sendNotification(.newFollowingListFromRelay, n)
+                        }
+                    }
+                    
+                    let savedEvent = Event.saveEvent(event: event, context:context, relay: message.relay)
+                    saved = saved + 1
+                    if (kind6firstQuote != nil) {
+                        savedEvent.firstQuote = kind6firstQuote
+                    }
+                    
+                    if event.kind == .setMetadata {
+                        Contact.saveOrUpdateContact(event: event, context: context)
+                        if (ot.isOnboarding && ot.pubkey == event.publicKey) {
+                            print("🟠🟠🟠 2")
+                            Account.preFillReadOnlyAccountInfo(event: event, context: context, forceOverwrite: true)
+                            ot.didFetchKind0 = true
                         }
                     }
                     

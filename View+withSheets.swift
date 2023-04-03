@@ -13,9 +13,9 @@ public extension View {
         modifier(WithSheets())
     }
     
-//    func withSheets(perform action: @escaping () -> Void) -> some View {
-//        modifier(WithSheets())
-//    }
+    //    func withSheets(perform action: @escaping () -> Void) -> some View {
+    //        modifier(WithSheets())
+    //    }
 }
 
 private struct WithSheets: ViewModifier {
@@ -25,6 +25,10 @@ private struct WithSheets: ViewModifier {
     @State var post:Event? = nil
     @State var contact:Contact? = nil
     @State var fullImage:FullScreenItem? = nil
+    
+    //
+    @State var restoreContactSheet = false
+    @State var removed:RemovedPubkeys? = nil
     
     func body(content: Content) -> some View {
         content
@@ -56,6 +60,21 @@ private struct WithSheets: ViewModifier {
                 let item = notification.object as! FullScreenItem
                 fullImage = item
             }
+            .onReceive(receiveNotification(.requestConfirmationChangedFollows)) { notification in
+                let removed = notification.object as! Set<String>
+                self.removed = RemovedPubkeys(pubkeys: removed)
+                self.restoreContactSheet = true
+            }
+            .confirmationDialog("It looks like \(removed?.pubkeys.count ?? 0) contacts were removed from your following list, perhaps from another nostr app", isPresented: $restoreContactSheet, titleVisibility: .visible,  actions: {
+                Button("OK", role: .destructive) {
+                    guard let removed = self.removed else { return }
+                    FollowingGuardian.shared.removeFollowing(removed.pubkeys)
+                }
+                Button("Restore \(removed?.pubkeys.count ?? 0) contacts", role: .cancel) {
+                    FollowingGuardian.shared.restoreFollowing()
+                }
+                .keyboardShortcut(.defaultAction)
+            })
     }
     
     func onDismiss() {
@@ -63,6 +82,11 @@ private struct WithSheets: ViewModifier {
         post = nil
         contact = nil
     }
-
+    
 }
 
+
+struct RemovedPubkeys: Identifiable {
+    let pubkeys:Set<String>
+    let id = UUID()
+}

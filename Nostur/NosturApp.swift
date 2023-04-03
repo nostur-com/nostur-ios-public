@@ -28,6 +28,7 @@ struct NosturApp: App {
     @StateObject private var sm = SideBarModel()
     @StateObject private var tm:DetailTabsModel = .shared
     @StateObject private var nm:NotificationsManager = .shared
+    @State var fg:FollowingGuardian = .shared
     
     @State var isViewDisplayed = false
     
