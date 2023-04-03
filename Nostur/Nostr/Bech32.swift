@@ -110,7 +110,7 @@ public class Bech32 {
     
     private func TryAlsooopolymod(_ values: Data) -> UInt32 {
         var chk: UInt32 = 1
-        values.map { v in
+        _ = values.map { v in
             let top = (chk >> 25)
             chk = (chk & 0x1ffffff) << 5 ^ UInt32(v)
             for i: UInt8 in 0..<5 {

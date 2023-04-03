@@ -16,10 +16,10 @@ struct CommandResult: Decodable {
 
     init(from decoder: Decoder) throws {
         var container = try decoder.unkeyedContainer()
-        let ok = try container.decode(String.self)
-        let id = try container.decode(String.self)
-        let success = try container.decode(Bool.self)
-        let message = try container.decode(String.self)
+        let _ = try container.decode(String.self) // ok
+        let id = try container.decode(String.self) // id
+        let success = try container.decode(Bool.self) // success
+        let message = try container.decode(String.self) // message
         
         values = [id, success, message]
     }

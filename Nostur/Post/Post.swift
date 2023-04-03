@@ -167,7 +167,7 @@ class VPostTransformer {
         //        let input = "The quick brown fox jumps over the lazy lazy dog."
         let imageUrlPattern = ###"(?i)https?:\/\/\S+?\.(?:png|jpe?g|gif|webp|bmp)(\?\S+){0,1}\b"###
         let videoUrlPattern = ###"(?i)http(s?):\/\/\S+\.(mp4|mov)"###
-        let hashtagPattern = ###"\#\S+"###
+//        let hashtagPattern = ###"\#\S+"###
         let lightningInvoicePattern = ###"lnbc\S+"###
         let notePattern = ###"nostr:note1[023456789acdefghjklmnpqrstuvwxyz]{58}"###
         let neventPattern = ###"nostr:nevent1\S+"###

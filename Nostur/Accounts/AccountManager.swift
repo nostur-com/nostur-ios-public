@@ -93,7 +93,7 @@ class AccountManager {
     func wipeAccount(_ account:Account) {
         guard let pk = account.privateKey else { return }
     
-        var metaData = NSetMetadata(name: "ACCOUNT_DELETED", display_name: "ACCOUNT_DELETED", about: "", picture: "", banner: "", nip05: "", lud16: "", lud06: "")
+        let metaData = NSetMetadata(name: "ACCOUNT_DELETED", display_name: "ACCOUNT_DELETED", about: "", picture: "", banner: "", nip05: "", lud16: "", lud06: "")
 
         // wipe kind 0
         var newKind0Event = NEvent(content: metaData)

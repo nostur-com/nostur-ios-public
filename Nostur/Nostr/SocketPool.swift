@@ -95,7 +95,7 @@ final class SocketPool: ObservableObject {
     
     func sendMessage(_ message:ClientMessage, subscriptionId:String? = nil) {
         if (message.type == .REQ) {
-            let read = sockets.values.filter { $0.read == true }.count
+//            let read = sockets.values.filter { $0.read == true }.count
 //            print("⬇️⬇️ REQ ON \(read) RELAYS: \(String(message.message.prefix(260)))")
 //            print("⬇️⬇️ REQ ON \(read) RELAYS: \(String(message.message))")
         }

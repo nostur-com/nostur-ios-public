@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import LightningDevKit
+//import LightningDevKit
 
 struct NoteRow: View {//}, Equatable {
     //    static func == (lhs: NoteRow, rhs: NoteRow) -> Bool {
@@ -171,7 +171,7 @@ struct NoteRow_Previews: PreviewProvider {
         // TODO: find repost of 97a1a5dab19064061b45937c4e3523782d34608bd13278def9af4d5107ece65c
         // maybe: 7edef20143bb4df0c65dff3993bd9f7c5fb755fe6c8fa72cc847299afe52d8fa
         
-        let event0 = PreviewFetcher.fetchVPost("21a1b8e4083c11eab8f280dc0c0bddf3837949df75662e181ad117bd0bd5fdf3")
+//        let event0 = PreviewFetcher.fetchVPost("21a1b8e4083c11eab8f280dc0c0bddf3837949df75662e181ad117bd0bd5fdf3")
         //        let event0 = PreviewFetcher.fetchVPost("24ad21d57d59b03f4f9a8931f8bc4ccca84ed6ab257bf62cb84b0d04e0583118")
         //
         let event1 = PreviewFetcher.fetchVPost("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
@@ -188,14 +188,14 @@ struct NoteRow_Previews: PreviewProvider {
         
         let event7 = PreviewFetcher.fetchVPost("fdf989cbe5d26d874a4afaf8a78861fcd3267619e7db467a549a6b33c6dbeeab")
         
-        let img0 = PreviewFetcher.fetchVPost("f61016921961dfe93981f12d2eff92b0b7e8b3312c8a1cfdabf191d9536ba2ad")
-        let img1 = PreviewFetcher.fetchVPost("bf0ca9422b83a35fd3384d4149314bfff9f05e025b5138c9db85d90a41b03ad9")
-        let img2 = PreviewFetcher.fetchVPost("6687ee15b74160673449e2bf667d88e246d8101418e167679f2aa10df3bb7c06")
-        let img3 = PreviewFetcher.fetchVPost("82fcaaa11259aa5f505f1e3a6de06c2b7265179d3d05ef0b74824c4b7ff7eab8")
-        let img4 = PreviewFetcher.fetchVPost("5099246907e78edde0169c419543c01dd312fbe2645106c58f476efd65c2f66b")
+//        let img0 = PreviewFetcher.fetchVPost("f61016921961dfe93981f12d2eff92b0b7e8b3312c8a1cfdabf191d9536ba2ad")
+//        let img1 = PreviewFetcher.fetchVPost("bf0ca9422b83a35fd3384d4149314bfff9f05e025b5138c9db85d90a41b03ad9")
+//        let img2 = PreviewFetcher.fetchVPost("6687ee15b74160673449e2bf667d88e246d8101418e167679f2aa10df3bb7c06")
+//        let img3 = PreviewFetcher.fetchVPost("82fcaaa11259aa5f505f1e3a6de06c2b7265179d3d05ef0b74824c4b7ff7eab8")
+//        let img4 = PreviewFetcher.fetchVPost("5099246907e78edde0169c419543c01dd312fbe2645106c58f476efd65c2f66b")
         
-        let eventLong = PreviewFetcher.fetchVPost("9b34fd9a53398fb51493d68ecfd0d64ff922d0cdf5ffd8f0ffab46c9a3cf54e3")
-        
+//        let eventLong = PreviewFetcher.fetchVPost("9b34fd9a53398fb51493d68ecfd0d64ff922d0cdf5ffd8f0ffab46c9a3cf54e3")
+//
         List {
             
             //            Group {
@@ -231,17 +231,17 @@ struct NoteRow_Previews: PreviewProvider {
             //                }
             //
             Group {
-                if let vPost = PreviewFetcher.fetchVPost("102177a51af895883e9256b70b2caff6b9ef90230359ee20f6dc7851ec9e5d5a") {
-                    NoteRow(vPost: vPost)
-                }
-                if let vPost = PreviewFetcher.fetchVPost("6701067d37887024cd221c45e77cf3f0e1ef76589006739617ccc8962719a024") {
-                    NoteRow(vPost: vPost)
-                }
+//                if let vPost = PreviewFetcher.fetchVPost("102177a51af895883e9256b70b2caff6b9ef90230359ee20f6dc7851ec9e5d5a") {
+//                    NoteRow(vPost: vPost)
+//                }
+//                if let vPost = PreviewFetcher.fetchVPost("6701067d37887024cd221c45e77cf3f0e1ef76589006739617ccc8962719a024") {
+//                    NoteRow(vPost: vPost)
+//                }
                 
                 
-                if (eventLong != nil) {
-                    NoteRow(vPost: eventLong!)
-                }
+//                if (eventLong != nil) {
+//                    NoteRow(vPost: eventLong!)
+//                }
                 
                 if (event1 != nil) {
                     NoteRow(vPost: event1!)

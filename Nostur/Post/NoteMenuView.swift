@@ -51,26 +51,25 @@ struct NoteMenuView: View {
                 Label("Copy source", systemImage: "doc.on.clipboard")
             }
 //            if (vPost.vContact?.isFollowing ?? false) { // TODO:FIXME
-            if (1 == 2) {
-                Button {
-                    print("Unfollow @\(vPost.event.username ?? vPost.event.username)")
-                    if (vPost.event.contact != nil) {
-                        ns.unfollow(vPost.event.contact!)
-                    }
-                } label: {
-                    Label("Unfollow @\(vPost.event.username)", systemImage: "person.fill.xmark")
+            
+//            Button {
+//                print("Unfollow @\(vPost.event.username ?? vPost.event.username)")
+//                if (vPost.event.contact != nil) {
+//                    ns.unfollow(vPost.event.contact!)
+//                }
+//            } label: {
+//                Label("Unfollow @\(vPost.event.username)", systemImage: "person.fill.xmark")
+//            }
+            
+            Button {
+                print("Follow @\(vPost.event.username)")
+                if (vPost.event.contact != nil) {
+                    ns.follow(vPost.event.contact!)
                 }
+            } label: {
+                Label("Follow @\(vPost.event.username)", systemImage: "person.fill")
             }
-            else {
-                Button {
-                    print("Follow @\(vPost.event.username)")
-                    if (vPost.event.contact != nil) {
-                        ns.follow(vPost.event.contact!)
-                    }
-                } label: {
-                    Label("Follow @\(vPost.event.username)", systemImage: "person.fill")
-                }
-            }
+
             Button {
                 // TODO: MOVE TO NostureState, like follow/muteConversation etc.
                 print("Block @\(vPost.event.username)")
@@ -171,26 +170,25 @@ struct NoteMenuSheet: View {
                     Label("Copy source", systemImage: "doc.on.clipboard")
                 }
                 //            if (vPost.vContact?.isFollowing ?? false) { // TODO:FIXME
-                if (1 == 2) {
-                    Button {
-                        print("Unfollow @\(vPost.event.username ?? vPost.event.username)")
-                        if (vPost.event.contact != nil) {
-                            ns.unfollow(vPost.event.contact!)
-                        }
-                    } label: {
-                        Label("Unfollow @\(vPost.event.username)", systemImage: "person.fill.xmark")
+                
+//                Button {
+//                    print("Unfollow @\(vPost.event.username)")
+//                    if (vPost.event.contact != nil) {
+//                        ns.unfollow(vPost.event.contact!)
+//                    }
+//                } label: {
+//                    Label("Unfollow @\(vPost.event.username)", systemImage: "person.fill.xmark")
+//                }
+                
+                Button {
+                    print("Follow @\(vPost.event.username)")
+                    if (vPost.event.contact != nil) {
+                        ns.follow(vPost.event.contact!)
                     }
+                } label: {
+                    Label("Follow @\(vPost.event.username)", systemImage: "person.fill")
                 }
-                else {
-                    Button {
-                        print("Follow @\(vPost.event.username)")
-                        if (vPost.event.contact != nil) {
-                            ns.follow(vPost.event.contact!)
-                        }
-                    } label: {
-                        Label("Follow @\(vPost.event.username)", systemImage: "person.fill")
-                    }
-                }
+                
                 Button {
                     // TODO: MOVE TO NostureState, like follow/muteConversation etc.
                     print("Block @\(vPost.event.username)")

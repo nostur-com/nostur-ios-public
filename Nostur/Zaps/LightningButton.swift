@@ -134,10 +134,10 @@ extension LightningButton {
 
 struct LightningButton_Previews: PreviewProvider {
     static var previews: some View {
-        let pubkey = "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
-        let contact = PreviewFetcher.fetchContact(pubkey)
+//        let pubkey = "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
+//        let contact = PreviewFetcher.fetchContact(pubkey)
 
-        let event = PreviewFetcher.fetchEvent("49635b590782cb1ab1580bd7e9d85ba586e6e99e48664bacf65e71821ae79df1")
+        
 
         VStack {
 
@@ -147,8 +147,8 @@ struct LightningButton_Previews: PreviewProvider {
 
             Text("\n\n")
 
-            if (event != nil) {
-                LightningButton(tally:event!.zapTally, event: event!)
+            if let event = PreviewFetcher.fetchEvent("49635b590782cb1ab1580bd7e9d85ba586e6e99e48664bacf65e71821ae79df1") {
+                LightningButton(tally:event.zapTally, event: event)
             }
 
         }

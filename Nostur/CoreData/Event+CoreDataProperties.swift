@@ -243,8 +243,6 @@ extension Event {
         var newText = content ?? ""
         for index in tags.indices {
             if (tags[index].type == "e") {
-                
-                let key = try! NIP19(prefix: "note1", hexString: tags[index].id)
                 newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "nostr:\(note1(tags[index].id))")
 
             }
@@ -420,21 +418,19 @@ extension Event {
     static func updateZapTallyCache(_ event:Event, context:NSManagedObjectContext) -> Bool {
         let nEvent = event.toNEvent()
     
-        if (1 == 2) {
-            /*
-             TODO: Disabled for now, because all zaps will be ignored because we havent fetched zapperPubkey for anyone yet Consider valid on import, to immediatly show amounts. Use seperate queue to fetch and verify zapperpubkey, then invalidate if wrong later.
-             */
-        // we need to have contact.zapperPubkey first... ughh
-        let pTag = nEvent.tags.first { $0.type == "p" }
-        guard pTag != nil else { return false }
-        let contact = Contact.fetchByPubkey(pTag!.pubkey, context: context)
-        guard contact != nil else { return false }
-        
-        
-            
-            guard contact!.zapperPubkey != nil else { return false }
-            guard contact!.zapperPubkey! == event.pubkey else { return false }
-        }
+//        if (1 == 2) {
+//            /*
+//             TODO: Disabled for now, because all zaps will be ignored because we havent fetched zapperPubkey for anyone yet Consider valid on import, to immediatly show amounts. Use seperate queue to fetch and verify zapperpubkey, then invalidate if wrong later.
+//             */
+//            // we need to have contact.zapperPubkey first... ughh
+//            let pTag = nEvent.tags.first { $0.type == "p" }
+//            guard pTag != nil else { return false }
+//            let contact = Contact.fetchByPubkey(pTag!.pubkey, context: context)
+//            guard contact != nil else { return false }
+//
+//            guard contact!.zapperPubkey != nil else { return false }
+//            guard contact!.zapperPubkey! == event.pubkey else { return false }
+//        }
                 
         // zapped event
         guard let firstE = nEvent.firstE() else { return false }

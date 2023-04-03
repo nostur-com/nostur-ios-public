@@ -12,7 +12,7 @@ import CoreData
 // Handles profile links
 // Tag links
 // Other links
-// DOES NOT handle note links or image links, because those are embeds, handled by DetailContentRenderer
+// DOES NOT handle note links or image links, because those are embeds, handled by ContentRenderer
 class ContentLinkRenderer { // TEXT things
     let context:NSManagedObjectContext
     

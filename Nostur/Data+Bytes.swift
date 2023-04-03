@@ -9,10 +9,22 @@
 import Foundation
 
 extension Data {
+    
+    // This gives warning:
+    // Initialization of 'UnsafeMutableBufferPointer<Byte>' (aka 'UnsafeMutableBufferPointer<UInt8>') results in a dangling buffer pointer
+//    public func makeBytes() -> Bytes {
+//        var array = Bytes(repeating: 0, count: count)
+//        let buffer = UnsafeMutableBufferPointer(start: &array, count: count)
+//        _ = copyBytes(to: buffer)
+//        return array
+//    }
+    
+    // I asked ChatGPT to fix the warning:
     public func makeBytes() -> Bytes {
         var array = Bytes(repeating: 0, count: count)
-        let buffer = UnsafeMutableBufferPointer(start: &array, count: count)
-        _ = copyBytes(to: buffer)
+        array.withUnsafeMutableBytes { buffer in
+            _ = copyBytes(to: buffer)
+        }
         return array
     }
     
@@ -50,20 +62,20 @@ extension Data {
         return nil
     }
     
-    static func fromHex(_ hex: String) -> Data? {
-        var hex = hex
-        var data = Data()
-        while(hex.count > 0) {
-            let subIndex = hex.index(hex.startIndex, offsetBy: 2)
-            let c = String(hex[..<subIndex])
-            hex = String(hex[subIndex...])
-            var ch: UInt32 = 0
-            Scanner(string: c).scanHexInt32(&ch)
-            var char = UInt8(ch)
-            data.append(&char, count: 1)
-        }
-        return data
-    }
+//    static func fromHex(_ hex: String) -> Data? {
+//        var hex = hex
+//        var data = Data()
+//        while(hex.count > 0) {
+//            let subIndex = hex.index(hex.startIndex, offsetBy: 2)
+//            let c = String(hex[..<subIndex])
+//            hex = String(hex[subIndex...])
+//            var ch: UInt32 = 0
+//            Scanner(string: c).scanHexInt32(&ch)
+//            var char = UInt8(ch)
+//            data.append(&char, count: 1)
+//        }
+//        return data
+//    }
     
     func setLengthLeft(_ toBytes: UInt64, isNegative:Bool = false ) -> Data? {
         let existingLength = UInt64(self.count)

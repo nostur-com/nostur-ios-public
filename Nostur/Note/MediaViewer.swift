@@ -413,8 +413,8 @@ func getImgUrlsFromContent(_ content:String) -> [URL] {
 struct ImageViewer_Previews: PreviewProvider {
     static var previews: some View {
         
-        let content4 = ###"some images: https://nostur.com/screenshots/badges.png https://nostur.com/screenshots/multi-account.jpg https://nostur.com/screenshots/tagging.gif\nhttps://nostur.com/screenshots/zaps-revamped.png https://nostur.com/screenshots/detail-pane-ipad.jpg"###
-        
+//        let content4 = ###"some images: https://nostur.com/screenshots/badges.png https://nostur.com/screenshots/multi-account.jpg https://nostur.com/screenshots/tagging.gif\nhttps://nostur.com/screenshots/zaps-revamped.png https://nostur.com/screenshots/detail-pane-ipad.jpg"###
+//        
         
         let content1 = "one image: https://nostur.com/screenshots/badges.png dunno"
         

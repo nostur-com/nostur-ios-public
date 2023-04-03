@@ -243,9 +243,9 @@ extension Event {
 
             return badges
             // NIP-58: Clients SHOULD ignore a without corresponding e tag and viceversa. Badge Awards referenced by the e tags should contain the same a tag.
-            return badges.compactMap {
-                $0.badgeAward.toNEvent().badgeAtag?.value == $0.badge.badgeA ? $0 : nil
-            }
+//            return badges.compactMap {
+//                $0.badgeAward.toNEvent().badgeAtag?.value == $0.badge.badgeA ? $0 : nil
+//            }
         }
     }
 }

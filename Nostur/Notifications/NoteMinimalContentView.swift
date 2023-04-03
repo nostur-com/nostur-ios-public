@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import LightningDevKit
+//import LightningDevKit
 
 struct NoteMinimalContentView: View {
     

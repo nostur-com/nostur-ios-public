@@ -98,8 +98,15 @@ struct ProfilePicViewWrapper: View {
     
     var body: some View {
         //        EmptyView()
-        PFP(pubkey: "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", pictureUrl: contacts.first?.picture)
-            .frame(width: 150, height: 150)
+        VStack {
+            PFP(pubkey: "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", pictureUrl: contacts.first?.picture, size: 150)
+                .frame(width: 150, height: 150)
+                .background(.green)
+            
+            PFP(pubkey: "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", pictureUrl: contacts.first?.picture)
+                .frame(width: 50, height: 50)
+                .background(.red)
+        }
     }
 }
 

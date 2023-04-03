@@ -346,7 +346,7 @@ class EventsProvider: ObservableObject {
         description.url = defaultDirectoryURL.appendingPathComponent("Nostur.sqlite") // ("Nostur-iCloud.sqlite")
         description.configuration = "Default"
         
-        print("🎃🎃🎃🎃🎃🎃🎃🎃🎃🎃 \(description.url)")
+        print("🎃🎃🎃🎃🎃🎃🎃🎃🎃🎃 \(description.url?.absoluteString ?? "")")
         
         if inMemory {
             description.url = URL(fileURLWithPath: "/dev/null")
