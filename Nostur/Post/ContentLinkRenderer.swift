@@ -118,12 +118,17 @@ class ContentLinkRenderer { // TEXT things
             switch match.prefix(11) {
                 case "nostr:npub1":
                     let npub = String(match.dropFirst(6))
-                    let pubkey = pubkey(npub)
-                    if !plainText {
-                        replacement = "[@\(contactUsername(fromPubkey: pubkey, event: event).escapeMD())](nostur:p:\(pubkey))"
+                    do {
+                        let pubkey = try pubkey(npub)
+                        if !plainText {
+                            replacement = "[@\(contactUsername(fromPubkey: pubkey, event: event).escapeMD())](nostur:p:\(pubkey))"
+                        }
+                        else {
+                            replacement = "" + contactUsername(fromPubkey: pubkey, event: event)
+                        }
                     }
-                    else {
-                        replacement = "" + contactUsername(fromPubkey: pubkey, event: event)
+                    catch {
+                        print("problem decoding npub")
                     }
                 case "nostr:nprof":
                     let nprofile = String(match.dropFirst(6))
