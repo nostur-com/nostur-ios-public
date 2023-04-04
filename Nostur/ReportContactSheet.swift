@@ -51,8 +51,7 @@ struct ReportContactSheet: View {
                     guard let signedReport = NosturState.shared.reportContact(pubkey: contact.pubkey, reportType: reason, note: comment) else {
                         return
                     }
-                    print(signedReport.eventJson())
-//                    Unpublisher.shared.publishNow(signedReport)
+                    Unpublisher.shared.publishNow(signedReport)
                     dismiss()
                 }
             }

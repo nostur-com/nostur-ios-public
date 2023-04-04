@@ -50,8 +50,7 @@ struct ReportPostSheet: View {
                     guard let signedReport = NosturState.shared.report(vPost.event, reportType: reason, note: comment) else {
                         return
                     }
-                    print(signedReport.eventJson())
-//                    Unpublisher.shared.publishNow(signedReport)
+                    Unpublisher.shared.publishNow(signedReport)
                     dismiss()
                 }
             }
