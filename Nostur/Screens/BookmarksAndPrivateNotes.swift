@@ -34,6 +34,7 @@ struct BookmarksAndPrivateNotes: View {
                 }
                 Spacer()
             }
+            .padding(.top, 5)
             .withNavigationDestinations()
             .navigationTitle(selectedSubTab)
             .navigationBarHidden(true)

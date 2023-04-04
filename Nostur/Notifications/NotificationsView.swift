@@ -88,6 +88,7 @@ struct NotificationsView: View {
                 Text("No active account")
             }
         }
+        .padding(.top, 5)
         .navigationTitle(tab)
         .navigationBarHidden(true)
         .navigationBarTitleDisplayMode(.inline)

@@ -31,7 +31,7 @@ struct TabButton: View {
                 }
                 Divider()
                     .frame(height: 4)
-                    .background(.green)
+                    .background(Color("AccentColor"))
                     .opacity(selected ? 1 : 0.2)
             }
         }

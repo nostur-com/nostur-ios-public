@@ -52,8 +52,7 @@ struct Search: View {
                         ProfileRow(contact: contact)
                             .boxShadow()
                     }
-                }
-                LazyVStack {
+                    
                     ForEach(vPosts) { vPost in
                         NoteRow(vPost: vPost)
                             .boxShadow()
@@ -62,13 +61,12 @@ struct Search: View {
                             }
                     }
                 }
+                .background(Color("ListBackground"))
             }
-            .padding(10)
-            .background(Color("ListBackground"))
+//            .padding(0)
             .withNavigationDestinations()
-            
             .navigationTitle("Search")
-            //        .navigationBarHidden(true)
+            .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $debounceObject.text, placement: .navigationBarDrawer(displayMode: .always))
             .onChange(of: debounceObject.debouncedText) { searchString in
                 

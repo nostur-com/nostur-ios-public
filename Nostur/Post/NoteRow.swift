@@ -63,7 +63,7 @@ struct NoteRow: View {//}, Equatable {
             }
             // IS NOT A REPOST
             else {
-                Kind1(vPost: vPost, hideFooter: false, inThread:inThread)
+                Kind1(vPost: vPost, hideFooter: hideFooter, inThread:inThread)
                 //                .background(Color.random)
             }
         }
@@ -134,9 +134,9 @@ struct NoteRow: View {//}, Equatable {
                         FooterFragmentView(event: event)
                             .frame(height: 30)
                             .padding(.top, 10)
-                            .padding(.bottom, 10)
                     }
                 }
+                .padding(.bottom, 10)
             }
             .padding(.trailing, 10)
         }
