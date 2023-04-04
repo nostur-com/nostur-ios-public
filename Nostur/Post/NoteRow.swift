@@ -97,7 +97,6 @@ struct NoteRow: View {//}, Equatable {
         let nav:NavigationModel = .shared
         let sp:SocketPool = .shared
         @State var contextForVPost:VPost?
-        @EnvironmentObject var ns:NosturState
         @EnvironmentObject var up:Unpublisher
         
         init(vPost: VPost, hideFooter:Bool = true, inThread:Bool = false) {

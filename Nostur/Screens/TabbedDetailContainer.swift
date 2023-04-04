@@ -228,7 +228,7 @@ struct TabbedDetailContainer: View {
         }
         .navigationBarTitle("")
         .navigationBarTitleDisplayMode(.inline)
-        .navigationBarHidden(true)
+//        .navigationBarHidden(true)
         .padding(0)
         .onAppear {
 //            print(tm.tabs)

@@ -188,7 +188,6 @@ struct ProfileView: View {
                                     }
                                     Spacer()
                                 }
-                                //                                .ignoresSafeArea(edges: .top)
                             }
                             
                             VStack(alignment: .leading) {
@@ -248,12 +247,8 @@ struct ProfileView: View {
                                 
                                 HStack {
                                     Text("@\(contact.username)").foregroundColor(.secondary)
+                                    ContactPrivateNoteToggle(contact: contact)
                                     Menu {
-                                        Button {
-                                            UIPasteboard.general.string = pubkey
-                                        } label: {
-                                            Label("Copy public key hex \(String(pubkey.prefix(11)))...", systemImage: "doc.on.clipboard")
-                                        }
                                         Button {
                                             UIPasteboard.general.string = Contact.npub(pubkey)
                                         } label: {
@@ -266,10 +261,26 @@ struct ProfileView: View {
                                                 Label("Copy profile source", systemImage: "doc.on.clipboard")
                                             }
                                         }
+                                        
+                                        
+                                        Button {
+                                            ns.objectWillChange.send()
+                                            ns.account!.blockedPubkeys_ = ns.account!.blockedPubkeys_ + [contact.pubkey]
+                                            sendNotification(.blockListUpdated, ns.account!.blockedPubkeys_)
+                                        } label: {
+                                            Label("Block @\(contact.username)", systemImage: "slash.circle")
+                                        }
+                                        Button {
+                                            sendNotification(.reportContact, contact)
+                                        } label: {
+                                            Label("Report @\(contact.username)", systemImage: "flag")
+                                        }
+                                        
+                                        
                                     } label: {
-                                        Image(systemName: "person.badge.key.fill")
+                                        Image(systemName: "ellipsis")
+                                            .fontWeight(.bold)
                                     }
-                                    ContactPrivateNoteToggle(contact: contact)
                                     if (ns.followsYou(contact)) {
                                         Text("Follows you").font(.system(size: 12))
                                             .foregroundColor(.white)
@@ -296,10 +307,7 @@ struct ProfileView: View {
                                 //                                Spacer()
                             }
                             .padding(10)
-                            //                                .ignoresSafeArea(edges: .top)
-                            
                         }
-                        //                        .frame(maxHeight: (geo.size.height / 2))
                     }
                     Section {
                         VStack {
@@ -334,7 +342,7 @@ struct ProfileView: View {
                                 case "Relays":
                                     VStack {
                                         if clEvents.count != 0 {
-                                            ProfileRelaysView(clEvent: clEvents.first!)    
+                                            ProfileRelaysView(clEvent: clEvents.first!)
                                         }
                                         else {
                                             HStack {
@@ -383,7 +391,6 @@ struct ProfileView: View {
                         }
                         .padding(.top, 10)
                         .background(.regularMaterial)
-                        //                        .ignoresSafeArea(edges: .top)
                     }
                 }
             }
@@ -442,7 +449,7 @@ struct ProfileView: View {
             }
         }
         .task {
-//            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndBadges(pubkey: pubkey)))
+            //            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndBadges(pubkey: pubkey)))
             sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserProfileKinds(pubkey: pubkey, kinds: [0,3,30008])))
         }
         .fullScreenCover(isPresented: $profilePicViewerIsShown) {
@@ -459,18 +466,22 @@ struct ProfileView: View {
 struct ProfileView_Previews: PreviewProvider {
     static var previews: some View {
         let pubkey = "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240"
-        let f = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
+        //        let f = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
         let snowden = PreviewFetcher.fetchContact(pubkey)
-        let fabian = PreviewFetcher.fetchContact(f)
+        //        let fabian = PreviewFetcher.fetchContact(f)
         
         Group {
             if let contact = snowden {
-                ProfileView(contact: contact)
+                NavigationStack {
+                    ProfileView(contact: contact)
+                }
             }
             
-            if let contact = fabian {
-                ProfileView(contact: contact)
-            }
+            //            NavigationStack {
+            //                if let contact = fabian {
+            //                    ProfileView(contact: contact)
+            //                }
+            //            }
         }
         .withPreviewEnvironment()
     }

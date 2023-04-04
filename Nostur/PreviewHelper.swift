@@ -148,15 +148,16 @@ struct PreviewFetcher {
         return nil
     }
     
-    static func fetchContact(_ pubkey:String, context:NSManagedObjectContext? = nil) -> Contact? {
+    static func fetchContact(_ pubkey:String? = nil, context:NSManagedObjectContext? = nil) -> Contact? {
         let request = NSFetchRequest<Contact>(entityName: "Contact")
-//        request.entity = Contact.entity()
-        request.predicate = NSPredicate(format: "pubkey == %@", pubkey)
+        if pubkey != nil {
+            request.predicate = NSPredicate(format: "pubkey == %@", pubkey!)
+        }
         request.sortDescriptors = []
         
         if (context != nil) {
-            return try! context!.fetch(request).first
+            return try! context!.fetch(request).randomElement()
         }
-        return try! PreviewFetcher.viewContext.fetch(request).first
+        return try! PreviewFetcher.viewContext.fetch(request).randomElement()
     }
 }

@@ -21,58 +21,71 @@ public extension View {
 private struct WithSheets: ViewModifier {
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
+    
+    // Sheet contents
     @State var privateNote:PrivateNote? = nil
     @State var post:Event? = nil
     @State var contact:Contact? = nil
     @State var fullImage:FullScreenItem? = nil
-    
-    //
     @State var restoreContactSheet = false
     @State var removed:RemovedPubkeys? = nil
     @State var reportPost:ReportPost? = nil
+    @State var reportContact:ReportContact? = nil
     
     func body(content: Content) -> some View {
         content
+            .onReceive(receiveNotification(.fullScreenView)) { notification in
+                let item = notification.object as! FullScreenItem
+                fullImage = item
+            }
             .fullScreenCover(item: $fullImage) { f in
                 FullImageViewer(fullImageURL: f.url)
+            }
+        
+            .onReceive(receiveNotification(.editingPrivateNote)) { notification in
+                let note = notification.object as! PrivateNote
+                self.privateNote = note
             }
             .sheet(item: $privateNote) { note in
                 EditPrivateNoteSheet(privateNote: note, onDismiss: onDismiss)
             }
+           
+            .onReceive(receiveNotification(.newPrivateNoteOnPost)) { notification in
+                let id = notification.object as! String
+                post = try! Event.fetchEvent(id: id, context: viewContext)
+            }
             .sheet(item: $post) { post in
                 NewPrivateNoteSheet(post: post, onDismiss: onDismiss)
+            }
+             
+            .onReceive(receiveNotification(.newPrivateNoteOnContact)) { notification in
+                let pubkey = notification.object as! String
+                contact = Contact.fetchByPubkey(pubkey, context: viewContext)
             }
             .sheet(item: $contact) { contact in
                 NewPrivateNoteSheet(contact: contact, onDismiss: onDismiss)
             }
+        
+            .onReceive(receiveNotification(.reportPost), perform: { notification in
+                let post = notification.object as! VPost
+                reportPost = ReportPost(vPost: post)
+            })
             .sheet(item: $reportPost, content: { reportPost in
                 NavigationStack {
                     ReportPostSheet(vPost: reportPost.vPost)
                 }
             })
         
-            .onReceive(receiveNotification(.reportPost), perform: { notification in
-                let post = notification.object as! VPost
-                reportPost = ReportPost(vPost: post)
+            .onReceive(receiveNotification(.reportContact), perform: { notification in
+                let contact = notification.object as! Contact
+                reportContact = ReportContact(contact: contact)
             })
-        
-        
-            .onReceive(receiveNotification(.editingPrivateNote)) { notification in
-                let note = notification.object as! PrivateNote
-                self.privateNote = note
-            }
-            .onReceive(receiveNotification(.newPrivateNoteOnPost)) { notification in
-                let id = notification.object as! String
-                post = try! Event.fetchEvent(id: id, context: viewContext)
-            }
-            .onReceive(receiveNotification(.newPrivateNoteOnContact)) { notification in
-                let pubkey = notification.object as! String
-                contact = Contact.fetchByPubkey(pubkey, context: viewContext)
-            }
-            .onReceive(receiveNotification(.fullScreenView)) { notification in
-                let item = notification.object as! FullScreenItem
-                fullImage = item
-            }
+            .sheet(item: $reportContact, content: { reportContact in
+                NavigationStack {
+                    ReportContactSheet(contact: reportContact.contact)
+                }
+            })
+            
             .onReceive(receiveNotification(.requestConfirmationChangedFollows)) { notification in
                 let removed = notification.object as! Set<String>
                 self.removed = RemovedPubkeys(pubkeys: removed)
@@ -108,3 +121,9 @@ struct ReportPost: Identifiable {
     let id = UUID()
     let vPost:VPost
 }
+
+struct ReportContact: Identifiable {
+    let id = UUID()
+    let contact:Contact
+}
+

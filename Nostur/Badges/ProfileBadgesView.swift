@@ -123,6 +123,7 @@ struct ProfileBadgesView: View {
                 BadgeIcon(badge: profileBadge.badge)
                     .onTapGesture { badgeInfoIsShown = true }
             }
+            Spacer()
         }
         .sheet(isPresented: $badgeInfoIsShown) {
             NavigationStack {
