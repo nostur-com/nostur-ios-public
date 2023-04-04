@@ -133,25 +133,32 @@ struct PostOrThread: View {
             }
         }
         else {
-            NoteRow(vPost: vPost)
-                .id(vPost.id)
-                .background(Color.systemBackground)
-                .onTapGesture {
-                    if (vPost.event.isRepost) {
-                        if let vPostRepost = vPost.event.firstQuote?.toVPost() {
-                            nav.navigateTo(vPostRepost)
-                        }
-                        else if let firstQuoteId = vPost.event.firstQuoteId {
-                            nav.navigateTo(NotePath(id: firstQuoteId))
+            VStack(spacing: 0) {
+                if vPost.isTruncated {
+                    Button("Show this thread") {
+                        nav.navigateTo(vPost)
+                    }.padding(.top, 10)
+                }
+                NoteRow(vPost: vPost, inThread: false)
+                    .id(vPost.id)
+                    .background(Color.systemBackground)
+                    .onTapGesture {
+                        if (vPost.event.isRepost) {
+                            if let vPostRepost = vPost.event.firstQuote?.toVPost() {
+                                nav.navigateTo(vPostRepost)
+                            }
+                            else if let firstQuoteId = vPost.event.firstQuoteId {
+                                nav.navigateTo(NotePath(id: firstQuoteId))
+                            }
+                            else {
+                                nav.navigateTo(vPost)
+                            }
                         }
                         else {
                             nav.navigateTo(vPost)
                         }
                     }
-                    else {
-                        nav.navigateTo(vPost)
-                    }
-                }
+            }
         }
     }
 }

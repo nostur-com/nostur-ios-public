@@ -128,14 +128,30 @@ class LVM: NSObject, ObservableObject {
                 }
             }
             else {
-//                return // TODO: FIXME
-                // truncate new replies for threads already on screen
-                let addedTruncated = self.renderNewLeafs(added, onScreen: currentVPosts)
-//                let currentVPostsCount = threadCount(currentVPosts)
-                
-                DispatchQueue.main.async {
-                    self.lvmState.vPosts = currentVPosts + addedTruncated
-                    self.lvmCounter.count = self.lvmCounter.count + threadCount(addedTruncated)
+                // if we have just 1 new post, and it is a reply to the last post on screen, merge it
+                // hmmm added,last is not enough the know if just 1 was added
+                if added.last?.parentPosts.last?.id == currentVPosts.last?.id {
+                    let lastCountValue = currentVPosts.last?.threadPostsCount ?? 0
+                    var truncateLast = added.last!
+                    truncateLast.parentPosts = truncateLast.parentPosts.suffix(lastCountValue)
+                    truncateLast.threadPostsCount = 1 + lastCountValue
+                    let currentAndJustOneExtra = Array(currentVPosts.dropLast(1)) + [truncateLast]
+                    
+                    DispatchQueue.main.async {
+                        self.lvmState.vPosts = currentAndJustOneExtra
+                        self.lvmCounter.count = self.lvmCounter.count + 1
+                    }
+                }
+                else {
+                    //                return // TODO: FIXME
+                    // truncate new replies for threads already on screen
+                    let addedTruncated = self.renderNewLeafs(added, onScreen: currentVPosts)
+                    //                let currentVPostsCount = threadCount(currentVPosts)
+                    
+                    DispatchQueue.main.async {
+                        self.lvmState.vPosts = currentVPosts + addedTruncated
+                        self.lvmCounter.count = self.lvmCounter.count + threadCount(addedTruncated)
+                    }
                 }
             }
         }
