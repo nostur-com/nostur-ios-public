@@ -15,10 +15,14 @@ struct ReportPostSheet: View {
     
     var body: some View {
         VStack {
-            NoteRow(vPost: vPost, hideFooter: true)
-                .disabled(true)
-                .opacity(0.8)
-                .boxShadow()
+            ScrollView {
+                NoteRow(vPost: vPost, hideFooter: true)
+                    .disabled(true)
+                    .opacity(0.8)
+                    .boxShadow()
+            }
+            .frame(maxHeight: 200)
+            .clipped()
             
             Form {
                 Section(header: Text("Report Information"), footer: VStack {
@@ -35,6 +39,7 @@ struct ReportPostSheet: View {
                     TextField("Extra information", text: $comment)
                 }
             }
+            .frame(maxHeight: .infinity)
             Spacer()
         }
         .padding()
