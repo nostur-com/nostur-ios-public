@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21513" systemVersion="22D68" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21754" systemVersion="22E252" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="Account" representedClassName=".Account" syncable="YES">
         <attribute name="about" attributeType="String" defaultValueString=""/>
         <attribute name="banner" attributeType="String" defaultValueString=""/>
@@ -51,6 +51,7 @@
     <entity name="Event" representedClassName=".Event" elementID="mentionsCount" syncable="YES">
         <attribute name="content" optional="YES" attributeType="String"/>
         <attribute name="created_at" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="deletedById" optional="YES" attributeType="String"/>
         <attribute name="dmAccepted" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="firstQuoteId" optional="YES" attributeType="String"/>
         <attribute name="id" attributeType="String"/>

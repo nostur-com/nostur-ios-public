@@ -194,11 +194,11 @@ struct RequestMessage {
         let pubs = JSON(short(pubkeys)).rawString(.utf8, options: .init(rawValue: 0))
         if since != nil {
             return """
-["REQ", "\(sub)", {"authors": \(pubs ?? "[]"), "kinds": [0,1,6], "limit": \(limit), "since": \(since!.timestamp)}]
+["REQ", "\(sub)", {"authors": \(pubs ?? "[]"), "kinds": [0,1,5,6], "limit": \(limit), "since": \(since!.timestamp)}]
 """
         }
         return """
-["REQ", "\(sub)", {"authors": \(pubs ?? "[]"), "kinds": [0,1,6], "limit": \(limit)}]
+["REQ", "\(sub)", {"authors": \(pubs ?? "[]"), "kinds": [0,1,5,6], "limit": \(limit)}]
 """
     }
     
@@ -374,6 +374,15 @@ struct EventMessageBuilder {
         reactionEvent.tags = tags
         
         return reactionEvent
+    }
+    
+    static func makeDeleteEvent(eventId: String) -> NEvent {
+        var event = NEvent(content: "")
+        event.kind = .delete
+        event.tags = [
+            NEventTag(type: "e", otherInformation: eventId),
+        ]
+        return event
     }
     
     static func makeReportEvent(pubkey:String, eventId:String, type:ReportType, note:String = "") -> NEvent {

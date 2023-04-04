@@ -55,6 +55,8 @@ extension Event {
     @NSManaged public var replies: Set<Event>?
     
     @NSManaged public var contacts: Set<Contact>?
+    
+    @NSManaged public var deletedById: String?
 
 
 //    // helper
@@ -914,6 +916,22 @@ extension Event {
                 _ = try context.execute(batchDelete) as! NSBatchDeleteResult
             } catch {
                 print("🔴🔴 Failed to delete older kind 3 events")
+            }
+        }
+        
+        if event.kind == .delete {
+            let eventIdsToDelete = event.eTags()
+            
+            let eventIdsToDeleteReq = NSFetchRequest<Event>(entityName: "Event")
+            eventIdsToDeleteReq.predicate = NSPredicate(format: "kind IN {1,6} AND id IN %@", eventIdsToDelete)
+            eventIdsToDeleteReq.sortDescriptors = []
+            if let eventsToDelete = try? context.fetch(eventIdsToDeleteReq) {
+                for d in eventsToDelete {
+                    if (d.pubkey == event.publicKey) {
+                        d.objectWillChange.send()
+                        d.deletedById = event.id
+                    }
+                }
             }
         }
         

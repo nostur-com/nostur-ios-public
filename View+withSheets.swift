@@ -22,15 +22,20 @@ private struct WithSheets: ViewModifier {
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
     
-    // Sheet contents
+    // Sheet contents (item based)
     @State var privateNote:PrivateNote? = nil
     @State var post:Event? = nil
     @State var contact:Contact? = nil
     @State var fullImage:FullScreenItem? = nil
-    @State var restoreContactSheet = false
-    @State var removed:RemovedPubkeys? = nil
     @State var reportPost:ReportPost? = nil
     @State var reportContact:ReportContact? = nil
+    
+    // Confirmation dialogs
+    @State var restoreContactSheet = false
+    @State var removed:RemovedPubkeys? = nil
+    
+    @State var deletePostSheet = false
+    @State var deletePost:DeletePost? = nil
     
     func body(content: Content) -> some View {
         content
@@ -101,6 +106,21 @@ private struct WithSheets: ViewModifier {
                 }
                 .keyboardShortcut(.defaultAction)
             })
+        
+            .onReceive(receiveNotification(.requestDeletePost)) { notification in
+                let eventId = notification.object as! String
+                self.deletePost = DeletePost(eventId: eventId)
+                self.deletePostSheet = true
+            }
+            .confirmationDialog("It's up to relays and other apps to honor your request", isPresented: $deletePostSheet, titleVisibility: .visible,  actions: {
+                Button("Request delete", role: .destructive) {
+                    guard let deletePost = self.deletePost else { return }
+                    guard let signedDeletion = NosturState.shared.deletePost(deletePost.eventId) else {
+                        return
+                    }
+                    Unpublisher.shared.publishNow(signedDeletion)
+                }
+            })
     }
     
     func onDismiss() {
@@ -127,3 +147,8 @@ struct ReportContact: Identifiable {
     let contact:Contact
 }
 
+
+struct DeletePost: Identifiable {
+    let id = UUID()
+    let eventId:String
+}

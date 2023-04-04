@@ -29,62 +29,68 @@ struct NoteRow: View {//}, Equatable {
     
     var body: some View {
         let _ = Self._printChanges()
-        VStack (alignment: .leading) {
-            if (event.isRepost) {
-                HStack(spacing:4) {
-                    Image(systemName: "arrow.2.squarepath")
-                        .fontWeight(.bold)
-                        .scaleEffect(0.6)
-                    Text("**\(vPost.displayName) reposted**").font(.subheadline)
-                        .onTapGesture {
-                            UIPasteboard.general.string = event.toNEvent().eventJson()
+        if event.deletedById == nil {
+            VStack (alignment: .leading) {
+                if (event.isRepost) {
+                    HStack(spacing:4) {
+                        Image(systemName: "arrow.2.squarepath")
+                            .fontWeight(.bold)
+                            .scaleEffect(0.6)
+                        Text("**\(vPost.displayName) reposted**").font(.subheadline)
+                            .onTapGesture {
+                                UIPasteboard.general.string = event.toNEvent().eventJson()
+                            }
+                    }
+                    .foregroundColor(.gray)
+                    .onTapGesture {
+                        nav.navigateTo(ContactPath(key: vPost.event.pubkey))
+                    }
+                    .padding(.leading, 40)
+                }
+                
+                if event.isRepost {
+                    // IS REPOST BUT NEED TO FETCH THE REPOSTED POST
+                    if (event.firstQuoteId != nil && event.firstQuote == nil) {
+                        CenteredProgressView().onAppear {
+                            // fetch repost
+                            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.firstQuoteId!)))
                         }
-                }
-                .foregroundColor(.gray)
-                .onTapGesture {
-                    nav.navigateTo(ContactPath(key: vPost.event.pubkey))
-                }
-                .padding(.leading, 40)
-            }
-            
-            if event.isRepost {
-                // IS REPOST BUT NEED TO FETCH THE REPOSTED POST
-                if (event.firstQuoteId != nil && event.firstQuote == nil) {
-                    CenteredProgressView().onAppear {
-                        // fetch repost
-                        sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.firstQuoteId!)))
+                    }
+                    else {
+                        if let firstQuoteId = event.firstQuoteId {
+                            Kind1ById(id: firstQuoteId, hideFooter: false)
+                        }
                     }
                 }
+                // IS NOT A REPOST
                 else {
-                    if let firstQuoteId = event.firstQuoteId {
-                        Kind1ById(id: firstQuoteId, hideFooter: false)
-                    }
+                    Kind1(vPost: vPost, hideFooter: hideFooter, inThread:inThread)
+                    //                .background(Color.random)
                 }
             }
-            // IS NOT A REPOST
-            else {
-                Kind1(vPost: vPost, hideFooter: hideFooter, inThread:inThread)
-                //                .background(Color.random)
+            .padding(.top, 20)
+            .onAppear {
+                //            guard 1 == 2 else { return } // performance check
+                //            print("🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴 MY FACE IS APPEAR")
+                // should fetch setMetaData if
+                // No Contact
+                // Contact updated_at is very old
+                // followed contact meta data refresh should be updated at app wake up probably
+                if (event.contact == nil || event.contact?.metadata_created_at == 0) {
+                    print("🔴🔴 NoteRow.onAppear vPost.vContact == nil so: REQ.0:\(event.pubkey)")
+                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.pubkey))) // TODO: MOVE TO VM
+                }
+                if (event.isRepost && event.firstQuote != nil && event.firstQuote!.contact != nil) {
+                    if (event.firstQuote!.contact!.metadata_created_at == 0) {
+                        print("🔴🔴 NoteRow.onAppear firstQuite.vContact == nil so: REQ.0:\(event.firstQuote!.pubkey)")
+                        sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.firstQuote!.pubkey))) // TODO: MOVE TO VM
+                    }
+                }
             }
         }
-        .padding(.top, 20)
-        .onAppear {
-            //            guard 1 == 2 else { return } // performance check
-            //            print("🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴 MY FACE IS APPEAR")
-            // should fetch setMetaData if
-            // No Contact
-            // Contact updated_at is very old
-            // followed contact meta data refresh should be updated at app wake up probably
-            if (event.contact == nil || event.contact?.metadata_created_at == 0) {
-                print("🔴🔴 NoteRow.onAppear vPost.vContact == nil so: REQ.0:\(event.pubkey)")
-                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.pubkey))) // TODO: MOVE TO VM
-            }
-            if (event.isRepost && event.firstQuote != nil && event.firstQuote!.contact != nil) {
-                if (event.firstQuote!.contact!.metadata_created_at == 0) {
-                    print("🔴🔴 NoteRow.onAppear firstQuite.vContact == nil so: REQ.0:\(event.firstQuote!.pubkey)")
-                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.firstQuote!.pubkey))) // TODO: MOVE TO VM
-                }
-            }
+        else {
+            Text("_Post deleted by author_")
+                .hCentered()
         }
     }
     

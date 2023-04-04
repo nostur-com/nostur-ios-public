@@ -77,6 +77,7 @@ public enum NEventKind: Codable, Equatable {
     case recommentServer
     case contactList
     case directMessage
+    case delete
     case repost
     case reaction
     case report
@@ -95,6 +96,7 @@ public enum NEventKind: Codable, Equatable {
         case     2: self = .recommentServer
         case     3: self = .contactList
         case     4: self = .directMessage
+        case     5: self = .delete
         case     6: self = .repost
         case     7: self = .reaction
         case  1984: self = .report
@@ -115,6 +117,7 @@ public enum NEventKind: Codable, Equatable {
         case .recommentServer:      return 2
         case .contactList:          return 3
         case .directMessage:        return 4
+        case .delete:               return 5
         case .repost:               return 6
         case .reaction:             return 7
         case .report:               return 1984

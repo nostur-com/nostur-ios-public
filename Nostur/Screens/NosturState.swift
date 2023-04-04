@@ -393,6 +393,18 @@ final class NosturState : ObservableObject {
         }
         return signedEvent
     }
+    
+    func deletePost(_ eventId:String) -> NEvent? {
+        guard account?.privateKey != nil else { readOnlyAccountSheetShown = true; return nil }
+        
+        let deletion = EventMessageBuilder.makeDeleteEvent(eventId: eventId)
+
+        guard let signedEvent = try? signEvent(deletion) else {
+            print("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
+            return nil
+        }
+        return signedEvent
+    }
 }
 
 

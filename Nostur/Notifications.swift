@@ -148,4 +148,8 @@ extension Notification.Name {
     static var reportContact: Notification.Name {
         return Notification.Name("reportContact")
     }
+    
+    static var requestDeletePost: Notification.Name {
+        return Notification.Name("requestDeletePost")
+    }
 }

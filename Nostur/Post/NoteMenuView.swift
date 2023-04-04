@@ -85,6 +85,12 @@ struct NoteMenuView: View {
                 Label("Report", systemImage: "flag")
             }
             
+            if (NosturState.shared.activeAccountPublicKey == event.pubkey) {
+                Button { sendNotification(.requestDeletePost, event.id) } label: {
+                    Label("Delete", systemImage: "trash")
+                }
+            }
+            
             Button {
                 guard ns.account != nil else { return }
                 let nEvent = vPost.event.toNEvent()

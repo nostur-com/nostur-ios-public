@@ -105,55 +105,69 @@ struct PostAndParent: View {
             }
             // PARENT: IF AVAILABLE, RENDER IT
             else if (event.replyTo != nil) {
-                PostAndParent(vPost: event.replyTo!.toVPost()!, isParent: true)
+                if event.replyTo!.deletedById == nil {
+                    PostAndParent(vPost: event.replyTo!.toVPost()!, isParent: true)
+                }
+                else {
+                    Text("_Post deleted by author_")
+                        .hCentered()
+                }
             }
             // OUR (DETAIL) REPLY:
             // MARK: DETAIL NOTE
             VStack(alignment: .leading, spacing: 3) {
-                // PFP | NAME/USERNAME/AGO
-                HStack {
-                    NavigationLink(value: ContactPath(key: event.pubkey), label: {
-                        PFP(pubkey: event.pubkey, pictureUrl: event.contact?.picture, size: 50)
-                    })
-                    
-                    VStack(alignment: .leading) { // name + reply + context menu
-                        NoteHeaderView(vPost: vPost, singleLine: isParent)
-                        if (isParent) {
-                            ReplyingToFragmentView(vPost: vPost)
-                        }
-                    }//.background(.red)
-                    Spacer()
-                    EventPrivateNoteToggle(event: event)
-                    NoteMenuView(vPost: vPost)
-                }//.background(.yellow)
-                .id(event.id)
-                
-                if (!isParent) {
+                if event.deletedById == nil {
+                    // PFP | NAME/USERNAME/AGO
                     HStack {
-                        ReplyingToFragmentView(vPost: vPost)
+                        NavigationLink(value: ContactPath(key: event.pubkey), label: {
+                            PFP(pubkey: event.pubkey, pictureUrl: event.contact?.picture, size: 50)
+                        })
+                        
+                        VStack(alignment: .leading) { // name + reply + context menu
+                            NoteHeaderView(vPost: vPost, singleLine: isParent)
+                            if (isParent) {
+                                ReplyingToFragmentView(vPost: vPost)
+                            }
+                        }//.background(.red)
                         Spacer()
+                        EventPrivateNoteToggle(event: event)
+                        NoteMenuView(vPost: vPost)
+                    }//.background(.yellow)
+                    .id(event.id)
+                    
+                    if (!isParent) {
+                        HStack {
+                            ReplyingToFragmentView(vPost: vPost)
+                            Spacer()
+                        }
+                    }
+                    
+                    VStack(alignment:.leading) {
+                        ContentRenderer(vPost: vPost, isDetail: true)
+                    }
+                    .padding(.leading, isParent ? INDENT : 0)
+                    
+                    if (isParent) {
+                        FooterFragmentView(event: event)
+                            .padding(.leading, isParent ? INDENT : 0)
+                            .padding(.vertical, 5)
+                            .padding(.trailing, 5)
+                        Divider()
+                    }
+                    else {
+                        DetailFooterFragment(event: event)
+                            .padding(.leading, isParent ? INDENT : 0)
+                        FooterFragmentView(event: event)
+                            .padding(.vertical, 5)
+                        Divider()
                     }
                 }
-                
-                VStack(alignment:.leading) {
-                    ContentRenderer(vPost: vPost, isDetail: true)
-                }
-                .padding(.leading, isParent ? INDENT : 0)
-                
-                if (isParent) {
-                    FooterFragmentView(event: event)
-                        .padding(.leading, isParent ? INDENT : 0)
-                        .padding(.vertical, 5)
-                        .padding(.trailing, 5)
-                    Divider()
-                }
                 else {
-                    DetailFooterFragment(event: event)
-                        .padding(.leading, isParent ? INDENT : 0)
-                    FooterFragmentView(event: event)
-                        .padding(.vertical, 5)
-                    Divider()
-                    
+                    Text("_Post deleted by author_")
+                        .hCentered()
+                }
+                
+                if (!isParent) {
                     // MARK: REPLIES TO OUR MAIN NOTE
                     LazyVStack {
                         ForEach (event.replies_.filter({ event in
@@ -182,6 +196,7 @@ struct PostAndParent: View {
                     
                     Spacer()
                 }
+                
             }
             .padding(!isParent ? 10 : 10)
             .background(MaybeThreadLine(isParent: isParent))
