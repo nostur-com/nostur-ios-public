@@ -88,6 +88,12 @@ extension Contact : Identifiable {
     var npub:String { try! NIP19(prefix: "npub", hexString: pubkey).displayString }
     var authorKey:String { String(npub.prefix(11)) }
     
+    var handle:String { // for autocomplete: name -> display_name -> authorKey. No nil or ""
+        let nameOrNil = name != "" ? name : nil // handle "" as nil
+        let displayNameOrNil = display_name != "" ? display_name : nil // handle "" as nil
+        return nameOrNil ?? displayNameOrNil ?? npub
+    }
+    
     var username:String {
         if (SettingsStore.shared.hideEmojisInNames) {
             if (name != nil) {

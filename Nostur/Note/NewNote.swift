@@ -54,6 +54,7 @@ struct NewNote: View {
     var firstResults:[Contact] { Array(contacts.prefix(30)) }
     
     @State var tapOrFirstResults:[Contact] = []
+    @State var previewEvent:Event?
     
     var body: some View {
         VStack {
@@ -96,7 +97,7 @@ struct NewNote: View {
                         ForEach(firstResults) { contact in
                             ContactSearchResultRow(contact: contact) {
                                 guard vm.textView != nil else { return }
-                                let mentionName = contact.username != "" ? contact.username : contact.npub
+                                let mentionName = contact.handle
                                 vm.text = vm.text.dropLast(vm.term.count) + mentionName
                                 tapOrFirstResults.append(contact)
                                 vm.mentioning = false
@@ -117,13 +118,14 @@ struct NewNote: View {
         }
         .padding(10)
         .onChange(of: firstResults) { newResults in
-            guard let firstResult = newResults.first else { return }
-            tapOrFirstResults.append(firstResult)
+            guard newResults.count > 0 else { return }
+            if let exactResult = newResults.first(where: { $0.handle.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) == vm.term.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) }) {
+                tapOrFirstResults.insert(exactResult, at:0)
+                updateEventWithNewText()
+            }
         }
         .onChange(of: vm.debouncedText) { mentionString in
-//            let mentionStringTrimmed = mentionString.trimmingCharacters(in: .whitespacesAndNewlines)
             guard let account = ns.account else { return }
-            
             
             if let mentionTerm = mentionTerm(mentionString) {
                 print ("mentionTerm \(mentionTerm) lastHit: \(vm.lastHit)")
@@ -134,22 +136,14 @@ struct NewNote: View {
                 else {
                     vm.mentioning = true
                     vm.term = mentionTerm
-                    contacts.nsPredicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@) AND NOT pubkey IN %@", mentionTerm, mentionTerm, account.blockedPubkeys_)
+                    contacts.nsPredicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@) AND NOT pubkey IN %@", mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), account.blockedPubkeys_)
                 }
             }
             else {
                 vm.mentioning = false
             }
             
-            var textToReplaceWithNpubs = vm.text
-            for contact in tapOrFirstResults {
-                textToReplaceWithNpubs = textToReplaceWithNpubs.replacingOccurrences(of: contact.username, with: contact.npub, options: .caseInsensitive)
-            }
-            if (vm.nEvent == nil) {
-                vm.nEvent = NEvent(content: textToReplaceWithNpubs)
-            } else {
-                vm.nEvent!.content = textToReplaceWithNpubs
-            }
+            updateEventWithNewText()
             
         }
         .toolbar {
@@ -160,15 +154,44 @@ struct NewNote: View {
                     Text("Cancel")
                 }
             }
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    sendNow()
-                } label: {
-                    Text("Post")
+            ToolbarItem {
+                Button("Preview") {
+                    guard let account = ns.account else { return }
+                    guard var nEvent = vm.nEvent else { return }
+                    nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
+                    nEvent = putHashtagsInTags(nEvent)
+                    nEvent.publicKey = account.publicKey
+                    
+                    if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
+                        nEvent.content = replaceNsecWithHunter2(nEvent.content)
+                    }
+                    self.previewEvent = createPreviewEvent(nEvent)
                 }
+                .cornerRadius(20)
+            }
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button("Post") { sendNow() }
                 .buttonStyle(.borderedProminent)
                 .cornerRadius(20)
             }
+        }
+        .sheet(item: $previewEvent) { previewEvent in
+            NavigationStack {
+                PostPreview(previewEvent: previewEvent, sendNow: self.sendNow)
+            }
+        }
+    }
+    
+    // Replaces "@handles in text with @npubs", which will later be replaced with #[index], and in a future update with nostr:..
+    func updateEventWithNewText() {
+        var textToReplaceWithNpubs = vm.text
+        for contact in tapOrFirstResults.sorted(by: { $0.handle.count > $1.handle.count }) { // .count so we replace @TestMacOS before partial match @test
+            textToReplaceWithNpubs = textToReplaceWithNpubs.replacingOccurrences(of: "@\(contact.handle)", with: "@\(contact.npub)", options: .caseInsensitive)
+        }
+        if (vm.nEvent == nil) {
+            vm.nEvent = NEvent(content: textToReplaceWithNpubs)
+        } else {
+            vm.nEvent!.content = textToReplaceWithNpubs
         }
     }
     
@@ -194,8 +217,11 @@ struct NewNote: View {
 struct NewNote_Previews: PreviewProvider {
     @State static var noteCancellationId:UUID?
     static var previews: some View {
-        NewNote(noteCancellationId: $noteCancellationId)
-            .withPreviewEnvironment()
+        NavigationStack {
+            NewNote(noteCancellationId: $noteCancellationId)
+                
+        }
+        .withPreviewEnvironment()
     }
 }
 

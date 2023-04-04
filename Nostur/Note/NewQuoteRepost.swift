@@ -26,6 +26,7 @@ struct NewQuoteRepost: View {
     var firstResults:[Contact] { Array(contacts.prefix(30)) }
     
     @State var tapOrFirstResults:[Contact] = []
+    @State var previewEvent:Event?
     
     init(quotingEvent:Event) {
         self.quotingEvent = quotingEvent
@@ -64,7 +65,9 @@ struct NewQuoteRepost: View {
                                     }
                                     .frame(minHeight: 50, maxHeight: 500)
 //                                    .frame(minHeight: 60, idealHeight: 175, maxHeight: 250, alignment: .top)
-                                MinimalQuotedNoteFragment(vPost: quotingEvent.toVPost()!)
+//                                QuoteById(id: quotingEvent.id)
+                                QuotedNoteFragmentView(vPost: quotingEvent.toVPost()!)
+//                                MinimalQuotedNoteFragment(vPost: quotingEvent.toVPost()!)
                                     .frame(minHeight: 250, maxHeight: 500)
                                 Spacer()
                             }
@@ -77,7 +80,7 @@ struct NewQuoteRepost: View {
                                 ForEach(firstResults) { contact in
                                     ContactSearchResultRow(contact: contact) {
                                         guard vm.textView != nil else { return }
-                                        let mentionName = contact.username != "" ? contact.username : contact.npub
+                                        let mentionName = contact.handle
                                         vm.text = vm.text.dropLast(vm.term.count) + mentionName
                                         tapOrFirstResults.append(contact)
                                         vm.mentioning = false
@@ -99,8 +102,11 @@ struct NewQuoteRepost: View {
             }
             .padding(10)
             .onChange(of: firstResults) { newResults in
-                guard let firstResult = newResults.first else { return }
-                tapOrFirstResults.append(firstResult)
+                guard newResults.count > 0 else { return }
+                if let exactResult = newResults.first(where: { $0.handle.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) == vm.term.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) }) {
+                    tapOrFirstResults.insert(exactResult, at:0)
+                    updateEventWithNewText()
+                }
             }
             .onChange(of: vm.debouncedText) { mentionString in
                 guard let account = ns.account else { return }
@@ -121,11 +127,7 @@ struct NewQuoteRepost: View {
                     vm.mentioning = false
                 }
                 
-                var textToReplaceWithNpubs = vm.text
-                for contact in tapOrFirstResults {
-                    textToReplaceWithNpubs = textToReplaceWithNpubs.replacingOccurrences(of: "@\(contact.username)", with: "@\(contact.npub)", options: .caseInsensitive)
-                }
-                vm.nEvent!.content = textToReplaceWithNpubs
+                updateEventWithNewText()
             }
             .onAppear {
                 var newQuoteRepost = NEvent(content: "")
@@ -134,25 +136,54 @@ struct NewQuoteRepost: View {
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
+                    Button("Cancel") {
                         dismiss() // TODO: If wrote something, confirm cancellation
-                    } label: {
-                        Text("Cancel")
                     }
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        sendNow()
-                    } label: {
-                        Text("Post")
+                ToolbarItem {
+                    Button("Preview") {
+                        guard let account = ns.account else { return }
+                        guard var nEvent = vm.nEvent else { return }
+                        nEvent = applyMentionsNip08(nEvent, bumpIndex: true)
+                        nEvent = putHashtagsInTags(nEvent)
+                        nEvent.publicKey = account.publicKey
+                        nEvent.content = nEvent.content + "\n\n#[0]"
+                        nEvent.tags.insert(NEventTag.event(otherEventId: quotingEvent.id, type: "mention"), at: 0)
+                        
+                        if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
+                            nEvent.content = replaceNsecWithHunter2(nEvent.content)
+                        }
+                        self.previewEvent = createPreviewEvent(nEvent)
                     }
+                    .cornerRadius(20)
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Post") { sendNow() }
                     .buttonStyle(.borderedProminent)
                     .cornerRadius(20)
+                }
+            }
+            .sheet(item: $previewEvent) { previewEvent in
+                NavigationStack {
+                    PostPreview(previewEvent: previewEvent, sendNow: self.sendNow)
                 }
             }
         }
         else {
             ProgressView()
+        }
+    }
+    
+    // Replaces "@handles in text with @npubs", which will later be replaced with #[index], and in a future update with nostr:..
+    func updateEventWithNewText() {
+        var textToReplaceWithNpubs = vm.text
+        for contact in tapOrFirstResults.sorted(by: { $0.handle.count > $1.handle.count }) { // .count so we replace @TestMacOS before partial match @test
+            textToReplaceWithNpubs = textToReplaceWithNpubs.replacingOccurrences(of: "@\(contact.handle)", with: "@\(contact.npub)", options: .caseInsensitive)
+        }
+        if (vm.nEvent == nil) {
+            vm.nEvent = NEvent(content: textToReplaceWithNpubs)
+        } else {
+            vm.nEvent!.content = textToReplaceWithNpubs
         }
     }
     
@@ -164,15 +195,12 @@ struct NewQuoteRepost: View {
         nEvent = applyMentionsNip08(nEvent, bumpIndex: true)
         nEvent.content = nEvent.content + "\n#[0]"
         nEvent.tags.insert(NEventTag.event(otherEventId: quotingEvent.id, type: "mention"), at: 0)
-//                            nEvent.content = noteText
-//
-//                            nEvent = applyMentionsNip08(nEvent)
         if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
             nEvent.content = replaceNsecWithHunter2(nEvent.content)
         }
         if let signedEvent = try? ns.signEvent(nEvent) {
-//                                let _ = up.publish(signedEvent)
-//                                print(signedEvent.wrappedEventJson())
+//            let _ = up.publish(signedEvent)
+//            print(signedEvent.wrappedEventJson())
             quotingEvent.reposted = true
             // .needsviewupdate?
             up.publishNow(signedEvent)

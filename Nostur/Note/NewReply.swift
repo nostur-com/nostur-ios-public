@@ -83,7 +83,7 @@ struct NewReply: View {
                                 ForEach(firstResults) { contact in
                                     ContactSearchResultRow(contact: contact) {
                                         guard vm.textView != nil else { return }
-                                        let mentionName = contact.username != "" ? contact.username : contact.npub
+                                        let mentionName = contact.handle
                                         vm.text = vm.text.dropLast(vm.term.count) + mentionName
                                         tapOrFirstResults.append(contact)
                                         vm.mentioning = false
@@ -105,8 +105,11 @@ struct NewReply: View {
             }
             .padding(10)
             .onChange(of: firstResults) { newResults in
-                guard let firstResult = newResults.first else { return }
-                tapOrFirstResults.append(firstResult)
+                guard newResults.count > 0 else { return }
+                if let exactResult = newResults.first(where: { $0.handle.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) == vm.term.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) }) {
+                    tapOrFirstResults.insert(exactResult, at:0)
+                    updateEventWithNewText()
+                }
             }
             .onChange(of: vm.debouncedText) { mentionString in
                 guard let account = ns.account else { return }
@@ -127,12 +130,7 @@ struct NewReply: View {
                     vm.mentioning = false
                 }
                 
-                var textToReplaceWithNpubs = vm.text
-                for contact in tapOrFirstResults {
-                    textToReplaceWithNpubs = textToReplaceWithNpubs.replacingOccurrences(of: "@\(contact.username)", with: "@\(contact.npub)", options: .caseInsensitive)
-                }
-                vm.nEvent!.content = textToReplaceWithNpubs
-//                vm.nEvent = applyMentionsNip08(vm.nEvent!)
+                updateEventWithNewText()
             }
             .onAppear {
                 var newReply = NEvent(content: "")
@@ -174,11 +172,7 @@ struct NewReply: View {
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        sendNow()
-                    } label: {
-                        Text("Post")
-                    }
+                    Button("Post") { sendNow() }
                     .buttonStyle(.borderedProminent)
                     .cornerRadius(20)
                 }
@@ -186,6 +180,19 @@ struct NewReply: View {
         }
         else {
             ProgressView()
+        }
+    }
+    
+    // Replaces "@handles in text with @npubs", which will later be replaced with #[index], and in a future update with nostr:..
+    func updateEventWithNewText() {
+        var textToReplaceWithNpubs = vm.text
+        for contact in tapOrFirstResults.sorted(by: { $0.handle.count > $1.handle.count }) { // .count so we replace @TestMacOS before partial match @test
+            textToReplaceWithNpubs = textToReplaceWithNpubs.replacingOccurrences(of: "@\(contact.handle)", with: "@\(contact.npub)", options: .caseInsensitive)
+        }
+        if (vm.nEvent == nil) {
+            vm.nEvent = NEvent(content: textToReplaceWithNpubs)
+        } else {
+            vm.nEvent!.content = textToReplaceWithNpubs
         }
     }
     
