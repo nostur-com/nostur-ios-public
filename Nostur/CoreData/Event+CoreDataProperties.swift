@@ -881,7 +881,7 @@ extension Event {
             // if other existing messages were replying, mentioning, reposting (to) this, fix the relation
             let pointingToEventReq = NSFetchRequest<Event>(entityName: "Event")
             //        pointingToEventReq.predicate = NSPredicate(format: "(kind IN {1,6} AND  (replyToId == %@ OR replyToRootId == %@ OR firstQuoteId == %@)", savedEvent.id, savedEvent.id, savedEvent.id)
-            pointingToEventReq.predicate = NSPredicate(format: "kind == 1 AND %@ IN {replyToId,replyToRootId,firstQuoteId}", savedEvent.id)
+            pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6} AND %@ IN {replyToId,replyToRootId,firstQuoteId}", savedEvent.id)
             // TODO: NEED 6 ALSO OR NOT?
 //            pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6} AND %@ IN {replyToId,replyToRootId,firstQuoteId}", savedEvent.id)
             pointingToEventReq.sortDescriptors = []
