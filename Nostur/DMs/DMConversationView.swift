@@ -39,6 +39,7 @@ struct DMConversationView: View {
     }
     
     var contact:Contact? {
+        guard let rootDM = rootDM else { return nil }
         // contact is in .pubkey or in .firstP (depending on incoming/outgoing DM.
         if rootDM.pubkey == self.pubkey, let firstP = rootDM.firstP() {
             return rootDM.contacts?.first(where: { $0.pubkey == firstP })
@@ -48,7 +49,8 @@ struct DMConversationView: View {
         }
     }
     
-    var contactPubkey:String {
+    var contactPubkey:String? {
+        guard let rootDM = rootDM else { return nil }
         // pubkey is .pubkey or .firstP (depending on incoming/outgoing DM.)
         if rootDM.pubkey == self.pubkey, let firstP = rootDM.firstP() {
             return firstP
@@ -58,13 +60,13 @@ struct DMConversationView: View {
         }
     }
     
-    var rootDM:Event {
-        allMessagesSorted.first!
+    var rootDM:Event? {
+        allMessagesSorted.first
     }
     
     var isAccepted:Bool {
         // if possible infer accepted by checking if we responded (mine)
-        rootDM.dmAccepted || (mine.count > 0)
+        rootDM?.dmAccepted ?? false || (mine.count > 0)
     }
     
     var allMessagesSorted:[Event] {
@@ -122,86 +124,88 @@ struct DMConversationView: View {
                                 }
                             }
                         header: {
-                                VStack {
-                                    PFP(pubkey: contactPubkey, pictureUrl: contact?.picture, size: 100)
-                                        .onTapGesture { nav.navigateTo(ContactPath(key: contactPubkey)) }
-                                    //                        ProfileBadgesContainer(pubkey: contactPubkey)
-                                    
-                                    if let contact = contact {
-                                        HStack(spacing:1) {
-                                            Text("\(contact.authorName) ").font(.headline)
-                                            if (contact.nip05veried) {
-                                                Group {
-                                                    Image(systemName: "checkmark.seal.fill")
-                                                    Text(contact.nip05domain).font(.footnote)
-                                                }.foregroundColor(Color("AccentColor"))
+                                if let contactPubkey {
+                                    VStack {
+                                        PFP(pubkey: contactPubkey, pictureUrl: contact?.picture, size: 100)
+                                            .onTapGesture { nav.navigateTo(ContactPath(key: contactPubkey)) }
+                                        //                        ProfileBadgesContainer(pubkey: contactPubkey)
+                                        
+                                        if let contact = contact {
+                                            HStack(spacing:1) {
+                                                Text("\(contact.authorName) ").font(.headline)
+                                                if (contact.nip05veried) {
+                                                    Group {
+                                                        Image(systemName: "checkmark.seal.fill")
+                                                        Text(contact.nip05domain).font(.footnote)
+                                                    }.foregroundColor(Color("AccentColor"))
+                                                }
+                                            }
+                                            
+                                            HStack {
+                                                Text("@\(contact.username)").foregroundColor(.secondary)
+                                            }
+                                            
+                                            if (ns.followsYou(contact)) {
+                                                Text("Follows you").font(.system(size: 12))
+                                                    .foregroundColor(.white)
+                                                    .padding(.horizontal, 7)
+                                                    .padding(.vertical, 2)
+                                                    .background(Color.secondary)
+                                                    .opacity(0.7)
+                                                    .cornerRadius(13)
+                                            }
+                                            
+                                            Text("\n**\(contact.followingPubkeys.count)** Following")
+                                            
+                                            
+                                            HStack {
+                                                Menu {
+                                                    Button {
+                                                        UIPasteboard.general.string = contactPubkey
+                                                    } label: {
+                                                        Label("Copy public key hex \(String(contactPubkey.prefix(11)))...", systemImage: "doc.on.clipboard")
+                                                    }
+                                                    Button {
+                                                        UIPasteboard.general.string = Contact.npub(contactPubkey)
+                                                    } label: {
+                                                        Label("Copy npub \(String(Contact.npub(contactPubkey).prefix(11)))...", systemImage: "doc.on.clipboard")
+                                                    }
+                                                } label: {
+                                                    Image(systemName: "person.badge.key.fill")
+                                                }
+                                                ContactPrivateNoteToggle(contact: contact)
+                                                ProfileLightningButton(contact: contact)
+                                            }
+                                            
+                                            Text("\n\(String(contact.about ?? ""))")
+                                                .padding(10)
+                                        }
+                                        else {
+                                            Text("@\(npub(contactPubkey))").foregroundColor(.secondary)
+                                            HStack {
+                                                Menu {
+                                                    Button {
+                                                        UIPasteboard.general.string = contactPubkey
+                                                    } label: {
+                                                        Label("Copy public key hex \(String(contactPubkey.prefix(11)))...", systemImage: "doc.on.clipboard")
+                                                    }
+                                                    Button {
+                                                        UIPasteboard.general.string = Contact.npub(contactPubkey)
+                                                    } label: {
+                                                        Label("Copy npub \(String(Contact.npub(contactPubkey).prefix(11)))...", systemImage: "doc.on.clipboard")
+                                                    }
+                                                } label: {
+                                                    Image(systemName: "person.badge.key.fill")
+                                                }
                                             }
                                         }
-                                        
-                                        HStack {
-                                            Text("@\(contact.username)").foregroundColor(.secondary)
-                                        }
-                                        
-                                        if (ns.followsYou(contact)) {
-                                            Text("Follows you").font(.system(size: 12))
-                                                .foregroundColor(.white)
-                                                .padding(.horizontal, 7)
-                                                .padding(.vertical, 2)
-                                                .background(Color.secondary)
-                                                .opacity(0.7)
-                                                .cornerRadius(13)
-                                        }
-                                        
-                                        Text("\n**\(contact.followingPubkeys.count)** Following")
-                                        
-                                        
-                                        HStack {
-                                            Menu {
-                                                Button {
-                                                    UIPasteboard.general.string = contactPubkey
-                                                } label: {
-                                                    Label("Copy public key hex \(String(contactPubkey.prefix(11)))...", systemImage: "doc.on.clipboard")
-                                                }
-                                                Button {
-                                                    UIPasteboard.general.string = Contact.npub(contactPubkey)
-                                                } label: {
-                                                    Label("Copy npub \(String(Contact.npub(contactPubkey).prefix(11)))...", systemImage: "doc.on.clipboard")
-                                                }
-                                            } label: {
-                                                Image(systemName: "person.badge.key.fill")
-                                            }
-                                            ContactPrivateNoteToggle(contact: contact)
-                                            ProfileLightningButton(contact: contact)
-                                        }
-                                        
-                                        Text("\n\(String(contact.about ?? ""))")
-                                            .padding(10)
                                     }
-                                    else {
-                                        Text("@\(npub(contactPubkey))").foregroundColor(.secondary)
-                                        HStack {
-                                            Menu {
-                                                Button {
-                                                    UIPasteboard.general.string = contactPubkey
-                                                } label: {
-                                                    Label("Copy public key hex \(String(contactPubkey.prefix(11)))...", systemImage: "doc.on.clipboard")
-                                                }
-                                                Button {
-                                                    UIPasteboard.general.string = Contact.npub(contactPubkey)
-                                                } label: {
-                                                    Label("Copy npub \(String(Contact.npub(contactPubkey).prefix(11)))...", systemImage: "doc.on.clipboard")
-                                                }
-                                            } label: {
-                                                Image(systemName: "person.badge.key.fill")
-                                            }
-                                        }
+                                    .task {
+                                        SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndBadges(pubkey: contactPubkey)))
                                     }
                                 }
-                                .task {
-                                    SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndBadges(pubkey: contactPubkey)))
-                                }
-                            }
-                        footer: {
+                                else { EmptyView() }
+                        } footer: {
                                 Group {
                                     if isAccepted {
                                         ChatInputField(message: $text) {
@@ -230,7 +234,7 @@ struct DMConversationView: View {
                                             }
                                         }
                                     }
-                                    else {
+                                    else if let rootDM {
                                         Divider()
                                         Button("Accept message request") {
                                             rootDM.objectWillChange.send()
@@ -250,7 +254,9 @@ struct DMConversationView: View {
                         }
                         .onAppear {
                             if (contact == nil) {
-                                SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: contactPubkey)))
+                                if let contactPubkey {
+                                    SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: contactPubkey)))
+                                }
                             }
                         }
                         .onAppear {
