@@ -70,7 +70,9 @@ struct QuotedNoteFragmentView: View {
 //                RowContentRenderer(vPost: vPost)
 //                DetailContentRenderer(event: vPost.event)
                 NoteTextRenderView(vPost: vPost)
-//                MediaViewer(imgUrls: vPost.imageUrls, pubkey: vPost.event.pubkey)
+                if let firstImage = vPost.imageUrls.first {
+                    SingleMediaViewer(url: firstImage, height: 250)
+                }
             }
         }
         .onTapGesture {
