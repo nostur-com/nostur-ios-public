@@ -29,6 +29,7 @@ private struct WithSheets: ViewModifier {
     //
     @State var restoreContactSheet = false
     @State var removed:RemovedPubkeys? = nil
+    @State var reportPost:ReportPost? = nil
     
     func body(content: Content) -> some View {
         content
@@ -44,6 +45,18 @@ private struct WithSheets: ViewModifier {
             .sheet(item: $contact) { contact in
                 NewPrivateNoteSheet(contact: contact, onDismiss: onDismiss)
             }
+            .sheet(item: $reportPost, content: { reportPost in
+                NavigationStack {
+                    ReportPostSheet(vPost: reportPost.vPost)
+                }
+            })
+        
+            .onReceive(receiveNotification(.reportPost), perform: { notification in
+                let post = notification.object as! VPost
+                reportPost = ReportPost(vPost: post)
+            })
+        
+        
             .onReceive(receiveNotification(.editingPrivateNote)) { notification in
                 let note = notification.object as! PrivateNote
                 self.privateNote = note
@@ -89,4 +102,9 @@ private struct WithSheets: ViewModifier {
 struct RemovedPubkeys: Identifiable {
     let pubkeys:Set<String>
     let id = UUID()
+}
+
+struct ReportPost: Identifiable {
+    let id = UUID()
+    let vPost:VPost
 }

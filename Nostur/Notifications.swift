@@ -140,4 +140,12 @@ extension Notification.Name {
     static var requestConfirmationChangedFollows: Notification.Name {
         return Notification.Name("requestConfirmationChangedFollows")
     }
+    
+    static var reportPost: Notification.Name {
+        return Notification.Name("reportPost")
+    }
+    
+    static var reportContact: Notification.Name {
+        return Notification.Name("reportContact")
+    }
 }
