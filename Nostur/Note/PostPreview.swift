@@ -24,7 +24,7 @@ struct PostPreview: View {
     }
     
     var body: some View {
-        VStack {
+        ScrollView {
             NoteRow(vPost: vPost)
                 .boxShadow()
             Spacer()
