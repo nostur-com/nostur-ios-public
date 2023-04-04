@@ -93,6 +93,8 @@ struct NotificationsReactions: View, Equatable {
                         }
                         .padding(.vertical, 10)
                         .listRowInsets(EdgeInsets())
+                        .background(Color.systemBackground)
+                        .contentShape(Rectangle())
                         .onTapGesture {
                             nav.navigateTo(vPost)
                         }

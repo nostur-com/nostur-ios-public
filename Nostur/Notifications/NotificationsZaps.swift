@@ -116,9 +116,10 @@ struct NotificationsZaps: View, Equatable {
                         }
                     }
                     .padding(.vertical, 10)
+//                    .background(Color.systemBackground)
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        nav.navigateTo(note.toVPost())
+                        nav.navigateTo(note.toVPost()!)
                     }
                     .id(note.id)
                     .listRowInsets(EdgeInsets())

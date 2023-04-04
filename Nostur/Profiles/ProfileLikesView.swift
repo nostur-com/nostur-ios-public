@@ -11,6 +11,7 @@ import CoreData
 
 struct ProfileLikesView: View {
 
+    let nav:NavigationModel = .shared
     var sp:SocketPool = .shared
     var pubkey:String
     @State var limit = 20
@@ -32,6 +33,11 @@ struct ProfileLikesView: View {
                         ForEach(reactionsTo.compactMap { VPostTransformer.shared.toVPost($0, skipParents: true) }) { vPost in
                             NoteRow(vPost: vPost)
                                 .id(vPost.id)
+                                .background(Color.systemBackground)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    nav.navigateTo(vPost)
+                                }
                             Divider()
                         }
                         VStack {
