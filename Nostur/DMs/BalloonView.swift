@@ -30,7 +30,7 @@ struct BalloonView: View {
                 .foregroundColor(.white)
                 .background(
                     RoundedRectangle(cornerRadius: 16)
-                        .fill(isSentByCurrentUser ? Color.blue : Color.gray)
+                        .fill(isSentByCurrentUser ? Color("AccentColor") : Color.gray)
                 )
                 .padding(.horizontal, 10)
                 .padding(isSentByCurrentUser ? .leading : .trailing, 50)

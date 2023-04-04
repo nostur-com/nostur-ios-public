@@ -71,7 +71,7 @@ struct ReactionRow: View {
                             if (reaction.contact?.nip05veried ?? false) {
                                 Image(systemName: "checkmark.seal.fill")
                                     .font(.system(size: 14))
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(Color("AccentColor"))
                             }
                         
                             Group {

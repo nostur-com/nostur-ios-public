@@ -28,7 +28,7 @@ struct ProfileRow: View {
                             if (contact.nip05veried) {
                                 Image(systemName: "checkmark.seal.fill")
                                     .font(.system(size: 14))
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(Color("AccentColor"))
                             }
                         }
 

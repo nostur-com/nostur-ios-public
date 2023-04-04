@@ -106,7 +106,7 @@ struct QuotedNoteFragmentView: View {
                 .lineLimit(1)
             if (contact.nip05veried) {
                 Image(systemName: "checkmark.seal.fill")
-                    .foregroundColor(.blue)
+                    .foregroundColor(Color("AccentColor"))
                     .layoutPriority(3)
             }
             Text("@\(contact.username)") //

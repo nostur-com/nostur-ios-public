@@ -30,7 +30,7 @@ struct ListUnreadCounter: View {
                     .padding(10)
                     .fontWeight(.bold)
                     .foregroundColor(.white)
-                    .background(.blue)
+                    .background(Color("AccentColor"))
                     .opacity(0.95)
                     .cornerRadius(20)
                     .shadow(radius: 90)

@@ -33,7 +33,7 @@ struct ChatInputField: View {
                     .font(.system(size: 20))
                     .padding(.trailing, 10)
             }
-            .accentColor(Color.blue)
+            .accentColor(Color("AccentColor"))
         }
         .background(Color(UIColor.systemGray6))
         .cornerRadius(25)

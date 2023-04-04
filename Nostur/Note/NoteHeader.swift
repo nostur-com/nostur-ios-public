@@ -43,7 +43,7 @@ struct NoteHeader: View {
                     if (event.contact?.nip05veried ?? false) {
                         Image(systemName: "checkmark.seal.fill")
 //                            .font(.system(size: 14))
-                            .foregroundColor(.blue)
+                            .foregroundColor(Color("AccentColor"))
                             .layoutPriority(3)
                     }
                     

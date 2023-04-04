@@ -171,7 +171,7 @@ struct PrivateNoteRow: View {
                     
                     if (contact.nip05veried) {
                         Image(systemName: "checkmark.seal.fill")
-                            .foregroundColor(.blue)
+                            .foregroundColor(Color("AccentColor"))
                             .layoutPriority(3)
                     }
                     

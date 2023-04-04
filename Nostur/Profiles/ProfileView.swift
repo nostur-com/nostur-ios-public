@@ -242,7 +242,7 @@ struct ProfileView: View {
                                         Group {
                                             Image(systemName: "checkmark.seal.fill")
                                             Text(contact.nip05domain).font(.footnote)
-                                        }.foregroundColor(.blue)
+                                        }.foregroundColor(Color("AccentColor"))
                                     }
                                 }
                                 

@@ -19,7 +19,7 @@ struct ProcessingStatus: View {
                     .foregroundColor(.white)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
-                    .background(Capsule().fill(.blue))
+                    .background(Capsule().fill(Color("AccentColor")))
                     .clipShape(Capsule())
             }
             else {

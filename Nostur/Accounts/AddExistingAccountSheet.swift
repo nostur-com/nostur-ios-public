@@ -16,7 +16,7 @@ struct AddExistingAccountSheet: View {
     @State var invalidKey = false
     
     var offerTryOut = false
-    var accentColor: Color = Color.blue
+    var accentColor: Color = Color("AccentColor")
     var grayBackground: Color = Color.gray.opacity(0.2)
     
     var body: some View {
