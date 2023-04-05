@@ -9,12 +9,8 @@ import SwiftUI
 
 struct NosturRootMenu: View {
     @AppStorage("selected_tab") var selectedTab = "Main"
-
-//    @EnvironmentObject var nav:NavigationModel
-    let nav:NavigationModel = .shared
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var sm:SideBarModel
-//    @EnvironmentObject var sp:SocketPool
     
     @State var accountsSheetIsShown = false
     @State var logoutAccount:Account? = nil
@@ -24,7 +20,6 @@ struct NosturRootMenu: View {
         SideBarStack(sidebarWidth: 310) {
             if (ns.account != nil) {
                 sideBar
-                    .withNavigationDestinations() //TODO: Put back?
             }
         } content: {
             if (ns.account != nil) {
@@ -38,7 +33,6 @@ struct NosturRootMenu: View {
             NavigationStack {
                 AccountsSheet()
                     .presentationDetents([.fraction(0.45), .medium, .large])
-                //                .presentationDragIndicator(.hidden)
             }
         }
         .actionSheet(item: $logoutAccount) { account in
@@ -113,7 +107,7 @@ extension NosturRootMenu {
                 }
                 
                 Button {
-                    nav.navigateTo(ContactPath(key: ns.account!.publicKey))
+                    navigateTo(ContactPath(key: ns.account!.publicKey))
                     sm.showSidebar = false
                 } label: {
                     Label("Profile", systemImage: "person")
@@ -125,20 +119,22 @@ extension NosturRootMenu {
                     Label("Bookmarks", systemImage: "bookmark")
                 }
                 Button {
-                    nav.navigateTo(ViewPath.Badges)
+                    if selectedTab != "Main" { selectedTab = "Main" }
+                    navigateToOnMain(ViewPath.Badges)
                     sm.showSidebar = false
                 } label: {
                     Label("Badges", systemImage: "medal")
                 }
                 Button {
-                    selectedTab = "Main"
-                    nav.navigateTo(ViewPath.Settings)
+                    if selectedTab != "Main" { selectedTab = "Main" }
+                    navigateToOnMain(ViewPath.Settings)
                     sm.showSidebar = false
                 } label: {
                     Label("Settings", systemImage: "gearshape")
                 }
                 Button {
-                    nav.navigateTo(ViewPath.Blocklist)
+                    if selectedTab != "Main" { selectedTab = "Main" }
+                    navigateToOnMain(ViewPath.Blocklist)
                     sm.showSidebar = false
                 } label: {
                     Label("Block list", systemImage: "person.badge.minus")
@@ -167,10 +163,10 @@ extension NosturRootMenu {
             let key = try! NIP19(displayString: "\(nostr[0][2])\(nostr[0][3])")
             print("ok lets go to: \(key.hexString)")
             if nostr[0][2] == "npub1" {
-                nav.navigateTo(ContactPath(key: key.hexString))
+                navigateTo(ContactPath(key: key.hexString))
             }
             if nostr[0][2] == "note1" {
-                nav.navigateTo(NotePath(id: key.hexString))
+                navigateTo(NotePath(id: key.hexString))
             }
         }
         
@@ -179,10 +175,10 @@ extension NosturRootMenu {
         if nostur.count == 1 && nostur[0].count == 4 {
             print("ok lets go to: \(nostur[0][2])\(nostur[0][3])")
             if nostur[0][2] == "p:" {
-                nav.navigateTo(ContactPath(key: nostur[0][3]))
+                navigateTo(ContactPath(key: nostur[0][3]))
             }
             if nostur[0][2] == "e:" {
-                nav.navigateTo(NotePath(id: nostur[0][3]))
+                navigateTo(NotePath(id: nostur[0][3]))
             }
         }
         
@@ -191,10 +187,10 @@ extension NosturRootMenu {
         if nostrHex.count == 1 && nostrHex[0].count == 4 {
             print("ok lets go to: \(nostrHex[0][2])\(nostrHex[0][3])")
             if nostrHex[0][2] == "p:" {
-                nav.navigateTo(ContactPath(key: nostrHex[0][3]))
+                navigateTo(ContactPath(key: nostrHex[0][3]))
             }
             if nostrHex[0][2] == "e:" {
-                nav.navigateTo(NotePath(id: nostrHex[0][3]))
+                navigateTo(NotePath(id: nostrHex[0][3]))
             }
         }
         
@@ -203,7 +199,7 @@ extension NosturRootMenu {
         if nosturHashtag.count == 1 && nosturHashtag[0].count == 3 {
             print("ok lets go to: \(nosturHashtag[0][2])")
             selectedTab = "Search"
-            nav.navigateTo(HashtagPath(hashTag: nosturHashtag[0][2]))
+            navigateTo(HashtagPath(hashTag: nosturHashtag[0][2]))
         }
     }
 }

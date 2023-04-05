@@ -48,7 +48,7 @@ struct NoteZaps: View {
 struct NoteZapRow: View {
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var er:ExchangeRateModel
-    @EnvironmentObject var nav:NavigationModel
+     
     @AppStorage("devToggle") var devToggle:Bool = false
     
     // THE ZAP EVENT (FROM CUSTODIAL ZAP PROVIDER)
@@ -66,7 +66,7 @@ struct NoteZapRow: View {
             PFP(pubkey: event.zapFromRequest?.pubkey ?? "WTF", pictureUrl: event.zapFromRequest?.contact?.picture)
                 .onTapGesture {
                     if let pubkey = event.zapFromRequest?.pubkey {
-                        nav.navigateTo(ContactPath(key: pubkey))
+                        navigateTo(ContactPath(key: pubkey))
                     }
                 }
             VStack(alignment: .leading) {
@@ -102,7 +102,7 @@ struct NoteZapRow: View {
         .contentShape(Rectangle())
         .onTapGesture {
             if (event.zapFromRequest != nil) {
-                nav.navigateTo(ContactPath(key: event.zapFromRequest!.pubkey))
+                navigateTo(ContactPath(key: event.zapFromRequest!.pubkey))
             }
         }
         Divider()

@@ -11,7 +11,7 @@ import SwiftUI
 
 struct PrivateNotesContainer: View {
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var nav:NavigationModel
+     
     
     var body: some View {
         let _ = Self._printChanges()
@@ -128,7 +128,7 @@ struct PrivateNotesView: View {
 
 struct PrivateNoteRow: View {
     @ObservedObject var note: PrivateNote
-    @EnvironmentObject var nav:NavigationModel
+     
     
     var body: some View {
         VStack(spacing: 0) {
@@ -152,12 +152,12 @@ struct PrivateNoteRow: View {
                 HStack {
                     PFP(pubkey: vPost.event.pubkey, pictureUrl: vPost.event.contact?.picture, size: 25)
                         .onTapGesture {
-                            nav.navigateTo(ContactPath(key: vPost.event.pubkey))
+                            navigateTo(ContactPath(key: vPost.event.pubkey))
                         }
                     MinimalNoteTextRenderView(vPost: vPost, lineLimit: 1)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .contentShape(Rectangle())
-                        .onTapGesture { nav.navigateTo(vPost) }
+                        .onTapGesture { navigateTo(vPost) }
                 }
             }
             else if let contact = note.contact {
@@ -184,7 +184,7 @@ struct PrivateNoteRow: View {
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    nav.navigateTo(ContactPath(key: contact.pubkey))
+                    navigateTo(ContactPath(key: contact.pubkey))
                 }
             }
         }

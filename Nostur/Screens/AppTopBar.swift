@@ -9,9 +9,9 @@ import SwiftUI
 struct AppTopBar: View {
     
     @EnvironmentObject var ns:NosturState
-//    @EnvironmentObject var nav:NavigationModel
+//     
     @EnvironmentObject var sm:SideBarModel
-    var nav:NavigationModel = .shared
+     
 //    @Binding var showSidebar:Bool
 //    @State var appTopBarIsHidden = false
     

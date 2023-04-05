@@ -22,7 +22,6 @@ struct BadgesReceivedView: View {
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var up:Unpublisher
-    let nav:NavigationModel = .shared
     @State var createNewBadgeSheetShown = false
     var pubkey:String
     @FetchRequest

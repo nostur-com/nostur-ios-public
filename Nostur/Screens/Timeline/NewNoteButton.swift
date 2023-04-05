@@ -9,7 +9,7 @@ import SwiftUI
 
 struct NewNoteButton: View {
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var nav:NavigationModel
+     
     @Binding var showingNewNote:Bool
     
     var body: some View {

@@ -10,6 +10,7 @@ import SwiftUI
 struct ProfileRow: View {
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var sp:SocketPool
+     
     // Following/Unfollowing tap is slow so update UI and do in background:
     @State var isFollowing = false
     var withoutFollowButton = false
@@ -61,7 +62,7 @@ struct ProfileRow: View {
         .padding()
         .contentShape(Rectangle())
         .onTapGesture {
-            NavigationModel.shared.navigateTo(ContactPath(key: contact.pubkey))
+            navigateTo(ContactPath(key: contact.pubkey))
         }
         .onAppear {
             if (ns.isFollowing(contact)) {

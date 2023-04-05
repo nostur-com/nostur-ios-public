@@ -10,7 +10,7 @@ import SwiftUI
 
 struct BookmarksContainer: View {
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var nav:NavigationModel
+     
     
     var body: some View {
         let _ = Self._printChanges()
@@ -29,7 +29,7 @@ struct BookmarksView: View {
     
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
-    let nav:NavigationModel = .shared
+     
     
     let account: Account
     
@@ -105,7 +105,7 @@ struct BookmarksView: View {
                     NoteRow(vPost: vBookmark)
                         .listRowInsets(EdgeInsets())
                         .onTapGesture {
-                            nav.navigateTo(vBookmark)
+                            navigateTo(vBookmark)
                         }
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button(role: .destructive) {

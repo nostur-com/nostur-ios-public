@@ -75,7 +75,7 @@ struct PostAndParent: View {
     @ObservedObject var event:Event
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var nav:NavigationModel
+     
     var navTitleHidden:Bool = false
     
     var isParent = false
@@ -180,7 +180,7 @@ struct PostAndParent: View {
                         }), id:\.self) { event in
                             NoteRow(vPost: event.toVPost()!, hideFooter: false)
                                 .onTapGesture {
-                                    nav.navigateTo(event.toVPost()!)
+                                    navigateTo(event.toVPost()!)
                                 }
                             Divider()
                         }
@@ -202,7 +202,7 @@ struct PostAndParent: View {
             .background(MaybeThreadLine(isParent: isParent))
             .onTapGesture {
                 if (isParent) {
-                    nav.navigateTo(vPost)
+                    navigateTo(vPost)
                 }
             }
             .onAppear {
@@ -321,7 +321,7 @@ struct MaybeThreadLine: View {
 
 struct DetailFooterFragment: View {
     @ObservedObject var event:Event
-    @EnvironmentObject var nav:NavigationModel
+     
     
     var body: some View {
         Divider()
@@ -329,10 +329,10 @@ struct DetailFooterFragment: View {
             Text("**\(event.mentionsCount)** reposts").onTapGesture { }
             
             Text("**\(event.likesCount)** reactions").onTapGesture {
-                nav.navigateTo(ViewPath.NoteReactions(event: event))
+                navigateTo(ViewPath.NoteReactions(event: event))
             }
             Text("**\(event.zapsCount)** zaps").onTapGesture {
-                nav.navigateTo(ViewPath.NoteZaps(event: event))
+                navigateTo(ViewPath.NoteZaps(event: event))
             }
             
             Spacer()

@@ -152,4 +152,16 @@ extension Notification.Name {
     static var requestDeletePost: Notification.Name {
         return Notification.Name("requestDeletePost")
     }
+    
+    static var navigateTo: Notification.Name {
+        return Notification.Name("navigateTo")
+    }
+    
+    static var clearNavigation: Notification.Name {
+        return Notification.Name("clearNavigation")
+    }
+    
+    static var navigateToOnMain: Notification.Name {
+        return Notification.Name("navigateToOnMain")
+    }
 }

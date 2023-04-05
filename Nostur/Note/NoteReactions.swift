@@ -54,7 +54,7 @@ struct NoteReactions: View {
 struct ReactionRow: View {
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var nav:NavigationModel
+     
     
     @ObservedObject var reaction:Event
     
@@ -94,7 +94,7 @@ struct ReactionRow: View {
         .padding()
         .contentShape(Rectangle())
         .onTapGesture {
-            nav.navigateTo(ContactPath(key: reaction.pubkey))
+            navigateTo(ContactPath(key: reaction.pubkey))
         }
         Divider()
     }

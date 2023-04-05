@@ -11,7 +11,7 @@ import CoreData
 // NOTES ON USER PROFILE SCREEN
 struct ProfileNotesView: View {
     
-    let nav:NavigationModel = .shared
+     
     let sp:SocketPool = .shared
     let pubkey:String
     @State var limit = 10
@@ -28,7 +28,7 @@ struct ProfileNotesView: View {
                                 .id(vPost.id)
                                 .boxShadow()
                                 .onTapGesture {
-                                    nav.navigateTo(vPost)
+                                    navigateTo(vPost)
                                 }
                         }
                         VStack {

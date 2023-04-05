@@ -17,7 +17,6 @@ struct Settings: View {
     @AppStorage("devToggle") var devToggle: Bool = false
     @AppStorage("selected_tab") var selectedTab = "Main"
     @Environment(\.managedObjectContext) var viewContext
-    let nav:NavigationModel = .shared
     let sp:SocketPool = .shared
 
     @FetchRequest(fetchRequest: Contact.fetchRequest())

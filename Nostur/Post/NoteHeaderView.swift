@@ -8,7 +8,7 @@ import SwiftUI
 import Compactor
 
 struct NoteHeaderView: View {
-    let nav:NavigationModel = .shared
+     
     let vPost:VPost
     var singleLine:Bool = true
     
@@ -38,7 +38,7 @@ struct NoteHeaderView: View {
                     }
                 }
                 .onTapGesture {
-                    nav.navigateTo(ContactPath(key: vPost.event.pubkey))
+                    navigateTo(ContactPath(key: vPost.event.pubkey))
                 }
             }
             if (!singleLine) {

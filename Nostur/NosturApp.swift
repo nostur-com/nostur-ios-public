@@ -21,7 +21,6 @@ struct NosturApp: App {
 //    @StateObject private var nm = NotificationsManager(bgContext:EventsProvider.shared.container.newBackgroundContext())
     @StateObject private var ns:NosturState = .shared
     @StateObject private var er:ExchangeRateModel = .shared
-    @StateObject private var nav:NavigationModel = .shared
     @StateObject private var sp:SocketPool = .shared
 //    @StateObject private var ds:DataStore = .shared
     @StateObject private var ss:SettingsStore = .shared
@@ -43,7 +42,6 @@ struct NosturApp: App {
                 .environmentObject(ns)
                 .environmentObject(er)
                 .environmentObject(sp)
-                .environmentObject(nav)
                 .environmentObject(up)
                 .environmentObject(ss)
                 .environmentObject(tm)

@@ -33,7 +33,8 @@ struct Search: View {
     var contacts:FetchedResults<Contact>
     
     @State var searching = false
-    @EnvironmentObject var nav:NavigationModel
+    @AppStorage("selected_tab") var selectedTab = "Search"
+    @State var navPath = NavigationPath()
     let initialHashtag:String?
     
     init(hashtag:String = "") {
@@ -42,7 +43,7 @@ struct Search: View {
     
     var body: some View {
         let _ = Self._printChanges()
-        NavigationStack(path: $nav.searchPath) {
+        NavigationStack(path: $navPath) {
             ScrollView {
                 if (contacts.count == 0 && events.count == 0 && searching) {
                     ProgressView()
@@ -57,13 +58,12 @@ struct Search: View {
                         NoteRow(vPost: vPost)
                             .boxShadow()
                             .onTapGesture {
-                                nav.navigateTo(vPost)
+                                navigateTo(vPost)
                             }
                     }
                 }
                 .background(Color("ListBackground"))
             }
-//            .padding(0)
             .withNavigationDestinations()
             .navigationTitle("Search")
             .navigationBarTitleDisplayMode(.inline)
@@ -137,6 +137,15 @@ struct Search: View {
                     debounceObject.text = "#\(initialHashtag ?? "")"
 //                    debounceObject.debouncedText = initialHashtag ?? ""
                 }
+            }
+            .onReceive(receiveNotification(.navigateTo)) { notification in
+                let destination = notification.object as! NavigationDestination
+                guard !IS_IPAD else { return }
+                guard selectedTab == "Search" else { return }
+                navPath.append(destination.destination)
+            }
+            .onReceive(receiveNotification(.clearNavigation)) { notification in
+                navPath.removeLast(navPath.count)
             }
         }
     }

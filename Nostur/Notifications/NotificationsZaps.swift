@@ -19,7 +19,7 @@ struct NotificationsZaps: View, Equatable {
     let pubkey:String
     let blockedPubkeys:[String]
     let FETCH_LIMIT = 200
-    let nav:NavigationModel = .shared
+     
     let sp:SocketPool = .shared
     @EnvironmentObject var ns:NosturState
     @Environment(\.managedObjectContext) var viewContext
@@ -117,7 +117,7 @@ struct NotificationsZaps: View, Equatable {
 //                    .background(Color.systemBackground)
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        nav.navigateTo(note.toVPost()!)
+                        navigateTo(note.toVPost()!)
                     }
                     .id(note.id)
                     .listRowInsets(EdgeInsets())

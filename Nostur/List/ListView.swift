@@ -97,6 +97,9 @@ struct ListView: View {
                         withAnimation {
                             if let last = vmState.vPosts.last {
                                 proxy.scrollTo(last.id)
+                                vmState.state = .SCROLLED_TO_END
+                            }
+                            else {
                                 proxy.scrollTo(END_OF_LIST)
                                 vmState.state = .SCROLLED_TO_END
                             }

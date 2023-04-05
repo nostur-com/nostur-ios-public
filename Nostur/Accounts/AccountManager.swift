@@ -118,7 +118,7 @@ class AccountManager {
             let accounts = NosturState.shared.accounts
             if (accounts.count <= 1) {
                 NosturState.shared.onBoardingIsShown = true
-                NavigationModel.shared.clear()
+                sendNotification(.clearNavigation)
                 NosturState.shared.setAccount(account: nil)
                 DataProvider.shared().viewContext.delete(account)
             }

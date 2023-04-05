@@ -158,7 +158,7 @@ class LVM: NSObject, ObservableObject {
                     
                     DispatchQueue.main.async {
                         self.lvmState.vPosts = currentVPosts + addedTruncated
-                        self.lvmCounter.count = self.lvmCounter.count + threadCount(addedTruncated)
+                        self.lvmCounter.count = self.lvmCounter.count + transformCounter // transformCounter is also added right???
                     }
                 }
             }
@@ -542,8 +542,8 @@ extension LVM {
         state = .AWAITING_SCROLL
         sendNotification(.shouldScrollToLast)
         self.lvmCounter.count = 0
-        if (self.lastAppeared != self.events.last) {
-            self.lastAppeared = self.events.last
+        if (self.lastAppeared != self.lvmState.vPosts.last?.event) {
+            self.lastAppeared = self.lvmState.vPosts.last?.event
         }
         let context = DataProvider.shared().container.newBackgroundContext()
         context.perform {
@@ -665,7 +665,7 @@ extension LVM: NSFetchedResultsControllerDelegate {
                         $0.parentEvents = Event.getParentEvents($0)
                         return $0
                     }
-                    .sorted(by: { $0.created_at < $1.created_at } )
+//                    .sorted(by: { $0.created_at < $1.created_at } )
                 
                 self.lvmState.state = .COMPLETED_FIRST_FETCH
                 
@@ -681,7 +681,7 @@ extension LVM: NSFetchedResultsControllerDelegate {
                             $0.parentEvents = Event.getParentEvents($0)
                             return $0
                         }
-                        .sorted(by: { $0.created_at < $1.created_at } )
+//                        .sorted(by: { $0.created_at < $1.created_at } )
                     self.state = .COMPLETED_FIRST_FETCH // POST NOT IN LIST, SO DONT RESTORE SCROLL.
                 }
                 if (lastAppearedIndex < LVM_MAX_VISIBLE) {
@@ -692,7 +692,7 @@ extension LVM: NSFetchedResultsControllerDelegate {
                             $0.parentEvents = Event.getParentEvents($0)
                             return $0
                         }
-                        .sorted(by: { $0.created_at < $1.created_at } )
+//                        .sorted(by: { $0.created_at < $1.created_at } )
                 }
                 else {
                     self.state = .AWAITING_RESTORE_SCROLL // POST IN LIST, BUT OUTSIDE MAX VISIBLE.. TODO: HANDLE THIS. NO CUTOFF NOW
@@ -701,7 +701,7 @@ extension LVM: NSFetchedResultsControllerDelegate {
                             $0.parentEvents = Event.getParentEvents($0)
                             return $0
                         }
-                        .sorted(by: { $0.created_at < $1.created_at } )
+//                        .sorted(by: { $0.created_at < $1.created_at } )
                 }
                 self.updateUnreadCount()
                 
@@ -710,13 +710,13 @@ extension LVM: NSFetchedResultsControllerDelegate {
                 self.events = events
                     .filter { $0.created_at > firstCreatedAt } // skip all older than first on screen
                     .filter(onlyRootOrReplyingToFollower)
-                    .sorted(by: { $0.created_at < $1.created_at } )
+//                    .sorted(by: { $0.created_at < $1.created_at } )
                     .suffix(LVM_MAX_VISIBLE * 2)
                     .map {
                         $0.parentEvents = Event.getParentEvents($0)
                         return $0
                     }
-                self.updateUnreadCount()
+//                self.updateUnreadCount()
                 return
         }
     }
@@ -751,6 +751,8 @@ extension LVM: NSFetchedResultsControllerDelegate {
     }
     
     func onlyRootOrReplyingToFollower(_ event:Event) -> Bool {
+        // TODO: Add setting to show replies to all...
+        return true
         if let replyToPubkey = event.replyTo?.pubkey {
             if pubkeys.contains(replyToPubkey) {
                 return true

@@ -27,7 +27,6 @@ struct BadgesIssuedContainer:View {
 }
 
 struct BadgesIssuedView: View {
-    let nav:NavigationModel = .shared
     @State var createNewBadgeSheetShown = false
     @FetchRequest
     var badges:FetchedResults<Event>

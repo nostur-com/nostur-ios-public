@@ -33,7 +33,6 @@ extension View {
         let dp = DataProvider(container: EventsProvider.preview.container)
         let ns:NosturState = .shared
         let sp:SocketPool = .shared
-        let nav: NavigationModel = .shared
         let er:ExchangeRateModel = .shared
         let tm:DetailTabsModel = .shared
         
@@ -56,7 +55,6 @@ extension View {
             .environmentObject(dp)
             .environmentObject(ns)
             .environmentObject(sp)
-            .environmentObject(nav)
             .environmentObject(er)
 //            .environmentObject(ds)
             .environmentObject(ss)

@@ -111,7 +111,8 @@ func computeRequestTotalUnread(_ onlyMostRecentRequests:[(Event, Int64)] ) -> In
 
 struct DirectMessages: View {
     @ObservedObject var nm:NotificationsManager = .shared
-    @EnvironmentObject var nav:NavigationModel
+    @State var navPath = NavigationPath()
+    @AppStorage("selected_tab") var selectedTab = "Messages"
     @EnvironmentObject var ns:NosturState
     let pubkey:String
     
@@ -182,7 +183,7 @@ struct DirectMessages: View {
     
     var body: some View {
         let _ = Self._printChanges()
-        NavigationStack(path: $nav.messagesPath) {
+        NavigationStack(path: $navPath) {
             VStack {
                 ZStack {
                     VStack {
@@ -272,6 +273,15 @@ struct DirectMessages: View {
                         type: .REQ,
                         message: RequestMessage
                             .getAuthorDMs(pubkey: pubkey)))
+        }
+        .onReceive(receiveNotification(.navigateTo)) { notification in
+            let destination = notification.object as! NavigationDestination
+            guard !IS_IPAD else { return }
+            guard selectedTab == "Messages" else { return }
+            navPath.append(destination.destination)
+        }
+        .onReceive(receiveNotification(.clearNavigation)) { notification in
+            navPath.removeLast(navPath.count)
         }
     }
     

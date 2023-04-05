@@ -14,7 +14,7 @@ struct ProfileByPubkey: View {
     
     @EnvironmentObject var sp:SocketPool
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var nav:NavigationModel
+     
     
     var pubkey:String
     
@@ -62,7 +62,7 @@ struct ProfileView: View {
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var sp:SocketPool
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var nav:NavigationModel
+     
     @ObservedObject var contact:Contact
     var pubkey:String
     let hideBadges:Bool

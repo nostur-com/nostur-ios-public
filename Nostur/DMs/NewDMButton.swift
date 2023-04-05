@@ -9,7 +9,7 @@ import SwiftUI
 
 struct NewDMButton: View {
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var nav:NavigationModel
+     
     @Binding var showingNewDM:Bool
     
     var body: some View {

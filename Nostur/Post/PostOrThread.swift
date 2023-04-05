@@ -10,7 +10,6 @@ import SwiftUI
 struct PostOrThreadMaxOneParent: View {
     let vPost:VPost
     let THREAD_LINE_OFFSET = 35.0
-    let nav:NavigationModel = .shared
     
     @State var color1 = Color.purple
     @State var color2 = Color.green
@@ -33,7 +32,7 @@ struct PostOrThreadMaxOneParent: View {
                 }
                 .background(Color.systemBackground)
                 .onTapGesture {
-                    nav.navigateTo(replyToVPost)
+                    navigateTo(replyToVPost)
                 }
                 
                 ZStack {
@@ -50,7 +49,7 @@ struct PostOrThreadMaxOneParent: View {
                 }
                 .background(Color.systemBackground)
                 .onTapGesture {
-                    nav.navigateTo(vPost)
+                    navigateTo(vPost)
                 }
             }
         }
@@ -60,17 +59,17 @@ struct PostOrThreadMaxOneParent: View {
                 .onTapGesture {
                     if (vPost.event.isRepost) {
                         if let vPostRepost = vPost.event.firstQuote?.toVPost() {
-                            nav.navigateTo(vPostRepost)
+                            navigateTo(vPostRepost)
                         }
                         else if let firstQuoteId = vPost.event.firstQuoteId {
-                            nav.navigateTo(NotePath(id: firstQuoteId))
+                            navigateTo(NotePath(id: firstQuoteId))
                         }
                         else {
-                            nav.navigateTo(vPost)
+                            navigateTo(vPost)
                         }
                     }
                     else {
-                        nav.navigateTo(vPost)
+                        navigateTo(vPost)
                     }
                 }
         }
@@ -80,7 +79,6 @@ struct PostOrThreadMaxOneParent: View {
 struct PostOrThread: View {
     let vPost:VPost
     let THREAD_LINE_OFFSET = 35.0
-    let nav:NavigationModel = .shared
     
     @State var color1 = Color.purple
     @State var color2 = Color.green
@@ -91,7 +89,7 @@ struct PostOrThread: View {
             VStack(spacing: 0) {
                 if vPost.isTruncated {
                     Button("Show this thread") {
-                        nav.navigateTo(vPost)
+                        navigateTo(vPost)
                     }.padding(.top, 10)
                 }
                 ForEach(vPost.parentPosts.indices, id:\.self) { index in
@@ -110,7 +108,7 @@ struct PostOrThread: View {
                     .id(vPost.id + vPost.parentPosts[index].id)
                     .background(Color.systemBackground)
                     .onTapGesture {
-                        nav.navigateTo(vPost.parentPosts[index])
+                        navigateTo(vPost.parentPosts[index])
                     }
                 }
                 ZStack {
@@ -128,7 +126,7 @@ struct PostOrThread: View {
                 }
                 .background(Color.systemBackground)
                 .onTapGesture {
-                    nav.navigateTo(vPost)
+                    navigateTo(vPost)
                 }
             }
         }
@@ -136,7 +134,7 @@ struct PostOrThread: View {
             VStack(spacing: 0) {
                 if vPost.isTruncated {
                     Button("Show this thread") {
-                        nav.navigateTo(vPost)
+                        navigateTo(vPost)
                     }.padding(.top, 10)
                 }
                 NoteRow(vPost: vPost, inThread: false)
@@ -145,17 +143,17 @@ struct PostOrThread: View {
                     .onTapGesture {
                         if (vPost.event.isRepost) {
                             if let vPostRepost = vPost.event.firstQuote?.toVPost() {
-                                nav.navigateTo(vPostRepost)
+                                navigateTo(vPostRepost)
                             }
                             else if let firstQuoteId = vPost.event.firstQuoteId {
-                                nav.navigateTo(NotePath(id: firstQuoteId))
+                                navigateTo(NotePath(id: firstQuoteId))
                             }
                             else {
-                                nav.navigateTo(vPost)
+                                navigateTo(vPost)
                             }
                         }
                         else {
-                            nav.navigateTo(vPost)
+                            navigateTo(vPost)
                         }
                     }
             }

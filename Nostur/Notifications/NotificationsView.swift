@@ -11,11 +11,12 @@ import CoreData
 struct NotificationsContainer: View {
     @EnvironmentObject var ns:NosturState
     @Environment(\.managedObjectContext) var viewContext
-    @EnvironmentObject var nav:NavigationModel
+    @AppStorage("selected_tab") var selectedTab = "Main"
+    @State var navPath = NavigationPath()
     
     var body: some View {
         let _ = Self._printChanges()
-        NavigationStack(path: $nav.notificationsPath) {
+        NavigationStack(path: $navPath) {
             VStack {
                 if (ns.account != nil) {
                     NotificationsView(account: ns.account!)
@@ -25,6 +26,15 @@ struct NotificationsContainer: View {
                 }
             }
             .withNavigationDestinations()
+        }
+        .onReceive(receiveNotification(.navigateTo)) { notification in
+            let destination = notification.object as! NavigationDestination
+            guard !IS_IPAD else { return }
+            guard selectedTab == "Notifications" else { return }
+            navPath.append(destination.destination)
+        }
+        .onReceive(receiveNotification(.clearNavigation)) { notification in
+            navPath.removeLast(navPath.count)
         }
     }
 }
@@ -93,7 +103,11 @@ struct NotificationsView: View {
         .navigationBarHidden(true)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
-            nm.unreadMentions = 0
+            if tab == "Posts" {
+                DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(3)) {
+                    self.nm.unreadMentions = 0
+                }
+            }
         }
     }
 }

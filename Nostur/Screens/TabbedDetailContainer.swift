@@ -92,15 +92,35 @@ struct NosturTabButton: View {
 }
 
 struct TabContainer: View {
-    @State var path = NavigationPath()
-    @StateObject var nav = NavigationModel(modelType: "TAB")
+    @State var navPath = NavigationPath()
+    let tm:DetailTabsModel = .shared
+    let tab:DetailTabsModel.Tab
     
-    var vPost:VPost
     var body: some View {
-        NavigationStack(path: $nav.tabPath) {
-            PostDetailView(vPost: vPost, navTitleHidden: true)
-                .withNavigationDestinations()
-                .environmentObject(nav)
+        NavigationStack(path: $navPath) {
+            if let vPost = tab.vPost {
+                PostDetailView(vPost: vPost, navTitleHidden: true)
+                    .withNavigationDestinations()
+            }
+            else if let contact = tab.contact {
+                ProfileView(contact:contact)
+                    .opacity(tm.selected == tab ? 1 : 0)
+                    
+            }
+            else if let notePathId = tab.notePath?.id {
+                NoteById(id: notePathId).opacity(tm.selected == tab ? 1 : 0)
+            }
+            else if let contacPubkey = tab.contactPath?.key {
+                ProfileByPubkey(pubkey: contacPubkey).opacity(tm.selected == tab ? 1 : 0)
+            }
+            else {
+                EmptyView()
+            }
+        }
+        .onReceive(receiveNotification(.navigateTo)) { notification in
+            guard tm.selected == tab else { return }
+            let destination = notification.object as! NavigationDestination
+            navPath.append(destination.destination)
         }
     }
 }
@@ -193,65 +213,74 @@ struct TabbedDetailContainer: View {
                     }
                 }
                 ForEach(tm.tabs) { tab in
-                    if (tab.vPost != nil) {
-                        TabContainer(vPost: tab.vPost!)
-                            .padding(.horizontal, 10)
-                            .opacity(tm.selected == tab ? 1 : 0)
-                            .id(tab.vPost!.id)
-                    }
-                    else if (tab.contact != nil) {
-                        ProfileView(contact: tab.contact!).opacity(tm.selected == tab ? 1 : 0)
-                            .padding(.horizontal, 10)
-                    }
-                    else if (tab.notePath != nil) {
-                        NoteById(id: tab.notePath!.id).opacity(tm.selected == tab ? 1 : 0)
-                            .padding(.horizontal, 10)
-                    }
-                    else if (tab.contactPath != nil) {
-                        ProfileByPubkey(pubkey: tab.contactPath!.key).opacity(tm.selected == tab ? 1 : 0)
-                            .padding(.horizontal, 10)
-                    }
-                    else {
-                        EmptyView()
-                    }
+                    TabContainer(tab:tab)
+                        .padding(.horizontal, 10)
+                        .opacity(tm.selected == tab ? 1 : 0)
+                        .id(tab.id)
                 }
             }
             Spacer()
-            
-//            Button {
-//                if (tm.selected != nil) {
-//                    tm.tabs.remove(at: tm.tabs.firstIndex(of: tm.selected!)!)
-//                }
-//            } label: { Text(" ") }
-//                .keyboardShortcut("w")
-//                .opacity(0)
         }
         .navigationBarTitle("")
         .navigationBarTitleDisplayMode(.inline)
-//        .navigationBarHidden(true)
         .padding(0)
-        .onAppear {
-//            print(tm.tabs)
+        .onReceive(receiveNotification(.navigateTo)) { notification in
+            let destination = notification.object as! NavigationDestination
+            if type(of: destination.destination) == VPost.self {
+                let p = destination.destination as! VPost
+                let tab = DetailTabsModel.Tab(vPost: p)
+                tm.tabs.append(tab)
+                tm.selected = tab
+                return
+            }
+            else if type(of: destination.destination) == Event.self {
+                let p = destination.destination as! Event
+                let tab = DetailTabsModel.Tab(event: p)
+                tm.tabs.append(tab)
+                tm.selected = tab
+                return
+            }
+            else if type(of: destination.destination) == NotePath.self {
+                let p = destination.destination as! NotePath
+                let tab = DetailTabsModel.Tab(notePath: p)
+                tm.tabs.append(tab)
+                tm.selected = tab
+                return
+            }
+            else if type(of: destination.destination) == ContactPath.self {
+                let c = destination.destination as! ContactPath
+                let tab = DetailTabsModel.Tab(contactPath: c)
+                tm.tabs.append(tab)
+                tm.selected = tab
+                return
+            }
+            else if type(of: destination.destination) == Contact.self {
+                let c = destination.destination as! Contact
+                let tab = DetailTabsModel.Tab(contact: c)
+                tm.tabs.append(tab)
+                tm.selected = tab
+                return
+            }
+            
         }
-        .onChange(of: tm.tabs) { newValue in
-//            print(newValue)
+        .onReceive(receiveNotification(.clearNavigation)) { notification in
+            tm.selected = nil
+            tm.tabs.removeAll()
         }
     }
 }
 
 struct TabbedDetailContainer_Previews: PreviewProvider {
     
-    static var nav:NavigationModel = .shared
-    
     static var previews: some View {
         TabbedDetailContainer()
             .onAppear {
                 if let event0 = PreviewFetcher.fetchEvent("21a1b8e4083c11eab8f280dc0c0bddf3837949df75662e181ad117bd0bd5fdf3") {
-                    nav.navigateTo(event0)
+                    navigateTo(event0)
                 }
                 
                 if let event1 = PreviewFetcher.fetchEvent("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0") {
-                    nav.navigateTo(event1)
+                    navigateTo(event1)
                 }
                 
             }

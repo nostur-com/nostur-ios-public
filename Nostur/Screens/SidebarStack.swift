@@ -16,8 +16,8 @@ struct SideBarStack<SidebarContent: View, Content: View>: View {
     let sidebarContent: SidebarContent
     let mainContent: Content
     let sidebarWidth: CGFloat
-//    @EnvironmentObject var nav:NavigationModel
-    let nav:NavigationModel = .shared
+//     
+     
     @EnvironmentObject var sm:SideBarModel
 
 //    @Binding var showSidebar: Bool

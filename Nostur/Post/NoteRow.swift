@@ -14,7 +14,7 @@ struct NoteRow: View {//}, Equatable {
     //    }
     
     private let sp:SocketPool = .shared
-    private let nav:NavigationModel = .shared
+     
     let vPost:VPost
     @ObservedObject var event:Event
     var hideFooter = true // For rendering in NewReply
@@ -43,7 +43,7 @@ struct NoteRow: View {//}, Equatable {
                     }
                     .foregroundColor(.gray)
                     .onTapGesture {
-                        nav.navigateTo(ContactPath(key: vPost.event.pubkey))
+                        navigateTo(ContactPath(key: vPost.event.pubkey))
                     }
                     .padding(.leading, 40)
                 }
@@ -100,7 +100,7 @@ struct NoteRow: View {//}, Equatable {
         let hideFooter:Bool // For rendering in NewReply
         let inThread:Bool // For rendering in thread
         @ObservedObject var event:Event
-        let nav:NavigationModel = .shared
+         
         let sp:SocketPool = .shared
         @State var contextForVPost:VPost?
         @EnvironmentObject var up:Unpublisher
@@ -116,7 +116,7 @@ struct NoteRow: View {//}, Equatable {
             HStack(alignment: .top, spacing:0) {
                 PFP(pubkey: event.pubkey, pictureUrl: event.contact?.picture)
                     .onTapGesture {
-                        nav.navigateTo(ContactPath(key: event.pubkey)) // TODO: if vPost.contact navigate with that else by .pubkey
+                        navigateTo(ContactPath(key: event.pubkey)) // TODO: if vPost.contact navigate with that else by .pubkey
                     }
                     .padding(.horizontal, 10)
                 
@@ -132,7 +132,7 @@ struct NoteRow: View {//}, Equatable {
                         ReplyingToFragmentView(vPost: vPost)
                             .padding(.bottom, 5)
                             .contentShape(Rectangle())
-                            .onTapGesture { nav.navigateTo(vPost) }
+                            .onTapGesture { navigateTo(vPost) }
                     }
                     ContentRenderer(vPost: vPost)
                     if (!hideFooter) {

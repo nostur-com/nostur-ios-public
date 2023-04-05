@@ -359,7 +359,7 @@ final class NosturState : ObservableObject {
         }
         if (accounts.count <= 1) {
             onBoardingIsShown = true
-            NavigationModel.shared.clear()
+            sendNotification(.clearNavigation)
             setAccount(account: nil)
             viewContext.delete(account)
         }

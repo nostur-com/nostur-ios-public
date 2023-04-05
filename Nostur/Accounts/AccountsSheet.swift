@@ -12,7 +12,6 @@ struct AccountsSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var nav:NavigationModel
     @EnvironmentObject var sm:SideBarModel
     @State var newAccountSheetShown = false
     @State var addExistingAccountSheetShown = false

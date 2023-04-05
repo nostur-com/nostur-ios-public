@@ -11,7 +11,7 @@ import CoreData
 struct NosturTabsView: View {
     //    @AppStorage("showReplies") var showReplies = true // TODO: Move to Timeline
     
-    //    @EnvironmentObject var nav:NavigationModel
+    //     
     @AppStorage("selected_tab") var selectedTab = "Main"
     @State var unread = 0
     @State var unreadDMs = 0
@@ -22,6 +22,7 @@ struct NosturTabsView: View {
             VStack {
                 TabView(selection: $selectedTab) {
                     FollowingAndExplore()
+                        .equatable()
                         .tabItem { Image(systemName: "house") }
                         .tag("Main")
                     

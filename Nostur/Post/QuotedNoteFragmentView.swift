@@ -18,7 +18,7 @@ import Compactor
 struct QuotedNoteFragmentView: View {
     let sp:SocketPool = .shared
     @EnvironmentObject var accountState:NosturState
-    @EnvironmentObject var nav:NavigationModel
+     
     let vPost:VPost
     
     var ago: String {
@@ -36,7 +36,7 @@ struct QuotedNoteFragmentView: View {
                         // profile image
                         PFP(pubkey: vPost.event.pubkey, pictureUrl: vPost.event.contact?.picture, size: 20)
                             .onTapGesture {
-                                nav.navigateTo(ContactPath(key: vPost.event.pubkey)) // TODO: Direct to vPost.vContact if possible
+                                navigateTo(ContactPath(key: vPost.event.pubkey)) // TODO: Direct to vPost.vContact if possible
                             }
                             
                         if let contact = vPost.event.contact {
@@ -76,7 +76,7 @@ struct QuotedNoteFragmentView: View {
             }
         }
         .onTapGesture {
-            nav.navigateTo(vPost)
+            navigateTo(vPost)
         }
         
         .padding(10)

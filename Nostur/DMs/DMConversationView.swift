@@ -11,7 +11,7 @@ import Algorithms
 struct DMConversationView: View {
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var up:Unpublisher
-    let nav:NavigationModel = .shared
+     
     let recentDM:Event
     let pubkey:String
     let theirPubkey:String?
@@ -127,7 +127,7 @@ struct DMConversationView: View {
                                 if let contactPubkey {
                                     VStack {
                                         PFP(pubkey: contactPubkey, pictureUrl: contact?.picture, size: 100)
-                                            .onTapGesture { nav.navigateTo(ContactPath(key: contactPubkey)) }
+                                            .onTapGesture { navigateTo(ContactPath(key: contactPubkey)) }
                                         //                        ProfileBadgesContainer(pubkey: contactPubkey)
                                         
                                         if let contact = contact {

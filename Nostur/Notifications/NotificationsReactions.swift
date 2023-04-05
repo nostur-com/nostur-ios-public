@@ -21,7 +21,7 @@ struct NotificationsReactions: View, Equatable {
     let blockedPubkeys:[String]
     let FETCH_LIMIT = 200
     let sp:SocketPool = .shared
-    let nav:NavigationModel = .shared
+     
     @EnvironmentObject var ns:NosturState
     @Environment(\.managedObjectContext) var viewContext
     
@@ -93,7 +93,7 @@ struct NotificationsReactions: View, Equatable {
                         .background(Color.systemBackground)
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            nav.navigateTo(vPost)
+                            navigateTo(vPost)
                         }
                     }
                 }

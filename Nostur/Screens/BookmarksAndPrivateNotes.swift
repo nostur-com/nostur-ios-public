@@ -8,11 +8,12 @@ import SwiftUI
 
 struct BookmarksAndPrivateNotes: View {
     
-    @EnvironmentObject var nav:NavigationModel
+    @State var navPath = NavigationPath()
+    @AppStorage("selected_tab") var selectedTab = "Bookmarks"
     @AppStorage("selected_bookmarkssubtab") var selectedSubTab = "Bookmarks"
     
     var body: some View {
-        NavigationStack(path: $nav.bookmarksPath) {
+        NavigationStack(path: $navPath) {
             VStack {
                 HStack {
                     TabButton(action: {
@@ -39,7 +40,15 @@ struct BookmarksAndPrivateNotes: View {
             .navigationTitle(selectedSubTab)
             .navigationBarHidden(true)
             .navigationBarTitleDisplayMode(.inline)
-//            .background(Color("ListBackground"))
+            .onReceive(receiveNotification(.navigateTo)) { notification in
+                let destination = notification.object as! NavigationDestination
+                guard !IS_IPAD else { return }
+                guard selectedTab == "Bookmarks" else { return }
+                navPath.append(destination.destination)
+            }
+            .onReceive(receiveNotification(.clearNavigation)) { notification in
+                navPath.removeLast(navPath.count)
+            }
         }
     }
 }
