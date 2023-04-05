@@ -163,7 +163,22 @@ class ManagedClient: WebSocketDelegate, ObservableObject {
     var url:String
     var client:WebSocket
     
-    var isConnecting = false
+    private var connectionQueue = DispatchQueue(label: "com.nostur.connection")
+    private var _isConnecting = false
+
+    var isConnecting: Bool {
+        get {
+            return connectionQueue.sync {
+                _isConnecting
+            }
+        }
+        set {
+            connectionQueue.async {
+                self._isConnecting = newValue
+            }
+        }
+    }
+    
     @Published var isConnected = false
     @Published var read = true
     @Published var write = false

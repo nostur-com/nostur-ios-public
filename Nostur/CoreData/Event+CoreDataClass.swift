@@ -10,7 +10,23 @@ import Foundation
 import CoreData
 
 
-public class Event: NSManagedObject, Identifiable {    
-    var parentEvents:[Event] = []
+public class Event: NSManagedObject, Identifiable {
+    
+    private var eventsQueue = DispatchQueue(label: "com.nostur.events")
+    
+    private var _parentEvents: [Event] = []
+    
+    var parentEvents: [Event] {
+        get {
+            return eventsQueue.sync {
+                _parentEvents
+            }
+        }
+        set {
+            eventsQueue.async(flags: .barrier) {
+                self._parentEvents = newValue
+            }
+        }
+    }
 }
 

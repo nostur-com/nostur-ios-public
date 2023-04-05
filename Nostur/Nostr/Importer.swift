@@ -10,12 +10,24 @@ import OSLog
 import CoreData
 
 class Importer {
+    var queue = DispatchQueue(label: "com.nostur.importer")
     var settingsStore = SettingsStore.shared
-    var isImporting = false
+    private var _isImporting = false
+    
+    var isImporting: Bool {
+        get {
+            return queue.sync {
+                _isImporting
+            }
+        }
+        set {
+            queue.sync {
+                _isImporting = newValue
+            }
+        }
+    }
     
     static var shared = Importer()
-    
-    var lastTimelineEventTimestamp:NTimestamp? = nil
     
     public func importEvents() async {
         if (isImporting) {
@@ -33,13 +45,13 @@ class Importer {
         let itemsCount = await parsedBucket.count()
         guard itemsCount != 0 else { self.isImporting = false; return }
         print("🦋🦋 \(itemsCount) messages in parsedBucket.")
-//        if itemsCount == 1 {
-//            print(await parsedBucket.all().description)
-//        }
+        //        if itemsCount == 1 {
+        //            print(await parsedBucket.all().description)
+        //        }
         DispatchQueue.main.async {
             sendNotification(.listStatus, "Processing \(itemsCount) items...")
         }
-
+        
         var forImports = [RelayMessage]()
         while let forImport = await parsedBucket.dequeue() {
             forImports.append(forImport)
@@ -47,7 +59,7 @@ class Importer {
         
         let isSignatureVerificationEnabled = self.settingsStore.isSignatureVerificationEnabled
         
-//        context.performAndWait {
+        //        context.performAndWait {
         await EventsProvider.shared.container.performBackgroundTask { context in
             
             var alreadyInLRUskipped = 0
@@ -57,7 +69,6 @@ class Importer {
             do {
                 for message in forImports {
                     var event = message.event!
-                    self.rememberTimestamp(event:event)
                     
                     guard SavedEventsCache.shared.retrieveObject(at: event.id) == nil else {
                         alreadyInLRUskipped = alreadyInLRUskipped + 1
@@ -90,7 +101,7 @@ class Importer {
                                 _ = Event.saveEvent(event: noteInNote, context:context)
                             }
                             else {
-//                                print("🔴 noteInNote already in db")
+                                //                                print("🔴 noteInNote already in db")
                             }
                             event.content = "#[0]"
                             event.tags.insert(NEventTag(type: "e", otherInformation: noteInNote.id, "", "mention"), at: 0)
@@ -103,7 +114,7 @@ class Importer {
                             // TODO: Need objectWillChange.send() here or not?
                             let pTags = event.pTags()
                             Task { @MainActor in
-//                                NosturState.shared.objectWillChange.send()
+                                //                                NosturState.shared.objectWillChange.send()
                                 NosturState.shared.rawExplorePubkeys = Set(pTags)
                             }
                         }
@@ -120,8 +131,8 @@ class Importer {
                             let fetchTimeline = ClientMessage(type: .REQ, message: RequestMessage.getFollowingEvents(pubkeys: event.pTags()))
                             
                             SocketPool.shared.sendMessage(fetchTimeline)
-//                            print("✈️✈️✈️ ONBORADING SPEED UP FETCHING 1,6,7,9735 FROM E's")
-//                            let fetchReferences = ClientMessage(type: .REQ, message: RequestMessage.getEventReferences(ids: ????))
+                            //                            print("✈️✈️✈️ ONBORADING SPEED UP FETCHING 1,6,7,9735 FROM E's")
+                            //                            let fetchReferences = ClientMessage(type: .REQ, message: RequestMessage.getEventReferences(ids: ????))
                             Account.preFillReadOnlyAccountFollowing(event: event, context: context, forceOverwrite: true)
                         }
                         
@@ -168,9 +179,9 @@ class Importer {
                         // NIP-10: Those marked with "reply" denote the id of the reply event being responded to.
                         // NIP-10: Those marked with "root" denote the root id of the reply thread being responded to.
                         // DISABLED BECAUSE ALREADY DONE IN saveEvent.
-//                        do { try _ = Event.updateRepliesCountCache(event.tags, context: context) } catch {
-//                            print("🦋🦋🔴🔴🔴 problem updateRepliesCountCache .id \(event.id)")
-//                        }
+                        //                        do { try _ = Event.updateRepliesCountCache(event.tags, context: context) } catch {
+                        //                            print("🦋🦋🔴🔴🔴 problem updateRepliesCountCache .id \(event.id)")
+                        //                        }
                     }
                     
                     SavedEventsCache.shared.setObject(for: event.id, value: event.createdAt)
@@ -180,9 +191,9 @@ class Importer {
                     if (saved > 0) {
                         print("💾 forImports: \(forImports.count), saved: \(saved), skipped (cache): \(alreadyInLRUskipped), skipped (db): \(alreadyInDBskipped)")
                     }
-//                    DispatchQueue.main.async {
-//                        sendNotification(.viewNeedsUpdate)
-//                    }
+                    //                    DispatchQueue.main.async {
+                    //                        sendNotification(.viewNeedsUpdate)
+                    //                    }
                 }
                 self.isImporting = false
             }
@@ -190,26 +201,6 @@ class Importer {
                 self.isImporting = false
                 print("🔴🔴🔴🔴🔴🔴 Failed to import because:")
                 print("🔴🔴🔴🔴🔴🔴 \(error)")
-            }
-        }
-    }
-    
-    func rememberTimestamp(event: NEvent) {
-        if event.kind == .textNote || event.kind == .custom(7) {
-            // don't remember if timestamp is in the future
-            if event.createdAt.timestamp > Int(Date().timeIntervalSince1970) {
-                return
-            }
-            
-            // remember timestamp if its the first one
-            if (self.lastTimelineEventTimestamp == nil) {
-                self.lastTimelineEventTimestamp = event.createdAt
-            }
-            else {
-                // only remember if timestamp is newer than already remembered timestamp
-                if (event.createdAt.timestamp > self.lastTimelineEventTimestamp!.timestamp) {
-                    self.lastTimelineEventTimestamp = event.createdAt
-                }
             }
         }
     }

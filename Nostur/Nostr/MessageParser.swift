@@ -12,7 +12,6 @@ class MessageParser {
     static var shared = MessageParser()
 
     var sp = SocketPool.shared
-    var lastTimelineEventTimestamp:NTimestamp? = nil
     var parsedBucket = ActorQueue<RelayMessage>()
     
     func socketReceivedMessage(text:String, relayUrl:String) {
@@ -72,17 +71,6 @@ class MessageParser {
                                     // don't remember if timestamp is in the future:
                                     if message.subscriptionId!.prefix(3) == "TL-" && message.event!.createdAt.timestamp > Int(Date().timeIntervalSince1970) {
                                         return
-                                    }
-                                    
-                                    // remember timestamp if its the first one
-                                    if (self.lastTimelineEventTimestamp == nil) {
-                                        self.lastTimelineEventTimestamp = message.event?.createdAt
-                                    }
-                                    else {
-                                        // only remember if timestamp is newer than already remembered timestamp
-                                        if ((message.event?.createdAt.timestamp)! > self.lastTimelineEventTimestamp!.timestamp) {
-                                            self.lastTimelineEventTimestamp = message.event?.createdAt
-                                        }
                                     }
                                 }
                             }
