@@ -177,7 +177,7 @@ class VPostTransformer {
 //        let hashtagPattern = ###"\#\S+"###
         let lightningInvoicePattern = ###"lnbc\S+"###
         let notePattern = ###"nostr:note1[023456789acdefghjklmnpqrstuvwxyz]{58}"###
-        let neventPattern = ###"nostr:nevent1\S+"###
+        let neventPattern = ###"nostr:nevent1[023456789acdefghjklmnpqrstuvwxyz]+\b"###
         let pattern = "(?i)\(imageUrlPattern)|\(lightningInvoicePattern)|\(notePattern)|\(neventPattern)|\(videoUrlPattern)"
         //        let pattern = ###"\\n"###
         
@@ -207,7 +207,7 @@ class VPostTransformer {
                     result.append(MarkdownElement.note1(m[0][0]))
                 }
                 else if matchString.matchingStrings(regex: neventPattern).count > 0 {
-                    let m = matchString.matchingStrings(regex:#"nevent1\S+"#)
+                    let m = matchString.matchingStrings(regex: #"nevent1[023456789acdefghjklmnpqrstuvwxyz]+\b"#)
                     do {
                         let identifier = try ShareableIdentifier(m[0][0])
                         if let noteId = identifier.eventId {
@@ -215,7 +215,7 @@ class VPostTransformer {
                         }
                     }
                     catch {
-                        print("problem decoding nevent")
+                        print("problem decoding nevent in event.id: \(event.id)")
                         result.append(MarkdownElement.text(contentLinkRenderer.renderedText(event, text:matchString)))
                     }
                 }
