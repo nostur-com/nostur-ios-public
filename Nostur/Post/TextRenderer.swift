@@ -117,27 +117,30 @@ class TextRenderer { // TEXT things
     // NIP-08 (deprecated in favor of NIP-27)
     func parseTagIndexedMentions(event:Event, text:String, plainText:Bool = false) -> String {
         guard tags.count > 0 else { return text }
-        guard tags.count < 100 else { return text }
         
         var newText = text
-        for index in tags.indices {
-            guard index < 50 else { break }
-            if (tags[index].0 == "p") {
+        let matches = text.matches(of: /#\[(\d+)\]/)
+        for match in matches.prefix(100) { // 100 limit for sanity
+            guard let tagIndex = Int(match.output.1) else { continue }
+            guard tagIndex < tags.count else { continue }
+            let tag = tags[tagIndex]
+            
+            if (tag.0 == "p") {
                 if !plainText {
-                    newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(contactUsername(fromPubkey: tags[index].1, event:event).escapeMD())](nostur:p:\(tags[index].1))")
+                    newText = newText.replacingOccurrences(of: match.output.0, with: "[@\(contactUsername(fromPubkey: tag.1, event:event).escapeMD())](nostur:p:\(tag.1))")
                 }
                 else {
-                    newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "@\(contactUsername(fromPubkey: tags[index].1, event:event))")
+                    newText = newText.replacingOccurrences(of: match.output.0, with: "@\(contactUsername(fromPubkey: tag.1, event:event))")
                 }
             }
-            if (tags[index].0 == "e") {
+            else if (tag.0 == "e") {
                 if !plainText {
-                    let key = try! NIP19(prefix: "note1", hexString: tags[index].1)
-                    newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(key.displayString).prefix(11))](nostur:e:\(tags[index].1))")
+                    let key = try! NIP19(prefix: "note1", hexString: tag.1)
+                    newText = newText.replacingOccurrences(of: match.output.0, with: "[@\(String(key.displayString).prefix(11))](nostur:e:\(tag.1))")
                 }
                 else {
-                    let key = try! NIP19(prefix: "note1", hexString: tags[index].1)
-                    newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "@\(String(key.displayString).prefix(11))")
+                    let key = try! NIP19(prefix: "note1", hexString: tag.1)
+                    newText = newText.replacingOccurrences(of: match.output.0, with: "@\(String(key.displayString).prefix(11))")
                 }
             }
         }
@@ -151,7 +154,10 @@ class TextRenderer { // TEXT things
         var replacedString = text
         var range = text.startIndex..<text.endIndex
 
+        var sanityIndex = 0
         while let matchRange = replacedString.range(of: pattern, options: .regularExpression, range: range, locale: nil) {
+            if sanityIndex > 100 { break }
+            sanityIndex += 1
             let match = replacedString[matchRange]
             var replacement = match
             switch match.prefix(11) {
