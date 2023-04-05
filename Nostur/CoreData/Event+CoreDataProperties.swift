@@ -244,13 +244,13 @@ extension Event {
     }
     
     var noteTextPrepared: String {
-        let tags = tags()
+        let tags = fastTags
         guard tags.count > 0 else { return content ?? "" }
         
         var newText = content ?? ""
         for index in tags.indices {
-            if (tags[index].type == "e") {
-                newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "nostr:\(note1(tags[index].id))")
+            if (tags[index].0 == "e") {
+                newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "nostr:\(note1(tags[index].1))")
 
             }
         }
@@ -473,6 +473,21 @@ extension Event {
             }
         }
         return true
+    }
+    
+    var fastTags:[(String, String)] {
+        guard let tagsSerialized = tagsSerialized else { return [] }
+        guard let jsonData = tagsSerialized.data(using: .utf8) else {
+            return []
+        }
+
+        guard let jsonArray = try? JSONSerialization.jsonObject(with: jsonData, options: []) as? [[String]] else {
+            return []
+        }
+        
+        return jsonArray
+            .filter { $0.count >= 2 }
+            .map { ($0[0], $0[1]) }
     }
     
     
@@ -1088,4 +1103,5 @@ extension NEvent {
             return nil
         }
         return mentionOnlyTags.first
-    }}
+    }
+}

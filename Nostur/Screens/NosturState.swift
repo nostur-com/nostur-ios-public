@@ -293,8 +293,8 @@ final class NosturState : ObservableObject {
     
     func followsYou(_ contact:Contact) -> Bool {
         guard contact.clEvent != nil else { return false }
-        guard account != nil else { return false }
-        return (contact.clEvent!.tags()).filter { $0.type == "p" && $0.otherInformation[0] == account!.publicKey }.count > 0
+        guard let account = account else { return false }
+        return (contact.clEvent!.fastTags).filter { $0.0 == "p" && $0.1 == account.publicKey }.count > 0
     }
     
     func muteConversation(_ vPost:VPost) {
