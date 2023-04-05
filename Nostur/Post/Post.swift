@@ -8,41 +8,17 @@
 import Foundation
 import CoreData
 
-//Equatable
-//struct VPost: Identifiable {
 struct VPost: Identifiable, Equatable, Hashable {
     static func == (lhs: VPost, rhs: VPost) -> Bool {
         lhs.id == rhs.id
-//        && lhs.replyingToUsernamesMarkDown == rhs.replyingToUsernamesMarkDown
-//        && lhs.plainText == rhs.plainText
-//        && lhs.renderedText == rhs.renderedText
-//        && lhs.event.liked == rhs.event.liked
-//        && lhs.event.likesCount == rhs.event.likesCount
-//        && lhs.event.reposted == rhs.event.reposted
-//        && lhs.event.firstQuote == rhs.event.firstQuote
-//        && lhs.event.zapsCount == rhs.event.zapsCount
-//        && lhs.event.mentionsCount == rhs.event.mentionsCount
-//        && lhs.event.bookmarkedBy == rhs.event.bookmarkedBy
-//        && lhs.event.repliesCount == rhs.event.repliesCount
     }
     
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
-//        hasher.combine(replyingToUsernamesMarkDown)
-//        hasher.combine(plainText)
-//        hasher.combine(renderedText)
-//        hasher.combine(event.liked)
-//        hasher.combine(event.likesCount)
-//        hasher.combine(event.reposted)
-//        hasher.combine(event.firstQuote)
-//        hasher.combine(event.zapsCount)
-//        hasher.combine(event.mentionsCount)
-//        hasher.combine(event.bookmarkedBy)
-//        hasher.combine(event.contacts)
-//        hasher.combine(event.repliesCount)
     }
     
     let id:String
+    let objectID:NSManagedObjectID
     let event:Event
     let created_at:Int64
     let npub:String
@@ -66,25 +42,7 @@ struct VPost: Identifiable, Equatable, Hashable {
     var name:String {
         "testttt" // TODO replace with .authorName... emoji check etc
     }
-    
-    // todo maybe to firstQuote here....
 }
-
-
-
-//struct VPostData {
-//    let created_at:Int64
-//    let npub:String
-//    let note1:String
-//    var plainText:String
-//    var renderedText:AttributedString
-//    var replyingToUsernamesMarkDown:String? // See ReplyingToFragment
-//    var imageUrls:[URL] // See ImageViewer
-//    var displayName:String
-//    var renderedElements:[MarkdownElement]
-//    var parentPosts:[VPost]
-//    var threadPostsCount:Int
-//}
 
 class VPostTransformer {
     static let shared = VPostTransformer()
@@ -139,34 +97,6 @@ class VPostTransformer {
             firstQuoteId: privateEvent.firstQuoteId
         )
     }
-    
-//    func vPostData(_ privateEvent:Event, skipParents:Bool? = false) -> VPostData {
-//        return VPostData(
-//            created_at: privateEvent.created_at,
-//            npub: privateEvent.npub,
-//            note1: privateEvent.noteId,
-//            plainText: contentLinkRenderer.copyPasteText(privateEvent, text: privateEvent.noteText),
-//            renderedText: contentLinkRenderer.renderedText(privateEvent, text: privateEvent.noteText),
-//            replyingToUsernamesMarkDown: replyingToBuilder.replyingToUsernamesMarkDownString(privateEvent),
-//            imageUrls: privateEvent.content != nil ? getImgUrlsFromContent(privateEvent.content!) : [],
-//            displayName: privateEvent.contact?.authorName ?? String((privateEvent.npub.prefix(11))),
-//            renderedElements: renderElements(privateEvent),
-//            parentPosts: !skipParents! ? privateEvent.parentEvents.map { toVPost($0, skipParents: true) } : []
-//        )
-//    }
-    
-//    func getParentPosts(_ event:Event) -> [VPost] {
-//        var parentPosts = [VPost]()
-//        var currentEvent:Event? = event
-//        while (currentEvent != nil) {
-//            if let replyTo = currentEvent?.replyTo {
-//                parentPosts.append(toVPost(replyTo, skipParents: true))
-//                currentEvent = replyTo
-//            }
-//            currentEvent = nil
-//        }
-//        return parentPosts
-//    }
 
     func renderElements(_ event:Event) -> [MarkdownElement] {
         let contentLinkRenderer = TextRenderer(self.context, event: event)

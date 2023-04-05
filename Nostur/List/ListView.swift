@@ -21,6 +21,7 @@ struct ListView: View {
         let _ = Self._printChanges()
         ScrollViewReader { proxy in
             if vmState.vPosts.count > 0 {
+//                Text("vPosts: \(vmState.vPosts.count) | threadValue: \(vmState.vPosts.reduce(0, { $0 + $1.threadPostsCount } ) )")
                 ScrollView {
                     LazyVStack {
                         ForEach(vmState.vPosts) { vPost in
