@@ -90,26 +90,24 @@ class VPostTransformer {
     static let shared = VPostTransformer()
     
     let context:NSManagedObjectContext
-    let replyingToBuilder:ReplyingToUsernamesBuilder
-    let contentLinkRenderer:ContentLinkRenderer
     
     init(_ context:NSManagedObjectContext? = nil) {
         self.context = context ?? DataProvider.shared().viewContext
-        self.replyingToBuilder = ReplyingToUsernamesBuilder(self.context)
-        self.contentLinkRenderer = ContentLinkRenderer(self.context)
     }
     
-    func toVPost(_ mainEvent:Event, skipParents:Bool? = false) -> VPost? {
+    func toVPost(_ mainEvent:Event, skipParents:Bool? = false, plainText:Bool = false) -> VPost? {
         if mainEvent.managedObjectContext == self.context {
+            let textRenderer = TextRenderer(self.context, event: mainEvent)
             return VPost(
                 id: mainEvent.id,
+                objectID: mainEvent.objectID,
                 event: mainEvent, // Should always be main context event
                 created_at: mainEvent.created_at,
                 npub: mainEvent.npub,
                 note1: mainEvent.noteId,
-                plainText: contentLinkRenderer.copyPasteText(mainEvent, text: mainEvent.noteText),
-                renderedText: contentLinkRenderer.renderedText(mainEvent, text: mainEvent.noteText),
-                replyingToUsernamesMarkDown: replyingToBuilder.replyingToUsernamesMarkDownString(mainEvent),
+                plainText: plainText ? textRenderer.copyPasteText(mainEvent, text: mainEvent.noteText) : "",
+                renderedText: textRenderer.renderedText(mainEvent, text: mainEvent.noteText),
+                replyingToUsernamesMarkDown: textRenderer.replyingToUsernamesMarkDownString(mainEvent),
                 imageUrls: mainEvent.content != nil ? getImgUrlsFromContent(mainEvent.content!) : [],
                 displayName: mainEvent.contact?.authorName ?? String((mainEvent.npub.prefix(11))),
                 renderedElements: renderElements(mainEvent),
@@ -121,16 +119,17 @@ class VPostTransformer {
         }
         
         guard let privateEvent = try? context.existingObject(with: mainEvent.objectID) as? Event else { return nil }
-
+        let textRenderer = TextRenderer(self.context, event: privateEvent)
         return VPost(
             id: privateEvent.id,
+            objectID: privateEvent.objectID,
             event: mainEvent, // Should always be main context event
             created_at: privateEvent.created_at,
             npub: privateEvent.npub,
             note1: privateEvent.noteId,
-            plainText: contentLinkRenderer.copyPasteText(privateEvent, text: privateEvent.noteText),
-            renderedText: contentLinkRenderer.renderedText(privateEvent, text: privateEvent.noteText),
-            replyingToUsernamesMarkDown: replyingToBuilder.replyingToUsernamesMarkDownString(privateEvent),
+            plainText: plainText ? textRenderer.copyPasteText(privateEvent, text: privateEvent.noteText) : "",
+            renderedText: textRenderer.renderedText(privateEvent, text: privateEvent.noteText),
+            replyingToUsernamesMarkDown: textRenderer.replyingToUsernamesMarkDownString(privateEvent),
             imageUrls: privateEvent.content != nil ? getImgUrlsFromContent(privateEvent.content!) : [],
             displayName: privateEvent.contact?.authorName ?? String((privateEvent.npub.prefix(11))),
             renderedElements: renderElements(privateEvent),
@@ -170,6 +169,7 @@ class VPostTransformer {
 //    }
 
     func renderElements(_ event:Event) -> [MarkdownElement] {
+        let contentLinkRenderer = TextRenderer(self.context, event: event)
         let input = event.noteTextPrepared
         //        let input = "The quick brown fox jumps over the lazy lazy dog."
         let imageUrlPattern = ###"(?i)https?:\/\/\S+?\.(?:png|jpe?g|gif|webp|bmp)(\?\S+){0,1}\b"###

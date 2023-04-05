@@ -9,8 +9,8 @@ import CoreData
 import OSLog
 
 extension Event {
-    func toVPost() -> VPost? {
-        VPostTransformer.shared.toVPost(self)
+    func toVPost(plainText:Bool = false) -> VPost? {
+        VPostTransformer.shared.toVPost(self, plainText: plainText)
     }
 }
 

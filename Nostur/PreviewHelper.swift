@@ -141,9 +141,9 @@ struct PreviewFetcher {
         return try! PreviewFetcher.viewContext.fetch(request).randomElement()
     }
     
-    static func fetchVPost(_ id:String? = nil, context:NSManagedObjectContext? = nil) -> VPost? {
+    static func fetchVPost(_ id:String? = nil, context:NSManagedObjectContext? = nil, plainText:Bool = false) -> VPost? {
         if let event = fetchEvent(id) {
-            return event.toVPost()
+            return event.toVPost(plainText: plainText)
         }
         return nil
     }

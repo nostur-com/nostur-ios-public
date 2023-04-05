@@ -48,7 +48,7 @@ struct NotificationsReactions: View, Equatable {
     }
     
     var myNotesReactedToAsVPosts:[VPost] {
-        myNotesReactedTo.compactMap { VPostTransformer.shared.toVPost($0, skipParents: true) }
+        myNotesReactedTo.compactMap { VPostTransformer.shared.toVPost($0, skipParents: true, plainText: true) }
     }
     
     func reactionsForNote(_ note:Event) -> [Event] {

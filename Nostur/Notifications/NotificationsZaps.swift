@@ -110,8 +110,8 @@ struct NotificationsZaps: View, Equatable {
                         .frame(width:70)
                         VStack(alignment:.leading, spacing: 3) {
                             Group {
-                                ZapsForThisNote(zaps:zapsForNote(note), onAppear: self.onAppear)
-                                NoteMinimalContentView(vPost: note.toVPost()!, lineLimit: 3)
+                                ZapsForThisNote(zaps:zapsForNote(note))
+                                NoteMinimalContentView(vPost: note.toVPost(plainText: true)!, lineLimit: 3)
                             }
                         }
                     }

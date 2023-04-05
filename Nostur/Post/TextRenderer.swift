@@ -13,11 +13,15 @@ import CoreData
 // Tag links
 // Other links
 // DOES NOT handle note links or image links, because those are embeds, handled by ContentRenderer
-class ContentLinkRenderer { // TEXT things
+class TextRenderer { // TEXT things
     let context:NSManagedObjectContext
+    let event:Event // The current event, so we dont need to duplicate .tags parsing
+    let tags:[(String, String)] // Faster tags, and only decode once at init
     
-    init(_ context:NSManagedObjectContext? = nil) {
+    init(_ context:NSManagedObjectContext? = nil, event:Event) {
         self.context = context ?? DataProvider.shared().viewContext
+        self.event = event
+        self.tags = event.fastTags
     }
     
     func renderedText(_ event:Event, text: String) -> AttributedString {
@@ -51,17 +55,51 @@ class ContentLinkRenderer { // TEXT things
     }
     
     func contactUsername(fromPubkey pubkey:String, event:Event) -> String {
+        if let username = PubkeyUsernameCache.shared.retrieveObject(at: pubkey) {
+            return username
+        }
         if let eventContact = event.contact, eventContact.pubkey == pubkey {
-            return eventContact.username != "" ? eventContact.username : eventContact.authorName
+            let username = eventContact.username != "" ? eventContact.username : eventContact.authorName
+            PubkeyUsernameCache.shared.setObject(for: pubkey, value: username)
+            return username
         }
         if let contact = event.contacts?.first(where: { $0.pubkey == pubkey }) {
-            return contact.username != "" ? contact.username : contact.authorName
+            let username = contact.username != "" ? contact.username : contact.authorName
+            PubkeyUsernameCache.shared.setObject(for: pubkey, value: username)
+            return username
         }
         // SLOW?
         if let contact = Contact.fetchByPubkey(pubkey, context: context) {
-            return contact.username != "" ? contact.username : contact.authorName
+            let username = contact.username != "" ? contact.username : contact.authorName
+            PubkeyUsernameCache.shared.setObject(for: pubkey, value: username)
+            return username
         }
         return "--"
+    }
+    
+    func replyingToUsernamesMarkDownString(_ event:Event) -> String? {
+        guard event.replyToId != nil || event.replyTo != nil else { return nil }
+        guard tags.count < 50 else { return "Replying to \(tags.count) people" }
+        
+        
+        let pTags = Set(tags.filter { $0.0 == "p" }.map { $0.1 })
+        if (pTags.count > 6) {
+            let pTagsAsStrings = pTags.prefix(4).map { pubkey in
+                let username = contactUsername(fromPubkey: pubkey, event: event)
+                    .escapeMD()
+                return "[@\(username)](nostur:p:\(pubkey))"
+            }
+            return "Replying to: " + pTagsAsStrings.joined(separator: ", ") + " and \(pTags.count-4) others"
+        }
+        else if (pTags.count > 0) {
+            let pTagsAsStrings = pTags.map { pubkey in
+                let username = contactUsername(fromPubkey: pubkey, event: event)
+                    .escapeMD()
+                return "[@\(username)](nostur:p:\(pubkey))"
+            }
+            return "Replying to: " + pTagsAsStrings.joined(separator: ", ")
+        }
+        return nil
     }
     
     func copyPasteText(_ event:Event,  text: String) -> String {
@@ -78,26 +116,27 @@ class ContentLinkRenderer { // TEXT things
     
     // NIP-08 (deprecated in favor of NIP-27)
     func parseTagIndexedMentions(event:Event, text:String, plainText:Bool = false) -> String {
-        let tags = event.tags()
         guard tags.count > 0 else { return text }
+        guard tags.count < 100 else { return text }
         
         var newText = text
         for index in tags.indices {
-            if (tags[index].type == "p") {
+            guard index < 50 else { break }
+            if (tags[index].0 == "p") {
                 if !plainText {
-                    newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(contactUsername(fromPubkey: tags[index].pubkey, event:event).escapeMD())](nostur:p:\(tags[index].pubkey))")
+                    newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(contactUsername(fromPubkey: tags[index].1, event:event).escapeMD())](nostur:p:\(tags[index].1))")
                 }
                 else {
-                    newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "@\(contactUsername(fromPubkey: tags[index].pubkey, event:event))")
+                    newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "@\(contactUsername(fromPubkey: tags[index].1, event:event))")
                 }
             }
-            if (tags[index].type == "e") {
+            if (tags[index].0 == "e") {
                 if !plainText {
-                    let key = try! NIP19(prefix: "note1", hexString: tags[index].id)
-                    newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(key.displayString).prefix(11))](nostur:e:\(tags[index].id))")
+                    let key = try! NIP19(prefix: "note1", hexString: tags[index].1)
+                    newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "[@\(String(key.displayString).prefix(11))](nostur:e:\(tags[index].1))")
                 }
                 else {
-                    let key = try! NIP19(prefix: "note1", hexString: tags[index].id)
+                    let key = try! NIP19(prefix: "note1", hexString: tags[index].1)
                     newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "@\(String(key.displayString).prefix(11))")
                 }
             }
@@ -184,3 +223,16 @@ class ContentLinkRenderer { // TEXT things
 
 
 
+
+
+extension String {
+    func escapeMD() -> String {
+        return self
+            .replacingOccurrences(of: "__", with: "\\_\\_")
+            .replacingOccurrences(of: "**", with: "\\*\\*")
+            .replacingOccurrences(of: "[", with: "\\[")
+            .replacingOccurrences(of: "]", with: "\\]")
+            .replacingOccurrences(of: "/", with: "\\/")
+            .replacingOccurrences(of: "\\", with: "\\\\")
+    }
+}

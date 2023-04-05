@@ -204,6 +204,11 @@ extension Event {
 
 extension Event {
     
+    var plainText:String {
+        let textRenderer = TextRenderer(managedObjectContext, event: self)
+        return textRenderer.copyPasteText(self, text: self.noteText)
+    }
+    
     var date: Date {
         get {
            Date(timeIntervalSince1970: Double(created_at))
