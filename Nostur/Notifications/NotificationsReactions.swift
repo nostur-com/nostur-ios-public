@@ -24,7 +24,6 @@ struct NotificationsReactions: View, Equatable {
     let nav:NavigationModel = .shared
     @EnvironmentObject var ns:NosturState
     @Environment(\.managedObjectContext) var viewContext
-    var onAppear:(Date) -> ()
     
     @FetchRequest
     var reactions:FetchedResults<Event>
@@ -55,11 +54,9 @@ struct NotificationsReactions: View, Equatable {
         reactions.compactMap {  $0.reactionTo == note ? $0 : nil }
     }
     
-    init(pubkey:String, blockedPubkeys:[String], context:NSManagedObjectContext, onAppear: @escaping (Date) -> ()) {
+    init(pubkey:String, blockedPubkeys:[String], context:NSManagedObjectContext) {
         self.pubkey = pubkey
         self.blockedPubkeys = blockedPubkeys
-        self.onAppear = onAppear
-        
         let r1 = Event.fetchRequest()
         r1.predicate = NSPredicate(format: "NOT pubkey IN %@ AND kind == 7 AND reactionTo.contact.pubkey == %@", blockedPubkeys, pubkey)
         r1.fetchLimit = FETCH_LIMIT
@@ -88,7 +85,7 @@ struct NotificationsReactions: View, Equatable {
                 Section {
                     ForEach(myNotesReactedToAsVPosts) { vPost in
                         VStack(alignment:.leading, spacing: 3) {
-                            ReactionsForThisNote(reactions:reactionsForNote(vPost.event), onAppear: self.onAppear)
+                            ReactionsForThisNote(reactions:reactionsForNote(vPost.event))
                             NoteMinimalContentView(vPost: vPost)
                         }
                         .padding(.vertical, 10)
@@ -159,7 +156,6 @@ struct NotificationsReactions: View, Equatable {
 struct ReactionsForThisNote: View {
     var reactions:[Event]
     @Environment(\.managedObjectContext) var viewContext
-    var onAppear:(Date) -> ()
     
     var withoutDuplicates:[Event] { // Author may accidentally like multiple times
         reactions
@@ -175,9 +171,6 @@ struct ReactionsForThisNote: View {
                     ZStack {
                         PFP(pubkey: reactions[index].pubkey, pictureUrl: reactions[index].contact?.picture)
                             .id(reactions[index].id)
-                            .onAppear {
-                                onAppear(reactions[index].insertedAt)
-                            }
                             .zIndex(-Double(index))
                         Text(reactions[index].content == "+" ? "❤️" : reactions[index].content ?? "❤️")
                             .offset(x:-10, y:+15)
@@ -222,9 +215,7 @@ struct ReactionsForThisNote: View {
 struct NotificationsV_Previews: PreviewProvider {
     static var previews: some View {
         let pubkey = "04c915daefee38317fa734444acee390a8269fe5810b2241e5e6dd343dfbecc9"
-        NotificationsReactions(pubkey: pubkey, blockedPubkeys: [], context: EventsProvider.preview.container.viewContext) { _ in
-            
-        }
-        .withPreviewEnvironment()
+        NotificationsReactions(pubkey: pubkey, blockedPubkeys: [], context: EventsProvider.preview.container.viewContext)
+            .withPreviewEnvironment()
     }
 }

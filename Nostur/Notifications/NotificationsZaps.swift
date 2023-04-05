@@ -23,7 +23,6 @@ struct NotificationsZaps: View, Equatable {
     let sp:SocketPool = .shared
     @EnvironmentObject var ns:NosturState
     @Environment(\.managedObjectContext) var viewContext
-    var onAppear:(Date) -> ()
     
     @FetchRequest
     var zaps:FetchedResults<Event>
@@ -55,10 +54,9 @@ struct NotificationsZaps: View, Equatable {
         }
     }
 //    
-    init(pubkey:String, blockedPubkeys:[String], context:NSManagedObjectContext, onAppear: @escaping (Date) -> ()) {
+    init(pubkey:String, blockedPubkeys:[String], context:NSManagedObjectContext) {
         self.pubkey = pubkey
         self.blockedPubkeys = blockedPubkeys
-        self.onAppear = onAppear
         let r1 = Event.fetchRequest()
         r1.predicate = NSPredicate(
             format:
@@ -181,7 +179,6 @@ struct NotificationsZaps: View, Equatable {
 struct ZapsForThisNote: View {
     var zaps:[Event]
     @Environment(\.managedObjectContext) var viewContext
-    var onAppear:(Date) -> ()
     
     var zapsSorted:[Event] { // $0.sats > $0.sats is slow... so cached..
         zaps
@@ -223,10 +220,6 @@ struct ZapsForThisNote: View {
                 ForEach(Array(deduplicated.keys.enumerated()), id: \.1) { index, key in
                     ZStack {
                         PFP(pubkey: deduplicated[key]!.0 , pictureUrl: deduplicated[key]!.1)
-//                            .id(zapsSorted[index].id)
-                            .onAppear {
-                                onAppear(deduplicated[key]!.3)
-                            }
                             .zIndex(-Double(index))
                         
                         Text("\(deduplicated[key]!.2.satsFormatted)")
@@ -275,9 +268,7 @@ struct ZapsForThisNote: View {
 struct NotificationsZaps_Previews: PreviewProvider {
     static var previews: some View {
         let pubkey = "32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245"
-        NotificationsZaps(pubkey: pubkey, blockedPubkeys:[],  context: EventsProvider.preview.container.viewContext) { _ in
-            
-        }
+        NotificationsZaps(pubkey: pubkey, blockedPubkeys:[],  context: EventsProvider.preview.container.viewContext)
             .withPreviewEnvironment()
     }
 }

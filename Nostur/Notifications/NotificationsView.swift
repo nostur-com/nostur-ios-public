@@ -68,15 +68,15 @@ struct NotificationsView: View {
                 
                 switch (tab) {
                     case "Posts":
-                        NotificationsPosts(pubkey: account.publicKey, mutedRootIds: account.mutedRootIds_, blockedPubkeys: account.blockedPubkeys_, context: viewContext, onAppear: saveLastSeenPost)
+                        NotificationsPosts(pubkey: account.publicKey, mutedRootIds: account.mutedRootIds_, blockedPubkeys: account.blockedPubkeys_, context: viewContext)
                             .equatable()
                             .padding(.horizontal, 10)
                     case "Reactions":
-                        NotificationsReactions(pubkey: account.publicKey, blockedPubkeys: account.blockedPubkeys_, context: viewContext, onAppear: saveLastSeenReaction)
+                        NotificationsReactions(pubkey: account.publicKey, blockedPubkeys: account.blockedPubkeys_, context: viewContext)
                             .equatable()
                             .padding(.horizontal, 10)
                     case "Zaps":
-                        NotificationsZaps(pubkey: account.publicKey, blockedPubkeys: account.blockedPubkeys_, context: viewContext, onAppear: saveLastSeenZap)
+                        NotificationsZaps(pubkey: account.publicKey, blockedPubkeys: account.blockedPubkeys_, context: viewContext)
                             .equatable()
                             .padding(.horizontal, 10)
                     default:
@@ -95,27 +95,6 @@ struct NotificationsView: View {
         .onAppear {
             nm.unreadMentions = 0
         }
-    }
-    
-    func saveLastSeenPost(_ insertedAt:Date) {
-//        if (insertedAt > lst.lastSeenPostInsertedAt ?? Date.init(timeIntervalSince1970: 0)) {
-//            lst.lastSeenPostInsertedAt = insertedAt
-//            nm.saveContext.send()
-//        }
-    }
-    
-    func saveLastSeenReaction(_ insertedAt:Date) {
-//        if (insertedAt > lst.lastSeenReactionInsertedAt ?? Date.init(timeIntervalSince1970: 0)) {
-//            lst.lastSeenReactionInsertedAt = insertedAt
-//            nm.saveContext.send()
-//        }
-    }
-    
-    func saveLastSeenZap(_ insertedAt:Date) {
-//        if (insertedAt > lst.lastSeenZapInsertedAt ?? Date.init(timeIntervalSince1970: 0)) {
-//            lst.lastSeenZapInsertedAt = insertedAt
-//            nm.saveContext.send()
-//        }
     }
 }
 

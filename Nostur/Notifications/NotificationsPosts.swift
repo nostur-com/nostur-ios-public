@@ -24,7 +24,6 @@ struct NotificationsPosts: View, Equatable {
     let nav:NavigationModel = .shared
     @EnvironmentObject var ns:NosturState
     @Environment(\.managedObjectContext) var viewContext
-    var onAppear:(Date) -> ()
     
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
@@ -34,11 +33,10 @@ struct NotificationsPosts: View, Equatable {
         notes.compactMap { VPostTransformer.shared.toVPost($0, skipParents: true) }
     }
     
-    init(pubkey:String, mutedRootIds:[String], blockedPubkeys:[String], context:NSManagedObjectContext, onAppear: @escaping (Date) -> ()) {
+    init(pubkey:String, mutedRootIds:[String], blockedPubkeys:[String], context:NSManagedObjectContext) {
         self.pubkey = pubkey
         self.mutedRootIds = mutedRootIds
         self.blockedPubkeys = blockedPubkeys
-        self.onAppear = onAppear
         
         let r2 = Event.fetchRequest()
         r2.predicate = NSPredicate(
@@ -71,9 +69,6 @@ struct NotificationsPosts: View, Equatable {
                             nav.navigateTo(vPost)
                         }
                         .id(vPost.id)
-                        .onAppear {
-                            onAppear(vPost.event.insertedAt)
-                        }
                 }
                 HStack {
                     Spacer()
@@ -129,9 +124,7 @@ struct NotificationsPosts: View, Equatable {
 struct NotificationsNotes_Previews: PreviewProvider {
     static var previews: some View {
         let pubkey = "04c915daefee38317fa734444acee390a8269fe5810b2241e5e6dd343dfbecc9"
-        NotificationsPosts(pubkey: pubkey, mutedRootIds: [], blockedPubkeys: [], context: EventsProvider.preview.container.viewContext) { _ in
-            
-        }
-        .withPreviewEnvironment()
+        NotificationsPosts(pubkey: pubkey, mutedRootIds: [], blockedPubkeys: [], context: EventsProvider.preview.container.viewContext)
+                .withPreviewEnvironment()
     }
 }
