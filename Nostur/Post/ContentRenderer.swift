@@ -208,79 +208,7 @@ struct VPV: UIViewRepresentable {
 
         }
     }
-
-//    func play() {
-//        player.play()
-//    }
-//
-//    func pause() {
-//        player.pause()
-//    }
 }
-
-
-//struct VPV: UIViewControllerRepresentable {
-//    let asset: AVAsset
-//    @Binding var isPlaying:Bool
-//
-//    init(asset: AVAsset, isPlaying:Binding<Bool>) {
-//        self.asset = asset
-//        _isPlaying = isPlaying
-//    }
-//
-//    func makeUIViewController(context: Context) -> AVPlayerViewController {
-//        let playerViewController = AVPlayerViewController()
-//        playerViewController.player = self.player
-//        playerViewController.showsPlaybackControls = true
-//        playerViewController.allowsPictureInPicturePlayback = true
-//        playerViewController.delegate = context.coordinator
-//        playerViewController.player?.play()
-//
-//        return playerViewController
-//    }
-//
-//    func makeCoordinator() -> Coordinator {
-//        Coordinator(self)
-//    }
-//
-//    //    func makeUIView(context: Context) -> UIView {
-//    //        let playerView = UIView(frame: CGRect(x: 0, y: 0, width: width, height: height))
-//    //        let player = AVPlayer(url: videoURL)
-//    //        let playerLayer = AVPlayerLayer(player: player)
-//    //        playerLayer.videoGravity = .resizeAspectFill
-//    //        playerLayer.frame = playerView.bounds
-//    //        playerView.layer.addSublayer(playerLayer)
-//    //
-//    //        player.play()
-//    //
-//    //        return playerView
-//    //    }
-//
-//    func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {
-//        if (isPlaying) {
-//            self.player.play()
-//        }
-//        else {
-//            self.player.play()
-//        }
-//    }
-//
-//    class Coordinator: NSObject, AVPlayerViewControllerDelegate {
-//        var parent: AVP
-//
-//        init(_ parent: AVP) {
-//            self.parent = parent
-//        }
-//    }
-//
-//    //    class Coordinator: NSObject, AVPlayerViewControllerDelegate {
-//    //        var parent: AVP
-//    //
-//    //        init(_ parent: AVP) {
-//    //            self.parent = parent
-//    //        }
-//    //    }
-//}
 
 
 enum MarkdownElement: Hashable {

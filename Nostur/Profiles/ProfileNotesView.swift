@@ -14,7 +14,7 @@ struct ProfileNotesView: View {
      
     let sp:SocketPool = .shared
     let pubkey:String
-    @State var limit = 10
+    @State var limit = 150
     
     var body: some View {
         DynamicFetchView(
@@ -25,7 +25,7 @@ struct ProfileNotesView: View {
                     if (events.count > 0) {
                         ForEach(events.compactMap { VPostTransformer.shared.toVPost($0, skipParents: true) }) { vPost in
                             NoteRow(vPost: vPost)
-                                .id(vPost.id)
+//                                .id(vPost.id)
                                 .boxShadow()
                                 .onTapGesture {
                                     navigateTo(vPost)
@@ -36,7 +36,7 @@ struct ProfileNotesView: View {
                                 HStack {
                                     Spacer()
                                     Button("Load more") {
-                                        limit = limit + 25
+                                        limit = limit + 125
                                     }
                                     .padding(30)
                                     Spacer()
