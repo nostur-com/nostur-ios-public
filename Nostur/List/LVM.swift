@@ -90,18 +90,26 @@ class LVM: NSObject, ObservableObject {
     
     private func processPostsInBackground(_ events:[Event]) { // events are from viewContext
         let context = DataProvider.shared().container.newBackgroundContext()
+        let onScreenIds = self.lvmState.vPosts.reduce(Set<NSManagedObjectID>()) { partialResult, vPost in
+            partialResult.union(Set([vPost.objectID] + vPost.parentPosts.map { $0.objectID }))
+        }
         
         context.perform { [unowned self] in
             let transformer = VPostTransformer(context) // Tranform in bg
             let currentVPosts = self.lvmState.vPosts // viewContext
+            let firstCreatedAt = currentVPosts.first?.created_at ?? 0
             var newVPosts:[VPost] = []
-            
+            var transformCounter = 0
             for event in self.events {
-                if currentVPosts.firstIndex(where: { $0.event.objectID == event.objectID } ) != nil {
+                if onScreenIds.contains(event.objectID) {
                     continue // Skip if the post is already on screen
                 }
+//                if currentVPosts.firstIndex(where: { $0.event.objectID == event.objectID } ) != nil {
+//                    continue // Skip if the post is already on screen
+//                }
                 else {
                     if let newVPost = transformer.toVPost(event) {
+                        transformCounter += 1
                         newVPosts.append(newVPost)
                     }
                 }
@@ -111,10 +119,10 @@ class LVM: NSObject, ObservableObject {
             let added = newVPosts
 //                .filter(notMuted) // TODO ADD BACK NOT MUtED IN RIGHT CONTEXT / THREAD
                 // post added to the end should not be older than the first one already on screen...
-                .filter { $0.created_at > (currentVPosts.first?.created_at ?? 0) }
+                .filter { $0.created_at > (firstCreatedAt) }
                 .suffix(LVM_MAX_VISIBLE)
             
-            
+            print("Transformed \(transformCounter) posts")
             if currentVPosts.count == 0 {
                 // remove duplicates
                 let dupsRemoved = self.renderLeafs(added)
@@ -698,7 +706,10 @@ extension LVM: NSFetchedResultsControllerDelegate {
                 self.updateUnreadCount()
                 
             default:
-                self.events = events.filter(onlyRootOrReplyingToFollower)
+                let firstCreatedAt = self.lvmState.vPosts.first?.created_at ?? 0
+                self.events = events
+                    .filter { $0.created_at > firstCreatedAt } // skip all older than first on screen
+                    .filter(onlyRootOrReplyingToFollower)
                     .sorted(by: { $0.created_at < $1.created_at } )
                     .suffix(LVM_MAX_VISIBLE * 2)
                     .map {
