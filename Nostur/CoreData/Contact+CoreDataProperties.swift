@@ -203,6 +203,7 @@ extension Contact : Identifiable {
         let request = NSFetchRequest<Contact>(entityName: "Contact")
         request.predicate = NSPredicate(format: "pubkey == %@", event.publicKey)
         request.sortDescriptors = [NSSortDescriptor(key: "updated_at", ascending: false)]
+        request.fetchLimit = 1
         
         if let contact = try! context.fetch(request).first {
             
