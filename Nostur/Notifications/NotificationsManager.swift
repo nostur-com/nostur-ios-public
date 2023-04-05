@@ -15,40 +15,41 @@ class NotificationsManager: ObservableObject {
     
     static let shared = NotificationsManager()
     
-    @Published var unreadMentions = 0 {
+    @Published var unreadMentions:Int = 0 {
         didSet {
             sendNotification(.updateNotificationsCount, unread)
         }
     }
-    @Published var unreadReactions = 0 {
+    @Published var unreadReactions:Int = 0 {
         didSet {
             sendNotification(.updateNotificationsCount, unread)
         }
     }
-    @Published var unreadZaps = 0 {
+    @Published var unreadZaps:Int = 0 {
         didSet {
             sendNotification(.updateNotificationsCount, unread)
         }
     }
-    @Published var unreadDMsAccepted = 0 {
+    @Published var unreadDMsAccepted:Int = 0 {
         didSet {
             sendNotification(.updateDMsCount, unreadDMs)
         }
     }
-    @Published var unreadDMRequests = 0 {
+    @Published var unreadDMRequests:Int = 0 {
         didSet {
             sendNotification(.updateDMsCount, unreadDMs)
         }
     }
     
     // Notifications tab
-    var unread:Int {
-        unreadMentions + unreadReactions + unreadZaps
+    var unread: Int {
+        let sum = unreadMentions &+ unreadReactions
+        return sum &+ unreadZaps
     }
     
     // DMs tab
     var unreadDMs:Int {
-        unreadDMsAccepted + unreadDMRequests
+        unreadDMsAccepted &+ unreadDMRequests
     }
     
     let viewContext = DataProvider.shared().viewContext
@@ -112,7 +113,7 @@ class NotificationsManager: ObservableObject {
         
         let unreadMentions = (try? DataProvider.shared().viewContext.count(for: r2)) ?? 0
         if unreadMentions != self.unreadMentions {
-            self.unreadMentions = unreadMentions
+            self.unreadMentions = min(unreadMentions,9999)
         }
     }
     
@@ -138,7 +139,7 @@ class NotificationsManager: ObservableObject {
         r2.resultType = .countResultType
         let unreadReactions = (try? DataProvider.shared().viewContext.count(for: r2)) ?? 0
         if unreadReactions != self.unreadReactions {
-            self.unreadReactions = unreadReactions
+            self.unreadReactions = min(unreadReactions,9999)
         }
     }
     
@@ -169,7 +170,7 @@ class NotificationsManager: ObservableObject {
         let unreadZaps = (try? DataProvider.shared().viewContext.count(for: r2)) ?? 0
         
         if unreadZaps != self.unreadZaps {
-            self.unreadZaps = unreadZaps
+            self.unreadZaps = min(unreadZaps,9999)
         }
 
     }
@@ -229,11 +230,11 @@ class NotificationsManager: ObservableObject {
         
         // Only set if changed. (else rerender because _nm changed.)
         if newUnreadDMsAccepted != unreadDMsAccepted {
-            unreadDMsAccepted = newUnreadDMsAccepted
+            unreadDMsAccepted = min(newUnreadDMsAccepted,9999)
         }
 
         if newUnreadDMRequests != unreadDMRequests {
-            unreadDMRequests = newUnreadDMRequests
+            unreadDMRequests = min(newUnreadDMRequests,9999)
         }
     }
     
