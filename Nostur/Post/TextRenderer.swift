@@ -215,7 +215,7 @@ class TextRenderer { // TEXT things
     
     static func replaceHashtagsWithMarkdownLinks(in string: String) -> String {
         return string
-            .replacingOccurrences(of: ###"(?<![/\?]|\b)(\#)(\S+)"###,
+            .replacingOccurrences(of: ###"(?<![/\?]|\b)(\#)(\S{2,})\b"###,
                                   with: "[$0](nostur:t:$2)",
                                   options: .regularExpression)
     }
