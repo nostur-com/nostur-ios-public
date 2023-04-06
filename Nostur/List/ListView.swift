@@ -124,20 +124,6 @@ struct ListView: View {
         .background(Color("ListBackground"))
     }
     
-    private func xmakeCellContent(vPost: VPost) -> some View {
-        PostOrThread(vPost: vPost)
-            .onBecomingVisible {
-                guard vmState.state != .AWAITING_FIRST_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-                guard vmState.state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-                guard vmState.state != .SWITCHING_ACCOUNT else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-                //                                        lastAppearedId = vPost.id
-                vm.lastAppearedSubject.send(vPost.event)
-                //                                        vm.onPostAppeared(vPost.event)
-            }
-            .boxShadow()
-            .padding()
-    }
-    
     struct CellButtonStyle: ButtonStyle {
         func makeBody(configuration: Configuration) -> some View {
             configuration.label
