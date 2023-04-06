@@ -39,6 +39,7 @@ struct PostPreview: View {
             }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
+                    DataProvider.shared().viewContext.delete(previewEvent)
                     sendNow()
                 } label: {
                     Text("Post")
