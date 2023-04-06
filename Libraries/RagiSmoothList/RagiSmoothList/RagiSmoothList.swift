@@ -19,6 +19,7 @@ public struct RagiSmoothList<
     // swiftlint:disable:next line_length
     public typealias RowDeletedCallback = ((sectionIndex: Int, itemIndex: Int, section: SectionType, item: ItemType)) -> Void
     public typealias RowAppearedCallback = ((sectionIndex: Int, itemIndex: Int, item: ItemType)) -> Void
+    public typealias FinishedScrollingCallback = (Bool) -> Void
 
     @Environment(\.ragiSmoothListStyle) var listStyle
 
@@ -36,6 +37,7 @@ public struct RagiSmoothList<
     private var onRefresh: (() -> Void)?
     private var onRowDeleted: RowDeletedCallback?
     private var onRowAppeared: RowAppearedCallback?
+    private var onFinishedScrolling: FinishedScrollingCallback?
     private var searchable: (bindableText: Binding<String>?, placeholder: String)?
 
     public init(
@@ -75,6 +77,9 @@ public struct RagiSmoothList<
             },
             onRowAppeared: { sectionIndex, itemIndex, item in
                 onRowAppeared?((sectionIndex: sectionIndex, itemIndex: itemIndex, item: item))
+            },
+            onFinishedScrolling: { isAtTop in
+                onFinishedScrolling?(isAtTop)
             },
             searchable: searchable,
             needsScrollToTop: needsScrollToTop,
@@ -123,6 +128,12 @@ public struct RagiSmoothList<
     public func onRowAppeared(_ action: @escaping RowAppearedCallback) -> Self {
         var newInstance = self
         newInstance.onRowAppeared = action
+        return newInstance
+    }
+    
+    public func onFinishedScrolling(_ action: @escaping FinishedScrollingCallback) -> Self {
+        var newInstance = self
+        newInstance.onFinishedScrolling = action
         return newInstance
     }
 

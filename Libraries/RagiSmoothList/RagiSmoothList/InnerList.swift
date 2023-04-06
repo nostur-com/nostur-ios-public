@@ -20,6 +20,7 @@ struct InnerList<
     typealias UIViewControllerType = UIViewController
     typealias RowDeletedCallback = ((sectionIndex: Int, itemIndex: Int, section: SectionType, item: ItemType)) -> Void
     typealias RowAppearedCallback = ((sectionIndex: Int, itemIndex: Int, item: ItemType)) -> Void
+    typealias FinishedScrollingCallback = (Bool) -> Void
     typealias CollectionViewHolderType = CollectionViewHolder<SectionType, ItemType, SectionHeader, SectionFooter, Cell>
 
     @Binding private var data: ListDataType
@@ -35,6 +36,7 @@ struct InnerList<
     private let onRefresh: () -> Void
     private let onRowDeleted: RowDeletedCallback
     private let onRowAppeared: RowAppearedCallback
+    private let onFinishedScrolling: FinishedScrollingCallback
     private var searchable: (bindableText: Binding<String>?, placeholder: String)?
 
     init(
@@ -49,6 +51,7 @@ struct InnerList<
         onRefresh: @escaping () -> Void,
         onRowDeleted: @escaping RowDeletedCallback,
         onRowAppeared: @escaping RowAppearedCallback,
+        onFinishedScrolling: @escaping FinishedScrollingCallback,
         searchable: (bindableText: Binding<String>?, placeholder: String)?,
         needsScrollToTop: Binding<Bool>,
         needsScrollToIndex: Binding<Int?>
@@ -64,6 +67,7 @@ struct InnerList<
         self.onRefresh = onRefresh
         self.onRowDeleted = onRowDeleted
         self.onRowAppeared = onRowAppeared
+        self.onFinishedScrolling = onFinishedScrolling
         self.searchable = searchable
         self._needsScrollToTop = needsScrollToTop
         self._needsScrollToIndex = needsScrollToIndex
@@ -109,7 +113,7 @@ struct InnerList<
         return Coordinator(parent: self)
     }
 
-    final class Coordinator: NSObject, UISearchBarDelegate, UICollectionViewDelegate {
+    final class Coordinator: NSObject, UISearchBarDelegate, UICollectionViewDelegate, UIScrollViewDelegate {
         private let parent: InnerList
         fileprivate var collectionViewHolder: CollectionViewHolderType?
         fileprivate var searchBar: UISearchBar?
@@ -119,10 +123,18 @@ struct InnerList<
         }
         
         func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-            //collectionView.contentOffset //
-            let item = parent.data[0].items[indexPath.row]
-            parent.onRowAppeared((sectionIndex: indexPath.section, itemIndex: indexPath.row,  item: item))
-//            print("appeared::: \(indexPath.row)")
+            if let item = parent.data[safe: 0]?.items[safe: indexPath.row] {
+                parent.onRowAppeared((sectionIndex: indexPath.section, itemIndex: indexPath.row,  item: item))
+            }
+        }
+        
+        func scrollViewDidScroll(_ scrollView: UIScrollView) {
+            if scrollView.contentOffset.y < 250 {
+                parent.onFinishedScrolling(true)
+            }
+            else {
+                parent.onFinishedScrolling(false)
+            }
         }
 
         // MARK: - UISearchBarDelegate
