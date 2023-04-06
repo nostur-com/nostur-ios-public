@@ -48,6 +48,7 @@ struct InnerList<
         onRowDeleted: @escaping RowDeletedCallback,
         searchable: (bindableText: Binding<String>?, placeholder: String)?,
         needsScrollToTop: Binding<Bool>,
+        needsScrollToIndex: Binding<Int?>
     ) {
         self._data = data
         self.listStyle = listStyle
@@ -61,6 +62,7 @@ struct InnerList<
         self.onRowDeleted = onRowDeleted
         self.searchable = searchable
         self._needsScrollToTop = needsScrollToTop
+        self._needsScrollToIndex = needsScrollToIndex
     }
 
     func makeUIViewController(context: Context) -> UIViewControllerType {
@@ -88,6 +90,13 @@ struct InnerList<
             collectionViewHolder.scrollToTop()
             Task {
                 needsScrollToTop = false
+            }
+        }
+        
+        if let index = needsScrollToIndex, let collectionViewHolder = context.coordinator.collectionViewHolder {
+            collectionViewHolder.scrollToIndex(index, animated: false)
+            Task {
+                needsScrollToIndex = nil
             }
         }
     }

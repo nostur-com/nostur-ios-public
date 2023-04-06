@@ -29,6 +29,7 @@ public struct RagiSmoothList<
     @State private var needsRefresh = false
 
     private var needsScrollToTop: Binding<Bool>
+    private var needsScrollToIndex: Binding<Int?>
     private var onLoadMore: (() -> Void)?
     private var onRefresh: (() -> Void)?
     private var onRowDeleted: RowDeletedCallback?
@@ -48,6 +49,7 @@ public struct RagiSmoothList<
         self.cellContent = cellContent
 
         self.needsScrollToTop = .constant(false)
+        self.needsScrollToIndex = .constant(nil)
     }
 
     public var body: some View {
@@ -70,6 +72,7 @@ public struct RagiSmoothList<
             },
             searchable: searchable,
             needsScrollToTop: needsScrollToTop,
+            needsScrollToIndex: needsScrollToIndex
         )
         .onAppear {
             needsRefresh = true
@@ -82,6 +85,12 @@ public struct RagiSmoothList<
     public func scrollToTop(_ request: Binding<Bool>) -> Self {
         var newInstance = self
         newInstance.needsScrollToTop = request
+        return newInstance
+    }
+    
+    public func scrollToIndex(_ index: Binding<Int?>) -> Self {
+        var newInstance = self
+        newInstance.needsScrollToIndex = index
         return newInstance
     }
 

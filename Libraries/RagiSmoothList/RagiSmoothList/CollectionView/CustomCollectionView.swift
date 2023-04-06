@@ -79,6 +79,11 @@ final class CustomCollectionView<
     func scrollToTop(animated: Bool = true) {
         setContentOffset(.zero, animated: animated)
     }
+    
+    func scrollToItem(_ index:Int, animated: Bool = true) {
+        scrollToItem(at: IndexPath(item: index, section: 0), at: .centeredVertically, animated: animated)
+//        setNeedsLayout()
+    }
 
     func updateLayout(_ configuration: UICollectionLayoutListConfiguration) {
         let layout = UICollectionViewCompositionalLayout { _, layoutEnvironment in
