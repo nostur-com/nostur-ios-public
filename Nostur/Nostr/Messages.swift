@@ -327,7 +327,7 @@ struct RequestMessage {
     }
     
     static func getUserProfileKinds(pubkey:String, subscriptionId:String? = nil, kinds:[Int]? = nil) -> String {
-        let kindsJsonArr = kinds != nil ? JSON(kinds!).rawString(.utf8, options: .init(rawValue: 0)) : "[0,3,30008]"
+        let kindsJsonArr = kinds != nil ? JSON(kinds!).rawString(.utf8, options: .init(rawValue: 0)) : "[0,3,30008,10002]"
         return """
 ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": \(kindsJsonArr!), "limit": 20}]
 """

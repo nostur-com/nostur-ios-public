@@ -66,8 +66,13 @@ struct ProfileView: View {
     @ObservedObject var contact:Contact
     var pubkey:String
     let hideBadges:Bool
+    
     @FetchRequest
     var clEvents:FetchedResults<Event>
+    
+    @FetchRequest
+    var relayEvents:FetchedResults<Event>
+    
     @FetchRequest
     var kind0Events:FetchedResults<Event>
     
@@ -86,6 +91,11 @@ struct ProfileView: View {
         _clEvents = FetchRequest(
             sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
             predicate: NSPredicate(format: "pubkey == %@ AND kind == 3", pubkey)
+        )
+        
+        _relayEvents = FetchRequest(
+            sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
+            predicate: NSPredicate(format: "pubkey == %@ AND kind == 10002", pubkey)
         )
         
         _kind0Events = FetchRequest(
@@ -341,7 +351,10 @@ struct ProfileView: View {
                                     ProfileZapsView(pubkey:pubkey, contact: contact)
                                 case "Relays":
                                     VStack {
-                                        if clEvents.count != 0 {
+                                        if relayEvents.count != 0 {
+                                            ProfileRelays(relayEvent: relayEvents.first!)
+                                        }
+                                        else if clEvents.count != 0 {
                                             ProfileRelaysView(clEvent: clEvents.first!)
                                         }
                                         else {
@@ -352,7 +365,7 @@ struct ProfileView: View {
                                                 Spacer()
                                             }
                                             .onAppear {
-                                                print("🟢 ProfileView.onAppear no clEvent so REQ.3: \(pubkey)")
+                                                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserProfileKinds(pubkey: pubkey, kinds: [10002])))
                                                 sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: pubkey)))
                                             }
                                         }
@@ -450,7 +463,7 @@ struct ProfileView: View {
         }
         .task {
             //            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndBadges(pubkey: pubkey)))
-            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserProfileKinds(pubkey: pubkey, kinds: [0,3,30008])))
+            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserProfileKinds(pubkey: pubkey, kinds: [0,3,30008,10002])))
         }
         .fullScreenCover(isPresented: $profilePicViewerIsShown) {
             ProfilePicFullScreenSheet(profilePicViewerIsShown: $profilePicViewerIsShown, pictureUrl:contact.picture!)
