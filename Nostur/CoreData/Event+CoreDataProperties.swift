@@ -475,7 +475,7 @@ extension Event {
         return true
     }
     
-    var fastTags:[(String, String)] {
+    var fastTags:[(String, String, String?)] {
         guard let tagsSerialized = tagsSerialized else { return [] }
         guard let jsonData = tagsSerialized.data(using: .utf8) else {
             return []
@@ -487,7 +487,7 @@ extension Event {
         
         return jsonArray
 //            .filter { $0.count >= 2 }
-            .map { ($0[0], $0[1]) }
+            .map { ($0[0], $0[1], $0[safe: 2]) }
     }
     
     
