@@ -17,6 +17,7 @@ class LVMState: ObservableObject {
     @Published var restoreScrollTo:Event? = nil // @TODO: Maybe doesn't need to be @Published?
     @Published var restoreScrollToAnchor = "BOTTOM"  // @TODO: Maybe doesn't need to be @Published?
     @Published var vPosts:[VPost] = []
+    @Published var vPostsN:[RagiSmoothListSectionModel<RagiSmoothListEmptySection, VPost>] = []
     @Published var state:LVM.LIST_STATE = .AWAITING_FIRST_FETCH {
         didSet {
             print("LVMState.state: \(oldValue) -> \(state) vPosts: \(vPosts.count) visible: \(viewIsVisible) id:\(listId)")
@@ -132,6 +133,7 @@ class LVM: NSObject, ObservableObject {
                 
                 DispatchQueue.main.async {
                     self.lvmState.vPosts = dupsRemoved
+                    self.lvmState.vPostsN = dupsRemoved.reversed().listEmptySectionModels()
                     self.lvmCounter.count = self.itemsAfterLastAppeared
                 }
             }
@@ -147,6 +149,7 @@ class LVM: NSObject, ObservableObject {
                     
                     DispatchQueue.main.async {
                         self.lvmState.vPosts = currentAndJustOneExtra
+                        self.lvmState.vPostsN = currentAndJustOneExtra.reversed().listEmptySectionModels()
                         self.lvmCounter.count = self.lvmCounter.count + 1
                     }
                 }
@@ -157,7 +160,8 @@ class LVM: NSObject, ObservableObject {
                     //                let currentVPostsCount = threadCount(currentVPosts)
                     
                     DispatchQueue.main.async {
-                        self.lvmState.vPosts = currentVPosts + addedTruncated
+                        self.lvmState.vPosts = (currentVPosts + addedTruncated)
+                        self.lvmState.vPostsN = (currentVPosts + addedTruncated).reversed().listEmptySectionModels()
                         self.lvmCounter.count = self.lvmCounter.count + transformCounter // transformCounter is also added right???
                     }
                 }
@@ -540,7 +544,7 @@ extension LVM {
     
     func scrollToEnd() {
         state = .AWAITING_SCROLL
-        sendNotification(.shouldScrollToLast)
+        sendNotification(.shouldScrollToRecent)
         self.lvmCounter.count = 0
         if (self.lastAppeared != self.lvmState.vPosts.last?.event) {
             self.lastAppeared = self.lvmState.vPosts.last?.event

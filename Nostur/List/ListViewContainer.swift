@@ -39,8 +39,7 @@ struct ListViewContainer: View, Equatable {
         let _ = Self._printChanges()
         ZStack {
             ListView(vm:vm, vmState:vm.lvmState)
-                .padding(.horizontal, 10)
-            ListUnreadCounter(vm:vm, vmCounter: vm.lvmCounter)
+            ListUnreadCounter(vmCounter: vm.lvmCounter)
             NewNoteButton(showingNewNote: $showingNewNote)
                 .sheet(isPresented: $showingNewNote) {
                     NavigationStack {

@@ -55,8 +55,8 @@ extension Notification.Name {
         return Notification.Name("shouldScrollToUnreadNote")
     }
     
-    static var shouldScrollToLast: Notification.Name {
-        return Notification.Name("shouldScrollToLast")
+    static var shouldScrollToRecent: Notification.Name {
+        return Notification.Name("shouldScrollToRecent")
     }
         
     static var scrollABit: Notification.Name {

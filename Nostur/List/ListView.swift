@@ -11,100 +11,48 @@ struct ListView: View {
     @AppStorage("selected_subtab") var selectedSubTab = "Following"
     @EnvironmentObject var ns:NosturState
     @Namespace var END_OF_LIST
-    @State var scrollResetId = 0
-
+    @State var scrollToTop = false
+    @State var scrollToIndex:Int? = nil
+    @State var lastAppearedId:String? = nil
+    
     let vm:LVM
     @ObservedObject var vmState:LVMState
     
-    
     var body: some View {
         let _ = Self._printChanges()
-        ScrollViewReader { proxy in
+        VStack {
             if vmState.vPosts.count > 0 {
-//                Text("vPosts: \(vmState.vPosts.count) | threadValue: \(vmState.vPosts.reduce(0, { $0 + $1.threadPostsCount } ) )")
-                ScrollView {
-                    LazyVStack {
-                        ForEach(vmState.vPosts) { vPost in
-                            PostOrThread(vPost: vPost)
-                                .padding(5)
-                                .background(
-                                    Rectangle().foregroundColor(Color.systemBackground)
-                                        .shadow(color: Color.gray.opacity(0.4), radius: 5, x: 0, y: 0)
-                                        .padding(5)
-                                )
-                            //                                NoteRow(vPost:vPost)
-                            //                                    .equatable()
-                                .id(vPost.id)
-                                .onBecomingVisible {
-                                    guard vmState.state != .AWAITING_FIRST_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-                                    guard vmState.state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-                                    guard vmState.state != .SWITCHING_ACCOUNT else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-                                    //                                        lastAppearedId = vPost.id
-                                    vm.lastAppearedSubject.send(vPost.event)
-                                    //                                        vm.onPostAppeared(vPost.event)
-                                }
-                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                    Button { ns.toggleBookmark(vPost.event)
-                                    } label: { Image(systemName: "bookmark") }.tint(.orange)
-                                    
-                                }
-                            //                                    .border(lastAppeared?.id == vPost.id ? .green : .white)
+                //                Text("vPosts: \(vmState.vPosts.count) | threadValue: \(vmState.vPosts.reduce(0, { $0 + $1.threadPostsCount } ) )")
+                
+                ZStack {
+                    RagiSmoothList(
+                        data: $vmState.vPostsN,
+                        listConfiguration: .init(separator: .init(isVisible: false)),
+                        cellContent: { vPost in
+                            makeCellContent(vPost: vPost)
                         }
+                    )
+                    .scrollToTop($scrollToTop)
+                    .scrollToIndex($scrollToIndex)
+                    .onRowAppeared { _, _, vPost in
+                        guard vmState.state != .AWAITING_FIRST_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+                        guard vmState.state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+                        guard vmState.state != .SWITCHING_ACCOUNT else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+                        vm.lastAppearedSubject.send(vPost.event)
                     }
                     VStack {
-                        ZStack {
-                            HStack {
-                                Spacer()
-                                Rectangle().frame(width: 300, height: 1)
-                                    .id(END_OF_LIST)
-                                    .onBecomingVisible {
-                                        vm.didReachEnd()
-                                    }
-                                Spacer()
-                            }
-                            ProcessingStatus()
-                        }
-                        .frame(height: 70)
+                        ProcessingStatus()
+                        Spacer()
                     }
-                    .frame(height: 70)
-                    .fixedSize()
                 }
-//                .padding(.top, 1)
                 .onAppear {
                     guard vmState.state == .AWAITING_RESTORE_SCROLL else { return }
                     print ("🟢🟢 List (count>0) onAppear -- restoreToScrollPos")
-                    restoreScrollPosition(proxy: proxy)
+                    restoreScrollPosition()
                 }
-                .onAppear {
-                    // FIRST FETCH?? DONT KNOW WHERE TO RESTORE?? JUST GO TO NEWEST!
-                    guard vmState.state == .COMPLETED_FIRST_FETCH else { return }
+                .onReceive(receiveNotification(.shouldScrollToRecent)) { _ in
                     guard vmState.viewIsVisible else { return }
-                    //                    scrollResetId += 1
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        withAnimation {
-                            if let last = vmState.vPosts.last {
-                                proxy.scrollTo(last.id)
-                                //                                proxy.scrollTo(END_OF_LIST)
-                                vmState.state = .SCROLLED_TO_END
-                            }
-                        }
-                    }
-                }
-                .onReceive(receiveNotification(.shouldScrollToLast)) { _ in
-                    guard vmState.viewIsVisible else { return }
-                    //                        scrollResetId += 1
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        withAnimation {
-                            if let last = vmState.vPosts.last {
-                                proxy.scrollTo(last.id)
-                                vmState.state = .SCROLLED_TO_END
-                            }
-                            else {
-                                proxy.scrollTo(END_OF_LIST)
-                                vmState.state = .SCROLLED_TO_END
-                            }
-                        }
-                    }
+                    scrollToTop = true
                 }
                 .onChange(of: selectedSubTab) { selectedTab in
                     vmState.viewIsVisible = selectedTab == vm.id
@@ -135,33 +83,67 @@ struct ListView: View {
         }
     }
     
-    func restoreScrollPosition(proxy:ScrollViewProxy) {
+    private func makeCellContent(vPost: VPost) -> some View {
+        VStack {
+            ForEach(vPost.parentPosts.indices, id:\.self) { index in
+//                if index == 0 && vPost.parentPosts[index].event.replyToId != nil {
+//                    Button("Show this thread") {
+//                        navigateTo(vPost.parentPosts[index])
+//                    }.padding(.top, 10)
+//                }
+                NoteRow(vPost: vPost.parentPosts[index], connect: vPost.parentPosts[index].event.replyToId != nil || index > 0 ? .both : .bottom)
+                    .background(Color.systemBackground)
+                    .onTapGesture {
+                        navigateTo(vPost)
+                    }
+            }
+//            if vPost.event.replyToId != nil && vPost.parentPosts.count == 0 {
+//                Button("Show this thread") {
+//                    navigateTo(vPost)
+//                }.padding(.top, 10)
+//            }
+            NoteRow(vPost: vPost, connect: vPost.event.replyToId != nil ? .top : nil)
+            .background(Color.systemBackground)
+            .onTapGesture {
+                navigateTo(vPost)
+            }
+        }
+        .border(lastAppearedId == vPost.id ? Color.blue : Color.clear)
+        .boxShadow()
+        .padding()
+    }
+    
+    private func xmakeCellContent(vPost: VPost) -> some View {
+        PostOrThread(vPost: vPost)
+            .onBecomingVisible {
+                guard vmState.state != .AWAITING_FIRST_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+                guard vmState.state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+                guard vmState.state != .SWITCHING_ACCOUNT else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+                //                                        lastAppearedId = vPost.id
+                vm.lastAppearedSubject.send(vPost.event)
+                //                                        vm.onPostAppeared(vPost.event)
+            }
+            .boxShadow()
+            .padding()
+    }
+    
+    struct CellButtonStyle: ButtonStyle {
+        func makeBody(configuration: Configuration) -> some View {
+            configuration.label
+                .background(configuration.isPressed ? Color.orange : nil)
+        }
+    }
+    
+    func restoreScrollPosition() {
         print("🟢🟢 restoreScrollPosition:  \(vmState.state.rawValue) ")
         //        guard vm.state == .AWAITING_RESTORE_SCROLL || vm.state == .SWITCHING_ACCOUNT else { return } // Onlyif we didn't restore yet (so not like nav to post and back)
         guard vmState.state == .AWAITING_RESTORE_SCROLL else { return } // Onlyif we didn't restore yet (so not like nav to post and back)
         if let lastAppeared = self.vmState.restoreScrollTo {
             print("🟢🟢🟢 proxy.scrollTo \(lastAppeared.id)  --- \(vmState.vPosts.count)  ")
-            proxy.scrollTo(lastAppeared.id, anchor: .center) // self.vmState.restoreScrollToAnchor
+            if let index = vmState.vPosts.firstIndex(where: { $0.id == lastAppeared.id }) {
+                scrollToIndex = index
+            }
             vmState.state = .COMPLETED_RESTORED_FETCH_WITH_SCROLL
-            
-            //            // TODO: DO WE STILL NEED THESE DELAYS?? LETS TEST...
-            //            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            //                print("🟢🟢🟢🟢")
-            //                //                proxy.scrollTo(lastAppeared.id, anchor: vm.lastAppearedAnchorSubject.value == "TOP" ? .top : .bottom)
-            //
-            //                if (vmState.vPosts.map { $0.id } .contains(lastAppeared.id)) {
-            //                    proxy.scrollTo(lastAppeared.id, anchor: .bottom)
-            //                }
-            //                else {
-            //                    print("🔴🔴🔴🔴 YO WHERE IS THE POST YO I CANT SCROLL ON \(vm.id)")
-            //                    print("🔴🔴🔴🔴 LOOKING FOR \(lastAppeared.id), vPosts: \(vmState.vPosts.count) ")
-            //                }
-            //
-            //            }
-            //            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            //                print("🟢🟢🟢🟢🟢")
-            //                vmState.state = .COMPLETED_RESTORED_FETCH_WITH_SCROLL
-            //            }
         }
         else {
             print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")

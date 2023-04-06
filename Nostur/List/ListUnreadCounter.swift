@@ -9,22 +9,25 @@ import SwiftUI
 
 class LVMCounter: ObservableObject {
     @Published var count = 0 // New one based on index
+    
+    init(count: Int = 0) {
+        self.count = count
+    }
 }
 
 struct ListUnreadCounter: View {
-    let vm:LVM
+//    let vm:LVM
     @ObservedObject var vmCounter:LVMCounter
     
     var body: some View {
         VStack {
-            Spacer()
             HStack {
                 Spacer()
                 if (vmCounter.count > 0) {
+                    // TODO: Add mini profile icons
                     HStack {
-                        Image(systemName: "arrow.down")
-                        Text("\(vmCounter.count) unread")
-                        Image(systemName: "arrow.down")
+                        Text("\(vmCounter.count)")
+                        Image(systemName: "arrow.up")
                     }
                     .frame(minWidth: 30)
                     .padding(10)
@@ -34,21 +37,23 @@ struct ListUnreadCounter: View {
                     .opacity(0.95)
                     .cornerRadius(20)
                     .shadow(radius: 90)
-//                    .onTapGesture(count: 2, perform: {
-//                     
-//                    })
+                    .padding(.trailing, 10)
+                    .padding(.top, 5)
                     .onTapGesture {
-                        vm.scrollToEnd()
+                        sendNotification(.shouldScrollToRecent)
                     }
-//                    .onTapGesture(count: 2, perform: {
-//                        vm.scrollToEnd()
-//                    })
-//                    .onTapGesture {
-//                        vm.scrollABit()
-//                    }
                 }
-                Spacer()
             }
+            Spacer()
         }
+    }
+}
+
+struct Previews_ListUnreadCounter_Previews: PreviewProvider {
+    
+    @StateObject static var lvmCounter = LVMCounter(count: 42)
+    
+    static var previews: some View {
+        ListUnreadCounter(vmCounter: lvmCounter)
     }
 }
