@@ -37,6 +37,11 @@ struct NoteMenuView: View {
                     Label("Copy post id \(String(vPost.note1.prefix(11)))...", systemImage: "doc.on.clipboard")
                 }
                 Button {
+                    UIPasteboard.general.string = vPost.id
+                } label: {
+                    Label("Copy post id (hex) \(String(vPost.id.prefix(11)))...", systemImage: "doc.on.clipboard")
+                }
+                Button {
                     UIPasteboard.general.string = vPost.event.plainText
                 } label: {
                     Label("Copy text", systemImage: "doc.on.clipboard")

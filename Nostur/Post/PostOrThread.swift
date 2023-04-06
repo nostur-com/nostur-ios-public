@@ -87,18 +87,18 @@ struct PostOrThread: View {
     var body: some View {
         if vPost.parentPosts.count > 0 {
             VStack(spacing: 0) {
-                if vPost.isTruncated {
-                    Button("Show this thread") {
-                        navigateTo(vPost)
-                    }.padding(.top, 10)
-                }
                 ForEach(vPost.parentPosts.indices, id:\.self) { index in
+                    if index == 0 && vPost.parentPosts[index].event.replyToId != nil {
+                        Button("Show this thread") {
+                            navigateTo(vPost.parentPosts[index])
+                        }.padding(.top, 10)
+                    }
                     ZStack {
                         VStack(spacing: 0) {
                             HStack(spacing: 0) {
                                 Color("LightGray")
                                     .frame(maxWidth: 1, maxHeight: .infinity)
-                                    .padding(.top, vPost.parentPosts[index].event.replyToId == nil ? 40 : 0)
+                                    .padding(.top, index == 0 ? 40 : 0)
                                     .offset(x:THREAD_LINE_OFFSET, y: vPost.parentPosts[index].event.replyToId == nil  ? 32 : 0)
                                 Spacer()
                             }
@@ -132,7 +132,7 @@ struct PostOrThread: View {
         }
         else {
             VStack(spacing: 0) {
-                if vPost.isTruncated {
+                if vPost.event.replyToId != nil {
                     Button("Show this thread") {
                         navigateTo(vPost)
                     }.padding(.top, 10)

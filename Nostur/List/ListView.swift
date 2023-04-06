@@ -41,8 +41,9 @@ struct ListView: View {
                         vm.lastAppearedSubject.send(vPost.event)
                     }
                     VStack {
-                        ProcessingStatus()
                         Spacer()
+                        ProcessingStatus()
+                            .opacity(0.7)
                     }
                 }
                 .onAppear {
@@ -83,10 +84,11 @@ struct ListView: View {
         .onDisappear {
             vmState.viewIsVisible = false
         }
+//        .background(Color("ListBackground"))
     }
     
     private func makeCellContent(vPost: VPost) -> some View {
-        VStack {
+        VStack(spacing:0) {
             ForEach(vPost.parentPosts.indices, id:\.self) { index in
 //                if index == 0 && vPost.parentPosts[index].event.replyToId != nil {
 //                    Button("Show this thread") {
@@ -105,14 +107,14 @@ struct ListView: View {
 //                }.padding(.top, 10)
 //            }
             NoteRow(vPost: vPost, connect: vPost.event.replyToId != nil ? .top : nil)
-            .background(Color.systemBackground)
-            .onTapGesture {
-                navigateTo(vPost)
-            }
+                .background(Color.systemBackground)
+                .onTapGesture {
+                    navigateTo(vPost)
+                }
         }
-        .border(lastAppearedId == vPost.id ? Color.blue : Color.clear)
         .boxShadow()
-        .padding()
+        .padding(5)
+        .background(Color("ListBackground"))
     }
     
     private func xmakeCellContent(vPost: VPost) -> some View {
