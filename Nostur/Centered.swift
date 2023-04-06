@@ -43,5 +43,5 @@ func randomColor(seed: String) -> Color {
     srand48(total / 200)
     let b = CGFloat(drand48())
     
-    return Color(cgColor: CGColor(red: r, green: g, blue: b, alpha: 0.7))
+    return Color(cgColor: CGColor(red: r, green: g, blue: b, alpha: 1.0))
 }
