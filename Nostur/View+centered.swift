@@ -47,7 +47,7 @@ struct BoxShadow: ViewModifier {
             .padding(5)
             .background(
                 Rectangle().foregroundColor(Color.systemBackground)
-                    .shadow(color: Color.gray.opacity(0.4), radius: 5, x: 0, y: 0)
+                    .shadow(color: Color.gray.opacity(0.2), radius: 5, x: 0, y: 0)
                     .padding(5)
             )
     }
