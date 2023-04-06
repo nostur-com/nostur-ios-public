@@ -165,6 +165,7 @@ class ManagedClient: WebSocketDelegate, ObservableObject {
     
     private var connectionQueue = DispatchQueue(label: "com.nostur.connection")
     private var _isConnecting = false
+    private var _activeSubscriptions:[String] = []
 
     var isConnecting: Bool {
         get {
@@ -183,7 +184,18 @@ class ManagedClient: WebSocketDelegate, ObservableObject {
     @Published var read = true
     @Published var write = false
     
-    var activeSubscriptions:[String] = []
+    var activeSubscriptions:[String] {
+        get {
+            return connectionQueue.sync {
+                _activeSubscriptions
+            }
+        }
+        set {
+            connectionQueue.async {
+                self._activeSubscriptions = newValue
+            }
+        }
+    }
     
     init(relayId: NSManagedObjectID, url: String, client:WebSocket, read: Bool = true, write: Bool = false) {
         self.relayId = relayId
