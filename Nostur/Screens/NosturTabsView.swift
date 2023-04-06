@@ -50,19 +50,6 @@ struct NosturTabsView: View {
                     //                    .tabItem { Image(systemName: "server.rack") }
                     //                    .tag("Configuration")
                 }
-                .onTapGesture(count: 2) { location in
-                    let fixedHeightFromBottom: CGFloat = 130 // Adjust this value as needed
-                    if location.y >= UIScreen.main.bounds.height - fixedHeightFromBottom {
-                        let tabWidth = UIScreen.main.bounds.width / CGFloat(5 + 1)
-                        let tappedTab = Int((location.x + tabWidth / 2) / tabWidth)
-                        if (selectedTab == "Main") && (tappedTab == 1) {
-                            sendNotification(.shouldScrollToLast)
-                        }
-                        else {
-                            selectedTab = ["Main", "Notifications", "Search", "Bookmarks", "Messages"][max(0,tappedTab-1)]
-                        }
-                    }
-                }
                 .withSheets()
             }
             .frame(maxWidth: 600)

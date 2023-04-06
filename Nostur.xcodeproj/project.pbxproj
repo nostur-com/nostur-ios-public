@@ -116,6 +116,23 @@
 		1F7E40EA29BD9AD6003F9F71 /* PrivateNote+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7E40E829BD9AD6003F9F71 /* PrivateNote+CoreDataClass.swift */; };
 		1F7E40EB29BD9AD6003F9F71 /* PrivateNote+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7E40E929BD9AD6003F9F71 /* PrivateNote+CoreDataProperties.swift */; };
 		1F83497F29DD6F980032E52B /* LRUCache2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F83497E29DD6F980032E52B /* LRUCache2.swift */; };
+		1F83498129DE28290032E52B /* ProfileRelays.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F83498029DE28290032E52B /* ProfileRelays.swift */; };
+		1F83499C29DE81390032E52B /* InnerList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F83498829DE81390032E52B /* InnerList.swift */; };
+		1F83499D29DE81390032E52B /* CollectionViewHolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F83498A29DE81390032E52B /* CollectionViewHolder.swift */; };
+		1F83499E29DE81390032E52B /* DataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F83498B29DE81390032E52B /* DataSource.swift */; };
+		1F83499F29DE81390032E52B /* CustomCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F83498C29DE81390032E52B /* CustomCollectionView.swift */; };
+		1F8349A029DE81390032E52B /* SwipeStartEdge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F83498D29DE81390032E52B /* SwipeStartEdge.swift */; };
+		1F8349A129DE81390032E52B /* InnerListCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F83498E29DE81390032E52B /* InnerListCell.swift */; };
+		1F8349A229DE81390032E52B /* RagiSmoothListConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F83498F29DE81390032E52B /* RagiSmoothListConfiguration.swift */; };
+		1F8349A329DE81390032E52B /* HostingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F83499029DE81390032E52B /* HostingView.swift */; };
+		1F8349A429DE81390032E52B /* RagiSmoothList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F83499129DE81390032E52B /* RagiSmoothList.swift */; };
+		1F8349A529DE81390032E52B /* InnerListSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F83499229DE81390032E52B /* InnerListSection.swift */; };
+		1F8349A629DE81390032E52B /* RagiSmoothListStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F83499429DE81390032E52B /* RagiSmoothListStyle.swift */; };
+		1F8349A729DE81390032E52B /* RagiSmoothListCellEditable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F83499629DE81390032E52B /* RagiSmoothListCellEditable.swift */; };
+		1F8349A829DE81390032E52B /* RagiSmoothListButtonCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F83499729DE81390032E52B /* RagiSmoothListButtonCell.swift */; };
+		1F8349A929DE81390032E52B /* RagiSmoothListTextCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F83499829DE81390032E52B /* RagiSmoothListTextCell.swift */; };
+		1F8349AA29DE81390032E52B /* RagiSmoothListEmptySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F83499A29DE81390032E52B /* RagiSmoothListEmptySection.swift */; };
+		1F8349AB29DE81390032E52B /* RagiSmoothListSectionModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F83499B29DE81390032E52B /* RagiSmoothListSectionModel.swift */; };
 		1F84840529C1A84B00AF129A /* NoteMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F84840429C1A84B00AF129A /* NoteMenuView.swift */; };
 		1F88490029B4EF6000145340 /* ZapValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8848FF29B4EF6000145340 /* ZapValidator.swift */; };
 		1F88490E29B537B400145340 /* HighlightingTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F88490229B537B400145340 /* HighlightingTextEditor.swift */; };
@@ -338,12 +355,27 @@
 		1F794DFE29B780C80013E633 /* View+onBecomingVisible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+onBecomingVisible.swift"; sourceTree = "<group>"; };
 		1F7C65AC29A0A530009FF3EA /* ReadOnlyAccountInformationSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadOnlyAccountInformationSheet.swift; sourceTree = "<group>"; };
 		1F7C65AE29A11244009FF3EA /* ProfileZapsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileZapsView.swift; sourceTree = "<group>"; };
-		1F7C65B929A14709009FF3EA /* LinkPresentation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = LinkPresentation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/LinkPresentation.framework; sourceTree = DEVELOPER_DIR; };
-		1F7C65BA29A14709009FF3EA /* CryptoKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CryptoKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/CryptoKit.framework; sourceTree = DEVELOPER_DIR; };
 		1F7C65BE29A14BA3009FF3EA /* Zaps.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Zaps.swift; sourceTree = "<group>"; };
 		1F7E40E829BD9AD6003F9F71 /* PrivateNote+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PrivateNote+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1F7E40E929BD9AD6003F9F71 /* PrivateNote+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PrivateNote+CoreDataProperties.swift"; sourceTree = "<group>"; };
-		1F83497E29DD6F980032E52B /* LRUCache2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LRUCache2.swift; path = Nostur/LRUCache2.swift; sourceTree = "<group>"; };
+		1F83497E29DD6F980032E52B /* LRUCache2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LRUCache2.swift; sourceTree = "<group>"; };
+		1F83498029DE28290032E52B /* ProfileRelays.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileRelays.swift; sourceTree = "<group>"; };
+		1F83498829DE81390032E52B /* InnerList.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InnerList.swift; sourceTree = "<group>"; };
+		1F83498A29DE81390032E52B /* CollectionViewHolder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CollectionViewHolder.swift; sourceTree = "<group>"; };
+		1F83498B29DE81390032E52B /* DataSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataSource.swift; sourceTree = "<group>"; };
+		1F83498C29DE81390032E52B /* CustomCollectionView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CustomCollectionView.swift; sourceTree = "<group>"; };
+		1F83498D29DE81390032E52B /* SwipeStartEdge.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwipeStartEdge.swift; sourceTree = "<group>"; };
+		1F83498E29DE81390032E52B /* InnerListCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InnerListCell.swift; sourceTree = "<group>"; };
+		1F83498F29DE81390032E52B /* RagiSmoothListConfiguration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RagiSmoothListConfiguration.swift; sourceTree = "<group>"; };
+		1F83499029DE81390032E52B /* HostingView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HostingView.swift; sourceTree = "<group>"; };
+		1F83499129DE81390032E52B /* RagiSmoothList.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RagiSmoothList.swift; sourceTree = "<group>"; };
+		1F83499229DE81390032E52B /* InnerListSection.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InnerListSection.swift; sourceTree = "<group>"; };
+		1F83499429DE81390032E52B /* RagiSmoothListStyle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RagiSmoothListStyle.swift; sourceTree = "<group>"; };
+		1F83499629DE81390032E52B /* RagiSmoothListCellEditable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RagiSmoothListCellEditable.swift; sourceTree = "<group>"; };
+		1F83499729DE81390032E52B /* RagiSmoothListButtonCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RagiSmoothListButtonCell.swift; sourceTree = "<group>"; };
+		1F83499829DE81390032E52B /* RagiSmoothListTextCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RagiSmoothListTextCell.swift; sourceTree = "<group>"; };
+		1F83499A29DE81390032E52B /* RagiSmoothListEmptySection.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RagiSmoothListEmptySection.swift; sourceTree = "<group>"; };
+		1F83499B29DE81390032E52B /* RagiSmoothListSectionModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RagiSmoothListSectionModel.swift; sourceTree = "<group>"; };
 		1F84840429C1A84B00AF129A /* NoteMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteMenuView.swift; sourceTree = "<group>"; };
 		1F8848FF29B4EF6000145340 /* ZapValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZapValidator.swift; sourceTree = "<group>"; };
 		1F88490229B537B400145340 /* HighlightingTextEditor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HighlightingTextEditor.swift; sourceTree = "<group>"; };
@@ -449,7 +481,7 @@
 		1FF69B2629AAA37D0070796B /* BechLnurl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BechLnurl.swift; sourceTree = "<group>"; };
 		1FF8BD1129D41BBD00C8C96A /* SingleMediaViewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleMediaViewer.swift; sourceTree = "<group>"; };
 		1FF8BD1329D444D900C8C96A /* ProcessingStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessingStatus.swift; sourceTree = "<group>"; };
-		1FF9BF1529DC966700D16EE7 /* ReportContactSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ReportContactSheet.swift; path = Nostur/ReportContactSheet.swift; sourceTree = "<group>"; };
+		1FF9BF1529DC966700D16EE7 /* ReportContactSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportContactSheet.swift; sourceTree = "<group>"; };
 		1FFF997A29CEE15000ADAE23 /* About.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = About.swift; sourceTree = "<group>"; };
 		1FFF997C29CF4AF100ADAE23 /* ProfilePicFullScreenSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePicFullScreenSheet.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -643,10 +675,80 @@
 		1F7C65B629A1466D009FF3EA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				1F7C65B929A14709009FF3EA /* LinkPresentation.framework */,
-				1F7C65BA29A14709009FF3EA /* CryptoKit.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		1F83498529DE80E60032E52B /* Libraries */ = {
+			isa = PBXGroup;
+			children = (
+				1F83498629DE80FE0032E52B /* RagiSmoothList */,
+				1F88490129B537A000145340 /* HighlightedTextEditor */,
+			);
+			path = Libraries;
+			sourceTree = "<group>";
+		};
+		1F83498629DE80FE0032E52B /* RagiSmoothList */ = {
+			isa = PBXGroup;
+			children = (
+				1F83499529DE81390032E52B /* Cells */,
+				1F83498729DE81390032E52B /* RagiSmoothList */,
+				1F83499929DE81390032E52B /* Section */,
+				1F83499329DE81390032E52B /* Styles */,
+			);
+			path = RagiSmoothList;
+			sourceTree = "<group>";
+		};
+		1F83498729DE81390032E52B /* RagiSmoothList */ = {
+			isa = PBXGroup;
+			children = (
+				1F83498829DE81390032E52B /* InnerList.swift */,
+				1F83498929DE81390032E52B /* CollectionView */,
+				1F83498E29DE81390032E52B /* InnerListCell.swift */,
+				1F83498F29DE81390032E52B /* RagiSmoothListConfiguration.swift */,
+				1F83499029DE81390032E52B /* HostingView.swift */,
+				1F83499129DE81390032E52B /* RagiSmoothList.swift */,
+				1F83499229DE81390032E52B /* InnerListSection.swift */,
+			);
+			path = RagiSmoothList;
+			sourceTree = "<group>";
+		};
+		1F83498929DE81390032E52B /* CollectionView */ = {
+			isa = PBXGroup;
+			children = (
+				1F83498A29DE81390032E52B /* CollectionViewHolder.swift */,
+				1F83498B29DE81390032E52B /* DataSource.swift */,
+				1F83498C29DE81390032E52B /* CustomCollectionView.swift */,
+				1F83498D29DE81390032E52B /* SwipeStartEdge.swift */,
+			);
+			path = CollectionView;
+			sourceTree = "<group>";
+		};
+		1F83499329DE81390032E52B /* Styles */ = {
+			isa = PBXGroup;
+			children = (
+				1F83499429DE81390032E52B /* RagiSmoothListStyle.swift */,
+			);
+			path = Styles;
+			sourceTree = "<group>";
+		};
+		1F83499529DE81390032E52B /* Cells */ = {
+			isa = PBXGroup;
+			children = (
+				1F83499629DE81390032E52B /* RagiSmoothListCellEditable.swift */,
+				1F83499729DE81390032E52B /* RagiSmoothListButtonCell.swift */,
+				1F83499829DE81390032E52B /* RagiSmoothListTextCell.swift */,
+			);
+			path = Cells;
+			sourceTree = "<group>";
+		};
+		1F83499929DE81390032E52B /* Section */ = {
+			isa = PBXGroup;
+			children = (
+				1F83499A29DE81390032E52B /* RagiSmoothListEmptySection.swift */,
+				1F83499B29DE81390032E52B /* RagiSmoothListSectionModel.swift */,
+			);
+			path = Section;
 			sourceTree = "<group>";
 		};
 		1F88490129B537A000145340 /* HighlightedTextEditor */ = {
@@ -702,6 +804,7 @@
 				1F8B1353297B36DB002EB8CF /* HexEncoding.swift */,
 				1FB4FCD529B87D3D0034D03A /* ImageProcessing.swift */,
 				1F1ABC4629811A1A00D03FA9 /* LRUCache.swift */,
+				1F83497E29DD6F980032E52B /* LRUCache2.swift */,
 				1F3309822989819700D4D8CF /* Maintenance.swift */,
 				1F75257B2996790D00477AF2 /* Notifications.swift */,
 				1FD49732297FCB5E0084F14E /* PreviewHelper.swift */,
@@ -735,11 +838,10 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
-				1F83497E29DD6F980032E52B /* LRUCache2.swift */,
-				1FF9BF1529DC966700D16EE7 /* ReportContactSheet.swift */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1FB448BB2965F3D000038671 /* Products */,
 				1F7C65B629A1466D009FF3EA /* Frameworks */,
+				1F83498529DE80E60032E52B /* Libraries */,
 			);
 			sourceTree = "<group>";
 		};
@@ -759,7 +861,6 @@
 				1F25B395297A508200A8A5A7 /* CoreData */,
 				1FC78F7229CB45520009C1C7 /* DMs */,
 				1F7265C029B2146900E4F9D4 /* Export */,
-				1F88490129B537A000145340 /* HighlightedTextEditor */,
 				1FB4D3F929BAEAE4004DB537 /* List */,
 				1F71037B296BD98D006245CC /* Nostr */,
 				1FEA78592979A18E007CC8E7 /* Note */,
@@ -834,6 +935,7 @@
 		1FC6807829DB0BDC003EE054 /* Reporting */ = {
 			isa = PBXGroup;
 			children = (
+				1FF9BF1529DC966700D16EE7 /* ReportContactSheet.swift */,
 				1FC6807929DB0BF7003EE054 /* ReportPostSheet.swift */,
 			);
 			path = Reporting;
@@ -877,6 +979,7 @@
 				1F33096029891C4800D4D8CF /* ProfileLikesView.swift */,
 				1F1ABC4C2981AEA500D03FA9 /* ProfileNotesView.swift */,
 				1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */,
+				1F83498029DE28290032E52B /* ProfileRelays.swift */,
 				1F14BA752985984100EACCD5 /* ProfileRelaysView.swift */,
 				1F65002B29A759FB00B79AEF /* ProfileRowMissing.swift */,
 				1F14BA6F29854DFC00EACCD5 /* ProfileRow.swift */,
@@ -1023,11 +1126,14 @@
 				1F8B1360297B36DB002EB8CF /* String+HexBytes.swift in Sources */,
 				1FB4FCD629B87D3D0034D03A /* ImageProcessing.swift in Sources */,
 				1F00337129BEF141007CE040 /* View+withSheets.swift in Sources */,
+				1F8349A929DE81390032E52B /* RagiSmoothListTextCell.swift in Sources */,
 				1F21442C29A797930090E78E /* Settings.swift in Sources */,
 				1F88491029B537B400145340 /* Markdown.swift in Sources */,
 				1FB130B729C0F03B004AC98D /* ReplyingToUsernamesBuilder.swift in Sources */,
 				1F006B0529D08FAA0048C6DD /* Event+Notifications.swift in Sources */,
+				1F83499F29DE81390032E52B /* CustomCollectionView.swift in Sources */,
 				1F9499C9299F568900F628B4 /* WelcomeSheet.swift in Sources */,
+				1F8349A129DE81390032E52B /* InnerListCell.swift in Sources */,
 				1F88491429B537B400145340 /* TextFormattingRule.swift in Sources */,
 				1F740D9C29AF1BF600EFCCA7 /* Badges.swift in Sources */,
 				1F88491329B537B400145340 /* NSFont.swift in Sources */,
@@ -1039,6 +1145,9 @@
 				1F71B45529B0822300FA0400 /* ProfileBadgesView.swift in Sources */,
 				1FC38B9E2972DD5A004769F8 /* Contact+CoreDataProperties.swift in Sources */,
 				1F75257C2996790D00477AF2 /* Notifications.swift in Sources */,
+				1F8349AA29DE81390032E52B /* RagiSmoothListEmptySection.swift in Sources */,
+				1F83499D29DE81390032E52B /* CollectionViewHolder.swift in Sources */,
+				1F8349A429DE81390032E52B /* RagiSmoothList.swift in Sources */,
 				1F517BEB29CDB29E00F7A97F /* GIFView.swift in Sources */,
 				1F3309632989598600D4D8CF /* NosturRootMenuView.swift in Sources */,
 				1FB130BF29C1A314004AC98D /* QuotedNoteFragmentView.swift in Sources */,
@@ -1058,6 +1167,7 @@
 				1F84840529C1A84B00AF129A /* NoteMenuView.swift in Sources */,
 				1F00337529BF0A44007CE040 /* BookmarksAndPrivateNotes.swift in Sources */,
 				1F6B445029D5D1F700AD3191 /* PostOrThread.swift in Sources */,
+				1F8349A529DE81390032E52B /* InnerListSection.swift in Sources */,
 				1F25B392297A4E3400A8A5A7 /* NosturList+CoreDataClass.swift in Sources */,
 				1F539DAB299D4B2A00F3B8CA /* NewAccountSheet.swift in Sources */,
 				1FF9BF1629DC966700D16EE7 /* ReportContactSheet.swift in Sources */,
@@ -1067,6 +1177,7 @@
 				1FD8AD7329D831CD00693302 /* Color+random.swift in Sources */,
 				1FB130B129C0DB07004AC98D /* NoteRow.swift in Sources */,
 				1F00337729BF0BF0007CE040 /* PrivateNotesView.swift in Sources */,
+				1F8349A729DE81390032E52B /* RagiSmoothListCellEditable.swift in Sources */,
 				1F7265BF29B2146200E4F9D4 /* ExportView.swift in Sources */,
 				1F33098C298AEE5D00D4D8CF /* View+withNavigationDestinations.swift in Sources */,
 				1F065A9D29A3E9E0003421D3 /* DynamicFetchView.swift in Sources */,
@@ -1098,13 +1209,17 @@
 				1F3E134F29C87BF400D076EA /* GifImageView.swift in Sources */,
 				1F756531296AE4260078474E /* RelaysView.swift in Sources */,
 				1FBE8224299A745600FB41CE /* PaymentAmountSelector.swift in Sources */,
+				1F8349A829DE81390032E52B /* RagiSmoothListButtonCell.swift in Sources */,
 				1FE4011D29952EC800A388A2 /* NIP05.swift in Sources */,
 				1F1ABC4B29819CAC00D03FA9 /* Cache.swift in Sources */,
 				1F02EA5C299F94F200FC89EB /* Onboarding.swift in Sources */,
 				1FF8BD1229D41BBD00C8C96A /* SingleMediaViewer.swift in Sources */,
 				1F1472DE29A71F6C00197393 /* NoteHeader.swift in Sources */,
+				1F8349A629DE81390032E52B /* RagiSmoothListStyle.swift in Sources */,
 				1F065A9B29A3E67F003421D3 /* NotificationsReactions.swift in Sources */,
+				1F83499C29DE81390032E52B /* InnerList.swift in Sources */,
 				1FB130AF29C0C99D004AC98D /* Post.swift in Sources */,
+				1F83498129DE28290032E52B /* ProfileRelays.swift in Sources */,
 				1F7C65AF29A11244009FF3EA /* ProfileZapsView.swift in Sources */,
 				1FB130BD29C1930A004AC98D /* PostDetailView.swift in Sources */,
 				1F88491629B537B400145340 /* UIFont.swift in Sources */,
@@ -1136,6 +1251,7 @@
 				1FB130B329C0E5A4004AC98D /* NoteHeaderView.swift in Sources */,
 				1F740DA129AF381F00EFCCA7 /* CreateNewBadgeSheet.swift in Sources */,
 				1F83497F29DD6F980032E52B /* LRUCache2.swift in Sources */,
+				1F8349AB29DE81390032E52B /* RagiSmoothListSectionModel.swift in Sources */,
 				1FD3DE0329BE325B007E1E6E /* PrivateNoteToggle.swift in Sources */,
 				1F7E40EA29BD9AD6003F9F71 /* PrivateNote+CoreDataClass.swift in Sources */,
 				1F88490029B4EF6000145340 /* ZapValidator.swift in Sources */,
@@ -1188,6 +1304,7 @@
 				1F14BA6E29854B8E00EACCD5 /* ContactList.swift in Sources */,
 				1FC4556329CB71CF00DE3239 /* NewDM.swift in Sources */,
 				1F794DFF29B780C80013E633 /* View+onBecomingVisible.swift in Sources */,
+				1F8349A329DE81390032E52B /* HostingView.swift in Sources */,
 				1F5F5A5C29838F1D00DED8F4 /* EventsProvider.swift in Sources */,
 				1F30FAB029706E72008439C8 /* Account+CoreDataClass.swift in Sources */,
 				1FC2DFED29A90F6C00C8A9DA /* NoteMinimalContentView.swift in Sources */,
@@ -1196,17 +1313,20 @@
 				1FC4556529CB75EB00DE3239 /* NewDMComposer.swift in Sources */,
 				1F987EB329805F33001E352E /* String+matchingStrings.swift in Sources */,
 				1FC4555F29CB673200DE3239 /* NewDMToSelector.swift in Sources */,
+				1F8349A229DE81390032E52B /* RagiSmoothListConfiguration.swift in Sources */,
 				1F25B393297A4E3400A8A5A7 /* NosturList+CoreDataProperties.swift in Sources */,
 				1F57C54729927A0000DFE063 /* AppTopBar.swift in Sources */,
 				1FC82F3629AE327700B81CE5 /* SmartRelayManager.swift in Sources */,
 				1FF21E7E29ACC02E00203623 /* FollowingAndExplore.swift in Sources */,
 				1F49C80629B8D7EA005C960D /* NewQuoteRepost.swift in Sources */,
+				1F83499E29DE81390032E52B /* DataSource.swift in Sources */,
 				1F7525842997B21D00477AF2 /* NotificationsView.swift in Sources */,
 				1FEA785829799FE6007CC8E7 /* ProfilePicView.swift in Sources */,
 				1F14CC45299D432400131B8D /* AccountsSheet.swift in Sources */,
 				1FC78F6B29CA2B000009C1C7 /* DirectMessages.swift in Sources */,
 				1FB4D3FF29BB3C7E004DB537 /* ListUnreadCounter.swift in Sources */,
 				1FC82F3429AE261C00B81CE5 /* TabbedDetailContainer.swift in Sources */,
+				1F8349A029DE81390032E52B /* SwipeStartEdge.swift in Sources */,
 				1F8B1362297B36DB002EB8CF /* Bytes+HexString.swift in Sources */,
 				1FC2DFF129A9142400C8A9DA /* MinimalQuotedNoteFragment.swift in Sources */,
 				1F8B1349297B34D7002EB8CF /* Bech32.swift in Sources */,
