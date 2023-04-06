@@ -79,15 +79,18 @@ struct PostAndParent: View {
     var navTitleHidden:Bool = false
     
     var isParent = false
+    var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
     var geoHeight:CGFloat
     let INDENT = 60.0
+    let THREAD_LINE_OFFSET = 34.0
         
-    init(vPost: VPost, isParent:Bool = false, geoHeight:CGFloat = CGFloat.zero, navTitleHidden:Bool = false) {
+    init(vPost: VPost, isParent:Bool = false, geoHeight:CGFloat = CGFloat.zero, navTitleHidden:Bool = false, connect:ThreadConnectDirection? = nil) {
         self.vPost = vPost
         self.event = vPost.event
         self.isParent = isParent
         self.geoHeight = geoHeight
         self.navTitleHidden = navTitleHidden
+        self.connect = connect
     }
     
     var body: some View {
@@ -106,7 +109,14 @@ struct PostAndParent: View {
             // PARENT: IF AVAILABLE, RENDER IT
             else if (event.replyTo != nil) {
                 if event.replyTo!.deletedById == nil {
-                    PostAndParent(vPost: event.replyTo!.toVPost()!, isParent: true)
+                    let connect:ThreadConnectDirection? = event.replyTo!.replyToId != nil ? .both : .bottom
+                    PostAndParent(vPost: event.replyTo!.toVPost()!, isParent: true, connect: connect)
+                        .background(alignment: .leading) {
+                            Color("LightGray")
+                                .frame(width: 1)
+                                .offset(x: THREAD_LINE_OFFSET, y: 62)
+                                .opacity(connect == .bottom || connect == .both ? 1 : 0)
+                        }
                 }
                 else {
                     Text("_Post deleted by author_")
@@ -121,6 +131,12 @@ struct PostAndParent: View {
                     HStack {
                         NavigationLink(value: ContactPath(key: event.pubkey), label: {
                             PFP(pubkey: event.pubkey, pictureUrl: event.contact?.picture, size: 50)
+                                .overlay(alignment: .top, content: {
+                                    Color("LightGray")
+                                        .frame(width: 10, height: 200)
+                                        .offset(x:0, y: -20)
+                                        .opacity(connect == .top || connect == .both ? 1 : 0)
+                                })
                         })
                         
                         VStack(alignment: .leading) { // name + reply + context menu
@@ -134,25 +150,17 @@ struct PostAndParent: View {
                         NoteMenuView(vPost: vPost)
                     }//.background(.yellow)
                     .id(event.id)
-                    
-                    if (!isParent) {
-                        HStack {
-                            ReplyingToFragmentView(vPost: vPost)
-                            Spacer()
-                        }
-                    }
-                    
-                    VStack(alignment:.leading) {
-                        ContentRenderer(vPost: vPost, isDetail: true)
-                    }
-                    .padding(.leading, isParent ? INDENT : 0)
+                                        
+                    ContentRenderer(vPost: vPost, isDetail: true)
+                        .padding(.vertical, 10)
+                        .padding(.leading, isParent ? INDENT : 0)
+
                     
                     if (isParent) {
                         FooterFragmentView(event: event)
                             .padding(.leading, isParent ? INDENT : 0)
                             .padding(.vertical, 5)
                             .padding(.trailing, 5)
-                        Divider()
                     }
                     else {
                         DetailFooterFragment(event: event)
@@ -163,7 +171,7 @@ struct PostAndParent: View {
                     }
                 }
                 else {
-                    Text("_Post deleted by author_")
+                    Text("_Post deleted by \(vPost.displayName)_")
                         .hCentered()
                 }
                 
@@ -199,7 +207,6 @@ struct PostAndParent: View {
                 
             }
             .padding(!isParent ? 10 : 10)
-            .background(MaybeThreadLine(isParent: isParent))
             .onTapGesture {
                 if (isParent) {
                     navigateTo(vPost)
@@ -300,20 +307,6 @@ struct PostAndParent: View {
                     event.objectWillChange.send()
                     event.firstQuote = openedEvent
                 }
-            }
-        }
-    }
-}
-
-struct MaybeThreadLine: View {
-    var isParent:Bool
-    
-    var body: some View {
-        if (isParent) {
-            HStack {
-                Rectangle().frame(width: 1).foregroundColor(Color("LightGray"))
-                    .padding(.leading, 33)
-                Spacer()
             }
         }
     }
