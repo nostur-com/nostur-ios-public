@@ -18,6 +18,8 @@ public struct RagiSmoothList<
     public typealias ListDataType = [ListSectionModelType]
     // swiftlint:disable:next line_length
     public typealias RowDeletedCallback = ((sectionIndex: Int, itemIndex: Int, section: SectionType, item: ItemType)) -> Void
+    public typealias RowAppearedCallback = ((sectionIndex: Int, itemIndex: Int, item: ItemType)) -> Void
+
     @Environment(\.ragiSmoothListStyle) var listStyle
 
     @Binding private var data: ListDataType
@@ -33,6 +35,7 @@ public struct RagiSmoothList<
     private var onLoadMore: (() -> Void)?
     private var onRefresh: (() -> Void)?
     private var onRowDeleted: RowDeletedCallback?
+    private var onRowAppeared: RowAppearedCallback?
     private var searchable: (bindableText: Binding<String>?, placeholder: String)?
 
     public init(
@@ -69,6 +72,9 @@ public struct RagiSmoothList<
             },
             onRowDeleted: { sectionIndex, itemIndex, section, item in
                 onRowDeleted?((sectionIndex: sectionIndex, itemIndex: itemIndex, section: section, item: item))
+            },
+            onRowAppeared: { sectionIndex, itemIndex, item in
+                onRowAppeared?((sectionIndex: sectionIndex, itemIndex: itemIndex, item: item))
             },
             searchable: searchable,
             needsScrollToTop: needsScrollToTop,
@@ -111,6 +117,12 @@ public struct RagiSmoothList<
     public func onRowDeleted(_ action: @escaping RowDeletedCallback) -> Self {
         var newInstance = self
         newInstance.onRowDeleted = action
+        return newInstance
+    }
+    
+    public func onRowAppeared(_ action: @escaping RowAppearedCallback) -> Self {
+        var newInstance = self
+        newInstance.onRowAppeared = action
         return newInstance
     }
 

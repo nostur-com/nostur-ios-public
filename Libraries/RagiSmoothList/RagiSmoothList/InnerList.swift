@@ -19,6 +19,7 @@ struct InnerList<
     typealias ListDataType = [ListSectionModelType]
     typealias UIViewControllerType = UIViewController
     typealias RowDeletedCallback = ((sectionIndex: Int, itemIndex: Int, section: SectionType, item: ItemType)) -> Void
+    typealias RowAppearedCallback = ((sectionIndex: Int, itemIndex: Int, item: ItemType)) -> Void
     typealias CollectionViewHolderType = CollectionViewHolder<SectionType, ItemType, SectionHeader, SectionFooter, Cell>
 
     @Binding private var data: ListDataType
@@ -33,6 +34,7 @@ struct InnerList<
     private let onLoadMore: () -> Void
     private let onRefresh: () -> Void
     private let onRowDeleted: RowDeletedCallback
+    private let onRowAppeared: RowAppearedCallback
     private var searchable: (bindableText: Binding<String>?, placeholder: String)?
 
     init(
@@ -46,6 +48,7 @@ struct InnerList<
         onLoadMore: @escaping () -> Void,
         onRefresh: @escaping () -> Void,
         onRowDeleted: @escaping RowDeletedCallback,
+        onRowAppeared: @escaping RowAppearedCallback,
         searchable: (bindableText: Binding<String>?, placeholder: String)?,
         needsScrollToTop: Binding<Bool>,
         needsScrollToIndex: Binding<Int?>
@@ -60,6 +63,7 @@ struct InnerList<
         self.onLoadMore = onLoadMore
         self.onRefresh = onRefresh
         self.onRowDeleted = onRowDeleted
+        self.onRowAppeared = onRowAppeared
         self.searchable = searchable
         self._needsScrollToTop = needsScrollToTop
         self._needsScrollToIndex = needsScrollToIndex
@@ -72,7 +76,7 @@ struct InnerList<
         context.coordinator.searchBar = searchBar
         searchBar.delegate = context.coordinator
 
-        let collectionViewHolder = makeCollectionViewHolder(parent: viewController, searchBar: searchBar)
+        let collectionViewHolder = makeCollectionViewHolder(parent: viewController, searchBar: searchBar, coordinator:context.coordinator)
         context.coordinator.collectionViewHolder = collectionViewHolder
         
         return viewController
@@ -113,6 +117,13 @@ struct InnerList<
         init(parent: InnerList) {
             self.parent = parent
         }
+        
+        func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+            //collectionView.contentOffset //
+            let item = parent.data[0].items[indexPath.row]
+            parent.onRowAppeared((sectionIndex: indexPath.section, itemIndex: indexPath.row,  item: item))
+//            print("appeared::: \(indexPath.row)")
+        }
 
         // MARK: - UISearchBarDelegate
         func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
@@ -145,6 +156,7 @@ struct InnerList<
             cellContent: cellContent,
             onLoadMore: onLoadMore,
             onRefresh: onRefresh,
+            delegate: coordinator
         ) { uiCollectionView in
             uiCollectionView.translatesAutoresizingMaskIntoConstraints = false
             viewController.view.addSubview(uiCollectionView)
