@@ -48,7 +48,9 @@ struct ListView: View {
                 .onAppear {
                     guard vmState.state == .AWAITING_RESTORE_SCROLL else { return }
                     print ("🟢🟢 List (count>0) onAppear -- restoreToScrollPos")
-                    restoreScrollPosition()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+                        self.restoreScrollPosition()
+                    }
                 }
                 .onReceive(receiveNotification(.shouldScrollToRecent)) { _ in
                     guard vmState.viewIsVisible else { return }
@@ -135,18 +137,24 @@ struct ListView: View {
     }
     
     func restoreScrollPosition() {
-        print("🟢🟢 restoreScrollPosition:  \(vmState.state.rawValue) ")
+//        print("🟢🟢 restoreScrollPosition:  \(vmState.state.rawValue) ")
         //        guard vm.state == .AWAITING_RESTORE_SCROLL || vm.state == .SWITCHING_ACCOUNT else { return } // Onlyif we didn't restore yet (so not like nav to post and back)
         guard vmState.state == .AWAITING_RESTORE_SCROLL else { return } // Onlyif we didn't restore yet (so not like nav to post and back)
         if let lastAppeared = self.vmState.restoreScrollTo {
-            print("🟢🟢🟢 proxy.scrollTo \(lastAppeared.id)  --- \(vmState.vPosts.count)  ")
-            if let index = vmState.vPosts.firstIndex(where: { $0.id == lastAppeared.id }) {
+//            print("🟢🟢🟢 proxy.scrollTo \(lastAppeared.id)  --- \(vmState.vPostLeafs.count)  ")
+            if let index = vmState.vPostLeafs.firstIndex(where: { $0.id == lastAppeared.id }) {
+//                print("🟢🟢🟢 should scroll to leaf index: \(index)")
+                scrollToIndex = index
+            }
+            // or maybe the leaf is now a parent?
+            else if let index = vmState.vPostLeafs.firstIndex(where: { $0.parentPosts.map { $0.id }.contains(lastAppeared.id) }) {
+//                print("🟢🟢🟢 should scroll to leaf-to-parent index: \(index)")
                 scrollToIndex = index
             }
             vmState.state = .COMPLETED_RESTORED_FETCH_WITH_SCROLL
         }
         else {
-            print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
+//            print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
             vmState.state = .COMPLETED_FIRST_FETCH
         }
     }

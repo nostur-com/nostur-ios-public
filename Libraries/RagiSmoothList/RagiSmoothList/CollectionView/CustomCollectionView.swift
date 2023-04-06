@@ -81,8 +81,8 @@ final class CustomCollectionView<
     }
     
     func scrollToItem(_ index:Int, animated: Bool = true) {
-        scrollToItem(at: IndexPath(item: index, section: 0), at: .centeredVertically, animated: animated)
-//        setNeedsLayout()
+//        reloadData()
+        scrollToItem(at: IndexPath(item: index, section: 0), at: .top, animated: animated)
     }
 
     func updateLayout(_ configuration: UICollectionLayoutListConfiguration) {
