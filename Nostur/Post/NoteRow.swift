@@ -19,12 +19,14 @@ struct NoteRow: View {//}, Equatable {
     @ObservedObject var event:Event
     var hideFooter = true // For rendering in NewReply
     var inThread = false // For rendering in thread, hide "Replying to.."
+    var connect:ThreadConnectDirection? = nil
     
-    init(vPost:VPost, hideFooter:Bool = false, inThread:Bool = false) {
+    init(vPost:VPost, hideFooter:Bool = false, inThread:Bool = false, connect: ThreadConnectDirection? = nil) {
         self.vPost = vPost
         self.event = vPost.event
         self.hideFooter = hideFooter
         self.inThread = inThread
+        self.connect = connect
     }
     
     var body: some View {
@@ -64,7 +66,7 @@ struct NoteRow: View {//}, Equatable {
                 }
                 // IS NOT A REPOST
                 else {
-                    Kind1(vPost: vPost, hideFooter: hideFooter, inThread:inThread)
+                    Kind1(vPost: vPost, hideFooter: hideFooter, inThread:inThread, connect:connect)
                     //                .background(Color.random)
                 }
             }
@@ -99,22 +101,33 @@ struct NoteRow: View {//}, Equatable {
         let vPost:VPost
         let hideFooter:Bool // For rendering in NewReply
         let inThread:Bool // For rendering in thread
+        var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
         @ObservedObject var event:Event
          
         let sp:SocketPool = .shared
         @State var contextForVPost:VPost?
         @EnvironmentObject var up:Unpublisher
         
-        init(vPost: VPost, hideFooter:Bool = true, inThread:Bool = false) {
+        init(vPost: VPost, hideFooter:Bool = true, inThread:Bool = false, connect:ThreadConnectDirection? = nil) {
             self.vPost = vPost
             self.event = vPost.event
             self.hideFooter = hideFooter
             self.inThread = inThread
+            self.connect = connect
         }
         
+        let THREAD_LINE_OFFSET = 34.0
+        
         var body: some View {
+            
             HStack(alignment: .top, spacing:0) {
                 PFP(pubkey: event.pubkey, pictureUrl: event.contact?.picture)
+                    .overlay(alignment: .top, content: {
+                        Color("LightGray")
+                            .frame(width: 1, height: 20)
+                            .offset(x:0, y: -20)
+                            .opacity(connect == .top || connect == .both ? 1 : 0)
+                    })
                     .onTapGesture {
                         navigateTo(ContactPath(key: event.pubkey)) // TODO: if vPost.contact navigate with that else by .pubkey
                     }
@@ -143,11 +156,22 @@ struct NoteRow: View {//}, Equatable {
                 }
                 .padding(.bottom, 10)
             }
+            .background(alignment: .leading) {
+                Color("LightGray")
+                    .frame(width: 1)
+                    .offset(x: THREAD_LINE_OFFSET, y: 18)
+                    .opacity(connect == .bottom || connect == .both ? 1 : 0)
+            }
             .padding(.trailing, 10)
+            
         }
     }
-    
-    
+}
+
+enum ThreadConnectDirection {
+    case top
+    case bottom
+    case both
 }
 
 struct NoteRow_Previews: PreviewProvider {
