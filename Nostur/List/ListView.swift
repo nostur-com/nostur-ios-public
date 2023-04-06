@@ -56,7 +56,7 @@ struct ListView: View {
                 .onAppear {
                     guard vmState.state == .AWAITING_RESTORE_SCROLL else { return }
                     print ("🟢🟢 List (count>0) onAppear -- restoreToScrollPos")
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
                         self.restoreScrollPosition()
                     }
                 }
@@ -137,12 +137,13 @@ struct ListView: View {
         guard vmState.state == .AWAITING_RESTORE_SCROLL else { return } // Onlyif we didn't restore yet (so not like nav to post and back)
         if let lastAppeared = self.vmState.restoreScrollTo {
 //            print("🟢🟢🟢 proxy.scrollTo \(lastAppeared.id)  --- \(vmState.vPostLeafs.count)  ")
-            if let index = vmState.vPostLeafs.firstIndex(where: { $0.id == lastAppeared.id }) {
+            if let index = vmState.vPosts[safe: 0]?.items.firstIndex(where: { $0.id == lastAppearedId }) {
 //                print("🟢🟢🟢 should scroll to leaf index: \(index)")
                 scrollToIndex = index
             }
             // or maybe the leaf is now a parent?
-            else if let index = vmState.vPostLeafs.firstIndex(where: { $0.parentPosts.map { $0.id }.contains(lastAppeared.id) }) {
+            else if let index = vmState.vPosts[safe: 0]?.items.firstIndex(where: { $0.parentPosts.map { $0.id }.contains(lastAppeared.id) }) {
+//            else if let index = vmState.vPostLeafs.firstIndex(where: { $0.parentPosts.map { $0.id }.contains(lastAppeared.id) }) {
 //                print("🟢🟢🟢 should scroll to leaf-to-parent index: \(index)")
                 scrollToIndex = index
             }
