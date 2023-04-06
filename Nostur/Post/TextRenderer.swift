@@ -16,7 +16,7 @@ import CoreData
 class TextRenderer { // TEXT things
     let context:NSManagedObjectContext
     let event:Event // The current event, so we dont need to duplicate .tags parsing
-    let tags:[(String, String)] // Faster tags, and only decode once at init
+    let tags:[(String, String, String?)] // Faster tags, and only decode once at init
     
     init(_ context:NSManagedObjectContext? = nil, event:Event) {
         self.context = context ?? DataProvider.shared().viewContext

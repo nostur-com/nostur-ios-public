@@ -19,41 +19,39 @@ struct SingleMediaViewer: View {
     var body: some View {
         if (url.absoluteString.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
             GeometryReader { geo in
-                LazyVStack {
-                    LazyImage(url: url) { state in
-                        if let container = state.imageContainer {
-                            if container.type == .gif, let gifData = container.data {
-                                AnimatedGifView(gifData: gifData, width: geo.size.width, height: geo.size.height, contentMode: .scaleAspectFit)
+                LazyImage(url: url) { state in
+                    if let container = state.imageContainer {
+                        if container.type == .gif, let gifData = container.data {
+                            AnimatedGifView(gifData: gifData, width: geo.size.width, height: geo.size.height, contentMode: .scaleAspectFit)
 //                                        .scaledToFill()
 //                                        .clipped()
-                                    .frame(width: geo.size.width, height: geo.size.height)
-                                    .onTapGesture {
-                                        sendNotification(.fullScreenView, FullScreenItem(url: url))
-                                    }
-                            }
-                            else if let image = state.image {
-                                image
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: geo.size.width, height: geo.size.height)
-                                    .onTapGesture {
-                                        sendNotification(.fullScreenView, FullScreenItem(url: url))
-                                    }
-                            }
-                            else {
-                                CenteredProgressView()
-                                    .background(Color("LightGray"))
-                            }
+                                .frame(width: geo.size.width, height: geo.size.height)
+                                .onTapGesture {
+                                    sendNotification(.fullScreenView, FullScreenItem(url: url))
+                                }
+                        }
+                        else if let image = state.image {
+                            image
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: geo.size.width, height: geo.size.height)
+                                .onTapGesture {
+                                    sendNotification(.fullScreenView, FullScreenItem(url: url))
+                                }
                         }
                         else {
                             CenteredProgressView()
                                 .background(Color("LightGray"))
                         }
                     }
-                    .pipeline(ImageProcessing.shared.content) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
-                    .priority(.low)
-                    .frame(width: geo.size.width, height: geo.size.height)
+                    else {
+                        CenteredProgressView()
+                            .background(Color("LightGray"))
+                    }
                 }
+                .pipeline(ImageProcessing.shared.content) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
+                .priority(.low)
+                .frame(width: geo.size.width, height: geo.size.height)
             }
         }
         else {

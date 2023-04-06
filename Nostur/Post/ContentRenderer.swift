@@ -95,45 +95,43 @@ struct ContentRenderer: View { // VIEW things
                     case .lnbc(let text):
                         LightningInvoice(invoice: text)
                     case .video(let url):
-                        LazyVStack {
-                            LazyImage(url: url) { state in
-                                if let container = state.imageContainer {
-                                    if let type = container.type, type.isVideo, let asset = container.userInfo[.videoAssetKey] as? AVAsset {
-                                        VPV(asset: asset, isPlaying: $isPlaying)
-                                            .onTapGesture {
-                                                isPlaying.toggle()
-                                            }
-                                            .frame(height: 250)
-                                            .background(Color("LightGray"))
-                                            .onAppear {
-                                                configureAudioSession()
-                                            }
-                                            .onDisappear {
-                                                isPlaying = false
-                                            }
-                                            .background(Color.black)
-                                            .overlay(
-                                                    Button(action: {
-                                                        if isPlaying {
-                                                            isPlaying = false
-                                                        } else {
-                                                            isPlaying = true
-                                                        }
-                                                    }) {
-                                                        Image(systemName: isPlaying ? "pause.circle" : "play.circle")
-                                                            .resizable()
-                                                            .scaledToFit()
-                                                            .padding(80)
-                                                    }.opacity(isPlaying ? 0 : 1)
-                                            )
-                                    }
+                        LazyImage(url: url) { state in
+                            if let container = state.imageContainer {
+                                if let type = container.type, type.isVideo, let asset = container.userInfo[.videoAssetKey] as? AVAsset {
+                                    VPV(asset: asset, isPlaying: $isPlaying)
+                                        .onTapGesture {
+                                            isPlaying.toggle()
+                                        }
+                                        .frame(height: 250)
+                                        .background(Color("LightGray"))
+                                        .onAppear {
+                                            configureAudioSession()
+                                        }
+                                        .onDisappear {
+                                            isPlaying = false
+                                        }
+                                        .background(Color.black)
+                                        .overlay(
+                                                Button(action: {
+                                                    if isPlaying {
+                                                        isPlaying = false
+                                                    } else {
+                                                        isPlaying = true
+                                                    }
+                                                }) {
+                                                    Image(systemName: isPlaying ? "pause.circle" : "play.circle")
+                                                        .resizable()
+                                                        .scaledToFit()
+                                                        .padding(80)
+                                                }.opacity(isPlaying ? 0 : 1)
+                                        )
                                 }
-                                
                             }
-                            .pipeline(ImageProcessing.shared.video)
-                            .frame(height: 250)
-                            .background(Color("LightGray"))
+                            
                         }
+                        .pipeline(ImageProcessing.shared.video)
+                        .frame(height: 250)
+                        .background(Color("LightGray"))
                     case .image(let url):
                         SingleMediaViewer(url: url)
                             .frame(height: 250)
