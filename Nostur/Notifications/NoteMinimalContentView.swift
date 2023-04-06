@@ -31,10 +31,10 @@ struct NoteMinimalContentView: View {
                 VStack(alignment:.leading, spacing: 3) {
                     MinimalNoteTextRenderView(vPost: vPost, lineLimit: lineLimit)
                     
-                    if (event.firstQuote != nil && event.firstQuoteId != nil) {
-                        MinimalQuotedNoteFragment(vPost: event.firstQuote!.toVPost(plainText: true)!)
+                    if let quoteVPost = event.firstQuote?.toVPost(plainText: true) {
+                        MinimalQuotedNoteFragment(vPost: quoteVPost)
                     }
-                    else if (event.firstQuote == nil && event.firstQuoteId != nil) {
+                    else if (event.firstQuoteId != nil) {
                         CenteredProgressView().onAppear {
                             sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.firstQuoteId!)))
                         }
@@ -132,7 +132,6 @@ struct NoteMinimalContentView_Previews: PreviewProvider {
             .listRowInsets(EdgeInsets())
             
         }
-        .listStyle(PlainListStyle())
         .withPreviewEnvironment()
     }
 }
