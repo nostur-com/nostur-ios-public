@@ -62,7 +62,7 @@ struct ListViewContainer: View, Equatable {
             print("🟣🟣🟣🟣🟣🟣🟣🟣 following: \(ns.followingPublicKeys.count) 🟣🟣🟣🟣🟣🟣🟣")
             print("🟣🟣🟣🟣🟣🟣🟣🟣 explore: \(ns.explorePubkeys.count) 🟣🟣🟣🟣🟣🟣🟣")
             
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                 pubkey = newPubkey
                 pubkeys =  listType == .account ? ns.followingPublicKeys : ns.explorePubkeys
                 

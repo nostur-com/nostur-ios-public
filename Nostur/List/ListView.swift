@@ -32,18 +32,25 @@ struct ListView: View {
                             makeCellContent(vPost: vPost)
                         }
                     )
+                    .onFinishedScrolling { isAtTop in
+                        guard isAtTop != vmState.isAtTop else { return }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+                            self.vmState.isAtTop = isAtTop
+                        }
+                    }
                     .scrollToTop($scrollToTop)
                     .scrollToIndex($scrollToIndex)
                     .onRowAppeared { _, _, vPost in
                         guard vmState.state != .AWAITING_FIRST_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
                         guard vmState.state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
                         guard vmState.state != .SWITCHING_ACCOUNT else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+//                        print("\(vPost.id) index: \(vmState.vPostLeafs.firstIndex(of: vPost) ?? -1)")
                         vm.lastAppearedSubject.send(vPost.event)
                     }
                     VStack {
                         Spacer()
                         ProcessingStatus()
-                            .opacity(0.7)
+                            .opacity(0.85)
                     }
                 }
                 .onAppear {
