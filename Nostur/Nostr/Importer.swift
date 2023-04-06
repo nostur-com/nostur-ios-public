@@ -44,7 +44,7 @@ class Importer {
         let parsedBucket = MessageParser.shared.parsedBucket
         let itemsCount = await parsedBucket.count()
         guard itemsCount != 0 else { self.isImporting = false; return }
-        print("🦋🦋 \(itemsCount) messages in parsedBucket.")
+//        print("🦋🦋 \(itemsCount) messages in parsedBucket.")
         //        if itemsCount == 1 {
         //            print(await parsedBucket.all().description)
         //        }
@@ -189,11 +189,8 @@ class Importer {
                 if (context.hasChanges) {
                     try context.save() // TODO: is this the slowdown??
                     if (saved > 0) {
-                        print("💾 forImports: \(forImports.count), saved: \(saved), skipped (cache): \(alreadyInLRUskipped), skipped (db): \(alreadyInDBskipped)")
+                        print("💾 Processed: \(forImports.count), saved: \(saved), skipped (cache): \(alreadyInLRUskipped), skipped (db): \(alreadyInDBskipped)")
                     }
-                    //                    DispatchQueue.main.async {
-                    //                        sendNotification(.viewNeedsUpdate)
-                    //                    }
                 }
                 self.isImporting = false
             }

@@ -38,10 +38,6 @@ struct VPost: Identifiable, Equatable, Hashable {
     var isTruncated = false
     var isRepost = false
     var firstQuoteId:String?
-        
-    var name:String {
-        "testttt" // TODO replace with .authorName... emoji check etc
-    }
 }
 
 class VPostTransformer {

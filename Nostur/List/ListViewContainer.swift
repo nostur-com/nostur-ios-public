@@ -69,7 +69,6 @@ struct ListViewContainer: View, Equatable {
                 vm.changeLVM(pubkey:newPubkey,
                              pubkeys: listType == .account ? ns.followingPublicKeys : ns.explorePubkeys,
                              listId: listId)
-                vm.performFetch()
             }
         }
         .onChange(of: ns.followingPublicKeys) { pubkeys in

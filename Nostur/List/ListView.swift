@@ -21,12 +21,12 @@ struct ListView: View {
     var body: some View {
         let _ = Self._printChanges()
         VStack {
-            if vmState.vPosts.count > 0 {
-                //                Text("vPosts: \(vmState.vPosts.count) | threadValue: \(vmState.vPosts.reduce(0, { $0 + $1.threadPostsCount } ) )")
+            if vmState.vPostLeafs.count > 0 {
+//                Text("\(vmState.state.rawValue) | vPosts: \(vmState.vPostLeafs.count) | threadValue: \(vmState.vPostLeafs.reduce(0, { $0 + $1.threadPostsCount } ) )")
                 
                 ZStack {
                     RagiSmoothList(
-                        data: $vmState.vPostsN,
+                        data: $vmState.vPosts,
                         listConfiguration: .init(separator: .init(isVisible: false)),
                         cellContent: { vPost in
                             makeCellContent(vPost: vPost)
