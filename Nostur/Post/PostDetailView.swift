@@ -113,9 +113,10 @@ struct PostAndParent: View {
                     PostAndParent(vPost: event.replyTo!.toVPost()!, isParent: true, connect: connect)
                         .background(alignment: .leading) {
                             Color("LightGray")
-                                .frame(width: 1)
+                                .frame(width: 2)
                                 .offset(x: THREAD_LINE_OFFSET, y: 62)
                                 .opacity(connect == .bottom || connect == .both ? 1 : 0)
+//                                .zIndex(1)
                         }
                 }
                 else {
@@ -131,11 +132,13 @@ struct PostAndParent: View {
                     HStack {
                         NavigationLink(value: ContactPath(key: event.pubkey), label: {
                             PFP(pubkey: event.pubkey, pictureUrl: event.contact?.picture, size: 50)
-                                .overlay(alignment: .top, content: {
+//                                .zIndex(10)
+                                .background(alignment: .top, content: {
                                     Color("LightGray")
-                                        .frame(width: 10, height: 200)
+                                        .frame(width: 2, height: 200)
                                         .offset(x:0, y: -20)
                                         .opacity(connect == .top || connect == .both ? 1 : 0)
+//                                        .zIndex(1)
                                 })
                         })
                         

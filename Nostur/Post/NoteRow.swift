@@ -122,9 +122,9 @@ struct NoteRow: View {//}, Equatable {
             
             HStack(alignment: .top, spacing:0) {
                 PFP(pubkey: event.pubkey, pictureUrl: event.contact?.picture)
-                    .overlay(alignment: .top, content: {
+                    .background(alignment: .top, content: {
                         Color("LightGray")
-                            .frame(width: 1, height: 20)
+                            .frame(width: 2, height: 20)
                             .offset(x:0, y: -20)
                             .opacity(connect == .top || connect == .both ? 1 : 0)
                     })
@@ -158,7 +158,7 @@ struct NoteRow: View {//}, Equatable {
             }
             .background(alignment: .leading) {
                 Color("LightGray")
-                    .frame(width: 1)
+                    .frame(width: 2)
                     .offset(x: THREAD_LINE_OFFSET, y: 18)
                     .opacity(connect == .bottom || connect == .both ? 1 : 0)
             }
