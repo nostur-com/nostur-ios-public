@@ -123,7 +123,7 @@ class LVM: NSObject, ObservableObject {
                 if let newVPostLeaf = transformer.toVPost(event) {
                     guard newVPostLeaf.created_at > lastCreatedAt else { continue } // Skip if it is older than last leaf on screen
                     transformedObjectIds.insert(newVPostLeaf.objectID)
-                    print("transformed: \(newVPostLeaf.id) \(newVPostLeaf.displayName) -- parentPosts: \(newVPostLeaf.parentPosts.count)")
+//                    print("transformed: \(newVPostLeaf.id) \(newVPostLeaf.displayName) -- parentPosts: \(newVPostLeaf.parentPosts.count)")
                     newVPostLeafs.append(newVPostLeaf)
                 }
             }
