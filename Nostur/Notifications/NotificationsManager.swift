@@ -98,8 +98,8 @@ class NotificationsManager: ObservableObject {
                                     "AND kind == 1 " +
                                     "AND tagsSerialized CONTAINS %@ " +
                                     "AND NOT id IN %@ " +
-                                    "AND NOT replyToRootId IN %@ " +
-                                    "AND NOT replyToId IN %@",
+                                    "AND (replyToRootId == nil OR NOT replyToRootId IN %@) " + // mutedRootIds
+                                    "AND (replyToId == nil OR NOT replyToId IN %@) ", // mutedRootIds
                                     account.lastSeenPostCreatedAt,
                                     blockedPubkeys + [pubkey],
                                     serializedP(pubkey),

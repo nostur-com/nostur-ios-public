@@ -41,12 +41,12 @@ struct NotificationsPosts: View, Equatable {
         let r2 = Event.fetchRequest()
         r2.predicate = NSPredicate(
             format:
-                "NOT pubkey IN %@ " +
+                "NOT pubkey IN %@ " + // blockedPubkeys + [pubkey]
                 "AND kind == 1 " +
-                "AND tagsSerialized CONTAINS %@ " +
-                "AND NOT id IN %@ " +
-                "AND NOT replyToRootId IN %@ " +
-                "AND NOT replyToId IN %@ ",
+                "AND tagsSerialized CONTAINS %@ " + // serializedP(pubkey)
+                "AND NOT id IN %@ " + // mutedRootIds
+                "AND (replyToRootId == nil OR NOT replyToRootId IN %@) " + // mutedRootIds
+                "AND (replyToId == nil OR NOT replyToId IN %@) ", // mutedRootIds
                 blockedPubkeys + [pubkey],
                 serializedP(pubkey),
                 mutedRootIds,
