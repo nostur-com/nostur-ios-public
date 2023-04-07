@@ -19,11 +19,8 @@ struct Settings: View {
     @Environment(\.managedObjectContext) var viewContext
     let sp:SocketPool = .shared
 
-    @FetchRequest(fetchRequest: Contact.fetchRequest())
-    var allContacts:FetchedResults<Contact>
-    
-    @FetchRequest(fetchRequest: Event.fetchRequest())
-    var allEvents:FetchedResults<Event>
+    @State var contactsCount:Int? = nil
+    @State var eventsCount:Int? = nil
     
     @FetchRequest(fetchRequest: Relay.fetchRequest())
     var allRelays:FetchedResults<Relay>
@@ -179,13 +176,13 @@ struct Settings: View {
 
                         Group {
                             Button { deleteAll = true } label: {
-                                Text("Delete all contacts \(allContacts.count)")
+                                Text("Delete all contacts \(contactsCount?.description ?? "")")
                             }.confirmationDialog("SURE???", isPresented: $deleteAll, actions: {
                                 Button("YES DELETE ALL CONTACTS", role: .destructive) { deleteAllContacts() }
                             })
 
                             Button { showDeleteAllEventsConfirmation = true } label: {
-                                Text("Delete all events \(allEvents.count)")
+                                Text("Delete all events \(eventsCount?.description ?? "")")
                             }.confirmationDialog("DELETE ALL EVENTS????", isPresented: $showDeleteAllEventsConfirmation) {
                                 Button("YES DELETE ALL EVENTS", role: .destructive) {
                                     deleteAllEvents()
@@ -228,6 +225,23 @@ struct Settings: View {
         }
         .onAppear {
             sliderValue = settings.defaultZapAmount
+            
+            let bg = DataProvider.shared().container.newBackgroundContext()
+            bg.perform {
+                let r = Event.fetchRequest()
+                r.resultType = .countResultType
+                let eventsCount = (try? bg.count(for: r)) ?? 0
+                
+                let c = Contact.fetchRequest()
+                c.resultType = .countResultType
+                let contactsCount = (try? bg.count(for: c)) ?? 0
+                
+                DispatchQueue.main.async {
+                    self.contactsCount = contactsCount
+                    self.eventsCount = eventsCount
+                }
+            }
+            
         }
         .onChange(of: amountS, perform: { newValue in
             settings.defaultZapAmount = Double(newValue)
