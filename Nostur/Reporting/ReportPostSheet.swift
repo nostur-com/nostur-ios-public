@@ -12,6 +12,7 @@ struct ReportPostSheet: View {
     let vPost:VPost
     @State var reason = ReportType.spam
     @State var comment:String = ""
+    @State var reportWhat = "Post" // to also report the profile, not just the post
     
     var body: some View {
         VStack {
@@ -26,7 +27,7 @@ struct ReportPostSheet: View {
             
             Form {
                 Section(header: Text("Report Information"), footer: VStack {
-                    Text("Your report is public, other users can use your report to prevent this kind of content")
+                    Text("Your report is public, other users can use your report to improve the network")
                 }) {
                     Picker(selection: $reason, label: Text("Reason")) {
                         Text("Spam").tag(ReportType.spam)
@@ -34,6 +35,11 @@ struct ReportPostSheet: View {
                         Text("Nudity").tag(ReportType.nudity)
                         Text("Profanity").tag(ReportType.profanity)
                         Text("Illegal content").tag(ReportType.illegal)
+                    }
+                    
+                    Picker(selection: $reportWhat, label: Text("Report")) {
+                        Text("This post").tag("Post")
+                        Text("This post & user").tag("Profile+Profile")
                     }
                         
                     TextField("Extra information", text: $comment)
@@ -52,7 +58,7 @@ struct ReportPostSheet: View {
             }
             ToolbarItem(placement: .primaryAction) {
                 Button("Report") {
-                    guard let signedReport = NosturState.shared.report(vPost.event, reportType: reason, note: comment) else {
+                    guard let signedReport = NosturState.shared.report(vPost.event, reportType: reason, note: comment, includeProfile: reportWhat == "Profile+Profile" ) else {
                         return
                     }
                     Unpublisher.shared.publishNow(signedReport)

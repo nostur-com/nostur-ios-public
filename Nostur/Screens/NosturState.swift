@@ -370,10 +370,10 @@ final class NosturState : ObservableObject {
         try! viewContext.save()
     }
     
-    func report(_ event:Event, reportType:ReportType, note:String = "") -> NEvent? {
+    func report(_ event:Event, reportType:ReportType, note:String = "", includeProfile:Bool = false) -> NEvent? {
         guard account?.privateKey != nil else { readOnlyAccountSheetShown = true; return nil }
         
-        let report = EventMessageBuilder.makeReportEvent(pubkey: event.pubkey, eventId: event.id, type: reportType, note: note)
+        let report = EventMessageBuilder.makeReportEvent(pubkey: event.pubkey, eventId: event.id, type: reportType, note: note, includeProfile: includeProfile)
 
         guard let signedEvent = try? signEvent(report) else {
             print("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
