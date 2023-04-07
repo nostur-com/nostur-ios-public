@@ -16,13 +16,14 @@ struct RelayEditView: View {
     @ObservedObject var socket: ManagedClient
     @State private var refresh: Bool = false
     var sp:SocketPool = .shared
-    
+    @State var confirmRemoveShown = false
+    @State var relayUrl =  ""
     
     var body: some View {
         VStack {
             Form {
                 Section(header: Text("Relay URL") ) {
-                    TextField("wss://nostr.relay.url.here", text: Binding($relay.url)!)
+                    TextField("wss://nostr.relay.url.here", text: $relayUrl)
                         .keyboardType(.URL)
                         .disableAutocorrection(true)
                         .textInputAutocapitalization(.never)
@@ -71,9 +72,30 @@ struct RelayEditView: View {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel") { dismiss() }
             }
+            ToolbarItem(placement: .destructiveAction) {
+                Button {
+                    confirmRemoveShown = true
+                } label: {
+                    Label("Remove", systemImage: "trash")
+                }
+                .confirmationDialog("Remove this relay: \(relay.url ?? "")?", isPresented: $confirmRemoveShown, titleVisibility: .visible) {
+                    Button("Remove", role: .destructive) {
+                        socket.client.disconnect()
+                        sp.removeSocket(relay.objectID)
+                        viewContext.delete(relay)
+                        dismiss()
+                        do {
+                            try viewContext.save()
+                        } catch {
+                            print("could not save after removing relay")
+                        }
+                    }
+                }
+            }
             ToolbarItem(placement: .primaryAction) {
                 Button("Save") {
                     do {
+                        relay.url = relayUrl.lowercased()
                         try viewContext.save()
                         // Update existing connections
                         // url change?
@@ -100,6 +122,9 @@ struct RelayEditView: View {
         }
         .onChange(of: relay.write) { newValue in
             socket.write = newValue
+        }
+        .onAppear {
+            relayUrl = relay.url ?? ""
         }
     }
 }

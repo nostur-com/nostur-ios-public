@@ -72,79 +72,20 @@ struct RelaysView: View {
     
     var body: some View {
         VStack {
-            ForEach(relays, id: \.objectID) { relay in
+            ForEach(relays, id:\.objectID) { relay in
                 RelayRowView(relay: relay, socket: socketForRelay(relay: relay))
                     .onTapGesture {
                         editRelay = relay
                     }
                 Divider()
             }
-            .onDelete(perform: deleteItems)
         }
-//        .navigationTitle("Relays")
-//        .toolbar {
-//            ToolbarItem {
-//                Button {
-//                    createRelayPresented = true
-//                } label: {
-//                    Label("Add relay", systemImage: "plus")
-//                }
-//            }
-//        }
         .sheet(item: $editRelay, content: { relay in
             NavigationStack {
                 RelayEditView(relay: relay, socket: socketForRelay(relay: relay))
             }
         })
-//        .sheet(isPresented: $createRelayPresented) {
-//            NewRelayView { url in
-//                let relay = Relay(context: viewContext)
-//                relay.id = UUID()
-//                relay.createdAt = Date()
-//                relay.url = url
-//
-//                do {
-//                    try viewContext.save()
-//                    if (relay.read || relay.write) {
-//                        _ = try sp.addSocket(relayId: relay.objectID, url: relay.url!, read: relay.read, write: relay.write)
-//                    }
-//                } catch {
-//                    let nsError = error as NSError
-//                    fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-//                }
-//            }
-//        }
-    }
-    
-    var bodyx: some View {
-        VStack {
-            ForEach(relays, id: \.objectID) { relay in
-                RelayRowView(relay: relay, socket: socketForRelay(relay: relay))
-            }
-            .onDelete(perform: deleteItems)
-        }
-        
-        .navigationDestination(for: Relay.self) { relay in
-            RelayEditView(relay: relay, socket: socketForRelay(relay: relay))
-        }
-        
-    }
-    
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            offsets.map { relays[$0] }.forEach(viewContext.delete)
-
-            do {
-                try viewContext.save()
-            } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-            }
-        }
-    }
-    
+    }    
 }
 
 struct RelaysView_Previews: PreviewProvider {
