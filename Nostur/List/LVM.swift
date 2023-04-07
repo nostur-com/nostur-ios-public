@@ -807,12 +807,12 @@ extension LVM: NSFetchedResultsControllerDelegate {
     func onlyRootOrReplyingToFollower(_ event:Event) -> Bool {
         // TODO: Add setting to show replies to all...
         return true
-        if let replyToPubkey = event.replyTo?.pubkey {
-            if pubkeys.contains(replyToPubkey) {
-                return true
-            }
-        }
-        return event.replyToId == nil
+//        if let replyToPubkey = event.replyTo?.pubkey {
+//            if pubkeys.contains(replyToPubkey) {
+//                return true
+//            }
+//        }
+//        return event.replyToId == nil
     }
 }
 

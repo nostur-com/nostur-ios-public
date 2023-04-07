@@ -208,8 +208,8 @@ struct BadgeIcon: View {
 struct ProfileBadgesView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
-//            let p = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
-            let pb = "5273115b3fad8a2d102e3335c0755083ed0baba48bd92c0c149a610212ccc3eb" // kind 30008
+            let pb = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
+//            let pb = "5273115b3fad8a2d102e3335c0755083ed0baba48bd92c0c149a610212ccc3eb" // kind 30008
             
             let profileBadgesEvent = PreviewFetcher.fetchEvent(pb)
             if (profileBadgesEvent != nil) {

@@ -102,7 +102,7 @@ struct InnerList<
         }
         
         if let index = needsScrollToIndex, let collectionViewHolder = context.coordinator.collectionViewHolder {
-            if let item = data[safe: 0]?.items[safe: index] {
+            if let _ = data[safe: 0]?.items[safe: index] {
                 collectionViewHolder.scrollToIndex(index, animated: false)
             }
             Task {
