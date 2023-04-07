@@ -102,7 +102,9 @@ struct ListView: View {
 //                        navigateTo(vPost.parentPosts[index])
 //                    }.padding(.top, 10)
 //                }
-                NoteRow(vPost: vPost.parentPosts[index], connect: vPost.parentPosts[index].event.replyToId != nil || index > 0 ? .both : .bottom)
+                NoteRow(vPost: vPost.parentPosts[index],
+                        inThread: (vPost.event.replyToId != nil && index != 0),
+                        connect: vPost.parentPosts[index].event.replyToId != nil || index > 0 ? .both : .bottom)
                     .background(Color.systemBackground)
                     .onTapGesture {
                         navigateTo(vPost)
@@ -113,7 +115,7 @@ struct ListView: View {
 //                    navigateTo(vPost)
 //                }.padding(.top, 10)
 //            }
-            NoteRow(vPost: vPost, connect: vPost.event.replyToId != nil ? .top : nil)
+            NoteRow(vPost: vPost, inThread: vPost.event.replyTo != nil, connect: vPost.event.replyToId != nil ? .top : nil)
                 .background(Color.systemBackground)
                 .onTapGesture {
                     if vPost.isRepost, let repostVPost = vPost.event.firstQuote?.toVPost() {
