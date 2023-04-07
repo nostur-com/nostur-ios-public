@@ -385,12 +385,12 @@ struct EventMessageBuilder {
         return event
     }
     
-    static func makeReportEvent(pubkey:String, eventId:String, type:ReportType, note:String = "") -> NEvent {
+    static func makeReportEvent(pubkey:String, eventId:String, type:ReportType, note:String = "", includeProfile:Bool = false) -> NEvent {
         var event = NEvent(content: note)
         event.kind = .report
         event.tags = [
             NEventTag(type: "e", otherInformation: [eventId, type.rawValue]),
-            NEventTag(type: "p", otherInformation: pubkey)
+            includeProfile ? NEventTag(type: "p", otherInformation: [pubkey, type.rawValue]) : NEventTag(type: "p", otherInformation: pubkey)
         ]
         return event
     }
