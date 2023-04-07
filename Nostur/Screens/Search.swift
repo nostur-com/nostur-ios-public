@@ -140,9 +140,15 @@ struct Search: View {
             }
             .onReceive(receiveNotification(.navigateTo)) { notification in
                 let destination = notification.object as! NavigationDestination
-                guard !IS_IPAD else { return }
+                guard type(of: destination.destination) == HashtagPath.self || !IS_IPAD else { return }
                 guard selectedTab == "Search" else { return }
-                navPath.append(destination.destination)
+                if (type(of: destination.destination) == HashtagPath.self) {
+                    let hashtag = (destination.destination as! HashtagPath).hashTag
+                    debounceObject.text = "#\(hashtag)"
+                }
+                else {
+                    navPath.append(destination.destination)
+                }
             }
             .onReceive(receiveNotification(.clearNavigation)) { notification in
                 navPath.removeLast(navPath.count)

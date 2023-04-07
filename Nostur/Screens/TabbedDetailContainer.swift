@@ -120,6 +120,7 @@ struct TabContainer: View {
         .onReceive(receiveNotification(.navigateTo)) { notification in
             guard tm.selected == tab else { return }
             let destination = notification.object as! NavigationDestination
+            guard type(of: destination.destination) != HashtagPath.self else  { return }
             navPath.append(destination.destination)
         }
     }
