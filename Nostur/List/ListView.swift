@@ -116,7 +116,7 @@ struct ListView: View {
 //                    navigateTo(vPost)
 //                }.padding(.top, 10)
 //            }
-            NoteRow(vPost: vPost, inThread: vPost.event.replyToId != nil, connect: vPost.event.replyToId != nil ? .top : nil)
+            NoteRow(vPost: vPost, inThread: vPost.event.replyToId != nil && vPost.parentPosts.count > 0, connect: vPost.event.replyToId != nil ? .top : nil)
                 .background(Color.systemBackground)
                 .onTapGesture {
                     guard vPost.event.deletedById == nil else { return }
