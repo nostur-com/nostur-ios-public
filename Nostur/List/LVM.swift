@@ -153,7 +153,7 @@ class LVM: NSObject, ObservableObject {
                 if !alreadySkipped && transformedObjectIds.count > 0 && transformedObjectIds.count < 5 {
                     fetchRelated(added.prefix(4))
                     alreadySkipped = true // Skip this render, wait for the next one so we have the related items
-                    DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(5)) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(10)) {
                         if self.alreadySkipped == true {
                             print("Still waiting... force render")
                             self.processPostsInBackground(self.unrenderedEvents)
