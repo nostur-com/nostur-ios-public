@@ -487,7 +487,7 @@ extension Event {
         
         return jsonArray
 //            .filter { $0.count >= 2 }
-            .map { ($0[0], $0[1], $0[safe: 2]) }
+            .map { ($0[0], $0[safe: 1] ?? "WTF", $0[safe: 2]) }
     }
     
     
