@@ -107,6 +107,7 @@ struct ListView: View {
                         connect: vPost.parentPosts[index].event.replyToId != nil || index > 0 ? .both : .bottom)
                     .background(Color.systemBackground)
                     .onTapGesture {
+                        guard vPost.event.deletedById == nil else { return }
                         navigateTo(vPost)
                     }
             }
@@ -118,6 +119,7 @@ struct ListView: View {
             NoteRow(vPost: vPost, inThread: vPost.event.replyTo != nil, connect: vPost.event.replyToId != nil ? .top : nil)
                 .background(Color.systemBackground)
                 .onTapGesture {
+                    guard vPost.event.deletedById == nil else { return }
                     if vPost.isRepost, let repostVPost = vPost.event.firstQuote?.toVPost() {
                         navigateTo(repostVPost)
                     }
