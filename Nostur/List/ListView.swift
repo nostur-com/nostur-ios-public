@@ -116,7 +116,12 @@ struct ListView: View {
             NoteRow(vPost: vPost, connect: vPost.event.replyToId != nil ? .top : nil)
                 .background(Color.systemBackground)
                 .onTapGesture {
-                    navigateTo(vPost)
+                    if vPost.isRepost, let repostVPost = vPost.event.firstQuote?.toVPost() {
+                        navigateTo(repostVPost)
+                    }
+                    else {
+                        navigateTo(vPost)
+                    }
                 }
         }
         .boxShadow()
