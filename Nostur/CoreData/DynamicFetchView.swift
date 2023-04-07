@@ -54,7 +54,7 @@ func fetchEvents(pubkeys:Set<String>, amount:Int? = 5000, since:Int64? = nil, su
         SocketPool.shared.sendMessage(clientMessage, subscriptionId:subscriptionId)
     }
     else {
-        let req = RequestMessage.getFollowingEvents(pubkeys: Array(pubkeys), limit: amount!)
+        let req = RequestMessage.getFollowingEvents(pubkeys: Array(pubkeys), limit: amount!, subscriptionId: subscriptionId)
         let clientMessage = ClientMessage(
             type: .REQ,
             message: req

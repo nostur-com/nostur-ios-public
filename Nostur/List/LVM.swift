@@ -102,6 +102,8 @@ class LVM: NSObject, ObservableObject {
     var alreadySkipped = false
     var danglingObjectIds:Set<NSManagedObjectID> = [] // posts that are transformed, but somehow not on screen. either we put on on screen or not, dont transform over and over again, so for some reason these are not on screen, dont know why. keep track here and dont transform again
     
+    var didCatchup = false
+    
     // MARK: FROM DB TO SCREEN STEP 3:
     private func processPostsInBackground(_ events:[Event]) { // events are from viewContext
         let context = DataProvider.shared().container.newBackgroundContext()
@@ -420,9 +422,12 @@ class LVM: NSObject, ObservableObject {
                 fetchEvents(pubkeys: self.pubkeys, subscriptionId: self.id)
                 
                 // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
-                let f = TimeCompactor(ifZero: nil, style: .short, roundSmallToWhole: true)
-                let ago =  f.string(from: Double(Date.now.timeIntervalSince(Date(timeIntervalSince1970: Double(cutOffPoint)))) as NSNumber)!
-                fetchEvents(pubkeys: self.pubkeys, amount: 5000, since: cutOffPoint, subscriptionId: "\(self.id)-CATCHUP-\(ago)")
+                if (!self.didCatchup) {
+                    let f = TimeCompactor(ifZero: nil, style: .short, roundSmallToWhole: true)
+                    let ago =  f.string(from: Double(Date.now.timeIntervalSince(Date(timeIntervalSince1970: Double(cutOffPoint)))) as NSNumber)!
+                    fetchEvents(pubkeys: self.pubkeys, amount: 5000, since: cutOffPoint, subscriptionId: "\(self.id)-CATCHUP-\(ago)")
+                    self.didCatchup = true
+                }
 //                 cutOff doesnt work well, since hits with some time ago limit (500)?
 //                fetchEvents(pubkeys: self.pubkeys, subscriptionId: self.id)
             }
