@@ -76,13 +76,6 @@ extension View {
     }
 }
 
-struct FollowingAndExplore_Previews: PreviewProvider {
-    static var previews: some View {
-        FollowingAndExplore()
-            .withPreviewEnvironment()
-    }
-}
-
 struct NavigationDestination {
     let destination:any Hashable
 }

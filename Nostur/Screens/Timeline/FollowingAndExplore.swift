@@ -84,3 +84,10 @@ struct FollowingAndExplore: View, Equatable {
         }
     }
 }
+
+struct FollowingAndExplore_Previews: PreviewProvider {
+    static var previews: some View {
+        FollowingAndExplore()
+            .withPreviewEnvironment()
+    }
+}
