@@ -112,10 +112,10 @@ class LVM: NSObject, ObservableObject {
         let onScreenIds = self.lvmState.vPostLeafs.reduce(Set<NSManagedObjectID>()) { partialResult, vPost in
             partialResult.union(Set([vPost.objectID] + vPost.parentPosts.map { $0.objectID }))
         }
+        let currentVPostLeafs = self.lvmState.vPostLeafs // viewContext. First (0) is newest
         
         context.perform { [unowned self] in
             let transformer = VPostTransformer(context) // Tranform in bg
-            let currentVPostLeafs = self.lvmState.vPostLeafs // viewContext. First (0) is newest
             let lastCreatedAt = currentVPostLeafs.last?.created_at ?? 0
             var newVPostLeafs:[VPost] = []
             var transformedObjectIds = Set<NSManagedObjectID>()
