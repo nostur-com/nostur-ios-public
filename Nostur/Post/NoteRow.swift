@@ -91,7 +91,7 @@ struct NoteRow: View {//}, Equatable {
             }
         }
         else {
-            Text("_Post deleted by \(vPost.displayName)")
+            Text("_Post deleted by \(vPost.displayName)_")
                 .hCentered()
         }
     }
