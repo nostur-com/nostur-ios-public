@@ -8,7 +8,11 @@
 import SwiftUI
 import Compactor
 
-struct Ago: View {
+struct Ago: View, Equatable {
+    
+    static func == (lhs: Ago, rhs: Ago) -> Bool {
+        lhs.date == rhs.date
+    }
     
     let date:Date
     let timer = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
