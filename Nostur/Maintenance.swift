@@ -73,7 +73,9 @@ struct Maintenance {
             let allAccounts = Array(try! context.fetch(frA))
             let ownAccountPubkeys = allAccounts.reduce([String]()) { partialResult, account in
                 var newResult = Array(partialResult)
-                newResult.append(account.publicKey)
+                if (account.privateKey != nil) { // only if it is really our account
+                    newResult.append(account.publicKey)
+                }
                 return newResult
             }
             
