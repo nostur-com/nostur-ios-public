@@ -115,9 +115,9 @@ struct DMConversationView: View {
                                                 BalloonView(message: event.noteText,
                                                             isSentByCurrentUser: event.pubkey == pubkey)
                                                 .id(event.id)
-                                                .onTapGesture {
-                                                    UIPasteboard.general.string = event.toNEvent().eventJson()
-                                                }
+//                                                .onTapGesture {
+//                                                    UIPasteboard.general.string = event.toNEvent().eventJson()
+//                                                }
                                             }
                                         }
                                     }
