@@ -152,7 +152,7 @@ struct PrivateNoteRow: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.bottom, 10)
-            if let vPost = note.post?.toVPost() {
+            if let vPost = note.post?.toVPost(plainText: true) {
                 HStack {
                     PFP(pubkey: vPost.event.pubkey, pictureUrl: vPost.event.contact?.picture, size: 25)
                         .onTapGesture {
