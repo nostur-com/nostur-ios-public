@@ -15,78 +15,90 @@ struct PFP: View {
     var pubkey:String
     var pictureUrl:String?
     var size:CGFloat = 50
-    var color:Color
+    var color:Color { randomColor(seed: pubkey) }
     
-    init(pubkey:String, pictureUrl:String? = nil, size: CGFloat = 50) {
-        self.pubkey = pubkey
-        self.pictureUrl = pictureUrl
-        self.size = size
-        self.color = randomColor(seed: pubkey)
-    }
+    @ObservedObject var settings:SettingsStore = .shared
     
     var body: some View {
         if (pictureUrl == nil || (pictureUrl != nil && pictureUrl!.prefix(7) == "http://")) { // TODO: is this slow??
             Circle().foregroundColor(color).frame(width: size, height: size)
         }
         else {
-
-                if (pictureUrl!.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
-                    LazyImage(url: URL(string: pictureUrl!)) { state in
-                        if let container = state.imageContainer {
-                            if container.type == .gif, let gifData = container.data {
-                                ZStack {
-                                    if let image = state.image {
-                                        image
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fill)
-                                            .frame(width: size, height: size)
-                                            .clipShape(Circle())
-                                    }
-                                    AnimatedGifView(gifData: gifData, width: size, height: size)
-                                        .scaledToFit()
+            if (!settings.animatedPFPenabled) {
+                LazyImage(url: URL(string: pictureUrl!)) { state in
+                    if let image = state.image {
+                        image
+                            .resizable()
+                        //                                .aspectRatio(contentMode: .fill)
+                        //                                .frame(width: size, height: size)
+                            .clipShape(Circle())
+                    }
+                    else {
+                        Circle().foregroundColor(color)//.frame(width: size, height: size)
+                    }
+                }
+                .pipeline(ImageProcessing.shared.pfp)
+                .processors([.resize(width: size, unit: .points), .circle()])
+                //                    .processors([.resize(width: size, unit: .pixels), .circle()])
+                //                    .priority(.low)
+                .frame(width: size, height: size)
+            }
+            else if (pictureUrl!.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
+                LazyImage(url: URL(string: pictureUrl!)) { state in
+                    if let container = state.imageContainer {
+                        if container.type == .gif, let gifData = container.data {
+                            ZStack {
+                                if let image = state.image {
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
                                         .frame(width: size, height: size)
                                         .clipShape(Circle())
                                 }
-                            }
-                            else if let image = state.image {
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
+                                AnimatedGifView(gifData: gifData, width: size, height: size)
+                                    .scaledToFit()
                                     .frame(width: size, height: size)
                                     .clipShape(Circle())
                             }
-                            else {
-                                Circle().foregroundColor(color).frame(width: size, height: size)
-                            }
+                        }
+                        else if let image = state.image {
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: size, height: size)
+                                .clipShape(Circle())
                         }
                         else {
                             Circle().foregroundColor(color).frame(width: size, height: size)
                         }
                     }
-                    .pipeline(ImageProcessing.shared.pfp) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
-                    .priority(.low) // lower prio for animated gif, saves bandwidth?
-                    .frame(width: size, height: size)
-                }
-                else {
-                    LazyImage(url: URL(string: pictureUrl!)) { state in
-                        if let image = state.image {
-                            image
-                                .resizable()
-//                                .aspectRatio(contentMode: .fill)
-//                                .frame(width: size, height: size)
-//                                .clipShape(Circle())
-                        }
-                        else {
-                            Circle().foregroundColor(color)//.frame(width: size, height: size)
-                        }
+                    else {
+                        Circle().foregroundColor(color).frame(width: size, height: size)
                     }
-                    .pipeline(ImageProcessing.shared.pfp)
-                    .processors([.resize(width: size, unit: .points), .circle()])
-//                    .processors([.resize(width: size, unit: .pixels), .circle()])
-//                    .priority(.low)
-                    .frame(width: size, height: size)
                 }
-            
+                .pipeline(ImageProcessing.shared.pfp) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
+                .priority(.low) // lower prio for animated gif, saves bandwidth?
+                .frame(width: size, height: size)
+            }
+            else {
+                LazyImage(url: URL(string: pictureUrl!)) { state in
+                    if let image = state.image {
+                        image
+                            .resizable()
+                        //                                .aspectRatio(contentMode: .fill)
+                        //                                .frame(width: size, height: size)
+                        //                                .clipShape(Circle())
+                    }
+                    else {
+                        Circle().foregroundColor(color)//.frame(width: size, height: size)
+                    }
+                }
+                .pipeline(ImageProcessing.shared.pfp)
+                .processors([.resize(width: size, unit: .points), .circle()])
+                //                    .processors([.resize(width: size, unit: .pixels), .circle()])
+                //                    .priority(.low)
+                .frame(width: size, height: size)
+            }
         }
     }
 }

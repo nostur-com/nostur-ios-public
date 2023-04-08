@@ -69,6 +69,10 @@ struct Settings: View {
                     Text("Restrict images to following")
                     Text("Only auto-download images in new posts from people you follow\nToggle off to download from all")
                 }
+                Toggle(isOn: $settings.animatedPFPenabled.not) {
+                    Text("Disable animated profile pic thumbnails")
+                    Text("This can improve scrolling performance")
+                }
             }
             
             Section(header: Text("Zapping")) {

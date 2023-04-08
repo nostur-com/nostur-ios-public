@@ -27,6 +27,7 @@ final class SettingsStore: ObservableObject {
         static let hideEmojisInNames = "hide_emojis_in_names"
         static let hideBadges = "hide_badges"
         static let restrictAutoDownload = "restrict_autodownload"
+        static let animatedPFPenabled = "animated_pfp_enabled"
     }
 
     private let cancellable: Cancellable
@@ -55,7 +56,8 @@ final class SettingsStore: ObservableObject {
             Keys.hideEmojisInNames: false,
             Keys.hideBadges: false,
             Keys.restrictAutoDownload: true,
-            Keys.defaultLightningWallet: SettingsStore.walletOptions.first!.id
+            Keys.defaultLightningWallet: SettingsStore.walletOptions.first!.id,
+            Keys.animatedPFPenabled: true,
             ])
 
         cancellable = NotificationCenter.default
@@ -68,6 +70,12 @@ final class SettingsStore: ObservableObject {
         set { defaults.set(newValue, forKey: Keys.hideBadges) }
         get { defaults.bool(forKey: Keys.hideBadges) }
     }
+    
+    var animatedPFPenabled: Bool {
+        set { defaults.set(newValue, forKey: Keys.animatedPFPenabled) }
+        get { defaults.bool(forKey: Keys.animatedPFPenabled) }
+    }
+    
 
     var hideEmojisInNames: Bool {
         set { defaults.set(newValue, forKey: Keys.hideEmojisInNames) }

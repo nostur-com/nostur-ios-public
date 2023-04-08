@@ -79,6 +79,7 @@
 		1F6B445029D5D1F700AD3191 /* PostOrThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6B444F29D5D1F700AD3191 /* PostOrThread.swift */; };
 		1F6E448429CC51600037D947 /* VideoPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6E448329CC515F0037D947 /* VideoPlayerView.swift */; };
 		1F6E448629CC5CAE0037D947 /* Account+Notifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6E448529CC5CAE0037D947 /* Account+Notifications.swift */; };
+		1F6EB73629E1912600B9DA83 /* Binding+not.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6EB73529E1912600B9DA83 /* Binding+not.swift */; };
 		1F71037D296BD9DE006245CC /* Nostr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F71037C296BD9DE006245CC /* Nostr.swift */; };
 		1F7150D029ABC6CE00AAB1C3 /* TabButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7150CF29ABC6CE00AAB1C3 /* TabButton.swift */; };
 		1F71B45529B0822300FA0400 /* ProfileBadgesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F71B45429B0822300FA0400 /* ProfileBadgesView.swift */; };
@@ -326,6 +327,7 @@
 		1F6B444F29D5D1F700AD3191 /* PostOrThread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostOrThread.swift; sourceTree = "<group>"; };
 		1F6E448329CC515F0037D947 /* VideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerView.swift; sourceTree = "<group>"; };
 		1F6E448529CC5CAE0037D947 /* Account+Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Account+Notifications.swift"; sourceTree = "<group>"; };
+		1F6EB73529E1912600B9DA83 /* Binding+not.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Binding+not.swift"; sourceTree = "<group>"; };
 		1F71037C296BD9DE006245CC /* Nostr.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nostr.swift; sourceTree = "<group>"; };
 		1F7150CF29ABC6CE00AAB1C3 /* TabButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabButton.swift; sourceTree = "<group>"; };
 		1F71B45429B0822300FA0400 /* ProfileBadgesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileBadgesView.swift; sourceTree = "<group>"; };
@@ -787,6 +789,7 @@
 		1F8B134D297B36BA002EB8CF /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				1F6EB73529E1912600B9DA83 /* Binding+not.swift */,
 				1F8B1352297B36DB002EB8CF /* Bytes+Base64.swift */,
 				1F8B1357297B36DB002EB8CF /* Bytes+HexString.swift */,
 				1F8B1356297B36DB002EB8CF /* Bytes+SecureRandom.swift */,
@@ -1228,6 +1231,7 @@
 				1FFF997B29CEE15000ADAE23 /* About.swift in Sources */,
 				1FD7CD1D29D1A2540012BD9A /* ListProcessingStatus.swift in Sources */,
 				1FBDE8C129B74EE800F4DFD0 /* ListState+CoreDataProperties.swift in Sources */,
+				1F6EB73629E1912600B9DA83 /* Binding+not.swift in Sources */,
 				1F065A9929A37A47003421D3 /* NoteZaps.swift in Sources */,
 				1F49C80829B8FB73005C960D /* QuoteOrRepostChoiceSheet.swift in Sources */,
 				1F14CC43299D1D7E00131B8D /* NosturStyles.swift in Sources */,
