@@ -135,7 +135,7 @@ struct RequestMessage {
     // Get all events where [pubkeys] are mentioned (in p tag)
     static func getHashtag(hashtag:String, kinds:[Int] = [1], limit:Int = 500,  subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"#t": \(hashtag), "limit": \(limit), "kinds": \(JSON(kinds).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]") }]
+["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"#t": ["\(hashtag)"], "limit": \(limit), "kinds": \(JSON(kinds).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]") }]
 """
     }
     

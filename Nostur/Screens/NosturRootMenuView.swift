@@ -199,7 +199,9 @@ extension NosturRootMenu {
         if nosturHashtag.count == 1 && nosturHashtag[0].count == 3 {
             print("ok lets go to: \(nosturHashtag[0][2])")
             selectedTab = "Search"
-            navigateTo(HashtagPath(hashTag: nosturHashtag[0][2]))
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                navigateTo(HashtagPath(hashTag: nosturHashtag[0][2]))
+            }
         }
     }
 }
