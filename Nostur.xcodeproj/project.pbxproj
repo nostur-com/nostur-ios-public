@@ -80,6 +80,8 @@
 		1F6E448429CC51600037D947 /* VideoPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6E448329CC515F0037D947 /* VideoPlayerView.swift */; };
 		1F6E448629CC5CAE0037D947 /* Account+Notifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6E448529CC5CAE0037D947 /* Account+Notifications.swift */; };
 		1F6EB73629E1912600B9DA83 /* Binding+not.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6EB73529E1912600B9DA83 /* Binding+not.swift */; };
+		1F6EB73829E1BA5300B9DA83 /* ListManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6EB73729E1BA5300B9DA83 /* ListManagerView.swift */; };
+		1F6EB73A29E1C9B200B9DA83 /* EditList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6EB73929E1C9B200B9DA83 /* EditList.swift */; };
 		1F71037D296BD9DE006245CC /* Nostr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F71037C296BD9DE006245CC /* Nostr.swift */; };
 		1F7150D029ABC6CE00AAB1C3 /* TabButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7150CF29ABC6CE00AAB1C3 /* TabButton.swift */; };
 		1F71B45529B0822300FA0400 /* ProfileBadgesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F71B45429B0822300FA0400 /* ProfileBadgesView.swift */; };
@@ -328,6 +330,8 @@
 		1F6E448329CC515F0037D947 /* VideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerView.swift; sourceTree = "<group>"; };
 		1F6E448529CC5CAE0037D947 /* Account+Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Account+Notifications.swift"; sourceTree = "<group>"; };
 		1F6EB73529E1912600B9DA83 /* Binding+not.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Binding+not.swift"; sourceTree = "<group>"; };
+		1F6EB73729E1BA5300B9DA83 /* ListManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListManagerView.swift; sourceTree = "<group>"; };
+		1F6EB73929E1C9B200B9DA83 /* EditList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = EditList.swift; path = Nostur/List/EditList.swift; sourceTree = "<group>"; };
 		1F71037C296BD9DE006245CC /* Nostr.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nostr.swift; sourceTree = "<group>"; };
 		1F7150CF29ABC6CE00AAB1C3 /* TabButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabButton.swift; sourceTree = "<group>"; };
 		1F71B45429B0822300FA0400 /* ProfileBadgesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileBadgesView.swift; sourceTree = "<group>"; };
@@ -841,6 +845,7 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
+				1F6EB73929E1C9B200B9DA83 /* EditList.swift */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1FB448BB2965F3D000038671 /* Products */,
 				1F7C65B629A1466D009FF3EA /* Frameworks */,
@@ -903,6 +908,7 @@
 				1FB4D3FE29BB3C7E004DB537 /* ListUnreadCounter.swift */,
 				1F00E8C229C2FE7800797B78 /* LVM.swift */,
 				1FF8BD1329D444D900C8C96A /* ProcessingStatus.swift */,
+				1F6EB73729E1BA5300B9DA83 /* ListManagerView.swift */,
 			);
 			path = List;
 			sourceTree = "<group>";
@@ -1228,6 +1234,7 @@
 				1F88491629B537B400145340 /* UIFont.swift in Sources */,
 				1F88491529B537B400145340 /* NSRegularExpression.swift in Sources */,
 				1F7150D029ABC6CE00AAB1C3 /* TabButton.swift in Sources */,
+				1F6EB73829E1BA5300B9DA83 /* ListManagerView.swift in Sources */,
 				1FFF997B29CEE15000ADAE23 /* About.swift in Sources */,
 				1FD7CD1D29D1A2540012BD9A /* ListProcessingStatus.swift in Sources */,
 				1FBDE8C129B74EE800F4DFD0 /* ListState+CoreDataProperties.swift in Sources */,
@@ -1282,6 +1289,7 @@
 				1F4AFC4729733E2400CC1F90 /* Event+CoreDataClass.swift in Sources */,
 				1F8B135E297B36DB002EB8CF /* HexEncoding.swift in Sources */,
 				1F4AFC4829733E2400CC1F90 /* Event+CoreDataProperties.swift in Sources */,
+				1F6EB73A29E1C9B200B9DA83 /* EditList.swift in Sources */,
 				1F6E448629CC5CAE0037D947 /* Account+Notifications.swift in Sources */,
 				1F88490E29B537B400145340 /* HighlightingTextEditor.swift in Sources */,
 				1F77D2E229D238520028DC95 /* ShareableIdentifierTest.swift in Sources */,

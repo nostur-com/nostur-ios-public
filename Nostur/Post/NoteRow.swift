@@ -100,7 +100,7 @@ struct NoteRow: View {
         @ObservedObject var event:Event
          
         let sp:SocketPool = .shared
-        @State var contextForVPost:VPost?
+//        @State var contextForVPost:VPost? // wtf is this?
         @EnvironmentObject var up:Unpublisher
         @ObservedObject var settings:SettingsStore = .shared
         

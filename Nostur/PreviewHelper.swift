@@ -71,10 +71,7 @@ struct PreviewFetcher {
         let request = NSFetchRequest<Contact>(entityName: "Contact")
         request.sortDescriptors = []
 
-        if (context != nil) {
-            return try! context!.fetch(request)
-        }
-        return try! PreviewFetcher.viewContext.fetch(request)
+        return try! (context ?? PreviewFetcher.viewContext).fetch(request)
     }
     
     static func fetchEvents(_ pubkey:String, kind:Int? = nil, context:NSManagedObjectContext? = nil) -> [Event] {
@@ -88,10 +85,7 @@ struct PreviewFetcher {
         
         request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         
-        if (context != nil) {
-            return try! context!.fetch(request)
-        }
-        return try! PreviewFetcher.viewContext.fetch(request)
+        return try! (context ?? PreviewFetcher.viewContext).fetch(request)
     }
     
     static func fetchEvents(_ pubkeys:Set<String>, kind:Int? = nil, context:NSManagedObjectContext? = nil) -> [Event] {
@@ -105,10 +99,7 @@ struct PreviewFetcher {
         
         request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         
-        if (context != nil) {
-            return try! context!.fetch(request)
-        }
-        return try! PreviewFetcher.viewContext.fetch(request)
+        return try! (context ?? PreviewFetcher.viewContext).fetch(request)
     }
     
     static func fetchAccount(_ pubkey:String? = nil, context:NSManagedObjectContext? = nil) -> Account? {
@@ -116,11 +107,7 @@ struct PreviewFetcher {
         let request = NSFetchRequest<Account>(entityName: "Account")
         request.predicate = NSPredicate(format: "publicKey == %@", accountKey)
         request.sortDescriptors = []
-        
-        if (context != nil) {
-            return try! context!.fetch(request).first
-        }
-        return try! PreviewFetcher.viewContext.fetch(request).first
+        return try! (context ?? PreviewFetcher.viewContext).fetch(request).first
     }
     
     static func fetchEvent(_ id:String? = nil, context:NSManagedObjectContext? = nil) -> Event? {
@@ -131,12 +118,7 @@ struct PreviewFetcher {
         else {
             request.predicate = NSPredicate(format: "kind == 1")
         }
-        request.sortDescriptors = []
-        
-        if (context != nil) {
-            return try! context!.fetch(request).randomElement()
-        }
-        return try! PreviewFetcher.viewContext.fetch(request).randomElement()
+        return try! (context ?? PreviewFetcher.viewContext).fetch(request).randomElement()
     }
     
     static func fetchVPost(_ id:String? = nil, context:NSManagedObjectContext? = nil, plainText:Bool = false) -> VPost? {
@@ -151,11 +133,11 @@ struct PreviewFetcher {
         if pubkey != nil {
             request.predicate = NSPredicate(format: "pubkey == %@", pubkey!)
         }
-        request.sortDescriptors = []
-        
-        if (context != nil) {
-            return try! context!.fetch(request).randomElement()
-        }
-        return try! PreviewFetcher.viewContext.fetch(request).randomElement()
+        return try! (context ?? PreviewFetcher.viewContext).fetch(request).randomElement()
+    }
+    
+    static func fetchList(context:NSManagedObjectContext? = nil) -> NosturList? {
+        let request = NSFetchRequest<NosturList>(entityName: "NosturList")
+        return try! (context ?? PreviewFetcher.viewContext).fetch(request).randomElement()
     }
 }
