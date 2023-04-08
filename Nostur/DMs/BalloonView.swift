@@ -26,6 +26,7 @@ struct BalloonView: View {
             }
             
             Text(renderedMessage)
+                .textSelection(.enabled)
                 .padding(10)
                 .foregroundColor(.white)
                 .background(
