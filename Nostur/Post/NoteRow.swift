@@ -146,7 +146,7 @@ struct NoteRow: View {
                     ContentRenderer(vPost: vPost)
                     if (!hideFooter && settings.rowFooterEnabled) {
                         FooterFragmentView(event: event)
-                            .frame(height: 30)
+//                            .frame(height: 30)
                             .padding(.top, 10)
                     }
                 }

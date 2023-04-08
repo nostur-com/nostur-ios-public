@@ -686,7 +686,8 @@ extension Event {
             if let event = try? bg.fetch(request).first {
                 var relays = event.relays.split(separator: " ").map { String($0) }
                 relays.append(relay)
-                event.relays = relays.joined(separator: " ")
+                let uniqueRelays = Set(relays)
+                event.relays = uniqueRelays.joined(separator: " ")
                 if bg.hasChanges {
                     do {
                         try bg.save()

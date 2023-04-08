@@ -21,113 +21,119 @@ struct FooterFragmentView: View {
     @State var showingNewQuoteRepost = false
     
     var body: some View {
-        HStack {
+        VStack(alignment: .leading, spacing: 5) {
             HStack {
-                Image(systemName: "message")
-                RollingOnUpdateNumber(event.repliesCount).opacity(event.repliesCount == 0 ? 0 : 1)
-            }
-            .padding([.vertical, .trailing], 5)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                guard ns.account?.privateKey != nil else {
-                    ns.readOnlyAccountSheetShown = true
-                    return
-                }
-                showingNewReply = true
-            }
-            Spacer()
-            
-            // REPOST
-            if (event.reposted) {
                 HStack {
-                    Image(systemName: "arrow.2.squarepath")
-                    RollingOnUpdateNumber(event.mentionsCount).opacity(event.mentionsCount == 0 ? 0 : 1)
+                    Image(systemName: "message")
+                    RollingOnUpdateNumber(event.repliesCount).opacity(event.repliesCount == 0 ? 0 : 1)
                 }
-                .foregroundColor(.green)
-                .padding(5)
-            }
-            else {
-                HStack {
-                    Image(systemName: "arrow.2.squarepath")
-                    RollingOnUpdateNumber(event.mentionsCount).opacity(event.mentionsCount == 0 ? 0 : 1)
-                }
-                .padding(5)
+                .padding([.vertical, .trailing], 5)
                 .contentShape(Rectangle())
                 .onTapGesture {
                     guard ns.account?.privateKey != nil else {
                         ns.readOnlyAccountSheetShown = true
                         return
                     }
-                    showingQuoteOrRepost = true
+                    showingNewReply = true
                 }
-            }
-            Spacer()
-            
-            // LIKE
-            if (event.liked) {
-                HStack {
-                    Image(systemName: "heart.fill")
-                    RollingOnUpdateNumber(event.likesCount).opacity(event.likesCount == 0 ? 0 : 1)
+                Spacer()
+                
+                // REPOST
+                if (event.reposted) {
+                    HStack {
+                        Image(systemName: "arrow.2.squarepath")
+                        RollingOnUpdateNumber(event.mentionsCount).opacity(event.mentionsCount == 0 ? 0 : 1)
+                    }
+                    .foregroundColor(.green)
+                    .padding(5)
                 }
-                .foregroundColor(.red)
-                .contentShape(Rectangle())
-                .padding(5)
-                .onTapGesture {
-                    if unpublishLikeId != nil && up.cancel(unpublishLikeId!) {
-                        ns.unlikePost(event)
+                else {
+                    HStack {
+                        Image(systemName: "arrow.2.squarepath")
+                        RollingOnUpdateNumber(event.mentionsCount).opacity(event.mentionsCount == 0 ? 0 : 1)
+                    }
+                    .padding(5)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        guard ns.account?.privateKey != nil else {
+                            ns.readOnlyAccountSheetShown = true
+                            return
+                        }
+                        showingQuoteOrRepost = true
                     }
                 }
-            }
-            else {
-                HStack {
-                    Image(systemName: "heart")
-                    RollingOnUpdateNumber(event.likesCount).opacity(event.likesCount == 0 ? 0 : 1)
-                }
-                .padding(5)
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    guard ns.account?.privateKey != nil else {
-                        ns.readOnlyAccountSheetShown = true
-                        return
+                Spacer()
+                
+                // LIKE
+                if (event.liked) {
+                    HStack {
+                        Image(systemName: "heart.fill")
+                        RollingOnUpdateNumber(event.likesCount).opacity(event.likesCount == 0 ? 0 : 1)
                     }
-                    if let signedEvent = ns.likePost(event) {
-                        unpublishLikeId = up.publish(signedEvent)
-                        sendNotification(.viewNeedsUpdate)
+                    .foregroundColor(.red)
+                    .contentShape(Rectangle())
+                    .padding(5)
+                    .onTapGesture {
+                        if unpublishLikeId != nil && up.cancel(unpublishLikeId!) {
+                            ns.unlikePost(event)
+                        }
                     }
                 }
-            }
-            Spacer()
-            
-            
-            LightningButton(tally: event.zapTally, event: event)
-                .opacity(event.contact?.anyLud ?? false ? 1 : 0.3)
-                .disabled(!(event.contact?.anyLud ?? false))
-            Spacer()  // TODO: FIXME
+                else {
+                    HStack {
+                        Image(systemName: "heart")
+                        RollingOnUpdateNumber(event.likesCount).opacity(event.likesCount == 0 ? 0 : 1)
+                    }
+                    .padding(5)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        guard ns.account?.privateKey != nil else {
+                            ns.readOnlyAccountSheetShown = true
+                            return
+                        }
+                        if let signedEvent = ns.likePost(event) {
+                            unpublishLikeId = up.publish(signedEvent)
+                            sendNotification(.viewNeedsUpdate)
+                        }
+                    }
+                }
+                Spacer()
+                
+                
+                LightningButton(tally: event.zapTally, event: event)
+                    .opacity(event.contact?.anyLud ?? false ? 1 : 0.3)
+                    .disabled(!(event.contact?.anyLud ?? false))
+                Spacer()  // TODO: FIXME
 
-            
-            // BOOKMARK
-            if (ns.isBookmarked(event)) {
-                Image(systemName: "bookmark.fill")
-                    .foregroundColor(.orange)
-                    .contentShape(Rectangle())
-                    .padding(.vertical, 5)
-                    .padding(.leading, 10)
-                    .onTapGesture {
-                        ns.removeBookmark(event)
-                    }
+                
+                // BOOKMARK
+                if (ns.isBookmarked(event)) {
+                    Image(systemName: "bookmark.fill")
+                        .foregroundColor(.orange)
+                        .contentShape(Rectangle())
+                        .padding(.vertical, 5)
+                        .padding(.leading, 10)
+                        .onTapGesture {
+                            ns.removeBookmark(event)
+                        }
+                }
+                else {
+                    Image(systemName: "bookmark")
+                        .padding(.vertical, 5)
+                        .padding(.leading, 10)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            let impactMed = UIImpactFeedbackGenerator(style: .medium)
+                            impactMed.impactOccurred()
+                            ns.addBookmark(event)
+                        }
+                }
+                
             }
-            else {
-                Image(systemName: "bookmark")
-                    .padding(.vertical, 5)
-                    .padding(.leading, 10)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        let impactMed = UIImpactFeedbackGenerator(style: .medium)
-                        impactMed.impactOccurred()
-                        ns.addBookmark(event)
-                    }
+            if (event.pubkey == ns.activeAccountPublicKey) {
+                Text("Sent to \(event.relays.split(separator: " ").count) relays")
+                    .padding(.bottom, 5)
             }
-            
         }
         .foregroundColor(Color.init(red: 113/255, green: 118/255, blue: 123/255))
 //            .padding(.trailing, 5)
