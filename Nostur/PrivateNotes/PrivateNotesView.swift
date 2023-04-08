@@ -37,6 +37,10 @@ struct PrivateNotesView: View {
     
     @State var selectedAccount:Account? = nil
     
+    var accounts:[Account] {
+        ns.accounts.filter { $0.privateKey != nil }
+    }
+    
     init(account:Account) {
         self.account = account
         self.selectedAccount = account
@@ -60,7 +64,7 @@ struct PrivateNotesView: View {
                             Spacer()
                         }
                     }
-                    ForEach(ns.accounts) { account in
+                    ForEach(accounts) { account in
                         Button {
                             selectedAccount = account
                         } label: {
@@ -78,8 +82,8 @@ struct PrivateNotesView: View {
                                 PFP(pubkey: selectedAccount!.publicKey, pictureUrl: selectedAccount?.picture, size: 30)
                             }
                             else {
-                                ForEach(ns.accounts.indices, id:\.self) { index in
-                                    PFP(pubkey: ns.accounts[index].publicKey, pictureUrl: ns.accounts[index].picture, size: 30)
+                                ForEach(accounts.indices, id:\.self) { index in
+                                    PFP(pubkey: accounts[index].publicKey, pictureUrl: accounts[index].picture, size: 30)
                                         .offset(x: -CGFloat(index*10))
                                     
                                 }

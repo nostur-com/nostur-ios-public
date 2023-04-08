@@ -40,6 +40,10 @@ struct BookmarksView: View {
         bookmarks.compactMap { VPostTransformer.shared.toVPost($0, skipParents: true) }
     }
     
+    var accounts:[Account] {
+        ns.accounts.filter { $0.privateKey != nil }
+    }
+    
     @State var selectedAccount:Account? = nil
     @State var viewNeedsUpdate = false
     
@@ -66,7 +70,7 @@ struct BookmarksView: View {
                             Spacer()
                         }
                     }
-                    ForEach(ns.accounts) { account in
+                    ForEach(accounts) { account in
                         Button {
                             selectedAccount = account
                         } label: {
@@ -85,8 +89,8 @@ struct BookmarksView: View {
                                 PFP(pubkey: selectedAccount!.publicKey, pictureUrl: selectedAccount?.picture, size: 30)
                             }
                             else {
-                                ForEach(ns.accounts.indices, id:\.self) { index in
-                                    PFP(pubkey: ns.accounts[index].publicKey, pictureUrl: ns.accounts[index].picture, size: 30)
+                                ForEach(accounts.indices, id:\.self) { index in
+                                    PFP(pubkey: accounts[index].publicKey, pictureUrl: accounts[index].picture, size: 30)
                                         .offset(x: -CGFloat(index*10))
                                     
                                 }
