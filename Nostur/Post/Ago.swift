@@ -8,21 +8,17 @@
 import SwiftUI
 import Compactor
 
-struct Ago: View, Equatable {
-    
-    static func == (lhs: Ago, rhs: Ago) -> Bool {
-        lhs.date == rhs.date
-    }
+struct Ago: View {
     
     let date:Date
     let timer = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
-    @State var agoText = ""
-    
+//    @State var agoText:String? = nil
+
     init(_ date:Date) {
         self.date = date
     }
     
-    var ago: String {
+    var ago:String {
         get {
             let f = TimeCompactor(ifZero: nil, style: .short, roundSmallToWhole: true)
             return f.string(from: Double(Date.now.timeIntervalSince(date)) as NSNumber)!
@@ -30,15 +26,15 @@ struct Ago: View, Equatable {
     }
     
     var body: some View {
-        Text(agoText)
-            .onAppear {
-                agoText = ago
-            }
-            .onReceive(timer) { _ in
-                if ago != agoText {
-                    agoText = ago
-                }
-            }
+        Text(ago)
+//            .onReceive(timer) { _ in
+//                if ago != agoText {
+//                    agoText = ago
+//                }
+////                if agoText != nil && ago != agoText! {
+////                    agoText = ago
+////                }
+//            }
     }
 }
 

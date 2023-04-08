@@ -32,7 +32,6 @@ struct NoteHeaderView: View {
                             Text("@\(vPost.event.username)").layoutPriority(1)
                             Text(" · ") //
                             Ago(vPost.event.date)
-                                .equatable()
                                 .layoutPriority(2)
                         }
                         .foregroundColor(.secondary)
