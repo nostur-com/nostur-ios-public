@@ -83,6 +83,7 @@ struct PostAndParent: View {
     var geoHeight:CGFloat
     let INDENT = 60.0
     let THREAD_LINE_OFFSET = 34.0
+    @ObservedObject var settings:SettingsStore = .shared
         
     init(vPost: VPost, isParent:Bool = false, geoHeight:CGFloat = CGFloat.zero, navTitleHidden:Bool = false, connect:ThreadConnectDirection? = nil) {
         self.vPost = vPost
@@ -159,13 +160,13 @@ struct PostAndParent: View {
                         .padding(.leading, isParent ? INDENT : 0)
 
                     
-                    if (isParent) {
+                    if (isParent && settings.rowFooterEnabled) {
                         FooterFragmentView(event: event)
                             .padding(.leading, isParent ? INDENT : 0)
                             .padding(.vertical, 5)
                             .padding(.trailing, 5)
                     }
-                    else {
+                    else if (!isParent) {
                         DetailFooterFragment(event: event)
                             .padding(.leading, isParent ? INDENT : 0)
                         FooterFragmentView(event: event)
@@ -188,11 +189,19 @@ struct PostAndParent: View {
                             else {
                                 return true
                             }
-                        }), id:\.self) { event in
-                            NoteRow(vPost: event.toVPost()!, hideFooter: false)
-                                .onTapGesture {
-                                    navigateTo(event.toVPost()!)
-                                }
+                        })
+                                 // newest at bottom
+                            .sorted(by: { $0.created_at < $1.created_at })
+                                 // following first
+                            .sorted(by: { ns.isFollowing($0.pubkey) && !ns.isFollowing($1.pubkey) })
+                                 // OP first even more first.
+                            .sorted(by: { $0.pubkey == event.pubkey && $1.pubkey != event.pubkey })
+                                , id:\.self) { event in
+                            
+                            if let vPost = event.toVPost() {
+                                NoteRow(vPost: vPost, hideFooter: false)
+                                    .onTapGesture { navigateTo(vPost) }
+                            }
                             Divider()
                         }
                     }

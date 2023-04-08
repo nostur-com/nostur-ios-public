@@ -17,6 +17,7 @@ struct ListView: View {
     
     let vm:LVM
     @ObservedObject var vmState:LVMState
+    @ObservedObject var settings:SettingsStore = .shared // dont need settings here, but needed to reload RagiSmoothList to recalculate row heights when disabling footer
     
     var body: some View {
         let _ = Self._printChanges()

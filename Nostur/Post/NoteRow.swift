@@ -6,20 +6,15 @@
 //
 
 import SwiftUI
-//import LightningDevKit
 
-struct NoteRow: View {//}, Equatable {
-    //    static func == (lhs: NoteRow, rhs: NoteRow) -> Bool {
-    //        lhs.vPost.id == rhs.vPost.id
-    //    }
-    
-    private let sp:SocketPool = .shared
-     
+struct NoteRow: View {
     let vPost:VPost
     @ObservedObject var event:Event
     var hideFooter = true // For rendering in NewReply
     var inThread = false // For rendering in thread, hide "Replying to.."
     var connect:ThreadConnectDirection? = nil
+    
+    private let sp:SocketPool = .shared
     
     init(vPost:VPost, hideFooter:Bool = false, inThread:Bool = false, connect: ThreadConnectDirection? = nil) {
         self.vPost = vPost
@@ -107,6 +102,7 @@ struct NoteRow: View {//}, Equatable {
         let sp:SocketPool = .shared
         @State var contextForVPost:VPost?
         @EnvironmentObject var up:Unpublisher
+        @ObservedObject var settings:SettingsStore = .shared
         
         init(vPost: VPost, hideFooter:Bool = true, inThread:Bool = false, connect:ThreadConnectDirection? = nil) {
             self.vPost = vPost
@@ -148,7 +144,7 @@ struct NoteRow: View {//}, Equatable {
                             .onTapGesture { navigateTo(vPost) }
                     }
                     ContentRenderer(vPost: vPost)
-                    if (!hideFooter) {
+                    if (!hideFooter && settings.rowFooterEnabled) {
                         FooterFragmentView(event: event)
                             .frame(height: 30)
                             .padding(.top, 10)

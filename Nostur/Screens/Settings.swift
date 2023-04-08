@@ -73,6 +73,10 @@ struct Settings: View {
                     Text("Disable animated profile pic thumbnails")
                     Text("This can improve scrolling performance")
                 }
+                Toggle(isOn: $settings.rowFooterEnabled.not) {
+                    Text("Disable post stats on timeline")
+                    Text("Counters for replies, likes etc will only be shown on detail")
+                }
             }
             
             Section(header: Text("Zapping")) {
