@@ -95,6 +95,7 @@ final class CollectionViewHolder<
     }
     
     func scrollToIndex(_ index:Int, animated: Bool = true) {
+        guard dataSource.itemIdentifier(for: IndexPath(item: index, section: 0)) != nil else { return }
         collectionView.scrollToItem(index, animated: animated)
     }
 
