@@ -106,6 +106,8 @@ class Unpublisher: ObservableObject {
             }
             do {
                 try viewContext.save()
+                // dont wait for background importer, show immediatly on screen
+                sendNotification(.newPostSaved, savedEvent)
             }
             catch {
                 print("🔴🔴🔴🔴🔴 COULD NOT SAVE EVENT 🔴🔴🔴🔴🔴")

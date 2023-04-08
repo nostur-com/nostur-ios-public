@@ -444,6 +444,27 @@ extension LVM {
         trackLastAppeared()
         processNewEventsInBg()
         keepFilteringMuted()
+        showOwnNewPostsImmediately()
+    }
+    
+    func showOwnNewPostsImmediately() {
+        receiveNotification(.newPostSaved)
+            .sink { notification in
+                let event = notification.object as! Event
+                
+                let context = DataProvider.shared().container.newBackgroundContext()
+                context.performAndWait { [unowned self] in
+                    let transformer = VPostTransformer(context) // Tranform in bg
+                    
+                    if let newVPostLeaf = transformer.toVPost(event) {
+                        DispatchQueue.main.async {
+                            self.lvmState.vPostLeafs.insert(newVPostLeaf, at: 0)
+                            self.lvmCounter.count = self.lvmState.isAtTop ? 0 : (self.lvmCounter.count + 1)
+                        }
+                    }
+                }
+            }
+            .store(in: &subscriptions)
     }
     
     func keepFilteringMuted() {

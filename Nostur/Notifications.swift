@@ -164,4 +164,9 @@ extension Notification.Name {
     static var navigateToOnMain: Notification.Name {
         return Notification.Name("navigateToOnMain")
     }
+    
+    
+    static var newPostSaved: Notification.Name {
+        return Notification.Name("newPostSaved")
+    }
 }
