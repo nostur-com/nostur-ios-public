@@ -60,8 +60,8 @@ struct NotificationsZaps: View, Equatable {
         let r1 = Event.fetchRequest()
         r1.predicate = NSPredicate(
             format:
-                "kind == 9735 " + // ONLY ZAPS
-                "AND zappedContactPubkey == %@" + // ONLY TO ME
+                "zappedContactPubkey == %@" + // ONLY TO ME
+                "AND kind == 9735 " + // ONLY ZAPS
                 "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS
             pubkey,
             blockedPubkeys
@@ -74,8 +74,8 @@ struct NotificationsZaps: View, Equatable {
         r2.predicate = NSPredicate(
             format:
                 "created_at >= %i " +
-                "AND kind == 9735 " +
                 "AND zappedContactPubkey == %@" + // ONLY TO ME
+                "AND kind == 9735 " +
                 "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS) // OPTIMISATION HACK
             oldestCreatedAt,
             pubkey,

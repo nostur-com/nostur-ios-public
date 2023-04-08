@@ -59,7 +59,7 @@ struct Maintenance {
         }
     }
     
-    // Clean up things older than 5 days
+    // Clean up things older than X days
     // Deletes ALL KIND=0 Events (except own), because should have Contact entity.
     // Keeps bookmarks
     // Keeps own events
@@ -113,7 +113,7 @@ struct Maintenance {
             // TODO: DONT EXPORT MUTED / BLOCKED. KEEP HERE SO WE DONT HAVE TO KEEP ..REPARSING
             
             let fr16 = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
-            fr16.predicate = NSPredicate(format: "kind IN {1,6} AND created_at < %i AND NOT id IN %@ AND NOT id IN %@ AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountBookmarkIds, ownAccountPrivateNoteEventIds, ownAccountPubkeys, regex)
+            fr16.predicate = NSPredicate(format: "created_at < %i AND kind IN {1,6} AND NOT id IN %@ AND NOT id IN %@ AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountBookmarkIds, ownAccountPrivateNoteEventIds, ownAccountPubkeys, regex)
             
             let fr16batchDelete = NSBatchDeleteRequest(fetchRequest: fr16)
             fr16batchDelete.resultType = .resultTypeCount
@@ -141,7 +141,7 @@ struct Maintenance {
             //            context.perform {
             let fr9734 = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
             
-            fr9734.predicate = NSPredicate(format: "kind IN {9734,8,7} AND created_at < %i AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys, regex)
+            fr9734.predicate = NSPredicate(format: "created_at < %i AND kind IN {9734,8,7} AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys, regex)
             
             let fr9734batchDelete = NSBatchDeleteRequest(fetchRequest: fr9734)
             fr9734batchDelete.resultType = .resultTypeCount
@@ -166,7 +166,7 @@ struct Maintenance {
             // zappedContactPubkey NOT IN OWN ACCOUNTS
             //            context.perform {
             let fr9735 = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
-            fr9735.predicate = NSPredicate(format: "kind == 9735 AND created_at < %i AND NOT zappedContactPubkey IN %@", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys)
+            fr9735.predicate = NSPredicate(format: "created_at < %i AND kind == 9735 AND NOT zappedContactPubkey IN %@", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys)
             
             let fr9735batchDelete = NSBatchDeleteRequest(fetchRequest: fr9735)
             fr9735batchDelete.resultType = .resultTypeCount

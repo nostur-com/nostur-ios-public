@@ -130,7 +130,7 @@ class NotificationsManager: ObservableObject {
                                     "created_at > %i " +
                                     "AND NOT pubkey IN %@ " +
                                     "AND kind == 7 " +
-                                    "AND reactionTo.contact.pubkey == %@",
+                                    "AND reactionTo.pubkey == %@",
                                     account.lastSeenReactionCreatedAt,
                                     blockedPubkeys + [pubkey],
                                     pubkey)
@@ -158,8 +158,8 @@ class NotificationsManager: ObservableObject {
         let r2 = Event.fetchRequest()
         r2.predicate = NSPredicate(format:
                                     "created_at > %i " + // AFTER LAST SEEN
-                                    "AND kind == 9735 " + // ONLY ZAPS
                                     "AND zappedContactPubkey == %@" + // ONLY TO ME
+                                    "AND kind == 9735 " + // ONLY ZAPS
                                     "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS
                                     account.lastSeenZapCreatedAt,
                                     pubkey,

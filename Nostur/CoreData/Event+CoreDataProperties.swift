@@ -270,7 +270,7 @@ extension Event {
         request.entity = Event.entity()
         request.includesPendingChanges = false
         if (byAuthorPubkey != nil) {
-            request.predicate = NSPredicate(format: "kind == 1 AND pubkey == %@", byAuthorPubkey!)
+            request.predicate = NSPredicate(format: "pubkey == %@ AND kind == 1", byAuthorPubkey!)
         }
         else {
             request.predicate = NSPredicate(format: "kind == 1")
@@ -285,7 +285,7 @@ extension Event {
         
         let request: NSFetchRequest<Event> = Event.fetchRequest()
         if (byAuthorPubkey != nil) {
-            request.predicate = NSPredicate(format: "kind == 0 AND pubkey == %@", byAuthorPubkey!)
+            request.predicate = NSPredicate(format: "pubkey == %@ AND kind == 0", byAuthorPubkey!)
         }
         else {
             request.predicate = NSPredicate(format: "kind == 0")
@@ -991,7 +991,7 @@ extension Event {
     static func zapsForEvent(_ id:String, context:NSManagedObjectContext) -> [Event] {
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        fr.predicate = NSPredicate(format: "kind == 9735 AND zappedEventId == %@", id)
+        fr.predicate = NSPredicate(format: "zappedEventId == %@ AND kind == 9735", id)
         
         return (try? context.fetch(fr)) ?? []
     }

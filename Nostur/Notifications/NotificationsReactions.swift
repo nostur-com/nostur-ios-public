@@ -58,19 +58,19 @@ struct NotificationsReactions: View, Equatable {
         self.pubkey = pubkey
         self.blockedPubkeys = blockedPubkeys
         let r1 = Event.fetchRequest()
-        r1.predicate = NSPredicate(format: "NOT pubkey IN %@ AND kind == 7 AND reactionTo.contact.pubkey == %@", blockedPubkeys, pubkey)
+        r1.predicate = NSPredicate(format: "NOT pubkey IN %@ AND kind == 7 AND reactionTo.pubkey == %@", blockedPubkeys, pubkey)
         r1.fetchLimit = FETCH_LIMIT
         r1.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         let oldestCreatedAt = (try? context.fetch(r1).last?.created_at) ?? 0
         
         let r2 = Event.fetchRequest()
         r2.predicate = NSPredicate(format:
-                                    "NOT pubkey IN %@ " +
-                                   "AND created_at >= %i " +
+                                   "created_at >= %i " +
+                                   "AND NOT pubkey IN %@ " +
                                    "AND kind == 7 " +
-                                   "AND reactionTo.contact.pubkey == %@",
-                                   blockedPubkeys + [pubkey],
+                                   "AND reactionTo.pubkey == %@",
                                    oldestCreatedAt,
+                                   blockedPubkeys + [pubkey],
                                    pubkey)
         r2.fetchLimit = FETCH_LIMIT
         r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]

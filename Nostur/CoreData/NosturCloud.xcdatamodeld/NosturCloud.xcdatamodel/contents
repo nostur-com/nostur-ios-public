@@ -48,7 +48,7 @@
             </uniquenessConstraint>
         </uniquenessConstraints>
     </entity>
-    <entity name="Event" representedClassName=".Event" elementID="mentionsCount" syncable="YES">
+    <entity name="Event" representedClassName=".Event" elementID="mentionsCount" versionHashModifier="added index 2" syncable="YES">
         <attribute name="content" optional="YES" attributeType="String"/>
         <attribute name="created_at" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="deletedById" optional="YES" attributeType="String"/>
@@ -87,6 +87,13 @@
         <relationship name="zapFromRequest" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event"/>
         <relationship name="zappedContact" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Contact"/>
         <relationship name="zappedEvent" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event"/>
+        <fetchIndex name="byKindAndPubkey">
+            <fetchIndexElement property="kind" type="Binary" order="ascending"/>
+            <fetchIndexElement property="pubkey" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byCreatedAt">
+            <fetchIndexElement property="created_at" type="Binary" order="descending"/>
+        </fetchIndex>
         <uniquenessConstraints>
             <uniquenessConstraint>
                 <constraint value="id"/>

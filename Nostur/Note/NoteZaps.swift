@@ -20,7 +20,7 @@ struct NoteZaps: View {
     
     init(event:Event) {
         self.event = event
-        _zaps = FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)], predicate: NSPredicate(format: "kind == 9735 AND zappedEventId == %@", event.id))
+        _zaps = FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)], predicate: NSPredicate(format: "zappedEventId == %@ AND kind == 9735", event.id))
     }
     
     var body: some View {

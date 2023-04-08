@@ -41,7 +41,7 @@ struct ProfileZapsView: View {
             
             _posts = FetchRequest(
                 sortDescriptors: [SortDescriptor(\Event.zapTally, order: .reverse)],
-                predicate: NSPredicate(format: "kind = 1 AND zapTally > 0 AND pubkey == %@", contact!.pubkey)
+                predicate: NSPredicate(format: "zapTally > 0 AND pubkey == %@ AND kind = 1", contact!.pubkey)
             )
         }
     }
