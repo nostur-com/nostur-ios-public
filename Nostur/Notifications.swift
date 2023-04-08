@@ -164,9 +164,15 @@ extension Notification.Name {
     static var navigateToOnMain: Notification.Name {
         return Notification.Name("navigateToOnMain")
     }
-    
-    
+     
     static var newPostSaved: Notification.Name {
         return Notification.Name("newPostSaved")
+    }
+    
+    static var createNewReply: Notification.Name {
+        return Notification.Name("createNewReply")
+    }
+    static var createNewQuoteOrRepost: Notification.Name {
+        return Notification.Name("createNewQuoteOrRepost")
     }
 }

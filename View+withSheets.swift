@@ -21,6 +21,7 @@ public extension View {
 private struct WithSheets: ViewModifier {
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
+    @EnvironmentObject var up:Unpublisher
     
     // Sheet contents (item based)
     @State var privateNote:PrivateNote? = nil
@@ -36,6 +37,11 @@ private struct WithSheets: ViewModifier {
     
     @State var deletePostSheet = false
     @State var deletePost:DeletePost? = nil
+    
+    // new post/quote post / new reply
+    @State var replyToEvent:Event? = nil
+    @State var quoteOrRepostEvent:Event? = nil
+    @State var quotePostEvent:Event? = nil
     
     func body(content: Content) -> some View {
         content
@@ -121,6 +127,47 @@ private struct WithSheets: ViewModifier {
                     Unpublisher.shared.publishNow(signedDeletion)
                 }
             })
+        
+            .onReceive(receiveNotification(.createNewReply)) { notification in
+                guard ns.account?.privateKey != nil else {
+                    ns.readOnlyAccountSheetShown = true
+                    return
+                }
+                replyToEvent = notification.object as? Event
+            }
+                       
+            .onReceive(receiveNotification(.createNewQuoteOrRepost)) { notification in
+                guard ns.account?.privateKey != nil else {
+                    ns.readOnlyAccountSheetShown = true
+                    return
+                }
+                quoteOrRepostEvent = notification.object as? Event
+            }
+        
+            .sheet(item: $replyToEvent) { event in
+                NavigationStack {
+                    NewReply(replyTo: event)
+                        .environmentObject(ns)
+                        .environmentObject(up)
+                }
+            }
+        
+            .sheet(item: $quoteOrRepostEvent) { event in
+                QuoteOrRepostChoiceSheet(originalEvent:event, quotePostEvent:$quotePostEvent)
+                    .environmentObject(ns)
+                    .environmentObject(up)
+                    .presentationDetents([.height(200)])
+                    .presentationDragIndicator(.visible)
+            }
+        
+        
+            .sheet(item: $quotePostEvent) { quotePostEvent in
+                NavigationStack {
+                    NewQuoteRepost(quotingEvent: quotePostEvent)
+                        .environmentObject(ns)
+                        .environmentObject(up)
+                }
+            }
     }
     
     func onDismiss() {

@@ -13,12 +13,8 @@ struct FooterFragmentView: View {
     
     @ObservedObject var event:Event
     @State var unpublishLikeId:UUID? = nil
-//    @State var unpublishRepostId:UUID? = nil
-//    @State var unpublishOriginalId:UUID? = nil
     
-    @State var showingNewReply = false
-    @State var showingQuoteOrRepost = false
-    @State var showingNewQuoteRepost = false
+
     
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
@@ -29,13 +25,7 @@ struct FooterFragmentView: View {
                 }
                 .padding([.vertical, .trailing], 5)
                 .contentShape(Rectangle())
-                .onTapGesture {
-                    guard ns.account?.privateKey != nil else {
-                        ns.readOnlyAccountSheetShown = true
-                        return
-                    }
-                    showingNewReply = true
-                }
+                .onTapGesture { sendNotification(.createNewReply, event) }
                 Spacer()
                 
                 // REPOST
@@ -55,11 +45,7 @@ struct FooterFragmentView: View {
                     .padding(5)
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        guard ns.account?.privateKey != nil else {
-                            ns.readOnlyAccountSheetShown = true
-                            return
-                        }
-                        showingQuoteOrRepost = true
+                        sendNotification(.createNewQuoteOrRepost, event)
                     }
                 }
                 Spacer()
@@ -136,35 +122,9 @@ struct FooterFragmentView: View {
             }
         }
         .foregroundColor(Color.init(red: 113/255, green: 118/255, blue: 123/255))
-//            .padding(.trailing, 5)
-//            .padding(.leading, 5)
             .font(.system(size: 14))
-            .sheet(isPresented: $showingNewReply) {
-                NavigationStack {
-                    NewReply(replyTo: event)
-                        .environmentObject(ns)
-                        .environmentObject(up)
-                }
-            }
-            .sheet(isPresented: $showingNewQuoteRepost) {
-                NavigationStack {
-                    NewQuoteRepost(quotingEvent: event)
-                        .environmentObject(ns)
-                        .environmentObject(up)
-                }
-            }
-            .sheet(isPresented: $showingQuoteOrRepost) {
-                QuoteOrRepostChoiceSheet(event:event, showingNewQuoteRepost:$showingNewQuoteRepost)
-                    .environmentObject(ns)
-                    .environmentObject(up)
-                    .presentationDetents([.height(200)])
-                    .presentationDragIndicator(.visible)
-            }
-            .onChange(of: showingNewQuoteRepost) { newValue in
-                if (newValue == true) {
-                    showingQuoteOrRepost = false
-                }
-            }
+            
+            
     }
 }
 
