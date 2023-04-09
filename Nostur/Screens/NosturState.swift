@@ -245,15 +245,9 @@ final class NosturState : ObservableObject {
     }
     
     func removeBookmark(_ event:Event) {
-        guard account != nil else { return }
-        account!.removeFromBookmarks(event)
-        do {
-            try viewContext.save()
-//            sendNotification(.viewNeedsUpdate)
-        }
-        catch {
-            print("Could not remove bookmark: \(error)")
-        }
+        guard let account = account else { return }
+        account.removeFromBookmarks(event)
+        DataProvider.shared().save()
     }
     
     func toggleBookmark(_ event:Event) {

@@ -108,6 +108,7 @@ struct BookmarksView: View {
                 ForEach(vBookmarks) { vBookmark in
                     NoteRow(vPost: vBookmark)
                         .listRowInsets(EdgeInsets())
+                        .background(Color.systemBackground)
                         .onTapGesture {
                             navigateTo(vBookmark)
                         }
@@ -143,7 +144,7 @@ struct BookmarksView: View {
     
     func deleteItem(at offsets: IndexSet) {
         for index in offsets {
-            let item = bookmarks[index].bookmarkedBy = []
+            bookmarks[index].bookmarkedBy = []
         }
         DataProvider.shared().save()
     }
