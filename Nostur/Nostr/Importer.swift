@@ -34,8 +34,10 @@ class Importer {
         if (isImporting) {
             print("🟠🟠🟠 ALREADY IMPORTING. SKIPPED 🟠🟠🟠")
             let itemsCount = await parsedBucket.count()
-            DispatchQueue.main.async {
-                sendNotification(.listStatus, "Processing \(itemsCount) items...")
+            if itemsCount > 0 {
+                DispatchQueue.main.async {
+                    sendNotification(.listStatus, "Processing \(itemsCount) items...")
+                }
             }
             return
         }
