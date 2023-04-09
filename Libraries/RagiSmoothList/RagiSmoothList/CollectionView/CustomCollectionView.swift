@@ -26,8 +26,8 @@ final class CustomCollectionView<
         keyboardDismissMode = .onDragWithAccessory
 
         // refresh control
-        refreshControl = UIRefreshControl()
-        refreshControl?.addTarget(self, action: #selector(onRefreshControlValueChanged(sender:)), for: .valueChanged)
+//        refreshControl = UIRefreshControl()
+//        refreshControl?.addTarget(self, action: #selector(onRefreshControlValueChanged(sender:)), for: .valueChanged)
 
         // cell, section header, section footer
         register(InnerListCell<Cell>.self, forCellWithReuseIdentifier: cellID)
