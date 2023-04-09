@@ -213,28 +213,34 @@ class NotificationsManager: ObservableObject {
             blockedPubkeys)
         receivedFR.fetchLimit = 500
         receivedFR.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        let received = try! ctx.fetch(receivedFR)
         
-        let sentFR = Event.fetchRequest()
-        sentFR.predicate = NSPredicate(
-            format: "kind == 4 AND pubkey == %@", pubkey)
-        sentFR.fetchLimit = 500
-        sentFR.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        let sent = try! ctx.fetch(sentFR)
-        
-        let onlyMostRecentAll = computeOnlyMostRecentAll(sent: sent, received: received, pubkey: pubkey)
-        let onlyMostRecentAccepted = computeOnlyMostRecentAccepted(onlyMostRecentAll)
-        let onlyMostRecentRequests = computeOnlyMostRecentRequests(onlyMostRecentAll)
-        let newUnreadDMsAccepted = computeOnlyMostRecentAcceptedTotalUnread(onlyMostRecentAccepted)
-        let newUnreadDMRequests = computeRequestTotalUnread(onlyMostRecentRequests)
-        
-        // Only set if changed. (else rerender because _nm changed.)
-        if newUnreadDMsAccepted != unreadDMsAccepted {
-            unreadDMsAccepted = min(newUnreadDMsAccepted,9999)
+        do {
+            let received = try ctx.fetch(receivedFR)
+            
+            let sentFR = Event.fetchRequest()
+            sentFR.predicate = NSPredicate(
+                format: "kind == 4 AND pubkey == %@", pubkey)
+            sentFR.fetchLimit = 500
+            sentFR.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+            let sent = try ctx.fetch(sentFR)
+            
+            let onlyMostRecentAll = computeOnlyMostRecentAll(sent: sent, received: received, pubkey: pubkey)
+            let onlyMostRecentAccepted = computeOnlyMostRecentAccepted(onlyMostRecentAll)
+            let onlyMostRecentRequests = computeOnlyMostRecentRequests(onlyMostRecentAll)
+            let newUnreadDMsAccepted = computeOnlyMostRecentAcceptedTotalUnread(onlyMostRecentAccepted)
+            let newUnreadDMRequests = computeRequestTotalUnread(onlyMostRecentRequests)
+            
+            // Only set if changed. (else rerender because _nm changed.)
+            if newUnreadDMsAccepted != unreadDMsAccepted {
+                unreadDMsAccepted = min(newUnreadDMsAccepted,9999)
+            }
+            
+            if newUnreadDMRequests != unreadDMRequests {
+                unreadDMRequests = min(newUnreadDMRequests,9999)
+            }
         }
-
-        if newUnreadDMRequests != unreadDMRequests {
-            unreadDMRequests = min(newUnreadDMRequests,9999)
+        catch {
+            print("🔴🔴 problem checking DM notifications")
         }
     }
     
