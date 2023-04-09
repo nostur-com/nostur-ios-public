@@ -100,16 +100,12 @@ struct PrivateNotesView: View {
                 ForEach(notes) { note in
                     PrivateNoteRow(note:note)
                         .listRowInsets(EdgeInsets())
-                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                            Button(role: .destructive) {
-                                do {
-                                    viewContext.delete(note)
-                                    try viewContext.save()
-                                } catch {}
-                            } label: {
-                                Label("Remove", systemImage: "trash")
-                            }
-                        }
+                }
+                .onDelete { offsets in
+                    for index in offsets {
+                        viewContext.delete(notes[index])
+                    }
+                    DataProvider.shared().save()
                 }
             }
             .listStyle(.plain)

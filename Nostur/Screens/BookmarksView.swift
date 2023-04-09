@@ -111,14 +111,8 @@ struct BookmarksView: View {
                         .onTapGesture {
                             navigateTo(vBookmark)
                         }
-                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                            Button(role: .destructive) {
-                                removeBookmark(vBookmark.event)
-                            } label: {
-                                Label("Remove", systemImage: "trash")
-                            }
-                        }
                 }
+                .onDelete(perform: deleteItem)
             }
             .listStyle(.plain)
             Spacer()
@@ -146,18 +140,12 @@ struct BookmarksView: View {
             }
         }
     }
-    private func removeBookmark(_ post:Event) {
-        for account in ns.accounts {
-            post.removeFromBookmarkedBy(account)
+    
+    func deleteItem(at offsets: IndexSet) {
+        for index in offsets {
+            let item = bookmarks[index].bookmarkedBy = []
         }
-        do {
-            try viewContext.save()
-            sendNotification(.viewNeedsUpdate)
-            
-        } catch {
-            let nsError = error as NSError
-            fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-        }
+        DataProvider.shared().save()
     }
 }
 
