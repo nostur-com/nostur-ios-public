@@ -354,6 +354,14 @@ struct ReplyAndParentView_Previews: PreviewProvider {
     static var previews: some View {
         Group {
             
+            if let yt2 = PreviewFetcher.fetchVPost("0000014de66e08882bd36b6b7b551a774f85fe752a18070dc8658d7776db7e69") {
+                PostDetailView(vPost: yt2)
+            }
+            
+            if let yt = PreviewFetcher.fetchVPost("c7b4ef377ee4f6d71f6f59bc6bad607acb9c7c3675e3c0b2ca0ad2442b133e49") {
+                PostDetailView(vPost: yt)
+            }
+              
             if let v = PreviewFetcher.fetchVPost("bb15e6165180d31c36b6c3e0baf082eeb949aa473c59e37eaa8e2bb29dc46422") {
                 PostDetailView(vPost: v)
             }

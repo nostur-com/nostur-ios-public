@@ -136,6 +136,10 @@ struct ContentRenderer: View { // VIEW things
                         SingleMediaViewer(url: url)
                             .frame(height: 250)
                             .padding(5)
+                    case .linkPreview(let url):
+                        LinkPreviewView(url: url)
+//                            .frame(height: 250)
+                            .padding(.vertical, 5)
                     default:
                         EmptyView()
                 }
@@ -218,6 +222,7 @@ enum MarkdownElement: Hashable {
     case link(String, URL)
     case image(URL)
     case video(URL)
+    case linkPreview(URL)
 }
 
 

@@ -104,7 +104,8 @@ class VPostTransformer {
         let lightningInvoicePattern = ###"lnbc\S+"###
         let notePattern = ###"nostr:note1[023456789acdefghjklmnpqrstuvwxyz]{58}"###
         let neventPattern = ###"nostr:nevent1[023456789acdefghjklmnpqrstuvwxyz]+\b"###
-        let pattern = "(?i)\(imageUrlPattern)|\(lightningInvoicePattern)|\(notePattern)|\(neventPattern)|\(videoUrlPattern)"
+        let otherUrlsPattern = ###"(https\:\/\/)[a-zA-Z0-9\-\.]+(?:\.[a-zA-Z]{2,999}+)+([\/\?\=\&\#\%\+\.]\@?[\S]+)*\/?"### // for link previews (TODO: white list domains or not?)
+        let pattern = "(?i)\(imageUrlPattern)|\(lightningInvoicePattern)|\(notePattern)|\(neventPattern)|\(videoUrlPattern)|\(otherUrlsPattern)"
         //        let pattern = ###"\\n"###
         
         let regex = try! NSRegularExpression(pattern: pattern)
@@ -123,10 +124,28 @@ class VPostTransformer {
                 result.append(MarkdownElement.text(contentLinkRenderer.renderedText(event, text:nonMatch)))
                 
                 if matchString.matchingStrings(regex: imageUrlPattern).count > 0 {
-                    result.append(MarkdownElement.image(URL(string: matchString)!))
+                    if let url = URL(string: matchString) {
+                        result.append(MarkdownElement.image(url))
+                    }
+                    else {
+                        result.append(MarkdownElement.text(contentLinkRenderer.renderedText(event, text:matchString)))
+                    }
                 }
                 else if matchString.matchingStrings(regex: videoUrlPattern).count > 0 {
-                    result.append(MarkdownElement.video(URL(string: matchString)!))
+                    if let url = URL(string: matchString) {
+                        result.append(MarkdownElement.video(url))
+                    }
+                    else {
+                        result.append(MarkdownElement.text(contentLinkRenderer.renderedText(event, text:matchString)))
+                    }
+                }
+                else if matchString.matchingStrings(regex: otherUrlsPattern).count > 0 {
+                    if let url = URL(string: matchString) {
+                        result.append(MarkdownElement.linkPreview(url))
+                    }
+                    else {
+                        result.append(MarkdownElement.text(contentLinkRenderer.renderedText(event, text:matchString)))
+                    }
                 }
                 else if matchString.matchingStrings(regex: notePattern).count > 0 {
                     let m = matchString.matchingStrings(regex:#"note1[023456789acdefghjklmnpqrstuvwxyz]{58}"#)

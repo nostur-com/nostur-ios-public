@@ -30,6 +30,13 @@ struct PubkeyUsernameCache {
     }()
 }
 
+struct LinkPreviewCache {
+    static var shared:LRUCache2<URL, [String: String]> = {
+        let cache = LRUCache2<URL, [String: String]>(countLimit: 2000)
+        return cache
+    }()
+}
+
 //// TO PREVENT SENDING DUPLICATE MESSAGES
 //struct LastSentMessagesCache {
 //    static var shared:LRUCache<EventId, NTimestamp> = {
