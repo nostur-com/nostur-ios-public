@@ -173,6 +173,7 @@ struct InnerList<
             delegate: coordinator
         ) { uiCollectionView in
             uiCollectionView.translatesAutoresizingMaskIntoConstraints = false
+            uiCollectionView.backgroundColor = UIColor(named: "ListBackground")
             viewController.view.addSubview(uiCollectionView)
 
             NSLayoutConstraint.activate([

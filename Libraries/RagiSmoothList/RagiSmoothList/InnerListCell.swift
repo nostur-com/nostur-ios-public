@@ -13,6 +13,7 @@ final class InnerListCell<Content: View>: UICollectionViewCell {
 
     func configure(content: Content) {
         hostingView.configure(content: content)
+        hostingView.backgroundColor = UIColor(named: "ListBackground")
         hostingView.invalidateIntrinsicContentSize()
 
         if !subviews.contains(hostingView) {
