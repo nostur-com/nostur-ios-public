@@ -106,8 +106,10 @@ class Unpublisher: ObservableObject {
             }
             do {
                 try viewContext.save()
-                // dont wait for background importer, show immediatly on screen
-                sendNotification(.newPostSaved, savedEvent)
+                // dont wait for background importer, show immediatly on screen (only (re)posts .kind)
+                if ([1,6].contains(savedEvent.kind)) {
+                    sendNotification(.newPostSaved, savedEvent)
+                }
             }
             catch {
                 print("🔴🔴🔴🔴🔴 COULD NOT SAVE EVENT 🔴🔴🔴🔴🔴")
