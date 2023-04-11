@@ -13,7 +13,7 @@ struct Maintenance {
     static let BOOTSTRAP_RELAYS = ["wss://relay.damus.io" , "wss://nostr.fmt.wiz.biz" , "wss://nostr.zebedee.cloud", "wss://relay.snort.social", "wss://nostr.mutinywallet.com", "wss://purplepag.es"]
     
     static func firstTimeStartup(context:NSManagedObjectContext) {
-        context.perform {
+        context.performAndWait {
             let r = Relay.fetchRequest()
             if let relaysCount = try? context.fetch(r).count {
                 var relays:[Relay] = []
@@ -46,7 +46,7 @@ struct Maintenance {
                         _ = try sp.addSocket(relayId: relay.objectID, url: relay.url!, read:relay.read, write: relay.write)
                     }
                     catch {
-                        print("problem adding socket \(relay.url ?? "")")
+                        print("🔴🔴 Problem adding socket \(relay.url ?? "")")
                     }
                 }
                 
@@ -67,6 +67,11 @@ struct Maintenance {
     
     //TODO: Find out which tags can be deleted..
     static func maintenance(context:NSManagedObjectContext) {
+        
+        let lastMaintenanceTimestamp = Date(timeIntervalSince1970: TimeInterval(SettingsStore.shared.lastMaintenanceTimestamp))
+        let hoursAgo = Date(timeIntervalSinceNow: (-24 * 60 * 60))
+        guard lastMaintenanceTimestamp < hoursAgo else { return } // don't do maintenance more than once every 24 hours
+        SettingsStore.shared.lastMaintenanceTimestamp = Int(Date.now.timeIntervalSince1970)
         
         context.perform {
             let frA = Account.fetchRequest()
@@ -120,7 +125,9 @@ struct Maintenance {
             
             do {
                 let result = try context.execute(fr16batchDelete) as! NSBatchDeleteResult
-                print("🧹🧹Deleted \(result.result!) kind {1,6} events")
+                if ((result.result as? Int ?? 0) > 0) {
+                    print("🧹🧹 Deleted \(result.result!) kind {1,6} events")
+                }
             } catch {
                 print("🔴🔴 Failed to delete {1,6} data")
             }
@@ -148,7 +155,9 @@ struct Maintenance {
             
             do {
                 let result = try context.execute(fr9734batchDelete) as! NSBatchDeleteResult
-                print("🧹🧹Deleted \(result.result!) kind {9734,8,7} events")
+                if ((result.result as? Int ?? 0) > 0) {
+                    print("🧹🧹 Deleted \(result.result!) kind {9734,8,7} events")
+                }
             } catch {
                 print("🔴🔴 Failed to delete 9734,7,8 data")
             }
@@ -173,7 +182,9 @@ struct Maintenance {
             
             do {
                 let result = try context.execute(fr9735batchDelete) as! NSBatchDeleteResult
-                print("🧹🧹Deleted \(result.result!) kind 9735 events")
+                if ((result.result as? Int ?? 0) > 0) {
+                    print("🧹🧹 Deleted \(result.result!) kind 9735 events")
+                }
             } catch {
                 print("🔴🔴 Failed to delete 9734 data")
             }
@@ -199,9 +210,11 @@ struct Maintenance {
             
             do {
                 let result = try context.execute(fr0batchDelete) as! NSBatchDeleteResult
-                print("Deleted \(result.result!) kind=0 events")
+                if ((result.result as? Int ?? 0) > 0) {
+                    print("🧹🧹 Deleted \(result.result!) kind=0 events")
+                }
             } catch {
-                print("Failed to delete kind=0 data")
+                print("🔴🔴 Failed to delete kind=0 data")
             }
             //            }
             
@@ -230,17 +243,19 @@ struct Maintenance {
                     noDuplicates[event.pubkey] = event
                 }
             }
-            print("going to delete \(forDeletion.count) kind 3 events")
             for toDelete in forDeletion {
                 context.delete(toDelete)
             }
             //            }
             
             do {
+                if forDeletion.count > 0 {
+                    print("🧹🧹 Deleted \(forDeletion.count) kind 3 events")
+                }
                 try context.save()
             }
             catch {
-                print("maintenance error on save(): \(error)")
+                print("🧹🧹 🔴🔴 maintenance error on save(), nothing deleted: \(error)")
             }
         }
     }
