@@ -20,6 +20,11 @@ extension NosturList {
     @NSManaged public var createdAt: Date?
     @NSManaged public var refreshedAt: Date?
     @NSManaged public var contacts: NSSet?
+    
+    var contacts_:[Contact] {
+        get { contacts?.allObjects as? [Contact] ?? [] }
+        set { contacts = NSSet(array: newValue) }
+    }
 
 }
 
