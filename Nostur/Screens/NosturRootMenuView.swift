@@ -61,12 +61,12 @@ struct SideBar: View {
                     Label("Profile", systemImage: "person")
                 }
                 Button {
-                    if selectedTab != "Main" { selectedTab = "Main" }
-                    navigateToOnMain(ViewPath.Lists)
-                    sm.showSidebar = false
-                } label: {
-                    Label("Lists", systemImage: "person.2.crop.square.stack.fill")
-                }
+//                    if selectedTab != "Main" { selectedTab = "Main" }
+//                    navigateToOnMain(ViewPath.Lists)
+//                    sm.showSidebar = false
+//                } label: {
+//                    Label("Lists", systemImage: "person.2.crop.square.stack.fill")
+//                }
                 Button {
                     selectedTab = "Bookmarks"
                     sm.showSidebar = false

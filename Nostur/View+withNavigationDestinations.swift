@@ -27,6 +27,7 @@ enum ViewPath: Hashable {
     case NoteReactions(event:Event)
     case NoteZaps(event:Event)
     case Settings
+    case Lists
     case Relays
     case Badges
 }
@@ -52,6 +53,9 @@ extension View {
             .navigationDestination(for: Badge.self) { badge in
                 BadgeDetailView(badge: badge.badge)
             }
+            .navigationDestination(for: NosturList.self) { list in
+                EditList(list: list)
+            }
             .navigationDestination(for: ViewPath.self) { path in
                 switch (path) {
                     case .Post(let post):
@@ -66,9 +70,10 @@ extension View {
                         NoteZaps(event: event)
                     case .Settings:
                         Settings()
+                    case .Lists:
+                        ListManagerView()
                     case .Relays:
-                        RelaysView()
-                        
+                        RelaysView()    
                     case .Badges:
                         BadgesView()
                 }

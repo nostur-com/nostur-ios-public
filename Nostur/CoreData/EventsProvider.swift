@@ -289,7 +289,7 @@ class EventsProvider: ObservableObject {
         
         account3.blockedPubkeys_.append("743416b4943b20b8e1ed6c6d8fc81bbb7a27797c4cd3acafae4cc3d1ed67dd4d;")
         
-        
+        NosturList.generateExamples(context: context)
         
         // make some random private notes
         
