@@ -67,8 +67,6 @@ class NotificationsManager: ObservableObject {
         checkForNewReactions()
         checkForNewZaps()
         checkForDMs()
-//        checkForNewDMRequests()
-//        checkForNewDMsAccepted()
         
         receiveNotification(.activeAccountChanged)
             .sink { _ in
@@ -193,8 +191,6 @@ class NotificationsManager: ObservableObject {
         checkForNewReactions()
         checkForNewZaps()
         checkForDMs()
-//        checkForNewDMRequests()
-//        checkForNewDMsAccepted()
     }
     
     func checkForDMs() {

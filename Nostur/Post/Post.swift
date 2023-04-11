@@ -7,14 +7,19 @@
 
 import Foundation
 import CoreData
+//import Combine
 
 struct VPost: Identifiable, Equatable, Hashable {
     static func == (lhs: VPost, rhs: VPost) -> Bool {
         lhs.id == rhs.id
+//        && lhs.replyingToUsernamesMarkDown == rhs.replyingToUsernamesMarkDown
+//        && lhs.renderedText == rhs.renderedText
     }
     
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
+//        hasher.combine(renderedText)
+//        hasher.combine(replyingToUsernamesMarkDown)
     }
     
     let id:String
@@ -38,6 +43,42 @@ struct VPost: Identifiable, Equatable, Hashable {
     var isTruncated = false
     var isRepost = false
     var firstQuoteId:String?
+//    var subscriptions = Set<AnyCancellable>()
+    
+//    init(id: String, objectID: NSManagedObjectID, event: Event, created_at: Int64, npub: String, note1: String, plainText: String, renderedText: AttributedString, replyingToUsernamesMarkDown: String? = nil, imageUrls: [URL], displayName: String, renderedElements: [MarkdownElement], parentPosts: [VPost], threadPostsCount: Int, isTruncated: Bool = false, isRepost: Bool = false, firstQuoteId: String? = nil) {
+//        self.id = id
+//        self.objectID = objectID
+//        self.event = event
+//        self.created_at = created_at
+//        self.npub = npub
+//        self.note1 = note1
+//        self.plainText = plainText
+//        self.renderedText = renderedText
+//        self.replyingToUsernamesMarkDown = replyingToUsernamesMarkDown
+//        self.imageUrls = imageUrls
+//        self.displayName = displayName
+//        self.renderedElements = renderedElements
+//        self.parentPosts = parentPosts
+//        self.threadPostsCount = threadPostsCount
+//        self.isTruncated = isTruncated
+//        self.isRepost = isRepost
+//        self.firstQuoteId = firstQuoteId
+//
+//        self.event.objectWillChange
+//            .sink { [weak self] in
+//                guard let self = self else { return }
+//                let textRenderer = TextRenderer(self.event.managedObjectContext, event: self.event)
+//                let transformer = VPostTransformer.shared
+//
+//                self.renderedText = textRenderer.renderedText(self.event, text: self.event.noteText)
+//                self.replyingToUsernamesMarkDown = textRenderer.replyingToUsernamesMarkDownString(self.event)
+//                self.displayName = self.event.contact?.authorName ?? String((self.event.npub.prefix(11)))
+//                self.renderedElements = transformer.renderElements(self.event)
+////                self.parentPosts = !skipParents! ? self.event.parentEvents.compactMap { toVPost($0, skipParents: true) } : []
+////                self.threadPostsCount = 1 + self.event.parentEvents.count
+//            }
+//            .store(in: &subscriptions)
+//    }
 }
 
 class VPostTransformer {
