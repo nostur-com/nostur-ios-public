@@ -12,8 +12,8 @@ import CoreData
 
 struct Settings: View {
     @EnvironmentObject var ns: NosturState
-    @EnvironmentObject var settings: SettingsStore
-    @EnvironmentObject var er: ExchangeRateModel
+    @ObservedObject var settings: SettingsStore = .shared
+    let er: ExchangeRateModel = .shared
     @AppStorage("devToggle") var devToggle: Bool = false
     @AppStorage("selected_tab") var selectedTab = "Main"
     @Environment(\.managedObjectContext) var viewContext

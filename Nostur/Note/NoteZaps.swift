@@ -47,7 +47,7 @@ struct NoteZaps: View {
 
 struct NoteZapRow: View {
     @Environment(\.managedObjectContext) var viewContext
-    @EnvironmentObject var er:ExchangeRateModel
+    let er:ExchangeRateModel = .shared
      
     @AppStorage("devToggle") var devToggle:Bool = false
     

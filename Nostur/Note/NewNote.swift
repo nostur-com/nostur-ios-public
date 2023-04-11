@@ -44,7 +44,7 @@ struct NewNote: View {
     let PLACEHOLDER = "What's happening?"
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var up:Unpublisher
+    let up:Unpublisher = .shared
     @Binding var noteCancellationId:UUID?
     
     @StateObject var vm = NewNoteText()

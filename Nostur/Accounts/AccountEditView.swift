@@ -14,7 +14,7 @@ struct AccountEditView: View {
     var sp:SocketPool = .shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) var viewContext
-    @EnvironmentObject var up:Unpublisher
+    let up:Unpublisher = .shared
     @EnvironmentObject var ns:NosturState
     @ObservedObject var account: Account
     @State var newPrivateKey = ""

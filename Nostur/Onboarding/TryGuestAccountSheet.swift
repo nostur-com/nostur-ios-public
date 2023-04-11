@@ -10,7 +10,7 @@ import SwiftUI
 struct TryGuestAccountSheet: View {
     
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var sp:SocketPool
+    let sp:SocketPool = .shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) var viewContext
     @State var letsGo = false

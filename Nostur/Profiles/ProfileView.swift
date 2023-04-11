@@ -12,7 +12,7 @@ import NukeUI
 
 struct ProfileByPubkey: View {
     
-    @EnvironmentObject var sp:SocketPool
+    let sp:SocketPool = .shared
     @EnvironmentObject var ns:NosturState
      
     
@@ -60,7 +60,7 @@ struct ProfileByPubkey: View {
 
 struct ProfileView: View {
     @Environment(\.managedObjectContext) var viewContext
-    @EnvironmentObject var sp:SocketPool
+    let sp:SocketPool = .shared
     @EnvironmentObject var ns:NosturState
      
     @ObservedObject var contact:Contact

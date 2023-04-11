@@ -9,7 +9,7 @@ import SwiftUI
 
 struct QuoteOrRepostChoiceSheet: View {
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var up:Unpublisher
+    let up:Unpublisher = .shared
     @Environment(\.dismiss) var dismiss
     
     let originalEvent:Event

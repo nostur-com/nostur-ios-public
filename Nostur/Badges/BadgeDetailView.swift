@@ -12,7 +12,7 @@ import NukeUI
 
 struct BadgeDetailView: View {
     @Environment(\.managedObjectContext) var viewContext
-    @EnvironmentObject var up:Unpublisher
+    let up:Unpublisher = .shared
     @EnvironmentObject var ns:NosturState
     
     @State var awardToPeopleIsShown = false

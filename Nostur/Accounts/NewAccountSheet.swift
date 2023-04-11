@@ -21,7 +21,7 @@ import Foundation
 struct NewAccountSheet: View {
     
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var up:Unpublisher
+    let up:Unpublisher = .shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) private var viewContext
     

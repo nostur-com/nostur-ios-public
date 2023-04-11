@@ -100,8 +100,7 @@ struct NoteRow: View {
         @ObservedObject var event:Event
          
         let sp:SocketPool = .shared
-//        @State var contextForVPost:VPost? // wtf is this?
-        @EnvironmentObject var up:Unpublisher
+        let up:Unpublisher = .shared
         @ObservedObject var settings:SettingsStore = .shared
         
         init(vPost: VPost, hideFooter:Bool = true, inThread:Bool = false, connect:ThreadConnectDirection? = nil) {

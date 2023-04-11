@@ -9,7 +9,7 @@ import SwiftUI
 
 struct NewDMComposer: View {
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var up:Unpublisher
+    let up:Unpublisher = .shared
     @Environment(\.dismiss) var dismiss
     @Binding var toPubkey:String?
     @Binding var toContact:Contact?

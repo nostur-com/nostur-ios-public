@@ -21,7 +21,7 @@ struct BadgesReceivedContainer:View {
 struct BadgesReceivedView: View {
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var up:Unpublisher
+    let up:Unpublisher = .shared
     @State var createNewBadgeSheetShown = false
     var pubkey:String
     @FetchRequest

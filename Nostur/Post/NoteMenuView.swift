@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct NoteMenuView: View {
-    @EnvironmentObject var up:Unpublisher
+    let up:Unpublisher = .shared
     @EnvironmentObject var ns:NosturState
     var vPost:VPost
     @ObservedObject var event:Event

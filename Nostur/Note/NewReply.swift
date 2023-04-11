@@ -14,7 +14,7 @@ struct NewReply: View {
     
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var up:Unpublisher
+    let up:Unpublisher = .shared
 //    @Binding var noteCancellationId:UUID?
     
 //    @State var newReplyEvent:NEvent

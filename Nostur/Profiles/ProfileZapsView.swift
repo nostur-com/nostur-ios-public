@@ -10,7 +10,7 @@ import SwiftUI
 // NOTES ON USER PROFILE SCREEN
 struct ProfileZapsView: View {
     
-    @EnvironmentObject var er:ExchangeRateModel
+    let er:ExchangeRateModel = .shared
     var sp:SocketPool = .shared
     var contact:Contact?
     

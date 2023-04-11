@@ -21,7 +21,6 @@ public extension View {
 private struct WithSheets: ViewModifier {
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var up:Unpublisher
     
     // Sheet contents (item based)
     @State var privateNote:PrivateNote? = nil
@@ -148,14 +147,12 @@ private struct WithSheets: ViewModifier {
                 NavigationStack {
                     NewReply(replyTo: event)
                         .environmentObject(ns)
-                        .environmentObject(up)
                 }
             }
         
             .sheet(item: $quoteOrRepostEvent) { event in
                 QuoteOrRepostChoiceSheet(originalEvent:event, quotePostEvent:$quotePostEvent)
                     .environmentObject(ns)
-                    .environmentObject(up)
                     .presentationDetents([.height(200)])
                     .presentationDragIndicator(.visible)
             }
@@ -165,7 +162,6 @@ private struct WithSheets: ViewModifier {
                 NavigationStack {
                     NewQuoteRepost(quotingEvent: quotePostEvent)
                         .environmentObject(ns)
-                        .environmentObject(up)
                 }
             }
     }

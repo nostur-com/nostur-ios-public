@@ -11,7 +11,7 @@ struct AddExistingAccountSheet: View {
     @EnvironmentObject var ns:NosturState
     @Environment(\.managedObjectContext) var viewContext
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject var sp:SocketPool
+    let sp:SocketPool = .shared
     @State var key = ""
     @State var invalidKey = false
     

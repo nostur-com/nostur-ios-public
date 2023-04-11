@@ -9,7 +9,7 @@ import SwiftUI
 
 struct FooterFragmentView: View {
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var up:Unpublisher
+    let up:Unpublisher = .shared
     
     @ObservedObject var event:Event
     @State var unpublishLikeId:UUID? = nil

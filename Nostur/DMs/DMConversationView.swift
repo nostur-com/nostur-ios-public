@@ -10,7 +10,7 @@ import Algorithms
 
 struct DMConversationView: View {
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var up:Unpublisher
+    let up:Unpublisher = .shared
      
     let recentDM:Event
     let pubkey:String
