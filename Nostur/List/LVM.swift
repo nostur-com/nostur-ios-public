@@ -23,12 +23,20 @@ class LVMState: ObservableObject {
     var vPostLeafs:[VPost] = [] {
         didSet {
             DispatchQueue.main.async {
-                self.vPosts = self.vPostLeafs.listEmptySectionModels()
+                self.vPosts = self.vPostLeafs
+//                self.vPosts = self.vPostLeafs.listEmptySectionModels()
             }
         }
     }
     
-    @Published var vPosts:[RagiSmoothListSectionModel<RagiSmoothListEmptySection, VPost>] = [] // This is fed to the RegiSmoothList
+    // because we no longer have just posts, but threads with parents on screen
+    // we can no longer just ask 5 before or after, we need to flatten the threads
+    var flattenedPostsOnScreen:[VPost] {
+        vPostLeafs.flatMap { $0.parentPosts.map { $0 } + [$0]  }
+    }
+    
+    @Published var vPosts:[VPost] = [] // This is fed to the RegiSmoothList
+//    @Published var vPosts:[RagiSmoothListSectionModel<RagiSmoothListEmptySection, VPost>] = [] // This is fed to the RegiSmoothList
     @Published var state:LVM.LIST_STATE = .AWAITING_FIRST_FETCH {
         didSet {
             print("LVMState.state: \(oldValue) -> \(state) vPosts: \(vPostLeafs.count) visible: \(viewIsVisible) id:\(listId)")
@@ -39,6 +47,7 @@ class LVMState: ObservableObject {
 
 //@MainActor
 class LVM: NSObject, ObservableObject {
+    
     let ot:OnboardingTracker = .shared
     
     let FETCH_FEED_INTERVAL = 3.0

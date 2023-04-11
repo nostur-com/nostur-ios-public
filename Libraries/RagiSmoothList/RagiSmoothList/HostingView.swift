@@ -13,7 +13,6 @@ final class HostingView<Content: View>: UIView {
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-        hostingController.view.backgroundColor = .clear
     }
 
     @available(*, unavailable)
@@ -23,7 +22,12 @@ final class HostingView<Content: View>: UIView {
 
     func configure(content: Content) {
         hostingController.rootView = content
-        hostingController.view.invalidateIntrinsicContentSize()
+//        hostingController.view.invalidateIntrinsicContentSize()
+        
+        hostingController.view.backgroundColor = .clear
+        // Set the sizing options of the hosting controller so that it automatically updates the
+        // intrinsicContentSize of its view based on the ideal size of the SwiftUI content.
+        hostingController.sizingOptions = .intrinsicContentSize
 
         if !subviews.contains(hostingController.view) {
             addSubview(hostingController.view)
