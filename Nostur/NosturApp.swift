@@ -17,19 +17,13 @@ func ?!(lhs: Bool?, rhs: Bool) -> Bool {
 @main
 struct NosturApp: App {
     @AppStorage("firstTimeCompleted") var firstTimeCompleted = false
-    @StateObject private var up:Unpublisher = .shared
-//    @StateObject private var nm = NotificationsManager(bgContext:EventsProvider.shared.container.newBackgroundContext())
     @StateObject private var ns:NosturState = .shared
-    @StateObject private var er:ExchangeRateModel = .shared
-    @StateObject private var sp:SocketPool = .shared
-//    @StateObject private var ds:DataStore = .shared
-    @StateObject private var ss:SettingsStore = .shared
-    @StateObject private var sm = SideBarModel()
     @StateObject private var tm:DetailTabsModel = .shared
     @StateObject private var nm:NotificationsManager = .shared
     @State var fg:FollowingGuardian = .shared
     
     @State var isViewDisplayed = false
+    @State var isOnboarding = false
     
     let runLoop = Timer.publish(every: 2, tolerance: 1, on: .main, in: .common).autoconnect()
     let priceLoop = Timer.publish(every: 900, tolerance: 120, on: .main, in: .common).autoconnect().receive(on: RunLoop.main)
@@ -37,34 +31,51 @@ struct NosturApp: App {
 
     var body: some Scene {
         WindowGroup {
-            Onboarding()
-                .environment(\.managedObjectContext, EventsProvider.shared.container.viewContext)
-                .environmentObject(ns)
-                .environmentObject(er)
-                .environmentObject(sp)
-                .environmentObject(up)
-                .environmentObject(ss)
-                .environmentObject(tm)
-                .environmentObject(sm)
-                .environmentObject(nm)
-                .onAppear {startNosturing(); self.isViewDisplayed = true }
-                .onDisappear { self.isViewDisplayed = false }
-                .onReceive(runLoop) { time in
-                    if (!isViewDisplayed) { return }
-                    Task { await Importer.shared.importEvents() }
-                }
-                .onReceive(priceLoop) { time in
-                    if (!isViewDisplayed) { return }
-                    Task {
-                        if let newPrice = await fetchBitcoinPrice() {
-                            if (newPrice != er.bitcoinPrice) {
-//                                er.objectWillChange.send()
-                                er.bitcoinPrice = newPrice
-                            }
+            Group {
+                if isOnboarding || ns.accounts.count == 0 {
+                    Onboarding()
+                        .environmentObject(ns)
+                        .environment(\.managedObjectContext, EventsProvider.shared.container.viewContext)
+                        .onReceive(receiveNotification(.onBoardingIsShownChanged)) { notification in   let onBoardingIsShown = notification.object as! Bool
+                            isOnboarding = onBoardingIsShown
                         }
+                        .onAppear { isOnboarding = true }
+                }
+                else {
+                    if let account = ns.account {
+                        NosturRootMenu(account: account)
+                            .sheet(isPresented: $ns.readOnlyAccountSheetShown) {
+                                ReadOnlyAccountInformationSheet()
+                                    .presentationDetents([.large])
+                                    .environmentObject(ns)
+                            }
+                            .environment(\.managedObjectContext, EventsProvider.shared.container.viewContext)
+                            .environmentObject(ns)
+                        //                    .environmentObject(er)
+                        //                    .environmentObject(tm)
+                        //                    .environmentObject(nm)
+                            .onReceive(runLoop) { time in
+                                if (!isViewDisplayed) { return }
+                                Task { await Importer.shared.importEvents() }
+                            }
+                            .onReceive(priceLoop) { time in
+                                if (!isViewDisplayed) { return }
+                                Task {
+                                    if let newPrice = await fetchBitcoinPrice() {
+                                        if (newPrice != ExchangeRateModel.shared.bitcoinPrice) {
+                                            ExchangeRateModel.shared.bitcoinPrice = newPrice
+                                        }
+                                    }
+                                }
+                            }
+                            .onReceive(receiveNotification(.onBoardingIsShownChanged)) { notification in   let onBoardingIsShown = notification.object as! Bool
+                                isOnboarding = onBoardingIsShown
+                            }
                     }
                 }
-//                .statusBarHidden(true)
+            }
+            .onAppear  { startNosturing(); self.isViewDisplayed = true }
+            .onDisappear { self.isViewDisplayed = false }
         }
     }
 
@@ -73,7 +84,6 @@ struct NosturApp: App {
             ns.setAccount(account: ns.accounts.last!)
         }
         else if ns.account == nil {
-            ns.onBoardingIsShown = true
             Maintenance.firstTimeStartup(context: EventsProvider.shared.container.viewContext)
         }
         
@@ -87,7 +97,7 @@ struct NosturApp: App {
         //        maintenance()
         
         // Get relays from Core Data, create sockets in SocketPool and connect.
-        EventsProvider.shared.container.viewContext.perform {
+        DataProvider.shared().viewContext.perform {
             do {
                 // Fetch RELAYS from CORE DATA
                 let fetchRequest: NSFetchRequest<Relay> = Relay.fetchRequest()
@@ -108,7 +118,7 @@ struct NosturApp: App {
                     // fetch guest account kind 0 + 3
                     print("✈️✈️✈️ ONBORADING SPEED UP, FETCHING 0 + 3")
                     let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: NosturState.GUEST_ACCOUNT_PUBKEY))
-                    sp.sendMessage(message)
+                    SocketPool.shared.sendMessage(message)
                 }
                 
                 
@@ -123,7 +133,7 @@ struct NosturApp: App {
                 let r = Event.fetchRequest()
                 r.predicate = NSPredicate(format: "kind == 3 && pubkey == %@", NosturState.EXPLORER_PUBKEY)
                 r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-                let exploreContactList = try? EventsProvider.shared.container.viewContext.fetch(r).first
+                let exploreContactList = try?  DataProvider.shared().viewContext.fetch(r).first
                 if exploreContactList != nil {
                     ns.objectWillChange.send()
                     ns.rawExplorePubkeys = Set(exploreContactList!.pTags())

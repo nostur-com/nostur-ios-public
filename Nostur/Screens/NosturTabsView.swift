@@ -9,9 +9,6 @@ import SwiftUI
 import CoreData
 
 struct NosturTabsView: View {
-    //    @AppStorage("showReplies") var showReplies = true // TODO: Move to Timeline
-    
-    //     
     @AppStorage("selected_tab") var selectedTab = "Main"
     @State var unread = 0
     @State var unreadDMs = 0
@@ -20,9 +17,10 @@ struct NosturTabsView: View {
         let _ = Self._printChanges()
         HStack {
             VStack {
+                AppTopBar()
+                    .padding(5)
                 TabView(selection: $selectedTab) {
-                    FollowingAndExplore()
-                        .equatable()
+                    MainView()
                         .tabItem { Image(systemName: "house") }
                         .tag("Main")
                     
@@ -57,6 +55,9 @@ struct NosturTabsView: View {
                 TabbedDetailContainer()
             }
         }
+        .onOpenURL { url in
+            self.handleUrl(url)
+        }
         .onReceive(receiveNotification(.updateNotificationsCount)) { notification in
             unread = (notification.object as! Int)
         }
@@ -66,6 +67,60 @@ struct NosturTabsView: View {
         //        .ignoresSafeArea()
     }
     
+}
+
+extension NosturTabsView {
+    func handleUrl(_ url:URL) {
+        // TODO: CHECK INPUT!!! SECURITY!
+        print(url.absoluteString)
+        // LINKS FROM ANYWHERE (NPUB1/NOTE1)
+        let nostr = url.absoluteString.matchingStrings(regex: "^(nostr:)(npub1|note1)([023456789acdefghjklmnpqrstuvwxyz]{58})$")
+        if nostr.count == 1 && nostr[0].count == 4 {
+            print("ok lets go to: \(nostr[0][2])\(nostr[0][3])")
+            let key = try! NIP19(displayString: "\(nostr[0][2])\(nostr[0][3])")
+            print("ok lets go to: \(key.hexString)")
+            if nostr[0][2] == "npub1" {
+                navigateTo(ContactPath(key: key.hexString))
+            }
+            if nostr[0][2] == "note1" {
+                navigateTo(NotePath(id: key.hexString))
+            }
+        }
+
+        // LINKS FROM WITHIN NOSTUR
+        let nostur = url.absoluteString.matchingStrings(regex: "^(nostur:)(p:|e:)([0-9a-z]{64})$")
+        if nostur.count == 1 && nostur[0].count == 4 {
+            print("ok lets go to: \(nostur[0][2])\(nostur[0][3])")
+            if nostur[0][2] == "p:" {
+                navigateTo(ContactPath(key: nostur[0][3]))
+            }
+            if nostur[0][2] == "e:" {
+                navigateTo(NotePath(id: nostur[0][3]))
+            }
+        }
+
+        // LINKS FROM ANYWHERE (HEX)
+        let nostrHex = url.absoluteString.matchingStrings(regex: "^(nostr:)(p:|e:)([0-9a-z]{64})$")
+        if nostrHex.count == 1 && nostrHex[0].count == 4 {
+            print("ok lets go to: \(nostrHex[0][2])\(nostrHex[0][3])")
+            if nostrHex[0][2] == "p:" {
+                navigateTo(ContactPath(key: nostrHex[0][3]))
+            }
+            if nostrHex[0][2] == "e:" {
+                navigateTo(NotePath(id: nostrHex[0][3]))
+            }
+        }
+
+        // HASHTAG LINKS FROM WITHIN NOSTUR
+        let nosturHashtag = url.absoluteString.matchingStrings(regex: "^(nostur:t:)(\\S+)$")
+        if nosturHashtag.count == 1 && nosturHashtag[0].count == 3 {
+            print("ok lets go to: \(nosturHashtag[0][2])")
+            selectedTab = "Search"
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                navigateTo(HashtagPath(hashTag: nosturHashtag[0][2]))
+            }
+        }
+    }
 }
 
 struct ContentView_Previews: PreviewProvider {

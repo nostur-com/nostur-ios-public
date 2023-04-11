@@ -353,62 +353,6 @@ class LVM: NSObject, ObservableObject {
         addSubscriptions()
     }
     
-    func changeLVM(pubkey:String, pubkeys:Set<String>, listId:String) {
-        self.lvmState.state = .AWAITING_FIRST_FETCH
-        self.unrenderedEvents = []
-        self.lvmState.vPostLeafs = []
-        self.lvmState.listId = listId
-        
-        self.pubkey = pubkey
-        self.pubkeys = pubkeys
-        self.listId = listId
-        
-        let ctx = DataProvider.shared().viewContext
-        var ls = ListState.fetchListState(pubkey, listId: listId, context: ctx)
-        ThreadWarning.which("changeLVM \(listId) ")
-        if (ls == nil) {
-            ls = ListState(context: ctx)
-            ls!.listId = listId
-            ls!.pubkey = pubkey
-            ls!.updatedAt = Date.now
-            do { try ctx.save() }
-            catch { print("could not save new listState") }
-        }
-        
-        let lastAppeared = ls!.lastAppearedId != nil
-        ? (try? Event.fetchEvent(id: ls!.lastAppearedId!, context: ctx))
-        : nil
-        
-        let lastRead = ls!.mostRecentAppearedId != nil
-        ? (try? Event.fetchEvent(id: ls!.mostRecentAppearedId!, context: ctx))
-        : nil
-        
-        self.listStateObjectId = ls!.objectID
-        self.lastRead = lastRead
-        self.lastAppeared = lastAppeared
-        let anchor = ls?.lastAppearedAtAnchor ?? "BOTTOM"
-        
-        if (lastAppeared != nil) {
-            self.state = .AWAITING_RESTORED_FETCH
-            self.lvmState.restoreScrollTo = self.lastAppeared
-            self.lvmState.restoreScrollToAnchor = anchor
-        }
-        self.performFetch()
-        
-        self.fetchFeedTimer?.invalidate()
-        self.fetchFeedTimer = Timer.scheduledTimer(withTimeInterval: FETCH_FEED_INTERVAL, repeats: true) { [weak self] _ in
-            guard let self = self else { return }
-            self.fetchFeedTimerNextTick()
-        }
-        lvmState.viewIsVisible = (UserDefaults.standard.string(forKey: "selected_subtab") ?? "Unknown") == listId
-    }
-    
-    func changeFollowers(pubkeys:Set<String>) {
-        self.pubkeys = pubkeys
-        self.frc = nil
-        performFetch()
-    }
-    
     // MARK: STEP 0: FETCH FROM RELAYS
     func fetchFeedTimerNextTick() {
         guard self.viewIsVisible else { return }

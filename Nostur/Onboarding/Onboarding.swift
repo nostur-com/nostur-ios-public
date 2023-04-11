@@ -8,36 +8,14 @@
 import SwiftUI
 
 struct Onboarding: View {
-    
     @EnvironmentObject var ns:NosturState
-    @State var path = NavigationPath()
     
     var body: some View {
         let _ = Self._printChanges()
-        if (ns.onBoardingIsShown) {
-            Color.clear
-                .fullScreenCover(isPresented: $ns.onBoardingIsShown) {
-                    NavigationStack() {
-                        WelcomeSheet(offerTryOut: true)
-                            .interactiveDismissDisabled()
-                            .withNavigationDestinations()
-                    }
-                }
-                .onReceive(receiveNotification(.endOnboarding)) { _ in
-                    ns.onBoardingIsShown = false
-                }
-        }
-        else if (ns.account != nil) {
-            NosturRootMenu()
-//                .ignoresSafeArea()
-                .sheet(isPresented: $ns.readOnlyAccountSheetShown) {
-                    ReadOnlyAccountInformationSheet()
-                        .presentationDetents([ .large])
-                        .environmentObject(ns)
-                }
-        }
-        else {
-            Text("do... onBoardingIsShown = true")
+        NavigationStack {
+            WelcomeSheet(offerTryOut: true)
+                .interactiveDismissDisabled()
+                .withNavigationDestinations()
         }
     }
 }
