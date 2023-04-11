@@ -21,7 +21,8 @@ struct FooterFragmentView: View {
             HStack {
                 HStack {
                     Image(systemName: "message")
-                    RollingOnUpdateNumber(event.repliesCount).opacity(event.repliesCount == 0 ? 0 : 1)
+                    Text(event.repliesCount.description).opacity(event.repliesCount == 0 ? 0 : 1)
+//                    RollingOnUpdateNumber(event.repliesCount).opacity(event.repliesCount == 0 ? 0 : 1)
                 }
                 .padding([.vertical, .trailing], 5)
                 .contentShape(Rectangle())
@@ -32,7 +33,8 @@ struct FooterFragmentView: View {
                 if (event.reposted) {
                     HStack {
                         Image(systemName: "arrow.2.squarepath")
-                        RollingOnUpdateNumber(event.mentionsCount).opacity(event.mentionsCount == 0 ? 0 : 1)
+                        Text(event.mentionsCount.description).opacity(event.mentionsCount == 0 ? 0 : 1)
+//                        RollingOnUpdateNumber(event.mentionsCount).opacity(event.mentionsCount == 0 ? 0 : 1)
                     }
                     .foregroundColor(.green)
                     .padding(5)
@@ -40,7 +42,8 @@ struct FooterFragmentView: View {
                 else {
                     HStack {
                         Image(systemName: "arrow.2.squarepath")
-                        RollingOnUpdateNumber(event.mentionsCount).opacity(event.mentionsCount == 0 ? 0 : 1)
+                        Text(event.mentionsCount.description).opacity(event.mentionsCount == 0 ? 0 : 1)
+//                        RollingOnUpdateNumber(event.mentionsCount).opacity(event.mentionsCount == 0 ? 0 : 1)
                     }
                     .padding(5)
                     .contentShape(Rectangle())
@@ -54,7 +57,8 @@ struct FooterFragmentView: View {
                 if (event.liked) {
                     HStack {
                         Image(systemName: "heart.fill")
-                        RollingOnUpdateNumber(event.likesCount).opacity(event.likesCount == 0 ? 0 : 1)
+                        Text(event.likesCount.description).opacity(event.likesCount == 0 ? 0 : 1)
+//                        RollingOnUpdateNumber(event.likesCount).opacity(event.likesCount == 0 ? 0 : 1)
                     }
                     .foregroundColor(.red)
                     .contentShape(Rectangle())
@@ -68,7 +72,8 @@ struct FooterFragmentView: View {
                 else {
                     HStack {
                         Image(systemName: "heart")
-                        RollingOnUpdateNumber(event.likesCount).opacity(event.likesCount == 0 ? 0 : 1)
+                        Text(event.likesCount.description).opacity(event.likesCount == 0 ? 0 : 1)
+//                        RollingOnUpdateNumber(event.likesCount).opacity(event.likesCount == 0 ? 0 : 1)
                     }
                     .padding(5)
                     .contentShape(Rectangle())
@@ -91,7 +96,7 @@ struct FooterFragmentView: View {
                     .disabled(!(event.contact?.anyLud ?? false))
                 Spacer()  // TODO: FIXME
 
-                
+
                 // BOOKMARK
                 if (ns.isBookmarked(event)) {
                     Image(systemName: "bookmark.fill")
