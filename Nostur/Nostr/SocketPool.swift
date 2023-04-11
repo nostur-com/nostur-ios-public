@@ -207,8 +207,10 @@ class ManagedClient: WebSocketDelegate, ObservableObject {
     }
     
     func connect() {
-        self.isConnecting = true
-        self.client.connect()
+        if !isConnecting {
+            self.isConnecting = true
+            self.client.connect()
+        }
     }
     
     func didReceive(event: Starscream.WebSocketEvent, client: Starscream.WebSocketClient) {
