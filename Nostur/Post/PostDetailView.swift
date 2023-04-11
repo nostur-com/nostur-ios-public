@@ -75,7 +75,7 @@ struct PostAndParent: View {
     @ObservedObject var event:Event
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
-     
+    
     var navTitleHidden:Bool = false
     
     var isParent = false
@@ -84,7 +84,7 @@ struct PostAndParent: View {
     let INDENT = 60.0
     let THREAD_LINE_OFFSET = 34.0
     @ObservedObject var settings:SettingsStore = .shared
-        
+    
     init(vPost: VPost, isParent:Bool = false, geoHeight:CGFloat = CGFloat.zero, navTitleHidden:Bool = false, connect:ThreadConnectDirection? = nil) {
         self.vPost = vPost
         self.event = vPost.event
@@ -99,13 +99,10 @@ struct PostAndParent: View {
             // MARK: PARENT NOTE
             // IF MISSING, FETCH IT
             if (event.replyTo == nil && event.replyToId != nil) {
-                
                 CenteredProgressView()
-                //                // TODO: FETCH ALL AT START WITH #E INSTEAD OF HERE?
-                //                    .onAppear {
-                //                    print("🤩🤩 🦋🦋 Fetching .replyTo \(event.replyToId!) ")
-                //                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.replyToId!)))
-                //                }
+                    .onAppear {
+                        sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.replyToId!)))
+                    }
             }
             // PARENT: IF AVAILABLE, RENDER IT
             else if (event.replyTo != nil) {
@@ -117,7 +114,7 @@ struct PostAndParent: View {
                                 .frame(width: 2)
                                 .offset(x: THREAD_LINE_OFFSET, y: 62)
                                 .opacity(connect == .bottom || connect == .both ? 1 : 0)
-//                                .zIndex(1)
+                            //                                .zIndex(1)
                         }
                 }
                 else {
@@ -129,36 +126,45 @@ struct PostAndParent: View {
             // MARK: DETAIL NOTE
             VStack(alignment: .leading, spacing: 3) {
                 if event.deletedById == nil {
-                    // PFP | NAME/USERNAME/AGO
-                    HStack {
+                    
+                    HStack(alignment:.top) {
                         NavigationLink(value: ContactPath(key: event.pubkey), label: {
                             PFP(pubkey: event.pubkey, pictureUrl: event.contact?.picture, size: 50)
-//                                .zIndex(10)
+                            //                                .zIndex(10)
                                 .background(alignment: .top, content: {
                                     Color("LightGray")
                                         .frame(width: 2, height: 200)
                                         .offset(x:0, y: -20)
                                         .opacity(connect == .top || connect == .both ? 1 : 0)
-//                                        .zIndex(1)
+                                    //                                        .zIndex(1)
                                 })
+                                .id(vPost.id)
                         })
-                        
-                        VStack(alignment: .leading) { // name + reply + context menu
-                            NoteHeaderView(vPost: vPost, singleLine: isParent)
-                            if (isParent) {
+                        VStack(alignment:.leading, spacing:0) {
+                            HStack {
+                                NoteHeaderView(vPost: vPost, singleLine: isParent)
+                                Spacer()
+                                EventPrivateNoteToggle(event: event)
+                                NoteMenuView(vPost: vPost)
+                            }//.background(.pink)
+                            if isParent {
                                 ReplyingToFragmentView(vPost: vPost)
+                                    .padding(.vertical, 3)
+                                ContentRenderer(vPost: vPost, isDetail: true)
+//                                    .padding(.top, 5)
+//                                    .background(.green)
                             }
-                        }//.background(.red)
-                        Spacer()
-                        EventPrivateNoteToggle(event: event)
-                        NoteMenuView(vPost: vPost)
-                    }//.background(.yellow)
-                    .id(event.id)
-                                        
-                    ContentRenderer(vPost: vPost, isDetail: true)
-                        .padding(.vertical, 10)
-                        .padding(.leading, isParent ? INDENT : 0)
+                        }
+                    }
 
+                    if !isParent {
+                        ReplyingToFragmentView(vPost: vPost)
+                            .padding(.bottom, 5)
+                        ContentRenderer(vPost: vPost, isDetail: true)
+                            .padding(.top, 5)
+                            .padding(.bottom, 10)
+//                            .background(.orange)
+                    }
                     
                     if (isParent && settings.rowFooterEnabled) {
                         FooterFragmentView(event: event)
@@ -196,7 +202,7 @@ struct PostAndParent: View {
                             .sorted(by: { ns.isFollowing($0.pubkey) && !ns.isFollowing($1.pubkey) })
                                  // OP first even more first.
                             .sorted(by: { $0.pubkey == event.pubkey && $1.pubkey != event.pubkey })
-                                , id:\.self) { event in
+                                 , id:\.self) { event in
                             
                             if let vPost = event.toVPost() {
                                 NoteRow(vPost: vPost, hideFooter: false)
@@ -326,7 +332,7 @@ struct PostAndParent: View {
 
 struct DetailFooterFragment: View {
     @ObservedObject var event:Event
-     
+    
     
     var body: some View {
         Divider()
@@ -354,6 +360,9 @@ struct ReplyAndParentView_Previews: PreviewProvider {
     static var previews: some View {
         Group {
             
+            if let xx = PreviewFetcher.fetchVPost("a4508aa658b12d51a56613c51da096d7791eb207d3b11407089c633ff73f668d") {
+                PostDetailView(vPost: xx)
+            }
             if let yt2 = PreviewFetcher.fetchVPost("0000014de66e08882bd36b6b7b551a774f85fe752a18070dc8658d7776db7e69") {
                 PostDetailView(vPost: yt2)
             }
@@ -361,7 +370,7 @@ struct ReplyAndParentView_Previews: PreviewProvider {
             if let yt = PreviewFetcher.fetchVPost("c7b4ef377ee4f6d71f6f59bc6bad607acb9c7c3675e3c0b2ca0ad2442b133e49") {
                 PostDetailView(vPost: yt)
             }
-              
+            
             if let v = PreviewFetcher.fetchVPost("bb15e6165180d31c36b6c3e0baf082eeb949aa473c59e37eaa8e2bb29dc46422") {
                 PostDetailView(vPost: v)
             }
@@ -374,7 +383,7 @@ struct ReplyAndParentView_Previews: PreviewProvider {
                 PostDetailView(vPost: rootWithReplies)
             }
             
-
+            
             
             if let v = PreviewFetcher.fetchVPost("c0d76c3c968775a62ca1dea28a73e1fc86d121e8e5e17f2e35aaad1436075f51") {
                 PostDetailView(vPost: v)
