@@ -68,6 +68,12 @@ class TextRenderer { // TEXT things
             PubkeyUsernameCache.shared.setObject(for: pubkey, value: username)
             return username
         }
+        if event.replyTo?.contact?.pubkey == pubkey {
+            let contact = event.replyTo!.contact!
+            let username = contact.username != "" ? contact.username : contact.authorName
+            PubkeyUsernameCache.shared.setObject(for: pubkey, value: username)
+            return username
+        }
         // SLOW?
         if let contact = Contact.fetchByPubkey(pubkey, context: context) {
             let username = contact.username != "" ? contact.username : contact.authorName

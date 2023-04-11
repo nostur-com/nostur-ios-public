@@ -6,25 +6,42 @@
 //
 
 import SwiftUI
+import Combine
 
 struct ReplyingToFragmentView: View {
     
     @Environment(\.managedObjectContext) var viewContext
     private let sp:SocketPool = .shared
     
-    var vPost:VPost
+    let vPost:VPost
+    @ObservedObject var event:Event
+    @State var rendered:String?
+    @State var subscriptions = Set<AnyCancellable>()
+    
+    init(vPost: VPost) {
+        self.vPost = vPost
+        self.event = vPost.event
+        _rendered = State(initialValue: vPost.replyingToUsernamesMarkDown)
+    }
     
     var body: some View {
-        if vPost.replyingToUsernamesMarkDown != nil {
-            Text(try! AttributedString(markdown: vPost.replyingToUsernamesMarkDown!))
-                .fontWeight(.light)
-                .foregroundColor(.secondary)
-                .accentColor(Color("AccentColor"))
-                .tint(Color("AccentColor"))
-                .frame(maxWidth:.infinity, alignment: .leading)
+        Group {
+            if let rendered = rendered {
+                Text(try! AttributedString(markdown: rendered))
+                        .fontWeight(.light)
+                        .foregroundColor(.secondary)
+                        .accentColor(Color("AccentColor"))
+                        .tint(Color("AccentColor"))
+                        .frame(maxWidth:.infinity, alignment: .leading)
+                }
         }
-        else {
-            EmptyView()
+        .onAppear {
+            event.objectWillChange
+                .sink {
+                    let textRenderer = TextRenderer(viewContext, event:event)
+                    rendered = textRenderer.replyingToUsernamesMarkDownString(event)
+                }
+                .store(in: &subscriptions)
         }
     }
 }
