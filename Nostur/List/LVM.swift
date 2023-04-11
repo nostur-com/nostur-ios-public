@@ -10,7 +10,7 @@ import CoreData
 import Combine
 import Compactor
 
-let LVM_MAX_VISIBLE = 150 // Will only be ignored if last appeared is older
+let LVM_MAX_VISIBLE = 300 // Will only be ignored if last appeared is older
 
 class LVMState: ObservableObject {
     @Published var listId = "Following"
@@ -146,19 +146,15 @@ class LVM: NSObject, ObservableObject {
             
             let added = newVPostLeafs
 //                .filter(notMuted) // TODO ADD BACK NOT MUtED IN RIGHT CONTEXT / THREAD
-                .suffix(LVM_MAX_VISIBLE) // Don't add too many posts
+//                .suffix(LVM_MAX_VISIBLE) // Don't add too many posts
             
+            guard transformedObjectIds.count > 0 else { return }
             print("Transformed \(transformedObjectIds.count) posts")
             if currentVPostLeafs.count == 0 {
                 let leafThreads = self.renderLeafs(added) // Transforms seperate posts into threads, .id for each thread is leaf.id
-                print("🟢🟢🟢🟢🟢🟢🟢🟢🟢")
-                print("🟢🟢🟢🟢🟢🟢🟢🟢🟢")
-                print("🟢🟢🟢🟢🟢🟢🟢🟢🟢")
-                
                 DispatchQueue.main.async {
                     self.lvmState.vPostLeafs = leafThreads
-//                    self.lvmState.vPosts = leafThreads.listEmptySectionModels()
-                    self.lvmCounter.count = self.itemsAfterLastAppeared
+                    self.lvmCounter.count = self.itemsAfterLastAppeared < 5 ? 0 : self.itemsAfterLastAppeared
                 }
             }
             else {
@@ -190,21 +186,24 @@ class LVM: NSObject, ObservableObject {
                     
                     DispatchQueue.main.async {
                         self.lvmState.vPostLeafs = currentAndJustOneExtra
-//                        self.lvmState.vPosts = self.lvmState.vPostLeafs.listEmptySectionModels()
                         self.lvmCounter.count = self.lvmState.isAtTop ? 0 : (self.lvmCounter.count + 1)
                     }
                 }
                 else {
                     // truncate new replies for threads already on screen
                     let addedTruncated = self.renderNewLeafs(added, onScreen: currentVPostLeafs)
-//                    let currentVPostsCount = threadCount(currentVPosts)
                     
                     DispatchQueue.main.async {
                         self.lvmState.vPostLeafs = (addedTruncated + currentVPostLeafs)
                         
                         self.danglingObjectIds = self.danglingObjectIds.union(transformedObjectIds.subtracting(Set(self.lvmState.vPostLeafs.map { $0.objectID })))
 //                        self.lvmState.vPosts = self.lvmState.vPostLeafs.listEmptySectionModels()
-                        self.lvmCounter.count = self.lvmState.isAtTop ? 0 : (self.lvmCounter.count + transformedObjectIds.count) // transformCounter is also added right???
+                        if self.lvmState.isAtTop && SettingsStore.shared.autoScroll {
+                            self.lvmCounter.count = 0
+                        }
+                        else {
+                            self.lvmCounter.count = self.lvmCounter.count + transformedObjectIds.count // transformedObjectIds.count is also added right???
+                        }
                     }
                 }
             }
@@ -217,7 +216,7 @@ class LVM: NSObject, ObservableObject {
         print("Skip render and fetch related of \(ids.joined(separator: ",")) first.")
     }
     
-    func renderLeafs(_ vPosts:ArraySlice<VPost>) -> [VPost] {
+    func renderLeafs(_ vPosts:[VPost]) -> [VPost] {
         let sortedByLongest = vPosts.sorted(by: { $0.parentPosts.count > $1.parentPosts.count })
 
         var renderedIds = [String]()
@@ -254,10 +253,11 @@ class LVM: NSObject, ObservableObject {
             renderedPosts.append(truncatedPost)
         }
         return renderedPosts
-            .sorted(by: { $0.parentPosts.first?.created_at ?? $0.created_at > $1.parentPosts.first?.created_at ?? $1.created_at })
+            .sorted(by: { $0.created_at > $1.created_at })
+//            .sorted(by: { $0.parentPosts.first?.created_at ?? $0.created_at > $1.parentPosts.first?.created_at ?? $1.created_at })
     }
     
-    func renderNewLeafs(_ added:ArraySlice<VPost>, onScreen:[VPost]) -> [VPost] {
+    func renderNewLeafs(_ added:[VPost], onScreen:[VPost]) -> [VPost] {
         let newSortedByLongest = added.sorted(by: { $0.parentPosts.count > $1.parentPosts.count })
 
         var onScreenIds = onScreen.flatMap {
@@ -311,6 +311,7 @@ class LVM: NSObject, ObservableObject {
     var lvmCounter = LVMCounter()
     
     init(pubkey:String, pubkeys:Set<String>, listId:String) {
+//        print("🟢🟢🟢🟣🟣🟣🟣🟣🟢🟢🟢 INIT 🟢🟢🟢🟢🟣🟣🟣🟣🟣🟣🟢🟢")
         self.lvmState = LVMState()
         self.pubkey = pubkey
         self.pubkeys = pubkeys
@@ -440,7 +441,7 @@ extension LVM {
                     if let newVPostLeaf = transformer.toVPost(event) {
                         DispatchQueue.main.async {
                             self.lvmState.vPostLeafs.insert(newVPostLeaf, at: 0)
-                            self.lvmCounter.count = self.lvmState.isAtTop ? 0 : (self.lvmCounter.count + 1)
+                            self.lvmCounter.count = self.lvmState.isAtTop && SettingsStore.shared.autoScroll ? 0 : (self.lvmCounter.count + 1)
                         }
                     }
                 }
@@ -458,7 +459,9 @@ extension LVM {
     
     func processNewEventsInBg() {
         unrenderedEventsSubject
+           .removeDuplicates()
            .sink { posts in
+//               print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 unrenderedEventsSubject 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
                self.processPostsInBackground(posts)
            }
            .store(in: &subscriptions)
@@ -466,7 +469,7 @@ extension LVM {
         
     func trackLastAppeared() {
         lastAppearedSubject
-            .throttle(for: 0.05, scheduler: RunLoop.main, latest: true)
+//            .throttle(for: 0.05, scheduler: RunLoop.main, latest: true)
             .compactMap { $0 }
             .sink { [weak self] event in
                 guard let self = self else { return }
@@ -564,28 +567,29 @@ extension LVM {
                 guard let self = self else { return }
                 guard let event = event else { return }
                 // get 5 posts before or after
+                let fp = self.lvmState.flattenedPostsOnScreen
                 if event.created_at > (self.lastAppeared?.created_at ?? 0) {
                     // get before
-                    if let indexOfPost = self.unrenderedEvents.firstIndex(of: event) {
+                    if let indexOfPost = fp.firstIndex(where: { $0.id == event.id }) {
                         let five = [
-                            self.unrenderedEvents[safe: indexOfPost],
-                            self.unrenderedEvents[safe: indexOfPost - 1],
-                            self.unrenderedEvents[safe: indexOfPost - 2],
-                            self.unrenderedEvents[safe: indexOfPost - 3],
-                            self.unrenderedEvents[safe: indexOfPost - 4]
+                            fp[safe: indexOfPost],
+                            fp[safe: indexOfPost - 1],
+                            fp[safe: indexOfPost - 2],
+                            fp[safe: indexOfPost - 3],
+                            fp[safe: indexOfPost - 4]
                         ]
                         self.requestForJustAppeared(five.compactMap { $0 })
                     }
                 }
                 else {
                     // get after
-                    if let indexOfPost = self.unrenderedEvents.firstIndex(of: event) {
+                    if let indexOfPost = fp.firstIndex(where: { $0.id == event.id }) {
                         let five = [
-                            self.unrenderedEvents[safe: indexOfPost],
-                            self.unrenderedEvents[safe: indexOfPost + 1],
-                            self.unrenderedEvents[safe: indexOfPost + 2],
-                            self.unrenderedEvents[safe: indexOfPost + 3],
-                            self.unrenderedEvents[safe: indexOfPost + 4]
+                            fp[safe: indexOfPost],
+                            fp[safe: indexOfPost + 1],
+                            fp[safe: indexOfPost + 2],
+                            fp[safe: indexOfPost + 3],
+                            fp[safe: indexOfPost + 4]
                         ]
                         self.requestForJustAppeared(five.compactMap { $0 })
                     }
@@ -633,8 +637,9 @@ extension LVM {
         self.lvmCounter.count = 0
     }
     
-    func requestForJustAppeared(_ events:[Event]) {
+    func requestForJustAppeared(_ vPosts:[VPost]) {
         guard self.viewIsVisible else { return }
+        let events = vPosts.map { $0.event }
         let ids = ids(events)
         let contacts = events.compactMap {
             $0.isRepost
@@ -645,7 +650,7 @@ extension LVM {
         
 //        ThreadWarning.which("requestForJustAppeared on \(self.id)")
         fetchStuffForLastAddedNotes(ids: ids)
-        //            fetchMissingReplyToContacts(events: events) // TODO: FIXME
+        fetchMissingReplyToContacts(events: events) // TODO: FIXME
         
         // TODO: FIX BROKEN
 //        let context = DataProvider.shared().container.newBackgroundContext()
@@ -661,21 +666,21 @@ extension LVM {
         //   TAKE P's. IF P IS NOT IN EVENT.CONTACTS, ADD IT
         // FINALLY, EVERY MISSING OR EMPTY CONTACT
         //  sp.fetch!
-        let context = DataProvider.shared().container.newBackgroundContext()
+        let context = DataProvider.shared().newTaskContext()
+        let pubkeys = events.flatMap { $0.fastTags.filter { $0.0 == "p" } }.map { $0.1 }
         context.perform {
-            for event in events {
-                let pubkeys = Array(Set(event.pTags()))
-                if pubkeys.count > 0 {
-                    let contacts = Contact.fetchByPubkeys(pubkeys, context: context)
-                    //                event.objectWillChange.send()
-                    // dit moet op main queue?
-                    //                ThreadWarning.which("Event.addToContacts( 💖💖💖")
-                    event.addToContacts(NSSet(array: contacts))
+            for mainEvent in events {
+                if let event = context.object(with: mainEvent.objectID) as? Event {
+                    let pubkeys = Array(Set(event.pTags()))
+                    if pubkeys.count > 0 {
+                        let contacts = Contact.fetchByPubkeys(pubkeys, context: context)
+                        //                event.objectWillChange.send()
+                        // dit moet op main queue?
+                        //                ThreadWarning.which("Event.addToContacts( 💖💖💖")
+                        event.addToContacts(NSSet(array: contacts))
+                    }
                 }
             }
-            // TODO: FIXEN
-            // TODO, bij importer, replyTo p in event.replyToPTag for speed up
-            let pubkeys = Array(Set(events.flatMap { TagsHelpers($0.tags()).pTags().map{ $0.pubkey } }))
             let contacts = Contact.fetchByPubkeys(pubkeys, context: context)
             let missingPubkeys = pubkeys.filter {
                 contacts.map { $0.pubkey }.firstIndex(of: $0) == nil
@@ -698,6 +703,7 @@ extension LVM: NSFetchedResultsControllerDelegate {
     
     // MARK: FROM DB TO SCREEN STEP 1: FETCH REQUEST
     func performFetch() {
+//        print("🟢🟢🟢🟣🟣🟣🟣🟣🟢🟢🟢 performFetch 🟢🟢🟢🟢🟣🟣🟣🟣🟣🟣🟢🟢")
         self.frc = NSFetchedResultsController(fetchRequest: Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: self.lastAppeared?.created_at ?? 0), managedObjectContext: DataProvider.shared().viewContext, sectionNameKeyPath: nil, cacheName: nil) // TODO: Try cache?
         frc?.delegate = self
         
@@ -715,6 +721,8 @@ extension LVM: NSFetchedResultsControllerDelegate {
     
     // MARK: FROM DB TO SCREEN STEP 2: FIRST FILTER PASS, GETTING PARENTS AND LIMIT, NOT ON SCREEN YET
     func setUnorderedEvents(events:[Event]) {
+//        guard events.count > 0 else { return }
+//        print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 setUnorderedEvents \(events.count) 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
         switch (self.state) {
             case .AWAITING_FIRST_FETCH: // Show last X (FORCED CUTOFF)
                 self.unrenderedEvents = events.filter(onlyRootOrReplyingToFollower)
@@ -779,6 +787,7 @@ extension LVM: NSFetchedResultsControllerDelegate {
     
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
         guard let posts = controller.fetchedObjects as? [Event] else { return }
+//        print("🟣🟣🟣🟣🟣 controllerDidChangeContent \(posts.count)")
         self.contentChangedSubject.send(posts)
     }
     
@@ -787,6 +796,7 @@ extension LVM: NSFetchedResultsControllerDelegate {
             .debounce(for: .seconds(2.5), scheduler: RunLoop.main)
             .throttle(for: .seconds(10), scheduler: RunLoop.main, latest: true)
             .sink { events in
+//                print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 updatePostFeed 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
                 self.setUnorderedEvents(events: events)
             }
             .store(in: &subscriptions)
