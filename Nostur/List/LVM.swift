@@ -58,6 +58,11 @@ class LVM: NSObject, ObservableObject {
     var pubkey:String
     var pubkeys:Set<String>
     
+    // for performance, .map .prefix(10) can maybe cause microhang with many pubkeys
+    var pubkeysPrefixString:String {
+        "[" + pubkeys.map {  "\"" +  $0.prefix(10) + "\"" }.joined(separator: ",") + "]"
+    }
+    
     var viewIsVisible:Bool { lvmState.viewIsVisible }
     var state:LIST_STATE {
         get { lvmState.state }
@@ -372,13 +377,13 @@ class LVM: NSObject, ObservableObject {
                 let cutOffPoint = min(self.lastAppeared?.created_at ?? hoursAgo, hoursAgo) // 8 hours ago or longer until lastAppeared Event
                 
                 // THIS SUBSCRIPTION WILL STAY ACTIVE:
-                fetchEvents(pubkeys: self.pubkeys, subscriptionId: self.id)
+                fetchEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: self.id)
                 
                 // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
                 if (!self.didCatchup) {
                     let f = TimeCompactor(ifZero: nil, style: .short, roundSmallToWhole: true)
                     let ago =  f.string(from: Double(Date.now.timeIntervalSince(Date(timeIntervalSince1970: Double(cutOffPoint)))) as NSNumber)!
-                    fetchEvents(pubkeys: self.pubkeys, amount: 5000, since: cutOffPoint, subscriptionId: "\(self.id)-CATCHUP-\(ago)")
+                    fetchEvents(pubkeysString: self.pubkeysPrefixString, amount: 5000, since: cutOffPoint, subscriptionId: "\(self.id)-CATCHUP-\(ago)")
                     self.didCatchup = true
                 }
 //                 cutOff doesnt work well, since hits with some time ago limit (500)?

@@ -191,14 +191,26 @@ struct RequestMessage {
     // or reactions by others reacting to the people you follow
     static func getFollowingEvents(pubkeys:[String], limit:Int = 500, subscriptionId:String? = nil, since:NTimestamp? = nil) -> String {
         let sub = subscriptionId ?? ("TL-"+UUID().uuidString)
-        let pubs = JSON(short(pubkeys)).rawString(.utf8, options: .init(rawValue: 0))
+        let pubs = fasterShort(pubkeys)
         if since != nil {
             return """
-["REQ", "\(sub)", {"authors": \(pubs ?? "[]"), "kinds": [0,1,5,6], "limit": \(limit), "since": \(since!.timestamp)}]
+["REQ", "\(sub)", {"authors": \(pubs), "kinds": [0,1,5,6], "limit": \(limit), "since": \(since!.timestamp)}]
 """
         }
         return """
-["REQ", "\(sub)", {"authors": \(pubs ?? "[]"), "kinds": [0,1,5,6], "limit": \(limit)}]
+["REQ", "\(sub)", {"authors": \(pubs), "kinds": [0,1,5,6], "limit": \(limit)}]
+"""
+    }
+    // Same as above but pubkeys already in string
+    static func getFollowingEvents(pubkeysString:String, limit:Int = 500, subscriptionId:String? = nil, since:NTimestamp? = nil) -> String {
+        let sub = subscriptionId ?? ("TL-"+UUID().uuidString)
+        if since != nil {
+            return """
+["REQ", "\(sub)", {"authors": \(pubkeysString), "kinds": [0,1,5,6], "limit": \(limit), "since": \(since!.timestamp)}]
+"""
+        }
+        return """
+["REQ", "\(sub)", {"authors": \(pubkeysString), "kinds": [0,1,5,6], "limit": \(limit)}]
 """
     }
     
@@ -294,17 +306,17 @@ struct RequestMessage {
         
         if since != nil {
             return """
-    ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON(short(pubkeys)).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]"), "limit": \(limit), "since": \(since!.timestamp)}]
+    ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(fasterShort(pubkeys)), "limit": \(limit), "since": \(since!.timestamp)}]
     """
         }
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON(short(pubkeys)).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]"), "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(fasterShort(pubkeys)), "limit": \(limit)}]
 """
     }
     
     static func getAuthorsNotes(pubkeys:[String], limit:Int = 100, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON(short(pubkeys)).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]"), "kinds": [1], "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(fasterShort(pubkeys)), "kinds": [1], "limit": \(limit)}]
 """
     }
     
@@ -336,7 +348,7 @@ struct RequestMessage {
     static func getUserMetadata(pubkeys:[String], limit:Int? = nil, subscriptionId:String? = nil) -> String {
         let limit = limit ?? (pubkeys.count + 20) // add 20 in case of multiple setMetadata's for a pubkey maybe?? not sure
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON(short(pubkeys)).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]"), "kinds": [0], "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(fasterShort(pubkeys)), "kinds": [0], "limit": \(limit)}]
 """
     }
 }
@@ -412,5 +424,9 @@ enum ReportType:String {
 }
 
 func short(_ pubkeys:[String], prefixLength:Int = 10) -> [String] {
-    pubkeys.map { String($0.prefix(prefixLength)) }
+    pubkeys.map { String( "\"" +  $0.prefix(prefixLength) + "\"") }
+}
+
+func fasterShort(_ pubkeys:[String], prefixLength:Int = 10) -> String {
+    "[" + pubkeys.map {  "\"" +  $0.prefix(prefixLength) + "\"" }.joined(separator: ",") + "]"
 }

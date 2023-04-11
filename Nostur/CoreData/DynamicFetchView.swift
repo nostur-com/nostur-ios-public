@@ -63,6 +63,34 @@ func fetchEvents(pubkeys:Set<String>, amount:Int? = 5000, since:Int64? = nil, su
     }
 }
 
+// SAME BUT pubkeys already in string
+func fetchEvents(pubkeysString:String, amount:Int? = 5000, since:Int64? = nil, subscriptionId:String? = nil) {
+//    print("💿💿 getFollowingEvents for \(pubkeys.count) pubkeys 💿💿")
+    if (since != nil) {
+        
+        let req = RequestMessage.getFollowingEvents(
+            pubkeysString: pubkeysString,
+            limit: amount!,
+            subscriptionId: subscriptionId,
+            since: NTimestamp(timestamp: Int(since!))
+        )
+        
+        let clientMessage = ClientMessage(
+            type: .REQ,
+            message: req
+        )
+        
+        SocketPool.shared.sendMessage(clientMessage, subscriptionId:subscriptionId)
+    }
+    else {
+        let req = RequestMessage.getFollowingEvents(pubkeysString: pubkeysString, limit: amount!, subscriptionId: subscriptionId)
+        let clientMessage = ClientMessage(
+            type: .REQ,
+            message: req
+        )
+        SocketPool.shared.sendMessage(clientMessage, subscriptionId:subscriptionId)
+    }
+}
 
 func fetchStuffForLastAddedNotes(ids:[String]) {
     //TODO: Fixen
