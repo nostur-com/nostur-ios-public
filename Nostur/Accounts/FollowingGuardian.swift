@@ -84,6 +84,7 @@ class FollowingGuardian {
                 account.addToFollows(newContact)
             }
         }
+        sendNotification(.followersChanged, account.followingPublicKeys)
         DataProvider.shared().save()
     }
     
@@ -103,6 +104,7 @@ class FollowingGuardian {
                 account.removeFromFollows(contact)
             }
         }
+        sendNotification(.followersChanged, account.followingPublicKeys)
         DataProvider.shared().save()
     }
 }

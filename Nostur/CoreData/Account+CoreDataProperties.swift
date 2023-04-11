@@ -41,6 +41,14 @@ extension Account {
     @NSManaged public var mutedRootIds: String? // Serialized
     @NSManaged public var blockedPubkeys: String? // Serialized
     
+    var followingPublicKeys:Set<String> {
+        get {
+            let withSelfIncluded = Set([publicKey] + (follows ?? Set<Contact>()).map { $0.pubkey })
+            let withoutBlocked = withSelfIncluded.subtracting(Set(blockedPubkeys_))
+            return withoutBlocked
+        }
+    }
+    
     static func fetchAccount(publicKey:String, context:NSManagedObjectContext) throws -> Account? {
         let request = NSFetchRequest<Account>(entityName: "Account")
 //        request.entity = Account.entity() <-- WTF MET DIT WERKT HET NIET!
@@ -286,7 +294,11 @@ extension Account : Identifiable {
                 for contact in contacts {
                     account.addToFollows(contact)
                 }
-                print(account.follows?.count ?? 0)
+//                print(account.follows?.count ?? 0)
+                let followingPublicKeys = account.followingPublicKeys
+                DispatchQueue.main.async {
+                    sendNotification(.followersChanged, followingPublicKeys)
+                }
             }
         }
     }

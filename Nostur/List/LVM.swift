@@ -398,6 +398,29 @@ extension LVM {
         processNewEventsInBg()
         keepFilteringMuted()
         showOwnNewPostsImmediately()
+        trackPubkeysChanged()
+    }
+    
+    func trackPubkeysChanged() {
+        receiveNotification(.followersChanged)
+            .sink { notification in
+                SocketPool.shared.allowNewFollowingSubscriptions()
+                let pubkeys = notification.object as! Set<String>
+                self.pubkeys = pubkeys
+                self.frc = nil
+                self.performFetch()
+            }
+            .store(in: &subscriptions)
+        
+        receiveNotification(.explorePubkeysChanged)
+            .sink { notification in
+                let pubkeys = notification.object as! Set<String>
+                self.pubkeys = pubkeys
+                self.frc = nil
+                self.performFetch()
+            }
+            .store(in: &subscriptions)
+        
     }
     
     func showOwnNewPostsImmediately() {

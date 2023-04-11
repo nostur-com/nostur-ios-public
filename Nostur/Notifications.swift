@@ -175,4 +175,12 @@ extension Notification.Name {
     static var createNewQuoteOrRepost: Notification.Name {
         return Notification.Name("createNewQuoteOrRepost")
     }
+    
+    static var followersChanged: Notification.Name {
+        return Notification.Name("followersChanged")
+    }
+    
+    static var explorePubkeysChanged: Notification.Name {
+        return Notification.Name("explorePubkeysChanged")
+    }
 }

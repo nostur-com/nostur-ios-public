@@ -16,7 +16,11 @@ final class NosturState : ObservableObject {
     
     static let GUEST_ACCOUNT_PUBKEY = "c118d1b814a64266730e75f6c11c5ffa96d0681bfea594d564b43f3097813844"
     static let EXPLORER_PUBKEY = "afba415fa31944f579eaf8d291a1d76bc237a527a878e92d7e3b9fc669b14320"
-    @Published var onBoardingIsShown = false
+    @Published var onBoardingIsShown = false {
+        didSet {
+            sendNotification(.onBoardingIsShownChanged, onBoardingIsShown)
+        }
+    }
     
 
     var followingPublicKeys:Set<String> {
@@ -60,6 +64,7 @@ final class NosturState : ObservableObject {
     }
     
     func setAccount(account:Account? = nil) {
+        guard self.account != account else { return }
         self.objectWillChange.send()
         self.account = account
         if let account {
@@ -72,7 +77,6 @@ final class NosturState : ObservableObject {
             }
             sendNotification(.activeAccountChanged, account)
         }
-        print("🟠🟠🟠🟠🟠🟠 ACTIVE ACCOUNT IS: \((self.account?.name != "") ? self.account?.name ?? (self.account?.display_name ?? "NONE") : (self.account?.display_name ?? "NONE"))")
     }
     
     var container:NSPersistentContainer
@@ -95,22 +99,21 @@ final class NosturState : ObservableObject {
         }
         
         let backgroundContext = DataProvider.shared().newTaskContext()
-
-        print("🎒🎒 LOAD LIKES/REPOSTS CACHE FOR ACCOUNT: ZEROING/SETTING 🎒🎒")
+        var zerodResultCount:Int?
+        print("🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀 Restoring likes/reposts state")
         backgroundContext.perform {
             let batchUpdate = NSBatchUpdateRequest(entityName: "Event")
             batchUpdate.propertiesToUpdate = ["liked": 0, "reposted": 0]
             batchUpdate.resultType = .updatedObjectsCountResultType
 
             do {
-                let result = try backgroundContext.execute(batchUpdate) as! NSBatchUpdateResult
-                print("Zerod .liked/.reposted property for \(result.result!) events")
+                let zerodResult = try backgroundContext.execute(batchUpdate) as? NSBatchUpdateResult
+                zerodResultCount = zerodResult?.result as? Int
             } catch {
-                print("Failed to zero .liked/.reposted")
+                print("🔴🔴 Failed to zero .liked/.reposted")
             }
         }
 
-//        print("🎒🎒 LOAD LIKES/REPOSTS CACHE FOR ACCOUNT: SETTING 🎒🎒")
         backgroundContext.performAndWait {
             let account = backgroundContext.object(with: self.account!.objectID) as! Account
             guard account.likes != nil else {
@@ -122,7 +125,7 @@ final class NosturState : ObservableObject {
                 event.liked = true
             }
 
-            print("Updated likes cache for \(account.likes!.count) events... NEED TO SAVE HERE OR NO?")
+            print("🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀 Zerod \(zerodResultCount ?? 0) events. -- Likes state restored \(account.likes!.count) events, ")
         }
         backgroundContext.performAndWait {
             let account = backgroundContext.object(with: self.account!.objectID) as! Account
@@ -135,7 +138,7 @@ final class NosturState : ObservableObject {
                 event.reposted = true
             }
 
-            print("Updated reposts cache for \(account.reposts!.count) events... NEED TO SAVE HERE OR NO?")
+            print("🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀 Reposts state restored for \(account.reposts!.count) events. NEED TO SAVE HERE OR NO?")
         }
     }
     
@@ -154,22 +157,21 @@ final class NosturState : ObservableObject {
 //    }
     
     func follow(_ pubkey:String) {
-        guard account != nil else {
-            return
-        }
+        guard let account = account else { return }
         self.objectWillChange.send()
         // find existing contact
         if let contact = Contact.contactBy(pubkey: pubkey, context: viewContext) {
-            account!.addToFollows(contact)
+            account.addToFollows(contact)
         }
         else {
             // if nil, create new contact
             let contact = Contact(context: viewContext)
             contact.pubkey = pubkey
-            account!.addToFollows(contact)
+            account.addToFollows(contact)
         }
 
-        try! viewContext.save()
+        DataProvider.shared().save()
+        sendNotification(.followersChanged, account.followingPublicKeys)
         publishNewContactList()
     }
     
@@ -182,13 +184,12 @@ final class NosturState : ObservableObject {
     }
     
     func follow(_ contact:Contact) {
-        guard account != nil else {
-            return
-        }
+        guard let account = account else { return }
         self.objectWillChange.send()
-        account!.addToFollows(contact)
-        try! viewContext.save()
-
+        account.addToFollows(contact)
+        
+        DataProvider.shared().save()
+        sendNotification(.followersChanged, account.followingPublicKeys)
         publishNewContactList()
     }
     
@@ -196,13 +197,11 @@ final class NosturState : ObservableObject {
         guard let contact = Contact.contactBy(pubkey: pubkey, context: viewContext) else {
             return
         }
-        guard account != nil else {
-            return
-        }
+        guard let account = account else { return }
         self.objectWillChange.send()
-        account!.removeFromFollows(contact)
-        try! viewContext.save()
-        
+        account.removeFromFollows(contact)
+        DataProvider.shared().save()
+        sendNotification(.followersChanged, account.followingPublicKeys)
         publishNewContactList()
     }
     
@@ -210,13 +209,11 @@ final class NosturState : ObservableObject {
         guard let contact = Contact.contactBy(pubkey: contact.pubkey, context: viewContext) else {
             return
         }
-        guard account != nil else {
-            return
-        }
+        guard let account = account else { return }
         self.objectWillChange.send()
-        account!.removeFromFollows(contact)
-        try! viewContext.save()
-        
+        account.removeFromFollows(contact)
+        DataProvider.shared().save()
+        sendNotification(.followersChanged, account.followingPublicKeys)
         publishNewContactList()
     }
     
@@ -225,10 +222,8 @@ final class NosturState : ObservableObject {
     }
     
     func isFollowing(_ contact:Contact) -> Bool {
-        guard account != nil else {
-            return false
-        }
-        return account!.follows?.contains(contact) ?? false
+        guard let account = account else { return false }
+        return account.follows?.contains(contact) ?? false
     }    
     
     func addBookmark(_ event:Event) {
@@ -237,7 +232,6 @@ final class NosturState : ObservableObject {
         account!.addToBookmarks(event)
         do {
             try viewContext.save()
-//            sendNotification(.viewNeedsUpdate)
         }
         catch {
             print("Could not add bookmark: \(error)")

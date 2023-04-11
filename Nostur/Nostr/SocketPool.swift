@@ -155,6 +155,15 @@ final class SocketPool: ObservableObject {
             socket.value.client.write(string: closeNotifications.message)
         }
     }
+    
+    func allowNewFollowingSubscriptions() {
+        // removes "Following" from the active subscriptions so when we try a new one when following keys has changed, it would be ignored because didn't pass !contains..
+        for socket in sockets {
+            socket.value.activeSubscriptions.removeAll { subscriptionId in
+                subscriptionId == "Following"
+            }
+        }
+    }
 }
 
 class ManagedClient: WebSocketDelegate, ObservableObject {
