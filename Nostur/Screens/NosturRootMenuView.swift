@@ -60,7 +60,7 @@ struct SideBar: View {
                 } label: {
                     Label("Profile", systemImage: "person")
                 }
-                Button {
+//                Button {
 //                    if selectedTab != "Main" { selectedTab = "Main" }
 //                    navigateToOnMain(ViewPath.Lists)
 //                    sm.showSidebar = false
