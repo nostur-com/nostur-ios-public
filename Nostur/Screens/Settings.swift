@@ -69,13 +69,17 @@ struct Settings: View {
                     Text("Restrict images to following")
                     Text("Only auto-download images in new posts from people you follow\nToggle off to download from all")
                 }
-                Toggle(isOn: $settings.animatedPFPenabled.not) {
-                    Text("Disable animated profile pic thumbnails")
-                    Text("This can improve scrolling performance")
+                Toggle(isOn: $settings.animatedPFPenabled) {
+                    Text("Enable animated profile pics")
+                    Text("Disable to improve scrolling performance")
                 }
-                Toggle(isOn: $settings.rowFooterEnabled.not) {
-                    Text("Disable post stats on timeline")
-                    Text("Counters for replies, likes etc will only be shown on detail")
+                Toggle(isOn: $settings.rowFooterEnabled) {
+                    Text("Show post stats on timeline")
+                    Text("Counters for replies, likes, zaps etc.")
+                }
+                Toggle(isOn: $settings.autoScroll) {
+                    Text("Auto scroll to new posts")
+                    Text("When at top, auto scroll if there are new posts")
                 }
             }
             

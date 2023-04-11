@@ -14,7 +14,7 @@ final class SettingsStore: ObservableObject {
     public static let shared = SettingsStore()
     
     public enum Keys {
-        static let pro = "pro"
+        static let lastMaintenanceTimestamp = "last_maintenance_timestamp"
         static let sleepGoal = "sleep_goal"
         
         static let isSignatureVerificationEnabled = "signature_verification_enabled"
@@ -29,6 +29,7 @@ final class SettingsStore: ObservableObject {
         static let restrictAutoDownload = "restrict_autodownload"
         static let animatedPFPenabled = "animated_pfp_enabled"
         static let rowFooterEnabled = "row_footer_enabled"
+        static let autoScroll = "autoscroll"
     }
 
     private let cancellable: Cancellable
@@ -50,6 +51,7 @@ final class SettingsStore: ObservableObject {
         self.defaults = defaults
         
         defaults.register(defaults: [
+            Keys.lastMaintenanceTimestamp: 0,
             Keys.replaceNsecWithHunter2: true,
             Keys.sleepGoal: 8,
             Keys.defaultZapAmount: 1000,
@@ -58,14 +60,20 @@ final class SettingsStore: ObservableObject {
             Keys.hideBadges: false,
             Keys.restrictAutoDownload: true,
             Keys.defaultLightningWallet: SettingsStore.walletOptions.first!.id,
-            Keys.animatedPFPenabled: true,
-            Keys.rowFooterEnabled: true
+            Keys.animatedPFPenabled: false,
+            Keys.rowFooterEnabled: true,
+            Keys.autoScroll: false
             ])
 
         cancellable = NotificationCenter.default
             .publisher(for: UserDefaults.didChangeNotification)
             .map { _ in () }
             .subscribe(objectWillChange)
+    }
+    
+    var lastMaintenanceTimestamp: Int {
+        set { defaults.set(newValue, forKey: Keys.lastMaintenanceTimestamp) }
+        get { defaults.integer(forKey: Keys.lastMaintenanceTimestamp) }
     }
     
     var hideBadges: Bool {
@@ -81,6 +89,10 @@ final class SettingsStore: ObservableObject {
     var rowFooterEnabled: Bool {
         set { defaults.set(newValue, forKey: Keys.rowFooterEnabled) }
         get { defaults.bool(forKey: Keys.rowFooterEnabled) }
+    }
+    var autoScroll: Bool {
+        set { defaults.set(newValue, forKey: Keys.autoScroll) }
+        get { defaults.bool(forKey: Keys.autoScroll) }
     }
 
     var hideEmojisInNames: Bool {
@@ -101,11 +113,6 @@ final class SettingsStore: ObservableObject {
     var replaceNsecWithHunter2Enabled: Bool {
         set { defaults.set(newValue, forKey: Keys.replaceNsecWithHunter2) }
         get { defaults.bool(forKey: Keys.replaceNsecWithHunter2) }
-    }
-
-    var isPro: Bool {
-        set { defaults.set(newValue, forKey: Keys.pro) }
-        get { defaults.bool(forKey: Keys.pro) }
     }
 
     var isSleepTrackingEnabled: Bool {
@@ -144,19 +151,6 @@ final class SettingsStore: ObservableObject {
         }
     }
 }
-
-extension SettingsStore {
-    func unlockPro() {
-        // You can do your in-app transactions here
-        isPro = true
-    }
-
-    func restorePurchase() {
-        // You can do you in-app purchase restore here
-        isPro = true
-    }
-}
-
 
 struct LightningWallet: Identifiable, Hashable {
     var id:String { name }
