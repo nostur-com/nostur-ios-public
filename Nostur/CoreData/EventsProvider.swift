@@ -60,7 +60,12 @@ class DataProvider: ObservableObject {
         return DataProvider.live
     }
     
-    func save() {
+    func save() { // TODO: replace all viewContext.save() with this save
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+            return
+        }
+        #endif
         if viewContext.hasChanges {
             do {
                 try viewContext.save()
@@ -346,7 +351,7 @@ class EventsProvider: ObservableObject {
         description.url = defaultDirectoryURL.appendingPathComponent("Nostur.sqlite") // ("Nostur-iCloud.sqlite")
         description.configuration = "Default"
         
-        print("🎃🎃🎃🎃🎃🎃🎃🎃🎃🎃 \(description.url?.absoluteString ?? "")")
+        print("🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀 \(description.url?.absoluteString ?? "")")
         
         if inMemory {
             description.url = URL(fileURLWithPath: "/dev/null")

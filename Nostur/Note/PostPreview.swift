@@ -12,7 +12,7 @@ struct PostPreview: View {
     @Environment(\.dismiss) var dismiss
     let previewEvent:Event
     let sendNow:() -> Void
-    let vPost:VPost
+    var vPost:VPost?
 
     // This previewEvent is not saved in database
     // Code is basically from Event.saveEvent, without unnecessary bits
@@ -20,13 +20,16 @@ struct PostPreview: View {
     init(previewEvent: Event, sendNow: @escaping () -> Void) {
         self.previewEvent = previewEvent
         self.sendNow = sendNow
-        self.vPost = previewEvent.toVPost()!
+        self.vPost = previewEvent.toVPost(plainText: false)
     }
     
     var body: some View {
         ScrollView {
-            NoteRow(vPost: vPost)
-                .boxShadow()
+            if let vPost = vPost {
+                NoteRow(vPost: vPost)
+                    .boxShadow()
+                    .disabled(true)
+            }
             Spacer()
         }
         .padding(10)
