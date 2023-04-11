@@ -12,7 +12,7 @@ struct Ago: View {
     
     let date:Date
     let timer = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
-//    @State var agoText:String? = nil
+    @State var agoText:String? = nil
 
     init(_ date:Date) {
         self.date = date
@@ -26,15 +26,12 @@ struct Ago: View {
     }
     
     var body: some View {
-        Text(ago)
-//            .onReceive(timer) { _ in
-//                if ago != agoText {
-//                    agoText = ago
-//                }
-////                if agoText != nil && ago != agoText! {
-////                    agoText = ago
-////                }
-//            }
+        Text(agoText ?? ago)
+            .onReceive(timer) { _ in
+                if ago != agoText {
+                    agoText = ago
+                }
+            }
     }
 }
 

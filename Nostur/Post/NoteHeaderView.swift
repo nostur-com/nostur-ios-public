@@ -10,13 +10,20 @@ import Compactor
 struct NoteHeaderView: View {
      
     let vPost:VPost
+    @ObservedObject var event:Event
     var singleLine:Bool = true
+    
+    init(vPost: VPost, singleLine: Bool = true) {
+        self.vPost = vPost
+        self.event = vPost.event
+        self.singleLine = singleLine
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing:0) { // Name + menu "replying to"
             HStack(spacing:2) {
                 Group {
-                    if let contact = vPost.event.contact {
+                    if let contact = event.contact {
                         NameAndNip(contact: contact)
                     }
                     else {
@@ -29,9 +36,9 @@ struct NoteHeaderView: View {
                     
                     if (singleLine) {
                         Group {
-                            Text("@\(vPost.event.username)").layoutPriority(1)
+                            Text("@\(event.username)").layoutPriority(1)
                             Text(" · ") //
-                            Ago(vPost.event.date)
+                            Ago(event.date)
                                 .layoutPriority(2)
                         }
                         .foregroundColor(.secondary)
@@ -43,7 +50,7 @@ struct NoteHeaderView: View {
                 }
             }
             if (!singleLine) {
-                Text("@\(vPost.event.username) · \(vPost.event.ago)")
+                Text("@\(event.username) · \(vPost.event.ago)")
                     .foregroundColor(.secondary)
                     .lineLimit(1)
             }
