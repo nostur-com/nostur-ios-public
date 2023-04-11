@@ -12,7 +12,7 @@
 //
 //struct ProfileImage: View {
 //    let imageState: ProfileModel.ImageState
-//    
+//
 //    var body: some View {
 //        switch imageState {
 //        case .success(let image):
@@ -33,7 +33,7 @@
 //
 //struct CircularProfileImage: View {
 //    let imageState: ProfileModel.ImageState
-//    
+//
 //    var body: some View {
 //        ProfileImage(imageState: imageState)
 //            .scaledToFill()
@@ -53,7 +53,7 @@
 //
 //struct EditableCircularProfileImage: View {
 //    @ObservedObject var viewModel: ProfileModel
-//    
+//
 //    var body: some View {
 //        CircularProfileImage(imageState: viewModel.imageState)
 //            .overlay(alignment: .bottomTrailing) {
@@ -84,29 +84,29 @@
 //
 //@MainActor
 //class ProfileModel: ObservableObject {
-//    
+//
 //    // MARK: - Profile Details
-//    
+//
 //    @Published var firstName: String = ""
 //    @Published var lastName: String = ""
 //    @Published var aboutMe: String = ""
-//    
+//
 //    // MARK: - Profile Image
-//    
+//
 //    enum ImageState {
 //        case empty
 //        case loading(Progress)
 //        case success(Image)
 //        case failure(Error)
 //    }
-//    
+//
 //    enum TransferError: Error {
 //        case importFailed
 //    }
-//    
+//
 //    struct ProfileImage: Transferable {
 //        let image: Image
-//        
+//
 //        static var transferRepresentation: some TransferRepresentation {
 //            DataRepresentation(importedContentType: .image) { data in
 //            #if canImport(UIKit)
@@ -121,9 +121,9 @@
 //            }
 //        }
 //    }
-//    
+//
 //    @Published private(set) var imageState: ImageState = .empty
-//    
+//
 //    @Published var imageSelection: PhotosPickerItem? = nil {
 //        didSet {
 //            if let imageSelection {
@@ -134,9 +134,9 @@
 //            }
 //        }
 //    }
-//    
+//
 //    // MARK: - Private Methods
-//    
+//
 //    private func loadTransferable(from imageSelection: PhotosPickerItem) -> Progress {
 //        return imageSelection.loadTransferable(type: ProfileImage.self) { result in
 //            DispatchQueue.main.async {
@@ -160,10 +160,10 @@
 //
 //
 //struct MediaPicker: View {
-//    
+//
 //    @StateObject var viewModel = ProfileModel()
-//    
-//    
+//
+//
 //    var body: some View {
 //        EditableCircularProfileImage(viewModel: viewModel)
 //    }
