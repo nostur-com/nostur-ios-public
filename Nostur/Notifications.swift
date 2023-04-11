@@ -35,6 +35,10 @@ extension Notification.Name {
         return Notification.Name("willDeleteAllEvents")
     }
     
+    static var didDeleteAllEvents: Notification.Name {
+        return Notification.Name("didDeleteAllEvents")
+    }
+    
     static var activeAccountChanged: Notification.Name {
         return Notification.Name("activeAccountChanged")
     }
@@ -182,5 +186,9 @@ extension Notification.Name {
     
     static var explorePubkeysChanged: Notification.Name {
         return Notification.Name("explorePubkeysChanged")
+    }
+    
+    static var onBoardingIsShownChanged: Notification.Name {
+        return Notification.Name("onBoardingIsShownChanged")
     }
 }

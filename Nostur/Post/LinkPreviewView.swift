@@ -24,7 +24,6 @@ struct LinkPreviewView: View {
                         if let image = state.image {
                             image
                                 .resizable()
-                            //                                    .aspectRatio(contentMode: .fit)
                                 .modifier(SizeModifier())
                         }
                     }
@@ -51,7 +50,7 @@ struct LinkPreviewView: View {
                         }
                     }
                     .pipeline(ImageProcessing.shared.linkPreview)
-                    //                    .frame(height: imageSize.height)
+                    .frame(height: 250)
                 }
                 VStack(alignment:.leading, spacing:5) {
                     if let title = tags["title"] {
