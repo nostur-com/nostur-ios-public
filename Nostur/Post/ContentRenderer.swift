@@ -10,6 +10,7 @@ import Nuke
 import NukeUI
 import NukeVideo
 import AVFoundation
+import Combine
 
 // Renders embeds (VIEWS), not links (in TEXT)
 struct ContentRenderer: View { // VIEW things
@@ -18,16 +19,19 @@ struct ContentRenderer: View { // VIEW things
     let isDetail:Bool
     @ObservedObject var event:Event
     @State var isPlaying = false
+    @State var renderedElements:[MarkdownElement]
+    @State var subscriptions = Set<AnyCancellable>()
     
     init(vPost: VPost, isDetail:Bool = false) {
         self.isDetail = isDetail
         self.vPost = vPost
         self.event = vPost.event
         ImageDecoderRegistry.shared.register(ImageDecoders.Video.init)
+        _renderedElements = State(initialValue: vPost.renderedElements)
     }
     
     var firstQuote:MarkdownElement? {
-        vPost.renderedElements.first(where: { element in
+        renderedElements.first(where: { element in
             if case .note1 = element {
                 return true
             }
@@ -38,10 +42,10 @@ struct ContentRenderer: View { // VIEW things
     // If not detail we filter some items to keep short for many rows
     var rendered:[MarkdownElement] {
         if isDetail {
-            return vPost.renderedElements
+            return renderedElements
         }
         var gotVideo = false
-        return vPost.renderedElements
+        return renderedElements
             .filter { element in
                 if case .video = element {
                     if (!gotVideo) {
@@ -146,6 +150,14 @@ struct ContentRenderer: View { // VIEW things
             }
         }
 //        .frame(maxWidth: .infinity, maxHeight:450, alignment: .leading)
+        .onAppear {
+            event.objectWillChange
+                .sink {
+                    let transformer = VPostTransformer.shared
+                    renderedElements = transformer.renderElements(event)
+                }
+                .store(in: &subscriptions)
+        }
     }
     
     func configureAudioSession() {
@@ -276,8 +288,8 @@ struct Kind1ById: View {
     }
 
     var body: some View {
-        if let event = events.first {
-            NoteRow.Kind1(vPost: event.toVPost()!, hideFooter:hideFooter)
+        if let vPost = events.first?.toVPost() {
+            NoteRow.Kind1(vPost: vPost, hideFooter:hideFooter)
         }
         else {
             ProgressView()
