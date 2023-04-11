@@ -40,6 +40,7 @@
         <attribute name="updated_at" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="zapperPubkey" optional="YES" attributeType="String"/>
         <relationship name="blockedBy" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Account" inverseName="blockedContacts" inverseEntity="Account"/>
+        <relationship name="events" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Event" inverseName="contacts" inverseEntity="Event"/>
         <relationship name="followedBy" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Account" inverseName="follows" inverseEntity="Account"/>
         <relationship name="lists" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="NosturList" inverseName="contacts" inverseEntity="NosturList"/>
         <uniquenessConstraints>
@@ -78,7 +79,7 @@
         <attribute name="zapTally" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="bookmarkedBy" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Account" inverseName="bookmarks" inverseEntity="Account"/>
         <relationship name="contact" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Contact"/>
-        <relationship name="contacts" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact"/>
+        <relationship name="contacts" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact" inverseName="events" inverseEntity="Contact"/>
         <relationship name="firstQuote" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event"/>
         <relationship name="reactionTo" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event"/>
         <relationship name="replies" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Event" inverseName="replyTo" inverseEntity="Event" elementID="repliesRelation"/>

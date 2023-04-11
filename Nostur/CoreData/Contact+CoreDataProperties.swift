@@ -46,6 +46,24 @@ extension Contact {
     @NSManaged public var updated_at: Int64
     @NSManaged public var metadata_created_at: Int64
     @NSManaged public var followedBy: NSSet?
+    @NSManaged public var events: Set<Event>?
+}
+
+// MARK: Generated accessors for events
+extension Contact {
+
+    @objc(addEventsObject:)
+    @NSManaged public func addToEvents(_ value: Event)
+
+    @objc(removeEventsObject:)
+    @NSManaged public func removeFromEvents(_ value: Event)
+
+    @objc(addEvents:)
+    @NSManaged public func addToEvents(_ values: NSSet)
+
+    @objc(removeEvents:)
+    @NSManaged public func removeFromEvents(_ values: NSSet)
+
 }
 
 // MARK: Generated accessors for followedBy
@@ -222,27 +240,7 @@ extension Contact : Identifiable {
                 contact.metadata_created_at = Int64(event.createdAt.timestamp) // By Author (kind 0)
                 contact.updated_at = Int64(Date().timeIntervalSince1970) // By Nostur
                 print("🟢🟢 Existing Contact metadata updated")
-                // TODO: Maybe some event.objectWillChange.send() to relations in active views? Performance?
-                let er = Event.fetchRequest()
-                er.sortDescriptors = []
-                er.predicate = NSPredicate(format: "kind IN {1,6,7,9734,4} && pubkey == %@", event.publicKey)
-                let contactEvents = Array(try! context.fetch(er))
-                
-                for event in contactEvents {
-                    event.objectWillChange.send()
-                    event.contact = contact
-                }
-                
-                // EVENTS.CONTACTS (which come from Event.P tags:
-                let tr = NSFetchRequest<Event>(entityName: "Event")
-                tr.predicate = NSPredicate(format: "kind IN {1,4} AND tagsSerialized CONTAINS %@", serializedP(contact.pubkey)) // OPTIMIZATION HACK
-                let events = Array(try! context.fetch(tr))
-                
-                
-                for event in events {
-                    event.objectWillChange.send()
-                    event.addToContacts(contact)
-                }
+                updateRelatedEvents(contact, context: context)
             }
             else {
                 // Received metadata is older than stored Contact
@@ -265,21 +263,27 @@ extension Contact : Identifiable {
             contact.metadata_created_at = Int64(event.createdAt.timestamp) // by author kind 0
             contact.updated_at = Int64(Date.now.timeIntervalSince1970) // by Nostur
             print("🟢🟢 New contact stored ")
-            
-            // Update relation on already existing events
-            let er = Event.fetchRequest()
-            er.sortDescriptors = []
-            er.predicate = NSPredicate(format: "kind IN {1,6,9734} && pubkey == %@", event.publicKey)
-            let contactEvents = Array(try! context.fetch(er))
+            updateRelatedEvents(contact, context: context)
+        }
+    }
+    
+    static func updateRelatedEvents(_ contact:Contact, context:NSManagedObjectContext) {
+        let username = contact.username != "" ? contact.username : contact.authorName
+        PubkeyUsernameCache.shared.setObject(for: contact.pubkey, value: username)
+        // TODO: Maybe some event.objectWillChange.send() to relations in active views? Performance?
+        let r1 = Event.fetchRequest()
+        r1.predicate = NSPredicate(format: "pubkey == %@ AND kind IN {1,6,9734,4}", contact.pubkey) // need kind 7 here or?
+        if let contactEvents = try? context.fetch(r1) {
             for event in contactEvents {
                 event.objectWillChange.send()
                 event.contact = contact
             }
-            
-            // EVENTS.CONTACTS (which come from Event.P tags:
-            let tr = NSFetchRequest<Event>(entityName: "Event")
-            tr.predicate = NSPredicate(format: "kind IN {1,4,6,7,9734} AND tagsSerialized CONTAINS %@", serializedP(contact.pubkey)) // OPTIMIZATION HACK
-            let events = Array(try! context.fetch(tr))
+        }
+        
+        // EVENTS.CONTACTS (which come from Event.P tags:)
+        let r2 = Event.fetchRequest()
+        r2.predicate = NSPredicate(format: "tagsSerialized CONTAINS %@ AND kind IN {1,6,9734,4}", serializedP(contact.pubkey)) // OPTIMIZATION HACK ..  // need kind 7 here or?
+        if let events = try? context.fetch(r2) {
             for event in events {
                 event.objectWillChange.send()
                 event.addToContacts(contact)

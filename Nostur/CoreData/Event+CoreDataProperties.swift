@@ -821,17 +821,6 @@ extension Event {
                     }
                 }
             }
-              
-//            let pPubkeys = event.pTags()
-//            if pPubkeys.count > 0 {
-//                let pContacts = Contact.fetchRequest()
-//                pContacts.predicate = NSPredicate(format: "pubkey IN %@", pPubkeys)
-//                let contacts = Array(try! context.fetch(pContacts))
-//                for contact in contacts {
-//                    savedEvent.objectWillChange.send()
-//                    savedEvent.addToContacts(contact)
-//                }
-//            }
             
             if (event.content == "#[0]" && event.tags.count > 0 && event.tags[0].type == "e") {
                 savedEvent.isRepost = true
@@ -840,19 +829,12 @@ extension Event {
             // NEw: Save all p's in .contacts
             // Maybe slow??
             let contacts = Contact.ensureContactsCreated(event: event, context: context)
-//            savedEvent.objectWillChange.send()
             savedEvent.addToContacts(NSSet(array: contacts))
-//            for contact in contacts {
-//                savedEvent.addToContacts(contact)
-//            }
         }
         
         if (event.kind == .directMessage) { // needed to fetch contact in DMS: so event.firstP is in event.contacts
             let contacts = Contact.ensureContactsCreated(event: event, context: context)
             savedEvent.addToContacts(NSSet(array: contacts))
-//            for contact in contacts {
-//                savedEvent.addToContacts(contact)
-//            }
         }
         
         // handle REPOST with normal mentions in .kind 1
