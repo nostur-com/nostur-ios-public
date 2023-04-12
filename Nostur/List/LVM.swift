@@ -113,13 +113,15 @@ class LVM: NSObject, ObservableObject {
         get { unrenderedEventsSubject.value }
         set { unrenderedEventsSubject.send(newValue) }
     }
+    
+    var onScreenSeen:Set<String> = []
     var alreadySkipped = false
     var danglingObjectIds:Set<NSManagedObjectID> = [] // posts that are transformed, but somehow not on screen. either we put on on screen or not, dont transform over and over again, so for some reason these are not on screen, dont know why. keep track here and dont transform again
     
     var didCatchup = false
     
     // MARK: FROM DB TO SCREEN STEP 3:
-    private func processPostsInBackground(_ events:[Event]) { // events are from viewContext
+    private func processPostsInBackgroundOld(_ events:[Event]) { // events are from viewContext
         let context = DataProvider.shared().container.newBackgroundContext()
         
         // onScreenIds includes leafs and parents, so all posts.
@@ -210,6 +212,52 @@ class LVM: NSObject, ObservableObject {
         }
     }
     
+    private func processPostsInBackground(_ events:[Event]) { // events are from viewContext
+        let context = DataProvider.shared().container.newBackgroundContext()
+        
+        // onScreenIds includes leafs and parents, so all posts.
+        let onScreenIds = self.lvmState.vPostLeafs.reduce(Set<NSManagedObjectID>()) { partialResult, vPost in
+            partialResult.union(Set([vPost.objectID] + vPost.parentPosts.map { $0.objectID }))
+        }
+        let currentVPostLeafs = self.lvmState.vPostLeafs // viewContext. First (0) is newest
+        
+        context.performAndWait { [unowned self] in
+            let transformer = VPostTransformer(context) // Tranform in bg
+//            let lastCreatedAt = currentVPostLeafs.last?.created_at ?? 0
+            var newVPostLeafs:[VPost] = []
+            var transformedObjectIds = Set<NSManagedObjectID>()
+            for event in self.unrenderedEvents {
+//                guard !danglingObjectIds.contains(event.objectID) else { continue } // Skip if the post is already on screen
+                guard !onScreenIds.contains(event.objectID) else {
+                    if let existingVPost = currentVPostLeafs.first(where: { $0.objectID == event.objectID }) {
+                        newVPostLeafs.append(existingVPost)
+                    }
+                    continue
+                } // Skip if the post is already on screen
+                if let newVPostLeaf = transformer.toVPost(event) {
+//                    guard newVPostLeaf.created_at > lastCreatedAt else { continue } // Skip if it is older than last leaf on screen
+                    transformedObjectIds.insert(newVPostLeaf.objectID)
+//                    print("transformed: \(newVPostLeaf.id) \(newVPostLeaf.displayName) -- parentPosts: \(newVPostLeaf.parentPosts.count)")
+                    newVPostLeafs.append(newVPostLeaf)
+                }
+            }
+            
+            let added = newVPostLeafs
+//                .filter(notMuted) // TODO ADD BACK NOT MUtED IN RIGHT CONTEXT / THREAD
+//                .suffix(LVM_MAX_VISIBLE) // Don't add too many posts
+            
+            guard transformedObjectIds.count > 0 else { return }
+            print("Transformed \(transformedObjectIds.count) posts")
+//            if currentVPostLeafs.count == 0 {
+                let leafThreads = self.renderLeafs(added) // Transforms seperate posts into threads, .id for each thread is leaf.id
+                DispatchQueue.main.async {
+                    self.lvmState.vPostLeafs = leafThreads
+                    self.lvmCounter.count = self.itemsAfterLastAppeared < 5 ? 0 : self.itemsAfterLastAppeared
+                }
+//            }
+        }
+    }
+    
     func fetchRelated(_ recentVPosts:ArraySlice<VPost>) {
         let ids = recentVPosts.map { $0.id }
         SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEventReferences(ids: ids)))
@@ -246,7 +294,11 @@ class LVM: NSObject, ObservableObject {
             }
             // render thread, truncated
             var truncatedPost = post
-            truncatedPost.parentPosts = post.parentPosts.filter { !renderedIds.contains($0.id) }
+            // structure is: parentPosts: [root, reply, reply, reply, replyTo] post: ThisPost
+            if let replyTo = post.parentPosts.last {
+                // always keep at least 1 parent (replyTo)
+                truncatedPost.parentPosts = [replyTo] + post.parentPosts.dropLast(1).filter { !renderedIds.contains($0.id) && !onScreenSeen.contains($0.id) }
+            }
             truncatedPost.threadPostsCount = 1 + truncatedPost.parentPosts.count
             truncatedPost.isTruncated = post.parentPosts.count > truncatedPost.parentPosts.count
             renderedIds.append(contentsOf: [truncatedPost.id] + truncatedPost.parentPosts.map { $0.id })
