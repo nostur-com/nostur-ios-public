@@ -155,6 +155,7 @@ struct ContentRenderer: View { // VIEW things
                 .sink {
                     let transformer = VPostTransformer.shared
                     renderedElements = transformer.renderElements(event)
+//                    print("renderedElements: \(event.id)")
                 }
                 .store(in: &subscriptions)
         }

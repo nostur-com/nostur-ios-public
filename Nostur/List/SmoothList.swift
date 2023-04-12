@@ -230,20 +230,25 @@ final class CViewHolder {
         }
     }()
     
+    private var MissingCellRegistration: UICollectionView.CellRegistration<UICollectionViewListCell, String> = {
+        .init { cell, indexPath, item in
+            cell.contentConfiguration = UIHostingConfiguration {
+                Text(item)
+                    .hCentered()
+            }
+            .background(Color("ListBackground"))
+            .margins(.all, 0)
+        }
+    }()
+    
     private func createDataSource() -> DataSourceType {
         DataSourcy<SingleSection, String>(
             collectionView: collectionView,
             cellProvider: { [weak self] collectionView, indexPath, identifier -> UICollectionViewCell? in
-                
-                let placeholderCell = UICollectionViewCell()
-                            placeholderCell.contentView.backgroundColor = .red // Change this to your desired placeholder cell appearance
-                
-                guard let self = self else {
-                    return placeholderCell
-                }
+                guard let self = self else { return nil }
                         
                 guard let vPost = self.coordinator.parent.data.first(where: { $0.id == identifier }) else {
-                    return placeholderCell
+                    return self.collectionView.dequeueConfiguredReusableCell(using: MissingCellRegistration, for: indexPath, item: "🧨")
                 }
                             
                 return self.collectionView.dequeueConfiguredReusableCell(using: PostOrThreadCellRegistration, for: indexPath, item: vPost)

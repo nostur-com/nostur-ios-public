@@ -35,6 +35,13 @@ struct ReplyingToFragmentView: View {
                         .frame(maxWidth:.infinity, alignment: .leading)
                 }
         }
+//        .onChange(of: event) { newValue in
+//            if (event.contacts?.count ?? 0) != (newValue.contacts?.count ?? 0) {
+//                let textRenderer = TextRenderer(viewContext, event:event)
+//                rendered = textRenderer.replyingToUsernamesMarkDownString(event)
+//                print("rendered: \(event.id)")
+//            }
+//        }
         .onAppear {
             event.objectWillChange
                 .sink {
