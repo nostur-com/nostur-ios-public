@@ -147,7 +147,7 @@
 ////        }
 ////
 ////        collectionViewLayout = layout
-////        
+////
 ////        collectionViewLayout.invalidateLayout()
 ////        self.layoutIfNeeded()
 ////        self.setNeedsLayout()

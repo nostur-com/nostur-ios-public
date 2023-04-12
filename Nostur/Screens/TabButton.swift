@@ -18,7 +18,7 @@ struct TabButton: View {
         Button { action() } label: {
             VStack{
                 HStack {
-                    Text(title)
+                    Text(title).lineLimit(1)
                     if let unread {
                         Text("\(unread)")
                             .font(.footnote)
