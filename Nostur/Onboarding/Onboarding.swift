@@ -9,13 +9,19 @@ import SwiftUI
 
 struct Onboarding: View {
     @EnvironmentObject var ns:NosturState
+    @AppStorage("did_accept_terms") var didAcceptTerms = true // TODO: DONT FORGET TO SET TO FALSE ON APP STORE SUBMIT
     
     var body: some View {
         let _ = Self._printChanges()
-        NavigationStack {
-            WelcomeSheet(offerTryOut: true)
-                .interactiveDismissDisabled()
-                .withNavigationDestinations()
+        if (!didAcceptTerms) {
+            TermsAndConditions()
+        }
+        else {
+            NavigationStack {
+                WelcomeSheet(offerTryOut: true)
+                    .interactiveDismissDisabled()
+                    .withNavigationDestinations()
+            }
         }
     }
 }

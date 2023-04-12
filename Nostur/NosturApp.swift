@@ -35,6 +35,7 @@ struct NosturApp: App {
         WindowGroup {
             Group {
                 if isOnboarding || ns.accounts.count == 0 {
+//                if !didAcceptTerms || isOnboarding || ns.accounts.count == 0 {
                     Onboarding()
                         .environmentObject(ns)
                         .environment(\.managedObjectContext, EventsProvider.shared.container.viewContext)
