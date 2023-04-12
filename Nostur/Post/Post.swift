@@ -43,6 +43,7 @@ struct VPost: Identifiable, Equatable, Hashable {
     var isTruncated = false
     var isRepost = false
     var firstQuoteId:String?
+    var linkPreviewURLs:[URL]
 //    var subscriptions = Set<AnyCancellable>()
     
 //    init(id: String, objectID: NSManagedObjectID, event: Event, created_at: Int64, npub: String, note1: String, plainText: String, renderedText: AttributedString, replyingToUsernamesMarkDown: String? = nil, imageUrls: [URL], displayName: String, renderedElements: [MarkdownElement], parentPosts: [VPost], threadPostsCount: Int, isTruncated: Bool = false, isRepost: Bool = false, firstQuoteId: String? = nil) {
@@ -93,6 +94,7 @@ class VPostTransformer {
     func toVPost(_ mainEvent:Event, skipParents:Bool? = false, plainText:Bool = false) -> VPost? {
         if mainEvent.managedObjectContext == self.context {
             let textRenderer = TextRenderer(self.context, event: mainEvent)
+            let (renderedElements, linkPreviewURLs) = renderElements(mainEvent)
             return VPost(
                 id: mainEvent.id,
                 objectID: mainEvent.objectID,
@@ -105,16 +107,18 @@ class VPostTransformer {
                 replyingToUsernamesMarkDown: textRenderer.replyingToUsernamesMarkDownString(mainEvent),
                 imageUrls: mainEvent.content != nil ? getImgUrlsFromContent(mainEvent.content!) : [],
                 displayName: mainEvent.contact?.authorName ?? String((mainEvent.npub.prefix(11))),
-                renderedElements: renderElements(mainEvent),
+                renderedElements: renderedElements,
                 parentPosts: !skipParents! ? mainEvent.parentEvents.compactMap { toVPost($0, skipParents: true) } : [],
                 threadPostsCount: 1 + mainEvent.parentEvents.count,
                 isRepost: mainEvent.isRepost,
-                firstQuoteId: mainEvent.firstQuoteId
+                firstQuoteId: mainEvent.firstQuoteId,
+                linkPreviewURLs: linkPreviewURLs
             )
         }
         
         guard let privateEvent = try? context.existingObject(with: mainEvent.objectID) as? Event else { return nil }
         let textRenderer = TextRenderer(self.context, event: privateEvent)
+        let (renderedElements, linkPreviewURLs) = renderElements(privateEvent)
         return VPost(
             id: privateEvent.id,
             objectID: privateEvent.objectID,
@@ -127,15 +131,16 @@ class VPostTransformer {
             replyingToUsernamesMarkDown: textRenderer.replyingToUsernamesMarkDownString(privateEvent),
             imageUrls: privateEvent.content != nil ? getImgUrlsFromContent(privateEvent.content!) : [],
             displayName: privateEvent.contact?.authorName ?? String((privateEvent.npub.prefix(11))),
-            renderedElements: renderElements(privateEvent),
+            renderedElements: renderedElements,
             parentPosts: !skipParents! ? mainEvent.parentEvents.compactMap { toVPost($0, skipParents: true) } : [],
             threadPostsCount: 1 + mainEvent.parentEvents.count,
             isRepost: privateEvent.isRepost,
-            firstQuoteId: privateEvent.firstQuoteId
+            firstQuoteId: privateEvent.firstQuoteId,
+            linkPreviewURLs: linkPreviewURLs
         )
     }
 
-    func renderElements(_ event:Event) -> [MarkdownElement] {
+    func renderElements(_ event:Event) -> ([MarkdownElement], [URL]) {
         let contentLinkRenderer = TextRenderer(self.context, event: event)
         let input = event.noteTextPrepared
         //        let input = "The quick brown fox jumps over the lazy lazy dog."
@@ -153,6 +158,7 @@ class VPostTransformer {
         let range = NSRange(location: 0, length: input.utf16.count)
         
         var result: [MarkdownElement] = []
+        var linkPreviewUrls: [URL] = []
         var lastMatchEnd = 0
         
         regex.enumerateMatches(in: input, options: [], range: range) { match, _, _ in
@@ -183,6 +189,7 @@ class VPostTransformer {
                 else if matchString.matchingStrings(regex: otherUrlsPattern).count > 0 {
                     if let url = URL(string: matchString) {
                         result.append(MarkdownElement.linkPreview(url))
+                        linkPreviewUrls.append(url)
                     }
                     else {
                         result.append(MarkdownElement.text(contentLinkRenderer.renderedText(event, text:matchString)))
@@ -221,6 +228,6 @@ class VPostTransformer {
         
         result.append(MarkdownElement.text(contentLinkRenderer.renderedText(event, text:nonMatch)))
         
-        return result
+        return (result, linkPreviewUrls)
     }
 }

@@ -131,16 +131,31 @@ struct SmoothList: UIViewControllerRepresentable {
         }
     }
     
-    final class Coordinator: NSObject, UICollectionViewDelegate, UIScrollViewDelegate { //, UICollectionViewDataSource {
+    final class Coordinator: NSObject, UICollectionViewDelegate, UIScrollViewDelegate, UICollectionViewDataSourcePrefetching { //, UICollectionViewDataSource {
         let parent: SmoothList
-//        @Binding var data: [VPost]
         var collectionViewHolder: CollectionViewHolderType?
         var scrollTimer: Timer?
 
-//        init(parent: SmoothList, data:Binding<[VPost]>) {
         init(parent: SmoothList) {
             self.parent = parent
-//            _data = data
+        }
+        
+        func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
+            for indexPath in indexPaths {
+                guard let item = parent.data[safe: indexPath.row] else { continue }
+                for url in item.linkPreviewURLs {
+                    fetchMetaTags(url: url) { result in
+                        do {
+                            let tags = try result.get()
+                            LinkPreviewCache.shared.setObject(for: url, value: tags)
+                            print("✓✓ Loaded link preview meta tags from \(url)")
+                        }
+                        catch {
+                            
+                        }
+                    }
+                }
+            }
         }
         
         func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
@@ -157,6 +172,9 @@ struct SmoothList: UIViewControllerRepresentable {
         }
 
         func processScrollViewDidScroll(_ scrollView: UIScrollView) {
+            if let indexPaths = collectionViewHolder?.collectionView.indexPathsForVisibleItems {
+                print(indexPaths)
+            }
             if scrollView.contentOffset.y > 150 {
                 print("IS AT TOP FALSE")
                 parent.onFinishedScrolling?(false) // didFinish and isAtTop=false
@@ -201,8 +219,8 @@ final class CViewHolder {
 //        collectionView.backgroundColor = .systemGroupedBackground
 //        collectionView.backgroundColor = UIColor(named: "ListBackground")
         collectionView.allowsSelection = false
-//        collectionView.dataSource = coordinator
         collectionView.delegate = coordinator
+        collectionView.prefetchDataSource = coordinator
 //        collectionView.backgroundColor = UIColor.brown
         onInitialized(collectionView)
     }
@@ -287,4 +305,3 @@ struct SmoothList_PReviews: PreviewProvider {
         .withPreviewEnvironment()
     }
 }
-
