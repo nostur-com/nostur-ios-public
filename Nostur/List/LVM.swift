@@ -409,6 +409,7 @@ class LVM: NSObject, ObservableObject {
         }
         lvmState.viewIsVisible = (UserDefaults.standard.string(forKey: "selected_subtab") ?? "Unknown") == listId
         addSubscriptions()
+        fetchFeedTimerNextTick()
     }
     
     // MARK: STEP 0: FETCH FROM RELAYS
@@ -416,10 +417,13 @@ class LVM: NSObject, ObservableObject {
         guard self.viewIsVisible else { return }
         guard !Importer.shared.isImporting else { print("⏳ Still importing, new fetch skipped."); return }
         
+        if (ot.isOnboarding && self.lvmState.vPostLeafs.count > 0) {
+            ot.didStartOnboarding = false
+        }
+        
         if (ot.isOnboarding && self.pubkey == ot.pubkey && ot.didFetchKind3 && !ot.didFillTimeline) {
-            fetchEvents(pubkeys: Set(ot.followingKeys), amount: 100)
-            ot.didFillTimeline = true
-            //            firstTimeCompleted = true
+            fetchEvents(pubkeys: Set(ot.followingKeys), amount: 150, subscriptionId: self.id)
+            fetchProfiles(pubkeys: Set(ot.followingKeys), subscriptionId: "PROFILES")
             DispatchQueue.main.async {
                 UserDefaults.standard.set(true, forKey: "firstTimeCompleted")
             }
@@ -436,7 +440,11 @@ class LVM: NSObject, ObservableObject {
                 if (!self.didCatchup) {
                     let f = TimeCompactor(ifZero: nil, style: .short, roundSmallToWhole: true)
                     let ago =  f.string(from: Double(Date.now.timeIntervalSince(Date(timeIntervalSince1970: Double(cutOffPoint)))) as NSNumber)!
-                    fetchEvents(pubkeysString: self.pubkeysPrefixString, amount: 5000, since: cutOffPoint, subscriptionId: "\(self.id)-CATCHUP-\(ago)")
+                    
+                    DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(8)) {
+                        fetchEvents(pubkeysString: self.pubkeysPrefixString, amount: 5000, since: cutOffPoint, subscriptionId: "\(self.id)-CATCHUP-\(ago)")
+                        fetchProfiles(pubkeys: self.pubkeys, subscriptionId: "Profiles")
+                    }
                     self.didCatchup = true
                 }
 //                 cutOff doesnt work well, since hits with some time ago limit (500)?

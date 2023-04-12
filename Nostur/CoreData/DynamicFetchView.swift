@@ -35,6 +35,18 @@ struct DynamicFetchView<T: NSManagedObject, Content: View>: View {
 
 // TEMP ALWAYS FUNCTIONS
 
+func fetchProfiles(pubkeys:Set<String>, subscriptionId:String? = nil) {
+    let since = NosturState.shared.lastProfileReceivedAt ?? nil
+    let sinceNTimestamp = since != nil ? NTimestamp(date: since!) : nil
+    print("checking profiles since: \(since?.description ?? "")")
+    
+    SocketPool.shared
+        .sendMessage(ClientMessage(
+            type: .REQ,
+            message: RequestMessage.getUserMetadata(pubkeys: Array(pubkeys),
+                                                    subscriptionId: subscriptionId, since: sinceNTimestamp)), subscriptionId: subscriptionId)
+}
+
 func fetchEvents(pubkeys:Set<String>, amount:Int? = 5000, since:Int64? = nil, subscriptionId:String? = nil) {
 //    print("💿💿 getFollowingEvents for \(pubkeys.count) pubkeys 💿💿")
     if (since != nil) {

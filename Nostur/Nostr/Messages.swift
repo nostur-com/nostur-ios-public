@@ -194,11 +194,11 @@ struct RequestMessage {
         let pubs = fasterShort(pubkeys)
         if since != nil {
             return """
-["REQ", "\(sub)", {"authors": \(pubs), "kinds": [0,1,5,6], "limit": \(limit), "since": \(since!.timestamp)}]
+["REQ", "\(sub)", {"authors": \(pubs), "kinds": [1,5,6], "limit": \(limit), "since": \(since!.timestamp)}]
 """
         }
         return """
-["REQ", "\(sub)", {"authors": \(pubs), "kinds": [0,1,5,6], "limit": \(limit)}]
+["REQ", "\(sub)", {"authors": \(pubs), "kinds": [1,5,6], "limit": \(limit)}]
 """
     }
     // Same as above but pubkeys already in string
@@ -206,11 +206,11 @@ struct RequestMessage {
         let sub = subscriptionId ?? ("TL-"+UUID().uuidString)
         if since != nil {
             return """
-["REQ", "\(sub)", {"authors": \(pubkeysString), "kinds": [0,1,5,6], "limit": \(limit), "since": \(since!.timestamp)}]
+["REQ", "\(sub)", {"authors": \(pubkeysString), "kinds": [1,5,6], "limit": \(limit), "since": \(since!.timestamp)}]
 """
         }
         return """
-["REQ", "\(sub)", {"authors": \(pubkeysString), "kinds": [0,1,5,6], "limit": \(limit)}]
+["REQ", "\(sub)", {"authors": \(pubkeysString), "kinds": [1,5,6], "limit": \(limit)}]
 """
     }
     
@@ -345,7 +345,14 @@ struct RequestMessage {
 """
     }
     
-    static func getUserMetadata(pubkeys:[String], limit:Int? = nil, subscriptionId:String? = nil) -> String {
+    static func getUserMetadata(pubkeys:[String], limit:Int? = nil, subscriptionId:String? = nil, since:NTimestamp? = nil) -> String {
+        
+        if let since {
+            return """
+    ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(fasterShort(pubkeys)), "kinds": [0], "since": \(since.timestamp)}]
+    """
+        }
+        
         let limit = limit ?? (pubkeys.count + 20) // add 20 in case of multiple setMetadata's for a pubkey maybe?? not sure
         return """
 ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(fasterShort(pubkeys)), "kinds": [0], "limit": \(limit)}]
