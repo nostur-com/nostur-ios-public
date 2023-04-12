@@ -175,6 +175,13 @@ class NotificationsManager: ObservableObject {
     
     func checkForEverything() {
         guard !Importer.shared.isImporting else { return }
+        guard let account = ns.account else { return }
+        guard ns.activeAccountPublicKey != "" else { return }
+        
+        let since = NosturState.shared.lastNotificationReceivedAt ?? nil
+        let sinceNTimestamp = since != nil ? NTimestamp(date: since!) : nil
+        print("checking notifications since: \(since?.description ?? "")")
+        
         SocketPool
             .shared
             .sendMessage(
@@ -183,7 +190,7 @@ class NotificationsManager: ObservableObject {
                     message:
                         RequestMessage
                         .getMentions(
-                            pubkeys: [ns.activeAccountPublicKey], subscriptionId: "Notifications")
+                            pubkeys: [ns.activeAccountPublicKey], subscriptionId: "Notifications", since: sinceNTimestamp)
                 )
                 , subscriptionId: "Notifications"
             )

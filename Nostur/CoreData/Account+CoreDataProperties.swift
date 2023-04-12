@@ -40,6 +40,8 @@ extension Account {
     @NSManaged public var reposts: Set<Event>?
     @NSManaged public var mutedRootIds: String? // Serialized
     @NSManaged public var blockedPubkeys: String? // Serialized
+    @NSManaged public var lastNotificationReceivedAt: Date?
+    @NSManaged public var lastProfileReceivedAt: Date?
     
     var followingPublicKeys:Set<String> {
         get {

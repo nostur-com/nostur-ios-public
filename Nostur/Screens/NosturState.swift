@@ -70,10 +70,17 @@ final class NosturState : ObservableObject {
     
     func setAccount(account:Account? = nil) {
         guard self.account != account else { return }
+        if let beforeAccount = self.account { // Save state for old account
+            beforeAccount.lastNotificationReceivedAt = lastNotificationReceivedAt
+            beforeAccount.lastProfileReceivedAt = lastProfileReceivedAt
+        }
         self.objectWillChange.send()
         self.account = account
         if let account {
             activeAccountPublicKey = account.publicKey
+            // load state for new account
+            lastNotificationReceivedAt = account.lastNotificationReceivedAt
+            lastProfileReceivedAt = account.lastProfileReceivedAt
             
             // Remove currectly active "Following" subscriptions from connected sockets
             SocketPool.shared.removeActiveAccountSubscriptions()
@@ -84,6 +91,8 @@ final class NosturState : ObservableObject {
         }
     }
     
+    var lastNotificationReceivedAt:Date? // stored here so we dont have to worry about different object contexts / threads
+    var lastProfileReceivedAt:Date? // stored here so we dont have to worry about different object contexts / threads
     var container:NSPersistentContainer
     var viewContext:NSManagedObjectContext
     

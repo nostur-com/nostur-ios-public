@@ -73,6 +73,14 @@ class Importer {
                 for message in forImports {
                     var event = message.event!
                     
+                    if message.subscriptionId == "Notifications" && event.pTags().contains(NosturState.shared.activeAccountPublicKey) && [1,7,9735,4].contains(event.kind.id) {
+                        NosturState.shared.lastNotificationReceivedAt = Date.now
+                    }
+                    
+                    if message.subscriptionId == "Profiles" && event.kind == .setMetadata {
+                        NosturState.shared.lastProfileReceivedAt = Date.now
+                    }
+                    
                     guard SavedEventsCache.shared.retrieveObject(at: event.id) == nil else {
                         alreadyInLRUskipped = alreadyInLRUskipped + 1
                         continue
