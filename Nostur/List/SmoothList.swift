@@ -66,35 +66,36 @@ struct SmoothList: UIViewControllerRepresentable {
     
     func makeCoordinator() -> Coordinator {
         return Coordinator(parent: self)
-//        return Coordinator(parent: self, data: $data)
     }
 
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
-        if needsRefresh, let collectionViewHolder = context.coordinator.collectionViewHolder {
-            refreshData(collectionViewHolder)
-            Task {
-                needsRefresh = false
-            }
-        }
-        
-        if needsScrollToTop, let ch = context.coordinator.collectionViewHolder {
-            // do the scroll
-            ch.collectionView.setContentOffset(CGPoint(x:0, y: autoScroll ? 0 : SMOOTHLIST_AUTOSCROLL_OFFSET), animated: true)
-            Task {
-                needsScrollToTop = false
-            }
-        }
-        
-        if needsScrollToIndex != nil, let ch = context.coordinator.collectionViewHolder {
-            if (needsScrollToIndex == 0) {
-                ch.collectionView.setContentOffset(CGPoint(x:0, y: autoScroll ? 0 : SMOOTHLIST_AUTOSCROLL_OFFSET), animated: true)
-            }
-            else {
-                ch.collectionView.scrollToItem(at: IndexPath(item: needsScrollToIndex!, section: 0), at: .top, animated: false)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            if needsRefresh, let collectionViewHolder = context.coordinator.collectionViewHolder {
+                refreshData(collectionViewHolder)
+                Task {
+                    needsRefresh = false
+                }
             }
             
-            Task {
-                needsScrollToIndex = nil
+            if needsScrollToTop, let ch = context.coordinator.collectionViewHolder {
+                // do the scroll
+                ch.collectionView.setContentOffset(CGPoint(x:0, y: autoScroll ? 0 : SMOOTHLIST_AUTOSCROLL_OFFSET), animated: true)
+                Task {
+                    needsScrollToTop = false
+                }
+            }
+            
+            if needsScrollToIndex != nil, let ch = context.coordinator.collectionViewHolder {
+                if (needsScrollToIndex == 0) {
+                    ch.collectionView.setContentOffset(CGPoint(x:0, y: autoScroll ? 0 : SMOOTHLIST_AUTOSCROLL_OFFSET), animated: true)
+                }
+                else {
+                    ch.collectionView.scrollToItem(at: IndexPath(item: needsScrollToIndex!, section: 0), at: .top, animated: false)
+                }
+                
+                Task {
+                    needsScrollToIndex = nil
+                }
             }
         }
     }
@@ -102,19 +103,17 @@ struct SmoothList: UIViewControllerRepresentable {
     private func refreshData(_ collectionViewHolder: CollectionViewHolderType) {
         var newSnapshot = NSDiffableDataSourceSnapshot<SingleSection, String>()
         newSnapshot.appendSections([SingleSection.main])
-
         newSnapshot.appendItems(data.map { $0.id }, toSection: SingleSection.main)
 
         let isInitialApply = collectionViewHolder.dataSource.snapshot().sectionIdentifiers.isEmpty
 
         collectionViewHolder.dataSource.apply(newSnapshot, animatingDifferences: !isInitialApply) {
             if (isInitialApply) { // Scroll to initial position
-                
                 DispatchQueue.main.async {
-//                    guard let self = self else { return }
-//                    print("❤️❤️ \(self.needsScrollToIndex)")
+                    //                    guard let self = self else { return }
+                    //                    print("❤️❤️ \(self.needsScrollToIndex)")
                     if (self.needsScrollToIndex != nil) && (self.needsScrollToIndex! > 4) {
-//                        print("❤️❤️ \(self.needsScrollToIndex) 1")
+                        //                        print("❤️❤️ \(self.needsScrollToIndex) 1")
                         collectionViewHolder.collectionView.scrollToItem(at: IndexPath(item: self.needsScrollToIndex!, section: 0), at: .top, animated: false)
                         
                         Task {
@@ -123,7 +122,7 @@ struct SmoothList: UIViewControllerRepresentable {
                     }
                     else {
                         if !self.autoScroll {
-//                            print("❤️❤️ no autoscroll please, offset a little")
+                            //                            print("❤️❤️ no autoscroll please, offset a little")
                             collectionViewHolder.collectionView.setContentOffset(CGPoint(x:0, y: SMOOTHLIST_AUTOSCROLL_OFFSET), animated: false)
                         }
                     }
@@ -221,9 +220,9 @@ final class CViewHolder {
     }
     
     private var PostOrThreadCellRegistration: UICollectionView.CellRegistration<UICollectionViewListCell, VPost> = {
-        .init { cell, indexPath, item in
+        .init { cell, indexPath, vPost in
             cell.contentConfiguration = UIHostingConfiguration {
-                PostOrThread(vPost: item)
+                PostOrThread(vPost: vPost)
             }
             .background(Color("ListBackground"))
             .margins(.all, 0)
@@ -250,8 +249,9 @@ final class CViewHolder {
                 guard let vPost = self.coordinator.parent.data.first(where: { $0.id == identifier }) else {
                     return self.collectionView.dequeueConfiguredReusableCell(using: MissingCellRegistration, for: indexPath, item: "🧨")
                 }
-                            
+                
                 return self.collectionView.dequeueConfiguredReusableCell(using: PostOrThreadCellRegistration, for: indexPath, item: vPost)
+                
                                 
 // TODO: Implement this
 //                if self.collectionView.isLastItem(indexPath) {
