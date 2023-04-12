@@ -128,7 +128,7 @@ struct TabContainer: View {
 
 struct TabbedDetailContainer: View {
     
-    @EnvironmentObject var tm:DetailTabsModel
+    @StateObject var tm = DetailTabsModel()
     @State var offsetX = 200.0
     
     func tabName(tab:DetailTabsModel.Tab) -> String {
