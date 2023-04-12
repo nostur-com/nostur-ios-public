@@ -11,7 +11,7 @@ import SwiftyJSON
 struct ProfileRelays: View {
     
     @Environment(\.managedObjectContext) var viewContext
-    @EnvironmentObject var sp:SocketPool
+    let sp:SocketPool = .shared
     @ObservedObject var relayEvent:Event
     
     var relayTags:[(String, String, String?)] {

@@ -11,8 +11,7 @@ import CoreData
 
 struct NoteById: View {
     
-    //    @EnvironmentObject var sp:SocketPool
-    var sp:SocketPool = .shared
+    let sp:SocketPool = .shared
     
     var id:String
     

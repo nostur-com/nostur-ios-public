@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ContactList: View {
     
-    @EnvironmentObject var sp:SocketPool
+    let sp:SocketPool = .shared
     
     @FetchRequest
     var contacts:FetchedResults<Contact>

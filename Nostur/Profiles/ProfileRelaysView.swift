@@ -8,11 +8,11 @@
 import SwiftUI
 import SwiftyJSON
 
-// NOTES ON USER PROFILE SCREEN
+// RELAYS ON USER PROFILE SCREEN
 struct ProfileRelaysView: View {
     
     @Environment(\.managedObjectContext) var viewContext
-    @EnvironmentObject var sp:SocketPool
+    let sp:SocketPool = .shared
     var clEvent:Event
     var relays:[String : JSON]?
     var cc:String

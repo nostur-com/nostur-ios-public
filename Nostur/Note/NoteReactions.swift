@@ -9,7 +9,7 @@ import SwiftUI
 
 struct NoteReactions: View {
     
-    @EnvironmentObject var sp:SocketPool
+    let sp:SocketPool = .shared
     
     let id:String
     

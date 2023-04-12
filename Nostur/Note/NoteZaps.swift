@@ -11,7 +11,7 @@ import SwiftUI
 
 struct NoteZaps: View {
 //    @Environment(\.managedObjectContext) var viewContext
-    @EnvironmentObject var sp:SocketPool
+    let sp:SocketPool = .shared
     @ObservedObject var event:Event
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)], predicate: NSPredicate(value: false))

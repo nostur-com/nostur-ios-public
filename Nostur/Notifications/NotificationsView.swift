@@ -44,7 +44,7 @@ struct NotificationsView: View {
     @ObservedObject var nm:NotificationsManager = .shared
     @ObservedObject var account:Account
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var sp:SocketPool
+    let sp:SocketPool = .shared
     
     @State var tab = "Posts"
     
