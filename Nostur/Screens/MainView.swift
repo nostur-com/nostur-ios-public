@@ -9,6 +9,7 @@ import SwiftUI
 
 struct MainView: View {
     @AppStorage("selected_tab") var selectedTab = "Main"
+    @AppStorage("selected_subtab") var selectedSubTab = "Following"
     @State var navPath = NavigationPath()
     @State var account:Account?
     
@@ -24,6 +25,9 @@ struct MainView: View {
             let account = notification.object as! Account
             guard self.account != account else { return }
             self.account = account
+            if selectedSubTab != "Following" {
+                selectedSubTab = "Following"
+            }
         }
         .onAppear {
             guard let account = NosturState.shared.account else { return }
