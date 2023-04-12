@@ -540,6 +540,12 @@ extension LVM {
             .compactMap { $0 }
             .sink { [weak self] event in
                 guard let self = self else { return }
+                
+                // Put onScreenSeen, so when when a new leaf for a long thread is inserted at top, it won't show all the parents you already seen again
+                if !self.onScreenSeen.contains(event.id) {
+                    self.onScreenSeen.insert(event.id)
+                }
+                
                 // TRACK ANCHOR
                 if let previous = self.lastAppeared {
                     self.lastAppearedAnchor = event.created_at > previous.created_at ? "BOTTOM" : "TOP"
