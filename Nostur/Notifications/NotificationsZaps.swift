@@ -90,37 +90,73 @@ struct NotificationsZaps: View, Equatable {
         let _ = Self._printChanges()
         List {
             Section {
-                ForEach(myNotesZapped) { note in
-                    HStack(alignment: .top) {
-                        VStack {
-                            Image(systemName: "bolt.fill")
-                                .foregroundColor(.green)
-                            Text(Double(note.zapTally).satsFormatted)
-                                .font(.title2)
-                            if (er.bitcoinPrice != 0.0) {
-                                let fiatPrice = String(format: "$%.02f",(Double(note.zapTally) / 100000000 * Double(er.bitcoinPrice)))
-                                
-                                Text("\(fiatPrice)")
-                                    .font(.caption)
-                                    .opacity(note.zapTally != 0 ? 0.5 : 0)
+                ForEach(zapsForMe) { zap in
+                    VStack {
+                        if let note = zap.zappedEvent {
+                            HStack(alignment: .top) {
+                                VStack {
+                                    Image(systemName: "bolt.fill")
+                                        .foregroundColor(.green)
+                                    Text(Double(note.zapTally).satsFormatted)
+                                        .font(.title2)
+                                    if (er.bitcoinPrice != 0.0) {
+                                        let fiatPrice = String(format: "$%.02f",(Double(note.zapTally) / 100000000 * Double(er.bitcoinPrice)))
+                                        
+                                        Text("\(fiatPrice)")
+                                            .font(.caption)
+                                            .opacity(note.zapTally != 0 ? 0.5 : 0)
+                                    }
+                                }
+                                .frame(width:70)
+                                VStack(alignment:.leading, spacing: 3) {
+                                    Group {
+                                        ZapsForThisNote(zaps:zapsForNote(note))
+                                        NoteMinimalContentView(vPost: note.toVPost(plainText: true)!, lineLimit: 3)
+                                    }
+                                }
                             }
+                            .padding(.vertical, 10)
+        //                    .background(Color.systemBackground)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                navigateTo(note.toVPost()!)
+                            }
+                            .id(note.id)
+                            .listRowInsets(EdgeInsets())
                         }
-                        .frame(width:70)
-                        VStack(alignment:.leading, spacing: 3) {
-                            Group {
-                                ZapsForThisNote(zaps:zapsForNote(note))
-                                NoteMinimalContentView(vPost: note.toVPost(plainText: true)!, lineLimit: 3)
+                        else {
+                            HStack(alignment: .top) {
+                                VStack {
+                                    Image(systemName: "bolt.fill")
+                                        .foregroundColor(.green)
+                                    Text(zap.naiveSats.satsFormatted)
+                                        .font(.title2)
+                                    if (er.bitcoinPrice != 0.0) {
+                                        let fiatPrice = String(format: "$%.02f",(Double(zap.naiveSats) / 100000000 * Double(er.bitcoinPrice)))
+                                        
+                                        Text("\(fiatPrice)")
+                                            .font(.caption)
+                                            .opacity(zap.naiveSats != 0 ? 0.5 : 0)
+                                    }
+                                }
+                                .frame(width:70)
+                                VStack(alignment:.leading, spacing: 3) {
+                                    PFP(pubkey: zap.zapFromRequest?.pubkey ?? "WTF", pictureUrl: zap.zapFromRequest?.contact?.picture)
+                                    Text("**\(zap.zapFromRequest?.contact?.authorName ?? "??")** zapped your profile")
+                                    Text(zap.zapFromRequest?.noteText ?? "")
+                                }
+                                .background(Color.systemBackground)
+                                .onTapGesture {
+                                    guard let pubkey = zap.zapFromRequest?.pubkey else { return }
+                                    navigateTo(ContactPath(key: pubkey))
+                                }
                             }
+                            .padding(.vertical, 10)
+        //                    .background(Color.systemBackground)
+                            .contentShape(Rectangle())
+                            .listRowInsets(EdgeInsets())
                         }
                     }
-                    .padding(.vertical, 10)
-//                    .background(Color.systemBackground)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        navigateTo(note.toVPost()!)
-                    }
-                    .id(note.id)
-                    .listRowInsets(EdgeInsets())
                 }
             }
             Section {
@@ -235,7 +271,7 @@ struct ZapsForThisNote: View {
                 }
             }
             if (deduplicated.values.count > 1) {
-                Text("**\(deduplicated.values.first(where: { $0.4 != nil })?.4 ?? "???")** and \(deduplicated.values.count - 1) others zapped to your post")
+                Text("**\(deduplicated.values.first(where: { $0.4 != nil })?.4 ?? "???")** and \(deduplicated.values.count - 1) others zapped your post")
             }
             else {
                 Text("**\(deduplicated.values.first(where: { $0.4 != nil })?.4 ?? "???")** zapped your post")
