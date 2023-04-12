@@ -106,6 +106,7 @@ struct SmoothList: UIViewControllerRepresentable {
         newSnapshot.appendItems(data.map { $0.id }, toSection: SingleSection.main)
 
         let isInitialApply = collectionViewHolder.dataSource.snapshot().sectionIdentifiers.isEmpty
+
         collectionViewHolder.dataSource.apply(newSnapshot, animatingDifferences: !isInitialApply) {
             if (isInitialApply) { // Scroll to initial position
                 
@@ -223,7 +224,6 @@ final class CViewHolder {
         .init { cell, indexPath, item in
             cell.contentConfiguration = UIHostingConfiguration {
                 PostOrThread(vPost: item)
-//                    .background(Color.orange)
             }
             .background(Color("ListBackground"))
             .margins(.all, 0)
@@ -234,14 +234,20 @@ final class CViewHolder {
         DataSourcy<SingleSection, String>(
             collectionView: collectionView,
             cellProvider: { [weak self] collectionView, indexPath, identifier -> UICollectionViewCell? in
-                guard let self else { return nil }
-                                
-                if let vPost = self.coordinator.parent.data.first(where: { $0.id == identifier }) {
-                    
-                    return self.collectionView.dequeueConfiguredReusableCell(using: PostOrThreadCellRegistration, for: indexPath, item: vPost)
-                }
-                return nil
                 
+                let placeholderCell = UICollectionViewCell()
+                            placeholderCell.contentView.backgroundColor = .red // Change this to your desired placeholder cell appearance
+                
+                guard let self = self else {
+                    return placeholderCell
+                }
+                        
+                guard let vPost = self.coordinator.parent.data.first(where: { $0.id == identifier }) else {
+                    return placeholderCell
+                }
+                            
+                return self.collectionView.dequeueConfiguredReusableCell(using: PostOrThreadCellRegistration, for: indexPath, item: vPost)
+                                
 // TODO: Implement this
 //                if self.collectionView.isLastItem(indexPath) {
 //                    self.onLoadMore()
