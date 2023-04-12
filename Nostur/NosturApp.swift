@@ -16,7 +16,9 @@ func ?!(lhs: Bool?, rhs: Bool) -> Bool {
 
 @main
 struct NosturApp: App {
+    @Environment(\.scenePhase) private var scenePhase
     @AppStorage("firstTimeCompleted") var firstTimeCompleted = false
+    @AppStorage("did_accept_terms") var didAcceptTerms = false
     @StateObject private var ns:NosturState = .shared
     @StateObject private var tm:DetailTabsModel = .shared
     @StateObject private var nm:NotificationsManager = .shared
@@ -77,6 +79,31 @@ struct NosturApp: App {
             .onAppear  { startNosturing(); self.isViewDisplayed = true }
             .onDisappear { self.isViewDisplayed = false }
         }
+        .onChange(of: scenePhase) { newScenePhase in
+                    switch newScenePhase {
+                    case .active:
+                            SocketPool.shared.connectAll()
+                    case .background:
+                            saveState()
+                            
+                    default:
+                        break
+                    }
+                }
+    }
+    
+    func saveState() {
+        let ns = NosturState.shared
+        if let account = ns.account {
+            if ns.lastNotificationReceivedAt != account.lastNotificationReceivedAt {
+                account.lastNotificationReceivedAt = ns.lastNotificationReceivedAt
+            }
+            if ns.lastProfileReceivedAt != account.lastProfileReceivedAt {
+                account.lastProfileReceivedAt = ns.lastProfileReceivedAt
+            }
+        }
+        DataProvider.shared().save()
+        print("State saved")
     }
 
     func startNosturing() {
