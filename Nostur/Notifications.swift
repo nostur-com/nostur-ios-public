@@ -191,4 +191,8 @@ extension Notification.Name {
     static var onBoardingIsShownChanged: Notification.Name {
         return Notification.Name("onBoardingIsShownChanged")
     }
+    
+    static var mutedWordsChanged: Notification.Name {
+        return Notification.Name("mutedWordsChanged")
+    }
 }

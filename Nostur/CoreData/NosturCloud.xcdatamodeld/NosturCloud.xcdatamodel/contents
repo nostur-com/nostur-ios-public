@@ -110,6 +110,10 @@
         <attribute name="unreadCount" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="updatedAt" attributeType="Date" defaultDateTimeInterval="-978332400" usesScalarValueType="NO"/>
     </entity>
+    <entity name="MutedWords" representedClassName="MutedWords" syncable="YES">
+        <attribute name="enabled" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+        <attribute name="words" attributeType="String" defaultValueString=""/>
+    </entity>
     <entity name="NosturList" representedClassName=".NosturList" syncable="YES">
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="name" optional="YES" attributeType="String"/>

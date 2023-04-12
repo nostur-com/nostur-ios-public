@@ -22,6 +22,11 @@ final class NosturState : ObservableObject {
         }
     }
     
+    var mutedWords:[String] = [] {
+        didSet {
+            sendNotification(.mutedWordsChanged, mutedWords)
+        }
+    }
 
     var followingPublicKeys:Set<String> {
         get {
@@ -85,11 +90,20 @@ final class NosturState : ObservableObject {
     init() {
         self.container = DataProvider.shared().container
         self.viewContext = self.container.viewContext
+        
         if (activeAccountPublicKey != "") {
             if let account = try? Account.fetchAccount(publicKey: activeAccountPublicKey, context: viewContext) {
                 self.setAccount(account: account)
             }
         }
+        initMutedWords()
+    }
+    
+    func initMutedWords() {
+        let fr = MutedWords.fetchRequest()
+        fr.predicate = NSPredicate(format: "enabled == true")
+        mutedWords = try! viewContext.fetch(fr)
+            .map { $0.words }.compactMap { $0 }.filter { $0 != "" }
     }
     
     func loadLikesAndReposts() {

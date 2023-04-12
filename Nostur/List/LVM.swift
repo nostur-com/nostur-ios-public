@@ -455,6 +455,13 @@ extension LVM {
                 self.lvmState.vPostLeafs = self.lvmState.vPostLeafs.filter(notMuted)
             }
             .store(in: &subscriptions)
+        
+        receiveNotification(.mutedWordsChanged)
+            .sink { notification in
+                let words = notification.object as! [String]
+                self.lvmState.vPostLeafs = self.lvmState.vPostLeafs.filter { notMutedWords(in: $0.event.noteText, mutedWords: words) }
+            }
+            .store(in: &subscriptions)
     }
     
     func processNewEventsInBg() {
@@ -712,11 +719,19 @@ extension LVM: NSFetchedResultsControllerDelegate {
                 try self.frc?.performFetch()
                 guard let posts = self.frc?.fetchedObjects else { return }
                 // self.contentChangedSubject.send(posts) // Disabled, no debounce/throttle on first fetch
-                self.setUnorderedEvents(events: posts)
+                self.setUnorderedEvents(events: filterMutedWords(posts))
             } catch {
                 print("🔴🔴🔴 failed to fetch items")
             }
         }
+    }
+    
+    func filterMutedWords(_ events:[Event]) -> [Event] {
+        guard NosturState.shared.mutedWords.count > 0 else { return events }
+        return events
+            .filter {
+                notMutedWords(in: $0.noteText, mutedWords: NosturState.shared.mutedWords)
+            }
     }
     
     // MARK: FROM DB TO SCREEN STEP 2: FIRST FILTER PASS, GETTING PARENTS AND LIMIT, NOT ON SCREEN YET
@@ -788,7 +803,7 @@ extension LVM: NSFetchedResultsControllerDelegate {
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
         guard let posts = controller.fetchedObjects as? [Event] else { return }
 //        print("🟣🟣🟣🟣🟣 controllerDidChangeContent \(posts.count)")
-        self.contentChangedSubject.send(posts)
+        self.contentChangedSubject.send(filterMutedWords(posts))
     }
     
     func updatePostFeed() {
@@ -826,6 +841,10 @@ extension LVM: NSFetchedResultsControllerDelegate {
 //        }
 //        return event.replyToId == nil
     }
+}
+
+func notMutedWords(in text: String, mutedWords: [String]) -> Bool {
+    return mutedWords.first(where: { text.localizedCaseInsensitiveContains($0) }) == nil
 }
 
 func notMuted(_ vPost:VPost) -> Bool {

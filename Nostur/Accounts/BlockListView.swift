@@ -21,16 +21,22 @@ struct BlockListView: View {
                 TabButton(action: {
                         tab = "Muted"
                 }, title: "Muted conversations", selected: tab == "Muted")
+                TabButton(action: {
+                        tab = "Muted words"
+                }, title: "Muted words", selected: tab == "Muted words")
             }
             switch tab {
                 case "Blocked":
                     BlockedAccounts()
+                    Text("Swipe to unblock/unmute")
                 case "Muted":
                     MutedConversations()
+                    Text("Swipe to unblock/unmute")
+                case "Muted words":
+                    MutedWordsView()
                 default:
                     BlockedAccounts()
             }
-            Text("Swipe to unblock/unmute")
             Spacer()
         }
         .navigationTitle(tab)
