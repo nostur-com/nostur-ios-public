@@ -244,6 +244,8 @@ final class CViewHolder {
             }
             .background(Color("ListBackground"))
             .margins(.all, 0)
+//            cell.layer.shouldRasterize = true
+//            cell.layer.rasterizationScale = UIScreen.main.scale
         }
     }()
     

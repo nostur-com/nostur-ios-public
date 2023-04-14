@@ -939,7 +939,7 @@ extension Event {
         
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        //        fr.fetchLimit = 500 //TODO: need this even?
+//                fr.fetchLimit = 500 //TODO: need this even?
         fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN {1,6}", newCutOffPoint,  pubkeys)
         return fr
     }

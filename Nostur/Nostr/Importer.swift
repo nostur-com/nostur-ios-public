@@ -27,7 +27,7 @@ class Importer {
         }
     }
     
-    static var shared = Importer()
+    static let shared = Importer()
     
     public func importEvents() async {
         let parsedBucket = MessageParser.shared.parsedBucket

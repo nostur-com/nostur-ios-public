@@ -46,12 +46,6 @@ struct PostOrThread: View {
                 }
                 .id(vPost.id)
         }
-        .boxShadow()
-        .padding(5)
-        .background(Color("ListBackground"))
-//        .onAppear {
-//            print("onAPPEAR \(vPost.id)")
-//        }
     }
 }
 

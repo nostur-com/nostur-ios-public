@@ -9,7 +9,7 @@ import Foundation
 
 class MessageParser {
     
-    static var shared = MessageParser()
+    static let shared = MessageParser()
 
     var sp = SocketPool.shared
     var parsedBucket = ActorQueue<RelayMessage>()
