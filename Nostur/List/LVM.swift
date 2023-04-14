@@ -297,7 +297,7 @@ class LVM: NSObject, ObservableObject {
             // structure is: parentPosts: [root, reply, reply, reply, replyTo] post: ThisPost
             if let replyTo = post.parentPosts.last {
                 // always keep at least 1 parent (replyTo)
-                truncatedPost.parentPosts = [replyTo] + post.parentPosts.dropLast(1).filter { !renderedIds.contains($0.id) && !onScreenSeen.contains($0.id) }
+                truncatedPost.parentPosts = post.parentPosts.dropLast(1).filter { !renderedIds.contains($0.id) && !onScreenSeen.contains($0.id) } + [replyTo]
             }
             truncatedPost.threadPostsCount = 1 + truncatedPost.parentPosts.count
             truncatedPost.isTruncated = post.parentPosts.count > truncatedPost.parentPosts.count
