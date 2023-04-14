@@ -856,7 +856,7 @@ extension LVM: NSFetchedResultsControllerDelegate {
                     .filter { $0.created_at > lastCreatedAt } // skip all older than first on screen (check LEAFS only)
                     .filter(onlyRootOrReplyingToFollower)
 //                    .sorted(by: { $0.created_at < $1.created_at } )
-                    .suffix(LVM_MAX_VISIBLE * 2)
+                    .prefix(LVM_MAX_VISIBLE * 2)
                     .map {
                         $0.parentEvents = Event.getParentEvents($0)
                         return $0
