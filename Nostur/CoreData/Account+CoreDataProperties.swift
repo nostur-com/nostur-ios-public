@@ -33,11 +33,6 @@ extension Account {
     }
     @NSManaged public var privateNotes: Set<PrivateNote>?
     @NSManaged public var bookmarks: Set<Event>?
-//    @NSManaged public var blockedContacts: Set<Contact>?
-//    @NSManaged public var mutedConversations: Set<Event>?
-    
-    @NSManaged public var likes: Set<Event>?
-    @NSManaged public var reposts: Set<Event>?
     @NSManaged public var mutedRootIds: String? // Serialized
     @NSManaged public var blockedPubkeys: String? // Serialized
     @NSManaged public var lastNotificationReceivedAt: Date?
@@ -125,60 +120,6 @@ extension Account {
             return Set(privateNotes!)
         }
     }
-}
-
-//// MARK: Generated accessors for muted conversations
-//extension Account {
-//
-//    @objc(addMutedConversationsObject:)
-//    @NSManaged public func addToMutedConversations(_ value: Event)
-//
-//    @objc(removeMutedConversationsObject:)
-//    @NSManaged public func removeFromMutedConversations(_ value: Event)
-//
-//    @objc(addMutedConversations:)
-//    @NSManaged public func addToMutedConversations(_ values: NSSet)
-//
-//    @objc(removeMutedConversations:)
-//    @NSManaged public func removeFromMutedConversations(_ values: NSSet)
-//
-//}
-
-// MARK: Generated accessors for likes
-extension Account {
-
-    @objc(addLikesObject:)
-    @NSManaged public func addToLikes(_ value: Event)
-
-    @objc(removeLikeObject:)
-    @NSManaged public func removeFromLikes(_ value: Event)
-
-    @objc(addLikes:)
-    @NSManaged public func addToLikes(_ values: NSSet)
-
-    @objc(removeLikes:)
-    @NSManaged public func removeFromLikes(_ values: NSSet)
-
-//    var mutedConversations_: Set<Event> {
-//        return mutedConversations ?? Set<Event>()
-//    }
-}
-
-// MARK: Generated accessors for reposts
-extension Account {
-
-    @objc(addRepostsObject:)
-    @NSManaged public func addToReposts(_ value: Event)
-
-    @objc(removeRepostObject:)
-    @NSManaged public func removeFromReposts(_ value: Event)
-
-    @objc(addReposts:)
-    @NSManaged public func addToReposts(_ values: NSSet)
-
-    @objc(removeReposts:)
-    @NSManaged public func removeFromReposts(_ values: NSSet)
-
 }
 
 extension Account : Identifiable {

@@ -44,6 +44,8 @@ struct VPost: Identifiable, Equatable, Hashable {
     var isRepost = false
     var firstQuoteId:String?
     var linkPreviewURLs:[URL]
+    var liked = false
+    var reposted = false
 //    var subscriptions = Set<AnyCancellable>()
     
 //    init(id: String, objectID: NSManagedObjectID, event: Event, created_at: Int64, npub: String, note1: String, plainText: String, renderedText: AttributedString, replyingToUsernamesMarkDown: String? = nil, imageUrls: [URL], displayName: String, renderedElements: [MarkdownElement], parentPosts: [VPost], threadPostsCount: Int, isTruncated: Bool = false, isRepost: Bool = false, firstQuoteId: String? = nil) {
@@ -113,6 +115,8 @@ class VPostTransformer {
                 isRepost: mainEvent.isRepost,
                 firstQuoteId: mainEvent.firstQuoteId,
                 linkPreviewURLs: linkPreviewURLs
+                liked: likedByCurrentAccount(mainEvent),
+                reposted: repostedByCurrentAccount(mainEvent)
             )
         }
         
@@ -137,7 +141,39 @@ class VPostTransformer {
             isRepost: privateEvent.isRepost,
             firstQuoteId: privateEvent.firstQuoteId,
             linkPreviewURLs: linkPreviewURLs
+            liked: likedByCurrentAccount(privateEvent),
+            reposted: repostedByCurrentAccount(privateEvent)
         )
+    }
+    
+    func likedByCurrentAccount(_ event:Event) -> Bool {
+        guard let ctx = event.managedObjectContext else { return false }
+        let fr = Event.fetchRequest()
+        fr.predicate = NSPredicate(format: "reactionToId == %@ AND pubkey == %@ AND kind == 7",
+                                   event.id, NosturState.shared.activeAccountPublicKey)
+        fr.fetchLimit = 1
+        fr.resultType = .countResultType
+        
+        //TODO: should check for "+","👍","🤙","❤️","🫂","🤗","😘","😍","💯","🤩","⚡️","🔥","💥","🚀"
+        
+        return ctx.performAndWait {
+            let count = (try? ctx.count(for: fr)) ?? 0
+            return count > 0
+        }
+    }
+    
+    func repostedByCurrentAccount(_ event:Event) -> Bool {
+        guard let ctx = event.managedObjectContext else { return false }
+        let fr = Event.fetchRequest()
+        fr.predicate = NSPredicate(format: "repostForId == %@ AND pubkey == %@",
+                                   event.id, NosturState.shared.activeAccountPublicKey)
+        fr.fetchLimit = 1
+        fr.resultType = .countResultType
+        
+        return ctx.performAndWait {
+            let count = (try? ctx.count(for: fr)) ?? 0
+            return count > 0
+        }
     }
 
     func renderElements(_ event:Event) -> ([MarkdownElement], [URL]) {

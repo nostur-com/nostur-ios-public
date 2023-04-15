@@ -84,9 +84,6 @@ final class NosturState : ObservableObject {
             
             // Remove currectly active "Following" subscriptions from connected sockets
             SocketPool.shared.removeActiveAccountSubscriptions()
-            Task(priority: .userInitiated) {
-                self.loadLikesAndReposts()
-            }
             sendNotification(.activeAccountChanged, account)
         }
     }
@@ -113,56 +110,6 @@ final class NosturState : ObservableObject {
         fr.predicate = NSPredicate(format: "enabled == true")
         mutedWords = try! viewContext.fetch(fr)
             .map { $0.words }.compactMap { $0 }.filter { $0 != "" }
-    }
-    
-    func loadLikesAndReposts() {
-        guard self.account != nil else {
-            print("🔴🔴 no account 🔴🔴")
-            return
-        }
-        
-        let backgroundContext = DataProvider.shared().newTaskContext()
-        var zerodResultCount:Int?
-        print("🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀 Restoring likes/reposts state")
-        backgroundContext.perform {
-            let batchUpdate = NSBatchUpdateRequest(entityName: "Event")
-            batchUpdate.propertiesToUpdate = ["liked": 0, "reposted": 0]
-            batchUpdate.resultType = .updatedObjectsCountResultType
-
-            do {
-                let zerodResult = try backgroundContext.execute(batchUpdate) as? NSBatchUpdateResult
-                zerodResultCount = zerodResult?.result as? Int
-            } catch {
-                print("🔴🔴 Failed to zero .liked/.reposted")
-            }
-        }
-
-        backgroundContext.performAndWait {
-            let account = backgroundContext.object(with: self.account!.objectID) as! Account
-            guard account.likes != nil else {
-                print("🔴🔴 no account or account.likes 🔴🔴")
-                return
-            }
-
-            for event in account.likes! {
-                event.liked = true
-            }
-
-            print("🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀 Zerod \(zerodResultCount ?? 0) events. -- Likes state restored \(account.likes!.count) events, ")
-        }
-        backgroundContext.performAndWait {
-            let account = backgroundContext.object(with: self.account!.objectID) as! Account
-            guard account.reposts != nil else {
-                print("🔴🔴 no account or account.reposts 🔴🔴")
-                return
-            }
-
-            for event in account.reposts! {
-                event.reposted = true
-            }
-
-            print("🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀 Reposts state restored for \(account.reposts!.count) events. NEED TO SAVE HERE OR NO?")
-        }
     }
     
 //    func loadFollowing() {
@@ -338,9 +285,7 @@ final class NosturState : ObservableObject {
         let impactMed = UIImpactFeedbackGenerator(style: .medium)
         impactMed.impactOccurred()
         print("💖💖💖💖💖💖💖💖💖💖💖💖💖💖")
-        event.liked = true
         event.likesCount += 1
-        account.addToLikes(event)
         
 //      1. create kind 7 event based on kind 1 event:
         let likeEvent = EventMessageBuilder.makeReactionEvent(reactingTo: event)
@@ -353,7 +298,6 @@ final class NosturState : ObservableObject {
     }
     
     func unlikePost(_ event:Event) {
-        event.liked = false
         event.likesCount -= 1
         do {
             try viewContext.save()

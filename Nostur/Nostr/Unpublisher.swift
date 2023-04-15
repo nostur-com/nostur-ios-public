@@ -65,7 +65,6 @@ class Unpublisher: ObservableObject {
     }
     
     func cancel(_ cancellationId:UUID) -> Bool {
-        print("unpublishing")
         let beforeCount = queue.count
         queue.removeAll(where: { $0.cancellationId == cancellationId })
         return beforeCount != queue.count

@@ -166,7 +166,7 @@ struct PostAndParent: View {
                     }
                     
                     if (isParent && settings.rowFooterEnabled) {
-                        FooterFragmentView(event: event)
+                        FooterFragmentView(vPost: vPost)
                             .padding(.leading, isParent ? INDENT : 0)
                             .padding(.vertical, 5)
                             .padding(.trailing, 5)
@@ -174,7 +174,7 @@ struct PostAndParent: View {
                     else if (!isParent) {
                         DetailFooterFragment(event: event)
                             .padding(.leading, isParent ? INDENT : 0)
-                        FooterFragmentView(event: event)
+                        FooterFragmentView(vPost: vPost)
                             .padding(.vertical, 5)
                         Divider()
                     }

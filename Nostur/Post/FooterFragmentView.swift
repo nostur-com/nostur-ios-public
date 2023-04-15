@@ -11,10 +11,18 @@ struct FooterFragmentView: View {
     @EnvironmentObject var ns:NosturState
     let up:Unpublisher = .shared
     
+    let vPost:VPost
     @ObservedObject var event:Event
     @State var unpublishLikeId:UUID? = nil
+    @State var liked:Bool
+    @State var reposted:Bool
     
-
+    init(vPost: VPost) {
+        self.vPost = vPost
+        self.event = vPost.event
+        _liked = State(initialValue: vPost.liked)
+        _reposted = State(initialValue: vPost.reposted)
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
@@ -30,7 +38,7 @@ struct FooterFragmentView: View {
                 Spacer()
                 
                 // REPOST
-                if (event.reposted) {
+                if (vPost.reposted || reposted) {
                     HStack {
                         Image(systemName: "arrow.2.squarepath")
                         Text(event.mentionsCount.description).opacity(event.mentionsCount == 0 ? 0 : 1)
@@ -54,7 +62,7 @@ struct FooterFragmentView: View {
                 Spacer()
                 
                 // LIKE
-                if (event.liked) {
+                if (vPost.liked || liked) {
                     HStack {
                         Image(systemName: "heart.fill")
                         Text(event.likesCount.description).opacity(event.likesCount == 0 ? 0 : 1)
@@ -66,6 +74,8 @@ struct FooterFragmentView: View {
                     .onTapGesture {
                         if unpublishLikeId != nil && up.cancel(unpublishLikeId!) {
                             ns.unlikePost(event)
+                            unpublishLikeId = nil
+                            liked = false
                         }
                     }
                 }
@@ -84,7 +94,8 @@ struct FooterFragmentView: View {
                         }
                         if let signedEvent = ns.likePost(event) {
                             unpublishLikeId = up.publish(signedEvent)
-                            sendNotification(.viewNeedsUpdate)
+                            liked = true
+//                            sendNotification(.viewNeedsUpdate)
                         }
                     }
                 }
@@ -137,9 +148,9 @@ struct FooterFragmentView: View {
 struct FooterFragmentView_Previews: PreviewProvider {
     static var previews: some View {
         
-        let event7 = PreviewFetcher.fetchEvent("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
+        let event7 = PreviewFetcher.fetchVPost("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
         if (event7 != nil) {
-            FooterFragmentView(event: event7!)
+            FooterFragmentView(vPost: event7!)
                 .withPreviewEnvironment()
         }
     }

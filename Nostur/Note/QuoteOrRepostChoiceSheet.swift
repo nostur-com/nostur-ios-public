@@ -22,9 +22,8 @@ struct QuoteOrRepostChoiceSheet: View {
                 guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
                 if (ns.account != nil) {
                     print("🔄🔄🔄🔄🔄🔄🔄🔄")
-                    originalEvent.reposted = true
 //                    originalEvent.mentionsCount += 1
-                    ns.account?.addToReposts(originalEvent)
+
                     
                     // 1. create repost
                     let repost = EventMessageBuilder.makeRepost(original: originalEvent)

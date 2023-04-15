@@ -201,7 +201,7 @@ struct NewQuoteRepost: View {
         if let signedEvent = try? ns.signEvent(nEvent) {
 //            let _ = up.publish(signedEvent)
 //            print(signedEvent.wrappedEventJson())
-            quotingEvent.reposted = true
+//            quotingEvent.reposted = true
             // .needsviewupdate?
             up.publishNow(signedEvent)
             sendNotification(.viewNeedsUpdate)

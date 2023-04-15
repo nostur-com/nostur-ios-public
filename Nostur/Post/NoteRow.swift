@@ -54,8 +54,16 @@ struct NoteRow: View {
                         }
                     }
                     else {
-                        if let firstQuoteId = event.firstQuoteId {
-                            Kind1ById(id: firstQuoteId, hideFooter: false)
+                        if vPost.event.content == "#[0]" {
+                            if let firstQuoteId = event.firstQuoteId {
+                                Kind1ById(id: firstQuoteId, hideFooter: false)
+                            }
+                            else {
+                                Kind1(vPost: vPost, hideFooter: true)
+                            }
+                        }
+                        else {
+                            Kind1(vPost: vPost, hideFooter: true)
                         }
                     }
                 }
@@ -144,8 +152,8 @@ struct NoteRow: View {
                     }
                     ContentRenderer(vPost: vPost)
                     if (!hideFooter && settings.rowFooterEnabled) {
-                        FooterFragmentView(event: event)
 //                            .frame(height: 30)
+                        FooterFragmentView(vPost: vPost)
                             .padding(.top, 10)
                     }
                 }

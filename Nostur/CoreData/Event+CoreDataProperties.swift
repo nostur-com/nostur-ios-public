@@ -33,9 +33,8 @@ extension Event {
     @NSManaged public var replyToRootId: String?
     @NSManaged public var replyToId: String?
     @NSManaged public var firstQuoteId: String?
-    
-    @NSManaged public var liked: Bool // Cache
-    @NSManaged public var reposted: Bool // Cache
+    @NSManaged public var repostForId: String? // for tracking if we resposted or not (footer icon)
+
     @NSManaged public var isRepost: Bool // Cache
     
     // Counters (cached)
@@ -663,7 +662,6 @@ extension Event {
             zapRequest.sig = event.signature
             zapRequest.pubkey = event.publicKey
             zapRequest.likesCount = 0
-            zapRequest.liked = false
             
             
             // set relation to Contact
@@ -711,7 +709,6 @@ extension Event {
         savedEvent.sig = event.signature
         savedEvent.pubkey = event.publicKey
         savedEvent.likesCount = 0
-        savedEvent.liked = false
         savedEvent.isRepost = event.kind == .repost
         savedEvent.contact = Contact.fetchByPubkey(event.publicKey, context: context)
         savedEvent.tagsSerialized = TagSerializer.shared.encode(tags: event.tags)
@@ -824,7 +821,13 @@ extension Event {
             
             if (event.content == "#[0]" && event.tags.count > 0 && event.tags[0].type == "e") {
                 savedEvent.isRepost = true
+                savedEvent.repostForId = event.tags[0].id // repost
             }
+            
+//            if (event.content.suffix(4) == "#[0]" && event.tags.count > 0 && event.tags[0].type == "e") {
+//                savedEvent.isRepost = true
+//                savedEvent.repostForId = event.tags[0].id // quote repost
+//            }
             
             // NEw: Save all p's in .contacts
             // Maybe slow??

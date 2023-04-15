@@ -67,7 +67,6 @@ func createPreviewEvent(_ event:NEvent) -> Event {
 //    previewEvent.sig = event.signature
     previewEvent.pubkey = event.publicKey
     previewEvent.likesCount = 0
-    previewEvent.liked = false
     previewEvent.isRepost = event.kind == .repost
     previewEvent.contact = Contact.fetchByPubkey(event.publicKey, context: context)
     previewEvent.tagsSerialized = TagSerializer.shared.encode(tags: event.tags)
