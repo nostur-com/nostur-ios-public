@@ -33,7 +33,10 @@ struct VPost: Identifiable, Equatable, Hashable {
     var replyingToUsernamesMarkDown:String? // See ReplyingToFragment
     var imageUrls:[URL] // See ImageViewer
     var displayName:String
-    var renderedElements:[MarkdownElement]
+    
+    var renderedElements:[MarkdownElement] // NoteRow.Kind1
+    var renderedElementsDetail:[MarkdownElement] // PostDetail.Kind1
+    
     var parentPosts:[VPost]
     
     // This one event + parents are shown as a single Thread, coming from a single vPost
@@ -97,6 +100,35 @@ class VPostTransformer {
         if mainEvent.managedObjectContext == self.context {
             let textRenderer = TextRenderer(self.context, event: mainEvent)
             let (renderedElements, linkPreviewURLs) = renderElements(mainEvent)
+            
+            let firstQuote = renderedElements.first(where: { element in
+                    if case .note1 = element {
+                        return true
+                    }
+                    return false
+            })
+            
+            var renderedForRow:[MarkdownElement] {
+                var gotVideo = false
+                return renderedElements
+                    .filter { element in
+                        if case .video = element {
+                            if (!gotVideo) {
+                                gotVideo = true
+                                return true
+                            }
+                            return false
+                        }
+                        if case .note1 = element {
+                            return element == firstQuote
+                        }
+                        else {
+                            return true
+                        }
+                    }
+            }
+
+            
             return VPost(
                 id: mainEvent.id,
                 objectID: mainEvent.objectID,
@@ -109,12 +141,13 @@ class VPostTransformer {
                 replyingToUsernamesMarkDown: textRenderer.replyingToUsernamesMarkDownString(mainEvent),
                 imageUrls: mainEvent.content != nil ? getImgUrlsFromContent(mainEvent.content!) : [],
                 displayName: mainEvent.contact?.authorName ?? String((mainEvent.npub.prefix(11))),
-                renderedElements: renderedElements,
+                renderedElements: renderedForRow,
+                renderedElementsDetail: renderedElements,
                 parentPosts: !skipParents! ? mainEvent.parentEvents.compactMap { toVPost($0, skipParents: true) } : [],
                 threadPostsCount: 1 + mainEvent.parentEvents.count,
                 isRepost: mainEvent.isRepost,
                 firstQuoteId: mainEvent.firstQuoteId,
-                linkPreviewURLs: linkPreviewURLs
+                linkPreviewURLs: linkPreviewURLs,
                 liked: likedByCurrentAccount(mainEvent),
                 reposted: repostedByCurrentAccount(mainEvent)
             )
@@ -123,6 +156,34 @@ class VPostTransformer {
         guard let privateEvent = try? context.existingObject(with: mainEvent.objectID) as? Event else { return nil }
         let textRenderer = TextRenderer(self.context, event: privateEvent)
         let (renderedElements, linkPreviewURLs) = renderElements(privateEvent)
+        
+        let firstQuote = renderedElements.first(where: { element in
+                if case .note1 = element {
+                    return true
+                }
+                return false
+        })
+        
+        var renderedForRow:[MarkdownElement] {
+            var gotVideo = false
+            return renderedElements
+                .filter { element in
+                    if case .video = element {
+                        if (!gotVideo) {
+                            gotVideo = true
+                            return true
+                        }
+                        return false
+                    }
+                    if case .note1 = element {
+                        return element == firstQuote
+                    }
+                    else {
+                        return true
+                    }
+                }
+        }
+        
         return VPost(
             id: privateEvent.id,
             objectID: privateEvent.objectID,
@@ -135,12 +196,13 @@ class VPostTransformer {
             replyingToUsernamesMarkDown: textRenderer.replyingToUsernamesMarkDownString(privateEvent),
             imageUrls: privateEvent.content != nil ? getImgUrlsFromContent(privateEvent.content!) : [],
             displayName: privateEvent.contact?.authorName ?? String((privateEvent.npub.prefix(11))),
-            renderedElements: renderedElements,
+            renderedElements: renderedForRow,
+            renderedElementsDetail: renderedElements,
             parentPosts: !skipParents! ? mainEvent.parentEvents.compactMap { toVPost($0, skipParents: true) } : [],
             threadPostsCount: 1 + mainEvent.parentEvents.count,
             isRepost: privateEvent.isRepost,
             firstQuoteId: privateEvent.firstQuoteId,
-            linkPreviewURLs: linkPreviewURLs
+            linkPreviewURLs: linkPreviewURLs,
             liked: likedByCurrentAccount(privateEvent),
             reposted: repostedByCurrentAccount(privateEvent)
         )
@@ -181,7 +243,7 @@ class VPostTransformer {
         let input = event.noteTextPrepared
         //        let input = "The quick brown fox jumps over the lazy lazy dog."
         let imageUrlPattern = ###"(?i)https?:\/\/\S+?\.(?:png|jpe?g|gif|webp|bmp)(\?\S+){0,1}\b"###
-        let videoUrlPattern = ###"(?i)http(s?):\/\/\S+\.(mp4|mov)"###
+        let videoUrlPattern = ###"(?i)https?:\/\/\S+?\.(?:mp4|mov)(\?\S+){0,1}\b"###
 //        let hashtagPattern = ###"\#\S+"###
         let lightningInvoicePattern = ###"lnbc\S+"###
         let notePattern = ###"nostr:note1[023456789acdefghjklmnpqrstuvwxyz]{58}"###
@@ -266,4 +328,18 @@ class VPostTransformer {
         
         return (result, linkPreviewUrls)
     }
+}
+
+
+enum MarkdownElement: Hashable {
+//    case rendered(String)
+//    case plain(String)
+    case text(AttributedString)
+    case note1(String)
+    case noteId(String)
+    case lnbc(String)
+    case link(String, URL)
+    case image(URL)
+    case video(URL)
+    case linkPreview(URL)
 }

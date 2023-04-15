@@ -26,56 +26,22 @@ struct ContentRenderer: View { // VIEW things
         self.isDetail = isDetail
         self.vPost = vPost
         self.event = vPost.event
-        ImageDecoderRegistry.shared.register(ImageDecoders.Video.init)
-        _renderedElements = State(initialValue: vPost.renderedElements)
-    }
-    
-    var firstQuote:MarkdownElement? {
-        renderedElements.first(where: { element in
-            if case .note1 = element {
-                return true
-            }
-            return false
-        })
-    }
-    
-    // If not detail we filter some items to keep short for many rows
-    var rendered:[MarkdownElement] {
-        if isDetail {
-            return renderedElements
-        }
-        var gotVideo = false
-        return renderedElements
-            .filter { element in
-                if case .video = element {
-                    if (!gotVideo) {
-                        gotVideo = true
-                        return true
-                    }
-                    return false
-                }
-                if case .note1 = element {
-                    return element == firstQuote
-                }
-                else {
-                    return true
-                }
-            }
+        _renderedElements = State(initialValue: isDetail ? vPost.renderedElementsDetail : vPost.renderedElements )
     }
     
     @State var f:FullScreenItem?
     
     var body: some View {
         VStack(alignment:.leading, spacing:0) {
-            ForEach(rendered.indices, id:\.self) { index in
-                switch rendered[index] {
-                    case .plain(let text):
-                        Text(text)
-                            .textSelection(.enabled)
-                            .multilineTextAlignment(.leading)
-                            .accentColor(Color("AccentColor"))
-                            .tint(Color("AccentColor"))
-                            .lineSpacing(3)
+            ForEach(renderedElements.indices, id:\.self) { index in
+                switch renderedElements[index] {
+//                    case .plain(let text):
+//                        Text(text)
+//                            .textSelection(.enabled)
+//                            .multilineTextAlignment(.leading)
+//                            .accentColor(Color("AccentColor"))
+//                            .tint(Color("AccentColor"))
+//                            .lineSpacing(3)
                     case .note1(let noteId):
                         QuoteById(id: hex(noteId))
                             .padding(.vertical, 5)
@@ -85,6 +51,10 @@ struct ContentRenderer: View { // VIEW things
                             .padding(.vertical, 5)
 //                            .frame(maxWidth: .infinity, maxHeight:400, alignment: .leading)
                     case .text(let attributedString):
+                        // BROKEN SHIT
+//                            Text(string)
+//                            .fixedSize(horizontal: false, vertical: true)
+//                            .overlay(MarkdownText(string))
                         Text(attributedString)
                             .textSelection(.enabled)
                             .multilineTextAlignment(TextAlignment.leading)
@@ -138,8 +108,8 @@ struct ContentRenderer: View { // VIEW things
                         .background(Color("LightGray"))
                     case .image(let url):
                         SingleMediaViewer(url: url)
-                            .frame(height: 250)
-                            .padding(5)
+//                            .frame(height: 250)
+                            .padding(.vertical, 5)
                     case .linkPreview(let url):
                         LinkPreviewView(url: url)
 //                            .frame(height: 250)
@@ -154,7 +124,35 @@ struct ContentRenderer: View { // VIEW things
             event.objectWillChange
                 .sink {
                     let transformer = VPostTransformer.shared
-                    renderedElements = transformer.renderElements(event).0
+                    
+                    var renderedElements = transformer.renderElements(event).0
+                    let firstQuote = renderedElements.first(where: { element in
+                            if case .note1 = element {
+                                return true
+                            }
+                            return false
+                    })
+                    var renderedForRow:[MarkdownElement] {
+                        var gotVideo = false
+                        return renderedElements
+                            .filter { element in
+                                if case .video = element {
+                                    if (!gotVideo) {
+                                        gotVideo = true
+                                        return true
+                                    }
+                                    return false
+                                }
+                                if case .note1 = element {
+                                    return element == firstQuote
+                                }
+                                else {
+                                    return true
+                                }
+                            }
+                    }
+                    
+                    renderedElements = isDetail ? renderedElements : renderedForRow
 //                    print("renderedElements: \(event.id)")
                 }
                 .store(in: &subscriptions)
@@ -176,13 +174,14 @@ struct RowContentRenderer_Previews: PreviewProvider {
     static var previews: some View {
         
         ScrollView {
-            if let vPost = PreviewFetcher.fetchVPost("9b34fd9a53398fb51493d68ecfd0d64ff922d0cdf5ffd8f0ffab46c9a3cf54e3") {
-                ContentRenderer(vPost: vPost)
+            VStack {
+                if let vPost = PreviewFetcher.fetchVPost("9b34fd9a53398fb51493d68ecfd0d64ff922d0cdf5ffd8f0ffab46c9a3cf54e3") {
+                    ContentRenderer(vPost: vPost)
+                }
+                if let vPost = PreviewFetcher.fetchVPost("102177a51af895883e9256b70b2caff6b9ef90230359ee20f6dc7851ec9e5d5a") {
+                    ContentRenderer(vPost: vPost)
+                }
             }
-            if let vPost = PreviewFetcher.fetchVPost("102177a51af895883e9256b70b2caff6b9ef90230359ee20f6dc7851ec9e5d5a") {
-                ContentRenderer(vPost: vPost)
-            }
-            Spacer()
         }
     }
 }
@@ -224,20 +223,6 @@ struct VPV: UIViewRepresentable {
         }
     }
 }
-
-
-enum MarkdownElement: Hashable {
-    case plain(String)
-    case text(AttributedString)
-    case note1(String)
-    case noteId(String)
-    case lnbc(String)
-    case link(String, URL)
-    case image(URL)
-    case video(URL)
-    case linkPreview(URL)
-}
-
 
 struct QuoteById: View {
 
