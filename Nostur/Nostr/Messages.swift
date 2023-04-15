@@ -377,7 +377,7 @@ struct EventMessageBuilder {
         tags.append(NEventTag(type: "p", otherInformation: reactingTo.pubkey))
         
         var reactionEvent = NEvent(content: "+")
-        reactionEvent.kind = .custom(7)
+        reactionEvent.kind = .reaction
         reactionEvent.tags = tags
         
         return reactionEvent
@@ -389,7 +389,7 @@ struct EventMessageBuilder {
         tags.append(NEventTag(type: "p", otherInformation: reactingTo.publicKey))
         
         var reactionEvent = NEvent(content: "+")
-        reactionEvent.kind = .custom(7)
+        reactionEvent.kind = .reaction
         reactionEvent.tags = tags
         
         return reactionEvent
