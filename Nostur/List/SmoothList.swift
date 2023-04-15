@@ -170,7 +170,7 @@ struct SmoothList: UIViewControllerRepresentable {
                 self?.processScrollViewDidScroll(scrollView)
             }
         }
-
+        
         func processScrollViewDidScroll(_ scrollView: UIScrollView) {
             if let indexPaths = collectionViewHolder?.collectionView.indexPathsForVisibleItems {
                 print(indexPaths)
@@ -183,10 +183,10 @@ struct SmoothList: UIViewControllerRepresentable {
             else {
                 print("IS AT TOP TRUE")
                 parent.onFinishedScrolling?(true) // didFinish and isAtTop=true
-
+                
                 if (!parent.autoScroll) && (scrollView.contentOffset.y < SMOOTHLIST_AUTOSCROLL_OFFSET) {
                     // if really at top, push back a little, so new items inserted at top don't push all down
-    //                    scrollView.layoutIfNeeded();
+                    //                    scrollView.layoutIfNeeded();
                     scrollView.setContentOffset(CGPoint(x: scrollView.contentOffset.x, y: SMOOTHLIST_AUTOSCROLL_OFFSET), animated: true)
                 }
             }
@@ -200,7 +200,7 @@ final class CViewHolder {
     private(set) lazy var dataSource: DataSourceType = createDataSource()
     private let coordinator: SmoothList.Coordinator
     private var layoutListConfiguration = UICollectionLayoutListConfiguration(appearance: .plain)
-
+    
     init(
         coordinator: SmoothList.Coordinator,
         onInitialized: @escaping (UICollectionView) -> Void
@@ -214,14 +214,14 @@ final class CViewHolder {
             section.contentInsets = .zero
             return section
         }
-    
+        
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-//        collectionView.backgroundColor = .systemGroupedBackground
-//        collectionView.backgroundColor = UIColor(named: "ListBackground")
+        //        collectionView.backgroundColor = .systemGroupedBackground
+        //        collectionView.backgroundColor = UIColor(named: "ListBackground")
         collectionView.allowsSelection = false
         collectionView.delegate = coordinator
         collectionView.prefetchDataSource = coordinator
-//        collectionView.backgroundColor = UIColor.brown
+        //        collectionView.backgroundColor = UIColor.brown
         onInitialized(collectionView)
     }
     
@@ -244,8 +244,8 @@ final class CViewHolder {
             }
             .background(Color("ListBackground"))
             .margins(.all, 0)
-//            cell.layer.shouldRasterize = true
-//            cell.layer.rasterizationScale = UIScreen.main.scale
+            //            cell.layer.shouldRasterize = true
+            //            cell.layer.rasterizationScale = UIScreen.main.scale
         }
     }()
     
@@ -265,18 +265,18 @@ final class CViewHolder {
             collectionView: collectionView,
             cellProvider: { [weak self] collectionView, indexPath, identifier -> UICollectionViewCell? in
                 guard let self = self else { return nil }
-                        
+                
                 guard let vPost = self.coordinator.parent.data.first(where: { $0.id == identifier }) else {
                     return self.collectionView.dequeueConfiguredReusableCell(using: MissingCellRegistration, for: indexPath, item: "🧨")
                 }
                 
                 return self.collectionView.dequeueConfiguredReusableCell(using: PostOrThreadCellRegistration, for: indexPath, item: vPost)
                 
-                                
-// TODO: Implement this
-//                if self.collectionView.isLastItem(indexPath) {
-//                    self.onLoadMore()
-//                }
+                
+                // TODO: Implement this
+                //                if self.collectionView.isLastItem(indexPath) {
+                //                    self.onLoadMore()
+                //                }
             }
         )
     }

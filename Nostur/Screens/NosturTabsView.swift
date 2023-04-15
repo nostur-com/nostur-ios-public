@@ -7,6 +7,7 @@
 
 import SwiftUI
 import CoreData
+import Nuke
 
 struct NosturTabsView: View {
     @AppStorage("selected_tab") var selectedTab = "Main"
@@ -63,6 +64,9 @@ struct NosturTabsView: View {
         }
         .onReceive(receiveNotification(.updateDMsCount)) { notification in
             unreadDMs = (notification.object as! Int)
+        }
+        .onAppear {
+            ImageDecoderRegistry.shared.register(ImageDecoders.Video.init)
         }
         //        .ignoresSafeArea()
     }

@@ -32,8 +32,8 @@ class Importer {
     public func importEvents() async {
         let parsedBucket = MessageParser.shared.parsedBucket
         if (isImporting) {
-            print("🟠🟠🟠 ALREADY IMPORTING. SKIPPED 🟠🟠🟠")
             let itemsCount = await parsedBucket.count()
+            print("🟠🟠🟠 ALREADY IMPORTING. SKIPPED importEvents with \(itemsCount) in bucket 🟠🟠🟠")
             if itemsCount > 0 {
                 DispatchQueue.main.async {
                     sendNotification(.listStatus, "Processing \(itemsCount) items...")

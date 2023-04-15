@@ -17,30 +17,30 @@ class TextRenderer { // TEXT things
     let context:NSManagedObjectContext
     let event:Event // The current event, so we dont need to duplicate .tags parsing
     let tags:[(String, String, String?)] // Faster tags, and only decode once at init
-    
+
     init(_ context:NSManagedObjectContext? = nil, event:Event) {
         self.context = context ?? DataProvider.shared().viewContext
         self.event = event
         self.tags = event.fastTags
     }
-    
+
     func renderedText(_ event:Event, text: String) -> AttributedString {
 //        var newText = text
-        
+
         // Remove image links
         // because they get rendered as embers in PostDetail.
         // and NoteRow shows them in ImageViewer
         var newText = removeImageLinks(event: event, text: text)
-        
+
         // NIP-08, handle #[0] #[1] etc
         newText = parseTagIndexedMentions(event: event, text: newText)
-        
+
         // NIP-28 handle nostr:npub1, nostr:nprofile ...
         newText = parseUserMentions(event: event, text: newText)
         if newText.suffix(1) == "\n" {
             newText = String(newText.dropLast(1))
         }
-        
+
         do {
 //            newText = Self.replaceURLsWithMarkdownLinks(in: newText)
             newText = Self.replaceHashtagsWithMarkdownLinks(in: newText)
@@ -53,7 +53,7 @@ class TextRenderer { // TEXT things
             return finalText
         }
     }
-    
+
     func contactUsername(fromPubkey pubkey:String, event:Event) -> String {
         if let username = PubkeyUsernameCache.shared.retrieveObject(at: pubkey) {
             return username
@@ -82,12 +82,12 @@ class TextRenderer { // TEXT things
         }
         return "--"
     }
-    
+
     func replyingToUsernamesMarkDownString(_ event:Event) -> String? {
         guard event.replyToId != nil || event.replyTo != nil else { return nil }
         guard tags.count < 50 else { return "Replying to \(tags.count) people" }
-        
-        
+
+
         let pTags = Set(tags.filter { $0.0 == "p" }.map { $0.1 })
         if (pTags.count > 6) {
             let pTagsAsStrings = pTags.prefix(4).map { pubkey in
@@ -107,30 +107,30 @@ class TextRenderer { // TEXT things
         }
         return nil
     }
-    
+
     func copyPasteText(_ event:Event,  text: String) -> String {
         var newText = text
-        
+
         // NIP-08, handle #[0] #[1] etc
         newText = parseTagIndexedMentions(event: event, text: text, plainText: true)
-        
+
         // NIP-28 handle nostr:npub1, nostr:nprofile ...
         newText = parseUserMentions(event: event, text: newText, plainText: true)
-        
+
         return newText
     }
-    
+
     // NIP-08 (deprecated in favor of NIP-27)
     func parseTagIndexedMentions(event:Event, text:String, plainText:Bool = false) -> String {
         guard tags.count > 0 else { return text }
-        
+
         var newText = text
         let matches = text.matches(of: /#\[(\d+)\]/)
         for match in matches.prefix(100) { // 100 limit for sanity
             guard let tagIndex = Int(match.output.1) else { continue }
             guard tagIndex < tags.count else { continue }
             let tag = tags[tagIndex]
-            
+
             if (tag.0 == "p") {
                 if !plainText {
                     newText = newText.replacingOccurrences(of: match.output.0, with: "[@\(contactUsername(fromPubkey: tag.1, event:event).escapeMD())](nostur:p:\(tag.1))")
@@ -152,7 +152,7 @@ class TextRenderer { // TEXT things
         }
         return newText
     }
-    
+
     // NIP-27 handle nostr:npub or nostr:nprofile
     func parseUserMentions(event:Event, text:String, plainText:Bool = false) -> String {
         let pattern = "nostr:npub1\\S+|nostr:nprofile1\\S+"
@@ -200,20 +200,20 @@ class TextRenderer { // TEXT things
                 default:
                     print("eeuh")
             }
-            
+
             replacedString.replaceSubrange(matchRange, with: replacement)
             range = replacedString.index(after: matchRange.lowerBound)..<replacedString.endIndex
         }
 
         return replacedString
     }
-    
+
     func removeImageLinks(event: Event, text:String) -> String {
         text.replacingOccurrences(of: #"(?i)https?:\/\/\S+?\.(?:png|jpe?g|gif|webp|bmp)(\?\S+){0,1}\b"#,
                                   with: "",
                                   options: .regularExpression)
     }
-    
+
     // Takes a string and replaces any link with a markdown link. Also handles subdomains
     static func replaceURLsWithMarkdownLinks(in string: String) -> String {
         return string
@@ -224,7 +224,7 @@ class TextRenderer { // TEXT things
                                   with: "[$0]($0)",
                                   options: .regularExpression) // REPLACE THE REMAINING URLS THAT HAVE PROTOCOL, BUT IGNORE ALREADY MARKDOWNED LINKS
     }
-    
+
     static func replaceHashtagsWithMarkdownLinks(in string: String) -> String {
         return string
             .replacingOccurrences(of: ###"(?<![/\?]|\b)(\#)(\S{2,})\b"###,

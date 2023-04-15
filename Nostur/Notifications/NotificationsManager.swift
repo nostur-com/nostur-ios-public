@@ -175,7 +175,7 @@ class NotificationsManager: ObservableObject {
     
     func checkForEverything() {
         guard !Importer.shared.isImporting else { return }
-        guard let account = ns.account else { return }
+        guard ns.account != nil else { return }
         guard ns.activeAccountPublicKey != "" else { return }
         
         let since = NosturState.shared.lastNotificationReceivedAt ?? nil
