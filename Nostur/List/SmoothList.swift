@@ -48,11 +48,11 @@ struct SmoothList: UIViewControllerRepresentable {
                                           coordinator: Coordinator) -> CollectionViewHolderType {
         
         let collectionViewHolder = CViewHolder(coordinator: coordinator) { uiCollectionView in
-//            uiCollectionView.translatesAutoresizingMaskIntoConstraints = false
+            //            uiCollectionView.translatesAutoresizingMaskIntoConstraints = false
             uiCollectionView.translatesAutoresizingMaskIntoConstraints = false
-//            uiCollectionView.backgroundColor = UIColor.yellow // UIColor(named: "ListBackground")
+            //            uiCollectionView.backgroundColor = UIColor.yellow // UIColor(named: "ListBackground")
             viewController.view.addSubview(uiCollectionView)
-//            viewController.view.backgroundColor = UIColor.blue
+            //            viewController.view.backgroundColor = UIColor.blue
             
             NSLayoutConstraint.activate([
                 viewController.view.leadingAnchor.constraint(equalTo: uiCollectionView.leadingAnchor),
@@ -67,7 +67,7 @@ struct SmoothList: UIViewControllerRepresentable {
     func makeCoordinator() -> Coordinator {
         return Coordinator(parent: self)
     }
-
+    
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
             if needsRefresh, let collectionViewHolder = context.coordinator.collectionViewHolder {
@@ -104,9 +104,9 @@ struct SmoothList: UIViewControllerRepresentable {
         var newSnapshot = NSDiffableDataSourceSnapshot<SingleSection, String>()
         newSnapshot.appendSections([SingleSection.main])
         newSnapshot.appendItems(data.map { $0.id }, toSection: SingleSection.main)
-
+        
         let isInitialApply = collectionViewHolder.dataSource.snapshot().sectionIdentifiers.isEmpty
-
+        
         collectionViewHolder.dataSource.apply(newSnapshot, animatingDifferences: !isInitialApply) {
             if (isInitialApply) { // Scroll to initial position
                 DispatchQueue.main.async {
@@ -135,7 +135,7 @@ struct SmoothList: UIViewControllerRepresentable {
         let parent: SmoothList
         var collectionViewHolder: CollectionViewHolderType?
         var scrollTimer: Timer?
-
+        
         init(parent: SmoothList) {
             self.parent = parent
         }
@@ -178,7 +178,7 @@ struct SmoothList: UIViewControllerRepresentable {
             if scrollView.contentOffset.y > 150 {
                 print("IS AT TOP FALSE")
                 parent.onFinishedScrolling?(false) // didFinish and isAtTop=false
-
+                
             }
             else {
                 print("IS AT TOP TRUE")
