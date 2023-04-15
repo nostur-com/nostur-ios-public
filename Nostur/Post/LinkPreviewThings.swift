@@ -32,7 +32,7 @@ func fetchMetaTags(url: URL, completion: @escaping (Result<[String: String], Err
 func parseMetaTags(html: String) -> [String: String] {
     let html = html.count > 300000 ? String(html.prefix(300000)) : html
     var metaTags = [String: String]()
-    let pattern = #"<meta\s+(?:property=|name=)"(?:og|twitter):(.*?)"\s+content="(.*?)"\s*/?>"#
+    let pattern = #"<meta\s+(?:property=|name=)"(?:og|twitter):(.*?)"\s+content="([^"]+)(?:"\s|"[^>]*?\/?>)"#
     let regex = try! NSRegularExpression(pattern: pattern, options: .caseInsensitive)
     let matches = regex.matches(in: html, options: [], range: NSRange(location: 0, length: html.utf16.count))
     
@@ -45,7 +45,7 @@ func parseMetaTags(html: String) -> [String: String] {
     }
     
     // fallback title
-    if let titleMatch = html.firstMatch(of: /<title>(.*)<\/title>/.ignoresCase())?.output {
+    if let titleMatch = html.firstMatch(of: /<title(?:.*)>(.*)<\/title>/.ignoresCase())?.output {
         metaTags["fallback_title"] = String(titleMatch.1)
     }
     
