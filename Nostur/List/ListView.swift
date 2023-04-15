@@ -27,14 +27,14 @@ struct ListView: View {
     var body: some View {
         let _ = Self._printChanges()
         VStack {
-            if vmState.vPosts.count > 0 {
-                //                Text("\(vmState.state.rawValue) | vPosts: \(vmState.vPostLeafs.count) | threadValue: \(vmState.vPostLeafs.reduce(0, { $0 + $1.threadPostsCount } ) )")
+            if vmState.vPostLeafs.count > 0 {
+                Text("\(vmState.state.rawValue) | vPosts: \(vmState.vPostLeafs.count) | threadValue: \(vmState.vPostLeafs.reduce(0, { $0 + $1.threadPostsCount } ) )")
                 
                 ZStack {
                     SmoothList(needsRefresh: $needsRefresh,
                                needsScrollToTop: $needsScrollToTop,
                                needsScrollToIndex: $needsScrollToIndex,
-                               data: $vmState.vPosts,
+                               data: $vmState.vPostLeafs,
                                autoScroll: $settings.autoScroll,
                                onRowAppeared: { (_, _, vPost) in
                         guard vmState.state != .AWAITING_FIRST_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
@@ -52,7 +52,7 @@ struct ListView: View {
                             
                         }
                     })
-                    .onChange(of: vmState.vPosts) { _ in
+                    .onChange(of: vmState.vPostLeafs) { _ in
                         needsRefresh = true
                     }
                     .onAppear {
@@ -108,12 +108,12 @@ struct ListView: View {
             
             //            print(self.vmState.vPosts[safe: 0]?.items.flatMap { [$0.id] + $0.parentPosts.map { $0.id } })
             vmState.state = .COMPLETED_RESTORED_FETCH_WITH_SCROLL
-            if let index = vmState.vPosts.firstIndex(where: { $0.id == lastAppeared.id }) {
+            if let index = vmState.vPostLeafs.firstIndex(where: { $0.id == lastAppeared.id }) {
 //                                print("🟢🟢🟢 should scroll to leaf index: \(index)")
                 return index
             }
             // or maybe the leaf is now a parent?
-            else if let index = vmState.vPosts.firstIndex(where: { $0.parentPosts.map { $0.id }.contains(lastAppeared.id) }) {
+            else if let index = vmState.vPostLeafs.firstIndex(where: { $0.parentPosts.map { $0.id }.contains(lastAppeared.id) }) {
                 //            else if let index = vmState.vPostLeafs.firstIndex(where: { $0.parentPosts.map { $0.id }.contains(lastAppeared.id) }) {
 //                                print("🟢🟢🟢 should scroll to leaf-to-parent index: \(index)")
                 return index
