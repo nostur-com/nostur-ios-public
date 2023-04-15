@@ -433,19 +433,25 @@ class LVM: NSObject, ObservableObject {
             DispatchQueue.main.async {
                 let cutOffPoint = min(self.lastAppeared?.created_at ?? hoursAgo, hoursAgo) // 8 hours ago or longer until lastAppeared Event
                 
-                // THIS SUBSCRIPTION WILL STAY ACTIVE:
-                fetchEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: self.id)
                 
-                // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
                 if (!self.didCatchup) {
+                    // THIS SUBSCRIPTION WILL STAY ACTIVE:
+                    fetchEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: self.id)
+                
+                    
+                    // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
                     let f = TimeCompactor(ifZero: nil, style: .short, roundSmallToWhole: true)
-                    let ago =  f.string(from: Double(Date.now.timeIntervalSince(Date(timeIntervalSince1970: Double(cutOffPoint)))) as NSNumber)!
+                    let ago =  f.string(from: Double(Date.now.timeIntervalSince(Date(timeIntervalSince1970: Double(since)))) as NSNumber)!
                     
                     DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(8)) {
-                        fetchEvents(pubkeysString: self.pubkeysPrefixString, amount: 5000, since: cutOffPoint, subscriptionId: "\(self.id)-CATCHUP-\(ago)")
+                        fetchEvents(pubkeysString: self.pubkeysPrefixString, amount: 5000, since: since, subscriptionId: "\(self.id)-CATCHUP-\(ago)")
                         fetchProfiles(pubkeys: self.pubkeys, subscriptionId: "Profiles")
                     }
                     self.didCatchup = true
+                }
+                else {
+                    // THIS SUBSCRIPTION WILL STAY ACTIVE:
+                    fetchEvents(pubkeysString: self.pubkeysPrefixString, since: since, subscriptionId: self.id)
                 }
 //                 cutOff doesnt work well, since hits with some time ago limit (500)?
 //                fetchEvents(pubkeys: self.pubkeys, subscriptionId: self.id)

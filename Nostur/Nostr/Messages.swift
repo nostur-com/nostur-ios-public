@@ -146,12 +146,12 @@ struct RequestMessage {
         
         if since != nil {
             return """
-    ["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"#p": \(JSON(pubkeys).rawString(.utf8, options: .init(rawValue: 0))!), "limit": \(limit), "since": \(since!.timestamp), "kinds": \(JSON(kinds).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]") }]
+    ["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"#p": \(JSON(pubkeys).rawString(.utf8, options: .init(rawValue: 0))!), "since": \(since!.timestamp), "kinds": \(JSON(kinds).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]") }]
     """
         }
         else if until != nil {
             return """
-    ["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"#p": \(JSON(pubkeys).rawString(.utf8, options: .init(rawValue: 0))!), "limit": \(limit), "until": \(until!.timestamp), "kinds": \(JSON(kinds).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]") }]
+    ["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"#p": \(JSON(pubkeys).rawString(.utf8, options: .init(rawValue: 0))!), "until": \(until!.timestamp), "kinds": \(JSON(kinds).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]") }]
     """
         }
         return """
@@ -189,12 +189,12 @@ struct RequestMessage {
     
     // For fetching events posted by people you follow
     // or reactions by others reacting to the people you follow
-    static func getFollowingEvents(pubkeys:[String], limit:Int = 500, subscriptionId:String? = nil, since:NTimestamp? = nil) -> String {
+    static func getFollowingEvents(pubkeys:[String], limit:Int = 5000, subscriptionId:String? = nil, since:NTimestamp? = nil) -> String {
         let sub = subscriptionId ?? ("TL-"+UUID().uuidString)
         let pubs = fasterShort(pubkeys)
         if since != nil {
             return """
-["REQ", "\(sub)", {"authors": \(pubs), "kinds": [1,5,6], "limit": \(limit), "since": \(since!.timestamp)}]
+["REQ", "\(sub)", {"authors": \(pubs), "kinds": [1,5,6], "since": \(since!.timestamp)}]
 """
         }
         return """
@@ -202,11 +202,11 @@ struct RequestMessage {
 """
     }
     // Same as above but pubkeys already in string
-    static func getFollowingEvents(pubkeysString:String, limit:Int = 500, subscriptionId:String? = nil, since:NTimestamp? = nil) -> String {
+    static func getFollowingEvents(pubkeysString:String, limit:Int = 5000, subscriptionId:String? = nil, since:NTimestamp? = nil) -> String {
         let sub = subscriptionId ?? ("TL-"+UUID().uuidString)
         if since != nil {
             return """
-["REQ", "\(sub)", {"authors": \(pubkeysString), "kinds": [1,5,6], "limit": \(limit), "since": \(since!.timestamp)}]
+["REQ", "\(sub)", {"authors": \(pubkeysString), "kinds": [1,5,6], "since": \(since!.timestamp)}]
 """
         }
         return """
@@ -306,7 +306,7 @@ struct RequestMessage {
         
         if since != nil {
             return """
-    ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(fasterShort(pubkeys)), "limit": \(limit), "since": \(since!.timestamp)}]
+    ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(fasterShort(pubkeys)), "since": \(since!.timestamp)}]
     """
         }
         return """
