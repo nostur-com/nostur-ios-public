@@ -17,7 +17,7 @@ struct ListView: View {
     
     let vm:LVM
     @ObservedObject var vmState:LVMState
-    @ObservedObject var settings:SettingsStore = .shared // dont need settings here, but needed to reload RagiSmoothList to recalculate row heights when disabling footer
+    @ObservedObject var settings:SettingsStore = .shared
     
     init(vm: LVM) {
         self.vm = vm
@@ -36,6 +36,7 @@ struct ListView: View {
                                needsScrollToIndex: $needsScrollToIndex,
                                data: $vmState.vPostLeafs,
                                autoScroll: $settings.autoScroll,
+                               fullWidthImages: $settings.fullWidthImages,
                                onRowAppeared: { (_, _, vPost) in
                         guard vmState.state != .AWAITING_FIRST_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
                         guard vmState.state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)

@@ -30,6 +30,7 @@ final class SettingsStore: ObservableObject {
         static let animatedPFPenabled = "animated_pfp_enabled"
         static let rowFooterEnabled = "row_footer_enabled"
         static let autoScroll = "autoscroll"
+        static let fullWidthImages = "full_width_images"
     }
 
     private let cancellable: Cancellable
@@ -62,7 +63,8 @@ final class SettingsStore: ObservableObject {
             Keys.defaultLightningWallet: SettingsStore.walletOptions.first!.id,
             Keys.animatedPFPenabled: false,
             Keys.rowFooterEnabled: true,
-            Keys.autoScroll: false
+            Keys.autoScroll: false,
+            Keys.fullWidthImages: false
             ])
 
         cancellable = NotificationCenter.default
@@ -90,9 +92,15 @@ final class SettingsStore: ObservableObject {
         set { defaults.set(newValue, forKey: Keys.rowFooterEnabled) }
         get { defaults.bool(forKey: Keys.rowFooterEnabled) }
     }
+    
     var autoScroll: Bool {
         set { defaults.set(newValue, forKey: Keys.autoScroll) }
         get { defaults.bool(forKey: Keys.autoScroll) }
+    }
+    
+    var fullWidthImages: Bool {
+        set { defaults.set(newValue, forKey: Keys.fullWidthImages) }
+        get { defaults.bool(forKey: Keys.fullWidthImages) }
     }
 
     var hideEmojisInNames: Bool {

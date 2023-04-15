@@ -24,15 +24,17 @@ struct SmoothList: UIViewControllerRepresentable {
     @Binding var needsScrollToIndex: Int?
     @Binding var data: [VPost]
     @Binding var autoScroll: Bool
+    @Binding var fullWidthImages: Bool
     private var onRowAppeared: RowAppearedCallback?
     private var onFinishedScrolling: FinishedScrollingCallback?
     
-    init(needsRefresh: Binding<Bool>, needsScrollToTop:Binding<Bool>, needsScrollToIndex:Binding<Int?>, data: Binding<[VPost]>, autoScroll: Binding<Bool>, onRowAppeared: RowAppearedCallback? = nil, onFinishedScrolling: FinishedScrollingCallback? = nil) {
+    init(needsRefresh: Binding<Bool>, needsScrollToTop:Binding<Bool>, needsScrollToIndex:Binding<Int?>, data: Binding<[VPost]>, autoScroll: Binding<Bool>, fullWidthImages: Binding<Bool>, onRowAppeared: RowAppearedCallback? = nil, onFinishedScrolling: FinishedScrollingCallback? = nil) {
         self._needsRefresh = needsRefresh
         self._needsScrollToTop = needsScrollToTop
         self._needsScrollToIndex = needsScrollToIndex
         self._data = data
         self._autoScroll = autoScroll
+        self._fullWidthImages = fullWidthImages
         self.onRowAppeared = onRowAppeared
         self.onFinishedScrolling = onFinishedScrolling
     }
@@ -251,6 +253,20 @@ final class CViewHolder {
         }
     }()
     
+    private var FullWidthPostOrThreadCellRegistration: UICollectionView.CellRegistration<UICollectionViewListCell, VPost> = {
+        .init { cell, indexPath, vPost in
+            cell.contentConfiguration = UIHostingConfiguration {
+                PostOrThread(vPost: vPost)
+                    .boxShadow()
+                    .padding(.vertical, 10)
+            }
+            .background(Color("ListBackground"))
+            .margins(.all, 0)
+            //            cell.layer.shouldRasterize = true
+            //            cell.layer.rasterizationScale = UIScreen.main.scale
+        }
+    }()
+    
     private var MissingCellRegistration: UICollectionView.CellRegistration<UICollectionViewListCell, String> = {
         .init { cell, indexPath, item in
             cell.contentConfiguration = UIHostingConfiguration {
@@ -272,6 +288,9 @@ final class CViewHolder {
                     return self.collectionView.dequeueConfiguredReusableCell(using: MissingCellRegistration, for: indexPath, item: "🧨")
                 }
                 
+                if self.coordinator.parent.fullWidthImages {
+                    return self.collectionView.dequeueConfiguredReusableCell(using: FullWidthPostOrThreadCellRegistration, for: indexPath, item: vPost)
+                }
                 return self.collectionView.dequeueConfiguredReusableCell(using: PostOrThreadCellRegistration, for: indexPath, item: vPost)
                 
                 
@@ -290,6 +309,7 @@ struct SmoothList_PReviews: PreviewProvider {
     @State static var needsScrollToTop = false
     @State static var needsScrollToIndex:Int? = nil
     @State static var autoScroll = true
+    @State static var fullWidthImages = true
     @State static var vPosts = PreviewFetcher
         .fetchEvents(NosturState.shared.followingPublicKeys, kind: 1)
         .map {
@@ -301,7 +321,7 @@ struct SmoothList_PReviews: PreviewProvider {
     
     static var previews: some View {
         VStack(spacing:0) {
-            SmoothList(needsRefresh: $needsRefresh, needsScrollToTop: $needsScrollToTop, needsScrollToIndex: $needsScrollToIndex, data: $vPosts, autoScroll: $autoScroll)
+            SmoothList(needsRefresh: $needsRefresh, needsScrollToTop: $needsScrollToTop, needsScrollToIndex: $needsScrollToIndex, data: $vPosts, autoScroll: $autoScroll, fullWidthImages: $fullWidthImages)
                 .onAppear {
                     needsRefresh = true
                 }
