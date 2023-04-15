@@ -44,11 +44,10 @@ struct HorizontallyCenteredView: ViewModifier {
 struct BoxShadow: ViewModifier {
     func body(content: Content) -> some View {
         content
-            .padding(5)
             .background(
-                Rectangle().foregroundColor(Color.systemBackground)
-                    .shadow(color: Color.gray.opacity(0.2), radius: 5, x: 0, y: 0)
-                    .padding(5)
+                Rectangle()
+                    .foregroundColor(Color("BackgroundColor"))
+                    .shadow(color: Color.gray.opacity(0.25), radius: 5)
             )
     }
 }

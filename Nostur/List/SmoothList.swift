@@ -241,6 +241,8 @@ final class CViewHolder {
         .init { cell, indexPath, vPost in
             cell.contentConfiguration = UIHostingConfiguration {
                 PostOrThread(vPost: vPost)
+                    .boxShadow()
+                    .padding(10)
             }
             .background(Color("ListBackground"))
             .margins(.all, 0)
