@@ -16,35 +16,35 @@ struct PFP: View {
     var pictureUrl:String?
     var size:CGFloat = 50
     var color:Color { randomColor(seed: pubkey) }
-    
+    var isFollowing = true // will use later to put non following in seperate cache
     @ObservedObject var settings:SettingsStore = .shared
     
     var body: some View {
-        if (pictureUrl == nil || (pictureUrl != nil && pictureUrl!.prefix(7) == "http://")) { // TODO: is this slow??
-            Circle().foregroundColor(color).frame(width: size, height: size)
-        }
-        else {
-            if (!settings.animatedPFPenabled) {
-                LazyImage(url: URL(string: pictureUrl!)) { state in
+        VStack {
+            if (pictureUrl == nil || (pictureUrl != nil && pictureUrl!.prefix(7) == "http://")) {
+                Circle().foregroundColor(color).frame(width: size, height: size)
+            }
+            else if (!settings.animatedPFPenabled) {
+                LazyImage(url: URL(string: pictureUrl!), transaction: .init(animation: .none)) { state in
                     if let image = state.image {
                         image
                             .resizable()
-                        //                                .aspectRatio(contentMode: .fill)
-                        //                                .frame(width: size, height: size)
-                            .clipShape(Circle())
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: size, height: size)
+                            .cornerRadius(.greatestFiniteMagnitude)
+//                            .compositingGroup()
                     }
                     else {
                         Circle().foregroundColor(color)//.frame(width: size, height: size)
+                            .frame(width: size, height: size)
                     }
                 }
                 .pipeline(ImageProcessing.shared.pfp)
-                .processors([.resize(width: size, unit: .points), .circle()])
-                //                    .processors([.resize(width: size, unit: .pixels), .circle()])
-                //                    .priority(.low)
+                .processors([.resize(width: size)])
                 .frame(width: size, height: size)
             }
             else if (pictureUrl!.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
-                LazyImage(url: URL(string: pictureUrl!)) { state in
+                LazyImage(url: URL(string: pictureUrl!), transaction: .init(animation: .none)) { state in
                     if let container = state.imageContainer {
                         if container.type == .gif, let gifData = container.data {
                             ZStack {
@@ -53,12 +53,14 @@ struct PFP: View {
                                         .resizable()
                                         .aspectRatio(contentMode: .fill)
                                         .frame(width: size, height: size)
-                                        .clipShape(Circle())
+                                        .cornerRadius(.greatestFiniteMagnitude)
+//                                        .compositingGroup()
                                 }
                                 AnimatedGifView(gifData: gifData, width: size, height: size)
                                     .scaledToFit()
                                     .frame(width: size, height: size)
-                                    .clipShape(Circle())
+                                    .cornerRadius(.greatestFiniteMagnitude)
+//                                    .clipShape(Circle())
                             }
                         }
                         else if let image = state.image {
@@ -66,38 +68,40 @@ struct PFP: View {
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
                                 .frame(width: size, height: size)
-                                .clipShape(Circle())
+                                .cornerRadius(.greatestFiniteMagnitude)
+                            //                                .compositingGroup()
                         }
                         else {
                             Circle().foregroundColor(color).frame(width: size, height: size)
+                                .frame(width: size, height: size)
                         }
                     }
                     else {
                         Circle().foregroundColor(color).frame(width: size, height: size)
+                            .frame(width: size, height: size)
                     }
                 }
                 .pipeline(ImageProcessing.shared.pfp) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
                 .priority(.low) // lower prio for animated gif, saves bandwidth?
-                .frame(width: size, height: size)
+             // .frame(width: size, height: size)
             }
             else {
-                LazyImage(url: URL(string: pictureUrl!)) { state in
+                LazyImage(url: URL(string: pictureUrl!), transaction: .init(animation: .none)) { state in
                     if let image = state.image {
                         image
                             .resizable()
-                        //                                .aspectRatio(contentMode: .fill)
-                        //                                .frame(width: size, height: size)
-                        //                                .clipShape(Circle())
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: size, height: size)
+                            .cornerRadius(.greatestFiniteMagnitude)
+                        //   .compositingGroup()
                     }
                     else {
                         Circle().foregroundColor(color)//.frame(width: size, height: size)
+                            .frame(width: size, height: size)
                     }
                 }
                 .pipeline(ImageProcessing.shared.pfp)
-                .processors([.resize(width: size, unit: .points), .circle()])
-                //                    .processors([.resize(width: size, unit: .pixels), .circle()])
-                //                    .priority(.low)
-                .frame(width: size, height: size)
+                .processors([.resize(width: size)])
             }
         }
     }

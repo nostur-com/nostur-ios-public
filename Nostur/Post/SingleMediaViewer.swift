@@ -15,26 +15,29 @@ struct SingleMediaViewer: View {
     let url:URL
     var height:CGFloat?
     @State var fullScreenItem:FullScreenItem?
+    @State private var viewSize: CGSize = .zero
     
     var body: some View {
-        if (url.absoluteString.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
-            GeometryReader { geo in
-                LazyImage(url: url) { state in
+        VStack {
+            Color.clear.frame(height: 0).modifier(SizeModifier())
+            if (url.absoluteString.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
+                LazyImage(url: url, transaction: .init(animation: .none)) { state in
                     if let container = state.imageContainer {
                         if container.type == .gif, let gifData = container.data {
-                            AnimatedGifView(gifData: gifData, width: geo.size.width, height: geo.size.height, contentMode: .scaleAspectFit)
-//                                        .scaledToFill()
-//                                        .clipped()
-                                .frame(width: geo.size.width, height: geo.size.height)
-                                .onTapGesture {
-                                    sendNotification(.fullScreenView, FullScreenItem(url: url))
-                                }
+                            GeometryReader { geo in
+                                AnimatedGifView(gifData: gifData, width: geo.size.width, height: geo.size.height, contentMode: .scaleAspectFit)
+//                                    .scaledToFill()
+//                                    .clipped()
+                                    .frame(width: geo.size.width, height: geo.size.height)
+                                    .onTapGesture {
+                                        sendNotification(.fullScreenView, FullScreenItem(url: url))
+                                    }
+                            }
                         }
                         else if let image = state.image {
                             image
                                 .resizable()
-                                .scaledToFit()
-                                .frame(width: geo.size.width, height: geo.size.height)
+                                .aspectRatio(contentMode: .fit)
                                 .onTapGesture {
                                     sendNotification(.fullScreenView, FullScreenItem(url: url))
                                 }
@@ -51,25 +54,33 @@ struct SingleMediaViewer: View {
                 }
                 .pipeline(ImageProcessing.shared.content) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
                 .priority(.low)
-                .frame(width: geo.size.width, height: geo.size.height)
+                .frame(height: 250)
+            }
+            else {
+                if viewSize.width > 0 {
+                    LazyImage(url: url, transaction: .init(animation: .none)) { state in
+                        if let image = state.image {
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .onTapGesture {
+                                    sendNotification(.fullScreenView, FullScreenItem(url: url))
+                                }
+                        }
+                        else {
+                            CenteredProgressView()
+                                .background(Color("LightGray"))
+                        }
+                    }
+                    .processors([.resize(width: viewSize.width)])
+                    .pipeline(ImageProcessing.shared.content) // No processing again here, we probably never show the image again
+                }
             }
         }
-        else {
-            LazyImage(url: url) { state in
-                if let image = state.image {
-                    image
-                        .resizable()
-                        .scaledToFit()
-                        .onTapGesture {
-                            sendNotification(.fullScreenView, FullScreenItem(url: url))
-                        }
-                }
-                else {
-                    CenteredProgressView()
-                        .background(Color("LightGray"))
-                }
-            }
-            .pipeline(ImageProcessing.shared.content) // No processing again here, we probably never show the image again
+        .onPreferenceChange(SizePreferenceKey.self) { size in
+            guard size.width > 0 else { return }
+            print("🟣🟣🟣🟣🟣 SINGLEMEDIA \(size.width) \(size.height) -- \(UIScreen.main.scale) ")
+            viewSize = size
         }
     }
     

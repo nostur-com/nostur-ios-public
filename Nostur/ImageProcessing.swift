@@ -13,6 +13,7 @@ class ImageProcessing {
     static public var shared = ImageProcessing()
     
     var pfp:ImagePipeline
+    var pfpNotFollowing:ImagePipeline
     var banner:ImagePipeline
     var content:ImagePipeline
     var badges:ImagePipeline
@@ -31,11 +32,11 @@ class ImageProcessing {
             }())
             
             let dataCache = try! DataCache(name: "com.nostur.image.linkpreview")
-            dataCache.sizeLimit = 1024 * 1024 * 25
+            dataCache.sizeLimit = 1024 * 1024 * 50
             
             $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 25)  // 25 MB
             $0.dataCache = dataCache
-            $0.dataCachePolicy = .storeEncodedImages
+            $0.dataCachePolicy = .storeAll
         }
         
         pfp = ImagePipeline {
@@ -54,6 +55,22 @@ class ImageProcessing {
             $0.dataCachePolicy = .storeAll
         }
         
+        pfpNotFollowing = ImagePipeline {
+            $0.dataLoader = DataLoader(configuration: {
+                // Disable disk caching built into URLSession
+                let conf = DataLoader.defaultConfiguration
+                conf.urlCache = nil
+                return conf
+            }())
+            
+            let dataCache = try! DataCache(name: "com.nostur.image.pfp.notfollowing")
+            dataCache.sizeLimit = 1024 * 1024 * 50
+            
+            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 50)  // 150 MB
+            $0.dataCache = dataCache
+            $0.dataCachePolicy = .storeAll
+        }
+        
         banner = ImagePipeline {
             $0.dataLoader = DataLoader(configuration: {
                 // Disable disk caching built into URLSession
@@ -67,7 +84,7 @@ class ImageProcessing {
             
             $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 50)  // 50 MB
             $0.dataCache = dataCache
-            $0.dataCachePolicy = .storeOriginalData
+            $0.dataCachePolicy = .storeAll
         }
         
         content = ImagePipeline {
@@ -83,7 +100,7 @@ class ImageProcessing {
             
             $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 50, countLimit: 100)  // 100 MB
             $0.dataCache = dataCache
-            $0.dataCachePolicy = .storeOriginalData
+            $0.dataCachePolicy = .storeAll
         }
         
         badges = ImagePipeline {

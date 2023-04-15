@@ -125,6 +125,7 @@ struct NoteRow: View {
             
             HStack(alignment: .top, spacing:0) {
                 PFP(pubkey: event.pubkey, pictureUrl: event.contact?.picture)
+                    .frame(width: 50, height: 50)
                     .background(alignment: .top, content: {
                         Color("LightGray")
                             .frame(width: 2, height: 20)
@@ -135,7 +136,9 @@ struct NoteRow: View {
                         navigateTo(ContactPath(key: event.pubkey)) // TODO: if vPost.contact navigate with that else by .pubkey
                     }
                     .padding(.horizontal, 10)
-                
+//                Circle().frame(width: 50, height: 50)
+//                    .padding(.horizontal, 10)
+//
                 VStack(alignment:.leading, spacing: 0) {// Post container
                     HStack { // name + reply + context menu
                         NoteHeaderView(vPost: vPost)

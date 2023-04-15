@@ -18,64 +18,47 @@ struct LinkPreviewView: View {
     var body: some View {
         Group {
             VStack(alignment:.leading, spacing:0) {
-                //                Text(tags.description)
-                if let image = tags["image"], let width = tags["image:width"], let height = tags["image:height"] {
-                    LazyImage(url: URL(string: image)) { state in
-                        if let image = state.image {
-                            image
-                                .resizable()
-                                .modifier(SizeModifier())
+                Color.clear.frame(height: 0)
+                    .modifier(SizeModifier())
+                if viewSize.width > 0 {
+                    if let image = tags["image"] {
+                        LazyImage(url: URL(string: image)) { state in
+                            if let image = state.image {
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                            }
                         }
+                        .processors([.resize(width: viewSize.width)])
+                        .pipeline(ImageProcessing.shared.linkPreview)
                     }
-                    .pipeline(ImageProcessing.shared.linkPreview)
-                    .frame(height: max(2,Double(height) / ( Double(width) / viewSize.width )) )
-                    .onPreferenceChange(SizePreferenceKey.self) { size in
-                        print("🟣🟣🟣🟣🟣 \(size.width) \(size.height) ")
-                        viewSize = size
-                    }
-                }
-                
-                else if let image = tags["image"] {
-                    LazyImage(url: URL(string: image)) { state in
-                        if let image = state.image {
-                            //                            GeometryReader { geometry in
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                            //                                    .frame(width: geometry.size.width)
-                            //                                    .background(GeometryReader { proxy in
-                            //                                        Color.clear.preference(key: ImageSizePreferenceKey.self, value: proxy.size)
-                            //                                    })
-                            //                            }
+                    VStack(alignment:.leading, spacing:5) {
+                        if let title = tags["title"] {
+                            Text(title.htmlUnescape()).lineLimit(2)
+                                .fontWeight(.bold)
                         }
-                    }
-                    .pipeline(ImageProcessing.shared.linkPreview)
-                    .frame(height: 250)
-                }
-                VStack(alignment:.leading, spacing:5) {
-                    if let title = tags["title"] {
-                        Text(title.htmlUnescape()).lineLimit(2)
-                            .fontWeight(.bold)
-                    }
-                    else if let title = tags["fallback_title"] {
-                        Text(title.htmlUnescape()).lineLimit(2)
-                            .fontWeight(.bold)
-                    }
-                    if let description = tags["description"] {
-                        Text(description.htmlUnescape()).lineLimit(3)
+                        else if let title = tags["fallback_title"] {
+                            Text(title.htmlUnescape()).lineLimit(2)
+                                .fontWeight(.bold)
+                        }
+                        if let description = tags["description"] {
+                            Text(description.htmlUnescape()).lineLimit(3)
+                                .font(.caption)
+                        }
+                        Text(url.absoluteString).lineLimit(2)
                             .font(.caption)
+                            .foregroundColor(.gray)
                     }
-                    Text(url.absoluteString).lineLimit(2)
-                        .font(.caption)
-                        .foregroundColor(.gray)
+                    .padding(10)
                 }
-                .padding(10)
+            }
+            .onPreferenceChange(SizePreferenceKey.self) { size in
+                guard size.width > 0 else { return }
+                print("🟣🟣🟣🟣🟣 LPV \(size.width) \(size.height) -- \(UIScreen.main.scale) ")
+                viewSize = size
             }
             .background(Color("ListBackground"))
             .clipShape(RoundedRectangle(cornerRadius: 10.0))
-            //            .onPreferenceChange(ImageSizePreferenceKey.self) { size in
-            //                imageSize = size
-            //            }
         }
         .onTapGesture {
             UIApplication.shared.open(url)
