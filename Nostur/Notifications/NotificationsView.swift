@@ -80,7 +80,7 @@ struct NotificationsView: View {
                     case "Posts":
                         NotificationsPosts(pubkey: account.publicKey, mutedRootIds: account.mutedRootIds_, blockedPubkeys: account.blockedPubkeys_, context: viewContext)
                             .equatable()
-                            .padding(.horizontal, 10)
+//                            .padding(.horizontal, 10)
                     case "Reactions":
                         NotificationsReactions(pubkey: account.publicKey, blockedPubkeys: account.blockedPubkeys_, context: viewContext)
                             .equatable()
@@ -88,7 +88,7 @@ struct NotificationsView: View {
                     case "Zaps":
                         NotificationsZaps(pubkey: account.publicKey, blockedPubkeys: account.blockedPubkeys_, context: viewContext)
                             .equatable()
-                            .padding(.horizontal, 10)
+//                            .padding(.horizontal, 10)
                     default:
                         EmptyView()
                 }

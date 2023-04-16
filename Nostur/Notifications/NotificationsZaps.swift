@@ -19,21 +19,21 @@ struct NotificationsZaps: View, Equatable {
     let pubkey:String
     let blockedPubkeys:[String]
     let FETCH_LIMIT = 200
-     
+    
     let sp:SocketPool = .shared
     @EnvironmentObject var ns:NosturState
     @Environment(\.managedObjectContext) var viewContext
     
     @FetchRequest
     var zaps:FetchedResults<Event>
-
-        
+    
+    
     var zapsForMe:[Event] {
         zaps.filter {
             $0.zappedContactPubkey != nil && $0.zappedContactPubkey == pubkey
         }
     }
-
+    
     var myNotesZapped:[Event] {
         // TODO: hmm we can already use zap.zappedEvent... instead of fetching by ID again
         let r = Event.fetchRequest()
@@ -44,7 +44,7 @@ struct NotificationsZaps: View, Equatable {
         r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         return (try? viewContext.fetch(r).filter { $0.pubkey == self.pubkey }) ?? []
     }
-
+    
     func zapsForNote(_ note:Event) -> [Event] {
         return zapsForMe.filter { zap in
             if let zappedEventId = zap.zappedEventId {
@@ -53,7 +53,7 @@ struct NotificationsZaps: View, Equatable {
             return false
         }
     }
-//    
+    //
     init(pubkey:String, blockedPubkeys:[String], context:NSManagedObjectContext) {
         self.pubkey = pubkey
         self.blockedPubkeys = blockedPubkeys
@@ -61,22 +61,22 @@ struct NotificationsZaps: View, Equatable {
         r1.predicate = NSPredicate(
             format:
                 "zappedContactPubkey == %@" + // ONLY TO ME
-                "AND kind == 9735 " + // ONLY ZAPS
-                "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS
+            "AND kind == 9735 " + // ONLY ZAPS
+            "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS
             pubkey,
             blockedPubkeys
         )
         r1.fetchLimit = FETCH_LIMIT
         r1.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         let oldestCreatedAt = (try? context.fetch(r1).last?.created_at) ?? 0
-
+        
         let r2 = Event.fetchRequest()
         r2.predicate = NSPredicate(
             format:
                 "created_at >= %i " +
-                "AND zappedContactPubkey == %@" + // ONLY TO ME
-                "AND kind == 9735 " +
-                "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS) // OPTIMISATION HACK
+            "AND zappedContactPubkey == %@" + // ONLY TO ME
+            "AND kind == 9735 " +
+            "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS) // OPTIMISATION HACK
             oldestCreatedAt,
             pubkey,
             blockedPubkeys
@@ -85,7 +85,7 @@ struct NotificationsZaps: View, Equatable {
         r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         _zaps = FetchRequest(fetchRequest: r2)
     }
-//    
+    //
     var body: some View {
         let _ = Self._printChanges()
         List {
@@ -96,7 +96,6 @@ struct NotificationsZaps: View, Equatable {
                             HStack(alignment: .top) {
                                 VStack {
                                     Image(systemName: "bolt.fill")
-                                        .foregroundColor(.green)
                                     Text(Double(note.zapTally).satsFormatted)
                                         .font(.title2)
                                     if (er.bitcoinPrice != 0.0) {
@@ -107,7 +106,7 @@ struct NotificationsZaps: View, Equatable {
                                             .opacity(note.zapTally != 0 ? 0.5 : 0)
                                     }
                                 }
-                                .frame(width:70)
+                                .frame(width:80)
                                 VStack(alignment:.leading, spacing: 3) {
                                     Group {
                                         ZapsForThisNote(zaps:zapsForNote(note))
@@ -115,14 +114,11 @@ struct NotificationsZaps: View, Equatable {
                                     }
                                 }
                             }
-                            .padding(.vertical, 10)
-        //                    .background(Color.systemBackground)
                             .contentShape(Rectangle())
                             .onTapGesture {
                                 navigateTo(note.toVPost()!)
                             }
                             .id(note.id)
-                            .listRowInsets(EdgeInsets())
                         }
                         else {
                             HStack(alignment: .top) {
@@ -139,24 +135,22 @@ struct NotificationsZaps: View, Equatable {
                                             .opacity(zap.naiveSats != 0 ? 0.5 : 0)
                                     }
                                 }
-                                .frame(width:70)
+                                .frame(width:80)
                                 VStack(alignment:.leading, spacing: 3) {
                                     PFP(pubkey: zap.zapFromRequest?.pubkey ?? "WTF", pictureUrl: zap.zapFromRequest?.contact?.picture)
                                     Text("**\(zap.zapFromRequest?.contact?.authorName ?? "??")** zapped your profile")
                                     Text(zap.zapFromRequest?.noteText ?? "")
                                 }
-                                .background(Color.systemBackground)
                                 .onTapGesture {
                                     guard let pubkey = zap.zapFromRequest?.pubkey else { return }
                                     navigateTo(ContactPath(key: pubkey))
                                 }
                             }
-                            .padding(.vertical, 10)
-        //                    .background(Color.systemBackground)
-                            .contentShape(Rectangle())
-                            .listRowInsets(EdgeInsets())
                         }
                     }
+                    .background(Color.systemBackground)
+                    .padding(.vertical, 10)
+                    .listRowInsets(EdgeInsets())
                 }
             }
             Section {
@@ -249,7 +243,7 @@ struct ZapsForThisNote: View {
         return d
     }
     
-
+    
     var body: some View {
         VStack(alignment:.leading) {
             ZStack {
@@ -277,28 +271,28 @@ struct ZapsForThisNote: View {
                 Text("**\(deduplicated.values.first(where: { $0.4 != nil })?.4 ?? "???")** zapped your post")
             }
         }
-//        .onAppear {
-////            self.fetchMissingEventContacts(events:Array(withoutDuplicates.prefix(10)))
-//        }
+        //        .onAppear {
+        ////            self.fetchMissingEventContacts(events:Array(withoutDuplicates.prefix(10)))
+        //        }
     }
-//
-//    func fetchMissingEventContacts(events:[Event]) {
-//        let pubkeys = pubkeys(events)
-//        let contacts = Contact.fetchByPubkeys(pubkeys, context: viewContext)
-//        let missingPubkeys = pubkeys.filter {
-//            contacts.map { $0.pubkey }.firstIndex(of: $0) == nil
-//        }
-//        let emptyContactPubkeys = pubkeys
-//            .compactMap { pubkey in
-//                contacts.first(where: { $0.pubkey == pubkey })
-//            }
-//            .filter { $0.updated_at == 0 }
-//            .map { $0.pubkey }
-//
-//        guard (missingPubkeys + emptyContactPubkeys).count > 0 else { return }
-//        print("Fetching  \((missingPubkeys + emptyContactPubkeys).count) missing or empty contacts")
-//        SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missingPubkeys + emptyContactPubkeys )))
-//    }
+    //
+    //    func fetchMissingEventContacts(events:[Event]) {
+    //        let pubkeys = pubkeys(events)
+    //        let contacts = Contact.fetchByPubkeys(pubkeys, context: viewContext)
+    //        let missingPubkeys = pubkeys.filter {
+    //            contacts.map { $0.pubkey }.firstIndex(of: $0) == nil
+    //        }
+    //        let emptyContactPubkeys = pubkeys
+    //            .compactMap { pubkey in
+    //                contacts.first(where: { $0.pubkey == pubkey })
+    //            }
+    //            .filter { $0.updated_at == 0 }
+    //            .map { $0.pubkey }
+    //
+    //        guard (missingPubkeys + emptyContactPubkeys).count > 0 else { return }
+    //        print("Fetching  \((missingPubkeys + emptyContactPubkeys).count) missing or empty contacts")
+    //        SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missingPubkeys + emptyContactPubkeys )))
+    //    }
 }
 
 struct NotificationsZaps_Previews: PreviewProvider {

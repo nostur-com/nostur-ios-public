@@ -22,6 +22,7 @@ struct NotificationsPosts: View, Equatable {
     let FETCH_LIMIT = 200
     let sp:SocketPool = .shared
      
+    @ObservedObject var settings:SettingsStore = .shared
     @EnvironmentObject var ns:NosturState
     @Environment(\.managedObjectContext) var viewContext
     
@@ -61,10 +62,13 @@ struct NotificationsPosts: View, Equatable {
     var body: some View {
         let _ = Self._printChanges()
         ScrollView {
-            LazyVStack {
+            LazyVStack(spacing: 0) {
                 ForEach(vPosts) { vPost in
                     NoteRow(vPost: vPost)
+                        .background(Color.systemBackground)
                         .boxShadow()
+                        .padding(.vertical, 10)
+                        .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
                         .onTapGesture {
                             navigateTo(vPost)
                         }
@@ -81,6 +85,7 @@ struct NotificationsPosts: View, Equatable {
                 }
             }
         }
+        .background(Color("ListBackground"))
         .onAppear {
             fetchNewerMentions()
             if let first = notes.first {

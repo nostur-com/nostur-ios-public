@@ -15,6 +15,7 @@ struct ProfileNotesView: View {
     let sp:SocketPool = .shared
     let pubkey:String
     @State var limit = 150
+    @ObservedObject var settings:SettingsStore = .shared
     
     var body: some View {
         DynamicFetchView(
@@ -25,8 +26,10 @@ struct ProfileNotesView: View {
                     if (events.count > 0) {
                         ForEach(events.compactMap { VPostTransformer.shared.toVPost($0, skipParents: true) }) { vPost in
                             NoteRow(vPost: vPost)
-//                                .id(vPost.id)
+                                .background(Color.systemBackground)
                                 .boxShadow()
+                                .padding(.vertical, 10)
+                                .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
                                 .onTapGesture {
                                     navigateTo(vPost)
                                 }
