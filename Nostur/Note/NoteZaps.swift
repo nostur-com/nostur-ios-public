@@ -94,7 +94,7 @@ struct NoteZapRow: View {
                     Spacer()
 
                 }
-                Text("Zapped \(event.naiveSats.clean) sats \(fiatPrice)")
+                Text("Zapped \(event.naiveSats.satsFormatted) sats \(fiatPrice)")
                 Text(event.zapFromRequest?.content ?? "")
             }
         }
