@@ -175,7 +175,15 @@ class LVM: NSObject, ObservableObject {
                 })
                 
                 DispatchQueue.main.async {
-                    self.lvmState.vPostLeafs.insert(contentsOf: newLeafThreads, at: 0)
+                    // clean up a bit if needed
+                    if self.lvmState.vPostLeafs.count > LVM_MAX_VISIBLE && self.lvmState.isAtTop {
+                        self.lvmState.vPostLeafs = newLeafThreads + self.lvmState.vPostLeafs.dropLast(newLeafThreads.count)
+                        print("Removed \(newLeafThreads.count) from the end")
+                    }
+                    else {
+                        self.lvmState.vPostLeafs.insert(contentsOf: newLeafThreads, at: 0)
+                    }
+                    
                     if !self.lvmState.isAtTop || !SettingsStore.shared.autoScroll {
                         self.lvmCounter.count += addedCount
                     }
@@ -359,7 +367,7 @@ class LVM: NSObject, ObservableObject {
             self.lvmState.restoreScrollToAnchor = ls?.lastAppearedAtAnchor ?? "BOTTOM"
 //            print("🟢🟢 lastAppeared.id on init: \(self.lastAppeared?.id ?? "")")
         }
-        self.performFetch()
+        self.performLocalFetch()
         self.fetchFeedTimer?.invalidate()
         self.fetchFeedTimer = Timer.scheduledTimer(withTimeInterval: FETCH_FEED_INTERVAL, repeats: true) { [weak self] _ in
             guard let self = self else { return }
@@ -373,8 +381,11 @@ class LVM: NSObject, ObservableObject {
     // MARK: STEP 0: FETCH FROM RELAYS
     func fetchFeedTimerNextTick() {
         guard self.viewIsVisible else { return }
+        
+        performLocalFetch()
+        
         guard !Importer.shared.isImporting else { print("⏳ Still importing, new fetch skipped."); return }
-        performFetch()
+        
         
         if (ot.isOnboarding && self.lvmState.vPostLeafs.count > 0) {
             ot.didStartOnboarding = false
@@ -439,7 +450,7 @@ extension LVM {
                 SocketPool.shared.allowNewFollowingSubscriptions()
                 let pubkeys = notification.object as! Set<String>
                 self.pubkeys = pubkeys
-                self.performFetch()
+                self.performLocalFetch()
             }
             .store(in: &subscriptions)
         
@@ -447,7 +458,7 @@ extension LVM {
             .sink { notification in
                 let pubkeys = notification.object as! Set<String>
                 self.pubkeys = pubkeys
-                self.performFetch()
+                self.performLocalFetch()
             }
             .store(in: &subscriptions)
         
@@ -739,11 +750,9 @@ extension LVM {
 extension LVM: NSFetchedResultsControllerDelegate {
     
     // MARK: FROM DB TO SCREEN STEP 1: FETCH REQUEST
-    func performFetch() {
-        print("🟢🟢🟢🟣🟣🟣🟣🟣🟢🟢🟢 performFetch 🟢🟢🟢🟢🟣🟣🟣🟣🟣🟣🟢🟢")
+    func performLocalFetch() {
         if let mostRecent = self.lvmState.vPostLeafs.first {
-            let fr = Event.postsByPubkeys(pubkeys, mostRecent: mostRecent.event
-        )
+            let fr = Event.postsByPubkeys(pubkeys, mostRecent: mostRecent.event)
             
             if viewIsVisible {
                 guard let posts = try? DataProvider.shared().viewContext.fetch(fr) else { return }

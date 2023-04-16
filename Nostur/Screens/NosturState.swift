@@ -281,7 +281,7 @@ final class NosturState : ObservableObject {
     
     func likePost(_ event:Event) -> NEvent? {
         guard account?.privateKey != nil else { readOnlyAccountSheetShown = true; return nil }
-        guard let account = account else { return nil }
+        guard account != nil else { return nil }
         let impactMed = UIImpactFeedbackGenerator(style: .medium)
         impactMed.impactOccurred()
         print("💖💖💖💖💖💖💖💖💖💖💖💖💖💖")
