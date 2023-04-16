@@ -21,7 +21,7 @@ struct SingleMediaViewer: View {
         VStack {
             Color.clear.frame(height: 0).modifier(SizeModifier())
             if (url.absoluteString.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
-                LazyImage(url: url, transaction: .init(animation: .none)) { state in
+                LazyImage(url: url) { state in
                     if let container = state.imageContainer {
                         if container.type == .gif, let gifData = container.data {
                             GeometryReader { geo in
@@ -58,10 +58,12 @@ struct SingleMediaViewer: View {
             }
             else {
                 if viewSize.width > 0 {
-                    LazyImage(url: url, transaction: .init(animation: .none)) { state in
+                    LazyImage(request: ImageRequest(url: url,
+                                processors: [.resize(width: viewSize.width)],
+                                userInfo: [.scaleKey: UIScreen.main.scale])) { state in
                         if let image = state.image {
                             image
-                                .resizable()
+//                                .resizable()
                                 .aspectRatio(contentMode: .fit)
                                 .onTapGesture {
                                     sendNotification(.fullScreenView, FullScreenItem(url: url))
@@ -72,7 +74,6 @@ struct SingleMediaViewer: View {
                                 .background(Color("LightGray"))
                         }
                     }
-                    .processors([.resize(width: viewSize.width)])
                     .pipeline(ImageProcessing.shared.content) // No processing again here, we probably never show the image again
                 }
             }

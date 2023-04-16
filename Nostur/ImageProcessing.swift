@@ -21,7 +21,7 @@ class ImageProcessing {
     var linkPreview:ImagePipeline
     
     init() {
-        //        ImagePipeline.shared = ImagePipeline(configuration: .withDataCache)
+        ImagePipeline.shared = ImagePipeline(configuration: .withDataCache)
         
         linkPreview = ImagePipeline {
             $0.dataLoader = DataLoader(configuration: {
@@ -36,7 +36,7 @@ class ImageProcessing {
             
             $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 25)  // 25 MB
             $0.dataCache = dataCache
-            $0.dataCachePolicy = .storeAll
+            $0.dataCachePolicy = .storeEncodedImages
         }
         
         pfp = ImagePipeline {
@@ -46,13 +46,13 @@ class ImageProcessing {
                 conf.urlCache = nil
                 return conf
             }())
-            
+
             let dataCache = try! DataCache(name: "com.nostur.image.pfp")
             dataCache.sizeLimit = 1024 * 1024 * 150
-            
+
             $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 150)  // 150 MB
             $0.dataCache = dataCache
-            $0.dataCachePolicy = .storeAll
+//            $0.dataCachePolicy = .storeAll
         }
         
         pfpNotFollowing = ImagePipeline {
@@ -68,7 +68,7 @@ class ImageProcessing {
             
             $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 50)  // 150 MB
             $0.dataCache = dataCache
-            $0.dataCachePolicy = .storeAll
+            $0.dataCachePolicy = .storeEncodedImages
         }
         
         banner = ImagePipeline {
@@ -84,7 +84,7 @@ class ImageProcessing {
             
             $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 50)  // 50 MB
             $0.dataCache = dataCache
-            $0.dataCachePolicy = .storeAll
+            $0.dataCachePolicy = .storeEncodedImages
         }
         
         content = ImagePipeline {
@@ -116,7 +116,7 @@ class ImageProcessing {
             
             $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 50, countLimit: 200)  // 100 MB
             $0.dataCache = dataCache
-            $0.dataCachePolicy = .storeAll
+            $0.dataCachePolicy = .storeEncodedImages
         }
         
         video = ImagePipeline {

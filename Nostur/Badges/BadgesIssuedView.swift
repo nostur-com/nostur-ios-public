@@ -114,7 +114,9 @@ struct BadgeRow: View {
                         .pipeline(ImageProcessing.shared.badges) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
                     }
                     else {
-                        LazyImage(url: URL(string: pictureUrl)) { state in
+                        LazyImage(request: ImageRequest(url: URL(string:pictureUrl),
+                                    processors: [.resize(width: 50)],
+                                    userInfo: [.scaleKey: UIScreen.main.scale])) { state in
                             if let image = state.image {
                                 image
                                     .resizable()
@@ -127,7 +129,7 @@ struct BadgeRow: View {
                                 CenteredProgressView()
                             }
                         }
-                        .processors([.resize(width: 50)])
+//                        .processors([.resize(width: 50)])
                         .pipeline(ImageProcessing.shared.badges)
     //                    .priority(.low)
                     }

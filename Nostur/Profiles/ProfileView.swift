@@ -103,7 +103,6 @@ struct ProfileView: View {
             predicate: NSPredicate(format: "pubkey == %@ AND kind == 0", pubkey)
         )
     }
-    
     var body: some View {
         GeometryReader { geo in
             ScrollView {

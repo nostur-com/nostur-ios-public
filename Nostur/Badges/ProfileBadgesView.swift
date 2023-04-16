@@ -185,7 +185,9 @@ struct BadgeIcon: View {
                 .priority(.low)
             }
             else {
-                LazyImage(url: URL(string: pictureUrl)) { state in
+                LazyImage(request: ImageRequest(url: URL(string:pictureUrl),
+                            processors: [.resize(width: 32)],
+                            userInfo: [.scaleKey: UIScreen.main.scale])) { state in
                     if let image = state.image {
                         image
                             .resizable()
@@ -197,7 +199,7 @@ struct BadgeIcon: View {
                         CenteredProgressView()
                     }
                 }
-                .processors([.resize(width: 32)])
+//                .processors([.resize(width: 32)])
                 .pipeline(ImageProcessing.shared.badges)
 //                    .priority(.low)
             }

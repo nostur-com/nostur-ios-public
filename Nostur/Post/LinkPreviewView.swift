@@ -22,14 +22,16 @@ struct LinkPreviewView: View {
                     .modifier(SizeModifier())
                 if viewSize.width > 0 {
                     if let image = tags["image"] {
-                        LazyImage(url: URL(string: image)) { state in
+                        LazyImage(request: ImageRequest(url: URL(string:image),
+                                    processors: [.resize(width: viewSize.width)],
+                                    userInfo: [.scaleKey: UIScreen.main.scale])) { state in
                             if let image = state.image {
                                 image
-                                    .resizable()
+//                                    .resizable()
                                     .aspectRatio(contentMode: .fit)
                             }
                         }
-                        .processors([.resize(width: viewSize.width)])
+//                        .processors([.resize(width: viewSize.width)])
                         .pipeline(ImageProcessing.shared.linkPreview)
                     }
                     VStack(alignment:.leading, spacing:5) {
