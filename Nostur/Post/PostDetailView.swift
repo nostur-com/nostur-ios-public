@@ -336,15 +336,16 @@ struct DetailFooterFragment: View {
     var body: some View {
         Divider()
         HStack(spacing: 20) {
-            Text("**\(event.mentionsCount)** reposts").onTapGesture { }
+            Text("**\(event.mentionsCount)** reposts")//.onTapGesture { }
             
-            Text("**\(event.likesCount)** reactions").onTapGesture {
-                navigateTo(ViewPath.NoteReactions(event: event))
+            NavigationLink(value: ViewPath.NoteReactions(event: event)) {
+                Text("**\(event.likesCount)** reactions")
             }
-            Text("**\(event.zapsCount)** zaps").onTapGesture {
-                navigateTo(ViewPath.NoteZaps(event: event))
+                           
+            NavigationLink(value: ViewPath.NoteZaps(event: event)) {
+                Text("**\(event.zapsCount)** zaps")
             }
-            
+        
             Spacer()
         }
         .foregroundColor(.gray)
