@@ -20,6 +20,7 @@ struct SmoothList: UIViewControllerRepresentable {
     typealias FinishedScrollingCallback = (Bool) -> Void
     
     @Binding var needsRefresh: Bool
+    @Binding var needsFullReload: Bool
     @Binding var needsScrollToTop: Bool
     @Binding var needsScrollToIndex: Int?
     @Binding var data: [VPost]
@@ -28,8 +29,9 @@ struct SmoothList: UIViewControllerRepresentable {
     private var onRowAppeared: RowAppearedCallback?
     private var onFinishedScrolling: FinishedScrollingCallback?
     
-    init(needsRefresh: Binding<Bool>, needsScrollToTop:Binding<Bool>, needsScrollToIndex:Binding<Int?>, data: Binding<[VPost]>, autoScroll: Binding<Bool>, fullWidthImages: Binding<Bool>, onRowAppeared: RowAppearedCallback? = nil, onFinishedScrolling: FinishedScrollingCallback? = nil) {
+    init(needsRefresh: Binding<Bool>, needsFullReload:Binding<Bool>, needsScrollToTop:Binding<Bool>, needsScrollToIndex:Binding<Int?>, data: Binding<[VPost]>, autoScroll: Binding<Bool>, fullWidthImages: Binding<Bool>, onRowAppeared: RowAppearedCallback? = nil, onFinishedScrolling: FinishedScrollingCallback? = nil) {
         self._needsRefresh = needsRefresh
+        self._needsFullReload = needsFullReload
         self._needsScrollToTop = needsScrollToTop
         self._needsScrollToIndex = needsScrollToIndex
         self._data = data
@@ -71,7 +73,14 @@ struct SmoothList: UIViewControllerRepresentable {
     }
     
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            if needsFullReload, let collectionViewHolder = context.coordinator.collectionViewHolder {
+                fullReload(collectionViewHolder)
+                Task {
+                    needsFullReload = false
+                }
+            }
+            
             if needsRefresh, let collectionViewHolder = context.coordinator.collectionViewHolder {
                 refreshData(collectionViewHolder)
                 Task {
@@ -102,6 +111,9 @@ struct SmoothList: UIViewControllerRepresentable {
         }
     }
     
+    private func fullReload(_ collectionViewHolder: CollectionViewHolderType) {
+        collectionViewHolder.collectionView.reloadData()
+    }
     private func refreshData(_ collectionViewHolder: CollectionViewHolderType) {
         var newSnapshot = NSDiffableDataSourceSnapshot<SingleSection, String>()
         newSnapshot.appendSections([SingleSection.main])
@@ -256,7 +268,7 @@ final class CViewHolder {
     private var FullWidthPostOrThreadCellRegistration: UICollectionView.CellRegistration<UICollectionViewListCell, VPost> = {
         .init { cell, indexPath, vPost in
             cell.contentConfiguration = UIHostingConfiguration {
-                PostOrThread(vPost: vPost)
+                PostOrThread(vPost: vPost, fullWidth: true)
                     .boxShadow()
                     .padding(.vertical, 10)
             }
@@ -306,6 +318,7 @@ final class CViewHolder {
 
 struct SmoothList_PReviews: PreviewProvider {
     @State static var needsRefresh = false
+    @State static var needsFullReload = false
     @State static var needsScrollToTop = false
     @State static var needsScrollToIndex:Int? = nil
     @State static var autoScroll = true
@@ -321,7 +334,7 @@ struct SmoothList_PReviews: PreviewProvider {
     
     static var previews: some View {
         VStack(spacing:0) {
-            SmoothList(needsRefresh: $needsRefresh, needsScrollToTop: $needsScrollToTop, needsScrollToIndex: $needsScrollToIndex, data: $vPosts, autoScroll: $autoScroll, fullWidthImages: $fullWidthImages)
+            SmoothList(needsRefresh: $needsRefresh, needsFullReload: $needsFullReload, needsScrollToTop: $needsScrollToTop, needsScrollToIndex: $needsScrollToIndex, data: $vPosts, autoScroll: $autoScroll, fullWidthImages: $fullWidthImages)
                 .onAppear {
                     needsRefresh = true
                 }

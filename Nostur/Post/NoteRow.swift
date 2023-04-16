@@ -13,15 +13,17 @@ struct NoteRow: View {
     var hideFooter = true // For rendering in NewReply
     var inThread = false // For rendering in thread, hide "Replying to.."
     var connect:ThreadConnectDirection? = nil
+    let fullWidth:Bool
     
     private let sp:SocketPool = .shared
     
-    init(vPost:VPost, hideFooter:Bool = false, inThread:Bool = false, connect: ThreadConnectDirection? = nil) {
+    init(vPost:VPost, hideFooter:Bool = false, inThread:Bool = false, connect: ThreadConnectDirection? = nil, fullWidth:Bool = false) {
         self.vPost = vPost
         self.event = vPost.event
         self.hideFooter = hideFooter
         self.inThread = inThread
         self.connect = connect
+        self.fullWidth = fullWidth
     }
     
     var body: some View {
@@ -56,21 +58,38 @@ struct NoteRow: View {
                     else {
                         if vPost.event.content == "#[0]" {
                             if let firstQuoteId = event.firstQuoteId {
-                                Kind1ById(id: firstQuoteId, hideFooter: false)
+                                Kind1ById(id: firstQuoteId, hideFooter: false, fullWidth: fullWidth)
                             }
                             else {
-                                Kind1(vPost: vPost, hideFooter: true)
+                                if fullWidth {
+                                    Kind1(vPost: vPost, hideFooter: true)
+                                }
+                                else {
+                                    Kind1Default(vPost: vPost, hideFooter: true)
+                                }
                             }
                         }
                         else {
-                            Kind1(vPost: vPost, hideFooter: true)
+                            if fullWidth {
+                                Kind1(vPost: vPost, hideFooter: true)
+                            }
+                            else {
+                                Kind1Default(vPost: vPost, hideFooter: true)
+                            }
                         }
                     }
                 }
                 // IS NOT A REPOST
                 else {
-                    Kind1(vPost: vPost, hideFooter: hideFooter, inThread:inThread, connect:connect)
-                    //                .background(Color.random)
+                    if fullWidth {
+                        Kind1(vPost: vPost, hideFooter: hideFooter, inThread:inThread, connect:connect)
+                        //                .background(Color.random)
+                    }
+                    else {
+                        Kind1Default(vPost: vPost, hideFooter: hideFooter, inThread:inThread, connect:connect)
+                        //                .background(Color.random)
+                    }
+                    
                 }
             }
             .padding(.top, 20)
@@ -100,7 +119,7 @@ struct NoteRow: View {
     }
     
     
-    struct Kind1: View {
+    struct Kind1Default: View {
         let vPost:VPost
         let hideFooter:Bool // For rendering in NewReply
         let inThread:Bool // For rendering in thread
@@ -169,6 +188,70 @@ struct NoteRow: View {
                     .opacity(connect == .bottom || connect == .both ? 1 : 0)
             }
             .padding(.trailing, 10)
+            
+        }
+    }
+    
+    // Full width
+    struct Kind1: View {
+        let vPost:VPost
+        let hideFooter:Bool // For rendering in NewReply
+        let inThread:Bool // For rendering in thread
+        var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
+        @ObservedObject var event:Event
+         
+        let sp:SocketPool = .shared
+        let up:Unpublisher = .shared
+        @ObservedObject var settings:SettingsStore = .shared
+        
+        init(vPost: VPost, hideFooter:Bool = true, inThread:Bool = false, connect:ThreadConnectDirection? = nil) {
+            self.vPost = vPost
+            self.event = vPost.event
+            self.hideFooter = hideFooter
+            self.inThread = inThread
+            self.connect = connect
+        }
+        
+        let THREAD_LINE_OFFSET = 34.0
+        
+        var body: some View {
+            
+            VStack(spacing: 0) {
+                HStack(alignment: .top, spacing:0) {
+                    PFP(pubkey: event.pubkey, pictureUrl: event.contact?.picture)
+                        .frame(width: 50, height: 50)
+                        .onTapGesture {
+                            navigateTo(ContactPath(key: event.pubkey)) // TODO: if vPost.contact navigate with that else by .pubkey
+                        }
+                        .padding(.horizontal, 10)
+                    VStack {
+                        HStack {
+                            NoteHeaderView(vPost: vPost)
+                            Spacer()
+                            NoteMenuView(vPost: vPost)
+                                .padding(.horizontal, 20)
+                        }
+                        ReplyingToFragmentView(vPost: vPost)
+                            .padding(.bottom, 5)
+                            .contentShape(Rectangle())
+                            .onTapGesture { navigateTo(vPost) }
+                    }
+                }
+                .padding(.bottom, 10)
+                VStack(alignment:.leading, spacing: 0) {// Post container
+                    ContentRenderer(vPost: vPost, fullWidth: true)
+                    if (!hideFooter && settings.rowFooterEnabled) {
+//                            .frame(height: 30)
+                        FooterFragmentView(vPost: vPost)
+                            .padding(10)
+//                            .background(.orange)
+                    }
+                }
+//                .padding(.bottom, 20)
+//                .background(.red)
+            }
+//            .padding(.trailing, 10)
+//            .background(.orange)
             
         }
     }

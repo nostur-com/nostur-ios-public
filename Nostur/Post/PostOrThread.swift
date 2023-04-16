@@ -9,6 +9,12 @@ import SwiftUI
 
 struct PostOrThread: View {
     var vPost: VPost
+    let fullWidth:Bool
+    
+    init(vPost: VPost, fullWidth: Bool = false) {
+        self.vPost = vPost
+        self.fullWidth = fullWidth
+    }
 
     var body: some View {
         VStack(spacing:0) {
@@ -20,7 +26,7 @@ struct PostOrThread: View {
 //                }
                 NoteRow(vPost: vPost.parentPosts[index],
                         inThread: (vPost.event.replyToId != nil && index != 0),
-                        connect: vPost.parentPosts[index].event.replyToId != nil || index > 0 ? .both : .bottom)
+                        connect: vPost.parentPosts[index].event.replyToId != nil || index > 0 ? .both : .bottom, fullWidth: fullWidth)
                     .background(Color.systemBackground)
                     .onTapGesture {
                         guard vPost.event.deletedById == nil else { return }
@@ -33,7 +39,7 @@ struct PostOrThread: View {
 //                    navigateTo(vPost)
 //                }.padding(.top, 10)
 //            }
-            NoteRow(vPost: vPost, inThread: vPost.event.replyToId != nil && vPost.parentPosts.count > 0, connect: vPost.event.replyToId != nil ? .top : nil)
+            NoteRow(vPost: vPost, inThread: vPost.event.replyToId != nil && vPost.parentPosts.count > 0, connect: vPost.event.replyToId != nil ? .top : nil, fullWidth: fullWidth)
                 .background(Color.systemBackground)
                 .onTapGesture {
                     guard vPost.event.deletedById == nil else { return }
@@ -46,6 +52,7 @@ struct PostOrThread: View {
                 }
                 .id(vPost.id)
         }
+//        .frame(width: UIScreen.main.bounds.width - 20)
     }
 }
 

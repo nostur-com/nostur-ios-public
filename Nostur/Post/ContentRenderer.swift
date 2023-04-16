@@ -17,15 +17,17 @@ struct ContentRenderer: View { // VIEW things
     
     let vPost:VPost
     let isDetail:Bool
+    let fullWidth:Bool
     @ObservedObject var event:Event
     @State var isPlaying = false
     @State var renderedElements:[MarkdownElement]
     @State var subscriptions = Set<AnyCancellable>()
     
-    init(vPost: VPost, isDetail:Bool = false) {
+    init(vPost: VPost, isDetail:Bool = false, fullWidth:Bool = false) {
         self.isDetail = isDetail
         self.vPost = vPost
         self.event = vPost.event
+        self.fullWidth = fullWidth
         _renderedElements = State(initialValue: isDetail ? vPost.renderedElementsDetail : vPost.renderedElements )
     }
     
@@ -45,10 +47,12 @@ struct ContentRenderer: View { // VIEW things
                     case .note1(let noteId):
                         QuoteById(id: hex(noteId))
                             .padding(.vertical, 5)
+                            .padding(.horizontal, fullWidth ? 10 : 0)
 //                            .frame(maxWidth: .infinity, maxHeight:400, alignment: .leading)
                     case .noteId(let hex):
                         QuoteById(id: hex)
                             .padding(.vertical, 5)
+                            .padding(.horizontal, fullWidth ? 10 : 0)
 //                            .frame(maxWidth: .infinity, maxHeight:400, alignment: .leading)
                     case .text(let attributedString):
                         // BROKEN SHIT
@@ -62,12 +66,14 @@ struct ContentRenderer: View { // VIEW things
                             .accentColor(Color("AccentColor"))
                             .tint(Color("AccentColor"))
                             .lineSpacing(3)
+                            .padding(.horizontal, fullWidth ? 10 : 0)
 //                            .padding(0)
 //                            .frame(maxWidth: .infinity)
 //                            .padding(.vertical, 5)
 //                                                    .frame(maxWidth: .infinity, alignment: .leading)
                     case .lnbc(let text):
                         LightningInvoice(invoice: text)
+                            .padding(.horizontal, fullWidth ? 10 : 0)
                     case .video(let url):
                         LazyImage(url: url) { state in
                             if let container = state.imageContainer {
@@ -114,6 +120,7 @@ struct ContentRenderer: View { // VIEW things
                         LinkPreviewView(url: url)
 //                            .frame(height: 250)
                             .padding(.vertical, 5)
+                            .padding(.horizontal, fullWidth ? 10 : 0)
                     default:
                         EmptyView()
                 }
@@ -259,14 +266,16 @@ struct Kind1ById: View {
 
     let id:String
     let hideFooter:Bool
+    let fullWidth:Bool
     //    @ObservedObject var vm:EventVM // no vm want fr is not updating after receiving from websocket
 
     @FetchRequest
     var events:FetchedResults<Event>
     //
-    init(id:String, hideFooter:Bool = true) {
+    init(id:String, hideFooter:Bool = true, fullWidth:Bool = false) {
         self.id = id
         self.hideFooter = hideFooter
+        self.fullWidth = fullWidth
         let fr = Event.fetchRequest()
         fr.predicate = NSPredicate(format: "id == %@", id)
         fr.fetchLimit = 1
@@ -275,7 +284,12 @@ struct Kind1ById: View {
 
     var body: some View {
         if let vPost = events.first?.toVPost() {
-            NoteRow.Kind1(vPost: vPost, hideFooter:hideFooter)
+            if fullWidth {
+                NoteRow.Kind1(vPost: vPost, hideFooter:hideFooter)
+            }
+            else {
+                NoteRow.Kind1Default(vPost: vPost, hideFooter:hideFooter)
+            }
         }
         else {
             ProgressView()

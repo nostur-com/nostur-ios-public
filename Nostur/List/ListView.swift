@@ -14,6 +14,7 @@ struct ListView: View {
     @State var needsScrollToTop = false
     @State var needsScrollToIndex:Int? = nil
     @State var needsRefresh = false
+    @State var needsFullReload = false
     
     let vm:LVM
     @ObservedObject var vmState:LVMState
@@ -32,6 +33,7 @@ struct ListView: View {
                 
                 ZStack {
                     SmoothList(needsRefresh: $needsRefresh,
+                               needsFullReload: $needsFullReload,
                                needsScrollToTop: $needsScrollToTop,
                                needsScrollToIndex: $needsScrollToIndex,
                                data: $vmState.vPostLeafs,
@@ -72,6 +74,9 @@ struct ListView: View {
                 }
                 .onChange(of: selectedSubTab) { selectedTab in
                     vmState.viewIsVisible = selectedTab == vm.id
+                }
+                .onChange(of: settings.fullWidthImages) { newValue in
+                    needsFullReload = true
                 }
             }
             else {
