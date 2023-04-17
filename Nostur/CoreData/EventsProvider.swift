@@ -129,7 +129,7 @@ class EventsProvider: ObservableObject {
         relay.url = "wss://nostr.bitcoin.sex"
         relay.createdAt = Date()
         relay.id = UUID()
-        relay.read = true
+        relay.read = false
         relay.write = false
         
         let contact = Contact(context: context)

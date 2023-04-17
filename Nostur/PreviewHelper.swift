@@ -75,8 +75,8 @@ struct PreviewFetcher {
     }
     
     static func fetchEvents(_ pubkey:String, kind:Int? = nil, context:NSManagedObjectContext? = nil) -> [Event] {
-        let request = NSFetchRequest<Event>(entityName: "Event")
-        request.entity = Event.entity()
+        let request = Event.fetchRequest()
+//        request.entity = Event.entity()
         if (kind != nil) {
             request.predicate = NSPredicate(format: "pubkey == %@ AND kind == %d", pubkey, kind!)
         } else {
@@ -89,29 +89,31 @@ struct PreviewFetcher {
     }
     
     static func fetchEvents(_ pubkeys:Set<String>, kind:Int? = nil, context:NSManagedObjectContext? = nil) -> [Event] {
-        let request = NSFetchRequest<Event>(entityName: "Event")
-        request.entity = Event.entity()
-        if (kind != nil) {
-            request.predicate = NSPredicate(format: "pubkey IN %@ AND kind == %d", pubkeys, kind!)
+        let request = Event.fetchRequest()
+//        request.entity = Event.entity()
+        if let kind {
+            request.predicate = NSPredicate(format: "pubkey IN %@ AND kind == %d", pubkeys, kind)
         } else {
             request.predicate = NSPredicate(format: "pubkey IN %@", pubkeys)
         }
         
         request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         
-        return try! (context ?? PreviewFetcher.viewContext).fetch(request)
+        return (try? (context ?? PreviewFetcher.viewContext).fetch(request)) ?? []
     }
     
     static func fetchAccount(_ pubkey:String? = nil, context:NSManagedObjectContext? = nil) -> Account? {
         let accountKey = pubkey ?? "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
-        let request = NSFetchRequest<Account>(entityName: "Account")
+        let request = Account.fetchRequest()
+//        let request = NSFetchRequest<Account>(entityName: "Account")
         request.predicate = NSPredicate(format: "publicKey == %@", accountKey)
         request.sortDescriptors = []
         return try! (context ?? PreviewFetcher.viewContext).fetch(request).first
     }
     
     static func fetchEvent(_ id:String? = nil, context:NSManagedObjectContext? = nil) -> Event? {
-        let request = NSFetchRequest<Event>(entityName: "Event")
+        let request = Event.fetchRequest()
+//        let request = NSFetchRequest<Event>(entityName: "Event")
         if id != nil {
             request.predicate = NSPredicate(format: "id == %@", id!)
         }
@@ -129,7 +131,7 @@ struct PreviewFetcher {
     }
     
     static func fetchContact(_ pubkey:String? = nil, context:NSManagedObjectContext? = nil) -> Contact? {
-        let request = NSFetchRequest<Contact>(entityName: "Contact")
+        let request = Contact.fetchRequest()
         if pubkey != nil {
             request.predicate = NSPredicate(format: "pubkey == %@", pubkey!)
         }
@@ -137,7 +139,7 @@ struct PreviewFetcher {
     }
     
     static func fetchList(context:NSManagedObjectContext? = nil) -> NosturList? {
-        let request = NSFetchRequest<NosturList>(entityName: "NosturList")
+        let request = NosturList.fetchRequest()
         return try! (context ?? PreviewFetcher.viewContext).fetch(request).randomElement()
     }
 }

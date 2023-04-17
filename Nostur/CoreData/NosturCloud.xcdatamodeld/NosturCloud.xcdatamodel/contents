@@ -49,7 +49,7 @@
             </uniquenessConstraint>
         </uniquenessConstraints>
     </entity>
-    <entity name="Event" representedClassName=".Event" elementID="mentionsCount" versionHashModifier="added index 2" syncable="YES">
+    <entity name="Event" representedClassName=".Event" elementID="mentionsCount" versionHashModifier="added index 3" syncable="YES">
         <attribute name="content" optional="YES" attributeType="String"/>
         <attribute name="created_at" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="deletedById" optional="YES" attributeType="String"/>
@@ -93,6 +93,10 @@
         </fetchIndex>
         <fetchIndex name="byCreatedAt">
             <fetchIndexElement property="created_at" type="Binary" order="descending"/>
+        </fetchIndex>
+        <fetchIndex name="byRepostForIdAndPubkey">
+            <fetchIndexElement property="repostForId" type="Binary" order="ascending"/>
+            <fetchIndexElement property="pubkey" type="Binary" order="ascending"/>
         </fetchIndex>
         <uniquenessConstraints>
             <uniquenessConstraint>

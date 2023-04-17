@@ -56,7 +56,7 @@ struct ProfileNotesView: View {
                     }
                 }
             }
-            .padding()
+//            .padding()
             .background(Color("ListBackground"))
     }
 }

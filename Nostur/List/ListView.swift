@@ -29,7 +29,7 @@ struct ListView: View {
         let _ = Self._printChanges()
         VStack {
             if vmState.vPostLeafs.count > 0 {
-                Text("\(vmState.state.rawValue) | vPosts: \(vmState.vPostLeafs.count) | threadValue: \(vmState.vPostLeafs.reduce(0, { $0 + $1.threadPostsCount } ) )")
+//                Text("\(vmState.state.rawValue) | vPosts: \(vmState.vPostLeafs.count) | threadValue: \(vmState.vPostLeafs.reduce(0, { $0 + $1.threadPostsCount } ) )")
                 
                 ZStack {
                     SmoothList(needsRefresh: $needsRefresh,
@@ -62,7 +62,7 @@ struct ListView: View {
                         needsScrollToIndex = getRestoreScrollIndex()
                         needsRefresh = true
                     }
-                    .background(Color.indigo)
+//                    .background(Color.indigo)
                     VStack {
                         Spacer()
                         ProcessingStatus()

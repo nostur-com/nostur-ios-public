@@ -31,13 +31,12 @@ struct ContactsSearch: View {
             }
             ForEach(contacts) { contact in
                 ContactSearchResultRow(contact: contact) {
-                    if onSelected != nil {
-                        self.onSelected!(contact)
+                    if let onSelected {
+                        onSelected(contact)
                     }
                     searching = false
                     debounceObject.text = ""
                     contacts.nsPredicate = NSPredicate(value: false)
-
                 }
                 Divider()
             }

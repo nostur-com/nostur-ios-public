@@ -103,15 +103,17 @@ struct TabContainer: View {
                     .withNavigationDestinations()
             }
             else if let contact = tab.contact {
-                ProfileView(contact:contact)
-                    .opacity(tm.selected == tab ? 1 : 0)
+                VStack {
+                    ProfileView(contact:contact)
+//                        .opacity(tm.selected == tab ? 1 : 0)
+                }
                     
             }
             else if let notePathId = tab.notePath?.id {
-                NoteById(id: notePathId).opacity(tm.selected == tab ? 1 : 0)
+                NoteById(id: notePathId)//.opacity(tm.selected == tab ? 1 : 0)
             }
             else if let contacPubkey = tab.contactPath?.key {
-                ProfileByPubkey(pubkey: contacPubkey).opacity(tm.selected == tab ? 1 : 0)
+                ProfileByPubkey(pubkey: contacPubkey)//.opacity(tm.selected == tab ? 1 : 0)
             }
             else {
                 EmptyView()
