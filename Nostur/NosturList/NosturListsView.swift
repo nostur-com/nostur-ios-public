@@ -1,24 +1,28 @@
 //
-//  ListManagerView.swift
+//  NosturLists.swift
 //  Nostur
 //
-//  Created by Fabian Lachman on 08/04/2023.
+//  Created by Fabian Lachman on 15/04/2023.
 //
 
 import SwiftUI
 
-struct ListManagerView: View {
-    
+struct NosturListsView: View {
     @Environment(\.managedObjectContext) var viewContext
-    
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \NosturList.createdAt, ascending: false)],
-        predicate: NSPredicate(value: true))
+    @FetchRequest
     var lists:FetchedResults<NosturList>
     
     @State var confirmDeleteShown = false
     @State var listToDelete:NosturList? = nil
+    @State var newList:NosturList? = nil
     
+    init() {
+        let r = NosturList.fetchRequest()
+        r.predicate = NSPredicate(value: true)
+        r.sortDescriptors = [NSSortDescriptor(keyPath:\NosturList.createdAt, ascending: false)]
+        _lists = FetchRequest(fetchRequest: r)
+    }
+        
     var body: some View {
         List(lists) { list in
             NavigationLink(value: list) {
@@ -28,15 +32,18 @@ struct ListManagerView: View {
                             listToDelete = list
                             confirmDeleteShown = true
                         } label: {
-                            Label("Delete", systemImage: "trash")
+                            Label("DeleteDelete", systemImage: "trash")
                         }
                         
                     }
             }
         }
+        
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-//                Button
+                Button("Create new list") {
+                    newList = NosturList(context: DataProvider.shared().viewContext)
+                }
             }
         }
         .navigationTitle("Lists")
@@ -49,9 +56,13 @@ struct ListManagerView: View {
                 self.listToDelete = nil
             }
         }
+        .sheet(item: $newList) { newList in
+            NavigationStack {
+                NewListSheet(list: newList)
+            }
+        }
     }
 }
-
 
 struct ListRow: View {
     @ObservedObject var list:NosturList
@@ -61,10 +72,10 @@ struct ListRow: View {
     }
 }
 
-struct ListManagerView_Previews: PreviewProvider {
+struct NosturListsView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
-            ListManagerView()
+            NosturListsView()
                 .withNavigationDestinations()
         }
         .withPreviewEnvironment()

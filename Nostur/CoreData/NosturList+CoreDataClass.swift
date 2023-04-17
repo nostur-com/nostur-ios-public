@@ -1,8 +1,8 @@
 //
-//  List+CoreDataClass.swift
+//  NosturList+CoreDataClass.swift
 //  Nostur
 //
-//  Created by Fabian Lachman on 20/01/2023.
+//  Created by Fabian Lachman on 15/04/2023.
 //
 //
 
@@ -16,7 +16,7 @@ public class NosturList: NSManagedObject {
         let contacts = PreviewFetcher.allContacts(context: context)
         for i in 0..<3 {
             let list = NosturList(context: context)
-            list.name = "List \(i)"
+            list.name = "Example List \(i)"
             list.addToContacts(NSSet(array: contacts.randomSample(count: 10)))
         }
     }

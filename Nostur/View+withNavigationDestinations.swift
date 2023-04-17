@@ -54,7 +54,7 @@ extension View {
                 BadgeDetailView(badge: badge.badge)
             }
             .navigationDestination(for: NosturList.self) { list in
-                EditList(list: list)
+                EditNosturList(list: list)
             }
             .navigationDestination(for: ViewPath.self) { path in
                 switch (path) {
@@ -71,7 +71,7 @@ extension View {
                     case .Settings:
                         Settings()
                     case .Lists:
-                        ListManagerView()
+                        NosturListsView()
                     case .Relays:
                         RelaysView()    
                     case .Badges:

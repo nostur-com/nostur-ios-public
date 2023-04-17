@@ -47,6 +47,24 @@ extension Contact {
     @NSManaged public var metadata_created_at: Int64
     @NSManaged public var followedBy: NSSet?
     @NSManaged public var events: Set<Event>?
+    @NSManaged public var list: NSSet?
+}
+
+// MARK: Generated accessors for lists
+extension Contact {
+
+    @objc(addNosturListsObject:)
+    @NSManaged public func addToNosturLists(_ value: NosturList)
+
+    @objc(removeNosturListsObject:)
+    @NSManaged public func removeFromNosturLists(_ value: NosturList)
+
+    @objc(addNosturLists:)
+    @NSManaged public func addToNosturLists(_ values: NSSet)
+
+    @objc(removeNosturLists:)
+    @NSManaged public func removeFromNosturLists(_ values: NSSet)
+
 }
 
 // MARK: Generated accessors for events

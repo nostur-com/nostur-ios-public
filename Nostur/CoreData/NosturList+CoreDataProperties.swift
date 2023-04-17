@@ -1,8 +1,8 @@
 //
-//  List+CoreDataProperties.swift
+//  NosturList+CoreDataProperties.swift
 //  Nostur
 //
-//  Created by Fabian Lachman on 20/01/2023.
+//  Created by Fabian Lachman on 15/04/2023.
 //
 //
 
@@ -16,16 +16,21 @@ extension NosturList {
         return NSFetchRequest<NosturList>(entityName: "NosturList")
     }
 
-    @NSManaged public var name: String?
     @NSManaged public var createdAt: Date?
+    @NSManaged public var name: String?
     @NSManaged public var refreshedAt: Date?
+    @NSManaged public var type: String?
     @NSManaged public var contacts: NSSet?
     
     var contacts_:[Contact] {
-        get { contacts?.allObjects as? [Contact] ?? [] }
+        get { contacts?.allObjects as! [Contact] }
         set { contacts = NSSet(array: newValue) }
     }
-
+    
+    var name_:String {
+        get { name ?? "" }
+        set { name = newValue }
+    }
 }
 
 // MARK: Generated accessors for contacts

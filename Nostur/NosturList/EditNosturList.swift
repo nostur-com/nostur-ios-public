@@ -7,14 +7,14 @@
 
 import SwiftUI
 
-struct EditList: View {
+struct EditNosturList: View {
     
     @ObservedObject var list:NosturList
     @Environment(\.managedObjectContext) var viewContext
     
     @State var confirmDeleteShown = false
     @State var contactToRemove:Contact? = nil
-    @State var newListSheetShown = false
+    @State var addContactsSheetShown = false
     
     var body: some View {
         List(list.contacts_) { contact in
@@ -24,8 +24,8 @@ struct EditList: View {
                 .listRowInsets(EdgeInsets())
                 .swipeActions(edge: .trailing) {
                     Button(role: .destructive) {
-                        contactToRemove = contact
-                        confirmDeleteShown = true
+                        viewContext.delete(contact)
+                        DataProvider.shared().save()
                     } label: {
                         Label("Remove", systemImage: "trash")
                     }
@@ -35,26 +35,28 @@ struct EditList: View {
         .listStyle(.plain)
         .navigationTitle("Edit \(list.name ?? "list")")
         .navigationBarTitleDisplayMode(.inline)
-        .confirmationDialog("Delete list \(contactToRemove?.name ?? "")", isPresented: $confirmDeleteShown, titleVisibility: .visible) {
-            Button("Delete", role: .destructive) {
-                guard let contactToRemove = contactToRemove else { return }
-                viewContext.delete(contactToRemove)
-                DataProvider.shared().save()
-                self.contactToRemove = nil
-            }
-        }
+//        .confirmationDialog("Delete list \(contactToRemove?.name ?? "")", isPresented: $confirmDeleteShown, titleVisibility: .visible) {
+//            Button("Delete", role: .destructive) {
+//                guard let contactToRemove = contactToRemove else { return }
+//
+//                self.contactToRemove = nil
+//            }
+//        }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
-                    
+                    addContactsSheetShown = true
                 } label: {
                     Label("", systemImage: "plus")
                 }
 
             }
         }
-        .sheet(isPresented: $newListSheetShown) {
-            NewListSheet()
+        .sheet(isPresented: $addContactsSheetShown) {
+            AddContactsToListSheet { contacts in
+                list.contacts_.append(contentsOf: contacts)
+                DataProvider.shared().save()
+            }
         }
     }
 }
@@ -63,7 +65,7 @@ struct EditList_Previews: PreviewProvider {
     static var previews: some View {
         if let list = PreviewFetcher.fetchList() {
             NavigationStack {
-                EditList(list: list)
+                EditNosturList(list: list)
                     .withNavigationDestinations()
             }
             .withPreviewEnvironment()
