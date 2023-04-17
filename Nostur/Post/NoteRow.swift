@@ -56,26 +56,8 @@ struct NoteRow: View {
                         }
                     }
                     else {
-                        if vPost.event.content == "#[0]" {
-                            if let firstQuoteId = event.firstQuoteId {
-                                Kind1ById(id: firstQuoteId, hideFooter: false, fullWidth: fullWidth)
-                            }
-                            else {
-                                if fullWidth {
-                                    Kind1(vPost: vPost, hideFooter: true)
-                                }
-                                else {
-                                    Kind1Default(vPost: vPost, hideFooter: true)
-                                }
-                            }
-                        }
-                        else {
-                            if fullWidth {
-                                Kind1(vPost: vPost, hideFooter: true)
-                            }
-                            else {
-                                Kind1Default(vPost: vPost, hideFooter: true)
-                            }
+                        if let firstQuoteId = event.firstQuoteId {
+                            Kind1ById(id: firstQuoteId, hideFooter: false, fullWidth: fullWidth)
                         }
                     }
                 }
