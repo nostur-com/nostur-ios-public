@@ -20,11 +20,12 @@ struct PostPreview: View {
     init(previewEvent: Event, sendNow: @escaping () -> Void) {
         self.previewEvent = previewEvent
         self.sendNow = sendNow
-        self.vPost = previewEvent.toVPost(plainText: false)
+        self.vPost = previewEvent.toVPost()
     }
     
     var body: some View {
         ScrollView {
+            AnyStatus()
             if let vPost = vPost {
                 NoteRow(vPost: vPost)
                     .boxShadow()

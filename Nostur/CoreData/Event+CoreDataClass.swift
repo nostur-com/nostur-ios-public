@@ -8,7 +8,7 @@
 
 import Foundation
 import CoreData
-
+import UIKit
 
 public class Event: NSManagedObject, Identifiable {
     
@@ -28,5 +28,7 @@ public class Event: NSManagedObject, Identifiable {
             }
         }
     }
+    
+    var previewImages:[UIImage] = []
 }
 

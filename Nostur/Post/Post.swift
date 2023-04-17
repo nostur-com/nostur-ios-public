@@ -7,6 +7,7 @@
 
 import Foundation
 import CoreData
+import UIKit
 //import Combine
 
 struct VPost: Identifiable, Equatable, Hashable {
@@ -241,16 +242,14 @@ class VPostTransformer {
     func renderElements(_ event:Event) -> ([MarkdownElement], [URL]) {
         let contentLinkRenderer = TextRenderer(self.context, event: event)
         let input = event.noteTextPrepared
-        //        let input = "The quick brown fox jumps over the lazy lazy dog."
-        let imageUrlPattern = ###"(?i)https?:\/\/\S+?\.(?:png|jpe?g|gif|webp|bmp)(\?\S+){0,1}\b"###
+        let imageUrlPattern = ###"(?i)https?:\/\/\S+?\.(?:png|jpe?g|gif|webp)(\?\S+){0,1}\b"###
+        let previewImagePlaceholder = ###"--@!\^@(\d+)@\^!@--"###
         let videoUrlPattern = ###"(?i)https?:\/\/\S+?\.(?:mp4|mov)(\?\S+){0,1}\b"###
-//        let hashtagPattern = ###"\#\S+"###
-        let lightningInvoicePattern = ###"lnbc\S+"###
+        let lightningInvoicePattern = ###"(?i)lnbc\S+"###
         let notePattern = ###"nostr:note1[023456789acdefghjklmnpqrstuvwxyz]{58}"###
         let neventPattern = ###"nostr:nevent1[023456789acdefghjklmnpqrstuvwxyz]+\b"###
-        let otherUrlsPattern = ###"(https\:\/\/)[a-zA-Z0-9\-\.]+(?:\.[a-zA-Z]{2,999}+)+([\/\?\=\&\#\%\+\.]\@?[\S]+)*\/?"### // for link previews (TODO: white list domains or not?)
-        let pattern = "(?i)\(imageUrlPattern)|\(lightningInvoicePattern)|\(notePattern)|\(neventPattern)|\(videoUrlPattern)|\(otherUrlsPattern)"
-        //        let pattern = ###"\\n"###
+        let otherUrlsPattern = ###"(?i)(https\:\/\/)[a-zA-Z0-9\-\.]+(?:\.[a-zA-Z]{2,999}+)+([\/\?\=\&\#\%\+\.]\@?[\S]+)*\/?"### // for link previews (TODO: white list domains or not?)
+        let pattern = "\(previewImagePlaceholder)|\(imageUrlPattern)|\(lightningInvoicePattern)|\(notePattern)|\(neventPattern)|\(videoUrlPattern)|\(otherUrlsPattern)"
         
         let regex = try! NSRegularExpression(pattern: pattern)
         let range = NSRange(location: 0, length: input.utf16.count)
@@ -297,6 +296,12 @@ class VPostTransformer {
                     let m = matchString.matchingStrings(regex:#"note1[023456789acdefghjklmnpqrstuvwxyz]{58}"#)
                     result.append(MarkdownElement.note1(m[0][0]))
                 }
+                else if matchString.matchingStrings(regex: previewImagePlaceholder).count > 0 {
+                    let m = matchString.matchingStrings(regex:previewImagePlaceholder)
+                    if let p = event.previewImages[safe: Int(m[0][0])] {
+                        result.append(MarkdownElement.postPreviewImage(p))
+                    }
+                }
                 else if matchString.matchingStrings(regex: neventPattern).count > 0 {
                     let m = matchString.matchingStrings(regex: #"nevent1[023456789acdefghjklmnpqrstuvwxyz]+\b"#)
                     do {
@@ -342,4 +347,5 @@ enum MarkdownElement: Hashable {
     case image(URL)
     case video(URL)
     case linkPreview(URL)
+    case postPreviewImage(UIImage)
 }

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 struct NewReply: View {
     let PLACEHOLDER = "Enter your reply"
@@ -24,8 +25,11 @@ struct NewReply: View {
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Contact.nip05verifiedAt, ascending: false)], predicate: NSPredicate(value: false))
     var contacts:FetchedResults<Contact>
     var firstResults:[Contact] { Array(contacts.prefix(30)) }
-    
     @State var tapOrFirstResults:[Contact] = []
+    @State var previewEvent:Event?
+    @State var uploading = false
+    @State var uploadError:String?
+    @State var subscriptions = Set<AnyCancellable>()
     
 //    init(replyTo:Event, noteCancellationId:Binding<UUID?>) {
     init(replyTo:Event) {
@@ -54,16 +58,9 @@ struct NewReply: View {
                                 Spacer()
                             }
                             VStack(alignment: .leading) {
-                                HighlightedTextEditor(text: $vm.text, shouldBecomeFirstResponder: true, highlightRules: NewNoteText.rules)
-                                // optional modifiers
-                                    .onCommit { print("commited") }
-                                    .onEditingChanged {
-                                        
-                                    }
-//                                    .onTextChange { print("latest text value", $0) }
-                                    .onSelectionChange { (range: NSRange) in
-                                        print(range)
-                                    }
+                                HighlightedTextEditor(text: $vm.text,
+                                                      pastedImages: $vm.pastedImages,
+                                                      shouldBecomeFirstResponder: true, highlightRules: NewNoteText.rules)
                                     .introspect { editor in
                                         if (vm.textView == nil) {
                                             vm.textView = editor.textView
@@ -71,6 +68,7 @@ struct NewReply: View {
                                         }
                                     }
                                     .frame(minHeight: 100, idealHeight: 125, maxHeight: 250, alignment: .top)
+                                ImagePreviews(pastedImages: $vm.pastedImages)
                                 Spacer()
                             }
                         }
@@ -104,6 +102,9 @@ struct NewReply: View {
                 }
             }
             .padding(10)
+            .onAppear {
+                updateEventWithNewText()
+            }
             .onChange(of: firstResults) { newResults in
                 guard newResults.count > 0 else { return }
                 if let exactResult = newResults.first(where: { $0.handle.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) == vm.term.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) }) {
@@ -171,10 +172,58 @@ struct NewReply: View {
                         Text("Cancel")
                     }
                 }
+                
+                if let uploadError {
+                    ToolbarItem(placement: .principal) {
+                        Text(uploadError).foregroundColor(.red)
+                    }
+                }
+                
+                ToolbarItem {
+                    Button("Preview") {
+                        guard let account = ns.account else { return }
+                        guard var nEvent = vm.nEvent else { return }
+                        nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
+                        nEvent = putHashtagsInTags(nEvent)
+                        nEvent.publicKey = account.publicKey
+                        
+                        if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
+                            nEvent.content = replaceNsecWithHunter2(nEvent.content)
+                        }
+                        for index in vm.pastedImages.indices {
+                            nEvent.content = nEvent.content + "\n--@!^@\(index)@^!@--"
+                        }
+                        let previewEvent = createPreviewEvent(nEvent)
+                        if (vm.pastedImages.count > 0) {
+                            previewEvent.previewImages = vm.pastedImages
+                        }
+                        self.previewEvent = previewEvent
+                    }
+                    .cornerRadius(20)
+                    .disabled(uploading)
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Post") { sendNow() }
+                    Button {
+                        sendNow()
+                    } label: {
+                        if (uploading) {
+                            ProgressView()
+                        }
+                        else {
+                            Text("Post")
+                        }
+                    }
                     .buttonStyle(.borderedProminent)
                     .cornerRadius(20)
+                    .disabled(uploading)
+                }
+            }
+            .sheet(item: $previewEvent) { previewEvent in
+                NavigationStack {
+                    PostPreview(previewEvent: previewEvent, sendNow: self.sendNow)
+                        .onDisappear {
+                            DataProvider.shared().viewContext.delete(previewEvent)
+                        }
                 }
             }
         }
@@ -200,17 +249,56 @@ struct NewReply: View {
         guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
         guard var nEvent = vm.nEvent else { return }
         
-        nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
-        nEvent = putHashtagsInTags(nEvent)
-        
-        if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
-            nEvent.content = replaceNsecWithHunter2(nEvent.content)
+        if (vm.pastedImages.count > 0) {
+            uploading = true
+            
+            uploadImages(images: vm.pastedImages)
+                .receive(on: RunLoop.main)
+                .sink(receiveCompletion: { result in
+                    switch result {
+                        case .failure(let error):
+                            print("Error uploading images: \(error.localizedDescription)")
+                            sendNotification(.anyStatus, ("Upload error: \(error.localizedDescription)", "NewPost"))
+                        case .finished:
+                            print("All images uploaded successfully")
+                    }
+                }, receiveValue: { urls in
+                    
+                    if (vm.pastedImages.count == urls.count) {
+                        // send message with images
+                        for url in urls {
+                            nEvent.content += "\n\(url)"
+                        }
+                        nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
+                        nEvent = putHashtagsInTags(nEvent)
+                        
+                        if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
+                            nEvent.content = replaceNsecWithHunter2(nEvent.content)
+                        }
+                        if let signedEvent = try? ns.signEvent(nEvent) {
+                            up.publishNow(signedEvent)
+                            dismiss()
+                            previewEvent = nil
+                        }
+                    }
+//                    print("Uploaded image URLs: \(urls)")
+                })
+                .store(in: &subscriptions)
+            
+            
         }
-        if let signedEvent = try? ns.signEvent(nEvent) {
-//                                let _ = up.publish(signedEvent)
-//                                print(signedEvent.wrappedEventJson())
-            up.publishNow(signedEvent)
-            dismiss()
+        else {
+            nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
+            nEvent = putHashtagsInTags(nEvent)
+            
+            if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
+                nEvent.content = replaceNsecWithHunter2(nEvent.content)
+            }
+            if let signedEvent = try? ns.signEvent(nEvent) {
+                up.publishNow(signedEvent)
+                dismiss()
+                previewEvent = nil
+            }
         }
     }
 }

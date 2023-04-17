@@ -121,6 +121,12 @@ struct ContentRenderer: View { // VIEW things
 //                            .frame(height: 250)
                             .padding(.vertical, 5)
                             .padding(.horizontal, fullWidth ? 10 : 0)
+                    case .postPreviewImage(let uiImage):
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: 600)
+                            .padding(.top, 10)
                     default:
                         EmptyView()
                 }

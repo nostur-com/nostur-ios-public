@@ -12,6 +12,7 @@ public final class NewNoteText: ObservableObject {
     
     @Published var mentioning = false
     @Published var text: String = ""
+    @Published var pastedImages:[UIImage] = []
     @Published var debouncedText: String = ""
     @Published var term: String = ""
     @Published var nEvent:NEvent?
@@ -23,10 +24,10 @@ public final class NewNoteText: ObservableObject {
             TextFormattingRule(key: .foregroundColor, value: UIColor(named: "AccentColor")!),
             TextFormattingRule(fontTraits: .traitBold)
         ])
-   ]
+    ]
     static let mentionRegex = try! NSRegularExpression(pattern: "(@\\w+|(?<![/\\?])#\\S+)", options: [])
     private var bag = Set<AnyCancellable>()
-
+    
     public init(dueTime: TimeInterval = 0.2) {
         $text
             .removeDuplicates()
@@ -46,7 +47,8 @@ struct NewNote: View {
     @EnvironmentObject var ns:NosturState
     let up:Unpublisher = .shared
     @Binding var noteCancellationId:UUID?
-    
+    @State var uploading = false
+    @State var uploadError:String?
     @StateObject var vm = NewNoteText()
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Contact.nip05verifiedAt, ascending: false)], predicate: NSPredicate(value: false))
@@ -55,6 +57,7 @@ struct NewNote: View {
     
     @State var tapOrFirstResults:[Contact] = []
     @State var previewEvent:Event?
+    @State var subscriptions = Set<AnyCancellable>()
     
     var body: some View {
         VStack {
@@ -69,26 +72,25 @@ struct NewNote: View {
                         Spacer()
                     }
                     VStack(alignment: .leading) {
-                        HighlightedTextEditor(text: $vm.text, shouldBecomeFirstResponder: true, highlightRules: NewNoteText.rules)
-                        // optional modifiers
-                            .onCommit { print("commited") }
-                            .onEditingChanged {
-                                
+                        HighlightedTextEditor(
+                            text: $vm.text,
+                            pastedImages: $vm.pastedImages,
+                            shouldBecomeFirstResponder: true,
+                            highlightRules: NewNoteText.rules,
+                            photoPickerTapped: {
+                                print("POTOTOT PICKER TAPPED")
+                            })
+                        .introspect { editor in
+                            if (vm.textView == nil) {
+                                vm.textView = editor.textView
+                                vm.textView?.backgroundColor = UIColor.clear
                             }
-//                            .onTextChange { print("latest text value", $0) }
-                            .onSelectionChange { (range: NSRange) in
-                                print(range)
-                            }
-                            .introspect { editor in
-                                if (vm.textView == nil) {
-                                    vm.textView = editor.textView
-                                    vm.textView?.backgroundColor = UIColor.clear
-                                }
-//                                editor.textView.becomeFirstResponder()
-                            }
-                            .frame(minHeight: 200, idealHeight: 325, maxHeight: 550, alignment: .top)
+                        }
+                        .frame(minHeight: 200, idealHeight: 325, maxHeight: 550, alignment: .top)
+                        ImagePreviews(pastedImages: $vm.pastedImages)
                         Spacer()
                     }
+                    AnyStatus(filter: "NewPost")
                 }
             }
             if vm.mentioning {
@@ -105,7 +107,7 @@ struct NewNote: View {
                                 vm.term = ""
                                 
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.02) { // after 0.02 sec to get the new .endOfDocument
-//                                    self.vm.mentioning = false
+                                    //                                    self.vm.mentioning = false
                                     let newPosition = vm.textView!.endOfDocument
                                     vm.textView!.selectedTextRange = vm.textView!.textRange(from: newPosition, to: newPosition)
                                 }
@@ -117,6 +119,9 @@ struct NewNote: View {
             Spacer()
         }
         .padding(10)
+        .onAppear {
+            updateEventWithNewText()
+        }
         .onChange(of: firstResults) { newResults in
             guard newResults.count > 0 else { return }
             if let exactResult = newResults.first(where: { $0.handle.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) == vm.term.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) }) {
@@ -129,7 +134,7 @@ struct NewNote: View {
             
             if let mentionTerm = mentionTerm(mentionString) {
                 print ("mentionTerm \(mentionTerm) lastHit: \(vm.lastHit)")
-
+                
                 if mentionTerm == vm.lastHit {
                     vm.mentioning = false
                 }
@@ -144,7 +149,6 @@ struct NewNote: View {
             }
             
             updateEventWithNewText()
-            
         }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
@@ -165,19 +169,48 @@ struct NewNote: View {
                     if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
                         nEvent.content = replaceNsecWithHunter2(nEvent.content)
                     }
-                    self.previewEvent = createPreviewEvent(nEvent)
+                    for index in vm.pastedImages.indices {
+                        nEvent.content = nEvent.content + "\n--@!^@\(index)@^!@--"
+                    }
+                    let previewEvent = createPreviewEvent(nEvent)
+                    if (vm.pastedImages.count > 0) {
+                        previewEvent.previewImages = vm.pastedImages
+                    }
+                    self.previewEvent = previewEvent
                 }
                 .cornerRadius(20)
+                .disabled(uploading)
             }
+            
+            if let uploadError {
+                ToolbarItem(placement: .principal) {
+                    Text(uploadError).foregroundColor(.red)
+                }
+            }
+            
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Post") { sendNow() }
+                Button {
+                    sendNow()
+                } label: {
+                    if (uploading) {
+                        ProgressView()
+                    }
+                    else {
+                        Text("Post")
+                    }
+                }
                 .buttonStyle(.borderedProminent)
                 .cornerRadius(20)
+                .disabled(uploading)
+                    
             }
         }
         .sheet(item: $previewEvent) { previewEvent in
             NavigationStack {
                 PostPreview(previewEvent: previewEvent, sendNow: self.sendNow)
+                    .onDisappear {
+                        DataProvider.shared().viewContext.delete(previewEvent)
+                    }
             }
         }
     }
@@ -199,17 +232,61 @@ struct NewNote: View {
         guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
         guard var nEvent = vm.nEvent else { return }
         
-        nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
-        nEvent = putHashtagsInTags(nEvent)
-        
-        if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
-            nEvent.content = replaceNsecWithHunter2(nEvent.content)
+        if (vm.pastedImages.count > 0) {
+            uploading = true
+            
+            uploadImages(images: vm.pastedImages)
+                .receive(on: RunLoop.main)
+                .sink(receiveCompletion: { result in
+                    switch result {
+                        case .failure(let error):
+                            print("Error uploading images: \(error.localizedDescription)")
+                            uploadError = "Image upload error"
+                            sendNotification(.anyStatus, ("Upload error: \(error.localizedDescription)", "NewPost"))
+                        case .finished:
+                            print("All images uploaded successfully")
+                    }
+                }, receiveValue: { urls in
+                    
+                    if (vm.pastedImages.count == urls.count) {
+                        // send message with images
+                        for url in urls {
+                            nEvent.content += "\n\(url)"
+                        }
+                        nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
+                        nEvent = putHashtagsInTags(nEvent)
+                        
+                        if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
+                            nEvent.content = replaceNsecWithHunter2(nEvent.content)
+                        }
+                        if let signedEvent = try? ns.signEvent(nEvent) {
+                            //                        print(signedEvent.wrappedEventJson())
+                            up.publishNow(signedEvent)
+                            //                        noteCancellationId = up.publish(signedEvent)
+                            dismiss()
+                            previewEvent = nil
+                        }
+                    }
+//                    print("Uploaded image URLs: \(urls)")
+                })
+                .store(in: &subscriptions)
+            
+            
         }
-        if let signedEvent = try? ns.signEvent(nEvent) {
-//                        print(signedEvent.wrappedEventJson())
-            up.publishNow(signedEvent)
-//                        noteCancellationId = up.publish(signedEvent)
-            dismiss()
+        else {
+            nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
+            nEvent = putHashtagsInTags(nEvent)
+            
+            if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
+                nEvent.content = replaceNsecWithHunter2(nEvent.content)
+            }
+            if let signedEvent = try? ns.signEvent(nEvent) {
+                //                        print(signedEvent.wrappedEventJson())
+                up.publishNow(signedEvent)
+                //                        noteCancellationId = up.publish(signedEvent)
+                dismiss()
+                previewEvent = nil
+            }
         }
     }
 }
@@ -219,7 +296,6 @@ struct NewNote_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
             NewNote(noteCancellationId: $noteCancellationId)
-                
         }
         .withPreviewEnvironment()
     }
@@ -231,4 +307,69 @@ func mentionTerm(_ text:String) -> String? {
         return extractedString
     }
     return nil
+}
+
+func uploadImages(images: [UIImage]) -> AnyPublisher<[String], Error> {
+    let imagePublishers = images.map { uploadImage(image: $0) }
+    return Publishers.MergeMany(imagePublishers)
+        .collect()
+        .eraseToAnyPublisher()
+}
+
+func uploadImage(image: UIImage) -> AnyPublisher<String, Error> {
+    let maxDimension: CGFloat = 600.0 // maximum width or height
+    let scale = min(maxDimension / image.size.width, maxDimension / image.size.height)
+    let size = CGSize(width: image.size.width * scale, height: image.size.height * scale)
+    
+    let renderer = UIGraphicsImageRenderer(size: size)
+    let scaledImage = renderer.image { _ in
+        image.draw(in: CGRect(origin: .zero, size: size))
+    }
+    guard let imageData = scaledImage.jpegData(compressionQuality: 0.8) else {
+        return Fail(error: ImageUploadError.conversionFailure).eraseToAnyPublisher()
+    }
+    
+    let url = URL(string: "https://api.imgur.com/3/upload")!
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    
+    let boundary = UUID().uuidString
+    let contentType = "multipart/form-data; boundary=\(boundary)"
+    request.setValue(contentType, forHTTPHeaderField: "Content-Type")
+    
+    let body = NSMutableData()
+    let fieldName = "image"
+    
+    body.append("--\(boundary)\r\n".data(using: .utf8)!)
+    body.append("Content-Disposition: form-data; name=\"\(fieldName)\"; filename=\"image.jpg\"\r\n".data(using: .utf8)!)
+    body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+    body.append(imageData)
+    body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+    
+    request.httpBody = body as Data
+    
+    let session = URLSession(configuration: .default)
+    return session.dataTaskPublisher(for: request)
+        .tryMap { data, response -> String in
+            
+            guard let httpResponse = response as? HTTPURLResponse,
+                  (200..<300).contains(httpResponse.statusCode),
+                  let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+                  let link = json["data"] as? [String: Any],
+                  let url = link["link"] as? String else {
+                let httpResponse = response as? HTTPURLResponse
+                print(httpResponse?.statusCode)
+                print(httpResponse?.allHeaderFields)
+                let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
+                print(json?.description)
+                throw ImageUploadError.uploadFailure
+            }
+            return url
+        }
+        .eraseToAnyPublisher()
+}
+
+enum ImageUploadError: Error {
+    case conversionFailure
+    case uploadFailure
 }

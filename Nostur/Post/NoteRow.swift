@@ -173,6 +173,14 @@ struct NoteRow: View {
                             .onTapGesture { navigateTo(vPost) }
                     }
                     ContentRenderer(vPost: vPost)
+//                    if (event.previewImages.count > 0) {
+//                        ForEach(event.previewImages.indices, id:\.self) { index in
+//                            Image(uiImage: event.previewImages[index])
+//                                .resizable()
+//                                .scaledToFit()
+//                                .frame(maxWidth: 600)
+//                        }
+//                    }
                     if (!hideFooter && settings.rowFooterEnabled) {
 //                            .frame(height: 30)
                         FooterFragmentView(vPost: vPost)
@@ -240,6 +248,9 @@ struct NoteRow: View {
                 .padding(.bottom, 10)
                 VStack(alignment:.leading, spacing: 0) {// Post container
                     ContentRenderer(vPost: vPost, fullWidth: true)
+//                    if (vPost.event.previewImages.count > 0) {
+//                        PostPreviewImages(vPost.event.previewImages)
+//                    }
                     if (!hideFooter && settings.rowFooterEnabled) {
 //                            .frame(height: 30)
                         FooterFragmentView(vPost: vPost)
