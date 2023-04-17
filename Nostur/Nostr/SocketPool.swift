@@ -46,6 +46,14 @@ final class SocketPool: ObservableObject {
         }
     }
     
+    func disconnectAll() {
+        for socket in sockets {
+            if socket.value.isConnecting || socket.value.isConnected {
+                socket.value.client.disconnect()
+            }
+        }
+    }
+    
     func addSocket(relayId:NSManagedObjectID, url:String, read:Bool = true, write: Bool = false) throws -> ManagedClient {
         if (!sockets.keys.contains(relayId)) {
             guard let urlURL = URL(string: url) else { throw "invalid url" }
@@ -241,6 +249,9 @@ class ManagedClient: WebSocketDelegate, ObservableObject {
                 self.isConnected = false
             }
                 self.activeSubscriptions = []
+                DispatchQueue.main.async {
+                    sendNotification(.socketNotification, "Disconnected: \(self.url)")
+                }
                 print("🔌 DISCONNECTED \(self.url): \(reason) with code: \(code)")
         case .text(let string):
 //                print("🔌 💬 Received text: \(string)")
@@ -266,6 +277,8 @@ class ManagedClient: WebSocketDelegate, ObservableObject {
             DispatchQueue.main.async {
                 self.isConnecting = false
                 self.isConnected = false
+                let shortURL = URL(string: self.url)?.baseURL?.description ?? self.url
+                sendNotification(.socketNotification, "Error: \(shortURL) \(error?.localizedDescription ?? "")")
             }
                 self.activeSubscriptions = []
                 print("🔌🔴 ERROR \(self.url): \(error!)")

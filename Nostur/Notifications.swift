@@ -195,6 +195,11 @@ extension Notification.Name {
     static var mutedWordsChanged: Notification.Name {
         return Notification.Name("mutedWordsChanged")
     }
+    
+    static var socketNotification: Notification.Name {
+        return Notification.Name("socketNotification")
+    }
+    
     static var anyStatus: Notification.Name {
         return Notification.Name("anyStatus")
     }

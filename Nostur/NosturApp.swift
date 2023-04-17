@@ -85,6 +85,7 @@ struct NosturApp: App {
                     case .active:
                             SocketPool.shared.connectAll()
                     case .background:
+                            SocketPool.shared.disconnectAll()
                             saveState()
                             
                     default:

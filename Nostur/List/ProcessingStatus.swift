@@ -10,7 +10,9 @@ import SwiftUI
 struct ProcessingStatus: View {
     
     @State var message:String? = nil
+    @State var socketMessage:String? = nil
     @State var dismissTask:Task<Void, Never>? = nil
+    @State var dismissSocketTask:Task<Void, Never>? = nil
     
     var body: some View {
         VStack {
@@ -20,6 +22,16 @@ struct ProcessingStatus: View {
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
                     .background(Capsule().fill(Color("AccentColor")))
+                    .clipShape(Capsule())
+            }
+            if let socketMessage {
+                Text(socketMessage)
+                    .lineLimit(2)
+                    .font(.caption2)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Capsule().fill(Color.red))
                     .clipShape(Capsule())
             }
             else {
@@ -33,7 +45,12 @@ struct ProcessingStatus: View {
             let message = notification.object as? String
             setTemporaryMessage(message)
         }
+        .onReceive(receiveNotification(.socketNotification)) { notification in
+            let message = notification.object as? String
+            setTemporarySocketMessage(message)
+        }
     }
+    
     func setTemporaryMessage(_ message:String?) {
         self.message = message
         self.dismissTask?.cancel()
@@ -43,6 +60,20 @@ struct ProcessingStatus: View {
                 try await Task.sleep(nanoseconds: 2_100_000_000)
                 withAnimation {
                     self.message = nil
+                }
+            } catch { }
+        }
+    }
+    
+    func setTemporarySocketMessage(_ message:String?) {
+        self.socketMessage = message
+        self.dismissSocketTask?.cancel()
+        self.dismissSocketTask = Task {
+            // dismiss message after 2.1 seconds
+            do {
+                try await Task.sleep(nanoseconds: 2_100_000_000)
+                withAnimation {
+                    self.socketMessage = nil
                 }
             } catch { }
         }
