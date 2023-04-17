@@ -194,7 +194,7 @@ class LVM: NSObject, ObservableObject {
     }
     
     func fetchRelated(_ recentVPosts:ArraySlice<VPost>) {
-        let ids = recentVPosts.map { $0.id }
+        let ids = recentVPosts.map { $0.id }.compactMap { $0 }
         SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEventReferences(ids: ids)))
         print("Skip render and fetch related of \(ids.joined(separator: ",")) first.")
     }
@@ -902,7 +902,7 @@ extension Event {
         
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN {1,6}", cutOffPoint,  pubkeys)
+        fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN {1,6} AND id != \"\"", cutOffPoint,  pubkeys)
         return fr
     }
     
@@ -918,7 +918,7 @@ extension Event {
         let frBefore = Event.fetchRequest()
         frBefore.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         frBefore.fetchLimit = 15 //TODO: need this even?
-        frBefore.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN {1,6}", cutOffPoint,  pubkeys)
+        frBefore.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN {1,6} AND id != \"\"", cutOffPoint,  pubkeys)
         
         let newFirstEvent = try? DataProvider.shared().viewContext.fetch(frBefore).last
         
@@ -926,7 +926,7 @@ extension Event {
         
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN {1,6}", newCutOffPoint,  pubkeys)
+        fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN {1,6} AND id != \"\"", newCutOffPoint,  pubkeys)
         return fr
     }
 }
