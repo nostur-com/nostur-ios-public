@@ -14,13 +14,14 @@ struct ProfileLikesView: View {
      
     var sp:SocketPool = .shared
     var pubkey:String
-    @State var limit = 20
+    @State var limit = 25
+    @ObservedObject var settings:SettingsStore = .shared
     
-    @FetchRequest(
-        sortDescriptors: [],
-        predicate: NSPredicate(format: "FALSEPREDICATE"),
-        animation: .none)
-    var reactionsTo: FetchedResults<Event>
+//    @FetchRequest(
+//        sortDescriptors: [],
+//        predicate: NSPredicate(format: "FALSEPREDICATE"),
+//        animation: .none)
+//    var reactionsTo: FetchedResults<Event>
 
     
     var body: some View {
@@ -29,19 +30,19 @@ struct ProfileLikesView: View {
             fetchLimit: limit,
             sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]) { (events: FetchedResults<Event>)  in
                 LazyVStack {
-                    if (reactionsTo.count > 0) {
-                        ForEach(reactionsTo.compactMap { VPostTransformer.shared.toVPost($0, skipParents: true) }) { vPost in
+                    if (events.count > 0) {
+                        ForEach(events.compactMap { $0.reactionTo?.toVPost() }) { vPost in
                             NoteRow(vPost: vPost)
-                                .id(vPost.id)
                                 .background(Color.systemBackground)
-                                .contentShape(Rectangle())
+                                .boxShadow()
+                                .padding(.vertical, 10)
+                                .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
                                 .onTapGesture {
                                     navigateTo(vPost)
                                 }
-                            Divider()
                         }
                         VStack {
-                            if (reactionsTo.count == limit) {
+                            if (events.count == limit) {
                                 HStack {
                                     Spacer()
                                     Button("Load more") {
@@ -61,17 +62,7 @@ struct ProfileLikesView: View {
                             }
                     }
                 }
-                .onAppear {
-                    if (events.count > 0) {
-                        let eventIds = events.map { event in
-                            return TagsHelpers(event.tags())
-                                .reactingToEventId() ?? nil
-                        }.filter { id in
-                            return id != nil
-                        }
-                        reactionsTo.nsPredicate = NSPredicate(format: "id IN %@ AND kind == 1", eventIds)
-                    }
-                }
+                .background(Color("ListBackground"))
             }
             .onAppear {
                 print("🟢 ProfileLikesView.onAppear always REQ.7: \(pubkey)")
