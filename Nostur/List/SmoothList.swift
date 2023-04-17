@@ -145,7 +145,7 @@ struct SmoothList: UIViewControllerRepresentable {
         }
     }
     
-    final class Coordinator: NSObject, UICollectionViewDelegate, UIScrollViewDelegate, UICollectionViewDataSourcePrefetching { //, UICollectionViewDataSource {
+    final class Coordinator: NSObject, UICollectionViewDelegate, UIScrollViewDelegate, UICollectionViewDataSourcePrefetching, UICollectionViewDelegateFlowLayout { //, UICollectionViewDataSource {
         let parent: SmoothList
         var collectionViewHolder: CollectionViewHolderType?
         var scrollTimer: Timer?
@@ -153,6 +153,29 @@ struct SmoothList: UIViewControllerRepresentable {
         init(parent: SmoothList) {
             self.parent = parent
         }
+        
+//        func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+//            let cellWidth = collectionView.bounds.size.width - (parent.fullWidthImages ? 0 : 10)
+//            guard let item = parent.data[safe: indexPath.row] else { return CGSize(width: cellWidth, height: 250.0) }
+//
+//            let mediaElements = item.renderedElements.filter {
+//                if case .image = $0 {
+//                        return true
+//                }
+//                if case .video = $0 {
+//                        return true
+//                }
+//                if case .linkPreview = $0 {
+//                        return true
+//                }
+//                return false
+//            }
+//
+//            // Count every image/video/linkpreview as 250. every parent or post as 150
+//            let height = Double((mediaElements.count * 250) + (item.threadPostsCount) * 150)
+//            print("🟢🟢 height estimated at: \(height)" )
+//            return CGSize(width: cellWidth, height: height)
+//        }
         
         func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
             for indexPath in indexPaths {
@@ -229,6 +252,11 @@ final class CViewHolder {
             return section
         }
         
+        layout.configuration.scrollDirection = .vertical
+//        let flowLayout = UICollectionViewFlowLayout()
+//        flowLayout.estimatedItemSize = CGSize(width: UIScreen.main.bounds.width - 10, height: 250.0)
+//        flowLayout.scrollDirection = .vertical
+        
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         //        collectionView.backgroundColor = .systemGroupedBackground
         //        collectionView.backgroundColor = UIColor(named: "ListBackground")
@@ -257,6 +285,7 @@ final class CViewHolder {
                 PostOrThread(vPost: vPost)
                     .boxShadow()
                     .padding(10)
+//                    .frame(maxWidth: .infinity)
             }
             .background(Color("ListBackground"))
             .margins(.all, 0)

@@ -144,8 +144,12 @@ class LVM: NSObject, ObservableObject {
 //                .filter(notMuted) // TODO ADD BACK NOT MUtED IN RIGHT CONTEXT / THREAD
 //                .suffix(LVM_MAX_VISIBLE) // Don't add too many posts
             
+            
+            
             guard transformedObjectIds.count > 0 else { return }
             print("Transformed \(transformedObjectIds.count) posts")
+//            self.lvmState.vPostLeafs = [newVPostLeafs.first!]
+//            return
             if currentVPostLeafs.count == 0 {
                 let leafThreads = self.renderLeafs(added) // Transforms seperate posts into threads, .id for each thread is leaf.id
                 DispatchQueue.main.async {
