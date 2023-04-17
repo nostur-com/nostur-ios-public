@@ -98,7 +98,7 @@ class VPostTransformer {
     }
     
     func toVPost(_ mainEvent:Event, skipParents:Bool? = false, plainText:Bool = false) -> VPost? {
-        if mainEvent.managedObjectContext == self.context {
+        if Thread.current == Thread.main {
             let textRenderer = TextRenderer(self.context, event: mainEvent)
             let (renderedElements, linkPreviewURLs) = renderElements(mainEvent)
             
@@ -153,60 +153,61 @@ class VPostTransformer {
                 reposted: repostedByCurrentAccount(mainEvent)
             )
         }
-        
-        guard let privateEvent = try? context.existingObject(with: mainEvent.objectID) as? Event else { return nil }
-        let textRenderer = TextRenderer(self.context, event: privateEvent)
-        let (renderedElements, linkPreviewURLs) = renderElements(privateEvent)
-        
-        let firstQuote = renderedElements.first(where: { element in
-                if case .note1 = element {
-                    return true
-                }
-                return false
-        })
-        
-        var renderedForRow:[MarkdownElement] {
-            var gotVideo = false
-            return renderedElements
-                .filter { element in
-                    if case .video = element {
-                        if (!gotVideo) {
-                            gotVideo = true
-                            return true
-                        }
-                        return false
-                    }
+        else {
+            guard let privateEvent = try? context.existingObject(with: mainEvent.objectID) as? Event else { return nil }
+            let textRenderer = TextRenderer(self.context, event: privateEvent)
+            let (renderedElements, linkPreviewURLs) = renderElements(privateEvent)
+            
+            let firstQuote = renderedElements.first(where: { element in
                     if case .note1 = element {
-                        return element == firstQuote
-                    }
-                    else {
                         return true
                     }
-                }
+                    return false
+            })
+            
+            var renderedForRow:[MarkdownElement] {
+                var gotVideo = false
+                return renderedElements
+                    .filter { element in
+                        if case .video = element {
+                            if (!gotVideo) {
+                                gotVideo = true
+                                return true
+                            }
+                            return false
+                        }
+                        if case .note1 = element {
+                            return element == firstQuote
+                        }
+                        else {
+                            return true
+                        }
+                    }
+            }
+            
+            return VPost(
+                id: privateEvent.id,
+                objectID: privateEvent.objectID,
+                event: mainEvent, // Should always be main context event
+                created_at: privateEvent.created_at,
+                npub: privateEvent.npub,
+                note1: privateEvent.noteId,
+                plainText: plainText ? textRenderer.copyPasteText(privateEvent, text: privateEvent.noteText) : "",
+                renderedText: textRenderer.renderedText(privateEvent, text: privateEvent.noteText),
+                replyingToUsernamesMarkDown: textRenderer.replyingToUsernamesMarkDownString(privateEvent),
+                imageUrls: privateEvent.content != nil ? getImgUrlsFromContent(privateEvent.content!) : [],
+                displayName: privateEvent.contact?.authorName ?? String((privateEvent.npub.prefix(11))),
+                renderedElements: renderedForRow,
+                renderedElementsDetail: renderedElements,
+                parentPosts: !skipParents! ? mainEvent.parentEvents.compactMap { toVPost($0, skipParents: true) } : [],
+                threadPostsCount: 1 + mainEvent.parentEvents.count,
+                isRepost: privateEvent.isRepost,
+                firstQuoteId: privateEvent.firstQuoteId,
+                linkPreviewURLs: linkPreviewURLs,
+                liked: likedByCurrentAccount(privateEvent),
+                reposted: repostedByCurrentAccount(privateEvent)
+            )
         }
-        
-        return VPost(
-            id: privateEvent.id,
-            objectID: privateEvent.objectID,
-            event: mainEvent, // Should always be main context event
-            created_at: privateEvent.created_at,
-            npub: privateEvent.npub,
-            note1: privateEvent.noteId,
-            plainText: plainText ? textRenderer.copyPasteText(privateEvent, text: privateEvent.noteText) : "",
-            renderedText: textRenderer.renderedText(privateEvent, text: privateEvent.noteText),
-            replyingToUsernamesMarkDown: textRenderer.replyingToUsernamesMarkDownString(privateEvent),
-            imageUrls: privateEvent.content != nil ? getImgUrlsFromContent(privateEvent.content!) : [],
-            displayName: privateEvent.contact?.authorName ?? String((privateEvent.npub.prefix(11))),
-            renderedElements: renderedForRow,
-            renderedElementsDetail: renderedElements,
-            parentPosts: !skipParents! ? mainEvent.parentEvents.compactMap { toVPost($0, skipParents: true) } : [],
-            threadPostsCount: 1 + mainEvent.parentEvents.count,
-            isRepost: privateEvent.isRepost,
-            firstQuoteId: privateEvent.firstQuoteId,
-            linkPreviewURLs: linkPreviewURLs,
-            liked: likedByCurrentAccount(privateEvent),
-            reposted: repostedByCurrentAccount(privateEvent)
-        )
     }
     
     func likedByCurrentAccount(_ event:Event) -> Bool {
@@ -330,7 +331,6 @@ class VPostTransformer {
         let nonMatch = (input as NSString).substring(with: nonMatchRange)
         
         result.append(MarkdownElement.text(contentLinkRenderer.renderedText(event, text:nonMatch)))
-        
         return (result, linkPreviewUrls)
     }
 }
