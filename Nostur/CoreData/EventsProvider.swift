@@ -113,6 +113,9 @@ class EventsProvider: ObservableObject {
         account3.name = "Fabian"
         account3.nip05 = "Fabian@nostur.com"
         account3.about = "Author of Nostur.com"
+        account3.picture = "https://nostur.com/fabian/profile.jpg"
+        account3.banner = "https://pbs.twimg.com/profile_banners/1479206440577519622/1671514703/1500x500"
+//        account3.banner = "https://nostur.com/fabian/banner.jpg"
                 
         let keys = NKeys.newKeys()
         

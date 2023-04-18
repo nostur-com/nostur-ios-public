@@ -6,7 +6,8 @@
 //
 
 import SwiftUI
-
+import Nuke
+import NukeUI
 
 import PhotosUI
 
@@ -38,7 +39,7 @@ struct CircularProfileImage: View {
         ProfileImage(imageState: imageState)
             .scaledToFill()
             .clipShape(Circle())
-            .frame(width: 100, height: 100)
+            .frame(width: 75, height: 75)
             .background {
                 Circle().fill(
                     LinearGradient(
@@ -84,12 +85,30 @@ import CoreTransferable
 
 @MainActor
 class ProfileModel: ObservableObject {
+    
+    @Binding var picture:String
+    @Binding var newPicture:UIImage?
 
-    // MARK: - Profile Details
-
-    @Published var firstName: String = ""
-    @Published var lastName: String = ""
-    @Published var aboutMe: String = ""
+    init(_ picture:Binding<String>, newPicture:Binding<UIImage?>) {
+        _picture = picture
+        _newPicture = newPicture
+        if (picture.wrappedValue != "") {
+            loadExistingImage(picture.wrappedValue)
+        }
+    }
+    
+    func loadExistingImage(_ picture:String) {
+        let request = ImageRequest(
+            url: URL(string: picture),
+            processors: [.resize(width: 75, upscale: true)],
+            priority: .high,
+            userInfo: [.scaleKey: UIScreen.main.scale]
+        )
+        Task {
+            let image = try await ImageProcessing.shared.pfp.image(for: request)
+            imageState = .success(Image(uiImage: image))
+        }
+    }
 
     // MARK: - Profile Image
 
@@ -106,6 +125,7 @@ class ProfileModel: ObservableObject {
 
     struct ProfileImage: Transferable {
         let image: Image
+        let uiImage: UIImage
 
         static var transferRepresentation: some TransferRepresentation {
             DataRepresentation(importedContentType: .image) { data in
@@ -114,7 +134,7 @@ class ProfileModel: ObservableObject {
                     throw TransferError.importFailed
                 }
                 let image = Image(uiImage: uiImage)
-                return ProfileImage(image: image)
+                return ProfileImage(image: image, uiImage: uiImage)
             #else
                 throw TransferError.importFailed
             #endif
@@ -147,6 +167,7 @@ class ProfileModel: ObservableObject {
                 switch result {
                 case .success(let profileImage?):
                     self.imageState = .success(profileImage.image)
+                    self.newPicture = profileImage.uiImage
                 case .success(nil):
                     self.imageState = .empty
                 case .failure(let error):
@@ -159,10 +180,13 @@ class ProfileModel: ObservableObject {
 
 
 
-struct MediaPicker: View {
+struct ProfilePicPicker: View {
 
-    @StateObject var viewModel = ProfileModel()
+    @StateObject var viewModel:ProfileModel
 
+    init(_ picture:Binding<String>, newPicture:Binding<UIImage?>) {
+        _viewModel = StateObject(wrappedValue: ProfileModel(picture, newPicture: newPicture))
+    }
 
     var body: some View {
         EditableCircularProfileImage(viewModel: viewModel)
@@ -170,7 +194,11 @@ struct MediaPicker: View {
 }
 
 struct MediaPicker_Previews: PreviewProvider {
+    @State static var picture = "https://nostur.com/fabian/profile.jpg"
+    @State static var newPicture:UIImage?
     static var previews: some View {
-        MediaPicker()
+        ProfilePicPicker($picture, newPicture:$newPicture)
+            .hCentered()
+            .listRowBackground(Color(.systemGroupedBackground))
     }
 }
