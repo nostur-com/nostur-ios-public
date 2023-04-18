@@ -49,15 +49,15 @@ struct ProfileNotesView: View {
                     }
                     else {
                         CenteredProgressView()
-                            .onAppear {
-                                print("🟢 ProfileNotesView.onAppear always REQ.1: \(pubkey)")
-                                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorNotes(pubkey: pubkey)))
-                            }
                     }
                 }
             }
 //            .padding()
             .background(Color("ListBackground"))
+            .onAppear {
+                print("🟢 ProfileNotesView.onAppear always REQ.1: \(pubkey)")
+                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorNotes(pubkey: pubkey, limit:250)))
+            }
     }
 }
 
