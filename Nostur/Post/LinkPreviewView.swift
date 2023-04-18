@@ -23,7 +23,7 @@ struct LinkPreviewView: View {
                 if viewSize.width > 0 {
                     if let image = tags["image"] {
                         LazyImage(request: ImageRequest(url: URL(string:image),
-                                    processors: [.resize(width: viewSize.width)],
+                                    processors: [.resize(width: viewSize.width, upscale: true)],
                                     userInfo: [.scaleKey: UIScreen.main.scale])) { state in
                             if let image = state.image {
                                 image
