@@ -58,6 +58,7 @@
 		1F45C7ED29EF997200F58772 /* ImgurMediaUploadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F45C7EC29EF997200F58772 /* ImgurMediaUploadService.swift */; };
 		1F45C7F129EF9A2C00F58772 /* NostrimgMediaUploadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F45C7F029EF9A2C00F58772 /* NostrimgMediaUploadService.swift */; };
 		1F45C7F329EF9C8400F58772 /* VoidCatMediaUploadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F45C7F229EF9C8400F58772 /* VoidCatMediaUploadService.swift */; };
+		1F45C7F529EFB13F00F58772 /* NostrBuildMediaUploadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F45C7F429EFB13E00F58772 /* NostrBuildMediaUploadService.swift */; };
 		1F4773A7296D4F5B0049454B /* AccountEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4773A6296D4F5B0049454B /* AccountEditView.swift */; };
 		1F4820F229A9F808000EDFDA /* NotificationsZaps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4820F129A9F808000EDFDA /* NotificationsZaps.swift */; };
 		1F49C80629B8D7EA005C960D /* NewQuoteRepost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F49C80529B8D7EA005C960D /* NewQuoteRepost.swift */; };
@@ -331,6 +332,7 @@
 		1F45C7EC29EF997200F58772 /* ImgurMediaUploadService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImgurMediaUploadService.swift; sourceTree = "<group>"; };
 		1F45C7F029EF9A2C00F58772 /* NostrimgMediaUploadService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostrimgMediaUploadService.swift; sourceTree = "<group>"; };
 		1F45C7F229EF9C8400F58772 /* VoidCatMediaUploadService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoidCatMediaUploadService.swift; sourceTree = "<group>"; };
+		1F45C7F429EFB13E00F58772 /* NostrBuildMediaUploadService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostrBuildMediaUploadService.swift; sourceTree = "<group>"; };
 		1F4773A6296D4F5B0049454B /* AccountEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountEditView.swift; sourceTree = "<group>"; };
 		1F4820F129A9F808000EDFDA /* NotificationsZaps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsZaps.swift; sourceTree = "<group>"; };
 		1F49C80529B8D7EA005C960D /* NewQuoteRepost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewQuoteRepost.swift; sourceTree = "<group>"; };
@@ -702,6 +704,7 @@
 				1F45C7EC29EF997200F58772 /* ImgurMediaUploadService.swift */,
 				1F45C7F029EF9A2C00F58772 /* NostrimgMediaUploadService.swift */,
 				1F45C7F229EF9C8400F58772 /* VoidCatMediaUploadService.swift */,
+				1F45C7F429EFB13E00F58772 /* NostrBuildMediaUploadService.swift */,
 			);
 			path = MediaUploads;
 			sourceTree = "<group>";
@@ -1249,6 +1252,7 @@
 				1F539DAD299D52E200F3B8CA /* AddExistingAccountSheet.swift in Sources */,
 				1FC4D4082997E126004E88CD /* AccountManager.swift in Sources */,
 				1FEA8D4B29E967B5004A83D3 /* InlineThings.swift in Sources */,
+				1F45C7F529EFB13F00F58772 /* NostrBuildMediaUploadService.swift in Sources */,
 				1F0088EB29D735080016F111 /* ContentRenderer.swift in Sources */,
 				1FC78F6F29CAD3510009C1C7 /* DMConversationView.swift in Sources */,
 				1FCEA0B529993B2400A309DC /* Swift-Big-Number-Core.swift in Sources */,

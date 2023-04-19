@@ -57,10 +57,10 @@ final class SettingsStore: ObservableObject {
         getVoidCatService(),
         
         // needs registered Client ID
-        getImgurService(),
+        getImgurService()
     
-//        // no api, parse media link from response
-//        MediaUploadService(name: "nostr.build", url: "https://nostr.build/upload.php"),
+        // no api, parse media link from response
+//        getNostrBuildService(),
     ]
     
     init(defaults: UserDefaults = .standard) {
