@@ -44,111 +44,120 @@ struct AccountEditView: View {
                     }
                 }
                 .listRowBackground(Color(.systemGroupedBackground))
-                Form {
-                    
-                    Group {
-                        Section(header: Text("Your name") ) {
-                            TextField("Enter your name", text: $account.display_name).disabled(shouldDisable)
+                ZStack {
+                    Form {
+                        
+                        Group {
+                            Section(header: Text("Your name") ) {
+                                TextField("Enter your name", text: $account.display_name).disabled(shouldDisable)
+                                    .disableAutocorrection(true)
+                            }
+                            
+                            Section(header: Text("Your username") ) {
+                                TextField("Enter your username", text: $account.name).disabled(shouldDisable)
+                                    .keyboardType(.URL)
+                                    .disableAutocorrection(true)
+                                    .textInputAutocapitalization(.never)
+                            }
+                            
+                            Section(header: Text("Bio") ) {
+                                TextField("Something about yourself", text:$account.about, axis: .vertical)
+                                    .lineLimit(3...5)
+                                    .disabled(shouldDisable)
+                            }
+                            
+                            Section(header: Text("NIP-05 identifier") ) {
+                                TextField("", text: $account.nip05).keyboardType(.emailAddress).disabled(shouldDisable)
+                                    .keyboardType(.URL)
+                                    .disableAutocorrection(true)
+                                    .textInputAutocapitalization(.never)
+                            }
+                        }
+                        //                    .listRowInsets(EdgeInsets())
+                        
+                        Section(header: Text("Lightning Address (LUD-16)") ) {
+                            TextField("", text: $account.lud16).keyboardType(.emailAddress).disabled(shouldDisable)
+                                .keyboardType(.URL)
                                 .disableAutocorrection(true)
+                                .textInputAutocapitalization(.never)
                         }
                         
-                        Section(header: Text("Your username") ) {
-                            TextField("Enter your username", text: $account.name).disabled(shouldDisable)
+                        Section(header: Text("Lightning Address (LUD-06)") ) {
+                            TextField("", text: $account.lud06).keyboardType(.URL).disabled(shouldDisable)
                                 .keyboardType(.URL)
                                 .disableAutocorrection(true)
                                 .textInputAutocapitalization(.never)
                         }
                         
-                        Section(header: Text("Bio") ) {
-                            TextField("Something about yourself", text:$account.about, axis: .vertical)
-                                .lineLimit(3...5)
-                                .disabled(shouldDisable)
+                        if (newPicture == nil) {
+                            Section(header: Text("Profile picture URL") ) {
+                                TextField("https://nostur.com/profile.jpg", text: $account.picture).keyboardType(.URL).disabled(shouldDisable)
+                                    .keyboardType(.URL)
+                                    .disableAutocorrection(true)
+                                    .textInputAutocapitalization(.never)
+                            }
                         }
                         
-                        Section(header: Text("NIP-05 identifier") ) {
-                            TextField("", text: $account.nip05).keyboardType(.emailAddress).disabled(shouldDisable)
-                                .keyboardType(.URL)
-                                .disableAutocorrection(true)
-                                .textInputAutocapitalization(.never)
-                        }
-                    }
-//                    .listRowInsets(EdgeInsets())
-                    
-                    Section(header: Text("Lightning Address (LUD-16)") ) {
-                        TextField("", text: $account.lud16).keyboardType(.emailAddress).disabled(shouldDisable)
-                            .keyboardType(.URL)
-                            .disableAutocorrection(true)
-                            .textInputAutocapitalization(.never)
-                    }
-                    
-                    Section(header: Text("Lightning Address (LUD-06)") ) {
-                        TextField("", text: $account.lud06).keyboardType(.URL).disabled(shouldDisable)
-                            .keyboardType(.URL)
-                            .disableAutocorrection(true)
-                            .textInputAutocapitalization(.never)
-                    }
-                    
-                    if (newPicture == nil) {
-                        Section(header: Text("Profile picture URL") ) {
-                            TextField("https://nostur.com/profile.jpg", text: $account.picture).keyboardType(.URL).disabled(shouldDisable)
-                                .keyboardType(.URL)
-                                .disableAutocorrection(true)
-                                .textInputAutocapitalization(.never)
-                        }
-                    }
-                    
-                    if (newBanner == nil) {
-                        Section(header: Text("Profile banner URL") ) {
-                            TextField("https://nostur.com/banner.jpg", text: $account.banner).keyboardType(.URL).disabled(shouldDisable)
-                                .keyboardType(.URL)
-                                .disableAutocorrection(true)
-                                .textInputAutocapitalization(.never)
-                        }
-                    }
-                    
-                    if (shouldDisable) {
-                        Section(header:Text("Import private key")) {
-                            TextField("nsec1...", text: $newPrivateKey).foregroundColor(.primary)
-                                .keyboardType(.URL)
-                                .disableAutocorrection(true)
-                                .textInputAutocapitalization(.never)
-                        }.foregroundColor(.primary)
-                    }
-                    
-                    Section(header: Text(shouldDisable ? "Public key" : "Keys") ) {
-                        HStack {
-                            Text("**PUBLIC KEY:** \(account.npub)").lineLimit(1)
-                            Image(systemName: "doc.on.doc.fill")
-                                .onTapGesture {
-                                    UIPasteboard.general.string = account.npub
-                                }
+                        if (newBanner == nil) {
+                            Section(header: Text("Profile banner URL") ) {
+                                TextField("https://nostur.com/banner.jpg", text: $account.banner).keyboardType(.URL).disabled(shouldDisable)
+                                    .keyboardType(.URL)
+                                    .disableAutocorrection(true)
+                                    .textInputAutocapitalization(.never)
+                            }
                         }
                         
-                        if (!shouldDisable && account.nsec != nil) {
+                        if (shouldDisable) {
+                            Section(header:Text("Import private key")) {
+                                TextField("nsec1...", text: $newPrivateKey).foregroundColor(.primary)
+                                    .keyboardType(.URL)
+                                    .disableAutocorrection(true)
+                                    .textInputAutocapitalization(.never)
+                            }.foregroundColor(.primary)
+                        }
+                        
+                        Section(header: Text(shouldDisable ? "Public key" : "Keys") ) {
                             HStack {
-                                Text("**PRIVATE KEY:** \(String(account.nsec!.prefix(7)))∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗").lineLimit(1)
-                                Spacer()
+                                Text("**PUBLIC KEY:** \(account.npub)").lineLimit(1)
                                 Image(systemName: "doc.on.doc.fill")
                                     .onTapGesture {
-                                        UIPasteboard.general.string = account.nsec!
+                                        UIPasteboard.general.string = account.npub
+                                        sendNotification(.anyStatus, ("Public key copied to clipboard", "COPYKEYS"))
                                     }
+                            }
+                            
+                            if (!shouldDisable && account.nsec != nil) {
+                                HStack {
+                                    Text("**PRIVATE KEY:** \(String(account.nsec!.prefix(7)))∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗").lineLimit(1)
+                                    Spacer()
+                                    Image(systemName: "doc.on.doc.fill")
+                                        .onTapGesture {
+                                            UIPasteboard.general.string = account.nsec!
+                                            sendNotification(.anyStatus, ("Private key copied to clipboard", "COPYKEYS"))
+                                        }
+                                }
                             }
                         }
                     }
+                    .foregroundColor(shouldDisable ? .gray : .primary)
+                    .padding(.top, 20)
+                    
+                    VStack {
+                        Spacer()
+                        AnyStatus(filter: "COPYKEYS")
+                            .opacity(0.85)
+                    }
+                    //            Button {
+                    //                updateContacts()
+                    //            } label: {
+                    //                Text("Update contacts metadata")
+                    //            }
+                    //            Button {
+                    //                loadFollowers(account: account)
+                    //            } label: {
+                    //                Text("load followers from kind 3")
+                    //            }
                 }
-                .foregroundColor(shouldDisable ? .gray : .primary)
-                .padding(.top, 20)
-                
-                //            Button {
-                //                updateContacts()
-                //            } label: {
-                //                Text("Update contacts metadata")
-                //            }
-                //            Button {
-                //                loadFollowers(account: account)
-                //            } label: {
-                //                Text("load followers from kind 3")
-                //            }
                 Button {
                     loadFromRelays()
                 } label: {
