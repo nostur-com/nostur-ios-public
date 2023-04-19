@@ -28,7 +28,9 @@ struct ListView: View {
     var body: some View {
         let _ = Self._printChanges()
         VStack {
+            Text("\(vmState.state.rawValue) | vPosts: \(vmState.vPostLeafs.count) | threadValue: \(vmState.vPostLeafs.reduce(0, { $0 + $1.threadPostsCount } ) )")
             if vmState.vPostLeafs.count > 0 {
+                Text("WTF")
 //                Text("\(vmState.state.rawValue) | vPosts: \(vmState.vPostLeafs.count) | threadValue: \(vmState.vPostLeafs.reduce(0, { $0 + $1.threadPostsCount } ) )")
                 
                 ZStack {
@@ -59,8 +61,11 @@ struct ListView: View {
                         needsRefresh = true
                     }
                     .onAppear {
-                        needsScrollToIndex = getRestoreScrollIndex()
-                        needsRefresh = true
+                        print("ON APEEAAAR BEID")
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                            self.needsScrollToIndex = getRestoreScrollIndex()
+                            self.needsRefresh = true
+                        }
                     }
 //                    .background(Color.indigo)
                     VStack {
