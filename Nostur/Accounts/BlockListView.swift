@@ -32,8 +32,8 @@ struct BlockListView: View {
                 case "Muted":
                     MutedConversations()
                     Text("Swipe to unblock/unmute")
-                case "Muted words":
-                    MutedWordsView()
+//                case "Muted words":
+//                    MutedWordsView()
                 default:
                     BlockedAccounts()
             }

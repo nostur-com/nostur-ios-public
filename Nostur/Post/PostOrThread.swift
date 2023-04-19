@@ -62,8 +62,8 @@ struct PostOrThread_Previews: PreviewProvider {
         
         ScrollView {
             LazyVStack(spacing: 0) {
-                ForEach(vPosts) { vPost in
-//                ForEach(Array(vPosts.dropFirst(2))) { vPost in
+//                ForEach(vPosts) { vPost in
+                ForEach(Array(vPosts.dropFirst(12))) { vPost in
                     PostOrThread(vPost: vPost)
                         .boxShadow()
                 }
