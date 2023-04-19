@@ -50,7 +50,7 @@ struct BlablaBannerImage: View {
         GeometryReader { geo in
             BannerImage(imageState: imageState, width: width)
                 .scaledToFill()
-//                .frame(width: geo.size.width, height: 150)
+                .frame(width: width, height: 150)
         }
     }
 }
@@ -203,7 +203,7 @@ struct BannerPicPicker: View {
 
 struct BannerPicPicker_Previews: PreviewProvider {
 //    @State static var picture = "https://nostur.com/fabian/banner.jpg"
-    @State static var picture = "https://pbs.twimg.com/profile_banners/1479206440577519622/1671514703/1500x500"
+    @State static var picture = "https://profilepics.nostur.com/062daf266de13f0195f611675d4b7309b32f743012f539979c104b803591dc86/banner.jpg"
     @State static var newPicture:UIImage?
     static var previews: some View {
         GeometryReader { geo in

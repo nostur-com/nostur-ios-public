@@ -36,6 +36,7 @@ struct AccountEditView: View {
                 ZStack {
                     BannerPicPicker($account.banner, newPicture:$newBanner, width: geo.size.width)
                         .frame(height: 150)
+                        .clipped()
                     HStack {
                         ProfilePicPicker($account.picture, newPicture:$newPicture)
                             .offset(x: 20, y: 60)
@@ -421,15 +422,60 @@ func uploadPFPImage(image: UIImage) -> AnyPublisher<String, Error> {
         .eraseToAnyPublisher()
 }
 
-func uploadBannerImage(image: UIImage) -> AnyPublisher<String, Error> {
-    let maxDimension: CGFloat = 150.0 // maximum height
-    let scale = min(maxDimension / image.size.height, 1.0)
-    let size = CGSize(width: image.size.width * scale, height: image.size.height * scale)
+// Scales an image to fit within a given height and width
+// Preserves aspect ratio
+// Fills the entire space, cropping if necessary
+func scaleImageToFill(image: UIImage, height: CGFloat, width: CGFloat) -> UIImage? {
+    let size = image.size
+    let widthRatio = width / size.width
+    let heightRatio = height / size.height
+    let scaleRatio = max(widthRatio, heightRatio)
+    let scaledSize = CGSize(width: size.width * scaleRatio, height: size.height * scaleRatio)
+    let origin = CGPoint(x: (width - scaledSize.width) / 2, y: (height - scaledSize.height) / 2)
+    UIGraphicsBeginImageContextWithOptions(CGSize(width: width, height: height), false, 0)
+    image.draw(in: CGRect(origin: origin, size: scaledSize))
+    let scaledImage = UIGraphicsGetImageFromCurrentImageContext()
+    UIGraphicsEndImageContext()
+    return scaledImage
+}
 
-    let renderer = UIGraphicsImageRenderer(size: size)
-    let scaledImage = renderer.image { _ in
-       image.draw(in: CGRect(origin: .zero, size: size))
+//
+//func scaleImageToFill(image: UIImage, maxHeight: CGFloat, maxWidth: CGFloat) -> UIImage? {
+//    let imageSize = image.size
+//    let aspectRatio = imageSize.width / imageSize.height
+//    let maxAspectRatio = maxWidth / maxHeight
+//    var scale: CGFloat
+//    var cropRect = CGRect.zero
+//
+//    if aspectRatio > maxAspectRatio {
+//        scale = maxWidth / imageSize.width
+//        let height = imageSize.height * scale
+//        cropRect = CGRect(x: 0, y: (maxHeight - height) / 2.0, width: maxWidth, height: height)
+//    } else {
+//        scale = maxHeight / imageSize.height
+//        let width = imageSize.width * scale
+//        cropRect = CGRect(x: (maxWidth - width) / 2.0, y: 0, width: width, height: maxHeight)
+//    }
+//
+//    UIGraphicsBeginImageContextWithOptions(CGSize(width: maxWidth, height: maxHeight), false, UIScreen.main.scale)
+//    defer { UIGraphicsEndImageContext() }
+//
+//    image.draw(in: cropRect)
+//
+//    guard let scaledImage = UIGraphicsGetImageFromCurrentImageContext() else {
+//        return nil
+//    }
+//
+//    return scaledImage
+//}
+
+func uploadBannerImage(image: UIImage) -> AnyPublisher<String, Error> {
+    
+    guard let scaledImage = scaleImageToFill(image: image, height: 150, width: 600) else {
+        return Fail(error: ImageUploadError.scalingFailure).eraseToAnyPublisher()
     }
+    
+//    let scaledImage = scaleImageToFill(image: image, height: 300, width: 900)
     
     guard let imageData = scaledImage.jpegData(compressionQuality: 0.8) else {
         return Fail(error: ImageUploadError.conversionFailure).eraseToAnyPublisher()
