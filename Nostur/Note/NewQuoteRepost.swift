@@ -58,12 +58,6 @@ struct NewQuoteRepost: View {
                                 .onSelectionChange { (range: NSRange) in
                                     print(range)
                                 }
-                                .introspect { editor in
-                                    if (vm.textView == nil) {
-                                        vm.textView = editor.textView
-                                        vm.textView?.backgroundColor = UIColor.clear
-                                    }
-                                }
                                 .frame(minHeight: 50, maxHeight: 500)
                                 .onChange(of: ipm.newImage) { newImage in
                                     if let newImage {

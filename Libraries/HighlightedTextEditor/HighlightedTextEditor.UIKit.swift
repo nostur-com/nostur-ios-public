@@ -94,6 +94,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     
     public func makeUIView(context: Context) -> UITextView {
         let textView = NosturTextView()
+        textView.backgroundColor = UIColor.clear
         textView.delegate = context.coordinator
         textView.pastedImageDelegate = context.coordinator
         

@@ -67,12 +67,6 @@ struct NewReply: View {
                                     photoPickerTapped: {
                                         ipm.photoPickerShown = true
                                     })
-                                    .introspect { editor in
-                                        if (vm.textView == nil) {
-                                            vm.textView = editor.textView
-                                            vm.textView?.backgroundColor = UIColor.clear
-                                        }
-                                    }
                                     .frame(minHeight: 100, idealHeight: 125, maxHeight: 250, alignment: .top)
                                     .photosPicker(isPresented: $ipm.photoPickerShown, selection: $ipm.imageSelection, matching: .images, photoLibrary: .shared())
                                     .onChange(of: ipm.newImage) { newImage in
