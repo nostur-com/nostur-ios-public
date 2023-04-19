@@ -8,7 +8,6 @@
 import SwiftUI
 import Nuke
 import NukeUI
-
 import PhotosUI
 
 struct BannerImage: View {

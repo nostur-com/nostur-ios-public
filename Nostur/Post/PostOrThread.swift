@@ -19,11 +19,6 @@ struct PostOrThread: View {
     var body: some View {
         VStack(spacing:0) {
             ForEach(vPost.parentPosts.indices, id:\.self) { index in
-//                if index == 0 && vPost.parentPosts[index].event.replyToId != nil {
-//                    Button("Show this thread") {
-//                        navigateTo(vPost.parentPosts[index])
-//                    }.padding(.top, 10)
-//                }
                 NoteRow(vPost: vPost.parentPosts[index],
                         inThread: (vPost.event.replyToId != nil && index != 0),
                         connect: vPost.parentPosts[index].event.replyToId != nil || index > 0 ? .both : .bottom, fullWidth: fullWidth)
@@ -34,11 +29,6 @@ struct PostOrThread: View {
                     }
                     .id(vPost.parentPosts[index].id)
             }
-//            if vPost.event.replyToId != nil && vPost.parentPosts.count == 0 {
-//                Button("Show this thread") {
-//                    navigateTo(vPost)
-//                }.padding(.top, 10)
-//            }
             NoteRow(vPost: vPost, inThread: vPost.event.replyToId != nil && vPost.parentPosts.count > 0, connect: vPost.event.replyToId != nil ? .top : nil, fullWidth: fullWidth)
                 .background(Color.systemBackground)
                 .onTapGesture {
