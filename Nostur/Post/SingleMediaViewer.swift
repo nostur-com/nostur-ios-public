@@ -59,7 +59,7 @@ struct SingleMediaViewer: View {
             else {
                 if viewSize.width > 0 {
                     LazyImage(request: ImageRequest(url: url,
-                                processors: [.resize(width: viewSize.width)],
+                                processors: [.resize(width: viewSize.width, upscale: true)],
                                 userInfo: [.scaleKey: UIScreen.main.scale])) { state in
                         if let image = state.image {
                             image
