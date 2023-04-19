@@ -21,6 +21,7 @@ struct NewReply: View {
 //    @State var newReplyEvent:NEvent
     
     @StateObject var vm = NewNoteText()
+    @StateObject var ipm = ImagePickerModel()
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Contact.nip05verifiedAt, ascending: false)], predicate: NSPredicate(value: false))
     var contacts:FetchedResults<Contact>
@@ -58,9 +59,14 @@ struct NewReply: View {
                                 Spacer()
                             }
                             VStack(alignment: .leading) {
-                                HighlightedTextEditor(text: $vm.text,
-                                                      pastedImages: $vm.pastedImages,
-                                                      shouldBecomeFirstResponder: true, highlightRules: NewNoteText.rules)
+                                HighlightedTextEditor(
+                                    text: $vm.text,
+                                    pastedImages: $vm.pastedImages,
+                                    shouldBecomeFirstResponder: true,
+                                    highlightRules: NewNoteText.rules,
+                                    photoPickerTapped: {
+                                        ipm.photoPickerShown = true
+                                    })
                                     .introspect { editor in
                                         if (vm.textView == nil) {
                                             vm.textView = editor.textView
@@ -68,6 +74,12 @@ struct NewReply: View {
                                         }
                                     }
                                     .frame(minHeight: 100, idealHeight: 125, maxHeight: 250, alignment: .top)
+                                    .photosPicker(isPresented: $ipm.photoPickerShown, selection: $ipm.imageSelection, matching: .images, photoLibrary: .shared())
+                                    .onChange(of: ipm.newImage) { newImage in
+                                        if let newImage {
+                                            vm.pastedImages.append(newImage)
+                                        }
+                                    }
                                 ImagePreviews(pastedImages: $vm.pastedImages)
                                 Spacer()
                             }

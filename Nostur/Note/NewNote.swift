@@ -7,6 +7,96 @@
 
 import SwiftUI
 import Combine
+import PhotosUI
+
+struct MediaImage: View {
+    let imageState: ImagePickerModel.ImageState
+
+    var body: some View {
+        switch imageState {
+        case .success(let image):
+            image.resizable()
+        case .loading:
+            ProgressView()
+        case .empty:
+            Rectangle()
+                .foregroundColor(.gray)
+        case .failure:
+            Rectangle()
+                .foregroundColor(.gray)
+        }
+    }
+}
+
+class ImagePickerModel: ObservableObject {
+    
+    enum ImageState {
+        case empty
+        case loading(Progress)
+        case success(Image)
+        case failure(Error)
+    }
+
+    enum TransferError: Error {
+        case importFailed
+    }
+
+    struct SelectedImage: Transferable {
+        let image: Image
+        let uiImage: UIImage
+
+        static var transferRepresentation: some TransferRepresentation {
+            DataRepresentation(importedContentType: .image) { data in
+            #if canImport(UIKit)
+                guard let uiImage = UIImage(data: data) else {
+                    throw TransferError.importFailed
+                }
+                let image = Image(uiImage: uiImage)
+                return SelectedImage(image: image, uiImage: uiImage)
+            #else
+                throw TransferError.importFailed
+            #endif
+            }
+        }
+    }
+
+    @Published var photoPickerShown = false
+    @Published private(set) var imageState: ImageState = .empty
+
+    @Published var newImage:UIImage?
+    @Published var imageSelection: PhotosPickerItem? = nil {
+        didSet {
+            if let imageSelection {
+                let progress = loadTransferable(from: imageSelection)
+                imageState = .loading(progress)
+            } else {
+                imageState = .empty
+            }
+        }
+    }
+
+    // MARK: - Private Methods
+
+    private func loadTransferable(from imageSelection: PhotosPickerItem) -> Progress {
+        return imageSelection.loadTransferable(type: SelectedImage.self) { result in
+            DispatchQueue.main.async {
+                guard imageSelection == self.imageSelection else {
+                    print("Failed to get the selected item.")
+                    return
+                }
+                switch result {
+                case .success(let selectedImage?):
+                    self.imageState = .success(selectedImage.image)
+                    self.newImage = selectedImage.uiImage
+                case .success(nil):
+                    self.imageState = .empty
+                case .failure(let error):
+                    self.imageState = .failure(error)
+                }
+            }
+        }
+    }
+}
 
 public final class NewNoteText: ObservableObject {
     
@@ -39,8 +129,6 @@ public final class NewNoteText: ObservableObject {
     }
 }
 
-
-
 struct NewNote: View {
     let PLACEHOLDER = "What's happening?"
     @Environment(\.dismiss) private var dismiss
@@ -50,6 +138,7 @@ struct NewNote: View {
     @State var uploading = false
     @State var uploadError:String?
     @StateObject var vm = NewNoteText()
+    @StateObject var ipm = ImagePickerModel()
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Contact.nip05verifiedAt, ascending: false)], predicate: NSPredicate(value: false))
     var contacts:FetchedResults<Contact>
@@ -78,7 +167,7 @@ struct NewNote: View {
                             shouldBecomeFirstResponder: true,
                             highlightRules: NewNoteText.rules,
                             photoPickerTapped: {
-                                print("POTOTOT PICKER TAPPED")
+                                ipm.photoPickerShown = true
                             })
                         .introspect { editor in
                             if (vm.textView == nil) {
@@ -87,6 +176,12 @@ struct NewNote: View {
                             }
                         }
                         .frame(minHeight: 200, idealHeight: 325, maxHeight: 550, alignment: .top)
+                        .photosPicker(isPresented: $ipm.photoPickerShown, selection: $ipm.imageSelection, matching: .images, photoLibrary: .shared())
+                        .onChange(of: ipm.newImage) { newImage in
+                            if let newImage {
+                                vm.pastedImages.append(newImage)
+                            }
+                        }
                         ImagePreviews(pastedImages: $vm.pastedImages)
                         Spacer()
                     }

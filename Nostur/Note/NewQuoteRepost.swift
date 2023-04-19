@@ -16,6 +16,7 @@ struct NewQuoteRepost: View {
     @EnvironmentObject var ns:NosturState
     let up:Unpublisher = .shared
     @StateObject var vm = NewNoteText()
+    @StateObject var ipm = ImagePickerModel()
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Contact.nip05verifiedAt, ascending: false)], predicate: NSPredicate(value: false))
     var contacts:FetchedResults<Contact>
@@ -46,9 +47,14 @@ struct NewQuoteRepost: View {
                                 Spacer()
                             }
                             VStack(alignment: .leading) {
-                                HighlightedTextEditor(text: $vm.text,
-                                                      pastedImages: $vm.pastedImages,
-                                                      shouldBecomeFirstResponder: true, highlightRules: NewNoteText.rules)
+                                HighlightedTextEditor(
+                                    text: $vm.text,
+                                    pastedImages: $vm.pastedImages,
+                                    shouldBecomeFirstResponder: true,
+                                    highlightRules: NewNoteText.rules,
+                                    photoPickerTapped: {
+                                        ipm.photoPickerShown = true
+                                    })
                                 .onSelectionChange { (range: NSRange) in
                                     print(range)
                                 }
@@ -59,6 +65,11 @@ struct NewQuoteRepost: View {
                                     }
                                 }
                                 .frame(minHeight: 50, maxHeight: 500)
+                                .onChange(of: ipm.newImage) { newImage in
+                                    if let newImage {
+                                        vm.pastedImages.append(newImage)
+                                    }
+                                }
                                 ImagePreviews(pastedImages: $vm.pastedImages)
                                 if let quotedVPost = quotingEvent.toVPost() {
                                     QuotedNoteFragmentView(vPost: quotedVPost)
