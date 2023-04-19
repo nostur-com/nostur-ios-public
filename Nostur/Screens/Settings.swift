@@ -86,6 +86,18 @@ struct Settings: View {
                 }
             }
             
+            Section(header: Text("Image uploading")) {
+                VStack {
+                    Picker(selection: $settings.defaultMediaUploadService) {
+                        ForEach(SettingsStore.mediaUploadServiceOptions) {
+                            Text($0.name).tag($0)
+                        }
+                    } label: {
+                        Text("Media upload service")
+                    }
+                }
+            }
+            
             Section(header: Text("Zapping")) {
                 
                 VStack {

@@ -31,6 +31,7 @@ final class SettingsStore: ObservableObject {
         static let rowFooterEnabled = "row_footer_enabled"
         static let autoScroll = "autoscroll"
         static let fullWidthImages = "full_width_images"
+        static let defaultMediaUploadService = "media_upload_service"
     }
 
     private let cancellable: Cancellable
@@ -46,6 +47,20 @@ final class SettingsStore: ObservableObject {
         LightningWallet(name: "Phoenix", scheme: "phoenix:lightning:"), // guessed. must check if works
         LightningWallet(name: "Breez", scheme: "breez:lightning:"), // https://github.com/breez/breezmobile/issues/300
         LightningWallet(name: "BlueWallet", scheme: "bluewallet:lightning:") // https://github.com/BlueWallet/BlueWallet/wiki/Deeplinking
+    ]
+    
+    public static let mediaUploadServiceOptions = [
+        // same as imgur
+        getNostrimgService(),
+
+         // link will be just the image url but need to replace http with https
+        getVoidCatService(),
+        
+        // needs registered Client ID
+        getImgurService(),
+    
+//        // no api, parse media link from response
+//        MediaUploadService(name: "nostr.build", url: "https://nostr.build/upload.php"),
     ]
     
     init(defaults: UserDefaults = .standard) {
@@ -64,13 +79,29 @@ final class SettingsStore: ObservableObject {
             Keys.animatedPFPenabled: false,
             Keys.rowFooterEnabled: true,
             Keys.autoScroll: false,
-            Keys.fullWidthImages: false
-            ])
+            Keys.fullWidthImages: false,
+            Keys.defaultMediaUploadService: "imgur.com"
+        ])
 
         cancellable = NotificationCenter.default
             .publisher(for: UserDefaults.didChangeNotification)
             .map { _ in () }
             .subscribe(objectWillChange)
+    }
+    
+    var defaultMediaUploadService: MediaUploadService {
+        get {
+            return defaults.string(forKey: Keys.defaultMediaUploadService)
+                .flatMap { id in
+                    SettingsStore.mediaUploadServiceOptions.first(where: { service in
+                        return service.id == id
+                    })
+                } ?? SettingsStore.mediaUploadServiceOptions.first!
+        }
+
+        set {
+            defaults.set(newValue.id, forKey: Keys.defaultMediaUploadService)
+        }
     }
     
     var lastMaintenanceTimestamp: Int {
