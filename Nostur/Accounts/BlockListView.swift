@@ -21,9 +21,9 @@ struct BlockListView: View {
                 TabButton(action: {
                         tab = "Muted"
                 }, title: "Muted conversations", selected: tab == "Muted")
-                TabButton(action: {
-                        tab = "Muted words"
-                }, title: "Muted words", selected: tab == "Muted words")
+//                TabButton(action: {
+//                        tab = "Muted words"
+//                }, title: "Muted words", selected: tab == "Muted words")
             }
             switch tab {
                 case "Blocked":
