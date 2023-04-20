@@ -6,7 +6,6 @@
 //
 
 import Foundation
-//import LightningDevKit
 
 
 func zapRequest(forPubkey pubkey: String, andEvent eventId: String? = nil, withMessage message:String = "", relays:[String]) -> NEvent {

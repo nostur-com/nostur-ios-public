@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-//import LightningDevKit
 
 
 struct NoteZaps: View {

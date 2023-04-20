@@ -9,7 +9,6 @@
 import Foundation
 import CoreData
 import Compactor
-//import LightningDevKit
 
 extension Event {
 

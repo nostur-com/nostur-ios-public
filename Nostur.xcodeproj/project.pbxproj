@@ -35,6 +35,9 @@
 		1F1DCB8D2999290E0085223E /* LightningInvoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1DCB8C2999290E0085223E /* LightningInvoice.swift */; };
 		1F21442C29A797930090E78E /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F21442B29A797930090E78E /* Settings.swift */; };
 		1F21442E29A797B80090E78E /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F21442D29A797B80090E78E /* SettingsStore.swift */; };
+		1F21DDBE29F0174700C564EF /* NewSocketPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F21DDBD29F0174700C564EF /* NewSocketPool.swift */; };
+		1F21DDC129F01B3000C564EF /* CombineWebSocket in Frameworks */ = {isa = PBXBuildFile; productRef = 1F21DDC029F01B3000C564EF /* CombineWebSocket */; };
+		1F21DDC329F0DC4300C564EF /* Prefetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F21DDC229F0DC4300C564EF /* Prefetcher.swift */; };
 		1F2A493029D9A04B008614D5 /* RestoreContactsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2A492F29D9A04A008614D5 /* RestoreContactsSheet.swift */; };
 		1F2DE030298E5C5C00891D2E /* BlockListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2DE02F298E5C5C00891D2E /* BlockListView.swift */; };
 		1F30FAA929705EBD008439C8 /* NosturCloud.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1F30FAA729705EBD008439C8 /* NosturCloud.xcdatamodeld */; };
@@ -79,7 +82,6 @@
 		1F5F5A5C29838F1D00DED8F4 /* EventsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5F5A5B29838F1D00DED8F4 /* EventsProvider.swift */; };
 		1F65002C29A759FB00B79AEF /* ProfileRowMissing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F65002B29A759FB00B79AEF /* ProfileRowMissing.swift */; };
 		1F65121B29C75AC9009FD4AE /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F65121A29C75AC9009FD4AE /* ProfileView.swift */; };
-		1F654F30298ED52E0040F15D /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 1F654F2F298ED52E0040F15D /* Starscream */; };
 		1F6B445029D5D1F700AD3191 /* PostOrThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6B444F29D5D1F700AD3191 /* PostOrThread.swift */; };
 		1F6E448429CC51600037D947 /* VideoPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6E448329CC515F0037D947 /* VideoPlayerView.swift */; };
 		1F6E448629CC5CAE0037D947 /* Account+Notifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6E448529CC5CAE0037D947 /* Account+Notifications.swift */; };
@@ -309,6 +311,8 @@
 		1F1DCB8C2999290E0085223E /* LightningInvoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightningInvoice.swift; sourceTree = "<group>"; };
 		1F21442B29A797930090E78E /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		1F21442D29A797B80090E78E /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
+		1F21DDBD29F0174700C564EF /* NewSocketPool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewSocketPool.swift; sourceTree = "<group>"; };
+		1F21DDC229F0DC4300C564EF /* Prefetcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prefetcher.swift; sourceTree = "<group>"; };
 		1F2A492F29D9A04A008614D5 /* RestoreContactsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestoreContactsSheet.swift; sourceTree = "<group>"; };
 		1F2DE02F298E5C5C00891D2E /* BlockListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockListView.swift; sourceTree = "<group>"; };
 		1F30FAA829705EBD008439C8 /* NosturCloud.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = NosturCloud.xcdatamodel; sourceTree = "<group>"; };
@@ -514,13 +518,13 @@
 		1FD8AD7429D87D0B00693302 /* ListViewContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListViewContainer.swift; sourceTree = "<group>"; };
 		1FDBA1A029D96B5200BB866B /* FollowingGuardian.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowingGuardian.swift; sourceTree = "<group>"; };
 		1FDF0ED529EB9F1000B56AC4 /* AddContactsToListSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddContactsToListSheet.swift; sourceTree = "<group>"; };
-		1FDF0ED829EC047C00B56AC4 /* ImagePreviews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ImagePreviews.swift; path = Nostur/Note/ImagePreviews.swift; sourceTree = "<group>"; };
-		1FDF0EDC29ED732500B56AC4 /* AnyStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AnyStatus.swift; path = Nostur/AnyStatus.swift; sourceTree = "<group>"; };
+		1FDF0ED829EC047C00B56AC4 /* ImagePreviews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePreviews.swift; sourceTree = "<group>"; };
+		1FDF0EDC29ED732500B56AC4 /* AnyStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnyStatus.swift; sourceTree = "<group>"; };
 		1FE4011C29952EC800A388A2 /* NIP05.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP05.swift; sourceTree = "<group>"; };
 		1FE5068D29B391CF006A16D8 /* FastAccountSwitcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastAccountSwitcher.swift; sourceTree = "<group>"; };
 		1FEA5FE129D60D2800A90F7E /* DeleteAccountSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteAccountSheet.swift; sourceTree = "<group>"; };
 		1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePicView.swift; sourceTree = "<group>"; };
-		1FEA8D4A29E967B5004A83D3 /* InlineThings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = InlineThings.swift; path = Nostur/InlineThings.swift; sourceTree = "<group>"; };
+		1FEA8D4A29E967B5004A83D3 /* InlineThings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineThings.swift; sourceTree = "<group>"; };
 		1FECAC4629A08255006FEE72 /* Collection+subscript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Collection+subscript.swift"; sourceTree = "<group>"; };
 		1FF21E7D29ACC02E00203623 /* FollowingAndExplore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowingAndExplore.swift; sourceTree = "<group>"; };
 		1FF283D129DB491F0063B799 /* PostPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostPreview.swift; sourceTree = "<group>"; };
@@ -541,7 +545,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				1F7C65BD29A14969009FF3EA /* LightningDevKit in Frameworks */,
-				1F654F30298ED52E0040F15D /* Starscream in Frameworks */,
 				1F75257829962AA300477AF2 /* NukeExtensions in Frameworks */,
 				1FB6E6F529E31C71008BE8A6 /* HTMLEntities in Frameworks */,
 				1F517BEE29CDB2FE00F7A97F /* FLAnimatedImage in Frameworks */,
@@ -550,6 +553,7 @@
 				1FC4D40B2997E58E004E88CD /* KeychainAccess in Frameworks */,
 				1FEA785529799697007CC8E7 /* Compactor in Frameworks */,
 				1F006B0A29D0A9BE0048C6DD /* Algorithms in Frameworks */,
+				1F21DDC129F01B3000C564EF /* CombineWebSocket in Frameworks */,
 				1F75257A29962AA300477AF2 /* NukeUI in Frameworks */,
 				1F055A53296EE2A2009EF792 /* secp256k1 in Frameworks */,
 				1FEC01C0296C4A400078CC9B /* SwiftyJSON in Frameworks */,
@@ -605,6 +609,7 @@
 				1F1ABC482981718700D03FA9 /* BookmarksView.swift */,
 				1F00337429BF0A44007CE040 /* BookmarksAndPrivateNotes.swift */,
 				1FC2DFEA29A8FBA100C8A9DA /* DetailContainer.swift */,
+				1F810B2F29E67017006B1614 /* MutedWordsView.swift */,
 				1F3309622989598600D4D8CF /* NosturRootMenuView.swift */,
 				1F3C3F9529755D4C00E813FD /* NosturState.swift */,
 				1F14CC42299D1D7E00131B8D /* NosturStyles.swift */,
@@ -660,6 +665,7 @@
 			isa = PBXGroup;
 			children = (
 				1F45C7EF29EF99A600F58772 /* MediaUploads */,
+				1FDF0EDC29ED732500B56AC4 /* AnyStatus.swift */,
 				1F6EB73529E1912600B9DA83 /* Binding+not.swift */,
 				1F8B1352297B36DB002EB8CF /* Bytes+Base64.swift */,
 				1F8B1357297B36DB002EB8CF /* Bytes+HexString.swift */,
@@ -716,11 +722,13 @@
 				1F4773A6296D4F5B0049454B /* AccountEditView.swift */,
 				1FC4D4072997E126004E88CD /* AccountManager.swift */,
 				1F539DAC299D52E200F3B8CA /* AddExistingAccountSheet.swift */,
+				1F45C7E729EE8FF100F58772 /* BannerPicPicker.swift */,
 				1F2DE02F298E5C5C00891D2E /* BlockListView.swift */,
 				1FEA5FE129D60D2800A90F7E /* DeleteAccountSheet.swift */,
-				1F539DAA299D4B2900F3B8CA /* NewAccountSheet.swift */,
+				1FB38B6029E29CEC00B85156 /* ProfilePicPicker.swift */,
 				1FE5068D29B391CF006A16D8 /* FastAccountSwitcher.swift */,
 				1FDBA1A029D96B5200BB866B /* FollowingGuardian.swift */,
+				1F539DAA299D4B2900F3B8CA /* NewAccountSheet.swift */,
 				1F2A492F29D9A04A008614D5 /* RestoreContactsSheet.swift */,
 			);
 			path = Accounts;
@@ -751,6 +759,7 @@
 				1F71037C296BD9DE006245CC /* Nostr.swift */,
 				1FBFE8E529AC74B40039F992 /* NostrRank.swift */,
 				1F75211429865F2D00C43DF0 /* SocketPool.swift */,
+				1F21DDBD29F0174700C564EF /* NewSocketPool.swift */,
 				1F75257D2996A1A900477AF2 /* Unpublisher.swift */,
 				1FC78F6829CA28940009C1C7 /* NKeys.swift */,
 			);
@@ -908,9 +917,6 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
-				1FDF0EDC29ED732500B56AC4 /* AnyStatus.swift */,
-				1FDF0ED829EC047C00B56AC4 /* ImagePreviews.swift */,
-				1FEA8D4A29E967B5004A83D3 /* InlineThings.swift */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1FB448BB2965F3D000038671 /* Products */,
 				1F7C65B629A1466D009FF3EA /* Frameworks */,
@@ -953,9 +959,7 @@
 				1FB448C62965F3D200038671 /* Assets.xcassets */,
 				1FB448C82965F3D200038671 /* Nostur.entitlements */,
 				1FB448C92965F3D200038671 /* Preview Content */,
-				1FB38B6029E29CEC00B85156 /* ProfilePicPicker.swift */,
-				1F45C7E729EE8FF100F58772 /* BannerPicPicker.swift */,
-				1F810B2F29E67017006B1614 /* MutedWordsView.swift */,
+				1F21DDC229F0DC4300C564EF /* Prefetcher.swift */,
 			);
 			path = Nostur;
 			sourceTree = "<group>";
@@ -1085,6 +1089,8 @@
 		1FEA78592979A18E007CC8E7 /* Note */ = {
 			isa = PBXGroup;
 			children = (
+				1FDF0ED829EC047C00B56AC4 /* ImagePreviews.swift */,
+				1FEA8D4A29E967B5004A83D3 /* InlineThings.swift */,
 				1F1DCB8C2999290E0085223E /* LightningInvoice.swift */,
 				1F987EB029804AA4001E352E /* NewNoteView.swift */,
 				1F75257F2997854200477AF2 /* NewNote.swift */,
@@ -1124,7 +1130,6 @@
 				1FEC01BF296C4A400078CC9B /* SwiftyJSON */,
 				1F055A52296EE2A2009EF792 /* secp256k1 */,
 				1FEA785429799697007CC8E7 /* Compactor */,
-				1F654F2F298ED52E0040F15D /* Starscream */,
 				1F75257529962AA300477AF2 /* Nuke */,
 				1F75257729962AA300477AF2 /* NukeExtensions */,
 				1F75257929962AA300477AF2 /* NukeUI */,
@@ -1134,6 +1139,7 @@
 				1F517BED29CDB2FE00F7A97F /* FLAnimatedImage */,
 				1F006B0929D0A9BE0048C6DD /* Algorithms */,
 				1FB6E6F429E31C71008BE8A6 /* HTMLEntities */,
+				1F21DDC029F01B3000C564EF /* CombineWebSocket */,
 			);
 			productName = Nostur;
 			productReference = 1FB448BA2965F3D000038671 /* Nostur.app */;
@@ -1167,13 +1173,13 @@
 				1FEC01BE296C4A400078CC9B /* XCRemoteSwiftPackageReference "SwiftyJSON" */,
 				1F055A51296EE2A2009EF792 /* XCRemoteSwiftPackageReference "secp256k1" */,
 				1FEA785329799697007CC8E7 /* XCRemoteSwiftPackageReference "SwiftCompactor" */,
-				1F654F2E298ED52E0040F15D /* XCRemoteSwiftPackageReference "Starscream" */,
 				1F75257429962AA300477AF2 /* XCRemoteSwiftPackageReference "Nuke" */,
 				1FC4D4092997E58E004E88CD /* XCRemoteSwiftPackageReference "KeychainAccess" */,
 				1F7C65BB29A14969009FF3EA /* XCRemoteSwiftPackageReference "ldk-swift" */,
 				1F517BEC29CDB2FD00F7A97F /* XCRemoteSwiftPackageReference "FLAnimatedImage" */,
 				1F006B0829D0A9BE0048C6DD /* XCRemoteSwiftPackageReference "swift-algorithms" */,
 				1FB6E6F329E31C71008BE8A6 /* XCRemoteSwiftPackageReference "swift-html-entities" */,
+				1F21DDBF29F01B3000C564EF /* XCRemoteSwiftPackageReference "CombineWebSocket" */,
 			);
 			productRefGroup = 1FB448BB2965F3D000038671 /* Products */;
 			projectDirPath = "";
@@ -1374,6 +1380,7 @@
 				1F30FAA929705EBD008439C8 /* NosturCloud.xcdatamodeld in Sources */,
 				1F71037D296BD9DE006245CC /* Nostr.swift in Sources */,
 				1FF283D229DB491F0063B799 /* PostPreview.swift in Sources */,
+				1F21DDC329F0DC4300C564EF /* Prefetcher.swift in Sources */,
 				1F8B135A297B36DB002EB8CF /* String+Conversion.swift in Sources */,
 				1F30FAB329707719008439C8 /* Account+CoreDataProperties.swift in Sources */,
 				1F8B135B297B36DB002EB8CF /* Convert.swift in Sources */,
@@ -1430,6 +1437,7 @@
 				1F987EB329805F33001E352E /* String+matchingStrings.swift in Sources */,
 				1FC4555F29CB673200DE3239 /* NewDMToSelector.swift in Sources */,
 				1F8349A229DE81390032E52B /* RagiSmoothListConfiguration.swift in Sources */,
+				1F21DDBE29F0174700C564EF /* NewSocketPool.swift in Sources */,
 				1F57C54729927A0000DFE063 /* AppTopBar.swift in Sources */,
 				1FC82F3629AE327700B81CE5 /* SmartRelayManager.swift in Sources */,
 				1FF21E7E29ACC02E00203623 /* FollowingAndExplore.swift in Sources */,
@@ -1701,20 +1709,20 @@
 				minimumVersion = 0.9.2;
 			};
 		};
+		1F21DDBF29F01B3000C564EF /* XCRemoteSwiftPackageReference "CombineWebSocket" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/luizmb/CombineWebSocket";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
 		1F517BEC29CDB2FD00F7A97F /* XCRemoteSwiftPackageReference "FLAnimatedImage" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/Flipboard/FLAnimatedImage";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 1.0.0;
-			};
-		};
-		1F654F2E298ED52E0040F15D /* XCRemoteSwiftPackageReference "Starscream" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/daltoniam/Starscream/";
-			requirement = {
-				branch = master;
-				kind = branch;
 			};
 		};
 		1F75257429962AA300477AF2 /* XCRemoteSwiftPackageReference "Nuke" */ = {
@@ -1778,6 +1786,11 @@
 			package = 1F055A51296EE2A2009EF792 /* XCRemoteSwiftPackageReference "secp256k1" */;
 			productName = secp256k1;
 		};
+		1F21DDC029F01B3000C564EF /* CombineWebSocket */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1F21DDBF29F01B3000C564EF /* XCRemoteSwiftPackageReference "CombineWebSocket" */;
+			productName = CombineWebSocket;
+		};
 		1F3E135329C89B9F00D076EA /* NukeVideo */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 1F75257429962AA300477AF2 /* XCRemoteSwiftPackageReference "Nuke" */;
@@ -1787,11 +1800,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1F517BEC29CDB2FD00F7A97F /* XCRemoteSwiftPackageReference "FLAnimatedImage" */;
 			productName = FLAnimatedImage;
-		};
-		1F654F2F298ED52E0040F15D /* Starscream */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1F654F2E298ED52E0040F15D /* XCRemoteSwiftPackageReference "Starscream" */;
-			productName = Starscream;
 		};
 		1F75257529962AA300477AF2 /* Nuke */ = {
 			isa = XCSwiftPackageProductDependency;
