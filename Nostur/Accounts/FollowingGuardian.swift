@@ -61,6 +61,7 @@ class FollowingGuardian {
                 
                 if removed.count > 0 {
                     sendNotification(.requestConfirmationChangedFollows, removed)
+                    print("Removed keys: \(removed)")
                 }
             }
             .store(in: &subscriptions)
@@ -88,8 +89,22 @@ class FollowingGuardian {
         DataProvider.shared().save()
     }
     
-    func restoreFollowing() {
+    func restoreFollowing(removed:Set<String>) {
         guard let account = NosturState.shared.account else { return }
+        let context = DataProvider.shared().viewContext
+        for pubkey in removed {
+            let contact = Contact.fetchByPubkey(pubkey, context: context)
+            if let contact {
+                account.addToFollows(contact)
+            }
+            else {
+                let newContact = Contact(context: context)
+                newContact.pubkey = pubkey
+                newContact.metadata_created_at = 0
+                newContact.updated_at = 0
+                account.addToFollows(newContact)
+            }
+        }
         guard let clEvent = try? AccountManager.createContactListEvent(account: account) else {
             print("🔴🔴 Could not create new clEvent")
             return

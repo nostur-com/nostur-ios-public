@@ -107,7 +107,7 @@ private struct WithSheets: ViewModifier {
                     FollowingGuardian.shared.removeFollowing(removed.pubkeys)
                 }
                 Button("Restore \(removed?.pubkeys.count ?? 0) contacts", role: .cancel) {
-                    FollowingGuardian.shared.restoreFollowing()
+                    FollowingGuardian.shared.restoreFollowing(removed:removed?.pubkeys ?? [])
                 }
                 .keyboardShortcut(.defaultAction)
             })
