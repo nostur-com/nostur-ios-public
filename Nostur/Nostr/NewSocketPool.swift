@@ -1,0 +1,402 @@
+//
+//  NewSocketPool.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 19/04/2023.
+//
+
+import Foundation
+import CoreData
+import OSLog
+import CombineWebSocket
+import Combine
+
+// Structure is:
+// SocketPool
+//  .sockets
+//      [NSManagedObjectID] = ManagedClient
+//                                    .client
+//                                    .activeSubscriptions
+//
+//      [NSManagedObjectID] = ManagedClient
+//                                    .client
+//                                    .activeSubscriptions
+//
+//      [NSManagedObjectID] = ManagedClient
+//                                    .client
+//                                    .activeSubscriptions
+//
+//      [NSManagedObjectID] = ManagedClient
+//                                    .client
+//                                    .activeSubscriptions
+
+final class SocketPool: ObservableObject {
+    
+    static let shared = SocketPool()
+    
+    @Published var sockets:[NSManagedObjectID : NewManagedClient] = [:]
+    
+    func connectAll() {
+        for socket in sockets {
+            guard socket.value.read else { continue }
+            if !socket.value.isConnecting && !socket.value.isConnected {
+                socket.value.connect()
+            }
+        }
+    }
+    
+    func disconnectAll() {
+        for socket in sockets {
+            if socket.value.isConnecting || socket.value.isConnected {
+                socket.value.disconnect()
+            }
+        }
+    }
+    
+    func addSocket(relayId:NSManagedObjectID, url:String, read:Bool = true, write: Bool = false) throws -> NewManagedClient {
+        if (!sockets.keys.contains(relayId)) {
+            guard let urlURL = URL(string: url) else { throw "invalid url" }
+            var request = URLRequest(url: urlURL)
+            //             request.setValue(["wamp"].joined(separator: ","), forHTTPHeaderField: "Sec-WebSocket-Protocol")
+            
+            request.timeoutInterval = 15
+            
+            let client = NewWebSocket(url: url)
+            
+            let managedClient = NewManagedClient(relayId: relayId, url: url, client:client, read: read, write: write)
+            
+            client.delegate = managedClient
+            
+            if (read || write) {
+                managedClient.connect()
+            }
+            sockets[relayId] = managedClient
+            return managedClient
+        }
+        else {
+            return sockets[relayId]!
+        }
+    }
+    
+    func socketByUrl(_ url:String) -> NewManagedClient? {
+        let managedClient = sockets.filter { relayId, managedClient in
+            managedClient.url == url.lowercased()
+        }.first?.value
+        return managedClient
+    }
+    
+    func isUrlConnected(_ url:String) -> Bool {
+        let managedClient = sockets.filter { relayId, managedClient in
+            managedClient.url == url.lowercased()
+        }.first?.value
+        guard managedClient != nil else {
+            return false
+        }
+        return managedClient!.isConnected
+    }
+    
+    func removeSocket(_ relayId:NSManagedObjectID) {
+        if (sockets.keys.contains(relayId)) {
+            sockets.removeValue(forKey: relayId)
+        }
+    }
+    
+    func sendMessage(_ message:ClientMessage, subscriptionId:String? = nil) {
+        if (message.type == .REQ) {
+            //            let read = sockets.values.filter { $0.read == true }.count
+            //            if read > 0 {
+            //                print("⬇️⬇️ REQ ON \(read) RELAYS: \(String(message.message.prefix(260)))")
+            //            }
+            //            print("⬇️⬇️ REQ ON \(read) RELAYS: \(String(message.message))")
+        }
+        
+        Task(priority: .utility) {
+            for (_, managedClient) in sockets {
+                //                print("active subscriptions \(managedClient.url): \(managedClient.activeSubscriptions.count)")
+                guard managedClient.read || managedClient.write else {
+                    // Skip if relay is not selected for reading or writing events
+                    continue
+                }
+                
+                if message.type == .REQ && managedClient.read { // REQ FOR ALL READ RELAYS
+                    if (!managedClient.isConnected) && (!managedClient.isConnecting) {
+                        managedClient.connect()
+                    }
+                    // skip if we already have an active subcription
+                    if subscriptionId != nil && managedClient.activeSubscriptions.contains(subscriptionId!) { continue }
+                    if (subscriptionId != nil) {
+                        print("⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!)")
+                        DispatchQueue.main.async {
+                            managedClient.activeSubscriptions.append(subscriptionId!)
+                        }
+                    }
+                    //                    print("REQUESTING: \(String(message.message.prefix(260)))")
+                    //                    print("⬇️⬇️ REQUESTING: \(String(message.message))")
+                    managedClient.client.sendMessage(message.message)
+                }
+                else if  message.type == .CLOSE { // CLOSE FOR ALL RELAYS
+                    if (!managedClient.isConnected && managedClient.read) && (!managedClient.isConnecting) {
+                        // Already closed? no need to connect and send CLOSE message
+                        continue
+                        //                        managedClient.connect()
+                    }
+                    //                    print("🔚🔚 CLOSE: \(String(message.message.prefix(260)))")
+                    managedClient.client.sendMessage(message.message)
+                }
+                else if message.type == .EVENT && managedClient.write { // EVENT IS ONLY FOR WRITE RELAYS
+                    if (!managedClient.isConnected) && (!managedClient.isConnecting) {
+                        managedClient.connect()
+                    }
+                    print("🚀🚀🚀 PUBLISHING TO \(managedClient.url): \(message.message)")
+                    managedClient.client.sendMessage(message.message)
+                }
+            }
+        }
+    }
+    
+    func removeActiveAccountSubscriptions() {
+        for socket in sockets {
+            socket.value.activeSubscriptions.removeAll { subscriptionId in
+                subscriptionId == "Following" || subscriptionId == "Notifications"
+            }
+            let closeFollowing = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "Following"))
+            socket.value.client.sendMessage(closeFollowing.message)
+            let closeNotifications = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "Notifications"))
+            socket.value.client.sendMessage(closeNotifications.message)
+        }
+    }
+    
+    func allowNewFollowingSubscriptions() {
+        // removes "Following" from the active subscriptions so when we try a new one when following keys has changed, it would be ignored because didn't pass !contains..
+        for socket in sockets {
+            socket.value.activeSubscriptions.removeAll { subscriptionId in
+                subscriptionId == "Following"
+            }
+        }
+    }
+}
+
+class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDelegate, ObservableObject {
+    
+    var relayId:NSManagedObjectID
+    var url:String
+    var client:NewWebSocket
+    
+    private var connectionQueue = DispatchQueue(label: "com.nostur.connection")
+    private var _isConnecting = false
+    private var _activeSubscriptions:[String] = []
+    
+    var isConnecting: Bool {
+        get {
+            return connectionQueue.sync {
+                _isConnecting
+            }
+        }
+        set {
+            connectionQueue.async {
+                self._isConnecting = newValue
+            }
+        }
+    }
+    
+    @Published var isConnected = false
+    @Published var read = true
+    @Published var write = false
+    
+    var activeSubscriptions:[String] {
+        get {
+            return connectionQueue.sync {
+                _activeSubscriptions
+            }
+        }
+        set {
+            connectionQueue.async {
+                self._activeSubscriptions = newValue
+            }
+        }
+    }
+    
+    init(relayId: NSManagedObjectID, url: String, client:NewWebSocket, read: Bool = true, write: Bool = false) {
+        self.relayId = relayId
+        self.url = url.lowercased()
+        self.read = read
+        self.write = write
+        self.client = client
+    }
+    
+    func connect() {
+        if !isConnecting {
+            self.isConnecting = true
+            self.client.connect()
+        }
+    }
+    
+    func disconnect() {
+        self.isConnecting = false
+        self.isConnected = false
+        self.client.disconnect()
+    }
+    
+    func didDisconnect() {
+        DispatchQueue.main.async {
+            self.isConnecting = false
+            self.isConnected = false
+        }
+        self.activeSubscriptions = []
+        print("🔌 DISCONNECTED \(self.url)")
+    }
+    
+    func didDisconnectWithError(_ error: Error) {
+        DispatchQueue.main.async {
+            self.isConnecting = false
+            self.isConnected = false
+            let shortURL = URL(string: self.url)?.baseURL?.description ?? self.url
+            sendNotification(.socketNotification, "Error: \(shortURL) \(error.localizedDescription)")
+        }
+        self.activeSubscriptions = []
+        print("🔌🔴 DISCONNECTED WITH ERROR \(self.url): \(error.localizedDescription)")
+    }
+    
+    func didReceiveMessage(_ text:String) {
+        MessageParser.shared.socketReceivedMessage(text: text, relayUrl: self.url)
+    }
+    
+    func didReceiveData(_ data:Data) {
+        print("🔌 RECEIVED DATA \(self.url): \(data.count)")
+    }
+    
+    public func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
+        DispatchQueue.main.async {
+            self.isConnecting = false
+            self.isConnected = true
+        }
+        self.activeSubscriptions = []
+        print("🔌 CONNECTED \(self.url)")
+        //                print("🔌 CONNECTED \(self.url): \(headers)")
+    }
+    
+    
+    public func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
+        DispatchQueue.main.async {
+            self.isConnecting = false
+            self.isConnected = false
+        }
+        self.activeSubscriptions = []
+        DispatchQueue.main.async {
+            sendNotification(.socketNotification, "Disconnected: \(self.url)")
+        }
+        print("🔌 DISCONNECTED \(self.url): with code: \(closeCode.rawValue) \(reason != nil ? String(data: reason!, encoding: .utf8) : "" ?? "")")
+        
+    }
+    
+//        func didReceive(event: Starscream.WebSocketEvent, client: Starscream.WebSocketClient) {
+//            switch event {
+//
+//            case .disconnected(let reason, let code):
+//
+//
+//            case .cancelled:
+//                DispatchQueue.main.async {
+//                    self.isConnecting = false
+//                    self.isConnected = false
+//                }
+//                    self.activeSubscriptions = []
+//                    print("🔌 CANCELLED \(self.url)")
+//            case .error(let error):
+//
+//            }
+//        }
+}
+
+protocol NewWebSocketDelegate: URLSessionWebSocketDelegate {
+    func didReceiveData(_ data:Data)
+    
+    func didReceiveMessage(_ text:String)
+    
+    func didDisconnect()
+    
+    func didDisconnectWithError(_ error:Error)
+}
+
+
+class NewWebSocket {
+    let url:String
+    var socketQueue = OperationQueue()
+    var webSocket:WebSocket?
+    var connection:AnyCancellable?
+//    var pinger:AnyCancellable?
+//    var subscriptions = Set<AnyCancellable>()
+//    var pingOnceSub:AnyCancellable?
+    var delegate:NewWebSocketDelegate?
+    
+    init(url:String) {
+        self.url = url
+        //        socketQueue.name = "nostur.socketqueue"
+        //        connect()
+        //        startPinger()
+    }
+    
+    func sendMessage(_ text:String) {
+        guard let webSocket = webSocket else {
+            print("🔴🔴 Not connected. Did not sendMessage \(self.url)")
+            return
+        }
+        let _ = webSocket.send(text)
+            .sink(receiveCompletion: {
+                print($0)
+                print("WHAT")
+            }, receiveValue: {
+                print($0)
+                print("WHAT OK")
+            } )
+    }
+    
+    func connect() {
+        
+        let session = URLSession(configuration: .default, delegate: delegate, delegateQueue: socketQueue)
+        let urlRequest = URLRequest(url: URL(string: url)!)
+        
+        // Create the WebSocket instance. This is the entry-point for sending and receiving messages
+        webSocket = session.webSocket(with: urlRequest)
+        
+        // Subscribe to the WebSocket. This will connect to the remote server and start listening
+        // for messages (URLSessionWebSocketTask.Message).
+        // URLSessionWebSocketTask.Message is an enum for either Data or String
+        if let webSocket {
+            connection = webSocket
+                .publisher
+                .sink(receiveCompletion: { completion in
+                    switch completion {
+                        case .finished:
+                            self.delegate?.didDisconnect()
+                        case .failure(let error):
+                            self.delegate?.didDisconnectWithError(error)
+                    }
+                },
+                      receiveValue: { message in
+                    switch message {
+                        case .data(let data):
+                            // Handle Data message
+                            self.delegate?.didReceiveData(data)
+                        case .string(let string):
+                            // Handle String message
+                            self.delegate?.didReceiveMessage(string)
+                        @unknown default:
+                            print("dunno")
+                    }
+                })
+        }
+    }
+    
+    func disconnect() {
+        guard webSocket != nil else { return }
+        // You can stop the WebSocket subscription, disconnecting from remote server.
+//        pinger?.cancel()
+//        pingOnceSub?.cancel()
+        connection?.cancel()
+    }
+    
+//    func stopPinging() {
+//        pinger?.cancel()
+//    }
+}

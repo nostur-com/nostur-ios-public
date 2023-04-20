@@ -13,7 +13,7 @@ struct RelayEditView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) var viewContext
     @ObservedObject var relay: Relay
-    @ObservedObject var socket: ManagedClient
+    @ObservedObject var socket: NewManagedClient
     @State private var refresh: Bool = false
     var sp:SocketPool = .shared
     @State var confirmRemoveShown = false
@@ -141,7 +141,7 @@ struct RelayEditView_Previews: PreviewProvider {
         
         let sp:SocketPool = .shared
         
-        func socketForRelay(relay: Relay) -> ManagedClient {
+        func socketForRelay(relay: Relay) -> NewManagedClient {
             guard let socket = sp.sockets[relay.objectID] else {
                 let addedSocket = try! sp.addSocket(relayId: relay.objectID, url: relay.url!, read: relay.read, write: relay.write)
                 return addedSocket

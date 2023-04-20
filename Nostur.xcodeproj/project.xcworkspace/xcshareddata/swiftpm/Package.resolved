@@ -1,6 +1,15 @@
 {
   "pins" : [
     {
+      "identity" : "combinewebsocket",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/luizmb/CombineWebSocket",
+      "state" : {
+        "branch" : "master",
+        "revision" : "7ade1417198ad7b196858dd0d0601818adae5725"
+      }
+    },
+    {
       "identity" : "flanimatedimage",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Flipboard/FLAnimatedImage",
@@ -43,15 +52,6 @@
       "state" : {
         "revision" : "48fb20fce4ca3aad89180448a127d5bc16f0e44c",
         "version" : "0.10.0"
-      }
-    },
-    {
-      "identity" : "starscream",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/daltoniam/Starscream/",
-      "state" : {
-        "branch" : "master",
-        "revision" : "c68359159dcf0b5de9b536b9a959e9e435e968d3"
       }
     },
     {
