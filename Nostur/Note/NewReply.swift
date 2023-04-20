@@ -26,7 +26,7 @@ struct NewReply: View {
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Contact.nip05verifiedAt, ascending: false)], predicate: NSPredicate(value: false))
     var contacts:FetchedResults<Contact>
     var firstResults:[Contact] { Array(contacts.prefix(30)) }
-    @State var tapOrFirstResults:[Contact] = []
+    @State var selectedMentions:[Contact] = []
     @State var previewEvent:Event?
     @State var uploading = false
     @State var uploadError:String?
@@ -67,6 +67,11 @@ struct NewReply: View {
                                     photoPickerTapped: {
                                         ipm.photoPickerShown = true
                                     })
+                                    .introspect { editor in
+                                        if (vm.textView == nil) {
+                                            vm.textView = editor.textView
+                                        }
+                                    }
                                     .frame(minHeight: 100, idealHeight: 125, maxHeight: 250, alignment: .top)
                                     .photosPicker(isPresented: $ipm.photoPickerShown, selection: $ipm.imageSelection, matching: .images, photoLibrary: .shared())
                                     .onChange(of: ipm.newImage) { newImage in
@@ -89,12 +94,12 @@ struct NewReply: View {
                                         guard vm.textView != nil else { return }
                                         let mentionName = contact.handle
                                         vm.text = vm.text.dropLast(vm.term.count) + mentionName
-                                        tapOrFirstResults.append(contact)
+                                        selectedMentions.append(contact)
                                         vm.mentioning = false
                                         vm.lastHit = mentionName
                                         vm.term = ""
                                         
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.02) { // after 0.02 sec to get the new .endOfDocument
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { // after 0.02 sec to get the new .endOfDocument
         //                                    self.vm.mentioning = false
                                             let newPosition = vm.textView!.endOfDocument
                                             vm.textView!.selectedTextRange = vm.textView!.textRange(from: newPosition, to: newPosition)
@@ -111,17 +116,15 @@ struct NewReply: View {
             .onAppear {
                 updateEventWithNewText()
             }
-            .onChange(of: firstResults) { newResults in
-                guard newResults.count > 0 else { return }
-                if let exactResult = newResults.first(where: { $0.handle.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) == vm.term.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) }) {
-                    tapOrFirstResults.insert(exactResult, at:0)
-                    updateEventWithNewText()
+            .onChange(of: vm.debouncedText) { newText in
+                if (vm.nEvent == nil) {
+                    vm.nEvent = NEvent(content: newText)
+                } else {
+                    vm.nEvent!.content = newText
                 }
-            }
-            .onChange(of: vm.debouncedText) { mentionString in
-                guard let account = ns.account else { return }
                 
-                if let mentionTerm = mentionTerm(mentionString) {
+                guard let account = ns.account else { return }
+                if let mentionTerm = mentionTerm(newText) {
                     print ("mentionTerm \(mentionTerm) lastHit: \(vm.lastHit)")
 
                     if mentionTerm == vm.lastHit {
@@ -130,14 +133,13 @@ struct NewReply: View {
                     else {
                         vm.mentioning = true
                         vm.term = mentionTerm
-                        contacts.nsPredicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@) AND NOT pubkey IN %@", mentionTerm, mentionTerm, account.blockedPubkeys_)
+                        contacts.nsPredicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@) AND NOT pubkey IN %@", mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), account.blockedPubkeys_)
                     }
+
                 }
                 else {
                     vm.mentioning = false
                 }
-                
-                updateEventWithNewText()
             }
             .onAppear {
                 var newReply = NEvent(content: "")
@@ -189,6 +191,7 @@ struct NewReply: View {
                     Button("Preview") {
                         guard let account = ns.account else { return }
                         guard var nEvent = vm.nEvent else { return }
+                        nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected:selectedMentions)
                         nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
                         nEvent = putHashtagsInTags(nEvent)
                         nEvent.publicKey = account.publicKey
@@ -238,16 +241,11 @@ struct NewReply: View {
         }
     }
     
-    // Replaces "@handles in text with @npubs", which will later be replaced with #[index], and in a future update with nostr:..
     func updateEventWithNewText() {
-        var textToReplaceWithNpubs = vm.text
-        for contact in tapOrFirstResults.sorted(by: { $0.handle.count > $1.handle.count }) { // .count so we replace @TestMacOS before partial match @test
-            textToReplaceWithNpubs = textToReplaceWithNpubs.replacingOccurrences(of: "@\(contact.handle)", with: "@\(contact.npub)", options: .caseInsensitive)
-        }
         if (vm.nEvent == nil) {
-            vm.nEvent = NEvent(content: textToReplaceWithNpubs)
+            vm.nEvent = NEvent(content: replaceMentionsWithHandles(vm.text, selected: selectedMentions))
         } else {
-            vm.nEvent!.content = textToReplaceWithNpubs
+            vm.nEvent!.content = replaceMentionsWithHandles(vm.text, selected: selectedMentions)
         }
     }
     
@@ -275,6 +273,7 @@ struct NewReply: View {
                         for url in urls {
                             nEvent.content += "\n\(url)"
                         }
+                        nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected: selectedMentions)
                         nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
                         nEvent = putHashtagsInTags(nEvent)
                         
@@ -294,6 +293,7 @@ struct NewReply: View {
             
         }
         else {
+            nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected: selectedMentions)
             nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
             nEvent = putHashtagsInTags(nEvent)
             

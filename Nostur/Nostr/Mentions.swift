@@ -7,6 +7,77 @@
 
 import Foundation
 
+func replaceMentionsWithHandles(_ text:String, selected:[Contact] = []) -> String {
+    let blocked = NosturState.shared.account?.blockedPubkeys_ ?? []
+    let mentions = text.matches(of: /(@(\w+))/)
+    var newText = text
+    let mentionsByLongest = mentions.sorted(by: { $0.output.2.count > $1.output.2.count })
+    for mention in mentionsByLongest {
+//        print(mention.output.0) // @tester
+//        print(mention.output.1) // @tester
+//        print(mention.output.2) // tester
+        let term = mention.output.2.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        // prio selected contacts
+        
+        if let result = selected.first(where: {
+            let displayName = ($0.display_name ?? "").lowercased()
+            let name = ($0.name ?? "").lowercased()
+            
+            if displayName.contains(term) { return true }
+            if name.contains(term) { return true }
+            return false
+        }) {
+//            print("selected result: \(result.authorName)")
+            newText = newText.replacingOccurrences(of: mention.output.1, with: result.handle, options: [.caseInsensitive])
+            continue
+        }
+        
+        let fr = Contact.fetchRequest()
+        fr.predicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@) AND NOT pubkey IN %@", term, term, blocked)
+        
+        if let result = try? DataProvider.shared().viewContext.fetch(fr).first {
+//            print("any result: \(result.authorName)")
+            newText = newText.replacingOccurrences(of: mention.output.1, with: "@\(result.handle)", options: [.caseInsensitive])
+        }
+    }
+    return newText
+}
+
+func replaceMentionsWithNpubs(_ text:String, selected:[Contact] = []) -> String {
+    let blocked = NosturState.shared.account?.blockedPubkeys_ ?? []
+    let mentions = text.matches(of: /(@(\w+))/)
+    var newText = text
+    let mentionsByLongest = mentions.sorted(by: { $0.output.2.count > $1.output.2.count })
+    for mention in mentionsByLongest {
+//        print(mention.output.0) // @Tester
+//        print(mention.output.1) // @Tester
+//        print(mention.output.2) // Tester
+        let term = mention.output.2.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        // prio selected contacts
+        if let result = selected.first(where: {
+            let displayName = ($0.display_name ?? "").lowercased()
+            let name = ($0.name ?? "").lowercased()
+            
+            if displayName.contains(term) { return true }
+            if name.contains(term) { return true }
+            return false
+        }) {
+//            print("selected result: \(result.authorName)")
+            newText = newText.replacingOccurrences(of: mention.output.1, with: "@\(result.npub)", options: [.caseInsensitive])
+            continue
+        }
+        
+        let fr = Contact.fetchRequest()
+        fr.predicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@) AND NOT pubkey IN %@", term, term, blocked)
+        
+        if let result = try? DataProvider.shared().viewContext.fetch(fr).first {
+//            print("any result \(result.handle) \(result.npub)")
+            newText = newText.replacingOccurrences(of: mention.output.1, with: "@\(result.npub)", options: [.caseInsensitive])
+        }
+    }
+    return newText
+}
+
 // EXAMPLE:
 // EROOT
 // E1 P1 sometext EROOT E P P P EREPLY
@@ -33,19 +104,21 @@ func applyMentionsNip08(_ event:NEvent, bumpIndex:Bool = false) -> NEvent {
 
 // Returns all mentions as tags
 func getMentionsAsTags(_ text:String) -> [NEventTag] {
-    
     var mentionsAsTags:[NEventTag] = []
-    
-    let mentionMatches = text.matchingStrings(regex:#"@(npub1|note1)([023456789acdefghjklmnpqrstuvwxyz]{58})"#)
-    
-    for index in mentionMatches.indices {
-        if mentionMatches[index][1] == "note1" {
-            if let mention = toHex(String(mentionMatches[index][0].dropFirst(1))) {
+    let notesAndNpubs = text.matches(of: /@(npub1|note)([023456789acdefghjklmnpqrstuvwxyz]{58})/)
+//    print(text)
+//    print("notesAndNpubs: \(notesAndNpubs.count)")
+    for match in notesAndNpubs {
+        // print(match.output.0) // @npub1sn0wdenkukak0d9dfczzeacvhkrgz92ak56egt7vdgzn8pv2wfqqhrjdv9
+        // print(match.output.1) // npub1
+        // print(match.output.2) // sn0wdenkukak0d9dfczzeacvhkrgz92ak56egt7vdgzn8pv2wfqqhrjdv9
+        if match.output.1 == "note1" {
+            if let mention = toHex(String(match.output.0.dropFirst(1))) {
                 mentionsAsTags.append(NEventTag(type: "e", otherInformation: mention, "", "mention")) // TODO: ADD RELAY HINT
             }
         }
-        else if mentionMatches[index][1] == "npub1" {
-            if let mention = toHex(String(mentionMatches[index][0].dropFirst(1))) {
+        else if match.output.1 == "npub1" {
+            if let mention = toHex(String(match.output.0.dropFirst(1))) {
                 mentionsAsTags.append(NEventTag(type: "p", otherInformation: mention)) // TODO: ADD RELAY HINT
             }
         }
@@ -129,7 +202,7 @@ func replaceNsecWithHunter2(_ text:String) -> String {
 }
 
 func putHashtagsInTags(_ event:NEvent) -> NEvent {
-    let hashtagMatches = event.content.matchingStrings(regex:"(?<![/\\?])#\\S+")
+    let hashtagMatches = event.content.matchingStrings(regex:"(?<![/\\?]|\\b)(\\#)([^\\s\\[]{2,})\\b")
     var eventWithHashtags = event
     for index in hashtagMatches.indices {
         eventWithHashtags
