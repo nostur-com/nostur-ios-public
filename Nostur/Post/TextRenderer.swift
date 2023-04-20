@@ -155,7 +155,7 @@ class TextRenderer { // TEXT things
 
     // NIP-27 handle nostr:npub or nostr:nprofile
     func parseUserMentions(event:Event, text:String, plainText:Bool = false) -> String {
-        let pattern = "nostr:npub1\\S+|nostr:nprofile1\\S+"
+        let pattern = "nostr:npub1[023456789acdefghjklmnpqrstuvwxyz]{58}|nostr:nprofile1[023456789acdefghjklmnpqrstuvwxyz]{30,999}"
 
         var replacedString = text
         var range = text.startIndex..<text.endIndex
