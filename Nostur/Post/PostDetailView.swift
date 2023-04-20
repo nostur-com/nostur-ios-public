@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-//import LightningDevKit
 import CoreData
 
 struct NoteById: View {
