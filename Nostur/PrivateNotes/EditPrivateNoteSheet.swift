@@ -77,9 +77,9 @@ struct EditPrivateNoteSheet: View {
                                 ns.objectWillChange.send()
                                 privateNote.post?.objectWillChange.send()
                                 privateNote.contact?.objectWillChange.send()
-                                viewContext.delete(privateNote)
-                                try viewContext.save()
                                 dismiss()
+                                viewContext.delete(privateNote)
+                                DataProvider.shared().save()
                             }
                             catch { print("problem deleting private note \(error)") }
                         }),
