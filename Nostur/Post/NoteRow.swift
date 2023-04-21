@@ -57,7 +57,16 @@ struct NoteRow: View {
                         }
                     }
                     else {
-                        if let firstQuoteId = event.firstQuoteId {
+                        if let firstQuote = vPost.firstQuote.first {
+                            let _ = print("why: \(firstQuote.event.contact?.pubkey ?? "bluh")")
+                            if fullWidth {
+                                Kind1(vPost: firstQuote, hideFooter:false)
+                            }
+                            else {
+                                Kind1Default(vPost: firstQuote, hideFooter:false)
+                            }
+                        }
+                        else if let firstQuoteId = event.firstQuoteId {
                             Kind1ById(id: firstQuoteId, hideFooter: false, fullWidth: fullWidth)
                         }
                     }

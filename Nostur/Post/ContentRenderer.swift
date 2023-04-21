@@ -244,7 +244,9 @@ struct QuoteById: View {
     
     @FetchRequest
     var events:FetchedResults<Event>
-    //
+    
+    @State var vPost:VPost?
+    
     init(id:String) {
         self.id = id
         let fr = Event.fetchRequest()
@@ -255,7 +257,23 @@ struct QuoteById: View {
     
     var body: some View {
         if let event = events.first {
-            QuotedNoteFragmentView(vPost: event.toVPost()!)
+            if let vPost = vPost {
+                QuotedNoteFragmentView(vPost: vPost)
+            }
+            else {
+                Color.clear
+                    .frame(height: 150)
+                    .task {
+                        EventsProvider.shared.container.performBackgroundTask { context in
+                            let transformer = VPostTransformer(context) // Tranform in bg
+                            if let vPost = transformer.toVPost(event, forceBg: true) {
+                                DispatchQueue.main.async {
+                                    self.vPost = vPost
+                                }
+                            }
+                        }
+                    }
+            }
         }
         else {
             ProgressView()
