@@ -18,6 +18,7 @@ import Compactor
 struct QuotedNoteFragmentView: View {
     let sp:SocketPool = .shared
     @EnvironmentObject var accountState:NosturState
+    @State var viewSize:CGSize = .zero
      
     let vPost:VPost
     
@@ -71,9 +72,15 @@ struct QuotedNoteFragmentView: View {
 //                DetailContentRenderer(event: vPost.event)
                 NoteTextRenderView(vPost: vPost)
                 if let firstImage = vPost.imageUrls.first {
-                    GeometryReader { geo in
-                        SingleMediaViewer(url: firstImage, height: 250, imageWidth: geo.size.width)
-                    }
+                    Color.clear.frame(height: 0)
+                       .modifier(SizeModifier())
+                       .onPreferenceChange(SizePreferenceKey.self) { size in
+                           guard size.width > 0 else { return }
+                           viewSize = size
+                       }
+                }
+                if let firstImage = vPost.imageUrls.first, viewSize.width > 0 {
+                    SingleMediaViewer(url: firstImage, pubkey: vPost.event.pubkey, imageWidth: viewSize.width)
                 }
             }
         }
