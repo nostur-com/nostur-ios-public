@@ -14,7 +14,7 @@ struct About: View {
         LicensedItem(title: "KeychainAccess", author: "kishikawa katsumi", url: "https://github.com/kishikawakatsumi/KeychainAccess"),
         LicensedItem(title: "Nuke", author: "Alex Grebenyuk", url: "https://github.com/kean/Nuke"),
         
-        LicensedItem(title: "Starscream", author: "Dalton Cherry", url: "https://github.com/daltoniam/Starscream"),
+//        LicensedItem(title: "Starscream", author: "Dalton Cherry", url: "https://github.com/daltoniam/Starscream"),
         
         LicensedItem(title: "SwiftyJSON", author: "Ruoyu Fu", url: "https://github.com/SwiftyJSON/SwiftyJSON"),
         
