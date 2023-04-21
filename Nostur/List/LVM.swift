@@ -119,7 +119,7 @@ class LVM: NSObject, ObservableObject {
         }
         let currentVPostLeafs = self.lvmState.vPostLeafs // viewContext. First (0) is newest
         
-        context.performAndWait { [unowned self] in
+        context.perform { [unowned self] in
             let transformer = VPostTransformer(context) // Tranform in bg
 //            let lastCreatedAt = currentVPostLeafs.last?.created_at ?? 0
             var newVPostLeafs:[VPost] = []
