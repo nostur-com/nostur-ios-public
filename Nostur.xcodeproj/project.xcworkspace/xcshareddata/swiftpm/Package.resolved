@@ -1,6 +1,15 @@
 {
   "pins" : [
     {
+      "identity" : "bigint",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/attaswift/BigInt",
+      "state" : {
+        "revision" : "0ed110f7555c34ff468e72e1686e59721f2b0da6",
+        "version" : "5.3.0"
+      }
+    },
+    {
       "identity" : "combinewebsocket",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/luizmb/CombineWebSocket",
@@ -25,15 +34,6 @@
       "state" : {
         "branch" : "master",
         "revision" : "ecb18d8ce4d88277cc4fb103973352d91e18c535"
-      }
-    },
-    {
-      "identity" : "ldk-swift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/lightningdevkit/ldk-swift/",
-      "state" : {
-        "revision" : "b71d1afd8b60d59b7cea6eb2dde46f10114419f0",
-        "version" : "0.0.113"
       }
     },
     {

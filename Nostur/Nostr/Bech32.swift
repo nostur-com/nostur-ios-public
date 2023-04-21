@@ -1,7 +1,11 @@
 import Foundation
 import Algorithms
 
+// This Bech32 class is a mess of several Bech32 implementations mixed together
+// Need to clean up one day.
 public class Bech32 {
+    private static let alphabet = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
+    
     private let gen: [UInt32] = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3]
     /// Bech32 checksum delimiter
     private let checksumMarker: String = "1"
@@ -21,51 +25,51 @@ public class Bech32 {
     
     /// Find the polynomial with value coefficients mod the generator as 30-bit.
     /// This one is CPU intensive
-//    private func ORIGINALpolymod(_ values: Data) -> UInt32 {
-//        var chk: UInt32 = 1
-//        for v in values {
-//            let top = (chk >> 25)
-//            chk = (chk & 0x1ffffff) << 5 ^ UInt32(v)
-//            for i: UInt8 in 0..<5 {
-//                chk ^= ((top >> i) & 1) == 0 ? 0 : gen[Int(i)]
-//            }
-//        }
-//        return chk
-//    }
+    //    private func ORIGINALpolymod(_ values: Data) -> UInt32 {
+    //        var chk: UInt32 = 1
+    //        for v in values {
+    //            let top = (chk >> 25)
+    //            chk = (chk & 0x1ffffff) << 5 ^ UInt32(v)
+    //            for i: UInt8 in 0..<5 {
+    //                chk ^= ((top >> i) & 1) == 0 ? 0 : gen[Int(i)]
+    //            }
+    //        }
+    //        return chk
+    //    }
     
     // Optimized by ChatGTP 3.5, seems much better
-//    private func polymodGTP35(_ values: Data) -> UInt32 {
-//        let chk: UInt32 = 1
-//        return values.reduce(into: chk) { chk, v in
-//            let top = (chk >> 25)
-//            let newChk = (chk & 0x1ffffff) << 5 ^ UInt32(v)
-//            chk = (0..<5).reduce(newChk) { chk, i in
-//                chk ^ ((top >> i) & 1) == 0 ? 0 : gen[Int(i)]
-//            }
-//        }
-//    }
+    //    private func polymodGTP35(_ values: Data) -> UInt32 {
+    //        let chk: UInt32 = 1
+    //        return values.reduce(into: chk) { chk, v in
+    //            let top = (chk >> 25)
+    //            let newChk = (chk & 0x1ffffff) << 5 ^ UInt32(v)
+    //            chk = (0..<5).reduce(newChk) { chk, i in
+    //                chk ^ ((top >> i) & 1) == 0 ? 0 : gen[Int(i)]
+    //            }
+    //        }
+    //    }
     
     // By GPT-4, asked again and gave input from its own 3.5 output
-//    private func polymodBROKEN(_ values: Data) -> UInt32 {
-//        let gen: [UInt32] = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3]
-//        let chk: UInt32 = 1
-//
-//        var precomputedTop: [UInt32] = Array(repeating: 0, count: 32)
-//        for i in 0..<32 {
-//            // swiftlint:disable:next identifier_name
-//            precomputedTop[i] = gen[0] &* (i & 1) ^ gen[1] &* (i >> 1 & 1) ^ gen[2] &* (i >> 2 & 1) ^ gen[3] &* (i >> 3 & 1) ^ gen[4] &* (i >> 4 & 1)
-//        }
-//
-//        return values.reduce(into: chk) { chk, v in
-//            let top = (chk >> 25)
-//            let newChk = (chk & 0x1ffffff) << 5 ^ UInt32(v)
-//            chk = newChk ^ precomputedTop[Int(top)]
-//        }
-//    }
+    //    private func polymodBROKEN(_ values: Data) -> UInt32 {
+    //        let gen: [UInt32] = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3]
+    //        let chk: UInt32 = 1
+    //
+    //        var precomputedTop: [UInt32] = Array(repeating: 0, count: 32)
+    //        for i in 0..<32 {
+    //            // swiftlint:disable:next identifier_name
+    //            precomputedTop[i] = gen[0] &* (i & 1) ^ gen[1] &* (i >> 1 & 1) ^ gen[2] &* (i >> 2 & 1) ^ gen[3] &* (i >> 3 & 1) ^ gen[4] &* (i >> 4 & 1)
+    //        }
+    //
+    //        return values.reduce(into: chk) { chk, v in
+    //            let top = (chk >> 25)
+    //            let newChk = (chk & 0x1ffffff) << 5 ^ UInt32(v)
+    //            chk = newChk ^ precomputedTop[Int(top)]
+    //        }
+    //    }
     
     // Asked GPT4 to fix it:
     private func polymod(_ values: Data) -> UInt32 {
-//        let gen: [UInt32] = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3]
+        //        let gen: [UInt32] = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3]
         let chk: UInt32 = 1
         
         var precomputedTop: [UInt32] = Array(repeating: 0, count: 32)
@@ -85,28 +89,28 @@ public class Bech32 {
             chk = newChk ^ precomputedTop[Int(top)]
         }
     }
-
-
+    
+    
     
     // Suggestion by ChatGPT 4, should try
-//    private func polymodDOESNTWORK(_ values: Data) -> UInt32 {
-////        let gen: [UInt32] = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3]
-//        var chk: UInt32 = 1
-//        var precomputedTop: [UInt32] = Array(repeating: 0, count: 32)
-//
-//        for i in 0..<32 {
-//            precomputedTop[i] = gen[0] &* (i & 1) ^ gen[1] &* (i >> 1 & 1) ^ gen[2] &* (i >> 2 & 1) ^ gen[3] &* (i >> 3 & 1) ^ gen[4] &* (i >> 4 & 1)
-//        }
-//
-//        for v in values {
-//            let top = (chk >> 25)
-//            chk = (chk & 0x1ffffff) << 5 ^ UInt32(v)
-//            chk ^= precomputedTop[Int(top)]
-//        }
-//
-//        return chk
-//    }
-
+    //    private func polymodDOESNTWORK(_ values: Data) -> UInt32 {
+    ////        let gen: [UInt32] = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3]
+    //        var chk: UInt32 = 1
+    //        var precomputedTop: [UInt32] = Array(repeating: 0, count: 32)
+    //
+    //        for i in 0..<32 {
+    //            precomputedTop[i] = gen[0] &* (i & 1) ^ gen[1] &* (i >> 1 & 1) ^ gen[2] &* (i >> 2 & 1) ^ gen[3] &* (i >> 3 & 1) ^ gen[4] &* (i >> 4 & 1)
+    //        }
+    //
+    //        for v in values {
+    //            let top = (chk >> 25)
+    //            chk = (chk & 0x1ffffff) << 5 ^ UInt32(v)
+    //            chk ^= precomputedTop[Int(top)]
+    //        }
+    //
+    //        return chk
+    //    }
+    
     
     private func TryAlsooopolymod(_ values: Data) -> UInt32 {
         var chk: UInt32 = 1
@@ -140,6 +144,20 @@ public class Bech32 {
             chk ^= ((top >> 4) & 1) == 0 ? 0 : gen[4]
         }
         return chk
+    }
+    
+    private static func expandHumanReadablePart(_ humanReadablePart: String) -> Data {
+        guard let stringBytes = humanReadablePart.data(using: .utf8) else { return Data() }
+        var data = Data()
+        
+        for character in stringBytes {
+            data.append(UInt8(UInt32(character) >> 5))
+        }
+        data.append(0)
+        for character in stringBytes {
+            data.append(UInt8(UInt32(character) & 31))
+        }
+        return data
     }
     
     /// Expand a HRP for use in checksum computation.
@@ -188,12 +206,59 @@ public class Bech32 {
         return String(data: ret, encoding: .utf8) ?? ""
     }
     
+    func hasValidCharacters(_ bechString: String) -> Bool {
+        guard let stringBytes = bechString.data(using: .utf8) else { return false }
+        
+        var hasLower = false
+        var hasUpper = false
+        
+        for character in stringBytes {
+            let code = UInt32(character)
+            if code < 33 || code > 126 {
+                return false
+            } else if code >= 97 && code <= 122 {
+                hasLower = true
+            } else if code >= 65 && code <= 90 {
+                hasUpper = true
+            }
+        }
+        
+        return !(hasLower && hasUpper)
+    }
+    
+    public func decode(_ bechString: String, limit: Bool = true) -> (hrp: String, checksum: Data)? {
+        guard hasValidCharacters(bechString) else { return nil }
+        
+        let bechString = bechString.lowercased()
+        guard let pos = bechString.lastIndex(of: "1") else { return nil }
+        
+        if pos < 1 || pos + 7 > bechString.count || (limit && bechString.count > 90) {
+            return nil
+        }
+        
+        let humanReadablePart = String(bechString.prefix(pos))
+        let dataPart = bechString.suffix(bechString.count - humanReadablePart.count - 1)
+        
+        var data = Data()
+        for character in dataPart {
+            guard let distance = Bech32.alphabet.indexDistance(of: character) else { return nil }
+            data.append(UInt8(distance))
+        }
+        
+        guard verifyChecksum(hrp: humanReadablePart, checksum: data) else {
+            return nil
+        }
+        
+        return (humanReadablePart, Data(data[..<(data.count - 6)]))
+    }
+    
+    
     /// Decode Bech32 string
-    public func decode(_ str: String) throws -> (hrp: String, checksum: Data) {
+    public func decode(_ str: String, skipLimit:Bool = false) throws -> (hrp: String, checksum: Data) {
         guard let strBytes = str.data(using: .utf8) else {
             throw DecodingError.nonUTF8String
         }
-        guard !["npub1","nsec1"].contains(str.prefix(5)) || strBytes.count <= 90 else {
+        guard skipLimit || !["npub1","nsec1"].contains(str.prefix(5)) || strBytes.count <= 90 else {
             throw DecodingError.stringLengthExceeded
         }
         var lower: Bool = false
@@ -268,7 +333,7 @@ public class Bech32 {
     
     static func decode(lnurl: String) throws -> URL {
         let bech32 = Bech32()
-        guard let (hrp, decodedData) = try? bech32.decode(lnurl) else {
+        guard let (hrp, decodedData) = bech32.decode(lnurl) else {
             throw "LNURLAuthError.invalidLNURL"
         }
         
@@ -293,7 +358,7 @@ public class Bech32 {
     
     static func decode(other: String) throws -> (String, Data) {
         let bech32 = Bech32()
-        guard let (hrp, decodedData) = try? bech32.decode(other) else {
+        guard let (hrp, decodedData) = try? bech32.decode(other, skipLimit: true) else {
             throw "LNURLAuthError.invalidLNURL"
         }
         
@@ -327,26 +392,26 @@ extension Bech32 {
         
         public var errorDescription: String? {
             switch self {
-            case .checksumMismatch:
-                return "Checksum doesn't match"
-            case .incorrectChecksumSize:
-                return "Checksum size too low"
-            case .incorrectHrpSize:
-                return "Human-readable-part is too small or empty"
-            case .invalidCase:
-                return "String contains mixed case characters"
-            case .invalidCharacter:
-                return "Invalid character met on decoding"
-            case .noChecksumMarker:
-                return "Checksum delimiter not found"
-            case .nonPrintableCharacter:
-                return "Non printable character in input string"
-            case .nonUTF8String:
-                return "String cannot be decoded by utf8 decoder"
-            case .stringLengthExceeded:
-                return "Input string is too long"
-            case .bitsConversionFailed:
-                return "Failed to perform bits conversion"
+                case .checksumMismatch:
+                    return "Checksum doesn't match"
+                case .incorrectChecksumSize:
+                    return "Checksum size too low"
+                case .incorrectHrpSize:
+                    return "Human-readable-part is too small or empty"
+                case .invalidCase:
+                    return "String contains mixed case characters"
+                case .invalidCharacter:
+                    return "Invalid character met on decoding"
+                case .noChecksumMarker:
+                    return "Checksum delimiter not found"
+                case .nonPrintableCharacter:
+                    return "Non printable character in input string"
+                case .nonUTF8String:
+                    return "String cannot be decoded by utf8 decoder"
+                case .stringLengthExceeded:
+                    return "Input string is too long"
+                case .bitsConversionFailed:
+                    return "Failed to perform bits conversion"
             }
         }
     }
@@ -361,21 +426,21 @@ extension Data {
         var bits: Int = 0
         var result = Data()
         let maxv: Int = (1 << toBits) - 1
-
+        
         for value in self {
             if value < 0 || (value >> fromBits) != 0 {
                 return nil
             }
-
+            
             acc = (acc << fromBits) | Int(value)
             bits += fromBits
-
+            
             while bits >= toBits {
                 bits -= toBits
                 result.append(UInt8((acc >> bits) & maxv))
             }
         }
-
+        
         if pad {
             if bits > 0 {
                 result.append(UInt8((acc << (toBits - bits)) & maxv))
@@ -383,7 +448,24 @@ extension Data {
         } else if bits >= fromBits || ((acc << (toBits - bits)) & maxv) != 0 {
             return nil
         }
-
+        
         return result
+    }
+}
+
+
+public extension String {
+    //    func sha256() -> String {
+    //        return data(using: .utf8)?.sha256.hexadecimalString ?? ""
+    //    }
+    
+    func indexDistance(of character: Character) -> Int? {
+        guard let index = firstIndex(of: character) else { return nil }
+        return distance(from: startIndex, to: index)
+    }
+    
+    func lastIndex(of string: String) -> Int? {
+        guard let index = range(of: string, options: .backwards) else { return nil }
+        return self.distance(from: self.startIndex, to: index.lowerBound)
     }
 }

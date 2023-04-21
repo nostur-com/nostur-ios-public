@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import LightningDevKit
 
 struct KrakenApiResponse: Codable {
     
@@ -36,34 +35,30 @@ struct LightningInvoice: View {
     @Environment(\.openURL) var openURL
     
     var invoice:String
-    @State var divider:Double = 1000 // 1000 = SATS, 100000000000 = BTC
+    @State var divider:Double = 1 // 1 = SATS, 100000000 = BTC
     @State var fiatPrice = ""
     
-    
-    var pInvoice:Invoice? {
-        get {
-            if let pInvoice = Invoice.fromStr(s: invoice).getValue() {
-                return pInvoice
-            }
-            return nil
-        }
+    var bolt11:Bolt11.Invoice? {
+        Bolt11.decode(string: invoice)
     }
     
     var isExpired:Bool {
-        get {
-            pInvoice?.isExpired() ?? false
-        }
+        guard let date = bolt11?.date else { return true }
+        guard let expiry = bolt11?.expiry else { return false }
+        print("isExpired: (\(date) + \(expiry) > \(Date.now) = \((date + expiry) < .now)")
+        return (date + expiry) < .now
     }
     
     var body: some View {
         VStack {
-            if (pInvoice != nil) {
+            if let bolt11 = bolt11 {
+                let _ = print("final: \(bolt11)")
                 Text("Bitcoin Lightning Invoice ⚡️").font(.caption)
                 Divider()
-                Text("\(pInvoice!.amountMilliSatoshis() != nil ? (Double(pInvoice!.amountMilliSatoshis()!)/divider).clean.description : "any") \(divider == 1000 ? "sats" : "BTC") \(fiatPrice)")
+                Text("\(bolt11.amount != nil ? (Double(bolt11.amount!.int64)/divider).clean.description : "any") \(divider == 1 ? "sats" : "BTC") \(fiatPrice)")
                     .font(.title3).padding(.bottom, 10)
                     .onTapGesture {
-                        divider = divider == 1000 ? 100000000000 : 1000
+                        divider = divider == 1 ? 100000000 : 1
                     }
                 Button {
                     openURL(URL(string: "lightning:\(invoice)")!)
@@ -93,8 +88,8 @@ struct LightningInvoice: View {
                 let response = try JSONDecoder().decode(KrakenApiResponse.self, from: data)
                 
                 // Return the fact string value.
-                if pInvoice?.amountMilliSatoshis() != nil {
-                    fiatPrice = String(format: "($%.02f)",(Double(pInvoice!.amountMilliSatoshis()!) / 100000000000 * Double(response.result.XXBTZUSD.c[0])!))
+                if let amount = bolt11?.amount {
+                    fiatPrice = String(format: "($%.02f)",(Double(amount.int64) / 100000000 * Double(response.result.XXBTZUSD.c[0])!))
                 }
             }
             catch {
