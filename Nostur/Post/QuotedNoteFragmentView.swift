@@ -71,7 +71,9 @@ struct QuotedNoteFragmentView: View {
 //                DetailContentRenderer(event: vPost.event)
                 NoteTextRenderView(vPost: vPost)
                 if let firstImage = vPost.imageUrls.first {
-                    SingleMediaViewer(url: firstImage, height: 250)
+                    GeometryReader { geo in
+                        SingleMediaViewer(url: firstImage, height: 250, imageWidth: geo.size.width)
+                    }
                 }
             }
         }

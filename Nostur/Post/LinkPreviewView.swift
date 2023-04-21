@@ -13,6 +13,7 @@ import HTMLEntities
 struct LinkPreviewView: View {
     let url:URL
     let imageWidth:CGFloat
+    let fullWidth:Bool
     @State var tags:[String: String] = [:]
     @State private var viewSize: CGSize = .zero
     
@@ -49,7 +50,7 @@ struct LinkPreviewView: View {
             }
             .background(Color("ListBackground"))
             .clipShape(RoundedRectangle(cornerRadius: 10.0))
-            .padding(.horizontal, tags["image"] == nil ? 10 : 0)
+            .padding(.horizontal, tags["image"] == nil && fullWidth ? 10 : 0)
         }
         .onTapGesture {
             UIApplication.shared.open(url)
@@ -82,7 +83,7 @@ struct LinkPreviewTest: View {
         let url = "https://youtu.be/QU9kRF9tHPU"
         if viewSize.width > 0 {
             Text("what")
-            LinkPreviewView(url: URL(string: url)!, imageWidth: viewSize.width)
+            LinkPreviewView(url: URL(string: url)!, imageWidth: viewSize.width, fullWidth: false)
                 .padding(.vertical, 5)
                 .padding(.horizontal, 10)
         }

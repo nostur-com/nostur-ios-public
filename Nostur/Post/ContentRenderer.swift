@@ -118,7 +118,7 @@ struct ContentRenderer: View { // VIEW things
                         SingleMediaViewer(url: url, imageWidth: availableWidth)
                             .padding(.vertical, 5)
                     case .linkPreview(let url):
-                        LinkPreviewView(url: url, imageWidth: availableWidth)
+                        LinkPreviewView(url: url, imageWidth: availableWidth, fullWidth:fullWidth)
                             .padding(.vertical, 5)
                     case .postPreviewImage(let uiImage):
                         Image(uiImage: uiImage)
