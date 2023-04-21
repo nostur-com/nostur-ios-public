@@ -249,7 +249,7 @@ class VPostTransformer {
         let lightningInvoicePattern = ###"(?i)lnbc\S+"###
         let notePattern = ###"nostr:note1[023456789acdefghjklmnpqrstuvwxyz]{58}"###
         let neventPattern = ###"nostr:nevent1[023456789acdefghjklmnpqrstuvwxyz]+\b"###
-        let otherUrlsPattern = ###"(?i)(https\:\/\/)[a-zA-Z0-9\-\.]+(?:\.[a-zA-Z]{2,999}+)+([\/\?\=\&\#\%\+\.]\@?[\S]+)*\/?"### // for link previews (TODO: white list domains or not?)
+        let otherUrlsPattern = ###"(?i)(https\:\/\/)[a-zA-Z0-9\-\.]+(?:\.[a-zA-Z]{2,999}+)+([\/\?\=\&\#\%\+\.]\@?[\S]+)*\/?[^\s\)]"### // for link previews (TODO: white list domains or not?)
         let pattern = "\(previewImagePlaceholder)|\(imageUrlPattern)|\(lightningInvoicePattern)|\(notePattern)|\(neventPattern)|\(videoUrlPattern)|\(otherUrlsPattern)"
         
         let regex = try! NSRegularExpression(pattern: pattern)
