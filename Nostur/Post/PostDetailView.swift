@@ -73,13 +73,14 @@ struct PostAndParent: View {
     @ObservedObject var event:Event
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
+    @EnvironmentObject var dim:DIMENSIONS
     
     var navTitleHidden:Bool = false
     
     var isParent = false
     var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
     var geoHeight:CGFloat
-    let INDENT = 60.0
+    let INDENT = DIMENSIONS.POST_ROW_PFP_WIDTH + (DIMENSIONS.POST_ROW_PFP_HPADDING*2)
     let THREAD_LINE_OFFSET = 34.0
     @ObservedObject var settings:SettingsStore = .shared
     
@@ -107,6 +108,7 @@ struct PostAndParent: View {
                 if event.replyTo!.deletedById == nil {
                     let connect:ThreadConnectDirection? = event.replyTo!.replyToId != nil ? .both : .bottom
                     PostAndParent(vPost: event.replyTo!.toVPost()!, isParent: true, connect: connect)
+//                        .background(.red)
                         .background(alignment: .leading) {
                             Color("LightGray")
                                 .frame(width: 2)
@@ -125,10 +127,10 @@ struct PostAndParent: View {
             VStack(alignment: .leading, spacing: 3) {
                 if event.deletedById == nil {
                     
-                    HStack(alignment:.top) {
+                    HStack(alignment:.top, spacing:0) {
                         NavigationLink(value: ContactPath(key: event.pubkey), label: {
                             PFP(pubkey: event.pubkey, pictureUrl: event.contact?.picture, size: 50)
-                            //                                .zIndex(10)
+                                .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: 50)
                                 .background(alignment: .top, content: {
                                     Color("LightGray")
                                         .frame(width: 2, height: 200)
@@ -137,6 +139,7 @@ struct PostAndParent: View {
                                     //                                        .zIndex(1)
                                 })
                                 .id(vPost.id)
+                                .padding(.horizontal, DIMENSIONS.POST_ROW_PFP_HPADDING)
                         })
                         VStack(alignment:.leading, spacing:0) {
                             HStack {
@@ -144,11 +147,12 @@ struct PostAndParent: View {
                                 Spacer()
                                 EventPrivateNoteToggle(event: event)
                                 NoteMenuView(vPost: vPost)
-                            }//.background(.pink)
+                            }
+                            .padding(.trailing, 10)
                             if isParent {
                                 ReplyingToFragmentView(vPost: vPost)
                                     .padding(.vertical, 3)
-                                ContentRenderer(vPost: vPost, isDetail: true)
+                                ContentRenderer(vPost: vPost, isDetail: true, availableWidth: dim.availableNoteRowImageWidth())
 //                                    .padding(.top, 5)
 //                                    .background(.green)
                             }
@@ -158,23 +162,26 @@ struct PostAndParent: View {
                     if !isParent {
                         ReplyingToFragmentView(vPost: vPost)
                             .padding(.bottom, 5)
-                        ContentRenderer(vPost: vPost, isDetail: true)
+                            .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
+                        ContentRenderer(vPost: vPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
                             .padding(.top, 5)
                             .padding(.bottom, 10)
+                            .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
 //                            .background(.orange)
                     }
                     
                     if (isParent && settings.rowFooterEnabled) {
                         FooterFragmentView(vPost: vPost)
-                            .padding(.leading, isParent ? INDENT : 0)
+                            .padding(.leading, INDENT)
                             .padding(.vertical, 5)
-                            .padding(.trailing, 5)
+                            .padding(.trailing, 10)
                     }
                     else if (!isParent) {
                         DetailFooterFragment(event: event)
-                            .padding(.leading, isParent ? INDENT : 0)
+                            .padding(.leading, isParent ? INDENT : DIMENSIONS.POST_ROW_HPADDING)
                         FooterFragmentView(vPost: vPost)
                             .padding(.vertical, 5)
+                            .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
                         Divider()
                     }
                 }
@@ -204,6 +211,7 @@ struct PostAndParent: View {
                             
                             if let vPost = event.toVPost() {
                                 NoteRow(vPost: vPost, hideFooter: false)
+//                                    .background(.orange)
                                     .onTapGesture { navigateTo(vPost) }
                             }
                             Divider()
@@ -222,7 +230,8 @@ struct PostAndParent: View {
                 }
                 
             }
-            .padding(!isParent ? 10 : 10)
+            .padding(.vertical, 10)
+//            .padding(.horizontal, !isParent ? 10 : 20)
             .onTapGesture {
                 if (isParent) {
                     navigateTo(vPost)

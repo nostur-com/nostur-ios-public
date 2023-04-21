@@ -18,26 +18,25 @@ class ImageProcessing {
     var content:ImagePipeline
     var badges:ImagePipeline
     var video:ImagePipeline
-    var linkPreview:ImagePipeline
     
     init() {
         ImagePipeline.shared = ImagePipeline(configuration: .withDataCache)
         
-        linkPreview = ImagePipeline {
-            $0.dataLoader = DataLoader(configuration: {
-                // Disable disk caching built into URLSession
-                let conf = DataLoader.defaultConfiguration
-                conf.urlCache = nil
-                return conf
-            }())
-            
-            let dataCache = try! DataCache(name: "com.nostur.image.linkpreview")
-            dataCache.sizeLimit = 1024 * 1024 * 50
-            
-            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 25)  // 25 MB
-            $0.dataCache = dataCache
-            $0.dataCachePolicy = .storeEncodedImages
-        }
+//        linkPreview = ImagePipeline {
+//            $0.dataLoader = DataLoader(configuration: {
+//                // Disable disk caching built into URLSession
+//                let conf = DataLoader.defaultConfiguration
+//                conf.urlCache = nil
+//                return conf
+//            }())
+//
+//            let dataCache = try! DataCache(name: "com.nostur.image.linkpreview")
+//            dataCache.sizeLimit = 1024 * 1024 * 50
+//
+//            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 25)  // 25 MB
+//            $0.dataCache = dataCache
+//            $0.dataCachePolicy = .storeAll
+//        }
         
         pfp = ImagePipeline {
             $0.dataLoader = DataLoader(configuration: {
@@ -98,7 +97,7 @@ class ImageProcessing {
             let dataCache = try! DataCache(name: "com.nostur.image.content")
             dataCache.sizeLimit = 1024 * 1024 * 100
             
-            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 50, countLimit: 100)  // 100 MB
+            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 100, countLimit: 100) 
             $0.dataCache = dataCache
             $0.dataCachePolicy = .storeAll
         }

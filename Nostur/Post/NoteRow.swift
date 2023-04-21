@@ -15,6 +15,7 @@ struct NoteRow: View {
     var connect:ThreadConnectDirection? = nil
     let fullWidth:Bool
     
+    
     private let sp:SocketPool = .shared
     
     init(vPost:VPost, hideFooter:Bool = false, inThread:Bool = false, connect: ThreadConnectDirection? = nil, fullWidth:Bool = false) {
@@ -102,6 +103,7 @@ struct NoteRow: View {
     
     
     struct Kind1Default: View {
+        @EnvironmentObject var dim:DIMENSIONS
         let vPost:VPost
         let hideFooter:Bool // For rendering in NewReply
         let inThread:Bool // For rendering in thread
@@ -126,7 +128,7 @@ struct NoteRow: View {
             
             HStack(alignment: .top, spacing:0) {
                 PFP(pubkey: event.pubkey, pictureUrl: event.contact?.picture)
-                    .frame(width: 50, height: 50)
+                    .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: 50)
                     .background(alignment: .top, content: {
                         Color("LightGray")
                             .frame(width: 2, height: 20)
@@ -136,10 +138,8 @@ struct NoteRow: View {
                     .onTapGesture {
                         navigateTo(ContactPath(key: event.pubkey)) // TODO: if vPost.contact navigate with that else by .pubkey
                     }
-                    .padding(.horizontal, 10)
-//                Circle().frame(width: 50, height: 50)
-//                    .padding(.horizontal, 10)
-//
+                    .padding(.horizontal, DIMENSIONS.POST_ROW_PFP_HPADDING)
+
                 VStack(alignment:.leading, spacing: 0) {// Post container
                     HStack { // name + reply + context menu
                         NoteHeaderView(vPost: vPost)
@@ -154,7 +154,7 @@ struct NoteRow: View {
                             .contentShape(Rectangle())
                             .onTapGesture { navigateTo(vPost) }
                     }
-                    ContentRenderer(vPost: vPost)
+                    ContentRenderer(vPost: vPost, availableWidth: dim.availableNoteRowImageWidth())
 //                    if (event.previewImages.count > 0) {
 //                        ForEach(event.previewImages.indices, id:\.self) { index in
 //                            Image(uiImage: event.previewImages[index])
@@ -177,13 +177,14 @@ struct NoteRow: View {
                     .offset(x: THREAD_LINE_OFFSET, y: 18)
                     .opacity(connect == .bottom || connect == .both ? 1 : 0)
             }
-            .padding(.trailing, 10)
+            .padding(.trailing, DIMENSIONS.KIND1_TRAILING)
             
         }
     }
     
     // Full width
     struct Kind1: View {
+        @EnvironmentObject var dim:DIMENSIONS
         let vPost:VPost
         let hideFooter:Bool // For rendering in NewReply
         let inThread:Bool // For rendering in thread
@@ -229,23 +230,13 @@ struct NoteRow: View {
                 }
                 .padding(.bottom, 10)
                 VStack(alignment:.leading, spacing: 0) {// Post container
-                    ContentRenderer(vPost: vPost, fullWidth: true)
-//                    if (vPost.event.previewImages.count > 0) {
-//                        PostPreviewImages(vPost.event.previewImages)
-//                    }
+                    ContentRenderer(vPost: vPost, fullWidth: true, availableWidth: dim.listWidth)
                     if (!hideFooter && settings.rowFooterEnabled) {
-//                            .frame(height: 30)
                         FooterFragmentView(vPost: vPost)
                             .padding(10)
-//                            .background(.orange)
                     }
                 }
-//                .padding(.bottom, 20)
-//                .background(.red)
             }
-//            .padding(.trailing, 10)
-//            .background(.orange)
-            
         }
     }
 }

@@ -35,6 +35,7 @@ extension View {
         let sp:SocketPool = .shared
         let er:ExchangeRateModel = .shared
         let tm:DetailTabsModel = .shared
+        let dim:DIMENSIONS = .shared
         
         let ss = SettingsStore()
         let sm = SideBarModel()
@@ -60,6 +61,7 @@ extension View {
             .environmentObject(ss)
             .environmentObject(sm)
             .environmentObject(tm)
+            .environmentObject(dim)
     }
 }
 

@@ -10,6 +10,7 @@ import SwiftUI
 struct ListView: View {
     @AppStorage("selected_subtab") var selectedSubTab = "Following"
     @EnvironmentObject var ns:NosturState
+    @EnvironmentObject var dim:DIMENSIONS
     @Namespace var END_OF_LIST
     @State var needsScrollToTop = false
     @State var needsScrollToIndex:Int? = nil
@@ -39,6 +40,7 @@ struct ListView: View {
                                data: $vmState.vPostLeafs,
                                autoScroll: $settings.autoScroll,
                                fullWidthImages: $settings.fullWidthImages,
+                               dim: dim,
                                onRowAppeared: { (_, _, vPost) in
                         guard vmState.state != .AWAITING_FIRST_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
                         guard vmState.state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)

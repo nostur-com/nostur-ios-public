@@ -14,12 +14,11 @@ struct SingleMediaViewer: View {
     
     let url:URL
     var height:CGFloat?
+    let imageWidth:CGFloat
     @State var fullScreenItem:FullScreenItem?
-    @State private var viewSize: CGSize = .zero
     
     var body: some View {
         VStack {
-            Color.clear.frame(height: 0).modifier(SizeModifier())
             if (url.absoluteString.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
                 LazyImage(url: url) { state in
                     if let container = state.imageContainer {
@@ -57,31 +56,24 @@ struct SingleMediaViewer: View {
                 .frame(height: 250)
             }
             else {
-                if viewSize.width > 0 {
-                    LazyImage(request: ImageRequest(url: url,
-                                processors: [.resize(width: viewSize.width, upscale: true)],
-                                userInfo: [.scaleKey: UIScreen.main.scale])) { state in
-                        if let image = state.image {
-                            image
+                LazyImage(request: ImageRequest(url: url,
+                            processors: [.resize(width: imageWidth, upscale: true)],
+                            userInfo: [.scaleKey: UIScreen.main.scale])) { state in
+                    if let image = state.image {
+                        image
 //                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .onTapGesture {
-                                    sendNotification(.fullScreenView, FullScreenItem(url: url))
-                                }
-                        }
-                        else {
-                            CenteredProgressView()
-                                .background(Color("LightGray"))
-                        }
+                            .aspectRatio(contentMode: .fit)
+                            .onTapGesture {
+                                sendNotification(.fullScreenView, FullScreenItem(url: url))
+                            }
                     }
-                    .pipeline(ImageProcessing.shared.content) // No processing again here, we probably never show the image again
+                    else {
+                        CenteredProgressView()
+                            .background(Color("LightGray"))
+                    }
                 }
+                .pipeline(ImageProcessing.shared.content) // No processing again here, we probably never show the image again
             }
-        }
-        .onPreferenceChange(SizePreferenceKey.self) { size in
-            guard size.width > 0 else { return }
-            print("🟣🟣🟣🟣🟣 SINGLEMEDIA \(size.width) \(size.height) -- \(UIScreen.main.scale) ")
-            viewSize = size
         }
     }
     
@@ -93,7 +85,7 @@ struct SingleMediaViewer_Previews: PreviewProvider {
         
         let urlsFromContent = getImgUrlsFromContent(content1)
         
-        SingleMediaViewer(url:urlsFromContent[0])
+        SingleMediaViewer(url:urlsFromContent[0], imageWidth: UIScreen.main.bounds.width)
     }
 }
 

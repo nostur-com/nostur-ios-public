@@ -129,7 +129,7 @@ struct TabContainer: View {
 }
 
 struct TabbedDetailContainer: View {
-    
+    @StateObject private var dim = DIMENSIONS()
     @StateObject var tm = DetailTabsModel()
     @State var offsetX = 200.0
     
@@ -164,6 +164,13 @@ struct TabbedDetailContainer: View {
     var body: some View {
         
         VStack(spacing:0) {
+            Color.clear.frame(height: 0)
+                .modifier(SizeModifier())
+                .onPreferenceChange(SizePreferenceKey.self) { size in
+                    guard size.width > 0 else { return }
+                    dim.listWidth = size.width
+                    print("🟣🟣🟣🟣🟣 NEW DETAIL WIDTH \(size.width) -- Scale: \(UIScreen.main.scale) ")
+                }
             ScrollViewReader { proxy in
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing:0) {
@@ -222,6 +229,7 @@ struct TabbedDetailContainer: View {
                         .id(tab.id)
                 }
             }
+            .environmentObject(dim)
             Spacer()
         }
         .navigationBarTitle("")

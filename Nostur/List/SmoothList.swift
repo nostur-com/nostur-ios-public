@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Nuke
 
 let SMOOTHLIST_AUTOSCROLL_OFFSET = 1.0
 
@@ -26,10 +27,11 @@ struct SmoothList: UIViewControllerRepresentable {
     @Binding var data: [VPost]
     @Binding var autoScroll: Bool
     @Binding var fullWidthImages: Bool
+    var dim: DIMENSIONS
     private var onRowAppeared: RowAppearedCallback?
     private var onFinishedScrolling: FinishedScrollingCallback?
     
-    init(needsRefresh: Binding<Bool>, needsFullReload:Binding<Bool>, needsScrollToTop:Binding<Bool>, needsScrollToIndex:Binding<Int?>, data: Binding<[VPost]>, autoScroll: Binding<Bool>, fullWidthImages: Binding<Bool>, onRowAppeared: RowAppearedCallback? = nil, onFinishedScrolling: FinishedScrollingCallback? = nil) {
+    init(needsRefresh: Binding<Bool>, needsFullReload:Binding<Bool>, needsScrollToTop:Binding<Bool>, needsScrollToIndex:Binding<Int?>, data: Binding<[VPost]>, autoScroll: Binding<Bool>, fullWidthImages: Binding<Bool>, dim: DIMENSIONS, onRowAppeared: RowAppearedCallback? = nil, onFinishedScrolling: FinishedScrollingCallback? = nil) {
         self._needsRefresh = needsRefresh
         self._needsFullReload = needsFullReload
         self._needsScrollToTop = needsScrollToTop
@@ -37,6 +39,7 @@ struct SmoothList: UIViewControllerRepresentable {
         self._data = data
         self._autoScroll = autoScroll
         self._fullWidthImages = fullWidthImages
+        self.dim = dim
         self.onRowAppeared = onRowAppeared
         self.onFinishedScrolling = onFinishedScrolling
     }
@@ -149,9 +152,58 @@ struct SmoothList: UIViewControllerRepresentable {
         let parent: SmoothList
         var collectionViewHolder: CollectionViewHolderType?
         var scrollTimer: Timer?
+        var prefetcher = ImagePrefetcher(pipeline: ImageProcessing.shared.content)
         
         init(parent: SmoothList) {
             self.parent = parent
+        }
+        
+        func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
+            let imageWidth = parent.dim.availableNoteRowImageWidth()
+            var imageRequests:[ImageRequest] = []
+            for indexPath in indexPaths {
+                guard let item = parent.data[safe: indexPath.row] else { continue }
+                for imageUrl in item.imageUrls {
+                    imageRequests.append(ImageRequest(url: imageUrl,
+                        processors: [.resize(width: imageWidth, upscale: true)],
+                        userInfo: [.scaleKey: UIScreen.main.scale]))
+                }
+                for url in item.linkPreviewURLs {
+                    fetchMetaTags(url: url) { result in
+                        do {
+                            let tags = try result.get()
+                            LinkPreviewCache.shared.setObject(for: url, value: tags)
+                            print("✓✓ Loaded link preview meta tags from \(url)")
+                            if let image = tags["image"] {
+                                imageRequests.append(ImageRequest(url: URL(string:image),
+                                    processors: [.resize(width: imageWidth, upscale: true)],
+                                    userInfo: [.scaleKey: UIScreen.main.scale]))
+                            }
+                        }
+                        catch { }
+                    }
+                }
+            }
+            print("prefetching for \(imageRequests.count)")
+            prefetcher.startPrefetching(with: imageRequests)
+        }
+
+        func collectionView(_ collectionView: UICollectionView, cancelPrefetchingForItemsAt indexPaths: [IndexPath]) {
+            var imageRequests:[ImageRequest] = []
+            for indexPath in indexPaths {
+                guard let item = parent.data[safe: indexPath.row] else { continue }
+                
+                let imageUrls = item.imageUrls + item.parentPosts.flatMap { $0.imageUrls }
+                
+                for imageUrl in imageUrls {
+                    imageRequests.append(ImageRequest(url: imageUrl,
+                        // TODO: Should get imagewith from SmoothList/Geometry. remove geometry from each cell
+                        processors: [.resize(width: 328.0, upscale: true)],
+                        userInfo: [.scaleKey: UIScreen.main.scale]))
+                }
+            }
+            print("cancelling prefetch for \(imageRequests.count)")
+            prefetcher.stopPrefetching(with: imageRequests)
         }
         
 //        func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
@@ -176,24 +228,6 @@ struct SmoothList: UIViewControllerRepresentable {
 //            print("🟢🟢 height estimated at: \(height)" )
 //            return CGSize(width: cellWidth, height: height)
 //        }
-        
-        func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
-            for indexPath in indexPaths {
-                guard let item = parent.data[safe: indexPath.row] else { continue }
-                for url in item.linkPreviewURLs {
-                    fetchMetaTags(url: url) { result in
-                        do {
-                            let tags = try result.get()
-                            LinkPreviewCache.shared.setObject(for: url, value: tags)
-                            print("✓✓ Loaded link preview meta tags from \(url)")
-                        }
-                        catch {
-                            
-                        }
-                    }
-                }
-            }
-        }
         
         func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
             if let item = parent.data[safe: indexPath.row] {
@@ -263,6 +297,7 @@ final class CViewHolder {
         collectionView.allowsSelection = false
         collectionView.delegate = coordinator
         collectionView.prefetchDataSource = coordinator
+        collectionView.isPrefetchingEnabled = true
         //        collectionView.backgroundColor = UIColor.brown
         onInitialized(collectionView)
     }
@@ -284,7 +319,8 @@ final class CViewHolder {
             cell.contentConfiguration = UIHostingConfiguration {
                 PostOrThread(vPost: vPost)
                     .boxShadow()
-                    .padding(10)
+                    .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
+                    .padding(.vertical, 10)
 //                    .frame(maxWidth: .infinity)
             }
             .background(Color("ListBackground"))
@@ -346,6 +382,7 @@ final class CViewHolder {
 
 
 struct SmoothList_PReviews: PreviewProvider {
+    @State static var dim:DIMENSIONS = .shared
     @State static var needsRefresh = false
     @State static var needsFullReload = false
     @State static var needsScrollToTop = false
@@ -363,7 +400,7 @@ struct SmoothList_PReviews: PreviewProvider {
     
     static var previews: some View {
         VStack(spacing:0) {
-            SmoothList(needsRefresh: $needsRefresh, needsFullReload: $needsFullReload, needsScrollToTop: $needsScrollToTop, needsScrollToIndex: $needsScrollToIndex, data: $vPosts, autoScroll: $autoScroll, fullWidthImages: $fullWidthImages)
+            SmoothList(needsRefresh: $needsRefresh, needsFullReload: $needsFullReload, needsScrollToTop: $needsScrollToTop, needsScrollToIndex: $needsScrollToIndex, data: $vPosts, autoScroll: $autoScroll, fullWidthImages: $fullWidthImages, dim: dim)
                 .onAppear {
                     needsRefresh = true
                 }

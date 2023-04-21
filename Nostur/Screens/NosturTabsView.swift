@@ -10,6 +10,7 @@ import CoreData
 import Nuke
 
 struct NosturTabsView: View {
+    @StateObject private var dim = DIMENSIONS()
     @AppStorage("selected_tab") var selectedTab = "Main"
     @State var unread = 0
     @State var unreadDMs = 0
@@ -18,6 +19,13 @@ struct NosturTabsView: View {
         let _ = Self._printChanges()
         HStack {
             VStack {
+                Color.clear.frame(height: 0)
+                    .modifier(SizeModifier())
+                    .onPreferenceChange(SizePreferenceKey.self) { size in
+                        guard size.width > 0 else { return }
+                        dim.listWidth = size.width
+                        print("🟣🟣🟣🟣🟣 NEW WIDTH \(size.width) -- Scale: \(UIScreen.main.scale) ")
+                    }
                 AppTopBar()
                     .padding(5)
                 TabView(selection: $selectedTab) {
@@ -52,6 +60,7 @@ struct NosturTabsView: View {
                 .withSheets()
             }
             .frame(maxWidth: 600)
+            .environmentObject(dim)
             if UIDevice.current.userInterfaceIdiom == .pad {
                 TabbedDetailContainer()
             }
@@ -68,7 +77,6 @@ struct NosturTabsView: View {
         .onAppear {
             ImageDecoderRegistry.shared.register(ImageDecoders.Video.init)
         }
-        //        .ignoresSafeArea()
     }
     
 }
