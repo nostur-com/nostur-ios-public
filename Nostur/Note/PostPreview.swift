@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct PostPreview: View {
-    
+    @StateObject var dim = DIMENSIONS()
     @Environment(\.dismiss) var dismiss
     let previewEvent:Event
     let sendNow:() -> Void
@@ -30,6 +30,7 @@ struct PostPreview: View {
                 NoteRow(vPost: vPost)
                     .boxShadow()
                     .disabled(true)
+                    .environmentObject(dim)
             }
             Spacer()
         }
