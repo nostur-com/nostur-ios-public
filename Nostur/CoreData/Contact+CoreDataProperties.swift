@@ -151,21 +151,22 @@ extension Contact : Identifiable {
     
     // Display name, with fallbacks: (User)name, pubkey (prefix), or "?:?"
     var authorName: String {
+        let displayName = display_name != nil && display_name != "" ? display_name : nil
+        let name = name != nil && name != "" ? name : nil
+        let theName = displayName ?? name
+        
         if (SettingsStore.shared.hideEmojisInNames) {
-            if (display_name != nil || name != nil) {
-                return (((display_name != nil && display_name != "") ? display_name : nil) ?? name)!.unicodeScalars.filter {
-                    
-                    !($0.value >= 0x13000 && $0.value <= 0x1342E) && // EGYPTIAN HIEROGLYPHS
-                    !$0.properties.isEmoji  // EMOJIS
-                    
-                }.reduce("") { $0 + String($1) }
-            }
-            else {
-                return authorKey
-            }
+        
+            return theName ?? authorKey
+            return (theName?.unicodeScalars.filter {
+                
+                !($0.value >= 0x13000 && $0.value <= 0x1342E) && // EGYPTIAN HIEROGLYPHS
+                !$0.properties.isEmoji  // EMOJIS
+                
+            }.reduce("") { $0 + String($1) }) ?? authorKey
         }
         else {
-            return (display_name != nil && display_name != "" ? display_name : nil) ?? name ?? authorKey
+            return theName ?? authorKey
         }
     }
     

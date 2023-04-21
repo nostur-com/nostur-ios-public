@@ -180,7 +180,7 @@ class NotificationsManager: ObservableObject {
         
         let since = NosturState.shared.lastNotificationReceivedAt ?? nil
         let sinceNTimestamp = since != nil ? NTimestamp(date: since!) : nil
-        print("checking notifications since: \(since?.description ?? "")")
+        print("checking notifications since: \(since?.description(with: .current) ?? "")")
         
         SocketPool
             .shared

@@ -131,7 +131,7 @@ final class SocketPool: ObservableObject {
                         }
                     }
                     //                    print("REQUESTING: \(String(message.message.prefix(260)))")
-                    //                    print("⬇️⬇️ REQUESTING: \(String(message.message))")
+//                    print("⬇️⬇️ REQUESTING: \(String(message.message))")
                     managedClient.client.sendMessage(message.message)
                 }
                 else if  message.type == .CLOSE { // CLOSE FOR ALL RELAYS
@@ -258,6 +258,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     }
     
     func didReceiveMessage(_ text:String) {
+//        print("🔌 RECEIVED: \(self.url): \(text)")
         MessageParser.shared.socketReceivedMessage(text: text, relayUrl: self.url)
     }
     
@@ -285,7 +286,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
         DispatchQueue.main.async {
             sendNotification(.socketNotification, "Disconnected: \(self.url)")
         }
-        print("🔌 DISCONNECTED \(self.url): with code: \(closeCode.rawValue) \(reason != nil ? String(data: reason!, encoding: .utf8) : "" ?? "")")
+        print("🔌 DISCONNECTED \(self.url): with code: \(closeCode.rawValue) \(reason != nil ? String(data: reason!, encoding: .utf8) : "" )")
         
     }
     

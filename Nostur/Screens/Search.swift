@@ -162,7 +162,7 @@ public final class DebounceObject: ObservableObject {
     @Published var debouncedText: String = ""
     private var bag = Set<AnyCancellable>()
 
-    public init(dueTime: TimeInterval = 0.4) {
+    public init(dueTime: TimeInterval = 0.5) {
         $text
             .removeDuplicates()
             .filter { $0.count > 1 || $0 == "" }
