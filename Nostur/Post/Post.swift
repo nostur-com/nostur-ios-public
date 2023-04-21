@@ -50,6 +50,7 @@ struct VPost: Identifiable, Equatable, Hashable {
     var isTruncated = false
     var isRepost = false
     var firstQuoteId:String?
+    var firstQuote:[VPost]
     var linkPreviewURLs:[URL]
     var liked = false
     var reposted = false
@@ -74,8 +75,8 @@ class VPostTransformer {
         self.context = context ?? DataProvider.shared().viewContext
     }
     
-    func toVPost(_ mainEvent:Event, skipParents:Bool? = false, plainText:Bool = false) -> VPost? {
-        if Thread.current == Thread.main {
+    func toVPost(_ mainEvent:Event, skipParents:Bool? = false, plainText:Bool = false, forceBg:Bool = false) -> VPost? {
+        if !forceBg && Thread.current == Thread.main {
             let textRenderer = TextRenderer(self.context, event: mainEvent)
             let (renderedElements, linkPreviewURLs) = renderElements(mainEvent)
             
@@ -108,9 +109,16 @@ class VPostTransformer {
 
             
             return VPost(
+                pubkey: mainEvent.pubkey,
                 id: mainEvent.id,
                 objectID: mainEvent.objectID,
                 event: mainEvent, // Should always be main context event
+                username: mainEvent.username,
+                authorName: mainEvent.contact?.authorName,
+                pictureUrl: mainEvent.contact?.picture,
+                nip05verified:mainEvent.contact?.nip05veried ?? false,
+                date: mainEvent.date,
+                ago: mainEvent.ago,
                 created_at: mainEvent.created_at,
                 npub: mainEvent.npub,
                 note1: mainEvent.noteId,
@@ -125,13 +133,14 @@ class VPostTransformer {
                 threadPostsCount: 1 + mainEvent.parentEvents.count,
                 isRepost: mainEvent.isRepost,
                 firstQuoteId: mainEvent.firstQuoteId,
+                firstQuote: mainEvent.firstQuote != nil ? [toVPost(mainEvent.firstQuote!, skipParents: true)].compactMap { $0 } : [],
                 linkPreviewURLs: linkPreviewURLs,
                 liked: likedByCurrentAccount(mainEvent),
                 reposted: repostedByCurrentAccount(mainEvent)
             )
         }
         else {
-            guard let privateEvent = try? context.existingObject(with: mainEvent.objectID) as? Event else { return nil }
+            guard let privateEvent = context.object(with: mainEvent.objectID) as? Event else { return nil }
             let textRenderer = TextRenderer(self.context, event: privateEvent)
             let (renderedElements, linkPreviewURLs) = renderElements(privateEvent)
             
@@ -162,10 +171,25 @@ class VPostTransformer {
                     }
             }
             
+            var actualMainEvent:Event?
+            let eventId = privateEvent.id
+            DataProvider.shared().viewContext.performAndWait {
+                actualMainEvent = try? Event.fetchEvent(id: eventId, context: DataProvider.shared().viewContext)
+//                actualMainEvent = try? DataProvider.shared().viewContext.existingObject(with: privateEvent.objectID) as? Event
+            }
+            
+            
             return VPost(
+                pubkey: privateEvent.pubkey,
                 id: privateEvent.id,
                 objectID: privateEvent.objectID,
-                event: mainEvent, // Should always be main context event
+                event: actualMainEvent!, // Should always be main context event
+                username: privateEvent.username,
+                authorName: privateEvent.contact?.authorName,
+                pictureUrl: privateEvent.contact?.picture,
+                nip05verified: privateEvent.contact?.nip05veried ?? false,
+                date: privateEvent.date,
+                ago: privateEvent.ago,
                 created_at: privateEvent.created_at,
                 npub: privateEvent.npub,
                 note1: privateEvent.noteId,
@@ -176,10 +200,11 @@ class VPostTransformer {
                 displayName: privateEvent.contact?.authorName ?? String((privateEvent.npub.prefix(11))),
                 renderedElements: renderedForRow,
                 renderedElementsDetail: renderedElements,
-                parentPosts: !skipParents! ? mainEvent.parentEvents.compactMap { toVPost($0, skipParents: true) } : [],
+                parentPosts: !skipParents! ? mainEvent.parentEvents.compactMap { toVPost($0, skipParents: true, forceBg: forceBg) } : [],
                 threadPostsCount: 1 + mainEvent.parentEvents.count,
                 isRepost: privateEvent.isRepost,
                 firstQuoteId: privateEvent.firstQuoteId,
+                firstQuote: privateEvent.firstQuote != nil ? [toVPost(privateEvent.firstQuote!, skipParents: true)].compactMap { $0 } : [],
                 linkPreviewURLs: linkPreviewURLs,
                 liked: likedByCurrentAccount(privateEvent),
                 reposted: repostedByCurrentAccount(privateEvent)

@@ -124,7 +124,7 @@ class LVM: NSObject, ObservableObject {
 //            let lastCreatedAt = currentVPostLeafs.last?.created_at ?? 0
             var newVPostLeafs:[VPost] = []
             var transformedObjectIds = Set<NSManagedObjectID>()
-            for event in self.unrenderedEvents {
+            for event in events {
 //                guard !danglingObjectIds.contains(event.objectID) else { continue } // Skip if the post is already on screen
                 guard !onScreenIds.contains(event.objectID) else {
                     if let existingVPost = currentVPostLeafs.first(where: { $0.objectID == event.objectID }) {
@@ -132,7 +132,7 @@ class LVM: NSObject, ObservableObject {
                     }
                     continue
                 } // Skip if the post is already on screen
-                if let newVPostLeaf = transformer.toVPost(event) {
+                if let newVPostLeaf = transformer.toVPost(event, forceBg: true) {
 //                    guard newVPostLeaf.created_at > lastCreatedAt else { continue } // Skip if it is older than last leaf on screen
                     transformedObjectIds.insert(newVPostLeaf.objectID)
 //                    print("transformed: \(newVPostLeaf.id) \(newVPostLeaf.displayName) -- parentPosts: \(newVPostLeaf.parentPosts.count)")
@@ -474,10 +474,10 @@ extension LVM {
                 let event = notification.object as! Event
                 
                 let context = DataProvider.shared().container.newBackgroundContext()
-                context.performAndWait { [unowned self] in
+                context.perform { [unowned self] in
                     let transformer = VPostTransformer(context) // Tranform in bg
                     
-                    if let newVPostLeaf = transformer.toVPost(event) {
+                    if let newVPostLeaf = transformer.toVPost(event, forceBg: true) {
                         DispatchQueue.main.async {
                             self.lvmState.vPostLeafs.insert(newVPostLeaf, at: 0)
                             self.lvmCounter.count = self.lvmState.isAtTop && SettingsStore.shared.autoScroll ? 0 : (self.lvmCounter.count + 1)
