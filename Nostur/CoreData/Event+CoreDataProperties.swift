@@ -600,6 +600,9 @@ extension Event {
 
     
     static func eventExists(id:String, context:NSManagedObjectContext) -> Bool {
+        if Thread.isMainThread {
+            print("☠️☠️☠️☠️ eventExists")
+        }
         let request = NSFetchRequest<Event>(entityName: "Event")
         request.entity = Event.entity()
         request.predicate = NSPredicate(format: "id == %@", id)
@@ -698,7 +701,9 @@ extension Event {
     }
     
     static func saveEvent(event:NEvent, context:NSManagedObjectContext, relay:String? = nil) -> Event {
-        
+        if Thread.isMainThread {
+            print("☠️☠️☠️☠️ saveEvent")
+        }
         let savedEvent = Event(context: context)
         savedEvent.insertedAt = Date.now
         savedEvent.id = event.id

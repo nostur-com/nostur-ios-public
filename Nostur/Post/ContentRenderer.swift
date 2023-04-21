@@ -290,6 +290,7 @@ struct Kind1ById: View {
     
     var body: some View {
         if let vPost = events.first?.toVPost() {
+            let _ = print("☠️☠️☠️☠️ toVPost() Kind1ById")
             if fullWidth {
                 NoteRow.Kind1(vPost: vPost, hideFooter:hideFooter)
             }

@@ -231,7 +231,9 @@ extension Contact : Identifiable {
     }
 
     static func saveOrUpdateContact(event:NEvent, context:NSManagedObjectContext) {
-        
+        if Thread.isMainThread {
+            print("☠️☠️☠️☠️ saveOrUpdateContact")
+        }
         let decoder = JSONDecoder()
         guard let metaData = try? decoder.decode(NSetMetadata.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) else {
             return

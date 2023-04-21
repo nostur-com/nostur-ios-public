@@ -34,6 +34,7 @@ struct PostOrThread: View {
                 .onTapGesture {
                     guard vPost.event.deletedById == nil else { return }
                     if vPost.isRepost, let repostVPost = vPost.event.firstQuote?.toVPost() {
+                        let _ = print("☠️☠️☠️☠️ toVPost() PostOrThread firstQuote")
                         navigateTo(repostVPost)
                     }
                     else {

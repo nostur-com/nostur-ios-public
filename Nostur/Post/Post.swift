@@ -208,6 +208,9 @@ class VPostTransformer {
     }
 
     func renderElements(_ event:Event) -> ([MarkdownElement], [URL]) {
+        if Thread.isMainThread {
+            print("☠️☠️☠️☠️ renderElements on MAIN thread....")
+        }
         let contentLinkRenderer = TextRenderer(self.context, event: event)
         let input = event.noteTextPrepared
         let imageUrlPattern = ###"(?i)https?:\/\/\S+?\.(?:png|jpe?g|gif|webp)(\?\S+){0,1}\b"###
