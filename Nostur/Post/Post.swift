@@ -58,6 +58,16 @@ struct VPost: Identifiable, Equatable, Hashable {
 class VPostTransformer {
     static let shared = VPostTransformer()
     
+    static let imageUrlPattern = ###"(?i)https?:\/\/\S+?\.(?:png|jpe?g|gif|webp)(\?\S+){0,1}\b"###
+    static let previewImagePlaceholder = ###"--@!\^@(\d+)@\^!@--"###
+    static let videoUrlPattern = ###"(?i)https?:\/\/\S+?\.(?:mp4|mov)(\?\S+){0,1}\b"###
+    static let lightningInvoicePattern = ###"(?i)lnbc\S+"###
+    static let notePattern = ###"nostr:note1[023456789acdefghjklmnpqrstuvwxyz]{58}"###
+    static let neventPattern = ###"nostr:nevent1[023456789acdefghjklmnpqrstuvwxyz]+\b"###
+    static let otherUrlsPattern = ###"(?i)(https\:\/\/)[a-zA-Z0-9\-\.]+(?:\.[a-zA-Z]{2,999}+)+([\/\?\=\&\#\%\+\.]\@?[\S]+)*\/?[^\s\)]"### // for link previews (TODO: white list domains or not?)
+    static let pattern = "\(previewImagePlaceholder)|\(imageUrlPattern)|\(lightningInvoicePattern)|\(notePattern)|\(neventPattern)|\(videoUrlPattern)|\(otherUrlsPattern)"
+    static let regex = try! NSRegularExpression(pattern: pattern)
+    
     let context:NSManagedObjectContext
     
     init(_ context:NSManagedObjectContext? = nil) {
@@ -213,23 +223,15 @@ class VPostTransformer {
         }
         let contentLinkRenderer = TextRenderer(self.context, event: event)
         let input = event.noteTextPrepared
-        let imageUrlPattern = ###"(?i)https?:\/\/\S+?\.(?:png|jpe?g|gif|webp)(\?\S+){0,1}\b"###
-        let previewImagePlaceholder = ###"--@!\^@(\d+)@\^!@--"###
-        let videoUrlPattern = ###"(?i)https?:\/\/\S+?\.(?:mp4|mov)(\?\S+){0,1}\b"###
-        let lightningInvoicePattern = ###"(?i)lnbc\S+"###
-        let notePattern = ###"nostr:note1[023456789acdefghjklmnpqrstuvwxyz]{58}"###
-        let neventPattern = ###"nostr:nevent1[023456789acdefghjklmnpqrstuvwxyz]+\b"###
-        let otherUrlsPattern = ###"(?i)(https\:\/\/)[a-zA-Z0-9\-\.]+(?:\.[a-zA-Z]{2,999}+)+([\/\?\=\&\#\%\+\.]\@?[\S]+)*\/?[^\s\)]"### // for link previews (TODO: white list domains or not?)
-        let pattern = "\(previewImagePlaceholder)|\(imageUrlPattern)|\(lightningInvoicePattern)|\(notePattern)|\(neventPattern)|\(videoUrlPattern)|\(otherUrlsPattern)"
         
-        let regex = try! NSRegularExpression(pattern: pattern)
+        
         let range = NSRange(location: 0, length: input.utf16.count)
         
         var result: [MarkdownElement] = []
         var linkPreviewUrls: [URL] = []
         var lastMatchEnd = 0
         
-        regex.enumerateMatches(in: input, options: [], range: range) { match, _, _ in
+        Self.regex.enumerateMatches(in: input, options: [], range: range) { match, _, _ in
             if let match = match {
                 let matchRange = match.range
                 let nonMatchRange = NSRange(location: lastMatchEnd, length: matchRange.location - lastMatchEnd)
@@ -238,7 +240,7 @@ class VPostTransformer {
                 
                 result.append(MarkdownElement.text(contentLinkRenderer.renderedText(event, text:nonMatch)))
                 
-                if matchString.matchingStrings(regex: imageUrlPattern).count > 0 {
+                if matchString.matchingStrings(regex: Self.imageUrlPattern).count > 0 {
                     if let url = URL(string: matchString) {
                         result.append(MarkdownElement.image(url))
                     }
@@ -246,7 +248,7 @@ class VPostTransformer {
                         result.append(MarkdownElement.text(contentLinkRenderer.renderedText(event, text:matchString)))
                     }
                 }
-                else if matchString.matchingStrings(regex: videoUrlPattern).count > 0 {
+                else if matchString.matchingStrings(regex: Self.videoUrlPattern).count > 0 {
                     if let url = URL(string: matchString) {
                         result.append(MarkdownElement.video(url))
                     }
@@ -254,7 +256,7 @@ class VPostTransformer {
                         result.append(MarkdownElement.text(contentLinkRenderer.renderedText(event, text:matchString)))
                     }
                 }
-                else if matchString.matchingStrings(regex: otherUrlsPattern).count > 0 {
+                else if matchString.matchingStrings(regex: Self.otherUrlsPattern).count > 0 {
                     if let url = URL(string: matchString) {
                         result.append(MarkdownElement.linkPreview(url))
                         linkPreviewUrls.append(url)
@@ -263,17 +265,17 @@ class VPostTransformer {
                         result.append(MarkdownElement.text(contentLinkRenderer.renderedText(event, text:matchString)))
                     }
                 }
-                else if matchString.matchingStrings(regex: notePattern).count > 0 {
+                else if matchString.matchingStrings(regex: Self.notePattern).count > 0 {
                     let m = matchString.matchingStrings(regex:#"note1[023456789acdefghjklmnpqrstuvwxyz]{58}"#)
                     result.append(MarkdownElement.note1(m[0][0]))
                 }
-                else if matchString.matchingStrings(regex: previewImagePlaceholder).count > 0 {
-                    let m = matchString.matchingStrings(regex:previewImagePlaceholder)
+                else if matchString.matchingStrings(regex: Self.previewImagePlaceholder).count > 0 {
+                    let m = matchString.matchingStrings(regex: Self.previewImagePlaceholder)
                     if let p = event.previewImages[safe: Int(m[0][0])] {
                         result.append(MarkdownElement.postPreviewImage(p))
                     }
                 }
-                else if matchString.matchingStrings(regex: neventPattern).count > 0 {
+                else if matchString.matchingStrings(regex: Self.neventPattern).count > 0 {
                     let m = matchString.matchingStrings(regex: #"nevent1[023456789acdefghjklmnpqrstuvwxyz]+\b"#)
                     do {
                         let identifier = try ShareableIdentifier(m[0][0])
@@ -286,7 +288,7 @@ class VPostTransformer {
                         result.append(MarkdownElement.text(contentLinkRenderer.renderedText(event, text:matchString)))
                     }
                 }
-                else if matchString.matchingStrings(regex: lightningInvoicePattern).count > 0 {
+                else if matchString.matchingStrings(regex: Self.lightningInvoicePattern).count > 0 {
                     result.append(MarkdownElement.lnbc(matchString))
                 }
                 else {
