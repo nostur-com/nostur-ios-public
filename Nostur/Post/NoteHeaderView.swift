@@ -38,7 +38,7 @@ struct NoteHeaderView: View {
                         Group {
                             Text("@\(event.username)").layoutPriority(1)
                             Text(" · ") //
-                            Ago(event.date)
+                            Ago(vPost.date)
                                 .layoutPriority(2)
                         }
                         .foregroundColor(.secondary)
@@ -46,11 +46,11 @@ struct NoteHeaderView: View {
                     }
                 }
                 .onTapGesture {
-                    navigateTo(ContactPath(key: vPost.event.pubkey))
+                    navigateTo(ContactPath(key: vPost.pubkey))
                 }
             }
             if (!singleLine) {
-                Text("@\(event.username) · \(vPost.event.ago)")
+                Text("@\(event.username) · \(vPost.ago)")
                     .foregroundColor(.secondary)
                     .lineLimit(1)
             }

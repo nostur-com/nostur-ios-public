@@ -136,7 +136,7 @@ struct NoteRow: View {
         var body: some View {
             
             HStack(alignment: .top, spacing:0) {
-                PFP(pubkey: event.pubkey, pictureUrl: event.contact?.picture)
+                PFP(pubkey: vPost.pubkey, pictureUrl: event.contact?.picture)
                     .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: 50)
                     .background(alignment: .top, content: {
                         Color("LightGray")
@@ -145,7 +145,7 @@ struct NoteRow: View {
                             .opacity(connect == .top || connect == .both ? 1 : 0)
                     })
                     .onTapGesture {
-                        navigateTo(ContactPath(key: event.pubkey)) // TODO: if vPost.contact navigate with that else by .pubkey
+                        navigateTo(ContactPath(key: vPost.pubkey)) // TODO: if vPost.contact navigate with that else by .pubkey
                     }
                     .padding(.horizontal, DIMENSIONS.POST_ROW_PFP_HPADDING)
 
@@ -154,7 +154,6 @@ struct NoteRow: View {
                         NoteHeaderView(vPost: vPost)
                             .padding(.bottom, 5)
                         Spacer()
-                        //                            EventPrivateNoteToggle(event: event)
                         NoteMenuView(vPost: vPost)
                     }
                     if !inThread {
@@ -164,16 +163,7 @@ struct NoteRow: View {
                             .onTapGesture { navigateTo(vPost) }
                     }
                     ContentRenderer(vPost: vPost, availableWidth: dim.availableNoteRowImageWidth())
-//                    if (event.previewImages.count > 0) {
-//                        ForEach(event.previewImages.indices, id:\.self) { index in
-//                            Image(uiImage: event.previewImages[index])
-//                                .resizable()
-//                                .scaledToFit()
-//                                .frame(maxWidth: 600)
-//                        }
-//                    }
                     if (!hideFooter && settings.rowFooterEnabled) {
-//                            .frame(height: 30)
                         FooterFragmentView(vPost: vPost)
                             .padding(.top, 10)
                     }
@@ -218,10 +208,10 @@ struct NoteRow: View {
             
             VStack(spacing: 0) {
                 HStack(alignment: .top, spacing:0) {
-                    PFP(pubkey: event.pubkey, pictureUrl: event.contact?.picture)
+                    PFP(pubkey: vPost.pubkey, pictureUrl: event.contact?.picture)
                         .frame(width: 50, height: 50)
                         .onTapGesture {
-                            navigateTo(ContactPath(key: event.pubkey)) // TODO: if vPost.contact navigate with that else by .pubkey
+                            navigateTo(ContactPath(key: vPost.pubkey)) // TODO: if vPost.contact navigate with that else by .pubkey
                         }
                         .padding(.horizontal, 10)
                     VStack {
