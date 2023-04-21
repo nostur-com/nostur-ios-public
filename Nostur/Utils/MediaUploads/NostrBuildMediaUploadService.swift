@@ -34,11 +34,11 @@ func getNostrBuildService() -> MediaUploadService {
               let responseString = String(data: data, encoding: .utf8),
               responseString.contains("https://")
         else {
-            let httpResponse = response as? HTTPURLResponse
+//            let httpResponse = response as? HTTPURLResponse
 //            print(httpResponse?.statusCode)
 //            print(httpResponse?.allHeaderFields)
-            let responseText = String(data: data, encoding: .utf8)
-            print(responseText?.description)
+//            let responseText = String(data: data, encoding: .utf8)
+//            print(responseText?.description)
             throw ImageUploadError.uploadFailure
         }
         

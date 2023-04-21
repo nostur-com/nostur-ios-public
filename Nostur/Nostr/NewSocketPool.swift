@@ -286,7 +286,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
         DispatchQueue.main.async {
             sendNotification(.socketNotification, "Disconnected: \(self.url)")
         }
-        print("🔌 DISCONNECTED \(self.url): with code: \(closeCode.rawValue) \(reason != nil ? String(data: reason!, encoding: .utf8) : "" )")
+        print("🔌 DISCONNECTED \(self.url): with code: \(closeCode.rawValue) \(String(describing: reason != nil ? String(data: reason!, encoding: .utf8) : "") )")
         
     }
     

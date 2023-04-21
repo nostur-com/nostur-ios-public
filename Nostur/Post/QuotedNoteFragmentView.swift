@@ -71,7 +71,7 @@ struct QuotedNoteFragmentView: View {
 //                RowContentRenderer(vPost: vPost)
 //                DetailContentRenderer(event: vPost.event)
                 NoteTextRenderView(vPost: vPost)
-                if let firstImage = vPost.imageUrls.first {
+                if vPost.imageUrls.first != nil {
                     Color.clear.frame(height: 0)
                        .modifier(SizeModifier())
                        .onPreferenceChange(SizePreferenceKey.self) { size in

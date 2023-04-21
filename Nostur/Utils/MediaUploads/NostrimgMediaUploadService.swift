@@ -35,10 +35,10 @@ func getNostrimgService() -> MediaUploadService {
               let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
               let link = json["data"] as? [String: Any],
               let url = link["link"] as? String else {
-            let httpResponse = response as? HTTPURLResponse
+//            let httpResponse = response as? HTTPURLResponse
 //            print(httpResponse?.statusCode)
 //            print(httpResponse?.allHeaderFields)
-            let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
+//            let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
 //            print(json?.description)
             throw ImageUploadError.uploadFailure
         }

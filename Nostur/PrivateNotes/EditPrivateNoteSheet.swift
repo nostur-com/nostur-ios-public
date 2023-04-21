@@ -73,15 +73,12 @@ struct EditPrivateNoteSheet: View {
 //                    ,
                     buttons: [
                         .destructive(Text("Delete"), action: {
-                            do {
-                                ns.objectWillChange.send()
-                                privateNote.post?.objectWillChange.send()
-                                privateNote.contact?.objectWillChange.send()
-                                dismiss()
-                                viewContext.delete(privateNote)
-                                DataProvider.shared().save()
-                            }
-                            catch { print("problem deleting private note \(error)") }
+                            ns.objectWillChange.send()
+                            privateNote.post?.objectWillChange.send()
+                            privateNote.contact?.objectWillChange.send()
+                            dismiss()
+                            viewContext.delete(privateNote)
+                            DataProvider.shared().save()
                         }),
                         .cancel(Text("Cancel"))
                     ])

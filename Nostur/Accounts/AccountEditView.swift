@@ -352,7 +352,7 @@ struct AccountView_Previews: PreviewProvider {
     static var previews: some View {
         
         let fab = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
-        let other = "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
+//        let other = "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
         
         let account = PreviewFetcher.fetchAccount(fab, context: EventsProvider.preview.container.viewContext)
             NavigationStack {
@@ -420,10 +420,10 @@ func uploadPFPImage(image: UIImage) -> AnyPublisher<String, Error> {
                   let link = json["data"] as? [String: Any],
                   let url = link["link"] as? String else {
                 let httpResponse = response as? HTTPURLResponse
-                print(httpResponse?.statusCode)
-                print(httpResponse?.allHeaderFields)
+//                print(httpResponse?.statusCode)
+//                print(httpResponse?.allHeaderFields)
                 let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
-                print(json?.description)
+//                print(json?.description)
                 throw ImageUploadError.uploadFailure
             }
             return url
@@ -519,10 +519,10 @@ func uploadBannerImage(image: UIImage) -> AnyPublisher<String, Error> {
                   let link = json["data"] as? [String: Any],
                   let url = link["link"] as? String else {
                 let httpResponse = response as? HTTPURLResponse
-                print(httpResponse?.statusCode)
-                print(httpResponse?.allHeaderFields)
+//                print(httpResponse?.statusCode)
+//                print(httpResponse?.allHeaderFields)
                 let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
-                print(json?.description)
+//                print(json?.description)
                 throw ImageUploadError.uploadFailure
             }
             return url
