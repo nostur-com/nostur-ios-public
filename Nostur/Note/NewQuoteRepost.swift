@@ -92,7 +92,7 @@ struct NewQuoteRepost: View {
                                         vm.lastHit = mentionName
                                         vm.term = ""
                                         
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { // after 0.02 sec to get the new .endOfDocument
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { // after 0.3 sec to get the new .endOfDocument
                                             //                                    self.vm.mentioning = false
                                             let newPosition = vm.textView!.endOfDocument
                                             vm.textView!.selectedTextRange = vm.textView!.textRange(from: newPosition, to: newPosition)
