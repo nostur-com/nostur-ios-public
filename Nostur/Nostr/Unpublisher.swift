@@ -115,9 +115,11 @@ class Unpublisher: ObservableObject {
                 print(error)
                 return
             }
+            Importer.shared.existingIds.insert(savedEvent.id)
             sp.sendMessage(ClientMessage(message: savedEvent.toNEvent().wrappedEventJson()))
         }
         else {
+            Importer.shared.existingIds.insert(nEvent.id)
             sp.sendMessage(ClientMessage(message: nEvent.wrappedEventJson()))
         }
     }
