@@ -13,8 +13,6 @@ struct LightningButton: View {
     var tally:Int64 // SATS (1000 SATS ~= 20 cent)
     var event:Event?
     @State var isLoading = false
-    @State var paymentInfo:PaymentInfo? = nil
-    @State var payAmountSelectorShown = false
     var body: some View {
         if isLoading {
             ProgressView()
@@ -22,7 +20,7 @@ struct LightningButton: View {
         }
         else {
             Group {
-                Image(systemName: "bolt")
+                Image("BoltIcon")
                 if (er.bitcoinPrice != 0.0) {
                     let fiatPrice = String(format: "$%.02f",(Double(tally) / 100000000 * Double(er.bitcoinPrice)))
                     
@@ -41,14 +39,12 @@ struct LightningButton: View {
                 isLoading = true
                 buttonTapped()
             }
-            .sheet(isPresented: $payAmountSelectorShown) {
-                PaymentAmountSelector(paymentInfo:paymentInfo!)
-            }
         }
     }
 }
 
-class PaymentInfo {
+class PaymentInfo: Identifiable {
+    var id = UUID()
     var min:UInt64 = 0
     var max:UInt64 = 5000000
     var callback = ""
@@ -89,8 +85,8 @@ extension LightningButton {
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
                                 event!.contact!.zapperPubkey = response.nostrPubkey!
                             }
-                            paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, event:event!, contact: event!.contact)
-                            payAmountSelectorShown = true
+                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, event:event!, contact: event!.contact)
+                            sendNotification(.showZapSheet, paymentInfo)
                             isLoading = false
                         }
                     }
@@ -117,8 +113,8 @@ extension LightningButton {
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
                                 event!.contact!.zapperPubkey = response.nostrPubkey!
                             }
-                            paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, event:event!, contact: event!.contact)
-                            payAmountSelectorShown = true
+                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, event:event!, contact: event!.contact)
+                            sendNotification(.showZapSheet, paymentInfo)
                             isLoading = false
                         }
                     }

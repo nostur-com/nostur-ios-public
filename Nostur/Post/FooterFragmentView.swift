@@ -8,6 +8,9 @@
 import SwiftUI
 
 struct FooterFragmentView: View {
+    
+    static let grey = Color.init(red: 113/255, green: 118/255, blue: 123/255)
+    
     @EnvironmentObject var ns:NosturState
     let up:Unpublisher = .shared
     
@@ -28,7 +31,7 @@ struct FooterFragmentView: View {
         VStack(alignment: .leading, spacing: 5) {
             HStack {
                 HStack {
-                    Image(systemName: "message")
+                    Image("ReplyIcon")
                     Text(event.repliesCount.description).opacity(event.repliesCount == 0 ? 0 : 1)
 //                    RollingOnUpdateNumber(event.repliesCount).opacity(event.repliesCount == 0 ? 0 : 1)
                 }
@@ -40,7 +43,8 @@ struct FooterFragmentView: View {
                 // REPOST
                 if (vPost.reposted || reposted) {
                     HStack {
-                        Image(systemName: "arrow.2.squarepath")
+                        Image("RepostedIcon")
+                            .foregroundColor(.green)
                         Text(event.mentionsCount.description).opacity(event.mentionsCount == 0 ? 0 : 1)
 //                        RollingOnUpdateNumber(event.mentionsCount).opacity(event.mentionsCount == 0 ? 0 : 1)
                     }
@@ -49,7 +53,7 @@ struct FooterFragmentView: View {
                 }
                 else {
                     HStack {
-                        Image(systemName: "arrow.2.squarepath")
+                        Image("RepostedIcon")
                         Text(event.mentionsCount.description).opacity(event.mentionsCount == 0 ? 0 : 1)
 //                        RollingOnUpdateNumber(event.mentionsCount).opacity(event.mentionsCount == 0 ? 0 : 1)
                     }
@@ -64,7 +68,8 @@ struct FooterFragmentView: View {
                 // LIKE
                 if (vPost.liked || liked) {
                     HStack {
-                        Image(systemName: "heart.fill")
+                        Image("LikeIconActive")
+                            .foregroundColor(.red)
                         Text(event.likesCount.description).opacity(event.likesCount == 0 ? 0 : 1)
 //                        RollingOnUpdateNumber(event.likesCount).opacity(event.likesCount == 0 ? 0 : 1)
                     }
@@ -81,7 +86,7 @@ struct FooterFragmentView: View {
                 }
                 else {
                     HStack {
-                        Image(systemName: "heart")
+                        Image("LikeIcon")
                         Text(event.likesCount.description).opacity(event.likesCount == 0 ? 0 : 1)
 //                        RollingOnUpdateNumber(event.likesCount).opacity(event.likesCount == 0 ? 0 : 1)
                     }
@@ -110,7 +115,7 @@ struct FooterFragmentView: View {
 
                 // BOOKMARK
                 if (ns.isBookmarked(event)) {
-                    Image(systemName: "bookmark.fill")
+                    Image("BookmarkIconActive")
                         .foregroundColor(.orange)
                         .contentShape(Rectangle())
                         .padding(.vertical, 5)
@@ -120,7 +125,7 @@ struct FooterFragmentView: View {
                         }
                 }
                 else {
-                    Image(systemName: "bookmark")
+                    Image("BookmarkIcon")
                         .padding(.vertical, 5)
                         .padding(.leading, 10)
                         .contentShape(Rectangle())
@@ -137,7 +142,7 @@ struct FooterFragmentView: View {
                     .padding(.bottom, 5)
             }
         }
-        .foregroundColor(Color.init(red: 113/255, green: 118/255, blue: 123/255))
+        .foregroundColor(Self.grey)
             .font(.system(size: 14))
             
             
@@ -147,10 +152,10 @@ struct FooterFragmentView: View {
 
 struct FooterFragmentView_Previews: PreviewProvider {
     static var previews: some View {
-        
         let event7 = PreviewFetcher.fetchVPost("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
         if (event7 != nil) {
             FooterFragmentView(vPost: event7!)
+                .padding(.horizontal, 20)
                 .withPreviewEnvironment()
         }
     }

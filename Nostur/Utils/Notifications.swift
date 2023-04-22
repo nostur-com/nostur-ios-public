@@ -203,4 +203,8 @@ extension Notification.Name {
     static var anyStatus: Notification.Name {
         return Notification.Name("anyStatus")
     }
+    
+    static var showZapSheet: Notification.Name {
+        return Notification.Name("showZapSheet")
+    }
 }

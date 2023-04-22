@@ -42,6 +42,9 @@ private struct WithSheets: ViewModifier {
     @State var quoteOrRepostEvent:Event? = nil
     @State var quotePostEvent:Event? = nil
     
+    // Zap sheet
+    @State var paymentInfo:PaymentInfo? = nil
+    
     func body(content: Content) -> some View {
         content
             .onReceive(receiveNotification(.fullScreenView)) { notification in
@@ -157,12 +160,19 @@ private struct WithSheets: ViewModifier {
                     .presentationDragIndicator(.visible)
             }
         
-        
             .sheet(item: $quotePostEvent) { quotePostEvent in
                 NavigationStack {
                     NewQuoteRepost(quotingEvent: quotePostEvent)
                         .environmentObject(ns)
                 }
+            }
+        
+            .onReceive(receiveNotification(.showZapSheet)) { notification in
+                let paymentInfo = notification.object as! PaymentInfo
+                self.paymentInfo = paymentInfo
+            }
+            .sheet(item: $paymentInfo) { paymentInfo in
+                PaymentAmountSelector(paymentInfo:paymentInfo)
             }
     }
     
