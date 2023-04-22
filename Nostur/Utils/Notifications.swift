@@ -207,4 +207,8 @@ extension Notification.Name {
     static var showZapSheet: Notification.Name {
         return Notification.Name("showZapSheet")
     }
+    
+    static var startPlayingVideo: Notification.Name {
+        return Notification.Name("startPlayingVideo")
+    }
 }
