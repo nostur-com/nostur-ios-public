@@ -27,7 +27,7 @@ struct NosturTabsView: View {
                         print("🟣🟣🟣🟣🟣 NEW WIDTH \(size.width) -- Scale: \(UIScreen.main.scale) ")
                     }
                 AppTopBar()
-                    .padding(5)
+//                    .padding(5)
                 TabView(selection: $selectedTab) {
                     MainView()
                         .tabItem { Image(systemName: "house") }

@@ -7,73 +7,39 @@
 import SwiftUI
 
 struct AppTopBar: View {
-    
     @EnvironmentObject var ns:NosturState
-//     
     @EnvironmentObject var sm:SideBarModel
-     
-//    @Binding var showSidebar:Bool
-//    @State var appTopBarIsHidden = false
     
     var body: some View {
         ZStack {
-//            if (!appTopBarIsHidden) {
-                Group {
-                    HStack {
-                        if (ns.account != nil && !sm.showSidebar) {
-                            Button {
-                                sm.showSidebar.toggle()
-                            } label: {
-                                PFP(pubkey: ns.account!.publicKey, pictureUrl: ns.account?.picture, size:30)
-                            }
-                            .accessibilityLabel("Account menu")
-                            .offset(x: 15)
-
-    //                            .offset(y: -5)
-//                                .onTapGesture { sm.showSidebar.toggle() }
-                        }
-                        Spacer()
+            HStack {
+                if (ns.account != nil && !sm.showSidebar) {
+                    Button {
+                        sm.showSidebar.toggle()
+                    } label: {
+                        PFP(pubkey: ns.account!.publicKey, pictureUrl: ns.account?.picture, size:30)
                     }
-                    HStack {
-                        Spacer()
-                        Image("NosturLogo")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height:30)
-                            .clipShape(Circle())
-    //                        .offset(y: -5)
-                        Spacer()
-                    }
+                    .accessibilityLabel("Account menu")
+                    .offset(x: 15)
                 }
-                .padding(.top, 3)
-//            }
-            
+                Spacer()
+            }
+            HStack {
+                Spacer()
+                Image("NosturLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height:30)
+                    .clipShape(Circle())
+                Spacer()
+            }
         }
-//        // TODO: FIXEN: NAV IS NIET MET OBSERVED
-//        .onChange(of: nav.selectedTab) { tab in
-//            if (tab == "Timeline") && (nav.timelinePath.isEmpty) {
-//                withAnimation(Animation.easeInOut(duration: 0.1)) {
-//                    appTopBarIsHidden = false
-//                }
-//            }
-//            else {
-//                withAnimation(Animation.easeInOut(duration: 0.1)) {
-//                    appTopBarIsHidden = true
-//                }
-//            }
-//        }
-//        .onChange(of: nav.timelinePath) { newValue in
-//            withAnimation(Animation.easeInOut(duration: 0.1)) {
-//                appTopBarIsHidden = !newValue.isEmpty
-//            }
-//        }
     }
 }
 
 struct AppTopBar_Previews: PreviewProvider {
-//    @State static var showSidebar = false
     static var previews: some View {
-        VStack {
+        VStack(spacing:0) {
             AppTopBar()
                 .withPreviewEnvironment()
             Spacer()

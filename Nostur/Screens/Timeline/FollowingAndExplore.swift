@@ -19,7 +19,7 @@ struct FollowingAndExplore: View { //, Equatable {
     
     var body: some View {
         let _ = Self._printChanges()
-            VStack {
+            VStack(spacing:0) {
                 HStack {
                     TabButton(
                         action: { selectedSubTab = "Following" },
@@ -55,7 +55,6 @@ struct FollowingAndExplore: View { //, Equatable {
 
 
                 }
-                Spacer()
             }
 //            .withNavigationDestinations()
             .navigationTitle(selectedSubTab)

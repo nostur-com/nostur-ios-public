@@ -24,16 +24,14 @@ struct BookmarksAndPrivateNotes: View {
                         selectedSubTab = "Private Notes"
                     }, title: "Private Notes", selected: selectedSubTab == "Private Notes")
                 }
-                ZStack {
-                    BookmarksContainer()
-                        .frame(maxWidth: 600)
-                        .opacity(selectedSubTab == "Bookmarks" ? 1 : 0)
-
-                    PrivateNotesContainer()
-                        .frame(maxWidth: 600)
-                        .opacity(selectedSubTab == "Private Notes" ? 1 : 0)
+                switch selectedSubTab {
+                    case "Bookmarks":
+                        BookmarksContainer()
+                    case "Private Notes":
+                        PrivateNotesContainer()
+                    default:
+                        Text("🥪")
                 }
-                Spacer()
             }
             .padding(.top, 5)
             .withNavigationDestinations()

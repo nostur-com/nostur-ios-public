@@ -109,7 +109,7 @@ struct ProfileView: View {
                 LazyVStack(alignment:.leading, spacing:0, pinnedViews: [.sectionHeaders]) {
                     Section {
                         VStack {
-                            ZStack() {
+                            ZStack {
                                 if let banner = contact.banner {
                                     if (banner.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
                                         LazyImage(url: URL(string: banner)) { state in
