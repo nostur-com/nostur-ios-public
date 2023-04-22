@@ -27,7 +27,24 @@ class Importer {
         }
     }
     
+    var existingIds:Set<String> = []
+    
     static let shared = Importer()
+    
+    init() {
+        self.preloadExistingIdsCache()
+        print("\(existingIds.count) existing ids in cache")
+    }
+    
+    func preloadExistingIdsCache() {
+        let fr = Event.fetchRequest()
+        fr.fetchLimit = 3000
+        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        fr.propertiesToFetch = ["id"]
+        if let results = try? DataProvider.shared().viewContext.fetch(fr) {
+            self.existingIds = Set(results.map { $0.id })
+        }
+    }
     
     public func importEvents() async {
         let parsedBucket = MessageParser.shared.parsedBucket
@@ -65,7 +82,7 @@ class Importer {
         //        context.performAndWait {
         await EventsProvider.shared.container.performBackgroundTask { context in
             
-            var alreadyInLRUskipped = 0
+            var alreadyInIdCacheSkipped = 0
             var alreadyInDBskipped = 0
             var saved = 0
             
@@ -81,8 +98,8 @@ class Importer {
                         NosturState.shared.lastProfileReceivedAt = Date.now
                     }
                     
-                    guard SavedEventsCache.shared.retrieveObject(at: event.id) == nil else {
-                        alreadyInLRUskipped = alreadyInLRUskipped + 1
+                    guard !self.existingIds.contains(event.id) else {
+                        alreadyInIdCacheSkipped = alreadyInIdCacheSkipped + 1
                         continue
                     }
                     
@@ -195,12 +212,12 @@ class Importer {
                         //                        }
                     }
                     
-                    SavedEventsCache.shared.setObject(for: event.id, value: event.createdAt)
+                    self.existingIds.insert(event.id)
                 }
                 if (context.hasChanges) {
                     try context.save() // TODO: is this the slowdown??
                     if (saved > 0) {
-                        print("💾 Processed: \(forImports.count), saved: \(saved), skipped (cache): \(alreadyInLRUskipped), skipped (db): \(alreadyInDBskipped)")
+                        print("💾 Processed: \(forImports.count), saved: \(saved), skipped (new cache): \(alreadyInIdCacheSkipped), skipped (db): \(alreadyInDBskipped)")
                     }
                 }
                 self.isImporting = false

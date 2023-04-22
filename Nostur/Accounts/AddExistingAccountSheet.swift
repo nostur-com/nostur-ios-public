@@ -79,7 +79,7 @@ struct AddExistingAccountSheet: View {
     }
     
     func addExistingAccount(privkey:String) {
-        SavedEventsCache.shared.clear() // Because else we dont fetch new info... if we just fetched it before, maybe during onboarding
+        Importer.shared.existingIds.removeAll() // Because else we dont fetch new info... if we just fetched it before, maybe during onboarding
         let account = Account(context: viewContext)
         account.id = UUID()
         account.createdAt = Date()
@@ -128,7 +128,7 @@ struct AddExistingAccountSheet: View {
     }
     
     func addExistingReadOnlyAccount(pubkey:String) {
-        SavedEventsCache.shared.clear() // Because else we dont fetch new info... if we just fetched it before, maybe during onboarding
+        Importer.shared.existingIds.removeAll() // Because else we dont fetch new info... if we just fetched it before, maybe during onboarding
         let ot = OnboardingTracker.shared
         ot.startOnboarding(pubkey: pubkey)
         let account = Account(context: viewContext)
