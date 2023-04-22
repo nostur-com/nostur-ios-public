@@ -37,7 +37,6 @@
 		1F21442E29A797B80090E78E /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F21442D29A797B80090E78E /* SettingsStore.swift */; };
 		1F21DDBE29F0174700C564EF /* NewSocketPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F21DDBD29F0174700C564EF /* NewSocketPool.swift */; };
 		1F21DDC129F01B3000C564EF /* CombineWebSocket in Frameworks */ = {isa = PBXBuildFile; productRef = 1F21DDC029F01B3000C564EF /* CombineWebSocket */; };
-		1F21DDC329F0DC4300C564EF /* Prefetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F21DDC229F0DC4300C564EF /* Prefetcher.swift */; };
 		1F2A493029D9A04B008614D5 /* RestoreContactsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2A492F29D9A04A008614D5 /* RestoreContactsSheet.swift */; };
 		1F2DE030298E5C5C00891D2E /* BlockListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2DE02F298E5C5C00891D2E /* BlockListView.swift */; };
 		1F30FAA929705EBD008439C8 /* NosturCloud.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1F30FAA729705EBD008439C8 /* NosturCloud.xcdatamodeld */; };
@@ -84,12 +83,6 @@
 		1F65121B29C75AC9009FD4AE /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F65121A29C75AC9009FD4AE /* ProfileView.swift */; };
 		1F69854F29F2B63E006F813F /* Bolt11.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F69854E29F2B63E006F813F /* Bolt11.swift */; };
 		1F69855429F2B80E006F813F /* BigInt in Frameworks */ = {isa = PBXBuildFile; productRef = 1F69855329F2B80E006F813F /* BigInt */; };
-		1F69855C29F3C00F006F813F /* Example-CellRegistrationExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F69855629F3C00F006F813F /* Example-CellRegistrationExtension.swift */; };
-		1F69855D29F3C00F006F813F /* Example-ContentViewWithSwiftUICell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F69855729F3C00F006F813F /* Example-ContentViewWithSwiftUICell.swift */; };
-		1F69855E29F3C00F006F813F /* CollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F69855829F3C00F006F813F /* CollectionView.swift */; };
-		1F69855F29F3C00F006F813F /* Example-ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F69855929F3C00F006F813F /* Example-ContentView.swift */; };
-		1F69856029F3C00F006F813F /* CollectionViewWithDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F69855A29F3C00F006F813F /* CollectionViewWithDataSource.swift */; };
-		1F69856129F3C00F006F813F /* CollectionViewDelegateProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F69855B29F3C00F006F813F /* CollectionViewDelegateProxy.swift */; };
 		1F69856329F40409006F813F /* Data+agoString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F69856229F40408006F813F /* Data+agoString.swift */; };
 		1F6B445029D5D1F700AD3191 /* PostOrThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6B444F29D5D1F700AD3191 /* PostOrThread.swift */; };
 		1F6E448429CC51600037D947 /* VideoPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6E448329CC515F0037D947 /* VideoPlayerView.swift */; };
@@ -319,7 +312,6 @@
 		1F21442B29A797930090E78E /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		1F21442D29A797B80090E78E /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
 		1F21DDBD29F0174700C564EF /* NewSocketPool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewSocketPool.swift; sourceTree = "<group>"; };
-		1F21DDC229F0DC4300C564EF /* Prefetcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prefetcher.swift; sourceTree = "<group>"; };
 		1F2A492F29D9A04A008614D5 /* RestoreContactsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestoreContactsSheet.swift; sourceTree = "<group>"; };
 		1F2DE02F298E5C5C00891D2E /* BlockListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockListView.swift; sourceTree = "<group>"; };
 		1F30FAA829705EBD008439C8 /* NosturCloud.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = NosturCloud.xcdatamodel; sourceTree = "<group>"; };
@@ -364,12 +356,6 @@
 		1F65002B29A759FB00B79AEF /* ProfileRowMissing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileRowMissing.swift; sourceTree = "<group>"; };
 		1F65121A29C75AC9009FD4AE /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		1F69854E29F2B63E006F813F /* Bolt11.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bolt11.swift; sourceTree = "<group>"; };
-		1F69855629F3C00F006F813F /* Example-CellRegistrationExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Example-CellRegistrationExtension.swift"; sourceTree = "<group>"; };
-		1F69855729F3C00F006F813F /* Example-ContentViewWithSwiftUICell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Example-ContentViewWithSwiftUICell.swift"; sourceTree = "<group>"; };
-		1F69855829F3C00F006F813F /* CollectionView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CollectionView.swift; sourceTree = "<group>"; };
-		1F69855929F3C00F006F813F /* Example-ContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Example-ContentView.swift"; sourceTree = "<group>"; };
-		1F69855A29F3C00F006F813F /* CollectionViewWithDataSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CollectionViewWithDataSource.swift; sourceTree = "<group>"; };
-		1F69855B29F3C00F006F813F /* CollectionViewDelegateProxy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CollectionViewDelegateProxy.swift; sourceTree = "<group>"; };
 		1F69856229F40408006F813F /* Data+agoString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Data+agoString.swift"; sourceTree = "<group>"; };
 		1F6B444F29D5D1F700AD3191 /* PostOrThread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostOrThread.swift; sourceTree = "<group>"; };
 		1F6E448329CC515F0037D947 /* VideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerView.swift; sourceTree = "<group>"; };
@@ -758,19 +744,6 @@
 			path = Timeline;
 			sourceTree = "<group>";
 		};
-		1F69855529F3C00F006F813F /* BetterCollectionView */ = {
-			isa = PBXGroup;
-			children = (
-				1F69855629F3C00F006F813F /* Example-CellRegistrationExtension.swift */,
-				1F69855729F3C00F006F813F /* Example-ContentViewWithSwiftUICell.swift */,
-				1F69855829F3C00F006F813F /* CollectionView.swift */,
-				1F69855929F3C00F006F813F /* Example-ContentView.swift */,
-				1F69855A29F3C00F006F813F /* CollectionViewWithDataSource.swift */,
-				1F69855B29F3C00F006F813F /* CollectionViewDelegateProxy.swift */,
-			);
-			path = BetterCollectionView;
-			sourceTree = "<group>";
-		};
 		1F71037B296BD98D006245CC /* Nostr */ = {
 			isa = PBXGroup;
 			children = (
@@ -963,7 +936,6 @@
 		1FB448BC2965F3D000038671 /* Nostur */ = {
 			isa = PBXGroup;
 			children = (
-				1F69855529F3C00F006F813F /* BetterCollectionView */,
 				1F4773A3296CA7040049454B /* Accounts */,
 				1F740D9D29AF36AB00EFCCA7 /* Badges */,
 				1F25B395297A508200A8A5A7 /* CoreData */,
@@ -988,7 +960,6 @@
 				1FB448C62965F3D200038671 /* Assets.xcassets */,
 				1FB448C82965F3D200038671 /* Nostur.entitlements */,
 				1FB448C92965F3D200038671 /* Preview Content */,
-				1F21DDC229F0DC4300C564EF /* Prefetcher.swift */,
 			);
 			path = Nostur;
 			sourceTree = "<group>";
@@ -1276,10 +1247,8 @@
 				1F8349AA29DE81390032E52B /* RagiSmoothListEmptySection.swift in Sources */,
 				1F83499D29DE81390032E52B /* CollectionViewHolder.swift in Sources */,
 				1F8349A429DE81390032E52B /* RagiSmoothList.swift in Sources */,
-				1F69856029F3C00F006F813F /* CollectionViewWithDataSource.swift in Sources */,
 				1F517BEB29CDB29E00F7A97F /* GIFView.swift in Sources */,
 				1F3309632989598600D4D8CF /* NosturRootMenuView.swift in Sources */,
-				1F69855F29F3C00F006F813F /* Example-ContentView.swift in Sources */,
 				1FB130BF29C1A314004AC98D /* QuotedNoteFragmentView.swift in Sources */,
 				1F4820F229A9F808000EDFDA /* NotificationsZaps.swift in Sources */,
 				1F1B55B329BD07CC006E1930 /* NotificationsManager.swift in Sources */,
@@ -1291,7 +1260,6 @@
 				1F45C7F529EFB13F00F58772 /* NostrBuildMediaUploadService.swift in Sources */,
 				1F0088EB29D735080016F111 /* ContentRenderer.swift in Sources */,
 				1FC78F6F29CAD3510009C1C7 /* DMConversationView.swift in Sources */,
-				1F69855C29F3C00F006F813F /* Example-CellRegistrationExtension.swift in Sources */,
 				1FCEA0B529993B2400A309DC /* Swift-Big-Number-Core.swift in Sources */,
 				1F8B135C297B36DB002EB8CF /* Data+Bytes.swift in Sources */,
 				1FC78F7629CB4A920009C1C7 /* ChatInputField.swift in Sources */,
@@ -1344,7 +1312,6 @@
 				1F533E2F29D2F3B100748438 /* VideoPlayer.swift in Sources */,
 				1FB448C52965F3D000038671 /* NosturTabsView.swift in Sources */,
 				1F3E134F29C87BF400D076EA /* GifImageView.swift in Sources */,
-				1F69856129F3C00F006F813F /* CollectionViewDelegateProxy.swift in Sources */,
 				1F756531296AE4260078474E /* RelaysView.swift in Sources */,
 				1FBE8224299A745600FB41CE /* PaymentAmountSelector.swift in Sources */,
 				1F8349A829DE81390032E52B /* RagiSmoothListButtonCell.swift in Sources */,
@@ -1413,11 +1380,9 @@
 				1F30FAA929705EBD008439C8 /* NosturCloud.xcdatamodeld in Sources */,
 				1F71037D296BD9DE006245CC /* Nostr.swift in Sources */,
 				1FF283D229DB491F0063B799 /* PostPreview.swift in Sources */,
-				1F21DDC329F0DC4300C564EF /* Prefetcher.swift in Sources */,
 				1F8B135A297B36DB002EB8CF /* String+Conversion.swift in Sources */,
 				1F30FAB329707719008439C8 /* Account+CoreDataProperties.swift in Sources */,
 				1F8B135B297B36DB002EB8CF /* Convert.swift in Sources */,
-				1F69855E29F3C00F006F813F /* CollectionView.swift in Sources */,
 				1FDBA1A129D96B5200BB866B /* FollowingGuardian.swift in Sources */,
 				1F75257E2996A1AA00477AF2 /* Unpublisher.swift in Sources */,
 				1F21442E29A797B80090E78E /* SettingsStore.swift in Sources */,
@@ -1473,7 +1438,6 @@
 				1FC4555F29CB673200DE3239 /* NewDMToSelector.swift in Sources */,
 				1F8349A229DE81390032E52B /* RagiSmoothListConfiguration.swift in Sources */,
 				1F21DDBE29F0174700C564EF /* NewSocketPool.swift in Sources */,
-				1F69855D29F3C00F006F813F /* Example-ContentViewWithSwiftUICell.swift in Sources */,
 				1F57C54729927A0000DFE063 /* AppTopBar.swift in Sources */,
 				1FC82F3629AE327700B81CE5 /* SmartRelayManager.swift in Sources */,
 				1FF21E7E29ACC02E00203623 /* FollowingAndExplore.swift in Sources */,
