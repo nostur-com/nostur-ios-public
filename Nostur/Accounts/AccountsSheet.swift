@@ -12,7 +12,6 @@ struct AccountsSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
-    @EnvironmentObject var sm:SideBarModel
     @State var newAccountSheetShown = false
     @State var addExistingAccountSheetShown = false
     
@@ -36,7 +35,7 @@ struct AccountsSheet: View {
                             .contentShape(Rectangle())
                             .onTapGesture {
                                 ns.setAccount(account: account)
-                                sm.showSidebar = false
+                                sendNotification(.hideSideBar)
                                 dismiss()
                             }
                             .swipeActions(edge: .trailing) {
@@ -85,7 +84,7 @@ struct AccountsSheet: View {
                             ns.logout(account)
                             
                             if (ns.accounts.count <= 1) {
-                                sm.showSidebar = false
+                                sendNotification(.hideSideBar)
                             }
                             
                         }),
@@ -100,7 +99,7 @@ struct AccountsSheet: View {
                             ns.logout(account)
                             
                             if (ns.accounts.count <= 1) {
-                                sm.showSidebar = false
+                                sendNotification(.hideSideBar)
                             }
                             
                         }),

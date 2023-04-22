@@ -106,10 +106,14 @@ struct SideBar: View {
             .listStyle(.plain)
             Spacer()
         }
+        .onReceive(receiveNotification(.hideSideBar), perform: { _ in
+            sm.showSidebar = false
+        })
         .sheet(isPresented: $accountsSheetIsShown) {
             NavigationStack {
                 AccountsSheet()
                     .presentationDetents([.fraction(0.45), .medium, .large])
+                    .environmentObject(ns)
             }
         }
         .actionSheet(item: $logoutAccount) { account in
