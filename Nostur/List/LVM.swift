@@ -118,9 +118,10 @@ class LVM: NSObject, ObservableObject {
             partialResult.union(Set([vPost.objectID] + vPost.parentPosts.map { $0.objectID }))
         }
         let currentVPostLeafs = self.lvmState.vPostLeafs // viewContext. First (0) is newest
+        let followingKeys = NosturState.shared.followingPublicKeys
         
         context.perform { [unowned self] in
-            let transformer = VPostTransformer(context) // Tranform in bg
+            let transformer = VPostTransformer(context, followingKeys: followingKeys) // Tranform in bg
 //            let lastCreatedAt = currentVPostLeafs.last?.created_at ?? 0
             var newVPostLeafs:[VPost] = []
             var transformedObjectIds = Set<NSManagedObjectID>()

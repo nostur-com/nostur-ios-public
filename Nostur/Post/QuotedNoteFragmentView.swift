@@ -80,7 +80,7 @@ struct QuotedNoteFragmentView: View {
                        }
                 }
                 if let firstImage = vPost.imageUrls.first, viewSize.width > 0 {
-                    SingleMediaViewer(url: firstImage, pubkey: vPost.event.pubkey, imageWidth: viewSize.width)
+                    SingleMediaViewer(url: firstImage, pubkey: vPost.event.pubkey, imageWidth: viewSize.width, isFollowing: vPost.following)
                 }
             }
         }

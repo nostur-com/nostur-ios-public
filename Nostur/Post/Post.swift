@@ -20,6 +20,7 @@ struct VPost: Identifiable, Equatable, Hashable {
     }
     
     let pubkey:String
+    let following:Bool
     let id:String
     let objectID:NSManagedObjectID
     let event:Event
@@ -70,9 +71,11 @@ class VPostTransformer {
     static let regex = try! NSRegularExpression(pattern: pattern)
     
     let context:NSManagedObjectContext
+    var followingKeys:Set<String>?
     
-    init(_ context:NSManagedObjectContext? = nil) {
+    init(_ context:NSManagedObjectContext? = nil, followingKeys:Set<String>? = nil) {
         self.context = context ?? DataProvider.shared().viewContext
+        self.followingKeys = followingKeys ?? NosturState.shared.followingPublicKeys
     }
     
     func toVPost(_ mainEvent:Event, skipParents:Bool? = false, plainText:Bool = false, forceBg:Bool = false) -> VPost? {
@@ -110,6 +113,7 @@ class VPostTransformer {
             
             return VPost(
                 pubkey: mainEvent.pubkey,
+                following:isFollowedByCurrentAccount(mainEvent),
                 id: mainEvent.id,
                 objectID: mainEvent.objectID,
                 event: mainEvent, // Should always be main context event
@@ -181,6 +185,7 @@ class VPostTransformer {
             
             return VPost(
                 pubkey: privateEvent.pubkey,
+                following:isFollowedByCurrentAccount(privateEvent),
                 id: privateEvent.id,
                 objectID: privateEvent.objectID,
                 event: actualMainEvent!, // Should always be main context event
@@ -226,6 +231,10 @@ class VPostTransformer {
             let count = (try? ctx.count(for: fr)) ?? 0
             return count > 0
         }
+    }
+    
+    func isFollowedByCurrentAccount(_ event:Event) -> Bool {
+        return followingKeys?.contains(event.pubkey) ?? false
     }
     
     func repostedByCurrentAccount(_ event:Event) -> Bool {

@@ -115,7 +115,7 @@ struct ContentRenderer: View { // VIEW things
                         .frame(height: 250)
                         .background(Color("LightGray"))
                     case .image(let url):
-                        SingleMediaViewer(url: url, pubkey: vPost.event.pubkey, imageWidth: availableWidth)
+                        SingleMediaViewer(url: url, pubkey: vPost.event.pubkey, imageWidth: availableWidth, isFollowing: vPost.following)
                             .padding(.vertical, 5)
                     case .linkPreview(let url):
                         // TODO: do no link preview if restrictAutoDownload...
@@ -264,8 +264,9 @@ struct QuoteById: View {
                 Color.clear
                     .frame(height: 150)
                     .task {
+                        let followingKeys = NosturState.shared.followingPublicKeys
                         EventsProvider.shared.container.performBackgroundTask { context in
-                            let transformer = VPostTransformer(context) // Tranform in bg
+                            let transformer = VPostTransformer(context, followingKeys: followingKeys) // Tranform in bg
                             if let vPost = transformer.toVPost(event, forceBg: true) {
                                 DispatchQueue.main.async {
                                     self.vPost = vPost

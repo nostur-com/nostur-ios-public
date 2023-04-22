@@ -16,6 +16,7 @@ struct SingleMediaViewer: View {
     let pubkey:String
     var height:CGFloat?
     let imageWidth:CGFloat
+    let isFollowing:Bool
     @State var fullScreenItem:FullScreenItem?
     @State var imagesShown = false
     
@@ -87,7 +88,7 @@ struct SingleMediaViewer: View {
             }
         }
         .onAppear {
-            imagesShown = !SettingsStore.shared.restrictAutoDownload || ns.isFollowing(pubkey)
+            imagesShown = !SettingsStore.shared.restrictAutoDownload || isFollowing
         }
     }
     
@@ -99,7 +100,7 @@ struct SingleMediaViewer_Previews: PreviewProvider {
         
         let urlsFromContent = getImgUrlsFromContent(content1)
         
-        SingleMediaViewer(url:urlsFromContent[0],  pubkey: "dunno", imageWidth: UIScreen.main.bounds.width)
+        SingleMediaViewer(url:urlsFromContent[0],  pubkey: "dunno", imageWidth: UIScreen.main.bounds.width, isFollowing: true)
     }
 }
 
