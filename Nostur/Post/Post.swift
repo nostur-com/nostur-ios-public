@@ -35,7 +35,7 @@ struct VPost: Identifiable, Equatable, Hashable {
     let note1:String
     var plainText:String
     var renderedText:AttributedString
-    var replyingToUsernamesMarkDown:String? // See ReplyingToFragment
+    var replyingToUsernamesMarkDown:AttributedString? // See ReplyingToFragment
     var imageUrls:[URL] // See ImageViewer
     var displayName:String
     
@@ -110,6 +110,7 @@ class VPostTransformer {
                     }
             }
 
+            let replyingToMD = textRenderer.replyingToUsernamesMarkDownString(mainEvent)
             
             return VPost(
                 pubkey: mainEvent.pubkey,
@@ -128,7 +129,7 @@ class VPostTransformer {
                 note1: mainEvent.noteId,
                 plainText: plainText ? textRenderer.copyPasteText(mainEvent, text: mainEvent.noteText) : "",
                 renderedText: textRenderer.renderedText(mainEvent, text: mainEvent.noteText),
-                replyingToUsernamesMarkDown: textRenderer.replyingToUsernamesMarkDownString(mainEvent),
+                replyingToUsernamesMarkDown: replyingToMD != nil ? try! AttributedString(markdown: replyingToMD!) : nil,
                 imageUrls: mainEvent.content != nil ? getImgUrlsFromContent(mainEvent.content!) : [],
                 displayName: mainEvent.contact?.authorName ?? String((mainEvent.npub.prefix(11))),
                 renderedElements: renderedForRow,
@@ -182,6 +183,7 @@ class VPostTransformer {
 //                actualMainEvent = try? DataProvider.shared().viewContext.existingObject(with: privateEvent.objectID) as? Event
             }
             
+            let replyingToMD = textRenderer.replyingToUsernamesMarkDownString(privateEvent)
             
             return VPost(
                 pubkey: privateEvent.pubkey,
@@ -200,7 +202,7 @@ class VPostTransformer {
                 note1: privateEvent.noteId,
                 plainText: plainText ? textRenderer.copyPasteText(privateEvent, text: privateEvent.noteText) : "",
                 renderedText: textRenderer.renderedText(privateEvent, text: privateEvent.noteText),
-                replyingToUsernamesMarkDown: textRenderer.replyingToUsernamesMarkDownString(privateEvent),
+                replyingToUsernamesMarkDown: replyingToMD != nil ? try! AttributedString(markdown: replyingToMD!) : nil,
                 imageUrls: privateEvent.content != nil ? getImgUrlsFromContent(privateEvent.content!) : [],
                 displayName: privateEvent.contact?.authorName ?? String((privateEvent.npub.prefix(11))),
                 renderedElements: renderedForRow,

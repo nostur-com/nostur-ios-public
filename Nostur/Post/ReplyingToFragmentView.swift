@@ -15,7 +15,7 @@ struct ReplyingToFragmentView: View {
     
     let vPost:VPost
     @ObservedObject var event:Event
-    @State var rendered:String?
+    @State var rendered:AttributedString?
     @State var subscriptions = Set<AnyCancellable>()
     
     init(vPost: VPost) {
@@ -27,7 +27,7 @@ struct ReplyingToFragmentView: View {
     var body: some View {
         Group {
             if let rendered = rendered {
-                Text(try! AttributedString(markdown: rendered))
+                Text(rendered)
                         .fontWeight(.light)
                         .foregroundColor(.secondary)
                         .accentColor(Color("AccentColor"))
@@ -46,7 +46,8 @@ struct ReplyingToFragmentView: View {
             event.objectWillChange
                 .sink {
                     let textRenderer = TextRenderer(viewContext, event:event)
-                    rendered = textRenderer.replyingToUsernamesMarkDownString(event)
+                    let replyingToMD = textRenderer.replyingToUsernamesMarkDownString(event)
+                    rendered = replyingToMD != nil ? try! AttributedString(markdown: replyingToMD!) : nil
                 }
                 .store(in: &subscriptions)
         }
