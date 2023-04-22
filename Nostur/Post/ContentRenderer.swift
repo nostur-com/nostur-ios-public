@@ -80,39 +80,63 @@ struct ContentRenderer: View { // VIEW things
                         LazyImage(url: url) { state in
                             if let container = state.imageContainer {
                                 if let type = container.type, type.isVideo, let asset = container.userInfo[.videoAssetKey] as? AVAsset {
-                                    VPV(asset: asset, isPlaying: $isPlaying)
-                                        .onTapGesture {
-                                            isPlaying.toggle()
-                                        }
-                                        .frame(height: 250)
-                                        .background(Color("LightGray"))
-                                        .onAppear {
-                                            configureAudioSession()
-                                        }
-                                        .onDisappear {
-                                            isPlaying = false
-                                        }
-                                        .background(Color.black)
-                                        .overlay(
-                                            Button(action: {
-                                                if isPlaying {
+                                    
+                                    if let videoSize = getVideoDimensions(asset: asset) {
+                                        let scaledWidth = availableWidth / videoSize.width
+                                        let scaledHeight = videoSize.height * scaledWidth
+                                        
+                                        VPV(asset: asset, isPlaying: $isPlaying)
+                                            .onTapGesture {
+                                                isPlaying.toggle()
+                                            }
+                                            .frame(height: scaledHeight)
+                                            .background(Color("LightGray"))
+                                            .onAppear {
+                                                configureAudioSession()
+                                            }
+                                            .onDisappear {
+                                                isPlaying = false
+                                            }
+                                            .background(Color.black)
+                                            .overlay(
+                                                Button(action: {
+                                                    if isPlaying {
+                                                        isPlaying = false
+                                                    } else {
+                                                        sendNotification(.startPlayingVideo, url.absoluteString)
+                                                        isPlaying = true
+                                                    }
+                                                }) {
+                                                    Image(systemName: isPlaying ? "pause.circle" : "play.circle")
+                                                        .resizable()
+                                                        .scaledToFit()
+                                                        .padding(80)
+                                                }.opacity(isPlaying ? 0 : 1)
+                                            )
+                                            .onReceive(receiveNotification(.startPlayingVideo)) { notification in
+                                                let otherUrl = notification.object as! String
+                                                if url.absoluteString != otherUrl {
                                                     isPlaying = false
-                                                } else {
-                                                    isPlaying = true
                                                 }
-                                            }) {
-                                                Image(systemName: isPlaying ? "pause.circle" : "play.circle")
-                                                    .resizable()
-                                                    .scaledToFit()
-                                                    .padding(80)
-                                            }.opacity(isPlaying ? 0 : 1)
-                                        )
+                                            }
+                                    }
+                                    else {
+                                        Label("Failed to load video", systemImage: "exclamationmark.triangle.fill")
+                                            .centered()
+                                    }
+                                }
+                                else {
+                                    Label("Failed to load video", systemImage: "exclamationmark.triangle.fill")
+                                        .centered()
                                 }
                             }
-                            
+                            else {
+                                Label("Failed to load video", systemImage: "exclamationmark.triangle.fill")
+                                    .centered()
+                            }
                         }
                         .pipeline(ImageProcessing.shared.video)
-                        .frame(height: 250)
+                        .frame(minHeight: 250)
                         .background(Color("LightGray"))
                     case .image(let url):
                         SingleMediaViewer(url: url, pubkey: vPost.event.pubkey, imageWidth: availableWidth, isFollowing: vPost.following)
@@ -328,3 +352,25 @@ struct Kind1ById: View {
         }
     }
 }
+
+func getVideoDimensions(asset: AVAsset) -> CGSize? {
+    // Get the video track
+    guard let videoTrack = asset.tracks(withMediaType: .video).first else {
+        return nil
+    }
+
+    // Get the natural size of the video track
+    let naturalSize = videoTrack.naturalSize
+
+    // Get the preferred transform to handle any video orientation
+    let preferredTransform = videoTrack.preferredTransform
+
+    // Calculate the corrected video dimensions considering the orientation
+    let correctedSize = CGSize(
+        width: abs(CGFloat(preferredTransform.a) * naturalSize.width + CGFloat(preferredTransform.c) * naturalSize.height),
+        height: abs(CGFloat(preferredTransform.b) * naturalSize.width + CGFloat(preferredTransform.d) * naturalSize.height)
+    )
+
+    return correctedSize
+}
+
