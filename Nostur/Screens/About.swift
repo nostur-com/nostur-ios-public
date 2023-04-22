@@ -18,9 +18,7 @@ struct About: View {
         
         LicensedItem(title: "SwiftyJSON", author: "Ruoyu Fu", url: "https://github.com/SwiftyJSON/SwiftyJSON"),
         
-        LicensedItem(title: "secp256k1", author: "GigaBitcoin LLC", url: "https://github.com/GigaBitcoin/secp256k1.swift"),
-        
-        LicensedItem(title: "SwiftCompactor", author: "OpenAlloc LLC", url: "https://github.com/openalloc/SwiftCompactor")
+        LicensedItem(title: "secp256k1", author: "GigaBitcoin LLC", url: "https://github.com/GigaBitcoin/secp256k1.swift")
     ]
     
     var body: some View {

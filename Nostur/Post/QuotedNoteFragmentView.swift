@@ -13,7 +13,6 @@
 //
 
 import SwiftUI
-import Compactor
 
 struct QuotedNoteFragmentView: View {
     let sp:SocketPool = .shared
@@ -21,13 +20,6 @@ struct QuotedNoteFragmentView: View {
     @State var viewSize:CGSize = .zero
      
     let vPost:VPost
-    
-    var ago: String {
-        get {
-            let f = TimeCompactor(ifZero: nil, style: .short, roundSmallToWhole: true)
-            return f.string(from: Double(Date.now.timeIntervalSince(Date(timeIntervalSince1970: Double(vPost.event.created_at)))) as NSNumber)!
-        }
-    }
     
     var body: some View {
         VStack(alignment:.leading) {

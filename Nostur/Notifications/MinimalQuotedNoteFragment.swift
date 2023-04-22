@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import Compactor
 
 struct MinimalQuotedNoteFragment: View {
     var sp:SocketPool = .shared

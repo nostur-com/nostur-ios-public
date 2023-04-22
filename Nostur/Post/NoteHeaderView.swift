@@ -5,7 +5,6 @@
 //  Created by Fabian Lachman on 15/03/2023.
 //
 import SwiftUI
-import Compactor
 
 struct NoteHeaderView: View {
      

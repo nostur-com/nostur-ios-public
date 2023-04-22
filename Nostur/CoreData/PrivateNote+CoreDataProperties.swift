@@ -8,7 +8,6 @@
 
 import Foundation
 import CoreData
-import Compactor
 
 extension PrivateNote {
 
@@ -42,10 +41,7 @@ extension PrivateNote : Identifiable {
         set { content = newValue }
     }
         
-    var ago: String {
-        let f = TimeCompactor(ifZero: nil, style: .short, roundSmallToWhole: true)
-        return f.string(from: Double(Date.now.timeIntervalSince(createdAt_)) as NSNumber)!
-    }
+    var ago: String { createdAt_.agoString }
     
     static func fetchByAccount(_ account:Account, andPost post:Event, context:NSManagedObjectContext) -> PrivateNote? {
         let fr = PrivateNote.fetchRequest()

@@ -8,7 +8,6 @@
 import Foundation
 import CoreData
 import Combine
-import Compactor
 
 let LVM_MAX_VISIBLE = 75 // Will only be ignored if last appeared is older
 
@@ -416,8 +415,7 @@ class LVM: NSObject, ObservableObject {
                 
                     
                     // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
-                    let f = TimeCompactor(ifZero: nil, style: .short, roundSmallToWhole: true)
-                    let ago =  f.string(from: Double(Date.now.timeIntervalSince(Date(timeIntervalSince1970: Double(since)))) as NSNumber)!
+                    let ago =  Date(timeIntervalSince1970: Double(since)).agoString
                     
                     DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(8)) {
                         fetchEvents(pubkeysString: self.pubkeysPrefixString, amount: 5000, since: since, subscriptionId: "\(self.id)-CATCHUP-\(ago)")

@@ -84,6 +84,13 @@
 		1F65121B29C75AC9009FD4AE /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F65121A29C75AC9009FD4AE /* ProfileView.swift */; };
 		1F69854F29F2B63E006F813F /* Bolt11.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F69854E29F2B63E006F813F /* Bolt11.swift */; };
 		1F69855429F2B80E006F813F /* BigInt in Frameworks */ = {isa = PBXBuildFile; productRef = 1F69855329F2B80E006F813F /* BigInt */; };
+		1F69855C29F3C00F006F813F /* Example-CellRegistrationExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F69855629F3C00F006F813F /* Example-CellRegistrationExtension.swift */; };
+		1F69855D29F3C00F006F813F /* Example-ContentViewWithSwiftUICell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F69855729F3C00F006F813F /* Example-ContentViewWithSwiftUICell.swift */; };
+		1F69855E29F3C00F006F813F /* CollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F69855829F3C00F006F813F /* CollectionView.swift */; };
+		1F69855F29F3C00F006F813F /* Example-ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F69855929F3C00F006F813F /* Example-ContentView.swift */; };
+		1F69856029F3C00F006F813F /* CollectionViewWithDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F69855A29F3C00F006F813F /* CollectionViewWithDataSource.swift */; };
+		1F69856129F3C00F006F813F /* CollectionViewDelegateProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F69855B29F3C00F006F813F /* CollectionViewDelegateProxy.swift */; };
+		1F69856329F40409006F813F /* Data+agoString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F69856229F40408006F813F /* Data+agoString.swift */; };
 		1F6B445029D5D1F700AD3191 /* PostOrThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6B444F29D5D1F700AD3191 /* PostOrThread.swift */; };
 		1F6E448429CC51600037D947 /* VideoPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6E448329CC515F0037D947 /* VideoPlayerView.swift */; };
 		1F6E448629CC5CAE0037D947 /* Account+Notifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6E448529CC5CAE0037D947 /* Account+Notifications.swift */; };
@@ -256,7 +263,6 @@
 		1FE4011D29952EC800A388A2 /* NIP05.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4011C29952EC800A388A2 /* NIP05.swift */; };
 		1FE5068E29B391CF006A16D8 /* FastAccountSwitcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE5068D29B391CF006A16D8 /* FastAccountSwitcher.swift */; };
 		1FEA5FE229D60D2800A90F7E /* DeleteAccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FEA5FE129D60D2800A90F7E /* DeleteAccountSheet.swift */; };
-		1FEA785529799697007CC8E7 /* Compactor in Frameworks */ = {isa = PBXBuildFile; productRef = 1FEA785429799697007CC8E7 /* Compactor */; };
 		1FEA785829799FE6007CC8E7 /* ProfilePicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */; };
 		1FEA8D4B29E967B5004A83D3 /* InlineThings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FEA8D4A29E967B5004A83D3 /* InlineThings.swift */; };
 		1FEC01C0296C4A400078CC9B /* SwiftyJSON in Frameworks */ = {isa = PBXBuildFile; productRef = 1FEC01BF296C4A400078CC9B /* SwiftyJSON */; };
@@ -358,6 +364,13 @@
 		1F65002B29A759FB00B79AEF /* ProfileRowMissing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileRowMissing.swift; sourceTree = "<group>"; };
 		1F65121A29C75AC9009FD4AE /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		1F69854E29F2B63E006F813F /* Bolt11.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bolt11.swift; sourceTree = "<group>"; };
+		1F69855629F3C00F006F813F /* Example-CellRegistrationExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Example-CellRegistrationExtension.swift"; sourceTree = "<group>"; };
+		1F69855729F3C00F006F813F /* Example-ContentViewWithSwiftUICell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Example-ContentViewWithSwiftUICell.swift"; sourceTree = "<group>"; };
+		1F69855829F3C00F006F813F /* CollectionView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CollectionView.swift; sourceTree = "<group>"; };
+		1F69855929F3C00F006F813F /* Example-ContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Example-ContentView.swift"; sourceTree = "<group>"; };
+		1F69855A29F3C00F006F813F /* CollectionViewWithDataSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CollectionViewWithDataSource.swift; sourceTree = "<group>"; };
+		1F69855B29F3C00F006F813F /* CollectionViewDelegateProxy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CollectionViewDelegateProxy.swift; sourceTree = "<group>"; };
+		1F69856229F40408006F813F /* Data+agoString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Data+agoString.swift"; sourceTree = "<group>"; };
 		1F6B444F29D5D1F700AD3191 /* PostOrThread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostOrThread.swift; sourceTree = "<group>"; };
 		1F6E448329CC515F0037D947 /* VideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerView.swift; sourceTree = "<group>"; };
 		1F6E448529CC5CAE0037D947 /* Account+Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Account+Notifications.swift"; sourceTree = "<group>"; };
@@ -553,7 +566,6 @@
 				1F3E135429C89B9F00D076EA /* NukeVideo in Frameworks */,
 				1F75257629962AA300477AF2 /* Nuke in Frameworks */,
 				1FC4D40B2997E58E004E88CD /* KeychainAccess in Frameworks */,
-				1FEA785529799697007CC8E7 /* Compactor in Frameworks */,
 				1F006B0A29D0A9BE0048C6DD /* Algorithms in Frameworks */,
 				1F21DDC129F01B3000C564EF /* CombineWebSocket in Frameworks */,
 				1F75257A29962AA300477AF2 /* NukeUI in Frameworks */,
@@ -701,6 +713,7 @@
 				1F33098B298AEE5D00D4D8CF /* View+withNavigationDestinations.swift */,
 				1F00337029BEF141007CE040 /* View+withSheets.swift */,
 				1FD8AD7229D831CD00693302 /* Color+random.swift */,
+				1F69856229F40408006F813F /* Data+agoString.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -743,6 +756,19 @@
 				1F5BA91329A8C27200002652 /* NewNoteButton.swift */,
 			);
 			path = Timeline;
+			sourceTree = "<group>";
+		};
+		1F69855529F3C00F006F813F /* BetterCollectionView */ = {
+			isa = PBXGroup;
+			children = (
+				1F69855629F3C00F006F813F /* Example-CellRegistrationExtension.swift */,
+				1F69855729F3C00F006F813F /* Example-ContentViewWithSwiftUICell.swift */,
+				1F69855829F3C00F006F813F /* CollectionView.swift */,
+				1F69855929F3C00F006F813F /* Example-ContentView.swift */,
+				1F69855A29F3C00F006F813F /* CollectionViewWithDataSource.swift */,
+				1F69855B29F3C00F006F813F /* CollectionViewDelegateProxy.swift */,
+			);
+			path = BetterCollectionView;
 			sourceTree = "<group>";
 		};
 		1F71037B296BD98D006245CC /* Nostr */ = {
@@ -937,6 +963,7 @@
 		1FB448BC2965F3D000038671 /* Nostur */ = {
 			isa = PBXGroup;
 			children = (
+				1F69855529F3C00F006F813F /* BetterCollectionView */,
 				1F4773A3296CA7040049454B /* Accounts */,
 				1F740D9D29AF36AB00EFCCA7 /* Badges */,
 				1F25B395297A508200A8A5A7 /* CoreData */,
@@ -1132,7 +1159,6 @@
 			packageProductDependencies = (
 				1FEC01BF296C4A400078CC9B /* SwiftyJSON */,
 				1F055A52296EE2A2009EF792 /* secp256k1 */,
-				1FEA785429799697007CC8E7 /* Compactor */,
 				1F75257529962AA300477AF2 /* Nuke */,
 				1F75257729962AA300477AF2 /* NukeExtensions */,
 				1F75257929962AA300477AF2 /* NukeUI */,
@@ -1175,7 +1201,6 @@
 			packageReferences = (
 				1FEC01BE296C4A400078CC9B /* XCRemoteSwiftPackageReference "SwiftyJSON" */,
 				1F055A51296EE2A2009EF792 /* XCRemoteSwiftPackageReference "secp256k1" */,
-				1FEA785329799697007CC8E7 /* XCRemoteSwiftPackageReference "SwiftCompactor" */,
 				1F75257429962AA300477AF2 /* XCRemoteSwiftPackageReference "Nuke" */,
 				1FC4D4092997E58E004E88CD /* XCRemoteSwiftPackageReference "KeychainAccess" */,
 				1F517BEC29CDB2FD00F7A97F /* XCRemoteSwiftPackageReference "FLAnimatedImage" */,
@@ -1251,8 +1276,10 @@
 				1F8349AA29DE81390032E52B /* RagiSmoothListEmptySection.swift in Sources */,
 				1F83499D29DE81390032E52B /* CollectionViewHolder.swift in Sources */,
 				1F8349A429DE81390032E52B /* RagiSmoothList.swift in Sources */,
+				1F69856029F3C00F006F813F /* CollectionViewWithDataSource.swift in Sources */,
 				1F517BEB29CDB29E00F7A97F /* GIFView.swift in Sources */,
 				1F3309632989598600D4D8CF /* NosturRootMenuView.swift in Sources */,
+				1F69855F29F3C00F006F813F /* Example-ContentView.swift in Sources */,
 				1FB130BF29C1A314004AC98D /* QuotedNoteFragmentView.swift in Sources */,
 				1F4820F229A9F808000EDFDA /* NotificationsZaps.swift in Sources */,
 				1F1B55B329BD07CC006E1930 /* NotificationsManager.swift in Sources */,
@@ -1264,6 +1291,7 @@
 				1F45C7F529EFB13F00F58772 /* NostrBuildMediaUploadService.swift in Sources */,
 				1F0088EB29D735080016F111 /* ContentRenderer.swift in Sources */,
 				1FC78F6F29CAD3510009C1C7 /* DMConversationView.swift in Sources */,
+				1F69855C29F3C00F006F813F /* Example-CellRegistrationExtension.swift in Sources */,
 				1FCEA0B529993B2400A309DC /* Swift-Big-Number-Core.swift in Sources */,
 				1F8B135C297B36DB002EB8CF /* Data+Bytes.swift in Sources */,
 				1FC78F7629CB4A920009C1C7 /* ChatInputField.swift in Sources */,
@@ -1308,6 +1336,7 @@
 				1F37571629672AD0007D210A /* DummyData.swift in Sources */,
 				1F7521172986736400C43DF0 /* Messages.swift in Sources */,
 				1F14BA762985984100EACCD5 /* ProfileRelaysView.swift in Sources */,
+				1F69856329F40409006F813F /* Data+agoString.swift in Sources */,
 				1F75211529865F2D00C43DF0 /* SocketPool.swift in Sources */,
 				1FC268C729A2CC4F00A2B577 /* NoteReactions.swift in Sources */,
 				1FCA273E299A6A1A00298881 /* LightningButton.swift in Sources */,
@@ -1315,6 +1344,7 @@
 				1F533E2F29D2F3B100748438 /* VideoPlayer.swift in Sources */,
 				1FB448C52965F3D000038671 /* NosturTabsView.swift in Sources */,
 				1F3E134F29C87BF400D076EA /* GifImageView.swift in Sources */,
+				1F69856129F3C00F006F813F /* CollectionViewDelegateProxy.swift in Sources */,
 				1F756531296AE4260078474E /* RelaysView.swift in Sources */,
 				1FBE8224299A745600FB41CE /* PaymentAmountSelector.swift in Sources */,
 				1F8349A829DE81390032E52B /* RagiSmoothListButtonCell.swift in Sources */,
@@ -1387,6 +1417,7 @@
 				1F8B135A297B36DB002EB8CF /* String+Conversion.swift in Sources */,
 				1F30FAB329707719008439C8 /* Account+CoreDataProperties.swift in Sources */,
 				1F8B135B297B36DB002EB8CF /* Convert.swift in Sources */,
+				1F69855E29F3C00F006F813F /* CollectionView.swift in Sources */,
 				1FDBA1A129D96B5200BB866B /* FollowingGuardian.swift in Sources */,
 				1F75257E2996A1AA00477AF2 /* Unpublisher.swift in Sources */,
 				1F21442E29A797B80090E78E /* SettingsStore.swift in Sources */,
@@ -1442,6 +1473,7 @@
 				1FC4555F29CB673200DE3239 /* NewDMToSelector.swift in Sources */,
 				1F8349A229DE81390032E52B /* RagiSmoothListConfiguration.swift in Sources */,
 				1F21DDBE29F0174700C564EF /* NewSocketPool.swift in Sources */,
+				1F69855D29F3C00F006F813F /* Example-ContentViewWithSwiftUICell.swift in Sources */,
 				1F57C54729927A0000DFE063 /* AppTopBar.swift in Sources */,
 				1FC82F3629AE327700B81CE5 /* SmartRelayManager.swift in Sources */,
 				1FF21E7E29ACC02E00203623 /* FollowingAndExplore.swift in Sources */,
@@ -1761,14 +1793,6 @@
 				kind = branch;
 			};
 		};
-		1FEA785329799697007CC8E7 /* XCRemoteSwiftPackageReference "SwiftCompactor" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/openalloc/SwiftCompactor";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.0;
-			};
-		};
 		1FEC01BE296C4A400078CC9B /* XCRemoteSwiftPackageReference "SwiftyJSON" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/SwiftyJSON/SwiftyJSON";
@@ -1834,11 +1858,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1FC4D4092997E58E004E88CD /* XCRemoteSwiftPackageReference "KeychainAccess" */;
 			productName = KeychainAccess;
-		};
-		1FEA785429799697007CC8E7 /* Compactor */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1FEA785329799697007CC8E7 /* XCRemoteSwiftPackageReference "SwiftCompactor" */;
-			productName = Compactor;
 		};
 		1FEC01BF296C4A400078CC9B /* SwiftyJSON */ = {
 			isa = XCSwiftPackageProductDependency;

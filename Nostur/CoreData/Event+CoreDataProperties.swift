@@ -8,7 +8,6 @@
 
 import Foundation
 import CoreData
-import Compactor
 
 extension Event {
 
@@ -213,12 +212,7 @@ extension Event {
         }
     }
     
-    var ago: String {
-        get {
-            let f = TimeCompactor(ifZero: nil, style: .short, roundSmallToWhole: true)
-            return f.string(from: Double(Date.now.timeIntervalSince(date)) as NSNumber)!
-        }
-    }
+    var ago: String { date.agoString }
     
     var authorKey: String {
         String(pubkey.prefix(5))
