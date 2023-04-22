@@ -16,35 +16,31 @@ class LVMCounter: ObservableObject {
 }
 
 struct ListUnreadCounter: View {
-//    let vm:LVM
     @ObservedObject var vmCounter:LVMCounter
     
     var body: some View {
-        VStack {
+        if (vmCounter.count > 0) {
+            // TODO: Add mini profile icons
             HStack {
-                Spacer()
-                if (vmCounter.count > 0) {
-                    // TODO: Add mini profile icons
-                    HStack {
-                        Text("\(vmCounter.count)")
-                        Image(systemName: "arrow.up")
-                    }
-                    .frame(minWidth: 30)
-                    .padding(10)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
-                    .background(Color("AccentColor"))
-                    .opacity(0.95)
-                    .cornerRadius(20)
-                    .shadow(radius: 90)
-                    .padding(.trailing, 10)
-                    .padding(.top, 5)
-                    .onTapGesture {
-                        sendNotification(.shouldScrollToRecent)
-                    }
-                }
+                Text("\(vmCounter.count)")
+                Image(systemName: "arrow.up")
             }
-            Spacer()
+            .frame(minWidth: 30)
+            .padding(10)
+            .fontWeight(.bold)
+            .foregroundColor(.white)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .foregroundColor(Color("AccentColor"))
+                    .opacity(0.85)
+                    .shadow(color: Color.gray.opacity(0.5), radius: 5)
+            )
+            .onTapGesture {
+                sendNotification(.shouldScrollToRecent)
+            }
+        }
+        else {
+            EmptyView()
         }
     }
 }

@@ -28,49 +28,40 @@ struct ListView: View {
     
     var body: some View {
         let _ = Self._printChanges()
-        VStack {
+        VStack(spacing: 0) {
             if vmState.vPostLeafs.count > 0 {
 //                Text("\(vmState.state.rawValue) | vPosts: \(vmState.vPostLeafs.count) | threadValue: \(vmState.vPostLeafs.reduce(0, { $0 + $1.threadPostsCount } ) )")
-                
-                ZStack {
-                    SmoothList(needsRefresh: $needsRefresh,
-                               needsFullReload: $needsFullReload,
-                               needsScrollToTop: $needsScrollToTop,
-                               needsScrollToIndex: $needsScrollToIndex,
-                               data: $vmState.vPostLeafs,
-                               autoScroll: $settings.autoScroll,
-                               fullWidthImages: $settings.fullWidthImages,
-                               dim: dim,
-                               onRowAppeared: { (_, _, vPost) in
-                        guard vmState.state != .AWAITING_FIRST_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-                        guard vmState.state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-                        guard vmState.state != .SWITCHING_ACCOUNT else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-                        //                        print("\(vPost.id) index: \(vmState.vPostLeafs.firstIndex(of: vPost) ?? -1)")
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-                            vm.lastAppearedSubject.send(vPost.event)
-                        }
-                    },
-                               onFinishedScrolling: { isAtTop in
-                        guard isAtTop != vmState.isAtTop else { return }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-                            self.vmState.isAtTop = isAtTop
-                            
-                        }
-                    })
-                    .onChange(of: vmState.vPostLeafs) { _ in
-                        needsRefresh = true
+                SmoothList(needsRefresh: $needsRefresh,
+                           needsFullReload: $needsFullReload,
+                           needsScrollToTop: $needsScrollToTop,
+                           needsScrollToIndex: $needsScrollToIndex,
+                           data: $vmState.vPostLeafs,
+                           autoScroll: $settings.autoScroll,
+                           fullWidthImages: $settings.fullWidthImages,
+                           dim: dim,
+                           onRowAppeared: { (_, _, vPost) in
+                    guard vmState.state != .AWAITING_FIRST_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+                    guard vmState.state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+                    guard vmState.state != .SWITCHING_ACCOUNT else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+                    //                        print("\(vPost.id) index: \(vmState.vPostLeafs.firstIndex(of: vPost) ?? -1)")
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+                        vm.lastAppearedSubject.send(vPost.event)
                     }
-                    .onAppear {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                            self.needsScrollToIndex = getRestoreScrollIndex()
-                            self.needsRefresh = true
-                        }
+                },
+                           onFinishedScrolling: { isAtTop in
+                    guard isAtTop != vmState.isAtTop else { return }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+                        self.vmState.isAtTop = isAtTop
+                        
                     }
-//                    .background(Color.indigo)
-                    VStack {
-                        Spacer()
-                        ProcessingStatus()
-                            .opacity(0.85)
+                })
+                .onChange(of: vmState.vPostLeafs) { _ in
+                    needsRefresh = true
+                }
+                .onAppear {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        self.needsScrollToIndex = getRestoreScrollIndex()
+                        self.needsRefresh = true
                     }
                 }
                 .onReceive(receiveNotification(.shouldScrollToRecent)) { _ in

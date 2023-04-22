@@ -9,36 +9,20 @@ import SwiftUI
 
 struct NewNoteButton: View {
     @EnvironmentObject var ns:NosturState
-     
     @Binding var showingNewNote:Bool
     
     var body: some View {
-        VStack {
-            Spacer()
-            HStack {
-                Spacer()
-                Button {
-                    guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
-                    showingNewNote = true
-                } label: {
-                    ZStack {
-                        Circle() // Transparent plug.circle looks weird - so make white here
-                            .foregroundColor(Color(.white))
-                            .frame(width: 45, height: 45)
-                            .padding([.top, .leading, .bottom], 10)
-                            .padding([.trailing], 25)
-                        Image(systemName: "plus.circle.fill")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 45, height: 45)
-                            .padding([.top, .leading, .bottom], 10)
-                            .padding([.trailing], 25)
-                    }
-                }
-                .accessibilityLabel("New post")
-            }
-            //                .offset(x:-30,y:-55)
+        Button {
+            guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
+            showingNewNote = true
+        } label: {
+            Image(systemName: "plus.circle.fill")
+                .resizable()
+                .scaledToFit()
+                .background(Circle().foregroundColor(Color.white))
+                .frame(width: 45, height: 45)
         }
+        .accessibilityLabel("New post")
     }
 }
 
