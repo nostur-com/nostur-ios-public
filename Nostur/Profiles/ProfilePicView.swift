@@ -25,7 +25,9 @@ struct PFP: View {
                 Circle().foregroundColor(color).frame(width: size, height: size)
             }
             else if (!settings.animatedPFPenabled) {
-                LazyImage(request: ImageRequest(url: URL(string:pictureUrl!),
+//                let options = ImageRequest.ThumbnailOptions(size: CGSize(width: size, height: size), unit: .points, contentMode: .aspectFill)
+//                LazyImage(request: ImageRequest(url: URL(string:pictureUrl!), userInfo: [.thumbnailKey: options])) { state in
+                    LazyImage(request: ImageRequest(url: URL(string:pictureUrl!),
                                                 processors: [.resize(size: CGSize(width: size, height: size), unit: .points, contentMode: .aspectFill, crop: true, upscale: true)],
                             userInfo: [.scaleKey: UIScreen.main.scale])) { state in
                     if let image = state.image {
@@ -34,6 +36,7 @@ struct PFP: View {
 //                            .scaledToFill()
 //                            .aspectRatio(contentMode: .fill)
                             .frame(width: size, height: size)
+                            .background(color)
                             .cornerRadius(.greatestFiniteMagnitude)
 //                            .compositingGroup()
                     }
