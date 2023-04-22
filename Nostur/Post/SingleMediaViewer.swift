@@ -27,14 +27,20 @@ struct SingleMediaViewer: View {
                     LazyImage(url: url) { state in
                         if let container = state.imageContainer {
                             if container.type == .gif, let gifData = container.data {
-                                GeometryReader { geo in
-                                    AnimatedGifView(gifData: gifData, width: geo.size.width, height: geo.size.height, contentMode: .scaleAspectFit)
-                                    //                                    .scaledToFill()
-                                    //                                    .clipped()
-                                        .frame(width: geo.size.width, height: geo.size.height)
+                                
+                                if let gifSize = getGifDimensions(data: gifData) {
+                                    let scaledWidth = imageWidth / gifSize.width
+                                    let scaledHeight = gifSize.height * scaledWidth
+                                 
+                                    AnimatedGifView(gifData: gifData, width: imageWidth, height: scaledHeight, contentMode: .scaleAspectFit)
+                                        .frame(width: imageWidth, height: scaledHeight)
                                         .onTapGesture {
                                             sendNotification(.fullScreenView, FullScreenItem(url: url))
                                         }
+                                    
+                                } else {
+                                    Label("Failed to load gif", systemImage: "exclamationmark.triangle.fill")
+                                        .centered()
                                 }
                             }
                             else if let image = state.image {
@@ -68,8 +74,15 @@ struct SingleMediaViewer: View {
                                     sendNotification(.fullScreenView, FullScreenItem(url: url))
                                 }
                         }
+                        else if state.error != nil {
+                            Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
+                                .centered()
+                            .frame(height: 250)
+                            .background(Color("LightGray"))
+                        }
                         else {
                             CenteredProgressView()
+                                .frame(height: 250)
                                 .background(Color("LightGray"))
                         }
                     }
@@ -123,4 +136,21 @@ struct Gif_Previews: PreviewProvider {
         .background(Color("ListBackground"))
         .withPreviewEnvironment()
     }
+}
+
+
+func getGifDimensions(data: Data) -> CGSize? {
+    // Create a CGImageSource with the Data
+    guard let imageSource = CGImageSourceCreateWithData(data as CFData, nil) else {
+        return nil
+    }
+
+    // Get the properties of the first image in the animated GIF
+    guard let properties = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil) as? [CFString: Any],
+          let width = properties[kCGImagePropertyPixelWidth] as? Int,
+          let height = properties[kCGImagePropertyPixelHeight] as? Int else {
+        return nil
+    }
+
+    return CGSize(width: width, height: height)
 }
