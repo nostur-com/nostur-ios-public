@@ -110,7 +110,8 @@ struct ContentRenderer: View { // VIEW things
                                                     Image(systemName: isPlaying ? "pause.circle" : "play.circle")
                                                         .resizable()
                                                         .scaledToFit()
-                                                        .padding(80)
+                                                        .frame(width: 75, height: 75)
+//                                                        .padding(80)
                                                 }.opacity(isPlaying ? 0 : 1)
                                             )
                                             .onReceive(receiveNotification(.startPlayingVideo)) { notification in
@@ -125,10 +126,14 @@ struct ContentRenderer: View { // VIEW things
                                             .centered()
                                     }
                                 }
-                                else {
-                                    Label("Failed to load video", systemImage: "exclamationmark.triangle.fill")
+                                else if state.isLoading {
+                                    ProgressView()
                                         .centered()
                                 }
+                            }
+                            else if state.isLoading {
+                                ProgressView()
+                                    .centered()
                             }
                             else {
                                 Label("Failed to load video", systemImage: "exclamationmark.triangle.fill")
