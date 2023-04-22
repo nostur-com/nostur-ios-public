@@ -62,10 +62,21 @@ struct PostOrThread_Previews: PreviewProvider {
         let vPosts = onlyRootEvents.compactMap { $0.toVPost() }
         
         ScrollView {
-            LazyVStack(spacing: 0) {
+            VStack(spacing: 0) {
 //                ForEach(vPosts) { vPost in
                 ForEach(Array(vPosts.dropFirst(12))) { vPost in
                     PostOrThread(vPost: vPost)
+                        .overlay {
+                            GeometryReader { geo in
+                                HStack {
+                                    Spacer()
+                                    Text("H: \(vPost.event.username): \(Int(geo.size.height))")
+                                        .padding(10)
+                                        .foregroundColor(.white)
+                                        .background(.red)
+                                }
+                            }
+                        }
                         .boxShadow()
                 }
             }

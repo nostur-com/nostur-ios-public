@@ -184,11 +184,14 @@ struct SmoothList: UIViewControllerRepresentable {
                     }
                 }
             }
-            print("prefetching for \(imageRequests.count)")
-            prefetcher.startPrefetching(with: imageRequests)
+            if imageRequests.count > 0 {
+                print("prefetching for \(imageRequests.count)")
+                prefetcher.startPrefetching(with: imageRequests)
+            }
         }
 
         func collectionView(_ collectionView: UICollectionView, cancelPrefetchingForItemsAt indexPaths: [IndexPath]) {
+            let imageWidth = parent.dim.availableNoteRowImageWidth()
             var imageRequests:[ImageRequest] = []
             for indexPath in indexPaths {
                 guard let item = parent.data[safe: indexPath.row] else { continue }
@@ -198,12 +201,14 @@ struct SmoothList: UIViewControllerRepresentable {
                 for imageUrl in imageUrls {
                     imageRequests.append(ImageRequest(url: imageUrl,
                         // TODO: Should get imagewith from SmoothList/Geometry. remove geometry from each cell
-                        processors: [.resize(width: 328.0, upscale: true)],
+                        processors: [.resize(width: imageWidth, upscale: true)],
                         userInfo: [.scaleKey: UIScreen.main.scale]))
                 }
             }
-            print("cancelling prefetch for \(imageRequests.count)")
-            prefetcher.stopPrefetching(with: imageRequests)
+            if (imageRequests.count > 0) {
+                print("cancelling prefetch for \(imageRequests.count)")
+                prefetcher.stopPrefetching(with: imageRequests)
+            }
         }
         
 //        func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
