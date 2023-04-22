@@ -98,11 +98,10 @@ func computeOnlyMostRecentAcceptedTotalUnread(_ onlyMostRecentAccepted:[(Event, 
     }
 }
 
-func computeRequestTotalUnread(_ onlyMostRecentRequests:[(Event, Int64)] ) -> Int {
-    guard let account = NosturState.shared.account else { return 0 }
+func computeRequestTotalUnread(_ onlyMostRecentRequests:[(Event, Int64)], lastSeenDMRequestCreatedAt:Int64) -> Int {
     return onlyMostRecentRequests.reduce(0) { (partialResult, requestDMtuple) in
         let (_, createdAt) = requestDMtuple
-        if (createdAt > account.lastSeenDMRequestCreatedAt) {
+        if (createdAt > lastSeenDMRequestCreatedAt) {
             return partialResult + 1
         }
         return partialResult
@@ -141,7 +140,8 @@ struct DirectMessages: View {
     }
     
     var requestsTotalUnread:Int {
-        return computeRequestTotalUnread(onlyMostRecentRequests)
+        guard let account = ns.account else { return 0 }
+        return computeRequestTotalUnread(onlyMostRecentRequests, lastSeenDMRequestCreatedAt: account.lastSeenDMRequestCreatedAt)
     }
     
     var onlyMostRecentAcceptedFiltered:[(Event, Int)] {

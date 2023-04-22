@@ -109,10 +109,19 @@ class NotificationsManager: ObservableObject {
         r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         r2.resultType = .countResultType
         
-        let unreadMentions = (try? DataProvider.shared().viewContext.count(for: r2)) ?? 0
-        if unreadMentions != self.unreadMentions {
-            self.unreadMentions = min(unreadMentions,9999)
+        
+        DataProvider.shared().container.performBackgroundTask { context in
+            let unreadMentions = (try? context.count(for: r2)) ?? 0
+            DispatchQueue.main.async {
+                if unreadMentions != self.unreadMentions {
+                    self.unreadMentions = min(unreadMentions,9999)
+                }
+            }
         }
+//        let unreadMentions = (try? DataProvider.shared().viewContext.count(for: r2)) ?? 0
+//        if unreadMentions != self.unreadMentions {
+//            self.unreadMentions = min(unreadMentions,9999)
+//        }
     }
     
     func checkForNewReactions() {
@@ -135,10 +144,21 @@ class NotificationsManager: ObservableObject {
         r2.fetchLimit = FETCH_LIMIT
         r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         r2.resultType = .countResultType
-        let unreadReactions = (try? DataProvider.shared().viewContext.count(for: r2)) ?? 0
-        if unreadReactions != self.unreadReactions {
-            self.unreadReactions = min(unreadReactions,9999)
+        
+        
+        DataProvider.shared().container.performBackgroundTask { context in
+            let unreadReactions = (try? context.count(for: r2)) ?? 0
+            DispatchQueue.main.async {
+                if unreadReactions != self.unreadReactions {
+                    self.unreadReactions = min(unreadReactions,9999)
+                }
+            }
         }
+        
+//        let unreadReactions = (try? DataProvider.shared().viewContext.count(for: r2)) ?? 0
+//        if unreadReactions != self.unreadReactions {
+//            self.unreadReactions = min(unreadReactions,9999)
+//        }
     }
     
     func checkForNewZaps() {
@@ -165,11 +185,21 @@ class NotificationsManager: ObservableObject {
         r2.fetchLimit = FETCH_LIMIT
         r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         r2.resultType = .countResultType
-        let unreadZaps = (try? DataProvider.shared().viewContext.count(for: r2)) ?? 0
         
-        if unreadZaps != self.unreadZaps {
-            self.unreadZaps = min(unreadZaps,9999)
+        
+        DataProvider.shared().container.performBackgroundTask { context in
+            let unreadZaps = (try? context.count(for: r2)) ?? 0
+            DispatchQueue.main.async {
+                if unreadZaps != self.unreadZaps {
+                    self.unreadZaps = min(unreadZaps,9999)
+                }
+            }
         }
+        
+//        let unreadZaps = (try? DataProvider.shared().viewContext.count(for: r2)) ?? 0
+//        if unreadZaps != self.unreadZaps {
+//            self.unreadZaps = min(unreadZaps,9999)
+//        }
 
     }
     
@@ -204,7 +234,6 @@ class NotificationsManager: ObservableObject {
         guard let account = ns.account else { return }
         let pubkey = account.publicKey
         let blockedPubkeys = account.blockedPubkeys_
-        let ctx = DataProvider.shared().viewContext
         
         let receivedFR = Event.fetchRequest()
         receivedFR.predicate = NSPredicate(
@@ -217,34 +246,75 @@ class NotificationsManager: ObservableObject {
         receivedFR.fetchLimit = 500
         receivedFR.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         
-        do {
-            let received = try ctx.fetch(receivedFR)
-            
-            let sentFR = Event.fetchRequest()
-            sentFR.predicate = NSPredicate(
-                format: "kind == 4 AND pubkey == %@", pubkey)
-            sentFR.fetchLimit = 500
-            sentFR.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-            let sent = try ctx.fetch(sentFR)
-            
-            let onlyMostRecentAll = computeOnlyMostRecentAll(sent: sent, received: received, pubkey: pubkey)
-            let onlyMostRecentAccepted = computeOnlyMostRecentAccepted(onlyMostRecentAll)
-            let onlyMostRecentRequests = computeOnlyMostRecentRequests(onlyMostRecentAll)
-            let newUnreadDMsAccepted = computeOnlyMostRecentAcceptedTotalUnread(onlyMostRecentAccepted)
-            let newUnreadDMRequests = computeRequestTotalUnread(onlyMostRecentRequests)
-            
-            // Only set if changed. (else rerender because _nm changed.)
-            if newUnreadDMsAccepted != unreadDMsAccepted {
-                unreadDMsAccepted = min(newUnreadDMsAccepted,9999)
+        
+        let lastSeenDMRequestCreatedAt = account.lastSeenDMRequestCreatedAt
+        
+        DataProvider.shared().container.performBackgroundTask { ctx in
+         
+            do {
+                let received = try ctx.fetch(receivedFR)
+                
+                let sentFR = Event.fetchRequest()
+                sentFR.predicate = NSPredicate(
+                    format: "kind == 4 AND pubkey == %@", pubkey)
+                sentFR.fetchLimit = 500
+                sentFR.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+                let sent = try ctx.fetch(sentFR)
+                
+                let onlyMostRecentAll = computeOnlyMostRecentAll(sent: sent, received: received, pubkey: pubkey)
+                let onlyMostRecentAccepted = computeOnlyMostRecentAccepted(onlyMostRecentAll)
+                let onlyMostRecentRequests = computeOnlyMostRecentRequests(onlyMostRecentAll)
+                let newUnreadDMsAccepted = computeOnlyMostRecentAcceptedTotalUnread(onlyMostRecentAccepted)
+                let newUnreadDMRequests = computeRequestTotalUnread(onlyMostRecentRequests, lastSeenDMRequestCreatedAt:lastSeenDMRequestCreatedAt)
+                
+                
+                DispatchQueue.main.async {
+                    // Only set if changed. (else rerender because _nm changed.)
+                    if newUnreadDMsAccepted != self.unreadDMsAccepted {
+                        self.unreadDMsAccepted = min(newUnreadDMsAccepted,9999)
+                    }
+                    
+                    if newUnreadDMRequests != self.unreadDMRequests {
+                        self.unreadDMRequests = min(newUnreadDMRequests,9999)
+                    }
+                }
             }
-            
-            if newUnreadDMRequests != unreadDMRequests {
-                unreadDMRequests = min(newUnreadDMRequests,9999)
+            catch {
+                print("🔴🔴 problem checking DM notifications")
             }
         }
-        catch {
-            print("🔴🔴 problem checking DM notifications")
-        }
+        
+        
+        
+        
+//        do {
+//            let received = try ctx.fetch(receivedFR)
+//
+//            let sentFR = Event.fetchRequest()
+//            sentFR.predicate = NSPredicate(
+//                format: "kind == 4 AND pubkey == %@", pubkey)
+//            sentFR.fetchLimit = 500
+//            sentFR.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+//            let sent = try ctx.fetch(sentFR)
+//
+//            let onlyMostRecentAll = computeOnlyMostRecentAll(sent: sent, received: received, pubkey: pubkey)
+//            let onlyMostRecentAccepted = computeOnlyMostRecentAccepted(onlyMostRecentAll)
+//            let onlyMostRecentRequests = computeOnlyMostRecentRequests(onlyMostRecentAll)
+//            let newUnreadDMsAccepted = computeOnlyMostRecentAcceptedTotalUnread(onlyMostRecentAccepted)
+//            let newUnreadDMRequests = computeRequestTotalUnread(onlyMostRecentRequests)
+//
+//            // Only set if changed. (else rerender because _nm changed.)
+//            if newUnreadDMsAccepted != unreadDMsAccepted {
+//                unreadDMsAccepted = min(newUnreadDMsAccepted,9999)
+//            }
+//
+//            if newUnreadDMRequests != unreadDMRequests {
+//                unreadDMRequests = min(newUnreadDMRequests,9999)
+//            }
+//        }
+//        catch {
+//            print("🔴🔴 problem checking DM notifications")
+//        }
     }
     
     func startTimer() {
