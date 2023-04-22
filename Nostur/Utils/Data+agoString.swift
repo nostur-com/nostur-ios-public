@@ -19,8 +19,12 @@ extension Date {
         let secondsInMinute = 60.0
         let secondsInHour = secondsInMinute * 60.0
         let secondsInDay = secondsInHour * 24.0
+        let secondsInYear = secondsInDay * 365.0
         
-        if timeInterval >= secondsInDay {
+        if timeInterval >= secondsInYear {
+            let years = Int(timeInterval / secondsInYear)
+            return "\(years)y"
+        } else if timeInterval >= secondsInDay {
             let days = Int(timeInterval / secondsInDay)
             return "\(days)d"
         } else if timeInterval >= secondsInHour {
