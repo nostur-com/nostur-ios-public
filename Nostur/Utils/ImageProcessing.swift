@@ -39,6 +39,7 @@ class ImageProcessing {
 //        }
         
         pfp = ImagePipeline {
+            $0.isProgressiveDecodingEnabled = true
             $0.dataLoader = DataLoader(configuration: {
                 // Disable disk caching built into URLSession
                 let conf = DataLoader.defaultConfiguration
@@ -87,6 +88,7 @@ class ImageProcessing {
         }
         
         content = ImagePipeline {
+            $0.isProgressiveDecodingEnabled = true
             $0.dataLoader = DataLoader(configuration: {
                 // Disable disk caching built into URLSession
                 let conf = DataLoader.defaultConfiguration
