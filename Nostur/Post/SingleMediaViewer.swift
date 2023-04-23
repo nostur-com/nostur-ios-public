@@ -66,8 +66,8 @@ struct SingleMediaViewer: View {
                 }
                 else {
                     LazyImage(request: ImageRequest(url: url,
-                                                    processors: [.resize(width: imageWidth, upscale: true)],
-                                                    userInfo: [.scaleKey: UIScreen.main.scale])) { state in
+                                            processors: [.resize(width: imageWidth, upscale: true)],
+                                            userInfo: [.scaleKey: UIScreen.main.scale])) { state in
                         if let image = state.image {
                             image
                                 .onTapGesture {

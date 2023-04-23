@@ -12,6 +12,7 @@ struct ProfileZapsView: View {
     
     let er:ExchangeRateModel = .shared
     var sp:SocketPool = .shared
+    let pubkey:String
     var contact:Contact?
     
     @FetchRequest(
@@ -32,21 +33,20 @@ struct ProfileZapsView: View {
     }
     
     init(pubkey:String, contact:Contact? = nil) {
+        self.pubkey = pubkey
         if (contact != nil) {
             self.contact = contact
             _zaps = FetchRequest(
                 sortDescriptors: [SortDescriptor(\Event.created_at, order: .reverse)],
-                predicate: NSPredicate(format: "kind = 9735 AND tagsSerialized CONTAINS %@", serializedP(contact!.pubkey)) // OPTIMIZATION HACK
+                predicate: NSPredicate(format: "kind = 9735 AND tagsSerialized CONTAINS %@", serializedP(pubkey)) // OPTIMIZATION HACK
             )
             
             _posts = FetchRequest(
                 sortDescriptors: [SortDescriptor(\Event.zapTally, order: .reverse)],
-                predicate: NSPredicate(format: "zapTally > 0 AND pubkey == %@ AND kind = 1", contact!.pubkey)
+                predicate: NSPredicate(format: "zapTally > 0 AND pubkey == %@ AND kind = 1", pubkey)
             )
         }
     }
-    
-    var pubkey:String { contact!.pubkey }
     
     // TODO: WHAT IF ZAPPER PUBKEY CHANGED. OLD VERIFIED ZAPS HUHH??!! KEEP TRACK
     var verifiedZaps:[Event] {
@@ -83,15 +83,16 @@ struct ProfileZapsView: View {
                     VStack {
                         Grid {
                             GridRow {
-                                Text("RECEIVED TOTALS")
+                                Text("Zaps received")
                                     .foregroundColor(.gray)
                                     .font(.system(size: 20))
                                     .gridCellColumns(2)
+                                    .padding(.top, 10)
                             }
                             Divider()
                             GridRow {
-                                Text("ZAPS")
-                                Text("SATS")
+                                Text("Zaps")
+                                Text("Sats")
                             }
                             .font(.system(size: 20))
                             Group {
@@ -116,7 +117,7 @@ struct ProfileZapsView: View {
                         Divider()
                         
                         VStack {
-                            Text("MOST RECEIVED ON:")
+                            Text("Most received on")
                                 .foregroundColor(.gray)
                                 .font(.system(size: 20))
                             
