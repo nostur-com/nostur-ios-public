@@ -148,7 +148,7 @@ struct ContentRenderer: View { // VIEW things
                             .padding(.vertical, 5)
                     case .linkPreview(let url):
                         // TODO: do no link preview if restrictAutoDownload...
-                        LinkPreviewView(url: url, imageWidth: availableWidth, fullWidth:fullWidth)
+                        LinkPreviewView(url: url)
                             .padding(.vertical, 5)
                     case .postPreviewImage(let uiImage):
                         Image(uiImage: uiImage)

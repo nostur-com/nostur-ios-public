@@ -25,6 +25,9 @@ class DIMENSIONS: ObservableObject {
     static public let POST_ROW_PFP_HPADDING = 10.0
     static public let KIND1_TRAILING = 10.0
     
+    
+    static public let PREVIEW_HEIGHT = 70.0
+    
     @Published var listWidth = UIScreen.main.bounds.width // Should override for IS_IPAD / macOS
     
     // Substracts profile pic space from list width

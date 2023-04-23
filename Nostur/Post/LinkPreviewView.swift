@@ -12,45 +12,44 @@ import HTMLEntities
 
 struct LinkPreviewView: View {
     let url:URL
-    let imageWidth:CGFloat
-    let fullWidth:Bool
     @State var tags:[String: String] = [:]
-    @State private var viewSize: CGSize = .zero
     
     var body: some View {
         Group {
-            VStack(alignment:.leading, spacing:0) {
+            HStack(alignment: .center) {
                 if let image = tags["image"] {
                     LazyImage(
                         request: ImageRequest(url: URL(string:image),
-                        processors: [.resize(width: imageWidth, upscale: true)],
+                                              processors: [.resize(height: DIMENSIONS.PREVIEW_HEIGHT, upscale: true)],
                         userInfo: [.scaleKey: UIScreen.main.scale])) { state in
                             if let image = state.image { image }
                     }
                     .pipeline(ImageProcessing.shared.content)
                 }
-                VStack(alignment:.leading, spacing:5) {
+                VStack(alignment:.leading, spacing:0) {
                     if let title = tags["title"] {
-                        Text(title.htmlUnescape()).lineLimit(2)
+                        Text(title.htmlUnescape()).lineLimit(1)
                             .fontWeight(.bold)
                     }
                     else if let title = tags["fallback_title"] {
-                        Text(title.htmlUnescape()).lineLimit(2)
+                        Text(title.htmlUnescape()).lineLimit(1)
                             .fontWeight(.bold)
                     }
                     if let description = tags["description"] {
-                        Text(description.htmlUnescape()).lineLimit(3)
+                        Text(description.htmlUnescape()).lineLimit(2)
                             .font(.caption)
                     }
-                    Text(url.absoluteString).lineLimit(2)
+                    Text(url.absoluteString).lineLimit(1)
                         .font(.caption)
                         .foregroundColor(.gray)
                 }
-                .padding(10)
+                .padding(.trailing, 10)
+//                .padding(5)
+
             }
             .background(Color("ListBackground"))
+            .frame(height: DIMENSIONS.PREVIEW_HEIGHT)
             .clipShape(RoundedRectangle(cornerRadius: 10.0))
-            .padding(.horizontal, tags["image"] == nil && fullWidth ? 10 : 0)
         }
         .onTapGesture {
             UIApplication.shared.open(url)
@@ -74,36 +73,14 @@ struct LinkPreviewView: View {
     }
 }
 
-struct LinkPreviewTest: View {
-    @State var viewSize: CGSize = .zero
-    
-    var body: some View {
-        //            let url = "https://open.spotify.com/track/5Tbpp3OLLClPJF8t1DmrFD"
-        //            let url = "https://youtu.be/qItugh-fFgg"
-        let url = "https://youtu.be/QU9kRF9tHPU"
-        if viewSize.width > 0 {
-            Text("what")
-            LinkPreviewView(url: URL(string: url)!, imageWidth: viewSize.width, fullWidth: false)
-                .padding(.vertical, 5)
-                .padding(.horizontal, 10)
-        }
-        else {
-            Text("whatdddd")
-            Color.clear.frame(height: 0)
-                .modifier(SizeModifier())
-                .onPreferenceChange(SizePreferenceKey.self) { size in
-                    guard size.width > 0 else { return }
-                    print("🟣🟣🟣🟣🟣 SINGLEMEDIA \(size.width) \(size.height) -- \(UIScreen.main.scale) ")
-                    viewSize = size
-                }
-        }
-    }
-}
-
 struct LinkPreviewView_Previews: PreviewProvider {
     static var previews: some View {
+        //            let url = "https://open.spotify.com/track/5Tbpp3OLLClPJF8t1DmrFD"
+        //            let url = "https://youtu.be/qItugh-fFgg"
+        let url = URL(string:"https://youtu.be/QU9kRF9tHPU")!
         NavigationStack {
-            LinkPreviewTest()
+            LinkPreviewView(url: url)
+                .padding(.vertical, 5)
         }
     }
 }

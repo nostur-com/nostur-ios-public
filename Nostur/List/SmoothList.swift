@@ -176,7 +176,7 @@ struct SmoothList: UIViewControllerRepresentable {
                             print("✓✓ Loaded link preview meta tags from \(url)")
                             if let image = tags["image"] {
                                 imageRequests.append(ImageRequest(url: URL(string:image),
-                                    processors: [.resize(width: imageWidth, upscale: true)],
+                                                                  processors: [.resize(height: DIMENSIONS.PREVIEW_HEIGHT, upscale: true)],
                                     userInfo: [.scaleKey: UIScreen.main.scale]))
                             }
                         }
@@ -201,7 +201,7 @@ struct SmoothList: UIViewControllerRepresentable {
                 for imageUrl in imageUrls {
                     imageRequests.append(ImageRequest(url: imageUrl,
                         // TODO: Should get imagewith from SmoothList/Geometry. remove geometry from each cell
-                        processors: [.resize(width: imageWidth, upscale: true)],
+                                                      processors: [.resize(height: DIMENSIONS.PREVIEW_HEIGHT, upscale: true)],
                         userInfo: [.scaleKey: UIScreen.main.scale]))
                 }
             }
