@@ -99,8 +99,8 @@ class Unpublisher: ObservableObject {
             
             // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
             if nEvent.kind == .reaction {
-                do { try _ = Event.updateLikeCountCache(savedEvent, content:nEvent.content, context: viewContext) } catch {
-                    print("🦋🦋🔴🔴🔴 problem updating Like Count Cache .id \(nEvent.id)")
+                do { try Event.updateReactionTo(savedEvent, context: viewContext) } catch {
+                    print("🦋🦋🔴🔴🔴 problem updating Like relation .id \(nEvent.id)")
                 }
             }
             do {

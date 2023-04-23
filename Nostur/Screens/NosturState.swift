@@ -285,7 +285,6 @@ final class NosturState : ObservableObject {
         let impactMed = UIImpactFeedbackGenerator(style: .medium)
         impactMed.impactOccurred()
         print("💖💖💖💖💖💖💖💖💖💖💖💖💖💖")
-        event.likesCount += 1
         
 //      1. create kind 7 event based on kind 1 event:
         let likeEvent = EventMessageBuilder.makeReactionEvent(reactingTo: event)
@@ -294,6 +293,7 @@ final class NosturState : ObservableObject {
             print("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
             return nil
         }
+        event.likesCount += 1
         return signedEvent
     }
     

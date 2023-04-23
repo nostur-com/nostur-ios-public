@@ -413,6 +413,21 @@ extension Event {
         return true
     }
     
+    // To fix event.reactionTo but not count+1, because +1 is instant at tap, but this relation happens after 8 sec (unpublisher)
+    static func updateReactionTo(_ event:Event, context:NSManagedObjectContext) throws {
+        if let lastEtag = event.lastE() {
+            let request = NSFetchRequest<Event>(entityName: "Event")
+            request.entity = Event.entity()
+            request.predicate = NSPredicate(format: "id == %@", lastEtag)
+            request.fetchLimit = 1
+            
+            if let reactingToEvent = try context.fetch(request).first {
+                event.reactionTo = reactingToEvent
+                event.reactionToId = reactingToEvent.id
+            }
+        }
+    }
+    
     
     static func updateZapTallyCache(_ event:Event, context:NSManagedObjectContext) -> Bool {
         let nEvent = event.toNEvent()
