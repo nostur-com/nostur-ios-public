@@ -48,6 +48,7 @@ extension Contact {
     @NSManaged public var followedBy: NSSet?
     @NSManaged public var events: Set<Event>?
     @NSManaged public var list: NSSet?
+    @NSManaged public var privateFollow: Bool
 }
 
 // MARK: Generated accessors for lists

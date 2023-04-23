@@ -179,7 +179,7 @@ class AccountManager {
                 var newKind3Event = NEvent(content: "")
                 newKind3Event.kind = .contactList
                 
-                for contact in Array(account.follows ?? Set<Contact>()) {
+                for contact in (Array(account.follows ?? Set<Contact>()).filter { $0.privateFollow == false } ) {
                     newKind3Event.tags.append(NEventTag(type: "p", otherInformation: contact.pubkey ))
                 }
                 

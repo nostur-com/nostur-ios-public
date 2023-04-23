@@ -39,19 +39,21 @@ struct ProfileRow: View {
                     Spacer()
                     if (!withoutFollowButton) {
                         Button {
-                            if (isFollowing) {
+                            if (isFollowing && !contact.privateFollow) {
+                                contact.privateFollow = true
+                                ns.follow(contact)
+                            }
+                            else if (isFollowing && contact.privateFollow) {
                                 isFollowing = false
+                                contact.privateFollow = false
                                 ns.unfollow(contact)
                             }
                             else {
-                                print("chaning isFollowing to true 1")
                                 isFollowing = true
                                 ns.follow(contact)
-                                print("chaning isFollowing to true 2")
-                                //                                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
                             }
                         } label: {
-                            FollowButton(isFollowing:isFollowing)
+                            FollowButton(isFollowing:isFollowing, isPrivateFollowing:contact.privateFollow)
                         }
                     }
                 }

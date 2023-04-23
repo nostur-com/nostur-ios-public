@@ -36,17 +36,17 @@ struct NosturButton: ButtonStyle {
 struct FollowButton: View {
     @Environment(\.colorScheme) var colorScheme
     var isFollowing: Bool = false
+    var isPrivateFollowing:Bool = false
     
     var body: some View {
         
         let whiteColor = colorScheme == .light ? Color.white : Color.black
         let blackColor = colorScheme == .light ? Color.black : Color.white
         
-        Text(isFollowing ? "Following" : "Follow")
+        Text((isFollowing && isPrivateFollowing) ? ("🤫 Following") : (isFollowing ? "Following" : "Follow"))
             .lineLimit(1)
-            .frame(width: 65, height: 30)
-            .padding(.horizontal, 25)
-        //.padding(.vertical, 10)
+            .frame(width: 105, height: 30)
+//            .padding(.horizontal, 25)
             .font(.caption.weight(.heavy))
             .foregroundColor(isFollowing ? blackColor : whiteColor)
             .background(isFollowing ? whiteColor : blackColor)
@@ -55,5 +55,16 @@ struct FollowButton: View {
                 RoundedRectangle(cornerRadius: 15)
                     .stroke(.gray, lineWidth: 1)
             }
+    }
+}
+
+
+struct FollowButton_Previews: PreviewProvider {
+    static var previews: some View {
+        VStack {
+            FollowButton(isFollowing: false, isPrivateFollowing: false)
+            FollowButton(isFollowing: true, isPrivateFollowing: false)
+            FollowButton(isFollowing: true, isPrivateFollowing: true)
+        }
     }
 }
