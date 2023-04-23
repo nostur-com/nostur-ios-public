@@ -76,15 +76,19 @@ struct ListView: View {
             }
             else {
                 if (selectedSubTab == "Following" && ns.followingPublicKeys.count <= 1) {
-                    Text("You are not following anyone yet, visit the explore tab and follow some people")
-                        .multilineTextAlignment(.center)
-                        .padding(.all, 30.0)
-                    
-                    Button {
-                        selectedSubTab = "Explore"
-                    } label: {
-                        Text("Explore")
-                    }.buttonStyle(.borderedProminent)
+                    VStack {
+                        Spacer()
+                        Text("You are not following anyone yet, visit the explore tab and follow some people")
+                            .multilineTextAlignment(.center)
+                            .padding(.all, 30.0)
+                        
+                        Button {
+                            selectedSubTab = "Explore"
+                        } label: {
+                            Text("Explore")
+                        }.buttonStyle(.borderedProminent)
+                        Spacer()
+                    }
                 }
                 else {
                     CenteredProgressView()
