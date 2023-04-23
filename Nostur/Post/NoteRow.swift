@@ -136,7 +136,7 @@ struct NoteRow: View {
         var body: some View {
             
             HStack(alignment: .top, spacing:0) {
-                PFP(pubkey: vPost.pubkey, pictureUrl: event.contact?.picture)
+                PFP(pubkey: vPost.pubkey, pictureUrl: event.contact?.picture ?? vPost.pictureUrl)
                     .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: 50)
                     .background(alignment: .top, content: {
                         Color("LightGray")

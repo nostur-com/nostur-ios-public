@@ -21,21 +21,37 @@ struct NoteHeaderView: View {
     var body: some View {
         VStack(alignment: .leading, spacing:0) { // Name + menu "replying to"
             HStack(spacing:2) {
+                
                 Group {
+                    
                     if let contact = event.contact {
                         NameAndNip(contact: contact)
                     }
+                    else if vPost.username != event.authorKey {
+                        Text(vPost.authorName ?? vPost.username)
+                            .foregroundColor(.primary)
+                            .fontWeight(.bold)
+                            .lineLimit(1)
+                            .layoutPriority(2)
+                        
+                        if (vPost.nip05verified) {
+                            Image(systemName: "checkmark.seal.fill")
+                                .foregroundColor(Color("AccentColor"))
+                                .layoutPriority(3)
+                        }
+                    }
                     else {
-                        Text("Anon") // Name
+                        Text("Anon")
                             .foregroundColor(.primary)
                             .fontWeight(.bold)
                             .lineLimit(1)
                             .redacted(reason: .placeholder)
+                        
                     }
                     
                     if (singleLine) {
                         Group {
-                            Text("@\(event.username)").layoutPriority(1)
+                            Text("@\(event.username ?? vPost.username)").layoutPriority(1)
                             Text(" · ") //
                             Ago(vPost.date)
                                 .layoutPriority(2)
