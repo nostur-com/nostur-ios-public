@@ -87,7 +87,10 @@ class Importer {
             var saved = 0
             
             do {
+                var count = 0
+                
                 for message in forImports {
+                    count = count + 1
                     var event = message.event!
                     
                     if message.subscriptionId == "Notifications" && event.pTags().contains(NosturState.shared.activeAccountPublicKey) && [1,7,9735,4].contains(event.kind.id) {
@@ -213,6 +216,19 @@ class Importer {
                     }
                     
                     self.existingIds.insert(event.id)
+                    
+                    // batch save every 250
+                    if count % 250 == 0 {
+                        if (context.hasChanges) {
+                            do {
+                                try context.save()
+                                print("💾 Saved \(count)/\(forImports.count)")
+                            }
+                            catch {
+                                print("🔴🔴🔴 Error on batch \(count)/\(forImports.count): \(error)")
+                            }
+                        }
+                    }
                 }
                 if (context.hasChanges) {
                     try context.save() // TODO: is this the slowdown??
