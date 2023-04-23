@@ -183,6 +183,8 @@ class VPostTransformer {
 //                actualMainEvent = try? DataProvider.shared().viewContext.existingObject(with: privateEvent.objectID) as? Event
             }
             
+            guard actualMainEvent != nil else { return nil }
+            
             let replyingToMD = textRenderer.replyingToUsernamesMarkDownString(privateEvent)
             
             return VPost(
