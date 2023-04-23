@@ -40,7 +40,7 @@ struct ImagePreviews: View {
 }
 
 struct ImagePreviews_Previews: PreviewProvider {
-    @State static var images:[UIImage] = [UIImage(named:"NosturLogo")!, UIImage(named:"NosturLogoShadow")!, UIImage(named:"NosturLogoFull")!]
+    @State static var images:[UIImage] = [UIImage(named:"NosturLogo")!, UIImage(named:"NosturLogoFull")!]
     static var previews: some View {
         VStack {
             ImagePreviews(pastedImages: $images)

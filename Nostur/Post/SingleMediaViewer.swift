@@ -8,7 +8,6 @@
 import SwiftUI
 import NukeUI
 import Nuke
-//import NukeVideo
 
 struct SingleMediaViewer: View {
     @EnvironmentObject var ns:NosturState // Only needed for `imagesShown`
