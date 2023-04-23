@@ -102,7 +102,6 @@
 		1F740DA329AF524100EFCCA7 /* BadgeDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F740DA229AF524100EFCCA7 /* BadgeDetailView.swift */; };
 		1F740DA529AF5F6900EFCCA7 /* ContactsSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F740DA429AF5F6900EFCCA7 /* ContactsSearch.swift */; };
 		1F740DA729AF61A700EFCCA7 /* ContactSearchResultRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F740DA629AF61A700EFCCA7 /* ContactSearchResultRow.swift */; };
-		1F740DA929AF658100EFCCA7 /* AwardToPeopleSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F740DA829AF658100EFCCA7 /* AwardToPeopleSheet.swift */; };
 		1F740DAB29AF898400EFCCA7 /* BadgesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F740DAA29AF898400EFCCA7 /* BadgesView.swift */; };
 		1F740DAD29AF8A5200EFCCA7 /* BadgesReceivedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F740DAC29AF8A5200EFCCA7 /* BadgesReceivedView.swift */; };
 		1F75211529865F2D00C43DF0 /* SocketPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F75211429865F2D00C43DF0 /* SocketPool.swift */; };
@@ -357,7 +356,6 @@
 		1F740DA229AF524100EFCCA7 /* BadgeDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgeDetailView.swift; sourceTree = "<group>"; };
 		1F740DA429AF5F6900EFCCA7 /* ContactsSearch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsSearch.swift; sourceTree = "<group>"; };
 		1F740DA629AF61A700EFCCA7 /* ContactSearchResultRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactSearchResultRow.swift; sourceTree = "<group>"; };
-		1F740DA829AF658100EFCCA7 /* AwardToPeopleSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AwardToPeopleSheet.swift; sourceTree = "<group>"; };
 		1F740DAA29AF898400EFCCA7 /* BadgesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgesView.swift; sourceTree = "<group>"; };
 		1F740DAC29AF8A5200EFCCA7 /* BadgesReceivedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgesReceivedView.swift; sourceTree = "<group>"; };
 		1F75211429865F2D00C43DF0 /* SocketPool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketPool.swift; sourceTree = "<group>"; };
@@ -746,7 +744,6 @@
 		1F740D9D29AF36AB00EFCCA7 /* Badges */ = {
 			isa = PBXGroup;
 			children = (
-				1F740DA829AF658100EFCCA7 /* AwardToPeopleSheet.swift */,
 				1F740D9B29AF1BF600EFCCA7 /* Badges.swift */,
 				1F740D9E29AF36C800EFCCA7 /* BadgesIssuedView.swift */,
 				1F740DAC29AF8A5200EFCCA7 /* BadgesReceivedView.swift */,
@@ -1136,7 +1133,6 @@
 				1F740D9C29AF1BF600EFCCA7 /* Badges.swift in Sources */,
 				1F88491329B537B400145340 /* NSFont.swift in Sources */,
 				1F33EC3729B613F800615FB9 /* MediaViewer.swift in Sources */,
-				1F740DA929AF658100EFCCA7 /* AwardToPeopleSheet.swift in Sources */,
 				1F57C54B299285B300DFE063 /* Search.swift in Sources */,
 				1FB62D0E296FFF1400A0055B /* RelayEditView.swift in Sources */,
 				1F7E40EB29BD9AD6003F9F71 /* PrivateNote+CoreDataProperties.swift in Sources */,

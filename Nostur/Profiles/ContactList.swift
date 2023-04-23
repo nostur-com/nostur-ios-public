@@ -30,7 +30,7 @@ struct ContactList: View {
     init(pubkeys:[String]) {
         self.pubkeys = pubkeys
         _contacts = FetchRequest(
-            sortDescriptors: [],
+            sortDescriptors: [NSSortDescriptor(keyPath: \Contact.metadata_created_at, ascending: true)],
             predicate: NSPredicate(format: "pubkey IN %@", pubkeys),
             animation: .none)
     }

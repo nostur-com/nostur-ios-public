@@ -476,8 +476,9 @@ extension LVM {
                 let event = notification.object as! Event
                 
                 let context = DataProvider.shared().container.newBackgroundContext()
+                let followingPubkeys = NosturState.shared.followingPublicKeys
                 context.perform { [unowned self] in
-                    let transformer = VPostTransformer(context) // Tranform in bg
+                    let transformer = VPostTransformer(context, followingKeys: followingPubkeys) // Tranform in bg
                     
                     if let newVPostLeaf = transformer.toVPost(event, forceBg: true) {
                         DispatchQueue.main.async {
