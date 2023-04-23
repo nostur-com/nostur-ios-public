@@ -130,7 +130,7 @@ struct ProfileBadgesView: View {
                 ScrollView {
                     VStack(alignment: .leading) {
                         ForEach(verifiedBadges) { profileBadge in
-                            BadgeRow(badge: profileBadge.badge)
+                            BadgeIssuedRow(badge: profileBadge.badge)
                         }
                         Spacer()
                     }

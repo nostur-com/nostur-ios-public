@@ -49,8 +49,8 @@ struct BadgesReceivedView: View {
     var body: some View {
         let _ = Self._printChanges()
         VStack {
-            List(Array(Set(badgeAwardsToMe.compactMap { $0.badgeDefinition }).sorted(by: { $0.created_at > $1.created_at })), id:\.self, selection: $selection) { badge in
-                    BadgeRow(badge: badge)
+            List(Array(Set(badgeAwardsToMe.compactMap { $0.badgeDefinition }).sorted(by: { $0.created_at > $1.created_at })), id:\.self) { badge in
+                BadgeReceivedRow(badge: badge, selectedBadges: $selection)
                     .id(badge.id)
             }
             
@@ -106,6 +106,98 @@ struct BadgesReceivedView: View {
             print(error)
         }
     }
+}
+
+// Same as BadgeIssuedRow, only added Button.
+struct BadgeReceivedRow: View {
+    var badge:Event
+    @Binding var selectedBadges:Set<Event>
+    var nBadge:NEvent { badge.toNEvent() }
+    
+    var body: some View {
+        HStack(alignment: .center) {
+            
+            Button {
+                if selectedBadges.contains(badge) {
+                    selectedBadges.remove(badge)
+                }
+                else {
+                    selectedBadges.insert(badge)
+                }
+            } label: {
+                if selectedBadges.contains(badge) {
+                    Image(systemName:  "checkmark.circle.fill")
+                }
+                else {
+                    Image(systemName:  "circle")
+                        .foregroundColor(Color.secondary)
+                }
+            }
+            
+            VStack(alignment: .center) {
+                if let pictureUrl = nBadge.badgeImage?.otherInformation[safe: 0] {
+                    if (pictureUrl.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
+                        LazyImage(url: URL(string: pictureUrl)) { state in
+                            if let container = state.imageContainer {
+                                if container.type == .gif, let gifData = container.data {
+                                    AnimatedGifView(gifData: gifData, width: 50, height: 50)
+                                        .scaledToFit()
+                                        .frame(width: 50, height: 50)
+                                        .clipped()
+                                        .padding(10)
+                                }
+                                else if let image = state.image {
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(width: 50, height: 50)
+                                        .clipped()
+                                        .padding(10)
+                                }
+                                else {
+                                    CenteredProgressView()
+                                }
+                            }
+                            else {
+                                CenteredProgressView()
+                            }
+                        }
+                        .pipeline(ImageProcessing.shared.badges) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
+                    }
+                    else {
+                        LazyImage(request: ImageRequest(url: URL(string:pictureUrl),
+                                    processors: [.resize(width: 50)],
+                                    userInfo: [.scaleKey: UIScreen.main.scale])) { state in
+                            if let image = state.image {
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: 50, height: 50)
+                                    .clipped()
+                                    .padding(10)
+                            }
+                            else {
+                                CenteredProgressView()
+                            }
+                        }
+//                        .processors([.resize(width: 50)])
+                        .pipeline(ImageProcessing.shared.badges)
+    //                    .priority(.low)
+                    }
+                }
+            }
+            .frame(width: 60)
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(nBadge.badgeName?.value ?? "No name")
+                    .font(.subheadline)
+                Text(nBadge.badgeDescription?.value ?? "No description").font(.caption2)
+                Text("Awarded to \(badge.awardedTo.count) people").font(.caption)
+            }.padding(10)
+        }
+        .navigationTitle("")
+    }
+    
 }
 
 struct BadgesReceivedView_Previews: PreviewProvider {

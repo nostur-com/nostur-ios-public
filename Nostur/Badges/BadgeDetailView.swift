@@ -109,22 +109,28 @@ struct BadgeDetailView: View {
             }
         }
         .sheet(isPresented: $awardToPeopleIsShown) {
-            AwardToPeopleSheet(onFinish: { contacts in
-                let newBadgeAwards = createBadgeAward(ns.account!.publicKey, badgeCode: nBadge.badgeCode!.definition,
-                                                      pubkeys: contacts.map { $0.pubkey })
-                
-                do {
-                    guard let newBadgeAwardsSigned = try? ns.signEvent(newBadgeAwards) else { throw "could not create newBadgeAwardsSigned " }
-                    _ = Event.saveEvent(event: newBadgeAwardsSigned, context: viewContext)
-                    try viewContext.save()
-//                    print(newBadgeAwardsSigned.wrappedEventJson())
-                    up.publishNow(newBadgeAwardsSigned)
-                }
-                catch {
-                    print("🔴🔴 could not create badge")
-                    print(error)
-                }
-            })
+            NavigationStack {
+                ContactsSearch(followingPubkeys: NosturState.shared.followingPublicKeys, prompt: "Search contacts", onSelectContacts: { selectedContacts in
+                    
+                    awardToPeopleIsShown = false
+                    guard selectedContacts.count > 0 else { return }
+                    let newBadgeAwards = createBadgeAward(ns.account!.publicKey,
+                                                          badgeCode: nBadge.badgeCode!.definition,
+                                                          pubkeys: selectedContacts.map { $0.pubkey })
+                    do {
+                        guard let newBadgeAwardsSigned = try? ns.signEvent(newBadgeAwards) else { throw "could not create newBadgeAwardsSigned " }
+                        _ = Event.saveEvent(event: newBadgeAwardsSigned, context: viewContext)
+                        try viewContext.save()
+                        up.publishNow(newBadgeAwardsSigned)
+                    }
+                    catch {
+                        print("🔴🔴 could not create badge")
+                        print(error)
+                    }
+                })
+                .navigationTitle("Award to")
+                .navigationBarTitleDisplayMode(.inline)
+            }
         }
     }
 }

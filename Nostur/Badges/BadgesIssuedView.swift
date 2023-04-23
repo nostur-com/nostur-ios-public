@@ -47,7 +47,7 @@ struct BadgesIssuedView: View {
 //            NavigationStack {
                 List(badges) { badge in
                     NavigationLink(value: Badge(badge)) {
-                        BadgeRow(badge: badge)
+                        BadgeIssuedRow(badge: badge)
                     }
                 }
 //            }
@@ -77,7 +77,7 @@ struct BadgesIssuedView: View {
     }
 }
 
-struct BadgeRow: View {
+struct BadgeIssuedRow: View {
     var badge:Event
     var nBadge:NEvent { badge.toNEvent() }
     
