@@ -11,10 +11,12 @@ struct EditNosturList: View {
     
     @ObservedObject var list:NosturList
     @Environment(\.managedObjectContext) var viewContext
+    @Environment(\.dismiss) var dismiss
     
     @State var confirmDeleteShown = false
     @State var contactToRemove:Contact? = nil
     @State var addContactsSheetShown = false
+    @State var selectedContacts:Set<Contact> = []
     
     var body: some View {
         List(list.contacts_) { contact in
@@ -53,9 +55,23 @@ struct EditNosturList: View {
             }
         }
         .sheet(isPresented: $addContactsSheetShown) {
-            AddContactsToListSheet { contacts in
-                list.contacts_.append(contentsOf: contacts)
-                DataProvider.shared().save()
+            NavigationStack {
+                ContactsSearch(followingPubkeys:NosturState.shared.followingPublicKeys,
+                               prompt: "huh", onSelectContacts: { selectedContacts in
+                    list.contacts_.append(contentsOf: selectedContacts)
+                    addContactsSheetShown = false
+                    DataProvider.shared().save()
+                })
+                .equatable()
+                .navigationTitle("Add contacts")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") {
+                            addContactsSheetShown = false
+                        }
+                    }
+                }
             }
         }
     }

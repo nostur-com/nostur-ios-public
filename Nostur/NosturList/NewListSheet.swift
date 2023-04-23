@@ -11,11 +11,11 @@ struct NewListSheet: View {
     
     @Environment(\.dismiss) var dismiss
     @ObservedObject var list:NosturList
-//    @State var title: String = ""
-//    @FocusState var titleFieldIsFocused = false
-    @State var selectedContacts:[Contact] = []
     @State var addContactsSheetShown = false
-
+    @State var selectedContacts:Set<Contact> = []
+    @State var contactSelectionVisible = false
+    var followingPubkeys = NosturState.shared.followingPublicKeys
+        
     
     var body: some View {
         Form {
@@ -27,20 +27,27 @@ struct NewListSheet: View {
         }
         .navigationTitle("New list")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                NavigationLink("Next") {
-                    AddContactsToListSheet { contacts in
-                        list.contacts_.append(contentsOf: contacts)
-                        DataProvider.shared().save()
-                        dismiss()
-                    }
-                }
-                    .disabled(list.name_ == "")
-            }
+        .toolbarRole(.navigationStack)
+        .navigationDestination(isPresented: $contactSelectionVisible) {
+            ContactsSearch(followingPubkeys:followingPubkeys,
+                           prompt: "Search contacts", onSelectContacts: { selectedContacts in
+                list.contacts_.append(contentsOf: selectedContacts)
+                contactSelectionVisible = false
+                DataProvider.shared().save()
+                dismiss()
+            })
+            .equatable()
         }
-        .sheet(isPresented: $addContactsSheetShown) {
-            
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") { dismiss() }
+            }
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button("Next") {
+                    contactSelectionVisible = true
+                }
+                .disabled(list.name_.isEmpty)
+            }
         }
     }
 }
