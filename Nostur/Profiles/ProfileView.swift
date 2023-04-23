@@ -307,7 +307,7 @@ struct ProfileView: View {
                                 HStack {
                                     Text("\n**\(contact.followingPubkeys.count)** Following")
                                     
-                                    Text("\n**??** Followers")
+                                    Text("\n**♾️** Followers")
                                         .onTapGesture {
                                             selectedSubTab = "Followers"
                                         }
