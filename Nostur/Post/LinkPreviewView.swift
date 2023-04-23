@@ -16,7 +16,7 @@ struct LinkPreviewView: View {
     
     var body: some View {
         Group {
-            HStack(alignment: .center) {
+            HStack(alignment: .center, spacing:0) {
                 if let image = tags["image"] {
                     LazyImage(
                         request: ImageRequest(url: URL(string:image),
@@ -43,8 +43,8 @@ struct LinkPreviewView: View {
                         .font(.caption)
                         .foregroundColor(.gray)
                 }
-                .padding(.trailing, 10)
-//                .padding(5)
+                .padding(5)
+                .frame(height: DIMENSIONS.PREVIEW_HEIGHT)
 
             }
             .background(Color("ListBackground"))
@@ -78,6 +78,7 @@ struct LinkPreviewView_Previews: PreviewProvider {
         //            let url = "https://open.spotify.com/track/5Tbpp3OLLClPJF8t1DmrFD"
         //            let url = "https://youtu.be/qItugh-fFgg"
         let url = URL(string:"https://youtu.be/QU9kRF9tHPU")!
+//        let url = URL(string:"https://nostur.com")!
         NavigationStack {
             LinkPreviewView(url: url)
                 .padding(.vertical, 5)
