@@ -34,6 +34,10 @@ struct NotificationsZaps: View, Equatable {
         }
     }
     
+    var zapsForMeDeduplicated:[Event] {
+        zaps.uniqued(on: { $0.zappedEventId })
+    }
+    
     var myNotesZapped:[Event] {
         // TODO: hmm we can already use zap.zappedEvent... instead of fetching by ID again
         let r = Event.fetchRequest()
@@ -90,12 +94,13 @@ struct NotificationsZaps: View, Equatable {
         let _ = Self._printChanges()
         List {
             Section {
-                ForEach(zapsForMe) { zap in
+                ForEach(zapsForMeDeduplicated) { zap in
                     VStack {
                         if let note = zap.zappedEvent {
                             HStack(alignment: .top) {
                                 VStack {
                                     Image(systemName: "bolt.fill")
+                                        .foregroundColor(Color("AccentColor"))
                                     Text(Double(note.zapTally).satsFormatted)
                                         .font(.title2)
                                     if (er.bitcoinPrice != 0.0) {
@@ -124,7 +129,7 @@ struct NotificationsZaps: View, Equatable {
                             HStack(alignment: .top) {
                                 VStack {
                                     Image(systemName: "bolt.fill")
-                                        .foregroundColor(.green)
+                                        .foregroundColor(Color("AccentColor"))
                                     Text(zap.naiveSats.satsFormatted)
                                         .font(.title2)
                                     if (er.bitcoinPrice != 0.0) {
