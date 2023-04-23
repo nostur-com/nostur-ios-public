@@ -181,8 +181,11 @@ class LVM: NSObject, ObservableObject {
                 DispatchQueue.main.async {
                     // clean up a bit if needed
                     if self.lvmState.vPostLeafs.count > LVM_MAX_VISIBLE && self.lvmState.isAtTop {
-                        self.lvmState.vPostLeafs = newLeafThreads + self.lvmState.vPostLeafs.dropLast(newLeafThreads.count)
-                        print("Removed \(newLeafThreads.count) from the end")
+                        // dont drop all
+                        let dropLimit = max(0,(self.lvmState.vPostLeafs.count - 10)) // also not negative
+                        let dropCount = min(newLeafThreads.count,dropLimit)
+                        self.lvmState.vPostLeafs = newLeafThreads + self.lvmState.vPostLeafs.dropLast(dropCount)
+                        print("Removed \(dropCount) from the end")
                     }
                     else {
                         self.lvmState.vPostLeafs.insert(contentsOf: newLeafThreads, at: 0)
