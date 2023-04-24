@@ -468,6 +468,15 @@ extension LVM {
             }
             .store(in: &subscriptions)
         
+        receiveNotification(.listPubkeysChanged)
+            .sink { notification in
+                let newPubkeyInfo = notification.object as! NewPubkeysForList
+                guard newPubkeyInfo.id.description == self.listId else { return }
+                self.pubkeys = newPubkeyInfo.pubkeys
+                self.performLocalFetch()
+            }
+            .store(in: &subscriptions)
+        
     }
     
     func showOwnNewPostsImmediately() {
@@ -942,4 +951,11 @@ func threadCount(_ vPosts:[VPost]) -> Int {
     vPosts.reduce(0) { partialResult, vPost in
         (partialResult + vPost.threadPostsCount)
     }
+}
+
+
+
+struct NewPubkeysForList {
+    var id:NSManagedObjectID
+    var pubkeys:Set<String>
 }

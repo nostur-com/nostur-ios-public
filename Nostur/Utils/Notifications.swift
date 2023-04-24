@@ -187,6 +187,10 @@ extension Notification.Name {
     static var explorePubkeysChanged: Notification.Name {
         return Notification.Name("explorePubkeysChanged")
     }
+        
+    static var listPubkeysChanged: Notification.Name {
+        return Notification.Name("listPubkeysChanged")
+    }
     
     static var onBoardingIsShownChanged: Notification.Name {
         return Notification.Name("onBoardingIsShownChanged")

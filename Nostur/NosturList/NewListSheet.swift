@@ -39,6 +39,7 @@ struct NewListSheet: View {
                 dismiss()
             })
             .equatable()
+            .navigationTitle("Add contacts to list")
         }
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
