@@ -12,6 +12,8 @@ struct MainView: View {
     @AppStorage("selected_subtab") var selectedSubTab = "Following"
     @State var navPath = NavigationPath()
     @State var account:Account?
+    @State var showingNewNote = false
+    @State var noteCancellationId:UUID?
     
     var body: some View {
         let _ = Self._printChanges()
@@ -19,6 +21,21 @@ struct MainView: View {
             if let account {
                 FollowingAndExplore(account: account)
                     .withNavigationDestinations()
+                    .overlay(alignment: .bottomTrailing) {
+                        NewNoteButton(showingNewNote: $showingNewNote)
+                            .padding([.top, .leading, .bottom], 10)
+                            .padding([.trailing], 25)
+                    }
+                    .overlay(alignment: .bottom) {
+                        ProcessingStatus()
+                            .opacity(0.85)
+                            .padding(.bottom, 10)
+                    }
+                    .sheet(isPresented: $showingNewNote) {
+                        NavigationStack {
+                            NewNote(noteCancellationId: $noteCancellationId)
+                        }
+                    }
             }
         }
         .onReceive(receiveNotification(.activeAccountChanged)) { notification in

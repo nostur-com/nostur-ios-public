@@ -11,10 +11,7 @@ import SwiftUI
 
 struct ListViewContainer: View {
     
-    let vm:LVM
-
-    @State var showingNewNote = false
-    @State var noteCancellationId:UUID?
+    let vm:LVM    
     
     var body: some View {
         let _ = Self._printChanges()
@@ -24,22 +21,8 @@ struct ListViewContainer: View {
                     .padding(.trailing, 10)
                     .padding(.top, 5)
             }
-            .overlay(alignment: .bottomTrailing) {
-                NewNoteButton(showingNewNote: $showingNewNote)
-                    .padding([.top, .leading, .bottom], 10)
-                    .padding([.trailing], 25)
-            }
-            .overlay(alignment: .bottom) {
-                ProcessingStatus()
-                    .opacity(0.85)
-                    .padding(.bottom, 10)
-            }
+
         .background(Color("ListBackground"))
-        .sheet(isPresented: $showingNewNote) {
-            NavigationStack {
-                NewNote(noteCancellationId: $noteCancellationId)
-            }
-        }
     }
 }
 
