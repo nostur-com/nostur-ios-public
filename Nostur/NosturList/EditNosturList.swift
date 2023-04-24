@@ -16,6 +16,7 @@ struct EditNosturList: View {
     @State var confirmDeleteShown = false
     @State var contactToRemove:Contact? = nil
     @State var addContactsSheetShown = false
+    @State var editList:NosturList? = nil
     @State var selectedContacts:Set<Contact> = []
     
     var body: some View {
@@ -26,7 +27,7 @@ struct EditNosturList: View {
                 .listRowInsets(EdgeInsets())
                 .swipeActions(edge: .trailing) {
                     Button(role: .destructive) {
-                        viewContext.delete(contact)
+                        list.removeFromContacts(contact)
                         DataProvider.shared().save()
                     } label: {
                         Label("Remove", systemImage: "trash")
@@ -35,16 +36,15 @@ struct EditNosturList: View {
                 }
         }
         .listStyle(.plain)
-        .navigationTitle("Edit \(list.name ?? "list")")
+        .navigationTitle("\(list.name ?? "list")")
         .navigationBarTitleDisplayMode(.inline)
-//        .confirmationDialog("Delete list \(contactToRemove?.name ?? "")", isPresented: $confirmDeleteShown, titleVisibility: .visible) {
-//            Button("Delete", role: .destructive) {
-//                guard let contactToRemove = contactToRemove else { return }
-//
-//                self.contactToRemove = nil
-//            }
-//        }
         .toolbar {
+            ToolbarItem(placement: .principal) {
+                HStack {
+                    Text("\(list.name ?? "list")")
+                    Button { editList = list } label: { Image(systemName: "square.and.pencil") }
+                }
+            }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
                     addContactsSheetShown = true
@@ -54,6 +54,11 @@ struct EditNosturList: View {
 
             }
         }
+        .sheet(item: $editList, content: { list in
+            NavigationStack {
+                EditListTitleSheet(list: list)
+            }
+        })
         .sheet(isPresented: $addContactsSheetShown) {
             NavigationStack {
                 ContactsSearch(followingPubkeys:NosturState.shared.followingPublicKeys,

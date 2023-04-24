@@ -9,54 +9,95 @@ import SwiftUI
 
 struct FollowingAndExplore: View { //, Equatable {
     
+    @EnvironmentObject var dim:DIMENSIONS
     @ObservedObject var account:Account
     @EnvironmentObject var ns:NosturState
     @AppStorage("selected_tab") var selectedTab = "Main"
     @AppStorage("selected_subtab") var selectedSubTab = "Following"
+    @AppStorage("selected_listId") var selectedListId = ""
     
     @State var showingNewNote = false
     @State var noteCancellationId:UUID?
     
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \NosturList.createdAt, ascending: false)],
+        predicate: NSPredicate(format: "showAsTab == true")
+    )
+    var lists:FetchedResults<NosturList>
+    @State var selectedList:NosturList?
+    
     var body: some View {
         let _ = Self._printChanges()
             VStack(spacing:0) {
-                HStack {
-                    TabButton(
-                        action: { selectedSubTab = "Following" },
-                        title: "Following",
-                        selected: selectedSubTab == "Following")
-
-                    TabButton(
-                        action: { selectedSubTab = "Explore"},
-                        title: "Explore",
-                        selected: selectedSubTab == "Explore")
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing:0) {
+//                        Spacer()
+                        TabButton(
+                            action: { selectedSubTab = "Following" },
+                            title: "Following",
+                            selected: selectedSubTab == "Following")
+                        Spacer()
+                        ForEach(lists) { list in
+                            TabButton(
+                                action: {
+                                    selectedSubTab = "List"
+                                    selectedList = list
+                                    selectedListId = list.objectID.description
+                                },
+                                title: list.name_,
+                                selected: selectedSubTab == "List" && selectedList == list )
+                            Spacer()
+                        }
+                        TabButton(
+                            action: { selectedSubTab = "Explore"},
+                            title: "Explore",
+                            selected: selectedSubTab == "Explore")
+//                        Spacer()
+                    }
+                    .frame(width: dim.listWidth)
                 }
                 switch selectedSubTab {
                     case "Following":
                         if account.followingPublicKeys.count > 0 {
                             ListViewContainer(vm: LVMManager.shared.followingLVM(forAccount: account))
-//                            ListViewContainer(pubkey: ns.activeAccountPublicKey, pubkeys: ns.followingPublicKeys, listId: "Following", listType: .account)
-//                                .equatable()
                         }
                         else {
                             ProgressView()
+                                .centered()
                         }
                     case "Explore":
                         if ns.rawExplorePubkeys.count > 0 {
                           ListViewContainer(vm: LVMManager.shared.exploreLVM(forAccount: account))
-//                            ListViewContainer(pubkey: ns.activeAccountPublicKey, pubkeys: ns.explorePubkeys, listId: "Explore", listType: .explore)
-//                                .equatable()
                         }
                         else {
                             ProgressView()
+                                .centered()
+                        }
+                    case "List":
+                        if let list = selectedList {
+                            ListViewContainer(vm: LVMManager.shared.listLVM(forAccount: account, andList: list))
+                        }
+                        else {
+                            ProgressView()
+                                .centered()
                         }
                     default:
                         Text("🥪")
+                            .centered()
 
 
                 }
             }
-//            .withNavigationDestinations()
+            .onAppear {
+                if selectedSubTab == "List" {
+                    if let list = lists.first(where: { $0.objectID.description == selectedListId }) {
+                        selectedList = list
+                    }
+                    else {
+                        selectedList = lists.first
+                    }
+                }
+            }
             .navigationTitle(selectedSubTab)
             .navigationBarHidden(true)
             .navigationBarTitleDisplayMode(.inline)

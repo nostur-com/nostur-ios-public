@@ -10,7 +10,8 @@ import SwiftUI
 struct NewListSheet: View {
     
     @Environment(\.dismiss) var dismiss
-    @ObservedObject var list:NosturList
+    @State var newList:NosturList?
+    @State var title = ""
     @State var addContactsSheetShown = false
     @State var selectedContacts:Set<Contact> = []
     @State var contactSelectionVisible = false
@@ -20,7 +21,7 @@ struct NewListSheet: View {
     var body: some View {
         Form {
             Section(header: Text("Title")) {
-                TextField("Title of your list", text: $list.name_)
+                TextField("Title of your list", text: $title)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
             }
@@ -31,7 +32,8 @@ struct NewListSheet: View {
         .navigationDestination(isPresented: $contactSelectionVisible) {
             ContactsSearch(followingPubkeys:followingPubkeys,
                            prompt: "Search contacts", onSelectContacts: { selectedContacts in
-                list.contacts_.append(contentsOf: selectedContacts)
+                guard let newList = newList else { return }
+                newList.contacts_.append(contentsOf: selectedContacts)
                 contactSelectionVisible = false
                 DataProvider.shared().save()
                 dismiss()
@@ -44,9 +46,11 @@ struct NewListSheet: View {
             }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Next") {
+                    newList = NosturList(context: DataProvider.shared().viewContext)
+                    newList?.name = title
                     contactSelectionVisible = true
                 }
-                .disabled(list.name_.isEmpty)
+                .disabled(title.isEmpty)
             }
         }
     }
@@ -56,7 +60,7 @@ struct NewListSheet_Previews: PreviewProvider {
     static var previews: some View {
         let newList = NosturList(context: PreviewFetcher.viewContext)
         NavigationStack {
-            NewListSheet(list: newList)
+            NewListSheet()
         }
         .withPreviewEnvironment()
     }

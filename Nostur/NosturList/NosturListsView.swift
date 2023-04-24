@@ -14,7 +14,7 @@ struct NosturListsView: View {
     
     @State var confirmDeleteShown = false
     @State var listToDelete:NosturList? = nil
-    @State var newList:NosturList? = nil
+    @State var newListSheet = false
     
     init() {
         let r = NosturList.fetchRequest()
@@ -42,7 +42,7 @@ struct NosturListsView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Create new list") {
-                    newList = NosturList(context: DataProvider.shared().viewContext)
+                    newListSheet = true
                 }
             }
         }
@@ -56,9 +56,9 @@ struct NosturListsView: View {
                 self.listToDelete = nil
             }
         }
-        .sheet(item: $newList) { newList in
+        .sheet(isPresented: $newListSheet) {
             NavigationStack {
-                NewListSheet(list: newList)
+                NewListSheet()
             }
         }
     }
@@ -68,7 +68,11 @@ struct ListRow: View {
     @ObservedObject var list:NosturList
     
     var body: some View {
-        Text("List: \(list.name ?? "")")
+        HStack {
+            Image(systemName: list.showAsTab ? "pin.fill" : "pin")
+            Text(list.name_)
+            Spacer()
+        }
     }
 }
 

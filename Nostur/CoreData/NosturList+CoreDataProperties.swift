@@ -21,6 +21,7 @@ extension NosturList {
     @NSManaged public var refreshedAt: Date?
     @NSManaged public var type: String?
     @NSManaged public var contacts: NSSet?
+    @NSManaged public var showAsTab: Bool
     
     var contacts_:[Contact] {
         get { contacts?.allObjects as! [Contact] }

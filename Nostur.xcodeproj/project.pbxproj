@@ -39,6 +39,7 @@
 		1F21DDC129F01B3000C564EF /* CombineWebSocket in Frameworks */ = {isa = PBXBuildFile; productRef = 1F21DDC029F01B3000C564EF /* CombineWebSocket */; };
 		1F2A493029D9A04B008614D5 /* RestoreContactsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2A492F29D9A04A008614D5 /* RestoreContactsSheet.swift */; };
 		1F2DE030298E5C5C00891D2E /* BlockListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2DE02F298E5C5C00891D2E /* BlockListView.swift */; };
+		1F2E760529F6DF6C00E67CE7 /* EditListTitleSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2E760429F6DF6C00E67CE7 /* EditListTitleSheet.swift */; };
 		1F30FAA929705EBD008439C8 /* NosturCloud.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1F30FAA729705EBD008439C8 /* NosturCloud.xcdatamodeld */; };
 		1F30FAB029706E72008439C8 /* Account+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F30FAAE29706E72008439C8 /* Account+CoreDataClass.swift */; };
 		1F30FAB329707719008439C8 /* Account+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F30FAB229707719008439C8 /* Account+CoreDataProperties.swift */; };
@@ -296,6 +297,7 @@
 		1F21DDBD29F0174700C564EF /* NewSocketPool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewSocketPool.swift; sourceTree = "<group>"; };
 		1F2A492F29D9A04A008614D5 /* RestoreContactsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestoreContactsSheet.swift; sourceTree = "<group>"; };
 		1F2DE02F298E5C5C00891D2E /* BlockListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockListView.swift; sourceTree = "<group>"; };
+		1F2E760429F6DF6C00E67CE7 /* EditListTitleSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditListTitleSheet.swift; sourceTree = "<group>"; };
 		1F30FAA829705EBD008439C8 /* NosturCloud.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = NosturCloud.xcdatamodel; sourceTree = "<group>"; };
 		1F30FAAE29706E72008439C8 /* Account+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Account+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1F30FAB229707719008439C8 /* Account+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Account+CoreDataProperties.swift"; sourceTree = "<group>"; };
@@ -982,6 +984,7 @@
 			children = (
 				1FDF0ED529EB9F1000B56AC4 /* AddContactsToListSheet.swift */,
 				1F6EB73929E1C9B200B9DA83 /* EditNosturList.swift */,
+				1F2E760429F6DF6C00E67CE7 /* EditListTitleSheet.swift */,
 				1FB6E6F829E3B16A008BE8A6 /* NewListSheet.swift */,
 				1FF2C6C529EAD7D00096AC4A /* NosturListsView.swift */,
 			);
@@ -1273,6 +1276,7 @@
 				1F75257E2996A1AA00477AF2 /* Unpublisher.swift in Sources */,
 				1F21442E29A797B80090E78E /* SettingsStore.swift in Sources */,
 				1F45C7ED29EF997200F58772 /* ImgurMediaUploadService.swift in Sources */,
+				1F2E760529F6DF6C00E67CE7 /* EditListTitleSheet.swift in Sources */,
 				1F7525802997854200477AF2 /* NewNote.swift in Sources */,
 				1F740DAD29AF8A5200EFCCA7 /* BadgesReceivedView.swift in Sources */,
 				1F4AFC4729733E2400CC1F90 /* Event+CoreDataClass.swift in Sources */,
