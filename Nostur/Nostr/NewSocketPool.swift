@@ -130,7 +130,7 @@ final class SocketPool: ObservableObject {
                             managedClient.activeSubscriptions.append(subscriptionId!)
                         }
                     }
-                    //                    print("REQUESTING: \(String(message.message.prefix(260)))")
+//                    print(" ⬇️⬇️ REQUESTING: \(String(message.message.prefix(260)))")
 //                    print("⬇️⬇️ REQUESTING: \(String(message.message))")
                     managedClient.client.sendMessage(message.message)
                 }
@@ -172,6 +172,17 @@ final class SocketPool: ObservableObject {
             socket.value.activeSubscriptions.removeAll { subscriptionId in
                 subscriptionId == "Following"
             }
+        }
+    }
+    
+    func closeSubscription(_ subscriptionId:String) {
+        for socket in sockets {
+            guard socket.value.isConnected && socket.value.read else { continue }
+            socket.value.activeSubscriptions.removeAll(where: { activeId in
+                activeId == subscriptionId
+            })
+            let closeSubscription = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: subscriptionId))
+            socket.value.client.sendMessage(closeSubscription.message)
         }
     }
 }

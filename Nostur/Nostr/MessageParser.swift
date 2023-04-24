@@ -38,7 +38,8 @@ class MessageParser {
                     print("\(relayUrl): \(message.message)")
                 case .EOSE:
                     // Keep these subscriptions open.
-                    if !["Following","Explore","Notifications"].contains(message.subscriptionId) {
+                    guard let subscriptionId = message.subscriptionId else { return }
+                    if !["Following","Explore","Notifications"].contains(subscriptionId) && String(subscriptionId.prefix(5)) != "List-" {
                         sp.sendMessage(ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: message.subscriptionId!)))
                     }
                 default:

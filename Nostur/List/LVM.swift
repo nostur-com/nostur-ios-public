@@ -44,6 +44,11 @@ class LVM: NSObject, ObservableObject {
     
     var listId:String
     var id:String { listId }
+    var subscriptionId:String {
+        if (id == "Explore" || id == "Following") { return id }
+        let idLength = id.count
+        return "List-" + String(id.prefix(min(idLength,18)))
+    }
     var listStateObjectId:NSManagedObjectID?
     var pubkey:String
     var pubkeys:Set<String>
@@ -380,7 +385,9 @@ class LVM: NSObject, ObservableObject {
             guard let self = self else { return }
             self.fetchFeedTimerNextTick()
         }
-        lvmState.viewIsVisible = (UserDefaults.standard.string(forKey: "selected_subtab") ?? "Unknown") == listId
+        let selectedSubtab = (UserDefaults.standard.string(forKey: "selected_subtab") ?? "Unknown")
+        let selectedListId = (UserDefaults.standard.string(forKey: "selected_listId") ?? "Unknown")
+        lvmState.viewIsVisible = (selectedSubtab != "List"  && selectedSubtab == listId) || (selectedSubtab == "List"  && selectedListId == listId)
         addSubscriptions()
         fetchFeedTimerNextTick()
     }
@@ -399,7 +406,7 @@ class LVM: NSObject, ObservableObject {
         }
         
         if (ot.isOnboarding && self.pubkey == ot.pubkey && ot.didFetchKind3 && !ot.didFillTimeline) {
-            fetchEvents(pubkeys: Set(ot.followingKeys), amount: 150, subscriptionId: self.id)
+            fetchEvents(pubkeys: Set(ot.followingKeys), amount: 150, subscriptionId: self.subscriptionId)
             fetchProfiles(pubkeys: Set(ot.followingKeys), subscriptionId: "PROFILES")
             DispatchQueue.main.async {
                 UserDefaults.standard.set(true, forKey: "firstTimeCompleted")
@@ -414,21 +421,21 @@ class LVM: NSObject, ObservableObject {
                 
                 if (!self.didCatchup) {
                     // THIS SUBSCRIPTION WILL STAY ACTIVE:
-                    fetchEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: self.id)
+                    fetchEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: self.subscriptionId)
                 
                     
                     // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
                     let ago =  Date(timeIntervalSince1970: Double(since)).agoString
                     
                     DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(8)) {
-                        fetchEvents(pubkeysString: self.pubkeysPrefixString, amount: 5000, since: since, subscriptionId: "\(self.id)-CATCHUP-\(ago)")
+                        fetchEvents(pubkeysString: self.pubkeysPrefixString, amount: 5000, since: since, subscriptionId: "\(self.subscriptionId)-CATCHUP-\(ago)")
                         fetchProfiles(pubkeys: self.pubkeys, subscriptionId: "Profiles")
                     }
                     self.didCatchup = true
                 }
                 else {
                     // THIS SUBSCRIPTION WILL STAY ACTIVE:
-                    fetchEvents(pubkeysString: self.pubkeysPrefixString, since: since, subscriptionId: self.id)
+                    fetchEvents(pubkeysString: self.pubkeysPrefixString, since: since, subscriptionId: self.subscriptionId)
                 }
 //                 cutOff doesnt work well, since hits with some time ago limit (500)?
 //                fetchEvents(pubkeys: self.pubkeys, subscriptionId: self.id)

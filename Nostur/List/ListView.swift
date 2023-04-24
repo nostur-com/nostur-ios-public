@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ListView: View {
     @AppStorage("selected_subtab") var selectedSubTab = "Following"
+    @AppStorage("selected_listId") var selectedListId = ""
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var dim:DIMENSIONS
     @Namespace var END_OF_LIST
@@ -68,7 +69,10 @@ struct ListView: View {
                     needsScrollToTop = true
                 }
                 .onChange(of: selectedSubTab) { selectedTab in
-                    vmState.viewIsVisible = selectedTab == vm.id
+                    vmState.viewIsVisible = vm.id != "List" && (selectedTab == vm.id)
+                }
+                .onChange(of: selectedListId) { selectedListId in
+                    vmState.viewIsVisible = vm.id == "List" && (selectedListId == vm.id)
                 }
                 .onChange(of: settings.fullWidthImages) { newValue in
                     needsFullReload = true
@@ -96,10 +100,12 @@ struct ListView: View {
             }
         }
         .onAppear {
-            vmState.viewIsVisible = selectedSubTab == vm.id
+            print("🟢🟢🟢 subtab:\(selectedSubTab) list:\(selectedListId) vm.id: \(vm.id)")
+            vmState.viewIsVisible = (selectedSubTab != "List" && selectedSubTab == vm.id) || (selectedSubTab == "List" && selectedListId == vm.id)
         }
         .onDisappear {
             vmState.viewIsVisible = false
+            SocketPool.shared.closeSubscription(vm.subscriptionId)
         }
         //        .background(Color("ListBackground"))
     }

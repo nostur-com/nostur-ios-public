@@ -76,6 +76,7 @@ struct FollowingAndExplore: View { //, Equatable {
                     case "List":
                         if let list = selectedList {
                             ListViewContainer(vm: LVMManager.shared.listLVM(forAccount: account, andList: list))
+                                .id(list.name_)
                         }
                         else {
                             ProgressView()
