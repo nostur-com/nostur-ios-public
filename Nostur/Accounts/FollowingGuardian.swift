@@ -18,10 +18,24 @@ class FollowingGuardian {
     
     var subscriptions = Set<AnyCancellable>()
 //    var lastRemovedPubkeys:Set<String>? // These we can restore after asking user
+    var checkForNewTimer:Timer?
     
     init() {
         listenForNewContactListEvents()
         listenForAccountChanged()
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
+            self.checkForUpdatedContactList()
+        }
+    }
+    
+    func checkForUpdatedContactList() {
+        print("Checking for updated contact list")
+        SocketPool.shared.sendMessage(ClientMessage(
+                type: .REQ,
+                message: RequestMessage.getAuthorContactsList(
+                    pubkey: NosturState.shared.activeAccountPublicKey
+                )))
     }
     
     func listenForAccountChanged() {
@@ -48,7 +62,7 @@ class FollowingGuardian {
                 guard account.privateKey != nil else { return }
                 
                 // TODO: Make this work for all accounts, not just active
-                let pubkeysOwn = Set(account.follows?.map({ c in c.pubkey }) ?? [])
+                let pubkeysOwn = Set(account.follows?.filter { !$0.privateFollow } .map({ c in c.pubkey }) ?? [])
                 let pubkeysRelay = Set(nEvent.pTags())
                 
                 print("🫂🫂 \(pubkeysOwn.joined(separator: ","))")
