@@ -196,13 +196,20 @@ struct SmoothList: UIViewControllerRepresentable {
             for indexPath in indexPaths {
                 guard let item = parent.data[safe: indexPath.row] else { continue }
                 
-                let imageUrls = item.imageUrls + item.parentPosts.flatMap { $0.imageUrls }
-                
-                for imageUrl in imageUrls {
+                for imageUrl in item.imageUrls {
                     imageRequests.append(ImageRequest(url: imageUrl,
-                        // TODO: Should get imagewith from SmoothList/Geometry. remove geometry from each cell
-                                                      processors: [.resize(height: DIMENSIONS.PREVIEW_HEIGHT, upscale: true)],
+                        processors: [.resize(width: imageWidth, upscale: true)],
                         userInfo: [.scaleKey: UIScreen.main.scale]))
+                }
+                
+                for url in item.linkPreviewURLs {
+                    if let tags = LinkPreviewCache.shared.retrieveObject(at: url) {
+                        if let image = tags["image"] {
+                            imageRequests.append(ImageRequest(url: URL(string:image),
+                                                              processors: [.resize(height: DIMENSIONS.PREVIEW_HEIGHT, upscale: true)],
+                                userInfo: [.scaleKey: UIScreen.main.scale]))
+                        }
+                    }
                 }
             }
             if (imageRequests.count > 0) {
