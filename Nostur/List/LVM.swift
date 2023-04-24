@@ -473,7 +473,7 @@ extension LVM {
                 let newPubkeyInfo = notification.object as! NewPubkeysForList
                 guard newPubkeyInfo.id.description == self.listId else { return }
                 self.pubkeys = newPubkeyInfo.pubkeys
-                self.performLocalFetch()
+                self.performLocalFetch(refreshInBackground: true)
             }
             .store(in: &subscriptions)
         
@@ -766,11 +766,11 @@ extension LVM {
 extension LVM: NSFetchedResultsControllerDelegate {
     
     // MARK: FROM DB TO SCREEN STEP 1: FETCH REQUEST
-    func performLocalFetch() {
+    func performLocalFetch(refreshInBackground:Bool = false) {
         if let mostRecent = self.lvmState.vPostLeafs.first {
             let fr = Event.postsByPubkeys(pubkeys, mostRecent: mostRecent.event)
             
-            if viewIsVisible {
+            if viewIsVisible || refreshInBackground {
                 guard let posts = try? DataProvider.shared().viewContext.fetch(fr) else { return }
                 self.setUnorderedEvents(events: filterMutedWords(posts))
             }
