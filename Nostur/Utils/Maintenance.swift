@@ -109,6 +109,26 @@ struct Maintenance {
             let xDaysAgo = Date.now.addingTimeInterval(-4 * 86400) // 4 days
             
             
+            
+            // CLEAN UP EVENTS WITHOUT SIG (BUG FROM PostPreview)
+            let frNoSig = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
+            frNoSig.predicate = NSPredicate(format: "sig == nil")
+            
+            let frNoSigbatchDelete = NSBatchDeleteRequest(fetchRequest: frNoSig)
+            frNoSigbatchDelete.resultType = .resultTypeCount
+            
+            do {
+                let result = try context.execute(frNoSigbatchDelete) as! NSBatchDeleteResult
+                if ((result.result as? Int ?? 0) > 0) {
+                    print("🧹🧹 Deleted \(result.result!) events without signature")
+                }
+            } catch {
+                print("🔴🔴 Failed to delete events without signature")
+            }
+            
+            
+            
+            
             // KIND 1,6
             // OUDER DAN X DAGEN
             // IS GEEN BOOKMARK

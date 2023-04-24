@@ -26,7 +26,7 @@ final class Exporter {
         
         let r = Event.fetchRequest()
         r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)]
-        r.predicate = NSPredicate(format: "pubkey == %@", pubkey)
+        r.predicate = NSPredicate(format: "pubkey == %@ and sig != nil", pubkey)
         
         
         var jsonl:[String] = []
