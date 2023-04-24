@@ -51,7 +51,7 @@ struct NoteHeaderView: View {
                     
                     if (singleLine) {
                         Group {
-                            Text("@\(event.username ?? vPost.username)").layoutPriority(1)
+                            Text("@\(event.username)").layoutPriority(1)
                             Text(" · ") //
                             Ago(vPost.date)
                                 .layoutPriority(2)

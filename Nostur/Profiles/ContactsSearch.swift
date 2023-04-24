@@ -78,36 +78,38 @@ struct ContactsSearch: View, Equatable {
                 if (filteredContacts.count == 0 && searching) {
                     ProgressView()
                 }
-                ForEach(filteredContacts) { contact in
-                    HStack(alignment:.top) {
-                        Button {
-                            if selectedContacts.contains(contact) {
-                                selectedContacts.remove(contact)
+                LazyVStack {
+                    ForEach(filteredContacts) { contact in
+                        HStack(alignment:.top) {
+                            Button {
+                                if selectedContacts.contains(contact) {
+                                    selectedContacts.remove(contact)
+                                }
+                                else {
+                                    selectedContacts.insert(contact)
+                                }
+                            } label: {
+                                if selectedContacts.contains(contact) {
+                                    Image(systemName:  "checkmark.circle.fill")
+                                        .padding(.top, 18)
+                                }
+                                else {
+                                    Image(systemName:  "circle")
+                                        .foregroundColor(Color.secondary)
+                                        .padding(.top, 18)
+                                }
                             }
-                            else {
-                                selectedContacts.insert(contact)
-                            }
-                        } label: {
-                            if selectedContacts.contains(contact) {
-                                Image(systemName:  "checkmark.circle.fill")
-                                    .padding(.top, 18)
-                            }
-                            else {
-                                Image(systemName:  "circle")
-                                    .foregroundColor(Color.secondary)
-                                    .padding(.top, 18)
+                            ContactSearchResultRow(contact: contact) {
+                                if selectedContacts.contains(contact) {
+                                    selectedContacts.remove(contact)
+                                }
+                                else {
+                                    selectedContacts.insert(contact)
+                                }
                             }
                         }
-                        ContactSearchResultRow(contact: contact) {
-                            if selectedContacts.contains(contact) {
-                                selectedContacts.remove(contact)
-                            }
-                            else {
-                                selectedContacts.insert(contact)
-                            }
-                        }
+                        Divider()
                     }
-                    Divider()
                 }
             }
             .padding(10)
