@@ -18,7 +18,7 @@ struct SmoothList: UIViewControllerRepresentable {
     typealias UIViewControllerType = UIViewController
     typealias CollectionViewHolderType = CViewHolder
     typealias RowAppearedCallback = ((sectionIndex: Int, itemIndex: Int, item: VPost)) -> Void
-    typealias FinishedScrollingCallback = (Bool) -> Void
+    typealias FinishedScrollingCallback = ((isAtTop: Bool, indexPaths:[IndexPath])) -> Void
     
     @Binding var needsRefresh: Bool
     @Binding var needsFullReload: Bool
@@ -255,17 +255,17 @@ struct SmoothList: UIViewControllerRepresentable {
         }
         
         func processScrollViewDidScroll(_ scrollView: UIScrollView) {
-            if let indexPaths = collectionViewHolder?.collectionView.indexPathsForVisibleItems {
-                print(indexPaths)
+            guard let indexPaths = collectionViewHolder?.collectionView.indexPathsForVisibleItems else {
+                return
             }
             if scrollView.contentOffset.y > 150 {
                 print("IS AT TOP FALSE")
-                parent.onFinishedScrolling?(false) // didFinish and isAtTop=false
+                parent.onFinishedScrolling?((isAtTop:false, indexPaths:indexPaths)) // didFinish and isAtTop=false
                 
             }
             else {
                 print("IS AT TOP TRUE")
-                parent.onFinishedScrolling?(true) // didFinish and isAtTop=true
+                parent.onFinishedScrolling?((isAtTop:true, indexPaths:indexPaths)) // didFinish and isAtTop=true
                 
                 if (!parent.autoScroll) && (scrollView.contentOffset.y < SMOOTHLIST_AUTOSCROLL_OFFSET) {
                     // if really at top, push back a little, so new items inserted at top don't push all down

@@ -48,7 +48,7 @@ struct ListView: View {
                         vm.lastAppearedSubject.send(vPost.event)
                     }
                 },
-                           onFinishedScrolling: { isAtTop in
+                           onFinishedScrolling: { (isAtTop, indexPaths) in
                     guard isAtTop != vmState.isAtTop else { return }
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
                         self.vmState.isAtTop = isAtTop
