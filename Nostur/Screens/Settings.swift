@@ -215,9 +215,9 @@ struct Settings: View {
                                 }
                             }
 
-//                            Button { fixContactEventRelations() } label: { // TODO: THIS ONE NOT NEEDED ANYMORE??
-//                                Text("Fix event.pubkey -> event.contact")
-//                            }
+                            Button { fixContactEventRelations() } label: { // TODO: THIS ONE NOT NEEDED ANYMORE??
+                                Text("Fix event.pubkey -> event.contact")
+                            }
 
                             Button { putContactsInEventsForPs() } label: {
                                 Text("Fix contacts (p) in event")
