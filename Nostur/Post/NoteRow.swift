@@ -14,17 +14,21 @@ struct NoteRow: View {
     var inThread = false // For rendering in thread, hide "Replying to.."
     var connect:ThreadConnectDirection? = nil
     let fullWidth:Bool
+    let isReply:Bool // is reply on PostDetail (needs 2*10 less box width)
+    let isDetail:Bool
     
     
     private let sp:SocketPool = .shared
     
-    init(vPost:VPost, hideFooter:Bool = false, inThread:Bool = false, connect: ThreadConnectDirection? = nil, fullWidth:Bool = false) {
+    init(vPost:VPost, hideFooter:Bool = false, inThread:Bool = false, connect: ThreadConnectDirection? = nil, fullWidth:Bool = false, isReply:Bool = false, isDetail:Bool = false) {
         self.vPost = vPost
         self.event = vPost.event
         self.hideFooter = hideFooter
         self.inThread = inThread
         self.connect = connect
         self.fullWidth = fullWidth
+        self.isReply = isReply
+        self.isDetail = isDetail
     }
     
     var body: some View {
@@ -60,10 +64,10 @@ struct NoteRow: View {
                         if let firstQuote = vPost.firstQuote.first {
                             let _ = print("why: \(firstQuote.event.contact?.pubkey ?? "bluh")")
                             if fullWidth {
-                                Kind1(vPost: firstQuote, hideFooter:false)
+                                Kind1(vPost: firstQuote, hideFooter:false, isDetail:isDetail)
                             }
                             else {
-                                Kind1Default(vPost: firstQuote, hideFooter:false)
+                                Kind1Default(vPost: firstQuote, hideFooter:false, isDetail:isDetail)
                             }
                         }
                         else if let firstQuoteId = event.firstQuoteId {
@@ -74,11 +78,11 @@ struct NoteRow: View {
                 // IS NOT A REPOST
                 else {
                     if fullWidth {
-                        Kind1(vPost: vPost, hideFooter: hideFooter, inThread:inThread, connect:connect)
+                        Kind1(vPost: vPost, hideFooter: hideFooter, inThread:inThread, connect:connect, isReply: isReply, isDetail:isDetail)
                         //                .background(Color.random)
                     }
                     else {
-                        Kind1Default(vPost: vPost, hideFooter: hideFooter, inThread:inThread, connect:connect)
+                        Kind1Default(vPost: vPost, hideFooter: hideFooter, inThread:inThread, connect:connect, isReply: isReply, isDetail:isDetail)
                         //                .background(Color.random)
                     }
                     
@@ -117,21 +121,38 @@ struct NoteRow: View {
         let hideFooter:Bool // For rendering in NewReply
         let inThread:Bool // For rendering in thread
         var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
+        let isReply:Bool // is reply on PostDetail
+        let isDetail:Bool
         @ObservedObject var event:Event
          
         let sp:SocketPool = .shared
         let up:Unpublisher = .shared
         @ObservedObject var settings:SettingsStore = .shared
         
-        init(vPost: VPost, hideFooter:Bool = true, inThread:Bool = false, connect:ThreadConnectDirection? = nil) {
+        init(vPost: VPost, hideFooter:Bool = true, inThread:Bool = false, connect:ThreadConnectDirection? = nil, isReply:Bool = false, isDetail:Bool = false) {
             self.vPost = vPost
             self.event = vPost.event
             self.hideFooter = hideFooter
             self.inThread = inThread
             self.connect = connect
+            self.isReply = isReply
+            self.isDetail = isDetail
         }
         
         let THREAD_LINE_OFFSET = 34.0
+        
+        var imageWidth:CGFloat {
+            // FULL WIDTH IS OFF
+            
+            // LIST OR LIST PARENT
+            if !isDetail { return dim.availableNoteRowImageWidth() }
+            
+            // DETAIL
+            if isDetail && !isReply { return dim.availablePostDetailImageWidth() }
+            
+            // DETAIL PARENT OR REPLY
+            return dim.availablePostDetailRowImageWidth()
+        }
         
         var body: some View {
             
@@ -161,7 +182,7 @@ struct NoteRow: View {
                             .contentShape(Rectangle())
                             .onTapGesture { navigateTo(vPost) }
                     }
-                    ContentRenderer(vPost: vPost, availableWidth: dim.availableNoteRowImageWidth())
+                    ContentRenderer(vPost: vPost, fullWidth: false, availableWidth: imageWidth)
                     if (!hideFooter && settings.rowFooterEnabled) {
                         FooterFragmentView(vPost: vPost)
                             .padding(.top, 10)
@@ -187,21 +208,38 @@ struct NoteRow: View {
         let hideFooter:Bool // For rendering in NewReply
         let inThread:Bool // For rendering in thread
         var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
+        let isReply:Bool // is reply of PostDetail
+        let isDetail:Bool
         @ObservedObject var event:Event
          
         let sp:SocketPool = .shared
         let up:Unpublisher = .shared
         @ObservedObject var settings:SettingsStore = .shared
         
-        init(vPost: VPost, hideFooter:Bool = true, inThread:Bool = false, connect:ThreadConnectDirection? = nil) {
+        init(vPost: VPost, hideFooter:Bool = true, inThread:Bool = false, connect:ThreadConnectDirection? = nil, isReply:Bool = false, isDetail:Bool = false) {
             self.vPost = vPost
             self.event = vPost.event
             self.hideFooter = hideFooter
             self.inThread = inThread
             self.connect = connect
+            self.isReply = isReply
+            self.isDetail = isDetail
         }
         
         let THREAD_LINE_OFFSET = 34.0
+        
+        var imageWidth:CGFloat {
+            // FULL WIDTH IS ON
+            
+            // LIST OR LIST PARENT
+            if !isDetail { return dim.listWidth }
+            
+            // DETAIL
+            if isDetail && !isReply { return dim.availablePostDetailRowImageWidth() }
+            
+            // DETAIL PARENT OR REPLY
+            return dim.availablePostDetailRowImageWidth()
+        }
         
         var body: some View {
             
@@ -224,7 +262,7 @@ struct NoteRow: View {
                         .padding(.horizontal, 10)
                         .contentShape(Rectangle())
                         .onTapGesture { navigateTo(vPost) }
-                    ContentRenderer(vPost: vPost, fullWidth: true, availableWidth: dim.listWidth)
+                    ContentRenderer(vPost: vPost, fullWidth: true, availableWidth: imageWidth)
                     if (!hideFooter && settings.rowFooterEnabled) {
                         FooterFragmentView(vPost: vPost)
                             .padding(10)

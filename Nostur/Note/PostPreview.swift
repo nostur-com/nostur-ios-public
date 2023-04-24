@@ -25,6 +25,13 @@ struct PostPreview: View {
     
     var body: some View {
         ScrollView {
+            Color.clear.frame(height: 0)
+                .modifier(SizeModifier())
+                .onPreferenceChange(SizePreferenceKey.self) { size in
+                    guard size.width > 0 else { return }
+                    dim.listWidth = size.width
+                    print("🟣🟣🟣🟣🟣 NEW DETAIL WIDTH \(size.width) -- Scale: \(UIScreen.main.scale) ")
+                }
             AnyStatus()
             if let vPost = vPost {
                 NoteRow(vPost: vPost)

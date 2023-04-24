@@ -32,12 +32,19 @@ class DIMENSIONS: ObservableObject {
     
     // Substracts profile pic space from list width
     func availableNoteRowImageWidth() -> CGFloat {
+        // 10 + ( 10+50+10 ) (availableWidth) + 10 + 10
         return (listWidth - (Self.POST_ROW_HPADDING * 2) - (Self.POST_ROW_PFP_WIDTH) - (Self.POST_ROW_PFP_HPADDING * 2) - Self.KIND1_TRAILING)
     }
     
     // No profile pic,  no shadow box padding, only Detail ContentRenderer padding
     func availablePostDetailImageWidth() -> CGFloat {
         return (listWidth - (Self.POST_ROW_HPADDING * 2))
+    }
+    
+    // Substracts profile pic space from list width
+    func availablePostDetailRowImageWidth() -> CGFloat {
+        //( 10+50+10 ) (availableWidth) + 10
+        return (listWidth - (Self.POST_ROW_PFP_WIDTH) - (Self.POST_ROW_PFP_HPADDING * 2) - Self.KIND1_TRAILING)
     }
 }
 

@@ -144,7 +144,7 @@ struct ContentRenderer: View { // VIEW things
                         .frame(minHeight: 250)
                         .background(Color("LightGray"))
                     case .image(let url):
-                        SingleMediaViewer(url: url, pubkey: vPost.event.pubkey, imageWidth: availableWidth, isFollowing: vPost.following)
+                        SingleMediaViewer(url: url, pubkey: vPost.event.pubkey, imageWidth: availableWidth, isFollowing: vPost.following, fullWidth: fullWidth)
                             .padding(.vertical, 5)
                     case .linkPreview(let url):
                         // TODO: do no link preview if restrictAutoDownload...

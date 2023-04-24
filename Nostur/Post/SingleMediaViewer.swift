@@ -16,6 +16,7 @@ struct SingleMediaViewer: View {
     var height:CGFloat?
     let imageWidth:CGFloat
     let isFollowing:Bool
+    var fullWidth:Bool = false
     @State var fullScreenItem:FullScreenItem?
     @State var imagesShown = false
     
@@ -43,21 +44,41 @@ struct SingleMediaViewer: View {
                                 }
                             }
                             else if let image = state.image {
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
-                                    .onTapGesture {
-                                        sendNotification(.fullScreenView, FullScreenItem(url: url))
-                                    }
+                                if !fullWidth {
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
+                                        .frame(height:250)
+                                        .onTapGesture {
+                                            sendNotification(.fullScreenView, FullScreenItem(url: url))
+                                        }
+                                }
+                                else {
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
+                                        .onTapGesture {
+                                            sendNotification(.fullScreenView, FullScreenItem(url: url))
+                                        }
+                                }
                             }
-                            else {
+                            else if state.isLoading {
                                 CenteredProgressView()
                                     .background(Color("LightGray"))
+                                    .frame(height:250)
+                            }
+                            else {
+                                Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
+                                    .centered()
+                                .frame(height: 250)
+                                .background(Color("LightGray"))
                             }
                         }
                         else {
-                            CenteredProgressView()
-                                .background(Color("LightGray"))
+                            Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
+                                .centered()
+                            .frame(height: 250)
+                            .background(Color("LightGray"))
                         }
                     }
                     .pipeline(ImageProcessing.shared.content) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
@@ -68,10 +89,21 @@ struct SingleMediaViewer: View {
                                             processors: [.resize(width: imageWidth, upscale: true)],
                                             userInfo: [.scaleKey: UIScreen.main.scale])) { state in
                         if let image = state.image {
-                            image
-                                .onTapGesture {
-                                    sendNotification(.fullScreenView, FullScreenItem(url: url))
-                                }
+                            if !fullWidth {
+                                image
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(height:250)
+                                    .onTapGesture {
+                                        sendNotification(.fullScreenView, FullScreenItem(url: url))
+                                    }
+                            }
+                            else {
+                                image
+                                    .onTapGesture {
+                                        sendNotification(.fullScreenView, FullScreenItem(url: url))
+                                    }
+                            }
                         }
                         else if state.error != nil {
                             Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
@@ -85,13 +117,13 @@ struct SingleMediaViewer: View {
                                 .background(Color("LightGray"))
                         }
                     }
-                                                    .pipeline(ImageProcessing.shared.content) // No processing again here, we probably never show the image again
+                    .pipeline(ImageProcessing.shared.content) // No processing again here, we probably never show the image again
                 }
             }
             else {
                 Text("Tap to load media")
                     .centered()
-                .frame(height: 200)
+                .frame(height: 250)
                 .background(.regularMaterial)
                 .cornerRadius(10)
                 .onTapGesture {

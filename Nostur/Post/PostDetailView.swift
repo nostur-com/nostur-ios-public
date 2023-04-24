@@ -152,7 +152,7 @@ struct PostAndParent: View {
                             if isParent {
 //                                ReplyingToFragmentView(vPost: vPost)
 //                                    .padding(.vertical, 3)
-                                ContentRenderer(vPost: vPost, isDetail: true, availableWidth: dim.availableNoteRowImageWidth())
+                                ContentRenderer(vPost: vPost, isDetail: true, availableWidth: dim.availablePostDetailRowImageWidth())
                                     .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
 //                                    .padding(.top, 5)
 //                                    .background(.green)
@@ -211,7 +211,7 @@ struct PostAndParent: View {
                                  , id:\.self) { event in
                             
                             if let vPost = event.toVPost() {
-                                NoteRow(vPost: vPost, hideFooter: false)
+                                NoteRow(vPost: vPost, hideFooter: false, isReply:true)
 //                                    .background(.orange)
                                     .onTapGesture { navigateTo(vPost) }
                             }
