@@ -332,7 +332,9 @@ class NewWebSocket {
     
     init(url:String) {
         self.url = url
-        //        socketQueue.name = "nostur.socketqueue"
+        self.socketQueue.name = "nostur.socketqueue"
+        self.socketQueue.qualityOfService = .utility
+        self.socketQueue.maxConcurrentOperationCount = 1
         //        connect()
         //        startPinger()
     }
