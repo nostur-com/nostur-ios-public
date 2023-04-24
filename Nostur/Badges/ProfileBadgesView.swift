@@ -121,6 +121,7 @@ struct ProfileBadgesView: View {
         HStack {
             ForEach(Array(verifiedBadges.prefix(3))) { profileBadge in
                 BadgeIcon(badge: profileBadge.badge)
+                    .frame(width: 32, height: 32)
                     .onTapGesture { badgeInfoIsShown = true }
             }
             Spacer()
@@ -173,12 +174,15 @@ struct BadgeIcon: View {
                                 .frame(width: 32, height: 32)
                                 .clipped()
                         }
-                        else {
+                        else if state.isLoading {
                             ProgressView()
+                        }
+                        else {
+                            Image(systemName: "exclamationmark.triangle.fill")
                         }
                     }
                     else {
-                        ProgressView()
+                        Image(systemName: "exclamationmark.triangle.fill")
                     }
                 }
                 .pipeline(ImageProcessing.shared.badges) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
@@ -195,8 +199,11 @@ struct BadgeIcon: View {
                             .frame(width: 32, height: 32)
                             .clipped()
                     }
-                    else {
+                    else if state.isLoading {
                         CenteredProgressView()
+                    }
+                    else {
+                        Image(systemName: "exclamationmark.triangle.fill")
                     }
                 }
 //                .processors([.resize(width: 32)])
