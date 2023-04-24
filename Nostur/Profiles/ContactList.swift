@@ -14,6 +14,7 @@ struct ContactList: View {
     @FetchRequest
     var contacts:FetchedResults<Contact>
     var pubkeys:[String]
+    var silent:[String]
     
     var notInContacts:[String] {
         Array(Set(pubkeys).subtracting(Set(contacts.map { $0.pubkey })))
@@ -27,17 +28,19 @@ struct ContactList: View {
     
     var missing:[String] { notInContacts + noMetadata }
 
-    init(pubkeys:[String]) {
+    init(pubkeys:[String], silent:[String]? = nil) {
         self.pubkeys = pubkeys
+        self.silent = silent ?? []
+        
         _contacts = FetchRequest(
             sortDescriptors: [NSSortDescriptor(keyPath: \Contact.metadata_created_at, ascending: true)],
-            predicate: NSPredicate(format: "pubkey IN %@", pubkeys),
+            predicate: NSPredicate(format: "pubkey IN %@", pubkeys + self.silent),
             animation: .none)
     }
     
     var body: some View {
         VStack {
-            Text("Total: \(pubkeys.count)")
+            Text("Total: \(pubkeys.count)\(silent.count > 0 ? " + \(silent.count) silent/private" : "")")
             LazyVStack {
                 ForEach(contacts) { contact in
                     ProfileRow(contact: contact)

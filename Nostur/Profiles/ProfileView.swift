@@ -331,7 +331,9 @@ struct ProfileView: View {
                                             
                                             Text("Following").font(.headline).fontWeight(.heavy).padding(.vertical, 10)
                                             
-                                            ContactList(pubkeys: pubkeys)
+                                            let silentFollows = clEvents.first!.pubkey == NosturState.shared.pubkey ? NosturState.shared.account?.follows_.filter { $0.privateFollow }.map { $0.pubkey } : []
+                                            
+                                            ContactList(pubkeys: pubkeys, silent:silentFollows)
                                         }
                                         else {
                                             HStack {
