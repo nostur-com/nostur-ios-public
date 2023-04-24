@@ -149,16 +149,15 @@ struct NoteRow: View {
                     }
                     .padding(.horizontal, DIMENSIONS.POST_ROW_PFP_HPADDING)
 
-                VStack(alignment:.leading, spacing: 0) {// Post container
+                VStack(alignment:.leading, spacing: 3) {// Post container
                     HStack { // name + reply + context menu
                         NoteHeaderView(vPost: vPost)
-                            .padding(.bottom, 5)
                         Spacer()
                         NoteMenuView(vPost: vPost)
                     }
                     if !inThread {
                         ReplyingToFragmentView(vPost: vPost)
-                            .padding(.bottom, 5)
+//                            .padding(.bottom, 3)
                             .contentShape(Rectangle())
                             .onTapGesture { navigateTo(vPost) }
                     }
@@ -206,7 +205,7 @@ struct NoteRow: View {
         
         var body: some View {
             
-            VStack(spacing: 0) {
+            VStack(spacing: 3) {
                 HStack(alignment: .top, spacing:0) {
                     PFP(pubkey: vPost.pubkey, pictureUrl: event.contact?.picture)
                         .frame(width: 50, height: 50)
@@ -214,21 +213,17 @@ struct NoteRow: View {
                             navigateTo(ContactPath(key: vPost.pubkey)) // TODO: if vPost.contact navigate with that else by .pubkey
                         }
                         .padding(.horizontal, 10)
-                    VStack {
-                        HStack {
-                            NoteHeaderView(vPost: vPost)
-                            Spacer()
-                            NoteMenuView(vPost: vPost)
-                                .padding(.horizontal, 20)
-                        }
-                        ReplyingToFragmentView(vPost: vPost)
-                            .padding(.bottom, 5)
-                            .contentShape(Rectangle())
-                            .onTapGesture { navigateTo(vPost) }
-                    }
+                    NoteHeaderView(vPost: vPost, singleLine: false)
+                    Spacer()
+                    NoteMenuView(vPost: vPost)
+                        .padding(.horizontal, 20)
                 }
                 .padding(.bottom, 10)
-                VStack(alignment:.leading, spacing: 0) {// Post container
+                VStack(alignment:.leading, spacing: 3) {// Post container
+                    ReplyingToFragmentView(vPost: vPost)
+                        .padding(.horizontal, 10)
+                        .contentShape(Rectangle())
+                        .onTapGesture { navigateTo(vPost) }
                     ContentRenderer(vPost: vPost, fullWidth: true, availableWidth: dim.listWidth)
                     if (!hideFooter && settings.rowFooterEnabled) {
                         FooterFragmentView(vPost: vPost)

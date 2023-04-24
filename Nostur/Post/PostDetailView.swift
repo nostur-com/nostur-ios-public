@@ -150,9 +150,10 @@ struct PostAndParent: View {
                             }
                             .padding(.trailing, 10)
                             if isParent {
-                                ReplyingToFragmentView(vPost: vPost)
-                                    .padding(.vertical, 3)
+//                                ReplyingToFragmentView(vPost: vPost)
+//                                    .padding(.vertical, 3)
                                 ContentRenderer(vPost: vPost, isDetail: true, availableWidth: dim.availableNoteRowImageWidth())
+                                    .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
 //                                    .padding(.top, 5)
 //                                    .background(.green)
                             }
@@ -160,11 +161,11 @@ struct PostAndParent: View {
                     }
 
                     if !isParent {
-                        ReplyingToFragmentView(vPost: vPost)
-                            .padding(.bottom, 5)
-                            .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
+//                        ReplyingToFragmentView(vPost: vPost)
+//                            .padding(.bottom, 3)
+//                            .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
                         ContentRenderer(vPost: vPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
-                            .padding(.top, 5)
+                            .padding(.top, 3)
                             .padding(.bottom, 10)
                             .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
 //                            .background(.orange)
