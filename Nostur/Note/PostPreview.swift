@@ -13,14 +13,16 @@ struct PostPreview: View {
     let previewEvent:Event
     let sendNow:() -> Void
     var vPost:VPost?
+    @Binding var uploading:Bool
 
     // This previewEvent is not saved in database
     // Code is basically from Event.saveEvent, without unnecessary bits
     
-    init(previewEvent: Event, sendNow: @escaping () -> Void) {
+    init(previewEvent: Event, sendNow: @escaping () -> Void, uploading:Binding<Bool>) {
         self.previewEvent = previewEvent
         self.sendNow = sendNow
         self.vPost = previewEvent.toVPost()
+        _uploading = uploading
     }
     
     var body: some View {
@@ -54,10 +56,16 @@ struct PostPreview: View {
                     DataProvider.shared().viewContext.delete(previewEvent)
                     sendNow()
                 } label: {
-                    Text("Post")
+                    if (uploading) {
+                        ProgressView()
+                    }
+                    else {
+                        Text("Post")
+                    }
                 }
                 .buttonStyle(.borderedProminent)
                 .cornerRadius(20)
+                .disabled(uploading)
             }
         }
         .navigationTitle("Post preview")
@@ -133,10 +141,11 @@ func createPreviewEvent(_ event:NEvent) -> Event {
 }
 
 struct PostPreview_Previews: PreviewProvider {
+    @State static var uploading = false
     static var previews: some View {
         NavigationStack {
             if let event = PreviewFetcher.fetchEvent() {
-                PostPreview(previewEvent: event, sendNow: { print("send!") })
+                PostPreview(previewEvent: event, sendNow: { print("send!") }, uploading: $uploading)
             }
         }
         .withPreviewEnvironment()

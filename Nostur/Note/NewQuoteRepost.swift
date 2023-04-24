@@ -195,7 +195,7 @@ struct NewQuoteRepost: View {
             }
             .sheet(item: $previewEvent) { previewEvent in
                 NavigationStack {
-                    PostPreview(previewEvent: previewEvent, sendNow: self.sendNow)
+                    PostPreview(previewEvent: previewEvent, sendNow: self.sendNow, uploading: $uploading)
                         .onDisappear {
                             DataProvider.shared().viewContext.delete(previewEvent)
                         }
