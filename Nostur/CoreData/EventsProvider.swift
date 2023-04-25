@@ -337,6 +337,9 @@ class EventsProvider: ObservableObject {
         self.inMemory = inMemory
     }
     
+    var databaseProblem = false
+    var databaseProblemDescription:String = ""
+    
     /// A peristent history token used for fetching transactions from the store.
     private var lastToken: NSPersistentHistoryToken?
     
@@ -370,9 +373,20 @@ class EventsProvider: ObservableObject {
         //        description.setOption(true as NSNumber,
         //                              forKey: NSPersistentHistoryTrackingKey)
         
+        
+        var newError:NSError?
         container.loadPersistentStores { storeDescription, error in
-            if let error = error as NSError? {
-                fatalError("Unresolved error \(error), \(error.userInfo)")
+            newError = error as NSError?
+        }
+        if newError != nil {
+            print("Unresolved error \(newError?.description ?? "")")
+            self.databaseProblem = true
+            self.databaseProblemDescription = newError?.userInfo.description ?? ""
+            description.url = URL(fileURLWithPath: "/dev/null")
+            container.loadPersistentStores { storeDescription, error in
+                if let error = error as NSError? {
+                    fatalError("Unresolved error \(error), \(error.userInfo)")
+                }
             }
         }
         

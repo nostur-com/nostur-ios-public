@@ -68,7 +68,27 @@ struct NosturApp: App {
     var body: some Scene {
         WindowGroup {
             Group {
-                if isOnboarding || ns.accounts.count == 0 {
+                if EventsProvider.shared.databaseProblem {
+                    VStack {
+                        Text("Something went wrong")
+                            .font(.title2)
+                        Text("The database could not be loaded.")
+                            .padding(.bottom, 20)
+                        Text("Sorry, this can happen during TestFlight.")
+                            .padding(.bottom, 20)
+                    }
+                    VStack(alignment: .leading) {
+                            Text("There are 2 solutions:")
+                            Text("1) Send screenshot of this error and wait for an update with fix")
+                            Text("2) Reinstall the app and start fresh")
+                                .padding(.bottom, 20)
+                            Text("Error: 00")
+                            Text(EventsProvider.shared.databaseProblemDescription)
+                    }
+                    .padding()
+                    
+                }
+                else if isOnboarding || ns.accounts.count == 0 {
 //                if !didAcceptTerms || isOnboarding || ns.accounts.count == 0 {
                     Onboarding()
                         .environmentObject(ns)
