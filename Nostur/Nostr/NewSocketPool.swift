@@ -192,6 +192,8 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     var relayId:NSManagedObjectID
     var url:String
     var client:NewWebSocket
+    var exponentialReconnectBackOff = 0
+    var skipped = 0
     
     private var connectionQueue = DispatchQueue(label: "com.nostur.connection")
     private var _isConnecting = false
@@ -236,7 +238,13 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     }
     
     func connect() {
+        guard self.skipped == self.exponentialReconnectBackOff else { // Should be 0 == 0 to continue, or 2 == 2 etc..
+            self.skipped = skipped + 1
+            print("🔌🔴 Skipping reconnect. EB: (\(exponentialReconnectBackOff)) skipped: \(skipped)")
+            return
+        }
         if !isConnecting {
+            self.skipped = 0
             self.isConnecting = true
             self.client.connect()
         }
@@ -265,6 +273,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
             sendNotification(.socketNotification, "Error: \(shortURL) \(error.localizedDescription)")
         }
         self.activeSubscriptions = []
+        self.exponentialReconnectBackOff = max(1, self.exponentialReconnectBackOff * 2)
         print("🔌🔴 DISCONNECTED WITH ERROR \(self.url): \(error.localizedDescription)")
     }
     
@@ -283,6 +292,8 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
             self.isConnected = true
         }
         self.activeSubscriptions = []
+        self.exponentialReconnectBackOff = 0
+        self.skipped = 0
         print("🔌 CONNECTED \(self.url)")
         //                print("🔌 CONNECTED \(self.url): \(headers)")
     }
@@ -294,6 +305,8 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
             self.isConnected = false
         }
         self.activeSubscriptions = []
+        self.exponentialReconnectBackOff = 0
+        self.skipped = 0
         DispatchQueue.main.async {
             sendNotification(.socketNotification, "Disconnected: \(self.url)")
         }
