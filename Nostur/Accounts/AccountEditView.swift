@@ -263,7 +263,7 @@ extension AccountEditView {
             account.privateKey = keys.privateKeyHex()
         }
         do {
-            try viewContext.save()
+//            try viewContext.save() /// save happens in publishMetadataEvent
             try publishMetadataEvent()
             dismiss()
         }
@@ -298,7 +298,7 @@ extension AccountEditView {
                 
                 _ = Event.saveEvent(event: newKind0EventSigned, context: viewContext)
                 Contact.saveOrUpdateContact(event: newKind0EventSigned, context: viewContext)
-                try viewContext.save()
+                DataProvider.shared().save()
                 
                 // broadcast to relays
                 up.publishNow(newKind0EventSigned)
