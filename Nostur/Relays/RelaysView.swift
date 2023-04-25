@@ -10,12 +10,20 @@ import CoreData
 
 struct RelayRowView: View {
     @ObservedObject var relay:Relay
-    @StateObject var socket:NewManagedClient
+    @ObservedObject var sp:SocketPool = .shared
+    
+    var isConnected:Bool {
+        socket?.isConnected ?? false
+    }
+    
+    var socket:NewManagedClient? {
+        sp.sockets.first(where: { $0.key == relay.objectID } )?.value
+    }
     
     var body: some View {
         HStack {
             
-            if (socket.isConnected) {
+            if (isConnected) {
                 Image(systemName: "circle.fill").foregroundColor(.green)
                     .opacity(1.0)
             }
@@ -33,16 +41,16 @@ struct RelayRowView: View {
                 .opacity(relay.read ? 1.0 : 0.2)
                 .onTapGesture {
                     relay.read.toggle()
-                    socket.read = relay.read
-                    try! relay.managedObjectContext!.save()
+                    socket?.read = relay.read
+                    DataProvider.shared().save()
                 }
             
             Image(systemName:"arrow.up.circle.fill").foregroundColor(relay.write ? .green : .gray)
                 .opacity(relay.write ? 1.0 : 0.2)
                 .onTapGesture {
                     relay.write.toggle()
-                    socket.write = relay.write
-                    try! relay.managedObjectContext!.save()
+                    socket?.write = relay.write
+                    DataProvider.shared().save()
                 }
         }
     }
@@ -60,7 +68,7 @@ struct RelaysView: View {
         animation: .default)
     var relays: FetchedResults<Relay>
 
-    let sp:SocketPool = .shared
+    @ObservedObject var sp:SocketPool = .shared
 
     func socketForRelay(relay: Relay) -> NewManagedClient {
         guard let socket = sp.sockets[relay.objectID] else {
@@ -73,7 +81,7 @@ struct RelaysView: View {
     var body: some View {
         VStack {
             ForEach(relays, id:\.objectID) { relay in
-                RelayRowView(relay: relay, socket: socketForRelay(relay: relay))
+                RelayRowView(relay: relay)
                     .onTapGesture {
                         editRelay = relay
                     }

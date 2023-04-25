@@ -237,8 +237,8 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
         self.client = client
     }
     
-    func connect() {
-        guard self.skipped == self.exponentialReconnectBackOff else { // Should be 0 == 0 to continue, or 2 == 2 etc..
+    func connect(_ forceConnectionAttempt:Bool = false) {
+        guard forceConnectionAttempt || self.skipped == self.exponentialReconnectBackOff else { // Should be 0 == 0 to continue, or 2 == 2 etc..
             self.skipped = skipped + 1
             print("🔌🔴 Skipping reconnect. EB: (\(exponentialReconnectBackOff)) skipped: \(skipped)")
             return
@@ -251,13 +251,16 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     }
     
     func disconnect() {
-        self.isConnecting = false
-        self.isConnected = false
+        DispatchQueue.main.async {
+            self.isConnecting = false
+            self.isConnected = false
+        }
         self.client.disconnect()
     }
     
     func didDisconnect() {
         DispatchQueue.main.async {
+            SocketPool.shared.objectWillChange.send()
             self.isConnecting = false
             self.isConnected = false
         }
@@ -267,6 +270,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     
     func didDisconnectWithError(_ error: Error) {
         DispatchQueue.main.async {
+            SocketPool.shared.objectWillChange.send()
             self.isConnecting = false
             self.isConnected = false
             let shortURL = URL(string: self.url)?.baseURL?.description ?? self.url
@@ -288,6 +292,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     
     public func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
         DispatchQueue.main.async {
+            SocketPool.shared.objectWillChange.send()
             self.isConnecting = false
             self.isConnected = true
         }
@@ -301,6 +306,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     
     public func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
         DispatchQueue.main.async {
+            SocketPool.shared.objectWillChange.send()
             self.isConnecting = false
             self.isConnected = false
         }
@@ -313,24 +319,6 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
         print("🔌 DISCONNECTED \(self.url): with code: \(closeCode.rawValue) \(String(describing: reason != nil ? String(data: reason!, encoding: .utf8) : "") )")
         
     }
-    
-//        func didReceive(event: Starscream.WebSocketEvent, client: Starscream.WebSocketClient) {
-//            switch event {
-//
-//            case .disconnected(let reason, let code):
-//
-//
-//            case .cancelled:
-//                DispatchQueue.main.async {
-//                    self.isConnecting = false
-//                    self.isConnected = false
-//                }
-//                    self.activeSubscriptions = []
-//                    print("🔌 CANCELLED \(self.url)")
-//            case .error(let error):
-//
-//            }
-//        }
 }
 
 protocol NewWebSocketDelegate: URLSessionWebSocketDelegate {
