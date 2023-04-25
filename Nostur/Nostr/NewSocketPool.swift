@@ -53,9 +53,9 @@ final class SocketPool: ObservableObject {
         }
     }
     
-    func addSocket(relayId:NSManagedObjectID, url:String, read:Bool = true, write: Bool = false) throws -> NewManagedClient {
+    func addSocket(relayId:NSManagedObjectID, url:String, read:Bool = true, write: Bool = false) -> NewManagedClient {
         if (!sockets.keys.contains(relayId)) {
-            guard let urlURL = URL(string: url) else { throw "invalid url" }
+            var urlURL:URL = URL(string: url) ?? URL(string:"wss://localhost:123456/invalid_relay_url")!
             var request = URLRequest(url: urlURL)
             //             request.setValue(["wamp"].joined(separator: ","), forHTTPHeaderField: "Sec-WebSocket-Protocol")
             
@@ -368,7 +368,7 @@ class NewWebSocket {
     func connect() {
         
         let session = URLSession(configuration: .default, delegate: delegate, delegateQueue: socketQueue)
-        let urlRequest = URLRequest(url: URL(string: url)!)
+        let urlRequest = URLRequest(url: URL(string: url) ?? URL(string: "wss://localhost:123456/invalid_relay_url")!)
         
         // Create the WebSocket instance. This is the entry-point for sending and receiving messages
         webSocket = session.webSocket(with: urlRequest)
