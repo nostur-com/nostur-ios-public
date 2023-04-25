@@ -812,7 +812,7 @@ extension Settings {
             er.predicate = NSPredicate(format: "kind IN {1,6,7,9735}")
             let allKind1 = Array(try! bg.fetch(er))
             
-            print("fixReplyToEventRelations for \(allKind1.count) items {1,6,7,9735}")
+            print("FIRSTPASS - fixReplyToEventRelations for \(allKind1.count) items {1,6,7,9735}")
             var progress = 0
             for event in allKind1 {
                 progress += 1
@@ -834,6 +834,39 @@ extension Settings {
                 event.zappedContact = nil
                 
                 event.reactionTo = nil
+            }
+            
+            do {
+                try bg.save()
+                viewPrint("Finished")
+            }
+            catch {
+                viewPrint("🔴 fixReplyToEventRelations error on save()")
+                print(error)
+            }
+        }
+        
+        bg.performAndWait {
+            // TODO: MAybe dont need for all events??? just kind:1 is enough?
+            let er = NSFetchRequest<Event>(entityName: "Event")
+            er.sortDescriptors = []
+            er.predicate = NSPredicate(format: "kind IN {1,6,7,9735}")
+            let allKind1 = Array(try! bg.fetch(er))
+            
+            print("SECOND PASS - fixReplyToEventRelations for \(allKind1.count) items {1,6,7,9735}")
+            var progress = 0
+            for event in allKind1 {
+                progress += 1
+                if (progress % 100 == 0) {
+                    viewPrint("Processing \(progress)/\(allKind1.count)")
+                    do {
+                        try bg.save()
+                    }
+                    catch {
+                        viewPrint("🔴 failed to save at batch \(progress)")
+                        print(error)
+                    }
+                }
                 
                 if event.kind == 7 {
                     if (event.reactionToId != nil) {
