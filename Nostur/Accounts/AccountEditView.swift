@@ -11,6 +11,7 @@ import Combine
 import SwiftyJSON
 import Nuke
 import NukeUI
+import CryptoKit
 
 struct AccountEditView: View {
     
@@ -379,25 +380,43 @@ func uploadBannerOrProfilePic(pfp: UIImage?, banner:UIImage?) -> AnyPublisher<[S
 
 
 func uploadPFPImage(image: UIImage) -> AnyPublisher<String, Error> {
-    let maxDimension: CGFloat = 150.0 // maximum width or height
-    let scale = min(maxDimension / image.size.width, maxDimension / image.size.height)
-    let size = CGSize(width: image.size.width * scale, height: image.size.height * scale)
+
+    // Create a profile pic, preserving aspect ratio, resize to 100x100
+
+    let size = CGSize(width: 150, height: 150)
+    let rect = CGRect(origin: CGPoint.zero, size: size)
+    UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
     
-    let renderer = UIGraphicsImageRenderer(size: size)
-    let scaledImage = renderer.image { _ in
-        image.draw(in: CGRect(origin: .zero, size: size))
-    }
-    guard let imageData = scaledImage.jpegData(compressionQuality: 0.8) else {
+//    let path = UIBezierPath(ovalIn: rect)
+//    path.addClip()
+    
+    let aspect = image.size.width / image.size.height
+    let width = size.width
+    let height = width / aspect
+    let x = CGFloat(0)
+    let y = (size.height - height) / 2
+    let drawRect = CGRect(x: x, y: y, width: width, height: height)
+    image.draw(in: drawRect)
+    
+    let scaledImage = UIGraphicsGetImageFromCurrentImageContext()
+    UIGraphicsEndImageContext()
+        
+    guard let imageData = scaledImage?.jpegData(compressionQuality: 0.8) else {
         return Fail(error: ImageUploadError.conversionFailure).eraseToAnyPublisher()
     }
     
-    let url = URL(string: "https://nostur.com/upload.php")!
+    let url = URL(string: "https://nostur.com/upload2.php")!
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     
     let boundary = UUID().uuidString
     let contentType = "multipart/form-data; boundary=\(boundary)"
     request.setValue(contentType, forHTTPHeaderField: "Content-Type")
+    
+    guard let proof = signedImageProof(imageData: imageData) else { return Fail(error: ImageUploadError.signingFailure).eraseToAnyPublisher() }
+    request.setValue(proof.signature, forHTTPHeaderField: "X-Nostur-Signature")
+    request.setValue(proof.message, forHTTPHeaderField: "X-Nostur-Message")
+    request.setValue(proof.publicKey, forHTTPHeaderField: "X-Nostur-PublicKey")
     
     let body = NSMutableData()
     let fieldName = "image"
@@ -490,13 +509,18 @@ func uploadBannerImage(image: UIImage) -> AnyPublisher<String, Error> {
         return Fail(error: ImageUploadError.conversionFailure).eraseToAnyPublisher()
     }
     
-    let url = URL(string: "https://nostur.com/uploadbanner.php")!
+    let url = URL(string: "https://nostur.com/uploadbanner2.php")!
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     
     let boundary = UUID().uuidString
     let contentType = "multipart/form-data; boundary=\(boundary)"
     request.setValue(contentType, forHTTPHeaderField: "Content-Type")
+    
+    guard let proof = signedImageProof(imageData: imageData) else { return Fail(error: ImageUploadError.signingFailure).eraseToAnyPublisher() }
+    request.setValue(proof.signature, forHTTPHeaderField: "X-Nostur-Signature")
+    request.setValue(proof.message, forHTTPHeaderField: "X-Nostur-Message")
+    request.setValue(proof.publicKey, forHTTPHeaderField: "X-Nostur-PublicKey")
     
     let body = NSMutableData()
     let fieldName = "image"
@@ -528,4 +552,47 @@ func uploadBannerImage(image: UIImage) -> AnyPublisher<String, Error> {
             return url
         }
         .eraseToAnyPublisher()
+}
+
+
+func signedImageProof(imageData:Data) -> (signature: String, message: String, publicKey: String)? {
+    guard let privateKeyHexString = NosturState.shared.account?.privateKey else { return nil }
+    guard let nostrPubkeyHex = NosturState.shared.account?.publicKey else { return nil }
+    
+    // NO EASY WAY TO VERIFY SCHNORR SIG IN PHP, SO JUST USE CRYPTOGRAPHY THAT JUST WORKS OUT OF THE BOX:
+    // SECURITY SHOULD BE THE SAME, YOU CAN ONLY REPLACE THE PROFILE PIC IF YOU HAVE THE PRIVATE KEY
+    // DOESNT MATTER IF THE SIGNATURE IS SCHNORR OR Curve25519
+    
+    guard let privateKeyData = Data(fromHexEncodedString: privateKeyHexString) else { return nil }
+    // Create a SymmetricKey from the Schnorr private key data
+    let symmetricKey = SymmetricKey(data: privateKeyData)
+
+    
+    // Use HKDF to derive a Curve25519 private key
+    let info = "Curve25519 private key".data(using: .utf8)!
+    let salt = "Salty " + nostrPubkeyHex
+    guard let saltData = salt.data(using: .utf8) else { return nil }
+
+    let derivedKey = HKDF<SHA256>.deriveKey(inputKeyMaterial: symmetricKey, salt: saltData, info: info, outputByteCount: 32)
+
+    guard let privateKey = try? Curve25519.Signing.PrivateKey(rawRepresentation: derivedKey) else { return nil }
+//    guard let privateKey = try? Curve25519.Signing.PrivateKey(rawRepresentation: privateKeyData) else { return nil }
+
+    let publicKey = privateKey.publicKey
+    let publicKeyData = publicKey.rawRepresentation
+    let publicKeyHexString = publicKeyData.map { String(format: "%02hhx", $0) }.joined()
+    
+    
+    let sha256data = SHA256.hash(data: imageData)
+    let sha256string = String(bytes:sha256data.bytes)
+
+    let message = "\(Int64(Date().timeIntervalSince1970).description)|\(sha256string)"
+    let messageData = message.data(using: .utf8)!
+
+    let signature = try! privateKey.signature(for: messageData)
+    let signatureHexString = signature.map { String(format: "%02hhx", $0) }.joined()
+
+    // Send `signatureHexString`, `message`, and `publicKeyHexString` to the server
+
+    return (signature: signatureHexString, message: message, publicKey: publicKeyHexString)
 }

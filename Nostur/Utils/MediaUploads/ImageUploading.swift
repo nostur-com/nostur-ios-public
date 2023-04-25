@@ -42,6 +42,7 @@ enum ImageUploadError: Error {
     case conversionFailure
     case uploadFailure
     case scalingFailure
+    case signingFailure
 }
 
 struct MediaUploadService: Identifiable, Hashable {
