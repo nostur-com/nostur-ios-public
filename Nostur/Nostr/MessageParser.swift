@@ -40,37 +40,41 @@ class MessageParser {
                     // Keep these subscriptions open.
                     guard let subscriptionId = message.subscriptionId else { return }
                     if !["Following","Explore","Notifications"].contains(subscriptionId) && String(subscriptionId.prefix(5)) != "List-" {
-                        sp.sendMessage(ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: message.subscriptionId!)))
+                        sp.sendMessage(ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: subscriptionId)))
                     }
                 default:
                     if (message.type == .EVENT) {
+                        guard let nEvent = message.event else { print("🔴🔴 uhh, where is nEvent "); return }
                         
                         Task { [weak self] in
                             guard let self = self else { return }
                             
                             let queuedMessages:[RelayMessage] = await self.parsedBucket.all()
-                            let sameMessageInQueue = queuedMessages.filter { $0.type == .EVENT }
-                                .map { $0.event!.id }.firstIndex(of: message.event!.id )
+                            let sameMessageInQueue = queuedMessages
+                                .filter { $0.type == .EVENT }
+                                .compactMap { $0.event?.id }
+                                .firstIndex(of: nEvent.id )
                             if (sameMessageInQueue != nil) {
-                                //                        print("🧜🧜 Message already in queue. skipped. \(message.event!.id)")
+                                // print("🧜🧜 Message already in queue. skipped. \(message.event!.id)")
                                 return
                             }
                             else {
                                 await self.parsedBucket.enqueue(message) // Wrap in _ = Task {}?
                                 
-                                if (message.event?.kind == .textNote || message.event?.kind == .reaction) {
+                                if (nEvent.kind == .textNote || nEvent.kind == .reaction) {
                                     
                                     if (message.subscriptionId == nil) {
                                         print("WHERE IS SUBSCRIPTION ID BRO")
                                         return
                                     }
                                     
-                                    // TIMESTAMP TRACKING NOT COULD ENOUGH, BECAUSe NEED TO FETCH OLDER EVENTS SOMETIMES
+                                    // TIMESTAMP TRACKING NOT COULD ENOUGH, BECAUSE  NEED TO FETCH OLDER EVENTS SOMETIMES
                                     // MAYBE EXCLUDE FROM TRACKING BY SUBSCRIPTION ID.
                                     // DISABLE FOR NOW...
                                     // ----
                                     // don't remember if timestamp is in the future:
-                                    if message.subscriptionId!.prefix(3) == "TL-" && message.event!.createdAt.timestamp > Int(Date().timeIntervalSince1970) {
+                                    guard let subscriptionId = message.subscriptionId else { return }
+                                    if subscriptionId.prefix(3) == "TL-" && nEvent.createdAt.timestamp > Int(Date().timeIntervalSince1970) {
                                         return
                                     }
                                 }
