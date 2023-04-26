@@ -73,6 +73,7 @@ struct ProfileMediaView: View {
         .onAppear {
             let fr = Event.fetchRequest()
             fr.predicate = NSPredicate(format: "pubkey == %@ AND kind == 1", pubkey)
+            fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
             fr.fetchBatchSize = 250
             fr.fetchOffset = offset
             
