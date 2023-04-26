@@ -34,6 +34,7 @@
 		1F1B55B329BD07CC006E1930 /* NotificationsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1B55B229BD07CC006E1930 /* NotificationsManager.swift */; };
 		1F1DCB8D2999290E0085223E /* LightningInvoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1DCB8C2999290E0085223E /* LightningInvoice.swift */; };
 		1F210B0429F7ED2D00159814 /* ImageTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F210B0329F7ED2D00159814 /* ImageTest.swift */; };
+		1F210B0629F853BB00159814 /* ProfileMediaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F210B0529F853BB00159814 /* ProfileMediaView.swift */; };
 		1F21442C29A797930090E78E /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F21442B29A797930090E78E /* Settings.swift */; };
 		1F21442E29A797B80090E78E /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F21442D29A797B80090E78E /* SettingsStore.swift */; };
 		1F21DDBE29F0174700C564EF /* NewSocketPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F21DDBD29F0174700C564EF /* NewSocketPool.swift */; };
@@ -293,6 +294,7 @@
 		1F1B55B229BD07CC006E1930 /* NotificationsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsManager.swift; sourceTree = "<group>"; };
 		1F1DCB8C2999290E0085223E /* LightningInvoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightningInvoice.swift; sourceTree = "<group>"; };
 		1F210B0329F7ED2D00159814 /* ImageTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageTest.swift; sourceTree = "<group>"; };
+		1F210B0529F853BB00159814 /* ProfileMediaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileMediaView.swift; sourceTree = "<group>"; };
 		1F21442B29A797930090E78E /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		1F21442D29A797B80090E78E /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
 		1F21DDBD29F0174700C564EF /* NewSocketPool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewSocketPool.swift; sourceTree = "<group>"; };
@@ -964,6 +966,7 @@
 				1F14BA6D29854B8E00EACCD5 /* ContactList.swift */,
 				1FC4D40C2998ED0E004E88CD /* FollowersList.swift */,
 				1F33096029891C4800D4D8CF /* ProfileLikesView.swift */,
+				1F210B0529F853BB00159814 /* ProfileMediaView.swift */,
 				1F1ABC4C2981AEA500D03FA9 /* ProfileNotesView.swift */,
 				1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */,
 				1F83498029DE28290032E52B /* ProfileRelays.swift */,
@@ -1232,6 +1235,7 @@
 				1F49C80829B8FB73005C960D /* QuoteOrRepostChoiceSheet.swift in Sources */,
 				1F14CC43299D1D7E00131B8D /* NosturStyles.swift in Sources */,
 				1F75211B2986D45D00C43DF0 /* Importer.swift in Sources */,
+				1F210B0629F853BB00159814 /* ProfileMediaView.swift in Sources */,
 				1F8B134B297B3551002EB8CF /* NIP19.swift in Sources */,
 				1F1ABC4729811A1B00D03FA9 /* LRUCache.swift in Sources */,
 				1F14BA7029854DFC00EACCD5 /* ProfileRow.swift in Sources */,

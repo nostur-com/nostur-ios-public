@@ -50,7 +50,7 @@ class ImageProcessing {
             let dataCache = try! DataCache(name: "com.nostur.image.pfp")
             dataCache.sizeLimit = 1024 * 1024 * 150
 
-            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 150)  // 150 MB
+            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 50)
             $0.dataCache = dataCache
 //            $0.dataCachePolicy = .storeAll
         }
@@ -82,7 +82,7 @@ class ImageProcessing {
             let dataCache = try! DataCache(name: "com.nostur.image.banner")
             dataCache.sizeLimit = 1024 * 1024 * 50
             
-            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 50)  // 50 MB
+            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 15)  // 50 MB
             $0.dataCache = dataCache
             $0.dataCachePolicy = .storeEncodedImages
         }
@@ -97,9 +97,9 @@ class ImageProcessing {
             }())
             
             let dataCache = try! DataCache(name: "com.nostur.image.content")
-            dataCache.sizeLimit = 1024 * 1024 * 100
+            dataCache.sizeLimit = 1024 * 1024 * 250
             
-            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 100, countLimit: 100) 
+            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 100, countLimit: 500)
             $0.dataCache = dataCache
             $0.dataCachePolicy = .storeAll
         }
@@ -131,7 +131,7 @@ class ImageProcessing {
             let dataCache = try! DataCache(name: "com.nostur.video.content")
             dataCache.sizeLimit = 1024 * 1024 * 100
             
-            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 50, countLimit: 100)  // 100 MB
+//            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 50, countLimit: 100)  // 100 MB
             $0.dataCache = dataCache
             $0.dataCachePolicy = .storeOriginalData
         }

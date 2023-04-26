@@ -62,6 +62,7 @@ struct ProfileView: View {
     @Environment(\.managedObjectContext) var viewContext
     let sp:SocketPool = .shared
     @EnvironmentObject var ns:NosturState
+    @EnvironmentObject var dim:DIMENSIONS
      
     @ObservedObject var contact:Contact
     var pubkey:String
@@ -348,6 +349,8 @@ struct ProfileView: View {
                                             }
                                         }
                                     }
+                                case "Media":
+                                    ProfileMediaView(pubkey: pubkey)
                                 case "Likes":
                                     ProfileLikesView(pubkey: pubkey)
                                 case "Zaps":
@@ -383,27 +386,39 @@ struct ProfileView: View {
                             }
                         }
                     } header: {
-                        HStack {
-                            TabButton(
-                                action: { selectedSubTab = "Posts" },
-                                title: "Posts",
-                                selected: selectedSubTab == "Posts")
-                            TabButton(
-                                action: { selectedSubTab = "Following" },
-                                title: "Following",
-                                selected: selectedSubTab == "Following")
-                            TabButton(
-                                action: { selectedSubTab = "Likes" },
-                                title: "Likes",
-                                selected: selectedSubTab == "Likes")
-                            TabButton(
-                                action: { selectedSubTab = "Zaps" },
-                                title: "Zaps",
-                                selected: selectedSubTab == "Zaps")
-                            TabButton(
-                                action: { selectedSubTab = "Relays" },
-                                title: "Relays",
-                                selected: selectedSubTab == "Relays")
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing:0) {
+                                TabButton(
+                                    action: { selectedSubTab = "Posts" },
+                                    title: "Posts",
+                                    selected: selectedSubTab == "Posts")
+                                Spacer()
+                                TabButton(
+                                    action: { selectedSubTab = "Following" },
+                                    title: "Following",
+                                    selected: selectedSubTab == "Following")
+                                Spacer()
+                                TabButton(
+                                    action: { selectedSubTab = "Media" },
+                                    title: "Media",
+                                    selected: selectedSubTab == "Media")
+                                Spacer()
+                                TabButton(
+                                    action: { selectedSubTab = "Likes" },
+                                    title: "Likes",
+                                    selected: selectedSubTab == "Likes")
+                                Spacer()
+                                TabButton(
+                                    action: { selectedSubTab = "Zaps" },
+                                    title: "Zaps",
+                                    selected: selectedSubTab == "Zaps")
+//                                Spacer()
+//                                TabButton(
+//                                    action: { selectedSubTab = "Relays" },
+//                                    title: "Relays",
+//                                    selected: selectedSubTab == "Relays")
+                            }
+                            .frame(width: dim.listWidth)
                         }
                         .padding(.top, 10)
                         .background(.regularMaterial)

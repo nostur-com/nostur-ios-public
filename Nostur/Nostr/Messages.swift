@@ -272,6 +272,12 @@ struct RequestMessage {
 """
     }
     
+    static func getAuthorKind1(pubkey:String, limit:Int = 100, subscriptionId:String? = nil) -> String {
+        return """
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [1], "limit": \(limit)}]
+"""
+    }
+    
     static func getAuthorNotes(pubkey:String, limit:Int = 100, subscriptionId:String? = nil) -> String {
         return """
 ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [1,6], "limit": \(limit)}]
