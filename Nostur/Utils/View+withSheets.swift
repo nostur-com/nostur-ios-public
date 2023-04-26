@@ -43,6 +43,9 @@ private struct WithSheets: ViewModifier {
     @State var quoteOrRepostEvent:Event? = nil
     @State var quotePostEvent:Event? = nil
     
+    // Add/Remove contact from list
+    @State var addRemoveContactFromList:Contact? = nil
+    
     // Zap sheet
     @State var paymentInfo:PaymentInfo? = nil
     
@@ -179,6 +182,16 @@ private struct WithSheets: ViewModifier {
             .sheet(item: $paymentInfo) { paymentInfo in
                 PaymentAmountSelector(paymentInfo:paymentInfo)
             }
+        
+            .onReceive(receiveNotification(.addRemoveToListsheet), perform: { notification in
+                let contact = notification.object as! Contact
+                addRemoveContactFromList = contact
+            })
+            .sheet(item: $addRemoveContactFromList, content: { contact in
+                NavigationStack {
+                    AddRemoveToListsheet(contact: contact)
+                }
+            })
     }
     
     func onDismiss() {

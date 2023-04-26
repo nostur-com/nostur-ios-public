@@ -215,7 +215,12 @@ extension Notification.Name {
     static var startPlayingVideo: Notification.Name {
         return Notification.Name("startPlayingVideo")
     }
+
     static var hideSideBar: Notification.Name {
         return Notification.Name("hideSideBar")
+    }
+    
+    static var addRemoveToListsheet: Notification.Name {
+        return Notification.Name("addRemoveToListsheet")
     }
 }

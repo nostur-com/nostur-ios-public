@@ -22,6 +22,12 @@ struct NoteMenuView: View {
         Menu {
             Group {
                 Button {
+                    guard let contact = vPost.event.contact else { return }
+                    sendNotification(.addRemoveToListsheet, contact)
+                } label: {
+                    Label("Add/Remove from lists", systemImage: "person.2.crop.square.stack")
+                }
+                Button {
                     if let pn = event.privateNote {
                         sendNotification(.editingPrivateNote, pn)
                     }

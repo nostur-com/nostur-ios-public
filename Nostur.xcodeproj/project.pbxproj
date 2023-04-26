@@ -222,6 +222,7 @@
 		1FC78F7129CADEED0009C1C7 /* View+centered.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC78F7029CADEED0009C1C7 /* View+centered.swift */; };
 		1FC78F7429CB45750009C1C7 /* BalloonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC78F7329CB45750009C1C7 /* BalloonView.swift */; };
 		1FC78F7629CB4A920009C1C7 /* ChatInputField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC78F7529CB4A920009C1C7 /* ChatInputField.swift */; };
+		1FC7A49729F8EFBA00645FEF /* AddRemoveToListsheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC7A49629F8EFBA00645FEF /* AddRemoveToListsheet.swift */; };
 		1FC82F3229AE0C0700B81CE5 /* Mentions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC82F3129AE0C0700B81CE5 /* Mentions.swift */; };
 		1FC82F3429AE261C00B81CE5 /* TabbedDetailContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC82F3329AE261C00B81CE5 /* TabbedDetailContainer.swift */; };
 		1FC82F3629AE327700B81CE5 /* SmartRelayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC82F3529AE327700B81CE5 /* SmartRelayManager.swift */; };
@@ -234,7 +235,6 @@
 		1FD8AD7329D831CD00693302 /* Color+random.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD8AD7229D831CD00693302 /* Color+random.swift */; };
 		1FD8AD7529D87D0B00693302 /* ListViewContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD8AD7429D87D0B00693302 /* ListViewContainer.swift */; };
 		1FDBA1A129D96B5200BB866B /* FollowingGuardian.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FDBA1A029D96B5200BB866B /* FollowingGuardian.swift */; };
-		1FDF0ED629EB9F1000B56AC4 /* AddContactsToListSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FDF0ED529EB9F1000B56AC4 /* AddContactsToListSheet.swift */; };
 		1FDF0ED929EC047C00B56AC4 /* ImagePreviews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FDF0ED829EC047C00B56AC4 /* ImagePreviews.swift */; };
 		1FDF0EDD29ED732500B56AC4 /* AnyStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FDF0EDC29ED732500B56AC4 /* AnyStatus.swift */; };
 		1FE4011D29952EC800A388A2 /* NIP05.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4011C29952EC800A388A2 /* NIP05.swift */; };
@@ -476,6 +476,7 @@
 		1FC78F7029CADEED0009C1C7 /* View+centered.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+centered.swift"; sourceTree = "<group>"; };
 		1FC78F7329CB45750009C1C7 /* BalloonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalloonView.swift; sourceTree = "<group>"; };
 		1FC78F7529CB4A920009C1C7 /* ChatInputField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInputField.swift; sourceTree = "<group>"; };
+		1FC7A49629F8EFBA00645FEF /* AddRemoveToListsheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddRemoveToListsheet.swift; sourceTree = "<group>"; };
 		1FC82F3129AE0C0700B81CE5 /* Mentions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mentions.swift; sourceTree = "<group>"; };
 		1FC82F3329AE261C00B81CE5 /* TabbedDetailContainer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TabbedDetailContainer.swift; sourceTree = "<group>"; };
 		1FC82F3529AE327700B81CE5 /* SmartRelayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartRelayManager.swift; sourceTree = "<group>"; };
@@ -488,7 +489,6 @@
 		1FD8AD7229D831CD00693302 /* Color+random.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+random.swift"; sourceTree = "<group>"; };
 		1FD8AD7429D87D0B00693302 /* ListViewContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListViewContainer.swift; sourceTree = "<group>"; };
 		1FDBA1A029D96B5200BB866B /* FollowingGuardian.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowingGuardian.swift; sourceTree = "<group>"; };
-		1FDF0ED529EB9F1000B56AC4 /* AddContactsToListSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddContactsToListSheet.swift; sourceTree = "<group>"; };
 		1FDF0ED829EC047C00B56AC4 /* ImagePreviews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePreviews.swift; sourceTree = "<group>"; };
 		1FDF0EDC29ED732500B56AC4 /* AnyStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnyStatus.swift; sourceTree = "<group>"; };
 		1FE4011C29952EC800A388A2 /* NIP05.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP05.swift; sourceTree = "<group>"; };
@@ -985,7 +985,7 @@
 		1FDF0ED729EBA26300B56AC4 /* NosturList */ = {
 			isa = PBXGroup;
 			children = (
-				1FDF0ED529EB9F1000B56AC4 /* AddContactsToListSheet.swift */,
+				1FC7A49629F8EFBA00645FEF /* AddRemoveToListsheet.swift */,
 				1F6EB73929E1C9B200B9DA83 /* EditNosturList.swift */,
 				1F2E760429F6DF6C00E67CE7 /* EditListTitleSheet.swift */,
 				1FB6E6F829E3B16A008BE8A6 /* NewListSheet.swift */,
@@ -1250,7 +1250,6 @@
 				1FE5068E29B391CF006A16D8 /* FastAccountSwitcher.swift in Sources */,
 				1FC78F6729CA18410009C1C7 /* Ago.swift in Sources */,
 				1FC2DFEF29A9128D00C8A9DA /* MinimalNoteTextRenderView.swift in Sources */,
-				1FDF0ED629EB9F1000B56AC4 /* AddContactsToListSheet.swift in Sources */,
 				1F1DCB8D2999290E0085223E /* LightningInvoice.swift in Sources */,
 				1F1ABC492981718700D03FA9 /* BookmarksView.swift in Sources */,
 				1FB130B329C0E5A4004AC98D /* NoteHeaderView.swift in Sources */,
@@ -1264,6 +1263,7 @@
 				1F006B0C29D0C4670048C6DD /* OnboardingTracker.swift in Sources */,
 				1F88491129B537B400145340 /* HighlightedTextEditor.AppKit.swift in Sources */,
 				1FA51FF72978441200FE60EF /* Relay+CoreDataProperties.swift in Sources */,
+				1FC7A49729F8EFBA00645FEF /* AddRemoveToListsheet.swift in Sources */,
 				1F88491729B537B400145340 /* UITextView.swift in Sources */,
 				1FBDE8C029B74EE800F4DFD0 /* ListState+CoreDataClass.swift in Sources */,
 				1FECAC4729A08255006FEE72 /* Collection+subscript.swift in Sources */,

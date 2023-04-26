@@ -66,10 +66,18 @@ struct NosturListsView: View {
 
 struct ListRow: View {
     @ObservedObject var list:NosturList
+    let showPin:Bool
+    
+    init(list: NosturList, showPin:Bool = true) {
+        self.list = list
+        self.showPin = showPin
+    }
     
     var body: some View {
         HStack {
-            Image(systemName: list.showAsTab ? "pin.fill" : "pin")
+            if showPin {
+                Image(systemName: list.showAsTab ? "pin.fill" : "pin")
+            }
             Text(list.name_)
             Spacer()
         }

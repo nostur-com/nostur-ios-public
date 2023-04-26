@@ -47,8 +47,13 @@ extension Contact {
     @NSManaged public var metadata_created_at: Int64
     @NSManaged public var followedBy: NSSet?
     @NSManaged public var events: Set<Event>?
-    @NSManaged public var list: NSSet?
+    @NSManaged public var lists: NSSet?
     @NSManaged public var privateFollow: Bool
+
+    var lists_:[NosturList] {
+        get { lists?.allObjects as! [NosturList] }
+        set { lists = NSSet(array: newValue) }
+    }
 }
 
 // MARK: Generated accessors for lists
