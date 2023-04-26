@@ -47,11 +47,17 @@ struct ContentRenderer: View { // VIEW things
                         //                            .tint(Color("AccentColor"))
                         //                            .lineSpacing(3)
                     case .note1(let noteId):
-                        QuoteById(id: hex(noteId))
-                            .padding(.vertical, 5)
-                            .padding(.horizontal, fullWidth ? 10 : 0)
+                        if let noteHex = hex(noteId) {
+                            QuoteById(id: noteHex)
+                                .padding(.vertical, 5)
+                                .padding(.horizontal, fullWidth ? 10 : 0)
+                        }
+                        else {
+                            let _ = print("🔴🔴🔴🔴 Problem converting \(noteId) to hex")
+                            EmptyView()
+                        }
                         //                            .frame(maxWidth: .infinity, maxHeight:400, alignment: .leading)
-                    case .noteId(let hex):
+                    case .noteHex(let hex):
                         QuoteById(id: hex)
                             .padding(.vertical, 5)
                             .padding(.horizontal, fullWidth ? 10 : 0)

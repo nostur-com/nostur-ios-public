@@ -304,8 +304,8 @@ class VPostTransformer {
                     }
                 }
                 else if matchString.matchingStrings(regex: Self.notePattern).count > 0 {
-                    let m = matchString.matchingStrings(regex:#"note1[023456789acdefghjklmnpqrstuvwxyz]{58}"#)
-                    result.append(MarkdownElement.note1(m[0][0]))
+                    let note1String = String(matchString.dropFirst(6)) // drop nostr:
+                    result.append(MarkdownElement.note1(note1String))
                 }
                 else if matchString.matchingStrings(regex: Self.previewImagePlaceholder).count > 0 {
                     let m = matchString.matchingStrings(regex: Self.previewImagePlaceholder)
@@ -314,11 +314,11 @@ class VPostTransformer {
                     }
                 }
                 else if matchString.matchingStrings(regex: Self.neventPattern).count > 0 {
-                    let m = matchString.matchingStrings(regex: #"nevent1[023456789acdefghjklmnpqrstuvwxyz]+\b"#)
+                    let nevent1String = String(matchString.dropFirst(6)) // drop "nostr:"
                     do {
-                        let identifier = try ShareableIdentifier(m[0][0])
-                        if let noteId = identifier.eventId {
-                            result.append(MarkdownElement.noteId(noteId))
+                        let identifier = try ShareableIdentifier(nevent1String)
+                        if let noteHex = identifier.eventId { // .eventId is already hex
+                            result.append(MarkdownElement.noteHex(noteHex))
                         }
                     }
                     catch {
@@ -351,7 +351,7 @@ enum MarkdownElement: Hashable {
 //    case plain(String)
     case text(AttributedString)
     case note1(String)
-    case noteId(String)
+    case noteHex(String)
     case lnbc(String)
     case link(String, URL)
     case image(URL)
