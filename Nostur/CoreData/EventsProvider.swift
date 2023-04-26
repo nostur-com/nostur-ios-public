@@ -68,7 +68,7 @@ class DataProvider: ObservableObject {
         #endif
         if viewContext.hasChanges {
             do {
-                try viewContext.save()
+                try viewContext.save() // TODO: SHOULD MOVE THIS TO viewContext.perform? or .performAndWait ???
                 print("🟢🟢 viewContext saved")
             }
             catch {

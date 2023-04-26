@@ -176,21 +176,22 @@ struct TabbedDetailContainer: View {
                     HStack(spacing:0) {
                         ForEach(tm.tabs.indices, id:\.self) { index in
                             NosturTabButton(
-                                isSelected: tm.selected == tm.tabs[index],
+                                isSelected: tm.selected == tm.tabs[safe: index],
                                 onSelect: {
-                                    tm.selected = tm.tabs[index]
+                                    guard let t = tm.tabs[safe: index] else { return }
+                                    tm.selected = t
                                 }, onClose: {
-                                    if (tm.selected == tm.tabs[index]) {
+                                    if (tm.selected == tm.tabs[safe: index]) {
                                         if (index != 0) {
-                                            tm.selected = tm.tabs[index - 1]
+                                            tm.selected = tm.tabs[safe: (index - 1)]
                                         }
                                         else if (tm.tabs.count > 1) {
                                             tm.selected = tm.tabs[1]
                                         }
                                     }
                                     tm.tabs.remove(at: index)
-                                }, label: "\(tabName(tab: tm.tabs[index]))")
-                            .id(tm.tabs[index].id)
+                                }, label: tm.tabs[safe: index] != nil ? "\(tabName(tab: tm.tabs[safe: index]!))" : "?")
+                            .id(tm.tabs[safe: index]?.id ?? UUID())
                             Divider().frame(height: 30).opacity(index == tm.tabs.count-1 ? 0 : 1)
                         }
                         Spacer()
@@ -224,7 +225,7 @@ struct TabbedDetailContainer: View {
                 }
                 ForEach(tm.tabs) { tab in
                     TabContainer(tab:tab)
-                        .padding(.horizontal, 10)
+                        .padding(.horizontal, 0)
                         .opacity(tm.selected == tab ? 1 : 0)
                         .id(tab.id)
                 }
