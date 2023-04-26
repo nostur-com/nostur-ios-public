@@ -32,6 +32,11 @@ extension NosturList {
         get { name ?? "" }
         set { name = newValue }
     }
+    
+    var subscriptionId:String {
+        let idLength = objectID.description.count
+        return "List-" + String(objectID.description.prefix(min(idLength,18)))
+    }
 }
 
 // MARK: Generated accessors for contacts

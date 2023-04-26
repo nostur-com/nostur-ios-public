@@ -29,7 +29,7 @@ struct EditNosturList: View {
                     Button(role: .destructive) {
                         list.removeFromContacts(contact)
                         DataProvider.shared().save()
-                        sendNotification(.listPubkeysChanged, NewPubkeysForList(id: list.objectID, pubkeys: Set(list.contacts_.map { $0.pubkey })))
+                        sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: list.subscriptionId, pubkeys: Set(list.contacts_.map { $0.pubkey })))
                     } label: {
                         Label("Remove", systemImage: "trash")
                     }
@@ -67,7 +67,7 @@ struct EditNosturList: View {
                     list.contacts_.append(contentsOf: selectedContacts)
                     addContactsSheetShown = false
                     DataProvider.shared().save()
-                    sendNotification(.listPubkeysChanged, NewPubkeysForList(id: list.objectID, pubkeys: Set(list.contacts_.map { $0.pubkey })))
+                    sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: list.subscriptionId, pubkeys: Set(list.contacts_.map { $0.pubkey })))
                 })
                 .equatable()
                 .navigationTitle("Add contacts")

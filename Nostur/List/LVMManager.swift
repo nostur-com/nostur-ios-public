@@ -47,10 +47,10 @@ class LVMManager {
         return lvm
     }
     func listLVM(forAccount account:Account, andList list:NosturList) -> LVM {
-        if let lvm = listVMs.first(where: { $0.pubkey == account.publicKey && $0.listId == list.objectID.description }) {
+        if let lvm = listVMs.first(where: { $0.pubkey == account.publicKey && $0.subscriptionId == list.subscriptionId }) {
             return lvm
         }
-        let lvm = LVM(pubkey: account.publicKey, pubkeys: Set(list.contacts_.map { $0.pubkey }), listId: list.objectID.description)
+        let lvm = LVM(pubkey: account.publicKey, pubkeys: Set(list.contacts_.map { $0.pubkey }), listId: list.subscriptionId)
         listVMs.append(lvm)
         return lvm
     }

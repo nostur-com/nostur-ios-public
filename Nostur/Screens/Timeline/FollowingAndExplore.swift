@@ -42,7 +42,7 @@ struct FollowingAndExplore: View { //, Equatable {
                                 action: {
                                     selectedSubTab = "List"
                                     selectedList = list
-                                    selectedListId = list.objectID.description
+                                    selectedListId = list.subscriptionId
                                 },
                                 title: list.name_,
                                 selected: selectedSubTab == "List" && selectedList == list )
@@ -76,7 +76,7 @@ struct FollowingAndExplore: View { //, Equatable {
                     case "List":
                         if let list = selectedList {
                             ListViewContainer(vm: LVMManager.shared.listLVM(forAccount: account, andList: list))
-                                .id(list.name_)
+                                .id(list.subscriptionId)
                         }
                         else {
                             ProgressView()
@@ -91,7 +91,7 @@ struct FollowingAndExplore: View { //, Equatable {
             }
             .onAppear {
                 if selectedSubTab == "List" {
-                    if let list = lists.first(where: { $0.objectID.description == selectedListId }) {
+                    if let list = lists.first(where: { $0.subscriptionId == selectedListId }) {
                         selectedList = list
                     }
                     else {

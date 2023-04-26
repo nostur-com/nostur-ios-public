@@ -478,7 +478,7 @@ extension LVM {
         receiveNotification(.listPubkeysChanged)
             .sink { notification in
                 let newPubkeyInfo = notification.object as! NewPubkeysForList
-                guard newPubkeyInfo.id.description == self.listId else { return }
+                guard newPubkeyInfo.subscriptionId == self.subscriptionId else { return }
                 self.pubkeys = newPubkeyInfo.pubkeys
                 self.performLocalFetch(refreshInBackground: true)
             }
@@ -489,6 +489,7 @@ extension LVM {
     func showOwnNewPostsImmediately() {
         receiveNotification(.newPostSaved)
             .sink { notification in
+                guard self.listId == "Following" else { return }
                 let event = notification.object as! Event
                 
                 let context = DataProvider.shared().container.newBackgroundContext()
@@ -963,6 +964,6 @@ func threadCount(_ vPosts:[VPost]) -> Int {
 
 
 struct NewPubkeysForList {
-    var id:NSManagedObjectID
+    var subscriptionId:String
     var pubkeys:Set<String>
 }
