@@ -57,7 +57,10 @@ final class SettingsStore: ObservableObject {
         getVoidCatService(),
         
         // needs registered Client ID
-        getImgurService()
+        getImgurService(),
+        
+        // needs registered Client ID
+        getNostrCheckMeService()
     
         // no api, parse media link from response
 //        getNostrBuildService(),
