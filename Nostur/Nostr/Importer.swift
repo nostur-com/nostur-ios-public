@@ -82,6 +82,8 @@ class Importer {
         //        context.performAndWait {
         await EventsProvider.shared.container.performBackgroundTask { context in
             
+            context.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+            
             var alreadyInIdCacheSkipped = 0
             var alreadyInDBskipped = 0
             var saved = 0
