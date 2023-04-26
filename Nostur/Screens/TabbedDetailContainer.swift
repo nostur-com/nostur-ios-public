@@ -58,7 +58,7 @@ struct NosturTabButton: View {
             if IS_CATALYST {
                 Image(systemName: "xmark")
                     .foregroundColor(isHoveringTab ? .gray : .clear)
-                    .padding(2)
+                    .padding(4)
                     .contentShape(Rectangle())
                     .background(isHoveringCloseButton ? .gray.opacity(0.1) : .clear)
                     .onHover { over in
@@ -70,7 +70,7 @@ struct NosturTabButton: View {
             }
             else {
                 Image(systemName: "xmark").foregroundColor(.gray)
-                    .padding(2)
+                    .padding(4)
                     .contentShape(Rectangle())
                     .onTapGesture {
                         self.onClose()
@@ -79,9 +79,10 @@ struct NosturTabButton: View {
             Text(label)
         }
         .padding(.trailing, 23)
-        .padding(.vertical, 5)
+        .padding(.vertical, 10)
         .padding(.leading, 5)
         .background(isSelected ? Color.accentColor.opacity(0.1) : .clear)
+        .contentShape(Rectangle())
         .onHover { over in
             isHoveringTab = over
         }
