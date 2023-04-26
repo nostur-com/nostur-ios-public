@@ -563,6 +563,8 @@ func signedImageProof(imageData:Data) -> (signature: String, message: String, pu
     // SECURITY SHOULD BE THE SAME, YOU CAN ONLY REPLACE THE PROFILE PIC IF YOU HAVE THE PRIVATE KEY
     // DOESNT MATTER IF THE SIGNATURE IS SCHNORR OR Curve25519
     
+    // TODO: EVENTALLY REPLACE WITH NOSTR SCHNORR VERIFICATION WHEN THERE IS PROPER PHP SUPPORT SO WE DONT HAVE TO DERRIVE AN EXTRA KEY
+    
     guard let privateKeyData = Data(fromHexEncodedString: privateKeyHexString) else { return nil }
     // Create a SymmetricKey from the Schnorr private key data
     let symmetricKey = SymmetricKey(data: privateKeyData)
