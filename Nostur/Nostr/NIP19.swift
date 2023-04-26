@@ -107,7 +107,7 @@ class ShareableIdentifier {
                         case "naddr":
                             eventId = value.hexEncodedString() // or: String(data: value, encoding: .utf8) ??
                         default:
-                            throw "EncodingError.invalidPrefix"
+                            throw "EncodingError.invalidPrefix.0"
                     }
                 case 1:
                     let relay = String(data: value, encoding: .utf8)!
@@ -119,13 +119,17 @@ class ShareableIdentifier {
                         case "nevent":
                             pubkey = value.hexEncodedString()
                         default:
-                            throw "EncodingError.invalidPrefix"
+                            throw "EncodingError.invalidPrefix.2"
                     }
                 case 3:
-                    guard prefix == "naddr" else {
-                        throw "EncodingError.invalidPrefix"
+                    switch prefix {
+                        case "naddr":
+                            kind = Int64(value.withUnsafeBytes { $0.load(as: UInt32.self) }.bigEndian)
+                        case "nevent":
+                            kind = Int64(value.withUnsafeBytes { $0.load(as: UInt32.self) }.bigEndian)
+                        default:
+                            throw "EncodingError.invalidPrefix.3"
                     }
-                    kind = Int64(value.withUnsafeBytes { $0.load(as: UInt32.self) }.bigEndian)
                 default:
                     print("EncodingError.invalidType")
             }
