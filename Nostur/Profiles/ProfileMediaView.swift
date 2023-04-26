@@ -36,35 +36,36 @@ struct ProfileMediaView: View {
             LazyVGrid(columns: columns, spacing: 3) {
                 ForEach(imageUrls.indices, id: \.self) { index in
                     // Lazy image here
-                    Group {
-                        LazyImage(request:
-                                    ImageRequest(url: imageUrls[index],
-                                                 processors: [.resize(width: squareSize, upscale: true)],
-                                                 userInfo: [.scaleKey: UIScreen.main.scale])) { state in
-                            if let image = state.image {
-                                image
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width:squareSize, height:squareSize)
-                                    .clipped()
-                                    .onTapGesture {
-                                        sendNotification(.fullScreenView, FullScreenItem(url: imageUrls[index]))
-                                    }
-                            }
-                            else if state.error != nil {
-                                Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
-                                    .centered()
-                                    .frame(width:squareSize, height:squareSize)
-                                .background(Color("LightGray"))
-                            }
-                            else {
-                                CenteredProgressView()
-                                    .frame(width:squareSize, height:squareSize)
-                                    .background(Color("LightGray"))
-                            }
+                    LazyImage(request:
+                                ImageRequest(url: imageUrls[index],
+                                             processors: [.resize(width: squareSize, upscale: true)],
+                                             userInfo: [.scaleKey: UIScreen.main.scale])) { state in
+                        if let image = state.image {
+                            image
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width:squareSize, height:squareSize)
+                                .clipped()
+                                .contentShape(Path(CGRect(x: 0, y: 0, width: squareSize, height: squareSize)))
+                                .onTapGesture {
+                                    sendNotification(.fullScreenView, FullScreenItem(url: imageUrls[index]))
+                                }
                         }
-                        .pipeline(ImageProcessing.shared.content) // No processing again here, we probably never show the
+                        else if state.error != nil {
+                            Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
+                                .centered()
+                                .frame(width:squareSize, height:squareSize)
+                                .background(Color("LightGray"))
+                        }
+                        else {
+                            CenteredProgressView()
+                                .frame(width:squareSize, height:squareSize)
+                                .background(Color("LightGray"))
+                        }
+                        
                     }
+                    .pipeline(ImageProcessing.shared.content) // No processing again here, we probably never show the
+//                    .id(imageUrls[index].absoluteString)
                 }
             }
             .padding(10)
