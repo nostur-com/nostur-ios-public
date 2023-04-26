@@ -45,8 +45,8 @@ struct NIP19 {
     
 }
 
-func note1(_ hex:String) -> String {
-    return try! NIP19(prefix: "note", hexString: hex).displayString
+func note1(_ hex:String) -> String? {
+    return try? NIP19(prefix: "note", hexString: hex).displayString
 }
 
 func npub(_ hex:String) -> String {
@@ -61,8 +61,8 @@ func pubkey(_ npub:String) throws -> String {
     return try NIP19(displayString: npub).hexString
 }
 
-func hex(_ note1:String) -> String {
-    return try! NIP19(displayString: note1).hexString
+func hex(_ note1:String) -> String? {
+    return try? NIP19(displayString: note1).hexString
 }
 
 

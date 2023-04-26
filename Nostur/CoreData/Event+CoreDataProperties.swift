@@ -242,8 +242,9 @@ extension Event {
         var newText = content ?? ""
         for index in tags.indices {
             if (tags[index].0 == "e") {
-                newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "nostr:\(note1(tags[index].1))")
-
+                if let note1string = note1(tags[index].1) {
+                    newText = newText.replacingOccurrences(of: String("#[\(index)]"), with: "nostr:\(note1string)")
+                }
             }
         }
         return newText
