@@ -83,7 +83,7 @@ struct AccountsSheet: View {
                         .destructive(Text("Log out"), action: {
                             ns.logout(account)
                             
-                            if (ns.accounts.count <= 1) {
+                            if (ns.accounts.count < 1) {
                                 sendNotification(.hideSideBar)
                             }
                             
@@ -98,7 +98,7 @@ struct AccountsSheet: View {
                         .destructive(Text("Log out"), action: {
                             ns.logout(account)
                             
-                            if (ns.accounts.count <= 1) {
+                            if (ns.accounts.count < 1) {
                                 sendNotification(.hideSideBar)
                             }
                             

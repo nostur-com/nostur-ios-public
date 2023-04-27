@@ -312,7 +312,7 @@ final class NosturState : ObservableObject {
         if (account.privateKey != nil) {
             AccountManager.shared.deletePrivateKey(forPublicKeyHex: account.publicKey)
         }
-        if (accounts.count <= 1) {
+        if (accounts.count < 1) {
             onBoardingIsShown = true
             sendNotification(.clearNavigation)
             setAccount(account: nil)
