@@ -172,37 +172,46 @@ struct ContentRenderer: View { // VIEW things
         .onAppear {
             event.objectWillChange
                 .sink {
-                    let transformer = VPostTransformer.shared
                     
-                    var renderedElements = transformer.renderElements(event).0
-                    let firstQuote = renderedElements.first(where: { element in
-                        if case .note1 = element {
-                            return true
-                        }
-                        return false
-                    })
-                    var renderedForRow:[MarkdownElement] {
-                        var gotVideo = false
-                        return renderedElements
-                            .filter { element in
-                                if case .video = element {
-                                    if (!gotVideo) {
-                                        gotVideo = true
+                    let followingKeys = NosturState.shared.followingPublicKeys
+                    EventsProvider.shared.container.performBackgroundTask { context in
+                        let transformer = VPostTransformer(context, followingKeys: followingKeys) // Tranform in bg
+                     
+                        guard let privateEvent = context.object(with: event.objectID) as? Event else { return }
+                        var renderedElements = transformer.renderElements(privateEvent).0
+                        
+                        let firstQuote = renderedElements.first(where: { element in
+                            if case .note1 = element {
+                                return true
+                            }
+                            return false
+                        })
+                        
+                        var renderedForRow:[MarkdownElement] {
+                            var gotVideo = false
+                            return renderedElements
+                                .filter { element in
+                                    if case .video = element {
+                                        if (!gotVideo) {
+                                            gotVideo = true
+                                            return true
+                                        }
+                                        return false
+                                    }
+                                    if case .note1 = element {
+                                        return element == firstQuote
+                                    }
+                                    else {
                                         return true
                                     }
-                                    return false
                                 }
-                                if case .note1 = element {
-                                    return element == firstQuote
-                                }
-                                else {
-                                    return true
-                                }
-                            }
+                        }
+                                                
+                        DispatchQueue.main.async {
+                            self.renderedElements = isDetail ? renderedElements : renderedForRow
+                        }
                     }
-                    
-                    renderedElements = isDetail ? renderedElements : renderedForRow
-                    //                    print("renderedElements: \(event.id)")
+    
                 }
                 .store(in: &subscriptions)
         }
