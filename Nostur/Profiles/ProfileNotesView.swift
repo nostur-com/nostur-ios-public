@@ -11,7 +11,6 @@ import CoreData
 // NOTES ON USER PROFILE SCREEN
 struct ProfileNotesView: View {
     
-     
     let sp:SocketPool = .shared
     let pubkey:String
     @State var limit = 150
