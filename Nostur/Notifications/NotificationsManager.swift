@@ -109,8 +109,8 @@ class NotificationsManager: ObservableObject {
         r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         r2.resultType = .countResultType
         
-        
-        DataProvider.shared().container.performBackgroundTask { context in
+        let context = DataProvider.shared().bg
+        context.perform {
             let unreadMentions = (try? context.count(for: r2)) ?? 0
             DispatchQueue.main.async {
                 if unreadMentions != self.unreadMentions {
@@ -118,10 +118,6 @@ class NotificationsManager: ObservableObject {
                 }
             }
         }
-//        let unreadMentions = (try? DataProvider.shared().viewContext.count(for: r2)) ?? 0
-//        if unreadMentions != self.unreadMentions {
-//            self.unreadMentions = min(unreadMentions,9999)
-//        }
     }
     
     func checkForNewReactions() {
@@ -146,7 +142,8 @@ class NotificationsManager: ObservableObject {
         r2.resultType = .countResultType
         
         
-        DataProvider.shared().container.performBackgroundTask { context in
+        let context = DataProvider.shared().bg
+        context.perform {
             let unreadReactions = (try? context.count(for: r2)) ?? 0
             DispatchQueue.main.async {
                 if unreadReactions != self.unreadReactions {
@@ -187,7 +184,8 @@ class NotificationsManager: ObservableObject {
         r2.resultType = .countResultType
         
         
-        DataProvider.shared().container.performBackgroundTask { context in
+        let context = DataProvider.shared().bg
+        context.perform {
             let unreadZaps = (try? context.count(for: r2)) ?? 0
             DispatchQueue.main.async {
                 if unreadZaps != self.unreadZaps {
@@ -249,7 +247,8 @@ class NotificationsManager: ObservableObject {
         
         let lastSeenDMRequestCreatedAt = account.lastSeenDMRequestCreatedAt
         
-        DataProvider.shared().container.performBackgroundTask { ctx in
+        let ctx = DataProvider.shared().bg
+        ctx.perform {
          
             do {
                 let received = try ctx.fetch(receivedFR)

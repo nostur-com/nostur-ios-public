@@ -691,7 +691,7 @@ extension Event {
         request.fetchLimit = 1
         request.fetchBatchSize = 1
         
-        let bg = DataProvider.shared().newTaskContext()
+        let bg = DataProvider.shared().bg
         bg.perform {
             if let event = try? bg.fetch(request).first {
                 var relays = event.relays.split(separator: " ").map { String($0) }

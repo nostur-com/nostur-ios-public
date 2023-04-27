@@ -79,11 +79,9 @@ class Importer {
         
         let isSignatureVerificationEnabled = self.settingsStore.isSignatureVerificationEnabled
         
-        //        context.performAndWait {
-        await EventsProvider.shared.container.performBackgroundTask { context in
-            
-            context.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
-            
+        let context = DataProvider.shared().bg
+        
+        await context.perform {
             var alreadyInIdCacheSkipped = 0
             var alreadyInDBskipped = 0
             var saved = 0

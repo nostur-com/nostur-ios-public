@@ -751,9 +751,9 @@ extension LVM {
         //   TAKE P's. IF P IS NOT IN EVENT.CONTACTS, ADD IT
         // FINALLY, EVERY MISSING OR EMPTY CONTACT
         //  sp.fetch!
-        let context = DataProvider.shared().newTaskContext()
+        
         let pubkeys = events.flatMap { $0.fastTags.filter { $0.0 == "p" } }.map { $0.1 }
-        context.perform {
+        DataProvider.shared().container.performBackgroundTask { context in
             for mainEvent in events {
                 if let event = context.object(with: mainEvent.objectID) as? Event {
                     let pubkeys = Array(Set(event.pTags()))
