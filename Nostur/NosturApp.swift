@@ -64,7 +64,7 @@ struct NosturApp: App {
     let runLoop = Timer.publish(every: 2, tolerance: 1, on: .main, in: .common).autoconnect()
     let priceLoop = Timer.publish(every: 900, tolerance: 120, on: .main, in: .common).autoconnect().receive(on: RunLoop.main)
         .merge(with: Just(Date()))
-
+    
     var body: some Scene {
         WindowGroup {
             Group {
@@ -78,18 +78,19 @@ struct NosturApp: App {
                             .padding(.bottom, 20)
                     }
                     VStack(alignment: .leading) {
-                            Text("There are 2 solutions:")
-                            Text("1) Send screenshot of this error and wait for an update with fix")
-                            Text("2) Reinstall the app and start fresh")
-                                .padding(.bottom, 20)
-                            Text("Error: 00")
-                            Text(EventsProvider.shared.databaseProblemDescription)
+                        Text("There are 2 solutions:")
+                        Text("1) Send screenshot of this error and wait for an update with fix")
+                        Text("2) Reinstall the app and start fresh")
+                            .padding(.bottom, 20)
+                        Text("Error: 00")
+                        Text(EventsProvider.shared.databaseProblemDescription)
                     }
                     .padding()
                     
                 }
-                else if isOnboarding || ns.accounts.count == 0 {
-//                if !didAcceptTerms || isOnboarding || ns.accounts.count == 0 {
+//                else if isOnboarding || ns.accounts.count == 0 {
+                else if isOnboarding {
+                    //                if !didAcceptTerms || isOnboarding || ns.accounts.count == 0 {
                     Onboarding()
                         .environmentObject(ns)
                         .environment(\.managedObjectContext, EventsProvider.shared.container.viewContext)
@@ -125,7 +126,8 @@ struct NosturApp: App {
                                     }
                                 }
                             }
-                            .onReceive(receiveNotification(.onBoardingIsShownChanged)) { notification in   let onBoardingIsShown = notification.object as! Bool
+                            .onReceive(receiveNotification(.onBoardingIsShownChanged)) { notification in
+                                let onBoardingIsShown = notification.object as! Bool
                                 isOnboarding = onBoardingIsShown
                             }
                     }
@@ -135,17 +137,17 @@ struct NosturApp: App {
             .onDisappear { self.isViewDisplayed = false }
         }
         .onChange(of: scenePhase) { newScenePhase in
-                    switch newScenePhase {
-                    case .active:
-                            SocketPool.shared.connectAll()
-                    case .background:
-                            SocketPool.shared.disconnectAll()
-                            saveState()
-                            
-                    default:
-                        break
-                    }
-                }
+            switch newScenePhase {
+                case .active:
+                    SocketPool.shared.connectAll()
+                case .background:
+                    SocketPool.shared.disconnectAll()
+                    saveState()
+                    
+                default:
+                    break
+            }
+        }
     }
     
     func saveState() {
@@ -161,7 +163,7 @@ struct NosturApp: App {
         DataProvider.shared().save()
         print("State saved")
     }
-
+    
     func startNosturing() {
         if (ns.account == nil && ns.accounts.count >= 1) { // NosturState will set last active account in .init, else we set here:
             ns.setAccount(account: ns.accounts.last!)
@@ -173,7 +175,7 @@ struct NosturApp: App {
         // Daily cleanup.
         //TODO: Is fast or do in background task?
         Maintenance.maintenance(context: DataProvider.shared().container.newBackgroundContext())
-//        Maintenance.maintenance(context: EventsProvider.shared.container.viewContext)
+        //        Maintenance.maintenance(context: EventsProvider.shared.container.viewContext)
         
         // One time fix
         //        repairDb()

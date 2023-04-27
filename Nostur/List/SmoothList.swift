@@ -154,6 +154,10 @@ struct SmoothList: UIViewControllerRepresentable {
         var scrollTimer: Timer?
         var prefetcher = ImagePrefetcher(pipeline: ImageProcessing.shared.content)
         
+        private var lastCalledTimestamp: TimeInterval = 0
+        private let debounceInterval: TimeInterval = 0.3 // Adjust this value to control the throttling
+        
+        
         init(parent: SmoothList) {
             self.parent = parent
         }
@@ -242,14 +246,25 @@ struct SmoothList: UIViewControllerRepresentable {
 //        }
         
         func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-            if let item = parent.data[safe: indexPath.row] {
-                parent.onRowAppeared?((sectionIndex: indexPath.section, itemIndex: indexPath.row,  item: item))
+            // Calculate the time since the last call
+            let currentTime = Date().timeIntervalSince1970
+            let timeSinceLastCall = currentTime - lastCalledTimestamp
+            
+            // Check if the debounceInterval has passed
+            if timeSinceLastCall > debounceInterval {
+                // Update the lastCalledTimestamp
+                lastCalledTimestamp = currentTime
+                
+                // Your throttled code here
+                if let item = parent.data[safe: indexPath.row] {
+                    parent.onRowAppeared?((sectionIndex: indexPath.section, itemIndex: indexPath.row,  item: item))
+                }
             }
         }
         
         func scrollViewDidScroll(_ scrollView: UIScrollView) {
             scrollTimer?.invalidate()
-            scrollTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: false) { [weak self] _ in
+            scrollTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { [weak self] _ in
                 self?.processScrollViewDidScroll(scrollView)
             }
         }
@@ -273,6 +288,22 @@ struct SmoothList: UIViewControllerRepresentable {
                     scrollView.setContentOffset(CGPoint(x: scrollView.contentOffset.x, y: SMOOTHLIST_AUTOSCROLL_OFFSET), animated: true)
                 }
             }
+        }
+    }
+}
+
+
+func debounce(delay: TimeInterval, action: @escaping (() -> Void)) -> () -> Void {
+    var lastRun: Date = Date()
+    let queue = DispatchQueue.main
+    return {
+        let now = Date()
+        let deadline: DispatchTime = .now() + delay
+        lastRun = now
+        queue.asyncAfter(deadline: deadline) {
+            let sinceLastRun = now.timeIntervalSince(lastRun)
+            guard sinceLastRun >= delay else { return }
+            action()
         }
     }
 }

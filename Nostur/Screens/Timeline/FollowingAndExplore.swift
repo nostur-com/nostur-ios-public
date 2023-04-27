@@ -18,12 +18,17 @@ struct FollowingAndExplore: View { //, Equatable {
     @State var showingNewNote = false
     @State var noteCancellationId:UUID?
     
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \NosturList.createdAt, ascending: false)],
-        predicate: NSPredicate(format: "showAsTab == true")
-    )
+    @FetchRequest
     var lists:FetchedResults<NosturList>
     @State var selectedList:NosturList?
+    
+    init(account:Account) {
+        self.account = account
+        let r = NosturList.fetchRequest()
+        r.predicate = NSPredicate(format: "showAsTab == true")
+        r.sortDescriptors = [NSSortDescriptor(keyPath:\NosturList.createdAt, ascending: false)]
+        _lists = FetchRequest(fetchRequest: r)
+    }
     
     var body: some View {
         let _ = Self._printChanges()

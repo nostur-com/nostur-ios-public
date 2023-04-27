@@ -31,3 +31,23 @@ enum ListType {
     case explore
     case list
 }
+
+struct What: View {
+    @EnvironmentObject var ns:NosturState
+    
+    var body: some View {
+        if let account = ns.account {
+            NavigationStack {
+                ListViewContainer(vm: LVMManager.shared.followingLVM(forAccount: account))
+            }
+        }
+    }
+}
+
+
+struct Previews_ListViewContainer_Previews: PreviewProvider {
+    static var previews: some View {
+        What()
+            .withPreviewEnvironment()
+    }
+}

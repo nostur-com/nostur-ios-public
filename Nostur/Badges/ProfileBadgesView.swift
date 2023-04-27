@@ -16,7 +16,6 @@ import NukeUI
 import CoreData
 
 struct ProfileBadgesContainer: View {
-    @Environment(\.managedObjectContext) var viewContext
     let pubkey:String
     
     @FetchRequest
@@ -30,10 +29,11 @@ struct ProfileBadgesContainer: View {
     init(pubkey:String) {
         self.pubkey = pubkey
 
-        _profileBadges = FetchRequest(
-            sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
-            predicate: NSPredicate(format: "kind == 30008 AND pubkey == %@", pubkey)
-        )
+        let fr = Event.fetchRequest()
+        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        fr.predicate = NSPredicate(format: "kind == 30008 AND pubkey == %@", pubkey)
+        
+        _profileBadges = FetchRequest(fetchRequest: fr)
     }
     
     var body: some View {

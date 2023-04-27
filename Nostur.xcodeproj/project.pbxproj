@@ -528,7 +528,7 @@
 		1FDBA1A029D96B5200BB866B /* FollowingGuardian.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowingGuardian.swift; sourceTree = "<group>"; };
 		1FDF0ED829EC047C00B56AC4 /* ImagePreviews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePreviews.swift; sourceTree = "<group>"; };
 		1FDF0EDC29ED732500B56AC4 /* AnyStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnyStatus.swift; sourceTree = "<group>"; };
-		1FE0C71229FAE82C00381586 /* ProfileFollowButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ProfileFollowButton.swift; path = Nostur/Profiles/ProfileFollowButton.swift; sourceTree = "<group>"; };
+		1FE0C71229FAE82C00381586 /* ProfileFollowButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileFollowButton.swift; sourceTree = "<group>"; };
 		1FE0C71429FAEA9F00381586 /* ProfileBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileBanner.swift; sourceTree = "<group>"; };
 		1FE4011C29952EC800A388A2 /* NIP05.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP05.swift; sourceTree = "<group>"; };
 		1FE5068D29B391CF006A16D8 /* FastAccountSwitcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastAccountSwitcher.swift; sourceTree = "<group>"; };
@@ -869,8 +869,6 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
-				1FE0C71429FAEA9F00381586 /* ProfileBanner.swift */,
-				1FE0C71229FAE82C00381586 /* ProfileFollowButton.swift */,
 				1F210B0329F7ED2D00159814 /* ImageTest.swift */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1FC7A54629FA46F000645FEF /* Highlight with Nostur */,
@@ -1029,7 +1027,9 @@
 				1F8B1364297B3BE8002EB8CF /* ContactProfile.swift */,
 				1F14BA6D29854B8E00EACCD5 /* ContactList.swift */,
 				1FC4D40C2998ED0E004E88CD /* FollowersList.swift */,
+				1FE0C71429FAEA9F00381586 /* ProfileBanner.swift */,
 				1FC7A49A29F95AD400645FEF /* ProfileByPubkey.swift */,
+				1FE0C71229FAE82C00381586 /* ProfileFollowButton.swift */,
 				1F33096029891C4800D4D8CF /* ProfileLikesView.swift */,
 				1F210B0529F853BB00159814 /* ProfileMediaView.swift */,
 				1F1ABC4C2981AEA500D03FA9 /* ProfileNotesView.swift */,
