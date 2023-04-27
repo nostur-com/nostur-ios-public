@@ -17,9 +17,9 @@ struct DynamicFetchView<T: NSManagedObject, Content: View>: View {
     }
 
     init(predicate: NSPredicate?, fetchLimit:Int = 5, sortDescriptors: [NSSortDescriptor], @ViewBuilder content: @escaping (FetchedResults<T>) -> Content) {
-        guard let entityName = T.entity().name else { fatalError("Unknown entity") }
+//        guard let entityName = T.entity().name else { print("Unknown entity"); fatalError("Unknown entity") }
 
-        let request = NSFetchRequest<T>(entityName: entityName)
+        let request = T.fetchRequest() as! NSFetchRequest<T>
         request.fetchLimit = fetchLimit
         request.sortDescriptors = sortDescriptors
         request.predicate = predicate

@@ -76,10 +76,6 @@ class DataProvider: ObservableObject {
             }
         }
     }
-    
-//    func ctx() -> NSManagedObjectContext {
-//        return Thread.isMainThread ? self.viewContext : self.bg
-//    }
 }
 
 class EventsProvider: ObservableObject {
@@ -146,6 +142,8 @@ class EventsProvider: ObservableObject {
         contact.metadata_created_at = 0
         
         var messages:[String] = []
+        messages.append(contentsOf: test1())
+        
         messages.append(contentsOf: testKind0Events())
         messages.append(contentsOf: testKind3Events())
         messages.append(contentsOf: testKind1Events())

@@ -8,56 +8,44 @@
 import SwiftUI
 import CoreData
 
+// "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
+let PREVIEW_ACCOUNT_ID = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
+
 extension View {
         
     func withPreviewEnvironment() -> some View {
         
         let userDefaults:UserDefaults = {
             let d = UserDefaults(suiteName: "preview_user_defaults")!
-            
-            
-            d.set("9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
-                  forKey: "activeAccountPublicKey")
-            
-//            d.set("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0",
-//                  forKey: "activeAccountPublicKey")
-            
+            d.set(PREVIEW_ACCOUNT_ID, forKey: "activeAccountPublicKey")
             d.set(true, forKey: "devToggle")
-            
-            d.set(true, forKey: "showReplies")
-            
+            d.set("Following", forKey: "selected_subtab")
+            d.set("Main", forKey: "selected_tab")
             return d
         }()
         
-        // "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
-        let dp = DataProvider(container: EventsProvider.preview.container)
         let ns:NosturState = .shared
         let sp:SocketPool = .shared
         let er:ExchangeRateModel = .shared
         let tm:DetailTabsModel = .shared
         let dim:DIMENSIONS = .shared
-        
-        let ss = SettingsStore()
+        let ss:SettingsStore = .shared
         let sm = SideBarModel()
         
-        let account = PreviewFetcher.fetchAccount("9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", context: EventsProvider.preview.container.viewContext)
-//
-//        let account = PreviewFetcher.fetchAccount("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", context: EventsProvider.preview.container.viewContext)
+        let previewContext = EventsProvider.preview.container.viewContext
         
+        let account = PreviewFetcher.fetchAccount(PREVIEW_ACCOUNT_ID, context: previewContext)
+        if let clNevent = PreviewFetcher.fetchEvents(PREVIEW_ACCOUNT_ID, kind: 3, context: previewContext).first?.toNEvent() {
+            Account.preFillReadOnlyAccountFollowing(event: clNevent, context: previewContext, forceOverwrite: true)
+        }
         ns.setAccount(account: account)
 
-        let clNevent = PreviewFetcher.fetchEvent("4d3003122620900ac5f39d4bd78bd5e82ef3f15d7538651700c90e9c56dcb964")!.toNEvent()
-        Account.preFillReadOnlyAccountFollowing(event: clNevent, context: EventsProvider.preview.container.viewContext, forceOverwrite: true)
-
-        
         return self.defaultAppStorage(userDefaults)
             .environment(\.managedObjectContext,
-                          EventsProvider.preview.container.viewContext)
-            .environmentObject(dp)
+                          previewContext)
             .environmentObject(ns)
             .environmentObject(sp)
             .environmentObject(er)
-//            .environmentObject(ds)
             .environmentObject(ss)
             .environmentObject(sm)
             .environmentObject(tm)
@@ -105,7 +93,7 @@ struct PreviewFetcher {
     }
     
     static func fetchAccount(_ pubkey:String? = nil, context:NSManagedObjectContext? = nil) -> Account? {
-        let accountKey = pubkey ?? "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
+        let accountKey = pubkey ?? PREVIEW_ACCOUNT_ID
         let request = Account.fetchRequest()
 //        let request = NSFetchRequest<Account>(entityName: "Account")
         request.predicate = NSPredicate(format: "publicKey == %@", accountKey)

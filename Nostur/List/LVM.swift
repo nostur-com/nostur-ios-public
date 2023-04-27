@@ -115,7 +115,11 @@ class LVM: NSObject, ObservableObject {
     
     // MARK: FROM DB TO SCREEN STEP 3:
     private func processPostsInBackground(_ events:[Event]) { // events are from viewContext
+        #if DEBUG
+        let context = DataProvider.shared().viewContext
+        #else
         let context = DataProvider.shared().container.newBackgroundContext()
+        #endif
         
         // onScreenIds includes leafs and parents, so all posts.
         let onScreenIds = self.lvmState.vPostLeafs.reduce(Set<NSManagedObjectID>()) { partialResult, vPost in
@@ -385,9 +389,18 @@ class LVM: NSObject, ObservableObject {
             guard let self = self else { return }
             self.fetchFeedTimerNextTick()
         }
+        
+#if DEBUG
+        let d = UserDefaults(suiteName: "preview_user_defaults")!
+        let selectedSubtab = (d.string(forKey: "selected_subtab") ?? "Unknown")
+        let selectedListId = (d.string(forKey: "selected_listId") ?? "Unknown")
+#else
         let selectedSubtab = (UserDefaults.standard.string(forKey: "selected_subtab") ?? "Unknown")
         let selectedListId = (UserDefaults.standard.string(forKey: "selected_listId") ?? "Unknown")
+#endif
+        
         lvmState.viewIsVisible = (selectedSubtab != "List"  && selectedSubtab == listId) || (selectedSubtab == "List"  && selectedListId == listId)
+        print("🟢🟢🟢🟣🟣🟣🟣🟣🟢🟢🟢\(selectedSubtab) \(lvmState.viewIsVisible) 🟢🟢🟢🟢🟣🟣🟣🟣🟣🟣🟢🟢")
         addSubscriptions()
         fetchFeedTimerNextTick()
     }
