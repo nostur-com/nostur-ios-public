@@ -11,7 +11,7 @@ import Combine
 
 class NotificationsManager: ObservableObject {
     
-    let FETCH_LIMIT = 200
+    let FETCH_LIMIT = 300
     
     static let shared = NotificationsManager()
     
@@ -63,10 +63,11 @@ class NotificationsManager: ObservableObject {
     init() {
         startTimer()
         
-        checkForNewPosts()
-        checkForNewReactions()
-        checkForNewZaps()
-        checkForDMs()
+        // Don't check now, better give some time for relays to respond
+//        checkForNewPosts()
+//        checkForNewReactions()
+//        checkForNewZaps()
+//        checkForDMs()
         
         receiveNotification(.activeAccountChanged)
             .sink { _ in
@@ -77,6 +78,57 @@ class NotificationsManager: ObservableObject {
                 self.unreadDMRequests = 0
             }
             .store(in: &subscriptions)
+        
+        // Check relays for newest messages NOW
+        relayCheckNewestNotifications() // or wait 3 seconds?
+        
+        // Check relays for since... later
+        DispatchQueue.main.asyncAfter(deadline: .now() + 11) {
+            self.relayCheckSinceNotifications()
+        }
+    }
+    
+    func relayCheckNewestNotifications() {
+        guard ns.account != nil else { return }
+        guard ns.activeAccountPublicKey != "" else { return }
+        
+        SocketPool
+            .shared
+            .sendMessage(
+                ClientMessage(
+                    type: .REQ,
+                    message:
+                        RequestMessage
+                        .getMentions(
+                            pubkeys: [ns.activeAccountPublicKey], subscriptionId: "Notifications")
+                )
+                , subscriptionId: "Notifications"
+            )
+    }
+    
+    func relayCheckSinceNotifications() {
+        // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
+        guard ns.account != nil else { return }
+        guard ns.activeAccountPublicKey != "" else { return }
+        guard let since = NosturState.shared.lastNotificationReceivedAt else { return }
+    
+        let sinceNTimestamp = NTimestamp(date: since)
+        print("checking notifications since: \(since.description(with: .current))")
+        
+        let ago = since.agoString
+        
+        SocketPool
+            .shared
+            .sendMessage(
+                ClientMessage(
+                    type: .REQ,
+                    message:
+                        RequestMessage
+                        .getMentions(
+                            pubkeys: [ns.activeAccountPublicKey], subscriptionId: "Notifications-CATCHUP-\(ago)", since: sinceNTimestamp)
+                )
+                , subscriptionId: "Notifications-CATCHUP-\(ago)"
+            )
     }
     
     func checkForNewPosts() {
@@ -203,25 +255,7 @@ class NotificationsManager: ObservableObject {
     
     func checkForEverything() {
         guard !Importer.shared.isImporting else { return }
-        guard ns.account != nil else { return }
-        guard ns.activeAccountPublicKey != "" else { return }
         
-        let since = NosturState.shared.lastNotificationReceivedAt ?? nil
-        let sinceNTimestamp = since != nil ? NTimestamp(date: since!) : nil
-        print("checking notifications since: \(since?.description(with: .current) ?? "")")
-        
-        SocketPool
-            .shared
-            .sendMessage(
-                ClientMessage(
-                    type: .REQ,
-                    message:
-                        RequestMessage
-                        .getMentions(
-                            pubkeys: [ns.activeAccountPublicKey], subscriptionId: "Notifications", since: sinceNTimestamp)
-                )
-                , subscriptionId: "Notifications"
-            )
         checkForNewPosts()
         checkForNewReactions()
         checkForNewZaps()
