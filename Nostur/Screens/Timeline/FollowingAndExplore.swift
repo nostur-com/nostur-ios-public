@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct FollowingAndExplore: View { //, Equatable {
-    
     @EnvironmentObject var dim:DIMENSIONS
     @ObservedObject var account:Account
     @EnvironmentObject var ns:NosturState
@@ -31,7 +30,6 @@ struct FollowingAndExplore: View { //, Equatable {
             VStack(spacing:0) {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing:0) {
-//                        Spacer()
                         TabButton(
                             action: { selectedSubTab = "Following" },
                             title: "Following",
@@ -52,7 +50,6 @@ struct FollowingAndExplore: View { //, Equatable {
                             action: { selectedSubTab = "Explore"},
                             title: "Explore",
                             selected: selectedSubTab == "Explore")
-//                        Spacer()
                     }
                     .frame(width: dim.listWidth)
                 }
@@ -107,9 +104,11 @@ struct FollowingAndExplore: View { //, Equatable {
 
 struct FollowingAndExplore_Previews: PreviewProvider {
     static var previews: some View {
-        if let account = PreviewFetcher.fetchAccount() {
-            FollowingAndExplore(account: account)
-                .withPreviewEnvironment()
+        if let account = NosturState.shared.account {
+            NavigationStack {
+                FollowingAndExplore(account: account)
+            }
+            .withPreviewEnvironment()
         }
     }
 }

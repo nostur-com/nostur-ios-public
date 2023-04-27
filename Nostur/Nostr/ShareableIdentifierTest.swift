@@ -30,6 +30,7 @@ struct ShareableIdentifierTest: View {
     
     var body: some View {
         if let s {
+            Text("\(Event.entity().name ?? "test")")
 //            Text(s.bech32string)
             Text(npub("9be0be0fc079548233231614e4e1efc9f28b0db398011efeecf05fe570e5dd33"))
 //            Text(lnurl ?? "")

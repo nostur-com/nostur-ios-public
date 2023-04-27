@@ -64,10 +64,7 @@ class Importer {
         
         let itemsCount = await parsedBucket.count()
         guard itemsCount != 0 else { self.isImporting = false; return }
-//        print("🦋🦋 \(itemsCount) messages in parsedBucket.")
-        //        if itemsCount == 1 {
-        //            print(await parsedBucket.all().description)
-        //        }
+        
         DispatchQueue.main.async {
             sendNotification(.listStatus, "Processing \(itemsCount) items...")
         }
@@ -91,7 +88,10 @@ class Importer {
                 
                 for message in forImports {
                     count = count + 1
-                    var event = message.event!
+                    guard var event = message.event else {
+                        print("🔴🔴 message.event is nil \(message.message)")
+                        continue
+                    }
                     
                     if message.subscriptionId == "Notifications" && event.pTags().contains(NosturState.shared.activeAccountPublicKey) && [1,7,9735,4].contains(event.kind.id) {
                         NosturState.shared.lastNotificationReceivedAt = Date.now
@@ -231,7 +231,7 @@ class Importer {
                     }
                 }
                 if (context.hasChanges) {
-                    try context.save() // TODO: is this the slowdown??
+                    try context.save() // This is saving to main context, not to disk..
                     if (saved > 0) {
                         print("💾 Processed: \(forImports.count), saved: \(saved), skipped (new cache): \(alreadyInIdCacheSkipped), skipped (db): \(alreadyInDBskipped)")
                     }

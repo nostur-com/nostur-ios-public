@@ -24,10 +24,8 @@ struct NosturTabsView: View {
                     .onPreferenceChange(SizePreferenceKey.self) { size in
                         guard size.width > 0 else { return }
                         dim.listWidth = size.width
-                        print("🟣🟣🟣🟣🟣 NEW WIDTH \(size.width) -- Scale: \(UIScreen.main.scale) ")
+//                        print("🟣🟣🟣🟣🟣 NEW WIDTH \(size.width) -- Scale: \(UIScreen.main.scale) ")
                     }
-                AppTopBar()
-//                    .padding(5)
                 TabView(selection: $selectedTab) {
                     MainView()
                         .tabItem { Image(systemName: "house") }
@@ -57,6 +55,7 @@ struct NosturTabsView: View {
                     //                    .tabItem { Image(systemName: "server.rack") }
                     //                    .tag("Configuration")
                 }
+//                .edgesIgnoringSafeArea(.all)
                 .withSheets()
             }
             .frame(maxWidth: 600)
@@ -134,23 +133,23 @@ extension NosturTabsView {
         }
     }
 }
-
-struct ContentView_Previews: PreviewProvider {
-    //    @State static var showMenu = false
-    //    @State static var selectedTab = "Timeline"
-    //
-    //    @State static var timelinePath = NavigationPath()
-    //    @State static var searchPath = NavigationPath()
-    //    @State static var accountsPath = NavigationPath()
-    //    @State static var bookmarksPath = NavigationPath()
-    //    @State static var notificationsPath = NavigationPath()
-    //    @State static var messagesPath = NavigationPath()
-    //    @State static var configurationPath = NavigationPath()
-    //    @State static var detailPath = NavigationPath()
-    //    @State static var showSidebar = false
-    
-    static var previews: some View {
-        NosturTabsView()
-            .withPreviewEnvironment()
-    }
-}
+//
+//struct ContentView_Previews: PreviewProvider {
+//    //    @State static var showMenu = false
+//    //    @State static var selectedTab = "Timeline"
+//    //
+//    //    @State static var timelinePath = NavigationPath()
+//    //    @State static var searchPath = NavigationPath()
+//    //    @State static var accountsPath = NavigationPath()
+//    //    @State static var bookmarksPath = NavigationPath()
+//    //    @State static var notificationsPath = NavigationPath()
+//    //    @State static var messagesPath = NavigationPath()
+//    //    @State static var configurationPath = NavigationPath()
+//    //    @State static var detailPath = NavigationPath()
+//    //    @State static var showSidebar = false
+//    
+//    static var previews: some View {
+//        NosturTabsView()
+//            .withPreviewEnvironment()
+//    }
+//}

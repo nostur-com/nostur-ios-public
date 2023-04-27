@@ -11,6 +11,12 @@ import CoreData
 
 extension Event {
 
+//    @nonobjc public class func fetchRequest() -> NSFetchRequest<Event> {
+//        let fr = NSFetchRequest<Event>(entityName: "Event")
+//        fr.sortDescriptors = []
+//        return fr
+//    }
+    
     @nonobjc public class func fetchRequest() -> NSFetchRequest<Event> {
         let fr = NSFetchRequest<Event>(entityName: "Event")
         fr.sortDescriptors = []
@@ -995,24 +1001,6 @@ extension Event {
         
         return (try? context.fetch(fr)) ?? []
     }
-    
-//    func toVPost(pubkey: String? = nil, context: NSManagedObjectContext? = nil) -> VPost {
-//        let p = pubkey ?? NosturState.shared.activeAccountPublicKey
-////        let ctx = context ?? managedObjectContext ?? DataProvider.shared().viewContext
-//        var vPost:VPost?
-//        if (Thread.isMainThread) {
-//            let vTransformer = VTransformer(pubkey: p)
-//            vPost = vTransformer.eventToVPost(self)
-//        }
-//        else {
-//            let bg = DataProvider.shared().bg
-//            bg.performAndWait {
-//                let vTransformer = VTransformer(pubkey: p)
-//                vPost = vTransformer.eventToVPost(self)
-//            }
-//        }
-//        return vPost!
-//    }
 }
 
 

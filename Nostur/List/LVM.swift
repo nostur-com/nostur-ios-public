@@ -438,7 +438,7 @@ class LVM: NSObject, ObservableObject {
                 
                     
                     // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
-                    let ago =  Date(timeIntervalSince1970: Double(since)).agoString
+                    let ago = Date(timeIntervalSince1970: Double(since)).agoString
                     
                     DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(8)) {
                         fetchEvents(pubkeysString: self.pubkeysPrefixString, amount: 5000, since: since, subscriptionId: "\(self.subscriptionId)-CATCHUP-\(ago)")
