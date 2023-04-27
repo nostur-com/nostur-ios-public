@@ -220,6 +220,10 @@ extension Notification.Name {
         return Notification.Name("hideSideBar")
     }
     
+    static var showSideBar: Notification.Name {
+        return Notification.Name("showSideBar")
+    }
+    
     static var addRemoveToListsheet: Notification.Name {
         return Notification.Name("addRemoveToListsheet")
     }

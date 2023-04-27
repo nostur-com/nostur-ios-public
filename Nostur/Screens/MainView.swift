@@ -14,6 +14,7 @@ struct MainView: View {
     @State var account:Account?
     @State var showingNewNote = false
     @State var noteCancellationId:UUID?
+    @EnvironmentObject var sm:SideBarModel
     
     var body: some View {
         let _ = Self._printChanges()
@@ -34,6 +35,27 @@ struct MainView: View {
                     .sheet(isPresented: $showingNewNote) {
                         NavigationStack {
                             NewNote(noteCancellationId: $noteCancellationId)
+                        }
+                    }
+                    .toolbar {
+                        if let account = self.account, !sm.showSidebar {
+                            ToolbarItem(placement: .navigationBarLeading) {
+                                Button {
+                                    sm.showSidebar.toggle()
+                                } label: {
+                                    PFP(pubkey: account.publicKey, pictureUrl: account.picture, size:30)
+                                }
+                                .accessibilityLabel("Account menu")
+//                                .offset(x: 15)
+                            
+                            }
+                        }
+                        ToolbarItem(placement: .principal) {
+                            Image("NosturLogo")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height:30)
+                                .clipShape(Circle())
                         }
                     }
             }
@@ -68,10 +90,7 @@ struct MainView: View {
 
 struct MainView_Previews: PreviewProvider {
     static var previews: some View {
-//        if let account = PreviewFetcher.fetchAccount() {
-//            MainView(account: account)
-            MainView()
-                .withPreviewEnvironment()
-//        }
+        MainView()
+            .withPreviewEnvironment()
     }
 }

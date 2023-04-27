@@ -109,6 +109,9 @@ struct SideBar: View {
         .onReceive(receiveNotification(.hideSideBar), perform: { _ in
             sm.showSidebar = false
         })
+        .onReceive(receiveNotification(.showSideBar), perform: { _ in
+            sm.showSidebar = true
+        })
         .sheet(isPresented: $accountsSheetIsShown) {
             NavigationStack {
                 AccountsSheet()

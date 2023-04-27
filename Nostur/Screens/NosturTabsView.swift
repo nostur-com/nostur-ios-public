@@ -64,6 +64,7 @@ struct NosturTabsView: View {
                 TabbedDetailContainer()
             }
         }
+        .edgesIgnoringSafeArea(.all)
         .onOpenURL { url in
             self.handleUrl(url)
         }

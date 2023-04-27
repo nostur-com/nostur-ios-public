@@ -63,6 +63,19 @@ struct Search: View {
                     }
                 }
                 .background(Color("ListBackground"))
+                .toolbar {
+                    if let account = NosturState.shared.account {
+                        ToolbarItem(placement: .navigationBarLeading) {
+                            Button {
+                                sendNotification(.showSideBar)
+                            } label: {
+                                PFP(pubkey: account.publicKey, pictureUrl: account.picture, size:30)
+                            }
+                            .accessibilityLabel("Account menu")
+                        
+                        }
+                    }
+                }
             }
             .withNavigationDestinations()
             .navigationTitle("Search")
