@@ -284,7 +284,7 @@ struct ProfileView: View {
             
             ToolbarItem(placement: .navigationBarTrailing) {
                 ProfileFollowButton(contact: contact)
-                    .offset(y: 140 + (max(-140,offset)))
+                    .offset(x: 10, y: 103 + (max(-103,offset)))
             }
         }
         .task {
