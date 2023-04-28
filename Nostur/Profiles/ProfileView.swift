@@ -57,15 +57,17 @@ struct ProfileView: View {
     
     @State var offset:CGFloat = 0.0
     
+    let PFP_SIZE = 75.0
+    
     var body: some View {
         ScrollView {
             LazyVStack(alignment:.leading, spacing:0, pinnedViews: [.sectionHeaders]) {
                 Section {
                     VStack {
-                        GeometryReader { geoPFP in
+                        GeometryReader { geoBanner in
                             ProfileBanner(contact: contact, offset: offset)
                                 .overlay(alignment: .bottomLeading, content: {
-                                    PFP(pubkey: contact.pubkey, pictureUrl: contact.picture, size: 75)
+                                    PFP(pubkey: contact.pubkey, pictureUrl: contact.picture, size: PFP_SIZE)
                                         .overlay(
                                             Circle()
                                                 .strokeBorder(Color.systemBackground, lineWidth: 3)
@@ -76,9 +78,9 @@ struct ProfileView: View {
                                             }
                                         }
                                         .scaleEffect(min(1,max(0.5,offset / 70 + 1.3)), anchor:.bottom)
-                                        .offset(x: 10, y: 150+37.5-10)
+                                        .offset(x: 10, y: PFP_SIZE/2)
                                 })
-                                .preference(key: OffsetPreferenceKey.self, value: geoPFP.frame(in:.global).minY)
+                                .preference(key: OffsetPreferenceKey.self, value: geoBanner.frame(in:.global).minY)
                                 .onPreferenceChange(OffsetPreferenceKey.self) { (value) in
                                     self.offset = value
                                 }
