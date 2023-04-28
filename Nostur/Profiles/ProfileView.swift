@@ -99,6 +99,7 @@ struct ProfileView: View {
                                 ProfileLightningButton(contact: contact)
 
                                 ProfileFollowButton(contact: contact)
+                                    .padding(.trailing, 10)
                             }
                             .padding(.top, 10)
 
@@ -278,13 +279,17 @@ struct ProfileView: View {
         }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
-                Text("\(contact.authorName) ").font(.headline)
+                VStack {
+                    Text("\(contact.authorName) ").font(.headline)
                     .offset(y: 140 + (max(-140,offset)))
+                }.frame(height: 40).clipped()
             }
             
             ToolbarItem(placement: .navigationBarTrailing) {
-                ProfileFollowButton(contact: contact)
-                    .offset(x: 10, y: 103 + (max(-103,offset)))
+                VStack {
+                    ProfileFollowButton(contact: contact)
+                        .offset(y: 103 + (max(-103,offset)))
+                }.frame(height: 40).clipped()
             }
         }
         .task {

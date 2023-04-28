@@ -106,7 +106,6 @@ struct TabContainer: View {
             else if let contact = tab.contact {
                 VStack {
                     ProfileView(contact:contact)
-//                        .opacity(tm.selected == tab ? 1 : 0)
                 }
                     
             }

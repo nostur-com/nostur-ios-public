@@ -55,7 +55,7 @@ struct NosturTabsView: View {
                     //                    .tabItem { Image(systemName: "server.rack") }
                     //                    .tag("Configuration")
                 }
-//                .edgesIgnoringSafeArea(.all)
+                .edgesIgnoringSafeArea(.all)
                 .withSheets()
             }
             .frame(maxWidth: 600)
@@ -64,7 +64,6 @@ struct NosturTabsView: View {
                 TabbedDetailContainer()
             }
         }
-        .edgesIgnoringSafeArea(.all)
         .onOpenURL { url in
             self.handleUrl(url)
         }
