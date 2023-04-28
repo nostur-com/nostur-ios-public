@@ -228,7 +228,6 @@
 		1FC7A54829FA46F000645FEF /* Media.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1FC7A54729FA46F000645FEF /* Media.xcassets */; };
 		1FC7A54A29FA46F000645FEF /* ActionRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC7A54929FA46F000645FEF /* ActionRequestHandler.swift */; };
 		1FC7A54C29FA46F000645FEF /* Action.js in Resources */ = {isa = PBXBuildFile; fileRef = 1FC7A54B29FA46F000645FEF /* Action.js */; };
-		1FC7A55029FA46F000645FEF /* Highlight with Nostur.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1FC7A54429FA46F000645FEF /* Highlight with Nostur.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		1FC82F3229AE0C0700B81CE5 /* Mentions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC82F3129AE0C0700B81CE5 /* Mentions.swift */; };
 		1FC82F3429AE261C00B81CE5 /* TabbedDetailContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC82F3329AE261C00B81CE5 /* TabbedDetailContainer.swift */; };
 		1FC82F3629AE327700B81CE5 /* SmartRelayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC82F3529AE327700B81CE5 /* SmartRelayManager.swift */; };
@@ -264,28 +263,7 @@
 		1FFF997D29CF4AF100ADAE23 /* ProfilePicFullScreenSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFF997C29CF4AF100ADAE23 /* ProfilePicFullScreenSheet.swift */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		1FC7A54E29FA46F000645FEF /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 1FB448B22965F3D000038671 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 1FC7A54329FA46F000645FEF;
-			remoteInfo = "Highlight with Nostur";
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXCopyFilesBuildPhase section */
-		1FC7A4EB29F99AB200645FEF /* Embed Foundation Extensions */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 13;
-			files = (
-				1FC7A55029FA46F000645FEF /* Highlight with Nostur.appex in Embed Foundation Extensions */,
-			);
-			name = "Embed Foundation Extensions";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		1FCEA0B329992FBE00A309DC /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1096,12 +1074,10 @@
 				1FB448B72965F3D000038671 /* Frameworks */,
 				1FB448B82965F3D000038671 /* Resources */,
 				1FCEA0B329992FBE00A309DC /* Embed Frameworks */,
-				1FC7A4EB29F99AB200645FEF /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				1FC7A54F29FA46F000645FEF /* PBXTargetDependency */,
 			);
 			name = Nostur;
 			packageProductDependencies = (
@@ -1461,14 +1437,6 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
-/* Begin PBXTargetDependency section */
-		1FC7A54F29FA46F000645FEF /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 1FC7A54329FA46F000645FEF /* Highlight with Nostur */;
-			targetProxy = 1FC7A54E29FA46F000645FEF /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
-
 /* Begin XCBuildConfiguration section */
 		1FB448CC2965F3D200038671 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -1590,7 +1558,6 @@
 		1FB448CF2965F3D200038671 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Nostur/Nostur.entitlements;
@@ -1637,7 +1604,6 @@
 		1FB448D02965F3D200038671 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Nostur/Nostur.entitlements;
