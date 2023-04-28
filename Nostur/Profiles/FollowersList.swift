@@ -65,14 +65,13 @@ struct FollowersList: View {
             }
             
             // TODO: ForEach for Fake ProfileRow view for pubkeys not in Contact
-            
             VStack {
-                Text("Missing: \(clEventsFollowingPubkeyMissingContact.count)")
-                ForEach(clEventsFollowingPubkeyMissingContact) { event in
-                    Text("Missing: \(event.pubkey)")
+                ForEach(clEventsFollowingPubkeyMissingContact, id:\.self) { event in
+                    ProfileRowMissing(pubkey: event.pubkey)
+                        .frame(height: 120)
+                    Divider()
                 }
             }
-            
         }.onAppear {
             // fetch missing
             // fetch pubkeys not in [contacts.pubkey]

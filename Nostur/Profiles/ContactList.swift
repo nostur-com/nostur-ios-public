@@ -52,6 +52,8 @@ struct ContactList: View {
             VStack {
                 ForEach(noMetadata, id:\.self) { pubkey in
                     ProfileRowMissing(pubkey: pubkey)
+                        .frame(height: 120)
+                    Divider()
                 }
             }
             

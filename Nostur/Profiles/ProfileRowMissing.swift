@@ -34,6 +34,11 @@ struct ProfileRowMissing: View {
                         .multilineTextAlignment(.leading)
                 }
             }
+            .padding()
+            .contentShape(Rectangle())
+            .onTapGesture {
+                navigateTo(ContactPath(key: pubkey))
+            }
         }
     }
 }
