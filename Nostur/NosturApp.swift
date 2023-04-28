@@ -114,7 +114,7 @@ struct NosturApp: App {
                         //                    .environmentObject(nm)
                             .onReceive(runLoop) { time in
                                 if (!isViewDisplayed) { return }
-                                Task { await Importer.shared.importEvents() }
+                                Importer.shared.importEvents()
                             }
                             .onReceive(priceLoop) { time in
                                 if (!isViewDisplayed) { return }

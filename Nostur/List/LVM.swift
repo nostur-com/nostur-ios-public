@@ -411,7 +411,7 @@ class LVM: NSObject, ObservableObject {
         
         performLocalFetch()
         
-        guard !Importer.shared.isImporting else { print("⏳ Still importing, new fetch skipped."); return }
+        guard !MessageParser.shared.messageBucket.isImporting else { print("⏳ Still importing, new fetch skipped."); return }
         
         
         if (ot.isOnboarding && self.lvmState.vPostLeafs.count > 0) {

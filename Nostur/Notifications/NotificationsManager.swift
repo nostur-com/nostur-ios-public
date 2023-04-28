@@ -254,7 +254,7 @@ class NotificationsManager: ObservableObject {
     }
     
     func checkForEverything() {
-        guard !Importer.shared.isImporting else { return }
+        guard !MessageParser.shared.messageBucket.isImporting else { return }
         
         checkForNewPosts()
         checkForNewReactions()

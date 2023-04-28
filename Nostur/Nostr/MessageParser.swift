@@ -12,7 +12,7 @@ class MessageParser {
     static let shared = MessageParser()
 
     var sp = SocketPool.shared
-    var parsedBucket = ActorQueue<RelayMessage>()
+    var messageBucket = MessageBucket()
     
     func socketReceivedMessage(text:String, relayUrl:String) {
         do {
@@ -49,7 +49,7 @@ class MessageParser {
                         Task { [weak self] in
                             guard let self = self else { return }
                             
-                            let queuedMessages:[RelayMessage] = await self.parsedBucket.all()
+                            let queuedMessages:[RelayMessage] = self.messageBucket.all()
                             let sameMessageInQueue = queuedMessages
                                 .filter { $0.type == .EVENT }
                                 .compactMap { $0.event?.id }
@@ -59,7 +59,7 @@ class MessageParser {
                                 return
                             }
                             else {
-                                await self.parsedBucket.enqueue(message) // Wrap in _ = Task {}?
+                                self.messageBucket.addMessage(message)
                                 
                                 if (nEvent.kind == .textNote || nEvent.kind == .reaction) {
                                     
