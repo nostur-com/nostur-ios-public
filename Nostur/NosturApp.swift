@@ -142,7 +142,7 @@ struct NosturApp: App {
         .onChange(of: scenePhase) { newScenePhase in
             switch newScenePhase {
                 case .active:
-                    print("🏎️🏎️ \(Date.now) scenePhase active")
+//                    print("🏎️🏎️ \(Date.now) scenePhase active")
                     SocketPool.shared.connectAll()
                 case .background:
                     SocketPool.shared.disconnectAll()

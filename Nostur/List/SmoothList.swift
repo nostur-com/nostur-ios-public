@@ -240,15 +240,15 @@ struct SmoothList: UIViewControllerRepresentable {
                 }
             }
             if imageRequests.count > 0 {
-                print("prefetching for \(imageRequests.count)")
+//                print("prefetching for \(imageRequests.count)")
                 prefetcher.startPrefetching(with: imageRequests)
             }
             if imageRequestsPFP.count > 0 {
-                print("prefetching for PFP: \(imageRequestsPFP.count)")
+//                print("prefetching for PFP: \(imageRequestsPFP.count)")
                 prefetcherPFP.startPrefetching(with: imageRequestsPFP)
             }
             if imageRequestsPFPnotFollowing.count > 0 {
-                print("prefetching for PFP not following: \(imageRequestsPFPnotFollowing.count)")
+//                print("prefetching for PFP not following: \(imageRequestsPFPnotFollowing.count)")
                 prefetcherPFPnotFollowing.startPrefetching(with: imageRequestsPFPnotFollowing)
             }
         }
@@ -313,15 +313,15 @@ struct SmoothList: UIViewControllerRepresentable {
                 }
             }
             if (imageRequests.count > 0) {
-                print("cancelling prefetch for \(imageRequests.count)")
+//                print("cancelling prefetch for \(imageRequests.count)")
                 prefetcher.stopPrefetching(with: imageRequests)
             }
             if imageRequestsPFP.count > 0 {
-                print("prefetching for PFP: \(imageRequestsPFP.count)")
+//                print("prefetching for PFP: \(imageRequestsPFP.count)")
                 prefetcherPFP.stopPrefetching(with: imageRequestsPFP)
             }
             if imageRequestsPFPnotFollowing.count > 0 {
-                print("prefetching for PFP not following: \(imageRequestsPFPnotFollowing.count)")
+//                print("prefetching for PFP not following: \(imageRequestsPFPnotFollowing.count)")
                 prefetcherPFPnotFollowing.stopPrefetching(with: imageRequestsPFPnotFollowing)
             }
         }

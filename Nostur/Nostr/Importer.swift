@@ -31,7 +31,7 @@ class Importer {
         addedRelayMessage
             .throttle(for: 2.5, scheduler: DispatchQueue.global(), latest: true)
             .sink { () in
-                print("🏎️🏎️ \(Date.now) Triggering import")
+//                print("🏎️🏎️ \(Date.now) Triggering import")
                 self.importEvents()
             }
             .store(in: &subscriptions)

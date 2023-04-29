@@ -166,7 +166,7 @@ class LVM: NSObject, ObservableObject {
                 
                 // FOR REALTIME, FETCH RELATED OF LAST 4 POSTS
                 if !alreadySkipped && transformedObjectIds.count > 0 && transformedObjectIds.count < 5 {
-                    print("🏎️🏎️ \(Date.now) SKIP RENDER")
+//                    print("🏎️🏎️ \(Date.now) SKIP RENDER")
                     fetchRelated(added.prefix(4))
                     alreadySkipped = true // Skip this render, wait for the next one so we have the
                     
@@ -214,7 +214,7 @@ class LVM: NSObject, ObservableObject {
                         self.lvmCounter.count += addedCount
                     }
 //                    print("Added \(newLeafThreads.count) new leafs (\(addedCount))")
-                    print("🏎️🏎️ \(Date.now) Added \(newLeafThreads.count) new leafs (\(addedCount))")
+//                    print("🏎️🏎️ \(Date.now) Added \(newLeafThreads.count) new leafs (\(addedCount))")
                     
                 }
             }
@@ -448,7 +448,7 @@ class LVM: NSObject, ObservableObject {
                 
                 if (!self.didCatchup) {
                     // THIS SUBSCRIPTION WILL STAY ACTIVE:
-                    print("🏎️🏎️ \(Date.now) fetchFeedTimerNexTick - fetchEvents 11")
+//                    print("🏎️🏎️ \(Date.now) fetchFeedTimerNexTick - fetchEvents 11")
                     fetchEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: self.subscriptionId)
                 
                     
@@ -463,7 +463,7 @@ class LVM: NSObject, ObservableObject {
                 }
                 else {
                     // THIS SUBSCRIPTION WILL STAY ACTIVE:
-                    print("🏎️🏎️ \(Date.now) fetchFeedTimerNexTick - fetchEvents")
+//                    print("🏎️🏎️ \(Date.now) fetchFeedTimerNexTick - fetchEvents")
                     fetchEvents(pubkeysString: self.pubkeysPrefixString, since: since, subscriptionId: self.subscriptionId)
                 }
 //                 cutOff doesnt work well, since hits with some time ago limit (500)?
@@ -477,7 +477,7 @@ class LVM: NSObject, ObservableObject {
 extension LVM {
     
     func restoreSubscription() {
-        print("🏎️🏎️ \(Date.now) restoreSubscription \(self.subscriptionId)")
+//        print("🏎️🏎️ \(Date.now) restoreSubscription \(self.subscriptionId)")
         let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 4)  // 4 hours  ago
         let since = (self.lvmState.vPostLeafs.first?.created_at ?? hoursAgo) - (60 * 15) // (take 15 minutes earlier to not mis out of sync posts)
         fetchEvents(pubkeysString: self.pubkeysPrefixString, since: since, subscriptionId: self.subscriptionId)
@@ -824,7 +824,7 @@ extension LVM: NSFetchedResultsControllerDelegate {
     
     // MARK: FROM DB TO SCREEN STEP 1: FETCH REQUEST
     func performLocalFetch(refreshInBackground:Bool = false) {
-        print("🏎️🏎️ \(Date.now) performLocalFetch \(self.subscriptionId)")
+//        print("🏎️🏎️ \(Date.now) performLocalFetch \(self.subscriptionId)")
         if let mostRecent = self.lvmState.vPostLeafs.first {
             let fr = Event.postsByPubkeys(pubkeys, mostRecent: mostRecent.event)
             
