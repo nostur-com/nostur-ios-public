@@ -87,6 +87,7 @@ func createPreviewEvent(_ event:NEvent) -> Event {
     previewEvent.isRepost = event.kind == .repost
     previewEvent.contact = Contact.fetchByPubkey(event.publicKey, context: context)
     previewEvent.tagsSerialized = TagSerializer.shared.encode(tags: event.tags)
+    previewEvent.isPreview = true
             
     if (event.kind == .textNote) {
         // THIS EVENT REPLYING TO SOMETHING

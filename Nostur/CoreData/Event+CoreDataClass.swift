@@ -28,7 +28,8 @@ public class Event: NSManagedObject, Identifiable {
             }
         }
     }
-    
+ 
+    var isPreview:Bool = false
     var previewImages:[UIImage] = []
 }
 

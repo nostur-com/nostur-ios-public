@@ -170,6 +170,7 @@ struct ContentRenderer: View { // VIEW things
         }
         //        .frame(maxWidth: .infinity, maxHeight:450, alignment: .leading)
         .onAppear {
+            guard !vPost.event.isPreview else { return }
             event.objectWillChange
                 .sink {
                     
