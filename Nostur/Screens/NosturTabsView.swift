@@ -55,11 +55,11 @@ struct NosturTabsView: View {
                     //                    .tabItem { Image(systemName: "server.rack") }
                     //                    .tag("Configuration")
                 }
-                .edgesIgnoringSafeArea(.all)
                 .withSheets()
             }
             .frame(maxWidth: 600)
             .environmentObject(dim)
+            .edgesIgnoringSafeArea(.all)
             if UIDevice.current.userInterfaceIdiom == .pad {
                 TabbedDetailContainer()
             }

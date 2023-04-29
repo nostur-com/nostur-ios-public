@@ -14,10 +14,10 @@ struct ProfileView: View {
     let sp:SocketPool = .shared
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var dim:DIMENSIONS
+    @ObservedObject var settings:SettingsStore = .shared
      
     @ObservedObject var contact:Contact
     var pubkey:String
-    let hideBadges:Bool
     
     @FetchRequest
     var clEvents:FetchedResults<Event>
@@ -55,19 +55,50 @@ struct ProfileView: View {
         _kind0Events = FetchRequest(fetchRequest: kind0)
     }
     
-    @State var offset:CGFloat = 0.0
-    
     let PFP_SIZE = 75.0
     
     var body: some View {
+        let _ = Self._printChanges()
         ScrollView {
+            Color.clear.background( // GeometryReader in .background so it does not mess up layout
+                GeometryReader { toolbarGEO in
+                    Color.clear
+                        .toolbar {
+                        ToolbarItem(placement: .navigationBarLeading) {
+                            VStack {
+                                HStack(spacing:2) {
+                                    PFP(pubkey: contact.pubkey,
+                                        pictureUrl: contact.picture,
+                                        size: 25,
+                                        isFollowing:ns.isFollowing(contact.pubkey)
+                                    )
+                                    .overlay(
+                                        Circle()
+                                            .strokeBorder(Color.systemBackground, lineWidth: 1)
+                                    )
+                                    Text("\(contact.authorName) ").font(.headline)
+                                }
+                                .offset(y: 160 + (max(-160,toolbarGEO.frame(in:.global).minY)))
+                            }.frame(height: 40).clipped()
+                        }
+                        
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            VStack {
+                                ProfileFollowButton(contact: contact)
+                                    .offset(y: 123 + (max(-123,toolbarGEO.frame(in:.global).minY)))
+                            }.frame(height: 40).clipped()
+                        }
+                    }
+                }
+            )
+            
             LazyVStack(alignment:.leading, spacing:0, pinnedViews: [.sectionHeaders]) {
                 Section {
                     VStack {
                         GeometryReader { geoBanner in
-                            ProfileBanner(contact: contact, offset: offset)
+                            ProfileBanner(banner: contact.banner, width: dim.listWidth, offset: geoBanner.frame(in:.global).minY)
                                 .overlay(alignment: .bottomLeading, content: {
-                                    PFP(pubkey: contact.pubkey, pictureUrl: contact.picture, size: PFP_SIZE)
+                                    PFP(pubkey: contact.pubkey, pictureUrl: contact.picture, size: PFP_SIZE, isFollowing:ns.isFollowing(contact.pubkey))
                                         .overlay(
                                             Circle()
                                                 .strokeBorder(Color.systemBackground, lineWidth: 3)
@@ -77,14 +108,10 @@ struct ProfileView: View {
                                                 profilePicViewerIsShown = true
                                             }
                                         }
-                                        .scaleEffect(min(1,max(0.5,offset / 70 + 1.3)), anchor:.bottom)
+                                        .scaleEffect(min(1,max(0.5,geoBanner.frame(in:.global).minY / 70 + 1.3)), anchor:.bottom)
                                         .offset(x: 10, y: PFP_SIZE/2)
                                 })
-                                .preference(key: OffsetPreferenceKey.self, value: geoBanner.frame(in:.global).minY)
-                                .onPreferenceChange(OffsetPreferenceKey.self) { (value) in
-                                    self.offset = value
-                                }
-                                        
+                            
                         }
                         
                         VStack(alignment: .leading) {
@@ -93,16 +120,16 @@ struct ProfileView: View {
                                     ProfileBadgesContainer(pubkey: contact.pubkey)
                                         .offset(x: 85, y: 0)
                                 }
-
+                                
                                 Spacer()
-
+                                
                                 ProfileLightningButton(contact: contact)
-
+                                
                                 ProfileFollowButton(contact: contact)
                                     .padding(.trailing, 10)
                             }
                             .padding(.top, 10)
-
+                            
                             HStack(spacing:0) {
                                 Text("\(contact.authorName) ").font(.system(size: 24, weight:.bold))
                                 if (contact.nip05veried) {
@@ -112,7 +139,7 @@ struct ProfileView: View {
                                     }.foregroundColor(Color("AccentColor"))
                                 }
                             }
-
+                            
                             HStack {
                                 Text("@\(contact.username)").foregroundColor(.secondary)
                                 ContactPrivateNoteToggle(contact: contact)
@@ -129,8 +156,8 @@ struct ProfileView: View {
                                             Label("Copy profile source", systemImage: "doc.on.clipboard")
                                         }
                                     }
-
-
+                                    
+                                    
                                     Button {
                                         ns.objectWillChange.send()
                                         ns.account!.blockedPubkeys_ = ns.account!.blockedPubkeys_ + [contact.pubkey]
@@ -143,8 +170,8 @@ struct ProfileView: View {
                                     } label: {
                                         Label("Report @\(contact.username)", systemImage: "flag")
                                     }
-
-
+                                    
+                                    
                                 } label: {
                                     Image(systemName: "ellipsis")
                                         .fontWeight(.bold)
@@ -159,12 +186,12 @@ struct ProfileView: View {
                                         .cornerRadius(13)
                                 }
                             }
-
+                            
                             Text("\(String(contact.about ?? "(No information)"))")
-
+                            
                             HStack {
                                 Text("\n**\(contact.followingPubkeys.count)** Following")
-
+                                
                                 Text("\n**♾️** Followers")
                                     .onTapGesture { selectedSubTab = "Followers" }
                             }
@@ -181,11 +208,11 @@ struct ProfileView: View {
                             case "Following":
                                 VStack {
                                     if clEvents.count != 0, let pubkeys = clEvents.first!.contactPubkeys() {
-
+                                        
                                         Text("Following").font(.headline).fontWeight(.heavy).padding(.vertical, 10)
-
+                                        
                                         let silentFollows = clEvents.first!.pubkey == NosturState.shared.pubkey ? NosturState.shared.account?.follows_.filter { $0.privateFollow }.map { $0.pubkey } : []
-
+                                        
                                         ContactList(pubkeys: pubkeys, silent:silentFollows)
                                     }
                                     else {
@@ -264,32 +291,17 @@ struct ProfileView: View {
                                 action: { selectedSubTab = "Zaps" },
                                 title: "Zaps",
                                 selected: selectedSubTab == "Zaps")
-//                                Spacer()
-//                                TabButton(
-//                                    action: { selectedSubTab = "Relays" },
-//                                    title: "Relays",
-//                                    selected: selectedSubTab == "Relays")
+                            //                                Spacer()
+                            //                                TabButton(
+                            //                                    action: { selectedSubTab = "Relays" },
+                            //                                    title: "Relays",
+                            //                                    selected: selectedSubTab == "Relays")
                         }
                         .frame(width: dim.listWidth)
                     }
                     .padding(.top, 10)
                     .background(.regularMaterial)
                 }
-            }
-        }
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                VStack {
-                    Text("\(contact.authorName) ").font(.headline)
-                    .offset(y: 140 + (max(-140,offset)))
-                }.frame(height: 40).clipped()
-            }
-            
-            ToolbarItem(placement: .navigationBarTrailing) {
-                VStack {
-                    ProfileFollowButton(contact: contact)
-                        .offset(y: 103 + (max(-103,offset)))
-                }.frame(height: 40).clipped()
             }
         }
         .task {

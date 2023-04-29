@@ -10,21 +10,21 @@ import NukeUI
 import Nuke
 
 struct ProfileBanner: View {
-    @ObservedObject var contact:Contact
-    @EnvironmentObject var dim:DIMENSIONS
+    var banner:String?
+    var width:CGFloat
     var offset:CGFloat
     let BANNER_HEIGHT = 150.0
     
     var body: some View {
-//        GeometryReader { bannerGEO in
+        let _ = Self._printChanges()
         Group {
-            if let banner = contact.banner {
+            if let banner {
                 if (banner.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
                     LazyImage(url: URL(string: banner)) { state in
                         if let container = state.imageContainer {
                             if container.type == .gif, let gifData = container.data {
-                                AnimatedGifView(gifData: gifData, width: dim.listWidth, height: BANNER_HEIGHT)
-                                    .frame(width: dim.listWidth, height: BANNER_HEIGHT)
+                                AnimatedGifView(gifData: gifData, width: width, height: BANNER_HEIGHT)
+                                    .frame(width: width, height: BANNER_HEIGHT)
                                     .clipped()
                                     .scaleEffect(1 + max(0,offset / BANNER_HEIGHT ), anchor: .bottom)
                                 
@@ -33,7 +33,7 @@ struct ProfileBanner: View {
                                 image
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)
-                                    .frame(width: dim.listWidth, height: BANNER_HEIGHT)
+                                    .frame(width: width, height: BANNER_HEIGHT)
                                     .clipped()
                                     .scaleEffect(1 + max(0,offset / BANNER_HEIGHT ), anchor: .bottom)
                             }
@@ -41,7 +41,7 @@ struct ProfileBanner: View {
                                 HStack {
                                     Rectangle()
                                         .foregroundColor(.gray)
-                                        .frame(width: dim.listWidth, height: BANNER_HEIGHT)
+                                        .frame(width: width, height: BANNER_HEIGHT)
                                         .scaleEffect(1 + max(0,offset / BANNER_HEIGHT ), anchor: .bottom)
                                 }
                             }
@@ -50,7 +50,7 @@ struct ProfileBanner: View {
                             HStack {
                                 Rectangle()
                                     .foregroundColor(.gray)
-                                    .frame(width: dim.listWidth, height: BANNER_HEIGHT)
+                                    .frame(width: width, height: BANNER_HEIGHT)
                                     .scaleEffect(1 + max(0,offset / BANNER_HEIGHT ), anchor: .bottom)
                             }
                         }
@@ -64,7 +64,7 @@ struct ProfileBanner: View {
                             image
                                 .resizable()
                                 .scaledToFill()
-                                .frame(height: BANNER_HEIGHT)
+                                .frame(width:width, height: BANNER_HEIGHT)
                                 .clipped()
                                 .scaleEffect(1 + max(0,offset / BANNER_HEIGHT ), anchor: .bottom)
                         }
@@ -72,8 +72,7 @@ struct ProfileBanner: View {
                             HStack {
                                 Rectangle()
                                     .foregroundColor(.gray)
-                                    .frame(height: BANNER_HEIGHT)
-//                                    .scaleEffect(1 + max(0,offset / BANNER_HEIGHT ), anchor: .bottom)
+                                    .frame(width: width, height: BANNER_HEIGHT)
                             }
                         }
                     }
@@ -84,7 +83,7 @@ struct ProfileBanner: View {
                 HStack {
                     Rectangle()
                         .foregroundColor(.gray)
-                        .frame(height: BANNER_HEIGHT)
+                        .frame(width: width, height: BANNER_HEIGHT)
 //                        .scaleEffect(1 + max(0,offset / BANNER_HEIGHT ), anchor: .bottom)
                 }
             }
@@ -95,8 +94,8 @@ struct ProfileBanner: View {
 
 struct ProfileBanner_Previews: PreviewProvider {
     static var previews: some View {
-        if let contact = PreviewFetcher.fetchContact() {
-            ProfileBanner(contact: contact, offset: 0)
+        if let contact = PreviewFetcher.fetchContact("9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e") {
+            ProfileBanner(banner:contact.banner, width: UIScreen.main.bounds.width, offset: 0)
         }
     }
 }
