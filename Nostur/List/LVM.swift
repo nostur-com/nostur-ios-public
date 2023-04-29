@@ -976,7 +976,7 @@ extension Event {
         
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN {1,6} AND id != \"\"", cutOffPoint,  pubkeys)
+        fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN {1,6,9802} AND id != \"\"", cutOffPoint,  pubkeys)
         return fr
     }
     
@@ -992,7 +992,7 @@ extension Event {
         let frBefore = Event.fetchRequest()
         frBefore.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         frBefore.fetchLimit = 15 //TODO: need this even?
-        frBefore.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN {1,6} AND id != \"\"", cutOffPoint,  pubkeys)
+        frBefore.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN {1,6,9802} AND id != \"\"", cutOffPoint,  pubkeys)
         
         let newFirstEvent = try? DataProvider.shared().viewContext.fetch(frBefore).last
         
@@ -1000,7 +1000,7 @@ extension Event {
         
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN {1,6} AND id != \"\"", newCutOffPoint,  pubkeys)
+        fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN {1,6,9802} AND id != \"\"", newCutOffPoint,  pubkeys)
         return fr
     }
 }

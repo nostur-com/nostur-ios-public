@@ -150,13 +150,67 @@ struct FooterFragmentView: View {
 }
 
 
+struct PreviewFooterFragmentView: View {
+    
+    static let grey = Color.init(red: 113/255, green: 118/255, blue: 123/255)
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            HStack {
+                HStack {
+                    Image("ReplyIcon")
+                    Text("0").opacity(0)
+                }
+                .padding([.vertical, .trailing], 5)
+                Spacer()
+                
+                // REPOST
+                HStack {
+                    Image("RepostedIcon")
+                    Text("0").opacity(0)
+                }
+                .padding(5)
+                Spacer()
+                
+                // LIKE
+                HStack {
+                    Image("LikeIcon")
+                    Text("0").opacity(0)
+                }
+                .padding(5)
+                Spacer()
+                
+                
+                Image("BoltIcon")
+                Text("0").opacity(0)
+                Spacer()  // TODO: FIXME
+
+
+                Image("BookmarkIcon")
+                    .padding(.vertical, 5)
+                    .padding(.leading, 10)
+                
+            }
+        }
+        .foregroundColor(Self.grey)
+            .font(.system(size: 14))
+            
+            
+    }
+}
+
 struct FooterFragmentView_Previews: PreviewProvider {
     static var previews: some View {
-        let event7 = PreviewFetcher.fetchVPost("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
-        if (event7 != nil) {
-            FooterFragmentView(vPost: event7!)
-                .padding(.horizontal, 20)
-                .withPreviewEnvironment()
+        VStack {
+            
+            PreviewFooterFragmentView()
+            
+            let event7 = PreviewFetcher.fetchVPost("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
+            if (event7 != nil) {
+                FooterFragmentView(vPost: event7!)
+            }
         }
+        .padding(.horizontal, 20)
+        .withPreviewEnvironment()
     }
 }

@@ -63,7 +63,10 @@ struct NoteRow: View {
                     else {
                         if let firstQuote = vPost.firstQuote.first {
                             let _ = print("why: \(firstQuote.event.contact?.pubkey ?? "bluh")")
-                            if fullWidth {
+                            if vPost.isHighlight {
+                                Highlight(vPost: vPost, hideFooter: false, inThread:inThread, connect:connect)
+                            }
+                            else if fullWidth {
                                 Kind1(vPost: firstQuote, hideFooter:false, isDetail:isDetail)
                             }
                             else {
@@ -77,7 +80,10 @@ struct NoteRow: View {
                 }
                 // IS NOT A REPOST
                 else {
-                    if fullWidth {
+                    if vPost.isHighlight {
+                        Highlight(vPost: vPost, hideFooter: hideFooter, inThread:inThread, connect:connect)
+                    }
+                    else if fullWidth {
                         Kind1(vPost: vPost, hideFooter: hideFooter, inThread:inThread, connect:connect, isReply: isReply, isDetail:isDetail)
                         //                .background(Color.random)
                     }
@@ -114,7 +120,111 @@ struct NoteRow: View {
         }
     }
     
+    // Hightlight note
+    struct Highlight: View {
+        let vPost:VPost
+        let hideFooter:Bool // For rendering in NewReply
+        let inThread:Bool // For rendering in thread
+        var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
+        @ObservedObject var event:Event
+        @ObservedObject var settings:SettingsStore = .shared
+        
+        init(vPost: VPost, hideFooter:Bool = true, inThread:Bool = false, connect:ThreadConnectDirection? = nil) {
+            self.vPost = vPost
+            self.event = vPost.event
+            self.hideFooter = hideFooter
+            self.inThread = inThread
+            self.connect = connect
+        }
+        
+        let THREAD_LINE_OFFSET = 34.0
+        
+        var body: some View {
+            
+            HStack(alignment: .top, spacing:0) {
+                PFP(pubkey: vPost.pubkey, pictureUrl: event.contact?.picture ?? vPost.pictureUrl, isFollowing: vPost.following)
+                    .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: DIMENSIONS.POST_ROW_PFP_HEIGHT)
+                    .background(alignment: .top, content: {
+                        Color("LightGray")
+                            .frame(width: 2, height: 20)
+                            .offset(x:0, y: -20)
+                            .opacity(connect == .top || connect == .both ? 1 : 0)
+                    })
+                    .onTapGesture {
+                        navigateTo(ContactPath(key: vPost.pubkey)) // TODO: if vPost.contact navigate with that else by .pubkey
+                    }
+                    .padding(.horizontal, DIMENSIONS.POST_ROW_PFP_HPADDING)
+
+                VStack(alignment:.leading, spacing: 3) {// Post container
+                    HStack { // name + reply + context menu
+                        NoteHeaderView(vPost: vPost)
+                        Spacer()
+                        NoteMenuView(vPost: vPost)
+                    }
+                    if !inThread {
+                        ReplyingToFragmentView(vPost: vPost)
+//                            .padding(.bottom, 3)
+                            .contentShape(Rectangle())
+                            .onTapGesture { navigateTo(vPost) }
+                    }
+                    VStack {
+                        Text(vPost.event.content ?? "")
+                            .italic()
+                            .padding(20)
+                            .overlay(alignment:.topLeading) {
+                                Image(systemName: "quote.opening")
+                                    .foregroundColor(Color.secondary)
+                            }
+                            .overlay(alignment:.bottomTrailing) {
+                                Image(systemName: "quote.closing")
+                                    .foregroundColor(Color.secondary)
+                            }
+                        
+                        if let highlightAuthorPubkey = vPost.highlightAuthorPubkey {
+                            HStack {
+                                Spacer()
+                                PFP(pubkey: highlightAuthorPubkey, pictureUrl: vPost.highlightAuthorPicture, size: 20, isFollowing: vPost.highlightAuthorIsFollowing)
+                                Text(vPost.highlightAuthorName ?? "Unknown")
+                            }
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                navigateTo(ContactPath(key: highlightAuthorPubkey))
+                            }
+                            .padding(.trailing, 40)
+                        }
+                        HStack {
+                            Spacer()
+                            if let url = vPost.highlightUrl {
+                                Text("[\(url)](\(url))")
+                                    .font(.caption)
+                            }
+                        }
+                        .padding(.trailing, 40)
+                    }
+                    .padding(10)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 15)
+                            .stroke(.regularMaterial, lineWidth: 1)
+                    )
+                    if (!hideFooter && settings.rowFooterEnabled) {
+                        FooterFragmentView(vPost: vPost)
+                            .padding(.top, 10)
+                    }
+                }
+                .padding(.bottom, 10)
+            }
+            .background(alignment: .leading) {
+                Color("LightGray")
+                    .frame(width: 2)
+                    .offset(x: THREAD_LINE_OFFSET, y: 18)
+                    .opacity(connect == .bottom || connect == .both ? 1 : 0)
+            }
+            .padding(.trailing, DIMENSIONS.KIND1_TRAILING)
+            
+        }
+    }
     
+    // Note 1 default
     struct Kind1Default: View {
         @EnvironmentObject var dim:DIMENSIONS
         let vPost:VPost
@@ -201,7 +311,7 @@ struct NoteRow: View {
         }
     }
     
-    // Full width
+    // Note Full width
     struct Kind1: View {
         @EnvironmentObject var dim:DIMENSIONS
         let vPost:VPost

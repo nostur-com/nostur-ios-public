@@ -299,7 +299,7 @@ extension Contact : Identifiable {
         PubkeyUsernameCache.shared.setObject(for: contact.pubkey, value: username)
         // TODO: Maybe some event.objectWillChange.send() to relations in active views? Performance?
         let r1 = Event.fetchRequest()
-        r1.predicate = NSPredicate(format: "pubkey == %@ AND kind IN {1,6,9734,4}", contact.pubkey) // need kind 7 here or?
+        r1.predicate = NSPredicate(format: "pubkey == %@ AND kind IN {1,6,9734,4,9802}", contact.pubkey) // need kind 7 here or?
         if let contactEvents = try? context.fetch(r1) {
             for event in contactEvents {
                 event.objectWillChange.send()
@@ -309,7 +309,7 @@ extension Contact : Identifiable {
         
         // EVENTS.CONTACTS (which come from Event.P tags:)
         let r2 = Event.fetchRequest()
-        r2.predicate = NSPredicate(format: "tagsSerialized CONTAINS %@ AND kind IN {1,6,9734,4}", serializedP(contact.pubkey)) // OPTIMIZATION HACK ..  // need kind 7 here or?
+        r2.predicate = NSPredicate(format: "tagsSerialized CONTAINS %@ AND kind IN {1,6,9734,4,9802}", serializedP(contact.pubkey)) // OPTIMIZATION HACK ..  // need kind 7 here or?
         if let events = try? context.fetch(r2) {
             for event in events {
                 event.objectWillChange.send()

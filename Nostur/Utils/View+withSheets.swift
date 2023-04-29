@@ -49,6 +49,9 @@ private struct WithSheets: ViewModifier {
     // Zap sheet
     @State var paymentInfo:PaymentInfo? = nil
     
+    // New highlight sheet
+    @State var newHighlight:NewHighlight? = nil
+    
     func body(content: Content) -> some View {
         content
             .onReceive(receiveNotification(.fullScreenView)) { notification in
@@ -192,6 +195,19 @@ private struct WithSheets: ViewModifier {
                     AddRemoveToListsheet(contact: contact)
                 }
             })
+        
+            // New highlight
+            .onReceive(receiveNotification(.newHighlight)) { notification in
+                let newHighlight = notification.object as! NewHighlight
+                print(newHighlight)
+                self.newHighlight = newHighlight
+            }
+            .sheet(item: $newHighlight) { newHighlight in
+                NavigationStack {
+                    HighlightComposer(highlight: newHighlight)
+                        .environmentObject(ns)
+                }
+            }
     }
     
     func onDismiss() {
@@ -222,4 +238,11 @@ struct ReportContact: Identifiable {
 struct DeletePost: Identifiable {
     let id = UUID()
     let eventId:String
+}
+
+struct NewHighlight: Identifiable {
+    let id = UUID()
+    let url:String
+    let selectedText:String
+    var title:String? = nil
 }

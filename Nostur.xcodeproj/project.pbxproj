@@ -233,6 +233,8 @@
 		1FC82F3629AE327700B81CE5 /* SmartRelayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC82F3529AE327700B81CE5 /* SmartRelayManager.swift */; };
 		1FCA273E299A6A1A00298881 /* LightningButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCA273D299A6A1A00298881 /* LightningButton.swift */; };
 		1FCEA0B72999413C00A309DC /* Double+clean.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCEA0B62999413C00A309DC /* Double+clean.swift */; };
+		1FCFDDCB29FCC735005320B8 /* Share highlight with Nostur.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1FC7A54429FA46F000645FEF /* Share highlight with Nostur.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		1FCFDDD229FCEA91005320B8 /* HighlightComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCFDDD129FCEA91005320B8 /* HighlightComposer.swift */; };
 		1FD3DE0329BE325B007E1E6E /* PrivateNoteToggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD3DE0229BE325B007E1E6E /* PrivateNoteToggle.swift */; };
 		1FD49733297FCB5E0084F14E /* PreviewHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD49732297FCB5E0084F14E /* PreviewHelper.swift */; };
 		1FD49737298029600084F14E /* NoteTextRenderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD49736298029600084F14E /* NoteTextRenderView.swift */; };
@@ -263,6 +265,16 @@
 		1FFF997D29CF4AF100ADAE23 /* ProfilePicFullScreenSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFF997C29CF4AF100ADAE23 /* ProfilePicFullScreenSheet.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		1FCFDDCC29FCC735005320B8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1FB448B22965F3D000038671 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1FC7A54329FA46F000645FEF;
+			remoteInfo = "Highlight with Nostur";
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
 		1FCEA0B329992FBE00A309DC /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -272,6 +284,17 @@
 			files = (
 			);
 			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1FCFDDCE29FCC735005320B8 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				1FCFDDCB29FCC735005320B8 /* Share highlight with Nostur.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -487,7 +510,7 @@
 		1FC7A49829F9389100645FEF /* NostrcheckMeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostrcheckMeService.swift; sourceTree = "<group>"; };
 		1FC7A49A29F95AD400645FEF /* ProfileByPubkey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileByPubkey.swift; sourceTree = "<group>"; };
 		1FC7A4D929F99AB100645FEF /* UniformTypeIdentifiers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UniformTypeIdentifiers.framework; path = System/Library/Frameworks/UniformTypeIdentifiers.framework; sourceTree = SDKROOT; };
-		1FC7A54429FA46F000645FEF /* Highlight with Nostur.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Highlight with Nostur.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		1FC7A54429FA46F000645FEF /* Share highlight with Nostur.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Share highlight with Nostur.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1FC7A54729FA46F000645FEF /* Media.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Media.xcassets; sourceTree = "<group>"; };
 		1FC7A54929FA46F000645FEF /* ActionRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionRequestHandler.swift; sourceTree = "<group>"; };
 		1FC7A54B29FA46F000645FEF /* Action.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = Action.js; sourceTree = "<group>"; };
@@ -498,6 +521,7 @@
 		1FC82F3529AE327700B81CE5 /* SmartRelayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartRelayManager.swift; sourceTree = "<group>"; };
 		1FCA273D299A6A1A00298881 /* LightningButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightningButton.swift; sourceTree = "<group>"; };
 		1FCEA0B62999413C00A309DC /* Double+clean.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Double+clean.swift"; sourceTree = "<group>"; };
+		1FCFDDD129FCEA91005320B8 /* HighlightComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightComposer.swift; sourceTree = "<group>"; };
 		1FD3DE0229BE325B007E1E6E /* PrivateNoteToggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateNoteToggle.swift; sourceTree = "<group>"; };
 		1FD49732297FCB5E0084F14E /* PreviewHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewHelper.swift; sourceTree = "<group>"; };
 		1FD49736298029600084F14E /* NoteTextRenderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteTextRenderView.swift; sourceTree = "<group>"; };
@@ -731,6 +755,14 @@
 			path = Accounts;
 			sourceTree = "<group>";
 		};
+		1F558B1929FD62D6002938A3 /* Highlights */ = {
+			isa = PBXGroup;
+			children = (
+				1FCFDDD129FCEA91005320B8 /* HighlightComposer.swift */,
+			);
+			path = Highlights;
+			sourceTree = "<group>";
+		};
 		1F5BA91229A8C25700002652 /* Timeline */ = {
 			isa = PBXGroup;
 			children = (
@@ -863,7 +895,7 @@
 			isa = PBXGroup;
 			children = (
 				1FB448BA2965F3D000038671 /* Nostur.app */,
-				1FC7A54429FA46F000645FEF /* Highlight with Nostur.appex */,
+				1FC7A54429FA46F000645FEF /* Share highlight with Nostur.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -871,6 +903,7 @@
 		1FB448BC2965F3D000038671 /* Nostur */ = {
 			isa = PBXGroup;
 			children = (
+				1F558B1929FD62D6002938A3 /* Highlights */,
 				1F4773A3296CA7040049454B /* Accounts */,
 				1F740D9D29AF36AB00EFCCA7 /* Badges */,
 				1F25B395297A508200A8A5A7 /* CoreData */,
@@ -1074,10 +1107,12 @@
 				1FB448B72965F3D000038671 /* Frameworks */,
 				1FB448B82965F3D000038671 /* Resources */,
 				1FCEA0B329992FBE00A309DC /* Embed Frameworks */,
+				1FCFDDCE29FCC735005320B8 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				1FCFDDCD29FCC735005320B8 /* PBXTargetDependency */,
 			);
 			name = Nostur;
 			packageProductDependencies = (
@@ -1097,9 +1132,9 @@
 			productReference = 1FB448BA2965F3D000038671 /* Nostur.app */;
 			productType = "com.apple.product-type.application";
 		};
-		1FC7A54329FA46F000645FEF /* Highlight with Nostur */ = {
+		1FC7A54329FA46F000645FEF /* Share highlight with Nostur */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1FC7A55229FA46F000645FEF /* Build configuration list for PBXNativeTarget "Highlight with Nostur" */;
+			buildConfigurationList = 1FC7A55229FA46F000645FEF /* Build configuration list for PBXNativeTarget "Share highlight with Nostur" */;
 			buildPhases = (
 				1FC7A54029FA46F000645FEF /* Sources */,
 				1FC7A54129FA46F000645FEF /* Frameworks */,
@@ -1109,9 +1144,9 @@
 			);
 			dependencies = (
 			);
-			name = "Highlight with Nostur";
+			name = "Share highlight with Nostur";
 			productName = "Highlight with Nostur";
-			productReference = 1FC7A54429FA46F000645FEF /* Highlight with Nostur.appex */;
+			productReference = 1FC7A54429FA46F000645FEF /* Share highlight with Nostur.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
@@ -1156,7 +1191,7 @@
 			projectRoot = "";
 			targets = (
 				1FB448B92965F3D000038671 /* Nostur */,
-				1FC7A54329FA46F000645FEF /* Highlight with Nostur */,
+				1FC7A54329FA46F000645FEF /* Share highlight with Nostur */,
 			);
 		};
 /* End PBXProject section */
@@ -1351,6 +1386,7 @@
 				1FF283D229DB491F0063B799 /* PostPreview.swift in Sources */,
 				1F8B135A297B36DB002EB8CF /* String+Conversion.swift in Sources */,
 				1F30FAB329707719008439C8 /* Account+CoreDataProperties.swift in Sources */,
+				1FCFDDD229FCEA91005320B8 /* HighlightComposer.swift in Sources */,
 				1F8B135B297B36DB002EB8CF /* Convert.swift in Sources */,
 				1FDBA1A129D96B5200BB866B /* FollowingGuardian.swift in Sources */,
 				1F75257E2996A1AA00477AF2 /* Unpublisher.swift in Sources */,
@@ -1436,6 +1472,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		1FCFDDCD29FCC735005320B8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1FC7A54329FA46F000645FEF /* Share highlight with Nostur */;
+			targetProxy = 1FCFDDCC29FCC735005320B8 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		1FB448CC2965F3D200038671 /* Debug */ = {
@@ -1656,7 +1700,7 @@
 				DEVELOPMENT_TEAM = 5T4GDWX88Z;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Highlight with Nostur/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "Highlight with Nostur";
+				INFOPLIST_KEY_CFBundleDisplayName = "Share highlight with Nostur";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1665,7 +1709,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "nostur.com.Nostur.Highlight-with-Nostur";
+				PRODUCT_BUNDLE_IDENTIFIER = "nostur.com.Nostur.Share-highlight-with-Nostur";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -1685,7 +1729,7 @@
 				DEVELOPMENT_TEAM = 5T4GDWX88Z;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Highlight with Nostur/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "Highlight with Nostur";
+				INFOPLIST_KEY_CFBundleDisplayName = "Share highlight with Nostur";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1694,7 +1738,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "nostur.com.Nostur.Highlight-with-Nostur";
+				PRODUCT_BUNDLE_IDENTIFIER = "nostur.com.Nostur.Share-highlight-with-Nostur";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -1727,7 +1771,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		1FC7A55229FA46F000645FEF /* Build configuration list for PBXNativeTarget "Highlight with Nostur" */ = {
+		1FC7A55229FA46F000645FEF /* Build configuration list for PBXNativeTarget "Share highlight with Nostur" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1FC7A55329FA46F000645FEF /* Debug */,

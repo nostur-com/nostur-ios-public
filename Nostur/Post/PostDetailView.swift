@@ -152,10 +152,14 @@ struct PostAndParent: View {
                             if isParent {
 //                                ReplyingToFragmentView(vPost: vPost)
 //                                    .padding(.vertical, 3)
-                                ContentRenderer(vPost: vPost, isDetail: true, availableWidth: dim.availablePostDetailRowImageWidth())
+                                if vPost.isHighlight {
+                                    HighlightRenderer(vPost: vPost)
                                     .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-//                                    .padding(.top, 5)
-//                                    .background(.green)
+                                }
+                                else {
+                                    ContentRenderer(vPost: vPost, isDetail: true, availableWidth: dim.availablePostDetailRowImageWidth())
+                                        .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                                }
                             }
                         }
                     }
@@ -164,10 +168,18 @@ struct PostAndParent: View {
 //                        ReplyingToFragmentView(vPost: vPost)
 //                            .padding(.bottom, 3)
 //                            .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
-                        ContentRenderer(vPost: vPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
+                        if vPost.isHighlight {
+                            HighlightRenderer(vPost: vPost)
                             .padding(.top, 3)
                             .padding(.bottom, 10)
                             .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                        }
+                        else {
+                            ContentRenderer(vPost: vPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
+                                .padding(.top, 3)
+                                .padding(.bottom, 10)
+                                .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                        }
 //                            .background(.orange)
                     }
                     
@@ -315,7 +327,7 @@ struct PostAndParent: View {
     func fixIfWeHavePointingToAlreadyInCache(_ openedEvent:Event) {
         let pointingToEventReq = NSFetchRequest<Event>(entityName: "Event")
         //        pointingToEventReq.predicate = NSPredicate(format: "(kind IN {1,6} AND  (replyToId == %@ OR replyToRootId == %@ OR firstQuoteId == %@)", openedEvent.id, openedEvent.id, openedEvent.id)
-        pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6} AND %@ IN {replyToId,replyToRootId,firstQuoteId}", openedEvent.id)
+        pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6,9802} AND %@ IN {replyToId,replyToRootId,firstQuoteId}", openedEvent.id)
         // TODO: NEED 6 ALSO OR NOT?
         //            pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6} AND %@ IN {replyToId,replyToRootId,firstQuoteId}", savedEvent.id)
         pointingToEventReq.sortDescriptors = []
@@ -400,5 +412,53 @@ struct ReplyAndParentView_Previews: PreviewProvider {
             }
         }
         .withPreviewEnvironment()
+    }
+}
+
+
+struct HighlightRenderer: View {
+    var vPost:VPost
+    
+    var body: some View {
+        VStack {
+            Text(vPost.event.content ?? "")
+                .italic()
+                .padding(20)
+                .overlay(alignment:.topLeading) {
+                    Image(systemName: "quote.opening")
+                        .foregroundColor(Color.secondary)
+                }
+                .overlay(alignment:.bottomTrailing) {
+                    Image(systemName: "quote.closing")
+                        .foregroundColor(Color.secondary)
+                }
+            
+            if let highlightAuthorPubkey = vPost.highlightAuthorPubkey {
+                HStack {
+                    Spacer()
+                    PFP(pubkey: highlightAuthorPubkey, pictureUrl: vPost.highlightAuthorPicture, size: 20, isFollowing: vPost.highlightAuthorIsFollowing)
+                    Text(vPost.highlightAuthorName ?? "Unknown")
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    navigateTo(ContactPath(key: highlightAuthorPubkey))
+                }
+                .padding(.trailing, 40)
+            }
+            HStack {
+                Spacer()
+                if let url = vPost.highlightUrl, let md = try? AttributedString(markdown:"[\(url)](\(url))") {
+                    Text(md)
+                        .lineLimit(1)
+                        .font(.caption)
+                }
+            }
+            .padding(.trailing, 40)
+        }
+        .padding(10)
+        .overlay(
+            RoundedRectangle(cornerRadius: 15)
+                .stroke(.regularMaterial, lineWidth: 1)
+        )
     }
 }

@@ -131,6 +131,15 @@ extension NosturTabsView {
                 navigateTo(HashtagPath(hashTag: nosturHashtag[0][2]))
             }
         }
+        
+        // SHARE NEW HIGHLIGHT
+        if let newHighlight = url.absoluteString.firstMatch(of: /^(nostur:highlight:)(.*)(:url:)(.*)(:title:)(.*)$/) {
+            guard let url = newHighlight.output.4.removingPercentEncoding else { return }
+            guard let selectedText = newHighlight.output.2.removingPercentEncoding else { return }
+            var title = newHighlight.output.6.removingPercentEncoding
+
+            sendNotification(.newHighlight, NewHighlight(url: url, selectedText: selectedText, title: title))
+        }
     }
 }
 //

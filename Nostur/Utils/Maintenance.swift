@@ -138,7 +138,7 @@ struct Maintenance {
             // TODO: DONT EXPORT MUTED / BLOCKED. KEEP HERE SO WE DONT HAVE TO KEEP ..REPARSING
             
             let fr16 = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
-            fr16.predicate = NSPredicate(format: "created_at < %i AND kind IN {1,6} AND NOT id IN %@ AND NOT id IN %@ AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountBookmarkIds, ownAccountPrivateNoteEventIds, ownAccountPubkeys, regex)
+            fr16.predicate = NSPredicate(format: "created_at < %i AND kind IN {1,6,9802} AND NOT id IN %@ AND NOT id IN %@ AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountBookmarkIds, ownAccountPrivateNoteEventIds, ownAccountPubkeys, regex)
             
             let fr16batchDelete = NSBatchDeleteRequest(fetchRequest: fr16)
             fr16batchDelete.resultType = .resultTypeCount
@@ -146,10 +146,10 @@ struct Maintenance {
             do {
                 let result = try context.execute(fr16batchDelete) as! NSBatchDeleteResult
                 if ((result.result as? Int ?? 0) > 0) {
-                    print("🧹🧹 Deleted \(result.result!) kind {1,6} events")
+                    print("🧹🧹 Deleted \(result.result!) kind {1,6,1,6,9802} events")
                 }
             } catch {
-                print("🔴🔴 Failed to delete {1,6} data")
+                print("🔴🔴 Failed to delete {1,6,1,9802} data")
             }
             
             

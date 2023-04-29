@@ -18,7 +18,7 @@ struct ProfileNotesView: View {
     
     var body: some View {
         DynamicFetchView(
-            predicate: NSPredicate(format: "pubkey == %@ AND kind IN {1,6}", pubkey),
+            predicate: NSPredicate(format: "pubkey == %@ AND kind IN {1,6,9802}", pubkey),
             fetchLimit: limit,
             sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]) { (events: FetchedResults<Event>)  in
                 LazyVStack {

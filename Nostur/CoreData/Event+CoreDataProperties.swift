@@ -905,11 +905,11 @@ extension Event {
         }
         
         
-        if (1 == 1 && event.kind == .textNote) { // TODO: Temp disabled for speed up check..
+        if (event.kind == .textNote) {
             // if other existing messages were replying, mentioning, reposting (to) this, fix the relation
             let pointingToEventReq = NSFetchRequest<Event>(entityName: "Event")
             //        pointingToEventReq.predicate = NSPredicate(format: "(kind IN {1,6} AND  (replyToId == %@ OR replyToRootId == %@ OR firstQuoteId == %@)", savedEvent.id, savedEvent.id, savedEvent.id)
-            pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6} AND %@ IN {replyToId,replyToRootId,firstQuoteId}", savedEvent.id)
+            pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6,9802} AND %@ IN {replyToId,replyToRootId,firstQuoteId}", savedEvent.id)
             // TODO: NEED 6 ALSO OR NOT?
 //            pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6} AND %@ IN {replyToId,replyToRootId,firstQuoteId}", savedEvent.id)
             pointingToEventReq.sortDescriptors = []
@@ -949,7 +949,7 @@ extension Event {
             let eventIdsToDelete = event.eTags()
             
             let eventIdsToDeleteReq = NSFetchRequest<Event>(entityName: "Event")
-            eventIdsToDeleteReq.predicate = NSPredicate(format: "kind IN {1,6} AND id IN %@", eventIdsToDelete)
+            eventIdsToDeleteReq.predicate = NSPredicate(format: "kind IN {1,6,9802} AND id IN %@", eventIdsToDelete)
             eventIdsToDeleteReq.sortDescriptors = []
             if let eventsToDelete = try? context.fetch(eventIdsToDeleteReq) {
                 for d in eventsToDelete {
@@ -959,6 +959,11 @@ extension Event {
                     }
                 }
             }
+        }
+        
+        if (event.kind == .highlight) { // needed to fetch highlight author so put event.firstP in event.contacts
+            let contacts = Contact.ensureContactsCreated(event: event, context: context)
+            savedEvent.addToContacts(NSSet(array: contacts))
         }
         
         return savedEvent

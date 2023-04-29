@@ -55,6 +55,13 @@ struct VPost: Identifiable, Equatable, Hashable {
     var linkPreviewURLs:[URL]
     var liked = false
     var reposted = false
+    
+    var isHighlight:Bool
+    var highlightAuthorPubkey:String?
+    var highlightAuthorPicture:String?
+    var highlightAuthorIsFollowing:Bool
+    var highlightAuthorName:String?
+    var highlightUrl:String?
 }
 
 class VPostTransformer {
@@ -141,7 +148,15 @@ class VPostTransformer {
                 firstQuote: mainEvent.firstQuote != nil ? [toVPost(mainEvent.firstQuote!, skipParents: true)].compactMap { $0 } : [],
                 linkPreviewURLs: linkPreviewURLs,
                 liked: likedByCurrentAccount(mainEvent),
-                reposted: repostedByCurrentAccount(mainEvent)
+                reposted: repostedByCurrentAccount(mainEvent),
+                
+                // Ughhh this needs clean up and put somewhere else probably
+                isHighlight: mainEvent.kind == 9802,
+                highlightAuthorPubkey: mainEvent.kind == 9802 ? mainEvent.fastTags.first(where: { $0.0 == "p" } )?.1 : nil,
+                highlightAuthorPicture: mainEvent.kind == 9802 ? mainEvent.contacts?.first?.picture : nil,
+                highlightAuthorIsFollowing: mainEvent.kind == 9802 ? isFollowedByCurrentAccount(mainEvent.fastTags.first(where: { $0.0 == "p" } )?.1) : false,
+                highlightAuthorName: mainEvent.kind == 9802 ? mainEvent.contacts?.first?.authorName : nil,
+                highlightUrl: mainEvent.kind == 9802 ? mainEvent.fastTags.first(where: { $0.0 == "r" } )?.1 : nil
             )
         }
         else {
@@ -216,7 +231,15 @@ class VPostTransformer {
                 firstQuote: privateEvent.firstQuote != nil ? [toVPost(privateEvent.firstQuote!, skipParents: true)].compactMap { $0 } : [],
                 linkPreviewURLs: linkPreviewURLs,
                 liked: likedByCurrentAccount(privateEvent),
-                reposted: repostedByCurrentAccount(privateEvent)
+                reposted: repostedByCurrentAccount(privateEvent),
+                
+                // Ughhh this needs clean up and put somewhere else probably
+                isHighlight: privateEvent.kind == 9802,
+                highlightAuthorPubkey: privateEvent.kind == 9802 ? privateEvent.fastTags.first(where: { $0.0 == "p" } )?.1 : nil,
+                highlightAuthorPicture: privateEvent.kind == 9802 ? privateEvent.contacts?.first?.picture : nil,
+                highlightAuthorIsFollowing: privateEvent.kind == 9802 ? isFollowedByCurrentAccount(privateEvent.fastTags.first(where: { $0.0 == "p" } )?.1) : false,
+                highlightAuthorName: privateEvent.kind == 9802 ? privateEvent.contacts?.first?.authorName : nil,
+                highlightUrl: privateEvent.kind == 9802 ? privateEvent.fastTags.first(where: { $0.0 == "r" } )?.1 : nil
             )
         }
     }
@@ -239,6 +262,11 @@ class VPostTransformer {
     
     func isFollowedByCurrentAccount(_ event:Event) -> Bool {
         return followingKeys?.contains(event.pubkey) ?? false
+    }
+    
+    func isFollowedByCurrentAccount(_ pubkey:String?) -> Bool {
+        guard let pubkey_ = pubkey else { return false }
+        return followingKeys?.contains(pubkey_) ?? false
     }
     
     func repostedByCurrentAccount(_ event:Event) -> Bool {
