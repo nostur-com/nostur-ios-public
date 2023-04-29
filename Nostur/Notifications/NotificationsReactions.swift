@@ -156,6 +156,7 @@ struct NotificationsReactions: View, Equatable {
 struct ReactionsForThisNote: View {
     var reactions:[Event]
     @Environment(\.managedObjectContext) var viewContext
+    @EnvironmentObject var ns:NosturState
     
     var withoutDuplicates:[Event] { // Author may accidentally like multiple times
         reactions
@@ -169,7 +170,7 @@ struct ReactionsForThisNote: View {
             ZStack {
                 ForEach(withoutDuplicates.prefix(10).indices, id:\.self) { index in
                     ZStack {
-                        PFP(pubkey: reactions[index].pubkey, pictureUrl: reactions[index].contact?.picture)
+                        PFP(pubkey: reactions[index].pubkey, pictureUrl: reactions[index].contact?.picture, isFollowing: ns.followingPublicKeys.contains(reactions[index].pubkey))
                             .id(reactions[index].id)
                             .zIndex(-Double(index))
                         Text(reactions[index].content == "+" ? "❤️" : reactions[index].content ?? "❤️")
