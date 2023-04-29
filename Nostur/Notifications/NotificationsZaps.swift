@@ -142,7 +142,7 @@ struct NotificationsZaps: View, Equatable {
                                 }
                                 .frame(width:80)
                                 VStack(alignment:.leading, spacing: 3) {
-                                    PFP(pubkey: zap.zapFromRequest?.pubkey ?? "WTF", pictureUrl: zap.zapFromRequest?.contact?.picture)
+                                    PFP(pubkey: zap.zapFromRequest?.pubkey ?? "WTF", pictureUrl: zap.zapFromRequest?.contact?.picture, isFollowing: ns.followingPublicKeys.contains(zap.zapFromRequest?.pubkey ?? "WTF"))
                                     Text("**\(zap.zapFromRequest?.contact?.authorName ?? "??")** zapped your profile")
                                     Text(zap.zapFromRequest?.noteText ?? "")
                                 }

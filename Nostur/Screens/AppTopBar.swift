@@ -17,7 +17,7 @@ struct AppTopBar: View {
                     Button {
                         sm.showSidebar.toggle()
                     } label: {
-                        PFP(pubkey: ns.account!.publicKey, pictureUrl: ns.account?.picture, size:30)
+                        PFP(pubkey: ns.account!.publicKey, pictureUrl: ns.account?.picture, size:30, isFollowing: true)
                     }
                     .accessibilityLabel("Account menu")
                     .offset(x: 15)

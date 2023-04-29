@@ -60,7 +60,7 @@ struct ReactionRow: View {
     
     var body: some View {
         HStack(alignment: .top) {
-            PFP(pubkey: reaction.pubkey, pictureUrl: reaction.contact?.picture)
+            PFP(pubkey: reaction.pubkey, pictureUrl: reaction.contact?.picture, isFollowing: ns.followingPublicKeys.contains(reaction.pubkey))
             VStack(alignment: .leading) {
                 HStack {
                     VStack(alignment: .leading) {

@@ -129,7 +129,7 @@ struct PostAndParent: View {
                     
                     HStack(alignment:.top, spacing:0) {
                         NavigationLink(value: ContactPath(key: event.pubkey), label: {
-                            PFP(pubkey: event.pubkey, pictureUrl: event.contact?.picture, size: 50)
+                            PFP(pubkey: event.pubkey, pictureUrl: event.contact?.picture, size: 50, isFollowing: vPost.following)
                                 .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: 50)
                                 .background(alignment: .top, content: {
                                     Color("LightGray")

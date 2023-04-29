@@ -157,8 +157,8 @@ struct NoteRow: View {
         var body: some View {
             
             HStack(alignment: .top, spacing:0) {
-                PFP(pubkey: vPost.pubkey, pictureUrl: event.contact?.picture ?? vPost.pictureUrl)
-                    .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: 50)
+                PFP(pubkey: vPost.pubkey, pictureUrl: event.contact?.picture ?? vPost.pictureUrl, isFollowing: vPost.following)
+                    .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: DIMENSIONS.POST_ROW_PFP_HEIGHT)
                     .background(alignment: .top, content: {
                         Color("LightGray")
                             .frame(width: 2, height: 20)
@@ -245,7 +245,7 @@ struct NoteRow: View {
             
             VStack(spacing: 3) {
                 HStack(alignment: .top, spacing:0) {
-                    PFP(pubkey: vPost.pubkey, pictureUrl: event.contact?.picture)
+                    PFP(pubkey: vPost.pubkey, pictureUrl: event.contact?.picture, isFollowing: vPost.following)
                         .frame(width: 50, height: 50)
                         .onTapGesture {
                             navigateTo(ContactPath(key: vPost.pubkey)) // TODO: if vPost.contact navigate with that else by .pubkey

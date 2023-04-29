@@ -43,7 +43,7 @@ struct MainView: View {
                                 Button {
                                     sm.showSidebar.toggle()
                                 } label: {
-                                    PFP(pubkey: account.publicKey, pictureUrl: account.picture, size:30)
+                                    PFP(pubkey: account.publicKey, pictureUrl: account.picture, size:30, isFollowing: true)
                                 }
                                 .accessibilityLabel("Account menu")
 //                                .offset(x: 15)

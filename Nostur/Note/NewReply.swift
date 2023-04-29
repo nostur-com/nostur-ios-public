@@ -49,7 +49,7 @@ struct NewReply: View {
                         Spacer()
                     }
                     HStack(alignment: .top) {
-                        PFP(pubkey: ns.account!.publicKey, pictureUrl: ns.account?.picture)
+                        PFP(pubkey: ns.account!.publicKey, pictureUrl: ns.account?.picture, isFollowing: true)
                             .padding(.horizontal, 10)
                         ZStack(alignment:.leading) {
                             VStack(alignment: .leading) {

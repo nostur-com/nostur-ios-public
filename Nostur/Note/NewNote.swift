@@ -151,7 +151,7 @@ struct NewNote: View {
     var body: some View {
         VStack {
             HStack(alignment: .top) {
-                PFP(pubkey: ns.account!.publicKey, pictureUrl: ns.account?.picture)
+                PFP(pubkey: ns.account!.publicKey, pictureUrl: ns.account?.picture, isFollowing: true)
                 
                 ZStack(alignment:.leading) {
                     VStack(alignment: .leading) {

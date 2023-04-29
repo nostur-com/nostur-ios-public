@@ -46,6 +46,7 @@ struct NoteZaps: View {
 
 struct NoteZapRow: View {
     @Environment(\.managedObjectContext) var viewContext
+    @EnvironmentObject var ns:NosturState
     let er:ExchangeRateModel = .shared
      
     @AppStorage("devToggle") var devToggle:Bool = false
@@ -62,7 +63,7 @@ struct NoteZapRow: View {
     var body: some View {
         
         HStack(alignment: .top) {
-            PFP(pubkey: event.zapFromRequest?.pubkey ?? "WTF", pictureUrl: event.zapFromRequest?.contact?.picture)
+            PFP(pubkey: event.zapFromRequest?.pubkey ?? "WTF", pictureUrl: event.zapFromRequest?.contact?.picture, isFollowing: ns.followingPublicKeys.contains(event.zapFromRequest?.pubkey ?? "WTF"))
                 .onTapGesture {
                     if let pubkey = event.zapFromRequest?.pubkey {
                         navigateTo(ContactPath(key: pubkey))

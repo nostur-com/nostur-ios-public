@@ -16,41 +16,35 @@ struct PFP: View {
     var pictureUrl:String?
     var size:CGFloat = 50
     var color:Color { randomColor(seed: pubkey) }
-    var isFollowing = true // will use later to put non following in seperate cache
-    @ObservedObject var settings:SettingsStore = .shared
+    var isFollowing = false // will use later to put non following in seperate cache
+    let settings:SettingsStore = .shared
+//    @ObservedObject var settings:SettingsStore = .shared
     
     var body: some View {
-        VStack {
-            if (pictureUrl == nil || (pictureUrl != nil && pictureUrl!.prefix(7) == "http://")) {
-                Circle().foregroundColor(color).frame(width: size, height: size)
-            }
-            else if (!settings.animatedPFPenabled) {
-//                let options = ImageRequest.ThumbnailOptions(size: CGSize(width: size, height: size), unit: .points, contentMode: .aspectFill)
-//                LazyImage(request: ImageRequest(url: URL(string:pictureUrl!), userInfo: [.thumbnailKey: options])) { state in
-                    LazyImage(request: ImageRequest(url: URL(string:pictureUrl!),
-                                                processors: [.resize(size: CGSize(width: size, height: size), unit: .points, contentMode: .aspectFill, crop: true, upscale: true)],
-                            userInfo: [.scaleKey: UIScreen.main.scale])) { state in
+        let _ = Self._printChanges()
+        if let pictureUrl, pictureUrl.prefix(7) != "http://" {
+            if (!settings.animatedPFPenabled) || (pictureUrl.suffix(4) != ".gif") {
+                LazyImage(request: ImageRequest(url: URL(string:pictureUrl), processors: [.resize(size: CGSize(width: size, height: size), unit: .points, contentMode: .aspectFill, crop: true, upscale: true)], userInfo: [.scaleKey: UIScreen.main.scale])) { state in
                     if let image = state.image {
-                        image
-//                            .resizable()
-//                            .scaledToFill()
-//                            .aspectRatio(contentMode: .fill)
-                            .frame(width: size, height: size)
-                            .background(color)
-                            .cornerRadius(.greatestFiniteMagnitude)
-//                            .compositingGroup()
+                        if pictureUrl.suffix(4) == ".gif" {
+                            image
+                                .resizable() // BUG: Still .gif gets wrong dimensions, so need .resizable()
+                        }
+                        else {
+                            image
+                        }
                     }
                     else {
-                        Circle().foregroundColor(color)//.frame(width: size, height: size)
-                            .frame(width: size, height: size)
+                        color
                     }
                 }
-//                .processors([.resize(width: size)])
-                .pipeline(ImageProcessing.shared.pfp)
+                .pipeline(isFollowing ? ImageProcessing.shared.pfp : ImageProcessing.shared.pfpNotFollowing)
                 .frame(width: size, height: size)
+                .background(color)
+                .cornerRadius(.greatestFiniteMagnitude)
             }
-            else if (pictureUrl!.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
-                LazyImage(url: URL(string: pictureUrl!)) { state in
+            else if (pictureUrl.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
+                LazyImage(url: URL(string: pictureUrl)) { state in
                     if let container = state.imageContainer {
                         if container.type == .gif, let gifData = container.data {
                             ZStack {
@@ -60,13 +54,11 @@ struct PFP: View {
                                         .aspectRatio(contentMode: .fill)
                                         .frame(width: size, height: size)
                                         .cornerRadius(.greatestFiniteMagnitude)
-//                                        .compositingGroup()
                                 }
                                 AnimatedGifView(gifData: gifData, width: size, height: size)
                                     .scaledToFit()
                                     .frame(width: size, height: size)
                                     .cornerRadius(.greatestFiniteMagnitude)
-//                                    .clipShape(Circle())
                             }
                         }
                         else if let image = state.image {
@@ -75,7 +67,6 @@ struct PFP: View {
                                 .aspectRatio(contentMode: .fill)
                                 .frame(width: size, height: size)
                                 .cornerRadius(.greatestFiniteMagnitude)
-                            //                                .compositingGroup()
                         }
                         else {
                             Circle().foregroundColor(color).frame(width: size, height: size)
@@ -88,28 +79,12 @@ struct PFP: View {
                     }
                 }
                 .priority(.low) // lower prio for animated gif, saves bandwidth?
-                .pipeline(ImageProcessing.shared.pfp) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
-             // .frame(width: size, height: size)
+                .pipeline(isFollowing ? ImageProcessing.shared.pfp : ImageProcessing.shared.pfpNotFollowing) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
             }
-            else {
-                LazyImage(request: ImageRequest(url: URL(string:pictureUrl!),
-                                                processors: [.resize(size: CGSize(width: size, height: size), unit: .points, contentMode: .aspectFill, crop: true, upscale: true)],
-                            userInfo: [.scaleKey: UIScreen.main.scale])) { state in
-                    if let image = state.image {
-                        image
-//                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: size, height: size)
-                            .cornerRadius(.greatestFiniteMagnitude)
-                    }
-                    else {
-                        Circle().foregroundColor(color)//.frame(width: size, height: size)
-                            .frame(width: size, height: size)
-                    }
-                }
-//                .processors([.resize(width: size)])
-                .pipeline(ImageProcessing.shared.pfp)
-            }
+        }
+        else {
+            Circle().foregroundColor(color)
+                .frame(width: size, height: size)
         }
     }
 }

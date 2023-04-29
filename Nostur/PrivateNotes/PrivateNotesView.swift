@@ -79,11 +79,11 @@ struct PrivateNotesView: View {
                         Spacer()
                         ZStack {
                             if (selectedAccount != nil) {
-                                PFP(pubkey: selectedAccount!.publicKey, pictureUrl: selectedAccount?.picture, size: 30)
+                                PFP(pubkey: selectedAccount!.publicKey, pictureUrl: selectedAccount?.picture, size: 30, isFollowing: true)
                             }
                             else {
                                 ForEach(accounts.indices, id:\.self) { index in
-                                    PFP(pubkey: accounts[index].publicKey, pictureUrl: accounts[index].picture, size: 30)
+                                    PFP(pubkey: accounts[index].publicKey, pictureUrl: accounts[index].picture, size: 30, isFollowing: true)
                                         .offset(x: -CGFloat(index*10))
                                     
                                 }
@@ -128,7 +128,7 @@ struct PrivateNotesView: View {
 
 struct PrivateNoteRow: View {
     @ObservedObject var note: PrivateNote
-     
+    @EnvironmentObject var ns:NosturState
     
     var body: some View {
         VStack(spacing: 0) {
@@ -150,7 +150,7 @@ struct PrivateNoteRow: View {
             .padding(.bottom, 10)
             if let vPost = note.post?.toVPost(plainText: true) {
                 HStack {
-                    PFP(pubkey: vPost.event.pubkey, pictureUrl: vPost.event.contact?.picture, size: 25)
+                    PFP(pubkey: vPost.event.pubkey, pictureUrl: vPost.event.contact?.picture, size: 25, isFollowing: vPost.following)
                         .onTapGesture {
                             navigateTo(ContactPath(key: vPost.event.pubkey))
                         }
@@ -162,7 +162,7 @@ struct PrivateNoteRow: View {
             }
             else if let contact = note.contact {
                 HStack {
-                    PFP(pubkey: contact.pubkey, pictureUrl: contact.picture, size: 25)
+                    PFP(pubkey: contact.pubkey, pictureUrl: contact.picture, size: 25, isFollowing: ns.isFollowing(contact.pubkey))
                     Text(contact.authorName) // Name
                         .foregroundColor(.secondary)
                         .fontWeight(.bold)
