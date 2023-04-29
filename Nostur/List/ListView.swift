@@ -40,12 +40,15 @@ struct ListView: View {
                            autoScroll: $settings.autoScroll,
                            fullWidthImages: $settings.fullWidthImages,
                            dim: dim,
-                           onRowAppeared: { (_, _, vPost) in
+                           onRowAppeared: { (_, rowIndex, vPost) in
                     guard vmState.state != .AWAITING_FIRST_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
                     guard vmState.state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
                     guard vmState.state != .SWITCHING_ACCOUNT else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
                     //                        print("\(vPost.id) index: \(vmState.vPostLeafs.firstIndex(of: vPost) ?? -1)")
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+                        if rowIndex == 0 {
+                            vm.lvmCounter.count = 0
+                        }
                         vm.lastAppearedSubject.send(vPost.event)
                     }
                 },
@@ -53,7 +56,9 @@ struct ListView: View {
                     guard isAtTop != vmState.isAtTop else { return }
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
                         self.vmState.isAtTop = isAtTop
-                        
+                        if isAtTop {
+                            vm.lvmCounter.count = 0
+                        }
                     }
                 })
                 .onChange(of: vmState.vPostLeafs) { _ in
