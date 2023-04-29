@@ -12,12 +12,14 @@ struct ContactsSearch: View, Equatable {
         lhs.followingPubkeys == rhs.followingPubkeys
     }
     
+    @Environment(\.dismiss) var dismiss
     @StateObject var debounceObject = DebounceObject()
 
     let followingPubkeys:Set<String>
     let sp:SocketPool = .shared
     var prompt:LocalizedStringKey
     var onSelectContacts:((Set<Contact>) -> Void)?
+    var onSelectContact:((Contact) -> Void)?
     
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
@@ -81,30 +83,37 @@ struct ContactsSearch: View, Equatable {
                 LazyVStack {
                     ForEach(filteredContacts) { contact in
                         HStack(alignment:.top) {
-                            Button {
-                                if selectedContacts.contains(contact) {
-                                    selectedContacts.remove(contact)
-                                }
-                                else {
-                                    selectedContacts.insert(contact)
-                                }
-                            } label: {
-                                if selectedContacts.contains(contact) {
-                                    Image(systemName:  "checkmark.circle.fill")
-                                        .padding(.top, 18)
-                                }
-                                else {
-                                    Image(systemName:  "circle")
-                                        .foregroundColor(Color.secondary)
-                                        .padding(.top, 18)
+                            if onSelectContacts != nil {
+                                Button {
+                                    if selectedContacts.contains(contact) {
+                                        selectedContacts.remove(contact)
+                                    }
+                                    else {
+                                        selectedContacts.insert(contact)
+                                    }
+                                } label: {
+                                    if selectedContacts.contains(contact) {
+                                        Image(systemName:  "checkmark.circle.fill")
+                                            .padding(.top, 18)
+                                    }
+                                    else {
+                                        Image(systemName:  "circle")
+                                            .foregroundColor(Color.secondary)
+                                            .padding(.top, 18)
+                                    }
                                 }
                             }
                             ContactSearchResultRow(contact: contact) {
-                                if selectedContacts.contains(contact) {
-                                    selectedContacts.remove(contact)
+                                if let onSelectContact {
+                                    onSelectContact(contact)
                                 }
                                 else {
-                                    selectedContacts.insert(contact)
+                                    if selectedContacts.contains(contact) {
+                                        selectedContacts.remove(contact)
+                                    }
+                                    else {
+                                        selectedContacts.insert(contact)
+                                    }
                                 }
                             }
                         }
@@ -141,9 +150,14 @@ struct ContactsSearch: View, Equatable {
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button(selectedContacts.count > 0 ? "Add (\(selectedContacts.count))" : "Done") {
-                    guard let onSelectContacts = onSelectContacts else { return }
-                    onSelectContacts(selectedContacts)
+                if onSelectContacts != nil {
+                    Button(selectedContacts.count > 0 ? "Add (\(selectedContacts.count))" : "Done") {
+                        guard let onSelectContacts = onSelectContacts else { return }
+                        onSelectContacts(selectedContacts)
+                    }
+                }
+                else {
+                    EmptyView()
                 }
             }
         }
