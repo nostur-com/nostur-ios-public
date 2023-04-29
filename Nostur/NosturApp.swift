@@ -22,6 +22,7 @@ class DIMENSIONS: ObservableObject {
     // Screen - Box-left  - (10 + PFP+ 10 ) - (text-right) - Box-right
     static public let POST_ROW_HPADDING = 10.0
     static public let POST_ROW_PFP_WIDTH = 50.0
+    static public let POST_ROW_PFP_HEIGHT = 50.0
     static public let POST_ROW_PFP_HPADDING = 10.0
     static public let KIND1_TRAILING = 10.0
     
@@ -56,6 +57,7 @@ struct NosturApp: App {
     @StateObject private var ns:NosturState = .shared
     @StateObject private var tm:DetailTabsModel = .shared
     @StateObject private var nm:NotificationsManager = .shared
+    private var importer:Importer = .shared // Need to initialize here on MAIN, else the first init will be in wrong background context
     @State var fg:FollowingGuardian = .shared
     
     @State var isViewDisplayed = false
@@ -193,7 +195,7 @@ struct NosturApp: App {
                 
                 // CONNECT TO RELAYS
                 for relay in relays {
-                    _ = try sp.addSocket(relayId: relay.objectID, url: relay.url!, read:relay.read, write: relay.write
+                    _ = sp.addSocket(relayId: relay.objectID, url: relay.url!, read:relay.read, write: relay.write
                     )
                 }
             } catch {

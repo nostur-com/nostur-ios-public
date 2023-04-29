@@ -21,7 +21,7 @@ struct PFP: View {
 //    @ObservedObject var settings:SettingsStore = .shared
     
     var body: some View {
-        let _ = Self._printChanges()
+//        let _ = Self._printChanges()
         if let pictureUrl, pictureUrl.prefix(7) != "http://" {
             if (!settings.animatedPFPenabled) || (pictureUrl.suffix(4) != ".gif") {
                 LazyImage(request: ImageRequest(url: URL(string:pictureUrl), processors: [.resize(size: CGSize(width: size, height: size), unit: .points, contentMode: .aspectFill, crop: true, upscale: true)], userInfo: [.scaleKey: UIScreen.main.scale])) { state in

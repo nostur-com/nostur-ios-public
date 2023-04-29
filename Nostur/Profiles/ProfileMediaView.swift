@@ -19,7 +19,7 @@ struct ProfileMediaView: View {
     
     let sp:SocketPool = .shared
     let pubkey:String
-    @State var limit = 150
+    @State var limit = 1000
     @State var imageUrls:[URL] = []
     @State var offset = 0
     
@@ -75,13 +75,13 @@ struct ProfileMediaView: View {
             let fr = Event.fetchRequest()
             fr.predicate = NSPredicate(format: "pubkey == %@ AND kind == 1", pubkey)
             fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-            fr.fetchBatchSize = 250
+            fr.fetchBatchSize = 1000
             fr.fetchOffset = offset
             
             if let posts = try? viewContext.fetch(fr) {
                 imageUrls = posts.flatMap { getImgUrlsFromContent($0.content!) }
             }
-            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorKind1(pubkey: pubkey, limit:250)))
+            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorKind1(pubkey: pubkey, limit:500)))
         }
     }
 }
