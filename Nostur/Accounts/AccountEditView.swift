@@ -174,6 +174,7 @@ struct AccountEditView: View {
                 Button("Cancel") {
                     dismiss()
                 }
+                .foregroundColor(Color.primary)
             }
             
             if let uploadError {
@@ -222,6 +223,7 @@ struct AccountEditView: View {
                     }
                     else {
                         Text("Save")
+                            .foregroundColor(Color.primary)
                     }
                 }
                 .disabled(uploading)
