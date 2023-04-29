@@ -582,7 +582,7 @@ extension Event {
     
     static func fetchEvent(id:String, context:NSManagedObjectContext) throws -> Event? {
         let request = NSFetchRequest<Event>(entityName: "Event")
-        request.entity = Event.entity()
+//        request.entity = Event.entity()
         request.predicate = NSPredicate(format: "id == %@", id)
         request.fetchLimit = 1
         request.fetchBatchSize = 1
@@ -591,7 +591,7 @@ extension Event {
     
     static func fetchReplacableEvent(_ kind:Int64, pubkey:String, definition:String, context:NSManagedObjectContext) throws -> Event? {
         let request = NSFetchRequest<Event>(entityName: "Event")
-        request.entity = Event.entity()
+//        request.entity = Event.entity()
         request.predicate = NSPredicate(format: "kind == %d AND pubkey == %@ AND tagsSerialized CONTAINS %@", kind, pubkey, ###"[["d","###)
         request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         let matches = try context.fetch(request).filter({ event in

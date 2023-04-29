@@ -18,8 +18,9 @@ import CoreData
 struct ProfileBadgesContainer: View {
     let pubkey:String
     
-    @FetchRequest
+    @FetchRequest(sortDescriptors: [], predicate: NSPredicate(value: false))
     var profileBadges:FetchedResults<Event>
+    
     var profileBadgesSorted:[Event] {
         profileBadges.sorted(by: { $0.created_at > $1.created_at})
     }
@@ -37,38 +38,36 @@ struct ProfileBadgesContainer: View {
     }
     
     var body: some View {
-        if (profileBadgesSorted.first != nil) {
-            ProfileBadgesView(verifiedBadges:profileBadgesSorted.first!.verifiedBadges)
+        let _ = Self._printChanges()
+        if let first = profileBadgesSorted.first  {
+            ProfileBadgesView(verifiedBadges:first.verifiedBadges)
                 .task {
-                    
                     // 30008 is already fetched when profile loads
                     // here we fetch any related 30009 + 8
-                    if (profileBadgesSorted.first != nil) {
-                        let allEs = profileBadgesSorted.first!.tags()
-                            .filter { $0.type == "e" }
-                            .map { $0.id }
-                        
-                        var filters: [(Int64, String, String)] = []
-                        profileBadgesSorted.first!.tags()
-                            .filter { $0.type == "a" }
-                            .forEach {
-                                let a = BadgeATag($0)
-                                let filter = (a.kind, a.badgeCode, a.pubkey)
-                                filters.append(filter)
-                            }
-                        
-                        print("🚺🚺 \(allEs.count)")
-                        if (allEs.count > 0) {
-                            let reqE = RequestMessage.getEvents(ids: allEs)
-                            let messageE = ClientMessage(type: .REQ, message: reqE)
-                            SocketPool.shared.sendMessage(messageE) // Get badge awards (kind .8)
+                    let allEs = first.tags()
+                        .filter { $0.type == "e" }
+                        .map { $0.id }
+
+                    var filters: [(Int64, String, String)] = []
+                    first.tags()
+                        .filter { $0.type == "a" }
+                        .forEach {
+                            let a = BadgeATag($0)
+                            let filter = (a.kind, a.badgeCode, a.pubkey)
+                            filters.append(filter)
                         }
-                        
-                        if (filters.count > 0) {
-                            let reqD = RequestMessage.getBadgeDefinitions(filters: Array(filters.prefix(10)))
-                            let messageD = ClientMessage(type: .REQ, message: reqD)
-                            SocketPool.shared.sendMessage(messageD) // Get badge definitions (kind 30009)
-                        }
+
+                    print("🚺🚺 \(allEs.count)")
+                    if (allEs.count > 0) {
+                        let reqE = RequestMessage.getEvents(ids: allEs)
+                        let messageE = ClientMessage(type: .REQ, message: reqE)
+                        SocketPool.shared.sendMessage(messageE) // Get badge awards (kind .8)
+                    }
+
+                    if (filters.count > 0) {
+                        let reqD = RequestMessage.getBadgeDefinitions(filters: Array(filters.prefix(10)))
+                        let messageD = ClientMessage(type: .REQ, message: reqD)
+                        SocketPool.shared.sendMessage(messageD) // Get badge definitions (kind 30009)
                     }
                 }
                 .onChange(of: profileBadgesSorted.first) { newValue in
@@ -76,7 +75,7 @@ struct ProfileBadgesContainer: View {
                         let allEs = newValue!.tags()
                             .filter { $0.type == "e" }
                             .map { $0.id }
-                        
+
                         var filters: [(Int64, String, String)] = []
                         newValue!.tags()
                             .filter { $0.type == "a" }
@@ -85,15 +84,15 @@ struct ProfileBadgesContainer: View {
                                 let filter = (a.kind, a.badgeCode, a.pubkey)
                                 filters.append(filter)
                             }
-                        
+
                         print("🚺🚺🚺🚺🚺 \(allEs.count)")
                         if (allEs.count > 0) {
                             let reqE = RequestMessage.getEvents(ids: allEs)
                             let messageE = ClientMessage(type: .REQ, message: reqE)
                             SocketPool.shared.sendMessage(messageE) // Get badge awards (kind .8)
-                            
+
                         }
-                        
+
                         if (filters.count > 0) {
                             let reqD = RequestMessage.getBadgeDefinitions(filters: filters)
                             let messageD = ClientMessage(type: .REQ, message: reqD)
@@ -118,6 +117,7 @@ struct ProfileBadgesView: View {
     @State var refreshHack = false
     
     var body: some View {
+        let _ = Self._printChanges()
         HStack {
             ForEach(Array(verifiedBadges.prefix(3))) { profileBadge in
                 BadgeIcon(badge: profileBadge.badge)
@@ -206,9 +206,7 @@ struct BadgeIcon: View {
                         Image(systemName: "exclamationmark.triangle.fill")
                     }
                 }
-//                .processors([.resize(width: 32)])
                 .pipeline(ImageProcessing.shared.badges)
-//                    .priority(.low)
             }
         }
     }
@@ -217,8 +215,8 @@ struct BadgeIcon: View {
 struct ProfileBadgesView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
-            let pb = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
-//            let pb = "5273115b3fad8a2d102e3335c0755083ed0baba48bd92c0c149a610212ccc3eb" // kind 30008
+//            let pb = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
+            let pb = "5273115b3fad8a2d102e3335c0755083ed0baba48bd92c0c149a610212ccc3eb" // kind 30008
             
             let profileBadgesEvent = PreviewFetcher.fetchEvent(pb)
             if (profileBadgesEvent != nil) {
