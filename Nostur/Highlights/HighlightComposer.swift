@@ -120,6 +120,7 @@ struct HighlightComposer: View {
     func send() {
         guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
         var nEvent = NEvent(content: highlight.selectedText)
+        nEvent.createdAt = NTimestamp.init(date: Date())
         nEvent.kind = .highlight
         if let selectedAuthor = selectedAuthor {
             nEvent.tags.append(NEventTag(type: "p", otherInformation: selectedAuthor.pubkey))

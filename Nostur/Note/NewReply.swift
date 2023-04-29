@@ -252,6 +252,7 @@ struct NewReply: View {
     func sendNow() {
         guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
         guard var nEvent = vm.nEvent else { return }
+        nEvent.createdAt = NTimestamp.init(date: Date())
         
         if (vm.pastedImages.count > 0) {
             uploading = true
