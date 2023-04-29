@@ -8,24 +8,14 @@
 import Foundation
 import OSLog
 import CoreData
+import Combine
 
 class Importer {
-//    var queue = DispatchQueue(label: "com.nostur.importer")
-    var settingsStore = SettingsStore.shared
-//    private var _isImporting = false
     
-//    var isImporting: Bool {
-//        get {
-//            return queue.sync {
-//                _isImporting
-//            }
-//        }
-//        set {
-//            queue.sync {
-//                _isImporting = newValue
-//            }
-//        }
-//    }
+    var subscriptions = Set<AnyCancellable>()
+    var addedRelayMessage = PassthroughSubject<Void, Never>()
+
+    var settingsStore = SettingsStore.shared
     
     var existingIds:Set<String> = []
     
@@ -34,6 +24,17 @@ class Importer {
     init() {
         self.preloadExistingIdsCache()
         print("\(existingIds.count) existing ids in cache")
+        triggerImportWhenRelayMessagesAreAdded()
+    }
+    
+    func triggerImportWhenRelayMessagesAreAdded() {
+        addedRelayMessage
+            .throttle(for: 2.5, scheduler: DispatchQueue.global(), latest: true)
+            .sink { () in
+                print("🏎️🏎️ \(Date.now) Triggering import")
+                self.importEvents()
+            }
+            .store(in: &subscriptions)
     }
     
     func preloadExistingIdsCache() {
@@ -219,11 +220,16 @@ class Importer {
                         self.existingIds.insert(event.id)
                         
                         // batch save every 250
-                        if count % 250 == 0 {
+                        if count % 50 == 0 {
                             if (context.hasChanges) {
                                 do {
                                     try context.save()
                                     print("💾 Saved \(count)/\(forImports.count)")
+                                    let imported = count
+                                    let total = forImports.count
+                                    DispatchQueue.main.async {
+                                        sendNotification(.listStatus, "Processing \(imported)/\(total) items...")
+                                    }
                                 }
                                 catch {
                                     print("🔴🔴🔴 Error on batch \(count)/\(forImports.count): \(error)")
@@ -235,6 +241,9 @@ class Importer {
                         try context.save() // This is saving to main context, not to disk..
                         if (saved > 0) {
                             print("💾 Processed: \(forImports.count), saved: \(saved), skipped (new cache): \(alreadyInIdCacheSkipped), skipped (db): \(alreadyInDBskipped)")
+                            DispatchQueue.main.async {
+                                sendNotification(.newEventsInDatabase)
+                            }
                         }
                     }
                     messageBucket.isImporting = false

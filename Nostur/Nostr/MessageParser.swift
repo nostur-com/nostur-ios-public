@@ -16,7 +16,7 @@ class MessageParser {
     
     func socketReceivedMessage(text:String, relayUrl:String) {
         do {
-            //            ThreadWarning.which("socketReceivedMessage")
+//            ThreadWarning.which("socketReceivedMessage")
             // Validation is CPU intensive. Moved it to Importer right before save step
             // so we dont waste cpu on duplicates etc
             guard let message = try? RelayMessage.parseRelayMessage(text: text, relay: relayUrl, skipValidation: true) else {
@@ -60,24 +60,8 @@ class MessageParser {
                             }
                             else {
                                 self.messageBucket.addMessage(message)
-                                
-                                if (nEvent.kind == .textNote || nEvent.kind == .reaction) {
-                                    
-                                    if (message.subscriptionId == nil) {
-                                        print("WHERE IS SUBSCRIPTION ID BRO")
-                                        return
-                                    }
-                                    
-                                    // TIMESTAMP TRACKING NOT COULD ENOUGH, BECAUSE  NEED TO FETCH OLDER EVENTS SOMETIMES
-                                    // MAYBE EXCLUDE FROM TRACKING BY SUBSCRIPTION ID.
-                                    // DISABLE FOR NOW...
-                                    // ----
-                                    // don't remember if timestamp is in the future:
-                                    guard let subscriptionId = message.subscriptionId else { return }
-                                    if subscriptionId.prefix(3) == "TL-" && nEvent.createdAt.timestamp > Int(Date().timeIntervalSince1970) {
-                                        return
-                                    }
-                                }
+//                                print("🏎️🏎️ \(Date.now) addedRelayMessage")
+                                Importer.shared.addedRelayMessage.send()
                             }
                         }
                     }

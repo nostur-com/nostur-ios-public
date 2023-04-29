@@ -100,12 +100,14 @@ struct ListView: View {
             }
         }
         .onAppear {
-            print("🟢🟢🟢 subtab:\(selectedSubTab) list:\(selectedListId) vm.id: \(vm.id)")
             vmState.viewIsVisible = (selectedSubTab != "List" && selectedSubTab == vm.id) || (selectedSubTab == "List" && selectedListId == vm.id)
+            print("🟢🟢🟢 ListView.onAppear:\(selectedSubTab) list:\(selectedListId) vm.id: \(vm.id) isVisible:\(vmState.viewIsVisible)")
+            vm.restoreSubscription()
         }
         .onDisappear {
             vmState.viewIsVisible = false
             SocketPool.shared.closeSubscription(vm.subscriptionId)
+            print("🟢🟢🟢 ListView.onDisappear:\(selectedSubTab) list:\(selectedListId) vm.id: \(vm.id) isVisible:\(vmState.viewIsVisible)")
         }
         //        .background(Color("ListBackground"))
     }

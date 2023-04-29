@@ -80,7 +80,9 @@ class NotificationsManager: ObservableObject {
             .store(in: &subscriptions)
         
         // Check relays for newest messages NOW
-        relayCheckNewestNotifications() // or wait 3 seconds?
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+            self.relayCheckNewestNotifications()
+        }
         
         // Check relays for since... later
         DispatchQueue.main.asyncAfter(deadline: .now() + 11) {
@@ -255,6 +257,8 @@ class NotificationsManager: ObservableObject {
     
     func checkForEverything() {
         guard !MessageParser.shared.messageBucket.isImporting else { return }
+        
+        relayCheckNewestNotifications() // or wait 3 seconds?
         
         checkForNewPosts()
         checkForNewReactions()

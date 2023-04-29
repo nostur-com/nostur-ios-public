@@ -40,7 +40,7 @@ class LVM: NSObject, ObservableObject {
     
     let ot:OnboardingTracker = .shared
     
-    let FETCH_FEED_INTERVAL = 10.0
+    let FETCH_FEED_INTERVAL = 9.0
     
     var listId:String
     var id:String { listId }
@@ -115,11 +115,7 @@ class LVM: NSObject, ObservableObject {
     
     // MARK: FROM DB TO SCREEN STEP 3:
     private func processPostsInBackground(_ events:[Event]) { // events are from viewContext
-        #if DEBUG
-        let context = DataProvider.shared().viewContext
-        #else
-        let context = DataProvider.shared().container.newBackgroundContext()
-        #endif
+        let context = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" ? DataProvider.shared().viewContext : DataProvider.shared().container.newBackgroundContext()
         
         // onScreenIds includes leafs and parents, so all posts.
         let onScreenIds = self.lvmState.vPostLeafs.reduce(Set<NSManagedObjectID>()) { partialResult, vPost in
@@ -170,12 +166,26 @@ class LVM: NSObject, ObservableObject {
                 
                 // FOR REALTIME, FETCH RELATED OF LAST 4 POSTS
                 if !alreadySkipped && transformedObjectIds.count > 0 && transformedObjectIds.count < 5 {
+                    print("🏎️🏎️ \(Date.now) SKIP RENDER")
                     fetchRelated(added.prefix(4))
                     alreadySkipped = true // Skip this render, wait for the next one so we have the
+                    
+                    // DO NEXT TICK IN HALF TIME (5 instead of 10 seconds
+                    self.fetchFeedTimer?.invalidate()
+                    self.fetchFeedTimer = Timer.scheduledTimer(withTimeInterval: FETCH_FEED_INTERVAL/2, repeats: true) { [weak self] _ in
+                        guard let self = self else { return }
+                        self.fetchFeedTimerNextTick()
+                    }
                     return
                 }
                 else {
                     alreadySkipped = false
+                    // Back to normal ticks of 10 seconds
+                    self.fetchFeedTimer?.invalidate()
+                    self.fetchFeedTimer = Timer.scheduledTimer(withTimeInterval: FETCH_FEED_INTERVAL, repeats: true) { [weak self] _ in
+                        guard let self = self else { return }
+                        self.fetchFeedTimerNextTick()
+                    }
                 }
                 
                 
@@ -203,7 +213,9 @@ class LVM: NSObject, ObservableObject {
                     if !self.lvmState.isAtTop || !SettingsStore.shared.autoScroll {
                         self.lvmCounter.count += addedCount
                     }
-                    print("Added \(newLeafThreads.count) new leafs (\(addedCount))")
+//                    print("Added \(newLeafThreads.count) new leafs (\(addedCount))")
+                    print("🏎️🏎️ \(Date.now) Added \(newLeafThreads.count) new leafs (\(addedCount))")
+                    
                 }
             }
         }
@@ -390,17 +402,19 @@ class LVM: NSObject, ObservableObject {
             self.fetchFeedTimerNextTick()
         }
         
-#if DEBUG
-        let d = UserDefaults(suiteName: "preview_user_defaults")!
-        let selectedSubtab = (d.string(forKey: "selected_subtab") ?? "Unknown")
-        let selectedListId = (d.string(forKey: "selected_listId") ?? "Unknown")
-#else
-        let selectedSubtab = (UserDefaults.standard.string(forKey: "selected_subtab") ?? "Unknown")
-        let selectedListId = (UserDefaults.standard.string(forKey: "selected_listId") ?? "Unknown")
-#endif
-        
-        lvmState.viewIsVisible = (selectedSubtab != "List"  && selectedSubtab == listId) || (selectedSubtab == "List"  && selectedListId == listId)
-        print("🟢🟢🟢🟣🟣🟣🟣🟣🟢🟢🟢\(selectedSubtab) \(lvmState.viewIsVisible) 🟢🟢🟢🟢🟣🟣🟣🟣🟣🟣🟢🟢")
+        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+            let d = UserDefaults(suiteName: "preview_user_defaults")!
+            let selectedSubtab = (d.string(forKey: "selected_subtab") ?? "Unknown")
+            let selectedListId = (d.string(forKey: "selected_listId") ?? "Unknown")
+            lvmState.viewIsVisible = (selectedSubtab != "List"  && selectedSubtab == listId) || (selectedSubtab == "List"  && selectedListId == listId)
+            print("🟢🟢🟢🟣🟣🟣🟣🟣🟢🟢🟢\(selectedSubtab) \(lvmState.viewIsVisible) 🟢🟢🟢🟢🟣🟣🟣🟣🟣🟣🟢🟢")
+        }
+        else {
+            let selectedSubtab = (UserDefaults.standard.string(forKey: "selected_subtab") ?? "Unknown")
+            let selectedListId = (UserDefaults.standard.string(forKey: "selected_listId") ?? "Unknown")
+            lvmState.viewIsVisible = (selectedSubtab != "List"  && selectedSubtab == listId) || (selectedSubtab == "List"  && selectedListId == listId)
+            print("🟢🟢🟢🟣🟣🟣🟣🟣🟢🟢🟢\(selectedSubtab) \(lvmState.viewIsVisible) 🟢🟢🟢🟢🟣🟣🟣🟣🟣🟣🟢🟢")
+        }
         addSubscriptions()
         fetchFeedTimerNextTick()
     }
@@ -409,7 +423,7 @@ class LVM: NSObject, ObservableObject {
     func fetchFeedTimerNextTick() {
         guard self.viewIsVisible else { return }
         
-        performLocalFetch()
+//        performLocalFetch()
         
         guard !MessageParser.shared.messageBucket.isImporting else { print("⏳ Still importing, new fetch skipped."); return }
         
@@ -434,6 +448,7 @@ class LVM: NSObject, ObservableObject {
                 
                 if (!self.didCatchup) {
                     // THIS SUBSCRIPTION WILL STAY ACTIVE:
+                    print("🏎️🏎️ \(Date.now) fetchFeedTimerNexTick - fetchEvents 11")
                     fetchEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: self.subscriptionId)
                 
                     
@@ -448,6 +463,7 @@ class LVM: NSObject, ObservableObject {
                 }
                 else {
                     // THIS SUBSCRIPTION WILL STAY ACTIVE:
+                    print("🏎️🏎️ \(Date.now) fetchFeedTimerNexTick - fetchEvents")
                     fetchEvents(pubkeysString: self.pubkeysPrefixString, since: since, subscriptionId: self.subscriptionId)
                 }
 //                 cutOff doesnt work well, since hits with some time ago limit (500)?
@@ -459,6 +475,14 @@ class LVM: NSObject, ObservableObject {
 
 
 extension LVM {
+    
+    func restoreSubscription() {
+        print("🏎️🏎️ \(Date.now) restoreSubscription \(self.subscriptionId)")
+        let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 4)  // 4 hours  ago
+        let since = (self.lvmState.vPostLeafs.first?.created_at ?? hoursAgo) - (60 * 15) // (take 15 minutes earlier to not mis out of sync posts)
+        fetchEvents(pubkeysString: self.pubkeysPrefixString, since: since, subscriptionId: self.subscriptionId)
+    }
+    
     func addSubscriptions() {
         keepListStateSaved()
         requestFooterCounters()
@@ -468,32 +492,41 @@ extension LVM {
         keepFilteringMuted()
         showOwnNewPostsImmediately()
         trackPubkeysChanged()
+        performLocalFetchAfterImport()
+    }
+    
+    func performLocalFetchAfterImport() {
+        receiveNotification(.newEventsInDatabase)
+            .sink { [weak self] _ in
+                self?.performLocalFetch()
+            }
+            .store(in: &subscriptions)
     }
     
     func trackPubkeysChanged() {
         receiveNotification(.followersChanged)
-            .sink { notification in
+            .sink { [weak self] notification in
                 SocketPool.shared.allowNewFollowingSubscriptions()
                 let pubkeys = notification.object as! Set<String>
-                self.pubkeys = pubkeys
-                self.performLocalFetch()
+                self?.pubkeys = pubkeys
+                self?.performLocalFetch()
             }
             .store(in: &subscriptions)
         
         receiveNotification(.explorePubkeysChanged)
-            .sink { notification in
+            .sink { [weak self] notification in
                 let pubkeys = notification.object as! Set<String>
-                self.pubkeys = pubkeys
-                self.performLocalFetch()
+                self?.pubkeys = pubkeys
+                self?.performLocalFetch()
             }
             .store(in: &subscriptions)
         
         receiveNotification(.listPubkeysChanged)
-            .sink { notification in
+            .sink { [weak self] notification in
                 let newPubkeyInfo = notification.object as! NewPubkeysForList
-                guard newPubkeyInfo.subscriptionId == self.subscriptionId else { return }
-                self.pubkeys = newPubkeyInfo.pubkeys
-                self.performLocalFetch(refreshInBackground: true)
+                guard newPubkeyInfo.subscriptionId == self?.subscriptionId else { return }
+                self?.pubkeys = newPubkeyInfo.pubkeys
+                self?.performLocalFetch(refreshInBackground: true)
             }
             .store(in: &subscriptions)
         
@@ -501,13 +534,14 @@ extension LVM {
     
     func showOwnNewPostsImmediately() {
         receiveNotification(.newPostSaved)
-            .sink { notification in
-                guard self.listId == "Following" else { return }
+            .sink { [weak self] notification in
+                guard self?.listId == "Following" else { return }
                 let event = notification.object as! Event
                 
                 let context = DataProvider.shared().container.newBackgroundContext()
                 let followingPubkeys = NosturState.shared.followingPublicKeys
-                context.perform { [unowned self] in
+                context.perform { [weak self] in
+                    guard let self = self else { return }
                     let transformer = VPostTransformer(context, followingKeys: followingPubkeys) // Tranform in bg
                     
                     if let newVPostLeaf = transformer.toVPost(event, forceBg: true) {
@@ -523,13 +557,15 @@ extension LVM {
     
     func keepFilteringMuted() {
         receiveNotification(.muteListUpdated)
-            .sink { notification in
+            .sink { [weak self] notification in
+                guard let self = self else { return }
                 self.lvmState.vPostLeafs = self.lvmState.vPostLeafs.filter(notMuted)
             }
             .store(in: &subscriptions)
         
         receiveNotification(.mutedWordsChanged)
-            .sink { notification in
+            .sink { [weak self] notification in
+                guard let self = self else { return }
                 let words = notification.object as! [String]
                 self.lvmState.vPostLeafs = self.lvmState.vPostLeafs.filter { notMutedWords(in: $0.event.noteText, mutedWords: words) }
             }
@@ -539,9 +575,9 @@ extension LVM {
     func processNewEventsInBg() {
         unrenderedEventsSubject
            .removeDuplicates()
-           .sink { posts in
+           .sink { [weak self] posts in
 //               print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 unrenderedEventsSubject 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
-               self.processPostsInBackground(posts)
+               self?.processPostsInBackground(posts)
            }
            .store(in: &subscriptions)
     }
@@ -788,6 +824,7 @@ extension LVM: NSFetchedResultsControllerDelegate {
     
     // MARK: FROM DB TO SCREEN STEP 1: FETCH REQUEST
     func performLocalFetch(refreshInBackground:Bool = false) {
+        print("🏎️🏎️ \(Date.now) performLocalFetch \(self.subscriptionId)")
         if let mostRecent = self.lvmState.vPostLeafs.first {
             let fr = Event.postsByPubkeys(pubkeys, mostRecent: mostRecent.event)
             
@@ -799,7 +836,7 @@ extension LVM: NSFetchedResultsControllerDelegate {
         else {
             let fr = Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: self.lastAppeared?.created_at ?? 0)
             
-            if viewIsVisible {
+            if viewIsVisible || refreshInBackground {
                 guard let posts = try? DataProvider.shared().viewContext.fetch(fr) else { return }
                 self.setUnorderedEvents(events: filterMutedWords(posts))
             }

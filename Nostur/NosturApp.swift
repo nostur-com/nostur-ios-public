@@ -61,7 +61,7 @@ struct NosturApp: App {
     @State var isViewDisplayed = false
     @State var isOnboarding = false
     
-    let runLoop = Timer.publish(every: 2, tolerance: 1, on: .main, in: .common).autoconnect()
+//    var runLoop = Timer.publish(every: 2, tolerance: 1, on: .main, in: .common).autoconnect()
     let priceLoop = Timer.publish(every: 900, tolerance: 120, on: .main, in: .common).autoconnect().receive(on: RunLoop.main)
         .merge(with: Just(Date()))
     
@@ -112,10 +112,11 @@ struct NosturApp: App {
                         //                    .environmentObject(er)
                         //                    .environmentObject(tm)
                         //                    .environmentObject(nm)
-                            .onReceive(runLoop) { time in
-                                if (!isViewDisplayed) { return }
-                                Importer.shared.importEvents()
-                            }
+//                            .onReceive(runLoop) { time in
+//                                if (!isViewDisplayed) { return }
+//                                print("🏎️🏎️ \(Date.now) onReceive runLoop")
+//                                Importer.shared.importEvents()
+//                            }
                             .onReceive(priceLoop) { time in
                                 if (!isViewDisplayed) { return }
                                 Task {
@@ -139,6 +140,7 @@ struct NosturApp: App {
         .onChange(of: scenePhase) { newScenePhase in
             switch newScenePhase {
                 case .active:
+                    print("🏎️🏎️ \(Date.now) scenePhase active")
                     SocketPool.shared.connectAll()
                 case .background:
                     SocketPool.shared.disconnectAll()

@@ -70,9 +70,13 @@ final class NosturState : ObservableObject {
     
     func setAccount(account:Account? = nil) {
         guard self.account != account else { return }
+        var sendActiveAccountChangedNotification = true
         if let beforeAccount = self.account { // Save state for old account
             beforeAccount.lastNotificationReceivedAt = lastNotificationReceivedAt
             beforeAccount.lastProfileReceivedAt = lastProfileReceivedAt
+        }
+        else {
+            sendActiveAccountChangedNotification = false
         }
         self.objectWillChange.send()
         self.account = account
@@ -84,7 +88,9 @@ final class NosturState : ObservableObject {
             
             // Remove currectly active "Following" subscriptions from connected sockets
             SocketPool.shared.removeActiveAccountSubscriptions()
-            sendNotification(.activeAccountChanged, account)
+            if sendActiveAccountChangedNotification {
+                sendNotification(.activeAccountChanged, account)
+            }
         }
     }
     
