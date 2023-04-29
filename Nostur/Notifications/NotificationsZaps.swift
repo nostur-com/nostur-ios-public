@@ -214,6 +214,7 @@ struct NotificationsZaps: View, Equatable {
 struct ZapsForThisNote: View {
     var zaps:[Event]
     @Environment(\.managedObjectContext) var viewContext
+    @EnvironmentObject var ns:NosturState
     
     var zapsSorted:[Event] { // $0.sats > $0.sats is slow... so cached..
         zaps
@@ -254,7 +255,7 @@ struct ZapsForThisNote: View {
             ZStack {
                 ForEach(Array(deduplicated.keys.enumerated()), id: \.1) { index, key in
                     ZStack {
-                        PFP(pubkey: deduplicated[key]!.0 , pictureUrl: deduplicated[key]!.1)
+                        PFP(pubkey: deduplicated[key]!.0 , pictureUrl: deduplicated[key]!.1, isFollowing: ns.followingPublicKeys.contains(deduplicated[key]!.0))
                             .zIndex(-Double(index))
                         
                         Text("\(deduplicated[key]!.2.satsFormatted)")
