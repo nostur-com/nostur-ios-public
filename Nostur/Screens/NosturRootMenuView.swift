@@ -7,16 +7,27 @@
 
 import SwiftUI
 
+let NOSTUR_SIDEBAR_WIDTH = 310.0
+
 struct NosturRootMenu: View {
     let account:Account
     @StateObject private var sm = SideBarModel()
     
     var body: some View {
         let _ = Self._printChanges()
-        SideBarStack(sidebarWidth: 310) {
+        SideBarStack(sidebarWidth: NOSTUR_SIDEBAR_WIDTH) {
             SideBar(account: account)
         } content: {
-            NosturTabsView()
+            if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+                Text("NosturTabsView()")
+                    .frame(width: UIScreen.main.bounds.width)
+                    .onAppear {
+                        sm.showSidebar = true
+                    }
+            }
+            else {
+                NosturTabsView()
+            }
         }
         .environmentObject(sm)
     }
@@ -33,21 +44,31 @@ struct SideBar: View {
     var body: some View {
         let _ = Self._printChanges()
         VStack(alignment: .leading) {
-            List {
-                HStack(spacing: 10) {
-                    PFP(pubkey: account.publicKey, pictureUrl: account.picture)
-                    Spacer()
-                    FastAccountSwitcher()
-                    Button { accountsSheetIsShown = true } label: {
-                        Image(systemName: "ellipsis.circle")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 25, height: 25)
+            ProfileBanner(banner: account.banner, width: NOSTUR_SIDEBAR_WIDTH, offset: 0)
+                .overlay(alignment: .bottomLeading, content: {
+                    PFP(pubkey: account.publicKey, pictureUrl: account.picture, size:75, isFollowing: true)
+                        .overlay(
+                            Circle()
+                                .strokeBorder(Color.systemBackground, lineWidth: 3)
+                        )
+                        .offset(x: 10, y:37)
+                })
+                .overlay(alignment:.bottomTrailing) {
+                    HStack(spacing: 10) {
+                        Spacer()
+                        FastAccountSwitcher(activePubkey: account.publicKey)
+                        Button { accountsSheetIsShown = true } label: {
+                            Image(systemName: "ellipsis.circle")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 25, height: 25)
+                        }
                     }
-//                    .buttonStyle(.bordered)
-//                    .buttonBorderShape(.capsule)
+                    .zIndex(20)
+                    .offset(x: -10, y:37)
                 }
-
+                .zIndex(30)
+            List {
                 VStack(alignment: .leading) {
                     Text("\(account.display_name != "" ? account.display_name : account.name)").font(.headline)
                     Text("@\(account.name)").font(.subheadline)
@@ -103,9 +124,12 @@ struct SideBar: View {
                     Label("Log out", systemImage: "rectangle.portrait.and.arrow.right")
                 }
             }
+            .zIndex(20)
             .listStyle(.plain)
+            .padding(.top, 25)
             Spacer()
         }
+        .edgesIgnoringSafeArea([.top, .leading])
         .onReceive(receiveNotification(.hideSideBar), perform: { _ in
             sm.showSidebar = false
         })
@@ -155,8 +179,11 @@ struct SideBar: View {
 
 struct NosturRootMenu_Previews: PreviewProvider {
     static var previews: some View {
-        let account = PreviewFetcher.fetchAccount()!
-        NosturRootMenu(account: account)
-            .withPreviewEnvironment()
+        if let account = PreviewFetcher.fetchAccount("9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e") {
+            
+            NosturRootMenu(account: account)
+                .withPreviewEnvironment()
+            
+        }
     }
 }

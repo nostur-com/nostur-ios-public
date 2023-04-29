@@ -11,21 +11,25 @@ struct FastAccountSwitcher: View {
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var sm:SideBarModel
     
-    let MAX_ACCOUNTS = 5
+    var activePubkey:String = ""
+    let MAX_ACCOUNTS = 4
     
     var fewAccounts:ArraySlice<Account> {
-        ns.accounts.prefix(MAX_ACCOUNTS)
+        ns.accounts
+            .filter { $0.publicKey != activePubkey }
+            .prefix(MAX_ACCOUNTS)
     }
     
     var body: some View {
         let _ = Self._printChanges()
-        HStack(spacing:10) {
+        HStack(spacing:5) {
             ForEach(fewAccounts.indices, id:\.self) { index in
-                PFP(pubkey: fewAccounts[index].publicKey, pictureUrl: fewAccounts[index].picture, size: 25)
+                PFP(pubkey: fewAccounts[index].publicKey, pictureUrl: fewAccounts[index].picture, size: 25, isFollowing: true)
+                    .padding(5)
+                    .contentShape(Rectangle())
                     .onTapGesture {
                         ns.setAccount(account: fewAccounts[index])
                         sm.showSidebar = false
-                        
                     }
             }
         }
