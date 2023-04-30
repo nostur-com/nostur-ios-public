@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import DequeModule
 
 class MessageParser {
     
@@ -49,8 +50,7 @@ class MessageParser {
                         Task { [weak self] in
                             guard let self = self else { return }
                             
-                            let queuedMessages:[RelayMessage] = self.messageBucket.all()
-                            let sameMessageInQueue = queuedMessages
+                            let sameMessageInQueue = self.messageBucket.all()
                                 .filter { $0.type == .EVENT }
                                 .compactMap { $0.event?.id }
                                 .firstIndex(of: nEvent.id )

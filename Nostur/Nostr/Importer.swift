@@ -75,10 +75,7 @@ class Importer {
         let context = DataProvider.shared().bg
         
         Task {
-            var forImports = [RelayMessage]()
-            while let forImport = messageBucket.takeMessage() {
-                forImports.append(forImport)
-            }
+            let forImportsCount = messageBucket.count
             
             await context.perform {
                 var alreadyInIdCacheSkipped = 0
@@ -88,7 +85,7 @@ class Importer {
                 do {
                     var count = 0
                     
-                    for message in forImports {
+                    while let message = messageBucket.takeMessage() {
                         count = count + 1
                         guard var event = message.event else {
                             print("🔴🔴 message.event is nil \(message.message)")
@@ -224,16 +221,16 @@ class Importer {
                             if (context.hasChanges) {
                                 do {
                                     try context.save()
-                                    print("💾 Saved \(count)/\(forImports.count)")
+                                    print("💾 Saved \(count)/\(forImportsCount)")
                                     let imported = count
-                                    let total = forImports.count
+                                    let total = forImportsCount
                                     DispatchQueue.main.async {
                                         sendNotification(.listStatus, "Processing \(imported)/\(total) items...")
                                         sendNotification(.newEventsInDatabase)
                                     }
                                 }
                                 catch {
-                                    print("🔴🔴🔴 Error on batch \(count)/\(forImports.count): \(error)")
+                                    print("🔴🔴🔴 Error on batch \(count)/\(forImportsCount): \(error)")
                                 }
                             }
                         }
@@ -241,7 +238,7 @@ class Importer {
                     if (context.hasChanges) {
                         try context.save() // This is saving to main context, not to disk..
                         if (saved > 0) {
-                            print("💾 Processed: \(forImports.count), saved: \(saved), skipped (new cache): \(alreadyInIdCacheSkipped), skipped (db): \(alreadyInDBskipped)")
+                            print("💾 Processed: \(forImportsCount), saved: \(saved), skipped (new cache): \(alreadyInIdCacheSkipped), skipped (db): \(alreadyInDBskipped)")
                             DispatchQueue.main.async {
                                 sendNotification(.newEventsInDatabase)
                             }

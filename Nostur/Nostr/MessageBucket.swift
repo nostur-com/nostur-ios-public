@@ -6,9 +6,12 @@
 //
 
 import Foundation
+import DequeModule
 
 class MessageBucket {
-    private var bucket: [RelayMessage] = []
+    
+    private var bucket: Deque<RelayMessage> = Deque<RelayMessage>(minimumCapacity: 5000)
+//    private var bucket: [RelayMessage] = []
     private var isImporting_:Bool = false
     private let serialQueue = DispatchQueue(label: "com.nostur.messageBucket.serial")
     
@@ -26,8 +29,8 @@ class MessageBucket {
     }
     
     func addMessage(_ message: RelayMessage) {
-        serialQueue.async { [weak self] in
-            self?.bucket.append(message)
+        serialQueue.sync { [weak self] in
+            self?.bucket.prepend(message)
         }
     }
     
@@ -36,7 +39,7 @@ class MessageBucket {
             guard let self = self, !self.bucket.isEmpty else {
                 return nil
             }
-            return self.bucket.removeFirst()
+            return self.bucket.popLast()
         }
     }
     
@@ -46,7 +49,7 @@ class MessageBucket {
         }
     }
     
-    func all() -> [RelayMessage] {
+    func all() -> Deque<RelayMessage> {
         return serialQueue.sync {
             return bucket
         }

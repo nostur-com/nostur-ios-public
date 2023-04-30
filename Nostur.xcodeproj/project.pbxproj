@@ -78,6 +78,7 @@
 		1F539DAB299D4B2A00F3B8CA /* NewAccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F539DAA299D4B2900F3B8CA /* NewAccountSheet.swift */; };
 		1F539DAD299D52E200F3B8CA /* AddExistingAccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F539DAC299D52E200F3B8CA /* AddExistingAccountSheet.swift */; };
 		1F558B3C29FE4DA0002938A3 /* EventRelationsQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F558B3B29FE4DA0002938A3 /* EventRelationsQueue.swift */; };
+		1F558B3F29FE66CE002938A3 /* DequeModule in Frameworks */ = {isa = PBXBuildFile; productRef = 1F558B3E29FE66CE002938A3 /* DequeModule */; };
 		1F57C54729927A0000DFE063 /* AppTopBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F57C54629927A0000DFE063 /* AppTopBar.swift */; };
 		1F57C54B299285B300DFE063 /* Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F57C54A299285B300DFE063 /* Search.swift */; };
 		1F5BA91429A8C27200002652 /* NewNoteButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5BA91329A8C27200002652 /* NewNoteButton.swift */; };
@@ -565,6 +566,7 @@
 				1F517BEE29CDB2FE00F7A97F /* FLAnimatedImage in Frameworks */,
 				1F3E135429C89B9F00D076EA /* NukeVideo in Frameworks */,
 				1F75257629962AA300477AF2 /* Nuke in Frameworks */,
+				1F558B3F29FE66CE002938A3 /* DequeModule in Frameworks */,
 				1FC4D40B2997E58E004E88CD /* KeychainAccess in Frameworks */,
 				1F006B0A29D0A9BE0048C6DD /* Algorithms in Frameworks */,
 				1F21DDC129F01B3000C564EF /* CombineWebSocket in Frameworks */,
@@ -1130,6 +1132,7 @@
 				1F006B0929D0A9BE0048C6DD /* Algorithms */,
 				1FB6E6F429E31C71008BE8A6 /* HTMLEntities */,
 				1F21DDC029F01B3000C564EF /* CombineWebSocket */,
+				1F558B3E29FE66CE002938A3 /* DequeModule */,
 			);
 			productName = Nostur;
 			productReference = 1FB448BA2965F3D000038671 /* Nostur.app */;
@@ -1188,6 +1191,7 @@
 				1F006B0829D0A9BE0048C6DD /* XCRemoteSwiftPackageReference "swift-algorithms" */,
 				1FB6E6F329E31C71008BE8A6 /* XCRemoteSwiftPackageReference "swift-html-entities" */,
 				1F21DDBF29F01B3000C564EF /* XCRemoteSwiftPackageReference "CombineWebSocket" */,
+				1F558B3D29FE66CE002938A3 /* XCRemoteSwiftPackageReference "swift-collections" */,
 			);
 			productRefGroup = 1FB448BB2965F3D000038671 /* Products */;
 			projectDirPath = "";
@@ -1821,6 +1825,14 @@
 				minimumVersion = 1.0.0;
 			};
 		};
+		1F558B3D29FE66CE002938A3 /* XCRemoteSwiftPackageReference "swift-collections" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-collections.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
 		1F75257429962AA300477AF2 /* XCRemoteSwiftPackageReference "Nuke" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/kean/Nuke";
@@ -1880,6 +1892,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1F517BEC29CDB2FD00F7A97F /* XCRemoteSwiftPackageReference "FLAnimatedImage" */;
 			productName = FLAnimatedImage;
+		};
+		1F558B3E29FE66CE002938A3 /* DequeModule */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1F558B3D29FE66CE002938A3 /* XCRemoteSwiftPackageReference "swift-collections" */;
+			productName = DequeModule;
 		};
 		1F75257529962AA300477AF2 /* Nuke */ = {
 			isa = XCSwiftPackageProductDependency;
