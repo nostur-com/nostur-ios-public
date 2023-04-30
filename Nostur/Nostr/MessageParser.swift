@@ -55,7 +55,8 @@ class MessageParser {
                                 .compactMap { $0.event?.id }
                                 .firstIndex(of: nEvent.id )
                             if (sameMessageInQueue != nil) {
-                                // print("🧜🧜 Message already in queue. skipped. \(message.event!.id)")
+//                                print("🧜🧜 Message already in queue (\(queuedMessages.count)). skipped. \(message.event!.id)")
+                              //  ThreadWarning.shouldNotBeMain()
                                 return
                             }
                             else {

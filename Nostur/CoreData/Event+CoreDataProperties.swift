@@ -10,12 +10,12 @@ import Foundation
 import CoreData
 
 extension Event {
-
-//    @nonobjc public class func fetchRequest() -> NSFetchRequest<Event> {
-//        let fr = NSFetchRequest<Event>(entityName: "Event")
-//        fr.sortDescriptors = []
-//        return fr
-//    }
+    
+    //    @nonobjc public class func fetchRequest() -> NSFetchRequest<Event> {
+    //        let fr = NSFetchRequest<Event>(entityName: "Event")
+    //        fr.sortDescriptors = []
+    //        return fr
+    //    }
     
     @nonobjc public class func fetchRequest() -> NSFetchRequest<Event> {
         let fr = NSFetchRequest<Event>(entityName: "Event")
@@ -38,7 +38,7 @@ extension Event {
     @NSManaged public var replyToId: String?
     @NSManaged public var firstQuoteId: String?
     @NSManaged public var repostForId: String? // for tracking if we resposted or not (footer icon)
-
+    
     @NSManaged public var isRepost: Bool // Cache
     
     // Counters (cached)
@@ -54,19 +54,20 @@ extension Event {
     @NSManaged public var replyToRoot: Event?
     @NSManaged public var firstQuote: Event?
     @NSManaged public var zapTally: Int64
-
+    
     @NSManaged public var replies: Set<Event>?
     
     @NSManaged public var contacts: Set<Contact>?
     
     @NSManaged public var deletedById: String?
-
-
-//    // helper
-//    var replies_: Set<Event> {
-//        get { (replies as? Set<Event>) ?? [] }
-//        set { replies = newValue as NSSet }
-//    }
+    
+    
+    
+    //    // helper
+    //    var replies_: Set<Event> {
+    //        get { (replies as? Set<Event>) ?? [] }
+    //        set { replies = newValue as NSSet }
+    //    }
     
     // helper
     var replies_: [Event] { replies?.sorted(by: { $0.created_at < $1.created_at } ) ?? [] }
@@ -98,40 +99,40 @@ extension Event {
 
 // MARK: Generated accessors for contacts
 extension Event {
-
+    
     @objc(addContactsObject:)
     @NSManaged public func addToContacts(_ value: Contact)
-
+    
     @objc(removeContactsObject:)
     @NSManaged public func removeFromContacts(_ value: Contact)
-
+    
     @objc(addContacts:)
     @NSManaged public func addToContacts(_ values: NSSet)
-
+    
     @objc(removeContacts:)
     @NSManaged public func removeFromContacts(_ values: NSSet)
-
+    
 }
 
 // MARK: Generated accessors for bookmarkedBy
 extension Event {
-
+    
     @objc(addBookmarkedByObject:)
     @NSManaged public func addToBookmarkedBy(_ value: Account)
-
+    
     @objc(removeBookmarkedByObject:)
     @NSManaged public func removeFromBookmarkedBy(_ value: Account)
-
+    
     @objc(addBookmarkedBy:)
     @NSManaged public func addToBookmarkedBy(_ values: NSSet)
-
+    
     @objc(removeBookmarkedBy:)
     @NSManaged public func removeFromBookmarkedBy(_ values: NSSet)
     
     var bookmarkedBy_:Set<Account> {
         get { bookmarkedBy ?? [] }
     }
-
+    
 }
 
 // MARK: Generated accessors for replies
@@ -139,21 +140,21 @@ extension Event {
     
     @objc(addRepliesObject:)
     @NSManaged public func addToReplies(_ value: Event)
-
+    
     @objc(removeRepliesObject:)
     @NSManaged public func removeFromReplies(_ value: Event)
-
+    
     @objc(addReplies:)
     @NSManaged public func addToReplies(_ values: NSSet)
-
+    
     @objc(removeReplies:)
     @NSManaged public func removeFromReplies(_ values: NSSet)
-
+    
 }
 
 // MARK: Generated accessors for zaps
 extension Event {
-//    @NSManaged public var zapFromRequestId: String? // We ALWAYS have zapFromRequest (it is IN the 9735, so not needed)
+    //    @NSManaged public var zapFromRequestId: String? // We ALWAYS have zapFromRequest (it is IN the 9735, so not needed)
     @NSManaged public var zappedEventId: String?
     @NSManaged public var zappedContactPubkey: String?
     
@@ -172,36 +173,36 @@ extension Event {
 // MARK: HELPERS FOR KIND 9735 (ZAPS)
 extension Event {
     
-//    // THE ZAP REQUEST (CREATED BY SENDER OF SATS)
-//    var zapReq:Event? { // TODO: Fix somewhere, this cant be nil or zap is invalid, put where to properly fix this so we never have to "if zapReq != nil..."
-//        get {
-//            tags_.first(where: { $0.type == "description" })?.event
-//        }
-//    }
-//
-//    // THE NOTE THAT RECEIVED THE ZAP
-//    // NIP-57: It MUST have either 0 or 1 e-tag
-//    var zappedEvent:Event? {
-//        tags_.filter { $0.type == "e" }.first?.event
-//    }
-//
-//    // For when we dont have the zappedEvent yet, we should at least have the id
-//    var zappedEventId:String? {
-//        tags_.filter { $0.type == "e" }.first?.index1
-//    }
-//
-//    // THE PERSON THAT RECEIVED THE ZAP
-//    // NIP-57: It MUST have at least one p-tag
-//    var zappedContact:Contact? {
-//        get {
-//            tags_.filter { $0.type == "p" }.first?.contact
-//        }
-//    }
-//
-//    // For when we dont have the zappedContact yet, we should at least have the id
-//    var zappedContactId:String? {
-//        tags_.filter { $0.type == "p" }.first?.index1
-//    }
+    //    // THE ZAP REQUEST (CREATED BY SENDER OF SATS)
+    //    var zapReq:Event? { // TODO: Fix somewhere, this cant be nil or zap is invalid, put where to properly fix this so we never have to "if zapReq != nil..."
+    //        get {
+    //            tags_.first(where: { $0.type == "description" })?.event
+    //        }
+    //    }
+    //
+    //    // THE NOTE THAT RECEIVED THE ZAP
+    //    // NIP-57: It MUST have either 0 or 1 e-tag
+    //    var zappedEvent:Event? {
+    //        tags_.filter { $0.type == "e" }.first?.event
+    //    }
+    //
+    //    // For when we dont have the zappedEvent yet, we should at least have the id
+    //    var zappedEventId:String? {
+    //        tags_.filter { $0.type == "e" }.first?.index1
+    //    }
+    //
+    //    // THE PERSON THAT RECEIVED THE ZAP
+    //    // NIP-57: It MUST have at least one p-tag
+    //    var zappedContact:Contact? {
+    //        get {
+    //            tags_.filter { $0.type == "p" }.first?.contact
+    //        }
+    //    }
+    //
+    //    // For when we dont have the zappedContact yet, we should at least have the id
+    //    var zappedContactId:String? {
+    //        tags_.filter { $0.type == "p" }.first?.index1
+    //    }
     
 }
 
@@ -214,7 +215,7 @@ extension Event {
     
     var date: Date {
         get {
-           Date(timeIntervalSince1970: Double(created_at))
+            Date(timeIntervalSince1970: Double(created_at))
         }
     }
     
@@ -354,7 +355,7 @@ extension Event {
             request.fetchLimit = 1
             
             if let reactingToEvent = try context.fetch(request).first {
-//                print("updating .replies for .id = \(String(describing: reactingToEvent.id))")
+                //                print("updating .replies for .id = \(String(describing: reactingToEvent.id))")
                 reactingToEvent.objectWillChange.send()
                 reactingToEvent.repliesCount = reactingToEvent.repliesCount + 1
             }
@@ -369,25 +370,25 @@ extension Event {
             request.fetchLimit = 1
             
             if let reactingToEvent = try context.fetch(request).first {
-//                print("updating .replies for .id = \(String(describing: reactingToEvent.id))")
+                //                print("updating .replies for .id = \(String(describing: reactingToEvent.id))")
                 reactingToEvent.objectWillChange.send()
                 reactingToEvent.repliesCount = reactingToEvent.repliesCount + 1
             }
         }
         
         // NIP-10: Those marked with "root" denote the root id of the reply thread being responded to.
-//        if let rootEtag = TagsHelpers(tags).replyToRootEtag() {
-//            if rootEtag.id != TagsHelpers(tags).replyToEtag()?.id { // dont increase counter if root reply id is same as reply id
-//                let request = NSFetchRequest<Event>()
-//                request.entity = Event.entity()
-//                request.predicate = NSPredicate(format: "id == %@", rootEtag.id)
-//                
-//                if let reactingToEvent = try context.fetch(request).first {
-////                    print("updating .replies for .id = \(String(describing: reactingToEvent.id))")
-//                    reactingToEvent.replies = reactingToEvent.replies + 1
-//                }
-//            }
-//        }
+        //        if let rootEtag = TagsHelpers(tags).replyToRootEtag() {
+        //            if rootEtag.id != TagsHelpers(tags).replyToEtag()?.id { // dont increase counter if root reply id is same as reply id
+        //                let request = NSFetchRequest<Event>()
+        //                request.entity = Event.entity()
+        //                request.predicate = NSPredicate(format: "id == %@", rootEtag.id)
+        //
+        //                if let reactingToEvent = try context.fetch(request).first {
+        ////                    print("updating .replies for .id = \(String(describing: reactingToEvent.id))")
+        //                    reactingToEvent.replies = reactingToEvent.replies + 1
+        //                }
+        //            }
+        //        }
         return true
     }
     
@@ -395,27 +396,27 @@ extension Event {
     // NIP-25: The content MAY be an emoji, in this case it MAY be interpreted as a "like" or "dislike", or the client MAY display this emoji reaction on the post.
     static func updateLikeCountCache(_ event:Event, content:String, context:NSManagedObjectContext) throws -> Bool {
         switch content {
-        case "+","👍","🤙","❤️","🫂","🤗","😘","😍","💯","🤩","⚡️","🔥","💥","🚀":
-            // # NIP-25: The last e tag MUST be the id of the note that is being reacted to.
+            case "+","👍","🤙","❤️","🫂","🤗","😘","😍","💯","🤩","⚡️","🔥","💥","🚀":
+                // # NIP-25: The last e tag MUST be the id of the note that is being reacted to.
                 if let lastEtag = event.lastE() {
-                let request = NSFetchRequest<Event>(entityName: "Event")
-                request.entity = Event.entity()
-                request.predicate = NSPredicate(format: "id == %@", lastEtag)
-                request.fetchLimit = 1
-                
-                if let reactingToEvent = try context.fetch(request).first {
-//                    print("updating .likes for .id = \(String(describing: reactingToEvent.id))")
-                    reactingToEvent.objectWillChange.send()
-                    reactingToEvent.likesCount = reactingToEvent.likesCount + 1
-                    event.reactionTo = reactingToEvent
-                    event.reactionToId = reactingToEvent.id
-//                                            try reactingToEvent.managedObjectContext?.save()
+                    let request = NSFetchRequest<Event>(entityName: "Event")
+                    request.entity = Event.entity()
+                    request.predicate = NSPredicate(format: "id == %@", lastEtag)
+                    request.fetchLimit = 1
+                    
+                    if let reactingToEvent = try context.fetch(request).first {
+                        //                    print("updating .likes for .id = \(String(describing: reactingToEvent.id))")
+                        reactingToEvent.objectWillChange.send()
+                        reactingToEvent.likesCount = reactingToEvent.likesCount + 1
+                        event.reactionTo = reactingToEvent
+                        event.reactionToId = reactingToEvent.id
+                        //                                            try reactingToEvent.managedObjectContext?.save()
+                    }
                 }
-            }
-        case "-":
-            print("downvote")
-        default:
-            break
+            case "-":
+                print("downvote")
+            default:
+                break
         }
         return true
     }
@@ -438,21 +439,21 @@ extension Event {
     
     static func updateZapTallyCache(_ event:Event, context:NSManagedObjectContext) -> Bool {
         let nEvent = event.toNEvent()
-    
-//        if (1 == 2) {
-//            /*
-//             TODO: Disabled for now, because all zaps will be ignored because we havent fetched zapperPubkey for anyone yet Consider valid on import, to immediatly show amounts. Use seperate queue to fetch and verify zapperpubkey, then invalidate if wrong later.
-//             */
-//            // we need to have contact.zapperPubkey first... ughh
-//            let pTag = nEvent.tags.first { $0.type == "p" }
-//            guard pTag != nil else { return false }
-//            let contact = Contact.fetchByPubkey(pTag!.pubkey, context: context)
-//            guard contact != nil else { return false }
-//
-//            guard contact!.zapperPubkey != nil else { return false }
-//            guard contact!.zapperPubkey! == event.pubkey else { return false }
-//        }
-                
+        
+        //        if (1 == 2) {
+        //            /*
+        //             TODO: Disabled for now, because all zaps will be ignored because we havent fetched zapperPubkey for anyone yet Consider valid on import, to immediatly show amounts. Use seperate queue to fetch and verify zapperpubkey, then invalidate if wrong later.
+        //             */
+        //            // we need to have contact.zapperPubkey first... ughh
+        //            let pTag = nEvent.tags.first { $0.type == "p" }
+        //            guard pTag != nil else { return false }
+        //            let contact = Contact.fetchByPubkey(pTag!.pubkey, context: context)
+        //            guard contact != nil else { return false }
+        //
+        //            guard contact!.zapperPubkey != nil else { return false }
+        //            guard contact!.zapperPubkey! == event.pubkey else { return false }
+        //        }
+        
         // zapped event
         guard let firstE = nEvent.firstE() else { return false }
         let request = NSFetchRequest<Event>(entityName: "Event")
@@ -480,7 +481,7 @@ extension Event {
                 
                 if let reactingToEvent = try context.fetch(request).first {
                     reactingToEvent.objectWillChange.send()
-//                    print("updating .mentions for .id = \(String(describing: reactingToEvent.id))")
+                    //                    print("updating .mentions for .id = \(String(describing: reactingToEvent.id))")
                     reactingToEvent.mentionsCount = reactingToEvent.mentionsCount + 1
                     
                 }
@@ -494,13 +495,13 @@ extension Event {
         guard let jsonData = tagsSerialized.data(using: .utf8) else {
             return []
         }
-
+        
         guard let jsonArray = try? JSONSerialization.jsonObject(with: jsonData, options: []) as? [[String]] else {
             return []
         }
         
         return jsonArray
-//            .filter { $0.count >= 2 }
+        //            .filter { $0.count >= 2 }
             .map { ($0[0], $0[safe: 1] ?? "WTF", $0[safe: 2]) }
     }
     
@@ -523,11 +524,11 @@ extension Event {
     func naiveBolt11() -> String? {
         let prefix = ###"["bolt11",""###
         let suffix = ###""]"###
-
+        
         if let rangeStart = tagsSerialized!.range(of: prefix)?.upperBound,
            let rangeEnd = tagsSerialized!.range(of: suffix, range: rangeStart..<tagsSerialized!.endIndex)?.lowerBound {
             let extractedString = String(tagsSerialized![rangeStart..<rangeEnd])
-
+            
             return extractedString
         }
         return nil
@@ -582,7 +583,7 @@ extension Event {
     
     static func fetchEvent(id:String, context:NSManagedObjectContext) throws -> Event? {
         let request = NSFetchRequest<Event>(entityName: "Event")
-//        request.entity = Event.entity()
+        //        request.entity = Event.entity()
         request.predicate = NSPredicate(format: "id == %@", id)
         request.fetchLimit = 1
         request.fetchBatchSize = 1
@@ -591,7 +592,7 @@ extension Event {
     
     static func fetchReplacableEvent(_ kind:Int64, pubkey:String, definition:String, context:NSManagedObjectContext) throws -> Event? {
         let request = NSFetchRequest<Event>(entityName: "Event")
-//        request.entity = Event.entity()
+        //        request.entity = Event.entity()
         request.predicate = NSPredicate(format: "kind == %d AND pubkey == %@ AND tagsSerialized CONTAINS %@", kind, pubkey, ###"[["d","###)
         request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         let matches = try context.fetch(request).filter({ event in
@@ -613,7 +614,7 @@ extension Event {
         fr.predicate = NSPredicate(format: "kind == 30008 AND tagsSerialized CONTAINS %@", badgeA)
         return (try? context.fetch(fr)) ?? []
     }
-
+    
     
     static func eventExists(id:String, context:NSManagedObjectContext) -> Bool {
         if Thread.isMainThread {
@@ -625,7 +626,7 @@ extension Event {
         request.resultType = .countResultType
         request.fetchLimit = 1
         request.includesPropertyValues = false
-
+        
         var count = 0
         do {
             count = try context.count(for: request)
@@ -634,7 +635,7 @@ extension Event {
             print(error)
             return false
         }
-
+        
         if count > 0 {
             return true
         }
@@ -664,30 +665,30 @@ extension Event {
     }
     
     static func saveZapRequest(event:NEvent, context:NSManagedObjectContext) -> Event? {
-            if let existingZapReq = try! Event.fetchEvent(id: event.id, context: context) {
-//                print("🔴 zap req already in db");
-                return existingZapReq
-            }
-            
-            // CREATE ZAP REQUEST EVENT
-            let zapRequest = Event(context: context)
-            zapRequest.insertedAt = Date.now
-            
-            zapRequest.id = event.id
-            zapRequest.kind = Int64(event.kind.id)
-            zapRequest.created_at = Int64(event.createdAt.timestamp)
-            zapRequest.content = event.content
-            zapRequest.sig = event.signature
-            zapRequest.pubkey = event.publicKey
-            zapRequest.likesCount = 0
-            
-            
-            // set relation to Contact
-            zapRequest.contact = Contact.fetchByPubkey(event.publicKey, context: context)
-
-            zapRequest.tagsSerialized = TagSerializer.shared.encode(tags: event.tags)
-            
-            return zapRequest
+        if let existingZapReq = try! Event.fetchEvent(id: event.id, context: context) {
+            //                print("🔴 zap req already in db");
+            return existingZapReq
+        }
+        
+        // CREATE ZAP REQUEST EVENT
+        let zapRequest = Event(context: context)
+        zapRequest.insertedAt = Date.now
+        
+        zapRequest.id = event.id
+        zapRequest.kind = Int64(event.kind.id)
+        zapRequest.created_at = Int64(event.createdAt.timestamp)
+        zapRequest.content = event.content
+        zapRequest.sig = event.signature
+        zapRequest.pubkey = event.publicKey
+        zapRequest.likesCount = 0
+        
+        
+        // set relation to Contact
+        zapRequest.contact = Contact.fetchByPubkey(event.publicKey, context: context)
+        
+        zapRequest.tagsSerialized = TagSerializer.shared.encode(tags: event.tags)
+        
+        return zapRequest
     }
     
     static func updateRelays(_ id:String, relay: String) {
@@ -738,16 +739,16 @@ extension Event {
             savedEvent.contact?.objectWillChange.send()
         }
         
-//        if event.kind == .badgeAward {
-//            // find and notify all kind 30008 where serialized tags contains
-//            // ["a","30009:aa77d356ac5a59dbedc78f0da17c6bdd3ae315778b5c78c40a718b5251391da6:test_badge"]
-//            // notify any related profile badge
-//            let profileBadges = Event.fetchProfileBadgesByATag(event.badgeA, context:context)
-//            for pb in profileBadges {
-//                pb.objectWillChange.send()
-//            }
-////            sendNotification(.badgeAwardFetched)
-//        }
+        //        if event.kind == .badgeAward {
+        //            // find and notify all kind 30008 where serialized tags contains
+        //            // ["a","30009:aa77d356ac5a59dbedc78f0da17c6bdd3ae315778b5c78c40a718b5251391da6:test_badge"]
+        //            // notify any related profile badge
+        //            let profileBadges = Event.fetchProfileBadgesByATag(event.badgeA, context:context)
+        //            for pb in profileBadges {
+        //                pb.objectWillChange.send()
+        //            }
+        ////            sendNotification(.badgeAwardFetched)
+        //        }
         if event.kind == .badgeDefinition {
             // notify any related profile badge
             savedEvent.contact?.objectWillChange.send()
@@ -755,7 +756,7 @@ extension Event {
             for pb in profileBadges {
                 pb.objectWillChange.send()
             }
-//            sendNotification(.badgeDefinitionFetched)
+            //            sendNotification(.badgeDefinitionFetched)
         }
         
         if event.kind == .zapNote {
@@ -781,12 +782,12 @@ extension Event {
             }
             
             // bolt11 -- replaced with naiveBolt11Decoder
-//            if let bolt11 = event.bolt11() {
-//                let invoice = Invoice.fromStr(s: bolt11)
-//                if let parsedInvoice = invoice.getValue() {
-//                    savedEvent.cachedSats = Double((parsedInvoice.amountMilliSatoshis() ?? 0) / 1000)
-//                }
-//            }
+            //            if let bolt11 = event.bolt11() {
+            //                let invoice = Invoice.fromStr(s: bolt11)
+            //                if let parsedInvoice = invoice.getValue() {
+            //                    savedEvent.cachedSats = Double((parsedInvoice.amountMilliSatoshis() ?? 0) / 1000)
+            //                }
+            //            }
         }
         
         if event.kind == .reaction {
@@ -797,10 +798,10 @@ extension Event {
             }
             
             // TODO: dont need this?
-//            if let lastP = event.lastP() {
-//                savedEvent.reactionToContactId = lastP
-//                savedEvent.reactionToContact = Contact.fetchByPubkey(lastP, context: context)
-//            }
+            //            if let lastP = event.lastP() {
+            //                savedEvent.reactionToContactId = lastP
+            //                savedEvent.reactionToContact = Contact.fetchByPubkey(lastP, context: context)
+            //            }
         }
         
         if (event.kind == .textNote) {
@@ -844,10 +845,10 @@ extension Event {
                 savedEvent.repostForId = event.tags[0].id // repost
             }
             
-//            if (event.content.suffix(4) == "#[0]" && event.tags.count > 0 && event.tags[0].type == "e") {
-//                savedEvent.isRepost = true
-//                savedEvent.repostForId = event.tags[0].id // quote repost
-//            }
+            //            if (event.content.suffix(4) == "#[0]" && event.tags.count > 0 && event.tags[0].type == "e") {
+            //                savedEvent.isRepost = true
+            //                savedEvent.repostForId = event.tags[0].id // quote repost
+            //            }
             
             // NEw: Save all p's in .contacts
             // Maybe slow??
@@ -1053,7 +1054,7 @@ extension NEvent {
         if (replyEtags.count != 0) {
             return replyEtags.first
         }
-
+        
         // OLD METHOD NIP-10:
         // One "e" tag = REPLY
         if threadETags.count == 1 && (threadETags.first?.otherInformation[safe: 2] == nil) {
@@ -1078,15 +1079,15 @@ extension NEvent {
         if (rootEtag != nil) {
             return rootEtag
         }
-
+        
         // OLD METHOD
         if threadETags.count == 1 && (threadETags.first?.otherInformation[safe: 2] == nil) {
             return threadETags.first
-
+            
         }
         if (threadETags.count >= 2) && (threadETags.first?.otherInformation[safe: 2] == nil) {
             return threadETags.first
-
+            
         }
         return nil
     }
