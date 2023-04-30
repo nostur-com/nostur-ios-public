@@ -53,28 +53,38 @@ struct NoteRow: View {
                 }
                 
                 if event.isRepost {
-                    // IS REPOST BUT NEED TO FETCH THE REPOSTED POST
-                    if (event.firstQuoteId != nil && event.firstQuote == nil) {
-                        CenteredProgressView().onAppear {
-                            // fetch repost
-                            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.firstQuoteId!)))
+                    if let firstQuote = vPost.firstQuote.first {
+                        // CASE - WE HAVE IT IN VPOST
+                        if vPost.isHighlight {
+                            Highlight(vPost: vPost, hideFooter: false, inThread:inThread, connect:connect)
+                        }
+                        else if fullWidth {
+                            Kind1(vPost: firstQuote, hideFooter:false, isDetail:isDetail)
+                        }
+                        else {
+                            Kind1Default(vPost: firstQuote, hideFooter:false, isDetail:isDetail)
                         }
                     }
-                    else {
-                        if let firstQuote = vPost.firstQuote.first {
-                            let _ = print("why: \(firstQuote.event.contact?.pubkey ?? "bluh")")
-                            if vPost.isHighlight {
-                                Highlight(vPost: vPost, hideFooter: false, inThread:inThread, connect:connect)
+                    // CASE - We have the event: firstQuote_ = already .firstQuote or lazy fetched with .firstQuoteId
+                    else if let firstQuote_ = event.firstQuote_ {
+                        if let toVPostQuote = firstQuote_.toVPost() {
+                            if toVPostQuote.isHighlight {
+                                Highlight(vPost: toVPostQuote, hideFooter: false, inThread:inThread, connect:connect)
                             }
                             else if fullWidth {
-                                Kind1(vPost: firstQuote, hideFooter:false, isDetail:isDetail)
+                                Kind1(vPost: toVPostQuote, hideFooter:false, isDetail:isDetail)
                             }
                             else {
-                                Kind1Default(vPost: firstQuote, hideFooter:false, isDetail:isDetail)
+                                Kind1Default(vPost: toVPostQuote, hideFooter:false, isDetail:isDetail)
                             }
                         }
-                        else if let firstQuoteId = event.firstQuoteId {
-                            Kind1ById(id: firstQuoteId, hideFooter: false, fullWidth: fullWidth)
+                    }
+                    // CASE - We need to fetch it
+                    else if let firstQuoteId = event.firstQuoteId {
+                        CenteredProgressView().onAppear {
+                            // fetch quote
+                            EventRelationsQueue.shared.addAwaitingEvent(event)
+                            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: firstQuoteId)))
                         }
                     }
                 }

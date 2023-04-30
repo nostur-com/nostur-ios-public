@@ -61,6 +61,46 @@ extension Event {
     
     @NSManaged public var deletedById: String?
     
+    var replyTo_:Event? {
+        guard replyTo == nil else { return replyTo }
+        guard let replyToId = replyToId else { return nil }
+        guard let ctx = managedObjectContext else { return nil }
+        if let found = try? Event.fetchEvent(id: replyToId, context: ctx) {
+            DispatchQueue.main.async {
+                self.replyTo = found
+                found.objectWillChange.send()
+                found.addToReplies(self)
+            }
+            return found
+        }
+        return nil
+    }
+    
+    var replyToRoot_:Event? {
+        guard replyToRoot == nil else { return replyToRoot }
+        guard let replyToRootId = replyToRootId else { return nil }
+        guard let ctx = managedObjectContext else { return nil }
+        if let found = try? Event.fetchEvent(id: replyToRootId, context: ctx) {
+            DispatchQueue.main.async {
+                self.replyToRoot = found
+            }
+            return found
+        }
+        return nil
+    }
+    
+    var firstQuote_:Event? {
+        guard firstQuote == nil else { return firstQuote }
+        guard let firstQuoteId = firstQuoteId else { return nil }
+        guard let ctx = managedObjectContext else { return nil }
+        if let found = try? Event.fetchEvent(id: firstQuoteId, context: ctx) {
+            DispatchQueue.main.async {
+                self.firstQuote = found
+            }
+            return found
+        }
+        return nil
+    }
     
     
     //    // helper
@@ -905,33 +945,6 @@ extension Event {
             }
         }
         
-        
-        if (event.kind == .textNote) {
-            // if other existing messages were replying, mentioning, reposting (to) this, fix the relation
-            let pointingToEventReq = NSFetchRequest<Event>(entityName: "Event")
-            //        pointingToEventReq.predicate = NSPredicate(format: "(kind IN {1,6} AND  (replyToId == %@ OR replyToRootId == %@ OR firstQuoteId == %@)", savedEvent.id, savedEvent.id, savedEvent.id)
-            pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6,9802} AND %@ IN {replyToId,replyToRootId,firstQuoteId}", savedEvent.id)
-            // TODO: NEED 6 ALSO OR NOT?
-//            pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6} AND %@ IN {replyToId,replyToRootId,firstQuoteId}", savedEvent.id)
-            pointingToEventReq.sortDescriptors = []
-            if let pointingToEvents = try? context.fetch(pointingToEventReq) { // TODO: SLOW?? Maybe only do this when opening the 1 or 6 instead of here.
-                for event in pointingToEvents {
-                    if (event.replyToId != nil) && (event.replyToId == savedEvent.id) {
-                        event.objectWillChange.send()
-                        event.replyTo = savedEvent
-                    }
-                    if (event.replyToRootId != nil) && (event.replyToRootId == savedEvent.id) {
-                        event.objectWillChange.send()
-                        event.replyToRoot = savedEvent
-                    }
-                    if (event.firstQuoteId != nil) && (event.firstQuoteId == savedEvent.id) {
-                        event.objectWillChange.send()
-                        event.firstQuote = savedEvent
-                    }
-                }
-            }
-        }
-        
         if (event.kind == .contactList) {
             // delete older events
             let r = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
@@ -965,6 +978,29 @@ extension Event {
         if (event.kind == .highlight) { // needed to fetch highlight author so put event.firstP in event.contacts
             let contacts = Contact.ensureContactsCreated(event: event, context: context)
             savedEvent.addToContacts(NSSet(array: contacts))
+        }
+        
+        
+        // Use new EventRelationsQueue to fix relations
+        if (event.kind == .textNote) {
+            
+            let awaitingEvents = EventRelationsQueue.shared.getAwaitingEvents()
+            
+            awaitingEvents.forEach { waitingEvent in
+                if (waitingEvent.replyToId != nil) && (waitingEvent.replyToId == savedEvent.id) {
+                    waitingEvent.objectWillChange.send()
+                    waitingEvent.replyTo = savedEvent
+                }
+                if (waitingEvent.replyToRootId != nil) && (waitingEvent.replyToRootId == savedEvent.id) {
+                    waitingEvent.objectWillChange.send()
+                    waitingEvent.replyToRoot = savedEvent
+                }
+                if (waitingEvent.firstQuoteId != nil) && (waitingEvent.firstQuoteId == savedEvent.id) {
+                    waitingEvent.objectWillChange.send()
+                    waitingEvent.firstQuote = savedEvent
+                }
+                EventRelationsQueue.shared.removeAwaitingEvent(waitingEvent)
+            }
         }
         
         return savedEvent

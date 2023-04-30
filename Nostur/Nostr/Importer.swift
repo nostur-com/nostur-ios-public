@@ -39,7 +39,7 @@ class Importer {
     
     func preloadExistingIdsCache() {
         let fr = Event.fetchRequest()
-        fr.fetchLimit = 3000
+        fr.fetchLimit = 5000
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         fr.propertiesToFetch = ["id"]
         if let results = try? DataProvider.shared().viewContext.fetch(fr) {
@@ -220,7 +220,7 @@ class Importer {
                         self.existingIds.insert(event.id)
                         
                         // batch save every 250
-                        if count % 50 == 0 {
+                        if count % 250 == 0 {
                             if (context.hasChanges) {
                                 do {
                                     try context.save()
@@ -229,6 +229,7 @@ class Importer {
                                     let total = forImports.count
                                     DispatchQueue.main.async {
                                         sendNotification(.listStatus, "Processing \(imported)/\(total) items...")
+                                        sendNotification(.newEventsInDatabase)
                                     }
                                 }
                                 catch {

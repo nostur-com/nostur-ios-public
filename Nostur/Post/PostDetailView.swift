@@ -96,19 +96,11 @@ struct PostAndParent: View {
     var body: some View {
         VStack {
             // MARK: PARENT NOTE
-            // IF MISSING, FETCH IT
-            if (event.replyTo == nil && event.replyToId != nil) {
-                CenteredProgressView()
-                    .onAppear {
-                        sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.replyToId!)))
-                    }
-            }
-            // PARENT: IF AVAILABLE, RENDER IT
-            else if (event.replyTo != nil) {
-                if event.replyTo!.deletedById == nil {
-                    let connect:ThreadConnectDirection? = event.replyTo!.replyToId != nil ? .both : .bottom
-                    PostAndParent(vPost: event.replyTo!.toVPost()!, isParent: true, connect: connect)
-//                        .background(.red)
+            // We have the event: replyTo_ = already .replyTo or lazy fetched with .replyToId
+            if let replyTo_ = event.replyTo_ {
+                if replyTo_.deletedById == nil {
+                    let connect:ThreadConnectDirection? = replyTo_.replyToId != nil ? .both : .bottom
+                    PostAndParent(vPost: replyTo_.toVPost()!, isParent: true, connect: connect)
                         .background(alignment: .leading) {
                             Color("LightGray")
                                 .frame(width: 2)
@@ -121,6 +113,13 @@ struct PostAndParent: View {
                     Text("_Post deleted by author_")
                         .hCentered()
                 }
+            }
+            else if let replyToId = event.replyToId {
+                CenteredProgressView()
+                    .onAppear {
+                        EventRelationsQueue.shared.addAwaitingEvent(event)
+                        sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: replyToId)))
+                    }
             }
             // OUR (DETAIL) REPLY:
             // MARK: DETAIL NOTE
@@ -259,7 +258,7 @@ struct PostAndParent: View {
                 if (!isParent) {
                     
                     // Fix replyTo if we already have it?
-                    fixReplyToIfWeAlreadyHaveIt(event)
+//                    fixReplyToIfWeAlreadyHaveIt(event)
                     
                     // Here, because do all at import is slow?
                     //                        fixIfWeHavePointingToAlreadyInCache(event)
@@ -292,62 +291,62 @@ struct PostAndParent: View {
         .navigationBarHidden(navTitleHidden)
     }
     
-    func fixReplyToIfWeAlreadyHaveIt(_ openedEvent:Event) {
-        if openedEvent.replyTo == nil && openedEvent.replyToId != nil {
-            // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
-            if let replyTo = try? Event.fetchEvent(id: openedEvent.replyToId!, context: viewContext) {
-                openedEvent.objectWillChange.send()
-                openedEvent.replyTo = replyTo
-                
-                replyTo.objectWillChange.send()
-                replyTo.addToReplies(openedEvent)
-                //                replyTo.repliesCount += 1 // TODO: Count again here?? or we already counted ??
-            }
-        }
-        
-        // IF THE THERE IS A ROOT, AND ITS NOT THE SAME AS THE REPLY TO
-        // DO THE SAME AS WITH THE REPLY BEFORE
-        if (openedEvent.replyToRootId != openedEvent.replyToId) { // If reply root is same as reply, dont double add.
-            if (openedEvent.replyToId == nil) { // IF IT HAS ONLY A ROOT REPLY, NO NORMAL REPLY: THEN REPLYTOROOT = REPLYTO
-                openedEvent.replyToId = openedEvent.replyToRootId
-                
-                // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
-                if let replyToRoot = try? Event.fetchEvent(id: openedEvent.replyToRootId!, context: viewContext) {
-                    openedEvent.objectWillChange.send()
-                    openedEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
-                    
-                    replyToRoot.objectWillChange.send()
-                    replyToRoot.addToReplies(openedEvent)
-                    //                    replyToRoot.repliesCount += 1 // TODO: Count again here?? or we already counted ??
-                }
-            }
-        }
-    }
+//    func fixReplyToIfWeAlreadyHaveIt(_ openedEvent:Event) {
+//        if openedEvent.replyTo_ == nil && openedEvent.replyToId != nil {
+//            // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
+//            if let replyTo = try? Event.fetchEvent(id: openedEvent.replyToId!, context: viewContext) {
+//                openedEvent.objectWillChange.send()
+//                openedEvent.replyTo = replyTo
+//
+//                replyTo.objectWillChange.send()
+//                replyTo.addToReplies(openedEvent)
+//                //                replyTo.repliesCount += 1 // TODO: Count again here?? or we already counted ??
+//            }
+//        }
+//
+//        // IF THE THERE IS A ROOT, AND ITS NOT THE SAME AS THE REPLY TO
+//        // DO THE SAME AS WITH THE REPLY BEFORE
+//        if (openedEvent.replyToRootId != openedEvent.replyToId) { // If reply root is same as reply, dont double add.
+//            if (openedEvent.replyToId == nil) { // IF IT HAS ONLY A ROOT REPLY, NO NORMAL REPLY: THEN REPLYTOROOT = REPLYTO
+//                openedEvent.replyToId = openedEvent.replyToRootId
+//
+//                // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
+//                if let replyToRoot = try? Event.fetchEvent(id: openedEvent.replyToRootId!, context: viewContext) {
+//                    openedEvent.objectWillChange.send()
+//                    openedEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
+//
+//                    replyToRoot.objectWillChange.send()
+//                    replyToRoot.addToReplies(openedEvent)
+//                    //                    replyToRoot.repliesCount += 1 // TODO: Count again here?? or we already counted ??
+//                }
+//            }
+//        }
+//    }
     
-    func fixIfWeHavePointingToAlreadyInCache(_ openedEvent:Event) {
-        let pointingToEventReq = NSFetchRequest<Event>(entityName: "Event")
-        //        pointingToEventReq.predicate = NSPredicate(format: "(kind IN {1,6} AND  (replyToId == %@ OR replyToRootId == %@ OR firstQuoteId == %@)", openedEvent.id, openedEvent.id, openedEvent.id)
-        pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6,9802} AND %@ IN {replyToId,replyToRootId,firstQuoteId}", openedEvent.id)
-        // TODO: NEED 6 ALSO OR NOT?
-        //            pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6} AND %@ IN {replyToId,replyToRootId,firstQuoteId}", savedEvent.id)
-        pointingToEventReq.sortDescriptors = []
-        if let pointingToEvents = try? viewContext.fetch(pointingToEventReq) {
-            for event in pointingToEvents {
-                if (event.replyToId != nil) && (event.replyToId == openedEvent.id) {
-                    event.objectWillChange.send()
-                    event.replyTo = openedEvent
-                }
-                if (event.replyToRootId != nil) && (event.replyToRootId == openedEvent.id) {
-                    event.objectWillChange.send()
-                    event.replyToRoot = openedEvent
-                }
-                if (event.firstQuoteId != nil) && (event.firstQuoteId == openedEvent.id) {
-                    event.objectWillChange.send()
-                    event.firstQuote = openedEvent
-                }
-            }
-        }
-    }
+//    func fixIfWeHavePointingToAlreadyInCache(_ openedEvent:Event) {
+//        let pointingToEventReq = NSFetchRequest<Event>(entityName: "Event")
+//        //        pointingToEventReq.predicate = NSPredicate(format: "(kind IN {1,6} AND  (replyToId == %@ OR replyToRootId == %@ OR firstQuoteId == %@)", openedEvent.id, openedEvent.id, openedEvent.id)
+//        pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6,9802} AND %@ IN {replyToId,replyToRootId,firstQuoteId}", openedEvent.id)
+//        // TODO: NEED 6 ALSO OR NOT?
+//        //            pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6} AND %@ IN {replyToId,replyToRootId,firstQuoteId}", savedEvent.id)
+//        pointingToEventReq.sortDescriptors = []
+//        if let pointingToEvents = try? viewContext.fetch(pointingToEventReq) {
+//            for event in pointingToEvents {
+//                if (event.replyToId != nil) && (event.replyToId == openedEvent.id) {
+//                    event.objectWillChange.send()
+//                    event.replyTo = openedEvent
+//                }
+//                if (event.replyToRootId != nil) && (event.replyToRootId == openedEvent.id) {
+//                    event.objectWillChange.send()
+//                    event.replyToRoot = openedEvent
+//                }
+//                if (event.firstQuoteId != nil) && (event.firstQuoteId == openedEvent.id) {
+//                    event.objectWillChange.send()
+//                    event.firstQuote = openedEvent
+//                }
+//            }
+//        }
+//    }
 }
 
 struct DetailFooterFragment: View {

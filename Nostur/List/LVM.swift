@@ -223,6 +223,9 @@ class LVM: NSObject, ObservableObject {
     
     func fetchRelated(_ recentVPosts:ArraySlice<VPost>) {
         let ids = recentVPosts.map { $0.id }.compactMap { $0 }
+        recentVPosts.map { $0.event }.forEach { event in
+            EventRelationsQueue.shared.addAwaitingEvent(event)
+        }
         SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEventReferences(ids: ids)))
         print("Skip render and fetch related of \(ids.joined(separator: ",")) first.")
     }
