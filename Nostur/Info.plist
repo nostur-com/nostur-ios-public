@@ -30,10 +30,7 @@
 	<key>LSMinimumSystemVersion</key>
 	<string>13.2.0</string>
 	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSExceptionDomains</key>
-		<dict/>
-	</dict>
+	<dict/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

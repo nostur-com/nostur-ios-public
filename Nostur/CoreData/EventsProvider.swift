@@ -361,16 +361,7 @@ class EventsProvider: ObservableObject {
             description.url = URL(fileURLWithPath: "/dev/null")
         }
         
-        //        // Enable persistent store remote change notifications
-        //        /// - Tag: persistentStoreRemoteChange
-        //        description.setOption(true as NSNumber,
-        //                              forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
-        //
-        //        // Enable persistent history tracking
-        //        /// - Tag: persistentHistoryTracking
-        //        description.setOption(true as NSNumber,
-        //                              forKey: NSPersistentHistoryTrackingKey)
-        
+        description.setOption(FileProtectionType.completeUntilFirstUserAuthentication as NSObject, forKey: NSPersistentStoreFileProtectionKey)
         
         var newError:NSError?
         container.loadPersistentStores { storeDescription, error in
@@ -387,7 +378,6 @@ class EventsProvider: ObservableObject {
                 }
             }
         }
-        
         container.viewContext.automaticallyMergesChangesFromParent = true
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         container.viewContext.undoManager = nil
