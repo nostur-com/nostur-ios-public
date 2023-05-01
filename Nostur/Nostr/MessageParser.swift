@@ -21,7 +21,7 @@ class MessageParser {
             // Validation is CPU intensive. Moved it to Importer right before save step
             // so we dont waste cpu on duplicates etc
             guard let message = try? RelayMessage.parseRelayMessage(text: text, relay: relayUrl, skipValidation: true) else {
-                print("🚒🚒🚒 \(relayUrl) could not parse message. or verify sig: \(text)")
+//                print("🚒🚒🚒 \(relayUrl) could not parse message. or verify sig: \(text)")
                 throw "could not parse message. or verify sig"
             }
             

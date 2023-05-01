@@ -125,7 +125,7 @@ final class SocketPool: ObservableObject {
                     // skip if we already have an active subcription
                     if subscriptionId != nil && managedClient.activeSubscriptions.contains(subscriptionId!) { continue }
                     if (subscriptionId != nil) {
-                        print("⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!)")
+                        print("🏎️🏎️⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!)")
                         DispatchQueue.main.async {
                             managedClient.activeSubscriptions.append(subscriptionId!)
                         }
@@ -240,7 +240,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     func connect(_ forceConnectionAttempt:Bool = false) {
         guard forceConnectionAttempt || self.skipped == self.exponentialReconnectBackOff else { // Should be 0 == 0 to continue, or 2 == 2 etc..
             self.skipped = skipped + 1
-            print("🔌🔴 Skipping reconnect. EB: (\(exponentialReconnectBackOff)) skipped: \(skipped)")
+            print("🏎️🏎️🔌🔴 Skipping reconnect. EB: (\(exponentialReconnectBackOff)) skipped: \(skipped)")
             return
         }
         if !isConnecting {
@@ -265,7 +265,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
             self.isConnected = false
         }
         self.activeSubscriptions = []
-        print("🔌 DISCONNECTED \(self.url)")
+        print("🏎️🏎️🔌 DISCONNECTED \(self.url)")
     }
     
     func didDisconnectWithError(_ error: Error) {
@@ -278,12 +278,12 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
         }
         self.activeSubscriptions = []
         self.exponentialReconnectBackOff = max(1, self.exponentialReconnectBackOff * 2)
-        print("🔌🔴 DISCONNECTED WITH ERROR \(self.url): \(error.localizedDescription)")
+        print("🏎️🏎️🔌🔴 DISCONNECTED WITH ERROR \(self.url): \(error.localizedDescription)")
     }
     
     func didReceiveMessage(_ text:String) {
-//        print("🔌 RECEIVED: \(self.url): \(text)")
-        MessageParser.shared.socketReceivedMessage(text: text, relayUrl: self.url)
+//        print("🏎️🔌 RECEIVED: \(self.url): \(text)")
+        MessageParser.shared.socketReceivedMessage(text: text, relayUrl: self.url, client:client)
     }
     
     func didReceiveData(_ data:Data) {
@@ -356,6 +356,7 @@ class NewWebSocket {
             print("🔴🔴 Not connected. Did not sendMessage \(self.url)")
             return
         }
+//        print("🏎️🔌🔌 SEND \(self.url): \(text)")
         let _ = webSocket.send(text)
             .sink(receiveCompletion: {
                 print($0)
