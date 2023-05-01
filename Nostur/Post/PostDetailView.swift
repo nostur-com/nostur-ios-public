@@ -225,6 +225,19 @@ struct PostAndParent: View {
                                 NoteRow(vPost: vPost, hideFooter: false, isReply:true)
 //                                    .background(.orange)
                                     .onTapGesture { navigateTo(vPost) }
+                                    .onAppear {
+                                        if (vPost.event.contact?.metadata_created_at ?? 0) == 0 {
+                                            EventRelationsQueue.shared.addAwaitingEvent(vPost.event)
+                                            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.pubkey)))
+                                        }
+                                        
+                                        if vPost.event.hasMissingContacts {
+                                            // TODO:
+//                                            EventRelationsQueue.shared.addAwaitingEvent(vPost.event)
+//
+//                                            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missing)))
+                                        }
+                                    }
                             }
                             Divider()
                         }
@@ -252,6 +265,7 @@ struct PostAndParent: View {
             .onAppear {
                 if (event.contact == nil) {
                     // TODO: Still needed? or below sp.send is already taking care of this?
+                    EventRelationsQueue.shared.addAwaitingEvent(event)
                     sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.pubkey)))
                 }
                 
@@ -271,6 +285,7 @@ struct PostAndParent: View {
                     }
                     
                     // Fetch all that reference this detail note (Replies, zaps, reactions)
+                    EventRelationsQueue.shared.addAwaitingEvent(event)
                     sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEventReferences(ids: [event.id])))
                     
                     

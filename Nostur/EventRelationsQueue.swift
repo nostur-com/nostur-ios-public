@@ -37,17 +37,25 @@ class EventRelationsQueue {
             .delay(for: .seconds(5), scheduler: DispatchQueue.global())
             .sink { [weak self] event in
                 self?.waitingEvents.remove(event)
-//                print("🟢🟢🟢 delayedRemove. now in queue: \(self?.waitingEvents.count)")
+                print("🟢🟢🟢 delayedRemove. now in queue: \(String(describing: self?.waitingEvents.count))")
             }
             .store(in: &subscriptions)
     }
     
     public func addAwaitingEvent(_ event:Event) {
         let ctx = DataProvider.shared().bg
-        ctx.perform {
-            guard let privateEvent = ctx.object(with: event.objectID) as? Event else { return }
-            self.waitingEvents.insert(privateEvent)
-//            print("🟢🟢🟢 addAwaitingEvent. now in queue: \(self.waitingEvents.count)")
+        if event.managedObjectContext == ctx {
+            ctx.perform {
+                self.waitingEvents.insert(event)
+                print("🟢🟢🟢 addAwaitingEvent. now in queue: \(self.waitingEvents.count)")
+            }
+        }
+        else {
+            ctx.perform {
+                guard let privateEvent = ctx.object(with: event.objectID) as? Event else { return }
+                self.waitingEvents.insert(privateEvent)
+                print("🟢🟢🟢 addAwaitingEvent. now in queue: \(self.waitingEvents.count)")
+            }
         }
     }
     
@@ -58,6 +66,10 @@ class EventRelationsQueue {
     
     public func getAwaitingEvents() -> Set<Event> {
         self.waitingEvents
+    }
+    
+    public func removeAll() {
+        self.waitingEvents = Set<Event>()
     }
 
 //    public func 

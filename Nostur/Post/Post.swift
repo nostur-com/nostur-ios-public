@@ -62,6 +62,8 @@ struct VPost: Identifiable, Equatable, Hashable {
     var highlightAuthorIsFollowing:Bool
     var highlightAuthorName:String?
     var highlightUrl:String?
+    
+    var missingContacts = false
 }
 
 class VPostTransformer {
@@ -156,7 +158,9 @@ class VPostTransformer {
                 highlightAuthorPicture: mainEvent.kind == 9802 ? mainEvent.contacts?.first?.picture : nil,
                 highlightAuthorIsFollowing: mainEvent.kind == 9802 ? isFollowedByCurrentAccount(mainEvent.fastTags.first(where: { $0.0 == "p" } )?.1) : false,
                 highlightAuthorName: mainEvent.kind == 9802 ? mainEvent.contacts?.first?.authorName : nil,
-                highlightUrl: mainEvent.kind == 9802 ? mainEvent.fastTags.first(where: { $0.0 == "r" } )?.1 : nil
+                highlightUrl: mainEvent.kind == 9802 ? mainEvent.fastTags.first(where: { $0.0 == "r" } )?.1 : nil,
+                
+                missingContacts: (mainEvent.contacts?.count ?? 0) < mainEvent.fastTags.filter({ $0.0 == "p" }).count
             )
         }
         else {
@@ -239,7 +243,9 @@ class VPostTransformer {
                 highlightAuthorPicture: privateEvent.kind == 9802 ? privateEvent.contacts?.first?.picture : nil,
                 highlightAuthorIsFollowing: privateEvent.kind == 9802 ? isFollowedByCurrentAccount(privateEvent.fastTags.first(where: { $0.0 == "p" } )?.1) : false,
                 highlightAuthorName: privateEvent.kind == 9802 ? privateEvent.contacts?.first?.authorName : nil,
-                highlightUrl: privateEvent.kind == 9802 ? privateEvent.fastTags.first(where: { $0.0 == "r" } )?.1 : nil
+                highlightUrl: privateEvent.kind == 9802 ? privateEvent.fastTags.first(where: { $0.0 == "r" } )?.1 : nil,
+                
+                missingContacts: (privateEvent.contacts?.count ?? 0) < privateEvent.fastTags.filter({ $0.0 == "p" }).count
             )
         }
     }

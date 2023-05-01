@@ -157,6 +157,9 @@ class LVM: NSObject, ObservableObject {
 //            return
             if currentVPostLeafs.count == 0 {
                 let leafThreads = self.renderLeafs(added) // Transforms seperate posts into threads, .id for each thread is leaf.id
+                
+                putEventsWithMissingContactsInEventRelationsQueue(leafThreadsToFlatVPosts(leafThreads))
+                
                 DispatchQueue.main.async {
                     self.lvmState.vPostLeafs = leafThreads
                     self.lvmCounter.count = self.itemsAfterLastAppeared < 5 ? 0 : self.itemsAfterLastAppeared
@@ -191,7 +194,7 @@ class LVM: NSObject, ObservableObject {
                 
                 
                 let newLeafThreads = self.renderNewLeafs(added, onScreen:self.lvmState.vPostLeafs)
-                
+                putEventsWithMissingContactsInEventRelationsQueue(leafThreadsToFlatVPosts(newLeafThreads))
                 // leafs+parents count
                 let addedCount = newLeafThreads.reduce(0, { partialResult, vPost in
                     return partialResult + vPost.threadPostsCount
@@ -218,6 +221,12 @@ class LVM: NSObject, ObservableObject {
                     
                 }
             }
+        }
+    }
+    
+    func leafThreadsToFlatVPosts(_ leafThreads:[VPost]) -> [VPost] {
+        return leafThreads.flatMap { vPost in
+            [vPost] + vPost.parentPosts
         }
     }
     
@@ -785,6 +794,7 @@ extension LVM {
     
     // TODO: WE NEED TO USE THIS.. JUST MOVED FROM ListView TO LVM but not updated yet
     func fetchMissingReplyToContacts(events:[Event]) {
+        print("🟢🟢 fetchMissingReplyToContacts for events.count: \(events.count)")
         // PLAN
         // FOR EVERY EVENT
         //   TAKE P's. IF P IS NOT IN EVENT.CONTACTS, ADD IT
@@ -793,14 +803,15 @@ extension LVM {
         
         let pubkeys = events.flatMap { $0.fastTags.filter { $0.0 == "p" } }.map { $0.1 }
         DataProvider.shared().container.performBackgroundTask { context in
+        context.perform {
+            var bgEvents = [Event]()
             for mainEvent in events {
                 if let event = context.object(with: mainEvent.objectID) as? Event {
-                    let pubkeys = Array(Set(event.pTags()))
+                    bgEvents.append(event)
+                    let pubkeys = Array(Set(event.fastPs.map { $0.1 }))
                     if pubkeys.count > 0 {
                         let contacts = Contact.fetchByPubkeys(pubkeys, context: context)
-                        //                event.objectWillChange.send()
-                        // dit moet op main queue?
-                        //                ThreadWarning.which("Event.addToContacts( 💖💖💖")
+                        event.objectWillChange.send()
                         event.addToContacts(NSSet(array: contacts))
                     }
                 }
@@ -818,8 +829,29 @@ extension LVM {
             
             guard (missingPubkeys + emptyContactPubkeys).count > 0 else { return }
             //        ThreadWarning.which("SocketPool.shared.sendMessag 💖💖💖")
+            
+            var eventsWithMissingContacts = [Event]()
+            (missingPubkeys + emptyContactPubkeys).forEach { pubkey in
+                bgEvents.forEach { event in
+                    if let tags = event.tagsSerialized, tags.contains(serializedP(pubkey)) {
+                        eventsWithMissingContacts.append(event)
+                    }
+                }
+            }
+            eventsWithMissingContacts.forEach { event in
+                EventRelationsQueue.shared.addAwaitingEvent(event)
+            }
+            print("added \(eventsWithMissingContacts.count) events to await for missing contacts \((missingPubkeys + emptyContactPubkeys).count) (total)99ccfc95a1078840dd9beacfb2031abe8599e4cfc11a61a3d12e4f554a64b4f4")
             SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missingPubkeys + emptyContactPubkeys )))
         }
+    }
+    
+    func putEventsWithMissingContactsInEventRelationsQueue(_ vPosts:[VPost]) {
+        vPosts
+            .filter { $0.missingContacts }
+            .forEach {
+                EventRelationsQueue.shared.addAwaitingEvent($0.event)
+            }
     }
 }
 

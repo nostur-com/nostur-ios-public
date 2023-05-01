@@ -61,6 +61,24 @@ extension Event {
     
     @NSManaged public var deletedById: String?
     
+    var hasMissingContacts:Bool {
+        (contacts?.count ?? 0) < fastTags.filter({ $0.0 == "p" }).count
+    }
+    
+    var contact_:Contact? {
+        guard contact == nil else { return contact }
+        guard let ctx = managedObjectContext else { return nil }
+        if let found = Contact.fetchByPubkey(pubkey, context: ctx) {
+            DispatchQueue.main.async {
+                self.contact = found
+                found.objectWillChange.send()
+                found.addToEvents(self)
+            }
+            return found
+        }
+        return nil
+    }
+    
     var replyTo_:Event? {
         guard replyTo == nil else { return replyTo }
         guard let replyToId = replyToId else { return nil }
@@ -543,6 +561,10 @@ extension Event {
         return jsonArray
         //            .filter { $0.count >= 2 }
             .map { ($0[0], $0[safe: 1] ?? "WTF", $0[safe: 2]) }
+    }
+    
+    var fastPs:[(String, String, String?)] {
+        fastTags.filter { $0.0 == "p" }
     }
     
     

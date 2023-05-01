@@ -31,23 +31,24 @@ struct NoteReactions: View {
             Spacer()
         }
         .onAppear {
-            var missing:[String] = []
+            var missing:[Event] = []
             for reaction in reactions_ {
                 if reaction.contact == nil || reaction.contact?.metadata_created_at == 0 {
-                    missing.append(reaction.pubkey)
+                    missing.append(reaction)
+                    EventRelationsQueue.shared.addAwaitingEvent(reaction)
                 }
             }
-            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missing)))
+            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missing.map { $0.pubkey })))
         }
-        .onChange(of: reactions_) { newValue in
-            var missing:[String] = []
-            for reaction in newValue {
-                if reaction.contact == nil || reaction.contact?.metadata_created_at == 0 {
-                    missing.append(reaction.pubkey)
-                }
-            }
-            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missing)))
-        }
+//        .onChange(of: reactions_) { newValue in
+//            var missing:[String] = []
+//            for reaction in newValue {
+//                if reaction.contact == nil || reaction.contact?.metadata_created_at == 0 {
+//                    missing.append(reaction.pubkey)
+//                }
+//            }
+//            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missing)))
+//        }
     }
 }
 
@@ -60,22 +61,23 @@ struct ReactionRow: View {
     
     var body: some View {
         HStack(alignment: .top) {
-            PFP(pubkey: reaction.pubkey, pictureUrl: reaction.contact?.picture, isFollowing: ns.followingPublicKeys.contains(reaction.pubkey))
+            // HMM contact_ is repeatingly fetching db?
+            PFP(pubkey: reaction.pubkey, pictureUrl: reaction.contact_?.picture, isFollowing: ns.followingPublicKeys.contains(reaction.pubkey))
             VStack(alignment: .leading) {
                 HStack {
                     VStack(alignment: .leading) {
                         HStack(spacing:3) {
-                            Text(reaction.contact?.authorName ?? "").font(.headline).foregroundColor(.primary)
+                            Text(reaction.contact_?.authorName ?? "").font(.headline).foregroundColor(.primary)
                                 .lineLimit(1)
                             
-                            if (reaction.contact?.nip05veried ?? false) {
+                            if (reaction.contact_?.nip05veried ?? false) {
                                 Image(systemName: "checkmark.seal.fill")
                                     .font(.system(size: 14))
                                     .foregroundColor(Color("AccentColor"))
                             }
                         
                             Group {
-                                Text("@\(reaction.contact?.username ?? reaction.authorKey )").layoutPriority(1)
+                                Text("@\(reaction.contact_?.username ?? reaction.authorKey )").layoutPriority(1)
                                 Text(" · ") //
                                 Ago(reaction.date).layoutPriority(1) //
                             }

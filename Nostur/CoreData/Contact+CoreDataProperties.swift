@@ -297,6 +297,24 @@ extension Contact : Identifiable {
     static func updateRelatedEvents(_ contact:Contact, context:NSManagedObjectContext) {
         let username = contact.username != "" ? contact.username : contact.authorName
         PubkeyUsernameCache.shared.setObject(for: contact.pubkey, value: username)
+        
+        
+        let awaitingEvents = EventRelationsQueue.shared.getAwaitingEvents()
+        
+        awaitingEvents.forEach { waitingEvent in
+            if (waitingEvent.pubkey == contact.pubkey) {
+                waitingEvent.objectWillChange.send()
+                waitingEvent.contact = contact
+            }
+            if let tagsSerialized = waitingEvent.tagsSerialized, tagsSerialized.contains(serializedP(contact.pubkey)) {
+                waitingEvent.objectWillChange.send()
+                waitingEvent.addToContacts(contact)
+            }
+            EventRelationsQueue.shared.removeAwaitingEvent(waitingEvent)
+        }
+        
+        return
+        // HMMM CAN WE REMOVE BELOW THING... AND ONLY USE ABOVE??
         // TODO: Maybe some event.objectWillChange.send() to relations in active views? Performance?
         let r1 = Event.fetchRequest()
         r1.predicate = NSPredicate(format: "pubkey == %@ AND kind IN {1,6,9734,4,9802}", contact.pubkey) // need kind 7 here or?
@@ -327,11 +345,11 @@ extension Contact : Identifiable {
                 contactsInThisEvent.append(contact!)
                 continue
             }
-            let newContact = Contact(context: context)
-            newContact.pubkey = pTag
-            newContact.metadata_created_at = 0
-            newContact.updated_at = 0
-            contactsInThisEvent.append(newContact)
+//            let newContact = Contact(context: context)
+//            newContact.pubkey = pTag
+//            newContact.metadata_created_at = 0
+//            newContact.updated_at = 0
+//            contactsInThisEvent.append(newContact)
         }
         
         return contactsInThisEvent
