@@ -91,7 +91,7 @@ struct NosturApp: App {
                     
                 }
 //                else if isOnboarding || ns.accounts.count == 0 {
-                else if isOnboarding {
+                else if isOnboarding || ns.accounts.count == 0 {
                     //                if !didAcceptTerms || isOnboarding || ns.accounts.count == 0 {
                     Onboarding()
                         .environmentObject(ns)
