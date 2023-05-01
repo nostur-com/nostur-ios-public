@@ -57,13 +57,13 @@ struct NosturApp: App {
     @StateObject private var ns:NosturState = .shared
     @StateObject private var tm:DetailTabsModel = .shared
     @StateObject private var nm:NotificationsManager = .shared
+    private var lvmManager:LVMManager = .shared
     private var importer:Importer = .shared // Need to initialize here on MAIN, else the first init will be in wrong background context
     @State var fg:FollowingGuardian = .shared
     
     @State var isViewDisplayed = false
     @State var isOnboarding = false
     
-//    var runLoop = Timer.publish(every: 2, tolerance: 1, on: .main, in: .common).autoconnect()
     let priceLoop = Timer.publish(every: 900, tolerance: 120, on: .main, in: .common).autoconnect().receive(on: RunLoop.main)
         .merge(with: Just(Date()))
     
@@ -111,14 +111,6 @@ struct NosturApp: App {
                             }
                             .environment(\.managedObjectContext, EventsProvider.shared.container.viewContext)
                             .environmentObject(ns)
-                        //                    .environmentObject(er)
-                        //                    .environmentObject(tm)
-                        //                    .environmentObject(nm)
-//                            .onReceive(runLoop) { time in
-//                                if (!isViewDisplayed) { return }
-//                                print("🏎️🏎️ \(Date.now) onReceive runLoop")
-//                                Importer.shared.importEvents()
-//                            }
                             .onReceive(priceLoop) { time in
                                 if (!isViewDisplayed) { return }
                                 Task {
@@ -142,8 +134,10 @@ struct NosturApp: App {
         .onChange(of: scenePhase) { newScenePhase in
             switch newScenePhase {
                 case .active:
-//                    print("🏎️🏎️ \(Date.now) scenePhase active")
+//                  print("🏎️🏎️ \(Date.now) scenePhase active")
+                    EventRelationsQueue.shared.removeAll()
                     SocketPool.shared.connectAll()
+                    lvmManager.restoreSubscriptions()
                 case .background:
                     SocketPool.shared.disconnectAll()
                     saveState()

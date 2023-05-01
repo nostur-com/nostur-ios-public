@@ -45,10 +45,12 @@ struct ListView: View {
                     guard vmState.state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
                     guard vmState.state != .SWITCHING_ACCOUNT else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
                     //                        print("\(vPost.id) index: \(vmState.vPostLeafs.firstIndex(of: vPost) ?? -1)")
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                         if rowIndex == 0 {
                             vm.lvmCounter.count = 0
                         }
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
                         vm.lastAppearedSubject.send(vPost.event)
                     }
                 },
@@ -77,7 +79,7 @@ struct ListView: View {
                     vmState.viewIsVisible = vm.id != "List" && (selectedTab == vm.id)
                 }
                 .onChange(of: selectedListId) { selectedListId in
-                    vmState.viewIsVisible = vm.id == "List" && (selectedListId == vm.id)
+                    vmState.viewIsVisible = vm.id == "List" && (selectedListId == vm.subscriptionId)
                 }
                 .onChange(of: settings.fullWidthImages) { newValue in
                     needsFullReload = true
@@ -105,14 +107,11 @@ struct ListView: View {
             }
         }
         .onAppear {
-            vmState.viewIsVisible = (selectedSubTab != "List" && selectedSubTab == vm.id) || (selectedSubTab == "List" && selectedListId == vm.id)
-            print("🟢🟢🟢 ListView.onAppear:\(selectedSubTab) list:\(selectedListId) vm.id: \(vm.id) isVisible:\(vmState.viewIsVisible)")
-            vm.restoreSubscription()
+//            vmState.viewIsVisible = (selectedSubTab != "List" && selectedSubTab == vm.id) || (selectedSubTab == "List" && selectedListId == vm.subscriptionId)
+            vmState.viewIsVisible = true
         }
         .onDisappear {
             vmState.viewIsVisible = false
-            SocketPool.shared.closeSubscription(vm.subscriptionId)
-            print("🟢🟢🟢 ListView.onDisappear:\(selectedSubTab) list:\(selectedListId) vm.id: \(vm.id) isVisible:\(vmState.viewIsVisible)")
         }
         //        .background(Color("ListBackground"))
     }

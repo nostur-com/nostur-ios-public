@@ -54,4 +54,10 @@ class LVMManager {
         listVMs.append(lvm)
         return lvm
     }
+    
+    func restoreSubscriptions() {
+        listVMs.forEach { lvm in
+            lvm.restoreSubscription()
+        }
+    }
 }

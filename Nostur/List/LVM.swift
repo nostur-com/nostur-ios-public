@@ -47,7 +47,7 @@ class LVM: NSObject, ObservableObject {
     var subscriptionId:String {
         if (id == "Explore" || id == "Following") { return id }
         let idLength = id.count
-        return "List-" + String(id.prefix(min(idLength,18)))
+        return String(id.prefix(min(idLength,18)))
     }
     var listStateObjectId:NSManagedObjectID?
     var pubkey:String
@@ -175,7 +175,7 @@ class LVM: NSObject, ObservableObject {
                     
                     // DO NEXT TICK IN HALF TIME (5 instead of 10 seconds
                     self.fetchFeedTimer?.invalidate()
-                    self.fetchFeedTimer = Timer.scheduledTimer(withTimeInterval: FETCH_FEED_INTERVAL/2, repeats: true) { [weak self] _ in
+                    self.fetchFeedTimer = Timer.scheduledTimer(withTimeInterval: FETCH_FEED_INTERVAL/3, repeats: true) { [weak self] _ in
                         guard let self = self else { return }
                         self.fetchFeedTimerNextTick()
                     }
@@ -433,7 +433,10 @@ class LVM: NSObject, ObservableObject {
     
     // MARK: STEP 0: FETCH FROM RELAYS
     func fetchFeedTimerNextTick() {
-        guard self.viewIsVisible else { return }
+        guard self.viewIsVisible else {
+//            print("🏎️🏎️ NOT VISIBLE \(self.subscriptionId)")
+            return
+        }
         
 //        performLocalFetch()
         
@@ -489,6 +492,10 @@ class LVM: NSObject, ObservableObject {
 extension LVM {
     
     func restoreSubscription() {
+        guard viewIsVisible else {
+//            print("🏎️🏎️ \(Date.now) NOT VISIBLE, NOT RESTORING: \(self.subscriptionId)")
+            return
+        }
 //        print("🏎️🏎️ \(Date.now) restoreSubscription \(self.subscriptionId)")
         let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 4)  // 4 hours  ago
         let since = (self.lvmState.vPostLeafs.first?.created_at ?? hoursAgo) - (60 * 15) // (take 15 minutes earlier to not mis out of sync posts)

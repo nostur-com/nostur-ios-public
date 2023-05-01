@@ -135,7 +135,8 @@ final class SocketPool: ObservableObject {
                     managedClient.client.sendMessage(message.message)
                 }
                 else if  message.type == .CLOSE { // CLOSE FOR ALL RELAYS
-                    if (!managedClient.isConnected && managedClient.read) && (!managedClient.isConnecting) {
+                    if (!managedClient.read) { continue }
+                    if (!managedClient.isConnected) && (!managedClient.isConnecting) {
                         // Already closed? no need to connect and send CLOSE message
                         continue
                         //                        managedClient.connect()
