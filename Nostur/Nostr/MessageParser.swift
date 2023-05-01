@@ -13,9 +13,9 @@ class MessageParser {
     static let shared = MessageParser()
 
     var sp = SocketPool.shared
-    var messageBucket = MessageBucket()
+    var messageBucket = ThreadSafeFIFOQueue<RelayMessage>()
     
-    func socketReceivedMessage(text:String, relayUrl:String) {
+    func socketReceivedMessage(text:String, relayUrl:String, client:NewWebSocket) {
         do {
 //            ThreadWarning.which("socketReceivedMessage")
             // Validation is CPU intensive. Moved it to Importer right before save step
@@ -41,7 +41,8 @@ class MessageParser {
                     // Keep these subscriptions open.
                     guard let subscriptionId = message.subscriptionId else { return }
                     if !["Following","Explore","Notifications"].contains(subscriptionId) && String(subscriptionId.prefix(5)) != "List-" {
-                        sp.sendMessage(ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: subscriptionId)))
+                        // Send close message to this specific socket, not all.
+                        client.sendMessage(ClientMessage.close(subscriptionId: subscriptionId))
                     }
                 default:
                     if (message.type == .EVENT) {
@@ -51,7 +52,7 @@ class MessageParser {
                             guard let self = self else { return }
                             
                             let sameMessageInQueue = self.messageBucket.all()
-                                .filter { $0.type == .EVENT }
+                                .filter { $0.type != nil && $0.type == .EVENT }
                                 .compactMap { $0.event?.id }
                                 .firstIndex(of: nEvent.id )
                             if (sameMessageInQueue != nil) {

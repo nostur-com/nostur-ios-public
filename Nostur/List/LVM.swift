@@ -115,7 +115,7 @@ class LVM: NSObject, ObservableObject {
     
     // MARK: FROM DB TO SCREEN STEP 3:
     private func processPostsInBackground(_ events:[Event]) { // events are from viewContext
-        let context = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" ? DataProvider.shared().viewContext : DataProvider.shared().container.newBackgroundContext()
+        let context = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" ? DataProvider.shared().viewContext : DataProvider.shared().bg // Should be use shared().bg instead??
         
         // onScreenIds includes leafs and parents, so all posts.
         let onScreenIds = self.lvmState.vPostLeafs.reduce(Set<NSManagedObjectID>()) { partialResult, vPost in
@@ -218,7 +218,6 @@ class LVM: NSObject, ObservableObject {
                     }
 //                    print("Added \(newLeafThreads.count) new leafs (\(addedCount))")
 //                    print("🏎️🏎️ \(Date.now) Added \(newLeafThreads.count) new leafs (\(addedCount))")
-                    
                 }
             }
         }
@@ -807,9 +806,8 @@ extension LVM {
         //   TAKE P's. IF P IS NOT IN EVENT.CONTACTS, ADD IT
         // FINALLY, EVERY MISSING OR EMPTY CONTACT
         //  sp.fetch!
-        
         let pubkeys = events.flatMap { $0.fastTags.filter { $0.0 == "p" } }.map { $0.1 }
-        DataProvider.shared().container.performBackgroundTask { context in
+        let context = DataProvider.shared().bg
         context.perform {
             var bgEvents = [Event]()
             for mainEvent in events {
