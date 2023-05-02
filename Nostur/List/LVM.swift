@@ -76,9 +76,6 @@ class LVM: NSObject, ObservableObject {
     }
     
     private var fetchFeedTimer: Timer?
-    var contentChangedSubject = CurrentValueSubject<[Event], Never>([]) // Need it for debounce etc
-    
-    
     
     var previousLastAppearedEvent:Event?
     
@@ -216,9 +213,8 @@ class LVM: NSObject, ObservableObject {
                     if !self.lvmState.isAtTop || !SettingsStore.shared.autoScroll {
                         self.lvmCounter.count += addedCount
                     }
-//                    print("Added \(newLeafThreads.count) new leafs (\(addedCount))")
-//                    print("🏎️🏎️ \(Date.now) Added \(newLeafThreads.count) new leafs (\(addedCount))")
                 }
+                
             }
         }
     }
@@ -524,7 +520,6 @@ extension LVM {
     func addSubscriptions() {
         keepListStateSaved()
         requestFooterCounters()
-        updatePostFeed()
         trackLastAppeared()
         processNewEventsInBg()
         keepFilteringMuted()
@@ -959,39 +954,19 @@ extension LVM: NSFetchedResultsControllerDelegate {
                         }
 //                        .sorted(by: { $0.created_at < $1.created_at } )
                 }
-//                self.updateUnreadCount()
                 
             default:
                 let lastCreatedAt = self.lvmState.vPostLeafs.last?.created_at ?? 0 // SHOULD CHECK ONLY LEAFS BECAUSE ROOTS CAN BE VERY OLD
                 self.unrenderedEvents = events
                     .filter { $0.created_at > lastCreatedAt } // skip all older than first on screen (check LEAFS only)
                     .filter(onlyRootOrReplyingToFollower)
-//                    .sorted(by: { $0.created_at < $1.created_at } )
                     .prefix(LVM_MAX_VISIBLE * 2)
                     .map {
                         $0.parentEvents = Event.getParentEvents($0)
                         return $0
                     }
-//                self.updateUnreadCount()
                 return
         }
-    }
-    
-    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-        guard let posts = controller.fetchedObjects as? [Event] else { return }
-//        print("🟣🟣🟣🟣🟣 controllerDidChangeContent \(posts.count)")
-        self.contentChangedSubject.send(filterMutedWords(posts))
-    }
-    
-    func updatePostFeed() {
-        contentChangedSubject
-            .debounce(for: .seconds(2.5), scheduler: RunLoop.main)
-            .throttle(for: .seconds(10), scheduler: RunLoop.main, latest: true)
-            .sink { events in
-//                print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 updatePostFeed 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
-                self.setUnorderedEvents(events: events)
-            }
-            .store(in: &subscriptions)
     }
     
     func updateUnreadCount() {
