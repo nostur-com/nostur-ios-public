@@ -58,9 +58,12 @@ struct ListView: View {
                     guard isAtTop != vmState.isAtTop else { return }
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
                         self.vmState.isAtTop = isAtTop
-                        if isAtTop {
+                        if indexPaths.contains(where: { $0.row == 0 }) {
                             vm.lvmCounter.count = 0
                         }
+//                        else if isAtTop {
+//                            vm.lvmCounter.count = 0
+//                        }
                     }
                 })
                 .onChange(of: vmState.vPostLeafs) { _ in
