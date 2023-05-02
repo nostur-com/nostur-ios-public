@@ -101,6 +101,7 @@ struct TabContainer: View {
         NavigationStack(path: $navPath) {
             if let vPost = tab.vPost {
                 PostDetailView(vPost: vPost, navTitleHidden: true)
+                    .padding(.top, 10)
                     .withNavigationDestinations()
             }
             else if let contact = tab.contact {
