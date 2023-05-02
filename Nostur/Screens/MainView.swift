@@ -40,13 +40,10 @@ struct MainView: View {
                     .toolbar {
                         if let account = self.account, !sm.showSidebar {
                             ToolbarItem(placement: .navigationBarLeading) {
-                                Button {
-                                    sm.showSidebar.toggle()
-                                } label: {
+                                Button { sm.showSidebar.toggle() } label: {
                                     PFP(pubkey: account.publicKey, pictureUrl: account.picture, size:30, isFollowing: true)
                                 }
                                 .accessibilityLabel("Account menu")
-//                                .offset(x: 15)
                             
                             }
                         }

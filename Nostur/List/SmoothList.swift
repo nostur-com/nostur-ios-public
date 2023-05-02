@@ -378,12 +378,12 @@ struct SmoothList: UIViewControllerRepresentable {
                 return
             }
             if scrollView.contentOffset.y > 150 {
-                print("IS AT TOP FALSE")
+//                print("IS AT TOP FALSE")
                 parent.onFinishedScrolling?((isAtTop:false, indexPaths:indexPaths)) // didFinish and isAtTop=false
                 
             }
             else {
-                print("IS AT TOP TRUE")
+//                print("IS AT TOP TRUE")
                 parent.onFinishedScrolling?((isAtTop:true, indexPaths:indexPaths)) // didFinish and isAtTop=true
                 
                 if (!parent.autoScroll) && (scrollView.contentOffset.y < SMOOTHLIST_AUTOSCROLL_OFFSET) {

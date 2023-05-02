@@ -203,14 +203,16 @@ final class NosturState : ObservableObject {
     }    
     
     func addBookmark(_ event:Event) {
-        guard account != nil else { return }
+        guard let account = account else { return }
         event.objectWillChange.send()
-        account!.addToBookmarks(event)
-        do {
-            try viewContext.save()
-        }
-        catch {
-            print("Could not add bookmark: \(error)")
+        account.addToBookmarks(event)
+        if viewContext.hasChanges {
+            do {
+                try viewContext.save()
+            }
+            catch {
+                print("Could not add bookmark: \(error)")
+            }
         }
     }
     

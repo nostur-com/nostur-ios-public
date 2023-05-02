@@ -55,7 +55,7 @@ final class SocketPool: ObservableObject {
     
     func addSocket(relayId:NSManagedObjectID, url:String, read:Bool = true, write: Bool = false) -> NewManagedClient {
         if (!sockets.keys.contains(relayId)) {
-            var urlURL:URL = URL(string: url) ?? URL(string:"wss://localhost:123456/invalid_relay_url")!
+            let urlURL:URL = URL(string: url) ?? URL(string:"wss://localhost:123456/invalid_relay_url")!
             var request = URLRequest(url: urlURL)
             //             request.setValue(["wamp"].joined(separator: ","), forHTTPHeaderField: "Sec-WebSocket-Protocol")
             

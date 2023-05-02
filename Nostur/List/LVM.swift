@@ -507,7 +507,8 @@ extension LVM {
             print("🏎️🏎️ \(Date.now) NOT VISIBLE, NOT RESTORING: \(self.subscriptionId)")
             return
         }
-//        print("🏎️🏎️ \(Date.now) restoreSubscription \(self.subscriptionId)")
+        
+        print("🏎️🏎️ \(Date.now) restoreSubscription \(self.subscriptionId)")
         let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 4)  // 4 hours  ago
         let since = (self.lvmState.vPostLeafs.first?.created_at ?? hoursAgo) - (60 * 15) // (take 15 minutes earlier to not mis out of sync posts)
         let ago = Date(timeIntervalSince1970: Double(since)).agoString
