@@ -792,7 +792,7 @@ extension Event {
         }
     }
     
-    static func saveEvent(event:NEvent, context:NSManagedObjectContext, relay:String? = nil) -> Event {
+    static func saveEvent(event:NEvent, context:NSManagedObjectContext, relay:String? = nil, skipRelatedUpdate:Bool = false) -> Event {
         if Thread.isMainThread {
             print("☠️☠️☠️☠️ saveEvent")
         }
@@ -1019,7 +1019,7 @@ extension Event {
         // Use new EventRelationsQueue to fix relations
         if (event.kind == .textNote) {
             
-            let awaitingEvents = EventRelationsQueue.shared.getAwaitingEvents()
+            let awaitingEvents = EventRelationsQueue.shared.getAwaitingBgEvents()
             
             awaitingEvents.forEach { waitingEvent in
                 if (waitingEvent.replyToId != nil) && (waitingEvent.replyToId == savedEvent.id) {

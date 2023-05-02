@@ -207,7 +207,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
             }
         }
         set {
-            connectionQueue.async {
+            connectionQueue.async(flags: .barrier) {
                 self._isConnecting = newValue
             }
         }
@@ -224,7 +224,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
             }
         }
         set {
-            connectionQueue.async {
+            connectionQueue.async(flags: .barrier) {
                 self._activeSubscriptions = newValue
             }
         }

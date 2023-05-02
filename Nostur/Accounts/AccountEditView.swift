@@ -300,7 +300,7 @@ extension AccountEditView {
                 print(newKind0EventSigned.wrappedEventJson())
                 
                 _ = Event.saveEvent(event: newKind0EventSigned, context: viewContext)
-                Contact.saveOrUpdateContact(event: newKind0EventSigned, context: viewContext)
+                Contact.saveOrUpdateContact(event: newKind0EventSigned, context: viewContext, skipRelatedUpdate: true)
                 DataProvider.shared().save()
                 
                 // broadcast to relays

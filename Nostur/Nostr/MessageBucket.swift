@@ -32,7 +32,7 @@ class ThreadSafeFIFOQueue<T> {
             }
         }
         set {
-            accessQueue.sync {
+            accessQueue.async(flags: .barrier) {
                 self.needsImport_ = newValue
             }
         }
@@ -45,7 +45,7 @@ class ThreadSafeFIFOQueue<T> {
             }
         }
         set {
-            accessQueue.sync {
+            accessQueue.async(flags: .barrier) {
                 self.isImporting_ = newValue
             }
         }
@@ -114,7 +114,7 @@ class ThreadSafeDeque<Element> {
 //    }
 
     func takeMessage() -> Element? {
-        return queue.sync {
+        return queue.sync(flags: .barrier) {
             return self.deque.popLast()
         }
     }

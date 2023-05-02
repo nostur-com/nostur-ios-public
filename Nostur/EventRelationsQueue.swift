@@ -20,11 +20,13 @@
 
 import Foundation
 import Combine
+import CoreData
 
 class EventRelationsQueue {
     
     static let shared = EventRelationsQueue()
     
+    private var ctx:NSManagedObjectContext
     private var waitingEvents = Set<Event>() // Contains events only from background context
     private var waitingEventsSubject = CurrentValueSubject<Set<Event>, Never>([])
     private var delayedRemove = PassthroughSubject<Event, Never>()
@@ -32,29 +34,35 @@ class EventRelationsQueue {
     private var subscriptions = Set<AnyCancellable>()
     
     init() {
+        ctx = DataProvider.shared().bg
         delayedRemove
 //            .delay(for: .seconds(5), scheduler: RunLoop.main)
             .delay(for: .seconds(5), scheduler: DispatchQueue.global())
             .sink { [weak self] event in
-                self?.waitingEvents.remove(event)
-                print("🟢🟢🟢 delayedRemove. now in queue: \(String(describing: self?.waitingEvents.count))")
+                self?.ctx.perform {
+                    self?.waitingEvents.remove(event)
+                }
+//                print("🟢🟢🟢 delayedRemove. now in queue: \(String(describing: self?.waitingEvents.count))")
             }
             .store(in: &subscriptions)
     }
     
+    
+    /// Adds event to the queue waiting for related data that is being fetched
+    /// - Parameter event: Event should be from .bg context, if not this function will fetch it from .bg using .objectID
     public func addAwaitingEvent(_ event:Event) {
         let ctx = DataProvider.shared().bg
         if event.managedObjectContext == ctx {
             ctx.perform {
                 self.waitingEvents.insert(event)
-                print("🟢🟢🟢 addAwaitingEvent. now in queue: \(self.waitingEvents.count)")
+//                print("🟢🟢🟢 addAwaitingEvent. now in queue: \(self.waitingEvents.count)")
             }
         }
         else {
             ctx.perform {
                 guard let privateEvent = ctx.object(with: event.objectID) as? Event else { return }
                 self.waitingEvents.insert(privateEvent)
-                print("🟢🟢🟢 addAwaitingEvent. now in queue: \(self.waitingEvents.count)")
+//                print("🟢🟢🟢 addAwaitingEvent. now in queue: \(self.waitingEvents.count)")
             }
         }
     }
@@ -64,12 +72,18 @@ class EventRelationsQueue {
         self.delayedRemove.send(event)
     }
     
-    public func getAwaitingEvents() -> Set<Event> {
-        self.waitingEvents
+    /// Returns events that are waiting for relations to be updated, like .contact, .contacts, .replyTo etc
+    /// - Returns: Events, these are background context (.bg)
+    public func getAwaitingBgEvents() -> Set<Event> {
+        return ctx.performAndWait {
+            return self.waitingEvents
+        }
     }
     
     public func removeAll() {
-        self.waitingEvents = Set<Event>()
+        ctx.perform {
+            self.waitingEvents = Set<Event>()
+        }
     }
 
 //    public func 

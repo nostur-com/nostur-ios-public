@@ -19,7 +19,6 @@ extension Contact {
 //        return request
 //        return NSFetchRequest<Contact>(entityName: "Contact")
 //    }
-    
     @nonobjc public class func fetchRequest() -> NSFetchRequest<Contact> {
         let fr = NSFetchRequest<Contact>(entityName: "Contact")
         fr.sortDescriptors = []
@@ -236,7 +235,7 @@ extension Contact : Identifiable {
         }
     }
 
-    static func saveOrUpdateContact(event:NEvent, context:NSManagedObjectContext) {
+    static func saveOrUpdateContact(event:NEvent, context:NSManagedObjectContext, skipRelatedUpdate:Bool = false) {
         if Thread.isMainThread {
             print("☠️☠️☠️☠️ saveOrUpdateContact")
         }
@@ -250,7 +249,7 @@ extension Contact : Identifiable {
         request.sortDescriptors = [NSSortDescriptor(key: "updated_at", ascending: false)]
         request.fetchLimit = 1
         
-        if let contact = try! context.fetch(request).first {
+        if let contact = try? context.fetch(request).first {
             
             // Received metadata is newer than stored Contact
             if contact.metadata_created_at < event.createdAt.timestamp {
@@ -267,7 +266,9 @@ extension Contact : Identifiable {
                 contact.metadata_created_at = Int64(event.createdAt.timestamp) // By Author (kind 0)
                 contact.updated_at = Int64(Date().timeIntervalSince1970) // By Nostur
                 print("🟢🟢 Existing Contact metadata updated")
-                updateRelatedEvents(contact, context: context)
+                if (!skipRelatedUpdate) {
+                    updateRelatedEvents(contact, context: context)
+                }
             }
             else {
                 // Received metadata is older than stored Contact
@@ -290,7 +291,9 @@ extension Contact : Identifiable {
             contact.metadata_created_at = Int64(event.createdAt.timestamp) // by author kind 0
             contact.updated_at = Int64(Date.now.timeIntervalSince1970) // by Nostur
             print("🟢🟢 New contact stored ")
-            updateRelatedEvents(contact, context: context)
+            if (!skipRelatedUpdate) {
+                updateRelatedEvents(contact, context: context)
+            }
         }
     }
     
@@ -299,16 +302,22 @@ extension Contact : Identifiable {
         PubkeyUsernameCache.shared.setObject(for: contact.pubkey, value: username)
         
         
-        let awaitingEvents = EventRelationsQueue.shared.getAwaitingEvents()
+        let awaitingEvents = EventRelationsQueue.shared.getAwaitingBgEvents()
         
         awaitingEvents.forEach { waitingEvent in
             if (waitingEvent.pubkey == contact.pubkey) {
-                waitingEvent.objectWillChange.send()
-                waitingEvent.contact = contact
+                if waitingEvent.contact == nil {
+                    waitingEvent.objectWillChange.send()
+                    waitingEvent.contact = contact
+                }
             }
             if let tagsSerialized = waitingEvent.tagsSerialized, tagsSerialized.contains(serializedP(contact.pubkey)) {
-                waitingEvent.objectWillChange.send()
-                waitingEvent.addToContacts(contact)
+                if let contacts = waitingEvent.contacts {
+                    if !contacts.contains(contact) {
+                        waitingEvent.objectWillChange.send()
+                        waitingEvent.addToContacts(contact)
+                    }
+                }
             }
             EventRelationsQueue.shared.removeAwaitingEvent(waitingEvent)
         }

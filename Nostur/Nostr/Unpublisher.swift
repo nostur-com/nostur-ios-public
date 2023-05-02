@@ -95,7 +95,7 @@ class Unpublisher: ObservableObject {
     private func sendToRelays(_ nEvent:NEvent) {
         // Always save event first
         if try! Event.fetchEvent(id: nEvent.id, context: viewContext) == nil {
-            let savedEvent = Event.saveEvent(event: nEvent, context: viewContext)
+            let savedEvent = Event.saveEvent(event: nEvent, context: viewContext, skipRelatedUpdate: true)
             
             // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
             if nEvent.kind == .reaction {
@@ -104,7 +104,9 @@ class Unpublisher: ObservableObject {
                 }
             }
             do {
-                try viewContext.save()
+                if viewContext.hasChanges {
+                    try viewContext.save()
+                }
                 // dont wait for background importer, show immediatly on screen (only (re)posts .kind)
                 if ([1,6,9802].contains(savedEvent.kind)) {
                     sendNotification(.newPostSaved, savedEvent)
