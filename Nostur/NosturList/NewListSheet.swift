@@ -59,7 +59,6 @@ struct NewListSheet: View {
 
 struct NewListSheet_Previews: PreviewProvider {
     static var previews: some View {
-        let newList = NosturList(context: PreviewFetcher.viewContext)
         NavigationStack {
             NewListSheet()
         }

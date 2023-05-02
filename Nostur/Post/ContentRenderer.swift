@@ -179,7 +179,7 @@ struct ContentRenderer: View { // VIEW things
                         let transformer = VPostTransformer(context, followingKeys: followingKeys) // Tranform in bg
                      
                         guard let privateEvent = context.object(with: event.objectID) as? Event else { return }
-                        var renderedElements = transformer.renderElements(privateEvent).0
+                        let renderedElements = transformer.renderElements(privateEvent).0
                         
                         let firstQuote = renderedElements.first(where: { element in
                             if case .note1 = element {

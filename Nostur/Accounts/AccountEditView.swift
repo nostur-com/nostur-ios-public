@@ -386,7 +386,7 @@ func uploadPFPImage(image: UIImage) -> AnyPublisher<String, Error> {
     // Create a profile pic, preserving aspect ratio, resize to 100x100
 
     let size = CGSize(width: 150, height: 150)
-    let rect = CGRect(origin: CGPoint.zero, size: size)
+//    let rect = CGRect(origin: CGPoint.zero, size: size)
     UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
     
 //    let path = UIBezierPath(ovalIn: rect)

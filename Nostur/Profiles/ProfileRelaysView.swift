@@ -63,7 +63,7 @@ struct ProfileRelaysView: View {
                                     
                                     
                                     try viewContext.save()
-                                    let managedSocket = try sp.addSocket(relayId: newRelay.objectID, url: url.description, read: true, write: true)
+                                    let managedSocket = sp.addSocket(relayId: newRelay.objectID, url: url.description, read: true, write: true)
                                     managedSocket.client.connect()
                                 }
                             }

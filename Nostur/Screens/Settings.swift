@@ -154,7 +154,7 @@ struct Settings: View {
                         do {
                             try viewContext.save()
                             if (relay.read || relay.write) {
-                                _ = try sp.addSocket(relayId: relay.objectID, url: relay.url!, read: relay.read, write: relay.write)
+                                _ = sp.addSocket(relayId: relay.objectID, url: relay.url!, read: relay.read, write: relay.write)
                             }
                         } catch {
                             let nsError = error as NSError

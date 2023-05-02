@@ -137,14 +137,11 @@ struct HighlightComposer: View {
 
 struct HighlightComposer_Previews: PreviewProvider {
     static var previews: some View {
-        if let account = PreviewFetcher.fetchAccount("9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e") {
-            
-            let example = NewHighlight(url: "https://nostur.com", selectedText: "This is amazing, this is some text that is being highlighted by Nostur highlightur", title:"Nostur - a nostr client for iOS/macOS")
-            
-            NavigationStack {
-                HighlightComposer(highlight: example)
-            }
-            .withPreviewEnvironment()
+        let example = NewHighlight(url: "https://nostur.com", selectedText: "This is amazing, this is some text that is being highlighted by Nostur highlightur", title:"Nostur - a nostr client for iOS/macOS")
+        
+        NavigationStack {
+            HighlightComposer(highlight: example)
         }
+        .withPreviewEnvironment()
     }
 }
