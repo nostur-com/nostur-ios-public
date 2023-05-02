@@ -110,14 +110,26 @@ class LVM: NSObject, ObservableObject {
     
     var didCatchup = false
     
+    var vPostLeafsOnScreenIds:Set<NSManagedObjectID> = [] // Should always be in sync with lvmState.vPostLeafs
+    
+    private func getAllObjectIds(_ vPosts:[VPost]) -> Set<NSManagedObjectID> {
+        return vPosts.reduce(Set<NSManagedObjectID>()) { partialResult, vPost in
+            partialResult.union(Set([vPost.objectID] + vPost.parentPosts.map { $0.objectID }))
+        }
+    }
+    
+    private func getAllObjectIds(_ events:[Event]) -> Set<NSManagedObjectID> {
+        return events.reduce(Set<NSManagedObjectID>()) { partialResult, event in
+            partialResult.union(Set([event.objectID] + event.parentEvents.map { $0.objectID }))
+        }
+    }
+    
     // MARK: FROM DB TO SCREEN STEP 3:
     private func processPostsInBackground(_ events:[Event]) { // events are from viewContext
         let context = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" ? DataProvider.shared().viewContext : DataProvider.shared().bg // Should be use shared().bg instead??
         
         // onScreenIds includes leafs and parents, so all posts.
-        let onScreenIds = self.lvmState.vPostLeafs.reduce(Set<NSManagedObjectID>()) { partialResult, vPost in
-            partialResult.union(Set([vPost.objectID] + vPost.parentPosts.map { $0.objectID }))
-        }
+        let onScreenIds = getAllObjectIds(self.lvmState.vPostLeafs)
         let currentVPostLeafs = self.lvmState.vPostLeafs // viewContext. First (0) is newest
         let followingKeys = NosturState.shared.followingPublicKeys
         
@@ -156,6 +168,8 @@ class LVM: NSObject, ObservableObject {
                 let leafThreads = self.renderLeafs(added) // Transforms seperate posts into threads, .id for each thread is leaf.id
                 
                 putEventsWithMissingContactsInEventRelationsQueue(leafThreadsToFlatVPosts(leafThreads))
+                
+                self.vPostLeafsOnScreenIds = getAllObjectIds(leafThreads)
                 
                 DispatchQueue.main.async {
                     self.lvmState.vPostLeafs = leafThreads
@@ -197,20 +211,27 @@ class LVM: NSObject, ObservableObject {
                     return partialResult + vPost.threadPostsCount
                 })
                 
-                DispatchQueue.main.async {
-                    // clean up a bit if needed
-                    if self.lvmState.vPostLeafs.count > LVM_MAX_VISIBLE && self.lvmState.isAtTop {
-                        // dont drop all
-                        let dropLimit = max(0,(self.lvmState.vPostLeafs.count - 10)) // also not negative
-                        let dropCount = min(newLeafThreads.count,dropLimit)
-                        self.lvmState.vPostLeafs = newLeafThreads + self.lvmState.vPostLeafs.dropLast(dropCount)
-                        print("Removed \(dropCount) from the end")
+                // clean up a bit if needed
+                if self.lvmState.vPostLeafs.count > LVM_MAX_VISIBLE && self.lvmState.isAtTop {
+                    // dont drop all
+                    let dropLimit = max(0,(self.lvmState.vPostLeafs.count - 10)) // also not negative
+                    let dropCount = min(newLeafThreads.count,dropLimit)
+                    let newVPostLeafs = newLeafThreads + self.lvmState.vPostLeafs.dropLast(dropCount)
+                    self.vPostLeafsOnScreenIds = getAllObjectIds(newVPostLeafs)
+                    DispatchQueue.main.async {
+                        self.lvmState.vPostLeafs = newVPostLeafs
                     }
-                    else {
+                    print("Removed \(dropCount) from the end")
+                }
+                else {
+                    self.vPostLeafsOnScreenIds = onScreenIds.union(getAllObjectIds(newLeafThreads))
+                    DispatchQueue.main.async {
                         self.lvmState.vPostLeafs.insert(contentsOf: newLeafThreads, at: 0)
                     }
-                    
-                    if !self.lvmState.isAtTop || !SettingsStore.shared.autoScroll {
+                }
+                
+                if !self.lvmState.isAtTop || !SettingsStore.shared.autoScroll {
+                    DispatchQueue.main.async {
                         self.lvmCounter.count += addedCount
                     }
                 }
@@ -402,6 +423,7 @@ class LVM: NSObject, ObservableObject {
             self.lvmState.restoreScrollToAnchor = ls?.lastAppearedAtAnchor ?? "BOTTOM"
 //            print("🟢🟢 lastAppeared.id on init: \(self.lastAppeared?.id ?? "")")
         }
+        print("🟢🟢🟢🟢🟢 performLocalFetch() - from init()")
         self.performLocalFetch()
         self.fetchFeedTimer?.invalidate()
         self.fetchFeedTimer = Timer.scheduledTimer(withTimeInterval: FETCH_FEED_INTERVAL, repeats: true) { [weak self] _ in
@@ -531,6 +553,7 @@ extension LVM {
     func performLocalFetchAfterImport() {
         receiveNotification(.newEventsInDatabase)
             .sink { [weak self] _ in
+                print("🟢🟢🟢🟢🟢 performLocalFetch() - from .newEventsInDatabase")
                 self?.performLocalFetch()
             }
             .store(in: &subscriptions)
@@ -881,6 +904,7 @@ extension LVM: NSFetchedResultsControllerDelegate {
     func performLocalFetch(refreshInBackground:Bool = false) {
 //        print("🏎️🏎️ \(Date.now) performLocalFetch \(self.subscriptionId)")
         if let mostRecent = self.lvmState.vPostLeafs.first {
+            print("🟢🟢🟢🟢🟢🟢 from mostRecent \(mostRecent.id)")
             let fr = Event.postsByPubkeys(pubkeys, mostRecent: mostRecent.event)
             
             if viewIsVisible || refreshInBackground {
@@ -889,6 +913,7 @@ extension LVM: NSFetchedResultsControllerDelegate {
             }
         }
         else {
+            print("🟢🟢🟢🟢🟢🟢 from lastAppearedCreatedAt \(self.lastAppeared?.created_at ?? 0)")
             let fr = Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: self.lastAppeared?.created_at ?? 0)
             
             if viewIsVisible || refreshInBackground {
@@ -909,16 +934,25 @@ extension LVM: NSFetchedResultsControllerDelegate {
     // MARK: FROM DB TO SCREEN STEP 2: FIRST FILTER PASS, GETTING PARENTS AND LIMIT, NOT ON SCREEN YET
     func setUnorderedEvents(events:[Event]) {
 //        guard events.count > 0 else { return }
-//        print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 setUnorderedEvents \(events.count) 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
+        var newUnrenderedEvents:[Event]
+        
         switch (self.state) {
             case .AWAITING_FIRST_FETCH: // Show last X (FORCED CUTOFF)
-                self.unrenderedEvents = events.filter(onlyRootOrReplyingToFollower)
+                
+                newUnrenderedEvents = events.filter(onlyRootOrReplyingToFollower)
                     .prefix(LVM_MAX_VISIBLE)
                     .map {
                         $0.parentEvents = Event.getParentEvents($0)
                         return $0
                     }
+                let newObjectIds = getAllObjectIds(newUnrenderedEvents)
+                let newCount = newObjectIds.subtracting(vPostLeafsOnScreenIds).count
+                if newCount > 0 {
+                    self.unrenderedEvents = newUnrenderedEvents
+                    print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 setUnorderedEvents \(newUnrenderedEvents.count) new: \(newCount) state:COMPLETED_FIRST_FETCH 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
+                }
                 self.lvmState.state = .COMPLETED_FIRST_FETCH
+                
                 
             case .AWAITING_RESTORED_FETCH: // Show last read, until end
                 // show last 100 if LR is within it
@@ -926,38 +960,54 @@ extension LVM: NSFetchedResultsControllerDelegate {
                 let lastAppearedIndex = self.lastAppeared != nil ? self.unrenderedEvents.firstIndex(where: { $0.id == self.lastAppearedId }) ?? -1 : -1
                 
                 if (lastAppearedIndex == -1) { // LAST APPEARED NOT IN EVENTS (FORCED CUTOFF)
-                    self.unrenderedEvents = events.filter(onlyRootOrReplyingToFollower)
+                    newUnrenderedEvents = events.filter(onlyRootOrReplyingToFollower)
                         .prefix(LVM_MAX_VISIBLE)
                         .map {
                             $0.parentEvents = Event.getParentEvents($0)
                             return $0
                         }
-//                        .sorted(by: { $0.created_at < $1.created_at } )
+                    let newObjectIds = getAllObjectIds(newUnrenderedEvents)
+                    let newCount = newObjectIds.subtracting(vPostLeafsOnScreenIds).count
+                    if newCount > 0 {
+                        self.unrenderedEvents = newUnrenderedEvents
+                        print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 setUnorderedEvents \(newUnrenderedEvents.count) new: \(newCount) state:COMPLETED_FIRST_FETCH 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
+                    }
                     self.state = .COMPLETED_FIRST_FETCH // POST NOT IN LIST, SO DONT RESTORE SCROLL.
                 }
-                if (lastAppearedIndex < LVM_MAX_VISIBLE) {
+                else if (lastAppearedIndex < LVM_MAX_VISIBLE) {
                     self.state = .AWAITING_RESTORE_SCROLL // POST IS IN LIST, SO WE CAN RESTORE SCROLL. (FORCED CUTOFF)
-                    self.unrenderedEvents = events.filter(onlyRootOrReplyingToFollower)
+                    
+                    newUnrenderedEvents = events.filter(onlyRootOrReplyingToFollower)
                         .prefix(LVM_MAX_VISIBLE)
                         .map {
                             $0.parentEvents = Event.getParentEvents($0)
                             return $0
                         }
-//                        .sorted(by: { $0.created_at < $1.created_at } )
+                    let newObjectIds = getAllObjectIds(newUnrenderedEvents)
+                    let newCount = newObjectIds.subtracting(vPostLeafsOnScreenIds).count
+                    if newCount > 0 {
+                        self.unrenderedEvents = newUnrenderedEvents
+                        print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 setUnorderedEvents \(newUnrenderedEvents.count) new: \(newCount) state:AWAITING_RESTORE_SCROLL 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
+                    }
                 }
                 else {
                     self.state = .AWAITING_RESTORE_SCROLL // POST IN LIST, BUT OUTSIDE MAX VISIBLE.. TODO: HANDLE THIS. NO CUTOFF NOW
-                    self.unrenderedEvents = events.filter(onlyRootOrReplyingToFollower)
+                    newUnrenderedEvents = events.filter(onlyRootOrReplyingToFollower)
                         .map {
                             $0.parentEvents = Event.getParentEvents($0)
                             return $0
                         }
-//                        .sorted(by: { $0.created_at < $1.created_at } )
+                    let newObjectIds = getAllObjectIds(newUnrenderedEvents)
+                    let newCount = newObjectIds.subtracting(vPostLeafsOnScreenIds).count
+                    if newCount > 0 {
+                        self.unrenderedEvents = newUnrenderedEvents
+                        print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 setUnorderedEvents \(newUnrenderedEvents.count) new: \(newCount) state:AWAITING_RESTORE_SCROLL 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
+                    }
                 }
                 
             default:
                 let lastCreatedAt = self.lvmState.vPostLeafs.last?.created_at ?? 0 // SHOULD CHECK ONLY LEAFS BECAUSE ROOTS CAN BE VERY OLD
-                self.unrenderedEvents = events
+                newUnrenderedEvents = events
                     .filter { $0.created_at > lastCreatedAt } // skip all older than first on screen (check LEAFS only)
                     .filter(onlyRootOrReplyingToFollower)
                     .prefix(LVM_MAX_VISIBLE * 2)
@@ -965,6 +1015,14 @@ extension LVM: NSFetchedResultsControllerDelegate {
                         $0.parentEvents = Event.getParentEvents($0)
                         return $0
                     }
+
+                let newObjectIds = getAllObjectIds(newUnrenderedEvents)
+                let newCount = newObjectIds.subtracting(vPostLeafsOnScreenIds).count
+                if newCount > 0 {
+                    self.unrenderedEvents = newUnrenderedEvents
+                    print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 setUnorderedEvents \(newUnrenderedEvents.count) new: \(newCount) state:default 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
+                }
+                
                 return
         }
     }
