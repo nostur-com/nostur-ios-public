@@ -458,7 +458,7 @@ class LVM: NSObject, ObservableObject {
             DispatchQueue.main.async {
                 // Why not just continue from first (newest) on screen?
                 let since = (self.lvmState.vPostLeafs.first?.created_at ?? hoursAgo) - (60 * 15) // (take 15 minutes earlier to not mis out of sync posts)
-                
+                let ago = Date(timeIntervalSince1970: Double(since)).agoString
                 
                 if (!self.didCatchup) {
                     // THIS SUBSCRIPTION WILL STAY ACTIVE:
@@ -466,11 +466,11 @@ class LVM: NSObject, ObservableObject {
                     fetchEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: self.subscriptionId)
                 
                     
-                    // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
-                    let ago = Date(timeIntervalSince1970: Double(since)).agoString
                     
+                    
+                    // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
                     DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(8)) {
-                        fetchEvents(pubkeysString: self.pubkeysPrefixString, amount: 5000, since: since, subscriptionId: "\(self.subscriptionId)-CATCHUP-\(ago)")
+                        fetchEvents(pubkeysString: self.pubkeysPrefixString, amount: 5000, since: since, subscriptionId: "\(self.subscriptionId)-SINCE-\(ago)")
                         fetchProfiles(pubkeys: self.pubkeys, subscriptionId: "Profiles")
                     }
                     self.didCatchup = true
@@ -478,7 +478,12 @@ class LVM: NSObject, ObservableObject {
                 else {
                     // THIS SUBSCRIPTION WILL STAY ACTIVE:
 //                    print("🏎️🏎️ \(Date.now) fetchFeedTimerNexTick - fetchEvents")
-                    fetchEvents(pubkeysString: self.pubkeysPrefixString, since: since, subscriptionId: self.subscriptionId)
+                    // "since" breaks realtime events? no new posts after received all...
+                    fetchEvents(pubkeysString: self.pubkeysPrefixString, since: since, subscriptionId: "\(self.subscriptionId)-SINCE-\(ago)")
+                    
+                    DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(8)) {
+                        fetchEvents(pubkeysString: self.pubkeysPrefixString, amount: 20, subscriptionId: "\(self.subscriptionId)")
+                    }
                 }
 //                 cutOff doesnt work well, since hits with some time ago limit (500)?
 //                fetchEvents(pubkeys: self.pubkeys, subscriptionId: self.id)
@@ -492,13 +497,20 @@ extension LVM {
     
     func restoreSubscription() {
         guard viewIsVisible else {
-//            print("🏎️🏎️ \(Date.now) NOT VISIBLE, NOT RESTORING: \(self.subscriptionId)")
+            print("🏎️🏎️ \(Date.now) NOT VISIBLE, NOT RESTORING: \(self.subscriptionId)")
             return
         }
 //        print("🏎️🏎️ \(Date.now) restoreSubscription \(self.subscriptionId)")
         let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 4)  // 4 hours  ago
         let since = (self.lvmState.vPostLeafs.first?.created_at ?? hoursAgo) - (60 * 15) // (take 15 minutes earlier to not mis out of sync posts)
-        fetchEvents(pubkeysString: self.pubkeysPrefixString, since: since, subscriptionId: self.subscriptionId)
+        let ago = Date(timeIntervalSince1970: Double(since)).agoString
+        fetchEvents(pubkeysString: self.pubkeysPrefixString, since: since, subscriptionId: "\(self.subscriptionId)-SINCE-\(ago)")
+        print("🏎️🏎️ \(Date.now) restoreSubscription \(self.subscriptionId)-SINCE-\(ago)")
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(8)) {
+            fetchEvents(pubkeysString: self.pubkeysPrefixString, amount: 20, subscriptionId: "\(self.subscriptionId)")
+            print("🏎️🏎️ \(Date.now) restoreSubscription + 8 seconds \(self.subscriptionId)")
+        }
     }
     
     func addSubscriptions() {
