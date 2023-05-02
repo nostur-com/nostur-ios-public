@@ -65,6 +65,19 @@ extension Event {
         (contacts?.count ?? 0) < fastTags.filter({ $0.0 == "p" }).count
     }
     
+    var reactionTo_:Event? {
+        guard reactionTo == nil else { return reactionTo }
+        guard let reactionToId = reactionToId else { return nil }
+        guard let ctx = managedObjectContext else { return nil }
+        if let found = try? Event.fetchEvent(id: reactionToId, context: ctx) {
+//            DispatchQueue.main.async {
+                self.reactionTo = found
+//            }
+            return found
+        }
+        return nil
+    }
+    
     var contact_:Contact? {
         guard contact == nil else { return contact }
         guard let ctx = managedObjectContext else { return nil }

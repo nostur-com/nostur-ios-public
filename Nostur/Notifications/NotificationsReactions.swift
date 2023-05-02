@@ -119,7 +119,29 @@ struct NotificationsReactions: View, Equatable {
                     ns.account?.lastSeenReactionCreatedAt = first.created_at
                 }
                 DataProvider.shared().save()
+                
+                fixReactionsWithMissingRelation()
             }
+        }
+    }
+    
+    func fixReactionsWithMissingRelation() {
+        let mr = Event.fetchRequest()
+        mr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        mr.predicate = NSPredicate(format: "kind == 7 AND tagsSerialized CONTAINS %@ AND reactionTo == nil", serializedP(pubkey))
+        
+        Task {
+            let ctx = DataProvider.shared().bg
+            DataProvider.shared().bg.perform {
+                if let danglingReactions = try? ctx.fetch(mr) {
+                    danglingReactions
+//                        .filter { $0.reactionTo == nil }
+                        .forEach { reaction in
+                            _ = reaction.reactionTo_ // this lazy load fixes the relation
+                        }
+                }
+            }
+            
         }
     }
     
