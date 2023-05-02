@@ -62,22 +62,25 @@ struct ReactionRow: View {
     var body: some View {
         HStack(alignment: .top) {
             // HMM contact_ is repeatingly fetching db?
-            PFP(pubkey: reaction.pubkey, pictureUrl: reaction.contact_?.picture, isFollowing: ns.followingPublicKeys.contains(reaction.pubkey))
+            
+            let contact_ = reaction.contact_
+            
+            PFP(pubkey: reaction.pubkey, pictureUrl: contact_?.picture, isFollowing: ns.followingPublicKeys.contains(reaction.pubkey))
             VStack(alignment: .leading) {
                 HStack {
                     VStack(alignment: .leading) {
                         HStack(spacing:3) {
-                            Text(reaction.contact_?.authorName ?? "").font(.headline).foregroundColor(.primary)
+                            Text(contact_?.authorName ?? "").font(.headline).foregroundColor(.primary)
                                 .lineLimit(1)
                             
-                            if (reaction.contact_?.nip05veried ?? false) {
+                            if (contact_?.nip05veried ?? false) {
                                 Image(systemName: "checkmark.seal.fill")
                                     .font(.system(size: 14))
                                     .foregroundColor(Color("AccentColor"))
                             }
                         
                             Group {
-                                Text("@\(reaction.contact_?.username ?? reaction.authorKey )").layoutPriority(1)
+                                Text("@\(contact_?.username ?? reaction.authorKey )").layoutPriority(1)
                                 Text(" · ") //
                                 Ago(reaction.date).layoutPriority(1) //
                             }

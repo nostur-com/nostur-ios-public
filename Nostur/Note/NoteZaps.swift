@@ -52,7 +52,7 @@ struct NoteZapRow: View {
     @AppStorage("devToggle") var devToggle:Bool = false
     
     // THE ZAP EVENT (FROM CUSTODIAL ZAP PROVIDER)
-    var event:Event
+    @ObservedObject var event:Event
     
     var fiatPrice:String {
         get {
@@ -63,7 +63,9 @@ struct NoteZapRow: View {
     var body: some View {
         
         HStack(alignment: .top) {
-            PFP(pubkey: event.zapFromRequest?.pubkey ?? "WTF", pictureUrl: event.zapFromRequest?.contact?.picture, isFollowing: ns.followingPublicKeys.contains(event.zapFromRequest?.pubkey ?? "WTF"))
+            let contact_ = event.zapFromRequest?.contact_
+            
+            PFP(pubkey: event.zapFromRequest?.pubkey ?? "WTF", pictureUrl: contact_?.picture, isFollowing: ns.followingPublicKeys.contains(event.zapFromRequest?.pubkey ?? "WTF"))
                 .onTapGesture {
                     if let pubkey = event.zapFromRequest?.pubkey {
                         navigateTo(ContactPath(key: pubkey))
@@ -73,17 +75,17 @@ struct NoteZapRow: View {
                 HStack {
                     VStack(alignment: .leading) {
                         HStack(spacing:3) {
-                            Text(event.zapFromRequest?.contact?.authorName ?? "").font(.headline).foregroundColor(.primary)
+                            Text(contact_?.authorName ?? "").font(.headline).foregroundColor(.primary)
                                 .lineLimit(1)
 
-                            if (event.zapFromRequest?.contact?.nip05veried ?? false) {
+                            if (contact_?.nip05veried ?? false) {
                                 Image(systemName: "checkmark.seal.fill")
                                     .font(.system(size: 14))
                                     .foregroundColor(Color("AccentColor"))
                             }
 
                             Group {
-                                Text("@\(event.zapFromRequest?.contact?.username ?? event.zapFromRequest?.authorKey ?? "?")").layoutPriority(1)
+                                Text("@\(contact_?.username ?? event.zapFromRequest?.authorKey ?? "?")").layoutPriority(1)
                                 Text(" · ") //
                                 Ago(event.date).layoutPriority(1) //
                             }

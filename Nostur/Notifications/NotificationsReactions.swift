@@ -50,8 +50,9 @@ struct NotificationsReactions: View, Equatable {
         myNotesReactedTo.compactMap { VPostTransformer.shared.toVPost($0, skipParents: true, plainText: true) }
     }
     
-    func reactionsForNote(_ note:Event) -> [Event] {
-        reactions.compactMap {  $0.reactionTo == note ? $0 : nil }
+    func reactionsForNote(_ event:Event) -> [Event] {
+        reactions.compactMap {  $0.reactionToId == event.id ? $0 : nil }
+//        reactions.compactMap {  $0.reactionTo == note ? $0 : nil }
     }
     
     init(pubkey:String, blockedPubkeys:[String], context:NSManagedObjectContext) {
