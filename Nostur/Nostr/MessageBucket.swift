@@ -59,7 +59,7 @@ class ThreadSafeFIFOQueue<T> {
 
     func takeMessage() -> T? {
         var element: T?
-        accessQueue.sync {
+        accessQueue.sync(flags: .barrier) {
             guard !self.queue.isEmpty else { return }
             element = self.queue.removeFirst()
         }

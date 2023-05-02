@@ -222,8 +222,10 @@ class Importer {
                             do {
                                 try context.save()
 //                                print("🏎️🏎️ \(Date.now) 💾 Saved \(count)/\(forImportsCount)")
+                                let mainQueueCount = count
+                                let mainQueueForImportsCount = forImportsCount
                                 DispatchQueue.main.async {
-                                    sendNotification(.listStatus, "Processing \(count)/\(forImportsCount) items...")
+                                    sendNotification(.listStatus, "Processing \(mainQueueCount)/\(mainQueueForImportsCount) items...")
                                     sendNotification(.newEventsInDatabase)
                                 }
                             }
