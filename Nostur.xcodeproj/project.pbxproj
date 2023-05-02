@@ -73,7 +73,6 @@
 		1F4AFC4829733E2400CC1F90 /* Event+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4AFC4629733E2400CC1F90 /* Event+CoreDataProperties.swift */; };
 		1F517BEB29CDB29E00F7A97F /* GIFView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F517BEA29CDB29E00F7A97F /* GIFView.swift */; };
 		1F517BEE29CDB2FE00F7A97F /* FLAnimatedImage in Frameworks */ = {isa = PBXBuildFile; productRef = 1F517BED29CDB2FE00F7A97F /* FLAnimatedImage */; };
-		1F533E2F29D2F3B100748438 /* VideoPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F533E2E29D2F3B100748438 /* VideoPlayer.swift */; };
 		1F533E3329D35FD300748438 /* TextRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F533E3229D35FD300748438 /* TextRenderer.swift */; };
 		1F539DAB299D4B2A00F3B8CA /* NewAccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F539DAA299D4B2900F3B8CA /* NewAccountSheet.swift */; };
 		1F539DAD299D52E200F3B8CA /* AddExistingAccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F539DAC299D52E200F3B8CA /* AddExistingAccountSheet.swift */; };
@@ -179,6 +178,7 @@
 		1FB130BD29C1930A004AC98D /* PostDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB130BC29C1930A004AC98D /* PostDetailView.swift */; };
 		1FB130BF29C1A314004AC98D /* QuotedNoteFragmentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB130BE29C1A314004AC98D /* QuotedNoteFragmentView.swift */; };
 		1FB38B6129E29CEC00B85156 /* ProfilePicPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB38B6029E29CEC00B85156 /* ProfilePicPicker.swift */; };
+		1FB3FBA52A01673F0018CBD7 /* SingleVideoViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB3FBA42A01673F0018CBD7 /* SingleVideoViewer.swift */; };
 		1FB448BE2965F3D000038671 /* NosturApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB448BD2965F3D000038671 /* NosturApp.swift */; };
 		1FB448C52965F3D000038671 /* NosturTabsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB448C42965F3D000038671 /* NosturTabsView.swift */; };
 		1FB448CB2965F3D200038671 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1FB448CA2965F3D200038671 /* Preview Assets.xcassets */; };
@@ -364,7 +364,6 @@
 		1F4AFC4529733E2400CC1F90 /* Event+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Event+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1F4AFC4629733E2400CC1F90 /* Event+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Event+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1F517BEA29CDB29E00F7A97F /* GIFView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GIFView.swift; sourceTree = "<group>"; };
-		1F533E2E29D2F3B100748438 /* VideoPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayer.swift; sourceTree = "<group>"; };
 		1F533E3229D35FD300748438 /* TextRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextRenderer.swift; sourceTree = "<group>"; };
 		1F539DAA299D4B2900F3B8CA /* NewAccountSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewAccountSheet.swift; sourceTree = "<group>"; };
 		1F539DAC299D52E200F3B8CA /* AddExistingAccountSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddExistingAccountSheet.swift; sourceTree = "<group>"; };
@@ -464,6 +463,7 @@
 		1FB130BC29C1930A004AC98D /* PostDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostDetailView.swift; sourceTree = "<group>"; };
 		1FB130BE29C1A314004AC98D /* QuotedNoteFragmentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuotedNoteFragmentView.swift; sourceTree = "<group>"; };
 		1FB38B6029E29CEC00B85156 /* ProfilePicPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePicPicker.swift; sourceTree = "<group>"; };
+		1FB3FBA42A01673F0018CBD7 /* SingleVideoViewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleVideoViewer.swift; sourceTree = "<group>"; };
 		1FB448BA2965F3D000038671 /* Nostur.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Nostur.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1FB448BD2965F3D000038671 /* NosturApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturApp.swift; sourceTree = "<group>"; };
 		1FB448C42965F3D000038671 /* NosturTabsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturTabsView.swift; sourceTree = "<group>"; };
@@ -605,8 +605,8 @@
 				1FB130B429C0E8D8004AC98D /* ReplyingToFragmentView.swift */,
 				1FB130B629C0F03B004AC98D /* ReplyingToUsernamesBuilder.swift */,
 				1F0088EA29D735080016F111 /* ContentRenderer.swift */,
-				1F533E2E29D2F3B100748438 /* VideoPlayer.swift */,
 				1FF8BD1129D41BBD00C8C96A /* SingleMediaViewer.swift */,
+				1FB3FBA42A01673F0018CBD7 /* SingleVideoViewer.swift */,
 			);
 			path = Post;
 			sourceTree = "<group>";
@@ -1323,7 +1323,6 @@
 				1FC268C729A2CC4F00A2B577 /* NoteReactions.swift in Sources */,
 				1FCA273E299A6A1A00298881 /* LightningButton.swift in Sources */,
 				1FC2DFEB29A8FBA100C8A9DA /* DetailContainer.swift in Sources */,
-				1F533E2F29D2F3B100748438 /* VideoPlayer.swift in Sources */,
 				1FB448C52965F3D000038671 /* NosturTabsView.swift in Sources */,
 				1F3E134F29C87BF400D076EA /* GifImageView.swift in Sources */,
 				1F756531296AE4260078474E /* RelaysView.swift in Sources */,
@@ -1434,6 +1433,7 @@
 				1F88490F29B537B400145340 /* URL.swift in Sources */,
 				1FB130B529C0E8D8004AC98D /* ReplyingToFragmentView.swift in Sources */,
 				1FBFE8E629AC74B50039F992 /* NostrRank.swift in Sources */,
+				1FB3FBA52A01673F0018CBD7 /* SingleVideoViewer.swift in Sources */,
 				1F45C7E829EE8FF100F58772 /* BannerPicPicker.swift in Sources */,
 				1FD49733297FCB5E0084F14E /* PreviewHelper.swift in Sources */,
 				1FB4D3FD29BAF1A6004DB537 /* ListView.swift in Sources */,

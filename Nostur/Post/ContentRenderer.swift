@@ -8,8 +8,6 @@
 import SwiftUI
 import Nuke
 import NukeUI
-import NukeVideo
-import AVFoundation
 import Combine
 
 // Renders embeds (VIEWS), not links (in TEXT)
@@ -19,7 +17,6 @@ struct ContentRenderer: View { // VIEW things
     let fullWidth:Bool
     let availableWidth:CGFloat
     @ObservedObject var event:Event
-    @State var isPlaying = false
     @State var renderedElements:[MarkdownElement]
     @State var subscriptions = Set<AnyCancellable>()
     
@@ -83,72 +80,7 @@ struct ContentRenderer: View { // VIEW things
                         LightningInvoice(invoice: text)
                             .padding(.horizontal, fullWidth ? 10 : 0)
                     case .video(let url):
-                        LazyImage(url: url) { state in
-                            if let container = state.imageContainer {
-                                if let type = container.type, type.isVideo, let asset = container.userInfo[.videoAssetKey] as? AVAsset {
-                                    
-                                    if let videoSize = getVideoDimensions(asset: asset) {
-                                        let scaledWidth = availableWidth / videoSize.width
-                                        let scaledHeight = videoSize.height * scaledWidth
-                                        
-                                        VPV(asset: asset, isPlaying: $isPlaying)
-                                            .onTapGesture {
-                                                isPlaying.toggle()
-                                            }
-                                            .frame(height: scaledHeight)
-                                            .background(Color("LightGray"))
-                                            .onAppear {
-                                                configureAudioSession()
-                                            }
-                                            .onDisappear {
-                                                isPlaying = false
-                                            }
-                                            .background(Color.black)
-                                            .overlay(
-                                                Button(action: {
-                                                    if isPlaying {
-                                                        isPlaying = false
-                                                    } else {
-                                                        sendNotification(.startPlayingVideo, url.absoluteString)
-                                                        isPlaying = true
-                                                    }
-                                                }) {
-                                                    Image(systemName: isPlaying ? "pause.circle" : "play.circle")
-                                                        .resizable()
-                                                        .scaledToFit()
-                                                        .frame(width: 75, height: 75)
-//                                                        .padding(80)
-                                                }.opacity(isPlaying ? 0 : 1)
-                                            )
-                                            .onReceive(receiveNotification(.startPlayingVideo)) { notification in
-                                                let otherUrl = notification.object as! String
-                                                if url.absoluteString != otherUrl {
-                                                    isPlaying = false
-                                                }
-                                            }
-                                    }
-                                    else {
-                                        Label("Failed to load video", systemImage: "exclamationmark.triangle.fill")
-                                            .centered()
-                                    }
-                                }
-                                else if state.isLoading {
-                                    ProgressView()
-                                        .centered()
-                                }
-                            }
-                            else if state.isLoading {
-                                ProgressView()
-                                    .centered()
-                            }
-                            else {
-                                Label("Failed to load video", systemImage: "exclamationmark.triangle.fill")
-                                    .centered()
-                            }
-                        }
-                        .pipeline(ImageProcessing.shared.video)
-                        .frame(minHeight: 250)
-                        .background(Color("LightGray"))
+                        SingleVideoViewer(url: url, pubkey: vPost.event.pubkey, videoWidth: availableWidth, isFollowing:vPost.following)
                     case .image(let url):
                         SingleMediaViewer(url: url, pubkey: vPost.event.pubkey, imageWidth: availableWidth, isFollowing: vPost.following, fullWidth: fullWidth)
                             .padding(.vertical, 5)
@@ -217,15 +149,6 @@ struct ContentRenderer: View { // VIEW things
                 .store(in: &subscriptions)
         }
     }
-    
-    func configureAudioSession() {
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
-            try AVAudioSession.sharedInstance().setActive(true)
-        } catch {
-            print("Failed to configure audio session: \(error.localizedDescription)")
-        }
-    }
 }
 
 struct RowContentRenderer_Previews: PreviewProvider {
@@ -241,44 +164,6 @@ struct RowContentRenderer_Previews: PreviewProvider {
                     ContentRenderer(vPost: vPost, availableWidth: UIScreen.main.bounds.width)
                 }
             }
-        }
-    }
-}
-
-
-struct VPV: UIViewRepresentable {
-    @State var asset:AVAsset
-    @State var videoPlayerView:VideoPlayerView
-    @Binding var isPlaying:Bool
-    
-    init(asset: AVAsset, isPlaying:Binding<Bool>) {
-        self.videoPlayerView = VideoPlayerView()
-        self.asset = asset
-        _isPlaying = isPlaying
-    }
-    
-    func makeUIView(context: Context) -> UIView {
-        videoPlayerView.asset = asset
-        //        videoPlayerView.playerLayer.player?.
-        if (isPlaying) {
-            videoPlayerView.play()
-            videoPlayerView.playerLayer.player?.isMuted = false
-        }
-        else {
-            videoPlayerView.playerLayer.player?.pause()
-        }
-        return videoPlayerView
-    }
-    
-    func updateUIView(_ uiView: UIView, context: Context) {
-        if (isPlaying) {
-            videoPlayerView.play()
-            videoPlayerView.playerLayer.player?.isMuted = false
-        }
-        else {
-            videoPlayerView.playerLayer.player?.pause()
-            videoPlayerView.playerLayer.player?.isMuted = true
-            
         }
     }
 }
@@ -373,26 +258,5 @@ struct Kind1ById: View {
                 }
         }
     }
-}
-
-func getVideoDimensions(asset: AVAsset) -> CGSize? {
-    // Get the video track
-    guard let videoTrack = asset.tracks(withMediaType: .video).first else {
-        return nil
-    }
-
-    // Get the natural size of the video track
-    let naturalSize = videoTrack.naturalSize
-
-    // Get the preferred transform to handle any video orientation
-    let preferredTransform = videoTrack.preferredTransform
-
-    // Calculate the corrected video dimensions considering the orientation
-    let correctedSize = CGSize(
-        width: abs(CGFloat(preferredTransform.a) * naturalSize.width + CGFloat(preferredTransform.c) * naturalSize.height),
-        height: abs(CGFloat(preferredTransform.b) * naturalSize.width + CGFloat(preferredTransform.d) * naturalSize.height)
-    )
-
-    return correctedSize
 }
 

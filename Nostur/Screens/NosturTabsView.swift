@@ -8,6 +8,7 @@
 import SwiftUI
 import CoreData
 import Nuke
+import AVFoundation
 
 struct NosturTabsView: View {
     @StateObject private var dim = DIMENSIONS()
@@ -75,6 +76,16 @@ struct NosturTabsView: View {
         }
         .onAppear {
             ImageDecoderRegistry.shared.register(ImageDecoders.Video.init)
+            configureAudioSession()
+        }
+    }
+    
+    func configureAudioSession() {
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            print("Failed to configure audio session: \(error.localizedDescription)")
         }
     }
     
