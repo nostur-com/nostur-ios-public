@@ -496,6 +496,13 @@ class LVM: NSObject, ObservableObject {
 extension LVM {
     
     func restoreSubscription() {
+        // Always try to restore timer
+        self.fetchFeedTimer?.invalidate()
+        self.fetchFeedTimer = Timer.scheduledTimer(withTimeInterval: FETCH_FEED_INTERVAL, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            self.fetchFeedTimerNextTick()
+        }
+        
         guard viewIsVisible else {
             print("🏎️🏎️ \(Date.now) NOT VISIBLE, NOT RESTORING: \(self.subscriptionId)")
             return
