@@ -81,7 +81,7 @@ struct NosturTabButton: View {
         .padding(.trailing, 23)
         .padding(.vertical, 10)
         .padding(.leading, 5)
-        .background(isSelected ? Color.accentColor.opacity(0.1) : .clear)
+        .background(isSelected ? Color.accentColor.opacity(0.25) : .clear)
         .contentShape(Rectangle())
         .onHover { over in
             isHoveringTab = over
@@ -191,6 +191,7 @@ struct TabbedDetailContainer: View {
                                     }
                                     tm.tabs.remove(at: index)
                                 }, label: tm.tabs[safe: index] != nil ? "\(tabName(tab: tm.tabs[safe: index]!))" : "?")
+                            .padding(.leading, index == 0 ? 30 : 0)
                             .id(tm.tabs[safe: index]?.id ?? UUID())
                             Divider().frame(height: 30).opacity(index == tm.tabs.count-1 ? 0 : 1)
                         }
