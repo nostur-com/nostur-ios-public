@@ -236,7 +236,7 @@ extension Contact : Identifiable {
     }
 
     static func saveOrUpdateContact(event:NEvent, context:NSManagedObjectContext, skipRelatedUpdate:Bool = false) {
-        if Thread.isMainThread {
+        if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
             print("☠️☠️☠️☠️ saveOrUpdateContact")
         }
         let decoder = JSONDecoder()
@@ -265,7 +265,7 @@ extension Contact : Identifiable {
                 contact.lud06 = metaData.lud06
                 contact.metadata_created_at = Int64(event.createdAt.timestamp) // By Author (kind 0)
                 contact.updated_at = Int64(Date().timeIntervalSince1970) // By Nostur
-                print("🟢🟢 Existing Contact metadata updated")
+//                print("🟢🟢 Existing Contact metadata updated")
                 if (!skipRelatedUpdate) {
                     updateRelatedEvents(contact, context: context)
                 }
@@ -290,7 +290,7 @@ extension Contact : Identifiable {
             contact.lud06 = metaData.lud06
             contact.metadata_created_at = Int64(event.createdAt.timestamp) // by author kind 0
             contact.updated_at = Int64(Date.now.timeIntervalSince1970) // by Nostur
-            print("🟢🟢 New contact stored ")
+//            print("🟢🟢 New contact stored ")
             if (!skipRelatedUpdate) {
                 updateRelatedEvents(contact, context: context)
             }

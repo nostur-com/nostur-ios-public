@@ -304,7 +304,7 @@ struct ZapsForThisNote: View {
 struct NotificationsZaps_Previews: PreviewProvider {
     static var previews: some View {
         let pubkey = "32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245"
-        NotificationsZaps(pubkey: pubkey, blockedPubkeys:[],  context: EventsProvider.preview.container.viewContext)
+        NotificationsZaps(pubkey: pubkey, blockedPubkeys:[],  context: DataProvider.shared().container.viewContext)
             .withPreviewEnvironment()
     }
 }

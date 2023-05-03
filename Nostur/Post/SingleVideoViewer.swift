@@ -237,13 +237,13 @@ func getVideoDimensions(asset: AVAsset) async -> CGSize? {
 
     return correctedSize
 }
-//
-//struct SingleVideoViewer_Previews: PreviewProvider {
-//    static var previews: some View {
-//        let content1 = "one image: https://www.volvocars.com/images/v/-/media/applications/pdpspecificationpage/my24/ex90-electric/reveal/hero/desktop/04-headlight-video.mp4 dunno"
-//
-//        let urlsFromContent = getImgUrlsFromContent(content1)
-//
-//        SingleVideoViewer(url:urlsFromContent[0],  pubkey: "dunno", videoWidth: UIScreen.main.bounds.width, isFollowing: true)
-//    }
-//}
+
+struct SingleVideoViewer_Previews: PreviewProvider {
+    static var previews: some View {
+        let content1 = "one image: https://www.volvocars.com/images/v/-/media/applications/pdpspecificationpage/my24/ex90-electric/reveal/hero/desktop/04-headlight-video.mp4 dunno"
+
+        let urlsFromContent = getImgUrlsFromContent(content1)
+
+        SingleVideoViewer(url:urlsFromContent[0],  pubkey: "dunno", videoWidth: UIScreen.main.bounds.width, isFollowing: true)
+    }
+}

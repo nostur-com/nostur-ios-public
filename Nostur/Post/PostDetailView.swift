@@ -393,86 +393,40 @@ struct DetailFooterFragment: View {
 
 struct ReplyAndParentView_Previews: PreviewProvider {
     static var previews: some View {
-        Group {
-            
-            if let xx = PreviewFetcher.fetchVPost("a4508aa658b12d51a56613c51da096d7791eb207d3b11407089c633ff73f668d") {
-                PostDetailView(vPost: xx)
-            }
-            if let yt2 = PreviewFetcher.fetchVPost("0000014de66e08882bd36b6b7b551a774f85fe752a18070dc8658d7776db7e69") {
-                PostDetailView(vPost: yt2)
-            }
-            
-            if let yt = PreviewFetcher.fetchVPost("c7b4ef377ee4f6d71f6f59bc6bad607acb9c7c3675e3c0b2ca0ad2442b133e49") {
-                PostDetailView(vPost: yt)
-            }
-            
-            if let v = PreviewFetcher.fetchVPost("bb15e6165180d31c36b6c3e0baf082eeb949aa473c59e37eaa8e2bb29dc46422") {
-                PostDetailView(vPost: v)
-            }
-            
-            if let lastReply = PreviewFetcher.fetchVPost("2026c6b0f0d887aa76cc60f0b3050fe940c8eca9eb479391acb493bb40e4d964") {
-                PostDetailView(vPost: lastReply)
-            }
-            
-            if let rootWithReplies = PreviewFetcher.fetchVPost("6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81") {
-                PostDetailView(vPost: rootWithReplies)
-            }
-            
-            
-            
-            if let v = PreviewFetcher.fetchVPost("c0d76c3c968775a62ca1dea28a73e1fc86d121e8e5e17f2e35aaad1436075f51") {
-                PostDetailView(vPost: v)
+        VStack {
+            Group {
                 
+                if let xx = PreviewFetcher.fetchVPost("a4508aa658b12d51a56613c51da096d7791eb207d3b11407089c633ff73f668d") {
+                    PostDetailView(vPost: xx)
+                }
+                if let yt2 = PreviewFetcher.fetchVPost("0000014de66e08882bd36b6b7b551a774f85fe752a18070dc8658d7776db7e69") {
+                    PostDetailView(vPost: yt2)
+                }
+                
+                if let yt = PreviewFetcher.fetchVPost("c7b4ef377ee4f6d71f6f59bc6bad607acb9c7c3675e3c0b2ca0ad2442b133e49") {
+                    PostDetailView(vPost: yt)
+                }
+                
+                if let v = PreviewFetcher.fetchVPost("bb15e6165180d31c36b6c3e0baf082eeb949aa473c59e37eaa8e2bb29dc46422") {
+                    PostDetailView(vPost: v)
+                }
+                
+                if let lastReply = PreviewFetcher.fetchVPost("2026c6b0f0d887aa76cc60f0b3050fe940c8eca9eb479391acb493bb40e4d964") {
+                    PostDetailView(vPost: lastReply)
+                }
+                
+                if let rootWithReplies = PreviewFetcher.fetchVPost("6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81") {
+                    PostDetailView(vPost: rootWithReplies)
+                }
+                
+                
+                
+                if let v = PreviewFetcher.fetchVPost("c0d76c3c968775a62ca1dea28a73e1fc86d121e8e5e17f2e35aaad1436075f51") {
+                    PostDetailView(vPost: v)
+                    
+                }
             }
         }
         .withPreviewEnvironment()
-    }
-}
-
-
-struct HighlightRenderer: View {
-    var vPost:VPost
-    
-    var body: some View {
-        VStack {
-            Text(vPost.event.content ?? "")
-                .italic()
-                .padding(20)
-                .overlay(alignment:.topLeading) {
-                    Image(systemName: "quote.opening")
-                        .foregroundColor(Color.secondary)
-                }
-                .overlay(alignment:.bottomTrailing) {
-                    Image(systemName: "quote.closing")
-                        .foregroundColor(Color.secondary)
-                }
-            
-            if let highlightAuthorPubkey = vPost.highlightAuthorPubkey {
-                HStack {
-                    Spacer()
-                    PFP(pubkey: highlightAuthorPubkey, pictureUrl: vPost.highlightAuthorPicture, size: 20, isFollowing: vPost.highlightAuthorIsFollowing)
-                    Text(vPost.highlightAuthorName ?? "Unknown")
-                }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    navigateTo(ContactPath(key: highlightAuthorPubkey))
-                }
-                .padding(.trailing, 40)
-            }
-            HStack {
-                Spacer()
-                if let url = vPost.highlightUrl, let md = try? AttributedString(markdown:"[\(url)](\(url))") {
-                    Text(md)
-                        .lineLimit(1)
-                        .font(.caption)
-                }
-            }
-            .padding(.trailing, 40)
-        }
-        .padding(10)
-        .overlay(
-            RoundedRectangle(cornerRadius: 15)
-                .stroke(.regularMaterial, lineWidth: 1)
-        )
     }
 }

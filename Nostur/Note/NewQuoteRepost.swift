@@ -33,11 +33,11 @@ struct NewQuoteRepost: View {
     }
     
     var body: some View {
-        if ns.account != nil {
+        if let account = ns.account {
             VStack {
                 ScrollView {
                     HStack(alignment: .top) {
-                        PFP(pubkey: ns.account!.publicKey, pictureUrl: ns.account?.picture, isFollowing: true)
+                        PFP(pubkey: account.publicKey, pictureUrl: account.picture, isFollowing: true)
                             .padding(.horizontal, 10)
                         ZStack(alignment:.leading) {
                             VStack(alignment: .leading) {
@@ -292,12 +292,15 @@ struct NewQuoteRepost_Previews: PreviewProvider {
     @State static var noteCancellationId:UUID?
     static var previews: some View {
         
-        let event = PreviewFetcher.fetchEvent("c3a040feac185585f984147cdaf7a7ec5774b06db29ff25017c45026e470daeb")
+        let id = "c3a040feac185585f984147cdaf7a7ec5774b06db29ff25017c45026e470daeb"
         
-        if (event != nil) {
-            NewQuoteRepost(quotingEvent:event!)
-                .withPreviewEnvironment()
+        VStack {
+            if let event = PreviewFetcher.fetchEvent() {
+                NewQuoteRepost(quotingEvent: event)
+                
+            }
         }
+        .withPreviewEnvironment()
     }
 }
 

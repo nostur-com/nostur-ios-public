@@ -16,7 +16,6 @@ struct AccountsSheet: View {
     @State var addExistingAccountSheetShown = false
     
     var withDismissButton:Bool = true
-    var ep: EventsProvider = .shared
     var sp: SocketPool = .shared
     
     @FetchRequest(

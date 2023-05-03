@@ -68,8 +68,11 @@ struct NewPrivateNoteSheet: View {
 struct NewPrivateNoteSheet_Previews: PreviewProvider {
     static var previews: some View {
         
-        if let event = PreviewFetcher.fetchEvent() {   
-            NewPrivateNoteSheet(post: event, onDismiss: {})            .withPreviewEnvironment()
+        VStack {
+            if let event = PreviewFetcher.fetchEvent() {
+                NewPrivateNoteSheet(post: event, onDismiss: {})
+            }
         }
+        .withPreviewEnvironment()
     }
 }

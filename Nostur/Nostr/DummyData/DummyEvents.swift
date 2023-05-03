@@ -23,6 +23,14 @@ func test1() -> [String] {
     return events
 }
 
+func testMinimal() -> [String] {
+    var events = [String]()
+    
+    events.append(###"["EVENT","edbf6f0f-69a1-4881-a5b9-77f4a82e25d9",{"content":"","created_at":1676240088,"id":"648eedac317d52339f71d1b505930ee4c369256d129f2d7e32815cb2d6d6db95","kind":10002,"pubkey":"ee11a5dff40c19a555f41fe42b48f00e618c91225622ae37b6c2bb67b76c4e49","sig":"455ad62326ee34b424575605f833d1e3ddbf3db60fd791a2b1b46db94d3d3c14c3789f59795a189e7730b0f7cd10f25bb0e8c9af92516eb775f90e4dd0340af2","tags":[["r","wss://eden.nostr.land"],["r","wss://nostr-pub.wellorder.net"],["r","wss://at.nostrworks.com"],["r","wss://nostr.oxtr.dev"],["r","wss://nostr.mikedilger.com","write"],["r","wss://offchain.pub"]]}]"###)
+
+    return events
+}
+
 func testHighlights() -> [String] {
     var events = [String]()
     
@@ -180,6 +188,8 @@ func testHighlights() -> [String] {
 // KIND 0 = SET (CONTACT) METADATA (USER PROFILES)
 func testKind0Events() -> [String] {
     var events:[String] = []
+    
+    events.append(###"["EVENT","TESTMENTION",{"pubkey":"460c25e682fda7832b52d1f22d3d22b3176d972f60dcdc3212ed8c92ef85065c","content":"{\"lud06\":\"LNURL1DP68GURN8GHJ7EM9W3SKCCNE9E3K7MF0WQHHV6T5DAE8QCTDWPKX7MNP9E48XMMWEG5LUM\",\"name\":\"\",\"picture\":\"https://vitorpamplona.com/me.jpg\",\"username\":\"\",\"display_name\":\"Vitor Pamplona\",\"displayName\":\"Vitor Pamplona\",\"banner\":\"https://pbs.twimg.com/profile_banners/15064756/1414451651/1080x360\",\"website\":\"https://vitorpamplona.com\",\"about\":\"Nostr's Chief Android Officer - Amethyst\",\"nip05\":\"vitor@vitorpamplona.com\",\"lud16\":\"vitor@vitorpamplona.com\"}","id":"3951fe391a5a23a70b6ae58d9472781edd12ec2fa8c72e35017a2b680dec9397","created_at":1678385562,"sig":"e6d4a2dabc0cf436437dbb62b9ec3574339ec6903afeb11a8196d40d44d63330217ab4596237f23e0d53c4c8412fffa981fb53cb2d2428a5de802e510dcbf5c3","kind":0,"tags":[["i","twitter:vitorpamplona","1603751686371217409"],["i","github:vitorpamplona","cf19e2d1d7f8dac6348ad37b35ec8421"]]}]"###)
     
     events.append(###"["EVENT","GIMMESOME",{"content":"{\"npub\":\"npub1w7auxggg0yzanru5r0vafnzd9pt0ms8j7zpl8tskw4zwrgann6gslx52fc\",\"name\":\"₿roadmode ⚡🌎\",\"picture\":\"https://void.cat/d/RbFw9gdZJ9nnuRUA6Fzvxc\",\"about\":\"Discrete autonomist. Online freedom. #Bitcoin.\",\"website\":\"broadmode.xyz\",\"nip05\":\"Broadmode@BitcoinNostr.com\",\"banner\":\"https://void.cat/d/SLkuNrKiwfZMMSpp5wRe5H\"}","created_at":1674274670,"id":"355ca0173f3c77cf59ba925fed4d65ead07f74b71e598f826aec0342418d7f99","kind":0,"pubkey":"77bbc321087905d98f941bd9d4cc4d2856fdc0f2f083f3ae167544e1a3b39e91","sig":"90803e1d4363e1d093ac0feff62d799d7ad3f85f2c4df54b0876d9645ffba2e2f125ae743eb80f1ead40884831498405a7b6bea606d5606340489abcd2bb6bef","tags":[]}]"###)
     

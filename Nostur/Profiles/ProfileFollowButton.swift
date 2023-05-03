@@ -58,9 +58,11 @@ struct ProfileFollowButton: View {
 
 struct ProfileFollowButton_Previews: PreviewProvider {
     static var previews: some View {
-        if let contact = PreviewFetcher.fetchContact() {
-            ProfileFollowButton(contact: contact)
-                .withPreviewEnvironment()
+        VStack {
+            if let contact = PreviewFetcher.fetchContact() {
+                ProfileFollowButton(contact: contact)
+            }
         }
+        .withPreviewEnvironment()
     }
 }

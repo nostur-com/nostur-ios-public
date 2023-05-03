@@ -56,14 +56,16 @@ struct ContactSearchResultRow_Previews: PreviewProvider {
         // snowden: 84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240
         let pubkey = "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240"
         
-        let contact = PreviewFetcher.fetchContact(pubkey)
+        
         
         VStack {
-            ContactSearchResultRow(contact: contact!, onSelect: {})
-            
-            ContactSearchResultRow(contact: contact!, onSelect: {})
-            
-            ContactSearchResultRow(contact: contact!, onSelect: {})
+            if let contact = PreviewFetcher.fetchContact(pubkey) {
+                ContactSearchResultRow(contact: contact, onSelect: {})
+                
+                ContactSearchResultRow(contact: contact, onSelect: {})
+                
+                ContactSearchResultRow(contact: contact, onSelect: {})
+            }
          
             Spacer()
         }

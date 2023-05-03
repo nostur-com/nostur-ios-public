@@ -86,12 +86,12 @@ struct EditNosturList: View {
 
 struct EditList_Previews: PreviewProvider {
     static var previews: some View {
-        if let list = PreviewFetcher.fetchList() {
-            NavigationStack {
+        NavigationStack {
+            if let list = PreviewFetcher.fetchList() {
                 EditNosturList(list: list)
-                    .withNavigationDestinations()
+                .withNavigationDestinations()
             }
-            .withPreviewEnvironment()
         }
+        .withPreviewEnvironment()
     }
 }

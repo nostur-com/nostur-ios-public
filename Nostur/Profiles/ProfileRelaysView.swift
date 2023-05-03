@@ -95,14 +95,16 @@ struct ProfileRelaysView: View {
 struct ProfileRelaysView_Previews: PreviewProvider {
     static var previews: some View {
         
-        let clEventId = "3e030d91ac2b0c0ddb885e1aac05b33e07b1a131f725de7c9c6491a8cc817e1e"
-        let clEvent = PreviewFetcher.fetchEvent(clEventId)
+        
         
         ScrollView {
+            let clEventId = "3e030d91ac2b0c0ddb885e1aac05b33e07b1a131f725de7c9c6491a8cc817e1e"
+            let clEvent = PreviewFetcher.fetchEvent(clEventId)
+            
             if (clEvent != nil) {
                 ProfileRelaysView(clEvent: clEvent!)
-                    .withPreviewEnvironment()
             }
         }
+        .withPreviewEnvironment()
     }
 }

@@ -57,6 +57,8 @@ struct NosturApp: App {
     @StateObject private var ns:NosturState = .shared
     @StateObject private var tm:DetailTabsModel = .shared
     @StateObject private var nm:NotificationsManager = .shared
+    private var dataProvider = DataProvider.shared()
+    private var eventRelationsQueue:EventRelationsQueue = .shared
     private var lvmManager:LVMManager = .shared
     private var importer:Importer = .shared // Need to initialize here on MAIN, else the first init will be in wrong background context
     @State var fg:FollowingGuardian = .shared
@@ -70,7 +72,7 @@ struct NosturApp: App {
     var body: some Scene {
         WindowGroup {
             Group {
-                if EventsProvider.shared.databaseProblem {
+                if DataProvider.shared().databaseProblem {
                     VStack {
                         Text("Something went wrong")
                             .font(.title2)
@@ -85,7 +87,7 @@ struct NosturApp: App {
                         Text("2) Reinstall the app and start fresh")
                             .padding(.bottom, 20)
                         Text("Error: 00")
-                        Text(EventsProvider.shared.databaseProblemDescription)
+                        Text(DataProvider.shared().databaseProblemDescription)
                     }
                     .padding()
                     
@@ -95,7 +97,7 @@ struct NosturApp: App {
                     //                if !didAcceptTerms || isOnboarding || ns.accounts.count == 0 {
                     Onboarding()
                         .environmentObject(ns)
-                        .environment(\.managedObjectContext, EventsProvider.shared.container.viewContext)
+                        .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
                         .onReceive(receiveNotification(.onBoardingIsShownChanged)) { notification in   let onBoardingIsShown = notification.object as! Bool
                             isOnboarding = onBoardingIsShown
                         }
@@ -109,7 +111,7 @@ struct NosturApp: App {
                                     .presentationDetents([.large])
                                     .environmentObject(ns)
                             }
-                            .environment(\.managedObjectContext, EventsProvider.shared.container.viewContext)
+                            .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
                             .environmentObject(ns)
                             .onReceive(priceLoop) { time in
                                 if (!isViewDisplayed) { return }
@@ -167,13 +169,13 @@ struct NosturApp: App {
             ns.setAccount(account: ns.accounts.last!)
         }
         else if ns.account == nil {
-            Maintenance.firstTimeStartup(context: EventsProvider.shared.container.viewContext)
+            Maintenance.firstTimeStartup(context: DataProvider.shared().container.viewContext)
         }
         
         // Daily cleanup.
         //TODO: Is fast or do in background task?
         Maintenance.maintenance(context: DataProvider.shared().container.newBackgroundContext())
-        //        Maintenance.maintenance(context: EventsProvider.shared.container.viewContext)
+        //        Maintenance.maintenance(context: DataProvider.shared().container.viewContext)
         
         // One time fix
         //        repairDb()

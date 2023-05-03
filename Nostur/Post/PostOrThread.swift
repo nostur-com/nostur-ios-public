@@ -49,39 +49,41 @@ struct PostOrThread: View {
 
 struct PostOrThread_Previews: PreviewProvider {
     static var previews: some View {
-        let ns:NosturState = .shared
-        let events = PreviewFetcher.fetchEvents(ns.followingPublicKeys, kind: 1)
-        
-        let onlyRootEvents = events
-            .map {
-                $0.parentEvents = Event.getParentEvents($0)
-                return $0
-            }
-            .filter(onlyRootOrReplyingToFollower)
-        
-        let vPosts = onlyRootEvents.compactMap { $0.toVPost() }
-        
-        ScrollView {
-            VStack(spacing: 0) {
-//                ForEach(vPosts) { vPost in
-                ForEach(Array(vPosts.dropFirst(12))) { vPost in
-                    PostOrThread(vPost: vPost)
-                        .overlay {
-                            GeometryReader { geo in
-                                HStack {
-                                    Spacer()
-                                    Text("H: \(vPost.event.username): \(Int(geo.size.height))")
-                                        .padding(10)
-                                        .foregroundColor(.white)
-                                        .background(.red)
+        VStack {
+            let ns:NosturState = .shared
+            let events = PreviewFetcher.fetchEvents(ns.followingPublicKeys, kind: 1)
+            
+            let onlyRootEvents = events
+                .map {
+                    $0.parentEvents = Event.getParentEvents($0)
+                    return $0
+                }
+                .filter(onlyRootOrReplyingToFollower)
+            
+            let vPosts = onlyRootEvents.compactMap { $0.toVPost() }
+            
+            ScrollView {
+                VStack(spacing: 0) {
+    //                ForEach(vPosts) { vPost in
+                    ForEach(Array(vPosts.dropFirst(12))) { vPost in
+                        PostOrThread(vPost: vPost)
+                            .overlay {
+                                GeometryReader { geo in
+                                    HStack {
+                                        Spacer()
+                                        Text("H: \(vPost.event.username): \(Int(geo.size.height))")
+                                            .padding(10)
+                                            .foregroundColor(.white)
+                                            .background(.red)
+                                    }
                                 }
                             }
-                        }
-                        .boxShadow()
+                            .boxShadow()
+                    }
                 }
             }
+            .background(.gray)
         }
-        .background(.gray)
         .withPreviewEnvironment()
     }
 }

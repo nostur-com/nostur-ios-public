@@ -159,7 +159,7 @@ struct RelayEditView: View {
 struct RelayEditView_Previews: PreviewProvider {
     
     static var previews: some View {
-        let relay = Relay(context: EventsProvider.preview.container.viewContext)
+        let relay = Relay(context: DataProvider.shared().container.viewContext)
         relay.id = UUID()
         relay.url = "wss://nostr.bitcoin.sex"
         relay.read = true

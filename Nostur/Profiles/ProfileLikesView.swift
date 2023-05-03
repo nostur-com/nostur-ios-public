@@ -80,7 +80,7 @@ struct ProfileLikesView_Previews: PreviewProvider {
         
         ScrollView {
             ProfileLikesView(pubkey: pubkey)
-                .withPreviewEnvironment()
         }
+        .withPreviewEnvironment()
     }
 }

@@ -81,10 +81,13 @@ struct NoteHeader: View {
 
 struct NoteHeader_Previews: PreviewProvider {
     static var previews: some View {
-        let event7 = PreviewFetcher.fetchEvent("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
-        if (event7 != nil) {
-            NoteHeader(event: event7!)
-                .withPreviewEnvironment()
+        
+        let id = "1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0"
+        VStack {
+            if let event = PreviewFetcher.fetchEvent() {
+                NoteHeader(event: event)
+            }
         }
+        .withPreviewEnvironment()
     }
 }

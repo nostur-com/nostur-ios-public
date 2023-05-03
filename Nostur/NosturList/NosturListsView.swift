@@ -9,19 +9,13 @@ import SwiftUI
 
 struct NosturListsView: View {
     @Environment(\.managedObjectContext) var viewContext
-    @FetchRequest
+    
+    @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath:\NosturList.createdAt, ascending: false)])
     var lists:FetchedResults<NosturList>
     
     @State var confirmDeleteShown = false
     @State var listToDelete:NosturList? = nil
     @State var newListSheet = false
-    
-    init() {
-        let r = NosturList.fetchRequest()
-        r.predicate = NSPredicate(value: true)
-        r.sortDescriptors = [NSSortDescriptor(keyPath:\NosturList.createdAt, ascending: false)]
-        _lists = FetchRequest(fetchRequest: r)
-    }
         
     var body: some View {
         List(lists) { list in

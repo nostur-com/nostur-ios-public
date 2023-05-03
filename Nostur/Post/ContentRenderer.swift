@@ -107,7 +107,7 @@ struct ContentRenderer: View { // VIEW things
                 .sink {
                     
                     let followingKeys = NosturState.shared.followingPublicKeys
-                    EventsProvider.shared.container.performBackgroundTask { context in
+                    DataProvider.shared().container.performBackgroundTask { context in
                         let transformer = VPostTransformer(context, followingKeys: followingKeys) // Tranform in bg
                      
                         guard let privateEvent = context.object(with: event.objectID) as? Event else { return }
@@ -165,6 +165,7 @@ struct RowContentRenderer_Previews: PreviewProvider {
                 }
             }
         }
+        .withPreviewEnvironment()
     }
 }
 
@@ -196,7 +197,7 @@ struct QuoteById: View {
                     .frame(height: 150)
                     .task {
                         let followingKeys = NosturState.shared.followingPublicKeys
-                        EventsProvider.shared.container.performBackgroundTask { context in
+                        DataProvider.shared().container.performBackgroundTask { context in
                             let transformer = VPostTransformer(context, followingKeys: followingKeys) // Tranform in bg
                             if let vPost = transformer.toVPost(event, forceBg: true) {
                                 DispatchQueue.main.async {

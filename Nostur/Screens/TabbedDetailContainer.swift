@@ -31,7 +31,7 @@ final class DetailTabsModel: ObservableObject {
             self.vPost = vPost
             
             if (contactPath != nil) {
-                if let contactFromCache = Contact.fetchByPubkey(contactPath!.key, context: EventsProvider.shared.container.viewContext) {
+                if let contactFromCache = Contact.fetchByPubkey(contactPath!.key, context: DataProvider.shared().container.viewContext) {
                     self.contact = contactFromCache
                 }
             }

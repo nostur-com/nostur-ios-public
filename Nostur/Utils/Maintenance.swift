@@ -278,7 +278,7 @@ struct Maintenance {
     
     // SetMetadata can have a banner field now.
     func rescanForBannerFields() {
-        EventsProvider.shared.container.viewContext.perform {
+        DataProvider.shared().container.viewContext.perform {
             
             do {
                 let decoder = JSONDecoder()
@@ -304,7 +304,7 @@ struct Maintenance {
                         }
                     }
                 }
-                try EventsProvider.shared.container.viewContext.save()
+                try DataProvider.shared().container.viewContext.save()
             }
             
             catch let error {
@@ -315,7 +315,7 @@ struct Maintenance {
     
     func deleteAllContacts() {
         //        if (1 == 1) { return }
-        //        EventsProvider.shared.container.viewContext.perform {
+        //        DataProvider.shared().container.viewContext.perform {
         //            do {
         //                let r = NSFetchRequest<Contact>()
         //                r.entity = Contact.entity()
@@ -327,10 +327,10 @@ struct Maintenance {
         //                }
         //
         //                for contact in allContacts {
-        //                    EventsProvider.shared.container.viewContext.delete(contact)
+        //                    DataProvider.shared().container.viewContext.delete(contact)
         //                }
         //
-        //                try EventsProvider.shared.container.viewContext.save()
+        //                try DataProvider.shared().container.viewContext.save()
         //            } catch let error  {
         //                print("😢😢😢 XX \(error)")
         //            }

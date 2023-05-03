@@ -137,7 +137,7 @@ struct ProfilePicFullScreenSheet_Previews: PreviewProvider {
         NavigationStack {
             ProfilePicFullScreenSheet(
                 profilePicViewerIsShown: $shown,
-                pictureUrl: "http://nostur.com/fabian/profile.jpg")
+                pictureUrl: "https://nostur.com/fabian/profile.jpg")
         }
     }
 }

@@ -397,7 +397,7 @@ extension Event {
     @discardableResult
     static func makePreviews(count: Int) -> [Event] {
         var events = [Event]()
-        let viewContext = EventsProvider.preview.container.viewContext
+        let viewContext = DataProvider.shared().container.viewContext
         for index in 0..<count {
             let event = Event(context: viewContext)
             event.insertedAt = Date.now
@@ -793,7 +793,7 @@ extension Event {
     }
     
     static func saveEvent(event:NEvent, context:NSManagedObjectContext, relay:String? = nil, skipRelatedUpdate:Bool = false) -> Event {
-        if Thread.isMainThread {
+        if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
             print("☠️☠️☠️☠️ saveEvent")
         }
         let savedEvent = Event(context: context)

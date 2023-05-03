@@ -174,17 +174,15 @@ struct ProfileZapsView_Previews: PreviewProvider {
     static var previews: some View {
         
         // snowden: 84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240
+        ScrollView {
+            let pubkey = "32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245"
+            let contact = PreviewFetcher.fetchContact(pubkey)
         
-        let pubkey = "32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245"
-        
-        let contact = PreviewFetcher.fetchContact(pubkey)
-        
-        if (contact != nil) {
-            ScrollView {
+            if (contact != nil) {
                 ProfileZapsView(pubkey:pubkey, contact: contact)
-                    .withPreviewEnvironment()
             }
         }
+        .withPreviewEnvironment()
     }
 }
 

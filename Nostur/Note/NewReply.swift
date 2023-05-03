@@ -39,7 +39,7 @@ struct NewReply: View {
     }
     
     var body: some View {
-        if ns.account != nil {
+        if let account = ns.account {
             VStack {
                 ScrollView {
                     NoteRow(vPost: replyTo.toVPost()!, hideFooter: true)
@@ -49,7 +49,7 @@ struct NewReply: View {
                         Spacer()
                     }
                     HStack(alignment: .top) {
-                        PFP(pubkey: ns.account!.publicKey, pictureUrl: ns.account?.picture, isFollowing: true)
+                        PFP(pubkey: account.publicKey, pictureUrl: account.picture, isFollowing: true)
                             .padding(.horizontal, 10)
                         ZStack(alignment:.leading) {
                             VStack(alignment: .leading) {
@@ -322,8 +322,8 @@ struct NewReplyingToFragment: View {
                 .font(.system(size: 13))
                 .fontWeight(.light)
             Group {
-                if (contact != nil) {
-                    Text("@\(contact!.username)")
+                if let contact {
+                    Text("@\(contact.username)")
                 }
                 else {
                     Text("@\(String(pubkey.prefix(5)))")
@@ -339,11 +339,12 @@ struct NewReply_Previews: PreviewProvider {
     @State static var noteCancellationId:UUID?
     static var previews: some View {
         
-        let event = PreviewFetcher.fetchEvent("c3a040feac185585f984147cdaf7a7ec5774b06db29ff25017c45026e470daeb")
-        
-        if (event != nil) {
-            NewReply(replyTo:event!)
-                .withPreviewEnvironment()
+        let id = "c3a040feac185585f984147cdaf7a7ec5774b06db29ff25017c45026e470daeb"
+        VStack {
+            if let event = PreviewFetcher.fetchEvent() {
+                NewReply(replyTo: event)
+            }
         }
+        .withPreviewEnvironment()
     }
 }

@@ -51,7 +51,6 @@ class EventRelationsQueue {
     /// Adds event to the queue waiting for related data that is being fetched
     /// - Parameter event: Event should be from .bg context, if not this function will fetch it from .bg using .objectID
     public func addAwaitingEvent(_ event:Event) {
-        let ctx = DataProvider.shared().bg
         if event.managedObjectContext == ctx {
             ctx.perform {
                 self.waitingEvents.insert(event)
@@ -60,7 +59,7 @@ class EventRelationsQueue {
         }
         else {
             ctx.perform {
-                guard let privateEvent = ctx.object(with: event.objectID) as? Event else { return }
+                guard let privateEvent = self.ctx.object(with: event.objectID) as? Event else { return }
                 self.waitingEvents.insert(privateEvent)
 //                print("🟢🟢🟢 addAwaitingEvent. now in queue: \(self.waitingEvents.count)")
             }
@@ -84,7 +83,5 @@ class EventRelationsQueue {
         ctx.perform {
             self.waitingEvents = Set<Event>()
         }
-    }
-
-//    public func 
+    } 
 }

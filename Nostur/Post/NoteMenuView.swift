@@ -134,13 +134,12 @@ struct NoteMenuView: View {
 
 struct NoteMenuView_Previews: PreviewProvider {
     static var previews: some View {
-        let event7 = PreviewFetcher.fetchVPost()
-        if (event7 != nil) {
-            VStack {
-                NoteMenuView(vPost: event7!)
-                Spacer()
+        VStack {
+            if let event7 = PreviewFetcher.fetchVPost() {
+                NoteMenuView(vPost: event7)
             }
-            .withPreviewEnvironment()
+            Spacer()
         }
+        .withPreviewEnvironment()
     }
 }

@@ -106,7 +106,7 @@ struct RelaysView_Previews: PreviewProvider {
         
         NavigationStack {
             RelaysView()
-                .environment(\.managedObjectContext, EventsProvider.preview.container.viewContext)
+                .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
                 .environmentObject(ns)
 //                .environmentObject(cm)
         }

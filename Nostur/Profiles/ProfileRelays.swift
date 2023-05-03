@@ -71,11 +71,11 @@ struct ProfileRelays: View {
 
 struct ProfileRelays_Previews: PreviewProvider {
     static var previews: some View {
-        
-        let relayEventId = "648eedac317d52339f71d1b505930ee4c369256d129f2d7e32815cb2d6d6db95"
-        let relayEvent = PreviewFetcher.fetchEvent(relayEventId)
-        
+
         ScrollView {
+            let relayEventId = "648eedac317d52339f71d1b505930ee4c369256d129f2d7e32815cb2d6d6db95"
+            let relayEvent = PreviewFetcher.fetchEvent(relayEventId)
+            
             if (relayEvent != nil) {
                 ProfileRelays(relayEvent: relayEvent!)
             }

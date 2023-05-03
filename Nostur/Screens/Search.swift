@@ -191,7 +191,7 @@ struct Search_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
             Search()
-                .withPreviewEnvironment()
         }
+        .withPreviewEnvironment()
     }
 }

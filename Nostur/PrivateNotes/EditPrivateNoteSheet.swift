@@ -90,18 +90,20 @@ struct EditPrivateNoteSheet: View {
 struct EditPrivateNoteSheet_Previews: PreviewProvider {
     static var previews: some View {
         
-        let note:PrivateNote = {
-            let note = PrivateNote(context: EventsProvider.preview.container.viewContext)
-            note.createdAt = Date.now
-            note.updatedAt = Date.now
-            note.content = ""
-            note.by = PreviewFetcher.fetchAccount()
-            note.post = PreviewFetcher.fetchEvent()
-            return note
-        }()
-        
-        
-        EditPrivateNoteSheet(privateNote: note, onDismiss: {})
-            .withPreviewEnvironment()
+        VStack {
+            let note:PrivateNote = {
+                let note = PrivateNote(context: DataProvider.shared().container.viewContext)
+                note.createdAt = Date.now
+                note.updatedAt = Date.now
+                note.content = ""
+                note.by = PreviewFetcher.fetchAccount()
+                note.post = PreviewFetcher.fetchEvent()
+                return note
+            }()
+            
+            
+            EditPrivateNoteSheet(privateNote: note, onDismiss: {})
+        }
+        .withPreviewEnvironment()
     }
 }

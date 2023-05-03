@@ -122,26 +122,30 @@ func fetchBitcoinPrice() async -> Double? {
 
 struct LightningInvoice_Previews: PreviewProvider {
     static var previews: some View {
-        let invoice = "lnbc469970n1p373e49pp5ey9mxfcy9k62clpjvqwsrju64p0378cll0mzehtccj2ulqnamkzqdqvw3jhxarfdenscqzpgxqyz5vqsp5m8zsyfs936f2vfkshvdfhntmr596079hwryr2r8dpr8ahy6hu6hq9qyyssqlcvvw6gmq09hwzw2kxfe03enc25plxzfmupxwx4xr8hddn972nzq7m0jf9sxenw23qg6nv55678nrnnr4fe3wkwm6pczmaxs0r7yftgqd6lgya"
-        
-        let event = { () -> VPost in
-            let event = PreviewFetcher.fetchEvent()
-            event?.content = invoice
-            return event!.toVPost()!
-        }()
-        
         
         VStack {
-            Text("Just the invoice:")
-            LightningInvoice(invoice:invoice)
+            let invoice = "lnbc469970n1p373e49pp5ey9mxfcy9k62clpjvqwsrju64p0378cll0mzehtccj2ulqnamkzqdqvw3jhxarfdenscqzpgxqyz5vqsp5m8zsyfs936f2vfkshvdfhntmr596079hwryr2r8dpr8ahy6hu6hq9qyyssqlcvvw6gmq09hwzw2kxfe03enc25plxzfmupxwx4xr8hddn972nzq7m0jf9sxenw23qg6nv55678nrnnr4fe3wkwm6pczmaxs0r7yftgqd6lgya"
             
-            Text("\n\n\n")
-            
-            Text("In a note")
-            NoteRow(vPost: event)
-        }.padding(20)
-            .withPreviewEnvironment()
-        
+            VStack {
+                Text("Just the invoice:")
+                LightningInvoice(invoice:invoice)
+                
+                Text("\n\n\n")
+                
+                Text("In a note")
+                if let vPost = { () -> VPost? in
+                    if let event = PreviewFetcher.fetchEvent() {
+                        event.content = invoice
+                        return event.toVPost()
+                    }
+                    return nil
+                }() {
+                    NoteRow(vPost: vPost)
+                }
+            }
+            .padding(20)
+        }
+        .withPreviewEnvironment()
     }
     
 }

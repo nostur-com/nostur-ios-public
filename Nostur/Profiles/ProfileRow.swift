@@ -79,19 +79,22 @@ struct ProfileRow_Previews: PreviewProvider {
         
         // 5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0 // bitcoiner
         // snowden: 84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240
-        let pubkey = "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240"
         
-        let contact = PreviewFetcher.fetchContact(pubkey)
         
         ScrollView {
-            LazyVStack {
-                ProfileRow(contact: contact!)
+            let pubkey = "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240"
+            
+            if let contact = PreviewFetcher.fetchContact() {
                 
-                ProfileRow(contact: contact!)
-                
-                ProfileRow(contact: contact!)
-             
-                Spacer()
+                LazyVStack {
+                    ProfileRow(contact: contact)
+                    
+                    ProfileRow(contact: contact)
+                    
+                    ProfileRow(contact: contact)
+                    
+                    Spacer()
+                }
             }
         }
         .withPreviewEnvironment()

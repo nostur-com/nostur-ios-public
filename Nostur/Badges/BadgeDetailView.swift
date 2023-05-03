@@ -138,11 +138,13 @@ struct BadgeDetailView: View {
 struct BadgeDetailView_Previews: PreviewProvider {
     static var previews: some View {
         
-        let badge = PreviewFetcher.fetchEvent("6215b9fee3834ff25da4962dfb0d72e3dd648a454491dc213da5bdf735d7ddd9")
-        
-        if (badge != nil) {
-            BadgeDetailView(badge: badge!)
-                .withPreviewEnvironment()
+        let id = "6215b9fee3834ff25da4962dfb0d72e3dd648a454491dc213da5bdf735d7ddd9"
+    
+        NavigationStack {
+            if let badge = PreviewFetcher.fetchEvent(id) {
+                BadgeDetailView(badge: badge)
+            }
         }
+        .withPreviewEnvironment()
     }
 }
