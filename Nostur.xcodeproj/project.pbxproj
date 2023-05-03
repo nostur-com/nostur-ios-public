@@ -42,6 +42,8 @@
 		1F2DE030298E5C5C00891D2E /* BlockListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2DE02F298E5C5C00891D2E /* BlockListView.swift */; };
 		1F2E760529F6DF6C00E67CE7 /* EditListTitleSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2E760429F6DF6C00E67CE7 /* EditListTitleSheet.swift */; };
 		1F2F54E52A02242900B6D7E4 /* HighlightRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2F54E42A02242900B6D7E4 /* HighlightRenderer.swift */; };
+		1F2F54E72A02364900B6D7E4 /* GIFImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2F54E62A02364900B6D7E4 /* GIFImage.swift */; };
+		1F2F54EA2A0236E500B6D7E4 /* Gifu in Frameworks */ = {isa = PBXBuildFile; productRef = 1F2F54E92A0236E500B6D7E4 /* Gifu */; };
 		1F30FAA929705EBD008439C8 /* NosturCloud.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1F30FAA729705EBD008439C8 /* NosturCloud.xcdatamodeld */; };
 		1F30FAB029706E72008439C8 /* Account+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F30FAAE29706E72008439C8 /* Account+CoreDataClass.swift */; };
 		1F30FAB329707719008439C8 /* Account+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F30FAB229707719008439C8 /* Account+CoreDataProperties.swift */; };
@@ -329,6 +331,7 @@
 		1F2DE02F298E5C5C00891D2E /* BlockListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockListView.swift; sourceTree = "<group>"; };
 		1F2E760429F6DF6C00E67CE7 /* EditListTitleSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditListTitleSheet.swift; sourceTree = "<group>"; };
 		1F2F54E42A02242900B6D7E4 /* HighlightRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightRenderer.swift; sourceTree = "<group>"; };
+		1F2F54E62A02364900B6D7E4 /* GIFImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GIFImage.swift; path = Nostur/GIFImage.swift; sourceTree = "<group>"; };
 		1F30FAA829705EBD008439C8 /* NosturCloud.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = NosturCloud.xcdatamodel; sourceTree = "<group>"; };
 		1F30FAAE29706E72008439C8 /* Account+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Account+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1F30FAB229707719008439C8 /* Account+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Account+CoreDataProperties.swift"; sourceTree = "<group>"; };
@@ -556,6 +559,7 @@
 				1F517BEE29CDB2FE00F7A97F /* FLAnimatedImage in Frameworks */,
 				1F3E135429C89B9F00D076EA /* NukeVideo in Frameworks */,
 				1F75257629962AA300477AF2 /* Nuke in Frameworks */,
+				1F2F54EA2A0236E500B6D7E4 /* Gifu in Frameworks */,
 				1F558B3F29FE66CE002938A3 /* DequeModule in Frameworks */,
 				1FC4D40B2997E58E004E88CD /* KeychainAccess in Frameworks */,
 				1F006B0A29D0A9BE0048C6DD /* Algorithms in Frameworks */,
@@ -873,6 +877,7 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
+				1F2F54E62A02364900B6D7E4 /* GIFImage.swift */,
 				1F210B0329F7ED2D00159814 /* ImageTest.swift */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1FC7A54629FA46F000645FEF /* Highlight with Nostur */,
@@ -1118,6 +1123,7 @@
 				1FB6E6F429E31C71008BE8A6 /* HTMLEntities */,
 				1F21DDC029F01B3000C564EF /* CombineWebSocket */,
 				1F558B3E29FE66CE002938A3 /* DequeModule */,
+				1F2F54E92A0236E500B6D7E4 /* Gifu */,
 			);
 			productName = Nostur;
 			productReference = 1FB448BA2965F3D000038671 /* Nostur.app */;
@@ -1177,6 +1183,7 @@
 				1FB6E6F329E31C71008BE8A6 /* XCRemoteSwiftPackageReference "swift-html-entities" */,
 				1F21DDBF29F01B3000C564EF /* XCRemoteSwiftPackageReference "CombineWebSocket" */,
 				1F558B3D29FE66CE002938A3 /* XCRemoteSwiftPackageReference "swift-collections" */,
+				1F2F54E82A0236E400B6D7E4 /* XCRemoteSwiftPackageReference "Gifu" */,
 			);
 			productRefGroup = 1FB448BB2965F3D000038671 /* Products */;
 			projectDirPath = "";
@@ -1399,6 +1406,7 @@
 				1FC38BA0297316AA004769F8 /* DummyEvents.swift in Sources */,
 				1F533E3329D35FD300748438 /* TextRenderer.swift in Sources */,
 				1FFF997D29CF4AF100ADAE23 /* ProfilePicFullScreenSheet.swift in Sources */,
+				1F2F54E72A02364900B6D7E4 /* GIFImage.swift in Sources */,
 				1F740D9F29AF36C800EFCCA7 /* BadgesIssuedView.swift in Sources */,
 				1F7C65AD29A0A530009FF3EA /* ReadOnlyAccountInformationSheet.swift in Sources */,
 				1FF9E6B129FB804A002583DE /* MessageBucket.swift in Sources */,
@@ -1797,6 +1805,14 @@
 				kind = branch;
 			};
 		};
+		1F2F54E82A0236E400B6D7E4 /* XCRemoteSwiftPackageReference "Gifu" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/kaishin/Gifu.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.4.1;
+			};
+		};
 		1F517BEC29CDB2FD00F7A97F /* XCRemoteSwiftPackageReference "FLAnimatedImage" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/Flipboard/FLAnimatedImage";
@@ -1862,6 +1878,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1F21DDBF29F01B3000C564EF /* XCRemoteSwiftPackageReference "CombineWebSocket" */;
 			productName = CombineWebSocket;
+		};
+		1F2F54E92A0236E500B6D7E4 /* Gifu */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1F2F54E82A0236E400B6D7E4 /* XCRemoteSwiftPackageReference "Gifu" */;
+			productName = Gifu;
 		};
 		1F3E135329C89B9F00D076EA /* NukeVideo */ = {
 			isa = XCSwiftPackageProductDependency;
