@@ -11,6 +11,15 @@ import Nuke
 import NukeVideo
 import AVFoundation
 
+enum VideoLoadingState {
+    case initial
+    case loading
+    case ready
+    case error
+    case cancelled
+}
+
+@MainActor
 struct SingleVideoViewer: View {
     
     @EnvironmentObject var ns:NosturState // Only needed for `imagesShown`
@@ -20,18 +29,15 @@ struct SingleVideoViewer: View {
     let videoWidth:CGFloat
     let isFollowing:Bool
     var fullWidth:Bool = false
+    @State var videoState:VideoLoadingState = .initial
     @State var videoShown = false
     @State var isPlaying = false
     @State var asset:AVAsset? = nil
     @State var videoSize:CGSize? = nil
     @State var task:AsyncImageTask? = nil
-//    @State var task:ImageTask? = nil
-    @State var isLoading = false
     @State var percent = 0
-    @State var didLoad = false
     @State var autoplay = false
-    @State var cancelled = false
-    
+
     
     var body: some View {
         VStack {
@@ -41,13 +47,14 @@ struct SingleVideoViewer: View {
                     let scaledHeight = videoSize.height * scaledWidth
                     
                     VPV(asset: asset, isPlaying: $isPlaying)
-                        .onTapGesture {
-                            isPlaying.toggle()
-                        }
+                        .highPriorityGesture(
+                            TapGesture().onEnded { _ in
+                                isPlaying.toggle()
+                            }
+                        )
                         .frame(height: scaledHeight)
-                        .background(.regularMaterial)
-                        .onDisappear { isPlaying = false }
                         .background(Color.black)
+                        .onDisappear { isPlaying = false }
                         .overlay(
                             Button(action: {
                                 if isPlaying {
@@ -64,6 +71,7 @@ struct SingleVideoViewer: View {
 //                                                        .padding(80)
                             }.opacity(isPlaying ? 0 : 1)
                         )
+                        .hCentered()
                         .onReceive(receiveNotification(.startPlayingVideo)) { notification in
                             let otherUrl = notification.object as! String
                             if url.absoluteString != otherUrl {
@@ -76,45 +84,52 @@ struct SingleVideoViewer: View {
                             }
                         }
                 }
-                else if isLoading && !didLoad {
+                else if videoState == .loading {
                     HStack(spacing: 5) {
                         ProgressView()
                         Text("\(percent)%")
                         Image(systemName: "multiply.circle.fill")
                             .onTapGesture {
                                 task?.cancel()
-                                cancelled = true
+                                videoState = .cancelled
                             }
                     }
-                        .centered()
+                    .centered()
+                    .frame(height: fullWidth ? 600 : 250)
+                    .background(Color("LightGray").opacity(0.2))
                 }
                 else {
-                    if cancelled {
+                    if videoState == .cancelled {
                         Text("Cancelled")
                             .centered()
+                            .frame(height: fullWidth ? 600 : 250)
+                            .background(Color("LightGray").opacity(0.2))
                     }
-                    else if !isLoading {
+                    else if videoState == .error {
                         Label("Failed to load video", systemImage: "exclamationmark.triangle.fill")
                             .centered()
+                            .frame(height: fullWidth ? 600 : 250)
+                            .background(Color("LightGray").opacity(0.2))
                     }
                 }
             }
-            else {
+            else if videoState == .initial {
                 Text("Tap to load video")
                     .centered()
-                .frame(height: 250)
-                .background(.regularMaterial)
-                .onTapGesture {
-                    videoShown = true
-                    autoplay = true
-                    Task {
-                        await loadVideo()
-                    }
-                }
+                    .frame(height: fullWidth ? 600 : 250)
+                    .background(Color("LightGray").opacity(0.2))
+                    .highPriorityGesture(
+                        TapGesture()
+                            .onEnded { _ in
+                                videoShown = true
+                                autoplay = true
+                                Task {
+                                    await loadVideo()
+                                }
+                            }
+                    )
             }
         }
-        .frame(minHeight: 250)
-        .background(Color("LightGray"))
         .onAppear {
             videoShown = !SettingsStore.shared.restrictAutoDownload || isFollowing
             if videoShown {
@@ -132,51 +147,29 @@ struct SingleVideoViewer: View {
         task = ImageProcessing.shared.video.imageTask(with: url)
             
         if let task {
-            isLoading = true
+            videoState = .loading
             for await progress in task.progress {
                 self.percent = Int(ceil(progress.fraction * 100))
             }
-            isLoading = false
-            didLoad = true
         }
-        
         
         if let response = try? await task?.response {
             if let type = response.container.type, type.isVideo, let asset = response.container.userInfo[.videoAssetKey] as? AVAsset {
                 self.asset = asset
+                videoState = .ready
                 Task {
                     if let videoSize = await getVideoDimensions(asset: asset) {
                         self.videoSize = videoSize
                     }
+                    else {
+                        videoState = .error
+                    }
                 }
             }
+            else {
+                videoState = .error
+            }
         }
-        
-        
-//        let imageTask = ImagePipeline.shared.imageTask(with: url)
-//
-//           imageView.image = try await imageTask.image
-//
-//        { result in
-//
-////        task = ImageProcessing.shared.video.loadImage(with: url) { result in
-//            if case let .success(response) = result {
-//                if let type = response.container.type, type.isVideo, let asset = response.container.userInfo[.videoAssetKey] as? AVAsset {
-//                    self.asset = asset
-//                    Task {
-//                        if let videoSize = await getVideoDimensions(asset: asset) {
-//                            self.videoSize = videoSize
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//
-//        if let task {
-//            for await progress in task.progress {
-//
-//            }
-//        }
     }
 }
 
