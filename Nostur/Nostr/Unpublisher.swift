@@ -95,30 +95,28 @@ class Unpublisher: ObservableObject {
     private func sendToRelays(_ nEvent:NEvent) {
         // Always save event first
         if try! Event.fetchEvent(id: nEvent.id, context: viewContext) == nil {
-            let savedEvent = Event.saveEvent(event: nEvent, context: viewContext, skipRelatedUpdate: true)
+            let bgContext = DataProvider.shared().bg
             
-            // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
-            if nEvent.kind == .reaction {
-                do { try Event.updateReactionTo(savedEvent, context: viewContext) } catch {
-                    print("🦋🦋🔴🔴🔴 problem updating Like relation .id \(nEvent.id)")
+            bgContext.perform {
+                let savedEvent = Event.saveEvent(event: nEvent)
+                // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
+                if nEvent.kind == .reaction {
+                    do {
+                        try Event.updateReactionTo(savedEvent, context: bgContext)
+                    } catch {
+                        print("🦋🦋🔴🔴🔴 problem updating Like relation .id \(nEvent.id)")
+                    }
                 }
-            }
-            do {
-                if viewContext.hasChanges {
-                    try viewContext.save()
-                }
-                // dont wait for background importer, show immediatly on screen (only (re)posts .kind)
+                
                 if ([1,6,9802].contains(savedEvent.kind)) {
-                    sendNotification(.newPostSaved, savedEvent)
+                    DispatchQueue.main.async {
+                        sendNotification(.newPostSaved, savedEvent)
+                    }
                 }
+                Importer.shared.existingIds.insert(savedEvent.id)
+                DataProvider.shared().bgSave()
+                self.sp.sendMessage(ClientMessage(message: savedEvent.toNEvent().wrappedEventJson()))
             }
-            catch {
-                print("🔴🔴🔴🔴🔴 COULD NOT SAVE EVENT 🔴🔴🔴🔴🔴")
-                print(error)
-                return
-            }
-            Importer.shared.existingIds.insert(savedEvent.id)
-            sp.sendMessage(ClientMessage(message: savedEvent.toNEvent().wrappedEventJson()))
         }
         else {
             Importer.shared.existingIds.insert(nEvent.id)

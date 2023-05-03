@@ -31,6 +31,7 @@ class PreviewEnvironment {
             d.set(true, forKey: "devToggle")
             d.set("Following", forKey: "selected_subtab")
             d.set("Main", forKey: "selected_tab")
+            d.set(false, forKey: "full_width_images")
             return d
         }()
         
@@ -57,7 +58,7 @@ class PreviewEnvironment {
             account3.banner = "https://profilepics.nostur.com/banner_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/banner.jpg?1682440972"
     //        account3.banner = "https://nostur.com/fabian/banner.jpg"
                     
-            let keys = NKeys.newKeys()
+//            let keys = NKeys.newKeys()
             
             let xaccount = Account(context: self.context)
             xaccount.createdAt = Date()
@@ -96,7 +97,7 @@ class PreviewEnvironment {
             print("3 \(messages.count)")
             messages.append(contentsOf: testKind1Events())
             print("4 \(messages.count)")
-//            messages.append(contentsOf: testKindMixedOldDunnoEvents())
+            messages.append(contentsOf: testKindMixedOldDunnoEvents())
             print("5 \(messages.count)")
             messages.append(contentsOf: testRepliesAndReactions())
             print("6 \(messages.count)")
@@ -157,7 +158,7 @@ class PreviewEnvironment {
                 if event.kind == .repost && event.content.prefix(2) == #"{""# {
                     let decoder = JSONDecoder()
                     if let noteInNote = try? decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
-                        _ = Event.saveEvent(event: noteInNote, context: self.context)
+                        _ = Event.saveEvent(event: noteInNote)
                         event.content = "#[0]"
                         if let firstTag = event.tags.first {
                             if firstTag.type == "e" {
@@ -167,10 +168,10 @@ class PreviewEnvironment {
                     }
                 }
                 
-                let savedEvent = Event.saveEvent(event: event, context: self.context)
+                let savedEvent = Event.saveEvent(event: event)
                 
                 if event.kind == .setMetadata {
-                    Contact.saveOrUpdateContact(event: event, context: self.context)
+                    Contact.saveOrUpdateContact(event: event)
                 }
                 
                 // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)

@@ -119,8 +119,8 @@ struct BadgeDetailView: View {
                                                           pubkeys: selectedContacts.map { $0.pubkey })
                     do {
                         guard let newBadgeAwardsSigned = try? ns.signEvent(newBadgeAwards) else { throw "could not create newBadgeAwardsSigned " }
-                        _ = Event.saveEvent(event: newBadgeAwardsSigned, context: viewContext)
-                        try viewContext.save()
+                        _ = Event.saveEvent(event: newBadgeAwardsSigned)
+                        DataProvider.shared().bgSave()
                         up.publishNow(newBadgeAwardsSigned)
                     }
                     catch {

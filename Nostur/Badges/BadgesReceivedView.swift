@@ -95,9 +95,8 @@ struct BadgesReceivedView: View {
 
         do {
             guard let newProfileBadgesSigned = try? ns.signEvent(newProfileBadges) else { throw "could not create newProfileBadgesSigned " }
-            _ = Event.saveEvent(event: newProfileBadgesSigned, context: viewContext)
-            try viewContext.save()
-//            print(newProfileBadgesSigned.wrappedEventJson())
+            _ = Event.saveEvent(event: newProfileBadgesSigned)
+            DataProvider.shared().bgSave()
             up.publishNow(newProfileBadgesSigned)
             self.selection.removeAll()
         }

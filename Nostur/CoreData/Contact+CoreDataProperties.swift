@@ -235,26 +235,51 @@ extension Contact : Identifiable {
         }
     }
 
-    static func saveOrUpdateContact(event:NEvent, context:NSManagedObjectContext, skipRelatedUpdate:Bool = false) {
-        if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
-            print("☠️☠️☠️☠️ saveOrUpdateContact")
-        }
-        let decoder = JSONDecoder()
-        guard let metaData = try? decoder.decode(NSetMetadata.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) else {
-            return
-        }
-        
-        let request = NSFetchRequest<Contact>(entityName: "Contact")
-        request.predicate = NSPredicate(format: "pubkey == %@", event.publicKey)
-        request.sortDescriptors = [NSSortDescriptor(key: "updated_at", ascending: false)]
-        request.fetchLimit = 1
-        
-        if let contact = try? context.fetch(request).first {
-            
-            // Received metadata is newer than stored Contact
-            if contact.metadata_created_at < event.createdAt.timestamp {
+    static func saveOrUpdateContact(event:NEvent) {
+//        if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+//            print("☠️☠️☠️☠️ saveOrUpdateContact")
+//        }
+        let context = DataProvider.shared().bg
                 
-                // update contact
+        context.performAndWait {
+            let decoder = JSONDecoder()
+            guard let metaData = try? decoder.decode(NSetMetadata.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) else {
+                return
+            }
+            
+            let request = NSFetchRequest<Contact>(entityName: "Contact")
+            request.predicate = NSPredicate(format: "pubkey == %@", event.publicKey)
+            request.sortDescriptors = [NSSortDescriptor(key: "updated_at", ascending: false)]
+            request.fetchLimit = 1
+            
+            if let contact = try? context.fetch(request).first {
+                
+                // Received metadata is newer than stored Contact
+                if contact.metadata_created_at < event.createdAt.timestamp {
+                    
+                    // update contact
+                    contact.name = metaData.name
+                    contact.display_name = metaData.display_name
+                    contact.about = metaData.about
+                    contact.picture = metaData.picture
+                    contact.banner = metaData.banner
+                    contact.nip05 = metaData.nip05
+                    contact.lud16 = metaData.lud16
+                    contact.lud06 = metaData.lud06
+                    contact.metadata_created_at = Int64(event.createdAt.timestamp) // By Author (kind 0)
+                    contact.updated_at = Int64(Date().timeIntervalSince1970) // By Nostur
+                    updateRelatedEvents(contact)
+                }
+                else {
+                    // Received metadata is older than stored Contact
+    //                print("🟠🟠 Already have newer info stored in Contact. Skipped update.")
+                }
+            }
+            else {
+                // Received metadata is not in any Contact
+                // insert new contact
+                let contact = Contact(context: context)
+                contact.pubkey = event.publicKey
                 contact.name = metaData.name
                 contact.display_name = metaData.display_name
                 contact.about = metaData.about
@@ -263,41 +288,14 @@ extension Contact : Identifiable {
                 contact.nip05 = metaData.nip05
                 contact.lud16 = metaData.lud16
                 contact.lud06 = metaData.lud06
-                contact.metadata_created_at = Int64(event.createdAt.timestamp) // By Author (kind 0)
-                contact.updated_at = Int64(Date().timeIntervalSince1970) // By Nostur
-//                print("🟢🟢 Existing Contact metadata updated")
-                if (!skipRelatedUpdate) {
-                    updateRelatedEvents(contact, context: context)
-                }
-            }
-            else {
-                // Received metadata is older than stored Contact
-//                print("🟠🟠 Already have newer info stored in Contact. Skipped update.")
-            }
-        }
-        else {
-            // Received metadata is not in any Contact
-            // insert new contact
-            let contact = Contact(context: context)
-            contact.pubkey = event.publicKey
-            contact.name = metaData.name
-            contact.display_name = metaData.display_name
-            contact.about = metaData.about
-            contact.picture = metaData.picture
-            contact.banner = metaData.banner
-            contact.nip05 = metaData.nip05
-            contact.lud16 = metaData.lud16
-            contact.lud06 = metaData.lud06
-            contact.metadata_created_at = Int64(event.createdAt.timestamp) // by author kind 0
-            contact.updated_at = Int64(Date.now.timeIntervalSince1970) // by Nostur
-//            print("🟢🟢 New contact stored ")
-            if (!skipRelatedUpdate) {
-                updateRelatedEvents(contact, context: context)
+                contact.metadata_created_at = Int64(event.createdAt.timestamp) // by author kind 0
+                contact.updated_at = Int64(Date.now.timeIntervalSince1970) // by Nostur
+                updateRelatedEvents(contact)
             }
         }
     }
     
-    static func updateRelatedEvents(_ contact:Contact, context:NSManagedObjectContext) {
+    static func updateRelatedEvents(_ contact:Contact) {
         let username = contact.username != "" ? contact.username : contact.authorName
         PubkeyUsernameCache.shared.setObject(for: contact.pubkey, value: username)
         

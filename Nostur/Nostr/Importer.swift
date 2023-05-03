@@ -128,7 +128,7 @@ class Importer {
                         }
                         else if let noteInNote = try? decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
                             if !Event.eventExists(id: noteInNote.id, context: context) {
-                                _ = Event.saveEvent(event: noteInNote, context:context)
+                                _ = Event.saveEvent(event: noteInNote)
                             }
                             else {
                                 //                                print("🔴 noteInNote already in db")
@@ -172,14 +172,14 @@ class Importer {
                         }
                     }
                     
-                    let savedEvent = Event.saveEvent(event: event, context:context, relay: message.relay)
+                    let savedEvent = Event.saveEvent(event: event, relay: message.relay)
                     saved = saved + 1
                     if (kind6firstQuote != nil) {
                         savedEvent.firstQuote = kind6firstQuote
                     }
                     
                     if event.kind == .setMetadata {
-                        Contact.saveOrUpdateContact(event: event, context: context)
+                        Contact.saveOrUpdateContact(event: event)
                         if (ot.isOnboarding && ot.pubkey == event.publicKey) {
                             print("🟠🟠🟠 2")
                             Account.preFillReadOnlyAccountInfo(event: event, context: context, forceOverwrite: true)

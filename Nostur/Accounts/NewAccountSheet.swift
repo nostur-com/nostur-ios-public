@@ -96,10 +96,10 @@ struct NewAccountSheet: View {
             
             guard let newKind0EventSigned = try AccountManager.createMetadataEvent(account: newAccount) else { throw "could not create newKind0EventSigned " }
             
-            _ = Event.saveEvent(event: newKind0EventSigned, context: viewContext)
-            Contact.saveOrUpdateContact(event: newKind0EventSigned, context: viewContext)
-            
-            try viewContext.save()
+            _ = Event.saveEvent(event: newKind0EventSigned)
+            Contact.saveOrUpdateContact(event: newKind0EventSigned)
+            DataProvider.shared().bgSave()
+//            try viewContext.save()
             
             // broadcast to relays
 //            up.publishNow(newKind0EventSigned) // TODO: Publish later? its probably empty now, will fill with follow

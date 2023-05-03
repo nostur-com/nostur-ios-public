@@ -113,6 +113,7 @@ public final class NewNoteText: ObservableObject {
         HighlightRule(pattern: NewNoteText.mentionRegex, formattingRules: [
             TextFormattingRule(key: .foregroundColor, value: UIColor(named: "AccentColor")!),
             TextFormattingRule(fontTraits: .traitBold)
+//            TextFormattingRule(key: .font, value: codeFont)
         ])
     ]
     static let mentionRegex = try! NSRegularExpression(pattern: "(@\\w+|(?<![/\\?])#\\S+)", options: [])
@@ -130,6 +131,7 @@ public final class NewNoteText: ObservableObject {
 }
 
 struct NewNote: View {
+//    @Environment(\.managedObjectContext) var viewContext
     let PLACEHOLDER = "What's happening?"
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var ns:NosturState
@@ -142,168 +144,173 @@ struct NewNote: View {
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Contact.nip05verifiedAt, ascending: false)], predicate: NSPredicate(value: false))
     var contacts:FetchedResults<Contact>
-    var firstResults:[Contact] { Array(contacts.prefix(30)) }
+    var firstResults:[Contact] { Array(contacts.prefix(60)) }
     
     @State var selectedMentions:[Contact] = []
     @State var previewEvent:Event?
     @State var subscriptions = Set<AnyCancellable>()
     
     var body: some View {
-        VStack {
-            HStack(alignment: .top) {
-                PFP(pubkey: ns.account!.publicKey, pictureUrl: ns.account?.picture, isFollowing: true)
-                
-                ZStack(alignment:.leading) {
-                    VStack(alignment: .leading) {
-                        Text(PLACEHOLDER).foregroundColor(.gray)
-                            .opacity(vm.text == "" ? 1 : 0)
-                            .offset(x: 5.0, y: 7.0)
-                        Spacer()
-                    }
-                    VStack(alignment: .leading) {
-                        HighlightedTextEditor(
-                            text: $vm.text,
-                            pastedImages: $vm.pastedImages,
-                            shouldBecomeFirstResponder: true,
-                            highlightRules: NewNoteText.rules,
-                            photoPickerTapped: {
-                                ipm.photoPickerShown = true
-                            })
-                        .introspect { editor in
-                            if (vm.textView == nil) {
-                                vm.textView = editor.textView
-                            }
+        if let account = ns.account {
+            VStack {
+                HStack(alignment: .top) {
+                    PFP(pubkey: account.publicKey, pictureUrl: account.picture, isFollowing: true)
+                    
+                    ZStack(alignment:.leading) {
+                        VStack(alignment: .leading) {
+                            Text(PLACEHOLDER).foregroundColor(.gray)
+                                .opacity(vm.text == "" ? 1 : 0)
+                                .offset(x: 5.0, y: 7.0)
+                            Spacer()
                         }
-                        .frame(minHeight: 200, idealHeight: 325, maxHeight: 550, alignment: .top)
-                        .photosPicker(isPresented: $ipm.photoPickerShown, selection: $ipm.imageSelection, matching: .images, photoLibrary: .shared())
-                        .onChange(of: ipm.newImage) { newImage in
-                            if let newImage {
-                                vm.pastedImages.append(newImage)
+                        VStack(alignment: .leading) {
+                            HighlightedTextEditor(
+                                text: $vm.text,
+                                pastedImages: $vm.pastedImages,
+                                shouldBecomeFirstResponder: true,
+                                highlightRules: NewNoteText.rules,
+                                photoPickerTapped: {
+                                    ipm.photoPickerShown = true
+                                })
+                            .introspect { editor in
+                                if (vm.textView == nil) {
+                                    vm.textView = editor.textView
+                                }
                             }
+                            .frame(minHeight: 200, idealHeight: 325, maxHeight: 550, alignment: .top)
+                            .photosPicker(isPresented: $ipm.photoPickerShown, selection: $ipm.imageSelection, matching: .images, photoLibrary: .shared())
+                            .onChange(of: ipm.newImage) { newImage in
+                                if let newImage {
+                                    vm.pastedImages.append(newImage)
+                                }
+                            }
+                            ImagePreviews(pastedImages: $vm.pastedImages)
+                            Spacer()
                         }
-                        ImagePreviews(pastedImages: $vm.pastedImages)
-                        Spacer()
+                        AnyStatus(filter: "NewPost")
                     }
-                    AnyStatus(filter: "NewPost")
                 }
-            }
-            if vm.mentioning {
-                ScrollView {
-                    LazyVStack {
-                        ForEach(firstResults) { contact in
-                            ContactSearchResultRow(contact: contact) {
-                                guard vm.textView != nil else { return }
-                                let mentionName = contact.handle
-                                vm.text = vm.text.dropLast(vm.term.count) + mentionName
-                                selectedMentions.append(contact)
-                                vm.mentioning = false
-                                vm.lastHit = mentionName
-                                vm.term = ""
-                                
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { // after 0.3 sec to get the new .endOfDocument
-//                                    vm.mentioning = false
-                                    let newPosition = vm.textView!.endOfDocument
-                                    vm.textView!.selectedTextRange = vm.textView!.textRange(from: newPosition, to: newPosition)
+                if vm.mentioning {
+                    ScrollView {
+                        LazyVStack {
+                            ForEach(firstResults) { contact in
+                                ContactSearchResultRow(contact: contact) {
+                                    guard vm.textView != nil else { return }
+                                    let mentionName = contact.handle
+                                    vm.text = vm.text.dropLast(vm.term.count) + (mentionName)
+                                    selectedMentions.append(contact)
+                                    vm.mentioning = false
+                                    vm.lastHit = mentionName
+                                    vm.term = ""
+                                    
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { // after 0.3 sec to get the new .endOfDocument
+                                        //                                    vm.mentioning = false
+                                        let newPosition = vm.textView!.endOfDocument
+                                        vm.textView!.selectedTextRange = vm.textView!.textRange(from: newPosition, to: newPosition)
+                                    }
                                 }
                             }
                         }
                     }
                 }
+                Spacer()
             }
-            Spacer()
-        }
-        .padding(10)
-        .onAppear {
-            updateEventWithNewText()
-        }
-        .onChange(of: vm.debouncedText) { newText in
-            if (vm.nEvent == nil) {
-                vm.nEvent = NEvent(content: newText)
-            } else {
-                vm.nEvent!.content = newText
+            .padding(10)
+            .onAppear {
+                updateEventWithNewText()
             }
-            
-            guard let account = ns.account else { return }
-            if let mentionTerm = mentionTerm(newText) {
-//                print ("mentionTerm \(mentionTerm) lastHit: \(vm.lastHit)")
-
-                if mentionTerm == vm.lastHit {
-                    vm.mentioning = false
+            .onChange(of: vm.debouncedText) { newText in
+                if (vm.nEvent == nil) {
+                    vm.nEvent = NEvent(content: newText)
+                } else {
+                    vm.nEvent!.content = newText
                 }
-                else {
-                    vm.mentioning = true
-                    vm.term = mentionTerm
-                    contacts.nsPredicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@) AND NOT pubkey IN %@", mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), account.blockedPubkeys_)
-                }
-
-            }
-            else {
-                vm.mentioning = false
-            }
-        }
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    dismiss() // TODO: If wrote something, confirm cancellation
-                } label: {
-                    Text("Cancel")
-                }
-            }
-            ToolbarItem {
-                Button("Preview") {
-                    guard let account = ns.account else { return }
-                    guard var nEvent = vm.nEvent else { return }
-                    nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected:selectedMentions)
-                    nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
-                    nEvent = putHashtagsInTags(nEvent)
-                    nEvent.publicKey = account.publicKey
+                
+                guard let account = ns.account else { return }
+                if let mentionTerm = mentionTerm(newText) {
+                    //                print ("mentionTerm \(mentionTerm) lastHit: \(vm.lastHit)")
                     
-                    if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
-                        nEvent.content = replaceNsecWithHunter2(nEvent.content)
-                    }
-                    for index in vm.pastedImages.indices {
-                        nEvent.content = nEvent.content + "\n--@!^@\(index)@^!@--"
-                    }
-                    let previewEvent = createPreviewEvent(nEvent)
-                    if (vm.pastedImages.count > 0) {
-                        previewEvent.previewImages = vm.pastedImages
-                    }
-                    self.previewEvent = previewEvent
-                }
-                .cornerRadius(20)
-                .disabled(uploading)
-            }
-            
-            if let uploadError {
-                ToolbarItem(placement: .principal) {
-                    Text(uploadError).foregroundColor(.red)
-                }
-            }
-            
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    sendNow()
-                } label: {
-                    if (uploading) {
-                        ProgressView()
+                    if mentionTerm == vm.lastHit {
+                        vm.mentioning = false
                     }
                     else {
-                        Text("Post")
+                        vm.mentioning = true
+                        vm.term = mentionTerm
+                        contacts.nsPredicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@) AND NOT pubkey IN %@", mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), account.blockedPubkeys_)
+                    }
+                    
+                }
+                else {
+                    vm.mentioning = false
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        dismiss() // TODO: If wrote something, confirm cancellation
+                    } label: {
+                        Text("Cancel")
                     }
                 }
-                .buttonStyle(.borderedProminent)
-                .cornerRadius(20)
-                .disabled(uploading)
+                ToolbarItem {
+                    Button("Preview") {
+                        guard let account = ns.account else { return }
+                        guard var nEvent = vm.nEvent else { return }
+                        nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected:selectedMentions)
+                        nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
+                        nEvent = putHashtagsInTags(nEvent)
+                        nEvent.publicKey = account.publicKey
+                        
+                        if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
+                            nEvent.content = replaceNsecWithHunter2(nEvent.content)
+                        }
+                        for index in vm.pastedImages.indices {
+                            nEvent.content = nEvent.content + "\n--@!^@\(index)@^!@--"
+                        }
+                        let previewEvent = createPreviewEvent(nEvent)
+                        if (vm.pastedImages.count > 0) {
+                            previewEvent.previewImages = vm.pastedImages
+                        }
+                        self.previewEvent = previewEvent
+                    }
+                    .cornerRadius(20)
+                    .disabled(uploading)
+                }
+                
+                if let uploadError {
+                    ToolbarItem(placement: .principal) {
+                        Text(uploadError).foregroundColor(.red)
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        sendNow()
+                    } label: {
+                        if (uploading) {
+                            ProgressView()
+                        }
+                        else {
+                            Text("Post")
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .cornerRadius(20)
+                    .disabled(uploading)
                     
+                }
+            }
+            .sheet(item: $previewEvent) { previewEvent in
+                NavigationStack {
+                    PostPreview(previewEvent: previewEvent, sendNow: self.sendNow, uploading: $uploading)
+                        .onDisappear {
+                            DataProvider.shared().viewContext.delete(previewEvent)
+                        }
+                }
             }
         }
-        .sheet(item: $previewEvent) { previewEvent in
-            NavigationStack {
-                PostPreview(previewEvent: previewEvent, sendNow: self.sendNow, uploading: $uploading)
-                    .onDisappear {
-                        DataProvider.shared().viewContext.delete(previewEvent)
-                    }
-            }
+        else {
+            ProgressView()
         }
     }
     

@@ -186,6 +186,19 @@ class DataProvider: ObservableObject {
         }
     }
     
+    func bgSave() { // TODO: replace all viewContext.save() with this save
+        bg.perform {
+            if self.bg.hasChanges {
+                do {
+                    try self.bg.save()
+                }
+                catch {
+                    print("🔴🔴 Could not save bgContext")
+                }
+            }
+        }
+    }
+    
     static func shared() -> DataProvider {
         // Use an in-memory store for previews
         #if DEBUG
