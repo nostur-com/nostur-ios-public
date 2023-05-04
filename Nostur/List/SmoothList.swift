@@ -243,19 +243,19 @@ struct SmoothList: UIViewControllerRepresentable {
                 }
             }
             if imageRequests.count > 0 {
-//                print("prefetching for \(imageRequests.count)")
+                //                print("prefetching for \(imageRequests.count)")
                 prefetcher.startPrefetching(with: imageRequests)
             }
             if imageRequestsPFP.count > 0 {
-//                print("prefetching for PFP: \(imageRequestsPFP.count)")
+                //                print("prefetching for PFP: \(imageRequestsPFP.count)")
                 prefetcherPFP.startPrefetching(with: imageRequestsPFP)
             }
             if imageRequestsPFPnotFollowing.count > 0 {
-//                print("prefetching for PFP not following: \(imageRequestsPFPnotFollowing.count)")
+                //                print("prefetching for PFP not following: \(imageRequestsPFPnotFollowing.count)")
                 prefetcherPFPnotFollowing.startPrefetching(with: imageRequestsPFPnotFollowing)
             }
         }
-
+        
         func collectionView(_ collectionView: UICollectionView, cancelPrefetchingForItemsAt indexPaths: [IndexPath]) {
             let imageWidth = parent.dim.availableNoteRowImageWidth()
             var imageRequests:[ImageRequest] = []
@@ -319,41 +319,41 @@ struct SmoothList: UIViewControllerRepresentable {
                 }
             }
             if (imageRequests.count > 0) {
-//                print("cancelling prefetch for \(imageRequests.count)")
+                //                print("cancelling prefetch for \(imageRequests.count)")
                 prefetcher.stopPrefetching(with: imageRequests)
             }
             if imageRequestsPFP.count > 0 {
-//                print("prefetching for PFP: \(imageRequestsPFP.count)")
+                //                print("prefetching for PFP: \(imageRequestsPFP.count)")
                 prefetcherPFP.stopPrefetching(with: imageRequestsPFP)
             }
             if imageRequestsPFPnotFollowing.count > 0 {
-//                print("prefetching for PFP not following: \(imageRequestsPFPnotFollowing.count)")
+                //                print("prefetching for PFP not following: \(imageRequestsPFPnotFollowing.count)")
                 prefetcherPFPnotFollowing.stopPrefetching(with: imageRequestsPFPnotFollowing)
             }
         }
         
-//        func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-//            let cellWidth = collectionView.bounds.size.width - (parent.fullWidthImages ? 0 : 10)
-//            guard let item = parent.data[safe: indexPath.row] else { return CGSize(width: cellWidth, height: 250.0) }
-//
-//            let mediaElements = item.renderedElements.filter {
-//                if case .image = $0 {
-//                        return true
-//                }
-//                if case .video = $0 {
-//                        return true
-//                }
-//                if case .linkPreview = $0 {
-//                        return true
-//                }
-//                return false
-//            }
-//
-//            // Count every image/video/linkpreview as 250. every parent or post as 150
-//            let height = Double((mediaElements.count * 250) + (item.threadPostsCount) * 150)
-//            print("🟢🟢 height estimated at: \(height)" )
-//            return CGSize(width: cellWidth, height: height)
-//        }
+        //        func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        //            let cellWidth = collectionView.bounds.size.width - (parent.fullWidthImages ? 0 : 10)
+        //            guard let item = parent.data[safe: indexPath.row] else { return CGSize(width: cellWidth, height: 250.0) }
+        //
+        //            let mediaElements = item.renderedElements.filter {
+        //                if case .image = $0 {
+        //                        return true
+        //                }
+        //                if case .video = $0 {
+        //                        return true
+        //                }
+        //                if case .linkPreview = $0 {
+        //                        return true
+        //                }
+        //                return false
+        //            }
+        //
+        //            // Count every image/video/linkpreview as 250. every parent or post as 150
+        //            let height = Double((mediaElements.count * 250) + (item.threadPostsCount) * 150)
+        //            print("🟢🟢 height estimated at: \(height)" )
+        //            return CGSize(width: cellWidth, height: height)
+        //        }
         
         func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
             // Calculate the time since the last call
@@ -384,12 +384,12 @@ struct SmoothList: UIViewControllerRepresentable {
                 return
             }
             if scrollView.contentOffset.y > 150 {
-//                print("IS AT TOP FALSE")
+                //                print("IS AT TOP FALSE")
                 parent.onFinishedScrolling?((isAtTop:false, indexPaths:indexPaths)) // didFinish and isAtTop=false
                 
             }
             else {
-//                print("IS AT TOP TRUE")
+                //                print("IS AT TOP TRUE")
                 parent.onFinishedScrolling?((isAtTop:true, indexPaths:indexPaths)) // didFinish and isAtTop=true
                 
                 if (!parent.autoScroll) && (scrollView.contentOffset.y < SMOOTHLIST_AUTOSCROLL_OFFSET) {
@@ -440,9 +440,9 @@ final class CViewHolder {
         }
         
         layout.configuration.scrollDirection = .vertical
-//        let flowLayout = UICollectionViewFlowLayout()
-//        flowLayout.estimatedItemSize = CGSize(width: UIScreen.main.bounds.width - 10, height: 250.0)
-//        flowLayout.scrollDirection = .vertical
+        //        let flowLayout = UICollectionViewFlowLayout()
+        //        flowLayout.estimatedItemSize = CGSize(width: UIScreen.main.bounds.width - 10, height: 250.0)
+        //        flowLayout.scrollDirection = .vertical
         
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         //        collectionView.backgroundColor = .systemGroupedBackground
@@ -474,7 +474,7 @@ final class CViewHolder {
                     .boxShadow()
                     .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
                     .padding(.vertical, 10)
-//                    .frame(maxWidth: .infinity)
+                //                    .frame(maxWidth: .infinity)
             }
             .background(Color("ListBackground"))
             .margins(.all, 0)
@@ -566,8 +566,8 @@ struct SmoothList_PReviews: PreviewProvider {
 func imageRequestFor(_ picture:String) -> ImageRequest {
     if !SettingsStore.shared.animatedPFPenabled || picture.suffix(4) != ".gif" {
         return ImageRequest(url: URL(string:picture),
-                     processors: [.resize(size: CGSize(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: DIMENSIONS.POST_ROW_PFP_HEIGHT), unit: .points, contentMode: .aspectFill, crop: true, upscale: true)],
-                     userInfo: [.scaleKey: UIScreen.main.scale])
+                            processors: [.resize(size: CGSize(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: DIMENSIONS.POST_ROW_PFP_HEIGHT), unit: .points, contentMode: .aspectFill, crop: true, upscale: true)],
+                            userInfo: [.scaleKey: UIScreen.main.scale])
     }
     return ImageRequest(url: URL(string:picture))
 }

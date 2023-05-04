@@ -235,4 +235,12 @@ extension Notification.Name {
     static var newHighlight: Notification.Name {
         return Notification.Name("newHighlight")
     }
+    
+    static var relayFetchResult: Notification.Name {
+        return Notification.Name("relayFetchResult")
+    }
+    
+    static var importedMessagesFromSubscriptionIds: Notification.Name {
+        return Notification.Name("importedMessagesFromSubscriptionIds")
+    }
 }

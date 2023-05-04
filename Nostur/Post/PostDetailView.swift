@@ -291,7 +291,7 @@ struct PostAndParent: View {
                     
                     if (event.replyToRootId != nil) {
                         
-                        // FEtch all that reference the root note
+                        // Fetch all that reference the root note
                         // to build the thread, maybe kind=1 is enough, or all...?
                         sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEventReferences(ids: [event.replyToRootId!], kinds: [1])))
                     }
