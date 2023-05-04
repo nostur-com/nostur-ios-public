@@ -10,18 +10,14 @@ import CoreData
 import Nuke
 import NukeUI
 
-
 // MEDIA ON USER PROFILE SCREEN
 struct ProfileMediaView: View {
-    
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var dim:DIMENSIONS
-    
-    let sp:SocketPool = .shared
     let pubkey:String
-    @State var limit = 1000
-    @State var imageUrls:[URL] = []
-    @State var offset = 0
+//    @State var imageUrls:[URL] = []
+    @StateObject var fl = FastLoader()
+    @State var backlog = Backlog()
     
     let columns = [
         GridItem(.flexible()),
@@ -31,9 +27,13 @@ struct ProfileMediaView: View {
     
     var squareSize:CGFloat { CGFloat(Int((dim.listWidth-26)/3)) }
     
+    var imageUrls:[URL] {
+        fl.events.flatMap { getImgUrlsFromContent($0.content!) }
+    }
+    
     var body: some View {
         ScrollView {
-            LazyVGrid(columns: columns, spacing: 3) {
+            LazyVGrid(columns: columns, spacing: 5) {
                 ForEach(imageUrls.indices, id: \.self) { index in
                     // Lazy image here
                     LazyImage(request:
@@ -64,24 +64,47 @@ struct ProfileMediaView: View {
                         }
                         
                     }
-                    .pipeline(ImageProcessing.shared.content) // No processing again here, we probably never show the
-//                    .id(imageUrls[index].absoluteString)
+                    .pipeline(ImageProcessing.shared.content)
                 }
             }
             .padding(10)
         }
-//        .background(Color.systemBackground)
         .onAppear {
-            let fr = Event.fetchRequest()
-            fr.predicate = NSPredicate(format: "pubkey == %@ AND kind == 1", pubkey)
-            fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-            fr.fetchBatchSize = 1000
-            fr.fetchOffset = offset
+            fl.vPostTransform = false
+            fl.predicate = NSPredicate(format: "pubkey == %@ AND kind == 1", pubkey)
+            fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+            fl.loadMore(1000)
             
-            if let posts = try? viewContext.fetch(fr) {
-                imageUrls = posts.flatMap { getImgUrlsFromContent($0.content!) }
+            // if there is nothing on screen, fetch most recent 1000
+            let fetchNewerLimit = 1000
+            let fetchNewerTask = ReqTask(
+                reqCommand: { (taskId) in
+                    print("\(taskId) 🟠🟠 fetchNewerTask.fetch()")
+                    req(RM.getAuthorKind1(pubkey: pubkey, limit:fetchNewerLimit, subscriptionId: taskId))
+                },
+                processResponseCommand: { (taskId) in
+                    print("\(taskId) 🟠🟠🟠 processResponseCommand")
+                    let currentNewestCreatedAt = fl.vPosts.first?.created_at ?? 0
+                    fl.predicate = NSPredicate(
+                        format:
+                            "created_at >= %i " +
+                            "AND pubkey == %@ " + // blockedPubkeys + [pubkey]
+                            "AND kind == 1",
+                            currentNewestCreatedAt,
+                            pubkey
+                    )
+                    fl.loadNewerEvents(fetchNewerLimit, taskId:taskId)
+                })
+
+            backlog.add(fetchNewerTask)
+            fetchNewerTask.fetch()
+        }
+        .onReceive(receiveNotification(.importedMessagesFromSubscriptionIds)) { notification in
+            let importedNotification = notification.object as! ImportedNotification
+            let reqTasks = backlog.tasks(with: importedNotification.subscriptionIds)
+            reqTasks.forEach { task in
+                task.process()
             }
-            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorKind1(pubkey: pubkey, limit:500)))
         }
     }
 }
