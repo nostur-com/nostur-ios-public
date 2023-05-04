@@ -283,7 +283,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     }
     
     func didReceiveMessage(_ text:String) {
-//        print("🏎️🔌 RECEIVED: \(self.url): \(text)")
+//        print("🟠🟠🏎️🔌 RECEIVED: \(self.url): \(text)")
         MessageParser.shared.socketReceivedMessage(text: text, relayUrl: self.url, client:client)
     }
     
@@ -357,7 +357,7 @@ class NewWebSocket {
             print("🔴🔴 Not connected. Did not sendMessage \(self.url)")
             return
         }
-//        print("🏎️🔌🔌 SEND \(self.url): \(text)")
+//        print("🟠🟠🏎️🔌🔌 SEND \(self.url): \(text)")
         let _ = webSocket.send(text)
             .sink(receiveCompletion: {
                 print($0)
