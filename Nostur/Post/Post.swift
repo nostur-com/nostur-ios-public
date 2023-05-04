@@ -274,7 +274,7 @@ class VPostTransformer {
         guard let ctx = event.managedObjectContext else { return false }
         let fr = Event.fetchRequest()
         // TODO: Maybe add > .created_at, faster or not?
-        fr.predicate = NSPredicate(format: "replyToId == %@ AND pubkey == %@",
+        fr.predicate = NSPredicate(format: "replyToId == %@ AND pubkey == %@ AND kind == 1",
                                    event.id, NosturState.shared.activeAccountPublicKey)
         fr.fetchLimit = 1
         fr.resultType = .countResultType
