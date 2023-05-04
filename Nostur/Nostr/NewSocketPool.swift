@@ -336,12 +336,26 @@ protocol NewWebSocketDelegate: URLSessionWebSocketDelegate {
 class NewWebSocket {
     let url:String
     var socketQueue = OperationQueue()
-    var webSocket:WebSocket?
+    private var websocketQueue = DispatchQueue(label: "com.nostur.websocket")
+    var webSocket_:WebSocket?
     var connection:AnyCancellable?
 //    var pinger:AnyCancellable?
 //    var subscriptions = Set<AnyCancellable>()
 //    var pingOnceSub:AnyCancellable?
     var delegate:NewWebSocketDelegate?
+    
+    var webSocket:WebSocket? {
+        get {
+            websocketQueue.sync {
+                self.webSocket_
+            }
+        }
+        set {
+            websocketQueue.async(flags: .barrier) {
+                self.webSocket_ = newValue
+            }
+        }
+    }
     
     init(url:String) {
         self.url = url
