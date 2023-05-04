@@ -8,55 +8,70 @@
 import SwiftUI
 import CoreData
 
-// NOTES ON USER PROFILE SCREEN
+// Posts on user profile screen
 struct ProfileNotesView: View {
     
-    let sp:SocketPool = .shared
     let pubkey:String
-    @State var limit = 150
     @ObservedObject var settings:SettingsStore = .shared
+    @EnvironmentObject var ns:NosturState
+    @StateObject var fl = FastLoader()
+    @State var backlog = Backlog()
     
     var body: some View {
-        DynamicFetchView(
-            predicate: NSPredicate(format: "pubkey == %@ AND kind IN {1,6,9802}", pubkey),
-            fetchLimit: limit,
-            sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]) { (events: FetchedResults<Event>)  in
-                LazyVStack {
-                    if (events.count > 0) {
-                        ForEach(events.compactMap { VPostTransformer.shared.toVPost($0, skipParents: true) }) { vPost in
-                            NoteRow(vPost: vPost)
-                                .background(Color.systemBackground)
-                                .boxShadow()
-                                .padding(.vertical, 10)
-                                .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
-                                .onTapGesture {
-                                    navigateTo(vPost)
-                                }
-                        }
-                        VStack {
-                            if (events.count == limit) {
-                                HStack {
-                                    Spacer()
-                                    Button("Load more") {
-                                        limit = limit + 125
-                                    }
-                                    .padding(30)
-                                    Spacer()
-                                }
-                            }
-                        }
-                    }
-                    else {
-                        CenteredProgressView()
-                    }
-                }
+        LazyVStack(spacing: 0) {
+            ForEach(fl.vPosts) { vPost in
+                NoteRow(vPost: vPost)
+                    .background(Color.systemBackground)
+                    .boxShadow()
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
+                    .onTapGesture { navigateTo(vPost) }
+                    .id(vPost.id)
             }
-//            .padding()
-            .background(Color("ListBackground"))
-            .onAppear {
-                print("🟢 ProfileNotesView.onAppear always REQ.1: \(pubkey)")
-                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorNotes(pubkey: pubkey, limit:250)))
+            Button("Show more") { fl.loadMore() }
+            .hCentered()
+            .buttonStyle(.bordered)
+            .tint(.accentColor)
+        }
+        .background(Color("ListBackground"))
+        .onAppear {
+            fl.followingKeys = ns.followingPublicKeys
+            fl.predicate = NSPredicate(format: "pubkey == %@ AND kind IN {1,6,9802} ", pubkey)
+            fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+            
+            fl.loadMore(5)
+            fl.loadMoreBG(15)
+            
+            let fetchNewerLimit = 250
+            let fetchNewerTask = ReqTask(
+                reqCommand: { (taskId) in
+                    print("\(taskId) 🟠🟠 fetchNewerTask.fetch()")
+                    req(RM.getAuthorNotes(pubkey: pubkey, limit:fetchNewerLimit, subscriptionId: taskId))
+                },
+                processResponseCommand: { (taskId) in
+                    print("\(taskId) 🟠🟠🟠 processResponseCommand")
+                    let currentNewestCreatedAt = fl.vPosts.first?.created_at ?? 0
+                    fl.predicate = NSPredicate(
+                        format:
+                            "created_at >= %i " +
+                            "AND pubkey == %@ " + // blockedPubkeys + [pubkey]
+                            "AND kind IN {1,6,9802} ",
+                            currentNewestCreatedAt,
+                            pubkey
+                    )
+                    fl.loadNewerBG(fetchNewerLimit, taskId:taskId)
+                })
+
+            backlog.add(fetchNewerTask)
+            fetchNewerTask.fetch()
+        }
+        .onReceive(receiveNotification(.importedMessagesFromSubscriptionIds)) { notification in
+            let importedNotification = notification.object as! ImportedNotification
+            let reqTasks = backlog.tasks(with: importedNotification.subscriptionIds)
+            reqTasks.forEach { task in
+                task.process()
             }
+        }
     }
 }
 
