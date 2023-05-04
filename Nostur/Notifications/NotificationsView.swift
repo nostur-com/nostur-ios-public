@@ -18,8 +18,8 @@ struct NotificationsContainer: View {
         let _ = Self._printChanges()
         NavigationStack(path: $navPath) {
             VStack {
-                if (ns.account != nil) {
-                    NotificationsView(account: ns.account!)
+                if let account = ns.account {
+                    NotificationsView(account: account)
                 }
                 else {
                     Text("Select account account first")
@@ -43,7 +43,6 @@ struct NotificationsView: View {
     @Environment(\.managedObjectContext) var viewContext
     @ObservedObject var nm:NotificationsManager = .shared
     @ObservedObject var account:Account
-    @EnvironmentObject var ns:NosturState
     let sp:SocketPool = .shared
     
     @State var tab = "Posts"
@@ -52,51 +51,46 @@ struct NotificationsView: View {
     var body: some View {
         let _ = Self._printChanges()
         VStack {
-            if let account = ns.account {
-                HStack {
-                    TabButton(action: {
-                        withAnimation {
-                            tab = "Posts"
-                            nm.unreadMentions = 0
-                        }
-                    }, title: "Posts", selected: tab == "Posts", unread: nm.unreadMentions)
-                    
-                    TabButton(action: {
-                        withAnimation {
-                            tab = "Reactions"
-                            nm.unreadReactions = 0
-                        }
-                    }, title: "Reactions", selected: tab == "Reactions", unread: nm.unreadReactions)
-                    
-                    TabButton(action: {
-                        withAnimation {
-                            tab = "Zaps"
-                            nm.unreadZaps = 0
-                        }
-                    }, title: "Zaps", selected: tab == "Zaps", unread: nm.unreadZaps)
-                }
+            HStack {
+                TabButton(action: {
+                    withAnimation {
+                        tab = "Posts"
+                        nm.unreadMentions = 0
+                    }
+                }, title: "Posts", selected: tab == "Posts", unread: nm.unreadMentions)
                 
-                switch (tab) {
-                    case "Posts":
-                        NotificationsPosts(pubkey: account.publicKey, mutedRootIds: account.mutedRootIds_, blockedPubkeys: account.blockedPubkeys_, context: viewContext)
-                            .equatable()
-//                            .padding(.horizontal, 10)
-                    case "Reactions":
-                        NotificationsReactions(pubkey: account.publicKey, blockedPubkeys: account.blockedPubkeys_, context: viewContext)
-                            .equatable()
-                            .padding(.horizontal, 10)
-                    case "Zaps":
-                        NotificationsZaps(pubkey: account.publicKey, blockedPubkeys: account.blockedPubkeys_, context: viewContext)
-                            .equatable()
-//                            .padding(.horizontal, 10)
-                    default:
-                        EmptyView()
-                }
-                Spacer()
+                TabButton(action: {
+                    withAnimation {
+                        tab = "Reactions"
+                        nm.unreadReactions = 0
+                    }
+                }, title: "Reactions", selected: tab == "Reactions", unread: nm.unreadReactions)
+                
+                TabButton(action: {
+                    withAnimation {
+                        tab = "Zaps"
+                        nm.unreadZaps = 0
+                    }
+                }, title: "Zaps", selected: tab == "Zaps", unread: nm.unreadZaps)
             }
-            else {
-                Text("No active account")
+            
+            switch (tab) {
+                case "Posts":
+                    NotificationsPosts(pubkey: account.publicKey, mutedRootIds: account.mutedRootIds_, blockedPubkeys: account.blockedPubkeys_)
+//                            .equatable()
+//                            .padding(.horizontal, 10)
+                case "Reactions":
+                    NotificationsReactions(pubkey: account.publicKey, blockedPubkeys: account.blockedPubkeys_, context: viewContext)
+                        .equatable()
+                        .padding(.horizontal, 10)
+                case "Zaps":
+                    NotificationsZaps(pubkey: account.publicKey, blockedPubkeys: account.blockedPubkeys_, context: viewContext)
+                        .equatable()
+//                            .padding(.horizontal, 10)
+                default:
+                    EmptyView()
             }
+            Spacer()
         }
         .overlay(alignment: .bottom) {
             ProcessingStatus()

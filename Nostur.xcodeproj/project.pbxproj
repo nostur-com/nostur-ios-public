@@ -46,7 +46,7 @@
 		1F2F54EA2A0236E500B6D7E4 /* Gifu in Frameworks */ = {isa = PBXBuildFile; productRef = 1F2F54E92A0236E500B6D7E4 /* Gifu */; };
 		1F2F54EC2A028C6B00B6D7E4 /* SubscriptionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2F54EB2A028C6B00B6D7E4 /* SubscriptionManager.swift */; };
 		1F2F54EE2A02904E00B6D7E4 /* FastLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2F54ED2A02904E00B6D7E4 /* FastLoader.swift */; };
-		1F2F54F02A02942B00B6D7E4 /* NotificationsPostsNew.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2F54EF2A02942B00B6D7E4 /* NotificationsPostsNew.swift */; };
+		1F2F54F02A02942B00B6D7E4 /* NotificationsPosts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2F54EF2A02942B00B6D7E4 /* NotificationsPosts.swift */; };
 		1F30FAA929705EBD008439C8 /* NosturCloud.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1F30FAA729705EBD008439C8 /* NosturCloud.xcdatamodeld */; };
 		1F30FAB029706E72008439C8 /* Account+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F30FAAE29706E72008439C8 /* Account+CoreDataClass.swift */; };
 		1F30FAB329707719008439C8 /* Account+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F30FAB229707719008439C8 /* Account+CoreDataProperties.swift */; };
@@ -100,7 +100,7 @@
 		1F71037D296BD9DE006245CC /* Nostr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F71037C296BD9DE006245CC /* Nostr.swift */; };
 		1F7150D029ABC6CE00AAB1C3 /* TabButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7150CF29ABC6CE00AAB1C3 /* TabButton.swift */; };
 		1F71B45529B0822300FA0400 /* ProfileBadgesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F71B45429B0822300FA0400 /* ProfileBadgesView.swift */; };
-		1F71B45729B0AA1600FA0400 /* NotificationsPosts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F71B45629B0AA1600FA0400 /* NotificationsPosts.swift */; };
+		1F71B45729B0AA1600FA0400 /* NotificationsPostsOld.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F71B45629B0AA1600FA0400 /* NotificationsPostsOld.swift */; };
 		1F71E8B229EB4E4900B99340 /* NosturList+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF2C6C729EAD9C20096AC4A /* NosturList+CoreDataClass.swift */; };
 		1F71E8B329EB4E4C00B99340 /* NosturList+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF2C6C829EAD9C20096AC4A /* NosturList+CoreDataProperties.swift */; };
 		1F7265C229B2148200E4F9D4 /* Exporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7265C129B2148200E4F9D4 /* Exporter.swift */; };
@@ -337,7 +337,7 @@
 		1F2F54E62A02364900B6D7E4 /* GIFImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GIFImage.swift; sourceTree = "<group>"; };
 		1F2F54EB2A028C6B00B6D7E4 /* SubscriptionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionManager.swift; sourceTree = "<group>"; };
 		1F2F54ED2A02904E00B6D7E4 /* FastLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastLoader.swift; sourceTree = "<group>"; };
-		1F2F54EF2A02942B00B6D7E4 /* NotificationsPostsNew.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsPostsNew.swift; sourceTree = "<group>"; };
+		1F2F54EF2A02942B00B6D7E4 /* NotificationsPosts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsPosts.swift; sourceTree = "<group>"; };
 		1F30FAA829705EBD008439C8 /* NosturCloud.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = NosturCloud.xcdatamodel; sourceTree = "<group>"; };
 		1F30FAAE29706E72008439C8 /* Account+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Account+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1F30FAB229707719008439C8 /* Account+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Account+CoreDataProperties.swift"; sourceTree = "<group>"; };
@@ -389,7 +389,7 @@
 		1F71037C296BD9DE006245CC /* Nostr.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nostr.swift; sourceTree = "<group>"; };
 		1F7150CF29ABC6CE00AAB1C3 /* TabButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabButton.swift; sourceTree = "<group>"; };
 		1F71B45429B0822300FA0400 /* ProfileBadgesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileBadgesView.swift; sourceTree = "<group>"; };
-		1F71B45629B0AA1600FA0400 /* NotificationsPosts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsPosts.swift; sourceTree = "<group>"; };
+		1F71B45629B0AA1600FA0400 /* NotificationsPostsOld.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsPostsOld.swift; sourceTree = "<group>"; };
 		1F7265C129B2148200E4F9D4 /* Exporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Exporter.swift; sourceTree = "<group>"; };
 		1F740D9B29AF1BF600EFCCA7 /* Badges.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Badges.swift; sourceTree = "<group>"; };
 		1F740D9E29AF36C800EFCCA7 /* BadgesIssuedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgesIssuedView.swift; sourceTree = "<group>"; };
@@ -980,8 +980,8 @@
 				1FC2DFF029A9142400C8A9DA /* MinimalQuotedNoteFragment.swift */,
 				1FC2DFEC29A90F6C00C8A9DA /* NoteMinimalContentView.swift */,
 				1F1B55B229BD07CC006E1930 /* NotificationsManager.swift */,
-				1F71B45629B0AA1600FA0400 /* NotificationsPosts.swift */,
-				1F2F54EF2A02942B00B6D7E4 /* NotificationsPostsNew.swift */,
+				1F71B45629B0AA1600FA0400 /* NotificationsPostsOld.swift */,
+				1F2F54EF2A02942B00B6D7E4 /* NotificationsPosts.swift */,
 				1F065A9A29A3E67F003421D3 /* NotificationsReactions.swift */,
 				1F7525832997B21D00477AF2 /* NotificationsView.swift */,
 				1F4820F129A9F808000EDFDA /* NotificationsZaps.swift */,
@@ -1358,7 +1358,7 @@
 				1F1ABC4729811A1B00D03FA9 /* LRUCache.swift in Sources */,
 				1F14BA7029854DFC00EACCD5 /* ProfileRow.swift in Sources */,
 				1F6E448429CC51600037D947 /* VideoPlayerView.swift in Sources */,
-				1F2F54F02A02942B00B6D7E4 /* NotificationsPostsNew.swift in Sources */,
+				1F2F54F02A02942B00B6D7E4 /* NotificationsPosts.swift in Sources */,
 				1F4773A7296D4F5B0049454B /* AccountEditView.swift in Sources */,
 				1F006B0729D090370048C6DD /* Event+DMs.swift in Sources */,
 				1FCEA0B72999413C00A309DC /* Double+clean.swift in Sources */,
@@ -1429,7 +1429,7 @@
 				1FC38B9D2972DD5A004769F8 /* Contact+CoreDataClass.swift in Sources */,
 				1FC4D40D2998ED0E004E88CD /* FollowersList.swift in Sources */,
 				1F65121B29C75AC9009FD4AE /* ProfileView.swift in Sources */,
-				1F71B45729B0AA1600FA0400 /* NotificationsPosts.swift in Sources */,
+				1F71B45729B0AA1600FA0400 /* NotificationsPostsOld.swift in Sources */,
 				1F88490F29B537B400145340 /* URL.swift in Sources */,
 				1FB130B529C0E8D8004AC98D /* ReplyingToFragmentView.swift in Sources */,
 				1FBFE8E629AC74B50039F992 /* NostrRank.swift in Sources */,

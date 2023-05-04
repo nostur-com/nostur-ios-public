@@ -1,69 +1,36 @@
 //
-//  NotificationsNotes.swift
+//  NotificationsPostsNew.swift
 //  Nostur
 //
-//  Created by Fabian Lachman on 02/03/2023.
+//  Created by Fabian Lachman on 03/05/2023.
 //
 
 import SwiftUI
 import CoreData
 
-struct NotificationsPosts: View, Equatable {
-    
-    static func == (lhs: NotificationsPosts, rhs: NotificationsPosts) -> Bool {
-        lhs.pubkey == rhs.pubkey
-        && lhs.mutedRootIds == rhs.mutedRootIds
-        && lhs.blockedPubkeys == rhs.blockedPubkeys
-    }
+@MainActor
+struct NotificationsPosts: View {
     
     let pubkey:String
     let mutedRootIds:[String]
     let blockedPubkeys:[String]
-    let FETCH_LIMIT = 200
-    let sp:SocketPool = .shared
      
     @ObservedObject var settings:SettingsStore = .shared
     @EnvironmentObject var ns:NosturState
-    @Environment(\.managedObjectContext) var viewContext
+    @StateObject var fl = FastLoader()
+    @State var backlog = Backlog()
     
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
-        predicate: NSPredicate(value: false))
-    var notes:FetchedResults<Event>
-    var vPosts:[VPost] {
-        notes.compactMap { VPostTransformer.shared.toVPost($0, skipParents: true) }
-    }
-    
-    init(pubkey:String, mutedRootIds:[String], blockedPubkeys:[String], context:NSManagedObjectContext) {
+    init(pubkey: String, mutedRootIds: [String] = [], blockedPubkeys: [String] = []) {
         self.pubkey = pubkey
         self.mutedRootIds = mutedRootIds
         self.blockedPubkeys = blockedPubkeys
-        
-        let r2 = Event.fetchRequest()
-        r2.predicate = NSPredicate(
-            format:
-                "NOT pubkey IN %@ " + // blockedPubkeys + [pubkey]
-                "AND kind == 1 " +
-                "AND tagsSerialized CONTAINS %@ " + // serializedP(pubkey)
-                "AND NOT id IN %@ " + // mutedRootIds
-                "AND (replyToRootId == nil OR NOT replyToRootId IN %@) " + // mutedRootIds
-                "AND (replyToId == nil OR NOT replyToId IN %@) ", // mutedRootIds
-                blockedPubkeys + [pubkey],
-                serializedP(pubkey),
-                mutedRootIds,
-                mutedRootIds,
-                mutedRootIds
-          )
-        r2.fetchLimit = FETCH_LIMIT
-        r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        _notes = FetchRequest(fetchRequest: r2)
     }
     
     var body: some View {
         let _ = Self._printChanges()
         ScrollView {
             LazyVStack(spacing: 0) {
-                ForEach(vPosts) { vPost in
+                ForEach(fl.vPosts) { vPost in
                     NoteRow(vPost: vPost)
                         .background(Color.systemBackground)
                         .boxShadow()
@@ -76,8 +43,9 @@ struct NotificationsPosts: View, Equatable {
                 }
                 HStack {
                     Spacer()
-                    Button("Fetch older") {
-                        fetchOlderMentions()
+                    Button("Show more") {
+//                        fetchOlderMentions()
+                        fl.loadMore()
                     }
                     .buttonStyle(.bordered)
                     .tint(.accentColor)
@@ -87,41 +55,103 @@ struct NotificationsPosts: View, Equatable {
         }
         .background(Color("ListBackground"))
         .onAppear {
-            fetchNewerMentions()
-            if let first = notes.first {
-                ns.account?.lastSeenPostCreatedAt = first.created_at
+            fl.followingKeys = ns.followingPublicKeys
+            fl.predicate = NSPredicate(
+                format:
+                    "NOT pubkey IN %@ " + // blockedPubkeys + [pubkey]
+                    "AND kind == 1 " +
+                    "AND tagsSerialized CONTAINS %@ " + // serializedP(pubkey)
+                    "AND NOT id IN %@ " + // mutedRootIds
+                    "AND (replyToRootId == nil OR NOT replyToRootId IN %@) " + // mutedRootIds
+                    "AND (replyToId == nil OR NOT replyToId IN %@) ", // mutedRootIds
+                    blockedPubkeys + [pubkey],
+                    serializedP(pubkey),
+                    mutedRootIds,
+                    mutedRootIds,
+                    mutedRootIds
+              )
+            fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+            
+            fl.loadMore(5)
+            fl.loadMoreBG(15)
+            
+            if let first = fl.vPosts.first, let account = ns.account {
+                DataProvider.shared().bg.perform {
+                    if let account = account.toBG() {
+                        account.lastSeenPostCreatedAt = first.created_at
+                    }
+                    DataProvider.shared().bgSave()
+                }
+                
             }
-            DataProvider.shared().save()
+            
+            
+            let fetchNewerTask = ReqTask(
+                reqCommand: { (taskId) in
+                    req(RM.getMentions(
+                        pubkeys: [pubkey],
+                        kinds: [1],
+                        limit: 500,
+                        subscriptionId: taskId,
+                        since: NTimestamp(timestamp: Int(fl.vPosts.first?.created_at ?? 0))
+                    ))
+                },
+                processResponseCommand: { (taskId) in
+                    print("🟠🟠🟠 processResponseCommand \(taskId)")
+                    let currentNewestCreatedAt = fl.vPosts.first?.created_at ?? 0
+                    fl.predicate = NSPredicate(
+                        format:
+                            "created_at >= %i " +
+                            "NOT pubkey IN %@ " + // blockedPubkeys + [pubkey]
+                            "AND kind == 1 " +
+                            "AND tagsSerialized CONTAINS %@ " + // serializedP(pubkey)
+                            "AND NOT id IN %@ " + // mutedRootIds
+                            "AND (replyToRootId == nil OR NOT replyToRootId IN %@) " + // mutedRootIds
+                            "AND (replyToId == nil OR NOT replyToId IN %@) ", // mutedRootIds
+                            currentNewestCreatedAt,
+                            blockedPubkeys + [pubkey],
+                            serializedP(pubkey),
+                            mutedRootIds,
+                            mutedRootIds,
+                            mutedRootIds
+                      )
+                    fl.loadNewerBG(250, taskId: taskId)
+                })
+
+            fetchNewerTask.fetch()
+//            print("🟠🟠 fetchNewerTask.fetch()")
+        }
+        .onReceive(receiveNotification(.importedMessagesFromSubscriptionIds)) { notification in
+            let importedSubIds = notification.object as! ImportedNotification
+            
+            let reqTasks = backlog.tasks(with: importedSubIds.subscriptionIds)
+            
+            reqTasks.forEach { task in
+                task.process()
+            }
         }
     }
-    func fetchNewerMentions() {
-        guard ns.account != nil else { return }
-        sp.sendMessage(
-            ClientMessage(type: .REQ,
-                          message:
-                            RequestMessage.getMentions(
-                                pubkeys: [ns.account!.publicKey],
-                                kinds: [1],
-                                limit: 500,
-                                since: NTimestamp(timestamp: Int(notes.first?.created_at ?? 0)))
-                         )
-        )
-    }
     
-    func fetchOlderMentions() {
-        guard ns.account != nil else { return }
-        sp.sendMessage(
-            ClientMessage(type: .REQ,
-                          message:
-                            RequestMessage.getMentions(
-                                pubkeys: [ns.account!.publicKey],
-                                kinds: [1],
-                                limit: 500,
-                                until: NTimestamp(timestamp: Int(notes.last?.created_at ?? 0))
-                            )
-                         )
-        )
-    }
+//    func loadMore() {
+//        fl.next()
+//    }
+    
+
+    
+//    func fetchOlderMentions() {
+//        guard ns.account != nil else { return }
+//        sp.sendMessage(
+//            ClientMessage(type: .REQ,
+//                          message:
+//                            RequestMessage.getMentions(
+//                                pubkeys: [ns.account!.publicKey],
+//                                kinds: [1],
+//                                limit: 500,
+//                                until: NTimestamp(timestamp: Int(notes.last?.created_at ?? 0))
+//                            )
+//                         )
+//        )
+//    }
     
     
 }
@@ -129,7 +159,7 @@ struct NotificationsPosts: View, Equatable {
 struct NotificationsNotes_Previews: PreviewProvider {
     static var previews: some View {
         let pubkey = "04c915daefee38317fa734444acee390a8269fe5810b2241e5e6dd343dfbecc9"
-        NotificationsPosts(pubkey: pubkey, mutedRootIds: [], blockedPubkeys: [], context: DataProvider.shared().container.viewContext)
+        NotificationsPosts(pubkey: pubkey, mutedRootIds: [], blockedPubkeys: [])
                 .withPreviewEnvironment()
     }
 }
