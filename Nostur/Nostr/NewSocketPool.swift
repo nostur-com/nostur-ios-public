@@ -417,3 +417,136 @@ class NewWebSocket {
 //        pinger?.cancel()
 //    }
 }
+
+
+
+
+final class EphemeralSocketPool: ObservableObject {
+    
+    static let shared = EphemeralSocketPool()
+    
+    @Published var sockets:[String : NewEphemeralClient] = [:]
+    
+    func addSocket(url:String) -> NewEphemeralClient {
+        let urlLower = url.lowercased()
+        removeAfterDelay(urlLower)
+        if (!sockets.keys.contains(urlLower)) {
+            let urlURL:URL = URL(string: urlLower) ?? URL(string:"wss://localhost:123456/invalid_relay_url")!
+            var request = URLRequest(url: urlURL)
+            request.timeoutInterval = 15
+            
+            let client = NewWebSocket(url: url)
+            
+            let managedClient = NewEphemeralClient(url: urlLower, client: client)
+            
+            client.delegate = managedClient
+            
+            managedClient.connect()
+            sockets[urlLower] = managedClient
+            return managedClient
+        }
+        else {
+            return sockets[urlLower]!
+        }
+    }
+    
+    private func removeAfterDelay(_ url:String) {
+        DispatchQueue.global().asyncAfter(deadline: .now() + .seconds(60)) { [weak self] in
+            if let socket = self?.sockets.first(where: { (key: String, value: NewEphemeralClient) in
+                key == url
+            }) {
+                print("Removing ephemeral relay \(url)")
+                socket.value.disconnect()
+                self?.sockets.removeValue(forKey: url)
+            }
+        }
+    }
+    
+    func socketByUrl(_ url:String) -> NewEphemeralClient? {
+        let managedClient = sockets.filter { url, managedClient in
+            managedClient.url == url.lowercased()
+        }.first?.value
+        return managedClient
+    }
+    
+    func removeSocket(_ url:String) {
+        if (sockets.keys.contains(url)) {
+            sockets.removeValue(forKey: url)
+        }
+    }
+    
+    func sendMessage(_ message:String, relay:String) {
+        Task(priority: .utility) {
+            let socket = addSocket(url: relay)
+            socket.connect()
+            socket.client.sendMessage(message)
+        }
+    }
+}
+
+// Copied NewManagedClient and removed everything that is not needed for a one-off fetch
+class NewEphemeralClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDelegate, ObservableObject {
+    
+    var url:String
+    var client:NewWebSocket
+    
+    init(url: String, client:NewWebSocket) {
+        self.url = url.lowercased()
+        self.client = client
+    }
+    
+    func connect() {
+        self.client.connect()
+    }
+    
+    func disconnect() {
+        self.client.disconnect()
+    }
+    
+    func didDisconnect() {
+        print("🏎️🏎️🔌 DISCONNECTED \(self.url)")
+    }
+    
+    func didDisconnectWithError(_ error: Error) {
+        DispatchQueue.main.async {
+            let shortURL = URL(string: self.url)?.baseURL?.description ?? self.url
+            sendNotification(.socketNotification, "Error: \(shortURL) \(error.localizedDescription)")
+        }
+        print("🏎️🏎️🔌🔴 DISCONNECTED WITH ERROR \(self.url): \(error.localizedDescription)")
+    }
+    
+    func didReceiveMessage(_ text:String) {
+        print("🔌 RECEIVED TEXT \(self.url): \(text)")
+        MessageParser.shared.socketReceivedMessage(text: text, relayUrl: self.url, client:client)
+    }
+    
+    func didReceiveData(_ data:Data) {
+        print("🔌 RECEIVED DATA \(self.url): \(data.count)")
+    }
+    
+    public func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
+        print("🔌 CONNECTED \(self.url)")
+    }
+    
+    
+    public func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
+        print("🔌 DISCONNECTED \(self.url): with code: \(closeCode.rawValue) \(String(describing: reason != nil ? String(data: reason!, encoding: .utf8) : "") )")
+    }
+}
+
+
+
+func fetchEventFromRelayHint(_ eventId:String, event:Event) {
+    // EventRelationsQueue.shared.addAwaitingEvent(event) <-- not needed, should already be awaiting
+//    [
+//      "e",
+//      "437743753045cd4b3335b0b8c921eaf301f65862d74b737b40278d9e4e3b1b88",
+//      "wss://relay.mostr.pub",
+//      "reply"
+//    ],
+    if let relay = event.fastTags.filter({ $0.0 == "e" && $0.1 == eventId }).first?.2 {
+        if relay.prefix(6) == "wss://" {
+            EphemeralSocketPool.shared.sendMessage(RM.getEvent(id: eventId), relay: relay)
+        }
+    }
+}
