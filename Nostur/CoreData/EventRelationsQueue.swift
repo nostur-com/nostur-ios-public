@@ -10,7 +10,7 @@
 // database of 50000+ events
 
 // Typically the flow will be:
-// 1. We some post, we need a replyToRootId or replyToId, but not the reply or root itself
+// 1. We have some post, with a replyToRootId or replyToId, but not the reply or root itself
 // 2. We queue this post here
 // 3. We ask relays for the reply/root
 // 4. Reply/Root comes in through socket didReceive -> MessageParser -> Importer
