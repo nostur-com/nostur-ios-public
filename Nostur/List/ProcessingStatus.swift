@@ -39,7 +39,7 @@ struct ProcessingStatus: View {
             }
         }
         .onAppear {
-            setTemporaryMessage("Checking for new items...")
+//            setTemporaryMessage("Checking for new items...")
         }
         .onReceive(receiveNotification(.listStatus)) { notification in
             let message = notification.object as? String

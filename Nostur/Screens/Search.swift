@@ -77,6 +77,11 @@ struct Search: View {
                     }
                 }
             }
+            .overlay(alignment: .bottom) {
+                ProcessingStatus()
+                    .opacity(0.85)
+                    .padding(.bottom, 10)
+            }
             .withNavigationDestinations()
             .navigationTitle("Search")
             .navigationBarTitleDisplayMode(.inline)

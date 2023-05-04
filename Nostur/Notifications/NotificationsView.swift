@@ -98,6 +98,11 @@ struct NotificationsView: View {
                 Text("No active account")
             }
         }
+        .overlay(alignment: .bottom) {
+            ProcessingStatus()
+                .opacity(0.85)
+                .padding(.bottom, 10)
+        }
         .padding(.top, 5)
         .navigationTitle(tab)
         .navigationBarHidden(true)
