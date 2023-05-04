@@ -85,6 +85,10 @@ class Importer {
                 var saved = 0
                 let forImportsCount = messageBucket.count
                 
+                // We send a notification every .save with the saved subscriptionIds
+                // so other parts of the system can start fetching from local db
+                var subscriptionIds = Set<String>()
+                
                 while let message = messageBucket.takeMessage() {
                     count = count + 1
                     guard var event = message.event else {
@@ -174,6 +178,9 @@ class Importer {
                     
                     let savedEvent = Event.saveEvent(event: event, relay: message.relay)
                     saved = saved + 1
+                    if let subscriptionId = message.subscriptionId {
+                        subscriptionIds.insert(subscriptionId)
+                    }
                     if (kind6firstQuote != nil) {
                         savedEvent.firstQuote = kind6firstQuote
                     }
@@ -224,10 +231,13 @@ class Importer {
 //                                print("🏎️🏎️ \(Date.now) 💾 Saved \(count)/\(forImportsCount)")
                                 let mainQueueCount = count
                                 let mainQueueForImportsCount = forImportsCount
+                                let importedNotification = ImportedNotification(subscriptionIds: subscriptionIds)
                                 DispatchQueue.main.async {
+                                    sendNotification(.importedMessagesFromSubscriptionIds, importedNotification)
                                     sendNotification(.listStatus, "Processing \(mainQueueCount)/\(mainQueueForImportsCount) items...")
                                     sendNotification(.newEventsInDatabase)
                                 }
+                                subscriptionIds.removeAll()
                             }
                             catch {
 //                                print("🏎️🏎️ \(Date.now) 🔴🔴🔴 Error on batch \(count)/\(forImportsCount): \(error)")
@@ -239,9 +249,15 @@ class Importer {
                     try context.save() // This is saving to main context, not to disk..
                     if (saved > 0) {
 //                        print("🏎️🏎️ \(Date.now) 💾 Processed: \(forImportsCount), saved: \(saved), skipped (new cache): \(alreadyInIdCacheSkipped), skipped (db): \(alreadyInDBskipped)")
+                        let mainQueueCount = count
+                        let mainQueueForImportsCount = forImportsCount
+                        let importedNotification = ImportedNotification(subscriptionIds: subscriptionIds)
                         DispatchQueue.main.async {
+                            sendNotification(.importedMessagesFromSubscriptionIds, importedNotification)
+                            sendNotification(.listStatus, "Processing \(mainQueueCount)/\(mainQueueForImportsCount) items...")
                             sendNotification(.newEventsInDatabase)
                         }
+                        subscriptionIds.removeAll()
                     }
                     else {
 //                        print("🏎️🏎️ \(Date.now) 💾 Finished, nothing saved. -- Processed: \(forImportsCount), saved: \(saved), skipped (new cache): \(alreadyInIdCacheSkipped), skipped (db): \(alreadyInDBskipped)")
