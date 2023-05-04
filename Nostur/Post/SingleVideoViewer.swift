@@ -41,7 +41,13 @@ struct SingleVideoViewer: View {
     
     var body: some View {
         VStack {
-            if videoShown {
+            if url.absoluteString.prefix(7) == "http://" {
+                Text("non-https media blocked")
+                   .centered()
+                   .frame(height: fullWidth ? 600 : 250)
+                   .background(Color("LightGray").opacity(0.2))
+            }
+            else if videoShown {
                 if let asset, let videoSize {
                     let scaledWidth = videoWidth / videoSize.width
                     let scaledHeight = videoSize.height * scaledWidth

@@ -208,18 +208,21 @@ struct SmoothList: UIViewControllerRepresentable {
                 )
                 
                 
-                for imageUrl in item.imageUrls {
+                for imageUrl in item.imageUrls.filter({ $0.absoluteString.prefix(7) != "http://" })
+                {
                     imageRequests.append(ImageRequest(url: imageUrl,
-                        processors: [.resize(width: imageWidth, upscale: true)],
-                        userInfo: [.scaleKey: UIScreen.main.scale]))
+                                                      processors: [.resize(width: imageWidth, upscale: true)],
+                                                      userInfo: [.scaleKey: UIScreen.main.scale]))
                 }
                 
                 imageRequests.append(contentsOf: item
                     .parentPosts
                     .reduce([ImageRequest](), { partialResult, item in
-                        return partialResult + item.imageUrls.map { ImageRequest(url: $0,
-                                                          processors: [.resize(width: imageWidth, upscale: true)],
-                                                          userInfo: [.scaleKey: UIScreen.main.scale]) }
+                        return partialResult + item.imageUrls
+                            .filter { $0.absoluteString.prefix(7) != "http://" }
+                            .map { ImageRequest(url: $0,
+                                                processors: [.resize(width: imageWidth, upscale: true)],
+                                                userInfo: [.scaleKey: UIScreen.main.scale]) }
                     })
                 )
                 
@@ -229,10 +232,10 @@ struct SmoothList: UIViewControllerRepresentable {
                             let tags = try result.get()
                             LinkPreviewCache.shared.setObject(for: url, value: tags)
                             print("✓✓ Loaded link preview meta tags from \(url)")
-                            if let image = tags["image"] {
+                            if let image = tags["image"], image.prefix(7) != "http://" {
                                 imageRequests.append(ImageRequest(url: URL(string:image),
                                                                   processors: [.resize(height: DIMENSIONS.PREVIEW_HEIGHT, upscale: true)],
-                                    userInfo: [.scaleKey: UIScreen.main.scale]))
+                                                                  userInfo: [.scaleKey: UIScreen.main.scale]))
                             }
                         }
                         catch { }
@@ -287,27 +290,30 @@ struct SmoothList: UIViewControllerRepresentable {
                     .map { imageRequestFor($0) }
                 )
                 
-                for imageUrl in item.imageUrls {
+                for imageUrl in item.imageUrls.filter( { $0.absoluteString.prefix(7) != "http://" })
+                {
                     imageRequests.append(ImageRequest(url: imageUrl,
-                        processors: [.resize(width: imageWidth, upscale: true)],
-                        userInfo: [.scaleKey: UIScreen.main.scale]))
+                                                      processors: [.resize(width: imageWidth, upscale: true)],
+                                                      userInfo: [.scaleKey: UIScreen.main.scale]))
                 }
                 
                 imageRequests.append(contentsOf: item
                     .parentPosts
                     .reduce([ImageRequest](), { partialResult, item in
-                        return partialResult + item.imageUrls.map { ImageRequest(url: $0,
-                                                          processors: [.resize(width: imageWidth, upscale: true)],
-                                                          userInfo: [.scaleKey: UIScreen.main.scale]) }
+                        return partialResult + item.imageUrls
+                            .filter { $0.absoluteString.prefix(7) != "http://" }
+                            .map { ImageRequest(url: $0,
+                                                processors: [.resize(width: imageWidth, upscale: true)],
+                                                userInfo: [.scaleKey: UIScreen.main.scale]) }
                     })
                 )
                 
                 for url in item.linkPreviewURLs {
                     if let tags = LinkPreviewCache.shared.retrieveObject(at: url) {
-                        if let image = tags["image"] {
+                        if let image = tags["image"], image.prefix(7) != "http://" {
                             imageRequests.append(ImageRequest(url: URL(string:image),
                                                               processors: [.resize(height: DIMENSIONS.PREVIEW_HEIGHT, upscale: true)],
-                                userInfo: [.scaleKey: UIScreen.main.scale]))
+                                                              userInfo: [.scaleKey: UIScreen.main.scale]))
                         }
                     }
                 }

@@ -22,7 +22,13 @@ struct SingleMediaViewer: View {
 
     var body: some View {
         VStack {
-            if imagesShown {
+            if url.absoluteString.prefix(7) == "http://" {
+                Text("non-https media blocked")
+                   .centered()
+                   .frame(height: fullWidth ? 600 : 250)
+                   .background(Color("LightGray").opacity(0.2))
+            }
+            else if imagesShown {
                 makeImage(url: url)
             }
             else {
