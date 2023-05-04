@@ -292,7 +292,7 @@ struct NewQuoteRepost_Previews: PreviewProvider {
     @State static var noteCancellationId:UUID?
     static var previews: some View {
         
-        let id = "c3a040feac185585f984147cdaf7a7ec5774b06db29ff25017c45026e470daeb"
+//        let id = "c3a040feac185585f984147cdaf7a7ec5774b06db29ff25017c45026e470daeb"
         
         VStack {
             if let event = PreviewFetcher.fetchEvent() {

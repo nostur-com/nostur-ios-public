@@ -426,10 +426,6 @@ class NewWebSocket {
 //        pingOnceSub?.cancel()
         connection?.cancel()
     }
-    
-//    func stopPinging() {
-//        pinger?.cancel()
-//    }
 }
 
 

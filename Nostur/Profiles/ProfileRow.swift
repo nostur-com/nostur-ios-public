@@ -82,7 +82,7 @@ struct ProfileRow_Previews: PreviewProvider {
         
         
         ScrollView {
-            let pubkey = "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240"
+//            let pubkey = "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240"
             
             if let contact = PreviewFetcher.fetchContact() {
                 
