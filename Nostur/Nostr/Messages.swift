@@ -114,7 +114,7 @@ struct RelayMessage {
 }
 
 // REQ messages for requesting with filters
-struct RequestMessage {
+public struct RequestMessage {
     
     static func getBadgeDefinitions(filters:[(Int64, String, String)], subscriptionId:String? = nil) -> String {
         // (kinds, badgeCode, author)
@@ -443,3 +443,21 @@ func short(_ pubkeys:[String], prefixLength:Int = 10) -> [String] {
 func fasterShort(_ pubkeys:[String], prefixLength:Int = 10) -> String {
     "[" + pubkeys.map {  "\"" +  $0.prefix(prefixLength) + "\"" }.joined(separator: ",") + "]"
 }
+
+
+// Short-hand usage example:
+
+//    req(RM.getMentions(
+//        pubkeys: [pubkey],
+//        kinds: [1],
+//        limit: 500,
+//        since: 0
+//    ))
+func req(_ rm:String, activeSubscriptionId:String? = nil) {
+    SocketPool.shared.sendMessage(
+        ClientMessage(type: .REQ, message: rm),
+        subscriptionId: activeSubscriptionId ?? UUID().uuidString
+    )
+}
+
+public typealias RM = RequestMessage
