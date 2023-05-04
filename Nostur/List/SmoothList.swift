@@ -164,13 +164,13 @@ struct SmoothList: UIViewControllerRepresentable {
             self.parent = parent
             
             self.prefetcher = ImagePrefetcher(pipeline: ImageProcessing.shared.content)
-            self.prefetcher.priority = .high
+            self.prefetcher.priority = .normal
             
             self.prefetcherPFP = ImagePrefetcher(pipeline: ImageProcessing.shared.pfp)
-            self.prefetcherPFP.priority = .normal
+            self.prefetcherPFP.priority = .high
             
             self.prefetcherPFPnotFollowing = ImagePrefetcher(pipeline: ImageProcessing.shared.pfpNotFollowing)
-            self.prefetcherPFP.priority = .low
+            self.prefetcherPFP.priority = .normal
         }
         
         func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
