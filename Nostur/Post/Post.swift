@@ -55,6 +55,7 @@ struct VPost: Identifiable, Equatable, Hashable {
     var linkPreviewURLs:[URL]
     var liked = false
     var reposted = false
+    var replied = false
     
     var isHighlight:Bool
     var highlightAuthorPubkey:String?
@@ -151,6 +152,7 @@ class VPostTransformer {
                 linkPreviewURLs: linkPreviewURLs,
                 liked: likedByCurrentAccount(mainEvent),
                 reposted: repostedByCurrentAccount(mainEvent),
+                replied: repliedByCurrentAccount(mainEvent),
                 
                 // Ughhh this needs clean up and put somewhere else probably
                 isHighlight: mainEvent.kind == 9802,
@@ -236,6 +238,7 @@ class VPostTransformer {
                 linkPreviewURLs: linkPreviewURLs,
                 liked: likedByCurrentAccount(privateEvent),
                 reposted: repostedByCurrentAccount(privateEvent),
+                replied: repliedByCurrentAccount(privateEvent),
                 
                 // Ughhh this needs clean up and put somewhere else probably
                 isHighlight: privateEvent.kind == 9802,
@@ -253,12 +256,28 @@ class VPostTransformer {
     func likedByCurrentAccount(_ event:Event) -> Bool {
         guard let ctx = event.managedObjectContext else { return false }
         let fr = Event.fetchRequest()
+        // TODO: Maybe add > .created_at, faster or not?
         fr.predicate = NSPredicate(format: "reactionToId == %@ AND pubkey == %@ AND kind == 7",
                                    event.id, NosturState.shared.activeAccountPublicKey)
         fr.fetchLimit = 1
         fr.resultType = .countResultType
         
         //TODO: should check for "+","👍","🤙","❤️","🫂","🤗","😘","😍","💯","🤩","⚡️","🔥","💥","🚀"
+        
+        return ctx.performAndWait {
+            let count = (try? ctx.count(for: fr)) ?? 0
+            return count > 0
+        }
+    }
+    
+    func repliedByCurrentAccount(_ event:Event) -> Bool {
+        guard let ctx = event.managedObjectContext else { return false }
+        let fr = Event.fetchRequest()
+        // TODO: Maybe add > .created_at, faster or not?
+        fr.predicate = NSPredicate(format: "replyToId == %@ AND pubkey == %@",
+                                   event.id, NosturState.shared.activeAccountPublicKey)
+        fr.fetchLimit = 1
+        fr.resultType = .countResultType
         
         return ctx.performAndWait {
             let count = (try? ctx.count(for: fr)) ?? 0

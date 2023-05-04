@@ -19,19 +19,22 @@ struct FooterFragmentView: View {
     @State var unpublishLikeId:UUID? = nil
     @State var liked:Bool
     @State var reposted:Bool
+//    @State var replied:Bool
     
     init(vPost: VPost) {
         self.vPost = vPost
         self.event = vPost.event
         _liked = State(initialValue: vPost.liked)
         _reposted = State(initialValue: vPost.reposted)
+//        _replied = State(initialValue: vPost.replied)
     }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
             HStack {
                 HStack {
-                    Image("ReplyIcon")
+                    Image(vPost.replied ? "ReplyIconActive" : "ReplyIcon")
+                        .foregroundColor(vPost.replied ? Color("AccentColor") : Self.grey)
                     Text(event.repliesCount.description).opacity(event.repliesCount == 0 ? 0 : 1)
 //                    RollingOnUpdateNumber(event.repliesCount).opacity(event.repliesCount == 0 ? 0 : 1)
                 }
@@ -41,7 +44,7 @@ struct FooterFragmentView: View {
                 Spacer()
                 
                 // REPOST
-                if (vPost.reposted || reposted) {
+                if (vPost.reposted) {
                     HStack {
                         Image("RepostedIcon")
                             .foregroundColor(.green)
