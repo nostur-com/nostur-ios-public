@@ -83,6 +83,7 @@ struct PostAndParent: View {
     let INDENT = DIMENSIONS.POST_ROW_PFP_WIDTH + (DIMENSIONS.POST_ROW_PFP_HPADDING*2)
     let THREAD_LINE_OFFSET = 34.0
     @ObservedObject var settings:SettingsStore = .shared
+    @State private var timerTask: Task<Void, Never>?
     
     init(vPost: VPost, isParent:Bool = false, geoHeight:CGFloat = CGFloat.zero, navTitleHidden:Bool = false, connect:ThreadConnectDirection? = nil) {
         self.vPost = vPost
@@ -117,8 +118,16 @@ struct PostAndParent: View {
             else if let replyToId = event.replyToId {
                 CenteredProgressView()
                     .onAppear {
+                        timerTask = Task {
+                            await Task.sleep(4 * 1_000_000_000) // sleep for 4 seconds
+                            fetchEventFromRelayHint(replyToId, event: event)
+                        }
                         EventRelationsQueue.shared.addAwaitingEvent(event)
                         sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: replyToId)))
+                    }
+                    .onDisappear {
+                        timerTask?.cancel()
+                        timerTask = nil
                     }
             }
             // OUR (DETAIL) REPLY:
