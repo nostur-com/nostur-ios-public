@@ -93,10 +93,28 @@ class FastLoader: ObservableObject {
         self.offset = offset + self.limit
 
         if vPostTransform {
-            vPosts = vPosts + transformOnMain((try? viewContext.fetch(next)) ?? [])
+            let dbEventIds = (try? viewContext.fetch(next)) ?? []
+            let currentVPostIds = Set(self.vPosts.map { item in
+                item.id
+            })
+            let onlyUnrendered = dbEventIds.filter { item in
+                !currentVPostIds.contains(item.id)
+            }
+            let nextItems = self.transformOnMain(onlyUnrendered)
+            
+            vPosts = vPosts + nextItems
         }
         else {
-            events = events + ((try? viewContext.fetch(next)) ?? [])
+            let dbEventIds = (try? viewContext.fetch(next)) ?? []
+            let currentEventIds = Set(self.events.map { event in
+                event.id
+            })
+            let onlyUnrendered = dbEventIds.filter { item in
+                !currentEventIds.contains(item.id)
+            }
+            let nextItems = onlyUnrendered
+            
+            events = events + nextItems
         }
     }
     
@@ -112,7 +130,15 @@ class FastLoader: ObservableObject {
         self.offset = offset + self.limit
         
         bgContext.perform {
-            let nextItems = self.transformInBG((try? self.bgContext.fetch(next)) ?? [])
+            let dbEventIds = (try? self.bgContext.fetch(next)) ?? []
+            let currentVPostIds = Set(self.vPosts.map { item in
+                item.id
+            })
+            let onlyUnrendered = dbEventIds.filter { item in
+                !currentVPostIds.contains(item.id)
+            }
+            let nextItems = self.transformInBG(onlyUnrendered)
+
             Task { @MainActor in
                 self.vPosts = self.vPosts + nextItems
             }
@@ -137,10 +163,10 @@ class FastLoader: ObservableObject {
             let currentVPostIds = Set(self.vPosts.map { item in
                 item.id
             })
-            let aaNew = dbEventIds.filter { item in
+            let onlyUnrendered = dbEventIds.filter { item in
                 !currentVPostIds.contains(item.id)
             }
-            let nextItems = self.transformInBG(aaNew)
+            let nextItems = self.transformInBG(onlyUnrendered)
             Task { @MainActor in
                 print("\(taskId) 🟠🟠🟠🟠🟠 self.vPosts = nextItems (\(nextItems.count)) + self.vPosts ")
                 self.vPosts = nextItems + self.vPosts

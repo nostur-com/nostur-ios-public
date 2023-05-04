@@ -28,7 +28,17 @@ struct ProfileNotesView: View {
                     .onTapGesture { navigateTo(vPost) }
                     .id(vPost.id)
             }
-            Button("Show more") { fl.loadMore() }
+            Button("Show more") {
+                fl.predicate = NSPredicate(format: "pubkey == %@ AND kind IN {1,6,9802}", pubkey)
+                fl.offset = (fl.vPosts.count - 1)
+                fl.loadMore(25)
+                if let until = fl.vPosts.last?.created_at {
+                    req(RM.getAuthorNotesUntil(pubkey: pubkey, until: NTimestamp(timestamp: Int(until)), limit:250))
+                }
+                else {
+                    req(RM.getAuthorNotes(pubkey: pubkey, limit:250))
+                }
+            }
             .hCentered()
             .buttonStyle(.bordered)
             .tint(.accentColor)
@@ -46,6 +56,7 @@ struct ProfileNotesView: View {
             let fetchNewerTask = ReqTask(
                 reqCommand: { (taskId) in
                     print("\(taskId) 🟠🟠 fetchNewerTask.fetch()")
+                    // Just get max 250 most recent events:
                     req(RM.getAuthorNotes(pubkey: pubkey, limit:fetchNewerLimit, subscriptionId: taskId))
                 },
                 processResponseCommand: { (taskId) in
