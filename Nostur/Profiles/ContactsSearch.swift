@@ -42,8 +42,8 @@ struct ContactsSearch: View, Equatable {
         let _ = Self._printChanges()
         VStack {
             Group {
-                TextField(text: $debounceObject.text, prompt: Text("Search").foregroundColor(Color.secondary), label: {
-                    Text("Search")
+                TextField(text: $debounceObject.text, prompt: Text(prompt).foregroundColor(Color.secondary), label: {
+                    Text(prompt)
                 })
                 .padding(5)
                 .padding(.leading, 25)

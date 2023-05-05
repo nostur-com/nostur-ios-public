@@ -16,11 +16,27 @@ struct NewDM: View {
     @Binding var tab:String
     
     var body: some View {
-        if toPubkey != nil {
-            NewDMComposer(toPubkey: $toPubkey, toContact: $toContact, message: $message, showingNewDM: $showingNewDM, tab: $tab)
-        }
-        else {
-            NewDMToSelector(toPubkey: $toPubkey, toContact: $toContact)
+        VStack {
+            if toPubkey != nil {
+                NewDMComposer(toPubkey: $toPubkey, toContact: $toContact, message: $message, showingNewDM: $showingNewDM, tab: $tab)
+            }
+            else {
+                ContactsSearch(followingPubkeys:NosturState.shared.followingPublicKeys,
+                               prompt: "Search contact", onSelectContact: { selectedContact in
+                    
+                    toContact = selectedContact
+                    toPubkey = selectedContact.pubkey
+                })
+                .navigationTitle("Send DM to")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") {
+                            showingNewDM = false
+                        }
+                    }
+                }
+            }
         }
     }
 }
