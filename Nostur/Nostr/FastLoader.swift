@@ -86,13 +86,11 @@ class FastLoader: ObservableObject {
         let next = Event.fetchRequest()
         next.predicate = predicate
         next.sortDescriptors = sortDescriptors
-        next.fetchOffset = offset
         next.fetchLimit = limit ?? self.limit
-        
         self.limit = limit ?? self.limit
-        self.offset = offset + self.limit
-
+        
         if vPostTransform {
+            next.fetchOffset = max(0, self.vPosts.count - 1)
             let dbEventIds = (try? viewContext.fetch(next)) ?? []
             let currentVPostIds = Set(self.vPosts.map { item in
                 item.id
@@ -105,6 +103,7 @@ class FastLoader: ObservableObject {
             vPosts = vPosts + nextItems
         }
         else {
+            next.fetchOffset = max(0, self.events.count - 1)
             let dbEventIds = (try? viewContext.fetch(next)) ?? []
             let currentEventIds = Set(self.events.map { event in
                 event.id
@@ -123,12 +122,11 @@ class FastLoader: ObservableObject {
         let next = Event.fetchRequest()
         next.predicate = predicate
         next.sortDescriptors = sortDescriptors
-        next.fetchOffset = offset
+        next.fetchOffset = max(0, self.vPosts.count - 1)
         next.fetchLimit = limit ?? self.limit
         
         self.limit = limit ?? self.limit
-        self.offset = offset + self.limit
-        
+
         bgContext.perform {
             let dbEventIds = (try? self.bgContext.fetch(next)) ?? []
             let currentVPostIds = Set(self.vPosts.map { item in
@@ -214,7 +212,7 @@ class FastLoader: ObservableObject {
         next.predicate = predicate
         next.sortDescriptors = sortDescriptors
         next.fetchLimit = limit ?? 1000
-        next.fetchOffset = 0
+        next.fetchOffset = max(0, self.events.count - 1)
         let dbEventIds = (try? self.viewContext.fetch(next)) ?? []
         let currentEventIds = Set(self.events.map { item in
             item.id

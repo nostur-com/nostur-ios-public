@@ -26,6 +26,7 @@ struct MinimalNoteTextRenderView: View {
                 .multilineTextAlignment(TextAlignment.leading)
                 .foregroundColor(.primary.opacity(0.5))
                 .lineSpacing(3)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.vertical, 5)
         }
     }

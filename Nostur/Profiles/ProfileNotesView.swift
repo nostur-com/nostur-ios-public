@@ -30,7 +30,7 @@ struct ProfileNotesView: View {
             }
             Button("Show more") {
                 fl.predicate = NSPredicate(format: "pubkey == %@ AND kind IN {1,6,9802}", pubkey)
-                fl.offset = (fl.vPosts.count - 1)
+//                fl.offset = (fl.vPosts.count - 1)
                 fl.loadMore(25)
                 if let until = fl.vPosts.last?.created_at {
                     req(RM.getAuthorNotesUntil(pubkey: pubkey, until: NTimestamp(timestamp: Int(until)), limit:250))

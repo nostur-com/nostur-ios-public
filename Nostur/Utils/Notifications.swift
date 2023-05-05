@@ -243,4 +243,16 @@ extension Notification.Name {
     static var importedMessagesFromSubscriptionIds: Notification.Name {
         return Notification.Name("importedMessagesFromSubscriptionIds")
     }
+    
+    static var newMentions: Notification.Name {
+        return Notification.Name("newMentions")
+    }
+    
+    static var newReactions: Notification.Name {
+        return Notification.Name("newReactions")
+    }
+    
+    static var newZaps: Notification.Name {
+        return Notification.Name("newZaps")
+    }
 }

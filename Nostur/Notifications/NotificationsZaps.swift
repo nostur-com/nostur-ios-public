@@ -8,45 +8,33 @@
 import SwiftUI
 import CoreData
 
-struct NotificationsZaps: View, Equatable {
-    
-    static func == (lhs: NotificationsZaps, rhs: NotificationsZaps) -> Bool {
-        lhs.pubkey == rhs.pubkey
-        && lhs.blockedPubkeys == rhs.blockedPubkeys
-    }
-    
+struct NotificationsZaps: View {
+        
     let er:ExchangeRateModel = .shared // Not Observed for performance
     let pubkey:String
     let blockedPubkeys:[String]
-    let FETCH_LIMIT = 200
-    
-    let sp:SocketPool = .shared
+
+    @StateObject var fl = FastLoader()
+    @State var backlog = Backlog()
     @EnvironmentObject var ns:NosturState
-    @Environment(\.managedObjectContext) var viewContext
-    
-    @FetchRequest
-    var zaps:FetchedResults<Event>
     
     
     var zapsForMe:[Event] {
-        zaps.filter {
+        fl.events.filter {
             $0.zappedContactPubkey != nil && $0.zappedContactPubkey == pubkey
         }
     }
     
     var zapsForMeDeduplicated:[Event] {
-        zaps.uniqued(on: { $0.zappedEventId })
+        fl.events.uniqued(on: { $0.zappedEventId })
     }
     
     var myNotesZapped:[Event] {
         // TODO: hmm we can already use zap.zappedEvent... instead of fetching by ID again
-        let r = Event.fetchRequest()
-        let ids = Set(zapsForMe.compactMap { zap in
-            return zap.zappedEventId
-        })
-        r.predicate = NSPredicate(format: "id IN %@", ids)
-        r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        return (try? viewContext.fetch(r).filter { $0.pubkey == self.pubkey }) ?? []
+        return zapsForMe.compactMap { $0.zappedEvent }
+            .uniqued { event in
+                event.id
+            }
     }
     
     func zapsForNote(_ note:Event) -> [Event] {
@@ -57,43 +45,16 @@ struct NotificationsZaps: View, Equatable {
             return false
         }
     }
-    //
-    init(pubkey:String, blockedPubkeys:[String], context:NSManagedObjectContext) {
+    
+    init(pubkey:String, blockedPubkeys:[String]) {
         self.pubkey = pubkey
         self.blockedPubkeys = blockedPubkeys
-        let r1 = Event.fetchRequest()
-        r1.predicate = NSPredicate(
-            format:
-                "zappedContactPubkey == %@" + // ONLY TO ME
-            "AND kind == 9735 " + // ONLY ZAPS
-            "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS
-            pubkey,
-            blockedPubkeys
-        )
-        r1.fetchLimit = FETCH_LIMIT
-        r1.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        let oldestCreatedAt = (try? context.fetch(r1).last?.created_at) ?? 0
-        
-        let r2 = Event.fetchRequest()
-        r2.predicate = NSPredicate(
-            format:
-                "created_at >= %i " +
-            "AND zappedContactPubkey == %@" + // ONLY TO ME
-            "AND kind == 9735 " +
-            "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS) // OPTIMISATION HACK
-            oldestCreatedAt,
-            pubkey,
-            blockedPubkeys
-        )
-        r2.fetchLimit = FETCH_LIMIT
-        r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        _zaps = FetchRequest(fetchRequest: r2)
     }
-    //
+    
     var body: some View {
         let _ = Self._printChanges()
-        List {
-            Section {
+        ScrollView {
+            LazyVStack(alignment:.leading, spacing: 0) {
                 ForEach(zapsForMeDeduplicated) { zap in
                     VStack {
                         if let note = zap.zappedEvent {
@@ -145,6 +106,7 @@ struct NotificationsZaps: View, Equatable {
                                     PFP(pubkey: zap.zapFromRequest?.pubkey ?? "WTF", pictureUrl: zap.zapFromRequest?.contact?.picture, isFollowing: ns.followingPublicKeys.contains(zap.zapFromRequest?.pubkey ?? "WTF"))
                                     Text("**\(zap.zapFromRequest?.contact?.authorName ?? "??")** zapped your profile")
                                     Text(zap.zapFromRequest?.noteText ?? "")
+                                        .frame(maxWidth: .infinity, alignment: .leading)
                                 }
                                 .onTapGesture {
                                     guard let pubkey = zap.zapFromRequest?.pubkey else { return }
@@ -153,61 +115,116 @@ struct NotificationsZaps: View, Equatable {
                             }
                         }
                     }
+                    .padding(10)
                     .background(Color.systemBackground)
-                    .padding(.vertical, 10)
-                    .listRowInsets(EdgeInsets())
+                    .boxShadow()
+                    .padding(10)
                 }
-            }
-            Section {
-                HStack {
-                    Spacer()
-                    Button("Fetch older") {
-                        fetchOlderZaps()
+                Button("Show more") {
+                    fl.predicate = NSPredicate(
+                        format:
+                            "zappedContactPubkey == %@" + // ONLY TO ME
+                            "AND kind == 9735 " +
+                            "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS)
+                            pubkey,
+                            blockedPubkeys)
+//                    fl.offset = (fl.events.count - 1)
+                    fl.loadMore(500)
+                    if let until = fl.events.last?.created_at {
+                        req(RM.getMentions(
+                            pubkeys: [pubkey],
+                            kinds: [9735],
+                            limit: 500,
+                            until: NTimestamp(timestamp: Int(until))
+                        ))
                     }
-                    .buttonStyle(.bordered)
-                    .tint(.accentColor)
-                    Spacer()
+                    else {
+                        req(RM.getMentions(pubkeys: [pubkey], kinds: [9735], limit:500))
+                    }
                 }
-                .padding(.vertical, 10)
-                .listRowInsets(EdgeInsets())
+                .padding(.bottom, 40)
+                .buttonStyle(.bordered)
+                .tint(.accentColor)
+                .hCentered()
             }
         }
-        .listStyle(.plain)
+        .background(Color("ListBackground"))
         .onAppear {
-            fetchZaps()
-            if let first = zaps.first {
-                ns.account?.lastSeenZapCreatedAt = first.created_at
+            fl.vPostTransform = false
+            fl.predicate = NSPredicate(
+                format:
+                    "zappedContactPubkey == %@" + // ONLY TO ME
+                    "AND kind == 9735 " +
+                    "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS)
+                    pubkey,
+                    blockedPubkeys
+                )
+            fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+            
+            fl.loadMore(500)
+            
+            if let first = fl.events.first, let account = ns.account {
+                let firstCreatedAt = first.created_at
+                DataProvider.shared().bg.perform {
+                    if let account = account.toBG() {
+                        account.lastSeenZapCreatedAt = firstCreatedAt
+                    }
+                    DataProvider.shared().bgSave()
+                }
+                
             }
-            DataProvider.shared().save()
+            
+            let fetchNewerTask = ReqTask(
+                reqCommand: { (taskId) in
+                    req(RM.getMentions(
+                        pubkeys: [pubkey],
+                        kinds: [9735],
+                        limit: 1500,
+                        subscriptionId: taskId,
+                        since: NTimestamp(timestamp: Int(fl.events.first?.created_at ?? 0))
+                    ))
+                },
+                processResponseCommand: { (taskId) in
+                    print("🟠🟠🟠 processResponseCommand \(taskId)")
+                    let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
+                    fl.predicate = NSPredicate(
+                        format:
+                            "created_at >= %i " +
+                            "AND zappedContactPubkey == %@" + // ONLY TO ME
+                            "AND kind == 9735 " +
+                            "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS)
+                            currentNewestCreatedAt,
+                            pubkey,
+                            blockedPubkeys
+                      )
+                    fl.loadNewerEvents(1500, taskId: taskId)
+                })
+
+            fetchNewerTask.fetch()
         }
-    }
-    
-    func fetchZaps() {
-        guard ns.account != nil else { return }
-        sp.sendMessage(
-            ClientMessage(type: .REQ,
-                          message:
-                            RequestMessage.getMentions(
-                                pubkeys: [pubkey],
-                                kinds: [9735],
-                                limit: 500,
-                                since: NTimestamp(timestamp: Int(zaps.first?.created_at ?? 0)))
-                         )
-        )
-    }
-    
-    func fetchOlderZaps() {
-        guard ns.account != nil else { return }
-        sp.sendMessage(
-            ClientMessage(type: .REQ,
-                          message:
-                            RequestMessage.getMentions(
-                                pubkeys: [ns.account!.publicKey],
-                                kinds: [9735],
-                                limit: 500,
-                                until: NTimestamp(timestamp: Int(zaps.last?.created_at ?? 0)))
-                         )
-        )
+        .onReceive(receiveNotification(.newZaps)) { _ in
+            let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
+            fl.predicate = NSPredicate(
+                format:
+                    "created_at >= %i " +
+                    "AND zappedContactPubkey == %@" + // ONLY TO ME
+                    "AND kind == 9735 " +
+                    "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS)
+                    currentNewestCreatedAt,
+                    pubkey,
+                    blockedPubkeys
+            )
+            fl.loadNewerEvents(5000, taskId:"newZaps")
+        }
+        .onReceive(receiveNotification(.importedMessagesFromSubscriptionIds)) { notification in
+            let importedSubIds = notification.object as! ImportedNotification
+            
+            let reqTasks = backlog.tasks(with: importedSubIds.subscriptionIds)
+            
+            reqTasks.forEach { task in
+                task.process()
+            }
+        }
     }
 }
 //
@@ -215,12 +232,6 @@ struct ZapsForThisNote: View {
     var zaps:[Event]
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
-    
-    var zapsSorted:[Event] { // $0.sats > $0.sats is slow... so cached..
-        zaps
-            .filter { $0.zapFromRequest != nil }
-            .sorted(by: { $0.naiveSats > $1.naiveSats } )
-    }
     
     var deduplicated:[String: (String, String?, Double, Date, String?)] { // [string: (pubkey, picturUrl?, amount, created_at)]
         var d = [String: (String, String?, Double, Date, String?)]()
@@ -246,14 +257,16 @@ struct ZapsForThisNote: View {
                     d[req!.pubkey] = (req!.pubkey, req!.contact?.picture, sats, createdAt, authorName)
                 }
             }
-        return d
+        return d.sorted { $0.value.2 > $1.value.2 }
+            .reduce(into: [String: (String, String?, Double, Date, String?)]()) { $0[$1.0] = $1.1 }
+
     }
     
     
     var body: some View {
         VStack(alignment:.leading) {
             ZStack {
-                ForEach(Array(deduplicated.keys.enumerated()), id: \.1) { index, key in
+                ForEach(Array(deduplicated.keys.enumerated().prefix(7)), id: \.1) { index, key in
                     ZStack {
                         PFP(pubkey: deduplicated[key]!.0 , pictureUrl: deduplicated[key]!.1, isFollowing: ns.followingPublicKeys.contains(deduplicated[key]!.0))
                             .zIndex(-Double(index))
@@ -304,7 +317,7 @@ struct ZapsForThisNote: View {
 struct NotificationsZaps_Previews: PreviewProvider {
     static var previews: some View {
         let pubkey = "32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245"
-        NotificationsZaps(pubkey: pubkey, blockedPubkeys:[],  context: DataProvider.shared().container.viewContext)
+        NotificationsZaps(pubkey: pubkey, blockedPubkeys:[])
             .withPreviewEnvironment()
     }
 }

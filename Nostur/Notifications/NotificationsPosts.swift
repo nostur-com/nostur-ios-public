@@ -41,16 +41,13 @@ struct NotificationsPosts: View {
                         }
                         .id(vPost.id)
                 }
-                HStack {
-                    Spacer()
-                    Button("Show more") {
-//                        fetchOlderMentions()
-                        fl.loadMore()
-                    }
-                    .buttonStyle(.bordered)
-                    .tint(.accentColor)
-                    Spacer()
+                Button("Show more") {
+                    fl.loadMore()
                 }
+                .padding(.bottom, 40)
+                .buttonStyle(.bordered)
+                .tint(.accentColor)
+                .hCentered()
             }
         }
         .background(Color("ListBackground"))
@@ -76,9 +73,10 @@ struct NotificationsPosts: View {
             fl.loadMoreBG(15)
             
             if let first = fl.vPosts.first, let account = ns.account {
+                let firstCreatedAt = first.created_at
                 DataProvider.shared().bg.perform {
                     if let account = account.toBG() {
-                        account.lastSeenPostCreatedAt = first.created_at
+                        account.lastSeenPostCreatedAt = firstCreatedAt
                     }
                     DataProvider.shared().bgSave()
                 }
@@ -102,7 +100,7 @@ struct NotificationsPosts: View {
                     fl.predicate = NSPredicate(
                         format:
                             "created_at >= %i " +
-                            "NOT pubkey IN %@ " + // blockedPubkeys + [pubkey]
+                            "AND NOT pubkey IN %@ " + // blockedPubkeys + [pubkey]
                             "AND kind == 1 " +
                             "AND tagsSerialized CONTAINS %@ " + // serializedP(pubkey)
                             "AND NOT id IN %@ " + // mutedRootIds
@@ -119,7 +117,26 @@ struct NotificationsPosts: View {
                 })
 
             fetchNewerTask.fetch()
-//            print("🟠🟠 fetchNewerTask.fetch()")
+        }
+        .onReceive(receiveNotification(.newMentions)) { _ in
+            let currentNewestCreatedAt = fl.vPosts.first?.created_at ?? 0
+            fl.predicate = NSPredicate(
+                format:
+                    "created_at >= %i " +
+                    "AND NOT pubkey IN %@ " + // blockedPubkeys + [pubkey]
+                    "AND kind == 1 " +
+                    "AND tagsSerialized CONTAINS %@ " + // serializedP(pubkey)
+                    "AND NOT id IN %@ " + // mutedRootIds
+                    "AND (replyToRootId == nil OR NOT replyToRootId IN %@) " + // mutedRootIds
+                    "AND (replyToId == nil OR NOT replyToId IN %@) ", // mutedRootIds
+                    currentNewestCreatedAt,
+                    blockedPubkeys + [pubkey],
+                    serializedP(pubkey),
+                    mutedRootIds,
+                    mutedRootIds,
+                    mutedRootIds
+            )
+            fl.loadNewerBG(250, taskId:"newMentions")
         }
         .onReceive(receiveNotification(.importedMessagesFromSubscriptionIds)) { notification in
             let importedSubIds = notification.object as! ImportedNotification
@@ -131,29 +148,6 @@ struct NotificationsPosts: View {
             }
         }
     }
-    
-//    func loadMore() {
-//        fl.next()
-//    }
-    
-
-    
-//    func fetchOlderMentions() {
-//        guard ns.account != nil else { return }
-//        sp.sendMessage(
-//            ClientMessage(type: .REQ,
-//                          message:
-//                            RequestMessage.getMentions(
-//                                pubkeys: [ns.account!.publicKey],
-//                                kinds: [1],
-//                                limit: 500,
-//                                until: NTimestamp(timestamp: Int(notes.last?.created_at ?? 0))
-//                            )
-//                         )
-//        )
-//    }
-    
-    
 }
 
 struct NotificationsNotes_Previews: PreviewProvider {

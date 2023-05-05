@@ -10,29 +10,21 @@ import CoreData
 
 // NIP-25: The last p tag MUST be the pubkey of the event being reacted to.
 // TODO: Maybe when performance problems: store lastE + lasteE in Events table
-struct NotificationsReactions: View, Equatable {
-    
-    static func == (lhs: NotificationsReactions, rhs: NotificationsReactions) -> Bool {
-        lhs.pubkey == rhs.pubkey
-        && lhs.blockedPubkeys == rhs.blockedPubkeys
-    }
-    
+struct NotificationsReactions: View {
+
     let pubkey:String
     let blockedPubkeys:[String]
-    let FETCH_LIMIT = 200
-    let sp:SocketPool = .shared
-     
-    @EnvironmentObject var ns:NosturState
-    @Environment(\.managedObjectContext) var viewContext
     
-    @FetchRequest
-    var reactions:FetchedResults<Event>
+    @StateObject var fl = FastLoader()
+    @State var backlog = Backlog()
+    @EnvironmentObject var ns:NosturState
+    
     
     var myNotesReactedTo:[Event] {
         
         var sortingDict:[Event: Int64] = [:] // Event and most recent reaction created_At
         
-        for reaction in reactions {
+        for reaction in fl.events {
             guard let reactionTo = reaction.reactionTo else { continue }
             if (sortingDict.keys.contains(reactionTo)) {
                 if reaction.created_at > sortingDict[reactionTo]! {
@@ -51,76 +43,137 @@ struct NotificationsReactions: View, Equatable {
     }
     
     func reactionsForNote(_ event:Event) -> [Event] {
-        reactions.compactMap {  $0.reactionToId == event.id ? $0 : nil }
-//        reactions.compactMap {  $0.reactionTo == note ? $0 : nil }
+        fl.events.compactMap {  $0.reactionToId == event.id ? $0 : nil }
     }
     
-    init(pubkey:String, blockedPubkeys:[String], context:NSManagedObjectContext) {
+    init(pubkey:String, blockedPubkeys:[String]) {
         self.pubkey = pubkey
         self.blockedPubkeys = blockedPubkeys
-        let r1 = Event.fetchRequest()
-        r1.predicate = NSPredicate(format: "NOT pubkey IN %@ AND kind == 7 AND reactionTo.pubkey == %@", blockedPubkeys, pubkey)
-        r1.fetchLimit = FETCH_LIMIT
-        r1.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        let oldestCreatedAt = (try? context.fetch(r1).last?.created_at) ?? 0
-        
-        let r2 = Event.fetchRequest()
-        r2.predicate = NSPredicate(format:
-                                   "created_at >= %i " +
-                                   "AND NOT pubkey IN %@ " +
-                                   "AND kind == 7 " +
-                                   "AND reactionTo.pubkey == %@",
-                                   oldestCreatedAt,
-                                   blockedPubkeys + [pubkey],
-                                   pubkey)
-        r2.fetchLimit = FETCH_LIMIT
-        r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        _reactions = FetchRequest(fetchRequest: r2)
     }
     
     var body: some View {
         let _ = Self._printChanges()
-        VStack {
-//            Text("my vPosts: \(myNotesReactedToAsVPosts.count), reactions: \(reactions.count)")
-            List {
-                Section {
-                    ForEach(myNotesReactedToAsVPosts) { vPost in
-                        VStack(alignment:.leading, spacing: 3) {
-                            ReactionsForThisNote(reactions:reactionsForNote(vPost.event))
-                            NoteMinimalContentView(vPost: vPost)
-                        }
-                        .padding(.vertical, 10)
-                        .listRowInsets(EdgeInsets())
-                        .background(Color.systemBackground)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            navigateTo(vPost)
-                        }
+        ScrollView {
+            LazyVStack(alignment:.leading, spacing: 0) {
+                ForEach(myNotesReactedToAsVPosts) { vPost in
+                    VStack(alignment:.leading, spacing: 3) {
+                        ReactionsForThisNote(reactions:reactionsForNote(vPost.event))
+                        NoteMinimalContentView(vPost: vPost)
+                    }
+                    .padding(10)
+                    .background(Color.systemBackground)
+                    .boxShadow()
+                    .padding(10)
+                    .onTapGesture {
+                        navigateTo(vPost)
+                    }
+                    .id(vPost.id)
+                }
+                Button("Show more") {
+                    fl.predicate = NSPredicate(
+                        format:
+                            "NOT pubkey IN %@ " +
+                            "AND kind == 7 " +
+                            "AND reactionTo.pubkey == %@",
+                            blockedPubkeys,
+                            pubkey)
+//                    fl.offset = (fl.events.count - 1)
+                    fl.loadMore(500)
+                    if let until = fl.events.last?.created_at {
+                        req(RM.getMentions(
+                            pubkeys: [pubkey],
+                            kinds: [7],
+                            limit: 500,
+                            until: NTimestamp(timestamp: Int(until))
+                        ))
+                    }
+                    else {
+                        req(RM.getMentions(pubkeys: [pubkey], limit:500))
                     }
                 }
-                Section {
-                    HStack {
-                        Spacer()
-                        Button("Fetch older") {
-                            fetchOlderReactions()
-                        }
-                        .buttonStyle(.bordered)
-                        .tint(.accentColor)
-                        Spacer()
-                    }
-                    .padding(.vertical, 10)
-                    .listRowInsets(EdgeInsets())
-                }
+                .padding(.bottom, 40)
+                .buttonStyle(.bordered)
+                .tint(.accentColor)
+                .hCentered()
             }
-            .listStyle(.plain)
-            .onAppear {
-                fetchReactions()
-                if let first = reactions.first {
-                    ns.account?.lastSeenReactionCreatedAt = first.created_at
+        }
+        .background(Color("ListBackground"))
+        .onAppear {
+            fl.vPostTransform = false
+            fl.predicate = NSPredicate(
+                format:
+                    "NOT pubkey IN %@ " +
+                    "AND kind == 7 " +
+                    "AND reactionTo.pubkey == %@",
+                    blockedPubkeys,
+                    pubkey
+                )
+            fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+            
+            fl.loadMore(500)
+            
+            if let first = fl.events.first, let account = ns.account {
+                let firstCreatedAt = first.created_at
+                DataProvider.shared().bg.perform {
+                    if let account = account.toBG() {
+                        account.lastSeenReactionCreatedAt = firstCreatedAt
+                    }
+                    DataProvider.shared().bgSave()
                 }
-                DataProvider.shared().save()
                 
-                fixReactionsWithMissingRelation()
+            }
+            
+            let fetchNewerTask = ReqTask(
+                reqCommand: { (taskId) in
+                    req(RM.getMentions(
+                        pubkeys: [pubkey],
+                        kinds: [7],
+                        limit: 5000,
+                        subscriptionId: taskId,
+                        since: NTimestamp(timestamp: Int(fl.events.first?.created_at ?? 0))
+                    ))
+                },
+                processResponseCommand: { (taskId) in
+                    print("🟠🟠🟠 processResponseCommand \(taskId)")
+                    let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
+                    fl.predicate = NSPredicate(
+                        format:
+                            "created_at >= %i " +
+                            "AND NOT pubkey IN %@ " +
+                            "AND kind == 7 " +
+                            "AND reactionTo.pubkey == %@",
+                            currentNewestCreatedAt,
+                            blockedPubkeys,
+                            pubkey
+                      )
+                    fl.loadNewerEvents(5000, taskId: taskId)
+                })
+
+            fetchNewerTask.fetch()
+            
+            fixReactionsWithMissingRelation()
+        }
+        .onReceive(receiveNotification(.newReactions)) { _ in
+            let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
+            fl.predicate = NSPredicate(
+                format:
+                    "created_at >= %i " +
+                    "AND NOT pubkey IN %@ " +
+                    "AND kind == 7 " +
+                    "AND reactionTo.pubkey == %@",
+                    currentNewestCreatedAt,
+                    blockedPubkeys,
+                    pubkey
+            )
+            fl.loadNewerEvents(5000, taskId:"newReactions")
+        }
+        .onReceive(receiveNotification(.importedMessagesFromSubscriptionIds)) { notification in
+            let importedSubIds = notification.object as! ImportedNotification
+            
+            let reqTasks = backlog.tasks(with: importedSubIds.subscriptionIds)
+            
+            reqTasks.forEach { task in
+                task.process()
             }
         }
     }
@@ -143,36 +196,6 @@ struct NotificationsReactions: View, Equatable {
             }
             
         }
-    }
-    
-    func fetchOlderReactions() {
-        guard ns.account != nil else { return }
-        sp.sendMessage(
-            ClientMessage(type: .REQ,
-                          message:
-                            RequestMessage.getMentions(
-                                pubkeys: [ns.account!.publicKey],
-                                kinds: [7],
-                                limit: 500,
-                                until: NTimestamp(timestamp: Int(reactions.last?.created_at ?? 0)))
-                         )
-        )
-    }
-    
-    func fetchReactions() {
-        guard let account = ns.account else { return }
-        let req = RequestMessage.getMentions(
-            pubkeys: [account.publicKey],
-            kinds: [7],
-            limit: 500,
-            since: NTimestamp(timestamp: Int(reactions.first?.created_at ?? 0)))
-        
-        print(req)
-        //        sp.sendMessage(
-        //            ClientMessage(type: .REQ,
-        //                          message: req
-        //                         )
-        //        )
     }
 }
 
@@ -239,7 +262,7 @@ struct ReactionsForThisNote: View {
 struct NotificationsV_Previews: PreviewProvider {
     static var previews: some View {
         let pubkey = "04c915daefee38317fa734444acee390a8269fe5810b2241e5e6dd343dfbecc9"
-        NotificationsReactions(pubkey: pubkey, blockedPubkeys: [], context: DataProvider.shared().container.viewContext)
+        NotificationsReactions(pubkey: pubkey, blockedPubkeys: [])
             .withPreviewEnvironment()
     }
 }

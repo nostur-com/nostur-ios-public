@@ -17,16 +17,25 @@ class NotificationsManager: ObservableObject {
     
     @Published var unreadMentions:Int = 0 {
         didSet {
+            if unreadMentions > oldValue {
+                sendNotification(.newMentions)
+            }
             sendNotification(.updateNotificationsCount, unread)
         }
     }
     @Published var unreadReactions:Int = 0 {
         didSet {
+            if unreadReactions > oldValue {
+                sendNotification(.newReactions)
+            }
             sendNotification(.updateNotificationsCount, unread)
         }
     }
     @Published var unreadZaps:Int = 0 {
         didSet {
+            if unreadZaps > oldValue {
+                sendNotification(.newZaps)
+            }
             sendNotification(.updateNotificationsCount, unread)
         }
     }
