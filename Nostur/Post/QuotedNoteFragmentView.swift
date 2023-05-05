@@ -15,11 +15,16 @@
 import SwiftUI
 
 struct QuotedNoteFragmentView: View {
-    let sp:SocketPool = .shared
     @EnvironmentObject var accountState:NosturState
     @State var viewSize:CGSize = .zero
      
     let vPost:VPost
+    @ObservedObject var event:Event
+    
+    init(vPost: VPost) {
+        self.vPost = vPost
+        self.event = vPost.event
+    }
     
     var body: some View {
         VStack(alignment:.leading) {
@@ -32,7 +37,7 @@ struct QuotedNoteFragmentView: View {
                                 navigateTo(ContactPath(key: vPost.event.pubkey)) // TODO: Direct to vPost.vContact if possible
                             }
                             
-                        if let contact = vPost.event.contact {
+                        if let contact = vPost.event.contact_ {
                             NameAndNip(contact: contact)
                         }
                         else {
@@ -90,9 +95,10 @@ struct QuotedNoteFragmentView: View {
             // No Contact
             // Contact updated_at is very old
             // followed contact meta data refresh should be updated at app wake up probably
-            if (vPost.event.contact == nil) {
-                print("🟢 NoteRow.onAppear event.contact == nil so: REQ.0:\(vPost.event.pubkey)")
-                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: vPost.event.pubkey)))
+            if (event.contact == nil) || (event.contact?.metadata_created_at == 0) {
+                print("🟢 NoteRow.onAppear event.contact == nil so: REQ.0:\(event.pubkey)")
+                EventRelationsQueue.shared.addAwaitingEvent(event)
+                req(RM.getUserMetadata(pubkey: vPost.event.pubkey))
             }
         }
     }

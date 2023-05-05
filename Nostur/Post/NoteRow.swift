@@ -55,14 +55,32 @@ struct NoteRow: View {
                 if event.isRepost {
                     if let firstQuote = vPost.firstQuote.first {
                         // CASE - WE HAVE IT IN VPOST
-                        if vPost.isHighlight {
-                            Highlight(vPost: vPost, hideFooter: false, inThread:inThread, connect:connect)
+                        if firstQuote.isHighlight {
+                            Highlight(vPost: firstQuote, hideFooter: false, inThread:inThread, connect:connect)
+                                .onAppear {
+                                    if firstQuote.event.contact == nil {
+                                        EventRelationsQueue.shared.addAwaitingEvent(firstQuote.event)
+                                        req(RM.getUserMetadata(pubkey: firstQuote.event.pubkey))
+                                    }
+                                }
                         }
                         else if fullWidth {
                             Kind1(vPost: firstQuote, hideFooter:false, isDetail:isDetail)
+                                .onAppear {
+                                    if firstQuote.event.contact == nil {
+                                        EventRelationsQueue.shared.addAwaitingEvent(firstQuote.event)
+                                        req(RM.getUserMetadata(pubkey: firstQuote.event.pubkey))
+                                    }
+                                }
                         }
                         else {
                             Kind1Default(vPost: firstQuote, hideFooter:false, isDetail:isDetail)
+                                .onAppear {
+                                    if firstQuote.event.contact == nil {
+                                        EventRelationsQueue.shared.addAwaitingEvent(firstQuote.event)
+                                        req(RM.getUserMetadata(pubkey: firstQuote.event.pubkey))
+                                    }
+                                }
                         }
                     }
                     // CASE - We have the event: firstQuote_ = already .firstQuote or lazy fetched with .firstQuoteId
@@ -70,12 +88,30 @@ struct NoteRow: View {
                         if let toVPostQuote = firstQuote_.toVPost() {
                             if toVPostQuote.isHighlight {
                                 Highlight(vPost: toVPostQuote, hideFooter: false, inThread:inThread, connect:connect)
+                                    .onAppear {
+                                        if toVPostQuote.event.contact == nil {
+                                            EventRelationsQueue.shared.addAwaitingEvent(toVPostQuote.event)
+                                            req(RM.getUserMetadata(pubkey: toVPostQuote.event.pubkey))
+                                        }
+                                    }
                             }
                             else if fullWidth {
                                 Kind1(vPost: toVPostQuote, hideFooter:false, isDetail:isDetail)
+                                    .onAppear {
+                                        if toVPostQuote.event.contact == nil {
+                                            EventRelationsQueue.shared.addAwaitingEvent(toVPostQuote.event)
+                                            req(RM.getUserMetadata(pubkey: toVPostQuote.event.pubkey))
+                                        }
+                                    }
                             }
                             else {
                                 Kind1Default(vPost: toVPostQuote, hideFooter:false, isDetail:isDetail)
+                                    .onAppear {
+                                        if toVPostQuote.event.contact == nil {
+                                            EventRelationsQueue.shared.addAwaitingEvent(toVPostQuote.event)
+                                            req(RM.getUserMetadata(pubkey: toVPostQuote.event.pubkey))
+                                        }
+                                    }
                             }
                         }
                     }

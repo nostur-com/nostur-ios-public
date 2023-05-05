@@ -47,6 +47,12 @@ struct NoteHeaderView: View {
                         }
                     }
                 }
+                .onAppear {
+                    if contact.metadata_created_at == 0 {
+                        EventRelationsQueue.shared.addAwaitingEvent(event)
+                        req(RM.getUserMetadata(pubkey: contact.pubkey))
+                    }
+                }
                 if (!singleLine) {
                     HStack {
                         Text("@\(contact.username)").layoutPriority(1)
@@ -87,9 +93,13 @@ struct NoteHeaderView: View {
                     }
                 }
                 if (!singleLine) {
-                    Text("@\(vPost.username) · 1s")
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
+                    HStack {
+                        Text("@\(vPost.username) · ")
+                        Ago(vPost.date)
+                            .layoutPriority(2)
+                    }
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
                 }
             }
         }
