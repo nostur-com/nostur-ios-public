@@ -234,7 +234,7 @@ class Importer {
                                 let importedNotification = ImportedNotification(subscriptionIds: subscriptionIds)
                                 DispatchQueue.main.async {
                                     sendNotification(.importedMessagesFromSubscriptionIds, importedNotification)
-                                    sendNotification(.listStatus, "Processing \(mainQueueCount)/\(mainQueueForImportsCount) items...")
+                                    sendNotification(.listStatus, "Processing \(mainQueueCount)/\(max(mainQueueCount,mainQueueForImportsCount)) items...")
                                     sendNotification(.newEventsInDatabase)
                                 }
                                 subscriptionIds.removeAll()
@@ -254,7 +254,7 @@ class Importer {
                         let importedNotification = ImportedNotification(subscriptionIds: subscriptionIds)
                         DispatchQueue.main.async {
                             sendNotification(.importedMessagesFromSubscriptionIds, importedNotification)
-                            sendNotification(.listStatus, "Processing \(mainQueueCount)/\(mainQueueForImportsCount) items...")
+                            sendNotification(.listStatus, "Processing \(mainQueueCount)/\(max(mainQueueCount,mainQueueForImportsCount)) items...")
                             sendNotification(.newEventsInDatabase)
                         }
                         subscriptionIds.removeAll()
