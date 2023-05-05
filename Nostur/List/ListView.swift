@@ -46,7 +46,7 @@ struct ListView: View {
                     guard vmState.state != .SWITCHING_ACCOUNT else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
                     //                        print("\(vPost.id) index: \(vmState.vPostLeafs.firstIndex(of: vPost) ?? -1)")
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        if rowIndex == 0 {
+                        if rowIndex == 0 || rowIndex == 1 { // not sure why just index 0 doesn't work 1% of the time
                             vm.lvmCounter.count = 0
                         }
                     }
@@ -56,7 +56,7 @@ struct ListView: View {
                 },
                            onFinishedScrolling: { (isAtTop, indexPaths) in
                     guard isAtTop != vmState.isAtTop else { return }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                         self.vmState.isAtTop = isAtTop
                         if indexPaths.contains(where: { $0.row == 0 }) {
                             vm.lvmCounter.count = 0
