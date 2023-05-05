@@ -134,7 +134,7 @@ class LVM: NSObject, ObservableObject {
         let followingKeys = NosturState.shared.followingPublicKeys
         
         context.perform { [unowned self] in
-            let transformer = VPostTransformer(context, followingKeys: followingKeys) // Tranform in bg
+            let transformer = VPostTransformer.bg
 //            let lastCreatedAt = currentVPostLeafs.last?.created_at ?? 0
             var newVPostLeafs:[VPost] = []
             var transformedObjectIds = Set<NSManagedObjectID>()
@@ -598,7 +598,7 @@ extension LVM {
                 let followingPubkeys = NosturState.shared.followingPublicKeys
                 context.perform { [weak self] in
                     guard let self = self else { return }
-                    let transformer = VPostTransformer(context, followingKeys: followingPubkeys) // Tranform in bg
+                    let transformer = VPostTransformer.bg
                     
                     if let newVPostLeaf = transformer.toVPost(event, forceBg: true) {
                         DispatchQueue.main.async {

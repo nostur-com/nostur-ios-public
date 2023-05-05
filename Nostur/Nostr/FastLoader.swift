@@ -236,7 +236,7 @@ class FastLoader: ObservableObject {
     }
     
     private func transformInBG(_ events:[Event]) -> [VPost] {
-        let transformer = VPostTransformer(bgContext, followingKeys: followingKeys)
+        let transformer = VPostTransformer.bg
         return bgContext.performAndWait {
             return events
                 .compactMap { transformer.toVPost($0, forceBg: true) }

@@ -8,7 +8,7 @@
 import Foundation
 import CoreData
 import UIKit
-//import Combine
+import Combine
 
 struct VPost: Identifiable, Equatable, Hashable {
     static func == (lhs: VPost, rhs: VPost) -> Bool {
@@ -69,6 +69,7 @@ struct VPost: Identifiable, Equatable, Hashable {
 
 class VPostTransformer {
     static let shared = VPostTransformer()
+    static let bg = VPostTransformer(DataProvider.shared().bg)
     
     static let imageUrlPattern = ###"(?i)https?:\/\/\S+?\.(?:png|jpe?g|gif|webp)(\?\S+){0,1}\b"###
     static let previewImagePlaceholder = ###"--@!\^@(\d+)@\^!@--"###
@@ -82,10 +83,18 @@ class VPostTransformer {
     
     let context:NSManagedObjectContext
     var followingKeys:Set<String>?
+    var subscriptions = Set<AnyCancellable>()
     
     init(_ context:NSManagedObjectContext? = nil, followingKeys:Set<String>? = nil) {
         self.context = context ?? DataProvider.shared().viewContext
-        self.followingKeys = followingKeys ?? NosturState.shared.followingPublicKeys
+        self.followingKeys = followingKeys
+        
+        receiveNotification(.followersChanged)
+                .sink { notification in
+                    guard let followingKeys = notification.object as? Set<String> else { return }
+                    self.followingKeys = followingKeys
+                }
+                .store(in: &subscriptions)
     }
     
     func toVPost(_ mainEvent:Event, skipParents:Bool? = false, plainText:Bool = false, forceBg:Bool = false) -> VPost? {

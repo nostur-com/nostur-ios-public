@@ -107,8 +107,9 @@ struct ContentRenderer: View { // VIEW things
                 .sink {
                     
                     let followingKeys = NosturState.shared.followingPublicKeys
-                    DataProvider.shared().container.performBackgroundTask { context in
-                        let transformer = VPostTransformer(context, followingKeys: followingKeys) // Tranform in bg
+                    let context = DataProvider.shared().bg
+                    context.perform {
+                        let transformer = VPostTransformer.bg
                      
                         guard let privateEvent = context.object(with: event.objectID) as? Event else { return }
                         let renderedElements = transformer.renderElements(privateEvent).0
@@ -144,6 +145,9 @@ struct ContentRenderer: View { // VIEW things
                             self.renderedElements = isDetail ? renderedElements : renderedForRow
                         }
                     }
+//                    DataProvider.shared().container.performBackgroundTask { context in
+//
+//                    }
     
                 }
                 .store(in: &subscriptions)
@@ -197,8 +201,9 @@ struct QuoteById: View {
                     .frame(height: 150)
                     .task {
                         let followingKeys = NosturState.shared.followingPublicKeys
-                        DataProvider.shared().container.performBackgroundTask { context in
-                            let transformer = VPostTransformer(context, followingKeys: followingKeys) // Tranform in bg
+//                        DataProvider.shared().container.performBackgroundTask { context in
+                        DataProvider.shared().bg.perform {
+                            let transformer = VPostTransformer.bg
                             if let vPost = transformer.toVPost(event, forceBg: true) {
                                 DispatchQueue.main.async {
                                     self.vPost = vPost
