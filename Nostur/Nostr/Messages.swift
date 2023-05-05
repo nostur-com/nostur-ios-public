@@ -235,7 +235,7 @@ public struct RequestMessage {
     static func getEventReferences(ids:[String], limit:Int = 5000, subscriptionId:String? = nil, kinds:[Int]? = nil) -> String {
         let kindsJsonArr = kinds != nil ? JSON(kinds!).rawString(.utf8, options: .init(rawValue: 0)) : "[1,6,7,9735]"
         return """
-["REQ", "\(subscriptionId ?? ("TL-REF-"+UUID().uuidString))", {"#e": \(JSON(ids).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]"), "kinds":\(kindsJsonArr!), "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? ("REF-"+UUID().uuidString))", {"#e": \(JSON(ids).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]"), "kinds":\(kindsJsonArr!), "limit": \(limit)}]
 """
     }
     
@@ -249,17 +249,17 @@ public struct RequestMessage {
         // TODO: UGH clean up this if then mess
         if (ids.count > 0 && authors.count > 0) {
             return """
-    ["REQ", "\(subscriptionId ?? ("TL-TAG-"+UUID().uuidString))", {"ids": \(JSON(ids).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]")}, {"authors": \(JSON(authors).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]"), "kinds": [0], "limit": \(limit)}]
+    ["REQ", "\(subscriptionId ?? ("RELATED-"+UUID().uuidString))", {"ids": \(JSON(ids).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]")}, {"authors": \(JSON(authors).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]"), "kinds": [0], "limit": \(limit)}]
     """
         }
         else if (ids.count > 0) {
             return """
-    ["REQ", "\(subscriptionId ?? ("TL-TAG-"+UUID().uuidString))", {"ids": \(JSON(ids).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]")}]
+    ["REQ", "\(subscriptionId ?? ("RELATED-"+UUID().uuidString))", {"ids": \(JSON(ids).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]")}]
     """
         }
         else if (authors.count > 0) {
             return """
-    ["REQ", "\(subscriptionId ?? ("TL-TAG-"+UUID().uuidString))", {"authors": \(JSON(authors).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]"), "kinds": [0], "limit": \(limit)}]
+    ["REQ", "\(subscriptionId ?? ("RELATED-"+UUID().uuidString))", {"authors": \(JSON(authors).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]"), "kinds": [0], "limit": \(limit)}]
     """
         }
         return nil

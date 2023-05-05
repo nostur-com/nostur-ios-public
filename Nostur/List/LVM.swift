@@ -251,7 +251,7 @@ class LVM: NSObject, ObservableObject {
         recentVPosts.map { $0.event }.forEach { event in
             EventRelationsQueue.shared.addAwaitingEvent(event)
         }
-        SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEventReferences(ids: ids)))
+        req(RM.getEventReferences(ids: ids, subscriptionId: "RELATED-"+UUID().uuidString))
         print("Skip render and fetch related of \(ids.joined(separator: ",")) first.")
     }
     

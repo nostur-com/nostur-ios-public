@@ -296,18 +296,13 @@ struct PostAndParent: View {
                     
                     // Fetch all that reference this detail note (Replies, zaps, reactions)
                     EventRelationsQueue.shared.addAwaitingEvent(event)
-                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEventReferences(ids: [event.id])))
-                    
-                    
-                    if (event.replyToRootId != nil) {
-                        
+                    req(RM.getEventReferences(ids: [event.id], subscriptionId: "DETAIL-"+UUID().uuidString))
+
+                    if let replyToRootId = event.replyToRootId {
                         // Fetch all that reference the root note
                         // to build the thread, maybe kind=1 is enough, or all...?
-                        sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEventReferences(ids: [event.replyToRootId!], kinds: [1])))
+                        req(RM.getEventReferences(ids: [replyToRootId], subscriptionId: "ROOT-"+UUID().uuidString, kinds:[1]))
                     }
-                    
-                    // OR??
-                    //                        /sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEventAndReferences(id: id)))
                 }
             }
         }
