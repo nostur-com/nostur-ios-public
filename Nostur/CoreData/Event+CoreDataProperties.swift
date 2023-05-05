@@ -71,6 +71,7 @@ extension Event {
         guard let ctx = managedObjectContext else { return nil }
         if let found = try? Event.fetchEvent(id: reactionToId, context: ctx) {
 //            DispatchQueue.main.async {
+                self.objectWillChange.send()
                 self.reactionTo = found
 //            }
             return found
@@ -98,6 +99,7 @@ extension Event {
         guard let ctx = managedObjectContext else { return nil }
         if let found = try? Event.fetchEvent(id: replyToId, context: ctx) {
             DispatchQueue.main.async {
+                self.objectWillChange.send()
                 self.replyTo = found
                 found.objectWillChange.send()
                 found.addToReplies(self)
@@ -113,6 +115,7 @@ extension Event {
         guard let ctx = managedObjectContext else { return nil }
         if let found = try? Event.fetchEvent(id: replyToRootId, context: ctx) {
             DispatchQueue.main.async {
+                self.objectWillChange.send()
                 self.replyToRoot = found
             }
             return found
@@ -126,6 +129,7 @@ extension Event {
         guard let ctx = managedObjectContext else { return nil }
         if let found = try? Event.fetchEvent(id: firstQuoteId, context: ctx) {
             DispatchQueue.main.async {
+                self.objectWillChange.send()
                 self.firstQuote = found
             }
             return found
@@ -800,251 +804,251 @@ extension Event {
         
         let context = DataProvider.shared().bg
         
-        return context.performAndWait {
-            let savedEvent = Event(context: context)
-            savedEvent.insertedAt = Date.now
-            savedEvent.id = event.id
-            savedEvent.kind = Int64(event.kind.id)
-            savedEvent.created_at = Int64(event.createdAt.timestamp)
-            savedEvent.content = event.content
-            savedEvent.sig = event.signature
-            savedEvent.pubkey = event.publicKey
-            savedEvent.likesCount = 0
-            savedEvent.isRepost = event.kind == .repost
-            savedEvent.contact = Contact.fetchByPubkey(event.publicKey, context: context)
-            savedEvent.tagsSerialized = TagSerializer.shared.encode(tags: event.tags)
-            savedEvent.relays = relay ?? ""
-            
-            if event.kind == .profileBadges {
-                savedEvent.contact?.objectWillChange.send()
-            }
-            
-            //        if event.kind == .badgeAward {
-            //            // find and notify all kind 30008 where serialized tags contains
-            //            // ["a","30009:aa77d356ac5a59dbedc78f0da17c6bdd3ae315778b5c78c40a718b5251391da6:test_badge"]
-            //            // notify any related profile badge
-            //            let profileBadges = Event.fetchProfileBadgesByATag(event.badgeA, context:context)
-            //            for pb in profileBadges {
-            //                pb.objectWillChange.send()
-            //            }
-            ////            sendNotification(.badgeAwardFetched)
-            //        }
-            if event.kind == .badgeDefinition {
-                // notify any related profile badge
-                savedEvent.contact?.objectWillChange.send()
-                let profileBadges = Event.fetchProfileBadgesByATag(event.badgeA, context:context)
-                for pb in profileBadges {
-                    pb.objectWillChange.send()
-                }
-                //            sendNotification(.badgeDefinitionFetched)
-            }
-            
-            if event.kind == .zapNote {
-                //TODO: Do we need any objectWillChange.send() here??
-                
-                // save 9734 seperate
-                // so later we can do --> event(9735).zappedEvent(9734).contact
-                let nZapRequest = Event.extractZapRequest(tags: event.tags)
-                if (nZapRequest != nil) {
-                    let zapRequest = Event.saveZapRequest(event: nZapRequest!, context: context)
-                    
-                    savedEvent.zapFromRequest = zapRequest
-                    if let firstE = event.firstE() {
-                        savedEvent.objectWillChange.send()
-                        savedEvent.zappedEventId = firstE
-                        savedEvent.zappedEvent = try? Event.fetchEvent(id: firstE, context: context)
-                    }
-                    if let firstP = event.firstP() {
-                        savedEvent.objectWillChange.send()
-                        savedEvent.zappedContactPubkey = firstP
-                        savedEvent.zappedContact = Contact.fetchByPubkey(firstP, context: context)
-                    }
-                }
-                
-                // bolt11 -- replaced with naiveBolt11Decoder
-                //            if let bolt11 = event.bolt11() {
-                //                let invoice = Invoice.fromStr(s: bolt11)
-                //                if let parsedInvoice = invoice.getValue() {
-                //                    savedEvent.cachedSats = Double((parsedInvoice.amountMilliSatoshis() ?? 0) / 1000)
-                //                }
-                //            }
-            }
-            
-            if event.kind == .reaction {
-                if let lastE = event.lastE() {
-                    savedEvent.objectWillChange.send()
-                    savedEvent.reactionToId = lastE
-                    savedEvent.reactionTo = try? Event.fetchEvent(id: lastE, context: context)
-                }
-                
-                // TODO: dont need this?
-                //            if let lastP = event.lastP() {
-                //                savedEvent.reactionToContactId = lastP
-                //                savedEvent.reactionToContact = Contact.fetchByPubkey(lastP, context: context)
-                //            }
-            }
-            
-            if (event.kind == .textNote) {
-                // THIS EVENT REPLYING TO SOMETHING
-                // CACHE THE REPLY "E" IN replyToId
-                if let replyToEtag = event.replyToEtag() {
-                    savedEvent.replyToId = replyToEtag.id
-                    
-                    // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
-                    if let replyTo = try? Event.fetchEvent(id: replyToEtag.id, context: context) {
-                        savedEvent.replyTo = replyTo
-                        
-                        replyTo.objectWillChange.send()
-                        replyTo.addToReplies(savedEvent)
-                        replyTo.repliesCount += 1
-                    }
-                }
-                
-                // IF THE THERE IS A ROOT, AND ITS NOT THE SAME AS THE REPLY TO
-                // DO THE SAME AS WITH THE REPLY BEFORE
-                if let replyToRootEtag = event.replyToRootEtag() {
-                    if (replyToRootEtag.id != savedEvent.replyToId) { // If reply root is same as reply, dont double add.
-                        savedEvent.replyToRootId = replyToRootEtag.id
-                        if (savedEvent.replyToId == nil) { // IF IT HAS ONLY A ROOT REPLY, NO NORMAL REPLY: THEN REPLYTOROOT = REPLYTO
-                            savedEvent.replyToId = replyToRootEtag.id
-                            
-                            // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
-                            if let replyToRoot = try? Event.fetchEvent(id: replyToRootEtag.id, context: context) {
-                                savedEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
-                                
-                                replyToRoot.objectWillChange.send()
-                                replyToRoot.addToReplies(savedEvent)
-                                replyToRoot.repliesCount += 1
-                            }
-                        }
-                    }
-                }
-                
-                if (event.content == "#[0]" && event.tags.count > 0 && event.tags[0].type == "e") {
-                    savedEvent.isRepost = true
-                    savedEvent.repostForId = event.tags[0].id // repost
-                }
-                
-                //            if (event.content.suffix(4) == "#[0]" && event.tags.count > 0 && event.tags[0].type == "e") {
-                //                savedEvent.isRepost = true
-                //                savedEvent.repostForId = event.tags[0].id // quote repost
-                //            }
-                
-                // NEw: Save all p's in .contacts
-                // Maybe slow??
-                let contacts = Contact.ensureContactsCreated(event: event, context: context)
-                savedEvent.addToContacts(NSSet(array: contacts))
-            }
-            
-            if (event.kind == .directMessage) { // needed to fetch contact in DMS: so event.firstP is in event.contacts
-                let contacts = Contact.ensureContactsCreated(event: event, context: context)
-                savedEvent.addToContacts(NSSet(array: contacts))
-            }
-            
-            // handle REPOST with normal mentions in .kind 1
-            // todo handle first nostr:nevent or not?
-            var alreadyCounted = false
-            if event.kind == .textNote, let firstE = event.firstMentionETag() {
-                savedEvent.firstQuoteId = firstE.id
-                
-                // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
-                if let firstQuote = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
-                    savedEvent.firstQuote = firstQuote
-                    
-                    if (firstE.otherInformation[safe: 2] == "mention") {
-                        firstQuote.objectWillChange.send()
-                        firstQuote.mentionsCount += 1
-                        alreadyCounted = true
-                    }
-                }
-            }
-            
-            // hmm above firstQuote doesn't seem to handle #[0] at .content end and "e" without "mention as first tag, so special case?
-            if !alreadyCounted && event.kind == .textNote && event.content.contains("#[0]"), let firstE = event.firstE() {
-                savedEvent.firstQuoteId = firstE
-                
-                // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
-                if let firstQuote = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
-                    savedEvent.firstQuote = firstQuote
-                    
-                    firstQuote.objectWillChange.send()
-                    firstQuote.mentionsCount += 1
-                }
-            }
-            
-            // kind6 sigh
-            if event.kind == .repost, let firstE = event.firstE() {
-                savedEvent.firstQuoteId = firstE
-                
-                // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
-                if let firstQuote = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
-                    savedEvent.firstQuote = firstQuote
-                    
-                    firstQuote.objectWillChange.send()
-                    firstQuote.mentionsCount += 1
-                }
-            }
-            
-            if (event.kind == .contactList) {
-                // delete older events
-                let r = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
-                r.predicate = NSPredicate(format: "kind == 3 AND pubkey == %@ AND insertedAt < %@", event.publicKey, savedEvent.insertedAt as NSDate)
-                let batchDelete = NSBatchDeleteRequest(fetchRequest: r)
-                batchDelete.resultType = .resultTypeCount
-                
-                do {
-                    _ = try context.execute(batchDelete) as! NSBatchDeleteResult
-                } catch {
-                    print("🔴🔴 Failed to delete older kind 3 events")
-                }
-            }
-            
-            if event.kind == .delete {
-                let eventIdsToDelete = event.eTags()
-                
-                let eventIdsToDeleteReq = NSFetchRequest<Event>(entityName: "Event")
-                eventIdsToDeleteReq.predicate = NSPredicate(format: "kind IN {1,6,9802} AND id IN %@", eventIdsToDelete)
-                eventIdsToDeleteReq.sortDescriptors = []
-                if let eventsToDelete = try? context.fetch(eventIdsToDeleteReq) {
-                    for d in eventsToDelete {
-                        if (d.pubkey == event.publicKey) {
-                            d.objectWillChange.send()
-                            d.deletedById = event.id
-                        }
-                    }
-                }
-            }
-            
-            if (event.kind == .highlight) { // needed to fetch highlight author so put event.firstP in event.contacts
-                let contacts = Contact.ensureContactsCreated(event: event, context: context)
-                savedEvent.addToContacts(NSSet(array: contacts))
-            }
-            
-            
-            // Use new EventRelationsQueue to fix relations
-            if (event.kind == .textNote) {
-                
-                let awaitingEvents = EventRelationsQueue.shared.getAwaitingBgEvents()
-                
-                awaitingEvents.forEach { waitingEvent in
-                    if (waitingEvent.replyToId != nil) && (waitingEvent.replyToId == savedEvent.id) {
-                        waitingEvent.objectWillChange.send()
-                        waitingEvent.replyTo = savedEvent
-                    }
-                    if (waitingEvent.replyToRootId != nil) && (waitingEvent.replyToRootId == savedEvent.id) {
-                        waitingEvent.objectWillChange.send()
-                        waitingEvent.replyToRoot = savedEvent
-                    }
-                    if (waitingEvent.firstQuoteId != nil) && (waitingEvent.firstQuoteId == savedEvent.id) {
-                        waitingEvent.objectWillChange.send()
-                        waitingEvent.firstQuote = savedEvent
-                    }
-                    EventRelationsQueue.shared.removeAwaitingEvent(waitingEvent)
-                }
-            }
-            
-            return savedEvent
+//        return context.performAndWait { // .performAndWait makes import very very slow at catch up....
+        let savedEvent = Event(context: context)
+        savedEvent.insertedAt = Date.now
+        savedEvent.id = event.id
+        savedEvent.kind = Int64(event.kind.id)
+        savedEvent.created_at = Int64(event.createdAt.timestamp)
+        savedEvent.content = event.content
+        savedEvent.sig = event.signature
+        savedEvent.pubkey = event.publicKey
+        savedEvent.likesCount = 0
+        savedEvent.isRepost = event.kind == .repost
+        savedEvent.contact = Contact.fetchByPubkey(event.publicKey, context: context)
+        savedEvent.tagsSerialized = TagSerializer.shared.encode(tags: event.tags)
+        savedEvent.relays = relay ?? ""
+        
+        if event.kind == .profileBadges {
+            savedEvent.contact?.objectWillChange.send()
         }
+        
+        //        if event.kind == .badgeAward {
+        //            // find and notify all kind 30008 where serialized tags contains
+        //            // ["a","30009:aa77d356ac5a59dbedc78f0da17c6bdd3ae315778b5c78c40a718b5251391da6:test_badge"]
+        //            // notify any related profile badge
+        //            let profileBadges = Event.fetchProfileBadgesByATag(event.badgeA, context:context)
+        //            for pb in profileBadges {
+        //                pb.objectWillChange.send()
+        //            }
+        ////            sendNotification(.badgeAwardFetched)
+        //        }
+        if event.kind == .badgeDefinition {
+            // notify any related profile badge
+            savedEvent.contact?.objectWillChange.send()
+            let profileBadges = Event.fetchProfileBadgesByATag(event.badgeA, context:context)
+            for pb in profileBadges {
+                pb.objectWillChange.send()
+            }
+            //            sendNotification(.badgeDefinitionFetched)
+        }
+        
+        if event.kind == .zapNote {
+            //TODO: Do we need any objectWillChange.send() here??
+            
+            // save 9734 seperate
+            // so later we can do --> event(9735).zappedEvent(9734).contact
+            let nZapRequest = Event.extractZapRequest(tags: event.tags)
+            if (nZapRequest != nil) {
+                let zapRequest = Event.saveZapRequest(event: nZapRequest!, context: context)
+                
+                savedEvent.zapFromRequest = zapRequest
+                if let firstE = event.firstE() {
+                    savedEvent.objectWillChange.send()
+                    savedEvent.zappedEventId = firstE
+                    savedEvent.zappedEvent = try? Event.fetchEvent(id: firstE, context: context)
+                }
+                if let firstP = event.firstP() {
+                    savedEvent.objectWillChange.send()
+                    savedEvent.zappedContactPubkey = firstP
+                    savedEvent.zappedContact = Contact.fetchByPubkey(firstP, context: context)
+                }
+            }
+            
+            // bolt11 -- replaced with naiveBolt11Decoder
+            //            if let bolt11 = event.bolt11() {
+            //                let invoice = Invoice.fromStr(s: bolt11)
+            //                if let parsedInvoice = invoice.getValue() {
+            //                    savedEvent.cachedSats = Double((parsedInvoice.amountMilliSatoshis() ?? 0) / 1000)
+            //                }
+            //            }
+        }
+        
+        if event.kind == .reaction {
+            if let lastE = event.lastE() {
+                savedEvent.objectWillChange.send()
+                savedEvent.reactionToId = lastE
+                savedEvent.reactionTo = try? Event.fetchEvent(id: lastE, context: context)
+            }
+            
+            // TODO: dont need this?
+            //            if let lastP = event.lastP() {
+            //                savedEvent.reactionToContactId = lastP
+            //                savedEvent.reactionToContact = Contact.fetchByPubkey(lastP, context: context)
+            //            }
+        }
+        
+        if (event.kind == .textNote) {
+            // THIS EVENT REPLYING TO SOMETHING
+            // CACHE THE REPLY "E" IN replyToId
+            if let replyToEtag = event.replyToEtag() {
+                savedEvent.replyToId = replyToEtag.id
+                
+                // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
+                if let replyTo = try? Event.fetchEvent(id: replyToEtag.id, context: context) {
+                    savedEvent.replyTo = replyTo
+                    
+                    replyTo.objectWillChange.send()
+                    replyTo.addToReplies(savedEvent)
+                    replyTo.repliesCount += 1
+                }
+            }
+            
+            // IF THE THERE IS A ROOT, AND ITS NOT THE SAME AS THE REPLY TO
+            // DO THE SAME AS WITH THE REPLY BEFORE
+            if let replyToRootEtag = event.replyToRootEtag() {
+                if (replyToRootEtag.id != savedEvent.replyToId) { // If reply root is same as reply, dont double add.
+                    savedEvent.replyToRootId = replyToRootEtag.id
+                    if (savedEvent.replyToId == nil) { // IF IT HAS ONLY A ROOT REPLY, NO NORMAL REPLY: THEN REPLYTOROOT = REPLYTO
+                        savedEvent.replyToId = replyToRootEtag.id
+                        
+                        // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
+                        if let replyToRoot = try? Event.fetchEvent(id: replyToRootEtag.id, context: context) {
+                            savedEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
+                            
+                            replyToRoot.objectWillChange.send()
+                            replyToRoot.addToReplies(savedEvent)
+                            replyToRoot.repliesCount += 1
+                        }
+                    }
+                }
+            }
+            
+            if (event.content == "#[0]" && event.tags.count > 0 && event.tags[0].type == "e") {
+                savedEvent.isRepost = true
+                savedEvent.repostForId = event.tags[0].id // repost
+            }
+            
+            //            if (event.content.suffix(4) == "#[0]" && event.tags.count > 0 && event.tags[0].type == "e") {
+            //                savedEvent.isRepost = true
+            //                savedEvent.repostForId = event.tags[0].id // quote repost
+            //            }
+            
+            // NEw: Save all p's in .contacts
+            // Maybe slow??
+            let contacts = Contact.ensureContactsCreated(event: event, context: context)
+            savedEvent.addToContacts(NSSet(array: contacts))
+        }
+        
+        if (event.kind == .directMessage) { // needed to fetch contact in DMS: so event.firstP is in event.contacts
+            let contacts = Contact.ensureContactsCreated(event: event, context: context)
+            savedEvent.addToContacts(NSSet(array: contacts))
+        }
+        
+        // handle REPOST with normal mentions in .kind 1
+        // todo handle first nostr:nevent or not?
+        var alreadyCounted = false
+        if event.kind == .textNote, let firstE = event.firstMentionETag() {
+            savedEvent.firstQuoteId = firstE.id
+            
+            // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
+            if let firstQuote = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
+                savedEvent.firstQuote = firstQuote
+                
+                if (firstE.otherInformation[safe: 2] == "mention") {
+                    firstQuote.objectWillChange.send()
+                    firstQuote.mentionsCount += 1
+                    alreadyCounted = true
+                }
+            }
+        }
+        
+        // hmm above firstQuote doesn't seem to handle #[0] at .content end and "e" without "mention as first tag, so special case?
+        if !alreadyCounted && event.kind == .textNote && event.content.contains("#[0]"), let firstE = event.firstE() {
+            savedEvent.firstQuoteId = firstE
+            
+            // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
+            if let firstQuote = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
+                savedEvent.firstQuote = firstQuote
+                
+                firstQuote.objectWillChange.send()
+                firstQuote.mentionsCount += 1
+            }
+        }
+        
+        // kind6 sigh
+        if event.kind == .repost, let firstE = event.firstE() {
+            savedEvent.firstQuoteId = firstE
+            
+            // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
+            if let firstQuote = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
+                savedEvent.firstQuote = firstQuote
+                
+                firstQuote.objectWillChange.send()
+                firstQuote.mentionsCount += 1
+            }
+        }
+        
+        if (event.kind == .contactList) {
+            // delete older events
+            let r = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
+            r.predicate = NSPredicate(format: "kind == 3 AND pubkey == %@ AND insertedAt < %@", event.publicKey, savedEvent.insertedAt as NSDate)
+            let batchDelete = NSBatchDeleteRequest(fetchRequest: r)
+            batchDelete.resultType = .resultTypeCount
+            
+            do {
+                _ = try context.execute(batchDelete) as! NSBatchDeleteResult
+            } catch {
+                print("🔴🔴 Failed to delete older kind 3 events")
+            }
+        }
+        
+        if event.kind == .delete {
+            let eventIdsToDelete = event.eTags()
+            
+            let eventIdsToDeleteReq = NSFetchRequest<Event>(entityName: "Event")
+            eventIdsToDeleteReq.predicate = NSPredicate(format: "kind IN {1,6,9802} AND id IN %@", eventIdsToDelete)
+            eventIdsToDeleteReq.sortDescriptors = []
+            if let eventsToDelete = try? context.fetch(eventIdsToDeleteReq) {
+                for d in eventsToDelete {
+                    if (d.pubkey == event.publicKey) {
+                        d.objectWillChange.send()
+                        d.deletedById = event.id
+                    }
+                }
+            }
+        }
+        
+        if (event.kind == .highlight) { // needed to fetch highlight author so put event.firstP in event.contacts
+            let contacts = Contact.ensureContactsCreated(event: event, context: context)
+            savedEvent.addToContacts(NSSet(array: contacts))
+        }
+        
+        
+        // Use new EventRelationsQueue to fix relations
+        if (event.kind == .textNote) {
+            
+            let awaitingEvents = EventRelationsQueue.shared.getAwaitingBgEvents()
+            
+            awaitingEvents.forEach { waitingEvent in
+                if (waitingEvent.replyToId != nil) && (waitingEvent.replyToId == savedEvent.id) {
+                    waitingEvent.objectWillChange.send()
+                    waitingEvent.replyTo = savedEvent
+                }
+                if (waitingEvent.replyToRootId != nil) && (waitingEvent.replyToRootId == savedEvent.id) {
+                    waitingEvent.objectWillChange.send()
+                    waitingEvent.replyToRoot = savedEvent
+                }
+                if (waitingEvent.firstQuoteId != nil) && (waitingEvent.firstQuoteId == savedEvent.id) {
+                    waitingEvent.objectWillChange.send()
+                    waitingEvent.firstQuote = savedEvent
+                }
+                EventRelationsQueue.shared.removeAwaitingEvent(waitingEvent)
+            }
+        }
+        
+        return savedEvent
+//        }
     }
     
     // Lets hope Event (Core Data) to nEvent will always keep correct id/sig and not lose integrity due to different storage
