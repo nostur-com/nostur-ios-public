@@ -12,6 +12,7 @@ struct ProfilePicFullScreenSheet: View {
     
     @Binding var profilePicViewerIsShown:Bool
     var pictureUrl:String
+    var isFollowing:Bool
     @State private var scale: CGFloat = 1.0
     @State private var lastScale: CGFloat = 1.0
     @State private var position: CGSize = .zero
@@ -95,7 +96,7 @@ struct ProfilePicFullScreenSheet: View {
                                 CenteredProgressView()
                             }
                         }
-                        .pipeline(ImageProcessing.shared.pfp) // CACHING BUT. NO PROCESSING, BREAKS ANIMATED GIF
+                        .pipeline(isFollowing ? ImageProcessing.shared.pfp : ImageProcessing.shared.pfpNotFollowing)
                         .priority(.high)
                     }
                     else {
@@ -118,7 +119,7 @@ struct ProfilePicFullScreenSheet: View {
                                 CenteredProgressView()
                             }
                         }
-                        .pipeline(ImageProcessing.shared.pfp)
+                        .pipeline(isFollowing ? ImageProcessing.shared.pfp : ImageProcessing.shared.pfpNotFollowing)
                         .priority(.high)
                     }
                 }
@@ -137,7 +138,7 @@ struct ProfilePicFullScreenSheet_Previews: PreviewProvider {
         NavigationStack {
             ProfilePicFullScreenSheet(
                 profilePicViewerIsShown: $shown,
-                pictureUrl: "https://nostur.com/fabian/profile.jpg")
+                pictureUrl: "https://nostur.com/fabian/profile.jpg", isFollowing:true)
         }
     }
 }

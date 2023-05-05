@@ -376,7 +376,7 @@ struct ProfileView: View {
             sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserProfileKinds(pubkey: pubkey, kinds: [0,3,30008,10002])))
         }
         .fullScreenCover(isPresented: $profilePicViewerIsShown) {
-            ProfilePicFullScreenSheet(profilePicViewerIsShown: $profilePicViewerIsShown, pictureUrl:contact.picture!)
+            ProfilePicFullScreenSheet(profilePicViewerIsShown: $profilePicViewerIsShown, pictureUrl:contact.picture!, isFollowing: ns.isFollowing(contact.pubkey))
         }
 //        .navigationBarHidden(true)
 //        .ignoresSafeArea(edges: .top)
