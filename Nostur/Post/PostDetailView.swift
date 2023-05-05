@@ -119,7 +119,7 @@ struct PostAndParent: View {
                 CenteredProgressView()
                     .onAppear {
                         timerTask = Task {
-                            await Task.sleep(4 * 1_000_000_000) // sleep for 4 seconds
+                            try? await Task.sleep(for: .seconds(4))
                             fetchEventFromRelayHint(replyToId, event: event)
                         }
                         EventRelationsQueue.shared.addAwaitingEvent(event)
@@ -290,6 +290,7 @@ struct PostAndParent: View {
                     // Fetch all related (e and p.kind=0)
                     // (the events and contacts mentioned in this DETAIL NOTE.
                     if let message = RequestMessage.getTags(event.tags()) {
+                        EventRelationsQueue.shared.addAwaitingEvent(event)
                         sp.sendMessage(ClientMessage(type: .REQ, message: message))
                     }
                     
