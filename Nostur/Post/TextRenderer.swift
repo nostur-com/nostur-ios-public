@@ -80,7 +80,7 @@ class TextRenderer { // TEXT things
             PubkeyUsernameCache.shared.setObject(for: pubkey, value: username)
             return username
         }
-        return "--"
+        return "..."
     }
 
     func replyingToUsernamesMarkDownString(_ event:Event) -> String? {
