@@ -107,14 +107,13 @@ class Unpublisher: ObservableObject {
                         print("🦋🦋🔴🔴🔴 problem updating Like relation .id \(nEvent.id)")
                     }
                 }
-                
+                Importer.shared.existingIds.insert(savedEvent.id)
+                DataProvider.shared().bgSave()
                 if ([1,6,9802].contains(savedEvent.kind)) {
                     DispatchQueue.main.async {
                         sendNotification(.newPostSaved, savedEvent)
                     }
                 }
-                Importer.shared.existingIds.insert(savedEvent.id)
-                DataProvider.shared().bgSave()
                 self.sp.sendMessage(ClientMessage(message: savedEvent.toNEvent().wrappedEventJson()))
             }
         }

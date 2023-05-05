@@ -594,7 +594,7 @@ extension LVM {
                 guard self?.listId == "Following" else { return }
                 let event = notification.object as! Event
                 
-                let context = DataProvider.shared().container.newBackgroundContext()
+                let context = DataProvider.shared().bg
                 let followingPubkeys = NosturState.shared.followingPublicKeys
                 context.perform { [weak self] in
                     guard let self = self else { return }
