@@ -229,7 +229,7 @@ class Importer {
                         if (context.hasChanges) {
                             do {
                                 try context.save()
-//                                print("🏎️🏎️ \(Date.now) 💾 Saved \(count)/\(forImportsCount)")
+                                print("🏎️🏎️ \(Date.now) 💾 Saved \(count)/\(forImportsCount)")
                                 let mainQueueCount = count
                                 let mainQueueForImportsCount = forImportsCount
                                 let importedNotification = ImportedNotification(subscriptionIds: subscriptionIds)
@@ -241,15 +241,15 @@ class Importer {
                                 subscriptionIds.removeAll()
                             }
                             catch {
-//                                print("🏎️🏎️ \(Date.now) 🔴🔴🔴 Error on batch \(count)/\(forImportsCount): \(error)")
+                                print("🏎️🏎️ \(Date.now) 🔴🔴🔴 Error on batch \(count)/\(forImportsCount): \(error)")
                             }
                         }
                     }
                 }
                 if (context.hasChanges) {
-                    try context.save() // This is saving to main context, not to disk..
+                    try context.save() // This is saving bg context to main, not to disk
                     if (saved > 0) {
-//                        print("🏎️🏎️ \(Date.now) 💾 Processed: \(forImportsCount), saved: \(saved), skipped (new cache): \(alreadyInIdCacheSkipped), skipped (db): \(alreadyInDBskipped)")
+                        print("🏎️🏎️ \(Date.now) 💾 Processed: \(forImportsCount), saved: \(saved), skipped (new cache): \(alreadyInIdCacheSkipped), skipped (db): \(alreadyInDBskipped)")
                         let mainQueueCount = count
                         let mainQueueForImportsCount = forImportsCount
                         let importedNotification = ImportedNotification(subscriptionIds: subscriptionIds)
@@ -261,11 +261,11 @@ class Importer {
                         subscriptionIds.removeAll()
                     }
                     else {
-//                        print("🏎️🏎️ \(Date.now) 💾 Finished, nothing saved. -- Processed: \(forImportsCount), saved: \(saved), skipped (new cache): \(alreadyInIdCacheSkipped), skipped (db): \(alreadyInDBskipped)")
+                        print("🏎️🏎️ \(Date.now) 💾 Finished, nothing saved. -- Processed: \(forImportsCount), saved: \(saved), skipped (new cache): \(alreadyInIdCacheSkipped), skipped (db): \(alreadyInDBskipped)")
                     }
                 }
                 else {
-//                    print("🏎️🏎️ Nothing imported, no changes.")
+                    print("🏎️🏎️ Nothing imported, no changes.")
                 }
             }
             catch {
@@ -274,7 +274,7 @@ class Importer {
             }
             messageBucket.isImporting = false
             if (messageBucket.needsImport) {
-//                print("🏎️🏎️ Chaining next import ")
+                print("🏎️🏎️ Chaining next import ")
                 messageBucket.needsImport = false
                 self.importEvents()
             }
