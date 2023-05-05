@@ -60,6 +60,9 @@ struct SingleMediaViewer: View {
                     .centered()
                     .frame(height: fullWidth ? 600 : 250)
                     .background(Color("LightGray").opacity(0.2))
+                    .onAppear {
+                        print("Failed to load image: \(state.error?.localizedDescription ?? "")")
+                    }
             }
             else if let container = state.imageContainer, container.type ==  .gif, let data = container.data {
                 if fullWidth {
