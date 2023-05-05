@@ -213,14 +213,14 @@ struct ReactionsForThisNote: View {
     
     var body: some View {
         VStack(alignment:.leading) {
-            ZStack {
+            ZStack(alignment:.leading) {
                 ForEach(withoutDuplicates.prefix(10).indices, id:\.self) { index in
-                    ZStack {
+                    ZStack(alignment:.leading) {
                         PFP(pubkey: reactions[index].pubkey, pictureUrl: reactions[index].contact?.picture, isFollowing: ns.followingPublicKeys.contains(reactions[index].pubkey))
                             .id(reactions[index].id)
                             .zIndex(-Double(index))
                         Text(reactions[index].content == "+" ? "❤️" : reactions[index].content ?? "❤️")
-                            .offset(x:-10, y:+15)
+                            .offset(x:5, y:+15)
                             .zIndex(20)
                         
                     }
@@ -229,10 +229,18 @@ struct ReactionsForThisNote: View {
                 }
             }
             if (withoutDuplicates.count > 1) {
-                Text("**\(withoutDuplicates.first(where: { $0.contact?.authorName != nil })?.contact?.authorName ?? "???")** and \(withoutDuplicates.count - 1) others reacted to your post")
+                Text("**\(withoutDuplicates.first(where: { $0.contact?.authorName != nil })?.contact?.authorName ?? "???")** and \(withoutDuplicates.count - 1) others reacted on your post")
+                    
             }
             else {
                 Text("**\(withoutDuplicates.first(where: { $0.contact?.authorName != nil })?.contact?.authorName ?? "???")** reacted on your post")
+            }
+        }
+        .frame(maxWidth:.infinity, alignment:.leading)
+        .overlay(alignment: .topTrailing) {
+            if let first = withoutDuplicates.first {
+                Ago(first.created_at).layoutPriority(2)
+                    .foregroundColor(.gray)
             }
         }
         .onAppear {

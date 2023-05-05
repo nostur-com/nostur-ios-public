@@ -16,6 +16,10 @@ struct Ago: View {
         self.date = date
     }
     
+    init(_ timestamp:Int64) {
+        self.date = Date(timeIntervalSince1970: Double(timestamp))
+    }
+    
     @State var agoText:String? = nil
     
     var body: some View {

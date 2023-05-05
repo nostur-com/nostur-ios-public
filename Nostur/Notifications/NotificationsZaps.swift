@@ -108,6 +108,10 @@ struct NotificationsZaps: View {
                                     Text(zap.zapFromRequest?.noteText ?? "")
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                 }
+                                .overlay(alignment: .topTrailing) {
+                                    Ago(zap.created_at).layoutPriority(2)
+                                        .foregroundColor(.gray)
+                                }
                                 .onTapGesture {
                                     guard let pubkey = zap.zapFromRequest?.pubkey else { return }
                                     navigateTo(ContactPath(key: pubkey))
@@ -265,9 +269,9 @@ struct ZapsForThisNote: View {
     
     var body: some View {
         VStack(alignment:.leading) {
-            ZStack {
-                ForEach(Array(deduplicated.keys.enumerated().prefix(7)), id: \.1) { index, key in
-                    ZStack {
+            ZStack(alignment:.leading) {
+                ForEach(Array(deduplicated.keys.enumerated().prefix(6)), id: \.1) { index, key in
+                    ZStack(alignment:.leading) {
                         PFP(pubkey: deduplicated[key]!.0 , pictureUrl: deduplicated[key]!.1, isFollowing: ns.followingPublicKeys.contains(deduplicated[key]!.0))
                             .zIndex(-Double(index))
                         
@@ -277,7 +281,7 @@ struct ZapsForThisNote: View {
                             .foregroundColor(.white)
                             .background(.orange)
                             .cornerRadius(8)
-                            .offset(x:-10, y:+15)
+                            .offset(x:5, y:+15)
                             .zIndex(20)
                     }
                     .offset(x:Double(0 + (35*index)))
@@ -288,6 +292,13 @@ struct ZapsForThisNote: View {
             }
             else {
                 Text("**\(deduplicated.values.first(where: { $0.4 != nil })?.4 ?? "???")** zapped your post")
+            }
+        }
+        .frame(maxWidth:.infinity, alignment: .leading)
+        .overlay(alignment: .topTrailing) {
+            if let first = deduplicated.values.first {
+                Ago(first.3).layoutPriority(2)
+                    .foregroundColor(.gray)
             }
         }
         //        .onAppear {
