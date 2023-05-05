@@ -186,14 +186,22 @@ struct ProfileView: View {
                                 }
                             }
                             
-                            Text("\(String(contact.about ?? "(No information)"))")
+                            Text("\(String(contact.about ?? "(No information)"))\n")
                             
-                            HStack {
-                                Text("\n**\(contact.followingPubkeys.count)** Following")
+                            HStack(alignment: .center, spacing:0) {
+                                if contact.followingPubkeys.count == 0 {
+                                    ProgressView()
+                                        .padding(.horizontal, 7)
+                                }
+                                else {
+                                    Text("**\(contact.followingPubkeys.count)** ")
+                                }
+                                Text("Following  ")
                                 
-                                Text("\n**♾️** Followers")
+                                Text("**♾️** Followers")
                                     .onTapGesture { selectedSubTab = "Followers" }
                             }
+                            .frame(height: 30)
                         }
                         .padding(10)
                         .padding(.top, 120)
@@ -302,6 +310,9 @@ struct ProfileView: View {
                     .background(.regularMaterial)
                 }
             }
+        }
+        .onReceive(receiveNotification(.newFollowingListFromRelay)) { notification in
+            contact.objectWillChange.send()
         }
         .task {
 //            return
