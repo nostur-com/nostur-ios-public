@@ -20,7 +20,13 @@ struct NoteTextRenderView: View {
     
     var body: some View {
         HStack(alignment: .top) {
-            if (useLinelimit) {
+            if vPost.event.kind != 1 && (vPost.event.content ?? "").isEmpty {
+                Label("kind \(Double(vPost.event.kind).clean) type not (yet) supported", systemImage: "exclamationmark.triangle.fill")
+                    .centered()
+                    .frame(maxWidth: .infinity)
+                    .background(Color("LightGray").opacity(0.2))
+            }
+            else if (useLinelimit) {
                 Text(vPost.renderedText)//.border(.cyan)
                     .lineLimit(10, reservesSpace: false)
                     .textSelection(.enabled)
