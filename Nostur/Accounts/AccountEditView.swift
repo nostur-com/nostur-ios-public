@@ -384,22 +384,61 @@ func uploadBannerOrProfilePic(pfp: UIImage?, banner:UIImage?) -> AnyPublisher<[S
 
 func uploadPFPImage(image: UIImage) -> AnyPublisher<String, Error> {
 
-    // Create a profile pic, preserving aspect ratio, resize to 100x100
+    // Create a profile pic, preserving aspect ratio, resize to 150x150
 
-    let size = CGSize(width: 150, height: 150)
-//    let rect = CGRect(origin: CGPoint.zero, size: size)
+    let SIDE:CGFloat = 150
+    let size = CGSize(width: SIDE, height: SIDE)
+    let rect = CGRect(origin: CGPoint.zero, size: size)
     UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
     
-//    let path = UIBezierPath(ovalIn: rect)
-//    path.addClip()
-    
-    let aspect = image.size.width / image.size.height
-    let width = size.width
-    let height = width / aspect
-    let x = CGFloat(0)
-    let y = (size.height - height) / 2
-    let drawRect = CGRect(x: x, y: y, width: width, height: height)
-    image.draw(in: drawRect)
+    // Steps.
+    // Take smallest of width or height
+    // if below 100, upscale to 100
+    if image.size.width < image.size.height && image.size.width < SIDE {
+        // WIDTH IS TOO SMALL:
+        let upscaleFactor = SIDE / image.size.width
+        let newHeight = image.size.height * upscaleFactor
+        let x = 0.0
+        let y = -((newHeight-SIDE)/2)
+        let drawRect = CGRect(x: x, y: y, width: SIDE, height: newHeight)
+        image.draw(in: drawRect)
+    }
+    else if image.size.height < image.size.width && image.size.height < SIDE {
+        // HEIGHT IS TOO SMALL:
+        let upscaleFactor = SIDE / image.size.height
+        let newWidth = image.size.width * upscaleFactor
+        let x = -((newWidth-SIDE)/2)
+        let y = 0.0
+        let drawRect = CGRect(x: x, y: y, width: newWidth, height: SIDE)
+        image.draw(in: drawRect)
+    }
+    else if image.size.width < image.size.height && image.size.width > SIDE {
+        // WIDTH SMALLER THAN HEIGHT, BUT TOO BIG
+        let downscaleFactor = image.size.width / SIDE
+        let newHeight = image.size.height / downscaleFactor
+        let x = 0.0
+        let y = -((newHeight-SIDE)/2)
+        let drawRect = CGRect(x: x, y: y, width: SIDE, height: newHeight)
+        image.draw(in: drawRect)
+    }
+    else if image.size.height < image.size.width && image.size.height > SIDE {
+        // HEIGHT SMALLER THAN WIDTH, BUT TOO BIG
+        let downscaleFactor = image.size.height / SIDE
+        let newWidth = image.size.width / downscaleFactor
+        let x = -((newWidth-SIDE)/2)
+        let y = 0.0
+        let drawRect = CGRect(x: x, y: y, width: newWidth, height: SIDE)
+        image.draw(in: drawRect)
+    }
+    else {
+//        let aspect = image.size.width / image.size.height
+        let x = 0.0
+        let y = 0.0
+        let width = SIDE
+        let height = SIDE
+        let drawRect = CGRect(x: x, y: y, width: width, height: height)
+        image.draw(in: drawRect)
+    }
     
     let scaledImage = UIGraphicsGetImageFromCurrentImageContext()
     UIGraphicsEndImageContext()

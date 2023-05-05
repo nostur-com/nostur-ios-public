@@ -9,19 +9,65 @@ import SwiftUI
 
 struct ImageTest: View {
     @State var uiImage:UIImage?
+    @State var uiImage2:UIImage?
+    @State var uiImage3:UIImage?
+    @State var uiImage4:UIImage?
+    @State var uiImage5:UIImage?
+    @State var uiImage6:UIImage?
+    @State var uiImage7:UIImage?
     var body: some View {
-        VStack {
-            if let uiImage {
-                Image(uiImage: uiImage)
+        ScrollView {
+            VStack {
+                if let uiImage {
+                    Image(uiImage: uiImage)
+                }
+                if let uiImage2 {
+                    Image(uiImage: uiImage2)
+                }
+                if let uiImage3 {
+                    Image(uiImage: uiImage3)
+                }
+                if let uiImage4 {
+                    Image(uiImage: uiImage4)
+                }
+                if let uiImage5 {
+                    Image(uiImage: uiImage5)
+                }
+                if let uiImage6 {
+                    Image(uiImage: uiImage6)
+                }
+                if let uiImage7 {
+                    Image(uiImage: uiImage7)
+                }
             }
         }
+        .frame(maxWidth:.infinity, maxHeight:.infinity)
+        .background(Color.gray)
         .task {
-            if let asset = UIImage(named: "ImageTest") {
+            if let asset = UIImage(named: "TestWide") {
                 uiImage = profilePic(asset)
             }
-            else if let asset = UIImage(named: "NosturLogo") {
-                uiImage = profilePic(asset)
+            if let asset = UIImage(named: "TestLong") {
+                uiImage2 = profilePic(asset)
             }
+            if let asset = UIImage(named: "TestSmall") {
+                uiImage3 = profilePic(asset)
+            }
+            if let asset = UIImage(named: "TestWideBig") {
+                uiImage4 = profilePic(asset)
+            }
+            if let asset = UIImage(named: "TestLongBig") {
+                uiImage5 = profilePic(asset)
+            }
+            if let asset = UIImage(named: "TestTooSmallWide") {
+                uiImage6 = profilePic(asset)
+            }
+            if let asset = UIImage(named: "TestTooSmallLong") {
+                uiImage7 = profilePic(asset)
+            }
+//            else if let asset = UIImage(named: "Test") {
+//                uiImage = profilePic(asset)
+//            }
         }
     }
 }
@@ -34,22 +80,60 @@ struct ImageTest_Previews: PreviewProvider {
 
 // Create a profile pic, preserving aspect ratio, circle, resize to 100x100
 func profilePic(_ image: UIImage, preserveAspect:Bool = true) -> UIImage? {
-    let size = CGSize(width: 100, height: 100)
+    let SIDE:CGFloat = 150
+    let size = CGSize(width: SIDE, height: SIDE)
     let rect = CGRect(origin: CGPoint.zero, size: size)
     UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
-//    let path = UIBezierPath(ovalIn: rect)
-//    path.addClip()
-    if preserveAspect {
+    
+    // Steps.
+    // Take smallest of width or height
+    // if below 100, upscale to 100
+    if image.size.width < image.size.height && image.size.width < SIDE {
+        // WIDTH IS TOO SMALL:
+        let upscaleFactor = SIDE / image.size.width
+        let newHeight = image.size.height * upscaleFactor
+        let x = 0.0
+        let y = -((newHeight-SIDE)/2)
+        let drawRect = CGRect(x: x, y: y, width: SIDE, height: newHeight)
+        image.draw(in: drawRect)
+    }
+    else if image.size.height < image.size.width && image.size.height < SIDE {
+        // HEIGHT IS TOO SMALL:
+        let upscaleFactor = SIDE / image.size.height
+        let newWidth = image.size.width * upscaleFactor
+        let x = -((newWidth-SIDE)/2)
+        let y = 0.0
+        let drawRect = CGRect(x: x, y: y, width: newWidth, height: SIDE)
+        image.draw(in: drawRect)
+    }
+    else if image.size.width < image.size.height && image.size.width > SIDE {
+        // WIDTH SMALLER THAN HEIGHT, BUT TOO BIG
+        let downscaleFactor = image.size.width / SIDE
+        let newHeight = image.size.height / downscaleFactor
+        let x = 0.0
+        let y = -((newHeight-SIDE)/2)
+        let drawRect = CGRect(x: x, y: y, width: SIDE, height: newHeight)
+        image.draw(in: drawRect)
+    }
+    else if image.size.height < image.size.width && image.size.height > SIDE {
+        // HEIGHT SMALLER THAN WIDTH, BUT TOO BIG
+        let downscaleFactor = image.size.height / SIDE
+        let newWidth = image.size.width / downscaleFactor
+        let x = -((newWidth-SIDE)/2)
+        let y = 0.0
+        let drawRect = CGRect(x: x, y: y, width: newWidth, height: SIDE)
+        image.draw(in: drawRect)
+    }
+    else {
         let aspect = image.size.width / image.size.height
-        let width = size.width
-        let height = width / aspect
-        let x = CGFloat(0)
-        let y = (size.height - height) / 2
+        let x = 0.0
+        let y = 0.0
+        let width = SIDE
+        let height = SIDE
         let drawRect = CGRect(x: x, y: y, width: width, height: height)
         image.draw(in: drawRect)
-    } else {
-        image.draw(in: rect)
     }
+    
     let result = UIGraphicsGetImageFromCurrentImageContext()
     UIGraphicsEndImageContext()
     return result
