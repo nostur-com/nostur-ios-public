@@ -23,6 +23,7 @@ extension VPost {
 class DataProvider: ObservableObject {
     
     private var bgStored:NSManagedObjectContext? // IMPORTING, PREPARING, TRANSFORMING FOR VIEW
+//    private var prioStored:NSManagedObjectContext? // FOR POST DETAIL AND "NOW" THINGS
     
     // MARK: Logging
     let logger = Logger(subsystem: "com.nostur.Events", category: "persistence")
@@ -111,6 +112,23 @@ class DataProvider: ObservableObject {
             return newBG
         }
     }()
+    
+//    lazy var prio: NSManagedObjectContext = {
+//        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+//            return container.viewContext
+//        }
+//        else {
+//            if let prioStored {
+//                return prioStored
+//            }
+//            let newPrio = container.newBackgroundContext()
+//            newPrio.automaticallyMergesChangesFromParent = true
+//            newPrio.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+//            newPrio.undoManager = nil
+//            self.prioStored = newPrio
+//            return newPrio
+//        }
+//    }()
     
     lazy var viewContext: NSManagedObjectContext = {
         return container.viewContext

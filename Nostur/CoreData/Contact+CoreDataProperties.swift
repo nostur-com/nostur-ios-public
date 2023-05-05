@@ -163,12 +163,12 @@ extension Contact : Identifiable {
         if (SettingsStore.shared.hideEmojisInNames) {
         
             return theName ?? authorKey
-            return (theName?.unicodeScalars.filter {
-                
-                !($0.value >= 0x13000 && $0.value <= 0x1342E) && // EGYPTIAN HIEROGLYPHS
-                !$0.properties.isEmoji  // EMOJIS
-                
-            }.reduce("") { $0 + String($1) }) ?? authorKey
+//            return (theName?.unicodeScalars.filter {
+//                
+//                !($0.value >= 0x13000 && $0.value <= 0x1342E) && // EGYPTIAN HIEROGLYPHS
+//                !$0.properties.isEmoji  // EMOJIS
+//                
+//            }.reduce("") { $0 + String($1) }) ?? authorKey
         }
         else {
             return theName ?? authorKey

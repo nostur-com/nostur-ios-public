@@ -29,8 +29,8 @@ class Importer {
     
     func triggerImportWhenRelayMessagesAreAdded() {
         addedRelayMessage
-//            .throttle(for: 1.5, scheduler: DispatchQueue.global(), latest: true)
-            .debounce(for: .seconds(0.1), scheduler: DispatchQueue.global())
+            .throttle(for: 1.5, scheduler: DispatchQueue.global(), latest: true)
+//            .debounce(for: .seconds(0.1), scheduler: DispatchQueue.global())
             .sink { () in
 //                print("🏎️🏎️ \(Date.now) Import requested, 1.5 sec after new relay message(s)")
 //                print("🏎️🏎️ \(Date.now) Import requested, 0.1 after last debounce of new relay message(s)")
@@ -172,6 +172,7 @@ class Importer {
                         
                         let n = event
                         DispatchQueue.main.async {
+                            // TODO: Use notifications like this in importer more, to update active views
                             sendNotification(.newFollowingListFromRelay, n)
                         }
                     }

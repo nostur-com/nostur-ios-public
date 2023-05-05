@@ -110,8 +110,8 @@ final class SocketPool: ObservableObject {
             //            print("⬇️⬇️ REQ ON \(read) RELAYS: \(String(message.message))")
         }
         
-        Task(priority: .utility) {
-            for (_, managedClient) in sockets {
+        Task.detached(priority: .utility) {
+            for (_, managedClient) in self.sockets {
                 //                print("active subscriptions \(managedClient.url): \(managedClient.activeSubscriptions.count)")
                 guard managedClient.read || managedClient.write else {
                     // Skip if relay is not selected for reading or writing events

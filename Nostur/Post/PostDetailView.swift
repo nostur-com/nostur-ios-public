@@ -284,7 +284,7 @@ struct PostAndParent: View {
 //                    fixReplyToIfWeAlreadyHaveIt(event)
                     
                     // Here, because do all at import is slow?
-                    //                        fixIfWeHavePointingToAlreadyInCache(event)
+//                    fixIfWeHavePointingToAlreadyInCache(event)
                     
                     
                     // Fetch all related (e and p.kind=0)
