@@ -10,8 +10,6 @@ import SwiftUI
 import Combine
 
 struct Search: View {
-    @StateObject var debounceObject = DebounceObject()
-
     var sp:SocketPool = .shared
     
     @FetchRequest(
@@ -37,6 +35,8 @@ struct Search: View {
     @State var navPath = NavigationPath()
     let initialHashtag:String?
     
+    @State var searchText = ""
+    
     init(hashtag:String = "") {
         self.initialHashtag = hashtag
     }
@@ -49,20 +49,21 @@ struct Search: View {
                     ProgressView()
                 }
                 LazyVStack {
-                    ForEach(contacts.prefix(150)) { contact in
-                        ProfileRow(contact: contact)
-                            .boxShadow()
-                    }
-                    
-                    ForEach(vPosts) { vPost in
-                        NoteRow(vPost: vPost)
-                            .boxShadow()
-                            .onTapGesture {
-                                navigateTo(vPost)
-                            }
+                    Section {
+                        ForEach(contacts.prefix(150)) { contact in
+                            ProfileRow(contact: contact)
+                                .boxShadow()
+                        }
+                        
+                        ForEach(vPosts) { vPost in
+                            NoteRow(vPost: vPost)
+                                .boxShadow()
+                                .onTapGesture {
+                                    navigateTo(vPost)
+                                }
+                        }
                     }
                 }
-                .background(Color("ListBackground"))
                 .toolbar {
                     if let account = NosturState.shared.account {
                         ToolbarItem(placement: .navigationBarLeading) {
@@ -75,6 +76,10 @@ struct Search: View {
                         
                         }
                     }
+                    ToolbarItem(placement: .principal) {
+                        SearchBox(prompt: "Search...", text: $searchText)
+                            .padding(10)
+                    }
                 }
             }
             .overlay(alignment: .bottom) {
@@ -85,8 +90,7 @@ struct Search: View {
             .withNavigationDestinations()
             .navigationTitle("Search")
             .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $debounceObject.text, placement: .navigationBarDrawer(displayMode: .always))
-            .onChange(of: debounceObject.debouncedText) { searchString in
+            .onChange(of: searchText) { searchString in
                 
                 let searchTrimmed = searchString.trimmingCharacters(in: .whitespacesAndNewlines)
                 
@@ -152,8 +156,7 @@ struct Search: View {
             }
             .onAppear {
                 if initialHashtag != "" {
-                    debounceObject.text = "#\(initialHashtag ?? "")"
-//                    debounceObject.debouncedText = initialHashtag ?? ""
+                    searchText = "#\(initialHashtag ?? "")"
                 }
             }
             .onReceive(receiveNotification(.navigateTo)) { notification in
@@ -162,7 +165,7 @@ struct Search: View {
                 guard selectedTab == "Search" else { return }
                 if (type(of: destination.destination) == HashtagPath.self) {
                     let hashtag = (destination.destination as! HashtagPath).hashTag
-                    debounceObject.text = "#\(hashtag)"
+                    searchText = "#\(hashtag)"
                 }
                 else {
                     navPath.append(destination.destination)

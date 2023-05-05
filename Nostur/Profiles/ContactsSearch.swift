@@ -13,7 +13,8 @@ struct ContactsSearch: View, Equatable {
     }
     
     @Environment(\.dismiss) var dismiss
-    @StateObject var debounceObject = DebounceObject()
+
+    @State var searchText = ""
 
     let followingPubkeys:Set<String>
     let sp:SocketPool = .shared
@@ -42,30 +43,7 @@ struct ContactsSearch: View, Equatable {
         let _ = Self._printChanges()
         VStack {
             Group {
-                TextField(text: $debounceObject.text, prompt: Text(prompt).foregroundColor(Color.secondary), label: {
-                    Text(prompt)
-                })
-                .padding(5)
-                .padding(.leading, 25)
-                .background {
-                    Color("ListBackground").opacity(0.5)
-                        .overlay(alignment:.leading) {
-                            Image(systemName: "magnifyingglass")
-                                .foregroundColor(Color.secondary)
-                                .padding(.leading, 5)
-                        }
-                }
-                .overlay(alignment:.trailing) {
-                    if debounceObject.text != "" {
-                        Image(systemName: "multiply.circle.fill")
-                            .foregroundColor(Color.secondary)
-                            .padding(.trailing, 5)
-                            .onTapGesture {
-                                debounceObject.text = ""
-                            }
-                    }
-                }
-                .cornerRadius(8.0)
+                SearchBox(prompt: prompt, text: $searchText)
 
                 if (followingPubkeys.count > 1 || 1 == 1) {
                     Picker("Filter contacts", selection: $contactFilter) {
@@ -123,7 +101,7 @@ struct ContactsSearch: View, Equatable {
             }
             .padding(10)
         }
-        .onChange(of: debounceObject.debouncedText) { searchString in
+        .onChange(of: searchText) { searchString in
 
             let searchTrimmed = searchString.trimmingCharacters(in: .whitespacesAndNewlines)
 
@@ -164,142 +142,6 @@ struct ContactsSearch: View, Equatable {
     }
 }
 
-//struct ContactsSearch: View {
-//
-//    @Environment(\.dismiss) var dismiss
-//    @StateObject var debounceObject = DebounceObject()
-//
-//    let followingPubkeys:Set<String>
-//    let sp:SocketPool = .shared
-//    var prompt:LocalizedStringKey
-//
-//    @FetchRequest(
-//        sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
-//        predicate: NSPredicate(value: false),
-//        animation: .none)
-//    var contacts:FetchedResults<Contact>
-//
-//    var filteredContacts:[Contact] {
-//        contacts
-//            .filter {
-//                contactFilter == "All" || followingPubkeys.contains($0.pubkey)
-//            }
-//    }
-//
-//    @State var searching = false
-//    @Binding var selectedContacts:Set<Contact>
-//    @State var contactFilter = "All"
-//
-//    var body: some View {
-//        let _ = Self._printChanges()
-//        Text("wuuu")
-////        VStack {
-////            Group {
-////                TextField(text: $debounceObject.text, prompt: Text("Search").foregroundColor(Color.secondary), label: {
-////                    Text("Search")
-////                })
-////                .padding(5)
-////                .padding(.leading, 25)
-////                .background {
-////                    Color("ListBackground").opacity(0.5)
-////                        .overlay(alignment:.leading) {
-////                            Image(systemName: "magnifyingglass")
-////                                .foregroundColor(Color.secondary)
-////                                .padding(.leading, 5)
-////                        }
-////                }
-////                .overlay(alignment:.trailing) {
-////                    if debounceObject.text != "" {
-////                        Image(systemName: "multiply.circle.fill")
-////                            .foregroundColor(Color.secondary)
-////                            .padding(.trailing, 5)
-////                            .onTapGesture {
-////                                debounceObject.text = ""
-////                            }
-////                    }
-////                }
-////                .cornerRadius(8.0)
-////
-////                if (followingPubkeys.count > 1 || 1 == 1) {
-////                    Picker("Filter contacts", selection: $contactFilter) {
-////                        Text("Following").tag("Following")
-////                        Text("All").tag("All")
-////                    }
-////                    .pickerStyle(.segmented)
-////                }
-////            }
-////            .padding(.horizontal)
-////            ScrollView {
-////                if (filteredContacts.count == 0 && searching) {
-////                    ProgressView()
-////                }
-////                ForEach(filteredContacts) { contact in
-////                    HStack(alignment:.top) {
-////                        Button {
-////                            if selectedContacts.contains(contact) {
-////                                selectedContacts.remove(contact)
-////                            }
-////                            else {
-////                                selectedContacts.insert(contact)
-////                            }
-////                        } label: {
-////                            if selectedContacts.contains(contact) {
-////                                Image(systemName:  "checkmark.circle.fill")
-////                                    .padding(.top, 18)
-////                            }
-////                            else {
-////                                Image(systemName:  "circle")
-////                                    .foregroundColor(Color.secondary)
-////                                    .padding(.top, 18)
-////                            }
-////                        }
-////                        ContactSearchResultRow(contact: contact)
-////                    }
-////                    Divider()
-////                }
-////            }
-////            .padding(10)
-////        }
-////        .onChange(of: debounceObject.debouncedText) { searchString in
-////
-////            let searchTrimmed = searchString.trimmingCharacters(in: .whitespacesAndNewlines)
-////
-////            guard searchTrimmed.count > 1 else { return }
-////
-////            // try npub
-////            if (searchTrimmed.prefix(5) == "npub1") {
-////                do {
-////                    searching = true
-////                    let key = try NIP19(displayString: searchTrimmed)
-////                    contacts.nsPredicate = NSPredicate(format: "pubkey = %@", key.hexString)
-////                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: key.hexString)))
-////                }
-////                catch {
-////                    print("npub1 search fail \(error)")
-////                    searching = false
-////                }
-////            }
-////            // search in names/usernames
-////            else {
-////                searching = false
-////                contacts.nsPredicate = NSPredicate(format: "name CONTAINS[cd] %@ OR display_name CONTAINS[cd] %@", searchTrimmed, searchTrimmed)
-////            }
-////        }
-////        .toolbar {
-////            ToolbarItem(placement: .primaryAction) {
-////                Button("Add") { dismiss() }
-////            }
-////        }
-//    }
-//
-//    private static func _printChanges() {
-//            dump("ContactsSearch: \(#function) - before")
-//            defer {
-//                dump("ContactsSearch: \(#function) - after")
-//            }
-//        }
-//}
-
 struct ContactsSearch_Previews: PreviewProvider {
     
     @State static var selectedContacts:Set<Contact> = []
@@ -307,7 +149,7 @@ struct ContactsSearch_Previews: PreviewProvider {
         NavigationStack {
             ContactsSearch(followingPubkeys: NosturState.shared.followingPublicKeys,
                            prompt: "Search")
-                .withPreviewEnvironment()
         }
+        .withPreviewEnvironment()
     }
 }
