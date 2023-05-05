@@ -48,7 +48,7 @@ class MessageParser {
                     if (message.type == .EVENT) {
                         guard let nEvent = message.event else { print("🔴🔴 uhh, where is nEvent "); return }
                         
-                        Task { [weak self] in
+                        Task.detached(priority: .medium) { [weak self] in
                             guard let self = self else { return }
                             
                             let sameMessageInQueue = self.messageBucket.all()

@@ -183,7 +183,7 @@ struct NotificationsReactions: View {
         mr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         mr.predicate = NSPredicate(format: "kind == 7 AND tagsSerialized CONTAINS %@ AND reactionTo == nil", serializedP(pubkey))
         
-        Task {
+        Task.detached(priority: .medium) {
             let ctx = DataProvider.shared().bg
             DataProvider.shared().bg.perform {
                 if let danglingReactions = try? ctx.fetch(mr) {

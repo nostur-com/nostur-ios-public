@@ -115,7 +115,7 @@ struct NosturApp: App {
                             .environmentObject(ns)
                             .onReceive(priceLoop) { time in
                                 if (!isViewDisplayed) { return }
-                                Task {
+                                Task.detached(priority: .low) {
                                     if let newPrice = await fetchBitcoinPrice() {
                                         if (newPrice != ExchangeRateModel.shared.bitcoinPrice) {
                                             ExchangeRateModel.shared.bitcoinPrice = newPrice
