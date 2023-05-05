@@ -14,6 +14,17 @@ func fetchMetaTags(url: URL, completion: @escaping (Result<[String: String], Err
     request.addValue("Nostur/1 Unknown/0.0.0 Unknown/0.0.0", forHTTPHeaderField: "User-Agent")
     // Normal user agent is Nostur/1 CFNetwork/1406.0.4 Darwin/22.4.0, but then youtube doesn't give back metatags we need.
     
+    // if youtube, add consent cookie to skip "Before you continue" or we can't load the preview
+    if let host = url.host, host.contains("youtube.com") {
+        let cookie = HTTPCookie(properties: [
+            .domain: "youtube.com",
+            .path: "/",
+            .name: "CONSENT",
+            .value: "PENDING+999"
+        ])!
+        request.addValue("\(cookie.name)=\(cookie.value)", forHTTPHeaderField: "Cookie")
+    }
+    
     let task = URLSession.shared.dataTask(with: request) { data, response, error in
         guard let data = data, error == nil else {
             completion(.failure(error!))
