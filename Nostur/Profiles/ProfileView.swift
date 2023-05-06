@@ -216,8 +216,6 @@ struct ProfileView: View {
                                 VStack {
                                     if clEvents.count != 0, let pubkeys = clEvents.first!.contactPubkeys() {
                                         
-                                        Text("Following").font(.headline).fontWeight(.heavy).padding(.vertical, 10)
-                                        
                                         let silentFollows = clEvents.first!.pubkey == NosturState.shared.pubkey ? NosturState.shared.account?.follows_.filter { $0.privateFollow }.map { $0.pubkey } : []
                                         
                                         ContactList(pubkeys: pubkeys, silent:silentFollows)

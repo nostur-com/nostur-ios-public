@@ -40,7 +40,7 @@ struct ContactList: View {
     
     var body: some View {
         VStack {
-            Text("Total: \(pubkeys.count)\(silent.count > 0 ? " + \(silent.count) silent/private" : "")")
+//            Text("Total: \(pubkeys.count)\(silent.count > 0 ? " + \(silent.count) silent/private" : "")")
             LazyVStack {
                 ForEach(contacts) { contact in
                     ProfileRow(contact: contact)
