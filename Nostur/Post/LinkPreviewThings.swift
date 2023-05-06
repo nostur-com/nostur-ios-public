@@ -20,7 +20,7 @@ func fetchMetaTags(url: URL, completion: @escaping (Result<[String: String], Err
             .domain: "youtube.com",
             .path: "/",
             .name: "CONSENT",
-            .value: "PENDING+999"
+            .value: "YES+999"
         ])!
         request.addValue("\(cookie.name)=\(cookie.value)", forHTTPHeaderField: "Cookie")
     }
