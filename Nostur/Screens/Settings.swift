@@ -40,7 +40,7 @@ struct Settings: View {
     var amountS:Float {
         mapLinearToExponential(value: Float(sliderValue), min: Float(SLIDER_MIN), max: Float(SLIDER_MAX), exponent: 7)
     }
-    let SLIDER_MIN = 500.0
+    let SLIDER_MIN = 21.0
     let SLIDER_MAX = 2000000.0
     
     @State var sliderValue = 0.0
