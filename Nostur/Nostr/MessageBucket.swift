@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import DequeModule
+//import DequeModule
 
 //import Collections
 //import Dispatch
@@ -90,60 +90,60 @@ class ThreadSafeFIFOQueue<T> {
 }
 
 
-class ThreadSafeDeque<Element> {
-    private var isImporting_ = false
-    private var deque = Deque<Element>()
-    private let queue = DispatchQueue(label: "nostur.com.ThreadSafeDeque", attributes: .concurrent)
-
-//    func append(_ element: Element) {
+//class ThreadSafeDeque<Element> {
+//    private var isImporting_ = false
+//    private var deque = Deque<Element>()
+//    private let queue = DispatchQueue(label: "nostur.com.ThreadSafeDeque", attributes: .concurrent)
+//
+////    func append(_ element: Element) {
+////        queue.async(flags: .barrier) {
+////            self.deque.append(element)
+////        }
+////    }
+//
+//    func addMessage(_ element: Element) {
 //        queue.async(flags: .barrier) {
-//            self.deque.append(element)
+//            self.deque.prepend(element)
 //        }
 //    }
-
-    func addMessage(_ element: Element) {
-        queue.async(flags: .barrier) {
-            self.deque.prepend(element)
-        }
-    }
-
-//    func popFirst() -> Element? {
+//
+////    func popFirst() -> Element? {
+////        return queue.sync {
+////            return self.deque.popFirst()
+////        }
+////    }
+//
+//    func takeMessage() -> Element? {
+//        return queue.sync(flags: .barrier) {
+//            return self.deque.popLast()
+//        }
+//    }
+//
+//    var count: Int {
 //        return queue.sync {
-//            return self.deque.popFirst()
+//            return self.deque.count
 //        }
 //    }
-
-    func takeMessage() -> Element? {
-        return queue.sync(flags: .barrier) {
-            return self.deque.popLast()
-        }
-    }
-
-    var count: Int {
-        return queue.sync {
-            return self.deque.count
-        }
-    }
-    
-    func all() -> Deque<Element> {
-        return queue.sync {
-            return Deque(self.deque)
-        }
-    }
-    
-    var isImporting:Bool {
-        get {
-            return queue.sync {
-                return self.isImporting_
-            }
-        }
-        set {
-            queue.async(flags: .barrier) {
-                self.isImporting_ = newValue
-            }
-        }
-    }
-}
+//    
+//    func all() -> Deque<Element> {
+//        return queue.sync {
+//            return Deque(self.deque)
+//        }
+//    }
+//    
+//    var isImporting:Bool {
+//        get {
+//            return queue.sync {
+//                return self.isImporting_
+//            }
+//        }
+//        set {
+//            queue.async(flags: .barrier) {
+//                self.isImporting_ = newValue
+//            }
+//        }
+//    }
+//}
 
 
 

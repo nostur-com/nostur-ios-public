@@ -125,7 +125,7 @@ func profilePic(_ image: UIImage, preserveAspect:Bool = true) -> UIImage? {
         image.draw(in: drawRect)
     }
     else {
-        let aspect = image.size.width / image.size.height
+//        let aspect = image.size.width / image.size.height
         let x = 0.0
         let y = 0.0
         let width = SIDE
