@@ -44,6 +44,7 @@ struct BookmarksView: View {
         ns.accounts.filter { $0.privateKey != nil }
     }
     
+    @ObservedObject var settings:SettingsStore = .shared
     @State var selectedAccount:Account? = nil
     @State var viewNeedsUpdate = false
     
@@ -104,18 +105,27 @@ struct BookmarksView: View {
                 .menuIndicator(.visible)
             }
             .padding(.horizontal)
-            List {
-                ForEach(vBookmarks) { vBookmark in
-                    NoteRow(vPost: vBookmark)
-                        .listRowInsets(EdgeInsets())
-                        .background(Color.systemBackground)
-                        .onTapGesture {
-                            navigateTo(vBookmark)
-                        }
+            ScrollView {
+                LazyVStack {
+                    ForEach(vBookmarks) { vBookmark in
+                        NoteRow(vPost: vBookmark)
+                            .background(Color.systemBackground)
+                            .boxShadow()
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
+                            .id(vBookmark.id)
+                            .onTapGesture {
+                                navigateTo(vBookmark)
+                            }
+                            .onDelete {
+                                vBookmark.event.bookmarkedBy = []
+                                Task.detached {
+                                    DataProvider.shared().save()
+                                }
+                            }
+                    }
                 }
-                .onDelete(perform: deleteItem)
             }
-            .listStyle(.plain)
             Spacer()
         }
         .navigationTitle("Bookmarks")
@@ -140,13 +150,6 @@ struct BookmarksView: View {
                 bookmarks.nsPredicate = NSPredicate(format: "bookmarkedBy.@count > 0")
             }
         }
-    }
-    
-    func deleteItem(at offsets: IndexSet) {
-        for index in offsets {
-            bookmarks[index].bookmarkedBy = []
-        }
-        DataProvider.shared().save()
     }
 }
 
