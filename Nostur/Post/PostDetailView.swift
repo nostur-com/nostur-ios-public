@@ -57,6 +57,9 @@ struct PostDetailView: View {
                         .onAppear {
                             proxy.scrollTo(vPost.id)
                         }
+                        .navigationTitle(vPost.event.replyToId != nil ? "Thread" : "Post")
+                        .navigationBarTitleDisplayMode(.inline)
+                        .navigationBarHidden(navTitleHidden)
                 }
             }
         }
@@ -306,9 +309,6 @@ struct PostAndParent: View {
                 }
             }
         }
-        .navigationTitle("Post")
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarHidden(navTitleHidden)
     }
     
 //    func fixReplyToIfWeAlreadyHaveIt(_ openedEvent:Event) {
