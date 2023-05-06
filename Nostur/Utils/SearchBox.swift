@@ -23,6 +23,7 @@ struct SearchBox: View {
             Color("ListBackground").opacity(0.5)
                 .overlay(alignment:.leading) {
                     Image(systemName: "magnifyingglass")
+                        .imageScale(.medium)
                         .foregroundColor(Color.secondary)
                         .padding(.leading, 5)
                 }
@@ -30,6 +31,7 @@ struct SearchBox: View {
         .overlay(alignment:.trailing) {
             if debounceObject.text != "" {
                 Image(systemName: "multiply.circle.fill")
+                    .imageScale(.medium)
                     .foregroundColor(Color.secondary)
                     .padding(.trailing, 5)
                     .onTapGesture {
@@ -47,6 +49,17 @@ struct SearchBox: View {
 struct SearchBox_Previews: PreviewProvider {
     @State static var text = ""
     static var previews: some View {
-        SearchBox(prompt: "Search for..", text: $text)
+        NavigationStack {
+            VStack {
+                SearchBox(prompt: "SearchBox in view..", text: $text)
+                    .padding()
+            }
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    SearchBox(prompt: "SearchBox in toolbar..", text: $text)
+                        .padding()
+                }
+            }
+        }
     }
 }
