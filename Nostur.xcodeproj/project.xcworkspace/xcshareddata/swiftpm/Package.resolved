@@ -10,15 +10,6 @@
       }
     },
     {
-      "identity" : "flanimatedimage",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/Flipboard/FLAnimatedImage",
-      "state" : {
-        "revision" : "d4f07b6f164d53c1212c3e54d6460738b1981e9f",
-        "version" : "1.0.17"
-      }
-    },
-    {
       "identity" : "gifu",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/kaishin/Gifu.git",
@@ -88,15 +79,6 @@
       "state" : {
         "revision" : "0a5bc04095a675662cf24757cc0640aa2204253b",
         "version" : "1.0.2"
-      }
-    },
-    {
-      "identity" : "swiftyjson",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/SwiftyJSON/SwiftyJSON",
-      "state" : {
-        "revision" : "b3dcd7dbd0d488e1a7077cb33b00f2083e382f07",
-        "version" : "5.0.1"
       }
     }
   ],

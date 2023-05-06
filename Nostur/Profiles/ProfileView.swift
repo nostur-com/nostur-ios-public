@@ -239,27 +239,27 @@ struct ProfileView: View {
                                 ProfileLikesView(pubkey: pubkey)
                             case "Zaps":
                                 ProfileZapsView(pubkey:pubkey, contact: contact)
-                            case "Relays":
-                                VStack {
-                                    if relayEvents.count != 0 {
-                                        ProfileRelays(relayEvent: relayEvents.first!)
-                                    }
-                                    else if clEvents.count != 0 {
-                                        ProfileRelaysView(clEvent: clEvents.first!)
-                                    }
-                                    else {
-                                        HStack {
-                                            Spacer()
-                                            ProgressView()
-                                                .padding(50)
-                                            Spacer()
-                                        }
-                                        .onAppear {
-                                            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserProfileKinds(pubkey: pubkey, kinds: [10002])))
-                                            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: pubkey)))
-                                        }
-                                    }
-                                }
+//                            case "Relays":
+//                                VStack {
+//                                    if relayEvents.count != 0 {
+//                                        ProfileRelays(relayEvent: relayEvents.first!)
+//                                    }
+//                                    else if clEvents.count != 0 {
+//                                        ProfileRelaysView(clEvent: clEvents.first!)
+//                                    }
+//                                    else {
+//                                        HStack {
+//                                            Spacer()
+//                                            ProgressView()
+//                                                .padding(50)
+//                                            Spacer()
+//                                        }
+//                                        .onAppear {
+//                                            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserProfileKinds(pubkey: pubkey, kinds: [10002])))
+//                                            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: pubkey)))
+//                                        }
+//                                    }
+//                                }
                             case "Followers":
                                 VStack {
                                     Text("Followers").font(.headline).fontWeight(.heavy).padding(.vertical, 10)

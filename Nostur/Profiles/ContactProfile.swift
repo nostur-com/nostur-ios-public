@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import SwiftyJSON
+//import SwiftyJSON
 
 class ContactProfile: Identifiable, Hashable, ObservableObject {
     
@@ -45,15 +45,10 @@ class ContactProfile: Identifiable, Hashable, ObservableObject {
     
     // TODO: Remove SwiftyJSON code so we can remove package
     func contactsPubkeys() -> [String]? {
-        guard let tagsSerialized = clEvent?.tagsSerialized else {
-            return nil
-        }
-        
-        guard let tags = try? JSON(data: tagsSerialized.data(using: .utf8, allowLossyConversion: false)!) else {
-            return nil
-        }
-        
-        return tags.filter { $0.1[0] == "p" } .map { $0.1[1].stringValue }
+        guard let clEvent = clEvent else { return nil }
+        guard clEvent.tagsSerialized != nil else { return nil }
+
+        return clEvent.fastPs.map { $0.1 }
     }
     
 }

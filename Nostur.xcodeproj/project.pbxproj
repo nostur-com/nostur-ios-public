@@ -252,7 +252,6 @@
 		1FEA5FE229D60D2800A90F7E /* DeleteAccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FEA5FE129D60D2800A90F7E /* DeleteAccountSheet.swift */; };
 		1FEA785829799FE6007CC8E7 /* ProfilePicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */; };
 		1FEA8D4B29E967B5004A83D3 /* InlineThings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FEA8D4A29E967B5004A83D3 /* InlineThings.swift */; };
-		1FEC01C0296C4A400078CC9B /* SwiftyJSON in Frameworks */ = {isa = PBXBuildFile; productRef = 1FEC01BF296C4A400078CC9B /* SwiftyJSON */; };
 		1FECAC4729A08255006FEE72 /* Collection+subscript.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FECAC4629A08255006FEE72 /* Collection+subscript.swift */; };
 		1FF21E7E29ACC02E00203623 /* FollowingAndExplore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF21E7D29ACC02E00203623 /* FollowingAndExplore.swift */; };
 		1FF283D229DB491F0063B799 /* PostPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF283D129DB491F0063B799 /* PostPreview.swift */; };
@@ -574,7 +573,6 @@
 				1F21DDC129F01B3000C564EF /* CombineWebSocket in Frameworks */,
 				1F75257A29962AA300477AF2 /* NukeUI in Frameworks */,
 				1F055A53296EE2A2009EF792 /* secp256k1 in Frameworks */,
-				1FEC01C0296C4A400078CC9B /* SwiftyJSON in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1125,7 +1123,6 @@
 			);
 			name = Nostur;
 			packageProductDependencies = (
-				1FEC01BF296C4A400078CC9B /* SwiftyJSON */,
 				1F055A52296EE2A2009EF792 /* secp256k1 */,
 				1F75257529962AA300477AF2 /* Nuke */,
 				1F75257729962AA300477AF2 /* NukeExtensions */,
@@ -1186,11 +1183,9 @@
 			);
 			mainGroup = 1FB448B12965F3D000038671;
 			packageReferences = (
-				1FEC01BE296C4A400078CC9B /* XCRemoteSwiftPackageReference "SwiftyJSON" */,
 				1F055A51296EE2A2009EF792 /* XCRemoteSwiftPackageReference "secp256k1" */,
 				1F75257429962AA300477AF2 /* XCRemoteSwiftPackageReference "Nuke" */,
 				1FC4D4092997E58E004E88CD /* XCRemoteSwiftPackageReference "KeychainAccess" */,
-				1F517BEC29CDB2FD00F7A97F /* XCRemoteSwiftPackageReference "FLAnimatedImage" */,
 				1F006B0829D0A9BE0048C6DD /* XCRemoteSwiftPackageReference "swift-algorithms" */,
 				1FB6E6F329E31C71008BE8A6 /* XCRemoteSwiftPackageReference "swift-html-entities" */,
 				1F21DDBF29F01B3000C564EF /* XCRemoteSwiftPackageReference "CombineWebSocket" */,
@@ -1831,14 +1826,6 @@
 				minimumVersion = 3.4.1;
 			};
 		};
-		1F517BEC29CDB2FD00F7A97F /* XCRemoteSwiftPackageReference "FLAnimatedImage" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/Flipboard/FLAnimatedImage";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.0;
-			};
-		};
 		1F558B3D29FE66CE002938A3 /* XCRemoteSwiftPackageReference "swift-collections" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/apple/swift-collections.git";
@@ -1869,14 +1856,6 @@
 			requirement = {
 				branch = master;
 				kind = branch;
-			};
-		};
-		1FEC01BE296C4A400078CC9B /* XCRemoteSwiftPackageReference "SwiftyJSON" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SwiftyJSON/SwiftyJSON";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 5.0.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -1931,11 +1910,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1FC4D4092997E58E004E88CD /* XCRemoteSwiftPackageReference "KeychainAccess" */;
 			productName = KeychainAccess;
-		};
-		1FEC01BF296C4A400078CC9B /* SwiftyJSON */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1FEC01BE296C4A400078CC9B /* XCRemoteSwiftPackageReference "SwiftyJSON" */;
-			productName = SwiftyJSON;
 		};
 /* End XCSwiftPackageProductDependency section */
 

@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import SwiftyJSON
+//import SwiftyJSON
 // TODO: Remove SwiftyJSON code so we can remove package
 
 // Message ready to sent, with envelope  EVENT/REQ/CLOSE
@@ -135,7 +135,7 @@ public struct RequestMessage {
     // Get all events where [pubkeys] are mentioned (in p tag)
     static func getHashtag(hashtag:String, kinds:[Int] = [1], limit:Int = 500,  subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"#t": ["\(hashtag)"], "limit": \(limit), "kinds": \(JSON(kinds).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]") }]
+["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"#t": ["\(hashtag)"], "limit": \(limit), "kinds": \(JSON.shared.toString(kinds)) }]
 """
     }
     
@@ -146,16 +146,16 @@ public struct RequestMessage {
         
         if since != nil {
             return """
-    ["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"#p": \(JSON(pubkeys).rawString(.utf8, options: .init(rawValue: 0))!), "since": \(since!.timestamp), "kinds": \(JSON(kinds).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]") }]
+    ["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"#p": \(JSON.shared.toString(pubkeys)), "since": \(since!.timestamp), "kinds": \(JSON.shared.toString(kinds)) }]
     """
         }
         else if until != nil {
             return """
-    ["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"#p": \(JSON(pubkeys).rawString(.utf8, options: .init(rawValue: 0))!), "until": \(until!.timestamp), "kinds": \(JSON(kinds).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]") }]
+    ["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"#p": \(JSON.shared.toString(pubkeys)), "until": \(until!.timestamp), "kinds": \(JSON.shared.toString(kinds)) }]
     """
         }
         return """
-["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"#p": \(JSON(pubkeys).rawString(.utf8, options: .init(rawValue: 0))!), "limit": \(limit), "kinds": \(JSON(kinds).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]") }]
+["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"#p": \(JSON.shared.toString(pubkeys)), "limit": \(limit), "kinds": \(JSON.shared.toString(kinds)) }]
 """
     }
     
@@ -169,7 +169,7 @@ public struct RequestMessage {
     
     static func getEvents(ids:[String], limit:Int = 500, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"ids": \(JSON(ids).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]"), "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"ids": \(JSON.shared.toString(ids)), "limit": \(limit)}]
 """
     }
     // FETCH A SINGLE EVENT AND REFERENCES
@@ -233,9 +233,9 @@ public struct RequestMessage {
     // Fetch anything that references given event ids in tags (1=REPLIES, 6=REPOSTS, 7=REACTIONS, 9735=ZAPS)
     // For when you have event(s) and you want to count replies, reposts, reactions, zaps.
     static func getEventReferences(ids:[String], limit:Int = 5000, subscriptionId:String? = nil, kinds:[Int]? = nil) -> String {
-        let kindsJsonArr = kinds != nil ? JSON(kinds!).rawString(.utf8, options: .init(rawValue: 0)) : "[1,6,7,9735]"
+        let kindsJsonArr = JSON.shared.toString(kinds ?? [1,6,7,9735])
         return """
-["REQ", "\(subscriptionId ?? ("REF-"+UUID().uuidString))", {"#e": \(JSON(ids).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]"), "kinds":\(kindsJsonArr!), "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? ("REF-"+UUID().uuidString))", {"#e": \(JSON.shared.toString(ids)), "kinds":\(kindsJsonArr), "limit": \(limit)}]
 """
     }
     
@@ -249,17 +249,17 @@ public struct RequestMessage {
         // TODO: UGH clean up this if then mess
         if (ids.count > 0 && authors.count > 0) {
             return """
-    ["REQ", "\(subscriptionId ?? ("RELATED-"+UUID().uuidString))", {"ids": \(JSON(ids).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]")}, {"authors": \(JSON(authors).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]"), "kinds": [0], "limit": \(limit)}]
+    ["REQ", "\(subscriptionId ?? ("RELATED-"+UUID().uuidString))", {"ids": \(JSON.shared.toString(ids))}, {"authors": \(JSON.shared.toString(authors)), "kinds": [0], "limit": \(limit)}]
     """
         }
         else if (ids.count > 0) {
             return """
-    ["REQ", "\(subscriptionId ?? ("RELATED-"+UUID().uuidString))", {"ids": \(JSON(ids).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]")}]
+    ["REQ", "\(subscriptionId ?? ("RELATED-"+UUID().uuidString))", {"ids": \(JSON.shared.toString(ids))}]
     """
         }
         else if (authors.count > 0) {
             return """
-    ["REQ", "\(subscriptionId ?? ("RELATED-"+UUID().uuidString))", {"authors": \(JSON(authors).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]"), "kinds": [0], "limit": \(limit)}]
+    ["REQ", "\(subscriptionId ?? ("RELATED-"+UUID().uuidString))", {"authors": \(JSON.shared.toString(authors)), "kinds": [0], "limit": \(limit)}]
     """
         }
         return nil
@@ -351,9 +351,9 @@ public struct RequestMessage {
     }
     
     static func getUserProfileKinds(pubkey:String, subscriptionId:String? = nil, kinds:[Int]? = nil) -> String {
-        let kindsJsonArr = kinds != nil ? JSON(kinds!).rawString(.utf8, options: .init(rawValue: 0)) : "[0,3,30008,10002]"
+        let kindsJsonArr = JSON.shared.toString(kinds ?? [0,3,30008,10002])
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": \(kindsJsonArr!), "limit": 20}]
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": \(kindsJsonArr), "limit": 20}]
 """
     }
     
@@ -467,3 +467,33 @@ func req(_ rm:String, activeSubscriptionId:String? = nil) {
 }
 
 public typealias RM = RequestMessage
+
+
+class JSON {
+    static let shared = JSON()
+    private var encoder = JSONEncoder()
+    
+    func toString(_ ints:[Int]) -> String {
+        do {
+            let jsonData = try encoder.encode(ints)
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                return jsonString // Output: "[1,7,9735,4,9802]"
+            }
+            return "[]"
+        } catch {
+            return "[]"
+        }
+    }
+    
+    func toString(_ pubkeys:[String]) -> String {
+        do {
+            let jsonData = try encoder.encode(pubkeys)
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                return jsonString // Output: "[1,7,9735,4,9802]"
+            }
+            return "[]"
+        } catch {
+            return "[]"
+        }
+    }
+}
