@@ -82,7 +82,7 @@ struct ImageTest_Previews: PreviewProvider {
 func profilePic(_ image: UIImage, preserveAspect:Bool = true) -> UIImage? {
     let SIDE:CGFloat = 150
     let size = CGSize(width: SIDE, height: SIDE)
-    let rect = CGRect(origin: CGPoint.zero, size: size)
+//    let rect = CGRect(origin: CGPoint.zero, size: size)
     UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
     
     // Steps.

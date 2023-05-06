@@ -106,7 +106,7 @@ struct ContentRenderer: View { // VIEW things
             event.objectWillChange
                 .sink {
                     
-                    let followingKeys = NosturState.shared.followingPublicKeys
+//                    let followingKeys = NosturState.shared.followingPublicKeys
                     let context = DataProvider.shared().bg
                     context.perform {
                         let transformer = VPostTransformer.bg
@@ -200,7 +200,7 @@ struct QuoteById: View {
                 Color.clear
                     .frame(height: 150)
                     .task {
-                        let followingKeys = NosturState.shared.followingPublicKeys
+//                        let followingKeys = NosturState.shared.followingPublicKeys
 //                        DataProvider.shared().container.performBackgroundTask { context in
                         DataProvider.shared().bg.perform {
                             let transformer = VPostTransformer.bg

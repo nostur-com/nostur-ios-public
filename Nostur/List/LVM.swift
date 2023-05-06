@@ -131,7 +131,7 @@ class LVM: NSObject, ObservableObject {
         // onScreenIds includes leafs and parents, so all posts.
         let onScreenIds = getAllObjectIds(self.lvmState.vPostLeafs)
         let currentVPostLeafs = self.lvmState.vPostLeafs // viewContext. First (0) is newest
-        let followingKeys = NosturState.shared.followingPublicKeys
+//        let followingKeys = NosturState.shared.followingPublicKeys
         
         context.perform { [unowned self] in
             let transformer = VPostTransformer.bg
@@ -595,7 +595,7 @@ extension LVM {
                 let event = notification.object as! Event
                 
                 let context = DataProvider.shared().bg
-                let followingPubkeys = NosturState.shared.followingPublicKeys
+//                let followingPubkeys = NosturState.shared.followingPublicKeys
                 context.perform { [weak self] in
                     guard let self = self else { return }
                     let transformer = VPostTransformer.bg
