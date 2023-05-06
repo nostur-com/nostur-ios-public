@@ -44,9 +44,9 @@ extension View {
             .navigationDestination(for: ContactPath.self) { path in
                 ProfileByPubkey(pubkey: path.key)
             }
-            .navigationDestination(for: HashtagPath.self) { path in
-                Search(hashtag: path.hashTag)
-            }
+//            .navigationDestination(for: HashtagPath.self) { path in
+//                Search(hashtag: path.hashTag)
+//            }
             .navigationDestination(for: Contact.self) { contact in
                 ProfileView(contact: contact)
             }

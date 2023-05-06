@@ -33,13 +33,8 @@ struct Search: View {
     @State var searching = false
     @AppStorage("selected_tab") var selectedTab = "Search"
     @State var navPath = NavigationPath()
-    let initialHashtag:String?
     
     @State var searchText = ""
-    
-    init(hashtag:String = "") {
-        self.initialHashtag = hashtag
-    }
     
     var body: some View {
         let _ = Self._printChanges()
@@ -154,11 +149,11 @@ struct Search: View {
                     contacts.nsPredicate = NSPredicate(format: "name CONTAINS[cd] %@ OR display_name CONTAINS[cd] %@", searchTrimmed, searchTrimmed)
                 }
             }
-            .onAppear {
-                if initialHashtag != "" {
-                    searchText = "#\(initialHashtag ?? "")"
-                }
-            }
+//            .onAppear {
+//                if initialHashtag != "" {
+//                    searchText = "#\(initialHashtag ?? "")"
+//                }
+//            }
             .onReceive(receiveNotification(.navigateTo)) { notification in
                 let destination = notification.object as! NavigationDestination
                 guard type(of: destination.destination) == HashtagPath.self || !IS_IPAD else { return }
@@ -170,6 +165,10 @@ struct Search: View {
                 else {
                     navPath.append(destination.destination)
                 }
+//                else {
+//
+//
+//                }
             }
             .onReceive(receiveNotification(.clearNavigation)) { notification in
                 navPath.removeLast(navPath.count)

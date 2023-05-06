@@ -40,8 +40,20 @@ struct SearchBox: View {
             }
         }
         .cornerRadius(8.0)
+        .onChange(of: text) { newText in
+            if newText != debounceObject.text {
+                debounceObject.text = newText
+            }
+        }
+//        .onAppear {
+//            if text != debounceObject.text {
+//                debounceObject.text = text
+//            }
+//        }
         .onChange(of: debounceObject.debouncedText) { searchString in
-            text = searchString
+            if searchString != text {
+                text = searchString
+            }
         }
     }
 }
