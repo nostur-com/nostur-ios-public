@@ -163,14 +163,16 @@ struct BadgeIcon: View {
                 LazyImage(url: URL(string: pictureUrl)) { state in
                     if let container = state.imageContainer {
                         if container.type == .gif, let gifData = container.data {
-                            AnimatedGifView(gifData: gifData, width: 32, height: 32)
+                            GIFImage(data: gifData)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
                                 .frame(width: 32, height: 32)
                                 .clipped()
                         }
                         else if let image = state.image {
                             image
                                 .resizable()
-                                .aspectRatio(contentMode: .fill)
+                                .aspectRatio(contentMode: .fit)
                                 .frame(width: 32, height: 32)
                                 .clipped()
                         }
@@ -195,7 +197,7 @@ struct BadgeIcon: View {
                     if let image = state.image {
                         image
                             .resizable()
-                            .aspectRatio(contentMode: .fill)
+                            .aspectRatio(contentMode: .fit)
                             .frame(width: 32, height: 32)
                             .clipped()
                     }

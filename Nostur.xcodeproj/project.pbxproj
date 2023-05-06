@@ -78,12 +78,10 @@
 		1F4AFC4729733E2400CC1F90 /* Event+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4AFC4529733E2400CC1F90 /* Event+CoreDataClass.swift */; };
 		1F4AFC4829733E2400CC1F90 /* Event+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4AFC4629733E2400CC1F90 /* Event+CoreDataProperties.swift */; };
 		1F517BEB29CDB29E00F7A97F /* GIFView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F517BEA29CDB29E00F7A97F /* GIFView.swift */; };
-		1F517BEE29CDB2FE00F7A97F /* FLAnimatedImage in Frameworks */ = {isa = PBXBuildFile; productRef = 1F517BED29CDB2FE00F7A97F /* FLAnimatedImage */; };
 		1F533E3329D35FD300748438 /* TextRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F533E3229D35FD300748438 /* TextRenderer.swift */; };
 		1F539DAB299D4B2A00F3B8CA /* NewAccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F539DAA299D4B2900F3B8CA /* NewAccountSheet.swift */; };
 		1F539DAD299D52E200F3B8CA /* AddExistingAccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F539DAC299D52E200F3B8CA /* AddExistingAccountSheet.swift */; };
 		1F558B3C29FE4DA0002938A3 /* EventRelationsQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F558B3B29FE4DA0002938A3 /* EventRelationsQueue.swift */; };
-		1F558B3F29FE66CE002938A3 /* DequeModule in Frameworks */ = {isa = PBXBuildFile; productRef = 1F558B3E29FE66CE002938A3 /* DequeModule */; };
 		1F57C54729927A0000DFE063 /* AppTopBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F57C54629927A0000DFE063 /* AppTopBar.swift */; };
 		1F57C54B299285B300DFE063 /* Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F57C54A299285B300DFE063 /* Search.swift */; };
 		1F5BA91429A8C27200002652 /* NewNoteButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5BA91329A8C27200002652 /* NewNoteButton.swift */; };
@@ -333,7 +331,7 @@
 		1F210B0529F853BB00159814 /* ProfileMediaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileMediaView.swift; sourceTree = "<group>"; };
 		1F21442B29A797930090E78E /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		1F21442D29A797B80090E78E /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
-		1F21CE422A067EC10021E2C7 /* View+onDelete.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "View+onDelete.swift"; path = "Nostur/Utils/View+onDelete.swift"; sourceTree = "<group>"; };
+		1F21CE422A067EC10021E2C7 /* View+onDelete.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+onDelete.swift"; sourceTree = "<group>"; };
 		1F21DDBD29F0174700C564EF /* NewSocketPool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewSocketPool.swift; sourceTree = "<group>"; };
 		1F2DE02F298E5C5C00891D2E /* BlockListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockListView.swift; sourceTree = "<group>"; };
 		1F2E760429F6DF6C00E67CE7 /* EditListTitleSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditListTitleSheet.swift; sourceTree = "<group>"; };
@@ -568,11 +566,9 @@
 			files = (
 				1F75257829962AA300477AF2 /* NukeExtensions in Frameworks */,
 				1FB6E6F529E31C71008BE8A6 /* HTMLEntities in Frameworks */,
-				1F517BEE29CDB2FE00F7A97F /* FLAnimatedImage in Frameworks */,
 				1F3E135429C89B9F00D076EA /* NukeVideo in Frameworks */,
 				1F75257629962AA300477AF2 /* Nuke in Frameworks */,
 				1F2F54EA2A0236E500B6D7E4 /* Gifu in Frameworks */,
-				1F558B3F29FE66CE002938A3 /* DequeModule in Frameworks */,
 				1FC4D40B2997E58E004E88CD /* KeychainAccess in Frameworks */,
 				1F006B0A29D0A9BE0048C6DD /* Algorithms in Frameworks */,
 				1F21DDC129F01B3000C564EF /* CombineWebSocket in Frameworks */,
@@ -731,6 +727,7 @@
 				1F6E448329CC515F0037D947 /* VideoPlayerView.swift */,
 				1FC78F7029CADEED0009C1C7 /* View+centered.swift */,
 				1F794DFE29B780C80013E633 /* View+onBecomingVisible.swift */,
+				1F21CE422A067EC10021E2C7 /* View+onDelete.swift */,
 				1F33098B298AEE5D00D4D8CF /* View+withNavigationDestinations.swift */,
 				1F00337029BEF141007CE040 /* View+withSheets.swift */,
 			);
@@ -895,7 +892,6 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
-				1F21CE422A067EC10021E2C7 /* View+onDelete.swift */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1FB448C82965F3D200038671 /* Nostur.entitlements */,
 				1F313DED296980D8004C7366 /* Info.plist */,
@@ -1136,11 +1132,9 @@
 				1F75257929962AA300477AF2 /* NukeUI */,
 				1FC4D40A2997E58E004E88CD /* KeychainAccess */,
 				1F3E135329C89B9F00D076EA /* NukeVideo */,
-				1F517BED29CDB2FE00F7A97F /* FLAnimatedImage */,
 				1F006B0929D0A9BE0048C6DD /* Algorithms */,
 				1FB6E6F429E31C71008BE8A6 /* HTMLEntities */,
 				1F21DDC029F01B3000C564EF /* CombineWebSocket */,
-				1F558B3E29FE66CE002938A3 /* DequeModule */,
 				1F2F54E92A0236E500B6D7E4 /* Gifu */,
 			);
 			productName = Nostur;
@@ -1912,16 +1906,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1F75257429962AA300477AF2 /* XCRemoteSwiftPackageReference "Nuke" */;
 			productName = NukeVideo;
-		};
-		1F517BED29CDB2FE00F7A97F /* FLAnimatedImage */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1F517BEC29CDB2FD00F7A97F /* XCRemoteSwiftPackageReference "FLAnimatedImage" */;
-			productName = FLAnimatedImage;
-		};
-		1F558B3E29FE66CE002938A3 /* DequeModule */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1F558B3D29FE66CE002938A3 /* XCRemoteSwiftPackageReference "swift-collections" */;
-			productName = DequeModule;
 		};
 		1F75257529962AA300477AF2 /* Nuke */ = {
 			isa = XCSwiftPackageProductDependency;

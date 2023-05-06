@@ -55,7 +55,9 @@ struct PFP: View {
                                         .frame(width: size, height: size)
                                         .cornerRadius(.greatestFiniteMagnitude)
                                 }
-                                AnimatedGifView(gifData: gifData, width: size, height: size)
+                                
+                                GIFImage(data: gifData)
+                                    .resizable()
                                     .scaledToFit()
                                     .frame(width: size, height: size)
                                     .cornerRadius(.greatestFiniteMagnitude)

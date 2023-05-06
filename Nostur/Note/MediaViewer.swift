@@ -75,9 +75,11 @@ struct MediaViewer: View {
                                         LazyImage(url: imgUrls[index]) { state in
                                             if let container = state.imageContainer {
                                                 if container.type == .gif, let gifData = container.data {
-                                                    AnimatedGifView(gifData: gifData, width: side, height: 200, contentMode: .scaleAspectFit)
-                                                        .scaledToFit()
-                                                    //                                                        .frame(width: side, height: 200)
+                                                    
+                                                    GIFImage(data: gifData)
+                                                        .resizable()
+                                                        .aspectRatio(contentMode: .fit)
+                                                        .frame(height: 200)
                                                         .onTapGesture {
                                                             fullScreenItem = FullScreenItem(url: imgUrls[index])
                                                         }
@@ -167,9 +169,10 @@ struct MediaViewer: View {
                                 LazyImage(url: imgUrl) { state in
                                     if let container = state.imageContainer {
                                         if container.type == .gif, let gifData = container.data {
-                                            AnimatedGifView(gifData: gifData, width: geo.size.width, height: 200, contentMode: .scaleAspectFit)
-                                            //                                                .scaledToFit()
-                                            //                                                .frame(width: geo.size.width, height: 200)
+                                            GIFImage(data: gifData)
+                                                .resizable()
+                                                .aspectRatio(contentMode: .fit)
+                                                .frame(width: geo.size.width, height: 200)
                                                 .onTapGesture {
                                                     fullScreenItem = FullScreenItem(url: imgUrl)
                                                 }
@@ -178,7 +181,6 @@ struct MediaViewer: View {
                                             image
                                                 .resizable()
                                                 .scaledToFit()
-                                            //                                                .frame(width: geo.size.width, height: 200)
                                                 .onTapGesture {
                                                     fullScreenItem = FullScreenItem(url: imgUrl)
                                                 }
@@ -314,7 +316,9 @@ struct FullImageViewer: View {
                         LazyImage(url: fullImageURL) { state in
                             if let container = state.imageContainer {
                                 if container.type == .gif, let gifData = container.data {
-                                    AnimatedGifView(gifData: gifData, width: geo.size.width, height: geo.size.height, contentMode: .scaleAspectFit)
+                                    GIFImage(data: gifData)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
                                         .frame(width: geo.size.width, height: geo.size.height)
                                         .scaleEffect(scale)
                                         .offset(position)
@@ -368,7 +372,6 @@ struct FullImageViewer: View {
                                 CenteredProgressView()
                             }
                         }
-                        //                                        .processors([.resize(height: 150)])
                         .pipeline(ImageProcessing.shared.content)
                         .priority(.high)
                     }

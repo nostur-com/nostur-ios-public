@@ -23,11 +23,12 @@ struct ProfileBanner: View {
                     LazyImage(url: URL(string: banner)) { state in
                         if let container = state.imageContainer {
                             if container.type == .gif, let gifData = container.data {
-                                AnimatedGifView(gifData: gifData, width: width, height: BANNER_HEIGHT)
+                                GIFImage(data: gifData)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
                                     .frame(width: width, height: BANNER_HEIGHT)
                                     .clipped()
-                                    .scaleEffect(1 + max(0,offset / BANNER_HEIGHT ), anchor: .bottom)
-                                
+                                    .scaleEffect(1 + max(0,offset / BANNER_HEIGHT ), anchor: .bottom)                                
                             }
                             else if let image = state.image {
                                 image

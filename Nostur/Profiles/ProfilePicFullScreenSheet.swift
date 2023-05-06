@@ -72,8 +72,10 @@ struct ProfilePicFullScreenSheet: View {
                         LazyImage(url: URL(string: pictureUrl)) { state in
                             if let container = state.imageContainer {
                                 if container.type == .gif, let gifData = container.data {
-                                    AnimatedGifView(gifData: gifData, width: geo.size.width, height: geo.size.height, contentMode: .scaleAspectFit)
-                                        .scaledToFit()
+                                    
+                                    GIFImage(data: gifData)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
                                         .scaleEffect(scale)
                                         .offset(position)
                                         .gesture(magnifyAndDragGesture)

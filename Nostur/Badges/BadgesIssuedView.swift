@@ -89,8 +89,9 @@ struct BadgeIssuedRow: View {
                         LazyImage(url: URL(string: pictureUrl)) { state in
                             if let container = state.imageContainer {
                                 if container.type == .gif, let gifData = container.data {
-                                    AnimatedGifView(gifData: gifData, width: 50, height: 50)
-                                        .scaledToFit()
+                                    GIFImage(data: gifData)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
                                         .frame(width: 50, height: 50)
                                         .clipped()
                                         .padding(10)
@@ -98,7 +99,7 @@ struct BadgeIssuedRow: View {
                                 else if let image = state.image {
                                     image
                                         .resizable()
-                                        .aspectRatio(contentMode: .fill)
+                                        .aspectRatio(contentMode: .fit)
                                         .frame(width: 50, height: 50)
                                         .clipped()
                                         .padding(10)
@@ -120,7 +121,7 @@ struct BadgeIssuedRow: View {
                             if let image = state.image {
                                 image
                                     .resizable()
-                                    .aspectRatio(contentMode: .fill)
+                                    .aspectRatio(contentMode: .fit)
                                     .frame(width: 50, height: 50)
                                     .clipped()
                                     .padding(10)
