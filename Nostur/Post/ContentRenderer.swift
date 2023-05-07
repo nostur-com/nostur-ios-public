@@ -44,13 +44,9 @@ struct ContentRenderer: View { // VIEW things
                         //                            .tint(Color("AccentColor"))
                         //                            .lineSpacing(3)
                     case .nevent1(let identifier):
-                        if let id = identifier.eventId {
-                            NEventView(identifier: identifier)
-                        }
+                        NEventView(identifier: identifier)
                     case .nprofile1(let identifier):
-                        if let pubkey = identifier.pubkey {
-                            NProfileView(identifier: identifier)
-                        }
+                        NProfileView(identifier: identifier)
                     case .note1(let noteId):
                         if let noteHex = hex(noteId) {
                             QuoteById(id: noteHex)

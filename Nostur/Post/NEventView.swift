@@ -43,7 +43,7 @@ struct NEventView: View {
                 }
                 else if let event = events.first {
                     Color.clear
-                        .frame(height: 150)
+                        .frame(height: 200)
                         .task {
                             DataProvider.shared().bg.perform {
                                 let transformer = VPostTransformer.bg
@@ -87,6 +87,7 @@ struct NEventView: View {
                                 task.cancel()
                             }
                         }
+                        .frame(height: 200)
                 }
             }
         }
