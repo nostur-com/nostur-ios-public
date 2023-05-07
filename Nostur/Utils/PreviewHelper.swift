@@ -127,6 +127,8 @@ class PreviewEnvironment {
             print("18 \(messages.count)")
             messages.append(contentsOf: testGifAndVideo())
             print("19 \(messages.count)")
+            messages.append(contentsOf: testHighlights())
+            print("20 \(messages.count)")
             
             var relayMessages:[RelayMessage] = []
             
