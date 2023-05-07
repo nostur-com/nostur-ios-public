@@ -87,6 +87,9 @@ struct ListView: View {
                 .onChange(of: settings.fullWidthImages) { newValue in
                     needsFullReload = true
                 }
+                .onChange(of: settings.animatedPFPenabled) { newValue in
+                    needsFullReload = true
+                }
             }
             else {
                 if (selectedSubTab == "Following" && ns.followingPublicKeys.count <= 1) {
