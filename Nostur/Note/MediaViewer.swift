@@ -266,6 +266,8 @@ struct FullImageViewer: View {
     @State private var position: CGSize = .zero
     @State private var newPosition: CGSize = .zero
     @State var isPlaying = true
+    @State private var gestureStartTime: Date?
+
     
     var body: some View {
         
@@ -288,14 +290,31 @@ struct FullImageViewer: View {
                 }
             )
             .simultaneously(with: DragGesture(minimumDistance: 3.0, coordinateSpace: .local)
+                .onChanged { value in
+                    if gestureStartTime == nil {
+                        gestureStartTime = Date()
+                    }
+                }
                 .onEnded { value in
                     print(value.translation)
+                    guard let startTime = gestureStartTime else { return }
+                                         let duration = Date().timeIntervalSince(startTime)
+                                         let quickSwipeThreshold: TimeInterval = 0.25 // Adjust this value as needed
+                    print(duration)
                     switch(value.translation.width, value.translation.height) {
                             //                    case (...0, -30...30):  print("left swipe")
                             //                    case (0..., -30...30):  print("right swipe")
                             //                    case (-100...100, ...0):  print("up swipe")
-                        case (-100...100, 0...):  dismiss()
-                        default:  print("no clue")
+                        case (-100...100, 0...):
+                            if duration < quickSwipeThreshold {
+                                dismiss()
+                            }
+                            else {
+                                gestureStartTime = nil
+                            }
+                        default:
+                            print("no clue")
+                            gestureStartTime = nil
                     }
                 }
             )
@@ -311,51 +330,33 @@ struct FullImageViewer: View {
 //                            }
                         VideoPlayerViewer(videoURL: fullImageURL, width: geo.size.width, height: geo.size.height)
                     }
-                    else if (fullImageURL.absoluteString.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
-                        LazyImage(url: fullImageURL) { state in
-                            if let container = state.imageContainer {
-                                if container.type == .gif, let gifData = container.data {
-                                    GIFImage(data: gifData)
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fit)
-                                        .frame(width: geo.size.width, height: geo.size.height)
-                                        .scaleEffect(scale)
-                                        .offset(position)
-                                        .gesture(magnifyAndDragGesture)
-                                        .onTapGesture {
-                                            withAnimation {
-                                                scale = 1.0
-                                            }
-                                        }
-                                }
-                                else if let image = state.image {
-                                    image
-                                        .resizable()
-                                        .scaledToFit()
-                                        .scaleEffect(scale)
-                                        .offset(position)
-                                        .gesture(magnifyAndDragGesture)
-                                        .onTapGesture {
-                                            withAnimation {
-                                                scale = 1.0
-                                            }
-                                        }
-                                }
-                                else {
-                                    CenteredProgressView()
-                                }
-                            }
-                            else {
-                                CenteredProgressView()
-                            }
-                        }
-                        .pipeline(ImageProcessing.shared.content) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
-                        .priority(.high)
-                    }
                     else {
-                        LazyImage(url: fullImageURL) { state in
-                            if let image = state.image {
+                        LazyImage(request: ImageRequest(url: fullImageURL)) { state in
+                            if state.error != nil {
+                                Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
+                                    .centered()
+                                    .background(Color("LightGray").opacity(0.2))
+                                    .onAppear {
+                                        print("Failed to load image: \(state.error?.localizedDescription ?? "")")
+                                    }
+                            }
+                            else if let container = state.imageContainer, container.type ==  .gif, let data = container.data {
+                                GIFImage(data: data)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: geo.size.width, height: geo.size.height)
+                                    .scaleEffect(scale)
+                                    .offset(position)
+                                    .gesture(magnifyAndDragGesture)
+                                    .onTapGesture {
+                                        withAnimation {
+                                            scale = 1.0
+                                        }
+                                    }
+                            }
+                            else if let image = state.image {
                                 image
+                                    .resizable()
                                     .resizable()
                                     .scaledToFit()
                                     .scaleEffect(scale)
@@ -367,8 +368,18 @@ struct FullImageViewer: View {
                                         }
                                     }
                             }
+                            else if state.isLoading { // does this conflict with showing preview images??
+                                HStack(spacing: 5) {
+                                    ProgressView()
+                                    ImageProgressView(progress: state.progress)
+                                    Image(systemName: "multiply.circle.fill")
+                                        .padding(10)
+                                }
+                                .centered()
+                                .background(Color("LightGray"))
+                            }
                             else {
-                                CenteredProgressView()
+                                Color("LightGray").opacity(0.2)
                             }
                         }
                         .pipeline(ImageProcessing.shared.content)
@@ -386,6 +397,7 @@ struct FullImageViewer: View {
                             .onTapGesture {
                                 dismiss()
                             }
+                            .zIndex(10)
                     }
                     Spacer()
                 }
