@@ -179,6 +179,12 @@ class AccountManager {
                 var newKind3Event = NEvent(content: "")
                 newKind3Event.kind = .contactList
                 
+                // keep existing content if we have it. Should be ignored as per spec https://github.com/nostr-protocol/nips/blob/master/02.md
+                // but some clients use it to store their garbage
+                if let existingKind3 = Event.contactListEvents(byAuthorPubkey: account.publicKey, context: DataProvider.shared().viewContext)?.first {
+                    newKind3Event.content = existingKind3.content ?? ""
+                }
+                
                 for contact in (Array(account.follows ?? Set<Contact>()).filter { $0.privateFollow == false } ) {
                     newKind3Event.tags.append(NEventTag(type: "p", otherInformation: contact.pubkey ))
                 }
