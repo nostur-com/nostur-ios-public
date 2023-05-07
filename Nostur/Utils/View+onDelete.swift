@@ -72,7 +72,7 @@ struct Delete: ViewModifier {
                         }
                     }
             )
-            .animation(.interactiveSpring())
+            .animation(.interactiveSpring(), value: offset)
     }
     
     private func delete() {

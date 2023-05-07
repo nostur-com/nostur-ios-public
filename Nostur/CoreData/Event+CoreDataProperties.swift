@@ -1065,7 +1065,7 @@ extension Event {
     
     func getMetadataContent() throws -> NSetMetadata? {
         if kind != NEventKind.setMetadata.id {
-            throw "Event is not kind 7"
+            throw "Event is not kind 0"
         }
         let decoder = JSONDecoder()
         
