@@ -370,7 +370,6 @@ struct FullImageViewer: View {
                             }
                             else if state.isLoading { // does this conflict with showing preview images??
                                 HStack(spacing: 5) {
-                                    ProgressView()
                                     ImageProgressView(progress: state.progress)
                                     Image(systemName: "multiply.circle.fill")
                                         .padding(10)

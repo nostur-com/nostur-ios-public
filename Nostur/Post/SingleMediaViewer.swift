@@ -105,7 +105,6 @@ struct SingleMediaViewer: View {
             }
             else if state.isLoading { // does this conflict with showing preview images??
                 HStack(spacing: 5) {
-                    ProgressView()
                     ImageProgressView(progress: state.progress)
                     Image(systemName: "multiply.circle.fill")
                         .padding(10)
@@ -195,6 +194,9 @@ struct ImageProgressView: View {
     @ObservedObject var progress: FetchImage.Progress
 
     var body: some View {
-        Text("\(Int(ceil(progress.fraction * 100))) %")
+        ProgressView()
+        if (progress.fraction != 0) {
+            Text("\(Int(ceil(progress.fraction * 100))) %")
+        }
     }
 }

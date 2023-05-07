@@ -51,7 +51,7 @@ struct ProfileNotesView: View {
             fl.loadMore(5)
             fl.loadMoreBG(15)
             
-            let fetchNewerLimit = 250
+            let fetchNewerLimit = 1000
             let fetchNewerTask = ReqTask(
                 reqCommand: { (taskId) in
                     print("\(taskId) 🟠🟠 fetchNewerTask.fetch()")
