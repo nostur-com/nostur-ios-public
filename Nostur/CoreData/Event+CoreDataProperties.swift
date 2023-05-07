@@ -547,7 +547,7 @@ extension Event {
     // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
     static func updateMentionsCountCache(_ tags:[NEventTag], context:NSManagedObjectContext) throws -> Bool {
         // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
-        if let mentionEtags = TagsHelpers(tags).mentionEtags() {
+        if let mentionEtags = TagsHelpers(tags).newerMentionEtags() {
             for etag in mentionEtags {
                 let request = NSFetchRequest<Event>(entityName: "Event")
                 request.entity = Event.entity()

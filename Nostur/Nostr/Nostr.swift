@@ -498,6 +498,18 @@ struct TagsHelpers {
         let etagsSlice = etags[1..<etags.count-1]
         return Array(etagsSlice)
     }
+    
+    func newerMentionEtags() -> [NEventTag]? {
+        if noEtags() {
+            return nil
+        }
+        // PREFERRED NEW METHOD
+        let mentionEtags = tags.filter { $0.type == "e" && $0.otherInformation.count == 3 && $0.otherInformation[2] == "mention" }
+        if mentionEtags.count > 0 {
+            return mentionEtags
+        }
+        return nil
+    }
 }
 
 struct NRelayMessage {
