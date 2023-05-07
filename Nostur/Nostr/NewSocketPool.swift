@@ -194,11 +194,24 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     var url:String
     var client:NewWebSocket
     var exponentialReconnectBackOff = 0
-    var skipped = 0
+    var _skipped = 0
     
     private var connectionQueue = DispatchQueue(label: "com.nostur.connection")
     private var _isConnecting = false
     private var _activeSubscriptions:[String] = []
+    
+    var skipped: Int {
+        get {
+            return connectionQueue.sync {
+                _skipped
+            }
+        }
+        set {
+            connectionQueue.async(flags: .barrier) {
+                self._skipped = newValue
+            }
+        }
+    }
     
     var isConnecting: Bool {
         get {
