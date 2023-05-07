@@ -99,7 +99,6 @@ struct BookmarksView: View {
                         }
                     }
                     .frame(width: 150)
-                    //                    .background(.green)
                 }
                 .menuStyle(.borderlessButton)
                 .menuIndicator(.visible)
@@ -114,14 +113,11 @@ struct BookmarksView: View {
                             .padding(.vertical, 10)
                             .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
                             .id(vBookmark.id)
-                            .onTapGesture {
-                                navigateTo(vBookmark)
-                            }
                             .onDelete {
                                 vBookmark.event.bookmarkedBy = []
-                                Task.detached {
+//                                Task.detached {
                                     DataProvider.shared().save()
-                                }
+//                                }
                             }
                     }
                 }

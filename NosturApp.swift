@@ -25,7 +25,7 @@ class DIMENSIONS: ObservableObject {
     static public let POST_ROW_PFP_HEIGHT = 50.0
     static public let POST_ROW_PFP_HPADDING = 10.0
     static public let KIND1_TRAILING = 10.0
-    
+    static public var ROW_PFP_SPACE:CGFloat { get { Self.POST_ROW_PFP_WIDTH + (2 * Self.POST_ROW_PFP_HPADDING) }}
     
     static public let PREVIEW_HEIGHT = 70.0
     

@@ -215,7 +215,6 @@ struct MediaViewer: View {
                         }
                     }
                     .frame(height: 200)
-                    //                    .background(.green)
                     .fullScreenCover(item: $fullScreenItem, content: { item in
                         FullImageViewer(fullImageURL:item.url)
                     })

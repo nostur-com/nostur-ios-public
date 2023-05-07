@@ -232,13 +232,15 @@ struct NoteRow: View {
                             HStack {
                                 Spacer()
                                 PFP(pubkey: highlightAuthorPubkey, pictureUrl: vPost.highlightAuthorPicture, size: 20, isFollowing: vPost.highlightAuthorIsFollowing)
+                                    .onTapGesture {
+                                        navigateTo(ContactPath(key: highlightAuthorPubkey))
+                                    }
                                 Text(vPost.highlightAuthorName ?? "Unknown")
+                                    .onTapGesture {
+                                        navigateTo(ContactPath(key: highlightAuthorPubkey))
+                                    }
                             }
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                navigateTo(ContactPath(key: highlightAuthorPubkey))
-                            }
-                            .padding(.trailing, 40)
+                            .padding(.trailing, 20)
                         }
                         HStack {
                             Spacer()
@@ -247,13 +249,17 @@ struct NoteRow: View {
                                     .font(.caption)
                             }
                         }
-                        .padding(.trailing, 40)
+                        .padding(.trailing, 20)
                     }
                     .padding(10)
                     .overlay(
                         RoundedRectangle(cornerRadius: 15)
                             .stroke(.regularMaterial, lineWidth: 1)
                     )
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        navigateTo(vPost)
+                    }
                     if (!hideFooter && settings.rowFooterEnabled) {
                         FooterFragmentView(vPost: vPost)
                             .padding(.top, 10)
@@ -268,6 +274,13 @@ struct NoteRow: View {
                     .opacity(connect == .bottom || connect == .both ? 1 : 0)
             }
             .padding(.trailing, DIMENSIONS.KIND1_TRAILING)
+            .background(alignment: .leading) {
+                Color.systemBackground.frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH+(DIMENSIONS.POST_ROW_PFP_HPADDING))
+                    .padding(.top, DIMENSIONS.POST_ROW_PFP_HEIGHT)
+                    .onTapGesture {
+                        navigateTo(vPost)
+                    }
+            }
             
         }
     }
@@ -317,12 +330,12 @@ struct NoteRow: View {
             HStack(alignment: .top, spacing:0) {
                 PFP(pubkey: vPost.pubkey, pictureUrl: event.contact?.picture ?? vPost.pictureUrl, isFollowing: vPost.following)
                     .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: DIMENSIONS.POST_ROW_PFP_HEIGHT)
-                    .background(alignment: .top, content: {
+                    .background(alignment: .top) {
                         Color("LightGray")
                             .frame(width: 2, height: 20)
                             .offset(x:0, y: -20)
                             .opacity(connect == .top || connect == .both ? 1 : 0)
-                    })
+                    }
                     .onTapGesture {
                         navigateTo(ContactPath(key: vPost.pubkey)) // TODO: if vPost.contact navigate with that else by .pubkey
                     }
@@ -341,12 +354,29 @@ struct NoteRow: View {
                             .onTapGesture { navigateTo(vPost) }
                     }
                     ContentRenderer(vPost: vPost, fullWidth: false, availableWidth: imageWidth)
+                        .frame(maxWidth: .infinity, alignment:.leading)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            navigateTo(vPost)
+                        }
                     if (!hideFooter && settings.rowFooterEnabled) {
                         FooterFragmentView(vPost: vPost)
                             .padding(.top, 10)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                navigateTo(vPost)
+                            }
                     }
                 }
                 .padding(.bottom, 10)
+                .background(alignment: .topLeading) {
+                    Color.systemBackground
+                        .frame(height: 25)
+                        .padding(.trailing, 45) // Space for NoteMenu tapping
+                        .onTapGesture {
+                            navigateTo(vPost)
+                        }
+                }
             }
             .background(alignment: .leading) {
                 Color("LightGray")
@@ -355,6 +385,13 @@ struct NoteRow: View {
                     .opacity(connect == .bottom || connect == .both ? 1 : 0)
             }
             .padding(.trailing, DIMENSIONS.KIND1_TRAILING)
+            .background(alignment: .topLeading) {
+                Color.systemBackground.frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH+(DIMENSIONS.POST_ROW_PFP_HPADDING))
+                    .padding(.top, DIMENSIONS.POST_ROW_PFP_HEIGHT)
+                    .onTapGesture {
+                        navigateTo(vPost)
+                    }
+            }
             
         }
     }
@@ -414,6 +451,14 @@ struct NoteRow: View {
                     NoteMenuView(vPost: vPost)
                         .padding(.horizontal, 20)
                 }
+                .background(alignment: .leading) {
+                    Color.systemBackground
+                        .padding(.leading, DIMENSIONS.ROW_PFP_SPACE)
+                        .padding(.trailing, 60) // Space for NoteMenu tapping
+                        .onTapGesture {
+                            navigateTo(vPost)
+                        }
+                }
                 .padding(.bottom, 10)
                 VStack(alignment:.leading, spacing: 3) {// Post container
                     ReplyingToFragmentView(vPost: vPost)
@@ -421,9 +466,16 @@ struct NoteRow: View {
                         .contentShape(Rectangle())
                         .onTapGesture { navigateTo(vPost) }
                     ContentRenderer(vPost: vPost, fullWidth: true, availableWidth: imageWidth)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            navigateTo(vPost)
+                        }
                     if (!hideFooter && settings.rowFooterEnabled) {
                         FooterFragmentView(vPost: vPost)
                             .padding(10)
+                            .onTapGesture {
+                                navigateTo(vPost)
+                            }
                     }
                 }
             }
@@ -488,93 +540,99 @@ struct NoteRow_Previews: PreviewProvider {
         
 //        let eventLong = PreviewFetcher.fetchVPost("9b34fd9a53398fb51493d68ecfd0d64ff922d0cdf5ffd8f0ffab46c9a3cf54e3")
 //
-        List {
-            
-            //            Group {
-            //                if (img0 != nil) {
-            //                    NoteRow(vPost: img0!)
-            //                        .listRowInsets(EdgeInsets())
-            //                }
-            //
-            //                if (img1 != nil) {
-            //                    NoteRow(vPost: img1!)
-            //                        .listRowInsets(EdgeInsets())
-            //                }
-            //
-            //                if (img2 != nil) {
-            //                    NoteRow(vPost: img2!)
-            //                        .listRowInsets(EdgeInsets())
-            //                }
-            //
-            //                if (img3 != nil) {
-            //                    NoteRow(vPost: img3!)
-            //                        .listRowInsets(EdgeInsets())
-            //                }
-            //
-            //                if (img4 != nil) {
-            //                    NoteRow(vPost: img4!)
-            //                        .listRowInsets(EdgeInsets())
-            //                }
-            
-            
-            //                if (event0 != nil) {
-            //                    NoteRow(vPost: event0!)
-            //                        .listRowInsets(EdgeInsets())
-            //                }
-            //
-            Group {
-//                if let vPost = PreviewFetcher.fetchVPost("102177a51af895883e9256b70b2caff6b9ef90230359ee20f6dc7851ec9e5d5a") {
-//                    NoteRow(vPost: vPost)
-//                }
-//                if let vPost = PreviewFetcher.fetchVPost("6701067d37887024cd221c45e77cf3f0e1ef76589006739617ccc8962719a024") {
-//                    NoteRow(vPost: vPost)
-//                }
+        ScrollView {
+            LazyVStack {
                 
-                
-//                if (eventLong != nil) {
-//                    NoteRow(vPost: eventLong!)
-//                }
-                if let vPost = PreviewFetcher.fetchVPost("2b6996d0695569d97f7dd6fd8f2a32428d4df5ca3f28bfcad6a6cc087ff79e25") {
-                    NoteRow(vPost: vPost)
-                }
-                
-                if (event1 != nil) {
-                    NoteRow(vPost: event1!)
-                }
-                ////
-                if (event2 != nil) {
-                    NoteRow(vPost: event2!)
-                }
+                //            Group {
+                //                if (img0 != nil) {
+                //                    NoteRow(vPost: img0!)
+                //                        .listRowInsets(EdgeInsets())
+                //                }
                 //
-                //            NoteRowView(event: event3!)
-                //                .listRowInsets(EdgeInsets())
+                //                if (img1 != nil) {
+                //                    NoteRow(vPost: img1!)
+                //                        .listRowInsets(EdgeInsets())
+                //                }
                 //
-                // QUOTE? TODO:// WAAROM CRASHED DEZE??
-                //            if (event4 != nil) {
-                //                NoteRowView(event: event4!)
-                //                    .listRowInsets(EdgeInsets())
-                //            }
+                //                if (img2 != nil) {
+                //                    NoteRow(vPost: img2!)
+                //                        .listRowInsets(EdgeInsets())
+                //                }
+                //
+                //                if (img3 != nil) {
+                //                    NoteRow(vPost: img3!)
+                //                        .listRowInsets(EdgeInsets())
+                //                }
+                //
+                //                if (img4 != nil) {
+                //                    NoteRow(vPost: img4!)
+                //                        .listRowInsets(EdgeInsets())
+                //                }
                 
-                //            NoteRowView(event: event5!)
-                //                .listRowInsets(EdgeInsets())
                 
-                if (event6 != nil) {
-                    // REPOST, LOADING?
-                    NoteRow(vPost: event6!)
+                //                if (event0 != nil) {
+                //                    NoteRow(vPost: event0!)
+                //                        .listRowInsets(EdgeInsets())
+                //                }
+                //
+                Group {
+                    //                if let vPost = PreviewFetcher.fetchVPost("102177a51af895883e9256b70b2caff6b9ef90230359ee20f6dc7851ec9e5d5a") {
+                    //                    NoteRow(vPost: vPost)
+                    //                }
+                    //                if let vPost = PreviewFetcher.fetchVPost("6701067d37887024cd221c45e77cf3f0e1ef76589006739617ccc8962719a024") {
+                    //                    NoteRow(vPost: vPost)
+                    //                }
+                    
+                    
+                    //                if (eventLong != nil) {
+                    //                    NoteRow(vPost: eventLong!)
+                    //                }
+                    
+                    if let highlight = PreviewFetcher.fetchVPost("68b3330358ab3e554183724bed09cc704e62e9b3e790efbb7e819c81905e71a3") {
+                        NoteRow(vPost: highlight)
+                    }
+                    
+                    if let vPost = PreviewFetcher.fetchVPost("2b6996d0695569d97f7dd6fd8f2a32428d4df5ca3f28bfcad6a6cc087ff79e25") {
+                        NoteRow(vPost: vPost)
+                    }
+                    
+                    if (event1 != nil) {
+                        NoteRow(vPost: event1!)
+                    }
+                    ////
+                    if (event2 != nil) {
+                        NoteRow(vPost: event2!)
+                    }
+                    //
+                    //            NoteRowView(event: event3!)
+                    //                .listRowInsets(EdgeInsets())
+                    //
+                    // QUOTE? TODO:// WAAROM CRASHED DEZE??
+                    //            if (event4 != nil) {
+                    //                NoteRowView(event: event4!)
+                    //                    .listRowInsets(EdgeInsets())
+                    //            }
+                    
+                    //            NoteRowView(event: event5!)
+                    //                .listRowInsets(EdgeInsets())
+                    
+                    if (event6 != nil) {
+                        // REPOST, LOADING?
+                        NoteRow(vPost: event6!)
+                    }
+                    
+                    if (event7 != nil) {
+                        // REPOST
+                        NoteRow(vPost: event7!)
+                    }
+                    //            }
+                    //            .frame(maxHeight: 400)
+                    
                 }
-                
-                if (event7 != nil) {
-                    // REPOST
-                    NoteRow(vPost: event7!)
-                }
-                //            }
-                //            .frame(maxHeight: 400)
+                .listRowInsets(EdgeInsets())
                 
             }
-            .listRowInsets(EdgeInsets())
-            
         }
-        .listStyle(.plain)
         .withPreviewEnvironment()
     }
 }

@@ -124,10 +124,11 @@ struct NoteMenuView: View {
             Image(systemName: "ellipsis")
                 .fontWeight(.bold)
                 .foregroundColor(Color.init(red: 113/255, green: 118/255, blue: 123/255))
-                .padding(.top, 0)
-                .padding(.bottom, 5)
-                .padding(.leading, 20)
+                .padding(.top, 7)
+                .padding(.bottom, 6)
+                .padding(.leading, 10)
         }
+        .contentShape(Rectangle())
     }
     
 }

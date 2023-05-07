@@ -37,9 +37,6 @@ struct ProfileLikesView: View {
                                 .boxShadow()
                                 .padding(.vertical, 10)
                                 .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
-                                .onTapGesture {
-                                    navigateTo(vPost)
-                                }
                         }
                         VStack {
                             if (events.count == limit) {

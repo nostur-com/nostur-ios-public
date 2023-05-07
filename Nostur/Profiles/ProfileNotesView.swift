@@ -25,7 +25,6 @@ struct ProfileNotesView: View {
                     .boxShadow()
                     .padding(.vertical, 10)
                     .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
-                    .onTapGesture { navigateTo(vPost) }
                     .id(vPost.id)
             }
             Button("Show more") {

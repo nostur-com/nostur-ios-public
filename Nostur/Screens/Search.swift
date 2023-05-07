@@ -54,9 +54,6 @@ struct Search: View {
                         ForEach(vPosts) { vPost in
                             NoteRow(vPost: vPost)
                                 .boxShadow()
-                                .onTapGesture {
-                                    navigateTo(vPost)
-                                }
                         }
                     }
                 }

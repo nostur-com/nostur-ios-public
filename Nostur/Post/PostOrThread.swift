@@ -22,28 +22,11 @@ struct PostOrThread: View {
                 NoteRow(vPost: vPost.parentPosts[index],
                         inThread: (vPost.event.replyToId != nil && index != 0),
                         connect: vPost.parentPosts[index].event.replyToId != nil || index > 0 ? .both : .bottom, fullWidth: fullWidth, isDetail: false)
-                    .background(Color.systemBackground)
-                    .onTapGesture {
-                        guard vPost.parentPosts[index].event.deletedById == nil else { return }
-                        navigateTo(vPost.parentPosts[index])
-                    }
                     .id(vPost.parentPosts[index].id)
             }
             NoteRow(vPost: vPost, inThread: vPost.event.replyToId != nil && vPost.parentPosts.count > 0, connect: vPost.event.replyToId != nil ? .top : nil, fullWidth: fullWidth, isDetail: false)
-                .background(Color.systemBackground)
-                .onTapGesture {
-                    guard vPost.event.deletedById == nil else { return }
-                    if vPost.isRepost, let repostVPost = vPost.event.firstQuote?.toVPost() {
-                        let _ = print("☠️☠️☠️☠️ toVPost() PostOrThread firstQuote")
-                        navigateTo(repostVPost)
-                    }
-                    else {
-                        navigateTo(vPost)
-                    }
-                }
                 .id(vPost.id)
         }
-//        .frame(width: UIScreen.main.bounds.width - 20)
     }
 }
 

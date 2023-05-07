@@ -125,15 +125,6 @@ struct ProfileZapsView: View {
                                 ForEach(vPosts.filter { $0.event.zapTally > 0  } .prefix(25)) { vPost in
                                     NoteRow(vPost: vPost)
                                         .background(Color.systemBackground)
-                                        .onTapGesture {
-                                            guard vPost.event.deletedById == nil else { return }
-                                            if vPost.isRepost, let repostVPost = vPost.event.firstQuote?.toVPost() {
-                                                navigateTo(repostVPost)
-                                            }
-                                            else {
-                                                navigateTo(vPost)
-                                            }
-                                        }
                                     Divider()
                                 }
                             }
