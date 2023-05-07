@@ -81,6 +81,7 @@ struct QuotedNoteFragmentView: View {
                 }
             }
         }
+        .contentShape(Rectangle())
         .onTapGesture {
             navigateTo(vPost)
         }
