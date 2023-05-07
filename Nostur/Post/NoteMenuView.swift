@@ -19,116 +19,123 @@ struct NoteMenuView: View {
     }
     
     var body: some View {
-        Menu {
-            Group {
-                Button {
-                    guard let contact = vPost.event.contact else { return }
-                    sendNotification(.addRemoveToListsheet, contact)
-                } label: {
-                    Label("Add/Remove from lists", systemImage: "person.2.crop.square.stack")
+        ZStack {
+            Color.systemBackground.frame(width: 45, height: 30)
+                .offset(x: -5, y: 5)
+                .contentShape(Rectangle())
+                .highPriorityGesture(TapGesture().onEnded {
+                    // This prevents tap near but not on menu from navigating to post detail
+                })
+            Menu {
+                Group {
+                    Button {
+                        guard let contact = vPost.event.contact else { return }
+                        sendNotification(.addRemoveToListsheet, contact)
+                    } label: {
+                        Label("Add/Remove from lists", systemImage: "person.2.crop.square.stack")
+                    }
+                    Button {
+                        if let pn = event.privateNote {
+                            sendNotification(.editingPrivateNote, pn)
+                        }
+                        else {
+                            sendNotification(.newPrivateNoteOnPost, event.id)
+                        }
+                    } label: {
+                        Label("Add private note", systemImage: "note.text")
+                    }
+                    Button {
+                        UIPasteboard.general.string = vPost.note1
+                    } label: {
+                        Label("Copy post id \(String(vPost.note1.prefix(11)))...", systemImage: "doc.on.clipboard")
+                    }
+                    Button {
+                        UIPasteboard.general.string = vPost.id
+                    } label: {
+                        Label("Copy post id (hex) \(String(vPost.id.prefix(11)))...", systemImage: "doc.on.clipboard")
+                    }
+                    Button {
+                        UIPasteboard.general.string = vPost.event.plainText
+                    } label: {
+                        Label("Copy text", systemImage: "doc.on.clipboard")
+                    }
+                    Button {
+                        UIPasteboard.general.string = vPost.event.toNEvent().eventJson()
+                    } label: {
+                        Label("Copy source", systemImage: "doc.on.clipboard")
+                    }
+                    Button {
+                        print("Follow @\(vPost.event.username)")
+                        if (vPost.event.contact != nil) {
+                            ns.follow(vPost.event.contact!)
+                        }
+                    } label: {
+                        Label("Follow @\(vPost.event.username)", systemImage: "person.fill")
+                    }
                 }
+
                 Button {
-                    if let pn = event.privateNote {
-                        sendNotification(.editingPrivateNote, pn)
+                    // TODO: MOVE TO NostureState, like follow/muteConversation etc.
+                    print("Block @\(vPost.event.username)")
+                    if (vPost.event.contact == nil) {
+                        // TODO: Contact is created so it can be unblocked in Blocklist. Should not have to create contact just for this.
+                        _ = DataProvider.shared().newContact(pubkey: vPost.event.pubkey)
+                        ns.objectWillChange.send()
+                        ns.account!.blockedPubkeys_ = ns.account!.blockedPubkeys_ + [vPost.event.pubkey]
                     }
                     else {
-                        sendNotification(.newPrivateNoteOnPost, event.id)
+                        ns.objectWillChange.send()
+                        ns.account!.blockedPubkeys_ = ns.account!.blockedPubkeys_ + [vPost.event.pubkey]
                     }
+                    sendNotification(.blockListUpdated, ns.account!.blockedPubkeys_)
                 } label: {
-                    Label("Add private note", systemImage: "note.text")
+                    Label("Block @\(vPost.event.username)", systemImage: "slash.circle")
                 }
+                
                 Button {
-                    UIPasteboard.general.string = vPost.note1
+                    print("Mute conversation")
+                    ns.muteConversation(vPost)
                 } label: {
-                    Label("Copy post id \(String(vPost.note1.prefix(11)))...", systemImage: "doc.on.clipboard")
+                    Label("Mute conversation", systemImage: "bell.slash.fill")
                 }
-                Button {
-                    UIPasteboard.general.string = vPost.id
-                } label: {
-                    Label("Copy post id (hex) \(String(vPost.id.prefix(11)))...", systemImage: "doc.on.clipboard")
+                
+                Button { sendNotification(.reportPost, vPost) } label: {
+                    Label("Report", systemImage: "flag")
                 }
-                Button {
-                    UIPasteboard.general.string = vPost.event.plainText
-                } label: {
-                    Label("Copy text", systemImage: "doc.on.clipboard")
-                }
-                Button {
-                    UIPasteboard.general.string = vPost.event.toNEvent().eventJson()
-                } label: {
-                    Label("Copy source", systemImage: "doc.on.clipboard")
-                }
-                Button {
-                    print("Follow @\(vPost.event.username)")
-                    if (vPost.event.contact != nil) {
-                        ns.follow(vPost.event.contact!)
-                    }
-                } label: {
-                    Label("Follow @\(vPost.event.username)", systemImage: "person.fill")
-                }
-            }
-
-            Button {
-                // TODO: MOVE TO NostureState, like follow/muteConversation etc.
-                print("Block @\(vPost.event.username)")
-                if (vPost.event.contact == nil) {
-                    // TODO: Contact is created so it can be unblocked in Blocklist. Should not have to create contact just for this.
-                    _ = DataProvider.shared().newContact(pubkey: vPost.event.pubkey)
-                    ns.objectWillChange.send()
-                    ns.account!.blockedPubkeys_ = ns.account!.blockedPubkeys_ + [vPost.event.pubkey]
-                }
-                else {
-                    ns.objectWillChange.send()
-                    ns.account!.blockedPubkeys_ = ns.account!.blockedPubkeys_ + [vPost.event.pubkey]
-                }
-                sendNotification(.blockListUpdated, ns.account!.blockedPubkeys_)
-            } label: {
-                Label("Block @\(vPost.event.username)", systemImage: "slash.circle")
-            }
-            
-            Button {
-                print("Mute conversation")
-                ns.muteConversation(vPost)
-            } label: {
-                Label("Mute conversation", systemImage: "bell.slash.fill")
-            }
-            
-            Button { sendNotification(.reportPost, vPost) } label: {
-                Label("Report", systemImage: "flag")
-            }
-            
-            if (NosturState.shared.activeAccountPublicKey == event.pubkey) {
-                Button { sendNotification(.requestDeletePost, event.id) } label: {
-                    Label("Delete", systemImage: "trash")
-                }
-            }
-            
-            Button {
-                guard ns.account != nil else { return }
-                let nEvent = vPost.event.toNEvent()
-                up.publishNow(nEvent)
-            } label: {
-                Label("Rebroadcast\(vPost.event.pubkey == NosturState.shared.activeAccountPublicKey ? " (again)" : "")", systemImage: "dot.radiowaves.left.and.right")
-            }
-            
-            if event.relays != "" {
-                Group {
-                    Divider()
-                    ForEach(event.relays.split(separator: " "), id:\.self) { relay in
-                        Button(String(relay)) { }
-                            .disabled(true)
+                
+                if (NosturState.shared.activeAccountPublicKey == event.pubkey) {
+                    Button { sendNotification(.requestDeletePost, event.id) } label: {
+                        Label("Delete", systemImage: "trash")
                     }
                 }
+                
+                Button {
+                    guard ns.account != nil else { return }
+                    let nEvent = vPost.event.toNEvent()
+                    up.publishNow(nEvent)
+                } label: {
+                    Label("Rebroadcast\(vPost.event.pubkey == NosturState.shared.activeAccountPublicKey ? " (again)" : "")", systemImage: "dot.radiowaves.left.and.right")
+                }
+                
+                if event.relays != "" {
+                    Group {
+                        Divider()
+                        ForEach(event.relays.split(separator: " "), id:\.self) { relay in
+                            Button(String(relay)) { }
+                                .disabled(true)
+                        }
+                    }
+                }
+                
+            } label: {
+                Image(systemName: "ellipsis")
+                    .fontWeight(.bold)
+                    .foregroundColor(Color.init(red: 113/255, green: 118/255, blue: 123/255))
+                    .padding(.top, 7)
+                    .padding(.bottom, 6)
+                    .padding(.leading, 10)
             }
-            
-        } label: {
-            Image(systemName: "ellipsis")
-                .fontWeight(.bold)
-                .foregroundColor(Color.init(red: 113/255, green: 118/255, blue: 123/255))
-                .padding(.top, 7)
-                .padding(.bottom, 6)
-                .padding(.leading, 10)
         }
-        .contentShape(Rectangle())
     }
     
 }
