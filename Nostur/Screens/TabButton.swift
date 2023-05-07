@@ -16,11 +16,12 @@ struct TabButton: View {
     
     var body: some View {
         Button { action() } label: {
-            VStack(spacing:8) {
+            VStack(spacing:0) {
                 HStack {
                     Text(title).lineLimit(1)
-                        .opacity(selected ? 1 : 0.75)
-                        .padding(.horizontal, 2)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 8)
+                        .padding(.bottom, 5)
                     if let unread, unread > 0 {
                         Text("\(unread)")
                             .font(.footnote)
@@ -30,16 +31,13 @@ struct TabButton: View {
                             .offset(x:-4, y: 0)
                     }
                 }
-                Divider()
+                Rectangle()
                     .frame(height: 3)
                     .background(Color("AccentColor"))
-                    .opacity(selected ? 1 : 0.35)
+                    .opacity(selected ? 1 : 0.15)
             }
-            .contentShape(Rectangle())
         }
-//        .frame(minWidth: 100)
-        
-        
+        .contentShape(Rectangle())
     }
 }
 

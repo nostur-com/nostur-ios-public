@@ -305,7 +305,7 @@ struct ProfileView: View {
                         .frame(width: dim.listWidth)
                     }
                     .padding(.top, 10)
-                    .background(.regularMaterial)
+                    .background(Color.systemBackground)
                 }
             }
         }
