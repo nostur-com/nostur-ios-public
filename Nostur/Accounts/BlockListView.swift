@@ -56,13 +56,11 @@ struct BlockedAccounts:View {
             Text("Please choose account first")
         }
         else {
-            List {
-                ForEach(blockedContacts.sorted(by: { $0.authorName < $1.authorName })) { contact in
-                    ProfileRow(withoutFollowButton: true, contact: contact)
-//                        .id(contact.id)
-                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                            Button {
-//                                withAnimation {
+            ScrollView {
+                LazyVStack {
+                    ForEach(blockedContacts.sorted(by: { $0.authorName < $1.authorName })) { contact in
+                        ProfileRow(withoutFollowButton: true, contact: contact)
+                            .onSwipe(tint: .green, label: "Unblock", icon: "") {
                                 ns.objectWillChange.send()
                                 ns.account!.blockedPubkeys_.removeAll(where: { $0 == contact.pubkey })
                                 try! viewContext.save()
@@ -73,9 +71,8 @@ struct BlockedAccounts:View {
                                     print("🔴 could not remove contact from blocked list")
                                     print(error)
                                 }
-//                                }
-                            } label: { Text("Unblock") }.tint(.green)
-                        }
+                            }
+                    }
                 }
             }
             .onAppear {
@@ -106,25 +103,27 @@ struct MutedConversations: View {
             Text("Please choose account first")
         }
         else {
-            List {
+            ScrollView {
                 ForEach(vPosts) { vPost in
                     NoteRow(vPost: vPost)
-                        .listRowInsets(EdgeInsets())
-                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                            Button {
-                                ns.objectWillChange.send()
-                                ns.account!.mutedRootIds_.removeAll(where: { $0 == vPost.id })
-                                do {
-                                    try viewContext.save()
-                                } catch {
-                                    print("🔴 could not remove post from muted conversations")
-                                    print(error)
-                                }
-                            } label: { Text("Unmute") }.tint(.green)
+                        .onSwipe(tint: Color.green, label: "Unmute", icon: "") {
+                            ns.objectWillChange.send()
+                            ns.account!.mutedRootIds_.removeAll(where: { $0 == vPost.id })
+                            do {
+                                try viewContext.save()
+                            } catch {
+                                print("🔴 could not remove post from muted conversations")
+                                print(error)
+                            }
                         }
+//                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+//                            Button {
+//
+//                            } label: { Text("Unmute") }.tint(.green)
+//                        }
                 }
             }
-            .listStyle(.plain)
+//            .listStyle(.plain)
             .onAppear {
                 if let account = ns.account {
                     mutedRootEvents.nsPredicate = NSPredicate(format: "id IN %@", account.mutedRootIds_)
