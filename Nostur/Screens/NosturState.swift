@@ -81,6 +81,8 @@ final class NosturState : ObservableObject {
         self.objectWillChange.send()
         self.account = account
         if let account {
+            VPostTransformer.shared.followingKeys = self.followingPublicKeys
+            VPostTransformer.bg.followingKeys = self.followingPublicKeys
             activeAccountPublicKey = account.publicKey
             // load state for new account
             lastNotificationReceivedAt = account.lastNotificationReceivedAt
@@ -148,15 +150,9 @@ final class NosturState : ObservableObject {
 
         DataProvider.shared().save()
         sendNotification(.followersChanged, account.followingPublicKeys)
+        VPostTransformer.shared.followingKeys = account.followingPublicKeys
+        VPostTransformer.bg.followingKeys = account.followingPublicKeys
         publishNewContactList()
-    }
-    
-    func publishNewContactList() {
-        guard let clEvent = try? AccountManager.createContactListEvent(account: account!) else {
-            print("🔴🔴 Could not create new clEvent")
-            return
-        }
-        _ = Unpublisher.shared.publishLast(clEvent, ofType: .contactList)
     }
     
     func follow(_ contact:Contact) {
@@ -166,6 +162,8 @@ final class NosturState : ObservableObject {
         
         DataProvider.shared().save()
         sendNotification(.followersChanged, account.followingPublicKeys)
+        VPostTransformer.shared.followingKeys = account.followingPublicKeys
+        VPostTransformer.bg.followingKeys = account.followingPublicKeys
         publishNewContactList()
     }
     
@@ -178,6 +176,8 @@ final class NosturState : ObservableObject {
         account.removeFromFollows(contact)
         DataProvider.shared().save()
         sendNotification(.followersChanged, account.followingPublicKeys)
+        VPostTransformer.shared.followingKeys = account.followingPublicKeys
+        VPostTransformer.bg.followingKeys = account.followingPublicKeys
         publishNewContactList()
     }
     
@@ -190,7 +190,17 @@ final class NosturState : ObservableObject {
         account.removeFromFollows(contact)
         DataProvider.shared().save()
         sendNotification(.followersChanged, account.followingPublicKeys)
+        VPostTransformer.shared.followingKeys = account.followingPublicKeys
+        VPostTransformer.bg.followingKeys = account.followingPublicKeys
         publishNewContactList()
+    }
+    
+    func publishNewContactList() {
+        guard let clEvent = try? AccountManager.createContactListEvent(account: account!) else {
+            print("🔴🔴 Could not create new clEvent")
+            return
+        }
+        _ = Unpublisher.shared.publishLast(clEvent, ofType: .contactList)
     }
     
     func isFollowing(_ pubkey:String) -> Bool {
