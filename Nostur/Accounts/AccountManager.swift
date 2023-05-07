@@ -55,6 +55,17 @@ class AccountManager {
         }
     }
     
+    func hasPrivateKey(pubkey:String) -> Bool {
+        let keychain = Keychain(service: "nostur.com.Nostur")
+        do {
+            let privateKeyHex = try keychain
+                .get(pubkey)
+            return privateKeyHex != nil
+        } catch {
+            return false
+        }
+    }
+    
     func storeKeys(_ keys:NKeys) {
         let keychain = Keychain(service: "nostur.com.Nostur")
         do {

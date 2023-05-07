@@ -168,6 +168,34 @@ class Importer {
                             //                            print("✈️✈️✈️ ONBORADING SPEED UP FETCHING 1,6,7,9735 FROM E's")
                             //                            let fetchReferences = ClientMessage(type: .REQ, message: RequestMessage.getEventReferences(ids: ????))
                             Account.preFillReadOnlyAccountFollowing(event: event, context: context, forceOverwrite: true)
+                            
+                            // Load existing relays if found in .content
+                            if !event.content.isEmpty, let contentData = event.content.data(using: .utf8), AccountManager.shared.hasPrivateKey(pubkey: event.publicKey) {
+                                do {
+                                    let decoder = JSONDecoder()
+                                    let relays = try decoder.decode(Kind3Relays.self, from: contentData)
+                                    if relays.relays.count > 0 {
+                                        print("✈️✈️✈️ found \(relays.relays.count) existing relays")
+                                    }
+                                    relays.relays.forEach { relay in
+                                        let fr = Relay.fetchRequest()
+                                        fr.predicate = NSPredicate(format: "url == %@", relay.url.lowercased())
+                                        print("✈️✈️✈️ adding \(relay.url) ")
+                                        if let existingRelay = try? context.fetch(fr).first {
+                                            existingRelay.read = relay.readWrite.read ?? false
+                                            existingRelay.write = relay.readWrite.write ?? false
+                                        }
+                                        else {
+                                            let newRelay = Relay(context: context)
+                                            newRelay.url = relay.url.lowercased()
+                                            newRelay.read = relay.readWrite.read ?? false
+                                            newRelay.write = relay.readWrite.write ?? false
+                                        }
+                                    }
+                                } catch {
+                                    print("Error decoding JSON: \(error)")
+                                }
+                            }
                         }
                         
                         let n = event

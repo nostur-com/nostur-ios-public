@@ -497,3 +497,26 @@ class JSON {
         }
     }
 }
+
+
+// For decoding relays in kind 3 .content
+struct Kind3Relay: Decodable {
+    let url: String
+    let readWrite: ReadWrite
+    
+    struct ReadWrite: Decodable {
+        let write: Bool?
+        let read: Bool?
+    }
+}
+
+struct Kind3Relays: Decodable {
+    let relays: [Kind3Relay]
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let serverDict = try container.decode([String: Kind3Relay.ReadWrite].self)
+
+        self.relays = serverDict.map { Kind3Relay(url: $0.key, readWrite: $0.value) }
+    }
+}
