@@ -193,13 +193,17 @@ class DataProvider: ObservableObject {
             return
         }
         #endif
-        if container.viewContext.hasChanges {
-            do {
-                try container.viewContext.save() // TODO: SHOULD MOVE THIS TO viewContext.perform? or .performAndWait ???
-                print("🟢🟢 viewContext saved")
-            }
-            catch {
-                print("🔴🔴 Could not save viewContext")
+        Task.detached {
+            self.container.viewContext.perform {
+                if self.container.viewContext.hasChanges {
+                    do {
+                        try self.container.viewContext.save() // TODO: SHOULD MOVE THIS TO viewContext.perform? or .performAndWait ???
+                        print("🟢🟢 viewContext saved")
+                    }
+                    catch {
+                        print("🔴🔴 Could not save viewContext")
+                    }
+                }
             }
         }
     }
