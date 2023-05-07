@@ -77,6 +77,8 @@
 		1F49C80A29B900AD005C960D /* RollingNumberView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F49C80929B900AD005C960D /* RollingNumberView.swift */; };
 		1F4AFC4729733E2400CC1F90 /* Event+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4AFC4529733E2400CC1F90 /* Event+CoreDataClass.swift */; };
 		1F4AFC4829733E2400CC1F90 /* Event+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4AFC4629733E2400CC1F90 /* Event+CoreDataProperties.swift */; };
+		1F4C1C282A07AB090010573F /* NEventView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4C1C272A07AB090010573F /* NEventView.swift */; };
+		1F4C1C2A2A07B21F0010573F /* NProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4C1C292A07B21F0010573F /* NProfileView.swift */; };
 		1F517BEB29CDB29E00F7A97F /* GIFView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F517BEA29CDB29E00F7A97F /* GIFView.swift */; };
 		1F533E3329D35FD300748438 /* TextRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F533E3229D35FD300748438 /* TextRenderer.swift */; };
 		1F539DAB299D4B2A00F3B8CA /* NewAccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F539DAA299D4B2900F3B8CA /* NewAccountSheet.swift */; };
@@ -368,6 +370,8 @@
 		1F49C80929B900AD005C960D /* RollingNumberView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RollingNumberView.swift; sourceTree = "<group>"; };
 		1F4AFC4529733E2400CC1F90 /* Event+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Event+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1F4AFC4629733E2400CC1F90 /* Event+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Event+CoreDataProperties.swift"; sourceTree = "<group>"; };
+		1F4C1C272A07AB090010573F /* NEventView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NEventView.swift; sourceTree = "<group>"; };
+		1F4C1C292A07B21F0010573F /* NProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NProfileView.swift; path = Nostur/Profiles/NProfileView.swift; sourceTree = SOURCE_ROOT; };
 		1F517BEA29CDB29E00F7A97F /* GIFView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GIFView.swift; sourceTree = "<group>"; };
 		1F533E3229D35FD300748438 /* TextRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextRenderer.swift; sourceTree = "<group>"; };
 		1F539DAA299D4B2900F3B8CA /* NewAccountSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewAccountSheet.swift; sourceTree = "<group>"; };
@@ -608,6 +612,8 @@
 				1FB3FBA42A01673F0018CBD7 /* SingleVideoViewer.swift */,
 				1F2F54EB2A028C6B00B6D7E4 /* SubscriptionManager.swift */,
 				1F533E3229D35FD300748438 /* TextRenderer.swift */,
+				1F4C1C272A07AB090010573F /* NEventView.swift */,
+				1F4C1C292A07B21F0010573F /* NProfileView.swift */,
 			);
 			path = Post;
 			sourceTree = "<group>";
@@ -1296,6 +1302,7 @@
 				1F00337729BF0BF0007CE040 /* PrivateNotesView.swift in Sources */,
 				1F33098C298AEE5D00D4D8CF /* View+withNavigationDestinations.swift in Sources */,
 				1F065A9D29A3E9E0003421D3 /* DynamicFetchView.swift in Sources */,
+				1F4C1C282A07AB090010573F /* NEventView.swift in Sources */,
 				1F65002C29A759FB00B79AEF /* ProfileRowMissing.swift in Sources */,
 				1F33096529895D1600D4D8CF /* SidebarStack.swift in Sources */,
 				1F740DA529AF5F6900EFCCA7 /* ContactsSearch.swift in Sources */,
@@ -1405,6 +1412,7 @@
 				1F8B135E297B36DB002EB8CF /* HexEncoding.swift in Sources */,
 				1F4AFC4829733E2400CC1F90 /* Event+CoreDataProperties.swift in Sources */,
 				1F6EB73A29E1C9B200B9DA83 /* EditNosturList.swift in Sources */,
+				1F4C1C2A2A07B21F0010573F /* NProfileView.swift in Sources */,
 				1F6E448629CC5CAE0037D947 /* Account+Notifications.swift in Sources */,
 				1FB6E6FB29E3B827008BE8A6 /* MainView.swift in Sources */,
 				1F88490E29B537B400145340 /* HighlightingTextEditor.swift in Sources */,

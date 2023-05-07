@@ -532,6 +532,9 @@ struct NoteRow_Previews: PreviewProvider {
 //                if (eventLong != nil) {
 //                    NoteRow(vPost: eventLong!)
 //                }
+                if let vPost = PreviewFetcher.fetchVPost("2b6996d0695569d97f7dd6fd8f2a32428d4df5ca3f28bfcad6a6cc087ff79e25") {
+                    NoteRow(vPost: vPost)
+                }
                 
                 if (event1 != nil) {
                     NoteRow(vPost: event1!)

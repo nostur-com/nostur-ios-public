@@ -66,8 +66,16 @@ func hex(_ note1:String) -> String? {
 }
 
 
-class ShareableIdentifier {
+class ShareableIdentifier: Hashable {
+    
+    static func == (lhs: ShareableIdentifier, rhs: ShareableIdentifier) -> Bool {
+        lhs.bech32string == rhs.bech32string
+    }
 
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(bech32string)
+    }
+    
     let bech32string:String
     let prefix:String
     

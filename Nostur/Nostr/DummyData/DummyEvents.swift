@@ -270,6 +270,8 @@ func testKind0Events() -> [String] {
 func testKind1Events() -> [String] {
     var events = [String]()
     
+    events.append(###"["EVENT","TEST",{"pubkey":"ae2f55614f873c7ca6272b0a42089eee2bd837908712f9e6e8344593517a1f20","content":"Hey nostr: nprofile1qqs2ut64v98cw0ru5cnjkzjzpz0wu27cx7ggwyheum5rg3vn29ap7gq4cf6mj","id":"2b6996d0695569d97f7dd6fd8f2a32428d4df5ca3f28bfcad6a6cc087ff79e25","created_at":1683455762,"sig":"8397c0c9aef41a8eb38a95e1791113fbfdc752bf81df67d77cf944a8261c584235cf679ea198a3c3ef1b80086187002ac95cf67ecd45b3ed20baa86905d9f87b","kind":1,"tags":[]}]"###)
+    
     events.append(###"["EVENT", "GIMME", {"pubkey":"63fe6318dc58583cfe16810f86dd09e18bfd76aabc24a0081ce2856f330504ed","content":"If you own a Snort Nip-5 you can now transfer them on https://snort.social/settings/nip5\nhttps://void.cat/d/SYWbvNgRHaeycrDk3Gj1oF.webp","id":"102177a51af895883e9256b70b2caff6b9ef90230359ee20f6dc7851ec9e5d5a","created_at":1680254151,"sig":"7c3d4e451a7bcaaddb70472c4ad49bf0d6f0c88259e35ec55c84332d6aa3d0c62822e517a41646026dee59aac583f067b9ef02731581183c563d8722a69f7a7b","kind":1,"tags":[]}]"###)
     
     events.append(###"["EVENT","GIMME",{"content":"They are here for nostrica 🤙🏼 #[0]","created_at":1676219234,"id":"21a1b8e4083c11eab8f280dc0c0bddf3837949df75662e181ad117bd0bd5fdf3","kind":1,"pubkey":"82341f882b6eabcd2ba7f1ef90aad961cf074af15b9ef44a09f9d2a8fbfbe6a2","sig":"5b22c60a4465d02166331128c09fb741e56480a3f07af170e9c8f41c058fca5618f5bcf126df926dc2895d4e7160fcae9bf32d2da7d13ee337b039ea365fd24d","tags":[["e","e06e6e94923c7d17e1c8d5a0af0d80dff68abcb86f204a67786399301541d929"]]}]"###)

@@ -77,8 +77,9 @@ class VPostTransformer {
     static let lightningInvoicePattern = ###"(?i)lnbc\S+"###
     static let notePattern = ###"nostr:note1[023456789acdefghjklmnpqrstuvwxyz]{58}"###
     static let neventPattern = ###"nostr:nevent1[023456789acdefghjklmnpqrstuvwxyz]+\b"###
+    static let nprofilePattern = ###"nostr:nprofile1[023456789acdefghjklmnpqrstuvwxyz]+\b"###
     static let otherUrlsPattern = ###"(?i)(https\:\/\/)[a-zA-Z0-9\-\.]+(?:\.[a-zA-Z]{2,999}+)+([\/\?\=\&\#\%\+\.]\@?[\S]+)*\/?[^\s\)]"### // for link previews (TODO: white list domains or not?)
-    static let pattern = "\(previewImagePlaceholder)|\(imageUrlPattern)|\(lightningInvoicePattern)|\(notePattern)|\(neventPattern)|\(videoUrlPattern)|\(otherUrlsPattern)"
+    static let pattern = "\(previewImagePlaceholder)|\(imageUrlPattern)|\(lightningInvoicePattern)|\(notePattern)|\(nprofilePattern)|\(neventPattern)|\(videoUrlPattern)|\(otherUrlsPattern)"
     static let regex = try! NSRegularExpression(pattern: pattern)
     
     let context:NSManagedObjectContext
@@ -379,12 +380,22 @@ class VPostTransformer {
                     let nevent1String = String(matchString.dropFirst(6)) // drop "nostr:"
                     do {
                         let identifier = try ShareableIdentifier(nevent1String)
-                        if let noteHex = identifier.eventId { // .eventId is already hex
-                            result.append(MarkdownElement.noteHex(noteHex))
-                        }
+                        result.append(MarkdownElement.nevent1(identifier))
+                        
                     }
                     catch {
                         print("problem decoding nevent in event.id: \(event.id)")
+                        result.append(MarkdownElement.text(contentLinkRenderer.renderedText(event, text:matchString)))
+                    }
+                }
+                else if matchString.matchingStrings(regex: Self.nprofilePattern).count > 0 {
+                    let nprofile1String = String(matchString.dropFirst(6)) // drop "nostr:"
+                    do {
+                        let identifier = try ShareableIdentifier(nprofile1String)
+                        result.append(MarkdownElement.nprofile1(identifier))
+                    }
+                    catch {
+                        print("problem decoding nevent in profile.pubkey: \(event.id)")
                         result.append(MarkdownElement.text(contentLinkRenderer.renderedText(event, text:matchString)))
                     }
                 }
@@ -420,4 +431,6 @@ enum MarkdownElement: Hashable {
     case video(URL)
     case linkPreview(URL)
     case postPreviewImage(UIImage)
+    case nevent1(ShareableIdentifier)
+    case nprofile1(ShareableIdentifier)
 }

@@ -43,6 +43,14 @@ struct ContentRenderer: View { // VIEW things
                         //                            .accentColor(Color("AccentColor"))
                         //                            .tint(Color("AccentColor"))
                         //                            .lineSpacing(3)
+                    case .nevent1(let identifier):
+                        if let id = identifier.eventId {
+                            NEventView(identifier: identifier)
+                        }
+                    case .nprofile1(let identifier):
+                        if let pubkey = identifier.pubkey {
+                            NProfileView(identifier: identifier)
+                        }
                     case .note1(let noteId):
                         if let noteHex = hex(noteId) {
                             QuoteById(id: noteHex)
@@ -176,7 +184,6 @@ struct RowContentRenderer_Previews: PreviewProvider {
 struct QuoteById: View {
     
     let id:String
-    //    @ObservedObject var vm:EventVM // no vm want fr is not updating after receiving from websocket
     
     @FetchRequest
     var events:FetchedResults<Event>
