@@ -164,17 +164,22 @@ struct PostAndParent: View {
                             if isParent {
 //                                ReplyingToFragmentView(vPost: vPost)
 //                                    .padding(.vertical, 3)
-                                if vPost.isHighlight {
-                                    HighlightRenderer(vPost: vPost)
-                                    .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                                }
-                                else {
-                                    ContentRenderer(vPost: vPost, isDetail: true, availableWidth: dim.availablePostDetailRowImageWidth())
+                                switch event.kind {
+                                    case 9802:
+                                        HighlightRenderer(vPost: vPost)
                                         .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                                        .contentShape(Rectangle())
-                                        .onTapGesture {
-                                            navigateTo(vPost)
-                                        }
+                                    case 1,9734:
+                                        ContentRenderer(vPost: vPost, isDetail: true, availableWidth: dim.availablePostDetailRowImageWidth())
+                                            .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                                            .contentShape(Rectangle())
+                                            .onTapGesture {
+                                                navigateTo(vPost)
+                                            }
+                                    default:
+                                        Label("kind \(Double(event.kind).clean) type not (yet) supported", systemImage: "exclamationmark.triangle.fill")
+                                            .centered()
+                                            .frame(maxWidth: .infinity)
+                                            .background(Color("LightGray").opacity(0.2))
                                 }
                             }
                         }
@@ -184,22 +189,26 @@ struct PostAndParent: View {
 //                        ReplyingToFragmentView(vPost: vPost)
 //                            .padding(.bottom, 3)
 //                            .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
-                        if vPost.isHighlight {
-                            HighlightRenderer(vPost: vPost)
-                            .padding(.top, 3)
-                            .padding(.bottom, 10)
-                            .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                        }
-                        else {
-                            ContentRenderer(vPost: vPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
+                        switch event.kind {
+                            case 9802:
+                                HighlightRenderer(vPost: vPost)
                                 .padding(.top, 3)
                                 .padding(.bottom, 10)
                                 .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    navigateTo(vPost)
-                                }
-                            
+                            case 1,9734:
+                                ContentRenderer(vPost: vPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
+                                    .padding(.top, 3)
+                                    .padding(.bottom, 10)
+                                    .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        navigateTo(vPost)
+                                    }
+                            default:
+                                Label("kind \(Double(event.kind).clean) type not (yet) supported", systemImage: "exclamationmark.triangle.fill")
+                                    .centered()
+                                    .frame(maxWidth: .infinity)
+                                    .background(Color("LightGray").opacity(0.2))
                         }
                     }
                     
