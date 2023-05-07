@@ -121,7 +121,7 @@ struct RelayEditView: View {
             ToolbarItem(placement: .primaryAction) {
                 Button("Save") {
                     do {
-                        let correctedRelayUrl = (relayUrl.prefix(6) != "wss://" ? ("wss://" + relayUrl) : relayUrl).lowercased()
+                        let correctedRelayUrl = (relayUrl.prefix(6) != "wss://" && relayUrl.prefix(5) != "ws://"  ? ("wss://" + relayUrl) : relayUrl).lowercased()
                         relay.url = correctedRelayUrl
                         try viewContext.save()
                         // Update existing connections
@@ -161,7 +161,7 @@ struct RelayEditView_Previews: PreviewProvider {
     static var previews: some View {
         let relay = Relay(context: DataProvider.shared().container.viewContext)
         relay.id = UUID()
-        relay.url = "wss://nostr.bitcoin.sex"
+        relay.url = "ws://localhost:3000"
         relay.read = true
         relay.write = false
         relay.createdAt = Date()

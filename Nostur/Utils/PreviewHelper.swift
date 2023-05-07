@@ -70,7 +70,7 @@ class PreviewEnvironment {
             xaccount.about = "Test"
             
             let relay = Relay(context: self.context)
-            relay.url = "wss://nostr.bitcoin.sex"
+            relay.url = "ws://localhost:3000"
             relay.createdAt = Date()
             relay.id = UUID()
             relay.read = false

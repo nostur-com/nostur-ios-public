@@ -555,7 +555,7 @@ func fetchEventFromRelayHint(_ eventId:String, event:Event) {
 //      "reply"
 //    ],
     if let relay = event.fastTags.filter({ $0.0 == "e" && $0.1 == eventId }).first?.2 {
-        if relay.prefix(6) == "wss://" {
+        if relay.prefix(6) == "wss://" || relay.prefix(5) == "ws://" {
             EphemeralSocketPool.shared.sendMessage(RM.getEvent(id: eventId), relay: relay)
         }
     }
