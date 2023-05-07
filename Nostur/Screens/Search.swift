@@ -35,6 +35,7 @@ struct Search: View {
     @State var navPath = NavigationPath()
     
     @State var searchText = ""
+    @State var searchTask:Task<Void, Never>? = nil
     
     var body: some View {
         let _ = Self._printChanges()
@@ -89,8 +90,59 @@ struct Search: View {
                 
                 let searchTrimmed = searchString.trimmingCharacters(in: .whitespacesAndNewlines)
                 
+                if (searchTrimmed.prefix(9) == "nprofile1") {
+                        /// test nevent1qqs0tg4e238wa8ce5yf2fn2t62t3sttwarj5rs557l0n8ftjd308f6qzyrr7mfnq567gyuznp6ptffm39tx75t33ms99d7xuj4dvqz00m97gvqg5waehxw309aex2mrp0yhxgctdw4eju6t0qyf8wumn8ghj7mn0wd68ytnew4mzuctvttk4x8
+
+                    if let identifier = try? ShareableIdentifier(searchTrimmed), let pubkey = identifier.pubkey { // .eventId is already hex
+                        searching = true
+                        contacts.nsPredicate = NSPredicate(format: "pubkey = %@", pubkey)
+                        events.nsPredicate = NSPredicate(value: false)
+                        req(RM.getUserMetadata(pubkey: pubkey))
+                        
+                        if identifier.relays.count > 0 {
+                            searchTask = Task {
+                                try? await Task.sleep(for: .seconds(3))
+                                let ctx = DataProvider.shared().bg
+                                await ctx.perform {
+                                    // If we don't have the event after X seconds, fetch from relay hint
+                                    if Contact.fetchByPubkey(pubkey, context: ctx) == nil {
+                                        if let relay = identifier.relays.first {
+                                            EphemeralSocketPool.shared.sendMessage(RM.getUserMetadata(pubkey: pubkey), relay: relay)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                else if (searchTrimmed.prefix(7) == "nevent1") {
+                        /// test nevent1qqs0tg4e238wa8ce5yf2fn2t62t3sttwarj5rs557l0n8ftjd308f6qzyrr7mfnq567gyuznp6ptffm39tx75t33ms99d7xuj4dvqz00m97gvqg5waehxw309aex2mrp0yhxgctdw4eju6t0qyf8wumn8ghj7mn0wd68ytnew4mzuctvttk4x8
+
+                    if let identifier = try? ShareableIdentifier(searchTrimmed), let noteHex = identifier.eventId { // .eventId is already hex
+                        searching = true
+                        events.nsPredicate = NSPredicate(format: "id = %@", noteHex)
+                        contacts.nsPredicate = NSPredicate(value: false)
+                        req(RM.getEvent(id: noteHex))
+                        
+                        if identifier.relays.count > 0 {
+                            searchTask = Task {
+                                try? await Task.sleep(for: .seconds(3))
+                                let ctx = DataProvider.shared().bg
+                                await ctx.perform {
+                                    // If we don't have the event after X seconds, fetch from relay hint
+                                    if (try? Event.fetchEvent(id: noteHex, context: ctx)) == nil {
+                                        if let relay = identifier.relays.first {
+                                            EphemeralSocketPool.shared.sendMessage(RM.getEvent(id: noteHex), relay: relay)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
                 // try npub
-                if (searchTrimmed.prefix(5) == "npub1") {
+                else if (searchTrimmed.prefix(5) == "npub1") {
                     do {
                         searching = true
                         let key = try NIP19(displayString: searchTrimmed)
