@@ -577,7 +577,7 @@ extension Event {
         
         return jsonArray
         //            .filter { $0.count >= 2 }
-            .map { ($0[0], $0[safe: 1] ?? "WTF", $0[safe: 2]) }
+            .map { ($0[safe: 0] ?? "WTF", $0[safe: 1] ?? "WTF", $0[safe: 2]) }
     }
     
     var fastPs:[(String, String, String?)] {
