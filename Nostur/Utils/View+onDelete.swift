@@ -12,6 +12,9 @@ import SwiftUI
 // https://stackoverflow.com/a/75841800
 struct Delete: ViewModifier {
 
+    let tint:Color
+    let label:String
+    let icon:String
     let action: () -> Void
     
     @State var offset: CGSize = .zero
@@ -25,11 +28,11 @@ struct Delete: ViewModifier {
                 GeometryReader { geometry in
                     ZStack {
                         Rectangle()
-                            .foregroundColor(.red)
-                        Image(systemName: "trash")
+                            .foregroundColor(tint)
+                        Label(label, systemImage: icon)
                             .foregroundColor(.white)
-                            .font(.title2.bold())
                             .layoutPriority(-1)
+                            .lineLimit(1)
                     }
                     .frame(width: -offset.width)
                     .clipShape(Rectangle() )
@@ -100,7 +103,10 @@ struct Delete: ViewModifier {
 extension View {
     
     func onDelete(perform action: @escaping () -> Void) -> some View {
-        self.modifier(Delete(action: action))
+        self.modifier(Delete(tint:Color.red, label:"Delete", icon:"trash", action: action))
     }
     
+    func onSwipe(tint:Color = Color.red, label:String, icon:String, perform action: @escaping () -> Void) -> some View {
+        self.modifier(Delete(tint:tint, label:label, icon:icon, action: action))
+    }
 }
