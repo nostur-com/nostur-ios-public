@@ -22,7 +22,7 @@ struct ListViewContainer: View {
                     .padding(.top, 5)
             }
 
-        .background(Color("ListBackground"))
+//        .background(Color.cyan) // Somehow becomes bottom tabbar background color
     }
 }
 

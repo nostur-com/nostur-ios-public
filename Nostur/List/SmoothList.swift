@@ -59,7 +59,6 @@ struct SmoothList: UIViewControllerRepresentable {
             uiCollectionView.translatesAutoresizingMaskIntoConstraints = false
             //            uiCollectionView.backgroundColor = UIColor.yellow // UIColor(named: "ListBackground")
             viewController.view.addSubview(uiCollectionView)
-            //            viewController.view.backgroundColor = UIColor.blue
             
             NSLayoutConstraint.activate([
                 viewController.view.leadingAnchor.constraint(equalTo: uiCollectionView.leadingAnchor),
@@ -445,13 +444,11 @@ final class CViewHolder {
         //        flowLayout.scrollDirection = .vertical
         
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        //        collectionView.backgroundColor = .systemGroupedBackground
-        //        collectionView.backgroundColor = UIColor(named: "ListBackground")
+        collectionView.backgroundColor = UIColor(named: "ListBackground") // This color flashes visible for a milisecond and is then covered by all other things
         collectionView.allowsSelection = false
         collectionView.delegate = coordinator
         collectionView.prefetchDataSource = coordinator
         collectionView.isPrefetchingEnabled = true
-        //        collectionView.backgroundColor = UIColor.brown
         onInitialized(collectionView)
     }
     
@@ -476,7 +473,7 @@ final class CViewHolder {
                     .padding(.vertical, 10)
                 //                    .frame(maxWidth: .infinity)
             }
-            .background(Color("ListBackground"))
+            .background(Color("ListBackground")) // Between and around every PostOrThread (NoteRows)
             .margins(.all, 0)
             //            cell.layer.shouldRasterize = true
             //            cell.layer.rasterizationScale = UIScreen.main.scale
@@ -490,7 +487,7 @@ final class CViewHolder {
                     .boxShadow()
                     .padding(.vertical, 10)
             }
-            .background(Color("ListBackground"))
+            .background(Color("ListBackground")) // Between and around every PostOrThread (NoteRows)
             .margins(.all, 0)
             //            cell.layer.shouldRasterize = true
             //            cell.layer.rasterizationScale = UIScreen.main.scale
@@ -503,7 +500,7 @@ final class CViewHolder {
                 Text(item)
                     .hCentered()
             }
-            .background(Color("ListBackground"))
+            .background(Color("ListBackground")) // Between and around every PostOrThread (NoteRows)
             .margins(.all, 0)
         }
     }()

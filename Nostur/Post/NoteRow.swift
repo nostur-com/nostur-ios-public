@@ -141,6 +141,7 @@ struct NoteRow: View {
                 }
             }
             .padding(.top, 20)
+            .background(Color.systemBackground) // NOTEROW BOX BACKGROUND
             .onAppear {
                 //            guard 1 == 2 else { return } // performance check
                 //            print("🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴 MY FACE IS APPEAR")
