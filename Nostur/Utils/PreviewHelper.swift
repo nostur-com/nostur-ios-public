@@ -290,6 +290,10 @@ class PreviewEnvironment {
                     privateNote.createdAt = Date.now
                     privateNote.updatedAt = Date.now
                 }
+                
+                account3.blockedPubkeys_.append(contentsOf:randomContacts.randomSample(count: 3).map { $0.pubkey })
+                account3.mutedRootIds_.append("505d4b36cf1bd646e55d16558d8562f838d50e296b6058561ef3490198d4cf77")
+                account3.mutedRootIds_.append("6d966c92a50e00d63b4f1303397f2ea96fb781efacd8f9071fd77e5ddd589a8c")
             }
             print ("☢️☢️☢️ LOADED (SHOULD ONLY APPEAR ONCE) ☢️☢️☢️")
         }

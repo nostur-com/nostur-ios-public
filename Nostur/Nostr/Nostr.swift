@@ -292,10 +292,6 @@ struct NEvent: Codable {
         self.publicKey = keys.publicKeyHex()
         self.signature = String(bytes:sig.rawRepresentation.bytes)
 
-//        print("🟣🟣 sign:")
-//        print(self.id)
-//        print(self.signature)
-
         return self
     }
 
@@ -550,7 +546,6 @@ public struct NSetMetadata: Codable {
 
     public func encodedString() throws -> String {
         let encoder = JSONEncoder()
-//        encoder.outputFormatting = .withoutEscapingSlashes
         return String(decoding: try encoder.encode(self), as: UTF8.self)
     }
 }

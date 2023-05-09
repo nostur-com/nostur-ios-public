@@ -8,8 +8,8 @@
 import SwiftUI
 import Nuke
 import NukeUI
-
 import PhotosUI
+import CoreTransferable
 
 struct ProfileImage: View {
     let imageState: ProfileModel.ImageState
@@ -70,18 +70,6 @@ struct EditableCircularProfileImage: View {
             }
     }
 }
-
-
-/*
-See LICENSE folder for this sample’s licensing information.
-
-Abstract:
-An observable state object that contains profile details.
-*/
-
-import SwiftUI
-import PhotosUI
-import CoreTransferable
 
 @MainActor
 class ProfileModel: ObservableObject {
@@ -177,8 +165,6 @@ class ProfileModel: ObservableObject {
         }
     }
 }
-
-
 
 struct ProfilePicPicker: View {
 

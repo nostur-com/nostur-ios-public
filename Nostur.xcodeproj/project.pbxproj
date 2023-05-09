@@ -260,7 +260,6 @@
 		1FF2C6C629EAD7D00096AC4A /* NosturListsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF2C6C529EAD7D00096AC4A /* NosturListsView.swift */; };
 		1FF30DED2A05573B00B0F011 /* AnimatedRedactedPlaceholder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF30DEC2A05573B00B0F011 /* AnimatedRedactedPlaceholder.swift */; };
 		1FF30DEF2A05784F00B0F011 /* SearchBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF30DEE2A05784F00B0F011 /* SearchBox.swift */; };
-		1FF69B2729AAA37D0070796B /* BechLnurl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF69B2629AAA37D0070796B /* BechLnurl.swift */; };
 		1FF8BD1229D41BBD00C8C96A /* SingleMediaViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF8BD1129D41BBD00C8C96A /* SingleMediaViewer.swift */; };
 		1FF8BD1429D444D900C8C96A /* ProcessingStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF8BD1329D444D900C8C96A /* ProcessingStatus.swift */; };
 		1FF9BF1629DC966700D16EE7 /* ReportContactSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF9BF1529DC966700D16EE7 /* ReportContactSheet.swift */; };
@@ -553,7 +552,6 @@
 		1FF2C6C829EAD9C20096AC4A /* NosturList+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NosturList+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1FF30DEC2A05573B00B0F011 /* AnimatedRedactedPlaceholder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedRedactedPlaceholder.swift; sourceTree = "<group>"; };
 		1FF30DEE2A05784F00B0F011 /* SearchBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SearchBox.swift; path = Utils/SearchBox.swift; sourceTree = "<group>"; };
-		1FF69B2629AAA37D0070796B /* BechLnurl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BechLnurl.swift; sourceTree = "<group>"; };
 		1FF8BD1129D41BBD00C8C96A /* SingleMediaViewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleMediaViewer.swift; sourceTree = "<group>"; };
 		1FF8BD1329D444D900C8C96A /* ProcessingStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessingStatus.swift; sourceTree = "<group>"; };
 		1FF9BF1529DC966700D16EE7 /* ReportContactSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportContactSheet.swift; sourceTree = "<group>"; };
@@ -791,7 +789,6 @@
 			children = (
 				1F37571429672AB6007D210A /* DummyData */,
 				1F8B1348297B34D7002EB8CF /* Bech32.swift */,
-				1FF69B2629AAA37D0070796B /* BechLnurl.swift */,
 				1F2F54ED2A02904E00B6D7E4 /* FastLoader.swift */,
 				1F75211A2986D45D00C43DF0 /* Importer.swift */,
 				1FC82F3129AE0C0700B81CE5 /* Mentions.swift */,
@@ -1236,7 +1233,6 @@
 			files = (
 				1FC82F3229AE0C0700B81CE5 /* Mentions.swift in Sources */,
 				1F2DE030298E5C5C00891D2E /* BlockListView.swift in Sources */,
-				1FF69B2729AAA37D0070796B /* BechLnurl.swift in Sources */,
 				1F756533296AE7910078474E /* NewRelayView.swift in Sources */,
 				1F96792F29BF613C00E78173 /* NewPrivateNoteSheet.swift in Sources */,
 				1F3C3F9629755D4C00E813FD /* NosturState.swift in Sources */,

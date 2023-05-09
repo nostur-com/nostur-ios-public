@@ -296,7 +296,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     }
     
     func didReceiveMessage(_ text:String) {
-//        print("🟠🟠🏎️🔌 RECEIVED: \(self.url): \(text)")
+//        print("🟠🟠🏎️🔌 RECEIVED: \(self.url): \(String(text.prefix(260)))")
         MessageParser.shared.socketReceivedMessage(text: text, relayUrl: self.url, client:client)
     }
     

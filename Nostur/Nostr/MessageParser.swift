@@ -6,7 +6,6 @@
 //
 
 import Foundation
-//import DequeModule
 
 class MessageParser {
     
@@ -62,7 +61,7 @@ class MessageParser {
                             }
                             else {
                                 self.messageBucket.addMessage(message)
-//                                print("🏎️🏎️ \(Date.now) addedRelayMessage")
+//                                print("🏎️🏎️ \(Date.now) addedRelayMessage \(message.message)")
                                 Importer.shared.addedRelayMessage.send()
                             }
                         }

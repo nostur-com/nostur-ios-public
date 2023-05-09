@@ -6,8 +6,6 @@
 //
 
 import Foundation
-//import SwiftyJSON
-// TODO: Remove SwiftyJSON code so we can remove package
 
 // Message ready to sent, with envelope  EVENT/REQ/CLOSE
 struct ClientMessage {
@@ -163,13 +161,13 @@ public struct RequestMessage {
     // FETCH A SINGLE EVENT
     static func getEvent(id:String, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"ids": ["\(id)"], "limit": 1}]
+["REQ", "\(subscriptionId ?? "S-" + UUID().uuidString)", {"ids": ["\(id)"], "limit": 1}]
 """
     }
     
     static func getEvents(ids:[String], limit:Int = 500, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"ids": \(JSON.shared.toString(ids)), "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? "SS-" + UUID().uuidString)", {"ids": \(JSON.shared.toString(ids)), "limit": \(limit)}]
 """
     }
     // FETCH A SINGLE EVENT AND REFERENCES
@@ -182,7 +180,7 @@ public struct RequestMessage {
     // FETCH A SINGLE EVENT AND REFERENCES
     static func getEventAndReferences(id:String, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"ids": ["\(id)"]}, {"#e": ["\(id)"]}]
+["REQ", "\(subscriptionId ?? "ER-"+UUID().uuidString)", {"ids": ["\(id)"]}, {"#e": ["\(id)"]}]
 """
     }
     
@@ -190,7 +188,7 @@ public struct RequestMessage {
     // For fetching events posted by people you follow
     // or reactions by others reacting to the people you follow
     static func getFollowingEvents(pubkeys:[String], limit:Int = 5000, subscriptionId:String? = nil, since:NTimestamp? = nil) -> String {
-        let sub = subscriptionId ?? ("TL-"+UUID().uuidString)
+        let sub = subscriptionId ?? ("F-"+UUID().uuidString)
         let pubs = fasterShort(pubkeys)
         if since != nil {
             return """
@@ -203,7 +201,7 @@ public struct RequestMessage {
     }
     // Same as above but pubkeys already in string
     static func getFollowingEvents(pubkeysString:String, limit:Int = 5000, subscriptionId:String? = nil, since:NTimestamp? = nil) -> String {
-        let sub = subscriptionId ?? ("TL-"+UUID().uuidString)
+        let sub = subscriptionId ?? ("F-"+UUID().uuidString)
         if since != nil {
             return """
 ["REQ", "\(sub)", {"authors": \(pubkeysString), "kinds": [1,5,6,9802], "since": \(since!.timestamp)}]
@@ -268,25 +266,25 @@ public struct RequestMessage {
     
     static func getAuthorContactsList(pubkey:String, limit:Int = 1, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [3], "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? "AC-" + UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [3], "limit": \(limit)}]
 """
     }
     
     static func getAuthorKind1(pubkey:String, limit:Int = 100, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [1], "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? "A1-" + UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [1], "limit": \(limit)}]
 """
     }
     
     static func getAuthorNotes(pubkey:String, limit:Int = 100, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [1,6,9802], "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? "AN-" + UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [1,6,9802], "limit": \(limit)}]
 """
     }
     
     static func getAuthorNotesUntil(pubkey:String, until:NTimestamp, limit:Int = 100, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [1,6,9802], "since": \(until.timestamp), "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? "ANU-" + UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [1,6,9802], "since": \(until.timestamp), "limit": \(limit)}]
 """
     }
     
@@ -334,7 +332,7 @@ public struct RequestMessage {
     
     static func getUserMetadata(pubkey:String, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [0], "limit": 1}]
+["REQ", "\(subscriptionId ?? "UM-" + UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [0], "limit": 1}]
 """
     }
     
@@ -361,7 +359,7 @@ public struct RequestMessage {
         
         if let since {
             return """
-    ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(fasterShort(pubkeys)), "kinds": [0], "since": \(since.timestamp)}]
+    ["REQ", "\(subscriptionId ?? "UM-" + UUID().uuidString)", {"authors": \(fasterShort(pubkeys)), "kinds": [0], "since": \(since.timestamp)}]
     """
         }
         
@@ -462,7 +460,7 @@ func fasterShort(_ pubkeys:[String], prefixLength:Int = 10) -> String {
 func req(_ rm:String, activeSubscriptionId:String? = nil) {
     SocketPool.shared.sendMessage(
         ClientMessage(type: .REQ, message: rm),
-        subscriptionId: activeSubscriptionId ?? UUID().uuidString
+        subscriptionId: activeSubscriptionId
     )
 }
 

@@ -6,15 +6,6 @@
 //
 
 import SwiftUI
-
-//
-//  NewAccountView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 07/01/2023.
-//
-
-import SwiftUI
 import secp256k1
 import Foundation
 

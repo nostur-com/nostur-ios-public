@@ -1,10 +1,4 @@
 //
-//  ProfileBadgesView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 02/03/2023.
-//
-//
 //  BadgesReceivedView.swift
 //  Nostur
 //
