@@ -33,7 +33,7 @@ struct NoteHeader: View {
                             .layoutPriority(2)
                     }
                     else {
-                        Text("Anon") // Name
+                        Text("...") // Name
                             .foregroundColor(.primary)
                             .fontWeight(.bold)
                             .lineLimit(1)
@@ -49,7 +49,7 @@ struct NoteHeader: View {
                     
                     if (singleLine) {
                         Group {
-                            Text("@\(event.contact?.username ?? "")").layoutPriority(1)
+                            Text("@\(event.contact?.username ?? "...")").layoutPriority(1)
                             Text(" · ") //
                             Ago(event.date).layoutPriority(1) //
                         }
@@ -67,7 +67,7 @@ struct NoteHeader: View {
 //                    .layoutPriority(1)
             }
             if (!singleLine) {
-                Text("@\(event.contact?.username ?? event.authorKey) · \(event.ago)") //
+                Text("@\(event.contact?.username ?? "...") · \(event.ago)") //
 //                        .font(.system(size: 14))
                     .foregroundColor(.secondary)
                     .lineLimit(1)

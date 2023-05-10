@@ -50,6 +50,7 @@ struct VPost: Identifiable, Equatable, Hashable {
     var threadPostsCount:Int
     var isTruncated = false
     var isRepost = false
+    var replyToId:String?
     var firstQuoteId:String?
     var firstQuote:[VPost]
     var linkPreviewURLs:[URL]
@@ -157,6 +158,7 @@ class VPostTransformer {
                 parentPosts: !skipParents! ? mainEvent.parentEvents.compactMap { toVPost($0, skipParents: true) } : [],
                 threadPostsCount: 1 + mainEvent.parentEvents.count,
                 isRepost: mainEvent.isRepost,
+                replyToId: mainEvent.replyToId,
                 firstQuoteId: mainEvent.firstQuoteId,
                 firstQuote: mainEvent.firstQuote != nil ? [toVPost(mainEvent.firstQuote!, skipParents: true)].compactMap { $0 } : [],
                 linkPreviewURLs: linkPreviewURLs,
@@ -243,6 +245,7 @@ class VPostTransformer {
                 parentPosts: !skipParents! ? mainEvent.parentEvents.compactMap { toVPost($0, skipParents: true, forceBg: forceBg) } : [],
                 threadPostsCount: 1 + mainEvent.parentEvents.count,
                 isRepost: privateEvent.isRepost,
+                replyToId: privateEvent.replyToId,
                 firstQuoteId: privateEvent.firstQuoteId,
                 firstQuote: privateEvent.firstQuote != nil ? [toVPost(privateEvent.firstQuote!, skipParents: true)].compactMap { $0 } : [],
                 linkPreviewURLs: linkPreviewURLs,

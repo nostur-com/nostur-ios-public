@@ -112,6 +112,8 @@ class LVM: NSObject, ObservableObject {
     
     var vPostLeafsOnScreenIds:Set<NSManagedObjectID> = [] // Should always be in sync with lvmState.vPostLeafs
     
+    var backlog = Backlog()
+    
     private func getAllObjectIds(_ vPosts:[VPost]) -> Set<NSManagedObjectID> {
         return vPosts.reduce(Set<NSManagedObjectID>()) { partialResult, vPost in
             partialResult.union(Set([vPost.objectID] + vPost.parentPosts.map { $0.objectID }))
@@ -128,14 +130,14 @@ class LVM: NSObject, ObservableObject {
     private func processPostsInBackground(_ events:[Event]) { // events are from viewContext
         let context = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" ? DataProvider.shared().viewContext : DataProvider.shared().bg // Should be use shared().bg instead??
         
-        // onScreenIds includes leafs and parents, so all posts.
-        let onScreenIds = getAllObjectIds(self.lvmState.vPostLeafs)
-        let currentVPostLeafs = self.lvmState.vPostLeafs // viewContext. First (0) is newest
-//        let followingKeys = NosturState.shared.followingPublicKeys
-        
-        context.perform { [unowned self] in
+        context.perform { [weak self] in
+            guard let self = self else { return }
+            
+            // onScreenIds includes leafs and parents, so all posts.
+            let onScreenIds = getAllObjectIds(self.lvmState.vPostLeafs)
+            let currentVPostLeafs = self.lvmState.vPostLeafs // viewContext. First (0) is newest
+            
             let transformer = VPostTransformer.bg
-//            let lastCreatedAt = currentVPostLeafs.last?.created_at ?? 0
             var newVPostLeafs:[VPost] = []
             var transformedObjectIds = Set<NSManagedObjectID>()
             for event in events {
@@ -147,9 +149,7 @@ class LVM: NSObject, ObservableObject {
                     continue
                 } // Skip if the post is already on screen
                 if let newVPostLeaf = transformer.toVPost(event, forceBg: true) {
-//                    guard newVPostLeaf.created_at > lastCreatedAt else { continue } // Skip if it is older than last leaf on screen
                     transformedObjectIds.insert(newVPostLeaf.objectID)
-//                    print("transformed: \(newVPostLeaf.id) \(newVPostLeaf.displayName) -- parentPosts: \(newVPostLeaf.parentPosts.count)")
                     newVPostLeafs.append(newVPostLeaf)
                 }
             }
@@ -157,87 +157,146 @@ class LVM: NSObject, ObservableObject {
             let added = newVPostLeafs
 //                .filter(notMuted) // TODO ADD BACK NOT MUtED IN RIGHT CONTEXT / THREAD
 //                .suffix(LVM_MAX_VISIBLE) // Don't add too many posts
-            
-            
-            
+
             guard transformedObjectIds.count > 0 else { return }
             print("Transformed \(transformedObjectIds.count) posts")
-//            self.lvmState.vPostLeafs = [newVPostLeafs.first!]
-//            return
+
             if currentVPostLeafs.count == 0 {
                 let leafThreads = self.renderLeafs(added) // Transforms seperate posts into threads, .id for each thread is leaf.id
                 
                 putEventsWithMissingContactsInEventRelationsQueue(leafThreadsToFlatVPosts(leafThreads))
                 
-                self.vPostLeafsOnScreenIds = getAllObjectIds(leafThreads)
-                
                 DispatchQueue.main.async {
+                    self.vPostLeafsOnScreenIds = self.getAllObjectIds(leafThreads)
                     self.lvmState.vPostLeafs = leafThreads
                     self.lvmCounter.count = self.itemsAfterLastAppeared < 5 ? 0 : self.itemsAfterLastAppeared
                 }
             }
             else {
                 
-                // FOR REALTIME, FETCH RELATED OF LAST 4 POSTS
-                if !alreadySkipped && transformedObjectIds.count > 0 && transformedObjectIds.count < 5 {
-//                    print("🏎️🏎️ \(Date.now) SKIP RENDER")
-                    fetchRelated(added.prefix(4))
-                    alreadySkipped = true // Skip this render, wait for the next one so we have the
-                    
-                    // DO NEXT TICK IN HALF TIME (5 instead of 10 seconds
-                    self.fetchFeedTimer?.invalidate()
-                    self.fetchFeedTimer = Timer.scheduledTimer(withTimeInterval: FETCH_FEED_INTERVAL/3, repeats: true) { [weak self] _ in
-                        guard let self = self else { return }
-                        self.fetchFeedTimerNextTick()
-                    }
-                    return
-                }
-                else {
-                    alreadySkipped = false
-                    // Back to normal ticks of 10 seconds
-                    self.fetchFeedTimer?.invalidate()
-                    self.fetchFeedTimer = Timer.scheduledTimer(withTimeInterval: FETCH_FEED_INTERVAL, repeats: true) { [weak self] _ in
-                        guard let self = self else { return }
-                        self.fetchFeedTimerNextTick()
-                    }
-                }
+//                // FOR REALTIME, FETCH RELATED OF LAST 4 POSTS
+//                if !alreadySkipped && transformedObjectIds.count > 0 && transformedObjectIds.count < 5 {
+////                    print("🏎️🏎️ \(Date.now) SKIP RENDER")
+//                    fetchRelated(added.prefix(4))
+//                    alreadySkipped = true // Skip this render, wait for the next one so we have the
+//
+//                    // DO NEXT TICK IN HALF TIME (5 instead of 10 seconds
+//                    self.fetchFeedTimer?.invalidate()
+//                    self.fetchFeedTimer = Timer.scheduledTimer(withTimeInterval: FETCH_FEED_INTERVAL/3, repeats: true) { [weak self] _ in
+//                        guard let self = self else { return }
+//                        self.fetchFeedTimerNextTick()
+//                    }
+//                    return
+//                }
+//                else {
+//                    alreadySkipped = false
+//                    // Back to normal ticks of 10 seconds
+//                    self.fetchFeedTimer?.invalidate()
+//                    self.fetchFeedTimer = Timer.scheduledTimer(withTimeInterval: FETCH_FEED_INTERVAL, repeats: true) { [weak self] _ in
+//                        guard let self = self else { return }
+//                        self.fetchFeedTimerNextTick()
+//                    }
+//                }
+
+                let newLeafThreadsWithMissingParents = self.renderNewLeafs(added, onScreen:self.lvmState.vPostLeafs)
                 
-                
-                
-                let newLeafThreads = self.renderNewLeafs(added, onScreen:self.lvmState.vPostLeafs)
-                putEventsWithMissingContactsInEventRelationsQueue(leafThreadsToFlatVPosts(newLeafThreads))
-                // leafs+parents count
-                let addedCount = newLeafThreads.reduce(0, { partialResult, vPost in
-                    return partialResult + vPost.threadPostsCount
-                })
-                
-                // clean up a bit if needed
-                if self.lvmState.vPostLeafs.count > LVM_MAX_VISIBLE && self.lvmState.isAtTop {
-                    // dont drop all
-                    let dropLimit = max(0,(self.lvmState.vPostLeafs.count - 10)) // also not negative
-                    let dropCount = min(newLeafThreads.count,dropLimit)
-                    let newVPostLeafs = newLeafThreads + self.lvmState.vPostLeafs.dropLast(dropCount)
-                    self.vPostLeafsOnScreenIds = getAllObjectIds(newVPostLeafs)
-                    DispatchQueue.main.async {
-                        self.lvmState.vPostLeafs = newVPostLeafs
-                    }
-                    print("Removed \(dropCount) from the end")
+                let (danglers, newLeafThreads) = extractDanglingReplies(newLeafThreadsWithMissingParents)
+//                self.needsReplyTo.append(contentsOf: danglers)
+//                print("🟠🟠 danglers: \(danglers.count)")
+                if danglers.count > 0 {
+                    fetchParents(danglers)
                 }
-                else {
-                    self.vPostLeafsOnScreenIds = onScreenIds.union(getAllObjectIds(newLeafThreads))
-                    DispatchQueue.main.async {
-                        self.lvmState.vPostLeafs.insert(contentsOf: newLeafThreads, at: 0)
-                    }
-                }
-                
-                if !self.lvmState.isAtTop || !SettingsStore.shared.autoScroll {
-                    DispatchQueue.main.async {
-                        self.lvmCounter.count += addedCount
-                    }
-                }
+                putNewThreadsOnScreen(newLeafThreads)
                 
             }
         }
+    }
+    
+    func safeInsert(_ vPosts:[VPost]) {
+        let onScreenIds = self.lvmState.vPostLeafs.map { $0.objectID }
+        let onlyNew = vPosts.filter { !onScreenIds.contains($0.objectID) }
+        self.lvmState.vPostLeafs.insert(contentsOf: onlyNew, at: 0)
+    }
+    
+    func putNewThreadsOnScreen(_ newLeafThreadsWithDuplicates:[VPost]) {
+        let onScreenIds = getAllObjectIds(self.lvmState.vPostLeafs)
+        let newLeafThreads = newLeafThreadsWithDuplicates.filter { !onScreenIds.contains($0.objectID) }
+        let diff = newLeafThreadsWithDuplicates.count - newLeafThreads.count
+        if diff > 0 {
+            print("putNewThreadsOnScreen: skipped \(diff) duplicates")
+        }
+        
+        putEventsWithMissingContactsInEventRelationsQueue(leafThreadsToFlatVPosts(newLeafThreads))
+        // leafs+parents count
+        let addedCount = newLeafThreads.reduce(0, { partialResult, vPost in
+            return partialResult + vPost.threadPostsCount
+        })
+        
+        // clean up a bit if needed
+        if self.lvmState.vPostLeafs.count > LVM_MAX_VISIBLE && self.lvmState.isAtTop {
+            // dont drop all
+            let dropLimit = max(0,(self.lvmState.vPostLeafs.count - 10)) // also not negative
+            let dropCount = min(newLeafThreads.count,dropLimit)
+            let newVPostLeafs = newLeafThreads + self.lvmState.vPostLeafs.dropLast(dropCount)
+            DispatchQueue.main.async {
+                self.safeInsert(newVPostLeafs)
+            }
+            print("Removed \(dropCount) from the end")
+        }
+        else {
+            DispatchQueue.main.async {
+                self.safeInsert(newLeafThreads)
+            }
+        }
+        
+        if !self.lvmState.isAtTop || !SettingsStore.shared.autoScroll {
+            DispatchQueue.main.async {
+                self.lvmCounter.count += addedCount
+            }
+        }
+    }
+    
+    func fetchParents(_ danglers:[VPost]) {
+        danglers.forEach { vPost in
+            EventRelationsQueue.shared.addAwaitingEvent(vPost.event)
+        }
+        
+        let danglingFetchTask = ReqTask(
+            reqCommand: { (taskId) in
+//                print("\(taskId) 🟠🟠 danglingFetchTask.fetch() - \(danglers.count)")
+                req(RM.getEvents(ids: danglers.compactMap { $0.replyToId }, subscriptionId: taskId))
+            },
+            processResponseCommand: { [weak self] (taskId) in
+//                print("\(taskId) 🟠🟠🟠 processResponseCommand")
+                guard let self = self else { print("\(taskId) 🟠🟠🟠 processResponseCommand RETURN!"); return }
+                
+//                print("🟢🟢🟢🟢🟢🟢 dangling before \(danglers.count)")
+//                print("🟢🟢🟢🟢🟢🟢 found \(danglers.compactMap { $0.event.replyTo_ }.count ) parents")
+                let danglingEvents = danglers.map { $0.event }
+                self.setUnorderedEvents(events: self.filterMutedWords(danglingEvents))
+            },
+            timeoutCommand: { [weak self] (taskId) in
+                guard let self = self else { return }
+//                print("🟠🟠 timeout.. should just render whatever \(danglers.compactMap { $0.event.replyTo_ == nil }.count)")
+                self.putNewThreadsOnScreen(danglers)
+            })
+
+        backlog.add(danglingFetchTask)
+        danglingFetchTask.fetch()
+    }
+    
+    func extractDanglingReplies(_ newLeafThreads:[VPost]) -> (danglers:[VPost], threads:[VPost]) {
+        var danglers:[VPost] = []
+        var threads:[VPost] = []
+        newLeafThreads.forEach { vPost in
+            if vPost.replyToId != nil && vPost.parentPosts.count == 0 {
+                danglers.append(vPost)
+            }
+            else {
+                threads.append(vPost)
+            }
+        }
+        return (danglers:danglers, threads:threads)
     }
     
     func leafThreadsToFlatVPosts(_ leafThreads:[VPost]) -> [VPost] {
@@ -330,56 +389,6 @@ class LVM: NSObject, ObservableObject {
         return oldThreadsRemoved
             .sorted(by: { $0.created_at > $1.created_at })
     }
-    
-//    func renderNewLeafs(_ added:[VPost], onScreen:[VPost]) -> [VPost] {
-//        let newSortedByLongest = added.sorted(by: { $0.parentPosts.count > $1.parentPosts.count })
-//
-//        var onScreenIds = onScreen.flatMap {
-//            if $0.isRepost {
-//                return [$0.id] + [$0.firstQuoteId]
-//            }
-//            else {
-//                return [$0.id] + $0.parentPosts.map { $0.id }
-//            }
-//        }
-//
-//        var newRenderedPosts = [VPost]()
-//        for post in newSortedByLongest {
-//            if post.isRepost && post.firstQuoteId != nil && onScreenIds.contains(post.firstQuoteId!) {
-//                // Reposted post already on screen
-//                continue
-//            }
-//            guard !onScreenIds.contains(post.id) else { continue } // Post is already in screen
-//
-//            guard !post.isRepost else {
-//                // Render a repost, but track firstQuoteId instead of .id in renderedIds
-//                if let firstQuoteId = post.firstQuoteId {
-//                    onScreenIds.append(firstQuoteId)
-//                    onScreenIds.append(post.id)
-//                    newRenderedPosts.append(post)
-//                }
-//                continue
-//            }
-//
-//            guard post.parentPosts.count > 0 else {
-//                // Render a root post, that has no parents
-//                onScreenIds.append(post.id)
-//                newRenderedPosts.append(post)
-//                continue
-//            }
-//            // render thread, truncated
-//            var truncatedPost = post
-//            if let replyToId = post.parentPosts.last?.id { // always keep at least replyingTo
-//                truncatedPost.parentPosts = post.parentPosts.filter { $0.id == replyToId || !onScreenIds.contains($0.id) }
-//            }
-//            truncatedPost.isTruncated = post.parentPosts.count > truncatedPost.parentPosts.count
-//            truncatedPost.threadPostsCount = 1 + truncatedPost.parentPosts.count
-//            onScreenIds.append(contentsOf: [truncatedPost.id] + truncatedPost.parentPosts.map { $0.id })
-//            newRenderedPosts.append(truncatedPost)
-//        }
-//        return newRenderedPosts
-//            .sorted(by: { $0.parentPosts.first?.created_at ?? $0.created_at > $1.parentPosts.first?.created_at ?? $1.created_at })
-//    }
     
     var lvmState:LVMState
     var lvmCounter = LVMCounter()
@@ -520,8 +529,9 @@ extension LVM {
             guard let self = self else { return }
             self.fetchFeedTimerNextTick()
         }
+        let selectedSubtab = (UserDefaults.standard.string(forKey: "selected_subtab") ?? "Unknown")
         
-        guard viewIsVisible else {
+        guard viewIsVisible || self.subscriptionId == selectedSubtab else {
             print("🏎️🏎️ \(Date.now) NOT VISIBLE, NOT RESTORING: \(self.subscriptionId)")
             return
         }
@@ -548,6 +558,23 @@ extension LVM {
         showOwnNewPostsImmediately()
         trackPubkeysChanged()
         performLocalFetchAfterImport()
+        processIncomingParents()
+    }
+    
+    func processIncomingParents() {
+        receiveNotification(.importedMessagesFromSubscriptionIds)
+            .sink { [weak self] notification in
+                guard let self = self else { return }
+                let importedNotification = notification.object as! ImportedNotification
+//                print("🟠🟠 notif \(importedNotification.subscriptionIds.joined(separator: ",")) ")
+//                print("🟠🟠 backlog tasks: \(self.backlog.tasks.count) - \(self.subscriptionId)")
+                let reqTasks = self.backlog.tasks(with: importedNotification.subscriptionIds)
+//                print("🟠🟠 reqTasks to process: \(reqTasks.count)")
+                reqTasks.forEach { task in
+                    task.process()
+                }
+            }
+            .store(in: &subscriptions)
     }
     
     func performLocalFetchAfterImport() {

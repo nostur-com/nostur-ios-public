@@ -271,6 +271,23 @@ struct ImportedNotification {
 class Backlog {
     
     var tasks = Set<ReqTask>()
+    var timer:Timer?
+    
+    init() {
+        timer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] timer in
+            guard let self = self else { return }
+            self.removeOldTasks()
+        }
+    }
+    
+    private func removeOldTasks() {
+        tasks.forEach { task in
+            if task.createdAt.timeIntervalSinceNow < -30 {
+                task.onTimeout()
+                tasks.remove(task)
+            }
+        }
+    }
     
     public func add(_ task:ReqTask) {
         tasks.insert(task)
@@ -305,11 +322,23 @@ struct ReqTask: Identifiable, Hashable {
     
     let reqCommand:(_ taskId:String) -> Void
     let processResponseCommand:(_ taskId:String) -> Void
+    let timeoutCommand:((_ taskId:String) -> Void)?
+    
+    init(reqCommand: @escaping (_: String) -> Void, processResponseCommand: @escaping (_: String) -> Void, timeoutCommand: ( (_: String) -> Void)? = nil) {
+        self.reqCommand = reqCommand
+        self.processResponseCommand = processResponseCommand
+        self.timeoutCommand = timeoutCommand
+    }
     
     public func fetch() {
         self.reqCommand(subscriptionId)
     }
     public func process() {
         self.processResponseCommand(subscriptionId)
+    }
+    
+    public func onTimeout() {
+        print("🟠🟠 removing task \(subscriptionId) after timeout")
+        self.timeoutCommand?(subscriptionId)
     }
 }
