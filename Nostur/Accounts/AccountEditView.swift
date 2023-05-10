@@ -299,7 +299,7 @@ extension AccountEditView {
                 print(newKind0EventSigned.wrappedEventJson())
                 
                 
-                _ = Event.saveEvent(event: newKind0EventSigned)
+                _ = Event.saveEventFromMain(event: newKind0EventSigned)
                 Contact.saveOrUpdateContact(event: newKind0EventSigned)
                 DataProvider.shared().bgSave()
                 // broadcast to relays

@@ -804,6 +804,13 @@ extension Event {
         }
     }
     
+    static func saveEventFromMain(event:NEvent, relay:String? = nil) -> Event {
+        let context = DataProvider.shared().bg
+        return context.performAndWait {
+            Event.saveEvent(event: event, relay: relay)
+        }
+    }
+    
     static func saveEvent(event:NEvent, relay:String? = nil) -> Event {
         // maybe save event should always be in background..
 //        if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {

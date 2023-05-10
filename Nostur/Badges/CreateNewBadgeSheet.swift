@@ -68,7 +68,7 @@ struct CreateNewBadgeSheet: View {
 
         do {    
             guard let newBadgeSigned = try? ns.signEvent(newBadge) else { throw "could not create newBadgeSigned " }
-            _ = Event.saveEvent(event: newBadgeSigned)
+            _ = Event.saveEventFromMain(event: newBadgeSigned)
             DataProvider.shared().bgSave()
 //            print(newBadgeSigned.wrappedEventJson())
             up.publishNow(newBadgeSigned)
