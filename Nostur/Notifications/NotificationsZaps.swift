@@ -204,6 +204,7 @@ struct NotificationsZaps: View {
                     fl.loadNewerEvents(1500, taskId: taskId)
                 })
 
+            backlog.add(fetchNewerTask)
             fetchNewerTask.fetch()
         }
         .onReceive(receiveNotification(.newZaps)) { _ in

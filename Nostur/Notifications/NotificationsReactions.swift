@@ -148,7 +148,8 @@ struct NotificationsReactions: View {
                       )
                     fl.loadNewerEvents(5000, taskId: taskId)
                 })
-
+            
+            backlog.add(fetchNewerTask)
             fetchNewerTask.fetch()
             
             fixReactionsWithMissingRelation()

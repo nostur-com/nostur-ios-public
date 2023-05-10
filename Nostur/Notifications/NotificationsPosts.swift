@@ -113,6 +113,7 @@ struct NotificationsPosts: View {
                     fl.loadNewerBG(250, taskId: taskId)
                 })
 
+            backlog.add(fetchNewerTask)
             fetchNewerTask.fetch()
         }
         .onReceive(receiveNotification(.newMentions)) { _ in
