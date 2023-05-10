@@ -310,7 +310,10 @@ struct ProfileView: View {
             }
         }
         .onReceive(receiveNotification(.newFollowingListFromRelay)) { notification in
-            contact.objectWillChange.send()
+            let nEvent = notification.object as! NEvent
+            if nEvent.publicKey == contact.pubkey {
+                contact.objectWillChange.send()
+            }
         }
         .task {
 //            return
