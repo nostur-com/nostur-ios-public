@@ -352,11 +352,11 @@ extension Contact : Identifiable {
                 contactsInThisEvent.append(contact!)
                 continue
             }
-//            let newContact = Contact(context: context)
-//            newContact.pubkey = pTag
-//            newContact.metadata_created_at = 0
-//            newContact.updated_at = 0
-//            contactsInThisEvent.append(newContact)
+            let newContact = Contact(context: context)
+            newContact.pubkey = pTag
+            newContact.metadata_created_at = 0
+            newContact.updated_at = 0
+            contactsInThisEvent.append(newContact)
         }
         
         return contactsInThisEvent

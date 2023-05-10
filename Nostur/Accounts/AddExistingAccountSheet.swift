@@ -95,13 +95,14 @@ struct AddExistingAccountSheet: View {
         account.publicKey = keys.publicKeyHex()
         account.privateKey = keys.privateKeyHex()
         
-        let ot = OnboardingTracker.shared
-        ot.startOnboarding(pubkey: account.publicKey)
+        
+//        let ot = OnboardingTracker.shared
+//        ot.startOnboarding(pubkey: account.publicKey)
         
         
-        // 1. Prefill from cached event
-        Account.preFillReadOnlyAccountInfo(account: account, context: viewContext, forceOverwrite: true)
-        Account.preFillReadOnlyAccountFollowing(account: account, context: viewContext)
+//        // 1. Prefill from cached event
+//        Account.preFillReadOnlyAccountInfo(account: account, context: viewContext, forceOverwrite: true)
+//        Account.preFillReadOnlyAccountFollowing(account: account, context: viewContext)
         
         // Remove existing metadata events, so can proper parse again from Importers. Else get filtered by duplicate filter
         if let contactEvents = Event.setMetaDataEvents(byAuthorPubkey: account.publicKey, context: viewContext) {
@@ -120,17 +121,17 @@ struct AddExistingAccountSheet: View {
 //        ns.objectWillChange.send()
         ns.setAccount(account: account)
         ns.onBoardingIsShown = false
-        // 2. But also check if there are newer events
-        if (!ot.didFetchKind0 || !ot.didFetchKind3) {
-            let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: account.publicKey))
-            SocketPool.shared.sendMessage(message)
+        
+        do {
+            try NewOnboardingTracker.shared.start(pubkey: account.publicKey)
+        }
+        catch {
+            print("🔴🔴 Failed to start onboarding")
         }
     }
     
     func addExistingReadOnlyAccount(pubkey:String) {
         Importer.shared.existingIds.removeAll() // Because else we dont fetch new info... if we just fetched it before, maybe during onboarding
-        let ot = OnboardingTracker.shared
-        ot.startOnboarding(pubkey: pubkey)
         let account = Account(context: viewContext)
         account.id = UUID()
         account.createdAt = Date()
@@ -140,8 +141,8 @@ struct AddExistingAccountSheet: View {
         
         
         // 1. Prefill from cached event
-        Account.preFillReadOnlyAccountInfo(account: account, context: viewContext, forceOverwrite: true)
-        Account.preFillReadOnlyAccountFollowing(account: account, context: viewContext)
+//        Account.preFillReadOnlyAccountInfo(account: account, context: viewContext, forceOverwrite: true)
+//        Account.preFillReadOnlyAccountFollowing(account: account, context: viewContext)
         
         // Remove existing metadata events, so can proper parse again from Importers. Else get filtered by duplicate filter
         if let contactEvents = Event.setMetaDataEvents(byAuthorPubkey: account.publicKey, context: viewContext) {
@@ -160,17 +161,12 @@ struct AddExistingAccountSheet: View {
         ns.objectWillChange.send()
         ns.setAccount(account: account)
         ns.onBoardingIsShown = false
-        // 2. But also check if there are newer events
-        if (!ot.didFetchKind0 || !ot.didFetchKind3) {
-            let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: pubkey))
-            SocketPool.shared.sendMessage(message)
-            print("🟠🟠🟠 1")
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: pubkey))
-                SocketPool.shared.sendMessage(message)
-                print("🟠🟠🟠 1")
-            }
+        
+        do {
+            try NewOnboardingTracker.shared.start(pubkey: account.publicKey)
+        }
+        catch {
+            print("🔴🔴 Failed to start onboarding")
         }
     }
 }

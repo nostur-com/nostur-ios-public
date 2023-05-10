@@ -298,11 +298,11 @@ class Backlog {
     }
     
     public func task(with subscriptionId:String) -> ReqTask? {
-        tasks.first(where: { $0.id == subscriptionId })
+        tasks.first(where: { $0.subscriptionId == subscriptionId })
     }
     
     public func tasks(with subscriptionIds:Set<String>) -> [ReqTask] {
-        return tasks.filter { subscriptionIds.contains($0.id) }
+        return tasks.filter { subscriptionIds.contains($0.subscriptionId) }
     }
 }
 
@@ -316,15 +316,17 @@ struct ReqTask: Identifiable, Hashable {
         hasher.combine(id)
     }
     
+    var prefix:String? = nil
     let createdAt = Date.now
     let id = UUID().uuidString
-    var subscriptionId:String { id }
+    var subscriptionId:String { (prefix ?? "") + id }
     
     let reqCommand:(_ taskId:String) -> Void
     let processResponseCommand:(_ taskId:String) -> Void
     let timeoutCommand:((_ taskId:String) -> Void)?
     
-    init(reqCommand: @escaping (_: String) -> Void, processResponseCommand: @escaping (_: String) -> Void, timeoutCommand: ( (_: String) -> Void)? = nil) {
+    init(prefix:String? = nil, reqCommand: @escaping (_: String) -> Void, processResponseCommand: @escaping (_: String) -> Void, timeoutCommand: ( (_: String) -> Void)? = nil) {
+        self.prefix = prefix
         self.reqCommand = reqCommand
         self.processResponseCommand = processResponseCommand
         self.timeoutCommand = timeoutCommand

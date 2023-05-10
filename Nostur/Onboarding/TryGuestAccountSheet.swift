@@ -36,42 +36,12 @@ struct TryGuestAccountSheet: View {
         }
         .frame(maxWidth: 300)
         .onAppear {
-            // prepare guest account in background
-
-//            let ar = Account.fetchRequest()
-//            ar.entity = Account.entity()
-//            ar.predicate = NSPredicate(format: "publicKey == %@", NosturState.GUEST_ACCOUNT_PUBKEY)
-            
-            var account:Account? = nil
-            account = try? Account.fetchAccount(publicKey: NosturState.GUEST_ACCOUNT_PUBKEY, context: viewContext)
-            
-            if (account == nil) {
-                account = Account(context: viewContext)
-                account!.id = UUID()
-                account!.createdAt = Date()
-                account!.createdAt = Date()
-                account!.display_name = "Nostur Rookie"
-                account!.name = "NosturRookie"
-                account!.about = "Just trying things out"
-                account!.publicKey = NosturState.GUEST_ACCOUNT_PUBKEY
-                didCreate = true
+            if let account = try? Account.fetchAccount(publicKey: NosturState.GUEST_ACCOUNT_PUBKEY, context: viewContext) {
+                ns.setAccount(account: account)
             }
-            
-            Importer.shared.existingIds.removeAll() // Because else we dont fetch new info... if we just fetched it before, maybe during onboarding
-            Account.preFillReadOnlyAccountInfo(account: account!, context: viewContext, forceOverwrite: true)
-            Account.preFillReadOnlyAccountFollowing(account: account!, context: viewContext)
-            ns.setAccount(account: account!)
-            let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: account!.publicKey))
-            sp.sendMessage(message)
         }
         .onDisappear {
-            // Did not continue with guest account, so undo the created account from .onAppear:
-            if (!letsGo && didCreate && ns.accounts.last != nil) {
-                viewContext.delete(ns.accounts.last!)
-                try! viewContext.save()
-            }
-            else if (letsGo) {
-                try! viewContext.save()
+            if (letsGo) {
                 ns.onBoardingIsShown = false
                 dismiss()
             }
@@ -81,7 +51,7 @@ struct TryGuestAccountSheet: View {
     }
 }
 
-struct TryGuesTAccountSheet_Previews: PreviewProvider {
+struct TryGuestAccountSheet_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
             TryGuestAccountSheet()

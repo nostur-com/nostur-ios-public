@@ -38,7 +38,7 @@ class LVMState: ObservableObject {
 //@MainActor
 class LVM: NSObject, ObservableObject {
     
-    let ot:OnboardingTracker = .shared
+    let ot:NewOnboardingTracker = .shared
     
     let FETCH_FEED_INTERVAL = 9.0
     
@@ -463,57 +463,39 @@ class LVM: NSObject, ObservableObject {
 //            print("🏎️🏎️ NOT VISIBLE \(self.subscriptionId)")
             return
         }
-        
 //        performLocalFetch()
-        
         guard !MessageParser.shared.messageBucket.isImporting else { print("⏳ Still importing, new fetch skipped."); return }
         
-        
-        if (ot.isOnboarding && self.lvmState.vPostLeafs.count > 0) {
-            ot.didStartOnboarding = false
-        }
-        
-        if (ot.isOnboarding && self.pubkey == ot.pubkey && ot.didFetchKind3 && !ot.didFillTimeline) {
-            fetchEvents(pubkeys: Set(ot.followingKeys), amount: 150, subscriptionId: self.subscriptionId)
-            fetchProfiles(pubkeys: Set(ot.followingKeys), subscriptionId: "PROFILES")
+        if !UserDefaults.standard.bool(forKey: "firstTimeCompleted") {
             DispatchQueue.main.async {
                 UserDefaults.standard.set(true, forKey: "firstTimeCompleted")
             }
         }
-        else if (!ot.isOnboarding) {
+        
+//        wtfFetch(subscriptionId: "WTF")
+        fetchRealtimeSinceNow(subscriptionId: self.subscriptionId) // Subscription should stay active
+        
+        if lvmState.vPostLeafs.count == 0 { // Nothing on screen
+            fetchNewestUntilNow(subscriptionId: self.subscriptionId) // This one closes after EOSE
+//            fetchProfiles(pubkeys: self.pubkeys, subscriptionId: "Profiles")
+        }
+        else { // Already on screen, app probably returned from from background
+            // Catch up?
             let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 4)  // 4 hours  ago
+
+            // Continue from first (newest) on screen?
+            let since = (self.lvmState.vPostLeafs.first?.created_at ?? hoursAgo) - (60 * 15) // (take 15 minutes earlier to not mis out of sync posts)
+            let ago = Date(timeIntervalSince1970: Double(since)).agoString
+
             DispatchQueue.main.async {
-                // Why not just continue from first (newest) on screen?
-                let since = (self.lvmState.vPostLeafs.first?.created_at ?? hoursAgo) - (60 * 15) // (take 15 minutes earlier to not mis out of sync posts)
-                let ago = Date(timeIntervalSince1970: Double(since)).agoString
-                
                 if (!self.didCatchup) {
-                    // THIS SUBSCRIPTION WILL STAY ACTIVE:
-//                    print("🏎️🏎️ \(Date.now) fetchFeedTimerNexTick - fetchEvents 11")
-                    fetchEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: self.subscriptionId)
-                
-                    
-                    
-                    
                     // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
                     DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(8)) {
-                        fetchEvents(pubkeysString: self.pubkeysPrefixString, amount: 5000, since: since, subscriptionId: "\(self.subscriptionId)-SINCE-\(ago)")
+                        self.fetchNewerSince(subscriptionId: "\(self.subscriptionId)-\(ago)", since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
                         fetchProfiles(pubkeys: self.pubkeys, subscriptionId: "Profiles")
                     }
                     self.didCatchup = true
                 }
-                else {
-                    // THIS SUBSCRIPTION WILL STAY ACTIVE:
-//                    print("🏎️🏎️ \(Date.now) fetchFeedTimerNexTick - fetchEvents")
-                    // "since" breaks realtime events? no new posts after received all...
-                    fetchEvents(pubkeysString: self.pubkeysPrefixString, since: since, subscriptionId: "\(self.subscriptionId)-SINCE-\(ago)")
-                    
-                    DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(8)) {
-                        fetchEvents(pubkeysString: self.pubkeysPrefixString, amount: 20, subscriptionId: "\(self.subscriptionId)")
-                    }
-                }
-//                 cutOff doesnt work well, since hits with some time ago limit (500)?
-//                fetchEvents(pubkeys: self.pubkeys, subscriptionId: self.id)
             }
         }
     }
@@ -523,6 +505,7 @@ class LVM: NSObject, ObservableObject {
 extension LVM {
     
     func restoreSubscription() {
+        self.didCatchup = false
         // Always try to restore timer
         self.fetchFeedTimer?.invalidate()
         self.fetchFeedTimer = Timer.scheduledTimer(withTimeInterval: FETCH_FEED_INTERVAL, repeats: true) { [weak self] _ in
@@ -537,15 +520,25 @@ extension LVM {
         }
         
         print("🏎️🏎️ \(Date.now) restoreSubscription \(self.subscriptionId)")
+        fetchRealtimeSinceNow(subscriptionId: self.subscriptionId)
+        print("🏎️🏎️ \(Date.now) fetchRealtimeSinceNow() ")
+        
         let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 4)  // 4 hours  ago
+
+        // Continue from first (newest) on screen?
         let since = (self.lvmState.vPostLeafs.first?.created_at ?? hoursAgo) - (60 * 15) // (take 15 minutes earlier to not mis out of sync posts)
         let ago = Date(timeIntervalSince1970: Double(since)).agoString
-        fetchEvents(pubkeysString: self.pubkeysPrefixString, since: since, subscriptionId: "\(self.subscriptionId)-SINCE-\(ago)")
-        print("🏎️🏎️ \(Date.now) restoreSubscription \(self.subscriptionId)-SINCE-\(ago)")
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(8)) {
-            fetchEvents(pubkeysString: self.pubkeysPrefixString, amount: 20, subscriptionId: "\(self.subscriptionId)")
-            print("🏎️🏎️ \(Date.now) restoreSubscription + 8 seconds \(self.subscriptionId)")
+
+        DispatchQueue.main.async {
+            if (!self.didCatchup) {
+                // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
+                DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(8)) {
+                    self.fetchNewerSince(subscriptionId: "\(self.subscriptionId)-\(ago)", since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
+                        fetchProfiles(pubkeys: self.pubkeys, subscriptionId: "Profiles")
+                    print("🏎️🏎️ \(Date.now) restoreSubscription + 8 seconds fetchNewerSince() \(self.subscriptionId)")
+                }
+                self.didCatchup = true
+            }
         }
     }
     

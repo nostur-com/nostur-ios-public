@@ -15,14 +15,14 @@ struct Maintenance {
     // time out... "wss://nostr.fmt.wiz.biz"
     // too many subscriptions "wss://relay.snort.social"
     
-    static func firstTimeStartup(context:NSManagedObjectContext) {
+    
+    static func ensureBootstrapRelaysExist(context:NSManagedObjectContext) {
         context.performAndWait {
             let r = Relay.fetchRequest()
             if let relaysCount = try? context.fetch(r).count {
                 var relays:[Relay] = []
-                let ot = OnboardingTracker.shared
+                
                 if (relaysCount == 0) {
-                    ot.startOnboarding(pubkey: NosturState.GUEST_ACCOUNT_PUBKEY)
                     for url in BOOTSTRAP_RELAYS {
                         let bootstrapRelay = Relay(context: context)
                         bootstrapRelay.read = url == "wss://nostr.mutinywallet.com" ? false : true // this one is write only
@@ -31,29 +31,13 @@ struct Maintenance {
                         bootstrapRelay.url = url
                         relays.append(bootstrapRelay)
                     }
-                    
-                    let account = Account(context: context)
-                    account.id = UUID()
-                    account.createdAt = Date()
-                    account.createdAt = Date()
-                    account.display_name = "Nostur Rookie"
-                    account.name = "NosturRookie"
-                    account.about = "Just trying things out"
-                    account.publicKey = NosturState.GUEST_ACCOUNT_PUBKEY
-                }
-                
-                let sp = SocketPool.shared
-                // CONNECT TO RELAYS
-                for relay in relays {
-                    _ = sp.addSocket(relayId: relay.objectID, url: relay.url!, read:relay.read, write: relay.write)
-                }
-                
-                if (!ot.didFetchKind0 || !ot.didFetchKind3) {
-                    let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: NosturState.GUEST_ACCOUNT_PUBKEY))
-                    SocketPool.shared.sendMessage(message)
+                    let sp = SocketPool.shared
+                    for relay in relays { // CONNECT TO RELAYS
+                        _ = sp.addSocket(relayId: relay.objectID, url: relay.url!, read:relay.read, write: relay.write)
+                    }
                 }
             }
-            try! context.save()
+            
         }
     }
     

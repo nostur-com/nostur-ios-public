@@ -62,7 +62,6 @@ class Importer {
             }
             return
         }
-        let ot = OnboardingTracker.shared
         
         messageBucket.isImporting = true
         
@@ -148,56 +147,11 @@ class Importer {
                             // TODO: Need objectWillChange.send() here or not?
                             let pTags = event.pTags()
                             Task { @MainActor in
-                                //                                NosturState.shared.objectWillChange.send()
+//                                NosturState.shared.objectWillChange.send()
                                 NosturState.shared.rawExplorePubkeys = Set(pTags)
                             }
                         }
-                        
-                        if (ot.isOnboarding && ot.pubkey == event.publicKey) { // TODO: skip if first time completed
-                            print("🟠🟠🟠 3")
-                            ot.didFetchKind3 = true
-                            ot.followingKeys = event.pTags()
-                            print("✈️✈️✈️ ONBORADING SPEED UP FETCHING P's FROM 3")
-                            let fetchPs = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: event.pTags()))
-                            SocketPool.shared.sendMessage(fetchPs)
-                            
-                            print("✈️✈️✈️ ONBORADING SPEED UP FETCHING 0,1,6 FROM P's")
-                            let fetchTimeline = ClientMessage(type: .REQ, message: RequestMessage.getFollowingEvents(pubkeys: event.pTags()))
-                            
-                            SocketPool.shared.sendMessage(fetchTimeline)
-                            //                            print("✈️✈️✈️ ONBORADING SPEED UP FETCHING 1,6,7,9735 FROM E's")
-                            //                            let fetchReferences = ClientMessage(type: .REQ, message: RequestMessage.getEventReferences(ids: ????))
-                            Account.preFillReadOnlyAccountFollowing(event: event, context: context, forceOverwrite: true)
-                            
-                            // Load existing relays if found in .content
-                            if !event.content.isEmpty, let contentData = event.content.data(using: .utf8), AccountManager.shared.hasPrivateKey(pubkey: event.publicKey) {
-                                do {
-                                    let decoder = JSONDecoder()
-                                    let relays = try decoder.decode(Kind3Relays.self, from: contentData)
-                                    if relays.relays.count > 0 {
-                                        print("✈️✈️✈️ found \(relays.relays.count) existing relays")
-                                    }
-                                    relays.relays.forEach { relay in
-                                        let fr = Relay.fetchRequest()
-                                        fr.predicate = NSPredicate(format: "url == %@", relay.url.lowercased())
-                                        print("✈️✈️✈️ adding \(relay.url) ")
-                                        if let existingRelay = try? context.fetch(fr).first {
-                                            existingRelay.read = relay.readWrite.read ?? false
-                                            existingRelay.write = relay.readWrite.write ?? false
-                                        }
-                                        else {
-                                            let newRelay = Relay(context: context)
-                                            newRelay.url = relay.url.lowercased()
-                                            newRelay.read = relay.readWrite.read ?? false
-                                            newRelay.write = relay.readWrite.write ?? false
-                                        }
-                                    }
-                                } catch {
-                                    print("Error decoding JSON: \(error)")
-                                }
-                            }
-                        }
-                        
+
                         let n = event
                         DispatchQueue.main.async {
                             // TODO: Use notifications like this in importer more, to update active views
@@ -217,11 +171,6 @@ class Importer {
                     
                     if event.kind == .setMetadata {
                         Contact.saveOrUpdateContact(event: event)
-                        if (ot.isOnboarding && ot.pubkey == event.publicKey) {
-                            print("🟠🟠🟠 2")
-                            Account.preFillReadOnlyAccountInfo(event: event, context: context, forceOverwrite: true)
-                            ot.didFetchKind0 = true
-                        }
                     }
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)

@@ -168,70 +168,48 @@ struct NosturApp: App {
         if (ns.account == nil && ns.accounts.count >= 1) { // NosturState will set last active account in .init, else we set here:
             ns.setAccount(account: ns.accounts.last!)
         }
-        else if ns.account == nil {
-            Maintenance.firstTimeStartup(context: DataProvider.shared().container.viewContext)
-        }
         
         // Daily cleanup.
-        //TODO: Is fast or do in background task?
-        Maintenance.maintenance(context: DataProvider.shared().container.newBackgroundContext())
-        //        Maintenance.maintenance(context: DataProvider.shared().container.viewContext)
+        if (firstTimeCompleted) {
+            Maintenance.maintenance(context: DataProvider.shared().container.newBackgroundContext())
+        }
         
-        // One time fix
-        //        repairDb()
-        //        maintenance()
+        if (!firstTimeCompleted) {
+            Maintenance.ensureBootstrapRelaysExist(context: DataProvider.shared().container.viewContext)
+        }
         
-        // Get relays from Core Data, create sockets in SocketPool and connect.
-        DataProvider.shared().viewContext.perform {
-            do {
-                // Fetch RELAYS from CORE DATA
-                let fetchRequest: NSFetchRequest<Relay> = Relay.fetchRequest()
-                let relays = try fetchRequest.execute()
-                let sp = SocketPool.shared
-                
-                // CONNECT TO RELAYS
-                for relay in relays {
-                    _ = sp.addSocket(relayId: relay.objectID, url: relay.url!, read:relay.read, write: relay.write
-                    )
+        SocketPool.shared.setup()
+        
+        if (!firstTimeCompleted) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                // fetch guest account kind 0 + 3
+                GuestAccountManager.shared.createGuestAccount()
+                do {
+                    try NewOnboardingTracker.shared.start(pubkey: NosturState.GUEST_ACCOUNT_PUBKEY)
+//                    print("✈️✈️✈️ ONBORADING SPEED UP, FETCHING 0 + 3")
+//                    req(RM.getUserMetadataAndContactList(pubkey: NosturState.GUEST_ACCOUNT_PUBKEY))
                 }
-            } catch {
-                print("🔴🔴🔴 Unable to Execute Fetch Request, \(error)")
+                catch {
+                    print("🔴🔴✈️✈️✈️ ONBORADING ERROR 123")
+                }
+            }
+        }
+        if (ns.rawExplorePubkeys.count == 0) {
+            // Fetch updated contactlist for epxlorer feed
+            
+            // First get from cache
+            let r = Event.fetchRequest()
+            r.predicate = NSPredicate(format: "kind == 3 && pubkey == %@", NosturState.EXPLORER_PUBKEY)
+            r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+            let exploreContactList = try?  DataProvider.shared().viewContext.fetch(r).first
+            if exploreContactList != nil {
+                ns.objectWillChange.send()
+                ns.rawExplorePubkeys = Set(exploreContactList!.pTags())
+                
             }
             
-            if (!firstTimeCompleted) {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    // fetch guest account kind 0 + 3
-                    print("✈️✈️✈️ ONBORADING SPEED UP, FETCHING 0 + 3")
-                    let message = ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndContactList(pubkey: NosturState.GUEST_ACCOUNT_PUBKEY))
-                    SocketPool.shared.sendMessage(message)
-                }
-                
-                
-                // fetch p's in 3
-                
-                // fetch following events
-            }
-            if (ns.rawExplorePubkeys.count == 0) {
-                // Fetch updated contactlist for epxlorer feed
-                
-                // First get from cache
-                let r = Event.fetchRequest()
-                r.predicate = NSPredicate(format: "kind == 3 && pubkey == %@", NosturState.EXPLORER_PUBKEY)
-                r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-                let exploreContactList = try?  DataProvider.shared().viewContext.fetch(r).first
-                if exploreContactList != nil {
-                    ns.objectWillChange.send()
-                    ns.rawExplorePubkeys = Set(exploreContactList!.pTags())
-                    
-                }
-                
-                // But connect also and get newest
-                SocketPool.shared.connectAll()
-                
-                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                    let message = ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: NosturState.EXPLORER_PUBKEY))
-                    SocketPool.shared.sendMessage(message)
-                }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                req(RM.getAuthorContactsList(pubkey: NosturState.EXPLORER_PUBKEY))
             }
         }
     }

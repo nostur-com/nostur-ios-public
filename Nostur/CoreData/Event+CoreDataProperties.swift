@@ -684,6 +684,14 @@ extension Event {
         return matches.sorted(by: { $0.created_at > $1.created_at }).first
     }
     
+    static func fetchReplacableEvent(_ kind:Int64, pubkey:String, context:NSManagedObjectContext) -> Event? {
+        let request = NSFetchRequest<Event>(entityName: "Event")
+        request.predicate = NSPredicate(format: "kind == %d AND pubkey == %@", kind, pubkey)
+        request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        request.fetchLimit = 1
+        return try? context.fetch(request).first
+    }
+    
     static func fetchProfileBadgesByATag(_ badgeA:String, context:NSManagedObjectContext) -> [Event] {
         // find and notify all kind 30008 where serialized tags contains
         // ["a","30009:aa77d356ac5a59dbedc78f0da17c6bdd3ae315778b5c78c40a718b5251391da6:test_badge"]

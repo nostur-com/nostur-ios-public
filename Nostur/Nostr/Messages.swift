@@ -187,7 +187,7 @@ public struct RequestMessage {
     
     // For fetching events posted by people you follow
     // or reactions by others reacting to the people you follow
-    static func getFollowingEvents(pubkeys:[String], limit:Int = 5000, subscriptionId:String? = nil, since:NTimestamp? = nil) -> String {
+    static func getFollowingEvents(pubkeys:[String], limit:Int = 5000, subscriptionId:String? = nil, since:NTimestamp? = nil, until:NTimestamp? = nil) -> String {
         let sub = subscriptionId ?? ("F-"+UUID().uuidString)
         let pubs = fasterShort(pubkeys)
         if since != nil {
@@ -195,16 +195,26 @@ public struct RequestMessage {
 ["REQ", "\(sub)", {"authors": \(pubs), "kinds": [1,5,6,9802], "since": \(since!.timestamp)}]
 """
         }
+        else if until != nil {
+            return """
+["REQ", "\(sub)", {"authors": \(pubs), "kinds": [1,5,6,9802], "until": \(until!.timestamp)}]
+"""
+        }
         return """
 ["REQ", "\(sub)", {"authors": \(pubs), "kinds": [1,5,6,9802], "limit": \(limit)}]
 """
     }
     // Same as above but pubkeys already in string
-    static func getFollowingEvents(pubkeysString:String, limit:Int = 5000, subscriptionId:String? = nil, since:NTimestamp? = nil) -> String {
+    static func getFollowingEvents(pubkeysString:String, limit:Int = 5000, subscriptionId:String? = nil, since:NTimestamp? = nil, until:NTimestamp? = nil) -> String {
         let sub = subscriptionId ?? ("F-"+UUID().uuidString)
         if since != nil {
             return """
-["REQ", "\(sub)", {"authors": \(pubkeysString), "kinds": [1,5,6,9802], "since": \(since!.timestamp)}]
+["REQ", "\(sub)", {"authors": \(pubkeysString), "kinds": [1,5,6,9802], "since": \(since!.timestamp), "limit": \(limit)}]
+"""
+        }
+        else if until != nil {
+            return """
+["REQ", "\(sub)", {"authors": \(pubkeysString), "kinds": [1,5,6,9802], "until": \(until!.timestamp), "limit": \(limit)}]
 """
         }
         return """
@@ -284,7 +294,7 @@ public struct RequestMessage {
     
     static func getAuthorNotesUntil(pubkey:String, until:NTimestamp, limit:Int = 100, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? "ANU-" + UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [1,6,9802], "since": \(until.timestamp), "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? "ANU-" + UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [1,6,9802], "until": \(until.timestamp), "limit": \(limit)}]
 """
     }
     
@@ -312,11 +322,16 @@ public struct RequestMessage {
 """
     }
     
-    static func getAuthorsEvents(pubkeys:[String], limit:Int = 200, subscriptionId:String? = nil, since:NTimestamp? = nil) -> String {
+    static func getAuthorsEvents(pubkeys:[String], limit:Int = 200, subscriptionId:String? = nil, since:NTimestamp? = nil, until:NTimestamp? = nil) -> String {
         
         if since != nil {
             return """
     ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(fasterShort(pubkeys)), "since": \(since!.timestamp)}]
+    """
+        }
+        else if until != nil {
+            return """
+    ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(fasterShort(pubkeys)), "until": \(until!.timestamp)}]
     """
         }
         return """
@@ -355,11 +370,16 @@ public struct RequestMessage {
 """
     }
     
-    static func getUserMetadata(pubkeys:[String], limit:Int? = nil, subscriptionId:String? = nil, since:NTimestamp? = nil) -> String {
+    static func getUserMetadata(pubkeys:[String], limit:Int? = nil, subscriptionId:String? = nil, since:NTimestamp? = nil, until:NTimestamp? = nil) -> String {
         
         if let since {
             return """
     ["REQ", "\(subscriptionId ?? "UM-" + UUID().uuidString)", {"authors": \(fasterShort(pubkeys)), "kinds": [0], "since": \(since.timestamp)}]
+    """
+        }
+        else if let until {
+            return """
+    ["REQ", "\(subscriptionId ?? "UM-" + UUID().uuidString)", {"authors": \(fasterShort(pubkeys)), "kinds": [0], "until": \(until.timestamp)}]
     """
         }
         

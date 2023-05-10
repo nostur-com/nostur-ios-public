@@ -218,33 +218,33 @@ extension Account : Identifiable {
         }
     }
     
-    // For when adding read only accounts, prefill with kind.0 info from relays (NEW EVENT FROM IMPORTER)
-    static func preFillReadOnlyAccountFollowing(event:NEvent, context:NSManagedObjectContext, forceOverwrite:Bool = false) {
-        
-        let fr = Account.fetchRequest()
-        fr.predicate = NSPredicate(format: "publicKey == %@", event.publicKey)
-        if let account = try? context.fetch(fr).first {
-            
-            let contacts = Contact.ensureContactsCreated(event: event, context: context, limit: 999)
-
-            if (forceOverwrite || account.privateKey == nil && contacts.count > 0) {
-                
-                // Also prefetch all metadata
-                let pubkeys = contacts.map { $0.pubkey }
-                SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys)))
-//                account.objectWillChange.send()
-//                NosturState.shared.objectWillChange.send()
-                for contact in contacts {
-                    account.addToFollows(contact)
-                }
-//                print(account.follows?.count ?? 0)
-                let followingPublicKeys = account.followingPublicKeys
-                DispatchQueue.main.async {
-                    sendNotification(.followersChanged, followingPublicKeys)
-                }
-            }
-        }
-    }
+//    // For when adding read only accounts, prefill with kind.0 info from relays (NEW EVENT FROM IMPORTER)
+//    static func preFillReadOnlyAccountFollowing(event:NEvent, context:NSManagedObjectContext, forceOverwrite:Bool = false) {
+//        
+//        let fr = Account.fetchRequest()
+//        fr.predicate = NSPredicate(format: "publicKey == %@", event.publicKey)
+//        if let account = try? context.fetch(fr).first {
+//            
+//            let contacts = Contact.ensureContactsCreated(event: event, context: context, limit: 999)
+//
+//            if (forceOverwrite || account.privateKey == nil && contacts.count > 0) {
+//                
+//                // Also prefetch all metadata
+//                let pubkeys = contacts.map { $0.pubkey }
+//                SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys)))
+////                account.objectWillChange.send()
+////                NosturState.shared.objectWillChange.send()
+//                for contact in contacts {
+//                    account.addToFollows(contact)
+//                }
+////                print(account.follows?.count ?? 0)
+//                let followingPublicKeys = account.followingPublicKeys
+//                DispatchQueue.main.async {
+//                    sendNotification(.followersChanged, followingPublicKeys)
+//                }
+//            }
+//        }
+//    }
     
     var mutedRootIds_:[String] {
         get {

@@ -36,6 +36,23 @@ final class SocketPool: ObservableObject {
     
     @Published var sockets:[NSManagedObjectID : NewManagedClient] = [:]
     
+    func setup() {
+        DataProvider.shared().viewContext.performAndWait {
+            do {
+                let fetchRequest: NSFetchRequest<Relay> = Relay.fetchRequest()
+                let relays = try fetchRequest.execute()
+                let sp = SocketPool.shared
+                
+                // CONNECT TO RELAYS
+                for relay in relays {
+                    _ = sp.addSocket(relayId: relay.objectID, url: relay.url!, read:relay.read, write: relay.write)
+                }
+            } catch {
+                print("🔴🔴🔴 Fail in SocketPool.shared.setup(), \(error)")
+            }
+        }
+    }
+    
     func connectAll() {
         for socket in sockets {
             guard socket.value.read else { continue }
