@@ -15,6 +15,18 @@ class LVMManager {
     var subscriptions:Set<AnyCancellable> = []
     
     init() {
+        restoreSubscriptionsSubject
+            .debounce(for: .seconds(0.2), scheduler: RunLoop.main)
+            .sink { [weak self] _ in
+                guard let self = self else { return }
+                
+                self.listVMs.forEach { lvm in
+                    lvm.restoreSubscription()
+                }
+            }
+            .store(in: &subscriptions)
+        
+        
         receiveNotification(.activeAccountChanged)
             .sink { notification in
                 guard let account = notification.object as? Account else { return }
@@ -55,9 +67,9 @@ class LVMManager {
         return lvm
     }
     
+    var restoreSubscriptionsSubject = PassthroughSubject<Void, Never>()
+    
     func restoreSubscriptions() {
-        listVMs.forEach { lvm in
-            lvm.restoreSubscription()
-        }
+        restoreSubscriptionsSubject.send()
     }
 }

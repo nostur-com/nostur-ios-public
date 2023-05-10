@@ -75,7 +75,7 @@ class Importer {
         let isSignatureVerificationEnabled = self.settingsStore.isSignatureVerificationEnabled
         
         let context = DataProvider.shared().bg // SLOW???
-        var last:Event? = nil
+//        var last:Event? = nil
         
         context.perform {
             do {
@@ -161,7 +161,7 @@ class Importer {
                     }
                     
                     let savedEvent = Event.saveEvent(event: event, relay: message.relay)
-                    last = savedEvent
+//                    last = savedEvent
                     saved = saved + 1
                     if let subscriptionId = message.subscriptionId {
                         subscriptionIds.insert(subscriptionId)
