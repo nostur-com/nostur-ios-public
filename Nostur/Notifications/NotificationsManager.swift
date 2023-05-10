@@ -11,7 +11,7 @@ import Combine
 
 class NotificationsManager: ObservableObject {
     
-    let FETCH_LIMIT = 300
+    let FETCH_LIMIT = 999
     
     static let shared = NotificationsManager()
     
@@ -288,7 +288,7 @@ class NotificationsManager: ObservableObject {
                 "AND NOT pubkey IN %@",
             serializedP(pubkey),
             blockedPubkeys)
-        receivedFR.fetchLimit = 500
+        receivedFR.fetchLimit = 999
         receivedFR.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         
         
@@ -303,7 +303,7 @@ class NotificationsManager: ObservableObject {
                 let sentFR = Event.fetchRequest()
                 sentFR.predicate = NSPredicate(
                     format: "kind == 4 AND pubkey == %@", pubkey)
-                sentFR.fetchLimit = 500
+                sentFR.fetchLimit = 999
                 sentFR.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
                 let sent = try ctx.fetch(sentFR)
                 
