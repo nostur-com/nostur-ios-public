@@ -162,6 +162,7 @@ struct AccountEditView: View {
                     loadFromRelays()
                 } label: {
                     Text("Load info and contacts from relays")
+                        .foregroundColor(Color.primary)
                 }
             }
         }
