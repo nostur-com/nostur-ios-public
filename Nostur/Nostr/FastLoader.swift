@@ -73,6 +73,11 @@ class FastLoader: ObservableObject {
             .store(in: &subscriptions)
     }
     
+    public func reset() {
+        self.vPosts = []
+        self.events = []
+    }
+    
     // What to load
     var predicate:NSPredicate?
     var sortDescriptors:[NSSortDescriptor]?
@@ -287,6 +292,10 @@ class Backlog {
                 tasks.remove(task)
             }
         }
+    }
+    
+    public func clear() {
+        tasks.removeAll()
     }
     
     public func add(_ task:ReqTask) {

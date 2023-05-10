@@ -99,60 +99,7 @@ struct NotificationsReactions: View {
         }
         .background(Color("ListBackground"))
         .onAppear {
-            fl.vPostTransform = false
-            fl.predicate = NSPredicate(
-                format:
-                    "NOT pubkey IN %@ " +
-                    "AND kind == 7 " +
-                    "AND reactionTo.pubkey == %@",
-                    blockedPubkeys,
-                    pubkey
-                )
-            fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-            
-            fl.loadMore(500)
-            
-            if let first = fl.events.first, let account = ns.account {
-                let firstCreatedAt = first.created_at
-                DataProvider.shared().bg.perform {
-                    if let account = account.toBG() {
-                        account.lastSeenReactionCreatedAt = firstCreatedAt
-                    }
-                    DataProvider.shared().bgSave()
-                }
-                
-            }
-            
-            let fetchNewerTask = ReqTask(
-                reqCommand: { (taskId) in
-                    req(RM.getMentions(
-                        pubkeys: [pubkey],
-                        kinds: [7],
-                        limit: 5000,
-                        subscriptionId: taskId,
-                        since: NTimestamp(timestamp: Int(fl.events.first?.created_at ?? 0))
-                    ))
-                },
-                processResponseCommand: { (taskId) in
-//                    print("🟠🟠🟠 processResponseCommand \(taskId)")
-                    let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
-                    fl.predicate = NSPredicate(
-                        format:
-                            "created_at >= %i " +
-                            "AND NOT pubkey IN %@ " +
-                            "AND kind == 7 " +
-                            "AND reactionTo.pubkey == %@",
-                            currentNewestCreatedAt,
-                            blockedPubkeys,
-                            pubkey
-                      )
-                    fl.loadNewerEvents(5000, taskId: taskId)
-                })
-            
-            backlog.add(fetchNewerTask)
-            fetchNewerTask.fetch()
-            
-            fixReactionsWithMissingRelation()
+            load()
         }
         .onReceive(receiveNotification(.newReactions)) { _ in
             let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
@@ -177,6 +124,68 @@ struct NotificationsReactions: View {
                 task.process()
             }
         }
+        .onReceive(receiveNotification(.activeAccountChanged)) { _ in
+            backlog.clear()
+            load()
+        }
+    }
+    
+    func load() {
+        fl.reset()
+        fl.vPostTransform = false
+        fl.predicate = NSPredicate(
+            format:
+                "NOT pubkey IN %@ " +
+                "AND kind == 7 " +
+                "AND reactionTo.pubkey == %@",
+                blockedPubkeys,
+                pubkey
+            )
+        fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+        
+        fl.loadMore(500)
+        
+        if let first = fl.events.first, let account = ns.account {
+            let firstCreatedAt = first.created_at
+            DataProvider.shared().bg.perform {
+                if let account = account.toBG() {
+                    account.lastSeenReactionCreatedAt = firstCreatedAt
+                }
+                DataProvider.shared().bgSave()
+            }
+            
+        }
+        
+        let fetchNewerTask = ReqTask(
+            reqCommand: { (taskId) in
+                req(RM.getMentions(
+                    pubkeys: [pubkey],
+                    kinds: [7],
+                    limit: 5000,
+                    subscriptionId: taskId,
+                    since: NTimestamp(timestamp: Int(fl.events.first?.created_at ?? 0))
+                ))
+            },
+            processResponseCommand: { (taskId) in
+//                    print("🟠🟠🟠 processResponseCommand \(taskId)")
+                let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
+                fl.predicate = NSPredicate(
+                    format:
+                        "created_at >= %i " +
+                        "AND NOT pubkey IN %@ " +
+                        "AND kind == 7 " +
+                        "AND reactionTo.pubkey == %@",
+                        currentNewestCreatedAt,
+                        blockedPubkeys,
+                        pubkey
+                  )
+                fl.loadNewerEvents(5000, taskId: taskId)
+            })
+        
+        backlog.add(fetchNewerTask)
+        fetchNewerTask.fetch()
+        
+        fixReactionsWithMissingRelation()
     }
     
     func fixReactionsWithMissingRelation() {

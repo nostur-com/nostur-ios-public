@@ -154,58 +154,7 @@ struct NotificationsZaps: View {
         }
         .background(Color("ListBackground"))
         .onAppear {
-            fl.vPostTransform = false
-            fl.predicate = NSPredicate(
-                format:
-                    "zappedContactPubkey == %@" + // ONLY TO ME
-                    "AND kind == 9735 " +
-                    "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS)
-                    pubkey,
-                    blockedPubkeys
-                )
-            fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-            
-            fl.loadMore(500)
-            
-            if let first = fl.events.first, let account = ns.account {
-                let firstCreatedAt = first.created_at
-                DataProvider.shared().bg.perform {
-                    if let account = account.toBG() {
-                        account.lastSeenZapCreatedAt = firstCreatedAt
-                    }
-                    DataProvider.shared().bgSave()
-                }
-                
-            }
-            
-            let fetchNewerTask = ReqTask(
-                reqCommand: { (taskId) in
-                    req(RM.getMentions(
-                        pubkeys: [pubkey],
-                        kinds: [9735],
-                        limit: 1500,
-                        subscriptionId: taskId,
-                        since: NTimestamp(timestamp: Int(fl.events.first?.created_at ?? 0))
-                    ))
-                },
-                processResponseCommand: { (taskId) in
-//                    print("🟠🟠🟠 processResponseCommand \(taskId)")
-                    let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
-                    fl.predicate = NSPredicate(
-                        format:
-                            "created_at >= %i " +
-                            "AND zappedContactPubkey == %@" + // ONLY TO ME
-                            "AND kind == 9735 " +
-                            "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS)
-                            currentNewestCreatedAt,
-                            pubkey,
-                            blockedPubkeys
-                      )
-                    fl.loadNewerEvents(1500, taskId: taskId)
-                })
-
-            backlog.add(fetchNewerTask)
-            fetchNewerTask.fetch()
+            load()
         }
         .onReceive(receiveNotification(.newZaps)) { _ in
             let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
@@ -230,6 +179,66 @@ struct NotificationsZaps: View {
                 task.process()
             }
         }
+        .onReceive(receiveNotification(.activeAccountChanged)) { _ in
+            backlog.clear()
+            load()
+        }
+    }
+    
+    func load() {
+        fl.reset()
+        fl.vPostTransform = false
+        fl.predicate = NSPredicate(
+            format:
+                "zappedContactPubkey == %@" + // ONLY TO ME
+                "AND kind == 9735 " +
+                "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS)
+                pubkey,
+                blockedPubkeys
+            )
+        fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+        
+        fl.loadMore(500)
+        
+        if let first = fl.events.first, let account = ns.account {
+            let firstCreatedAt = first.created_at
+            DataProvider.shared().bg.perform {
+                if let account = account.toBG() {
+                    account.lastSeenZapCreatedAt = firstCreatedAt
+                }
+                DataProvider.shared().bgSave()
+            }
+            
+        }
+        
+        let fetchNewerTask = ReqTask(
+            reqCommand: { (taskId) in
+                req(RM.getMentions(
+                    pubkeys: [pubkey],
+                    kinds: [9735],
+                    limit: 1500,
+                    subscriptionId: taskId,
+                    since: NTimestamp(timestamp: Int(fl.events.first?.created_at ?? 0))
+                ))
+            },
+            processResponseCommand: { (taskId) in
+//                    print("🟠🟠🟠 processResponseCommand \(taskId)")
+                let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
+                fl.predicate = NSPredicate(
+                    format:
+                        "created_at >= %i " +
+                        "AND zappedContactPubkey == %@" + // ONLY TO ME
+                        "AND kind == 9735 " +
+                        "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS)
+                        currentNewestCreatedAt,
+                        pubkey,
+                        blockedPubkeys
+                  )
+                fl.loadNewerEvents(1500, taskId: taskId)
+            })
+
+        backlog.add(fetchNewerTask)
+        fetchNewerTask.fetch()
     }
 }
 //

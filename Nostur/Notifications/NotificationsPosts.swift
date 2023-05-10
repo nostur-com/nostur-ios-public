@@ -49,72 +49,7 @@ struct NotificationsPosts: View {
         }
         .background(Color("ListBackground"))
         .onAppear {
-            fl.followingKeys = ns.followingPublicKeys
-            fl.predicate = NSPredicate(
-                format:
-                    "NOT pubkey IN %@ " + // blockedPubkeys + [pubkey]
-                    "AND kind == 1 " +
-                    "AND tagsSerialized CONTAINS %@ " + // serializedP(pubkey)
-                    "AND NOT id IN %@ " + // mutedRootIds
-                    "AND (replyToRootId == nil OR NOT replyToRootId IN %@) " + // mutedRootIds
-                    "AND (replyToId == nil OR NOT replyToId IN %@) ", // mutedRootIds
-                    blockedPubkeys + [pubkey],
-                    serializedP(pubkey),
-                    mutedRootIds,
-                    mutedRootIds,
-                    mutedRootIds
-              )
-            fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-            
-            fl.loadMore(5)
-            fl.loadMoreBG(15)
-            
-            if let first = fl.vPosts.first, let account = ns.account {
-                let firstCreatedAt = first.created_at
-                DataProvider.shared().bg.perform {
-                    if let account = account.toBG() {
-                        account.lastSeenPostCreatedAt = firstCreatedAt
-                    }
-                    DataProvider.shared().bgSave()
-                }
-                
-            }
-            
-            
-            let fetchNewerTask = ReqTask(
-                reqCommand: { (taskId) in
-                    req(RM.getMentions(
-                        pubkeys: [pubkey],
-                        kinds: [1],
-                        limit: 500,
-                        subscriptionId: taskId,
-                        since: NTimestamp(timestamp: Int(fl.vPosts.first?.created_at ?? 0))
-                    ))
-                },
-                processResponseCommand: { (taskId) in
-//                    print("🟠🟠🟠 processResponseCommand \(taskId)")
-                    let currentNewestCreatedAt = fl.vPosts.first?.created_at ?? 0
-                    fl.predicate = NSPredicate(
-                        format:
-                            "created_at >= %i " +
-                            "AND NOT pubkey IN %@ " + // blockedPubkeys + [pubkey]
-                            "AND kind == 1 " +
-                            "AND tagsSerialized CONTAINS %@ " + // serializedP(pubkey)
-                            "AND NOT id IN %@ " + // mutedRootIds
-                            "AND (replyToRootId == nil OR NOT replyToRootId IN %@) " + // mutedRootIds
-                            "AND (replyToId == nil OR NOT replyToId IN %@) ", // mutedRootIds
-                            currentNewestCreatedAt,
-                            blockedPubkeys + [pubkey],
-                            serializedP(pubkey),
-                            mutedRootIds,
-                            mutedRootIds,
-                            mutedRootIds
-                      )
-                    fl.loadNewerBG(250, taskId: taskId)
-                })
-
-            backlog.add(fetchNewerTask)
-            fetchNewerTask.fetch()
+            load()
         }
         .onReceive(receiveNotification(.newMentions)) { _ in
             let currentNewestCreatedAt = fl.vPosts.first?.created_at ?? 0
@@ -145,6 +80,80 @@ struct NotificationsPosts: View {
                 task.process()
             }
         }
+        .onReceive(receiveNotification(.activeAccountChanged)) { _ in
+            backlog.clear()
+            load()
+        }
+    }
+    
+    func load() {
+        fl.reset()
+        fl.followingKeys = ns.followingPublicKeys
+        fl.predicate = NSPredicate(
+            format:
+                "NOT pubkey IN %@ " + // blockedPubkeys + [pubkey]
+                "AND kind == 1 " +
+                "AND tagsSerialized CONTAINS %@ " + // serializedP(pubkey)
+                "AND NOT id IN %@ " + // mutedRootIds
+                "AND (replyToRootId == nil OR NOT replyToRootId IN %@) " + // mutedRootIds
+                "AND (replyToId == nil OR NOT replyToId IN %@) ", // mutedRootIds
+                blockedPubkeys + [pubkey],
+                serializedP(pubkey),
+                mutedRootIds,
+                mutedRootIds,
+                mutedRootIds
+          )
+        fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+        
+        fl.loadMore(5)
+        fl.loadMoreBG(15)
+        
+        if let first = fl.vPosts.first, let account = ns.account {
+            let firstCreatedAt = first.created_at
+            DataProvider.shared().bg.perform {
+                if let account = account.toBG() {
+                    account.lastSeenPostCreatedAt = firstCreatedAt
+                }
+                DataProvider.shared().bgSave()
+            }
+            
+        }
+        
+        
+        let fetchNewerTask = ReqTask(
+            reqCommand: { (taskId) in
+                req(RM.getMentions(
+                    pubkeys: [pubkey],
+                    kinds: [1],
+                    limit: 500,
+                    subscriptionId: taskId,
+                    since: NTimestamp(timestamp: Int(fl.vPosts.first?.created_at ?? 0))
+                ))
+            },
+            processResponseCommand: { (taskId) in
+//                    print("🟠🟠🟠 processResponseCommand \(taskId)")
+                let currentNewestCreatedAt = fl.vPosts.first?.created_at ?? 0
+                fl.predicate = NSPredicate(
+                    format:
+                        "created_at >= %i " +
+                        "AND NOT pubkey IN %@ " + // blockedPubkeys + [pubkey]
+                        "AND kind == 1 " +
+                        "AND tagsSerialized CONTAINS %@ " + // serializedP(pubkey)
+                        "AND NOT id IN %@ " + // mutedRootIds
+                        "AND (replyToRootId == nil OR NOT replyToRootId IN %@) " + // mutedRootIds
+                        "AND (replyToId == nil OR NOT replyToId IN %@) ", // mutedRootIds
+                        currentNewestCreatedAt,
+                        blockedPubkeys + [pubkey],
+                        serializedP(pubkey),
+                        mutedRootIds,
+                        mutedRootIds,
+                        mutedRootIds
+                  )
+                fl.loadNewerBG(250, taskId: taskId)
+            })
+
+        backlog.add(fetchNewerTask)
+        fetchNewerTask.fetch()
     }
 }
 
