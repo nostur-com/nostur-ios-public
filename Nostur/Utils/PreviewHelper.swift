@@ -300,7 +300,26 @@ class PreviewEnvironment {
         
         let account = PreviewFetcher.fetchAccount(PREVIEW_ACCOUNT_ID, context: self.context)
         if let clNevent = PreviewFetcher.fetchEvents(PREVIEW_ACCOUNT_ID, kind: 3, context: self.context).first?.toNEvent() {
-            Account.preFillReadOnlyAccountFollowing(event: clNevent, context: self.context, forceOverwrite: true)
+            
+            let pTags = clNevent.pTags()
+            var existingAndCreatedContacts = [Contact]()
+            for pTag in pTags {
+                let contact = Contact.fetchByPubkey(pTag, context: self.context)
+                guard contact == nil else {
+                    // Skip if we already have a contact
+                    existingAndCreatedContacts.append(contact!)
+                    continue
+                }
+                // Else create a new one
+                let newContact = Contact(context: self.context)
+                newContact.pubkey = pTag
+                newContact.metadata_created_at = 0
+                newContact.updated_at = 0
+                existingAndCreatedContacts.append(newContact)
+            }
+            if let account {
+                account.addToFollows(NSSet(array: existingAndCreatedContacts))
+            }
         }
         ns.setAccount(account: account)
     }
