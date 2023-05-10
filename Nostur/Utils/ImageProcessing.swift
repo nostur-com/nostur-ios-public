@@ -32,7 +32,7 @@ class ImageProcessing {
             }())
 
             let dataCache = try! DataCache(name: "com.nostur.image.pfp")
-            dataCache.sizeLimit = 1024 * 1024 * 250
+            dataCache.sizeLimit = 1024 * 1024 * 500
 
             $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 150)
             $0.dataCache = dataCache
@@ -49,7 +49,7 @@ class ImageProcessing {
             }())
             
             let dataCache = try! DataCache(name: "com.nostur.image.pfp.notfollowing")
-            dataCache.sizeLimit = 1024 * 1024 * 150
+            dataCache.sizeLimit = 1024 * 1024 * 500
             
             $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 50)
             $0.dataCache = dataCache
@@ -65,7 +65,7 @@ class ImageProcessing {
             }())
             
             let dataCache = try! DataCache(name: "com.nostur.image.banner")
-            dataCache.sizeLimit = 1024 * 1024 * 150
+            dataCache.sizeLimit = 1024 * 1024 * 250
             
             $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 50)  // 50 MB
             $0.dataCache = dataCache
@@ -82,9 +82,9 @@ class ImageProcessing {
             }())
             
             let dataCache = try! DataCache(name: "com.nostur.image.content")
-            dataCache.sizeLimit = 1024 * 1024 * 250
+            dataCache.sizeLimit = 1024 * 1024 * 500
             
-            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 100, countLimit: 500)
+            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 100, countLimit: 1000)
             $0.dataCache = dataCache
             $0.dataCachePolicy = .storeAll
         }
