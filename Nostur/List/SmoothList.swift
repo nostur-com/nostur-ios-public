@@ -519,12 +519,6 @@ final class CViewHolder {
                     return self.collectionView.dequeueConfiguredReusableCell(using: FullWidthPostOrThreadCellRegistration, for: indexPath, item: vPost)
                 }
                 return self.collectionView.dequeueConfiguredReusableCell(using: PostOrThreadCellRegistration, for: indexPath, item: vPost)
-                
-                
-                // TODO: Implement this
-                //                if self.collectionView.isLastItem(indexPath) {
-                //                    self.onLoadMore()
-                //                }
             }
         )
     }

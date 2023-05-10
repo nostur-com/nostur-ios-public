@@ -290,7 +290,6 @@ final class NosturState : ObservableObject {
         do {
             try viewContext.save()
             sendNotification(.muteListUpdated)
-            //sendNotification(.viewNeedsUpdate) // TODO: NEED THIS??
         }
         catch {
             print("Could not save after muting thread \(error)")

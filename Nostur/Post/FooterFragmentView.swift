@@ -113,7 +113,7 @@ struct FooterFragmentView: View {
                 LightningButton(tally: event.zapTally, event: event)
                     .opacity(event.contact?.anyLud ?? false ? 1 : 0.3)
                     .disabled(!(event.contact?.anyLud ?? false))
-                Spacer()  // TODO: FIXME
+                Spacer() 
 
 
                 // BOOKMARK
@@ -186,7 +186,7 @@ struct PreviewFooterFragmentView: View {
                 
                 Image("BoltIcon")
                 Text("0").opacity(0)
-                Spacer()  // TODO: FIXME
+                Spacer()
 
 
                 Image("BookmarkIcon")

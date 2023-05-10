@@ -63,8 +63,7 @@ struct FollowersList: View {
                     Divider()
                 }
             }
-            
-            // TODO: ForEach for Fake ProfileRow view for pubkeys not in Contact
+        
             VStack {
                 ForEach(clEventsFollowingPubkeyMissingContact, id:\.self) { event in
                     ProfileRowMissing(pubkey: event.pubkey)

@@ -6,7 +6,6 @@
 //
 
 import Foundation
-//import SwiftyJSON
 
 class ContactProfile: Identifiable, Hashable, ObservableObject {
     
@@ -43,7 +42,6 @@ class ContactProfile: Identifiable, Hashable, ObservableObject {
         hasher.combine(contact.id)
     }
     
-    // TODO: Remove SwiftyJSON code so we can remove package
     func contactsPubkeys() -> [String]? {
         guard let clEvent = clEvent else { return nil }
         guard clEvent.tagsSerialized != nil else { return nil }

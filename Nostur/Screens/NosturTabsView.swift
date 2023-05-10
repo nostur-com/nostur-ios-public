@@ -50,11 +50,6 @@ struct NosturTabsView: View {
                         .tabItem { Image(systemName: "envelope.fill") }
                         .tag("Messages")
                         .badge(unreadDMs)
-                    
-                    
-                    //                    ConfigurationView() // TODO: MOVE TO SETTINGS
-                    //                    .tabItem { Image(systemName: "server.rack") }
-                    //                    .tag("Configuration")
                 }
                 .withSheets()
             }
