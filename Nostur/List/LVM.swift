@@ -457,6 +457,29 @@ class LVM: NSObject, ObservableObject {
         fetchFeedTimerNextTick()
     }
     
+    
+    // FETCHES NOTHING, BUT AFTER THAT IS REALTIME FOR NEW EVENTS
+    private func wtfFetch(subscriptionId:String) {
+        let now = NTimestamp(date: Date.now)
+        req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString, limit:10, subscriptionId: subscriptionId, until: now))
+    }
+    
+    // FETCHES NOTHING, BUT AFTER THAT IS REALTIME FOR NEW EVENTS
+    private func fetchRealtimeSinceNow(subscriptionId:String) {
+        let now = NTimestamp(date: Date.now)
+        req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: subscriptionId, since: now), activeSubscriptionId: subscriptionId)
+    }
+    
+    // FETCHES ALL NEW, UNTIL NOW
+    private func fetchNewestUntilNow(subscriptionId:String) {
+        let now = NTimestamp(date: Date.now)
+        req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: "CATCHUP-" + subscriptionId, until: now))
+    }
+    
+    private func fetchNewerSince(subscriptionId:String, since: NTimestamp) {
+        req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: "RESUME-" + subscriptionId, since: since))
+    }
+    
     // MARK: STEP 0: FETCH FROM RELAYS
     func fetchFeedTimerNextTick() {
         guard self.viewIsVisible else {
@@ -572,6 +595,7 @@ extension LVM {
     
     func performLocalFetchAfterImport() {
         receiveNotification(.newEventsInDatabase)
+            .debounce(for: .seconds(2), scheduler: RunLoop.main)
             .sink { [weak self] _ in
 //                print("🟢🟢🟢🟢🟢 performLocalFetch() - from .newEventsInDatabase")
                 self?.performLocalFetch()
@@ -582,10 +606,11 @@ extension LVM {
     func trackPubkeysChanged() {
         receiveNotification(.followersChanged)
             .sink { [weak self] notification in
+                guard let self = self else { return }
                 SocketPool.shared.allowNewFollowingSubscriptions()
                 let pubkeys = notification.object as! Set<String>
-                self?.pubkeys = pubkeys
-                self?.performLocalFetch()
+                self.pubkeys = pubkeys
+                self.performLocalFetch(refreshInBackground: true)
             }
             .store(in: &subscriptions)
         
@@ -615,7 +640,6 @@ extension LVM {
                 let event = notification.object as! Event
                 
                 let context = DataProvider.shared().bg
-//                let followingPubkeys = NosturState.shared.followingPublicKeys
                 context.perform { [weak self] in
                     guard let self = self else { return }
                     let transformer = VPostTransformer.bg
@@ -1104,7 +1128,7 @@ extension Event {
         // get 15 events before lastAppearedCreatedAt (or 8 hours ago, if we dont have it)
         let frBefore = Event.fetchRequest()
         frBefore.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        frBefore.fetchLimit = 15 //TODO: need this even?
+        frBefore.fetchLimit = 15 
         frBefore.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN {1,6,9802} AND id != \"\"", cutOffPoint,  pubkeys)
         
         let newFirstEvent = try? DataProvider.shared().viewContext.fetch(frBefore).last
