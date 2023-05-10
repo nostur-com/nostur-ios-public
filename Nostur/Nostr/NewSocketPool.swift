@@ -65,6 +65,13 @@ final class SocketPool: ObservableObject {
     func disconnectAll() {
         for socket in sockets {
             if socket.value.isConnecting || socket.value.isConnected {
+//                socket.value.activeSubscriptions.forEach { subscription in
+//                    SocketPool.shared
+//                        .sendMessage(ClientMessage(
+//                            type: .CLOSE,
+//                            message: ClientMessage.close(subscriptionId: subscription)
+//                        ))
+//                }
                 socket.value.disconnect()
             }
         }
@@ -369,11 +376,23 @@ class NewWebSocket {
     var socketQueue = OperationQueue()
     private var websocketQueue = DispatchQueue(label: "com.nostur.websocket")
     var webSocket_:WebSocket?
-    var connection:AnyCancellable?
-//    var pinger:AnyCancellable?
-//    var subscriptions = Set<AnyCancellable>()
-//    var pingOnceSub:AnyCancellable?
+    var connection_:AnyCancellable?
+
     var delegate:NewWebSocketDelegate?
+    
+    var connection:AnyCancellable? {
+        get {
+            websocketQueue.sync {
+                self.connection_
+            }
+        }
+        set {
+            websocketQueue.async(flags: .barrier) {
+                self.connection_ = newValue
+            }
+        }
+    }
+    
     
     var webSocket:WebSocket? {
         get {
@@ -414,7 +433,6 @@ class NewWebSocket {
     }
     
     func connect() {
-        
         let session = URLSession(configuration: .default, delegate: delegate, delegateQueue: socketQueue)
         let urlRequest = URLRequest(url: URL(string: url) ?? URL(string: "wss://localhost:123456/invalid_relay_url")!)
         
