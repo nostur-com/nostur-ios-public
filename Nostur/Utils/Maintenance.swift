@@ -10,7 +10,10 @@ import CoreData
 
 struct Maintenance {
     
-    static let BOOTSTRAP_RELAYS = ["wss://relay.damus.io" , "wss://nostr.fmt.wiz.biz", "wss://relay.snort.social", "wss://nostr.mutinywallet.com", "wss://purplepag.es"]
+    static let BOOTSTRAP_RELAYS = ["wss://relay.damus.io" , "wss://nostr.wine", "wss://nos.lol", "wss://nostr.mutinywallet.com", "wss://purplepag.es"]
+    
+    // time out... "wss://nostr.fmt.wiz.biz"
+    // too many subscriptions "wss://relay.snort.social"
     
     static func firstTimeStartup(context:NSManagedObjectContext) {
         context.performAndWait {
