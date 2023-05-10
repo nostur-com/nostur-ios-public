@@ -313,7 +313,8 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
         self.activeSubscriptions = []
         self.exponentialReconnectBackOff = 0
         self.skipped = 0
-        print("🔌 CONNECTED \(self.url)")
+        print("🏎️🏎️🔌 CONNECTED \(self.url)")
+        LVMManager.shared.restoreSubscriptions()
         //                print("🔌 CONNECTED \(self.url): \(headers)")
     }
     
