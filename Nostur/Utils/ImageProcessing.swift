@@ -48,7 +48,7 @@ class ImageProcessing {
                 return conf
             }())
             
-            let dataCache = try! DataCache(name: "com.nostur.image.pfp.notfollowing")
+            let dataCache = try! DataCache(name: "com.nostur.image.pfp") // use same folder for now... isFollowing is messed up when using multiple accounts
             dataCache.sizeLimit = 1024 * 1024 * 500
             
             $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 50)
