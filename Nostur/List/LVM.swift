@@ -423,7 +423,7 @@ class LVM: NSObject, ObservableObject {
             self.lvmState.restoreScrollToAnchor = ls?.lastAppearedAtAnchor ?? "BOTTOM"
 //            print("🟢🟢 lastAppeared.id on init: \(self.lastAppeared?.id ?? "")")
         }
-        print("🟢🟢🟢🟢🟢 performLocalFetch() - from init()")
+//        print("🟢🟢🟢🟢🟢 performLocalFetch() - from init()")
         self.performLocalFetch()
         self.fetchFeedTimer?.invalidate()
         self.fetchFeedTimer = Timer.scheduledTimer(withTimeInterval: FETCH_FEED_INTERVAL, repeats: true) { [weak self] _ in
@@ -553,7 +553,7 @@ extension LVM {
     func performLocalFetchAfterImport() {
         receiveNotification(.newEventsInDatabase)
             .sink { [weak self] _ in
-                print("🟢🟢🟢🟢🟢 performLocalFetch() - from .newEventsInDatabase")
+//                print("🟢🟢🟢🟢🟢 performLocalFetch() - from .newEventsInDatabase")
                 self?.performLocalFetch()
             }
             .store(in: &subscriptions)
@@ -904,7 +904,7 @@ extension LVM: NSFetchedResultsControllerDelegate {
     func performLocalFetch(refreshInBackground:Bool = false) {
 //        print("🏎️🏎️ \(Date.now) performLocalFetch \(self.subscriptionId)")
         if let mostRecent = self.lvmState.vPostLeafs.first {
-            print("🟢🟢🟢🟢🟢🟢 from mostRecent \(mostRecent.id)")
+//            print("🟢🟢🟢🟢🟢🟢 from mostRecent \(mostRecent.id)")
             let fr = Event.postsByPubkeys(pubkeys, mostRecent: mostRecent.event)
             
             if viewIsVisible || refreshInBackground {
@@ -913,7 +913,7 @@ extension LVM: NSFetchedResultsControllerDelegate {
             }
         }
         else {
-            print("🟢🟢🟢🟢🟢🟢 from lastAppearedCreatedAt \(self.lastAppeared?.created_at ?? 0)")
+//            print("🟢🟢🟢🟢🟢🟢 from lastAppearedCreatedAt \(self.lastAppeared?.created_at ?? 0)")
             let fr = Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: self.lastAppeared?.created_at ?? 0)
             
             if viewIsVisible || refreshInBackground {
@@ -949,7 +949,7 @@ extension LVM: NSFetchedResultsControllerDelegate {
                 let newCount = newObjectIds.subtracting(vPostLeafsOnScreenIds).count
                 if newCount > 0 {
                     self.unrenderedEvents = newUnrenderedEvents
-                    print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 setUnorderedEvents \(newUnrenderedEvents.count) new: \(newCount) state:COMPLETED_FIRST_FETCH 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
+//                    print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 setUnorderedEvents \(newUnrenderedEvents.count) new: \(newCount) state:COMPLETED_FIRST_FETCH 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
                 }
                 self.lvmState.state = .COMPLETED_FIRST_FETCH
                 
@@ -970,7 +970,7 @@ extension LVM: NSFetchedResultsControllerDelegate {
                     let newCount = newObjectIds.subtracting(vPostLeafsOnScreenIds).count
                     if newCount > 0 {
                         self.unrenderedEvents = newUnrenderedEvents
-                        print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 setUnorderedEvents \(newUnrenderedEvents.count) new: \(newCount) state:COMPLETED_FIRST_FETCH 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
+//                        print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 setUnorderedEvents \(newUnrenderedEvents.count) new: \(newCount) state:COMPLETED_FIRST_FETCH 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
                     }
                     self.state = .COMPLETED_FIRST_FETCH // POST NOT IN LIST, SO DONT RESTORE SCROLL.
                 }
@@ -987,7 +987,7 @@ extension LVM: NSFetchedResultsControllerDelegate {
                     let newCount = newObjectIds.subtracting(vPostLeafsOnScreenIds).count
                     if newCount > 0 {
                         self.unrenderedEvents = newUnrenderedEvents
-                        print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 setUnorderedEvents \(newUnrenderedEvents.count) new: \(newCount) state:AWAITING_RESTORE_SCROLL 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
+//                        print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 setUnorderedEvents \(newUnrenderedEvents.count) new: \(newCount) state:AWAITING_RESTORE_SCROLL 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
                     }
                 }
                 else {
@@ -1001,7 +1001,7 @@ extension LVM: NSFetchedResultsControllerDelegate {
                     let newCount = newObjectIds.subtracting(vPostLeafsOnScreenIds).count
                     if newCount > 0 {
                         self.unrenderedEvents = newUnrenderedEvents
-                        print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 setUnorderedEvents \(newUnrenderedEvents.count) new: \(newCount) state:AWAITING_RESTORE_SCROLL 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
+//                        print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 setUnorderedEvents \(newUnrenderedEvents.count) new: \(newCount) state:AWAITING_RESTORE_SCROLL 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
                     }
                 }
                 
@@ -1020,7 +1020,7 @@ extension LVM: NSFetchedResultsControllerDelegate {
                 let newCount = newObjectIds.subtracting(vPostLeafsOnScreenIds).count
                 if newCount > 0 {
                     self.unrenderedEvents = newUnrenderedEvents
-                    print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 setUnorderedEvents \(newUnrenderedEvents.count) new: \(newCount) state:default 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
+//                    print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 setUnorderedEvents \(newUnrenderedEvents.count) new: \(newCount) state:default 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
                 }
                 
                 return
