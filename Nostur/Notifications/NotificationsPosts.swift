@@ -92,7 +92,7 @@ struct NotificationsPosts: View {
                     ))
                 },
                 processResponseCommand: { (taskId) in
-                    print("🟠🟠🟠 processResponseCommand \(taskId)")
+//                    print("🟠🟠🟠 processResponseCommand \(taskId)")
                     let currentNewestCreatedAt = fl.vPosts.first?.created_at ?? 0
                     fl.predicate = NSPredicate(
                         format:

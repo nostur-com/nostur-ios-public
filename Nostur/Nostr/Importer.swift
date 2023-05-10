@@ -208,6 +208,7 @@ class Importer {
                     let savedEvent = Event.saveEvent(event: event, relay: message.relay)
                     saved = saved + 1
                     if let subscriptionId = message.subscriptionId {
+//                        print("🟠🟠🟠 subscriptionId: \(subscriptionId)")
                         subscriptionIds.insert(subscriptionId)
                     }
                     if (kind6firstQuote != nil) {

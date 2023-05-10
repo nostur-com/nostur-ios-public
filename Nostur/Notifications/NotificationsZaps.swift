@@ -189,7 +189,7 @@ struct NotificationsZaps: View {
                     ))
                 },
                 processResponseCommand: { (taskId) in
-                    print("🟠🟠🟠 processResponseCommand \(taskId)")
+//                    print("🟠🟠🟠 processResponseCommand \(taskId)")
                     let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
                     fl.predicate = NSPredicate(
                         format:
