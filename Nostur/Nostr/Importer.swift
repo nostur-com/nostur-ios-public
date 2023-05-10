@@ -75,6 +75,7 @@ class Importer {
         let isSignatureVerificationEnabled = self.settingsStore.isSignatureVerificationEnabled
         
         let context = DataProvider.shared().bg // SLOW???
+        var last:Event? = nil
         
         context.perform {
             do {
@@ -160,9 +161,9 @@ class Importer {
                     }
                     
                     let savedEvent = Event.saveEvent(event: event, relay: message.relay)
+                    last = savedEvent
                     saved = saved + 1
                     if let subscriptionId = message.subscriptionId {
-//                        print("🟠🟠🟠 subscriptionId: \(subscriptionId)")
                         subscriptionIds.insert(subscriptionId)
                     }
                     if (kind6firstQuote != nil) {
@@ -237,13 +238,16 @@ class Importer {
                             sendNotification(.newEventsInDatabase)
                         }
                         subscriptionIds.removeAll()
+//                        if saved == 1, let last {
+//                            print("Saved: \(last.toNEvent().eventJson())")
+//                        }
                     }
                     else {
                         print("🏎️🏎️ \(Date.now) 💾 Finished, nothing saved. -- Processed: \(forImportsCount), saved: \(saved), skipped (new cache): \(alreadyInIdCacheSkipped), skipped (db): \(alreadyInDBskipped)")
                     }
                 }
                 else {
-                    print("🏎️🏎️ Nothing imported, no changes.")
+//                    print("🏎️🏎️ Nothing imported, no changes.")
                 }
             }
             catch {

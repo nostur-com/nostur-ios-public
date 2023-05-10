@@ -142,9 +142,9 @@ final class SocketPool: ObservableObject {
                     // skip if we already have an active subcription
                     if subscriptionId != nil && managedClient.activeSubscriptions.contains(subscriptionId!) { continue }
                     if (subscriptionId != nil) {
-                        print("🏎️🏎️⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count)")
                         DispatchQueue.main.async {
                             managedClient.activeSubscriptions.append(subscriptionId!)
+                            print("🏎️🏎️⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count)")
                         }
                     }
 //                    print(" ⬇️⬇️ REQUESTING: \(String(message.message.prefix(260)))")
