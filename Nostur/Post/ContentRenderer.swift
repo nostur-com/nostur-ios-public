@@ -251,10 +251,10 @@ struct Kind1ById: View {
         if let vPost = events.first?.toVPost() {
             let _ = print("☠️☠️☠️☠️ toVPost() Kind1ById")
             if fullWidth {
-                NoteRow.Kind1(vPost: vPost, hideFooter:hideFooter)
+                Kind1(vPost: vPost, hideFooter:hideFooter)
             }
             else {
-                NoteRow.Kind1Default(vPost: vPost, hideFooter:hideFooter)
+                Kind1Default(vPost: vPost, hideFooter:hideFooter)
             }
         }
         else {

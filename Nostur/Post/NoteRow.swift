@@ -17,7 +17,6 @@ struct NoteRow: View {
     let isReply:Bool // is reply on PostDetail (needs 2*10 less box width)
     let isDetail:Bool
     
-    
     private let sp:SocketPool = .shared
     
     init(vPost:VPost, hideFooter:Bool = false, inThread:Bool = false, connect: ThreadConnectDirection? = nil, fullWidth:Bool = false, isReply:Bool = false, isDetail:Bool = false) {
@@ -32,7 +31,6 @@ struct NoteRow: View {
     }
     
     var body: some View {
-//        let _ = Self._printChanges()
         if event.deletedById == nil {
             VStack (alignment: .leading) {
                 if (event.isRepost) {
@@ -52,103 +50,29 @@ struct NoteRow: View {
                     .padding(.leading, 40)
                 }
                 
-                if event.isRepost {
-                    if let firstQuote = vPost.firstQuote.first {
-                        // CASE - WE HAVE IT IN VPOST
-                        if firstQuote.isHighlight {
-                            Highlight(vPost: firstQuote, hideFooter: false, inThread:inThread, connect:connect)
-                                .onAppear {
-                                    if firstQuote.event.contact == nil {
-                                        EventRelationsQueue.shared.addAwaitingEvent(firstQuote.event)
-                                        req(RM.getUserMetadata(pubkey: firstQuote.event.pubkey))
-                                    }
-                                }
-                        }
-                        else if fullWidth {
-                            Kind1(vPost: firstQuote, hideFooter:false, isDetail:isDetail)
-                                .onAppear {
-                                    if firstQuote.event.contact == nil {
-                                        EventRelationsQueue.shared.addAwaitingEvent(firstQuote.event)
-                                        req(RM.getUserMetadata(pubkey: firstQuote.event.pubkey))
-                                    }
-                                }
-                        }
-                        else {
-                            Kind1Default(vPost: firstQuote, hideFooter:false, isDetail:isDetail)
-                                .onAppear {
-                                    if firstQuote.event.contact == nil {
-                                        EventRelationsQueue.shared.addAwaitingEvent(firstQuote.event)
-                                        req(RM.getUserMetadata(pubkey: firstQuote.event.pubkey))
-                                    }
-                                }
-                        }
-                    }
-                    // CASE - We have the event: firstQuote_ = already .firstQuote or lazy fetched with .firstQuoteId
-                    else if let firstQuote_ = event.firstQuote_ {
-                        if let toVPostQuote = firstQuote_.toVPost() {
-                            if toVPostQuote.isHighlight {
-                                Highlight(vPost: toVPostQuote, hideFooter: false, inThread:inThread, connect:connect)
-                                    .onAppear {
-                                        if toVPostQuote.event.contact == nil {
-                                            EventRelationsQueue.shared.addAwaitingEvent(toVPostQuote.event)
-                                            req(RM.getUserMetadata(pubkey: toVPostQuote.event.pubkey))
-                                        }
-                                    }
-                            }
-                            else if fullWidth {
-                                Kind1(vPost: toVPostQuote, hideFooter:false, isDetail:isDetail)
-                                    .onAppear {
-                                        if toVPostQuote.event.contact == nil {
-                                            EventRelationsQueue.shared.addAwaitingEvent(toVPostQuote.event)
-                                            req(RM.getUserMetadata(pubkey: toVPostQuote.event.pubkey))
-                                        }
-                                    }
-                            }
-                            else {
-                                Kind1Default(vPost: toVPostQuote, hideFooter:false, isDetail:isDetail)
-                                    .onAppear {
-                                        if toVPostQuote.event.contact == nil {
-                                            EventRelationsQueue.shared.addAwaitingEvent(toVPostQuote.event)
-                                            req(RM.getUserMetadata(pubkey: toVPostQuote.event.pubkey))
-                                        }
-                                    }
-                            }
-                        }
-                    }
-                    // CASE - We need to fetch it
-                    else if let firstQuoteId = event.firstQuoteId {
-                        CenteredProgressView().onAppear {
-                            // fetch quote
-                            EventRelationsQueue.shared.addAwaitingEvent(event)
-                            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: firstQuoteId)))
-                        }
+                if event.isRepost, let firstQuote = vPost.firstQuote.first {
+                    // CASE - WE HAVE IT IN VPOST
+                    KindResolver(vPost: firstQuote, inThread: inThread, connect: connect, fetchOnAppear: true)
+                }
+                // CASE - We have the event: firstQuote_ = already .firstQuote or lazy fetched with .firstQuoteId
+                else if event.isRepost, let firstQuote_ = event.firstQuote_, let toVPostQuote = firstQuote_.toVPost() {
+                    KindResolver(vPost: toVPostQuote, inThread: inThread, connect: connect, fetchOnAppear: true)
+                }
+                // CASE - We need to fetch it
+                else if event.isRepost, let firstQuoteId = event.firstQuoteId {
+                    CenteredProgressView().onAppear {
+                        // fetch quote
+                        EventRelationsQueue.shared.addAwaitingEvent(event)
+                        req(RM.getEvent(id: firstQuoteId))
                     }
                 }
-                // IS NOT A REPOST
-                else {
-                    if vPost.isHighlight {
-                        Highlight(vPost: vPost, hideFooter: hideFooter, inThread:inThread, connect:connect)
-                    }
-                    else if fullWidth {
-                        Kind1(vPost: vPost, hideFooter: hideFooter, inThread:inThread, connect:connect, isReply: isReply, isDetail:isDetail)
-                        //                .background(Color.random)
-                    }
-                    else {
-                        Kind1Default(vPost: vPost, hideFooter: hideFooter, inThread:inThread, connect:connect, isReply: isReply, isDetail:isDetail)
-                        //                .background(Color.random)
-                    }
-                    
+                else { // IS NOT A REPOST
+                    KindResolver(vPost: vPost, fullWidth: fullWidth, hideFooter: hideFooter, inThread: inThread, isReply: isReply, isDetail:isDetail, connect: connect, fetchOnAppear: false)
                 }
             }
             .padding(.top, 20)
             .background(Color.systemBackground) // NOTEROW BOX BACKGROUND
             .onAppear {
-                //            guard 1 == 2 else { return } // performance check
-                //            print("🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴 MY FACE IS APPEAR")
-                // should fetch setMetaData if
-                // No Contact
-                // Contact updated_at is very old
-                // followed contact meta data refresh should be updated at app wake up probably
                 if (event.contact == nil || event.contact?.metadata_created_at == 0) {
                     print("🔴🔴 NoteRow.onAppear vPost.vContact == nil so: REQ.0:\(event.pubkey)")
                     sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.pubkey))) // TODO: MOVE TO VM
@@ -161,336 +85,7 @@ struct NoteRow: View {
                 }
             }
         }
-        else {
-            Text("_Post deleted by \(vPost.displayName)_")
-                .hCentered()
-        }
-    }
-    
-    // Hightlight note
-    struct Highlight: View {
-        let vPost:VPost
-        let hideFooter:Bool // For rendering in NewReply
-        let inThread:Bool // For rendering in thread
-        var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
-        @ObservedObject var event:Event
-        @ObservedObject var settings:SettingsStore = .shared
-        
-        init(vPost: VPost, hideFooter:Bool = true, inThread:Bool = false, connect:ThreadConnectDirection? = nil) {
-            self.vPost = vPost
-            self.event = vPost.event
-            self.hideFooter = hideFooter
-            self.inThread = inThread
-            self.connect = connect
-        }
-        
-        let THREAD_LINE_OFFSET = 34.0
-        
-        var body: some View {
-            
-            HStack(alignment: .top, spacing:0) {
-                PFP(pubkey: vPost.pubkey, pictureUrl: event.contact?.picture ?? vPost.pictureUrl, isFollowing: vPost.following)
-                    .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: DIMENSIONS.POST_ROW_PFP_HEIGHT)
-                    .background(alignment: .top, content: {
-                        Color("LightGray")
-                            .frame(width: 2, height: 20)
-                            .offset(x:0, y: -20)
-                            .opacity(connect == .top || connect == .both ? 1 : 0)
-                    })
-                    .onTapGesture {
-                        navigateTo(ContactPath(key: vPost.pubkey)) // TODO: if vPost.contact navigate with that else by .pubkey
-                    }
-                    .padding(.horizontal, DIMENSIONS.POST_ROW_PFP_HPADDING)
-
-                VStack(alignment:.leading, spacing: 3) {// Post container
-                    HStack { // name + reply + context menu
-                        NoteHeaderView(vPost: vPost)
-                        Spacer()
-                        NoteMenuView(vPost: vPost)
-                    }
-                    if !inThread {
-                        ReplyingToFragmentView(vPost: vPost)
-//                            .padding(.bottom, 3)
-                            .contentShape(Rectangle())
-                            .onTapGesture { navigateTo(vPost) }
-                    }
-                    VStack {
-                        Text(vPost.event.content ?? "")
-                            .lineLimit(5)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .italic()
-                            .padding(20)
-                            .overlay(alignment:.topLeading) {
-                                Image(systemName: "quote.opening")
-                                    .foregroundColor(Color.secondary)
-                            }
-                            .overlay(alignment:.bottomTrailing) {
-                                Image(systemName: "quote.closing")
-                                    .foregroundColor(Color.secondary)
-                            }
-                        
-                        if let highlightAuthorPubkey = vPost.highlightAuthorPubkey {
-                            HStack {
-                                Spacer()
-                                PFP(pubkey: highlightAuthorPubkey, pictureUrl: vPost.highlightAuthorPicture, size: 20, isFollowing: vPost.highlightAuthorIsFollowing)
-                                    .onTapGesture {
-                                        navigateTo(ContactPath(key: highlightAuthorPubkey))
-                                    }
-                                Text(vPost.highlightAuthorName ?? "Unknown")
-                                    .onTapGesture {
-                                        navigateTo(ContactPath(key: highlightAuthorPubkey))
-                                    }
-                            }
-                            .padding(.trailing, 20)
-                        }
-                        HStack {
-                            Spacer()
-                            if let url = vPost.highlightUrl {
-                                Text("[\(url)](\(url))")
-                                    .font(.caption)
-                            }
-                        }
-                        .padding(.trailing, 20)
-                    }
-                    .padding(10)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 15)
-                            .stroke(.regularMaterial, lineWidth: 1)
-                    )
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        navigateTo(vPost)
-                    }
-                    if (!hideFooter && settings.rowFooterEnabled) {
-                        FooterFragmentView(vPost: vPost)
-                            .padding(.top, 10)
-                    }
-                }
-                .padding(.bottom, 10)
-            }
-            .background(alignment: .leading) {
-                Color("LightGray")
-                    .frame(width: 2)
-                    .offset(x: THREAD_LINE_OFFSET, y: 18)
-                    .opacity(connect == .bottom || connect == .both ? 1 : 0)
-            }
-            .padding(.trailing, DIMENSIONS.KIND1_TRAILING)
-            .background(alignment: .leading) {
-                Color.systemBackground.frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH+(DIMENSIONS.POST_ROW_PFP_HPADDING))
-                    .padding(.top, DIMENSIONS.POST_ROW_PFP_HEIGHT)
-                    .onTapGesture {
-                        navigateTo(vPost)
-                    }
-            }
-            
-        }
-    }
-    
-    // Note 1 default
-    struct Kind1Default: View {
-        @EnvironmentObject var dim:DIMENSIONS
-        let vPost:VPost
-        let hideFooter:Bool // For rendering in NewReply
-        let inThread:Bool // For rendering in thread
-        var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
-        let isReply:Bool // is reply on PostDetail
-        let isDetail:Bool
-        @ObservedObject var event:Event
-         
-        let sp:SocketPool = .shared
-        let up:Unpublisher = .shared
-        @ObservedObject var settings:SettingsStore = .shared
-        
-        init(vPost: VPost, hideFooter:Bool = true, inThread:Bool = false, connect:ThreadConnectDirection? = nil, isReply:Bool = false, isDetail:Bool = false) {
-            self.vPost = vPost
-            self.event = vPost.event
-            self.hideFooter = hideFooter
-            self.inThread = inThread
-            self.connect = connect
-            self.isReply = isReply
-            self.isDetail = isDetail
-        }
-        
-        let THREAD_LINE_OFFSET = 34.0
-        
-        var imageWidth:CGFloat {
-            // FULL WIDTH IS OFF
-            
-            // LIST OR LIST PARENT
-            if !isDetail { return dim.availableNoteRowImageWidth() }
-            
-            // DETAIL
-            if isDetail && !isReply { return dim.availablePostDetailImageWidth() }
-            
-            // DETAIL PARENT OR REPLY
-            return dim.availablePostDetailRowImageWidth()
-        }
-        
-        var body: some View {
-            
-            HStack(alignment: .top, spacing:0) {
-                PFP(pubkey: vPost.pubkey, pictureUrl: event.contact?.picture ?? vPost.pictureUrl, isFollowing: vPost.following)
-                    .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: DIMENSIONS.POST_ROW_PFP_HEIGHT)
-                    .background(alignment: .top) {
-                        Color("LightGray")
-                            .frame(width: 2, height: 20)
-                            .offset(x:0, y: -20)
-                            .opacity(connect == .top || connect == .both ? 1 : 0)
-                    }
-                    .onTapGesture {
-                        navigateTo(ContactPath(key: vPost.pubkey)) // TODO: if vPost.contact navigate with that else by .pubkey
-                    }
-                    .padding(.horizontal, DIMENSIONS.POST_ROW_PFP_HPADDING)
-
-                VStack(alignment:.leading, spacing: 3) {// Post container
-                    HStack { // name + reply + context menu
-                        NoteHeaderView(vPost: vPost)
-                        Spacer()
-                        NoteMenuView(vPost: vPost)
-                    }
-                    if !inThread {
-                        ReplyingToFragmentView(vPost: vPost)
-//                            .padding(.bottom, 3)
-                            .contentShape(Rectangle())
-                            .onTapGesture { navigateTo(vPost) }
-                    }
-                    if vPost.event.kind == 1063 {
-                        Kind1063(vPost, availableWidth: imageWidth)
-                    }
-                    else {
-                        ContentRenderer(vPost: vPost, fullWidth: false, availableWidth: imageWidth)
-                            .frame(maxWidth: .infinity, alignment:.leading)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                navigateTo(vPost)
-                            }
-                    }
-                    if (!hideFooter && settings.rowFooterEnabled) {
-                        FooterFragmentView(vPost: vPost)
-                            .padding(.top, 10)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                navigateTo(vPost)
-                            }
-                    }
-                }
-                .padding(.bottom, 10)
-                .background(alignment: .topLeading) {
-                    Color.systemBackground
-                        .frame(height: 25)
-                        .padding(.trailing, 45) // Space for NoteMenu tapping
-                        .onTapGesture {
-                            navigateTo(vPost)
-                        }
-                }
-            }
-            .background(alignment: .leading) {
-                Color("LightGray")
-                    .frame(width: 2)
-                    .offset(x: THREAD_LINE_OFFSET, y: 18)
-                    .opacity(connect == .bottom || connect == .both ? 1 : 0)
-            }
-            .padding(.trailing, DIMENSIONS.KIND1_TRAILING)
-            .background(alignment: .topLeading) {
-                Color.systemBackground.frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH+(DIMENSIONS.POST_ROW_PFP_HPADDING))
-                    .padding(.top, DIMENSIONS.POST_ROW_PFP_HEIGHT)
-                    .onTapGesture {
-                        navigateTo(vPost)
-                    }
-            }
-            
-        }
-    }
-    
-    // Note Full width
-    struct Kind1: View {
-        @EnvironmentObject var dim:DIMENSIONS
-        let vPost:VPost
-        let hideFooter:Bool // For rendering in NewReply
-        let inThread:Bool // For rendering in thread
-        var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
-        let isReply:Bool // is reply of PostDetail
-        let isDetail:Bool
-        @ObservedObject var event:Event
-         
-        let sp:SocketPool = .shared
-        let up:Unpublisher = .shared
-        @ObservedObject var settings:SettingsStore = .shared
-        
-        init(vPost: VPost, hideFooter:Bool = true, inThread:Bool = false, connect:ThreadConnectDirection? = nil, isReply:Bool = false, isDetail:Bool = false) {
-            self.vPost = vPost
-            self.event = vPost.event
-            self.hideFooter = hideFooter
-            self.inThread = inThread
-            self.connect = connect
-            self.isReply = isReply
-            self.isDetail = isDetail
-        }
-        
-        let THREAD_LINE_OFFSET = 34.0
-        
-        var imageWidth:CGFloat {
-            // FULL WIDTH IS ON
-            
-            // LIST OR LIST PARENT
-            if !isDetail { return dim.listWidth }
-            
-            // DETAIL
-            if isDetail && !isReply { return dim.availablePostDetailRowImageWidth() }
-            
-            // DETAIL PARENT OR REPLY
-            return dim.availablePostDetailRowImageWidth()
-        }
-        
-        var body: some View {
-            
-            VStack(spacing: 3) {
-                HStack(alignment: .top, spacing:0) {
-                    PFP(pubkey: vPost.pubkey, pictureUrl: event.contact?.picture, isFollowing: vPost.following)
-                        .frame(width: 50, height: 50)
-                        .onTapGesture {
-                            navigateTo(ContactPath(key: vPost.pubkey)) // TODO: if vPost.contact navigate with that else by .pubkey
-                        }
-                        .padding(.horizontal, 10)
-                    NoteHeaderView(vPost: vPost, singleLine: false)
-                    Spacer()
-                    NoteMenuView(vPost: vPost)
-                        .padding(.horizontal, 20)
-                }
-                .background(alignment: .leading) {
-                    Color.systemBackground
-                        .padding(.leading, DIMENSIONS.ROW_PFP_SPACE)
-                        .padding(.trailing, 60) // Space for NoteMenu tapping
-                        .onTapGesture {
-                            navigateTo(vPost)
-                        }
-                }
-                .padding(.bottom, 10)
-                VStack(alignment:.leading, spacing: 3) {// Post container
-                    ReplyingToFragmentView(vPost: vPost)
-                        .padding(.horizontal, 10)
-                        .contentShape(Rectangle())
-                        .onTapGesture { navigateTo(vPost) }
-                    if vPost.event.kind == 1063 {
-                        Kind1063(vPost, availableWidth: imageWidth)
-                    }
-                    else {
-                        ContentRenderer(vPost: vPost, fullWidth: true, availableWidth: imageWidth)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                navigateTo(vPost)
-                            }
-                    }
-                    if (!hideFooter && settings.rowFooterEnabled) {
-                        FooterFragmentView(vPost: vPost)
-                            .padding(10)
-                            .onTapGesture {
-                                navigateTo(vPost)
-                            }
-                    }
-                }
-            }
-        }
+        else { Text("_Post deleted by \(vPost.displayName)_").hCentered() }
     }
 }
 
@@ -556,71 +151,71 @@ struct NoteRow_Previews: PreviewProvider {
                 
                 //            Group {
                 //                if (img0 != nil) {
-                //                    NoteRow(vPost: img0!)
+                //                    PostRowDeletable(vPost: img0!)
                 //                        .listRowInsets(EdgeInsets())
                 //                }
                 //
                 //                if (img1 != nil) {
-                //                    NoteRow(vPost: img1!)
+                //                    PostRowDeletable(vPost: img1!)
                 //                        .listRowInsets(EdgeInsets())
                 //                }
                 //
                 //                if (img2 != nil) {
-                //                    NoteRow(vPost: img2!)
+                //                    PostRowDeletable(vPost: img2!)
                 //                        .listRowInsets(EdgeInsets())
                 //                }
                 //
                 //                if (img3 != nil) {
-                //                    NoteRow(vPost: img3!)
+                //                    PostRowDeletable(vPost: img3!)
                 //                        .listRowInsets(EdgeInsets())
                 //                }
                 //
                 //                if (img4 != nil) {
-                //                    NoteRow(vPost: img4!)
+                //                    PostRowDeletable(vPost: img4!)
                 //                        .listRowInsets(EdgeInsets())
                 //                }
                 
                 
                 //                if (event0 != nil) {
-                //                    NoteRow(vPost: event0!)
+                //                    PostRowDeletable(vPost: event0!)
                 //                        .listRowInsets(EdgeInsets())
                 //                }
                 //
                 Group {
                     //                if let vPost = PreviewFetcher.fetchVPost("102177a51af895883e9256b70b2caff6b9ef90230359ee20f6dc7851ec9e5d5a") {
-                    //                    NoteRow(vPost: vPost)
+                    //                    PostRowDeletable(vPost: vPost)
                     //                }
                     //                if let vPost = PreviewFetcher.fetchVPost("6701067d37887024cd221c45e77cf3f0e1ef76589006739617ccc8962719a024") {
-                    //                    NoteRow(vPost: vPost)
+                    //                    PostRowDeletable(vPost: vPost)
                     //                }
                     
                     
                     //                if (eventLong != nil) {
-                    //                    NoteRow(vPost: eventLong!)
+                    //                    PostRowDeletable(vPost: eventLong!)
                     //                }
                     
                     if let kind1063quoted = PreviewFetcher.fetchVPost("71a965d8e8546f8927cea23ad865a429dbec0215f36c5e0edad2323eb00f4851") {
-                        NoteRow(vPost: kind1063quoted)
+                        PostRowDeletable(vPost: kind1063quoted)
                     }
                     
                     if let kind1063 = PreviewFetcher.fetchVPost("ac0c2960db29828ee4a818337ea56df990d9ddd9278341b96c9fb530b4c4dce8") {
-                        NoteRow(vPost: kind1063)
+                        PostRowDeletable(vPost: kind1063)
                     }
                     
                     if let highlight = PreviewFetcher.fetchVPost("68b3330358ab3e554183724bed09cc704e62e9b3e790efbb7e819c81905e71a3") {
-                        NoteRow(vPost: highlight)
+                        PostRowDeletable(vPost: highlight)
                     }
                     
                     if let vPost = PreviewFetcher.fetchVPost("2b6996d0695569d97f7dd6fd8f2a32428d4df5ca3f28bfcad6a6cc087ff79e25") {
-                        NoteRow(vPost: vPost)
+                        PostRowDeletable(vPost: vPost)
                     }
                     
                     if (event1 != nil) {
-                        NoteRow(vPost: event1!)
+                        PostRowDeletable(vPost: event1!)
                     }
                     ////
                     if (event2 != nil) {
-                        NoteRow(vPost: event2!)
+                        PostRowDeletable(vPost: event2!)
                     }
                     //
                     //            NoteRowView(event: event3!)
@@ -637,12 +232,12 @@ struct NoteRow_Previews: PreviewProvider {
                     
                     if (event6 != nil) {
                         // REPOST, LOADING?
-                        NoteRow(vPost: event6!)
+                        PostRowDeletable(vPost: event6!)
                     }
                     
                     if (event7 != nil) {
                         // REPOST
-                        NoteRow(vPost: event7!)
+                        PostRowDeletable(vPost: event7!)
                     }
                     //            }
                     //            .frame(maxHeight: 400)

@@ -244,6 +244,11 @@
 		1FD3DE0329BE325B007E1E6E /* PrivateNoteToggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD3DE0229BE325B007E1E6E /* PrivateNoteToggle.swift */; };
 		1FD49733297FCB5E0084F14E /* PreviewHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD49732297FCB5E0084F14E /* PreviewHelper.swift */; };
 		1FD49737298029600084F14E /* NoteTextRenderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD49736298029600084F14E /* NoteTextRenderView.swift */; };
+		1FD78EEF2A0CB78B003E7B3E /* Kind1Default.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD78EEE2A0CB78B003E7B3E /* Kind1Default.swift */; };
+		1FD78EF12A0CB813003E7B3E /* Kind1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD78EF02A0CB813003E7B3E /* Kind1.swift */; };
+		1FD78EF32A0CB878003E7B3E /* Highlight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD78EF22A0CB878003E7B3E /* Highlight.swift */; };
+		1FD78EF52A0CBE18003E7B3E /* KindResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD78EF42A0CBE18003E7B3E /* KindResolver.swift */; };
+		1FD78EF72A0CC365003E7B3E /* PostRowDeletable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD78EF62A0CC365003E7B3E /* PostRowDeletable.swift */; };
 		1FD8AD7329D831CD00693302 /* Color+random.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD8AD7229D831CD00693302 /* Color+random.swift */; };
 		1FD8AD7529D87D0B00693302 /* ListViewContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD8AD7429D87D0B00693302 /* ListViewContainer.swift */; };
 		1FDBA1A129D96B5200BB866B /* FollowingGuardian.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FDBA1A029D96B5200BB866B /* FollowingGuardian.swift */; };
@@ -536,6 +541,11 @@
 		1FD3DE0229BE325B007E1E6E /* PrivateNoteToggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateNoteToggle.swift; sourceTree = "<group>"; };
 		1FD49732297FCB5E0084F14E /* PreviewHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewHelper.swift; sourceTree = "<group>"; };
 		1FD49736298029600084F14E /* NoteTextRenderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteTextRenderView.swift; sourceTree = "<group>"; };
+		1FD78EEE2A0CB78B003E7B3E /* Kind1Default.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Kind1Default.swift; sourceTree = "<group>"; };
+		1FD78EF02A0CB813003E7B3E /* Kind1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Kind1.swift; sourceTree = "<group>"; };
+		1FD78EF22A0CB878003E7B3E /* Highlight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Highlight.swift; sourceTree = "<group>"; };
+		1FD78EF42A0CBE18003E7B3E /* KindResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KindResolver.swift; sourceTree = "<group>"; };
+		1FD78EF62A0CC365003E7B3E /* PostRowDeletable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostRowDeletable.swift; sourceTree = "<group>"; };
 		1FD8AD7229D831CD00693302 /* Color+random.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+random.swift"; sourceTree = "<group>"; };
 		1FD8AD7429D87D0B00693302 /* ListViewContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListViewContainer.swift; sourceTree = "<group>"; };
 		1FDBA1A029D96B5200BB866B /* FollowingGuardian.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowingGuardian.swift; sourceTree = "<group>"; };
@@ -596,6 +606,7 @@
 		1F00E8C129C2626500797B78 /* Post */ = {
 			isa = PBXGroup;
 			children = (
+				1FD78EED2A0CB770003E7B3E /* Kinds */,
 				1FC78F6629CA18410009C1C7 /* Ago.swift */,
 				1F0088EA29D735080016F111 /* ContentRenderer.swift */,
 				1FB130BA29C0F9A6004AC98D /* FooterFragmentView.swift */,
@@ -605,6 +616,7 @@
 				1FB130B229C0E5A4004AC98D /* NoteHeaderView.swift */,
 				1F84840429C1A84B00AF129A /* NoteMenuView.swift */,
 				1FB130B029C0DB07004AC98D /* NoteRow.swift */,
+				1FD78EF62A0CC365003E7B3E /* PostRowDeletable.swift */,
 				1FB130AE29C0C99D004AC98D /* Post.swift */,
 				1FB130BC29C1930A004AC98D /* PostDetailView.swift */,
 				1F6B444F29D5D1F700AD3191 /* PostOrThread.swift */,
@@ -1078,6 +1090,17 @@
 			path = Profiles;
 			sourceTree = "<group>";
 		};
+		1FD78EED2A0CB770003E7B3E /* Kinds */ = {
+			isa = PBXGroup;
+			children = (
+				1FD78EEE2A0CB78B003E7B3E /* Kind1Default.swift */,
+				1FD78EF02A0CB813003E7B3E /* Kind1.swift */,
+				1FD78EF22A0CB878003E7B3E /* Highlight.swift */,
+				1FD78EF42A0CBE18003E7B3E /* KindResolver.swift */,
+			);
+			path = Kinds;
+			sourceTree = "<group>";
+		};
 		1FDF0ED729EBA26300B56AC4 /* NosturList */ = {
 			isa = PBXGroup;
 			children = (
@@ -1238,6 +1261,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1FC82F3229AE0C0700B81CE5 /* Mentions.swift in Sources */,
+				1FD78EF12A0CB813003E7B3E /* Kind1.swift in Sources */,
 				1F2DE030298E5C5C00891D2E /* BlockListView.swift in Sources */,
 				1F756533296AE7910078474E /* NewRelayView.swift in Sources */,
 				1F96792F29BF613C00E78173 /* NewPrivateNoteSheet.swift in Sources */,
@@ -1249,6 +1273,7 @@
 				1F33EC3929B6849800615FB9 /* Centered.swift in Sources */,
 				1F810B2E29E65639006B1614 /* TermsAndConditions.swift in Sources */,
 				1F45C7EA29EF930F00F58772 /* ImageUploading.swift in Sources */,
+				1FD78EF52A0CBE18003E7B3E /* KindResolver.swift in Sources */,
 				1F5BBE40297BC7E600F4AF03 /* EventsError.swift in Sources */,
 				1F3E135929C8B11F00D076EA /* Event+PrivateNotes.swift in Sources */,
 				1F49C80A29B900AD005C960D /* RollingNumberView.swift in Sources */,
@@ -1284,6 +1309,7 @@
 				1F0088EB29D735080016F111 /* ContentRenderer.swift in Sources */,
 				1FC78F6F29CAD3510009C1C7 /* DMConversationView.swift in Sources */,
 				1F8B135C297B36DB002EB8CF /* Data+Bytes.swift in Sources */,
+				1FD78EF32A0CB878003E7B3E /* Highlight.swift in Sources */,
 				1FC78F7629CB4A920009C1C7 /* ChatInputField.swift in Sources */,
 				1F9499CB299F715800F628B4 /* TryGuestAccountSheet.swift in Sources */,
 				1F927C6F297DB34A0024F665 /* Queue.swift in Sources */,
@@ -1371,6 +1397,7 @@
 				1FB130BB29C0F9A6004AC98D /* FooterFragmentView.swift in Sources */,
 				1FC4556129CB677F00DE3239 /* NewDMButton.swift in Sources */,
 				1F3309832989819700D4D8CF /* Maintenance.swift in Sources */,
+				1FD78EEF2A0CB78B003E7B3E /* Kind1Default.swift in Sources */,
 				1F8B1361297B36DB002EB8CF /* Bytes+SecureRandom.swift in Sources */,
 				1FE5068E29B391CF006A16D8 /* FastAccountSwitcher.swift in Sources */,
 				1FC78F6729CA18410009C1C7 /* Ago.swift in Sources */,
@@ -1408,6 +1435,7 @@
 				1F21442E29A797B80090E78E /* SettingsStore.swift in Sources */,
 				1F45C7ED29EF997200F58772 /* ImgurMediaUploadService.swift in Sources */,
 				1F2E760529F6DF6C00E67CE7 /* EditListTitleSheet.swift in Sources */,
+				1FD78EF72A0CC365003E7B3E /* PostRowDeletable.swift in Sources */,
 				1F7525802997854200477AF2 /* NewNote.swift in Sources */,
 				1F740DAD29AF8A5200EFCCA7 /* BadgesReceivedView.swift in Sources */,
 				1F4AFC4729733E2400CC1F90 /* Event+CoreDataClass.swift in Sources */,
