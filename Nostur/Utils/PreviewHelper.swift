@@ -129,6 +129,9 @@ class PreviewEnvironment {
             print("19 \(messages.count)")
             messages.append(contentsOf: testHighlights())
             print("20 \(messages.count)")
+            messages.append(contentsOf: testKind1063())
+            print("21 \(messages.count)")
+            
             
             var relayMessages:[RelayMessage] = []
             

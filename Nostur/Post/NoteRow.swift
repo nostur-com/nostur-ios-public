@@ -354,12 +354,17 @@ struct NoteRow: View {
                             .contentShape(Rectangle())
                             .onTapGesture { navigateTo(vPost) }
                     }
-                    ContentRenderer(vPost: vPost, fullWidth: false, availableWidth: imageWidth)
-                        .frame(maxWidth: .infinity, alignment:.leading)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            navigateTo(vPost)
-                        }
+                    if vPost.event.kind == 1063 {
+                        Kind1063(vPost, availableWidth: imageWidth)
+                    }
+                    else {
+                        ContentRenderer(vPost: vPost, fullWidth: false, availableWidth: imageWidth)
+                            .frame(maxWidth: .infinity, alignment:.leading)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                navigateTo(vPost)
+                            }
+                    }
                     if (!hideFooter && settings.rowFooterEnabled) {
                         FooterFragmentView(vPost: vPost)
                             .padding(.top, 10)
@@ -466,11 +471,16 @@ struct NoteRow: View {
                         .padding(.horizontal, 10)
                         .contentShape(Rectangle())
                         .onTapGesture { navigateTo(vPost) }
-                    ContentRenderer(vPost: vPost, fullWidth: true, availableWidth: imageWidth)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            navigateTo(vPost)
-                        }
+                    if vPost.event.kind == 1063 {
+                        Kind1063(vPost, availableWidth: imageWidth)
+                    }
+                    else {
+                        ContentRenderer(vPost: vPost, fullWidth: true, availableWidth: imageWidth)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                navigateTo(vPost)
+                            }
+                    }
                     if (!hideFooter && settings.rowFooterEnabled) {
                         FooterFragmentView(vPost: vPost)
                             .padding(10)
@@ -588,6 +598,14 @@ struct NoteRow_Previews: PreviewProvider {
                     //                if (eventLong != nil) {
                     //                    NoteRow(vPost: eventLong!)
                     //                }
+                    
+                    if let kind1063quoted = PreviewFetcher.fetchVPost("71a965d8e8546f8927cea23ad865a429dbec0215f36c5e0edad2323eb00f4851") {
+                        NoteRow(vPost: kind1063quoted)
+                    }
+                    
+                    if let kind1063 = PreviewFetcher.fetchVPost("ac0c2960db29828ee4a818337ea56df990d9ddd9278341b96c9fb530b4c4dce8") {
+                        NoteRow(vPost: kind1063)
+                    }
                     
                     if let highlight = PreviewFetcher.fetchVPost("68b3330358ab3e554183724bed09cc704e62e9b3e790efbb7e819c81905e71a3") {
                         NoteRow(vPost: highlight)

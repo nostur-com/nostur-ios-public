@@ -185,6 +185,18 @@ func testHighlights() -> [String] {
     return events
 }
 
+func testKind1063() -> [String] {
+    var events = [String]()
+    
+    events.append(###"["EVENT", "kind1063profile", {"pubkey":"29079335c266e8995b9b8b0613017f8a818b2a52600ed19bed268b82f4d025dc","content":"{\"name\":\"Jeremy Baker\",\"username\":\"Jeremy Baker\",\"display_name\":\"Baker 48\",\"displayName\":\"Baker 48\",\"picture\":\"https://nostr.build/i/p/nostr.build_6527dce4384c0a9d58ed4ba0c69e9acbcae3a3fec87420af29e0b6d2f6e0066f.png\",\"banner\":\"https://nostr.build/i/p/nostr.build_1964fc3fb71047417b49f784824888c70d6421ffb45d1533048cb34e8552b3c2.jpeg\",\"website\":\"\",\"about\":\"Bitcoin\",\"lud16\":\"pliablename78@walletofsatoshi.com\",\"lud06\":\"lnurl1dp68gurn8ghj7ampd3kx2ar0veekzar0wd5xjtnrdakj7tnhv4kxctttdehhwm30d3h82unvwqhhqmrfv93xcetwv9kk2dec4vgsc3\",\"nip05\":\"jeremybaker@nostrplebs.com\"}","id":"92936ec34372f2d1b47b5e16e01770df87dc49c7a3c075a916631db364cc2a7d","created_at":1676950079,"sig":"2ea750d2f2b0bf2817ceea16e313466f20b2b4f9c8b971b850b03c1fb6ae1fd6e7dc10871c82d84b0cb607e6d9e48e4da995b012eca1c400689155c26f5b975d","kind":0,"tags":[]}]"###)
+    
+    events.append(###"["EVENT","testKind1063",{"pubkey":"29079335c266e8995b9b8b0613017f8a818b2a52600ed19bed268b82f4d025dc","content":"","id":"ac0c2960db29828ee4a818337ea56df990d9ddd9278341b96c9fb530b4c4dce8","created_at":1683739607,"sig":"6bd6089f5c985e6c83843f3b40285bb9f7579b0421861030167489ace1e4d75d3b66267f20c3c86c4e57ebb36ef47eae12dc9bdd45cd50041467e47ac6ff71d5","kind":1063,"tags":[["url","https://i.imgur.com/6QzPdVY.png"],["m","image/png"],["x","676738520eeb492a641b519ab5e1d3e6d62c3d195feea12fcc23eb9456148d85"],["size","92290"],["dim","1440x1414"],["blurhash","|8RMbrM{xvxus=j]xuofs=$-Rja_ofj?j[WAj[ax-sM{Riofocj?Rjofk84,WBjdt7xuf8ogayt8RjWBofofj?j[j]j[j??KayWTR*Rij?WAj[R%D~oft7ofoNjut7WCf9f#ofWBWBjcayj@ayjc?ct7WBRjWBj?RjfPWA"]]}]"###)
+    
+    events.append(###"["EVENT","kind1063quotes", {"pubkey":"29079335c266e8995b9b8b0613017f8a818b2a52600ed19bed268b82f4d025dc","content":"What am I missing? I see no update from play store either. \n\nnostr:nevent1qqs2crpfvrdjnq5wuj5psvm754klnyxemhvj0q6ph9kfldfsknzde6qzyq5s0ye4cfnw3x2mnw9svycp079grze22fsqa5vma5nghqh56qjacqcyqqqqgfcd8x5qc","id":"71a965d8e8546f8927cea23ad865a429dbec0215f36c5e0edad2323eb00f4851","created_at":1683739610,"sig":"3a395ce13c04f5308a120635c16e6725bed89f96b5ee2c5d1d353acf7fcdfc2d7fd32ea939aa0f3a01a5274f39282c486500513dfb26fa95f07ad3fcbbcbd14f","kind":1,"tags":[["e","1c8eae9cd4333cfd832d474f0752050fa89df708b2fc8a210f22cab8d95485dc"],["e","ac0c2960db29828ee4a818337ea56df990d9ddd9278341b96c9fb530b4c4dce8"],["p","460c25e682fda7832b52d1f22d3d22b3176d972f60dcdc3212ed8c92ef85065c"],["p","29079335c266e8995b9b8b0613017f8a818b2a52600ed19bed268b82f4d025dc"]]}]"###)
+
+    return events
+}
+
 // KIND 0 = SET (CONTACT) METADATA (USER PROFILES)
 func testKind0Events() -> [String] {
     var events:[String] = []

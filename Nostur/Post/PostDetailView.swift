@@ -175,6 +175,8 @@ struct PostAndParent: View {
                                             .onTapGesture {
                                                 navigateTo(vPost)
                                             }
+                                    case 1063:
+                                        NoteTextRenderView(vPost: vPost)
                                     default:
                                         Label("kind \(Double(event.kind).clean) type not (yet) supported", systemImage: "exclamationmark.triangle.fill")
                                             .centered()
@@ -204,6 +206,9 @@ struct PostAndParent: View {
                                     .onTapGesture {
                                         navigateTo(vPost)
                                     }
+                            case 1063:
+                                Kind1063(vPost, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
+                                .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                             default:
                                 Label("kind \(Double(event.kind).clean) type not (yet) supported", systemImage: "exclamationmark.triangle.fill")
                                     .centered()
@@ -409,6 +414,27 @@ struct DetailFooterFragment: View {
     }
 }
 
+struct Kind1063detail_Previews: PreviewProvider {
+    static var previews: some View {
+        NavigationStack {
+            if let kind1063 = PreviewFetcher.fetchVPost("ac0c2960db29828ee4a818337ea56df990d9ddd9278341b96c9fb530b4c4dce8") {
+                PostDetailView(vPost:kind1063)
+            }
+        }
+        .withPreviewEnvironment()
+    }
+}
+
+struct Kind1063detailQuoted_Previews: PreviewProvider {
+    static var previews: some View {
+        NavigationStack {
+            if let kind1063q = PreviewFetcher.fetchVPost("71a965d8e8546f8927cea23ad865a429dbec0215f36c5e0edad2323eb00f4851") {
+                PostDetailView(vPost:kind1063q)
+            }
+        }
+        .withPreviewEnvironment()
+    }
+}
 
 struct ReplyAndParentView_Previews: PreviewProvider {
     static var previews: some View {

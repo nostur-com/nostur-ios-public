@@ -12,6 +12,7 @@ import SwiftUI
 struct NoteTextRenderView: View {
     var vPost:VPost
     var useLinelimit = true
+    @State var viewSize:CGSize = .zero
     
     init(vPost: VPost, useLinelimit:Bool = true) {
         self.vPost = vPost
@@ -20,7 +21,20 @@ struct NoteTextRenderView: View {
     
     var body: some View {
         HStack(alignment: .top) {
-            if vPost.event.kind != 1 && (vPost.event.content ?? "").isEmpty {
+            if canRender1063(vPost) {
+                VStack {
+                    if viewSize.width > 0 {
+                        Kind1063(vPost, availableWidth: viewSize.width)
+                    }
+                    Color.clear.frame(height: 0)
+                       .modifier(SizeModifier())
+                       .onPreferenceChange(SizePreferenceKey.self) { size in
+                           guard size.width > 0 else { return }
+                           viewSize = size
+                       }
+                }
+            }
+            else if vPost.event.kind != 1 && (vPost.event.content ?? "").isEmpty {
                 Label("kind \(Double(vPost.event.kind).clean) type not (yet) supported", systemImage: "exclamationmark.triangle.fill")
                     .centered()
                     .frame(maxWidth: .infinity)
