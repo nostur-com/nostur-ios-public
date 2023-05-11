@@ -19,12 +19,12 @@ struct PostOrThread: View {
     var body: some View {
         VStack(spacing:0) {
             ForEach(vPost.parentPosts.indices, id:\.self) { index in
-                NoteRow(vPost: vPost.parentPosts[index],
+                PostRowDeletable(vPost: vPost.parentPosts[index],
                         inThread: (vPost.event.replyToId != nil && index != 0),
                         connect: vPost.parentPosts[index].event.replyToId != nil || index > 0 ? .both : .bottom, fullWidth: fullWidth, isDetail: false)
                     .id(vPost.parentPosts[index].id)
             }
-            NoteRow(vPost: vPost, inThread: vPost.event.replyToId != nil && vPost.parentPosts.count > 0, connect: vPost.event.replyToId != nil ? .top : nil, fullWidth: fullWidth, isDetail: false)
+            PostRowDeletable(vPost: vPost, inThread: vPost.event.replyToId != nil && vPost.parentPosts.count > 0, connect: vPost.event.replyToId != nil ? .top : nil, fullWidth: fullWidth, isDetail: false)
                 .id(vPost.id)
         }
     }

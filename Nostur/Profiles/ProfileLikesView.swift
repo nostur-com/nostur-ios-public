@@ -32,7 +32,7 @@ struct ProfileLikesView: View {
                 LazyVStack {
                     if (events.count > 0) {
                         ForEach(events.compactMap { $0.reactionTo?.toVPost() }) { vPost in
-                            NoteRow(vPost: vPost)
+                            PostRowDeletable(vPost: vPost)
                                 .background(Color.systemBackground)
                                 .boxShadow()
                                 .padding(.vertical, 10)

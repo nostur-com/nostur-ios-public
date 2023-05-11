@@ -158,11 +158,11 @@ struct Gif_Previews: PreviewProvider {
         ScrollView {
             LazyVStack {
                 if let vPost = PreviewFetcher.fetchVPost("8d49bc0204aad2c0e8bb292b9c99b7dc1bdd6c520a877d908724c27eb5ab8ce8") {
-                    NoteRow(vPost: vPost)
+                    PostRowDeletable(vPost: vPost)
                         .boxShadow()
                 }
                 if let vPost = PreviewFetcher.fetchVPost("1c0ba51ba48e5228e763f72c5c936d610088959fe44535f9c861627287fe8f6d") {
-                    NoteRow(vPost: vPost)
+                    PostRowDeletable(vPost: vPost)
                         .boxShadow()
                 }
             }

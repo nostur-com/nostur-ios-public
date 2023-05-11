@@ -42,7 +42,7 @@ struct NewReply: View {
         if let account = ns.account {
             VStack {
                 ScrollView {
-                    NoteRow(vPost: replyTo.toVPost()!, hideFooter: true)
+                    PostRowDeletable(vPost: replyTo.toVPost()!, hideFooter: true)
                     HStack {
                         NewReplyingToFragment(contact: replyTo.contact, pubkey: replyTo.pubkey)
                             .offset(x:80)

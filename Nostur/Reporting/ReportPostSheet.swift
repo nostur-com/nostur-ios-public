@@ -17,7 +17,7 @@ struct ReportPostSheet: View {
     var body: some View {
         VStack {
             ScrollView {
-                NoteRow(vPost: vPost, hideFooter: true)
+                PostRowDeletable(vPost: vPost, hideFooter: true)
                     .disabled(true)
                     .opacity(0.8)
                     .boxShadow()

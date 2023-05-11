@@ -158,7 +158,7 @@ struct QuotedNoteFragmentView_Previews: PreviewProvider {
             
             Spacer()
             if (event0 != nil) {
-                NoteRow(vPost: event0!)
+                PostRowDeletable(vPost: event0!)
             }
             
             if (event1 != nil) {

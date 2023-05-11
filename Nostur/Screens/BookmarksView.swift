@@ -107,7 +107,7 @@ struct BookmarksView: View {
             ScrollView {
                 LazyVStack {
                     ForEach(vBookmarks) { vBookmark in
-                        NoteRow(vPost: vBookmark)
+                        PostRowDeletable(vPost: vBookmark)
                             .background(Color.systemBackground)
                             .boxShadow()
                             .padding(.vertical, 10)

@@ -123,7 +123,7 @@ struct ProfileZapsView: View {
                             
                             LazyVStack {
                                 ForEach(vPosts.filter { $0.event.zapTally > 0  } .prefix(25)) { vPost in
-                                    NoteRow(vPost: vPost)
+                                    PostRowDeletable(vPost: vPost)
                                         .background(Color.systemBackground)
                                     Divider()
                                 }

@@ -140,7 +140,7 @@ struct LightningInvoice_Previews: PreviewProvider {
                     }
                     return nil
                 }() {
-                    NoteRow(vPost: vPost)
+                    PostRowDeletable(vPost: vPost)
                 }
             }
             .padding(20)

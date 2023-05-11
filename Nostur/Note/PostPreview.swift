@@ -36,7 +36,7 @@ struct PostPreview: View {
                 }
             AnyStatus()
             if let vPost = vPost {
-                NoteRow(vPost: vPost)
+                PostRowDeletable(vPost: vPost)
                     .boxShadow()
                     .disabled(true)
                     .environmentObject(dim)

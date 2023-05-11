@@ -97,7 +97,7 @@ struct MutedConversations: View {
         if let account = ns.account {
             ScrollView {
                 ForEach(vPosts) { vPost in
-                    NoteRow(vPost: vPost)
+                    PostRowDeletable(vPost: vPost)
                         .onSwipe(tint: Color.green, label: "Unmute", icon: "") {
                             ns.objectWillChange.send()
                             account.mutedRootIds_.removeAll(where: { $0 == vPost.id })

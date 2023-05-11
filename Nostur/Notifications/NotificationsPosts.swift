@@ -31,7 +31,7 @@ struct NotificationsPosts: View {
         ScrollView {
             LazyVStack(spacing: 0) {
                 ForEach(fl.vPosts) { vPost in
-                    NoteRow(vPost: vPost)
+                    PostRowDeletable(vPost: vPost)
                         .background(Color.systemBackground)
                         .boxShadow()
                         .padding(.vertical, 10)

@@ -261,7 +261,7 @@ struct PostAndParent: View {
                                  , id:\.self) { event in
                             
                             if let vPost = event.toVPost() {
-                                NoteRow(vPost: vPost, hideFooter: false, isReply:true)
+                                PostRowDeletable(vPost: vPost, hideFooter: false, isReply:true)
                                     .onAppear {
                                         if (vPost.event.contact?.metadata_created_at ?? 0) == 0 {
                                             EventRelationsQueue.shared.addAwaitingEvent(vPost.event)
