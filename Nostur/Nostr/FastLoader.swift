@@ -287,7 +287,7 @@ class Backlog {
     
     private func removeOldTasks() {
         tasks.forEach { task in
-            if task.createdAt.timeIntervalSinceNow < -30 {
+            if task.createdAt.timeIntervalSinceNow < -60 {
                 task.onTimeout()
                 tasks.remove(task)
             }
