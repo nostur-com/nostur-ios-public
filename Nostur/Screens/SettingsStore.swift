@@ -19,8 +19,6 @@ final class SettingsStore: ObservableObject {
         
         static let isSignatureVerificationEnabled = "signature_verification_enabled"
         static let replaceNsecWithHunter2 = "replace_nsec_with_hunter2"
-        static let sleepTrackingEnabled = "sleep_tracking_enabled"
-        static let sleepTrackingMode = "sleep_tracking_mode"
         
         static let defaultZapAmount = "default_zap_amount"
         static let defaultLightningWallet = "default_lightning_wallet"
@@ -74,10 +72,9 @@ final class SettingsStore: ObservableObject {
             Keys.replaceNsecWithHunter2: true,
             Keys.sleepGoal: 8,
             Keys.defaultZapAmount: 1000,
-            Keys.sleepTrackingEnabled: true,
             Keys.hideEmojisInNames: false,
             Keys.hideBadges: false,
-            Keys.restrictAutoDownload: true,
+            Keys.restrictAutoDownload: false,
             Keys.defaultLightningWallet: SettingsStore.walletOptions.first!.id,
             Keys.animatedPFPenabled: false,
             Keys.rowFooterEnabled: true,
@@ -157,16 +154,6 @@ final class SettingsStore: ObservableObject {
         get { defaults.bool(forKey: Keys.replaceNsecWithHunter2) }
     }
 
-    var isSleepTrackingEnabled: Bool {
-        set { defaults.set(newValue, forKey: Keys.sleepTrackingEnabled) }
-        get { defaults.bool(forKey: Keys.sleepTrackingEnabled) }
-    }
-
-    var sleepGoal: Int {
-        set { defaults.set(newValue, forKey: Keys.sleepGoal) }
-        get { defaults.integer(forKey: Keys.sleepGoal) }
-    }
-    
     var defaultZapAmount: Double {
         set { defaults.set(newValue, forKey: Keys.defaultZapAmount) }
         get { defaults.double(forKey: Keys.defaultZapAmount) }
