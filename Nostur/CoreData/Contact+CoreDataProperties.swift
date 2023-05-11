@@ -304,17 +304,15 @@ extension Contact : Identifiable {
         
         awaitingEvents.forEach { waitingEvent in
             if (waitingEvent.pubkey == contact.pubkey) {
+                waitingEvent.objectWillChange.send()
                 if waitingEvent.contact == nil {
-                    waitingEvent.objectWillChange.send()
                     waitingEvent.contact = contact
                 }
             }
             if let tagsSerialized = waitingEvent.tagsSerialized, tagsSerialized.contains(serializedP(contact.pubkey)) {
-                if let contacts = waitingEvent.contacts {
-                    if !contacts.contains(contact) {
-                        waitingEvent.objectWillChange.send()
-                        waitingEvent.addToContacts(contact)
-                    }
+                waitingEvent.objectWillChange.send()
+                if !waitingEvent.contacts_.contains(contact) {
+                    waitingEvent.addToContacts(contact)
                 }
             }
             EventRelationsQueue.shared.removeAwaitingEvent(waitingEvent)

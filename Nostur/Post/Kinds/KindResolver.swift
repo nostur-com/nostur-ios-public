@@ -40,7 +40,7 @@ struct KindResolver: View {
                 }
         }
         else {
-            Kind1Default(vPost: vPost, hideFooter:false, isDetail:isDetail)
+            Kind1Default(vPost: vPost, hideFooter:false, connect: connect, isDetail:isDetail)
                 .onAppear {
                     guard fetchOnAppear else { return }
                     if vPost.event.contact == nil {

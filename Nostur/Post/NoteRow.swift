@@ -16,10 +16,11 @@ struct NoteRow: View {
     let fullWidth:Bool
     let isReply:Bool // is reply on PostDetail (needs 2*10 less box width)
     let isDetail:Bool
+    let fetchOnAppear:Bool
     
     private let sp:SocketPool = .shared
     
-    init(vPost:VPost, hideFooter:Bool = false, inThread:Bool = false, connect: ThreadConnectDirection? = nil, fullWidth:Bool = false, isReply:Bool = false, isDetail:Bool = false) {
+    init(vPost:VPost, hideFooter:Bool = false, inThread:Bool = false, connect: ThreadConnectDirection? = nil, fullWidth:Bool = false, isReply:Bool = false, isDetail:Bool = false, fetchOnAppear:Bool = false) {
         self.vPost = vPost
         self.event = vPost.event
         self.hideFooter = hideFooter
@@ -28,9 +29,11 @@ struct NoteRow: View {
         self.fullWidth = fullWidth
         self.isReply = isReply
         self.isDetail = isDetail
+        self.fetchOnAppear = fetchOnAppear
     }
     
     var body: some View {
+        let _ = Self._printChanges()
         if event.deletedById == nil {
             VStack (alignment: .leading) {
                 if (event.isRepost) {
@@ -67,20 +70,51 @@ struct NoteRow: View {
                     }
                 }
                 else { // IS NOT A REPOST
-                    KindResolver(vPost: vPost, fullWidth: fullWidth, hideFooter: hideFooter, inThread: inThread, isReply: isReply, isDetail:isDetail, connect: connect, fetchOnAppear: false)
+                    KindResolver(vPost: vPost, fullWidth: fullWidth, hideFooter: hideFooter, inThread: inThread, isReply: isReply, isDetail:isDetail, connect: connect, fetchOnAppear: fetchOnAppear)
                 }
             }
             .padding(.top, 20)
+//            .background(Color.random) // NOTEROW BOX BACKGROUND
             .background(Color.systemBackground) // NOTEROW BOX BACKGROUND
             .onAppear {
+                var needPs = [String]()
                 if (event.contact == nil || event.contact?.metadata_created_at == 0) {
-                    print("🔴🔴 NoteRow.onAppear vPost.vContact == nil so: REQ.0:\(event.pubkey)")
-                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.pubkey))) // TODO: MOVE TO VM
+                    print("🔴🔴 NoteRow.onAppear event.contact == nil - Fetching kind 0 for:\(event.pubkey)")
+                    
+                
+                    needPs.append(event.pubkey)
+                    // This works for contact:
+//                    req(RM.getUserMetadata(pubkey: event.pubkey))
+                    
+                    // Or should we just get any p's?
+//                    req(RM.getUserMetadata(pubkeys: [event.pubkey])
+                    
+                    // OLD TODO: MOVE TO VM. BUT CANT BECAUSE SEARCH ETC HAS NO VM.
                 }
+                
+                let eventContactPs = event.contacts_.compactMap({ contact in
+                    if contact.metadata_created_at != 0 {
+                        return contact.pubkey
+                    }
+                    return nil
+                })
+                event.fastPs.forEach { (tag, pubkey, hint) in
+                    if !eventContactPs.contains(pubkey) {
+                        needPs.append(pubkey)
+                    }
+                }
+                
+                if needPs.count > 0 {
+                    EventRelationsQueue.shared.addAwaitingEvent(event)
+                    req(RM.getUserMetadata(pubkeys: needPs))
+                    print("🔴🔴 NoteRow.onAppear fetching \(needPs.count) missing contacts (event.pubkey or event.pTags)")
+                }
+                
                 if (event.isRepost && event.firstQuote != nil && event.firstQuote!.contact != nil) {
                     if (event.firstQuote!.contact!.metadata_created_at == 0) {
-                        print("🔴🔴 NoteRow.onAppear firstQuite.vContact == nil so: REQ.0:\(event.firstQuote!.pubkey)")
-                        sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: event.firstQuote!.pubkey))) // TODO: MOVE TO VM
+                        print("🔴🔴 NoteRow.onAppear event.firstQuote!.contact!.metadata_created_at == 0 - Fetching kind 0 for:\(event.firstQuote!.pubkey)")
+                        EventRelationsQueue.shared.addAwaitingEvent(event.firstQuote!)
+                        req(RM.getUserMetadata(pubkey: event.firstQuote!.pubkey))
                     }
                 }
             }

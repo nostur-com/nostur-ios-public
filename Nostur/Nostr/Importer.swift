@@ -75,6 +75,7 @@ class Importer {
         let isSignatureVerificationEnabled = self.settingsStore.isSignatureVerificationEnabled
         
         let context = DataProvider.shared().bg // SLOW???
+        
 //        var last:Event? = nil
         
         context.perform {

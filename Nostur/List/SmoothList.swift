@@ -8,7 +8,7 @@
 import SwiftUI
 import Nuke
 
-let SMOOTHLIST_AUTOSCROLL_OFFSET = 1.0
+let SMOOTHLIST_AUTOSCROLL_OFFSET = 3.0
 
 enum SingleSection: CaseIterable {
     case main

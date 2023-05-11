@@ -61,6 +61,11 @@ extension Event {
     
     @NSManaged public var deletedById: String?
     
+    var contacts_:[Contact] {
+        get { Array(contacts ?? [])  }
+        set { contacts = Set(newValue) }
+    }
+    
     var hasMissingContacts:Bool {
         (contacts?.count ?? 0) < fastTags.filter({ $0.0 == "p" }).count
     }

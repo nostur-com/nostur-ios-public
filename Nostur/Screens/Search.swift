@@ -52,7 +52,7 @@ struct Search: View {
                         }
                         
                         ForEach(vPosts) { vPost in
-                            PostRowDeletable(vPost: vPost)
+                            PostRowDeletable(vPost: vPost, fetchOnAppear: true)
                                 .boxShadow()
                         }
                     }

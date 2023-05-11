@@ -16,8 +16,9 @@ struct PostRowDeletable: View {
     var fullWidth:Bool = false
     var isReply:Bool = false // is reply on PostDetail (needs 2*10 less box width)
     var isDetail:Bool = false
+    var fetchOnAppear:Bool = false
     
-    init(vPost:VPost, hideFooter:Bool = false, inThread:Bool = false, connect: ThreadConnectDirection? = nil, fullWidth:Bool = false, isReply:Bool = false, isDetail:Bool = false) {
+    init(vPost:VPost, hideFooter:Bool = false, inThread:Bool = false, connect: ThreadConnectDirection? = nil, fullWidth:Bool = false, isReply:Bool = false, isDetail:Bool = false, fetchOnAppear:Bool = false) {
         self.vPost = vPost
         self.event = vPost.event
         self.hideFooter = hideFooter
@@ -26,11 +27,12 @@ struct PostRowDeletable: View {
         self.fullWidth = fullWidth
         self.isReply = isReply
         self.isDetail = isDetail
+        self.fetchOnAppear = fetchOnAppear
     }
     
     var body: some View {
         if event.deletedById == nil {
-            NoteRow(vPost: vPost, hideFooter: hideFooter, inThread: inThread, connect: connect, fullWidth: fullWidth, isReply: isReply, isDetail: isDetail)
+            NoteRow(vPost: vPost, hideFooter: hideFooter, inThread: inThread, connect: connect, fullWidth: fullWidth, isReply: isReply, isDetail: isDetail, fetchOnAppear:fetchOnAppear)
         }
         else {
             Text("_Post deleted by \(vPost.displayName)_").hCentered()
