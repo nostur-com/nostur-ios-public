@@ -901,6 +901,17 @@ extension LVM {
                         event.objectWillChange.send()
                         event.addToContacts(NSSet(array: contacts))
                     }
+                    
+                    if let firstQuote = event.firstQuote_ {
+                        bgEvents.append(firstQuote)
+                        let firstQuotePubkeys = Array(Set(firstQuote.fastPs.map { $0.1 }))
+                        if firstQuotePubkeys.count > 0 {
+                            let contacts = Contact.fetchByPubkeys(firstQuotePubkeys, context: context)
+                            firstQuote.objectWillChange.send()
+                            firstQuote.addToContacts(NSSet(array: contacts))
+                        }
+                    }
+                    
                 }
             }
             let contacts = Contact.fetchByPubkeys(pubkeys, context: context)
@@ -923,12 +934,17 @@ extension LVM {
                     if let tags = event.tagsSerialized, tags.contains(serializedP(pubkey)) {
                         eventsWithMissingContacts.append(event)
                     }
+                    if let firstQuote = event.firstQuote_ {
+                        if let firstQuoteTags = firstQuote.tagsSerialized, firstQuoteTags.contains(serializedP(pubkey)) {
+                            eventsWithMissingContacts.append(firstQuote)
+                        }
+                    }
                 }
             }
             eventsWithMissingContacts.forEach { event in
                 EventRelationsQueue.shared.addAwaitingEvent(event)
             }
-            print("added \(eventsWithMissingContacts.count) events to await for missing contacts \((missingPubkeys + emptyContactPubkeys).count) (total)99ccfc95a1078840dd9beacfb2031abe8599e4cfc11a61a3d12e4f554a64b4f4")
+            print("added \(eventsWithMissingContacts.count) events to await for missing contacts \((missingPubkeys + emptyContactPubkeys).count) (total)")
             SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missingPubkeys + emptyContactPubkeys )))
         }
     }
