@@ -116,13 +116,24 @@ class LVM: NSObject, ObservableObject {
     
     private func getAllObjectIds(_ vPosts:[VPost]) -> Set<NSManagedObjectID> {
         return vPosts.reduce(Set<NSManagedObjectID>()) { partialResult, vPost in
-            partialResult.union(Set([vPost.objectID] + vPost.parentPosts.map { $0.objectID }))
+            if vPost.isRepost, let firstPost = vPost.firstQuote.first {
+                // for repost add post + reposted post
+                return partialResult.union(Set([vPost.objectID, firstPost.objectID]))
+            } else {
+                return partialResult.union(Set([vPost.objectID] + vPost.parentPosts.map { $0.objectID }))
+            }
         }
     }
     
     private func getAllObjectIds(_ events:[Event]) -> Set<NSManagedObjectID> {
         return events.reduce(Set<NSManagedObjectID>()) { partialResult, event in
-            partialResult.union(Set([event.objectID] + event.parentEvents.map { $0.objectID }))
+            if event.isRepost, let firstQuote = event.firstQuote_ {
+                // for repost add post + reposted post
+                return partialResult.union(Set([event.objectID, firstQuote.objectID]))
+            }
+            else {
+                return partialResult.union(Set([event.objectID] + event.parentEvents.map { $0.objectID }))
+            }
         }
     }
     
