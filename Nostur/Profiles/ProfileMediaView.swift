@@ -36,13 +36,13 @@ struct ProfileMediaView: View {
             LazyVGrid(columns: columns, spacing: 5) {
                 ForEach(imageUrls.indices, id: \.self) { index in
                     // Lazy image here
-                    MediaThumb(imageUrls[index], size: squareSize)
+                    MediaThumb(imageUrls[index], size: squareSize, priority: index < 10 ? .veryHigh : .low)
                 }
             }
             .padding(10)
         }
         .onAppear {
-            fl.vPostTransform = false
+            fl.nrPostTransform = false
             fl.predicate = NSPredicate(format: "pubkey == %@ AND kind == 1", pubkey)
             fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
             fl.loadMore(1000)
@@ -58,7 +58,7 @@ struct ProfileMediaView: View {
 //                },
 //                processResponseCommand: { (taskId) in
 //                    print("\(taskId) 🟠🟠🟠 processResponseCommand")
-//                    let currentNewestCreatedAt = fl.vPosts.first?.created_at ?? 0
+//                    let currentNewestCreatedAt = fl.nrPosts.first?.created_at ?? 0
 //                    fl.predicate = NSPredicate(
 //                        format:
 //                            "created_at >= %i " +
@@ -85,13 +85,14 @@ struct ProfileMediaView: View {
 
 struct MediaThumb: View {
     
-    @State var priority:ImageRequest.Priority = .low
     let url:URL
     let squareSize:CGFloat
+    @State var priority:ImageRequest.Priority = .low
     
-    init(_ url:URL, size:CGFloat) {
+    init(_ url:URL, size:CGFloat, priority:ImageRequest.Priority = .low) {
         self.url = url
         self.squareSize = size
+        self.priority = priority
     }
     
     var body: some View {
@@ -154,10 +155,10 @@ struct MediaThumb: View {
         .pipeline(ImageProcessing.shared.content)
         .priority(priority)
         .onDisappear {
-            priority = .veryLow
+            priority = .low
         }
         .onAppear {
-            priority = .high
+            priority = .normal
         }
     }
 }
