@@ -144,9 +144,9 @@ struct ProfileView: View {
                                 ContactPrivateNoteToggle(contact: contact)
                                 Menu {
                                     Button {
-                                        UIPasteboard.general.string = Contact.npub(pubkey)
+                                        UIPasteboard.general.string = contact.npub
                                     } label: {
-                                        Label("Copy npub \(String(Contact.npub(pubkey).prefix(11)))...", systemImage: "doc.on.clipboard")
+                                        Label("Copy npub", systemImage: "doc.on.clipboard")
                                     }
                                     if let kind0 = kind0Events.first {
                                         Button {

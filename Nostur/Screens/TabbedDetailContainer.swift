@@ -141,7 +141,7 @@ struct TabbedDetailContainer: View {
                 return nrPost.anyDisplayName
             }
             else {
-                return String(nrPost.npub.prefix(11))
+                return String(nrPost.pubkey.suffix(11))
             }
         }
         if let event = tab.event {
@@ -149,7 +149,7 @@ struct TabbedDetailContainer: View {
                 return event.name
             }
             else {
-                return String(event.npub.prefix(11))
+                return String(event.pubkey.suffix(11))
             }
         }
         if let contact = tab.contact {
@@ -157,7 +157,7 @@ struct TabbedDetailContainer: View {
                 return contact.authorName
             }
             else {
-                return String(contact.npub.prefix(11))
+                return String(contact.pubkey.suffix(11))
             }
         }
         return "＿"

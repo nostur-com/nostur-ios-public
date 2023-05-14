@@ -42,7 +42,7 @@ struct PlaceholderPostHeader: View {
     var body: some View {
         HStack(spacing:2) {
             Group {
-                Text(String(nrPost.npub.prefix(11))) // Name
+                Text(String(nrPost.pubkey.suffix(11))) // Name
                     .foregroundColor(.primary)
                     .fontWeight(.bold)
                     .lineLimit(1)
@@ -50,7 +50,7 @@ struct PlaceholderPostHeader: View {
                 
                 if (singleLine) {
                     Group {
-                        Text("@\(String(nrPost.npub.prefix(11)))").layoutPriority(1)
+                        Text("@\(String(nrPost.pubkey.suffix(11)))").layoutPriority(1)
                         Text(" · ") //
                         Ago(nrPost.createdAt)
                             .layoutPriority(2)
@@ -62,7 +62,7 @@ struct PlaceholderPostHeader: View {
         }
         if (!singleLine) {
             HStack {
-                Text("@\(String(nrPost.npub.prefix(11)))").layoutPriority(1)
+                Text("@\(String(nrPost.pubkey.suffix(11)))").layoutPriority(1)
                 Text(" · ") //
                 Ago(nrPost.createdAt)
                     .layoutPriority(2)
@@ -95,7 +95,7 @@ struct PostHeader: View {
                 
                 if (singleLine) {
                     Group {
-                        Text("@\(contact.username ?? String(contact.npub.prefix(11)))").layoutPriority(1)
+                        Text("@\(contact.username ?? String(contact.pubkey.suffix(11)))").layoutPriority(1)
                         Text(" · ") //
                         Ago(nrPost.createdAt)
                             .layoutPriority(2)

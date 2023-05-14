@@ -126,8 +126,10 @@ extension Contact {
 extension Contact : Identifiable {
   
 //    public var id:String { pubkey } // <--- This gives Core data multithreading errors
-    var npub:String { try! NIP19(prefix: "npub", hexString: pubkey).displayString }
-    var authorKey:String { String(npub.prefix(11)) }
+    var npub:String {
+        try! NIP19(prefix: "npub", hexString: pubkey).displayString
+    }
+    var authorKey:String { String(pubkey.prefix(11)) }
     
     var handle:String { // for autocomplete: name -> display_name -> authorKey. No nil or ""
         let nameOrNil = name != "" ? name : nil // handle "" as nil

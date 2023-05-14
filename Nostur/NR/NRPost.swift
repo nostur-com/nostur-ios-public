@@ -28,11 +28,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     let ago:String
     
     let id:NRPostID
-    let note1:String
+//    let note1:String
     let kind:Int64
     
     let pubkey:String
-    let npub:String
+//    let npub:String
     
     var content:String?
     var plainText:String = ""
@@ -127,13 +127,13 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         if let contact = contact {
             return contact.anyDisplayName
         }
-        return String(npub.prefix(11))
+        return String(pubkey.suffix(11))
     }
     var anyUsername:String {
         if let contact = contact {
             return contact.anyUsername
         }
-        return String(npub.prefix(11))
+        return String(pubkey.suffix(11))
     }
     
     private var withReplyTo = false
@@ -143,9 +143,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     init(event: Event, withReplyTo:Bool = false, withParents:Bool = false, withReplies:Bool = false, plainText:Bool = false) {
         self.event = event // Only touch this in BG context!!!
         self.id = event.id
-        self.note1 = "..." //event.noteId
         self.pubkey = event.pubkey
-        self.npub = "....."  // event.npub
         self.kind = event.kind
         self.createdAt = event.date
         self.created_at = event.created_at

@@ -163,12 +163,12 @@ struct DMConversationView: View {
                                                     Button {
                                                         UIPasteboard.general.string = contactPubkey
                                                     } label: {
-                                                        Label("Copy public key hex \(String(contactPubkey.prefix(11)))...", systemImage: "doc.on.clipboard")
+                                                        Label("Copy public key hex", systemImage: "doc.on.clipboard")
                                                     }
                                                     Button {
                                                         UIPasteboard.general.string = Contact.npub(contactPubkey)
                                                     } label: {
-                                                        Label("Copy npub \(String(Contact.npub(contactPubkey).prefix(11)))...", systemImage: "doc.on.clipboard")
+                                                        Label("Copy npub", systemImage: "doc.on.clipboard")
                                                     }
                                                 } label: {
                                                     Image(systemName: "person.badge.key.fill")
@@ -187,12 +187,12 @@ struct DMConversationView: View {
                                                     Button {
                                                         UIPasteboard.general.string = contactPubkey
                                                     } label: {
-                                                        Label("Copy public key hex \(String(contactPubkey.prefix(11)))...", systemImage: "doc.on.clipboard")
+                                                        Label("Copy public key hex", systemImage: "doc.on.clipboard")
                                                     }
                                                     Button {
                                                         UIPasteboard.general.string = Contact.npub(contactPubkey)
                                                     } label: {
-                                                        Label("Copy npub \(String(Contact.npub(contactPubkey).prefix(11)))...", systemImage: "doc.on.clipboard")
+                                                        Label("Copy npub", systemImage: "doc.on.clipboard")
                                                     }
                                                 } label: {
                                                     Image(systemName: "person.badge.key.fill")

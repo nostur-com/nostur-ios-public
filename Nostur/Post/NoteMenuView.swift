@@ -39,14 +39,14 @@ struct NoteMenuView: View {
                         Label("Add private note", systemImage: "note.text")
                     }
                     Button {
-                        UIPasteboard.general.string = nrPost.note1
+                        UIPasteboard.general.string = nrPost.mainEvent.noteId
                     } label: {
-                        Label("Copy post id \(String(nrPost.note1.prefix(11)))...", systemImage: "doc.on.clipboard")
+                        Label("Copy post id", systemImage: "doc.on.clipboard")
                     }
                     Button {
                         UIPasteboard.general.string = nrPost.id
                     } label: {
-                        Label("Copy post id (hex) \(String(nrPost.id.prefix(11)))...", systemImage: "doc.on.clipboard")
+                        Label("Copy post id (hex)", systemImage: "doc.on.clipboard")
                     }
                     Button {
                         UIPasteboard.general.string = nrPost.mainEvent.plainText

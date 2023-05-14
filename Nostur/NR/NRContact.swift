@@ -20,7 +20,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         
     var id:String { pubkey }
     let pubkey:String
-    let npub:String
+//    let npub:String
 
     var displayName:String?
     var anyDisplayName:String {
@@ -35,7 +35,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         if let username = username, !username.isEmpty {
             return username
         }
-        return String(npub.prefix(11))
+        return String(pubkey.suffix(11))
     }
     var pictureUrl:String?
     var about:String?
@@ -57,8 +57,6 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     init(contact: Contact) {
         self.contact = contact
         self.pubkey = contact.pubkey
-        self.npub = "...." // contact.npub
-        
         self.displayName = contact.display_name
         self.username = contact.name
         self.pictureUrl = contact.picture
