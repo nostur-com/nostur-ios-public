@@ -96,6 +96,7 @@ class DataProvider: ObservableObject {
             newBG.automaticallyMergesChangesFromParent = true
             newBG.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
             newBG.undoManager = nil
+            newBG.name = "nostur-bg-context"
             self.bgStored = newBG
             return newBG
         }

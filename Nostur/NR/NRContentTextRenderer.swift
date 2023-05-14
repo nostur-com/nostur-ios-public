@@ -14,10 +14,6 @@ struct NRContentTextRenderer: View {
     let fullWidth = false
     @State var text:AttributedString? = nil
     
-//    init(_ attributedStringWithPs:AttributedStringWithPs) {
-//        self.attributedStringWithPs = attributedStringWithPs
-//    }
-//
     var body: some View {
         Text(text ?? attributedStringWithPs.text)
             .textSelection(.enabled)
