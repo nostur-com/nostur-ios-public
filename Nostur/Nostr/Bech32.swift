@@ -333,7 +333,7 @@ public class Bech32 {
     
     static func decode(lnurl: String) throws -> URL {
         let bech32 = Bech32()
-        guard let (hrp, decodedData) = bech32.decode(lnurl) else {
+        guard let (hrp, decodedData) = bech32.decode(lnurl, limit: false) else {
             throw "LNURLAuthError.invalidLNURL"
         }
         
