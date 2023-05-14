@@ -304,6 +304,9 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
         }
         self.activeSubscriptions = []
         print("🏎️🏎️🔌 DISCONNECTED \(self.url)")
+        DispatchQueue.main.async {
+            sendNotification(.socketNotification, "Disconnected: \(self.url)")
+        }
     }
     
     func didDisconnectWithError(_ error: Error) {
@@ -317,6 +320,9 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
         self.activeSubscriptions = []
         self.exponentialReconnectBackOff = max(1, self.exponentialReconnectBackOff * 2)
         print("🏎️🏎️🔌🔴 DISCONNECTED WITH ERROR \(self.url): \(error.localizedDescription)")
+        DispatchQueue.main.async {
+            sendNotification(.socketNotification, "Disconnected: \(self.url)")
+        }
     }
     
     func didReceiveMessage(_ text:String) {

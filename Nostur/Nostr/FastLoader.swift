@@ -178,7 +178,7 @@ class FastLoader: ObservableObject {
             let nextItems = onlyUnrendered.compactMap { self.transformer($0) }
             DispatchQueue.main.async {
                 print("\(taskId) 🟠🟠🟠🟠🟠 self.nrPosts = nextItems (\(nextItems.count)) + self.nrPosts ")
-                self.nrPosts = self.nrPosts + nextItems
+                self.nrPosts = nextItems + self.nrPosts
             }
         }
     }

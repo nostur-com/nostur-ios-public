@@ -208,8 +208,8 @@ class Importer {
                     
                     self.existingIds.insert(event.id)
                     
-                    // batch save every 250
-                    if count % 25 == 0 {
+                    // batch save every 100
+                    if count % 100 == 0 {
                         if (context.hasChanges) {
                             do {
                                 try context.save()
@@ -264,6 +264,9 @@ class Importer {
                 print("🏎️🏎️ Chaining next import ")
                 messageBucket.needsImport = false
                 self.importEvents()
+            }
+            else {
+                DataProvider.shared().save()
             }
         }
     }
