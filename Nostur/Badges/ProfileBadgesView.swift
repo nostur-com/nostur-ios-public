@@ -105,7 +105,6 @@ struct ProfileBadgesContainer: View {
 
 struct ProfileBadgesView: View {
     var verifiedBadges:[ProfileBadge]
-    @Environment(\.dismiss) private var dismiss
     @State var selectedBadge:Event? = nil
     @State var badgeInfoIsShown = false
     @State var refreshHack = false

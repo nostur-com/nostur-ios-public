@@ -50,34 +50,34 @@ class NewTextRenderer { // TEXT things
         return newText
     }
     
-    func contactUsername(fromPubkey pubkey:String, event:Event) -> String {
-        if let username = PubkeyUsernameCache.shared.retrieveObject(at: pubkey) {
-            return username
-        }
-        if let eventContact = event.contact, eventContact.pubkey == pubkey {
-            let username = eventContact.username != "" ? eventContact.username : eventContact.authorName
-            PubkeyUsernameCache.shared.setObject(for: pubkey, value: username)
-            return username
-        }
-        if let contact = event.contacts?.first(where: { $0.pubkey == pubkey }) {
-            let username = contact.username != "" ? contact.username : contact.authorName
-            PubkeyUsernameCache.shared.setObject(for: pubkey, value: username)
-            return username
-        }
-        if event.replyTo?.contact?.pubkey == pubkey {
-            let contact = event.replyTo!.contact!
-            let username = contact.username != "" ? contact.username : contact.authorName
-            PubkeyUsernameCache.shared.setObject(for: pubkey, value: username)
-            return username
-        }
-        // SLOW?
-        if let contact = Contact.fetchByPubkey(pubkey, context: context) {
-            let username = contact.username != "" ? contact.username : contact.authorName
-            PubkeyUsernameCache.shared.setObject(for: pubkey, value: username)
-            return username
-        }
-        return "--"
-    }
+//    func contactUsername(fromPubkey pubkey:String, event:Event) -> String {
+//        if let username = PubkeyUsernameCache.shared.retrieveObject(at: pubkey) {
+//            return username
+//        }
+//        if let eventContact = event.contact, eventContact.pubkey == pubkey {
+//            let username = eventContact.username != "" ? eventContact.username : eventContact.authorName
+//            PubkeyUsernameCache.shared.setObject(for: pubkey, value: username)
+//            return username
+//        }
+//        if let contact = event.contacts?.first(where: { $0.pubkey == pubkey }) {
+//            let username = contact.username != "" ? contact.username : contact.authorName
+//            PubkeyUsernameCache.shared.setObject(for: pubkey, value: username)
+//            return username
+//        }
+//        if event.replyTo?.contact?.pubkey == pubkey {
+//            let contact = event.replyTo!.contact!
+//            let username = contact.username != "" ? contact.username : contact.authorName
+//            PubkeyUsernameCache.shared.setObject(for: pubkey, value: username)
+//            return username
+//        }
+//        // SLOW?
+//        if let contact = Contact.fetchByPubkey(pubkey, context: context) {
+//            let username = contact.username != "" ? contact.username : contact.authorName
+//            PubkeyUsernameCache.shared.setObject(for: pubkey, value: username)
+//            return username
+//        }
+//        return "--"
+//    }
     
     func replyingToUsernamesMarkDownString(_ event:Event) -> String? {
         guard event.replyToId != nil || event.replyTo != nil else { return nil }
@@ -166,7 +166,7 @@ class NewTextRenderer { // TEXT things
                 case "nostr:npub1":
                     let npub = String(match.dropFirst(6))
                     do {
-                        let pubkey = try pubkey(npub)
+                        let pubkey = try toPubkey(npub)
                         if !plainText {
                             replacement = "[@\(contactUsername(fromPubkey: pubkey, event: event).escapeMD())](nostur:p:\(pubkey))"
                         }
