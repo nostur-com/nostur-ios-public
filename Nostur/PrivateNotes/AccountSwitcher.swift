@@ -32,22 +32,21 @@ struct AccountSwitcher: View {
                 }
             }
         } label: {
-            HStack {
-                Spacer()
-                ZStack {
-                    if let selectedAccount {
-                        PFP(pubkey: selectedAccount.publicKey, pictureUrl: selectedAccount.picture, size: 30, isFollowing: true)
-                    }
-                    else {
-                        ForEach(accounts.indices, id:\.self) { index in
-                            PFP(pubkey: accounts[index].publicKey, pictureUrl: accounts[index].picture, size: 30, isFollowing: true)
-                                .offset(x: -CGFloat(index*10))
-                            
-                        }
+            ZStack {
+                if let selectedAccount {
+                    PFP(pubkey: selectedAccount.publicKey, pictureUrl: selectedAccount.picture, size: 30, isFollowing: true)
+                }
+                else {
+                    ForEach(accounts.indices, id:\.self) { index in
+                        PFP(pubkey: accounts[index].publicKey, pictureUrl: accounts[index].picture, size: 30, isFollowing: true)
+                            .offset(x: -CGFloat(index*10))
+                        
                     }
                 }
             }
-            .frame(width: 150)
+            .padding(.horizontal, 20)
+//            .frame(width:100, alignment: .trailing)
+            .contentShape(Rectangle())
         }
         .menuStyle(.borderlessButton)
         .menuIndicator(.visible)

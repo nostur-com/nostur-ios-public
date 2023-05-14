@@ -14,7 +14,7 @@ struct BookmarksContainer: View {
     
     var body: some View {
         let _ = Self._printChanges()
-        VStack {
+        VStack(spacing:0) {
             if (ns.account != nil) {
                 BookmarksView(account: ns.account!)
             }
@@ -47,69 +47,27 @@ struct BookmarksView: View {
 
     var body: some View {
         let _ = Self._printChanges()
-        VStack {
-            HStack {
-                Spacer()
-                Menu {
-                    Button {
-                        selectedAccount = nil
-                    } label: {
-                        HStack {
-                            Text("All accounts")
-                            Spacer()
+        ScrollView {
+            LazyVStack {
+                ForEach(vBookmarks) { vBookmark in
+                    PostRowDeletable(nrPost: vBookmark)
+                        .background(Color.systemBackground)
+                        .boxShadow()
+                        .padding(.vertical, 10)
+                        .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
+                        .id(vBookmark.id)
+                        .onDelete {
+                            vBookmark.mainEvent.bookmarkedBy = []
+                            vBookmarks = vBookmarks.filter { $0.id != vBookmark.id }
+                                DataProvider.shared().save()
                         }
-                    }
-                    ForEach(accounts) { account in
-                        Button {
-                            selectedAccount = account
-                        } label: {
-                            HStack {
-                                //                            ProfilePicView(pubkey: account.publicKey, account: account, size: 30)
-                                Text("@\(account.name)")
-                                Spacer()
-                            }
-                        }
-                    }
-                } label: {
-                    HStack {
-                        Spacer()
-                        ZStack {
-                            if (selectedAccount != nil) {
-                                PFP(pubkey: selectedAccount!.publicKey, pictureUrl: selectedAccount?.picture, size: 30, isFollowing: true)
-                            }
-                            else {
-                                ForEach(accounts.indices, id:\.self) { index in
-                                    PFP(pubkey: accounts[index].publicKey, pictureUrl: accounts[index].picture, size: 30, isFollowing: true)
-                                        .offset(x: -CGFloat(index*10))
-
-                                }
-                            }
-                        }
-                    }
-                    .frame(width: 150)
-                }
-                .menuStyle(.borderlessButton)
-                .menuIndicator(.visible)
-            }
-            .padding(.horizontal)
-            ScrollView {
-                LazyVStack {
-                    ForEach(vBookmarks) { vBookmark in
-                        PostRowDeletable(nrPost: vBookmark)
-                            .background(Color.systemBackground)
-                            .boxShadow()
-                            .padding(.vertical, 10)
-                            .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
-                            .id(vBookmark.id)
-                            .onDelete {
-                                vBookmark.mainEvent.bookmarkedBy = []
-                                vBookmarks = vBookmarks.filter { $0.id != vBookmark.id }
-                                    DataProvider.shared().save()
-                            }
-                    }
                 }
             }
-            Spacer()
+            .background(Color("ListBackground"))
+        }
+        .overlay(alignment:.topTrailing) {
+            AccountSwitcher(accounts: accounts, selectedAccount: $selectedAccount)
+                .padding(.horizontal)
         }
         .onReceive(receiveNotification(.postAction)) { notification in
             let action = notification.object as! PostActionNotification
@@ -152,7 +110,9 @@ struct BookmarksView: View {
 
 struct BookmarksView_Previews: PreviewProvider {
     static var previews: some View {
-        BookmarksContainer()
-            .withPreviewEnvironment()
+        VStack {
+            BookmarksContainer()
+        }
+        .withPreviewEnvironment()
     }
 }

@@ -14,7 +14,7 @@ struct PrivateNotesContainer: View {
     
     var body: some View {
         let _ = Self._printChanges()
-        VStack {
+        VStack(spacing:0) {
             if (ns.account != nil) {
                 PrivateNotesView(account: ns.account!)
             }
@@ -47,11 +47,6 @@ struct PrivateNotesView: View {
     var body: some View {
         let _ = Self._printChanges()
         ScrollView {
-            HStack {
-                Spacer()
-                AccountSwitcher(accounts: accounts, selectedAccount: $selectedAccount)
-            }
-            .padding(.horizontal)
             LazyVStack {
                 ForEach(privateNotes) { pnInfo in
                     PrivateNoteRow(note: pnInfo.note, nrPost: pnInfo.nrPost)
@@ -64,6 +59,10 @@ struct PrivateNotesView: View {
                 }
             }
 //            Spacer()
+        }
+        .overlay(alignment:.topTrailing) {
+            AccountSwitcher(accounts: accounts, selectedAccount: $selectedAccount)
+                .padding(.horizontal)
         }
         .navigationTitle("Private Notes")
         .navigationBarTitleDisplayMode(.inline)
