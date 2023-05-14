@@ -49,8 +49,9 @@ struct SingleVideoViewer: View {
             }
             else if videoShown {
                 if let asset, let videoSize {
+                    
                     let scaledWidth = videoWidth / videoSize.width
-                    let scaledHeight = videoSize.height * scaledWidth
+                    let scaledHeight = videoSize.height > videoSize.width && videoSize.height > 600 ? 600 : videoSize.height * scaledWidth
                     
                     VPV(asset: asset, isPlaying: $isPlaying)
                         .highPriorityGesture(
