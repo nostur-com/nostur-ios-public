@@ -91,6 +91,9 @@ struct Kind1: View {
                         .onTapGesture {
                             navigateTo(nrPost)
                         }
+                    if (nrPost.previewWeights.moreItems) {
+                        ReadMoreButton(nrPost: nrPost)
+                    }
                 }
                 if (!hideFooter && settings.rowFooterEnabled) {
                     FooterFragmentView(nrPost: nrPost)

@@ -207,6 +207,7 @@
 		1FC0A9512A0F8B9D00F9ABF6 /* ProfileZaps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC0A9502A0F8B9D00F9ABF6 /* ProfileZaps.swift */; };
 		1FC0A9532A1094A100F9ABF6 /* PrivateNoteRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC0A9522A1094A100F9ABF6 /* PrivateNoteRow.swift */; };
 		1FC0A9552A1094BD00F9ABF6 /* AccountSwitcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC0A9542A1094BD00F9ABF6 /* AccountSwitcher.swift */; };
+		1FC0A9572A10E44500F9ABF6 /* ReadMoreButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC0A9562A10E44500F9ABF6 /* ReadMoreButton.swift */; };
 		1FC268C729A2CC4F00A2B577 /* NoteReactions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC268C629A2CC4F00A2B577 /* NoteReactions.swift */; };
 		1FC2DFED29A90F6C00C8A9DA /* NoteMinimalContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC2DFEC29A90F6C00C8A9DA /* NoteMinimalContentView.swift */; };
 		1FC2DFEF29A9128D00C8A9DA /* MinimalNoteTextRenderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC2DFEE29A9128D00C8A9DA /* MinimalNoteTextRenderView.swift */; };
@@ -511,6 +512,7 @@
 		1FC0A9502A0F8B9D00F9ABF6 /* ProfileZaps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileZaps.swift; sourceTree = "<group>"; };
 		1FC0A9522A1094A100F9ABF6 /* PrivateNoteRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateNoteRow.swift; sourceTree = "<group>"; };
 		1FC0A9542A1094BD00F9ABF6 /* AccountSwitcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountSwitcher.swift; sourceTree = "<group>"; };
+		1FC0A9562A10E44500F9ABF6 /* ReadMoreButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadMoreButton.swift; sourceTree = "<group>"; };
 		1FC268C629A2CC4F00A2B577 /* NoteReactions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteReactions.swift; sourceTree = "<group>"; };
 		1FC2DFEC29A90F6C00C8A9DA /* NoteMinimalContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteMinimalContentView.swift; sourceTree = "<group>"; };
 		1FC2DFEE29A9128D00C8A9DA /* MinimalNoteTextRenderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinimalNoteTextRenderView.swift; sourceTree = "<group>"; };
@@ -644,6 +646,7 @@
 				1FB3FBA42A01673F0018CBD7 /* SingleVideoViewer.swift */,
 				1F2F54EB2A028C6B00B6D7E4 /* SubscriptionManager.swift */,
 				1F533E3229D35FD300748438 /* TextRenderer.swift */,
+				1FC0A9562A10E44500F9ABF6 /* ReadMoreButton.swift */,
 			);
 			path = Post;
 			sourceTree = "<group>";
@@ -1362,6 +1365,7 @@
 				1FD8AD7529D87D0B00693302 /* ListViewContainer.swift in Sources */,
 				1FA51FF62978441200FE60EF /* Relay+CoreDataClass.swift in Sources */,
 				1FD8AD7329D831CD00693302 /* Color+random.swift in Sources */,
+				1FC0A9572A10E44500F9ABF6 /* ReadMoreButton.swift in Sources */,
 				1FB130B129C0DB07004AC98D /* NoteRow.swift in Sources */,
 				1F00337729BF0BF0007CE040 /* PrivateNotesView.swift in Sources */,
 				1F33098C298AEE5D00D4D8CF /* View+withNavigationDestinations.swift in Sources */,
