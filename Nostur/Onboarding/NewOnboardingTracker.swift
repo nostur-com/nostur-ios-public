@@ -80,8 +80,8 @@ class NewOnboardingTracker {
     private func stopAfterDelay() {
         DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(10)) { [weak self] in
             guard let self = self else { return }
-            self.bg.perform {
-                self.cancel()
+            self.bg.perform { [weak self] in
+                self?.cancel()
             }
         }
     }
@@ -128,13 +128,15 @@ class NewOnboardingTracker {
             processResponseCommand: { [weak self] (taskId) in
                 guard let self = self else { return }
                 print("\(taskId) ✈️✈️ fetchProfileAndFollowersTask.processResponseCommand()")
-                self.bg.perform {
+                self.bg.perform { [weak self] in
+                    guard let self = self else { return }
                     if !self.fetchedOwnProfileTask {
                         self.processKind0()
                     }
                 }
                 
-                self.bg.perform {
+                self.bg.perform { [weak self] in
+                    guard let self = self else { return }
                     if !self.fetchedFollowersTask {
                         self.processKind3()
                     }

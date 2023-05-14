@@ -11,7 +11,7 @@ struct LightningButton: View {
     let er:ExchangeRateModel = .shared // Not Observed for performance
     let ns:NosturState = .shared // Not Observed for performance
     var tally:Int64 // SATS (1000 SATS ~= 20 cent)
-    var event:Event?
+    var nrPost:NRPost?
     @State var isLoading = false
     var body: some View {
         if isLoading {
@@ -35,7 +35,7 @@ struct LightningButton: View {
                     ns.readOnlyAccountSheetShown = true
                     return
                 }
-                guard event != nil else { return }
+                guard nrPost != nil else { return }
                 isLoading = true
                 buttonTapped()
             }
@@ -49,15 +49,15 @@ class PaymentInfo: Identifiable {
     var max:UInt64 = 5000000
     var callback = ""
     var supportsZap = false
-    var event:Event?
+    var nrPost:NRPost?
     var contact:Contact?
     
-    init(min: UInt64, max: UInt64, callback: String = "", supportsZap: Bool = false, event:Event? = nil, contact:Contact? = nil) {
+    init(min: UInt64, max: UInt64, callback: String = "", supportsZap: Bool = false, nrPost:NRPost? = nil, contact:Contact? = nil) {
         self.min = min
         self.max = max
         self.callback = callback
         self.supportsZap = supportsZap
-        self.event = event
+        self.nrPost = nrPost
         self.contact = contact
     }
 }
@@ -65,11 +65,11 @@ class PaymentInfo: Identifiable {
 extension LightningButton {
     func buttonTapped() {
         guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
-        guard (event?.contact?.anyLud ?? false) else { return }
+        guard (nrPost?.contact?.anyLud ?? false) else { return }
         isLoading = true
         
         
-        if let lud16 = event!.contact!.lud16 {
+        if let lud16 = nrPost!.contact!.lud16 {
             Task {
                 do {
                     let response = try await LUD16.getCallbackUrl(lud16: lud16)
@@ -83,9 +83,9 @@ extension LightningButton {
                             if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
                                 supportsZap = true
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
-                                event!.contact!.zapperPubkey = response.nostrPubkey!
+                                nrPost!.contact!.zapperPubkey = response.nostrPubkey!
                             }
-                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, event:event!, contact: event!.contact)
+                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrPost:nrPost!, contact: nrPost!.contact!.mainContact)
                             sendNotification(.showZapSheet, paymentInfo)
                             isLoading = false
                         }
@@ -97,7 +97,7 @@ extension LightningButton {
                 }
             }
         }
-        else if let lud06 = event!.contact!.lud06 {
+        else if let lud06 = nrPost!.contact!.lud06 {
             Task {
                 do {
                     let response = try await LUD16.getCallbackUrl(lud06: lud06)
@@ -111,9 +111,9 @@ extension LightningButton {
                             if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
                                 supportsZap = true
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
-                                event!.contact!.zapperPubkey = response.nostrPubkey!
+                                nrPost!.contact!.zapperPubkey = response.nostrPubkey!
                             }
-                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, event:event!, contact: event!.contact)
+                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrPost:nrPost!, contact: nrPost!.contact!.mainContact)
                             sendNotification(.showZapSheet, paymentInfo)
                             isLoading = false
                         }
@@ -143,8 +143,8 @@ struct LightningButton_Previews: PreviewProvider {
 
             Text("\n\n")
 
-            if let event = PreviewFetcher.fetchEvent("49635b590782cb1ab1580bd7e9d85ba586e6e99e48664bacf65e71821ae79df1") {
-                LightningButton(tally:event.zapTally, event: event)
+            if let nrPost = PreviewFetcher.fetchNRPost("49635b590782cb1ab1580bd7e9d85ba586e6e99e48664bacf65e71821ae79df1") {
+                LightningButton(tally:nrPost.zapTally, nrPost: nrPost)
             }
 
         }

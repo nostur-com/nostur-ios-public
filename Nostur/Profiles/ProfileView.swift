@@ -238,7 +238,8 @@ struct ProfileView: View {
                             case "Likes":
                                 ProfileLikesView(pubkey: pubkey)
                             case "Zaps":
-                                ProfileZapsView(pubkey:pubkey, contact: contact)
+                                ProfileZaps(pubkey: pubkey, contact: contact)
+//                                ProfileZapsView(pubkey:pubkey, contact: contact)
 //                            case "Relays":
 //                                VStack {
 //                                    if relayEvents.count != 0 {

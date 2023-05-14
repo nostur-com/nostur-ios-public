@@ -61,9 +61,11 @@ struct ContactList: View {
         .onAppear {
             guard missing.count != 0 else { return }
             print("Fetching \(missing.count) missing contacts")
-            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missing)))
-            
-            // TODO: ADD FETCH NEW CONTACT INFO ON APPEAR, SIMILAR TO REQUESTFORLATEST ON LISTVIEW
+            QueuedFetcher.shared.enqueue(pTags: missing)
+        }
+        .onDisappear {
+            guard missing.count != 0 else { return }
+            QueuedFetcher.shared.dequeue(pTags: missing)
         }
     }
     

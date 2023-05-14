@@ -10,13 +10,7 @@ import SwiftUI
 struct NoteMenuView: View {
     let up:Unpublisher = .shared
     @EnvironmentObject var ns:NosturState
-    var vPost:VPost
-    @ObservedObject var event:Event
-    
-    init(vPost: VPost) {
-        self.vPost = vPost
-        self.event = vPost.event
-    }
+    var nrPost:NRPost
     
     var body: some View {
         ZStack {
@@ -29,98 +23,95 @@ struct NoteMenuView: View {
             Menu {
                 Group {
                     Button {
-                        guard let contact = vPost.event.contact else { return }
+                        guard let contact = nrPost.mainEvent.contact else { return }
                         sendNotification(.addRemoveToListsheet, contact)
                     } label: {
                         Label("Add/Remove from lists", systemImage: "person.2.crop.square.stack")
                     }
                     Button {
-                        if let pn = event.privateNote {
+                        if let pn = nrPost.mainEvent.privateNote {
                             sendNotification(.editingPrivateNote, pn)
                         }
                         else {
-                            sendNotification(.newPrivateNoteOnPost, event.id)
+                            sendNotification(.newPrivateNoteOnPost, nrPost.id)
                         }
                     } label: {
                         Label("Add private note", systemImage: "note.text")
                     }
                     Button {
-                        UIPasteboard.general.string = vPost.note1
+                        UIPasteboard.general.string = nrPost.note1
                     } label: {
-                        Label("Copy post id \(String(vPost.note1.prefix(11)))...", systemImage: "doc.on.clipboard")
+                        Label("Copy post id \(String(nrPost.note1.prefix(11)))...", systemImage: "doc.on.clipboard")
                     }
                     Button {
-                        UIPasteboard.general.string = vPost.id
+                        UIPasteboard.general.string = nrPost.id
                     } label: {
-                        Label("Copy post id (hex) \(String(vPost.id.prefix(11)))...", systemImage: "doc.on.clipboard")
+                        Label("Copy post id (hex) \(String(nrPost.id.prefix(11)))...", systemImage: "doc.on.clipboard")
                     }
                     Button {
-                        UIPasteboard.general.string = vPost.event.plainText
+                        UIPasteboard.general.string = nrPost.mainEvent.plainText
                     } label: {
                         Label("Copy text", systemImage: "doc.on.clipboard")
                     }
                     Button {
-                        UIPasteboard.general.string = vPost.event.toNEvent().eventJson()
+                        UIPasteboard.general.string = nrPost.mainEvent.toNEvent().eventJson()
                     } label: {
                         Label("Copy source", systemImage: "doc.on.clipboard")
                     }
                     Button {
-                        print("Follow @\(vPost.event.username)")
-                        if (vPost.event.contact != nil) {
-                            ns.follow(vPost.event.contact!)
+                        if (nrPost.mainEvent.contact != nil) {
+                            ns.follow(nrPost.mainEvent.contact!)
                         }
                     } label: {
-                        Label("Follow @\(vPost.event.username)", systemImage: "person.fill")
+                        Label("Follow @\(nrPost.anyUsername)", systemImage: "person.fill")
                     }
                 }
 
                 Button {
-                    // TODO: MOVE TO NostureState, like follow/muteConversation etc.
-                    print("Block @\(vPost.event.username)")
-                    if (vPost.event.contact == nil) {
+                    if (nrPost.mainEvent.contact == nil) {
                         // TODO: Contact is created so it can be unblocked in Blocklist. Should not have to create contact just for this.
-                        _ = DataProvider.shared().newContact(pubkey: vPost.event.pubkey)
+                        _ = DataProvider.shared().newContact(pubkey: nrPost.event.pubkey)
                         ns.objectWillChange.send()
-                        ns.account!.blockedPubkeys_ = ns.account!.blockedPubkeys_ + [vPost.event.pubkey]
+                        ns.account!.blockedPubkeys_ = ns.account!.blockedPubkeys_ + [nrPost.pubkey]
                     }
                     else {
                         ns.objectWillChange.send()
-                        ns.account!.blockedPubkeys_ = ns.account!.blockedPubkeys_ + [vPost.event.pubkey]
+                        ns.account!.blockedPubkeys_ = ns.account!.blockedPubkeys_ + [nrPost.pubkey]
                     }
                     sendNotification(.blockListUpdated, ns.account!.blockedPubkeys_)
                 } label: {
-                    Label("Block @\(vPost.event.username)", systemImage: "slash.circle")
+                    Label("Block @\(nrPost.anyUsername)", systemImage: "slash.circle")
                 }
                 
                 Button {
                     print("Mute conversation")
-                    ns.muteConversation(vPost)
+                    ns.muteConversation(nrPost)
                 } label: {
                     Label("Mute conversation", systemImage: "bell.slash.fill")
                 }
                 
-                Button { sendNotification(.reportPost, vPost) } label: {
+                Button { sendNotification(.reportPost, nrPost) } label: {
                     Label("Report", systemImage: "flag")
                 }
                 
-                if (NosturState.shared.activeAccountPublicKey == event.pubkey) {
-                    Button { sendNotification(.requestDeletePost, event.id) } label: {
+                if (NosturState.shared.activeAccountPublicKey == nrPost.pubkey) {
+                    Button { sendNotification(.requestDeletePost, nrPost.id) } label: {
                         Label("Delete", systemImage: "trash")
                     }
                 }
                 
                 Button {
                     guard ns.account != nil else { return }
-                    let nEvent = vPost.event.toNEvent()
+                    let nEvent = nrPost.mainEvent.toNEvent()
                     up.publishNow(nEvent)
                 } label: {
-                    Label("Rebroadcast\(vPost.event.pubkey == NosturState.shared.activeAccountPublicKey ? " (again)" : "")", systemImage: "dot.radiowaves.left.and.right")
+                    Label("Rebroadcast\(nrPost.pubkey == NosturState.shared.activeAccountPublicKey ? " (again)" : "")", systemImage: "dot.radiowaves.left.and.right")
                 }
                 
-                if event.relays != "" {
+                if nrPost.relays != "" {
                     Group {
                         Divider()
-                        ForEach(event.relays.split(separator: " "), id:\.self) { relay in
+                        ForEach(nrPost.relays.split(separator: " "), id:\.self) { relay in
                             Button(String(relay)) { }
                                 .disabled(true)
                         }
@@ -143,8 +134,8 @@ struct NoteMenuView: View {
 struct NoteMenuView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
-            if let event7 = PreviewFetcher.fetchVPost() {
-                NoteMenuView(vPost: event7)
+            if let event7 = PreviewFetcher.fetchNRPost() {
+                NoteMenuView(nrPost: event7)
             }
             Spacer()
         }

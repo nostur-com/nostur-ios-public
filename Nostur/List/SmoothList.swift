@@ -17,21 +17,21 @@ enum SingleSection: CaseIterable {
 struct SmoothList: UIViewControllerRepresentable {
     typealias UIViewControllerType = UIViewController
     typealias CollectionViewHolderType = CViewHolder
-    typealias RowAppearedCallback = ((sectionIndex: Int, itemIndex: Int, item: VPost)) -> Void
+    typealias RowAppearedCallback = ((sectionIndex: Int, itemIndex: Int, item: NRPost)) -> Void
     typealias FinishedScrollingCallback = ((isAtTop: Bool, indexPaths:[IndexPath])) -> Void
     
     @Binding var needsRefresh: Bool
     @Binding var needsFullReload: Bool
     @Binding var needsScrollToTop: Bool
     @Binding var needsScrollToIndex: Int?
-    @Binding var data: [VPost]
+    @Binding var data: [NRPost]
     @Binding var autoScroll: Bool
     @Binding var fullWidthImages: Bool
     var dim: DIMENSIONS
     private var onRowAppeared: RowAppearedCallback?
     private var onFinishedScrolling: FinishedScrollingCallback?
     
-    init(needsRefresh: Binding<Bool>, needsFullReload:Binding<Bool>, needsScrollToTop:Binding<Bool>, needsScrollToIndex:Binding<Int?>, data: Binding<[VPost]>, autoScroll: Binding<Bool>, fullWidthImages: Binding<Bool>, dim: DIMENSIONS, onRowAppeared: RowAppearedCallback? = nil, onFinishedScrolling: FinishedScrollingCallback? = nil) {
+    init(needsRefresh: Binding<Bool>, needsFullReload:Binding<Bool>, needsScrollToTop:Binding<Bool>, needsScrollToIndex:Binding<Int?>, data: Binding<[NRPost]>, autoScroll: Binding<Bool>, fullWidthImages: Binding<Bool>, dim: DIMENSIONS, onRowAppeared: RowAppearedCallback? = nil, onFinishedScrolling: FinishedScrollingCallback? = nil) {
         self._needsRefresh = needsRefresh
         self._needsFullReload = needsFullReload
         self._needsScrollToTop = needsScrollToTop
@@ -181,8 +181,8 @@ struct SmoothList: UIViewControllerRepresentable {
             for indexPath in indexPaths {
                 guard let item = parent.data[safe: indexPath.row] else { continue }
                 
-                if let picture = item.pictureUrl, picture.prefix(7) != "http://" {
-                    if item.following {
+                if let picture = item.contact?.pictureUrl, picture.prefix(7) != "http://" {
+                    if item.contact?.following ?? false {
                         imageRequestsPFP.append(imageRequestFor(picture))
                     }
                     else {
@@ -192,16 +192,16 @@ struct SmoothList: UIViewControllerRepresentable {
                 
                 imageRequestsPFP.append(contentsOf: item
                     .parentPosts
-                    .filter{ $0.following }
-                    .compactMap { $0.pictureUrl }
+                    .filter{ $0.contact?.following ?? false }
+                    .compactMap { $0.contact?.pictureUrl }
                     .filter { $0.prefix(7) != "http://" }
                     .map { imageRequestFor($0) }
                 )
                 
                 imageRequestsPFPnotFollowing.append(contentsOf: item
                     .parentPosts
-                    .filter{ !$0.following }
-                    .compactMap { $0.pictureUrl }
+                    .filter{ !($0.contact?.following ?? false) }
+                    .compactMap { $0.contact?.pictureUrl }
                     .filter { $0.prefix(7) != "http://" }
                     .map { imageRequestFor($0) }
                 )
@@ -264,8 +264,8 @@ struct SmoothList: UIViewControllerRepresentable {
             for indexPath in indexPaths {
                 guard let item = parent.data[safe: indexPath.row] else { continue }
                 
-                if let picture = item.pictureUrl, picture.prefix(7) != "http://" {
-                    if item.following {
+                if let picture = item.contact?.pictureUrl, picture.prefix(7) != "http://" {
+                    if item.contact?.following ?? false {
                         imageRequestsPFP.append(imageRequestFor(picture))
                     }
                     else {
@@ -275,19 +275,19 @@ struct SmoothList: UIViewControllerRepresentable {
                 
                 imageRequestsPFP.append(contentsOf: item
                     .parentPosts
-                    .filter{ $0.following }
-                    .compactMap { $0.pictureUrl }
+                    .filter{ $0.contact?.following ?? false }
+                    .compactMap { $0.contact?.pictureUrl }
                     .filter { $0.prefix(7) != "http://" }
                     .map { imageRequestFor($0) }
                 )
                 
-                imageRequestsPFPnotFollowing.append(contentsOf: item
-                    .parentPosts
-                    .filter{ !$0.following }
-                    .compactMap { $0.pictureUrl }
-                    .filter { $0.prefix(7) != "http://" }
-                    .map { imageRequestFor($0) }
-                )
+//                imageRequestsPFPnotFollowing.append(contentsOf: item
+//                    .parentPosts
+//                    .filter{ !($0.contact?.following ?? false) }
+//                    .compactMap { $0.contact?.pictureUrl }
+//                    .filter { $0.prefix(7) != "http://" }
+//                    .map { imageRequestFor($0) }
+//                )
                 
                 for imageUrl in item.imageUrls.filter( { $0.absoluteString.prefix(7) != "http://" })
                 {
@@ -449,6 +449,7 @@ final class CViewHolder {
         collectionView.delegate = coordinator
         collectionView.prefetchDataSource = coordinator
         collectionView.isPrefetchingEnabled = true
+        collectionView.selfSizingInvalidation = .enabledIncludingConstraints 
         onInitialized(collectionView)
     }
     
@@ -464,10 +465,10 @@ final class CViewHolder {
         }
     }
     
-    private var PostOrThreadCellRegistration: UICollectionView.CellRegistration<UICollectionViewListCell, VPost> = {
-        .init { cell, indexPath, vPost in
+    private var PostOrThreadCellRegistration: UICollectionView.CellRegistration<UICollectionViewListCell, NRPost> = {
+        .init { cell, indexPath, nrPost in
             cell.contentConfiguration = UIHostingConfiguration {
-                PostOrThread(vPost: vPost)
+                PostOrThread(nrPost: nrPost)
                     .boxShadow()
                     .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
                     .padding(.vertical, 10)
@@ -480,10 +481,10 @@ final class CViewHolder {
         }
     }()
     
-    private var FullWidthPostOrThreadCellRegistration: UICollectionView.CellRegistration<UICollectionViewListCell, VPost> = {
-        .init { cell, indexPath, vPost in
+    private var FullWidthPostOrThreadCellRegistration: UICollectionView.CellRegistration<UICollectionViewListCell, NRPost> = {
+        .init { cell, indexPath, nrPost in
             cell.contentConfiguration = UIHostingConfiguration {
-                PostOrThread(vPost: vPost, fullWidth: true)
+                PostOrThread(nrPost: nrPost, fullWidth: true)
                     .boxShadow()
                     .padding(.vertical, 10)
             }
@@ -511,14 +512,14 @@ final class CViewHolder {
             cellProvider: { [weak self] collectionView, indexPath, identifier -> UICollectionViewCell? in
                 guard let self = self else { return nil }
                 
-                guard let vPost = self.coordinator.parent.data.first(where: { $0.id == identifier }) else {
+                guard let nrPost = self.coordinator.parent.data.first(where: { $0.id == identifier }) else {
                     return self.collectionView.dequeueConfiguredReusableCell(using: MissingCellRegistration, for: indexPath, item: "🧨")
                 }
                 
                 if self.coordinator.parent.fullWidthImages {
-                    return self.collectionView.dequeueConfiguredReusableCell(using: FullWidthPostOrThreadCellRegistration, for: indexPath, item: vPost)
+                    return self.collectionView.dequeueConfiguredReusableCell(using: FullWidthPostOrThreadCellRegistration, for: indexPath, item: nrPost)
                 }
-                return self.collectionView.dequeueConfiguredReusableCell(using: PostOrThreadCellRegistration, for: indexPath, item: vPost)
+                return self.collectionView.dequeueConfiguredReusableCell(using: PostOrThreadCellRegistration, for: indexPath, item: nrPost)
             }
         )
     }
@@ -533,18 +534,18 @@ struct SmoothList_PReviews: PreviewProvider {
     @State static var needsScrollToIndex:Int? = nil
     @State static var autoScroll = true
     @State static var fullWidthImages = true
-    @State static var vPosts = PreviewFetcher
+    @State static var nrPosts = PreviewFetcher
         .fetchEvents(NosturState.shared.followingPublicKeys, kind: 1)
         .map {
             $0.parentEvents = Event.getParentEvents($0)
             return $0
         }
         .filter(onlyRootOrReplyingToFollower)
-        .compactMap { $0.toVPost() }
+        .compactMap { NRPost(event: $0) }
     
     static var previews: some View {
         VStack(spacing:0) {
-            SmoothList(needsRefresh: $needsRefresh, needsFullReload: $needsFullReload, needsScrollToTop: $needsScrollToTop, needsScrollToIndex: $needsScrollToIndex, data: $vPosts, autoScroll: $autoScroll, fullWidthImages: $fullWidthImages, dim: dim)
+            SmoothList(needsRefresh: $needsRefresh, needsFullReload: $needsFullReload, needsScrollToTop: $needsScrollToTop, needsScrollToIndex: $needsScrollToIndex, data: $nrPosts, autoScroll: $autoScroll, fullWidthImages: $fullWidthImages, dim: dim)
                 .onAppear {
                     needsRefresh = true
                 }

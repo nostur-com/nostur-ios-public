@@ -19,23 +19,31 @@ struct ProfileNotesView: View {
     
     var body: some View {
         LazyVStack(spacing: 0) {
-            ForEach(fl.vPosts) { vPost in
-                PostRowDeletable(vPost: vPost)
+            ForEach(fl.nrPosts) { nrPost in
+                PostRowDeletable(nrPost: nrPost)
                     .background(Color.systemBackground)
                     .boxShadow()
                     .padding(.vertical, 10)
                     .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
-                    .id(vPost.id)
+                    .id(nrPost.id)
             }
-            Button("Show more") {
-                fl.predicate = NSPredicate(format: "pubkey == %@ AND kind IN {1,6,9802}", pubkey)
-//                fl.offset = (fl.vPosts.count - 1)
-                fl.loadMore(25)
-                if let until = fl.vPosts.last?.created_at {
-                    req(RM.getAuthorNotesUntil(pubkey: pubkey, until: NTimestamp(timestamp: Int(until)), limit:250))
+            VStack {
+                if fl.nrPosts.count > 0 {
+                    Button("Show more") {
+                        fl.predicate = NSPredicate(format: "pubkey == %@ AND kind IN {1,6,9802}", pubkey)
+        //                fl.offset = (fl.nrPosts.count - 1)
+                        fl.loadMore(50)
+                        if let until = fl.nrPosts.last?.created_at {
+                            req(RM.getAuthorNotesUntil(pubkey: pubkey, until: NTimestamp(timestamp: Int(until)), limit:250))
+                        }
+                        else {
+                            req(RM.getAuthorNotes(pubkey: pubkey, limit:250))
+                        }
+                    }
+                    
                 }
                 else {
-                    req(RM.getAuthorNotes(pubkey: pubkey, limit:250))
+                    ProgressView()
                 }
             }
             .hCentered()
@@ -44,12 +52,10 @@ struct ProfileNotesView: View {
         }
         .background(Color("ListBackground"))
         .onAppear {
-            fl.followingKeys = ns.followingPublicKeys
             fl.predicate = NSPredicate(format: "pubkey == %@ AND kind IN {1,6,9802} ", pubkey)
             fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
             
-            fl.loadMore(5)
-            fl.loadMoreBG(15)
+            fl.loadMore(50)
             
             let fetchNewerLimit = 1000
             let fetchNewerTask = ReqTask(
@@ -60,7 +66,7 @@ struct ProfileNotesView: View {
                 },
                 processResponseCommand: { (taskId) in
                     print("\(taskId) 🟠🟠🟠 processResponseCommand")
-                    let currentNewestCreatedAt = fl.vPosts.first?.created_at ?? 0
+                    let currentNewestCreatedAt = fl.nrPosts.first?.created_at ?? 0
                     fl.predicate = NSPredicate(
                         format:
                             "created_at >= %i " +
@@ -69,7 +75,7 @@ struct ProfileNotesView: View {
                             currentNewestCreatedAt,
                             pubkey
                     )
-                    fl.loadNewerBG(fetchNewerLimit, taskId:taskId)
+                    fl.loadNewer(fetchNewerLimit, taskId:taskId)
                 })
 
             backlog.add(fetchNewerTask)

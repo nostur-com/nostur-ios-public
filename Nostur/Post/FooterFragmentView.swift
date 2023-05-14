@@ -14,41 +14,46 @@ struct FooterFragmentView: View {
     @EnvironmentObject var ns:NosturState
     let up:Unpublisher = .shared
     
-    let vPost:VPost
-    @ObservedObject var event:Event
+    @ObservedObject var nrPost:NRPost
     @State var unpublishLikeId:UUID? = nil
-    @State var liked:Bool
-    @State var reposted:Bool
-//    @State var replied:Bool
+    @State var liked:Bool = false
+    @State var reposted:Bool = false
+    @State var replied:Bool = false
     
-    init(vPost: VPost) {
-        self.vPost = vPost
-        self.event = vPost.event
-        _liked = State(initialValue: vPost.liked)
-        _reposted = State(initialValue: vPost.reposted)
-//        _replied = State(initialValue: vPost.replied)
+    init(nrPost: NRPost) {
+        self.nrPost = nrPost
+        liked = nrPost.liked
+        reposted = nrPost.reposted
+        replied = nrPost.replied
+//        _liked = State(initialValue: nrPost.liked)
+//        _reposted = State(initialValue: nrPost.reposted)
+//        _replied = State(initialValue: nrPost.replied)
     }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
             HStack {
                 HStack {
-                    Image(vPost.replied ? "ReplyIconActive" : "ReplyIcon")
-                        .foregroundColor(vPost.replied ? Color("AccentColor") : Self.grey)
-                    Text(event.repliesCount.description).opacity(event.repliesCount == 0 ? 0 : 1)
+                    Image(nrPost.replied ? "ReplyIconActive" : "ReplyIcon")
+                        .foregroundColor(nrPost.replied ? Color("AccentColor") : Self.grey)
+                    Text(nrPost.repliesCount.description).opacity(nrPost.repliesCount == 0 ? 0 : 1)
 //                    RollingOnUpdateNumber(event.repliesCount).opacity(event.repliesCount == 0 ? 0 : 1)
                 }
                 .padding([.vertical, .trailing], 5)
                 .contentShape(Rectangle())
-                .onTapGesture { sendNotification(.createNewReply, event) }
+                .onTapGesture {
+                    if let replyTo = nrPost.event.toMain() {
+                        sendNotification(.createNewReply, replyTo)
+                    }
+                }
                 Spacer()
                 
                 // REPOST
-                if (vPost.reposted) {
+                if (nrPost.reposted) {
                     HStack {
                         Image("RepostedIcon")
                             .foregroundColor(.green)
-                        Text(event.mentionsCount.description).opacity(event.mentionsCount == 0 ? 0 : 1)
+                        Text(nrPost.mentionsCount.description).opacity(nrPost.mentionsCount == 0 ? 0 : 1)
 //                        RollingOnUpdateNumber(event.mentionsCount).opacity(event.mentionsCount == 0 ? 0 : 1)
                     }
                     .foregroundColor(.green)
@@ -57,23 +62,25 @@ struct FooterFragmentView: View {
                 else {
                     HStack {
                         Image("RepostedIcon")
-                        Text(event.mentionsCount.description).opacity(event.mentionsCount == 0 ? 0 : 1)
+                        Text(nrPost.mentionsCount.description).opacity(nrPost.mentionsCount == 0 ? 0 : 1)
 //                        RollingOnUpdateNumber(event.mentionsCount).opacity(event.mentionsCount == 0 ? 0 : 1)
                     }
                     .padding(5)
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        sendNotification(.createNewQuoteOrRepost, event)
+                        if let mainEvent = nrPost.event.toMain() {
+                            sendNotification(.createNewQuoteOrRepost, mainEvent)
+                        }
                     }
                 }
                 Spacer()
                 
                 // LIKE
-                if (vPost.liked || liked) {
+                if (nrPost.liked || liked) {
                     HStack {
                         Image("LikeIconActive")
                             .foregroundColor(.red)
-                        Text(event.likesCount.description).opacity(event.likesCount == 0 ? 0 : 1)
+                        Text(nrPost.likesCount.description).opacity(nrPost.likesCount == 0 ? 0 : 1)
 //                        RollingOnUpdateNumber(event.likesCount).opacity(event.likesCount == 0 ? 0 : 1)
                     }
                     .foregroundColor(.red)
@@ -81,7 +88,7 @@ struct FooterFragmentView: View {
                     .padding(5)
                     .onTapGesture {
                         if unpublishLikeId != nil && up.cancel(unpublishLikeId!) {
-                            ns.unlikePost(event)
+                            ns.unlikePost(nrPost.mainEvent)
                             unpublishLikeId = nil
                             liked = false
                         }
@@ -90,7 +97,7 @@ struct FooterFragmentView: View {
                 else {
                     HStack {
                         Image("LikeIcon")
-                        Text(event.likesCount.description).opacity(event.likesCount == 0 ? 0 : 1)
+                        Text(nrPost.likesCount.description).opacity(nrPost.likesCount == 0 ? 0 : 1)
 //                        RollingOnUpdateNumber(event.likesCount).opacity(event.likesCount == 0 ? 0 : 1)
                     }
                     .padding(5)
@@ -100,31 +107,29 @@ struct FooterFragmentView: View {
                             ns.readOnlyAccountSheetShown = true
                             return
                         }
-                        if let signedEvent = ns.likePost(event) {
+                        if let signedEvent = ns.likePost(nrPost.mainEvent) {
                             unpublishLikeId = up.publish(signedEvent)
                             liked = true
-//                            sendNotification(.viewNeedsUpdate)
                         }
                     }
                 }
                 Spacer()
-                
-                
-                LightningButton(tally: event.zapTally, event: event)
-                    .opacity(event.contact?.anyLud ?? false ? 1 : 0.3)
-                    .disabled(!(event.contact?.anyLud ?? false))
+                                
+                LightningButton(tally: nrPost.zapTally, nrPost: nrPost)
+                    .opacity(nrPost.contact?.anyLud ?? false ? 1 : 0.3)
+                    .disabled(!(nrPost.contact?.anyLud ?? false))
                 Spacer() 
 
 
                 // BOOKMARK
-                if (ns.isBookmarked(event)) {
+                if (nrPost.bookmarked) {
                     Image("BookmarkIconActive")
                         .foregroundColor(.orange)
                         .contentShape(Rectangle())
                         .padding(.vertical, 5)
                         .padding(.leading, 10)
                         .onTapGesture {
-                            ns.removeBookmark(event)
+                            ns.removeBookmark(nrPost.mainEvent)
                         }
                 }
                 else {
@@ -135,13 +140,13 @@ struct FooterFragmentView: View {
                         .onTapGesture {
                             let impactMed = UIImpactFeedbackGenerator(style: .medium)
                             impactMed.impactOccurred()
-                            ns.addBookmark(event)
+                            ns.addBookmark(nrPost.mainEvent)
                         }
                 }
                 
             }
-            if (event.pubkey == ns.activeAccountPublicKey) {
-                Text("Sent to \(event.relays.split(separator: " ").count) relays")
+            if (nrPost.pubkey == ns.activeAccountPublicKey) {
+                Text("Sent to \(nrPost.relays.split(separator: " ").count) relays")
                     .padding(.bottom, 5)
             }
         }
@@ -208,9 +213,9 @@ struct FooterFragmentView_Previews: PreviewProvider {
             
             PreviewFooterFragmentView()
             
-            let event7 = PreviewFetcher.fetchVPost("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
+            let event7 = PreviewFetcher.fetchNRPost("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
             if (event7 != nil) {
-                FooterFragmentView(vPost: event7!)
+                FooterFragmentView(nrPost: event7!)
             }
         }
         .padding(.horizontal, 20)

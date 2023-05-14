@@ -10,18 +10,16 @@ import SwiftUI
 struct PostPreview: View {
     @StateObject var dim = DIMENSIONS()
     @Environment(\.dismiss) var dismiss
-    let previewEvent:Event
+    let nrPost:NRPost
     let sendNow:() -> Void
-    var vPost:VPost?
     @Binding var uploading:Bool
 
     // This previewEvent is not saved in database
     // Code is basically from Event.saveEvent, without unnecessary bits
     
-    init(previewEvent: Event, sendNow: @escaping () -> Void, uploading:Binding<Bool>) {
-        self.previewEvent = previewEvent
+    init(nrPost: NRPost, sendNow: @escaping () -> Void, uploading:Binding<Bool>) {
+        self.nrPost = nrPost
         self.sendNow = sendNow
-        self.vPost = previewEvent.toVPost()
         _uploading = uploading
     }
     
@@ -35,25 +33,21 @@ struct PostPreview: View {
                     print("🟣🟣🟣🟣🟣 NEW DETAIL WIDTH \(size.width) -- Scale: \(UIScreen.main.scale) ")
                 }
             AnyStatus()
-            if let vPost = vPost {
-                PostRowDeletable(vPost: vPost)
-                    .boxShadow()
-                    .disabled(true)
-                    .environmentObject(dim)
-            }
+            PostRowDeletable(nrPost: nrPost)
+                .boxShadow()
+                .disabled(true)
+                .environmentObject(dim)
             Spacer()
         }
         .padding(10)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Back") {
-                    DataProvider.shared().viewContext.delete(previewEvent)
                     dismiss()
                 }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
-                    DataProvider.shared().viewContext.delete(previewEvent)
                     sendNow()
                 } label: {
                     if (uploading) {
@@ -74,7 +68,7 @@ struct PostPreview: View {
 }
 
 func createPreviewEvent(_ event:NEvent) -> Event {
-    let context = DataProvider.shared().viewContext
+    let context = DataProvider.shared().bg
     let previewEvent = Event(context: context)
     previewEvent.insertedAt = Date.now
     previewEvent.id = event.id
@@ -145,8 +139,8 @@ struct PostPreview_Previews: PreviewProvider {
     @State static var uploading = false
     static var previews: some View {
         NavigationStack {
-            if let event = PreviewFetcher.fetchEvent() {
-                PostPreview(previewEvent: event, sendNow: { print("send!") }, uploading: $uploading)
+            if let nrPost = PreviewFetcher.fetchNRPost() {
+                PostPreview(nrPost: nrPost, sendNow: { print("send!") }, uploading: $uploading)
             }
         }
         .withPreviewEnvironment()

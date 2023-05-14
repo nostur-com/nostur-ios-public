@@ -9,62 +9,91 @@ import SwiftUI
 import CoreData
 
 
+// Posts on user profile screen
 struct ProfileLikesView: View {
-
-     
-    var sp:SocketPool = .shared
-    var pubkey:String
-    @State var limit = 25
-    @ObservedObject var settings:SettingsStore = .shared
     
-//    @FetchRequest(
-//        sortDescriptors: [],
-//        predicate: NSPredicate(format: "FALSEPREDICATE"),
-//        animation: .none)
-//    var reactionsTo: FetchedResults<Event>
-
+    let pubkey:String
+    @ObservedObject var settings:SettingsStore = .shared
+    @EnvironmentObject var ns:NosturState
+    @StateObject var fl = FastLoader()
+    @State var backlog = Backlog()
     
     var body: some View {
-        DynamicFetchView(
-            predicate: NSPredicate(format: "pubkey == %@ AND kind == 7", pubkey),
-            fetchLimit: limit,
-            sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]) { (events: FetchedResults<Event>)  in
-                LazyVStack {
-                    if (events.count > 0) {
-                        ForEach(events.compactMap { $0.reactionTo?.toVPost() }) { vPost in
-                            PostRowDeletable(vPost: vPost)
-                                .background(Color.systemBackground)
-                                .boxShadow()
-                                .padding(.vertical, 10)
-                                .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
+        LazyVStack(spacing: 0) {
+            ForEach(fl.nrPosts) { nrPost in
+                PostRowDeletable(nrPost: nrPost)
+                    .background(Color.systemBackground)
+                    .boxShadow()
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
+                    .id(nrPost.id)
+            }
+            VStack {
+                if fl.nrPosts.count > 0 {
+                    Button("Show more") {
+                        fl.predicate = NSPredicate(format: "pubkey == %@ AND kind == 7", pubkey)
+                        fl.loadMore(50)
+                        if let until = fl.nrPosts.last?.created_at {
+                            req(RM.getAuthorReactions(pubkey: pubkey, limit:250, until: NTimestamp(timestamp: Int(until))))
                         }
-                        VStack {
-                            if (events.count == limit) {
-                                HStack {
-                                    Spacer()
-                                    Button("Load more") {
-                                        limit = limit + 25
-                                    }
-                                    .padding(30)
-                                    Spacer()
-                                }
-                            }
+                        else {
+                            req(RM.getAuthorReactions(pubkey: pubkey, limit:250))
                         }
                     }
-                    else {
-                        CenteredProgressView()
-                            .onAppear {
-                                print("🟢 ProfileNotesView.onAppear always REQ.1: \(pubkey)")
-                                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorNotes(pubkey: pubkey)))
-                            }
-                    }
+                    
                 }
-                .background(Color("ListBackground"))
+                else {
+                    ProgressView()
+                }
             }
-            .onAppear {
-                print("🟢 ProfileLikesView.onAppear always REQ.7: \(pubkey)")
-                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorReactions(pubkey: pubkey)))
+            .hCentered()
+            .buttonStyle(.bordered)
+            .tint(.accentColor)
+        }
+        .background(Color("ListBackground"))
+        .onAppear {
+            fl.transformer = { event in
+                if let reactionTo = event.reactionTo_ {
+                    return NRPost(event: reactionTo)
+                }
+                return nil
             }
+            fl.predicate = NSPredicate(format: "pubkey == %@ AND kind == 7", pubkey)
+            fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+            
+            fl.loadMore(50)
+            
+            let fetchNewerLimit = 1000
+            let fetchNewerTask = ReqTask(
+                reqCommand: { (taskId) in
+                    print("\(taskId) 🟠🟠 fetchNewerTask.fetch()")
+                    // Just get max 250 most recent events:
+                    req(RM.getAuthorReactions(pubkey: pubkey, limit:fetchNewerLimit, subscriptionId: taskId))
+                },
+                processResponseCommand: { (taskId) in
+                    print("\(taskId) 🟠🟠🟠 processResponseCommand")
+                    let currentNewestCreatedAt = fl.nrPosts.first?.created_at ?? 0
+                    fl.predicate = NSPredicate(
+                        format:
+                            "created_at >= %i " +
+                            "AND pubkey == %@ " + // blockedPubkeys + [pubkey]
+                            "AND kind == 7 ",
+                            currentNewestCreatedAt,
+                            pubkey
+                    )
+                    fl.loadNewer(fetchNewerLimit, taskId:taskId)
+                })
+
+            backlog.add(fetchNewerTask)
+            fetchNewerTask.fetch()
+        }
+        .onReceive(receiveNotification(.importedMessagesFromSubscriptionIds)) { notification in
+            let importedNotification = notification.object as! ImportedNotification
+            let reqTasks = backlog.tasks(with: importedNotification.subscriptionIds)
+            reqTasks.forEach { task in
+                task.process()
+            }
+        }
     }
 }
 

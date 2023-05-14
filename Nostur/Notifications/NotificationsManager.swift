@@ -148,32 +148,34 @@ class NotificationsManager: ObservableObject {
         let pubkey = account.publicKey
         let blockedPubkeys = account.blockedPubkeys_
         
-        
-        // Same query as in NotificationsPosts.init. should be kept in sync, refactor to 1 function source someday
-        // except oldestCreatedAt = lastSeenPostInstertedAt
-//        print("🟣🟣🟣🟣  \(account.lastSeenPostCreatedAt)")
-        let r2 = Event.fetchRequest()
-        r2.predicate = NSPredicate(format:
-                                    "created_at > %i " +
-                                    "AND NOT pubkey IN %@ " +
-                                    "AND kind == 1 " +
-                                    "AND tagsSerialized CONTAINS %@ " +
-                                    "AND NOT id IN %@ " +
-                                    "AND (replyToRootId == nil OR NOT replyToRootId IN %@) " + // mutedRootIds
-                                    "AND (replyToId == nil OR NOT replyToId IN %@) ", // mutedRootIds
-                                    account.lastSeenPostCreatedAt,
-                                    blockedPubkeys + [pubkey],
-                                    serializedP(pubkey),
-                                    mutedRootIds,
-                                    mutedRootIds,
-                                    mutedRootIds)
-        
-        r2.fetchLimit = FETCH_LIMIT
-        r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        r2.resultType = .countResultType
-        
         let context = DataProvider.shared().bg
-        context.perform {
+        context.perform { [weak self] in
+            guard let self = self else { return }
+            let lastSeenPostCreatedAt = account.toBG()?.lastSeenPostCreatedAt ?? 0
+            
+            // Same query as in NotificationsPosts.init. should be kept in sync, refactor to 1 function source someday
+            // except oldestCreatedAt = lastSeenPostInstertedAt
+    //        print("🟣🟣🟣🟣  \(account.lastSeenPostCreatedAt)")
+            let r2 = Event.fetchRequest()
+            r2.predicate = NSPredicate(format:
+                                        "created_at > %i " +
+                                        "AND NOT pubkey IN %@ " +
+                                        "AND kind == 1 " +
+                                        "AND tagsSerialized CONTAINS %@ " +
+                                        "AND NOT id IN %@ " +
+                                        "AND (replyToRootId == nil OR NOT replyToRootId IN %@) " + // mutedRootIds
+                                        "AND (replyToId == nil OR NOT replyToId IN %@) ", // mutedRootIds
+                                        lastSeenPostCreatedAt,
+                                        blockedPubkeys + [pubkey],
+                                        serializedP(pubkey),
+                                        mutedRootIds,
+                                        mutedRootIds,
+                                        mutedRootIds)
+            
+            r2.fetchLimit = self.FETCH_LIMIT
+            r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+            r2.resultType = .countResultType
+             
             let unreadMentions = (try? context.count(for: r2)) ?? 0
             DispatchQueue.main.async {
                 if unreadMentions != self.unreadMentions {
@@ -339,5 +341,38 @@ class NotificationsManager: ObservableObject {
     
     func stopTimer() {
         timer?.invalidate()
+    }
+    
+    func markMentionsAsRead() {
+        guard let account = ns.account else { return }
+        let mutedRootIds = account.mutedRootIds_
+        let pubkey = account.publicKey
+        let blockedPubkeys = account.blockedPubkeys_
+        
+        let r2 = Event.fetchRequest()
+        r2.predicate = NSPredicate(format:
+                                    "NOT pubkey IN %@ " +
+                                    "AND kind == 1 " +
+                                    "AND tagsSerialized CONTAINS %@ " +
+                                    "AND NOT id IN %@ " +
+                                    "AND (replyToRootId == nil OR NOT replyToRootId IN %@) " + // mutedRootIds
+                                    "AND (replyToId == nil OR NOT replyToId IN %@) ", // mutedRootIds
+                                   blockedPubkeys + [pubkey],
+                                   serializedP(pubkey),
+                                   mutedRootIds,
+                                   mutedRootIds,
+                                   mutedRootIds)
+        r2.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        r2.fetchLimit = 1
+        
+        let ctx = DataProvider.shared().bg
+        ctx.perform {
+            if let mostRecent = try? ctx.fetch(r2).first {
+                account.toBG()?.lastSeenPostCreatedAt = mostRecent.created_at
+            }
+            else {
+                account.toBG()?.lastSeenPostCreatedAt = Int64(Date.now.timeIntervalSince1970)
+            }
+        }
     }
 }

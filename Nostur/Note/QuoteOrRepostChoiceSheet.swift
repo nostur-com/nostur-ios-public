@@ -36,6 +36,7 @@ struct QuoteOrRepostChoiceSheet: View {
                     
                     up.publishNow(originalEvent.toNEvent()) // publish original
                     up.publishNow(signedRepost) // publish repost
+                    sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: originalEvent.id))
                     dismiss()
                 }
             } label: { Label("Repost", systemImage: "arrow.2.squarepath").padding(.vertical, 5) }

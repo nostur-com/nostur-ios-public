@@ -29,22 +29,22 @@ struct ContactPrivateNoteToggle: View {
 }
 
 struct EventPrivateNoteToggle: View {
-    @ObservedObject var event:Event
+    @ObservedObject var nrPost:NRPost
 
     var body: some View {
         HStack {
             Button {
-                if let pn = event.privateNote {
+                if let pn = nrPost.mainEvent.privateNote {
                     sendNotification(.editingPrivateNote, pn)
                 }
                 else {
-                    sendNotification(.newPrivateNoteOnPost, event.id)
+                    sendNotification(.newPrivateNoteOnPost, nrPost.id)
                 }
             } label: {
                 Image(systemName: "note.text")
                     .padding(5)
             }
-            .opacity(event.privateNote != nil ? 1 : 0.2)
+            .opacity(nrPost.mainEvent.privateNote != nil ? 1 : 0.2)
         }
     }
 }
@@ -52,9 +52,9 @@ struct EventPrivateNoteToggle: View {
 
 //struct PrivateNoteToggle_Previews: PreviewProvider {
 //    static var previews: some View {
-//        let post = PreviewFetcher.fetchVPost("21a1b8e4083c11eab8f280dc0c0bddf3837949df75662e181ad117bd0bd5fdf3")
+//        let post = PreviewFetcher.fetchNRPost("21a1b8e4083c11eab8f280dc0c0bddf3837949df75662e181ad117bd0bd5fdf3")
 //        if (post != nil) {
-//            PrivateNoteToggle(vPost: post)
+//            PrivateNoteToggle(nrPost: post)
 //                .withPreviewEnvironment()
 //        }
 //    }

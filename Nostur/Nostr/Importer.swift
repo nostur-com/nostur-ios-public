@@ -164,6 +164,10 @@ class Importer {
                     let savedEvent = Event.saveEvent(event: event, relay: message.relay)
 //                    last = savedEvent
                     saved = saved + 1
+                    let eventId = savedEvent.id
+                    DispatchQueue.main.async {
+                        sendNotification(.postSaved, eventId)
+                    }
                     if let subscriptionId = message.subscriptionId {
                         subscriptionIds.insert(subscriptionId)
                     }

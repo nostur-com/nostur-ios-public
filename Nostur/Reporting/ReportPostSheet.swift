@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ReportPostSheet: View {
     @Environment(\.dismiss) var dismiss
-    let vPost:VPost
+    let nrPost:NRPost
     @State var reason = ReportType.spam
     @State var comment:String = ""
     @State var reportWhat = "Post" // to also report the profile, not just the post
@@ -17,7 +17,7 @@ struct ReportPostSheet: View {
     var body: some View {
         VStack {
             ScrollView {
-                PostRowDeletable(vPost: vPost, hideFooter: true)
+                PostRowDeletable(nrPost: nrPost, hideFooter: true)
                     .disabled(true)
                     .opacity(0.8)
                     .boxShadow()
@@ -58,7 +58,8 @@ struct ReportPostSheet: View {
             }
             ToolbarItem(placement: .primaryAction) {
                 Button("Report") {
-                    guard let signedReport = NosturState.shared.report(vPost.event, reportType: reason, note: comment, includeProfile: reportWhat == "Profile+Profile" ) else {
+                    // TODO: FIXME nrPost.event context
+                    guard let signedReport = NosturState.shared.report(nrPost.event, reportType: reason, note: comment, includeProfile: reportWhat == "Profile+Profile" ) else {
                         return
                     }
                     Unpublisher.shared.publishNow(signedReport)
@@ -72,8 +73,8 @@ struct ReportPostSheet: View {
 struct ReportPostSheet_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
-            if let vPost = PreviewFetcher.fetchVPost() {
-                ReportPostSheet(vPost: vPost)
+            if let nrPost = PreviewFetcher.fetchNRPost() {
+                ReportPostSheet(nrPost: nrPost)
             }
         }
         .withPreviewEnvironment()

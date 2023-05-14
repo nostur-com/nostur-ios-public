@@ -133,14 +133,14 @@ struct LightningInvoice_Previews: PreviewProvider {
                 Text("\n\n\n")
                 
                 Text("In a note")
-                if let vPost = { () -> VPost? in
+                if let nrPost = { () -> NRPost? in
                     if let event = PreviewFetcher.fetchEvent() {
                         event.content = invoice
-                        return event.toVPost()
+                        return NRPost(event: event)
                     }
                     return nil
                 }() {
-                    PostRowDeletable(vPost: vPost)
+                    PostRowDeletable(nrPost: nrPost)
                 }
             }
             .padding(20)

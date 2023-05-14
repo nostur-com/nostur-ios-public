@@ -43,17 +43,24 @@ struct NewPrivateNoteSheet: View {
                 ToolbarItem(placement: .primaryAction) {
                     Button("Save") {
                         do {
+                            guard let account = ns.account else { return }
                             guard post != nil || contact != nil else { return }
                             ns.objectWillChange.send()
                             post?.objectWillChange.send()
                             contact?.objectWillChange.send()
-                            if let newPrivateNote = post != nil
-                                ? PrivateNote.createNewFor(ns.account!, andPost: post!, context: viewContext)
-                                : PrivateNote.createNewFor(ns.account!, andContact: contact!, context: viewContext) {
-                             
-                                newPrivateNote.content = content
+                            if let post {
+                                if let newPrivateNote = PrivateNote.createNewFor(account, andPost: post, context: viewContext) {
+                                    newPrivateNote.content = content
+                                    
+                                    sendNotification(.postAction, PostActionNotification(type: .privateNote, eventId: post.id, hasPrivateNote: true))
+                                }
                             }
-//                            privateNote.post?.objectWillChange.send()
+                            else if let contact {
+                                if let newPrivateNote = PrivateNote.createNewFor(account, andContact: contact, context: viewContext) {
+                                    newPrivateNote.content = content
+                                }
+                            }
+                            
                             try viewContext.save()
                         }
                         catch { print("problem saving private note \(error)") }

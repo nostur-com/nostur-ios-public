@@ -89,18 +89,18 @@ struct MutedConversations: View {
     @FetchRequest(sortDescriptors: [], predicate: NSPredicate(value: false))
     var mutedRootEvents:FetchedResults<Event>
     
-    var vPosts:[VPost] {
-        mutedRootEvents.compactMap { VPostTransformer.shared.toVPost($0, skipParents: true) }
+    var nrPosts:[NRPost] {
+        mutedRootEvents.compactMap { NRPost(event: $0) }
     }
     
     var body: some View {
         if let account = ns.account {
             ScrollView {
-                ForEach(vPosts) { vPost in
-                    PostRowDeletable(vPost: vPost)
+                ForEach(nrPosts) { nrPost in
+                    PostRowDeletable(nrPost: nrPost)
                         .onSwipe(tint: Color.green, label: "Unmute", icon: "") {
                             ns.objectWillChange.send()
-                            account.mutedRootIds_.removeAll(where: { $0 == vPost.id })
+                            account.mutedRootIds_.removeAll(where: { $0 == nrPost.id })
                             DataProvider.shared().save()
                         }
                     Divider()

@@ -8,24 +8,24 @@
 import SwiftUI
 
 struct PostOrThread: View {
-    var vPost: VPost
+    var nrPost: NRPost
     let fullWidth:Bool
     
-    init(vPost: VPost, fullWidth: Bool = false) {
-        self.vPost = vPost
+    init(nrPost: NRPost, fullWidth: Bool = false) {
+        self.nrPost = nrPost
         self.fullWidth = fullWidth
     }
 
     var body: some View {
         VStack(spacing:0) {
-            ForEach(vPost.parentPosts.indices, id:\.self) { index in
-                PostRowDeletable(vPost: vPost.parentPosts[index],
-                        inThread: (vPost.event.replyToId != nil && index != 0),
-                        connect: vPost.parentPosts[index].event.replyToId != nil || index > 0 ? .both : .bottom, fullWidth: fullWidth, isDetail: false)
-                    .id(vPost.parentPosts[index].id)
+            ForEach(nrPost.parentPosts.indices, id:\.self) { index in
+                PostRowDeletable(nrPost: nrPost.parentPosts[index],
+                        inThread: (nrPost.replyToId != nil && index != 0),
+                        connect: nrPost.parentPosts[index].replyToId != nil || index > 0 ? .both : .bottom, fullWidth: fullWidth, isDetail: false)
+                    .id(nrPost.parentPosts[index].id)
             }
-            PostRowDeletable(vPost: vPost, inThread: vPost.event.replyToId != nil && vPost.parentPosts.count > 0, connect: vPost.event.replyToId != nil ? .top : nil, fullWidth: fullWidth, isDetail: false)
-                .id(vPost.id)
+            PostRowDeletable(nrPost: nrPost, inThread: nrPost.replyToId != nil && nrPost.parentPosts.count > 0, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: fullWidth, isDetail: false)
+                .id(nrPost.id)
         }
     }
 }
@@ -43,18 +43,18 @@ struct PostOrThread_Previews: PreviewProvider {
                 }
                 .filter(onlyRootOrReplyingToFollower)
             
-            let vPosts = onlyRootEvents.compactMap { $0.toVPost() }
+            let nrPosts = onlyRootEvents.compactMap { NRPost(event: $0) }
             
             ScrollView {
                 VStack(spacing: 0) {
-    //                ForEach(vPosts) { vPost in
-                    ForEach(Array(vPosts.dropFirst(12))) { vPost in
-                        PostOrThread(vPost: vPost)
+    //                ForEach(nrPosts) { nrPost in
+                    ForEach(Array(nrPosts.dropFirst(12))) { nrPost in
+                        PostOrThread(nrPost: nrPost)
                             .overlay {
                                 GeometryReader { geo in
                                     HStack {
                                         Spacer()
-                                        Text("H: \(vPost.event.username): \(Int(geo.size.height))")
+                                        Text("H: \(nrPost.anyUsername): \(Int(geo.size.height))")
                                             .padding(10)
                                             .foregroundColor(.white)
                                             .background(.red)

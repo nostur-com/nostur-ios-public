@@ -125,23 +125,23 @@ func ids(_ events:Array<Event>.SubSequence) -> [String] {
     return events.map { $0.id }
 }
 
-func ids(_ vPosts:[VPost]) -> [String] {
-    return vPosts.map { $0.id }
+func ids(_ nrPosts:[NRPost]) -> [String] {
+    return nrPosts.map { $0.id }
 }
 
 func pubkeys(_ events:[Event]) -> [String] {
     return events.map { $0.pubkey }
 }
 
-func id(_ event:Event) -> String {
+func toId(_ event:Event) -> String {
     return event.id
 }
 
-func pubkey(_ event:Event) -> String {
+func toPubkey(_ event:Event) -> String {
     return event.pubkey
 }
 
-func pubkey(_ contact:Contact) -> String {
+func toPubkey(_ contact:Contact) -> String {
     return contact.pubkey
 }
 

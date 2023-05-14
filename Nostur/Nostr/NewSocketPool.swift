@@ -154,7 +154,7 @@ final class SocketPool: ObservableObject {
                             print("🏎️🏎️⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count)")
                         }
                     }
-//                    print(" ⬇️⬇️ REQUESTING: \(String(message.message.prefix(260)))")
+                    print(" ⬇️⬇️ REQUESTING: \(String(message.message.prefix(260)))")
 //                    print("⬇️⬇️ REQUESTING: \(String(message.message))")
                     managedClient.client.sendMessage(message.message)
                 }
@@ -595,7 +595,7 @@ class NewEphemeralClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDel
 
 
 
-func fetchEventFromRelayHint(_ eventId:String, event:Event) {
+func fetchEventFromRelayHint(_ eventId:String, fastTags:[(String, String, String?)]) {
     // EventRelationsQueue.shared.addAwaitingEvent(event) <-- not needed, should already be awaiting
 //    [
 //      "e",
@@ -603,7 +603,7 @@ func fetchEventFromRelayHint(_ eventId:String, event:Event) {
 //      "wss://relay.mostr.pub",
 //      "reply"
 //    ],
-    if let relay = event.fastTags.filter({ $0.0 == "e" && $0.1 == eventId }).first?.2 {
+    if let relay = fastTags.filter({ $0.0 == "e" && $0.1 == eventId }).first?.2 {
         if relay.prefix(6) == "wss://" || relay.prefix(5) == "ws://" {
             EphemeralSocketPool.shared.sendMessage(RM.getEvent(id: eventId), relay: relay)
         }

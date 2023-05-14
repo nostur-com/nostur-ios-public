@@ -27,46 +27,42 @@ struct NewReply: View {
     var contacts:FetchedResults<Contact>
     var firstResults:[Contact] { Array(contacts.prefix(30)) }
     @State var selectedMentions:[Contact] = []
-    @State var previewEvent:Event?
+    @State var replyToNRPost:NRPost?
+    @State var previewNRPost:NRPost?
     @State var uploading = false
     @State var uploadError:String?
     @State var subscriptions = Set<AnyCancellable>()
     
-//    init(replyTo:Event, noteCancellationId:Binding<UUID?>) {
-    init(replyTo:Event) {
-        self.replyTo = replyTo
-//        _noteCancellationId = noteCancellationId
-    }
-    
     var body: some View {
-        if let account = ns.account {
-            VStack {
-                ScrollView {
-                    PostRowDeletable(vPost: replyTo.toVPost()!, hideFooter: true)
-                    HStack {
-                        NewReplyingToFragment(contact: replyTo.contact, pubkey: replyTo.pubkey)
-                            .offset(x:80)
-                        Spacer()
-                    }
-                    HStack(alignment: .top) {
-                        PFP(pubkey: account.publicKey, pictureUrl: account.picture, isFollowing: true)
-                            .padding(.horizontal, 10)
-                        ZStack(alignment:.leading) {
-                            VStack(alignment: .leading) {
-                                Text(PLACEHOLDER).foregroundColor(.gray)
-                                    .opacity(vm.text == "" ? 1 : 0)
-                                    .offset(x: 5.0, y: 7.0)
-                                Spacer()
-                            }
-                            VStack(alignment: .leading) {
-                                HighlightedTextEditor(
-                                    text: $vm.text,
-                                    pastedImages: $vm.pastedImages,
-                                    shouldBecomeFirstResponder: true,
-                                    highlightRules: NewNoteText.rules,
-                                    photoPickerTapped: {
-                                        ipm.photoPickerShown = true
-                                    })
+        VStack {
+            if let account = ns.account, let replyToNRPost {
+                VStack {
+                    ScrollView {
+                        PostRowDeletable(nrPost: replyToNRPost, hideFooter: true)
+                        HStack {
+                            NewReplyingToFragment(contact: replyTo.contact, pubkey: replyTo.pubkey)
+                                .offset(x:80)
+                            Spacer()
+                        }
+                        HStack(alignment: .top) {
+                            PFP(pubkey: account.publicKey, pictureUrl: account.picture, isFollowing: true)
+                                .padding(.horizontal, 10)
+                            ZStack(alignment:.leading) {
+                                VStack(alignment: .leading) {
+                                    Text(PLACEHOLDER).foregroundColor(.gray)
+                                        .opacity(vm.text == "" ? 1 : 0)
+                                        .offset(x: 5.0, y: 7.0)
+                                    Spacer()
+                                }
+                                VStack(alignment: .leading) {
+                                    HighlightedTextEditor(
+                                        text: $vm.text,
+                                        pastedImages: $vm.pastedImages,
+                                        shouldBecomeFirstResponder: true,
+                                        highlightRules: NewNoteText.rules,
+                                        photoPickerTapped: {
+                                            ipm.photoPickerShown = true
+                                        })
                                     .introspect { editor in
                                         if (vm.textView == nil) {
                                             vm.textView = editor.textView
@@ -79,165 +75,180 @@ struct NewReply: View {
                                             vm.pastedImages.append(newImage)
                                         }
                                     }
-                                ImagePreviews(pastedImages: $vm.pastedImages)
-                                Spacer()
+                                    ImagePreviews(pastedImages: $vm.pastedImages)
+                                    Spacer()
+                                }
                             }
                         }
-                    }
-                    
-                    
-                    if vm.mentioning {
-                        ScrollView {
-                            LazyVStack {
-                                ForEach(firstResults) { contact in
-                                    ContactSearchResultRow(contact: contact) {
-                                        guard vm.textView != nil else { return }
-                                        let mentionName = contact.handle
-                                        vm.text = vm.text.dropLast(vm.term.count) + mentionName
-                                        selectedMentions.append(contact)
-                                        vm.mentioning = false
-                                        vm.lastHit = mentionName
-                                        vm.term = ""
-                                        
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { // after 0.3 sec to get the new .endOfDocument
-        //                                    self.vm.mentioning = false
-                                            let newPosition = vm.textView!.endOfDocument
-                                            vm.textView!.selectedTextRange = vm.textView!.textRange(from: newPosition, to: newPosition)
+                        if vm.mentioning {
+                            ScrollView {
+                                LazyVStack {
+                                    ForEach(firstResults) { contact in
+                                        ContactSearchResultRow(contact: contact) {
+                                            guard vm.textView != nil else { return }
+                                            let mentionName = contact.handle
+                                            vm.text = vm.text.dropLast(vm.term.count) + mentionName
+                                            selectedMentions.append(contact)
+                                            vm.mentioning = false
+                                            vm.lastHit = mentionName
+                                            vm.term = ""
+                                            
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { // after 0.3 sec to get the new .endOfDocument
+                                                //                                    self.vm.mentioning = false
+                                                let newPosition = vm.textView!.endOfDocument
+                                                vm.textView!.selectedTextRange = vm.textView!.textRange(from: newPosition, to: newPosition)
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
+                        Spacer()
                     }
-                    Spacer()
                 }
-            }
-            .padding(10)
-            .onAppear {
-                updateEventWithNewText()
-            }
-            .onChange(of: vm.debouncedText) { newText in
-                if (vm.nEvent == nil) {
-                    vm.nEvent = NEvent(content: newText)
-                } else {
-                    vm.nEvent!.content = newText
+                .padding(10)
+                .onAppear {
+                    updateEventWithNewText()
                 }
-                
-                guard let account = ns.account else { return }
-                if let mentionTerm = mentionTerm(newText) {
-                    print ("mentionTerm \(mentionTerm) lastHit: \(vm.lastHit)")
-
-                    if mentionTerm == vm.lastHit {
-                        vm.mentioning = false
+                .onChange(of: vm.debouncedText) { newText in
+                    if (vm.nEvent == nil) {
+                        vm.nEvent = NEvent(content: newText)
+                    } else {
+                        vm.nEvent!.content = newText
                     }
-                    else {
-                        vm.mentioning = true
-                        vm.term = mentionTerm
-                        contacts.nsPredicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@) AND NOT pubkey IN %@", mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), account.blockedPubkeys_)
-                    }
-
-                }
-                else {
-                    vm.mentioning = false
-                }
-            }
-            .onAppear {
-                var newReply = NEvent(content: "")
-                newReply.kind = .textNote
-                
-                let root = TagsHelpers(replyTo.tags()).replyToRootEtag()
-                
-                if (root != nil) { // ADD "ROOT" + "REPLY"
-                    let newRootTag = NEventTag(type: "e", otherInformation: root!.otherInformation[0], "", "root") // TODO RECOMMENDED RELAY HERE
-                    newReply.tags.append(newRootTag)
                     
-                    let newReplyTag = NEventTag(type: "e", otherInformation: replyTo.id, "", "reply")
-                    
-                    newReply.tags.append(newReplyTag)
-                }
-                else { // ADD ONLY "ROOT"
-                    let newRootTag = NEventTag(type: "e", otherInformation: replyTo.id, "", "root")
-                    newReply.tags.append(newRootTag)
-                }
-                
-                // ADD ALL "P" TAGS
-                let existingPtags = TagsHelpers(replyTo.tags()).pTags()
-                newReply.tags.append(contentsOf: existingPtags)
-                
-                // TODO: DEDUPLICATE P TAGS
-                
-                // ADD PUBKEY OF REPLYING TO EVENT
-                let replyToPtag = NEventTag(type: "p", otherInformation: replyTo.pubkey)
-                
-                newReply.tags.append(replyToPtag)
-                vm.nEvent = newReply
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        dismiss() // TODO: If wrote something, confirm cancellation
-                    } label: {
-                        Text("Cancel")
-                    }
-                }
-                
-                if let uploadError {
-                    ToolbarItem(placement: .principal) {
-                        Text(uploadError).foregroundColor(.red)
-                    }
-                }
-                
-                ToolbarItem {
-                    Button("Preview") {
-                        guard let account = ns.account else { return }
-                        guard var nEvent = vm.nEvent else { return }
-                        nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected:selectedMentions)
-                        nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
-                        nEvent = putHashtagsInTags(nEvent)
-                        nEvent.publicKey = account.publicKey
+                    guard let account = ns.account else { return }
+                    if let mentionTerm = mentionTerm(newText) {
+                        print ("mentionTerm \(mentionTerm) lastHit: \(vm.lastHit)")
                         
-                        if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
-                            nEvent.content = replaceNsecWithHunter2(nEvent.content)
-                        }
-                        for index in vm.pastedImages.indices {
-                            nEvent.content = nEvent.content + "\n--@!^@\(index)@^!@--"
-                        }
-                        let previewEvent = createPreviewEvent(nEvent)
-                        if (vm.pastedImages.count > 0) {
-                            previewEvent.previewImages = vm.pastedImages
-                        }
-                        self.previewEvent = previewEvent
-                    }
-                    .cornerRadius(20)
-                    .disabled(uploading)
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        sendNow()
-                    } label: {
-                        if (uploading) {
-                            ProgressView()
+                        if mentionTerm == vm.lastHit {
+                            vm.mentioning = false
                         }
                         else {
-                            Text("Post")
+                            vm.mentioning = true
+                            vm.term = mentionTerm
+                            contacts.nsPredicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@) AND NOT pubkey IN %@", mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), account.blockedPubkeys_)
+                        }
+                        
+                    }
+                    else {
+                        vm.mentioning = false
+                    }
+                }
+                .onAppear {
+                    var newReply = NEvent(content: "")
+                    newReply.kind = .textNote
+                    
+                    let root = TagsHelpers(replyTo.tags()).replyToRootEtag()
+                    
+                    if (root != nil) { // ADD "ROOT" + "REPLY"
+                        let newRootTag = NEventTag(type: "e", otherInformation: root!.otherInformation[0], "", "root") // TODO RECOMMENDED RELAY HERE
+                        newReply.tags.append(newRootTag)
+                        
+                        let newReplyTag = NEventTag(type: "e", otherInformation: replyTo.id, "", "reply")
+                        
+                        newReply.tags.append(newReplyTag)
+                    }
+                    else { // ADD ONLY "ROOT"
+                        let newRootTag = NEventTag(type: "e", otherInformation: replyTo.id, "", "root")
+                        newReply.tags.append(newRootTag)
+                    }
+                    
+                    // ADD ALL "P" TAGS
+                    let existingPtags = TagsHelpers(replyTo.tags()).pTags()
+                    newReply.tags.append(contentsOf: existingPtags)
+                    
+                    // TODO: DEDUPLICATE P TAGS
+                    
+                    // ADD PUBKEY OF REPLYING TO EVENT
+                    let replyToPtag = NEventTag(type: "p", otherInformation: replyTo.pubkey)
+                    
+                    newReply.tags.append(replyToPtag)
+                    vm.nEvent = newReply
+                }
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button {
+                            dismiss() // TODO: If wrote something, confirm cancellation
+                        } label: {
+                            Text("Cancel")
                         }
                     }
-                    .buttonStyle(.borderedProminent)
-                    .cornerRadius(20)
-                    .disabled(uploading)
-                }
-            }
-            .sheet(item: $previewEvent) { previewEvent in
-                NavigationStack {
-                    PostPreview(previewEvent: previewEvent, sendNow: self.sendNow, uploading: $uploading)
-                        .onDisappear {
-                            DataProvider.shared().viewContext.delete(previewEvent)
+                    
+                    if let uploadError {
+                        ToolbarItem(placement: .principal) {
+                            Text(uploadError).foregroundColor(.red)
                         }
+                    }
+                    
+                    ToolbarItem {
+                        Button("Preview") {
+                            guard let account = ns.account else { return }
+                            guard var nEvent = vm.nEvent else { return }
+                            nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected:selectedMentions)
+                            nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
+                            nEvent = putHashtagsInTags(nEvent)
+                            nEvent.publicKey = account.publicKey
+                            
+                            if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
+                                nEvent.content = replaceNsecWithHunter2(nEvent.content)
+                            }
+                            for index in vm.pastedImages.indices {
+                                nEvent.content = nEvent.content + "\n--@!^@\(index)@^!@--"
+                            }
+                            DataProvider.shared().bg.perform {
+                                let previewEvent = createPreviewEvent(nEvent)
+                                if (vm.pastedImages.count > 0) {
+                                    previewEvent.previewImages = vm.pastedImages
+                                }
+                                let previewNRPost = NRPost(event: previewEvent)
+                                DispatchQueue.main.async {
+                                    self.previewNRPost = previewNRPost
+                                }
+                                DataProvider.shared().bg.delete(previewEvent)
+                            }
+                        }
+                        .cornerRadius(20)
+                        .disabled(uploading)
+                    }
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button {
+                            sendNow()
+                        } label: {
+                            if (uploading) {
+                                ProgressView()
+                            }
+                            else {
+                                Text("Post")
+                            }
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .cornerRadius(20)
+                        .disabled(uploading)
+                    }
+                }
+                .sheet(item: $previewNRPost) { nrPost in
+                    NavigationStack {
+                        PostPreview(nrPost: nrPost, sendNow: self.sendNow, uploading: $uploading)
+                        //                        .onDisappear {
+                        //                            DataProvider.shared().viewContext.delete(previewEvent)
+                        //                        }
+                    }
                 }
             }
-        }
-        else {
-            ProgressView()
+            else {
+                ProgressView()
+                    .task {
+                        DataProvider.shared().bg.perform {
+                            if let replyToBG = replyTo.toBG() {
+                                let replyToNRPost = NRPost(event: replyToBG)
+                                DispatchQueue.main.async {
+                                    self.replyToNRPost = replyToNRPost
+                                }
+                            }
+                        }
+                    }
+            }
         }
     }
     
@@ -283,8 +294,8 @@ struct NewReply: View {
                         }
                         if let signedEvent = try? ns.signEvent(nEvent) {
                             up.publishNow(signedEvent)
+                            sendNotification(.postAction, PostActionNotification(type: .replied, eventId: replyTo.id))
                             dismiss()
-                            previewEvent = nil
                         }
                     }
 //                    print("Uploaded image URLs: \(urls)")
@@ -303,8 +314,8 @@ struct NewReply: View {
             }
             if let signedEvent = try? ns.signEvent(nEvent) {
                 up.publishNow(signedEvent)
+                sendNotification(.postAction, PostActionNotification(type: .replied, eventId: replyTo.id))
                 dismiss()
-                previewEvent = nil
             }
         }
     }

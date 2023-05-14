@@ -241,18 +241,26 @@ extension Contact : Identifiable {
 //        }
         let context = DataProvider.shared().bg
                 
-        context.performAndWait {
+        context.perform {
             let decoder = JSONDecoder()
             guard let metaData = try? decoder.decode(NSetMetadata.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) else {
                 return
             }
             
-            let request = NSFetchRequest<Contact>(entityName: "Contact")
-            request.predicate = NSPredicate(format: "pubkey == %@", event.publicKey)
-            request.sortDescriptors = [NSSortDescriptor(key: "updated_at", ascending: false)]
-            request.fetchLimit = 1
+            let awaitingContacts = EventRelationsQueue.shared.getAwaitingBgContacts()
+            var contact:Contact?
             
-            if let contact = try? context.fetch(request).first {
+            contact = awaitingContacts.first(where: { $0.pubkey == event.publicKey })
+            
+            if contact == nil {
+                let request = NSFetchRequest<Contact>(entityName: "Contact")
+                request.predicate = NSPredicate(format: "pubkey == %@", event.publicKey)
+                request.sortDescriptors = [NSSortDescriptor(key: "updated_at", ascending: false)]
+                request.fetchLimit = 1
+                contact = try? context.fetch(request).first
+            }
+            
+            if let contact {
                 
                 // Received metadata is newer than stored Contact
                 if contact.metadata_created_at < event.createdAt.timestamp {
@@ -299,7 +307,6 @@ extension Contact : Identifiable {
         let username = contact.username != "" ? contact.username : contact.authorName
         PubkeyUsernameCache.shared.setObject(for: contact.pubkey, value: username)
         
-        
         let awaitingEvents = EventRelationsQueue.shared.getAwaitingBgEvents()
         
         awaitingEvents.forEach { waitingEvent in
@@ -318,6 +325,10 @@ extension Contact : Identifiable {
             EventRelationsQueue.shared.removeAwaitingEvent(waitingEvent)
         }
         
+        let pubkey = contact.pubkey
+        DispatchQueue.main.async {
+            sendNotification(.contactSaved, pubkey)
+        }
         return
 //        // HMMM CAN WE REMOVE BELOW THING... AND ONLY USE ABOVE??
 //        // TODO: Maybe some event.objectWillChange.send() to relations in active views? Performance?

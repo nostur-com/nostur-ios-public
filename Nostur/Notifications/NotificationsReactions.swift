@@ -7,6 +7,7 @@
 
 import SwiftUI
 import CoreData
+import Combine
 
 // NIP-25: The last p tag MUST be the pubkey of the event being reacted to.
 // TODO: Maybe when performance problems: store lastE + lasteE in Events table
@@ -19,12 +20,11 @@ struct NotificationsReactions: View {
     @State var backlog = Backlog()
     @EnvironmentObject var ns:NosturState
     
-    
-    var myNotesReactedTo:[Event] {
+    func myNotesReactedTo(_ events:[Event]) -> [Event] {
         
         var sortingDict:[Event: Int64] = [:] // Event and most recent reaction created_At
         
-        for reaction in fl.events {
+        for reaction in events {
             guard let reactionTo = reaction.reactionTo else { continue }
             if (sortingDict.keys.contains(reactionTo)) {
                 if reaction.created_at > sortingDict[reactionTo]! {
@@ -38,12 +38,10 @@ struct NotificationsReactions: View {
         return sortingDict.keys.sorted(by: { (sortingDict[$0] ?? 0) > (sortingDict[$1] ?? 0) } )
     }
     
-    var myNotesReactedToAsVPosts:[VPost] {
-        myNotesReactedTo.compactMap { VPostTransformer.shared.toVPost($0, skipParents: true, plainText: true) }
-    }
+    @State var myNotesReactedToAsNRPosts:[NRPost] = []
     
-    func reactionsForNote(_ event:Event) -> [Event] {
-        fl.events.compactMap {  $0.reactionToId == event.id ? $0 : nil }
+    func reactionsForNote(_ id:String) -> [Event] {
+        fl.events.compactMap {  $0.reactionToId == id ? $0 : nil }
     }
     
     init(pubkey:String, blockedPubkeys:[String]) {
@@ -55,45 +53,49 @@ struct NotificationsReactions: View {
         let _ = Self._printChanges()
         ScrollView {
             LazyVStack(alignment:.leading, spacing: 0) {
-                ForEach(myNotesReactedToAsVPosts) { vPost in
+                ForEach(myNotesReactedToAsNRPosts) { nrPost in
                     VStack(alignment:.leading, spacing: 3) {
-                        ReactionsForThisNote(reactions:reactionsForNote(vPost.event))
-                        NoteMinimalContentView(vPost: vPost)
+                        ReactionsForThisNote(reactions:reactionsForNote(nrPost.id))
+                        NoteMinimalContentView(nrPost: nrPost)
                     }
                     .padding(10)
                     .background(Color.systemBackground)
                     .boxShadow()
                     .padding(10)
                     .onTapGesture {
-                        navigateTo(vPost)
+                        navigateTo(nrPost)
                     }
-                    .id(vPost.id)
+                    .id(nrPost.id)
                 }
-                Button("Show more") {
-                    fl.predicate = NSPredicate(
-                        format:
-                            "NOT pubkey IN %@ " +
-                            "AND kind == 7 " +
-                            "AND reactionTo.pubkey == %@",
-                            blockedPubkeys,
-                            pubkey)
-//                    fl.offset = (fl.events.count - 1)
-                    fl.loadMore(500)
-                    if let until = fl.events.last?.created_at {
-                        req(RM.getMentions(
-                            pubkeys: [pubkey],
-                            kinds: [7],
-                            limit: 500,
-                            until: NTimestamp(timestamp: Int(until))
-                        ))
+                VStack {
+                    if myNotesReactedToAsNRPosts.count > 0 {
+                        Button("Show more") {
+                            fl.predicate = NSPredicate(
+                                format: "NOT pubkey IN %@ AND kind == 7 AND reactionTo.pubkey == %@",
+                                    blockedPubkeys,
+                                    pubkey)
+        //                    fl.offset = (fl.events.count - 1)
+                            fl.loadMore(500)
+                            if let until = fl.events.last?.created_at {
+                                req(RM.getMentions(
+                                    pubkeys: [pubkey],
+                                    kinds: [7],
+                                    limit: 500,
+                                    until: NTimestamp(timestamp: Int(until))
+                                ))
+                            }
+                            else {
+                                req(RM.getMentions(pubkeys: [pubkey], kinds: [7], limit:500))
+                            }
+                        }
+                        .padding(.bottom, 40)
+                        .buttonStyle(.bordered)
+                        .tint(.accentColor)
                     }
                     else {
-                        req(RM.getMentions(pubkeys: [pubkey], limit:500))
+                        ProgressView()
                     }
                 }
-                .padding(.bottom, 40)
-                .buttonStyle(.bordered)
-                .tint(.accentColor)
                 .hCentered()
             }
         }
@@ -105,10 +107,7 @@ struct NotificationsReactions: View {
             let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
             fl.predicate = NSPredicate(
                 format:
-                    "created_at >= %i " +
-                    "AND NOT pubkey IN %@ " +
-                    "AND kind == 7 " +
-                    "AND reactionTo.pubkey == %@",
+                    "created_at >= %i AND NOT pubkey IN %@ AND kind == 7 AND reactionTo.pubkey == %@",
                     currentNewestCreatedAt,
                     blockedPubkeys,
                     pubkey
@@ -130,14 +129,28 @@ struct NotificationsReactions: View {
         }
     }
     
+    @State var subscriptions = Set<AnyCancellable>()
+    
     func load() {
+        fl.$events
+            .sink { events in
+                let myNotesReactedTo = self.myNotesReactedTo(events)
+                DataProvider.shared().bg.perform {
+                    let transformed = myNotesReactedTo
+                        .compactMap { $0.toBG() }
+                        .map { NRPost(event: $0, plainText:true) }
+                    
+                    DispatchQueue.main.async {
+                        self.myNotesReactedToAsNRPosts = transformed
+                    }
+                }
+            }
+            .store(in: &subscriptions)
+        
         fl.reset()
-        fl.vPostTransform = false
+        fl.nrPostTransform = false
         fl.predicate = NSPredicate(
-            format:
-                "NOT pubkey IN %@ " +
-                "AND kind == 7 " +
-                "AND reactionTo.pubkey == %@",
+            format: "NOT pubkey IN %@ AND kind == 7 AND reactionTo.pubkey == %@",
                 blockedPubkeys,
                 pubkey
             )
@@ -170,11 +183,7 @@ struct NotificationsReactions: View {
 //                    print("🟠🟠🟠 processResponseCommand \(taskId)")
                 let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
                 fl.predicate = NSPredicate(
-                    format:
-                        "created_at >= %i " +
-                        "AND NOT pubkey IN %@ " +
-                        "AND kind == 7 " +
-                        "AND reactionTo.pubkey == %@",
+                    format: "created_at >= %i AND NOT pubkey IN %@ AND kind == 7 AND reactionTo.pubkey == %@",
                         currentNewestCreatedAt,
                         blockedPubkeys,
                         pubkey
@@ -192,7 +201,7 @@ struct NotificationsReactions: View {
         let mr = Event.fetchRequest()
         mr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         mr.predicate = NSPredicate(format: "kind == 7 AND tagsSerialized CONTAINS %@ AND reactionTo == nil", serializedP(pubkey))
-        
+
         Task.detached(priority: .medium) {
             let ctx = DataProvider.shared().bg
             DataProvider.shared().bg.perform {
@@ -204,7 +213,7 @@ struct NotificationsReactions: View {
                         }
                 }
             }
-            
+
         }
     }
 }
@@ -280,7 +289,10 @@ struct ReactionsForThisNote: View {
 struct NotificationsV_Previews: PreviewProvider {
     static var previews: some View {
         let pubkey = "04c915daefee38317fa734444acee390a8269fe5810b2241e5e6dd343dfbecc9"
-        NotificationsReactions(pubkey: pubkey, blockedPubkeys: [])
-            .withPreviewEnvironment()
+//        let pubkey = "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
+        VStack {
+            NotificationsReactions(pubkey: pubkey, blockedPubkeys: [])
+        }
+        .withPreviewEnvironment()
     }
 }

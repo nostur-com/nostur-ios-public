@@ -39,12 +39,12 @@ struct VPost: Identifiable, Equatable, Hashable {
     var imageUrls:[URL] // See ImageViewer
     var displayName:String
     
-    var renderedElements:[MarkdownElement] // NoteRow.Kind1
-    var renderedElementsDetail:[MarkdownElement] // PostDetail.Kind1
+    var renderedElements:[ContentElement] // NoteRow.Kind1
+    var renderedElementsDetail:[ContentElement] // PostDetail.Kind1
     
     var parentPosts:[VPost]
     
-    // This one event + parents are shown as a single Thread, coming from a single vPost
+    // This one event + parents are shown as a single Thread, coming from a single nrPost
     // So to get the counter correct we can no longer just do vPosts.count
     // We need vPosts.reduce ... .parentPosts.count
     var threadPostsCount:Int
@@ -111,7 +111,7 @@ class VPostTransformer {
                     return false
             })
             
-            var renderedForRow:[MarkdownElement] {
+            var renderedForRow:[ContentElement] {
                 var gotVideo = false
                 return renderedElements
                     .filter { element in
@@ -189,7 +189,7 @@ class VPostTransformer {
                     return false
             })
             
-            var renderedForRow:[MarkdownElement] {
+            var renderedForRow:[ContentElement] {
                 var gotVideo = false
                 return renderedElements
                     .filter { element in
@@ -321,7 +321,7 @@ class VPostTransformer {
         }
     }
 
-    func renderElements(_ event:Event) -> ([MarkdownElement], [URL]) {
+    func renderElements(_ event:Event) -> ([ContentElement], [URL]) {
         if Thread.isMainThread {
             print("☠️☠️☠️☠️ renderElements on MAIN thread....")
         }
@@ -331,7 +331,7 @@ class VPostTransformer {
         
         let range = NSRange(location: 0, length: input.utf16.count)
         
-        var result: [MarkdownElement] = []
+        var result: [ContentElement] = []
         var linkPreviewUrls: [URL] = []
         var lastMatchEnd = 0
         
@@ -342,71 +342,71 @@ class VPostTransformer {
                 let nonMatch = (input as NSString).substring(with: nonMatchRange)
                 let matchString = (input as NSString).substring(with: matchRange)
                 
-                result.append(MarkdownElement.text(contentLinkRenderer.renderedText(event, text:nonMatch)))
+//                result.append(ContentElement.text(contentLinkRenderer.renderedText(event, text:nonMatch)))
                 
                 if matchString.matchingStrings(regex: Self.imageUrlPattern).count > 0 {
                     if let url = URL(string: matchString) {
-                        result.append(MarkdownElement.image(url))
+                        result.append(ContentElement.image(url))
                     }
                     else {
-                        result.append(MarkdownElement.text(contentLinkRenderer.renderedText(event, text:matchString)))
+//                        result.append(ContentElement.text(contentLinkRenderer.renderedText(event, text:matchString)))
                     }
                 }
                 else if matchString.matchingStrings(regex: Self.videoUrlPattern).count > 0 {
                     if let url = URL(string: matchString) {
-                        result.append(MarkdownElement.video(url))
+                        result.append(ContentElement.video(url))
                     }
                     else {
-                        result.append(MarkdownElement.text(contentLinkRenderer.renderedText(event, text:matchString)))
+//                        result.append(ContentElement.text(contentLinkRenderer.renderedText(event, text:matchString)))
                     }
                 }
                 else if matchString.matchingStrings(regex: Self.otherUrlsPattern).count > 0 {
                     if let url = URL(string: matchString) {
-                        result.append(MarkdownElement.linkPreview(url))
+                        result.append(ContentElement.linkPreview(url))
                         linkPreviewUrls.append(url)
                     }
                     else {
-                        result.append(MarkdownElement.text(contentLinkRenderer.renderedText(event, text:matchString)))
+//                        result.append(ContentElement.text(contentLinkRenderer.renderedText(event, text:matchString)))
                     }
                 }
                 else if matchString.matchingStrings(regex: Self.notePattern).count > 0 {
                     let note1String = String(matchString.dropFirst(6)) // drop nostr:
-                    result.append(MarkdownElement.note1(note1String))
+                    result.append(ContentElement.note1(note1String))
                 }
                 else if matchString.matchingStrings(regex: Self.previewImagePlaceholder).count > 0 {
                     let m = matchString.matchingStrings(regex: Self.previewImagePlaceholder)
                     if let p = event.previewImages[safe: Int(m[0][0])] {
-                        result.append(MarkdownElement.postPreviewImage(p))
+                        result.append(ContentElement.postPreviewImage(p))
                     }
                 }
                 else if matchString.matchingStrings(regex: Self.neventPattern).count > 0 {
                     let nevent1String = String(matchString.dropFirst(6)) // drop "nostr:"
                     do {
                         let identifier = try ShareableIdentifier(nevent1String)
-                        result.append(MarkdownElement.nevent1(identifier))
+                        result.append(ContentElement.nevent1(identifier))
                         
                     }
                     catch {
                         print("problem decoding nevent in event.id: \(event.id)")
-                        result.append(MarkdownElement.text(contentLinkRenderer.renderedText(event, text:matchString)))
+//                        result.append(ContentElement.text(contentLinkRenderer.renderedText(event, text:matchString)))
                     }
                 }
                 else if matchString.matchingStrings(regex: Self.nprofilePattern).count > 0 {
                     let nprofile1String = String(matchString.dropFirst(6)) // drop "nostr:"
                     do {
                         let identifier = try ShareableIdentifier(nprofile1String)
-                        result.append(MarkdownElement.nprofile1(identifier))
+                        result.append(ContentElement.nprofile1(identifier))
                     }
                     catch {
                         print("problem decoding nevent in profile.pubkey: \(event.id)")
-                        result.append(MarkdownElement.text(contentLinkRenderer.renderedText(event, text:matchString)))
+//                        result.append(ContentElement.text(contentLinkRenderer.renderedText(event, text:matchString)))
                     }
                 }
                 else if matchString.matchingStrings(regex: Self.lightningInvoicePattern).count > 0 {
-                    result.append(MarkdownElement.lnbc(matchString))
+                    result.append(ContentElement.lnbc(matchString))
                 }
                 else {
-                    result.append(MarkdownElement.text(contentLinkRenderer.renderedText(event, text:matchString)))
+//                    result.append(ContentElement.text(contentLinkRenderer.renderedText(event, text:matchString)))
                 }
                 
                 lastMatchEnd = matchRange.location + matchRange.length
@@ -416,16 +416,17 @@ class VPostTransformer {
         let nonMatchRange = NSRange(location: lastMatchEnd, length: input.utf16.count - lastMatchEnd)
         let nonMatch = (input as NSString).substring(with: nonMatchRange)
         
-        result.append(MarkdownElement.text(contentLinkRenderer.renderedText(event, text:nonMatch)))
+//        result.append(ContentElement.text(contentLinkRenderer.renderedText(event, text:nonMatch)))
         return (result, linkPreviewUrls)
     }
 }
 
+public typealias Ptag = String
 
-enum MarkdownElement: Hashable {
+enum ContentElement: Hashable {
 //    case rendered(String)
 //    case plain(String)
-    case text(AttributedString)
+    case text(AttributedStringWithPs, String)
     case note1(String)
     case noteHex(String)
     case lnbc(String)
@@ -436,4 +437,10 @@ enum MarkdownElement: Hashable {
     case postPreviewImage(UIImage)
     case nevent1(ShareableIdentifier)
     case nprofile1(ShareableIdentifier)
+}
+
+struct AttributedStringWithPs: Hashable {
+    var text:AttributedString
+    var pTags:[Ptag]
+    var event:Event
 }

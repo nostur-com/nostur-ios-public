@@ -21,11 +21,11 @@ struct HashtagPath: Hashable {
 }
 
 enum ViewPath: Hashable {
-    case Post(vPost:VPost)
+    case Post(nrPost:NRPost)
     case Blocklist
     case Bookmarks(account:Account)
-    case NoteReactions(event:Event)
-    case NoteZaps(event:Event)
+    case NoteReactions(id:String)
+    case NoteZaps(id:String)
     case Settings
     case Lists
     case Relays
@@ -35,8 +35,8 @@ enum ViewPath: Hashable {
 extension View {
     func withNavigationDestinations() -> some View {
         return self
-            .navigationDestination(for: VPost.self) { vPost in
-                PostDetailView(vPost: vPost)
+            .navigationDestination(for: NRPost.self) { nrPost in
+                PostDetailView(nrPost: nrPost)
             }
             .navigationDestination(for: NotePath.self) { path in
                 NoteById(id: path.id)
@@ -59,15 +59,15 @@ extension View {
             .navigationDestination(for: ViewPath.self) { path in
                 switch (path) {
                     case .Post(let post):
-                        PostDetailView(vPost: post)
+                        PostDetailView(nrPost: post)
                     case .Blocklist:
                         BlockListView()
                     case .Bookmarks(let account):
                         BookmarksView(account: account)
-                    case .NoteReactions(let event):
-                        NoteReactions(id: event.id)
-                    case .NoteZaps(let event):
-                        NoteZaps(event: event)
+                    case .NoteReactions(let id):
+                        NoteReactions(id: id)
+                    case .NoteZaps(let id):
+                        NoteZaps(id: id)
                     case .Settings:
                         Settings()
                     case .Lists:

@@ -53,6 +53,9 @@ struct EditPrivateNoteSheet: View {
                             privateNote.post?.objectWillChange.send()
                             privateNote.contact?.objectWillChange.send()
                             try viewContext.save()
+                            if let post = privateNote.post {
+                                sendNotification(.postAction, PostActionNotification(type: .privateNote, eventId: post.id, hasPrivateNote: true))
+                            }
                         }
                         catch { print("problem saving private note \(error)") }
                         dismiss()
@@ -62,21 +65,17 @@ struct EditPrivateNoteSheet: View {
             .actionSheet(item: $privateNoteToRemove) { pNote in
                 ActionSheet(
                     title: Text("Delete private note"),
-//                    message: account.privateKey != nil
-//                    ? Text("""
-//                             Make sure you have a back-up of your private key (nsec)
-//                             Nostur cannot recover your account without it
-//                             """)
-//                    : Text("""
-//                             Account: @\(account.name) / \(account.display_name)
-//                             """)
-//                    ,
                     buttons: [
                         .destructive(Text("Delete"), action: {
                             ns.objectWillChange.send()
                             privateNote.post?.objectWillChange.send()
                             privateNote.contact?.objectWillChange.send()
                             dismiss()
+                            
+                            if let post = privateNote.post {
+                                sendNotification(.postAction, PostActionNotification(type: .privateNote, eventId: post.id, hasPrivateNote: false))
+                            }
+                            
                             viewContext.delete(privateNote)
                             DataProvider.shared().save()
                         }),

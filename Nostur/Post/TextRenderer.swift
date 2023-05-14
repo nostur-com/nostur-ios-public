@@ -170,7 +170,7 @@ class TextRenderer { // TEXT things
                 case "nostr:npub1":
                     let npub = String(match.dropFirst(6))
                     do {
-                        let pubkey = try pubkey(npub)
+                        let pubkey = try toPubkey(npub)
                         if !plainText {
                             replacement = "[@\(contactUsername(fromPubkey: pubkey, event: event).escapeMD())](nostur:p:\(pubkey))"
                         }

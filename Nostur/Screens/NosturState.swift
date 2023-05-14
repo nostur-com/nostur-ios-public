@@ -53,7 +53,19 @@ final class NosturState : ObservableObject {
     var subscriptions = Set<AnyCancellable>()
 
     @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""
-    @Published var account:Account? = nil
+    @Published var account:Account? = nil {
+        didSet {
+            if let account {
+                DataProvider.shared().bg.perform {
+                    self.bgAccount = DataProvider.shared().bg.object(with: account.objectID) as? Account
+                }
+            }
+            else {
+                bgAccount = nil
+            }
+        }
+    }
+    var bgAccount:Account?
     @Published var readOnlyAccountSheetShown:Bool = false
     @Published var rawExplorePubkeys:Set<String> = []
     
@@ -216,6 +228,7 @@ final class NosturState : ObservableObject {
         guard let account = account else { return }
         event.objectWillChange.send()
         account.addToBookmarks(event)
+        sendNotification(.postAction, PostActionNotification(type:.bookmark, eventId: event.id, bookmarked: true))
         if viewContext.hasChanges {
             do {
                 try viewContext.save()
@@ -229,6 +242,7 @@ final class NosturState : ObservableObject {
     func removeBookmark(_ event:Event) {
         guard let account = account else { return }
         account.removeFromBookmarks(event)
+        sendNotification(.postAction, PostActionNotification(type:.bookmark, eventId: event.id, bookmarked: false))
         DataProvider.shared().save()
     }
     
@@ -273,19 +287,19 @@ final class NosturState : ObservableObject {
         return clEvent.fastTags.filter { $0.0 == "p" && $0.1 == account.publicKey }.count > 0
     }
     
-    func muteConversation(_ vPost:VPost) {
+    func muteConversation(_ nrPost:NRPost) {
         guard let account = account else { return }
-        if let replyToRootId = vPost.event.replyToRootId {
-            account.mutedRootIds_ = account.mutedRootIds_ + [replyToRootId, vPost.id]
+        if let replyToRootId = nrPost.replyToRootId {
+            account.mutedRootIds_ = account.mutedRootIds_ + [replyToRootId, nrPost.id]
             print("Muting \(replyToRootId)")
         }
-        else if let firstE = vPost.event.firstE() {
-            account.mutedRootIds_ = account.mutedRootIds_ + [firstE, vPost.id]
-            print("Muting \(firstE)")
+        else if let replyToId = nrPost.replyToId {
+            account.mutedRootIds_ = account.mutedRootIds_ + [replyToId, nrPost.id]
+            print("Muting \(replyToId)")
         }
         else {
-            account.mutedRootIds_ = account.mutedRootIds_ + [vPost.id]
-            print("Muting \(vPost.id)")
+            account.mutedRootIds_ = account.mutedRootIds_ + [nrPost.id]
+            print("Muting \(nrPost.id)")
         }
         do {
             try viewContext.save()

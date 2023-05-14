@@ -10,21 +10,21 @@ import SwiftUI
 // TODO: RESEARCH SWIFT USER GENERATED CONTEXT SANITIZING ETC.
 
 struct NoteTextRenderView: View {
-    var vPost:VPost
+    var nrPost:NRPost
     var useLinelimit = true
     @State var viewSize:CGSize = .zero
     
-    init(vPost: VPost, useLinelimit:Bool = true) {
-        self.vPost = vPost
+    init(nrPost: NRPost, useLinelimit:Bool = true) {
+        self.nrPost = nrPost
         self.useLinelimit = useLinelimit
     }
     
     var body: some View {
         HStack(alignment: .top) {
-            if canRender1063(vPost) {
+            if canRender1063(nrPost), let fileMetadata = nrPost.fileMetadata {
                 VStack {
                     if viewSize.width > 0 {
-                        Kind1063(vPost, availableWidth: viewSize.width)
+                        Kind1063(nrPost, fileMetadata: fileMetadata, availableWidth: viewSize.width)
                     }
                     Color.clear.frame(height: 0)
                        .modifier(SizeModifier())
@@ -34,14 +34,28 @@ struct NoteTextRenderView: View {
                        }
                 }
             }
-            else if vPost.event.kind != 1 && (vPost.event.content ?? "").isEmpty {
-                Label("kind \(Double(vPost.event.kind).clean) type not (yet) supported", systemImage: "exclamationmark.triangle.fill")
-                    .centered()
-                    .frame(maxWidth: .infinity)
-                    .background(Color("LightGray").opacity(0.2))
+            else if nrPost.kind != 1 {
+                VStack {
+                    Label("kind \(Double(nrPost.kind).clean) type not (yet) supported", systemImage: "exclamationmark.triangle.fill")
+                        .hCentered()
+                        .frame(maxWidth: .infinity)
+                        .background(Color("LightGray").opacity(0.2))
+                    if !(nrPost.content ?? "").isEmpty {
+                        Text(nrPost.content ?? "")//.border(.cyan)
+                            .lineLimit(10, reservesSpace: false)
+                            .textSelection(.enabled)
+                            .multilineTextAlignment(TextAlignment.leading)
+                            .foregroundColor(.primary)
+                            .accentColor(Color("AccentColor"))
+                            .tint(Color("AccentColor"))
+                            .lineSpacing(3)
+                            .padding(.vertical, 5)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
             }
             else if (useLinelimit) {
-                Text(vPost.renderedText)//.border(.cyan)
+                Text(nrPost.renderedText)//.border(.cyan)
                     .lineLimit(10, reservesSpace: false)
                     .textSelection(.enabled)
                     .multilineTextAlignment(TextAlignment.leading)
@@ -53,7 +67,7 @@ struct NoteTextRenderView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             else {
-                Text(vPost.renderedText)//.border(.pink)
+                Text(nrPost.renderedText)//.border(.pink)
                     .textSelection(.enabled)
                     .multilineTextAlignment(TextAlignment.leading)
                     .foregroundColor(.primary)
@@ -86,51 +100,51 @@ struct NoteTextRenderView_Previews: PreviewProvider {
         
         VStack {
             
-            let event5 = PreviewFetcher.fetchVPost("b2e209b3073f24b4d6c172965ad8dd8276ada68895d4ab8837cf3a57d3f1c947")
-            //        let event5 = PreviewFetcher.fetchVPost("143efe07393c5b07efbe6ea1fc66c39cb985b98f8844650edd00fbcb041228a3")
+            let event5 = PreviewFetcher.fetchNRPost("b2e209b3073f24b4d6c172965ad8dd8276ada68895d4ab8837cf3a57d3f1c947")
+            //        let event5 = PreviewFetcher.fetchNRPost("143efe07393c5b07efbe6ea1fc66c39cb985b98f8844650edd00fbcb041228a3")
             
-            let event4 = PreviewFetcher.fetchVPost("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe")
+            let event4 = PreviewFetcher.fetchNRPost("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe")
             
-            let event3 = PreviewFetcher.fetchVPost("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
+            let event3 = PreviewFetcher.fetchNRPost("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
             
-            let event2 = PreviewFetcher.fetchVPost("115eab2976aee4ca562d83ea6b1d805c6d4e0acf54fe2e6a4e1a62f73c2850cc")
+            let event2 = PreviewFetcher.fetchNRPost("115eab2976aee4ca562d83ea6b1d805c6d4e0acf54fe2e6a4e1a62f73c2850cc")
             
-            let event1 = PreviewFetcher.fetchVPost("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
+            let event1 = PreviewFetcher.fetchNRPost("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
             
-            let event0 = PreviewFetcher.fetchVPost("21a1b8e4083c11eab8f280dc0c0bddf3837949df75662e181ad117bd0bd5fdf3")
+            let event0 = PreviewFetcher.fetchNRPost("21a1b8e4083c11eab8f280dc0c0bddf3837949df75662e181ad117bd0bd5fdf3")
             
             Group {
                 if (event0 != nil) {
-                    NoteTextRenderView(vPost:event0!)
+                    NoteTextRenderView(nrPost:event0!)
                     Divider()
                 }
                 
                 if (event1 != nil) {
-                    NoteTextRenderView(vPost:event1!)
+                    NoteTextRenderView(nrPost:event1!)
                         .withPreviewEnvironment()
                     Divider()
                 }
                 
                 if (event2 != nil) {
-                    NoteTextRenderView(vPost:event2!)
+                    NoteTextRenderView(nrPost:event2!)
                         .withPreviewEnvironment()
                     Divider()
                 }
             }
             
             if (event3 != nil) {
-                NoteTextRenderView(vPost:event3!)
+                NoteTextRenderView(nrPost:event3!)
                     .withPreviewEnvironment()
                 Divider()
             }
             
             if (event4 != nil) {
-                NoteTextRenderView(vPost:event4!)
+                NoteTextRenderView(nrPost:event4!)
                     .withPreviewEnvironment()
                 Divider()
             }
             if (event5 != nil) {
-                NoteTextRenderView(vPost:event5!)
+                NoteTextRenderView(nrPost:event5!)
                     .withPreviewEnvironment()
                 Divider()
             }

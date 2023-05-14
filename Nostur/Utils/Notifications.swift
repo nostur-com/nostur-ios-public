@@ -62,11 +62,6 @@ extension Notification.Name {
     static var shouldScrollToRecent: Notification.Name {
         return Notification.Name("shouldScrollToRecent")
     }
-        
-    static var scrollABit: Notification.Name {
-        return Notification.Name("scrollABit")
-    }
-    
     
     static var newNotesAvailable: Notification.Name {
         return Notification.Name("newNotesAvailable")
@@ -254,5 +249,24 @@ extension Notification.Name {
     
     static var newZaps: Notification.Name {
         return Notification.Name("newZaps")
+    }
+
+    static var contactSaved: Notification.Name {
+        return Notification.Name("contactSaved")
+    }
+    
+    static var postSaved: Notification.Name {
+        return Notification.Name("postSaved")
+    }
+    
+    static var replySaved: Notification.Name {
+        return Notification.Name("replySaved")
+    }
+    
+    static var postDeleted: Notification.Name {
+        return Notification.Name("postDeleted")
+    }
+    static var postAction: Notification.Name {
+        return Notification.Name("postAction")
     }
 }

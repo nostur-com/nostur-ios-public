@@ -9,16 +9,16 @@ import SwiftUI
 
 // Hightlight note
 struct Highlight: View {
-    let vPost:VPost
+    @ObservedObject var nrPost:NRPost
     let hideFooter:Bool // For rendering in NewReply
     let inThread:Bool // For rendering in thread
     var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
-    @ObservedObject var event:Event
+//    @ObservedObject var event:Event
     @ObservedObject var settings:SettingsStore = .shared
     
-    init(vPost: VPost, hideFooter:Bool = true, inThread:Bool = false, connect:ThreadConnectDirection? = nil) {
-        self.vPost = vPost
-        self.event = vPost.event
+    init(nrPost: NRPost, hideFooter:Bool = true, inThread:Bool = false, connect:ThreadConnectDirection? = nil) {
+        self.nrPost = nrPost
+//        self.event = nrPost.event
         self.hideFooter = hideFooter
         self.inThread = inThread
         self.connect = connect
@@ -29,7 +29,7 @@ struct Highlight: View {
     var body: some View {
         
         HStack(alignment: .top, spacing:0) {
-            PFP(pubkey: vPost.pubkey, pictureUrl: event.contact?.picture ?? vPost.pictureUrl, isFollowing: vPost.following)
+            PFP(pubkey: nrPost.pubkey, pictureUrl: nrPost.contact?.pictureUrl, isFollowing: nrPost.contact?.following ?? false)
                 .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: DIMENSIONS.POST_ROW_PFP_HEIGHT)
                 .background(alignment: .top, content: {
                     Color("LightGray")
@@ -38,24 +38,24 @@ struct Highlight: View {
                         .opacity(connect == .top || connect == .both ? 1 : 0)
                 })
                 .onTapGesture {
-                    navigateTo(ContactPath(key: vPost.pubkey)) // TODO: if vPost.contact navigate with that else by .pubkey
+                    navigateTo(ContactPath(key: nrPost.pubkey)) // TODO: if nrPost.contact navigate with that else by .pubkey
                 }
                 .padding(.horizontal, DIMENSIONS.POST_ROW_PFP_HPADDING)
 
             VStack(alignment:.leading, spacing: 3) {// Post container
                 HStack { // name + reply + context menu
-                    NoteHeaderView(vPost: vPost)
+                    NoteHeaderView(nrPost: nrPost)
                     Spacer()
-                    NoteMenuView(vPost: vPost)
+                    NoteMenuView(nrPost: nrPost)
                 }
                 if !inThread {
-                    ReplyingToFragmentView(vPost: vPost)
+                    ReplyingToFragmentView(nrPost: nrPost)
 //                            .padding(.bottom, 3)
                         .contentShape(Rectangle())
-                        .onTapGesture { navigateTo(vPost) }
+                        .onTapGesture { navigateTo(nrPost) }
                 }
                 VStack {
-                    Text(vPost.event.content ?? "")
+                    Text(nrPost.content ?? "")
                         .lineLimit(5)
                         .fixedSize(horizontal: false, vertical: true)
                         .italic()
@@ -69,23 +69,23 @@ struct Highlight: View {
                                 .foregroundColor(Color.secondary)
                         }
                     
-                    if let highlightAuthorPubkey = vPost.highlightAuthorPubkey {
+                    if let hl = nrPost.highlightData, let hlPubkey = hl.highlightAuthorPubkey {
                         HStack {
                             Spacer()
-                            PFP(pubkey: highlightAuthorPubkey, pictureUrl: vPost.highlightAuthorPicture, size: 20, isFollowing: vPost.highlightAuthorIsFollowing)
+                            PFP(pubkey: hlPubkey, pictureUrl: hl.highlightAuthorPicture, size: 20, isFollowing: hl.highlightAuthorIsFollowing)
                                 .onTapGesture {
-                                    navigateTo(ContactPath(key: highlightAuthorPubkey))
+                                    navigateTo(ContactPath(key: hlPubkey))
                                 }
-                            Text(vPost.highlightAuthorName ?? "Unknown")
+                            Text(hl.highlightAuthorName ?? "Unknown")
                                 .onTapGesture {
-                                    navigateTo(ContactPath(key: highlightAuthorPubkey))
+                                    navigateTo(ContactPath(key: hlPubkey))
                                 }
                         }
                         .padding(.trailing, 20)
                     }
                     HStack {
                         Spacer()
-                        if let url = vPost.highlightUrl {
+                        if let url = nrPost.highlightData?.highlightUrl {
                             Text("[\(url)](\(url))")
                                 .lineLimit(1)
                                 .font(.caption)
@@ -100,10 +100,10 @@ struct Highlight: View {
                 )
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    navigateTo(vPost)
+                    navigateTo(nrPost)
                 }
                 if (!hideFooter && settings.rowFooterEnabled) {
-                    FooterFragmentView(vPost: vPost)
+                    FooterFragmentView(nrPost: nrPost)
                         .padding(.top, 10)
                 }
             }
@@ -120,7 +120,7 @@ struct Highlight: View {
             Color.systemBackground.frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH+(DIMENSIONS.POST_ROW_PFP_HPADDING))
                 .padding(.top, DIMENSIONS.POST_ROW_PFP_HEIGHT)
                 .onTapGesture {
-                    navigateTo(vPost)
+                    navigateTo(nrPost)
                 }
         }
         
@@ -130,8 +130,8 @@ struct Highlight: View {
 struct Highlight_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
-            if let vPost = PreviewFetcher.fetchVPost("6e00b687cdb567eda5093d54e6f73577ecae928f00a85c3b09dddbf2da52adc1") {
-                Highlight(vPost: vPost)
+            if let nrPost = PreviewFetcher.fetchNRPost("6e00b687cdb567eda5093d54e6f73577ecae928f00a85c3b09dddbf2da52adc1") {
+                Highlight(nrPost: nrPost)
             }
         }
         .withPreviewEnvironment()

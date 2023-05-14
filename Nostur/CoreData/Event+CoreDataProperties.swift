@@ -133,10 +133,7 @@ extension Event {
         guard let firstQuoteId = firstQuoteId else { return nil }
         guard let ctx = managedObjectContext else { return nil }
         if let found = try? Event.fetchEvent(id: firstQuoteId, context: ctx) {
-            DispatchQueue.main.async {
-                self.objectWillChange.send()
-                self.firstQuote = found
-            }
+            self.firstQuote = found
             return found
         }
         return nil
@@ -150,7 +147,10 @@ extension Event {
     //    }
     
     // helper
-    var replies_: [Event] { replies?.sorted(by: { $0.created_at < $1.created_at } ) ?? [] }
+//    var replies_: [Event] { replies?.sorted(by: { $0.created_at < $1.created_at } ) ?? [] }
+    
+    var replies_: [Event] { Array(replies ?? []) }
+    
     var username: String { contact?.username ?? authorKey }
     var name: String { contact?.authorName ?? authorKey }
     
@@ -174,6 +174,29 @@ extension Event {
         }
         return parentEvents
             .sorted(by: { $0.created_at < $1.created_at })
+    }
+    
+    func toMain() -> Event? {
+        if Thread.isMainThread {
+            return DataProvider.shared().viewContext.object(with: self.objectID) as? Event
+        }
+        else {
+            return DispatchQueue.main.sync {
+                return DataProvider.shared().viewContext.object(with: self.objectID) as? Event
+            }
+        }
+    }
+    
+    func toBG() -> Event? {
+        if Thread.isMainThread {
+            print("🔴🔴🔴 toBG() should be in bg already, switching now but should fix code")
+            return DataProvider.shared().bg.performAndWait {
+                return DataProvider.shared().bg.object(with: self.objectID) as? Event
+            }
+        }
+        else {
+            return DataProvider.shared().bg.object(with: self.objectID) as? Event
+        }
     }
 }
 
@@ -252,6 +275,7 @@ extension Event {
 
 // MARK: HELPERS FOR KIND 9735 (ZAPS)
 extension Event {
+    
     
     //    // THE ZAP REQUEST (CREATED BY SENDER OF SATS)
     //    var zapReq:Event? { // TODO: Fix somewhere, this cant be nil or zap is invalid, put where to properly fix this so we never have to "if zapReq != nil..."
@@ -791,7 +815,7 @@ extension Event {
         request.fetchBatchSize = 1
         
         let bg = DataProvider.shared().bg
-        bg.perform {
+        bg.perform { 
             if let event = try? bg.fetch(request).first {
                 var relays = event.relays.split(separator: " ").map { String($0) }
                 relays.append(relay)
@@ -914,6 +938,8 @@ extension Event {
             if let replyToEtag = event.replyToEtag() {
                 savedEvent.replyToId = replyToEtag.id
                 
+                // TODO: COULD USE EventsRelationsQeuue here...
+                
                 // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
                 if let replyTo = try? Event.fetchEvent(id: replyToEtag.id, context: context) {
                     savedEvent.replyTo = replyTo
@@ -921,6 +947,9 @@ extension Event {
                     replyTo.objectWillChange.send()
                     replyTo.addToReplies(savedEvent)
                     replyTo.repliesCount += 1
+                    DispatchQueue.main.async {
+                        sendNotification(.replySaved, replyToEtag.id)
+                    }
                 }
             }
             
@@ -939,6 +968,10 @@ extension Event {
                             replyToRoot.objectWillChange.send()
                             replyToRoot.addToReplies(savedEvent)
                             replyToRoot.repliesCount += 1
+                            
+                            DispatchQueue.main.async {
+                                sendNotification(.replySaved, replyToRootEtag.id)
+                            }
                         }
                     }
                 }
@@ -1034,6 +1067,10 @@ extension Event {
                     if (d.pubkey == event.publicKey) {
                         d.objectWillChange.send()
                         d.deletedById = event.id
+                        let eventId = event.id
+                        DispatchQueue.main.async {
+                            sendNotification(.postDeleted, eventId)
+                        }
                     }
                 }
             }

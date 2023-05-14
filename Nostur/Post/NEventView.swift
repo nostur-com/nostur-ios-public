@@ -19,7 +19,7 @@ struct NEventView: View {
     
     struct NEventViewInner: View {
         
-        @State var vPost:VPost?
+        @State var nrPost:NRPost?
         @State var fetchTask:Task<Void, Never>?
         
         private var fetchRequest: FetchRequest<Event>
@@ -38,19 +38,19 @@ struct NEventView: View {
         
         var body: some View {
             VStack {
-                if let vPost = vPost {
-                    QuotedNoteFragmentView(vPost: vPost)
+                if let nrPost = nrPost {
+                    QuotedNoteFragmentView(nrPost: nrPost)
                 }
                 else if let event = events.first {
                     Color.clear
                         .frame(height: 200)
                         .task {
                             DataProvider.shared().bg.perform {
-                                let transformer = VPostTransformer.bg
-                                if let vPost = transformer.toVPost(event, forceBg: true) {
-                                    DispatchQueue.main.async {
-                                        self.vPost = vPost
-                                    }
+//                                let transformer = VPostTransformer.bg
+                                let bgEvent = DataProvider.shared().bg.object(with: event.objectID) as! Event
+                                let nrPost = NRPost(event: bgEvent)
+                                DispatchQueue.main.async {
+                                    self.nrPost = nrPost
                                 }
                             }
                         }

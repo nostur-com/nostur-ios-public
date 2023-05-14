@@ -147,7 +147,7 @@ struct NewNote: View {
     var firstResults:[Contact] { Array(contacts.prefix(60)) }
     
     @State var selectedMentions:[Contact] = []
-    @State var previewEvent:Event?
+    @State var previewNRPost:NRPost?
     @State var subscriptions = Set<AnyCancellable>()
     
     var body: some View {
@@ -267,11 +267,22 @@ struct NewNote: View {
                         for index in vm.pastedImages.indices {
                             nEvent.content = nEvent.content + "\n--@!^@\(index)@^!@--"
                         }
-                        let previewEvent = createPreviewEvent(nEvent)
-                        if (vm.pastedImages.count > 0) {
-                            previewEvent.previewImages = vm.pastedImages
+                        DataProvider.shared().bg.perform {
+                            print(111)
+                            let previewEvent = createPreviewEvent(nEvent)
+                            print(222)
+                            if (vm.pastedImages.count > 0) {
+                                print(333)
+                                previewEvent.previewImages = vm.pastedImages
+                            }
+                            let nrPost = NRPost(event: previewEvent)
+                            DispatchQueue.main.async {
+                                print(4444)
+//                                self.previewEvent = previewEvent
+                                self.previewNRPost = nrPost
+                            }
+                            DataProvider.shared().bg.delete(previewEvent)
                         }
-                        self.previewEvent = previewEvent
                     }
                     .cornerRadius(20)
                     .disabled(uploading)
@@ -300,12 +311,14 @@ struct NewNote: View {
                     
                 }
             }
-            .sheet(item: $previewEvent) { previewEvent in
+            .sheet(item: $previewNRPost) { nrPost in
                 NavigationStack {
-                    PostPreview(previewEvent: previewEvent, sendNow: self.sendNow, uploading: $uploading)
-                        .onDisappear {
-                            DataProvider.shared().viewContext.delete(previewEvent)
-                        }
+                    PostPreview(nrPost: nrPost, sendNow: self.sendNow, uploading: $uploading)
+//                        .onDisappear {
+//                            DataProvider.shared().bg.perform {
+//                                DataProvider.shared().bg.delete(previewEvent)
+//                            }
+//                        }
                 }
             }
         }
@@ -359,7 +372,7 @@ struct NewNote: View {
                             up.publishNow(signedEvent)
                             //                        noteCancellationId = up.publish(signedEvent)
                             dismiss()
-                            previewEvent = nil
+//                            previewEvent = nil
                         }
                     }
 //                    print("Uploaded image URLs: \(urls)")
@@ -383,7 +396,7 @@ struct NewNote: View {
                 up.publishNow(signedEvent)
                 //                        noteCancellationId = up.publish(signedEvent)
                 dismiss()
-                previewEvent = nil
+//                previewEvent = nil
             }
         }
     }

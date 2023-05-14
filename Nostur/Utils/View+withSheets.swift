@@ -87,18 +87,19 @@ private struct WithSheets: ViewModifier {
             }
         
             .onReceive(receiveNotification(.reportPost), perform: { notification in
-                let post = notification.object as! VPost
-                reportPost = ReportPost(vPost: post)
+                let post = notification.object as! NRPost
+                reportPost = ReportPost(nrPost: post)
             })
             .sheet(item: $reportPost, content: { reportPost in
                 NavigationStack {
-                    ReportPostSheet(vPost: reportPost.vPost)
+                    ReportPostSheet(nrPost: reportPost.nrPost)
                         .environmentObject(dim)
                 }
             })
         
             .onReceive(receiveNotification(.reportContact), perform: { notification in
                 let contact = notification.object as! Contact
+                // TODO: FETCH CONTACT FROM VIEWCONTEXt..
                 reportContact = ReportContact(contact: contact)
             })
             .sheet(item: $reportContact, content: { reportContact in
@@ -226,7 +227,7 @@ struct RemovedPubkeys: Identifiable {
 
 struct ReportPost: Identifiable {
     let id = UUID()
-    let vPost:VPost
+    let nrPost:NRPost
 }
 
 struct ReportContact: Identifiable {

@@ -9,7 +9,7 @@ import SwiftUI
 
 struct MinimalQuotedNoteFragment: View {
     var sp:SocketPool = .shared
-    var vPost:VPost
+    var nrPost:NRPost
     
     var body: some View {
         VStack(alignment:.leading) {
@@ -17,9 +17,9 @@ struct MinimalQuotedNoteFragment: View {
                 VStack(alignment: .leading) { // Name + menu "replying to"
                     HStack(spacing:2) {
                         // profile image
-                        PFP(pubkey: vPost.event.pubkey, pictureUrl: vPost.event.contact?.picture, size: 20, isFollowing: vPost.following)
+                        PFP(pubkey: nrPost.pubkey, pictureUrl: nrPost.contact?.pictureUrl, size: 20, isFollowing: nrPost.contact?.following ?? false)
                         .opacity(0.5)
-                        if let contact = vPost.event.contact {
+                        if let contact = nrPost.contact {
                             NameAndNip(contact: contact)
                         }
                         else {
@@ -33,7 +33,7 @@ struct MinimalQuotedNoteFragment: View {
                                 .foregroundColor(.secondary.opacity(0.5))
                                 .redacted(reason: .placeholder)
                         }
-                        Text(" · \(vPost.event.ago)") //
+                        Text(" · \(nrPost.ago)") //
                             .font(.system(size: 14))
                             .foregroundColor(.secondary)
                     }
@@ -41,7 +41,7 @@ struct MinimalQuotedNoteFragment: View {
                 Spacer()
             }
             VStack(alignment: .leading) {
-                MinimalNoteTextRenderView(vPost: vPost)
+                MinimalNoteTextRenderView(nrPost: nrPost)
             }
         }
         .padding(10)
@@ -50,29 +50,34 @@ struct MinimalQuotedNoteFragment: View {
                 .stroke(.regularMaterial, lineWidth: 1)
         )
         .onAppear {
-            if (vPost.event.contact == nil) {
-                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: vPost.event.pubkey)))
+            if (nrPost.contact == nil) {
+                QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
+            }
+        }
+        .onDisappear {
+            if (nrPost.contact == nil) {
+                QueuedFetcher.shared.dequeue(pTag: nrPost.pubkey)
             }
         }
     }
     
     struct NameAndNip: View {
-        @ObservedObject var contact:Contact // for rendering nip check (after just verified) etc
+        @ObservedObject var contact:NRContact // for rendering nip check (after just verified) etc
  
         var body: some View {
-            Text(contact.authorName) // Name
+            Text(contact.displayName ?? "") // Name
                 .font(.system(size: 14))
                 .foregroundColor(.primary.opacity(0.5))
                 .fontWeight(.bold)
                 .lineLimit(1)
             
-            if (contact.nip05veried) {
+            if (contact.nip05verified) {
                 Image(systemName: "checkmark.seal.fill")
                     .foregroundColor(Color("AccentColor"))
                     .layoutPriority(3)
             }
             
-            Text("@\(contact.username)") //
+            Text("@\(contact.anyUsername)") //
                 .font(.system(size: 14))
                 .foregroundColor(.secondary.opacity(0.5))
         }
@@ -104,23 +109,23 @@ struct MinimalQuotedNote_Previews: PreviewProvider {
         
         VStack {
             // Mention at #[5]
-            let event0 = PreviewFetcher.fetchVPost("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe", plainText: true)
+            let event0 = PreviewFetcher.fetchNRPost("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe", plainText: true)
         
             
-            let event1 = PreviewFetcher.fetchVPost("dec5a86ad780edd26fb8a1b85f919ddace9cb2b2b5d3a68d5124802fc2da4ed3", plainText: true)
+            let event1 = PreviewFetcher.fetchNRPost("dec5a86ad780edd26fb8a1b85f919ddace9cb2b2b5d3a68d5124802fc2da4ed3", plainText: true)
             
-            let event2 = PreviewFetcher.fetchVPost("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e", plainText: true)
+            let event2 = PreviewFetcher.fetchNRPost("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e", plainText: true)
             
             Spacer()
             if (event0 != nil) {
-                NoteMinimalContentView(vPost: event0!)
+                NoteMinimalContentView(nrPost: event0!)
             }
             
             if (event1 != nil) {
-                MinimalQuotedNoteFragment(vPost: event1!)
+                MinimalQuotedNoteFragment(nrPost: event1!)
             }
             if (event2 != nil) {
-                MinimalQuotedNoteFragment(vPost: event2!)
+                MinimalQuotedNoteFragment(nrPost: event2!)
             }
             Spacer()
         }

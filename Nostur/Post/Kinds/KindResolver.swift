@@ -9,54 +9,54 @@ import SwiftUI
 
 struct KindResolver: View {
     
-    let vPost:VPost
+    @ObservedObject var nrPost:NRPost
     var fullWidth:Bool = false
     var hideFooter:Bool = false // For rendering in NewReply
     var inThread:Bool = false // For rendering in thread
     var isReply:Bool = false 
     var isDetail:Bool = false
     var connect:ThreadConnectDirection? = nil
-    var fetchOnAppear:Bool = false
     
     var body: some View {
-        if vPost.isHighlight {
-            Highlight(vPost: vPost, hideFooter: false, inThread:inThread, connect:connect)
-                .onAppear {
-                    guard fetchOnAppear else { return }
-                    if vPost.event.contact == nil {
-                        EventRelationsQueue.shared.addAwaitingEvent(vPost.event)
-                        req(RM.getUserMetadata(pubkey: vPost.event.pubkey))
-                    }
-                }
+        VStack {
+            if nrPost.isHighlight {
+                Highlight(nrPost: nrPost, hideFooter: false, inThread:inThread, connect:connect)
+            }
+            else if fullWidth {
+                Kind1(nrPost: nrPost, hideFooter:false, isDetail:isDetail)
+            }
+            else {
+                Kind1Default(nrPost: nrPost, hideFooter:false, connect: connect, isDetail:isDetail)
+            }
         }
-        else if fullWidth {
-            Kind1(vPost: vPost, hideFooter:false, isDetail:isDetail)
-                .onAppear {
-                    guard fetchOnAppear else { return }
-                    if vPost.event.contact == nil {
-                        EventRelationsQueue.shared.addAwaitingEvent(vPost.event)
-                        req(RM.getUserMetadata(pubkey: vPost.event.pubkey))
-                    }
-                }
+        .onAppear {
+//            return
+            // TODO: NOTIFICATIONIZED UPDATE
+            // TODO: NEED SOMEHOW REFERENCED Ps in NRPOST, COMPARE MISSING ... CONTACTS in NRPOST?
+            
+            if nrPost.missingPs.count > 0 {
+                // TODO: NOTIFICATIONIZED UPDATE
+                EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
+                QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
+//                req(RM.getUserMetadata(pubkeys: nrPost.missingPs))
+                print("🔴🔴 NoteRow.onAppear fetching \(nrPost.missingPs.count) missing contacts (event.pubkey or event.pTags)")
+            }
         }
-        else {
-            Kind1Default(vPost: vPost, hideFooter:false, connect: connect, isDetail:isDetail)
-                .onAppear {
-                    guard fetchOnAppear else { return }
-                    if vPost.event.contact == nil {
-                        EventRelationsQueue.shared.addAwaitingEvent(vPost.event)
-                        req(RM.getUserMetadata(pubkey: vPost.event.pubkey))
-                    }
-                }
+        .onDisappear {
+//            return
+            if nrPost.missingPs.count > 0 {
+                QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
+            }
         }
+        
     }
 }
 
 struct KindResolver_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
-            if let vPost = PreviewFetcher.fetchVPost() {
-                KindResolver(vPost: vPost)
+            if let nrPost = PreviewFetcher.fetchNRPost() {
+                KindResolver(nrPost: nrPost)
             }
         }
         .withPreviewEnvironment()

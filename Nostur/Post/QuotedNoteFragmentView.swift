@@ -18,12 +18,12 @@ struct QuotedNoteFragmentView: View {
     @EnvironmentObject var accountState:NosturState
     @State var viewSize:CGSize = .zero
      
-    let vPost:VPost
-    @ObservedObject var event:Event
+    let nrPost:NRPost
+//    @ObservedObject var event:Event
     
-    init(vPost: VPost) {
-        self.vPost = vPost
-        self.event = vPost.event
+    init(nrPost: NRPost) {
+        self.nrPost = nrPost
+//        self.event = nrPost.event
     }
     
     var body: some View {
@@ -32,12 +32,13 @@ struct QuotedNoteFragmentView: View {
                 VStack(alignment: .leading) { // Name + menu "replying to"
                     HStack(spacing:2) {
                         // profile image
-                        PFP(pubkey: vPost.event.pubkey, pictureUrl: vPost.event.contact?.picture, size: 20, isFollowing: vPost.following)
+                        PFP(pubkey: nrPost.pubkey, pictureUrl: nrPost.contact?.pictureUrl, size: 20, isFollowing: nrPost.contact?.following ?? false)
                             .onTapGesture {
-                                navigateTo(ContactPath(key: vPost.event.pubkey)) // TODO: Direct to vPost.vContact if possible
+                                navigateTo(ContactPath(key: nrPost.pubkey)) // TODO: Direct to nrPost.vContact if possible
                             }
                             
-                        if let contact = vPost.event.contact_ {
+                        if let contact = nrPost.contact {
+//                            NameAndNip(contact: contact)
                             NameAndNip(contact: contact)
                         }
                         else {
@@ -54,21 +55,21 @@ struct QuotedNoteFragmentView: View {
                         
                         Group {
                             Text(" ·") //
-                            Ago(vPost.event.date)
+                            Ago(nrPost.createdAt)
                         }
                             .font(.system(size: 14))
                             .foregroundColor(.secondary)
                     }
-                    ReplyingToFragmentView(vPost: vPost)
+                    ReplyingToFragmentView(nrPost: nrPost)
                 }
                 
                 Spacer()
             }.frame(height: 40)
             VStack(alignment: .leading) {
-//                RowContentRenderer(vPost: vPost)
-//                DetailContentRenderer(event: vPost.event)
-                NoteTextRenderView(vPost: vPost)
-                if vPost.imageUrls.first != nil {
+//                RowContentRenderer(nrPost: nrPost)
+//                DetailContentRenderer(event: nrPost.event)
+                NoteTextRenderView(nrPost: nrPost)
+                if nrPost.imageUrls.first != nil {
                     Color.clear.frame(height: 0)
                        .modifier(SizeModifier())
                        .onPreferenceChange(SizePreferenceKey.self) { size in
@@ -76,14 +77,14 @@ struct QuotedNoteFragmentView: View {
                            viewSize = size
                        }
                 }
-                if let firstImage = vPost.imageUrls.first, viewSize.width > 0 {
-                    SingleMediaViewer(url: firstImage, pubkey: vPost.event.pubkey, imageWidth: viewSize.width, isFollowing: vPost.following)
+                if let firstImage = nrPost.imageUrls.first, viewSize.width > 0 {
+                    SingleMediaViewer(url: firstImage, pubkey: nrPost.pubkey, imageWidth: viewSize.width, isFollowing: nrPost.contact?.following ?? false)
                 }
             }
         }
         .contentShape(Rectangle())
         .onTapGesture {
-            navigateTo(vPost)
+            navigateTo(nrPost)
         }
         
         .padding(10)
@@ -96,28 +97,34 @@ struct QuotedNoteFragmentView: View {
             // No Contact
             // Contact updated_at is very old
             // followed contact meta data refresh should be updated at app wake up probably
-            if (event.contact == nil) || (event.contact?.metadata_created_at == 0) {
-                print("🟢 NoteRow.onAppear event.contact == nil so: REQ.0:\(event.pubkey)")
-                EventRelationsQueue.shared.addAwaitingEvent(event)
-                req(RM.getUserMetadata(pubkey: vPost.event.pubkey))
+            if (nrPost.contact == nil) || (nrPost.contact?.metadata_created_at == 0) {
+                print("🟢 NoteRow.onAppear event.contact == nil so: REQ.0:\(nrPost.pubkey)")
+                // TODO: FIXXXX
+//                EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
+                QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
+            }
+        }
+        .onDisappear {
+            if (nrPost.contact == nil) || (nrPost.contact?.metadata_created_at == 0) {
+                QueuedFetcher.shared.dequeue(pTag: nrPost.pubkey)
             }
         }
     }
     
     struct NameAndNip: View {
-        @ObservedObject var contact:Contact
+        @ObservedObject var contact:NRContact
         var body: some View {
-            Text(contact.authorName) // Name
+            Text(contact.displayName ?? "") // Name
                 .font(.system(size: 14))
                 .foregroundColor(.primary)
                 .fontWeight(.bold)
                 .lineLimit(1)
-            if (contact.nip05veried) {
+            if (contact.nip05verified) {
                 Image(systemName: "checkmark.seal.fill")
                     .foregroundColor(Color("AccentColor"))
                     .layoutPriority(3)
             }
-            Text("@\(contact.username)") //
+            Text("@\(contact.anyUsername)") //
                 .font(.system(size: 14))
                 .foregroundColor(.secondary)
         }
@@ -149,23 +156,23 @@ struct QuotedNoteFragmentView_Previews: PreviewProvider {
         
         VStack {
             // Mention at #[5]
-            let event0 = PreviewFetcher.fetchVPost("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe")
+            let event0 = PreviewFetcher.fetchNRPost("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe")
         
             
-            let event1 = PreviewFetcher.fetchVPost("dec5a86ad780edd26fb8a1b85f919ddace9cb2b2b5d3a68d5124802fc2da4ed3")
+            let event1 = PreviewFetcher.fetchNRPost("dec5a86ad780edd26fb8a1b85f919ddace9cb2b2b5d3a68d5124802fc2da4ed3")
             
-            let event2 = PreviewFetcher.fetchVPost("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e")
+            let event2 = PreviewFetcher.fetchNRPost("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e")
             
             Spacer()
             if (event0 != nil) {
-                PostRowDeletable(vPost: event0!)
+                PostRowDeletable(nrPost: event0!)
             }
             
             if (event1 != nil) {
-                QuotedNoteFragmentView(vPost: event1!)
+                QuotedNoteFragmentView(nrPost: event1!)
             }
             if (event2 != nil) {
-                QuotedNoteFragmentView(vPost: event2!)
+                QuotedNoteFragmentView(nrPost: event2!)
             }
             Spacer()
         }

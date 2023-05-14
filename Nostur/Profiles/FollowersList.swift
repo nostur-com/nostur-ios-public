@@ -71,13 +71,17 @@ struct FollowersList: View {
                     Divider()
                 }
             }
-        }.onAppear {
-            // fetch missing
-            // fetch pubkeys not in [contacts.pubkey]
-            
+        }
+        .onAppear {
             let missing = clEventsFollowingPubkeyMissingContact.map { $0.pubkey }
-            
-            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missing)))
+            guard missing.count != 0 else { return }
+            print("Fetching \(missing.count) missing contacts")
+            QueuedFetcher.shared.enqueue(pTags: missing)
+        }
+        .onDisappear {
+            let missing = clEventsFollowingPubkeyMissingContact.map { $0.pubkey }
+            guard missing.count != 0 else { return }
+            QueuedFetcher.shared.dequeue(pTags: missing)
         }
     }
     

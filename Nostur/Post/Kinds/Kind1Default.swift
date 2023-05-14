@@ -10,21 +10,21 @@ import SwiftUI
 // Note 1 default
 struct Kind1Default: View {
     @EnvironmentObject var dim:DIMENSIONS
-    let vPost:VPost
+    @ObservedObject var nrPost:NRPost
     let hideFooter:Bool // For rendering in NewReply
     let inThread:Bool // For rendering in thread
     var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
     let isReply:Bool // is reply on PostDetail
     let isDetail:Bool
-    @ObservedObject var event:Event
+//    @ObservedObject var event:Event
      
     let sp:SocketPool = .shared
     let up:Unpublisher = .shared
     @ObservedObject var settings:SettingsStore = .shared
     
-    init(vPost: VPost, hideFooter:Bool = true, inThread:Bool = false, connect:ThreadConnectDirection? = nil, isReply:Bool = false, isDetail:Bool = false) {
-        self.vPost = vPost
-        self.event = vPost.event
+    init(nrPost: NRPost, hideFooter:Bool = true, inThread:Bool = false, connect:ThreadConnectDirection? = nil, isReply:Bool = false, isDetail:Bool = false) {
+        self.nrPost = nrPost
+//        self.event = nrPost.event
         self.hideFooter = hideFooter
         self.inThread = inThread
         self.connect = connect
@@ -50,7 +50,7 @@ struct Kind1Default: View {
     var body: some View {
         
         HStack(alignment: .top, spacing:0) {
-            PFP(pubkey: vPost.pubkey, pictureUrl: event.contact?.picture ?? vPost.pictureUrl, isFollowing: vPost.following)
+            PFP(pubkey: nrPost.pubkey, pictureUrl: nrPost.contact?.pictureUrl, isFollowing: nrPost.contact?.following ?? false)
                 .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: DIMENSIONS.POST_ROW_PFP_HEIGHT)
                 .background(alignment: .top) {
                     Color("LightGray")
@@ -59,39 +59,45 @@ struct Kind1Default: View {
                         .opacity(connect == .top || connect == .both ? 1 : 0)
                 }
                 .onTapGesture {
-                    navigateTo(ContactPath(key: vPost.pubkey)) // TODO: if vPost.contact navigate with that else by .pubkey
+                    navigateTo(ContactPath(key: nrPost.pubkey)) // TODO: if nrPost.contact navigate with that else by .pubkey
                 }
                 .padding(.horizontal, DIMENSIONS.POST_ROW_PFP_HPADDING)
 
             VStack(alignment:.leading, spacing: 3) {// Post container
                 HStack { // name + reply + context menu
-                    NoteHeaderView(vPost: vPost)
+                    NoteHeaderView(nrPost: nrPost)
                     Spacer()
-                    NoteMenuView(vPost: vPost)
+                    NoteMenuView(nrPost: nrPost)
                 }
                 if !inThread {
-                    ReplyingToFragmentView(vPost: vPost)
+                    ReplyingToFragmentView(nrPost: nrPost)
 //                            .padding(.bottom, 3)
                         .contentShape(Rectangle())
-                        .onTapGesture { navigateTo(vPost) }
+                        .onTapGesture { navigateTo(nrPost) }
                 }
-                if vPost.event.kind == 1063 {
-                    Kind1063(vPost, availableWidth: imageWidth)
+                if let fileMetadata = nrPost.fileMetadata {
+                    Kind1063(nrPost, fileMetadata:fileMetadata, availableWidth: imageWidth)
                 }
                 else {
-                    ContentRenderer(vPost: vPost, fullWidth: false, availableWidth: imageWidth)
+                    if (nrPost.kind != 1) {
+                        Label("kind \(Double(nrPost.kind).clean) type not (yet) supported", systemImage: "exclamationmark.triangle.fill")
+                            .hCentered()
+                            .frame(maxWidth: .infinity)
+                            .background(Color("LightGray").opacity(0.2))
+                    }
+                    ContentRenderer(nrPost: nrPost, fullWidth: false, availableWidth: imageWidth)
                         .frame(maxWidth: .infinity, alignment:.leading)
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            navigateTo(vPost)
+                            navigateTo(nrPost)
                         }
                 }
                 if (!hideFooter && settings.rowFooterEnabled) {
-                    FooterFragmentView(vPost: vPost)
+                    FooterFragmentView(nrPost: nrPost)
                         .padding(.top, 10)
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            navigateTo(vPost)
+                            navigateTo(nrPost)
                         }
                 }
             }
@@ -101,7 +107,7 @@ struct Kind1Default: View {
                     .frame(height: 25)
                     .padding(.trailing, 45) // Space for NoteMenu tapping
                     .onTapGesture {
-                        navigateTo(vPost)
+                        navigateTo(nrPost)
                     }
             }
         }
@@ -116,7 +122,7 @@ struct Kind1Default: View {
             Color.systemBackground.frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH+(DIMENSIONS.POST_ROW_PFP_HPADDING))
                 .padding(.top, DIMENSIONS.POST_ROW_PFP_HEIGHT)
                 .onTapGesture {
-                    navigateTo(vPost)
+                    navigateTo(nrPost)
                 }
         }
         
@@ -126,8 +132,8 @@ struct Kind1Default: View {
 struct Kind1Default_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
-            if let vPost = PreviewFetcher.fetchVPost() {
-                Kind1Default(vPost: vPost)
+            if let nrPost = PreviewFetcher.fetchNRPost() {
+                Kind1Default(nrPost: nrPost)
             }
         }
         .withPreviewEnvironment()

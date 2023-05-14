@@ -31,7 +31,7 @@ import Combine
 class FastLoader: ObservableObject {
     private var viewContext:NSManagedObjectContext
     private var bgContext:NSManagedObjectContext
-    private var loadNewerBGSubject = PassthroughSubject<(Int?, String), Never>()
+    private var loadNewerSubject = PassthroughSubject<(Int?, String), Never>()
     private var loadNewerEventsSubject = PassthroughSubject<(Int?, String), Never>()
     private var loadOlderEventsSubject = PassthroughSubject<(Int?, String), Never>()
     private var subscriptions = Set<AnyCancellable>()
@@ -39,20 +39,19 @@ class FastLoader: ObservableObject {
     public var subscriptionId = UUID().uuidString
     public var offset = 0
     public var limit = 10
-    public var vPostTransform = true
+    public var nrPostTransform = true
     
-    @Published var vPosts:[VPost] = []
+    @Published var nrPosts:[NRPost] = []
     @Published var events:[Event] = []
-    @Published var followingKeys:Set<String> = []
     
     init() {
         viewContext = DataProvider.shared().viewContext
         bgContext = DataProvider.shared().bg
-        loadNewerBGSubject
-            .debounce(for: .seconds(0.5), scheduler: DispatchQueue.global())
+        loadNewerSubject
+            .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
             .sink { parameters in
                 let (limit, taskId) = parameters
-                self._loadNewerBG(limit, taskId: taskId)
+                self._loadNewer(limit, taskId: taskId)
             }
             .store(in: &subscriptions)
         
@@ -74,7 +73,7 @@ class FastLoader: ObservableObject {
     }
     
     public func reset() {
-        self.vPosts = []
+        self.nrPosts = []
         self.events = []
     }
     
@@ -85,6 +84,11 @@ class FastLoader: ObservableObject {
     // How to fetch new
     var fetchNewer:(() -> Void)?
     
+    // How to transform (eg from Event to NRPost)
+    var transformer:(_ event:Event) -> NRPost? = { event in
+        NRPost(event: event)
+    }
+    
     // load first set of [limit] posts
     // loads from local, transforms on main, not not fetch from relays
     public func loadMore(_ limit:Int? = nil) {
@@ -94,18 +98,21 @@ class FastLoader: ObservableObject {
         next.fetchLimit = limit ?? self.limit
         self.limit = limit ?? self.limit
         
-        if vPostTransform {
-            next.fetchOffset = max(0, self.vPosts.count - 1)
-            let dbEventIds = (try? viewContext.fetch(next)) ?? []
-            let currentVPostIds = Set(self.vPosts.map { item in
-                item.id
-            })
-            let onlyUnrendered = dbEventIds.filter { item in
-                !currentVPostIds.contains(item.id)
+        if nrPostTransform {
+            next.fetchOffset = max(0, self.nrPosts.count - 1)
+            bgContext.perform {
+                let dbEventIds = (try? self.bgContext.fetch(next)) ?? []
+                let currentNRPostIds = Set(self.nrPosts.map { item in
+                    item.id
+                })
+                let onlyUnrendered = dbEventIds.filter { item in
+                    !currentNRPostIds.contains(item.id)
+                }
+                let nextItems = onlyUnrendered.compactMap { self.transformer($0) }
+                DispatchQueue.main.async {
+                    self.nrPosts = self.nrPosts + nextItems
+                }
             }
-            let nextItems = self.transformOnMain(onlyUnrendered)
-            
-            vPosts = vPosts + nextItems
         }
         else {
             next.fetchOffset = max(0, self.events.count - 1)
@@ -122,40 +129,39 @@ class FastLoader: ObservableObject {
         }
     }
     
-    // Only for .vPosts, not .events
-    public func loadMoreBG(_ limit:Int? = nil) {
-        let next = Event.fetchRequest()
-        next.predicate = predicate
-        next.sortDescriptors = sortDescriptors
-        next.fetchOffset = max(0, self.vPosts.count - 1)
-        next.fetchLimit = limit ?? self.limit
-        
-        self.limit = limit ?? self.limit
-
-        bgContext.perform {
-            let dbEventIds = (try? self.bgContext.fetch(next)) ?? []
-            let currentVPostIds = Set(self.vPosts.map { item in
-                item.id
-            })
-            let onlyUnrendered = dbEventIds.filter { item in
-                !currentVPostIds.contains(item.id)
-            }
-            let nextItems = self.transformInBG(onlyUnrendered)
-
-            Task { @MainActor in
-                self.vPosts = self.vPosts + nextItems
-            }
-        }
+//    // Only for .nrPosts, not .events
+//    public func loadMoreBG(_ limit:Int? = nil) {
+//        let next = Event.fetchRequest()
+//        next.predicate = predicate
+//        next.sortDescriptors = sortDescriptors
+//        next.fetchOffset = max(0, self.nrPosts.count - 1)
+//        next.fetchLimit = limit ?? self.limit
+//
+//        self.limit = limit ?? self.limit
+//
+//        bgContext.perform {
+//            let dbEventIds = (try? self.bgContext.fetch(next)) ?? []
+//            let currentNRPostIds = Set(self.nrPosts.map { item in
+//                item.id
+//            })
+//            let onlyUnrendered = dbEventIds.filter { item in
+//                !currentNRPostIds.contains(item.id)
+//            }
+//            let nextItems = onlyUnrendered.map { NRPost(event: $0) }
+//            DispatchQueue.main.async {
+//                self.nrPosts = self.nrPosts + nextItems
+//            }
+//        }
+//    }
+    
+    // Only for .nrPosts, not .events
+    public func loadNewer(_ limit:Int? = nil, taskId:String) {
+        self.loadNewerSubject.send((limit, taskId))
     }
     
-    // Only for .vPosts, not .events
-    public func loadNewerBG(_ limit:Int? = nil, taskId:String) {
-        self.loadNewerBGSubject.send((limit, taskId))
-    }
-    
-    // Only for .vPosts, not .events
-    private func _loadNewerBG(_ limit:Int? = nil, taskId:String) {
-        print("\(taskId) 🟠🟠🟠🟠 _loadNewerBG()")
+    // Only for .nrPosts, not .events
+    private func _loadNewer(_ limit:Int? = nil, taskId:String) {
+        print("\(taskId) 🟠🟠🟠🟠 _loadNewer()")
         let next = Event.fetchRequest()
         next.predicate = predicate
         next.sortDescriptors = sortDescriptors
@@ -163,27 +169,27 @@ class FastLoader: ObservableObject {
         next.fetchOffset = 0
         bgContext.perform {
             let dbEventIds = (try? self.bgContext.fetch(next)) ?? []
-            let currentVPostIds = Set(self.vPosts.map { item in
+            let currentNRPostIds = Set(self.nrPosts.map { item in
                 item.id
             })
             let onlyUnrendered = dbEventIds.filter { item in
-                !currentVPostIds.contains(item.id)
+                !currentNRPostIds.contains(item.id)
             }
-            let nextItems = self.transformInBG(onlyUnrendered)
-            Task { @MainActor in
-                print("\(taskId) 🟠🟠🟠🟠🟠 self.vPosts = nextItems (\(nextItems.count)) + self.vPosts ")
-                self.vPosts = nextItems + self.vPosts
+            let nextItems = onlyUnrendered.compactMap { self.transformer($0) }
+            DispatchQueue.main.async {
+                print("\(taskId) 🟠🟠🟠🟠🟠 self.nrPosts = nextItems (\(nextItems.count)) + self.nrPosts ")
+                self.nrPosts = self.nrPosts + nextItems
             }
         }
     }
     
     
-    // Only for .events, not .vPosts, on main
+    // Only for .events, not .nrPosts, on main
     public func loadNewerEvents(_ limit:Int? = nil, taskId:String) {
         self.loadNewerEventsSubject.send((limit, taskId))
     }
     
-    // Only for .events, not .vPosts, on main
+    // Only for .events, not .nrPosts, on main
     private func _loadNewerEvents(_ limit:Int? = nil, taskId:String) {
         print("\(taskId) 🟠🟠🟠🟠 _loadNewerEvents()")
         let next = Event.fetchRequest()
@@ -205,12 +211,12 @@ class FastLoader: ObservableObject {
     }
     
 
-    // Only for .events, not .vPosts, on main
+    // Only for .events, not .nrPosts, on main
     public func loadOlderEvents(_ limit:Int? = nil, taskId:String) {
         self.loadOlderEventsSubject.send((limit, taskId))
     }
     
-    // Only for .events, not .vPosts, on main
+    // Only for .events, not .nrPosts, on main
     private func _loadOlderEvents(_ limit:Int? = nil, taskId:String) {
         print("\(taskId) 🟠🟠🟠🟠 _loadOlderEvents()")
         let next = Event.fetchRequest()
@@ -229,24 +235,6 @@ class FastLoader: ObservableObject {
             print("\(taskId) 🟠🟠🟠🟠🟠 self.events = self.events + nextItems (\(nextItems.count)) ")
             self.events = self.events + nextItems
         }
-    }
-    
-    
-    public func transformOnMain(_ events:[Event]) -> [VPost] {
-        if followingKeys.count == 0 { print("🔴🔴🔴 followingKeys is empty, this gives PFP caching problems!!!") }
-        let transformer = VPostTransformer(viewContext, followingKeys: followingKeys)
-        
-        return events
-            .compactMap { transformer.toVPost($0) }
-    }
-    
-    private func transformInBG(_ events:[Event]) -> [VPost] {
-        let transformer = VPostTransformer.bg
-        return bgContext.performAndWait {
-            return events
-                .compactMap { transformer.toVPost($0, forceBg: true) }
-        }
-        
     }
 }
 
@@ -277,8 +265,10 @@ class Backlog {
     
     var tasks = Set<ReqTask>()
     var timer:Timer?
+    var timeout = 60.0
     
-    init() {
+    init(timeout:Double = 60.0) {
+        self.timeout = timeout
         timer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] timer in
             guard let self = self else { return }
             self.removeOldTasks()
@@ -287,7 +277,8 @@ class Backlog {
     
     private func removeOldTasks() {
         tasks.forEach { task in
-            if task.createdAt.timeIntervalSinceNow < -60 {
+            // TODO: Swift access race in Nostur.Backlog.tasks.modify : Swift.Set<Nostur.ReqTask> at 0x12630f940
+            if task.createdAt.timeIntervalSinceNow < -timeout {
                 task.onTimeout()
                 tasks.remove(task)
             }
@@ -299,6 +290,7 @@ class Backlog {
     }
     
     public func add(_ task:ReqTask) {
+        // TODO: Swift access race in Nostur.Backlog.tasks.modify : Swift.Set<Nostur.ReqTask> at 0x12630f940
         tasks.insert(task)
     }
     

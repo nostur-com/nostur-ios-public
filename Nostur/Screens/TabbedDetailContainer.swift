@@ -19,16 +19,16 @@ final class DetailTabsModel: ObservableObject {
         var notePath:NotePath?
         var contactPath:ContactPath?
         var event:Event?
-        var vPost:VPost?
+        var nrPost:NRPost?
         var contact:Contact?
         
-        init(notePath:NotePath? = nil, contactPath:ContactPath? = nil, event:Event? = nil, contact:Contact? = nil, vPost:VPost? = nil) {
+        init(notePath:NotePath? = nil, contactPath:ContactPath? = nil, event:Event? = nil, contact:Contact? = nil, nrPost:NRPost? = nil) {
             self.id = UUID()
             self.notePath = notePath
             self.contactPath = contactPath
             self.event = event
             self.contact = contact
-            self.vPost = vPost
+            self.nrPost = nrPost
             
             if (contactPath != nil) {
                 if let contactFromCache = Contact.fetchByPubkey(contactPath!.key, context: DataProvider.shared().container.viewContext) {
@@ -96,11 +96,12 @@ struct TabContainer: View {
     @State var navPath = NavigationPath()
     let tm:DetailTabsModel = .shared
     let tab:DetailTabsModel.Tab
+//    @State var nrPost:NRPost? = nil
     
     var body: some View {
         NavigationStack(path: $navPath) {
-            if let vPost = tab.vPost {
-                PostDetailView(vPost: vPost, navTitleHidden: true)
+            if let nrPost = tab.nrPost {
+                PostDetailView(nrPost: nrPost, navTitleHidden: true)
                     .padding(.top, 10)
                     .withNavigationDestinations()
             }
@@ -135,12 +136,12 @@ struct TabbedDetailContainer: View {
     @State var offsetX = 200.0
     
     func tabName(tab:DetailTabsModel.Tab) -> String {
-        if let vPost = tab.vPost {
-            if vPost.displayName != "" {
-                return vPost.displayName
+        if let nrPost = tab.nrPost {
+            if nrPost.anyDisplayName != "" {
+                return nrPost.anyDisplayName
             }
             else {
-                return String(vPost.npub.prefix(11))
+                return String(nrPost.npub.prefix(11))
             }
         }
         if let event = tab.event {
@@ -240,9 +241,9 @@ struct TabbedDetailContainer: View {
         .padding(0)
         .onReceive(receiveNotification(.navigateTo)) { notification in
             let destination = notification.object as! NavigationDestination
-            if type(of: destination.destination) == VPost.self {
-                let p = destination.destination as! VPost
-                let tab = DetailTabsModel.Tab(vPost: p)
+            if type(of: destination.destination) == NRPost.self {
+                let p = destination.destination as! NRPost
+                let tab = DetailTabsModel.Tab(nrPost: p)
                 tm.tabs.append(tab)
                 tm.selected = tab
                 return

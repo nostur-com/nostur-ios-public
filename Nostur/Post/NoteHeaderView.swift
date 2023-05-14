@@ -8,100 +8,123 @@ import SwiftUI
 
 struct NoteHeaderView: View {
      
-    let vPost:VPost
-    @ObservedObject var event:Event
+    @ObservedObject var nrPost:NRPost
     var singleLine:Bool = true
     
-    init(vPost: VPost, singleLine: Bool = true) {
-        self.vPost = vPost
-        self.event = vPost.event
+    init(nrPost: NRPost, singleLine: Bool = true) {
+        self.nrPost = nrPost
         self.singleLine = singleLine
     }
     
     var body: some View {
         VStack(alignment: .leading, spacing:0) { // Name + menu "replying to"
-            if let contact = event.contact_ {
-                HStack(spacing:2) {
-                    Group {
-                        Text(contact.authorName) // Name
-                            .foregroundColor(.primary)
-                            .fontWeight(.bold)
-                            .lineLimit(1)
-                            .layoutPriority(2)
-                        
-                        if (contact.nip05veried) {
-                            Image(systemName: "checkmark.seal.fill")
-                                .foregroundColor(Color("AccentColor"))
-                                .layoutPriority(3)
-                        }
-                        
-                        if (singleLine) {
-                            Group {
-                                Text("@\(contact.username)").layoutPriority(1)
-                                Text(" · ") //
-                                Ago(vPost.date)
-                                    .layoutPriority(2)
-                            }
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                        }
-                    }
-                }
-                .onAppear {
-                    if contact.metadata_created_at == 0 {
-                        EventRelationsQueue.shared.addAwaitingEvent(event)
-                        req(RM.getUserMetadata(pubkey: contact.pubkey))
-                    }
-                }
-                if (!singleLine) {
-                    HStack {
-                        Text("@\(contact.username)").layoutPriority(1)
-                        Text(" · ") //
-                        Ago(vPost.date)
-                            .layoutPriority(2)
-                    }
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
-                }
+            if let contact = nrPost.contact {
+                PostHeader(contact: contact, nrPost:nrPost, singleLine:singleLine)
             }
             else {
-                HStack(spacing:2) {
-                    Group {
-                        
-                        Text(vPost.displayName) // Name
-                            .foregroundColor(.primary)
-                            .fontWeight(.bold)
-                            .lineLimit(1)
-                            .layoutPriority(2)
-                        
-                        if (vPost.nip05verified) {
-                            Image(systemName: "checkmark.seal.fill")
-                                .foregroundColor(Color("AccentColor"))
-                                .layoutPriority(3)
-                        }
-                        
-                        if (singleLine) {
-                            Group {
-                                Text("@\(vPost.username)").layoutPriority(1)
-                                Text(" · ") //
-                                Ago(vPost.date)
-                                    .layoutPriority(2)
-                            }
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                        }
+                PlaceholderPostHeader(nrPost: nrPost, singleLine: singleLine)
+                    .onAppear {
+                        EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
+                        QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
                     }
-                }
-                if (!singleLine) {
-                    HStack {
-                        Text("@\(vPost.username) · ")
-                        Ago(vPost.date)
+                    .onDisappear {
+                        QueuedFetcher.shared.dequeue(pTag: nrPost.pubkey)
+                    }
+            }
+        }
+    }
+}
+
+struct PlaceholderPostHeader: View {
+    let nrPost:NRPost
+    let singleLine:Bool
+    
+    var body: some View {
+        HStack(spacing:2) {
+            Group {
+                Text(String(nrPost.npub.prefix(11))) // Name
+                    .foregroundColor(.primary)
+                    .fontWeight(.bold)
+                    .lineLimit(1)
+                    .layoutPriority(2)
+                
+                if (singleLine) {
+                    Group {
+                        Text("@\(String(nrPost.npub.prefix(11)))").layoutPriority(1)
+                        Text(" · ") //
+                        Ago(nrPost.createdAt)
                             .layoutPriority(2)
                     }
                     .foregroundColor(.secondary)
                     .lineLimit(1)
                 }
             }
+        }
+        if (!singleLine) {
+            HStack {
+                Text("@\(String(nrPost.npub.prefix(11)))").layoutPriority(1)
+                Text(" · ") //
+                Ago(nrPost.createdAt)
+                    .layoutPriority(2)
+            }
+            .foregroundColor(.secondary)
+            .lineLimit(1)
+        }
+    }
+}
+
+struct PostHeader: View {
+    @ObservedObject var contact:NRContact
+    let nrPost:NRPost
+    let singleLine:Bool
+    
+    var body: some View {
+        HStack(spacing:2) {
+            Group {
+                Text(contact.displayName ?? "") // Name
+                    .foregroundColor(.primary)
+                    .fontWeight(.bold)
+                    .lineLimit(1)
+                    .layoutPriority(2)
+                
+                if (contact.nip05verified) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .foregroundColor(Color("AccentColor"))
+                        .layoutPriority(3)
+                }
+                
+                if (singleLine) {
+                    Group {
+                        Text("@\(contact.username ?? String(contact.npub.prefix(11)))").layoutPriority(1)
+                        Text(" · ") //
+                        Ago(nrPost.createdAt)
+                            .layoutPriority(2)
+                    }
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                }
+            }
+        }
+        .onAppear {
+            if contact.metadata_created_at == 0 {
+                EventRelationsQueue.shared.addAwaitingContact(contact.contact)
+                QueuedFetcher.shared.enqueue(pTag: contact.pubkey)
+            }
+        }
+        .onDisappear {
+            if contact.metadata_created_at == 0 {
+                QueuedFetcher.shared.dequeue(pTag: contact.pubkey)
+            }
+        }
+        if (!singleLine) {
+            HStack {
+                Text("@\(contact.anyUsername)").layoutPriority(1)
+                Text(" · ") //
+                Ago(nrPost.createdAt)
+                    .layoutPriority(2)
+            }
+            .foregroundColor(.secondary)
+            .lineLimit(1)
         }
     }
 }
@@ -154,16 +177,18 @@ struct PreviewHeaderView: View {
 }
 
 struct NameAndNip: View {
-    @ObservedObject var contact:Contact // for rendering nip check (after just verified) etc
+//    @ObservedObject var contact:Contact // for rendering nip check (after just verified) etc
+//    var contact:NRContact
+    @ObservedObject var contact:NRContact // for rendering nip check (after just verified) etc
 
     var body: some View {
-        Text(contact.authorName) // Name
+        Text(contact.displayName ?? "") // Name
             .foregroundColor(.primary)
             .fontWeight(.bold)
             .lineLimit(1)
             .layoutPriority(2)
 
-        if (contact.nip05veried) {
+        if (contact.nip05verified) {
             Image(systemName: "checkmark.seal.fill")
                 .foregroundColor(Color("AccentColor"))
                 .layoutPriority(3)
@@ -177,9 +202,9 @@ struct NoteHeaderView_Previews: PreviewProvider {
         VStack {
             PreviewHeaderView(authorName: "Fabian", username: "fabian")
             
-            let event7 = PreviewFetcher.fetchVPost("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
+            let event7 = PreviewFetcher.fetchNRPost("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
             if (event7 != nil) {
-                NoteHeaderView(vPost: event7!)
+                NoteHeaderView(nrPost: event7!)
                     .withPreviewEnvironment()
             }
         }

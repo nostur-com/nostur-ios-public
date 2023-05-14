@@ -11,15 +11,14 @@ import SwiftUI
 struct NoteZaps: View {
 //    @Environment(\.managedObjectContext) var viewContext
     let sp:SocketPool = .shared
-    @ObservedObject var event:Event
-    
+    let id:String
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)], predicate: NSPredicate(value: false))
     var zaps:FetchedResults<Event>
     var zapsSorted:[Event] { zaps.sorted(by: { $0.naiveSats > $1.naiveSats }) }
     
-    init(event:Event) {
-        self.event = event
-        _zaps = FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)], predicate: NSPredicate(format: "zappedEventId == %@ AND kind == 9735", event.id))
+    init(id:String) {
+        self.id = id
+        _zaps = FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)], predicate: NSPredicate(format: "zappedEventId == %@ AND kind == 9735", id))
     }
     
     var body: some View {
@@ -34,10 +33,12 @@ struct NoteZaps: View {
             let tally = zaps.reduce((0, 0)) { partialResult, zap in
                 return (partialResult.0 + Int64(zap.naiveSats), partialResult.1 + Int64(1))
             }
-            if event.zapsCount != tally.1 {
-                event.objectWillChange.send()
-                event.zapsCount = tally.1
-                event.zapTally = tally.0
+            if let event = try? DataProvider.shared().fetchEvent(id: id) {
+                if event.zapsCount != tally.1 {
+                    event.objectWillChange.send()
+                    event.zapsCount = tally.1
+                    event.zapTally = tally.0
+                }
             }
             
         }
@@ -121,12 +122,12 @@ struct NoteZaps_Previews: PreviewProvider {
         
         VStack {
             
-            if dunno != nil {
-                NoteZaps(event: dunno!)
+            if let dunno {
+                NoteZaps(id: dunno.id)
             }
             
-            if (odell != nil) {
-                NoteZaps(event: odell!)
+            if let odell {
+                NoteZaps(id: odell.id)
             }
         }
         .withPreviewEnvironment()

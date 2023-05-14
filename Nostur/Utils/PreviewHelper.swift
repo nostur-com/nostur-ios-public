@@ -408,13 +408,14 @@ struct PreviewFetcher {
         return try! (context ?? PreviewFetcher.viewContext).fetch(request).randomElement()
     }
     
-    static func fetchVPost(_ id:String? = nil, context:NSManagedObjectContext? = nil, plainText:Bool = false) -> VPost? {
+    static func fetchNRPost(_ id:String? = nil, context:NSManagedObjectContext? = nil, plainText:Bool = false) -> NRPost? {
         if let event = fetchEvent(id) {
-            return event.toVPost(plainText: plainText)
+            return NRPost(event: event, plainText: plainText)
         }
-        else {
-            return fetchEvent()?.toVPost()
+        if let anyEvent = fetchEvent() {
+            return NRPost(event: anyEvent)
         }
+        return nil
     }
     
     static func fetchContact(_ pubkey:String? = nil, context:NSManagedObjectContext? = nil) -> Contact? {
@@ -423,6 +424,17 @@ struct PreviewFetcher {
             request.predicate = NSPredicate(format: "pubkey == %@", pubkey!)
         }
         return try! (context ?? PreviewFetcher.viewContext).fetch(request).randomElement()
+    }
+    
+    static func fetchNRContact(_ pubkey:String? = nil, context:NSManagedObjectContext? = nil) -> NRContact? {
+        let request = Contact.fetchRequest()
+        if pubkey != nil {
+            request.predicate = NSPredicate(format: "pubkey == %@", pubkey!)
+        }
+        if let contact = try? (context ?? PreviewFetcher.viewContext).fetch(request).randomElement() {
+           return NRContact(contact: contact)
+        }
+        return nil
     }
     
     static func fetchList(context:NSManagedObjectContext? = nil) -> NosturList? {

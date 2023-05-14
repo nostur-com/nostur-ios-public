@@ -8,11 +8,11 @@
 import SwiftUI
 
 struct HighlightRenderer: View {
-    var vPost:VPost
+    var nrPost:NRPost
     
     var body: some View {
         VStack {
-            Text(vPost.event.content ?? "")
+            Text(nrPost.content ?? "")
                 .italic()
                 .padding(20)
                 .overlay(alignment:.topLeading) {
@@ -24,21 +24,21 @@ struct HighlightRenderer: View {
                         .foregroundColor(Color.secondary)
                 }
             
-            if let highlightAuthorPubkey = vPost.highlightAuthorPubkey {
+            if let hl = nrPost.highlightData, let hlPubkey = hl.highlightAuthorPubkey {
                 HStack {
                     Spacer()
-                    PFP(pubkey: highlightAuthorPubkey, pictureUrl: vPost.highlightAuthorPicture, size: 20, isFollowing: vPost.highlightAuthorIsFollowing)
-                    Text(vPost.highlightAuthorName ?? "Unknown")
+                    PFP(pubkey: hlPubkey, pictureUrl: hl.highlightAuthorPicture, size: 20, isFollowing: hl.highlightAuthorIsFollowing)
+                    Text(hl.highlightAuthorName ?? "Unknown")
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    navigateTo(ContactPath(key: highlightAuthorPubkey))
+                    navigateTo(ContactPath(key: hlPubkey))
                 }
                 .padding(.trailing, 40)
             }
             HStack {
                 Spacer()
-                if let url = vPost.highlightUrl, let md = try? AttributedString(markdown:"[\(url)](\(url))") {
+                if let url = nrPost.highlightData?.highlightUrl, let md = try? AttributedString(markdown:"[\(url)](\(url))") {
                     Text(md)
                         .lineLimit(1)
                         .font(.caption)
@@ -57,8 +57,8 @@ struct HighlightRenderer: View {
 struct HighlightRenderer_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
-            if let vPost = PreviewFetcher.fetchVPost() {
-                HighlightRenderer(vPost: vPost)
+            if let nrPost = PreviewFetcher.fetchNRPost() {
+                HighlightRenderer(nrPost: nrPost)
             }
         }
         .withPreviewEnvironment()

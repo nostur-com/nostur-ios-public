@@ -19,7 +19,7 @@ struct NProfileView: View {
     
     struct NProfileViewInner: View {
         
-        @State var vPost:VPost?
+        @State var nrPost:NRPost?
         @State var fetchTask:Task<Void, Never>?
         
         private var fetchRequest: FetchRequest<Contact>

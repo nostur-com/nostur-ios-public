@@ -56,6 +56,7 @@ struct NotificationsView: View {
                     withAnimation {
                         tab = "Posts"
                         nm.unreadMentions = 0
+                        NotificationsManager.shared.markMentionsAsRead()
                     }
                 }, title: "Posts", selected: tab == "Posts", unread: nm.unreadMentions)
                 

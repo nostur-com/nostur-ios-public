@@ -140,16 +140,16 @@ public struct RequestMessage {
                 
     
     // Get all events where [pubkeys] are mentioned (in p tag)
-    static func getMentions(pubkeys:[String], kinds:[Int] = [1,7,9735,4,9802], limit:Int = 500, subscriptionId:String? = nil, since:NTimestamp? = nil, until:NTimestamp? = nil) -> String {
+    static func getMentions(pubkeys:[String], kinds:[Int] = [1,7,9735,9802], limit:Int = 500, subscriptionId:String? = nil, since:NTimestamp? = nil, until:NTimestamp? = nil) -> String {
         
-        if since != nil {
+        if let since {
             return """
-    ["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"#p": \(JSON.shared.toString(pubkeys)), "since": \(since!.timestamp), "kinds": \(JSON.shared.toString(kinds)) }]
+    ["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"#p": \(JSON.shared.toString(pubkeys)), "since": \(since.timestamp), "kinds": \(JSON.shared.toString(kinds)), "limit": \(limit) }]
     """
         }
-        else if until != nil {
+        else if let until {
             return """
-    ["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"#p": \(JSON.shared.toString(pubkeys)), "until": \(until!.timestamp), "kinds": \(JSON.shared.toString(kinds)) }]
+    ["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"#p": \(JSON.shared.toString(pubkeys)), "until": \(until.timestamp), "kinds": \(JSON.shared.toString(kinds)), "limit": \(limit) }]
     """
         }
         return """
@@ -190,14 +190,14 @@ public struct RequestMessage {
     static func getFollowingEvents(pubkeys:[String], limit:Int = 5000, subscriptionId:String? = nil, since:NTimestamp? = nil, until:NTimestamp? = nil) -> String {
         let sub = subscriptionId ?? ("F-"+UUID().uuidString)
         let pubs = fasterShort(pubkeys)
-        if since != nil {
+        if let since {
             return """
-["REQ", "\(sub)", {"authors": \(pubs), "kinds": [1,5,6,9802], "since": \(since!.timestamp)}]
+["REQ", "\(sub)", {"authors": \(pubs), "kinds": [1,5,6,9802], "since": \(since.timestamp)}]
 """
         }
-        else if until != nil {
+        else if let until {
             return """
-["REQ", "\(sub)", {"authors": \(pubs), "kinds": [1,5,6,9802], "until": \(until!.timestamp)}]
+["REQ", "\(sub)", {"authors": \(pubs), "kinds": [1,5,6,9802], "until": \(until.timestamp)}]
 """
         }
         return """
@@ -207,14 +207,14 @@ public struct RequestMessage {
     // Same as above but pubkeys already in string
     static func getFollowingEvents(pubkeysString:String, limit:Int = 5000, subscriptionId:String? = nil, since:NTimestamp? = nil, until:NTimestamp? = nil) -> String {
         let sub = subscriptionId ?? ("F-"+UUID().uuidString)
-        if since != nil {
+        if let since {
             return """
-["REQ", "\(sub)", {"authors": \(pubkeysString), "kinds": [1,5,6,9802], "since": \(since!.timestamp), "limit": \(limit)}]
+["REQ", "\(sub)", {"authors": \(pubkeysString), "kinds": [1,5,6,9802], "since": \(since.timestamp), "limit": \(limit)}]
 """
         }
-        else if until != nil {
+        else if let until {
             return """
-["REQ", "\(sub)", {"authors": \(pubkeysString), "kinds": [1,5,6,9802], "until": \(until!.timestamp), "limit": \(limit)}]
+["REQ", "\(sub)", {"authors": \(pubkeysString), "kinds": [1,5,6,9802], "until": \(until.timestamp), "limit": \(limit)}]
 """
         }
         return """
@@ -273,6 +273,31 @@ public struct RequestMessage {
         return nil
     }
     
+    // Fetch anything in the tags (only e -> "ids" and p -> "authors" kind=0  (for now))
+    // For when you have 1 event, and want to fetch, reply to, mentions, contacts
+    static func getFastTags(_ tags:[(String, String, String?)], limit:Int = 500, subscriptionId:String? = nil) -> String? {
+        let ids = tags.filter { $0.0 == "e" }.map { $0.1 }
+        let authors = tags.filter { $0.0 == "p" }.map { $0.1 }
+        
+        // TODO: UGH clean up this if then mess
+        if (ids.count > 0 && authors.count > 0) {
+            return """
+    ["REQ", "\(subscriptionId ?? ("RELATED-"+UUID().uuidString))", {"ids": \(JSON.shared.toString(ids))}, {"authors": \(JSON.shared.toString(authors)), "kinds": [0], "limit": \(limit)}]
+    """
+        }
+        else if (ids.count > 0) {
+            return """
+    ["REQ", "\(subscriptionId ?? ("RELATED-"+UUID().uuidString))", {"ids": \(JSON.shared.toString(ids))}]
+    """
+        }
+        else if (authors.count > 0) {
+            return """
+    ["REQ", "\(subscriptionId ?? ("RELATED-"+UUID().uuidString))", {"authors": \(JSON.shared.toString(authors)), "kinds": [0], "limit": \(limit)}]
+    """
+        }
+        return nil
+    }
+    
     
     static func getAuthorContactsList(pubkey:String, limit:Int = 1, subscriptionId:String? = nil) -> String {
         return """
@@ -298,16 +323,33 @@ public struct RequestMessage {
 """
     }
     
-    static func getAuthorReactions(pubkey:String, limit:Int = 100, subscriptionId:String? = nil) -> String {
+    static func getAuthorReactions(pubkey:String, limit:Int = 100, until:NTimestamp? = nil, subscriptionId:String? = nil) -> String {
+        if let until {
+            return """
+    ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [7], "limit": \(limit), "until": \(until.timestamp)}]
+    """
+        }
         return """
 ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [7], "limit": \(limit)}]
 """
     }
     
-    static func getAuthorZaps(pubkey:String, limit:Int = 1000, subscriptionId:String? = nil) -> String {
-        return """
+    static func getAuthorZaps(pubkey:String, limit:Int = 5000, until:NTimestamp? = nil, since:NTimestamp? = nil, subscriptionId:String? = nil) -> String {
+        if let since {
+            return """
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"#p": ["\(pubkey)"], "kinds": [9735], "limit": \(limit), "since": \(since.timestamp)}]
+"""
+        }
+        else if let until {
+            return """
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"#p": ["\(pubkey)"], "kinds": [9735], "limit": \(limit), "until": \(until.timestamp)}]
+"""
+        }
+        else {
+            return """
 ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"#p": ["\(pubkey)"], "kinds": [9735], "limit": \(limit)}]
 """
+        }
     }
     
     static func getAuthorDMs(pubkey:String, limit:Int = 1000, subscriptionId:String? = nil) -> String {
@@ -324,14 +366,14 @@ public struct RequestMessage {
     
     static func getAuthorsEvents(pubkeys:[String], limit:Int = 200, subscriptionId:String? = nil, since:NTimestamp? = nil, until:NTimestamp? = nil) -> String {
         
-        if since != nil {
+        if let since {
             return """
-    ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(fasterShort(pubkeys)), "since": \(since!.timestamp)}]
+    ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(fasterShort(pubkeys)), "since": \(since.timestamp)}]
     """
         }
-        else if until != nil {
+        else if let until {
             return """
-    ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(fasterShort(pubkeys)), "until": \(until!.timestamp)}]
+    ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(fasterShort(pubkeys)), "until": \(until.timestamp)}]
     """
         }
         return """

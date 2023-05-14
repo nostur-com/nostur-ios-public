@@ -379,9 +379,12 @@ struct DMRow: View {
                 HStack {
                     VStack(alignment: .leading) {
                         HStack(alignment: .center, spacing:3) {
+                            
+                            // TODO: FIXX WEIRD:
                             if let contact = contact {
-                                NameAndNip(contact: contact)
+                                NameAndNip(contact: NRContact(contact: contact))
                             }
+                            
                             Group {
                                 Text("@\(contact?.username ?? String(npub(contactPubkey).prefix(11)))").layoutPriority(1)
                                 Text(" · ") //

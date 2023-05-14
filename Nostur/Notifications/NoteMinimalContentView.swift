@@ -11,13 +11,13 @@ struct NoteMinimalContentView: View {
     
     @Environment(\.managedObjectContext) var viewContext
     private let sp:SocketPool = .shared
-    let vPost:VPost
-    @ObservedObject var event:Event
+    let nrPost:NRPost
+//    @ObservedObject var event:Event
     let lineLimit:Int
     
-    init(vPost:VPost, hideFooter:Bool = false, lineLimit:Int = 0) {
-        self.vPost = vPost
-        self.event = vPost.event
+    init(nrPost:NRPost, hideFooter:Bool = false, lineLimit:Int = 0) {
+        self.nrPost = nrPost
+//        self.event = nrPost.event
         self.lineLimit = lineLimit
     }
     
@@ -28,14 +28,14 @@ struct NoteMinimalContentView: View {
         VStack (alignment: .leading) {
             HStack(alignment: .top) {
                 VStack(alignment:.leading, spacing: 3) {
-                    MinimalNoteTextRenderView(vPost: vPost, lineLimit: lineLimit)
+                    MinimalNoteTextRenderView(nrPost: nrPost, lineLimit: lineLimit)
                     
-                    if let quoteVPost = event.firstQuote?.toVPost(plainText: true) {
-                        MinimalQuotedNoteFragment(vPost: quoteVPost)
+                    if let quoteNRPost = nrPost.firstQuote {
+                        MinimalQuotedNoteFragment(nrPost: quoteNRPost)
                     }
-                    else if (event.firstQuoteId != nil) {
+                    else if let firstQuoteId = nrPost.firstQuoteId {
                         CenteredProgressView().onAppear {
-                            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: event.firstQuoteId!)))
+                            req(RM.getEvent(id: firstQuoteId))
                         }
                     }
                 }
@@ -74,59 +74,59 @@ struct NoteMinimalContentView_Previews: PreviewProvider {
        
         
         List {
-            let event0 = PreviewFetcher.fetchVPost("21a1b8e4083c11eab8f280dc0c0bddf3837949df75662e181ad117bd0bd5fdf3", plainText: true)
-    //        let event0 = PreviewFetcher.fetchVPost("24ad21d57d59b03f4f9a8931f8bc4ccca84ed6ab257bf62cb84b0d04e0583118")
+            let event0 = PreviewFetcher.fetchNRPost("21a1b8e4083c11eab8f280dc0c0bddf3837949df75662e181ad117bd0bd5fdf3", plainText: true)
+    //        let event0 = PreviewFetcher.fetchNRPost("24ad21d57d59b03f4f9a8931f8bc4ccca84ed6ab257bf62cb84b0d04e0583118")
     //
-            let event1 = PreviewFetcher.fetchVPost("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0", plainText: true)
+            let event1 = PreviewFetcher.fetchNRPost("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0", plainText: true)
     //
-            let event2 = PreviewFetcher.fetchVPost("dec5a86ad780edd26fb8a1b85f919ddace9cb2b2b5d3a68d5124802fc2da4ed3", plainText: true)
+            let event2 = PreviewFetcher.fetchNRPost("dec5a86ad780edd26fb8a1b85f919ddace9cb2b2b5d3a68d5124802fc2da4ed3", plainText: true)
     //
-    //        let event3 = PreviewFetcher.fetchVPost("d3b581761bab06fbe727b12b22c33c7b8768d7d9681b45cb6b1f4ad798496e14")
+    //        let event3 = PreviewFetcher.fetchNRPost("d3b581761bab06fbe727b12b22c33c7b8768d7d9681b45cb6b1f4ad798496e14")
             
-            let event4 = PreviewFetcher.fetchVPost("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe", plainText: true)
+            let event4 = PreviewFetcher.fetchNRPost("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe", plainText: true)
     //
-    //        let event5 = PreviewFetcher.fetchVPost("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e")
+    //        let event5 = PreviewFetcher.fetchNRPost("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e")
     //
-            let event6 = PreviewFetcher.fetchVPost("7d96834f60c5411be97fe9e4b07e3221c56df531543a11a1d67ff81168033e8e", plainText: true)
+            let event6 = PreviewFetcher.fetchNRPost("7d96834f60c5411be97fe9e4b07e3221c56df531543a11a1d67ff81168033e8e", plainText: true)
 
-            let event7 = PreviewFetcher.fetchVPost("fdf989cbe5d26d874a4afaf8a78861fcd3267619e7db467a549a6b33c6dbeeab", plainText: true)
+            let event7 = PreviewFetcher.fetchNRPost("fdf989cbe5d26d874a4afaf8a78861fcd3267619e7db467a549a6b33c6dbeeab", plainText: true)
             
             Group {
                 if (event0 != nil) {
-                    NoteMinimalContentView(vPost: event0!)
+                    NoteMinimalContentView(nrPost: event0!)
                         
                 }
                 
                 if (event1 != nil) {
-                    NoteMinimalContentView(vPost: event1!)
+                    NoteMinimalContentView(nrPost: event1!)
                         
                 }
                 //
                 if (event2 != nil) {
-                    NoteMinimalContentView(vPost: event2!)
+                    NoteMinimalContentView(nrPost: event2!)
                         
                 }
                 //
-                //            NoteMinimalContentView(vPost: event3!)
+                //            NoteMinimalContentView(nrPost: event3!)
                 //
                 //
                 // QUOTE?
                 if (event4 != nil) {
-                    NoteMinimalContentView(vPost: event4!)
+                    NoteMinimalContentView(nrPost: event4!)
                         
                 }
                 
-                //            NoteMinimalContentView(vPost: event5!)
+                //            NoteMinimalContentView(nrPost: event5!)
                 //                .listRowInsets(EdgeInsets())
                 
                 if (event6 != nil) {
                     // REPOST, LOADING?
-                    NoteMinimalContentView(vPost: event6!)
+                    NoteMinimalContentView(nrPost: event6!)
                 }
                 
                 if (event7 != nil) {
                     // REPOST
-                    NoteMinimalContentView(vPost: event7!)
+                    NoteMinimalContentView(nrPost: event7!)
                 }
             }
             .listRowInsets(EdgeInsets())

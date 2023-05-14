@@ -1,0 +1,68 @@
+//
+//  AccountSwitcher.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 14/05/2023.
+//
+
+import SwiftUI
+
+struct AccountSwitcher: View {
+    let accounts:[Account]
+    @Binding var selectedAccount:Account?
+    
+    var body: some View {
+        Menu {
+            Button {
+                $selectedAccount.wrappedValue = nil
+            } label: {
+                HStack {
+                    Text("All accounts")
+                    Spacer()
+                }
+            }
+            ForEach(accounts) { account in
+                Button {
+                    selectedAccount = account
+                } label: {
+                    HStack {
+                        Text("@\(account.name)")
+                        Spacer()
+                    }
+                }
+            }
+        } label: {
+            HStack {
+                Spacer()
+                ZStack {
+                    if let selectedAccount {
+                        PFP(pubkey: selectedAccount.publicKey, pictureUrl: selectedAccount.picture, size: 30, isFollowing: true)
+                    }
+                    else {
+                        ForEach(accounts.indices, id:\.self) { index in
+                            PFP(pubkey: accounts[index].publicKey, pictureUrl: accounts[index].picture, size: 30, isFollowing: true)
+                                .offset(x: -CGFloat(index*10))
+                            
+                        }
+                    }
+                }
+            }
+            .frame(width: 150)
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.visible)
+    }
+}
+
+struct AccountSwitcher_Previews: PreviewProvider {
+    
+    @State static var selectedAccount:Account? = nil
+    
+    static var previews: some View {
+        VStack {
+            let accounts = NosturState.shared.accounts
+            AccountSwitcher(accounts: accounts, selectedAccount: $selectedAccount)
+        }
+        .withPreviewEnvironment()
+    }
+}

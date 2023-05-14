@@ -1,47 +1,38 @@
-
 //
-//  Search.swift
-//  Nostur
+////
+////  Search.swift
+////  Nostur
+////
+////  Created by Fabian Lachman on 07/02/2023.
+////
 //
-//  Created by Fabian Lachman on 07/02/2023.
-//
-
 import SwiftUI
 import Combine
 
 struct Search: View {
     var sp:SocketPool = .shared
-    
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)],
-        predicate: NSPredicate(value: false),
-        animation: .none)
-    var events:FetchedResults<Event>
-    
-    var vPosts:[VPost] {
-        events
-            .prefix(150)
-            .compactMap { VPostTransformer.shared.toVPost($0, skipParents: true) }
-    }
-    
+
+    @State var nrPosts:[NRPost] = []
+
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
         predicate: NSPredicate(value: false),
         animation: .none)
     var contacts:FetchedResults<Contact>
-    
+
     @State var searching = false
     @AppStorage("selected_tab") var selectedTab = "Search"
     @State var navPath = NavigationPath()
-    
+
     @State var searchText = ""
     @State var searchTask:Task<Void, Never>? = nil
-    
+    @State var backlog = Backlog()
+
     var body: some View {
         let _ = Self._printChanges()
         NavigationStack(path: $navPath) {
             ScrollView {
-                if (contacts.count == 0 && events.count == 0 && searching) {
+                if (contacts.count == 0 && nrPosts.count == 0 && searching) {
                     ProgressView()
                 }
                 LazyVStack {
@@ -50,9 +41,9 @@ struct Search: View {
                             ProfileRow(contact: contact)
                                 .boxShadow()
                         }
-                        
-                        ForEach(vPosts) { vPost in
-                            PostRowDeletable(vPost: vPost, fetchOnAppear: true)
+
+                        ForEach(nrPosts) { nrPost in
+                            PostRowDeletable(nrPost: nrPost)
                                 .boxShadow()
                         }
                     }
@@ -66,7 +57,7 @@ struct Search: View {
                                 PFP(pubkey: account.publicKey, pictureUrl: account.picture, size:30, isFollowing: true)
                             }
                             .accessibilityLabel("Account menu")
-                        
+
                         }
                     }
                     ToolbarItem(placement: .principal) {
@@ -84,18 +75,18 @@ struct Search: View {
             .navigationTitle("Search")
             .navigationBarTitleDisplayMode(.inline)
             .onChange(of: searchText) { searchString in
-                
+                nrPosts = []
                 let searchTrimmed = searchString.trimmingCharacters(in: .whitespacesAndNewlines)
-                
+
                 if (searchTrimmed.prefix(9) == "nprofile1") {
                         /// test nevent1qqs0tg4e238wa8ce5yf2fn2t62t3sttwarj5rs557l0n8ftjd308f6qzyrr7mfnq567gyuznp6ptffm39tx75t33ms99d7xuj4dvqz00m97gvqg5waehxw309aex2mrp0yhxgctdw4eju6t0qyf8wumn8ghj7mn0wd68ytnew4mzuctvttk4x8
 
                     if let identifier = try? ShareableIdentifier(searchTrimmed), let pubkey = identifier.pubkey { // .eventId is already hex
                         searching = true
                         contacts.nsPredicate = NSPredicate(format: "pubkey = %@", pubkey)
-                        events.nsPredicate = NSPredicate(value: false)
+                        nrPosts = []
                         req(RM.getUserMetadata(pubkey: pubkey))
-                        
+
                         if identifier.relays.count > 0 {
                             searchTask = Task {
                                 try? await Task.sleep(for: .seconds(3))
@@ -112,16 +103,44 @@ struct Search: View {
                         }
                     }
                 }
-                
+
                 else if (searchTrimmed.prefix(7) == "nevent1") {
                         /// test nevent1qqs0tg4e238wa8ce5yf2fn2t62t3sttwarj5rs557l0n8ftjd308f6qzyrr7mfnq567gyuznp6ptffm39tx75t33ms99d7xuj4dvqz00m97gvqg5waehxw309aex2mrp0yhxgctdw4eju6t0qyf8wumn8ghj7mn0wd68ytnew4mzuctvttk4x8
 
                     if let identifier = try? ShareableIdentifier(searchTrimmed), let noteHex = identifier.eventId { // .eventId is already hex
                         searching = true
-                        events.nsPredicate = NSPredicate(format: "id = %@", noteHex)
                         contacts.nsPredicate = NSPredicate(value: false)
-                        req(RM.getEvent(id: noteHex))
                         
+                        let fr = Event.fetchRequest()
+                        fr.predicate = NSPredicate(format: "id = %@", noteHex)
+                        fr.fetchLimit = 1
+                        DataProvider.shared().bg.perform {
+                            if let result = try? DataProvider.shared().bg.fetch(fr).first {
+                                let nrPost = NRPost(event: result)
+                                DispatchQueue.main.async {
+                                    self.nrPosts = [nrPost]
+                                }
+                            }
+                        }
+                        
+                        let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
+                            req(RM.getEvent(id: noteHex, subscriptionId: taskId))
+                        }, processResponseCommand: { taskId in
+                            let fr = Event.fetchRequest()
+                            fr.predicate = NSPredicate(format: "id = %@", noteHex)
+                            fr.fetchLimit = 1
+                            DataProvider.shared().bg.perform {
+                                if let result = try? DataProvider.shared().bg.fetch(fr).first {
+                                    let nrPost = NRPost(event: result)
+                                    DispatchQueue.main.async {
+                                        self.nrPosts.append(nrPost)
+                                    }
+                                }
+                            }
+                        })
+                        backlog.add(searchTask1)
+                        searchTask1.fetch()
+
                         if identifier.relays.count > 0 {
                             searchTask = Task {
                                 try? await Task.sleep(for: .seconds(3))
@@ -130,7 +149,7 @@ struct Search: View {
                                     // If we don't have the event after X seconds, fetch from relay hint
                                     if (try? Event.fetchEvent(id: noteHex, context: ctx)) == nil {
                                         if let relay = identifier.relays.first {
-                                            EphemeralSocketPool.shared.sendMessage(RM.getEvent(id: noteHex), relay: relay)
+                                            EphemeralSocketPool.shared.sendMessage(RM.getEvent(id: noteHex, subscriptionId:searchTask1.subscriptionId), relay: relay)
                                         }
                                     }
                                 }
@@ -144,7 +163,7 @@ struct Search: View {
                         searching = true
                         let key = try NIP19(displayString: searchTrimmed)
                         contacts.nsPredicate = NSPredicate(format: "pubkey = %@", key.hexString)
-                        events.nsPredicate = NSPredicate(value: false)
+                        nrPosts = []
                         sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: key.hexString)))
                     }
                     catch {
@@ -152,27 +171,90 @@ struct Search: View {
                         searching = false
                     }
                 }
-                
+
                 // try @account
                 else if (searchTrimmed.prefix(1) == "@") {
                     searching = true
                     contacts.nsPredicate = NSPredicate(format: "name BEGINSWITH %@", String(searchTrimmed.dropFirst(1)))
-                    events.nsPredicate = NSPredicate(value: false)
+                    nrPosts = []
                 }
                 else if (searchTrimmed.prefix(1) == "#") {
                     searching = true
-                    events.nsPredicate = NSPredicate(format: "kind == 1 && tagsSerialized CONTAINS %@", serializedT(String(searchTrimmed.dropFirst(1))))
                     contacts.nsPredicate = NSPredicate(value: false)
-                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getHashtag(hashtag: String(searchTrimmed.dropFirst(1)))))
+                    
+                    let fr = Event.fetchRequest()
+                    fr.predicate = NSPredicate(format: "kind == 1 && tagsSerialized CONTAINS %@", serializedT(String(searchTrimmed.dropFirst(1))))
+                    fr.fetchLimit = 150
+                    DataProvider.shared().bg.perform {
+                        if let results = try? DataProvider.shared().bg.fetch(fr) {
+                            let nrPosts = results.map { NRPost(event: $0) }
+                            DispatchQueue.main.async {
+                                self.nrPosts = nrPosts
+                            }
+                        }
+                    }
+                    
+                    let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
+                        req(RM.getHashtag(
+                            hashtag: String(searchTrimmed.dropFirst(1)),
+                            subscriptionId: taskId
+                        ))
+                    }, processResponseCommand: { taskId in
+                        let fr = Event.fetchRequest()
+                        fr.predicate = NSPredicate(format: "kind == 1 && tagsSerialized CONTAINS %@", serializedT(String(searchTrimmed.dropFirst(1))))
+                        fr.fetchLimit = 150
+                        DataProvider.shared().bg.perform {
+                            if let results = try? DataProvider.shared().bg.fetch(fr) {
+                                let nrPosts = results.map { NRPost(event: $0) }
+                                DispatchQueue.main.async {
+                                    self.nrPosts.insert(contentsOf: nrPosts, at: 0)
+                                }
+                            }
+                        }
+                    })
+                    backlog.add(searchTask1)
+                    searchTask1.fetch()
                 }
                 // try note1
                 else if (searchTrimmed.prefix(5) == "note1") {
                     do {
                         searching = true
                         let key = try NIP19(displayString: searchTrimmed)
-                        events.nsPredicate = NSPredicate(format: "id = %@", key.hexString)
                         contacts.nsPredicate = NSPredicate(value: false)
-                        sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: key.hexString)))
+                        
+                        
+                        
+                        let fr = Event.fetchRequest()
+                        fr.predicate = NSPredicate(format: "id = %@", key.hexString)
+                        fr.fetchLimit = 1
+                        DataProvider.shared().bg.perform {
+                            if let result = try? DataProvider.shared().bg.fetch(fr).first {
+                                let nrPost = NRPost(event: result)
+                                DispatchQueue.main.async {
+                                    self.nrPosts = [nrPost]
+                                }
+                            }
+                        }
+                        
+                        let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
+                            req(RM.getEvent(id: key.hexString, subscriptionId: taskId))
+                        }, processResponseCommand: { taskId in
+                            let fr = Event.fetchRequest()
+                            fr.predicate = NSPredicate(format: "id = %@", key.hexString)
+                            fr.fetchLimit = 1
+                            DataProvider.shared().bg.perform {
+                                if let result = try? DataProvider.shared().bg.fetch(fr).first {
+                                    let nrPost = NRPost(event: result)
+                                    DispatchQueue.main.async {
+                                        self.nrPosts.append(nrPost)
+                                    }
+                                }
+                            }
+                        })
+                        backlog.add(searchTask1)
+                        searchTask1.fetch()
+                        
+                        
                     }
                     catch {
                         print("note1 search fail \(error)")
@@ -182,10 +264,42 @@ struct Search: View {
                 // else try hex id or pubkey
                 else if (searchTrimmed.count == 64) {
                     searching = true
-                    events.nsPredicate = NSPredicate(format: "id = %@", searchTrimmed)
                     contacts.nsPredicate = NSPredicate(format: "pubkey = %@", searchTrimmed)
-                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: searchTrimmed)))
                     sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: searchTrimmed)))
+                    
+                    
+                    let fr = Event.fetchRequest()
+                    fr.predicate = NSPredicate(format: "id = %@", searchTrimmed)
+                    fr.fetchLimit = 1
+                    DataProvider.shared().bg.perform {
+                        if let result = try? DataProvider.shared().bg.fetch(fr).first {
+                            let nrPost = NRPost(event: result)
+                            DispatchQueue.main.async {
+                                self.nrPosts = [nrPost]
+                            }
+                        }
+                    }
+                    
+                    let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
+                        req(RM.getEvent(id: searchTrimmed, subscriptionId: taskId))
+                    }, processResponseCommand: { taskId in
+                        let fr = Event.fetchRequest()
+                        fr.predicate = NSPredicate(format: "id = %@", searchTrimmed)
+                        fr.fetchLimit = 1
+                        DataProvider.shared().bg.perform {
+                            if let result = try? DataProvider.shared().bg.fetch(fr).first {
+                                let nrPost = NRPost(event: result)
+                                DispatchQueue.main.async {
+                                    self.nrPosts.append(nrPost)
+                                }
+                            }
+                        }
+                    })
+                    backlog.add(searchTask1)
+                    searchTask1.fetch()
+                    
+                    
+                    
                     Task {
                         try? await Task.sleep(nanoseconds: 5_500_000_000)
                         searching = false
@@ -194,8 +308,19 @@ struct Search: View {
                 // search in names/usernames
                 else {
                     searching = false
-                    events.nsPredicate = NSPredicate(format: "kind == 1 AND content CONTAINS[cd] %@ AND NOT content BEGINSWITH %@", searchTrimmed, "lnbc")
                     contacts.nsPredicate = NSPredicate(format: "name CONTAINS[cd] %@ OR display_name CONTAINS[cd] %@", searchTrimmed, searchTrimmed)
+                    
+                    let fr = Event.fetchRequest()
+                    fr.predicate = NSPredicate(format: "kind == 1 AND content CONTAINS[cd] %@ AND NOT content BEGINSWITH %@", searchTrimmed, "lnbc")
+                    fr.fetchLimit = 150
+                    DataProvider.shared().bg.perform {
+                        if let result = try? DataProvider.shared().bg.fetch(fr).first {
+                            let nrPost = NRPost(event: result)
+                            DispatchQueue.main.async {
+                                self.nrPosts = [nrPost]
+                            }
+                        }
+                    }
                 }
             }
 //            .onAppear {
@@ -203,6 +328,15 @@ struct Search: View {
 //                    searchText = "#\(initialHashtag ?? "")"
 //                }
 //            }
+            .onReceive(receiveNotification(.importedMessagesFromSubscriptionIds)) { notification in
+                let importedSubIds = notification.object as! ImportedNotification
+
+                let reqTasks = backlog.tasks(with: importedSubIds.subscriptionIds)
+
+                reqTasks.forEach { task in
+                    task.process()
+                }
+            }
             .onReceive(receiveNotification(.navigateTo)) { notification in
                 let destination = notification.object as! NavigationDestination
                 guard type(of: destination.destination) == HashtagPath.self || !IS_IPAD else { return }

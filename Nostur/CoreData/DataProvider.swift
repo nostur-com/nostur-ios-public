@@ -8,18 +8,6 @@
 import CoreData
 import OSLog
 
-extension Event {
-    func toVPost(plainText:Bool = false) -> VPost? {
-        VPostTransformer.shared.toVPost(self, plainText: plainText)
-    }
-}
-
-extension VPost {
-    func toEvent() -> Event {
-        self.event
-    }
-}
-
 class DataProvider: ObservableObject {
     
     private var bgStored:NSManagedObjectContext? // IMPORTING, PREPARING, TRANSFORMING FOR VIEW
@@ -209,7 +197,8 @@ class DataProvider: ObservableObject {
     }
     
     func bgSave() { // TODO: replace all viewContext.save() with this save
-        bg.perform {
+        bg.perform { [weak self] in
+            guard let self = self else { return }
             if self.bg.hasChanges {
                 do {
                     try self.bg.save()

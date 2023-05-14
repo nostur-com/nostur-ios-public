@@ -57,7 +57,7 @@ func nsec(_ hex:String) -> String {
     return try! NIP19(prefix: "nsec", hexString: hex).displayString
 }
 
-func pubkey(_ npub:String) throws -> String {
+func toPubkey(_ npub:String) throws -> String {
     return try NIP19(displayString: npub).hexString
 }
 
