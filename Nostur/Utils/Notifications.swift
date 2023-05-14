@@ -263,9 +263,6 @@ extension Notification.Name {
         return Notification.Name("replySaved")
     }
     
-    static var postDeleted: Notification.Name {
-        return Notification.Name("postDeleted")
-    }
     static var postAction: Notification.Name {
         return Notification.Name("postAction")
     }

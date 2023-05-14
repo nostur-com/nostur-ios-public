@@ -512,6 +512,7 @@ extension Event {
                         //                    print("updating .likes for .id = \(String(describing: reactingToEvent.id))")
                         reactingToEvent.objectWillChange.send()
                         reactingToEvent.likesCount = reactingToEvent.likesCount + 1
+                        reactingToEvent.likesDidChange.send(reactingToEvent.likesCount)
                         event.reactionTo = reactingToEvent
                         event.reactionToId = reactingToEvent.id
                         //                                            try reactingToEvent.managedObjectContext?.save()
@@ -569,6 +570,7 @@ extension Event {
             zappedEvent.objectWillChange.send()
             zappedEvent.zapTally = zappedEvent.zapTally + Int64(event.naiveSats)
             zappedEvent.zapsCount = zappedEvent.zapsCount + 1
+            zappedEvent.zapsDidChange.send((zappedEvent.zapsCount, zappedEvent.zapTally))
         }
         return true
     }
@@ -1067,10 +1069,7 @@ extension Event {
                     if (d.pubkey == event.publicKey) {
                         d.objectWillChange.send()
                         d.deletedById = event.id
-                        let eventId = event.id
-                        DispatchQueue.main.async {
-                            sendNotification(.postDeleted, eventId)
-                        }
+                        d.postDeleted.send(event.id)
                     }
                 }
             }

@@ -383,6 +383,31 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         }
         
         actionListener()
+        likesListener()
+        zapsListener()
+    }
+    
+    private func likesListener() {
+        event.likesDidChange
+            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
+            .sink { [weak self] likes in
+                guard let self = self else { return }
+                self.objectWillChange.send()
+                self.likesCount = likes
+            }
+            .store(in: &subscriptions)
+    }
+    
+    private func zapsListener() {
+        event.zapsDidChange
+            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
+            .sink { [weak self] (count, tally) in
+                guard let self = self else { return }
+                self.objectWillChange.send()
+                self.zapTally = tally
+                self.zapsCount = count
+            }
+            .store(in: &subscriptions)
     }
     
     private func actionListener() {

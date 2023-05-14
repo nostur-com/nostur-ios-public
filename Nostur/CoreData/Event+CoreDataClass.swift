@@ -9,9 +9,12 @@
 import Foundation
 import CoreData
 import UIKit
+import Combine
 
 public class Event: NSManagedObject, Identifiable {
-    
+    var likesDidChange = PassthroughSubject<Int64, Never>()
+    var zapsDidChange = PassthroughSubject<(Int64, Int64), Never>()
+    var postDeleted = PassthroughSubject<String, Never>()
 //    private var eventsQueue = DispatchQueue(label: "com.nostur.events")
     
     var parentEvents: [Event] = []
