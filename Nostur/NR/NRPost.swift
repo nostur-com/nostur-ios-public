@@ -417,20 +417,21 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 let action = notification.object as! PostActionNotification
                 guard action.eventId == self.id else { return }
                 
-                switch action.type {
-                case .bookmark:
-                    self.bookmarked = action.bookmarked
-                case .liked:
-                    self.liked = true
-                case .replied:
-                    self.replied = true
-                case .reposted:
-                    self.reposted = true
-                case .privateNote:
-                    self.hasPrivateNote = action.hasPrivateNote
+                DispatchQueue.main.async {
+                    self.objectWillChange.send()
+                    switch action.type {
+                    case .bookmark:
+                        self.bookmarked = action.bookmarked
+                    case .liked:
+                        self.liked = true
+                    case .replied:
+                        self.replied = true
+                    case .reposted:
+                        self.reposted = true
+                    case .privateNote:
+                        self.hasPrivateNote = action.hasPrivateNote
+                    }
                 }
-                
-                self.objectWillChange.send()
             }
             .store(in: &subscriptions)
     }
@@ -478,9 +479,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 guard let self = self else { return }
                 DataProvider.shared().bg.perform { [weak self] in
                     guard let contact = self?.event.contact else { return }
-                    self?.contact = NRContact(contact: contact)
+                    let nrContact = NRContact(contact: contact)
                     DispatchQueue.main.async {
                         self?.objectWillChange.send()
+                        self?.contact = nrContact
                     }
                 }
             }
@@ -491,9 +493,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         DataProvider.shared().bg.perform { [weak self] in
             guard let self = self else { return }
             if let replyingToMarkdown = NRReplyingToBuilder.shared.replyingToUsernamesMarkDownString(self.event) {
-                self.replyingToUsernamesMarkDown = try? AttributedString(markdown: replyingToMarkdown)
+                let md = try? AttributedString(markdown: replyingToMarkdown)
                 DispatchQueue.main.async {
                     self.objectWillChange.send()
+                    self.replyingToUsernamesMarkDown = md
                 }
             }
         }
@@ -509,10 +512,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 guard let self = self else { return }
                 
                 if let firstQuote = self.event.firstQuote {
-                    self.firstQuote = NRPost(event: firstQuote)
-                    
+                    let fQ = NRPost(event: firstQuote)
                     DispatchQueue.main.async {
                         self.objectWillChange.send()
+                        self.firstQuote = fQ
                     }
                 }
             }
@@ -521,19 +524,14 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
     
     private func postDeletedListener() {
-        receiveNotification(.postDeleted).sink { [weak self] notification in
-            guard let self = self else { return }
-            let eventId = notification.object as! String
-            guard self.id == eventId else { return }
-            
-            DataProvider.shared().bg.perform { [weak self] in
-                self?.deletedById = self?.event.deletedById
-                DispatchQueue.main.async {
-                    self?.objectWillChange.send()
-                }
+        self.event.postDeleted
+            .receive(on: RunLoop.main)
+            .sink { [weak self] deletedById in
+                guard let self = self else { return }
+                self.objectWillChange.send()
+                self.deletedById = deletedById
             }
-        }
-        .store(in: &subscriptions)
+            .store(in: &subscriptions)
     }
     
     private func replyAndReplyRootListener() {
@@ -544,9 +542,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             
             DataProvider.shared().bg.perform { [weak self] in
                 if let eventReplyTo = self?.event.replyTo {
-                    self?.replyTo = NRPost(event: eventReplyTo, withReplyTo: true)
+                    let nrReplyTo = NRPost(event: eventReplyTo, withReplyTo: true)
                     DispatchQueue.main.async {
                         self?.objectWillChange.send()
+                        self?.replyTo = nrReplyTo
                     }
                 }
                 else {
@@ -565,10 +564,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             
             DataProvider.shared().bg.perform { [weak self] in
                 guard let self = self else { return }
-                self.replies = self.event.replies_.map { NRPost(event: $0) }
+                let nrReplies = self.event.replies_.map { NRPost(event: $0) }
                 
                 DispatchQueue.main.async {
                     self.objectWillChange.send()
+                    self.replies = nrReplies
                 }
             }
         }
@@ -583,9 +583,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         
         DataProvider.shared().bg.perform { [weak self] in
             guard let self = self else { return }
-            self.replies = self.event.replies_.map { NRPost(event: $0) }
+            let nrReplies = self.event.replies_.map { NRPost(event: $0) }
             DispatchQueue.main.async {
                 self.objectWillChange.send()
+                self.replies = nrReplies
             }
         }
     }
@@ -602,9 +603,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             guard let replyToId = self.replyToId else { return }
             
             if let replyTo = try? Event.fetchEvent(id: replyToId, context: DataProvider.shared().bg) {
-                self.replyTo = NRPost(event: replyTo, withReplyTo: true)
+                let nrReplyTo = NRPost(event: replyTo, withReplyTo: true)
                 DispatchQueue.main.async {
                     self.objectWillChange.send()
+                    self.replyTo = nrReplyTo
                 }
             }
         }
