@@ -33,12 +33,19 @@ struct NoteReactions: View {
         .onAppear {
             var missing:[Event] = []
             for reaction in reactions_ {
-                if reaction.contact == nil || reaction.contact?.metadata_created_at == 0 {
+                if let contact = reaction.contact, contact.metadata_created_at == 0 {
                     missing.append(reaction)
-                    EventRelationsQueue.shared.addAwaitingEvent(reaction)
+                    EventRelationsQueue.shared.addAwaitingContact(contact, debugInfo: "NoteReactions.001")
+                }
+                else if reaction.contact == nil {
+                    missing.append(reaction)
+                    EventRelationsQueue.shared.addAwaitingEvent(reaction, debugInfo: "NoteReactions.002") // wrong ctx
                 }
             }
-            req(RM.getUserMetadata(pubkeys: missing.map { $0.pubkey }))
+            
+            QueuedFetcher.shared.enqueue(pTags: missing.map { $0.pubkey })
+            
+//            req(RM.getUserMetadata(pubkeys: missing.map { $0.pubkey }))
         }
 //        .onChange(of: reactions_) { newValue in
 //            var missing:[String] = []
@@ -55,44 +62,18 @@ struct NoteReactions: View {
 struct ReactionRow: View {
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
-     
-    
     @ObservedObject var reaction:Event
     
     var body: some View {
         HStack(alignment: .top) {
-            // HMM contact_ is repeatingly fetching db?
-            
-            let contact_ = reaction.contact_
-            
-            PFP(pubkey: reaction.pubkey, pictureUrl: contact_?.picture, isFollowing: ns.followingPublicKeys.contains(reaction.pubkey))
-            VStack(alignment: .leading) {
-                HStack {
-                    VStack(alignment: .leading) {
-                        HStack(spacing:3) {
-                            Text(contact_?.authorName ?? "").font(.headline).foregroundColor(.primary)
-                                .lineLimit(1)
-                            
-                            if (contact_?.nip05veried ?? false) {
-                                Image(systemName: "checkmark.seal.fill")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(Color("AccentColor"))
-                            }
-                        
-                            Group {
-                                Text("@\(contact_?.username ?? reaction.authorKey )").layoutPriority(1)
-                                Text(" · ") //
-                                Ago(reaction.date).layoutPriority(1) //
-                            }
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                            Spacer()
-                            NoteMenuView(vPost: reaction.toVPost()!)
-                        }
-                    }.multilineTextAlignment(.leading)
-                    Spacer()
-                    
+            PFP(pubkey: reaction.pubkey, contact: reaction.contact)
+                .onTapGesture {
+                    navigateTo(ContactPath(key: reaction.pubkey))
                 }
+            VStack(alignment: .leading) {
+//                Text("contact_:\(reaction.contact == nil ? "nil" : reaction.contact!.authorName)")
+//                Text("contact_.meta:\(reaction.contact != nil ? reaction.contact!.metadata_created_at.description : "nil")")
+                NoteHeaderViewEvent(event: reaction)
                 Text(reaction.content == "+" ? "❤️" : reaction.content ?? "")
             }
         }
@@ -101,6 +82,16 @@ struct ReactionRow: View {
         .onTapGesture {
             navigateTo(ContactPath(key: reaction.pubkey))
         }
+//        .onAppear {
+//            if reaction.contact == nil || reaction.contact?.metadata_created_at == 0 {
+//                QueuedFetcher.shared.enqueue(pTag: reaction.pubkey)
+//            }
+//        }
+//        .onDisappear {
+//            if reaction.contact == nil || reaction.contact?.metadata_created_at == 0 {
+//                QueuedFetcher.shared.dequeue(pTag: reaction.pubkey)
+//            }
+//        }
         Divider()
     }
 }

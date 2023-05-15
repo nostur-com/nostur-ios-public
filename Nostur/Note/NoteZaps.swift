@@ -45,13 +45,23 @@ struct NoteZaps: View {
             var missing:[Event] = []
             for zap in zaps {
                 if let zapFrom = zap.zapFromRequest {
-                    if zapFrom.contact == nil || zapFrom.contact?.metadata_created_at == 0 {
+                    if let contact = zapFrom.contact, contact.metadata_created_at == 0 {
                         missing.append(zapFrom)
-                        EventRelationsQueue.shared.addAwaitingEvent(zapFrom)
+                        EventRelationsQueue.shared.addAwaitingContact(contact, debugInfo: "NoteZaps.001")
+                    }
+                    else if zapFrom.contact == nil {
+                        missing.append(zapFrom)
+                        EventRelationsQueue.shared.addAwaitingEvent(zapFrom, debugInfo: "NoteZaps.002")
+                    }
+                    if zapFrom.contact == nil || zapFrom.contact?.metadata_created_at == 0 {
+                        
                     }
                 }
             }
-            req(RM.getUserMetadata(pubkeys: missing.map { $0.pubkey }))
+            
+            QueuedFetcher.shared.enqueue(pTags: missing.map { $0.pubkey })
+            
+//            req(RM.getUserMetadata(pubkeys: missing.map { $0.pubkey }))
         }
     }
 }
@@ -76,37 +86,14 @@ struct NoteZapRow: View {
     var body: some View {
         
         HStack(alignment: .top) {
-            let contact_ = zapFrom.contact_
-            
-            PFP(pubkey: zapFrom.pubkey, pictureUrl: contact_?.picture, isFollowing: ns.followingPublicKeys.contains(zapFrom.pubkey))
+            PFP(pubkey: zapFrom.pubkey, contact: zapFrom.contact)
                 .onTapGesture {
                     navigateTo(ContactPath(key: zapFrom.pubkey))
                 }
             VStack(alignment: .leading) {
-                HStack {
-                    VStack(alignment: .leading) {
-                        HStack(spacing:3) {
-                            Text(contact_?.authorName ?? "").font(.headline).foregroundColor(.primary)
-                                .lineLimit(1)
-
-                            if (contact_?.nip05veried ?? false) {
-                                Image(systemName: "checkmark.seal.fill")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(Color("AccentColor"))
-                            }
-
-                            Group {
-                                Text("@\(contact_?.username ?? zapFrom.authorKey)").layoutPriority(1)
-                                Text(" · ") //
-                                Ago(zap.date).layoutPriority(1) //
-                            }
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                        }
-                    }.multilineTextAlignment(.leading)
-                    Spacer()
-
-                }
+//                Text("contact_:\(zapFrom.contact == nil ? "nil" : zapFrom.contact!.authorName)")
+//                Text("contact_.meta:\(zapFrom.contact != nil ? zapFrom.contact!.metadata_created_at.description : "nil")")
+                NoteHeaderViewEvent(event: zapFrom)
                 Text("Zapped \(zap.naiveSats.satsFormatted) sats \(fiatPrice)")
                 Text(zapFrom.content ?? "")
             }
@@ -116,6 +103,16 @@ struct NoteZapRow: View {
         .onTapGesture {
             navigateTo(ContactPath(key: zapFrom.pubkey))
         }
+//        .onAppear {
+//            if zapFrom.contact == nil || zapFrom.contact?.metadata_created_at == 0 {
+//                QueuedFetcher.shared.enqueue(pTag: zapFrom.pubkey)
+//            }
+//        }
+//        .onDisappear {
+//            if zapFrom.contact == nil || zapFrom.contact?.metadata_created_at == 0 {
+//                QueuedFetcher.shared.dequeue(pTag: zapFrom.pubkey)
+//            }
+//        }
         Divider()
     }
 }

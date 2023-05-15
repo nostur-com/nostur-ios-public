@@ -313,12 +313,17 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
     
     private func getHighlightData(event: Event) -> KindHightlight {
+        var hlNrContact:NRContact?
+        if let contact = event.contacts?.first {
+            hlNrContact = NRContact(contact: contact)
+        }
         return KindHightlight(
             highlightAuthorPubkey: event.fastTags.first(where: { $0.0 == "p" } )?.1,
             highlightAuthorPicture: event.contacts?.first?.picture,
             highlightAuthorIsFollowing: false, // TODO: FIX highlight isfollowing
             highlightAuthorName: event.contacts?.first?.authorName,
-            highlightUrl: event.fastTags.first(where: { $0.0 == "r" } )?.1
+            highlightUrl: event.fastTags.first(where: { $0.0 == "r" } )?.1,
+            highlightNrContact: hlNrContact
         )
     }
     
@@ -606,6 +611,7 @@ struct KindHightlight {
     var highlightAuthorIsFollowing:Bool
     var highlightAuthorName:String?
     var highlightUrl:String?
+    var highlightNrContact: NRContact?
 }
 
 /// add back later

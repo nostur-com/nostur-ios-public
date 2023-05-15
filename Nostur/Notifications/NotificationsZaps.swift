@@ -302,11 +302,10 @@ struct ProfileZap: View {
 
 struct ZapsForThisNote: View {
     var zaps:[Event]
-//    @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
     
-    var deduplicated:[String: (String, String?, Double, Date, String?)] { // [string: (pubkey, picturUrl?, amount, created_at)]
-        var d = [String: (String, String?, Double, Date, String?)]()
+    var deduplicated:[String: (String, Contact?, Double, Date, String?)] { // [string: (pubkey, Contact?, amount, created_at)]
+        var d = [String: (String, Contact?, Double, Date, String?)]()
         // show only 1 zap per pubkey, combine total amount, track most recent created_at
         zaps
             .map {
@@ -326,11 +325,11 @@ struct ZapsForThisNote: View {
                 }
                 else {
                     // first entry
-                    d[req!.pubkey] = (req!.pubkey, req!.contact?.picture, sats, createdAt, authorName)
+                    d[req!.pubkey] = (req!.pubkey, req!.contact, sats, createdAt, authorName)
                 }
             }
         return d.sorted { $0.value.2 > $1.value.2 }
-            .reduce(into: [String: (String, String?, Double, Date, String?)]()) { $0[$1.0] = $1.1 }
+            .reduce(into: [String: (String, Contact?, Double, Date, String?)]()) { $0[$1.0] = $1.1 }
 
     }
     
@@ -340,7 +339,7 @@ struct ZapsForThisNote: View {
             ZStack(alignment:.leading) {
                 ForEach(Array(deduplicated.keys.enumerated().prefix(6)), id: \.1) { index, key in
                     ZStack(alignment:.leading) {
-                        PFP(pubkey: deduplicated[key]!.0 , pictureUrl: deduplicated[key]!.1, isFollowing: ns.followingPublicKeys.contains(deduplicated[key]!.0))
+                        PFP(pubkey: deduplicated[key]!.0 , contact: deduplicated[key]!.1)
                             .zIndex(-Double(index))
                         
                         Text("\(deduplicated[key]!.2.satsFormatted)")
