@@ -16,12 +16,17 @@ class QueuedFetcher {
     var pQueue = Set<String>()
     var idQueue = Set<String>()
     
+    // TODO: finish recent cache
+    var recentPs = Set<String>()
+    var recentIds = Set<String>()
     
     private var fetchSubject = PassthroughSubject<Void, Never>()
     private var enqueuePsubject = PassthroughSubject<String, Never>()
     private var dequeuePsubject = PassthroughSubject<String, Never>()
     private var enqueueIDsubject = PassthroughSubject<String, Never>()
     private var dequeueIDsubject = PassthroughSubject<String, Never>()
+    
+    // TODO add recently tried queue, to not retry the same over and over..
     
     init() {
         enqueuePsubject.sink { pTag in
@@ -76,6 +81,7 @@ class QueuedFetcher {
     }
     
     public func enqueue(pTags: [String]) {
+        guard pTags.count > 0 else { return }
         pTags.forEach { pTag in
             enqueuePsubject.send(pTag)
         }
@@ -99,6 +105,7 @@ class QueuedFetcher {
     }
     
     public func enqueue(ids: [String]) {
+        guard ids.count > 0 else { return }
         ids.forEach { id in
             enqueuePsubject.send(id)
         }

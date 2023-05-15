@@ -159,8 +159,6 @@ class NewOnboardingTracker {
             account.addToFollows(NSSet(array: existingAndCreatedContacts))
             let followingPublicKeys = account.followingPublicKeys
             DataProvider.shared().bgSave()
-            VPostTransformer.shared.followingKeys = followingPublicKeys
-            VPostTransformer.bg.followingKeys = followingPublicKeys
             DispatchQueue.main.async {
                 sendNotification(.followersChanged, followingPublicKeys)
             }

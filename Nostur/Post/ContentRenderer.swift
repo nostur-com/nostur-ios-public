@@ -63,7 +63,7 @@ struct ContentRenderer: View { // VIEW things
                             .padding(.vertical, 5)
                             .padding(.horizontal, fullWidth ? 10 : 0)
                         //                            .frame(maxWidth: .infinity, maxHeight:400, alignment: .leading)
-                    case .text(let (attributedStringWithPs, oringalText)):
+                    case .text(let attributedStringWithPs, let oringalText):
                         // BROKEN SHIT
                         //                            Text(string)
                         //                            .fixedSize(horizontal: false, vertical: true)

@@ -58,32 +58,8 @@ class NRTextParser { // TEXT things
         }
     }
 
-//    func replyingToUsernamesMarkDownString(_ event:Event) -> String? {
-//        guard event.replyToId != nil || event.replyTo != nil else { return nil }
-//        guard tags.count < 50 else { return "Replying to \(tags.count) people" }
-//
-//
-//        let pTags = Set(tags.filter { $0.0 == "p" }.map { $0.1 })
-//        if (pTags.count > 6) {
-//            let pTagsAsStrings = pTags.prefix(4).map { pubkey in
-//                let username = contactUsername(fromPubkey: pubkey, event: event)
-//                    .escapeMD()
-//                return "[@\(username)](nostur:p:\(pubkey))"
-//            }
-//            return "Replying to: " + pTagsAsStrings.joined(separator: ", ") + " and \(pTags.count-4) others"
-//        }
-//        else if (pTags.count > 0) {
-//            let pTagsAsStrings = pTags.map { pubkey in
-//                let username = contactUsername(fromPubkey: pubkey, event: event)
-//                    .escapeMD()
-//                return "[@\(username)](nostur:p:\(pubkey))"
-//            }
-//            return "Replying to: " + pTagsAsStrings.joined(separator: ", ")
-//        }
-//        return nil
-//    }
-
-    func copyPasteText(_ event:Event,  text: String) -> TextWithPs {
+    func copyPasteText(_ event:Event, text: String) -> TextWithPs {
+        self.tags = event.fastTags
         // NIP-08, handle #[0] #[1] etc
         let textWithPs = parseTagIndexedMentions(event: event, text: text, plainText: true)
 

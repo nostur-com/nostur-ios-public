@@ -50,16 +50,16 @@ struct SingleVideoViewer: View {
             else if videoShown {
                 if let asset, let videoSize {
                     
-                    let isWide = videoSize.width > videoSize.height
-                    var scaleFactor = videoWidth / videoSize.width
-                    var tooHigh = (videoSize.height * scaleFactor) > 600
-                    var scaleDownFactor = 600 / (videoSize.height * scaleFactor)
+//                    let isWide = videoSize.width > videoSize.height
+                    let scaleFactor = videoWidth / videoSize.width
+                    let tooHigh = (videoSize.height * scaleFactor) > 600
+                    let scaleDownFactor = 600 / (videoSize.height * scaleFactor)
                     
-                    var scaledWidth = videoSize.width * scaleFactor
-                    var scaledHeight = videoSize.height * scaleFactor
+                    let scaledWidth = videoSize.width * scaleFactor
+                    let scaledHeight = videoSize.height * scaleFactor
                     
-                    var width = tooHigh ? scaledWidth * scaleDownFactor : scaledWidth
-                    var height = tooHigh ? scaledHeight * scaleDownFactor : scaledWidth
+                    let width = tooHigh ? scaledWidth * scaleDownFactor : scaledWidth
+                    let height = tooHigh ? scaledHeight * scaleDownFactor : scaledWidth
                     
                     VPV(asset: asset, isPlaying: $isPlaying)
                         .highPriorityGesture(

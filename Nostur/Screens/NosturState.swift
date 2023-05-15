@@ -93,8 +93,6 @@ final class NosturState : ObservableObject {
         self.objectWillChange.send()
         self.account = account
         if let account {
-            VPostTransformer.shared.followingKeys = self.followingPublicKeys
-            VPostTransformer.bg.followingKeys = self.followingPublicKeys
             activeAccountPublicKey = account.publicKey
             // load state for new account
             lastNotificationReceivedAt = account.lastNotificationReceivedAt
@@ -162,8 +160,6 @@ final class NosturState : ObservableObject {
 
         DataProvider.shared().save()
         sendNotification(.followersChanged, account.followingPublicKeys)
-        VPostTransformer.shared.followingKeys = account.followingPublicKeys
-        VPostTransformer.bg.followingKeys = account.followingPublicKeys
         publishNewContactList()
     }
     
@@ -174,8 +170,6 @@ final class NosturState : ObservableObject {
         
         DataProvider.shared().save()
         sendNotification(.followersChanged, account.followingPublicKeys)
-        VPostTransformer.shared.followingKeys = account.followingPublicKeys
-        VPostTransformer.bg.followingKeys = account.followingPublicKeys
         publishNewContactList()
     }
     
@@ -188,8 +182,6 @@ final class NosturState : ObservableObject {
         account.removeFromFollows(contact)
         DataProvider.shared().save()
         sendNotification(.followersChanged, account.followingPublicKeys)
-        VPostTransformer.shared.followingKeys = account.followingPublicKeys
-        VPostTransformer.bg.followingKeys = account.followingPublicKeys
         publishNewContactList()
     }
     
@@ -202,8 +194,6 @@ final class NosturState : ObservableObject {
         account.removeFromFollows(contact)
         DataProvider.shared().save()
         sendNotification(.followersChanged, account.followingPublicKeys)
-        VPostTransformer.shared.followingKeys = account.followingPublicKeys
-        VPostTransformer.bg.followingKeys = account.followingPublicKeys
         publishNewContactList()
     }
     
