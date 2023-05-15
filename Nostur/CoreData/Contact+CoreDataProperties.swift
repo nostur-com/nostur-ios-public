@@ -268,6 +268,7 @@ extension Contact : Identifiable {
                 if contact.metadata_created_at < event.createdAt.timestamp {
                     
                     // update contact
+                    contact.objectWillChange.send()
                     contact.name = metaData.name
                     contact.display_name = metaData.display_name
                     contact.about = metaData.about
@@ -278,6 +279,7 @@ extension Contact : Identifiable {
                     contact.lud06 = metaData.lud06
                     contact.metadata_created_at = Int64(event.createdAt.timestamp) // By Author (kind 0)
                     contact.updated_at = Int64(Date().timeIntervalSince1970) // By Nostur
+                    contact.contactUpdated.send(contact)
                     updateRelatedEvents(contact)
                 }
                 else {
@@ -313,15 +315,17 @@ extension Contact : Identifiable {
         
         awaitingEvents.forEach { waitingEvent in
             if (waitingEvent.pubkey == contact.pubkey) {
-                waitingEvent.objectWillChange.send()
+                waitingEvent.objectWillChange.send() // Needed for zaps on notification screen
                 if waitingEvent.contact == nil {
                     waitingEvent.contact = contact
+                    waitingEvent.contactUpdated.send(contact)
                 }
             }
             if let tagsSerialized = waitingEvent.tagsSerialized, tagsSerialized.contains(serializedP(contact.pubkey)) {
                 waitingEvent.objectWillChange.send()
                 if !waitingEvent.contacts_.contains(contact) {
                     waitingEvent.addToContacts(contact)
+                    waitingEvent.contactsUpdated.send(waitingEvent.contacts_)
                 }
             }
             EventRelationsQueue.shared.removeAwaitingEvent(waitingEvent)

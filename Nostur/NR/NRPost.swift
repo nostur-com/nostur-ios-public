@@ -503,24 +503,18 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
     
     private func quotedPostListener() {
-        receiveNotification(.postSaved).sink { [weak self] notification in
-            guard let self = self else { return }
-            let eventId = notification.object as! String
-            guard self.firstQuoteId == eventId else { return }
-            
-            DataProvider.shared().bg.perform { [weak self] in
-                guard let self = self else { return }
-                
-                if let firstQuote = self.event.firstQuote {
-                    let fQ = NRPost(event: firstQuote)
+        self.event.firstQuoteUpdated
+            .sink { firstQuote in
+                DataProvider.shared().bg.perform { [weak self] in
+                    guard let self = self else { return }
+                    let nrFirstQuote = NRPost(event: firstQuote, withReplyTo: true)
                     DispatchQueue.main.async {
                         self.objectWillChange.send()
-                        self.firstQuote = fQ
+                        self.firstQuote = nrFirstQuote
                     }
                 }
             }
-        }
-        .store(in: &subscriptions)
+            .store(in: &subscriptions)
     }
     
     private func postDeletedListener() {
@@ -535,44 +529,51 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
     
     private func replyAndReplyRootListener() {
-        receiveNotification(.postSaved).sink { [weak self] notification in
-            guard let self = self else { return }
-            let eventId = notification.object as! String
-            guard self.replyToId == eventId || self.replyToRootId == eventId else { return }
-            
-            DataProvider.shared().bg.perform { [weak self] in
-                if let eventReplyTo = self?.event.replyTo {
-                    let nrReplyTo = NRPost(event: eventReplyTo, withReplyTo: true)
+        self.event.replyToUpdated
+            .sink { replyTo in
+                DataProvider.shared().bg.perform { [weak self] in
+                    guard let self = self else { return }
+                    let nrReplyTo = NRPost(event: replyTo, withReplyTo: true)
                     DispatchQueue.main.async {
-                        self?.objectWillChange.send()
-                        self?.replyTo = nrReplyTo
+                        self.objectWillChange.send()
+                        self.replyTo = nrReplyTo
+                        // self.loadReplyTo() // need this??
                     }
                 }
-                else {
-                    self?.loadReplyTo()
+            }
+            .store(in: &subscriptions)
+        
+        self.event.replyToRootUpdated
+            .sink { replyToRoot in
+                DataProvider.shared().bg.perform { [weak self] in
+                    guard let self = self else { return }
+                    let nrReplyToRoot = NRPost(event: replyToRoot, withReplyTo: true)
+                    DispatchQueue.main.async {
+                        self.objectWillChange.send()
+                        self.replyToRoot = nrReplyToRoot
+                        // self.loadReplyTo() // need this??
+                    }
                 }
             }
-        }
-        .store(in: &subscriptions)
+            .store(in: &subscriptions)
+        
+        
     }
     
     private func repliesListener() {
-        receiveNotification(.replySaved).sink { [weak self] notification in
-            guard let self = self else { return }
-            let replyToId = notification.object as! String
-            guard self.id == replyToId else { return }
-            
-            DataProvider.shared().bg.perform { [weak self] in
-                guard let self = self else { return }
-                let nrReplies = self.event.replies_.map { NRPost(event: $0) }
-                
-                DispatchQueue.main.async {
-                    self.objectWillChange.send()
-                    self.replies = nrReplies
+        self.event.repliesUpdated
+            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
+            .sink { replies in
+                DataProvider.shared().bg.perform { [weak self] in
+                    guard let self = self else { return }
+                    let nrReplies = replies.map { NRPost(event: $0) }
+                    DispatchQueue.main.async {
+                        self.objectWillChange.send()
+                        self.replies = nrReplies
+                    }
                 }
             }
-        }
-        .store(in: &subscriptions)
+            .store(in: &subscriptions)
     }
     
     public func loadReplies() {
@@ -595,7 +596,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         if (!self.withReplyTo) {
             self.withReplyTo = true
             replyAndReplyRootListener()
-            
         }
         DataProvider.shared().bg.perform { [weak self] in
             guard let self = self else { return }

@@ -76,50 +76,48 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         listenForChanges()
     }
     
-    // Save properties that can be changed, unlike pubkey, npub etc
-    private func updateProperties() {
-        self.displayName = contact.display_name
-        self.username = contact.name
-        self.pictureUrl = contact.picture
-        self.about = contact.about
-        
-        self.nip05verified = contact.nip05veried
-        self.nip05domain = contact.nip05domain
-        self.metaDataCreatedAt = Date(timeIntervalSince1970: TimeInterval(contact.metadata_created_at))
-        self.metadata_created_at = contact.metadata_created_at
-        
-        self.anyLud = contact.anyLud
-        self.lud06 = contact.lud06
-        self.lud16 = contact.lud16
-        self.zapperPubkey = contact.zapperPubkey
-    }
-    
     var subscriptions = Set<AnyCancellable>()
     
     private func listenForChanges() {
-        contactSavedListener()
-    }
-    
-    private func contactSavedListener() {
-        receiveNotification(.contactSaved)
-            .filter({ [weak self] notification in
-                guard let self = self else { return false }
-                let contactPubkey = notification.object as! String
-                return self.pubkey == contactPubkey
-            })
-            .throttle(for: .seconds(0.1), scheduler: RunLoop.main, latest: true)
-            .sink { [weak self] notification in
-            guard let self = self else { return }
-//            let contactPubkey = notification.object as! String
-            
-            DataProvider.shared().bg.perform { [weak self] in
-                self?.updateProperties()
+        self.contact.contactUpdated
+            .sink { [weak self] contact in
+                guard let self = self else { return }
+                
+                let displayName = contact.display_name
+                let username = contact.name
+                let pictureUrl = contact.picture
+                let about = contact.about
+                
+                let nip05verified = contact.nip05veried
+                let nip05domain = contact.nip05domain
+                let metaDataCreatedAt = Date(timeIntervalSince1970: TimeInterval(contact.metadata_created_at))
+                let metadata_created_at = contact.metadata_created_at
+                
+                let anyLud = contact.anyLud
+                let lud06 = contact.lud06
+                let lud16 = contact.lud16
+                let zapperPubkey = contact.zapperPubkey
+                
                 DispatchQueue.main.async {
-                    self?.objectWillChange.send()
+                    self.objectWillChange.send()
+                    
+                    self.displayName = displayName
+                    self.username = username
+                    self.pictureUrl = pictureUrl
+                    self.about = about
+                    
+                    self.nip05verified = nip05verified
+                    self.nip05domain = nip05domain
+                    self.metaDataCreatedAt = metaDataCreatedAt
+                    self.metadata_created_at = metadata_created_at
+                    
+                    self.anyLud = anyLud
+                    self.lud06 = lud06
+                    self.lud16 = lud16
+                    self.zapperPubkey = zapperPubkey
                 }
             }
-        }
-        .store(in: &subscriptions)
+            .store(in: &subscriptions)
     }
     
     var mainContact:Contact {

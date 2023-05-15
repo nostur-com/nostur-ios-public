@@ -12,9 +12,17 @@ import UIKit
 import Combine
 
 public class Event: NSManagedObject, Identifiable {
+    
     var likesDidChange = PassthroughSubject<Int64, Never>()
     var zapsDidChange = PassthroughSubject<(Int64, Int64), Never>()
     var postDeleted = PassthroughSubject<String, Never>()
+    var repliesUpdated = PassthroughSubject<[Event], Never>()
+    var replyToUpdated = PassthroughSubject<Event, Never>()
+    var replyToRootUpdated = PassthroughSubject<Event, Never>()
+    var firstQuoteUpdated = PassthroughSubject<Event, Never>()
+    var contactUpdated = PassthroughSubject<Contact, Never>()
+    var contactsUpdated = PassthroughSubject<[Contact], Never>()
+    
 //    private var eventsQueue = DispatchQueue(label: "com.nostur.events")
     
     var parentEvents: [Event] = []

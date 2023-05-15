@@ -255,14 +255,6 @@ extension Notification.Name {
         return Notification.Name("contactSaved")
     }
     
-    static var postSaved: Notification.Name {
-        return Notification.Name("postSaved")
-    }
-    
-    static var replySaved: Notification.Name {
-        return Notification.Name("replySaved")
-    }
-    
     static var postAction: Notification.Name {
         return Notification.Name("postAction")
     }

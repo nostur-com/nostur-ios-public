@@ -75,10 +75,8 @@ extension Event {
         guard let reactionToId = reactionToId else { return nil }
         guard let ctx = managedObjectContext else { return nil }
         if let found = try? Event.fetchEvent(id: reactionToId, context: ctx) {
-//            DispatchQueue.main.async {
-                self.objectWillChange.send()
-                self.reactionTo = found
-//            }
+            self.objectWillChange.send()
+            self.reactionTo = found
             return found
         }
         return nil
@@ -460,7 +458,7 @@ extension Event {
             
             if let reactingToEvent = try context.fetch(request).first {
                 //                print("updating .replies for .id = \(String(describing: reactingToEvent.id))")
-                reactingToEvent.objectWillChange.send()
+//                reactingToEvent.objectWillChange.send()
                 reactingToEvent.repliesCount = reactingToEvent.repliesCount + 1
             }
         }
@@ -475,7 +473,7 @@ extension Event {
             
             if let reactingToEvent = try context.fetch(request).first {
                 //                print("updating .replies for .id = \(String(describing: reactingToEvent.id))")
-                reactingToEvent.objectWillChange.send()
+//                reactingToEvent.objectWillChange.send()
                 reactingToEvent.repliesCount = reactingToEvent.repliesCount + 1
             }
         }
@@ -510,7 +508,7 @@ extension Event {
                     //TODO: Can use EventRelationsQueue here probably for speed up
                     if let reactingToEvent = try context.fetch(request).first {
                         //                    print("updating .likes for .id = \(String(describing: reactingToEvent.id))")
-                        reactingToEvent.objectWillChange.send()
+//                        reactingToEvent.objectWillChange.send()
                         reactingToEvent.likesCount = reactingToEvent.likesCount + 1
                         reactingToEvent.likesDidChange.send(reactingToEvent.likesCount)
                         event.reactionTo = reactingToEvent
@@ -567,7 +565,7 @@ extension Event {
         request.fetchLimit = 1
         
         if let zappedEvent = try! context.fetch(request).first {
-            zappedEvent.objectWillChange.send()
+//            zappedEvent.objectWillChange.send()
             zappedEvent.zapTally = zappedEvent.zapTally + Int64(event.naiveSats)
             zappedEvent.zapsCount = zappedEvent.zapsCount + 1
             zappedEvent.zapsDidChange.send((zappedEvent.zapsCount, zappedEvent.zapTally))
@@ -586,7 +584,7 @@ extension Event {
                 request.fetchLimit = 1
                 
                 if let reactingToEvent = try context.fetch(request).first {
-                    reactingToEvent.objectWillChange.send()
+//                    reactingToEvent.objectWillChange.send()
                     //                    print("updating .mentions for .id = \(String(describing: reactingToEvent.id))")
                     reactingToEvent.mentionsCount = reactingToEvent.mentionsCount + 1
                     
@@ -900,12 +898,12 @@ extension Event {
                 
                 savedEvent.zapFromRequest = zapRequest
                 if let firstE = event.firstE() {
-                    savedEvent.objectWillChange.send()
+//                    savedEvent.objectWillChange.send()
                     savedEvent.zappedEventId = firstE
                     savedEvent.zappedEvent = try? Event.fetchEvent(id: firstE, context: context)
                 }
                 if let firstP = event.firstP() {
-                    savedEvent.objectWillChange.send()
+//                    savedEvent.objectWillChange.send()
                     savedEvent.zappedContactPubkey = firstP
                     savedEvent.zappedContact = Contact.fetchByPubkey(firstP, context: context)
                 }
@@ -922,7 +920,7 @@ extension Event {
         
         if event.kind == .reaction {
             if let lastE = event.lastE() {
-                savedEvent.objectWillChange.send()
+//                savedEvent.objectWillChange.send()
                 savedEvent.reactionToId = lastE
                 savedEvent.reactionTo = try? Event.fetchEvent(id: lastE, context: context)
             }
@@ -946,12 +944,10 @@ extension Event {
                 if let replyTo = try? Event.fetchEvent(id: replyToEtag.id, context: context) {
                     savedEvent.replyTo = replyTo
                     
-                    replyTo.objectWillChange.send()
+//                    replyTo.objectWillChange.send()
                     replyTo.addToReplies(savedEvent)
                     replyTo.repliesCount += 1
-                    DispatchQueue.main.async {
-                        sendNotification(.replySaved, replyToEtag.id)
-                    }
+                    replyTo.repliesUpdated.send(replyTo.replies_)
                 }
             }
             
@@ -967,13 +963,10 @@ extension Event {
                         if let replyToRoot = try? Event.fetchEvent(id: replyToRootEtag.id, context: context) {
                             savedEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
                             
-                            replyToRoot.objectWillChange.send()
+//                            replyToRoot.objectWillChafnge.send()
                             replyToRoot.addToReplies(savedEvent)
                             replyToRoot.repliesCount += 1
-                            
-                            DispatchQueue.main.async {
-                                sendNotification(.replySaved, replyToRootEtag.id)
-                            }
+                            replyToRoot.repliesUpdated.send(replyToRoot.replies_)
                         }
                     }
                 }
@@ -1003,7 +996,7 @@ extension Event {
         // handle REPOST with normal mentions in .kind 1
         // todo handle first nostr:nevent or not?
         var alreadyCounted = false
-        if event.kind == .textNote, let firstE = event.firstMentionETag() {
+        if event.kind == .textNote, let firstE = event.firstMentionETag(), let replyToId = savedEvent.replyToId, firstE.id != replyToId { // also fQ not the same as replyToId
             savedEvent.firstQuoteId = firstE.id
             
             // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
@@ -1011,7 +1004,7 @@ extension Event {
                 savedEvent.firstQuote = firstQuote
                 
                 if (firstE.otherInformation[safe: 2] == "mention") {
-                    firstQuote.objectWillChange.send()
+//                    firstQuote.objectWillChange.send()
                     firstQuote.mentionsCount += 1
                     alreadyCounted = true
                 }
@@ -1026,7 +1019,7 @@ extension Event {
             if let firstQuote = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
                 savedEvent.firstQuote = firstQuote
                 
-                firstQuote.objectWillChange.send()
+//                firstQuote.objectWillChange.send()
                 firstQuote.mentionsCount += 1
             }
         }
@@ -1039,7 +1032,7 @@ extension Event {
             if let firstQuote = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
                 savedEvent.firstQuote = firstQuote
                 
-                firstQuote.objectWillChange.send()
+//                firstQuote.objectWillChange.send()
                 firstQuote.mentionsCount += 1
             }
         }
@@ -1067,7 +1060,7 @@ extension Event {
             if let eventsToDelete = try? context.fetch(eventIdsToDeleteReq) {
                 for d in eventsToDelete {
                     if (d.pubkey == event.publicKey) {
-                        d.objectWillChange.send()
+//                        d.objectWillChange.send()
                         d.deletedById = event.id
                         d.postDeleted.send(event.id)
                     }
@@ -1088,16 +1081,19 @@ extension Event {
             
             awaitingEvents.forEach { waitingEvent in
                 if (waitingEvent.replyToId != nil) && (waitingEvent.replyToId == savedEvent.id) {
-                    waitingEvent.objectWillChange.send()
+//                    waitingEvent.objectWillChange.send()
                     waitingEvent.replyTo = savedEvent
+                    waitingEvent.replyToUpdated.send(savedEvent)
                 }
                 if (waitingEvent.replyToRootId != nil) && (waitingEvent.replyToRootId == savedEvent.id) {
-                    waitingEvent.objectWillChange.send()
+//                    waitingEvent.objectWillChange.send()
                     waitingEvent.replyToRoot = savedEvent
+                    waitingEvent.replyToRootUpdated.send(savedEvent)
                 }
                 if (waitingEvent.firstQuoteId != nil) && (waitingEvent.firstQuoteId == savedEvent.id) {
-                    waitingEvent.objectWillChange.send()
+//                    waitingEvent.objectWillChange.send()
                     waitingEvent.firstQuote = savedEvent
+                    waitingEvent.firstQuoteUpdated.send(savedEvent)
                 }
                 EventRelationsQueue.shared.removeAwaitingEvent(waitingEvent)
             }
