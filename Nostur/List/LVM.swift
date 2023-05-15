@@ -362,7 +362,7 @@ class LVM: NSObject, ObservableObject {
                 continue
             }
             // render thread, truncated
-            var truncatedPost = post
+            let truncatedPost = post
             // structure is: parentPosts: [root, reply, reply, reply, replyTo] post: ThisPost
             if let replyTo = post.parentPosts.last {
                 // always keep at least 1 parent (replyTo)
@@ -394,7 +394,7 @@ class LVM: NSObject, ObservableObject {
         let oldThreadsRemoved = onlyNewLeafs.map {
             // render thread, truncated
             let post = $0
-            var truncatedPost = post
+            let truncatedPost = post
             // structure is: parentPosts: [root, reply, reply, reply, replyTo] post: ThisPost
             if let replyTo = post.parentPosts.last {
                 // always keep at least 1 parent (replyTo)
