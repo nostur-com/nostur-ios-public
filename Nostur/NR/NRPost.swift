@@ -160,7 +160,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         self.zapTally = event.zapTally
         self.relays = event.relays
         self.fastTags = event.fastTags
-        self.plainText = NRTextParser.shared.copyPasteText(event, text: event.noteTextPrepared).text
+        self.plainText = NRTextParser.shared.copyPasteText(event, text: event.content ?? "").text
         self.withParents = withParents
         self.withReplies = withReplies
         self.withReplyTo = withReplyTo

@@ -311,8 +311,7 @@ extension Event {
 extension Event {
     
     var plainText:String {
-        let textRenderer = TextRenderer(managedObjectContext, event: self)
-        return textRenderer.copyPasteText(self, text: self.noteText)
+        return NRTextParser.shared.copyPasteText(self, text: self.content ?? "").text
     }
     
     var date: Date {
