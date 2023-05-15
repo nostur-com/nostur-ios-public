@@ -13,8 +13,9 @@ class QueuedFetcher {
     
     var subscriptions = Set<AnyCancellable>()
     
-    var pQueue = [String]()
-    var idQueue = [String]()
+    var pQueue = Set<String>()
+    var idQueue = Set<String>()
+    
     
     private var fetchSubject = PassthroughSubject<Void, Never>()
     private var enqueuePsubject = PassthroughSubject<String, Never>()
@@ -25,23 +26,23 @@ class QueuedFetcher {
     init() {
         enqueuePsubject.sink { pTag in
             guard !self.pQueue.contains(pTag) else { return }
-            self.pQueue.append(pTag)
+            self.pQueue.insert(pTag)
         }
         .store(in: &subscriptions)
         
         dequeuePsubject.sink { pTag in
-            self.pQueue.removeAll(where: { $0 == pTag })
+            self.pQueue.remove(pTag)
         }
         .store(in: &subscriptions)
         
         enqueueIDsubject.sink { eventId in
             guard !self.idQueue.contains(eventId) else { return }
-            self.idQueue.append(eventId)
+            self.idQueue.insert(eventId)
         }
         .store(in: &subscriptions)
         
         dequeueIDsubject.sink { eventId in
-            self.idQueue.removeAll(where: { $0 == eventId })
+            self.idQueue.remove(eventId)
         }
         .store(in: &subscriptions)
         
@@ -51,17 +52,17 @@ class QueuedFetcher {
                 guard self.pQueue.count > 0 || self.idQueue.count > 0 else { return }
                 
                 if self.idQueue.count == 0 {
-                    req(RM.getUserMetadata(pubkeys: self.pQueue))
+                    req(RM.getUserMetadata(pubkeys: Array(self.pQueue)))
                     self.pQueue.removeAll()
                 }
                 else if self.pQueue.count == 0 {
-                    req(RM.getEvents(ids: self.idQueue))
+                    req(RM.getEvents(ids: Array(self.idQueue)))
                     self.idQueue.removeAll()
                 }
                 else {
                     // TODO COMBINE IN SINGLE REQUEST:
-                    req(RM.getUserMetadata(pubkeys: self.pQueue))
-                    req(RM.getEvents(ids: self.idQueue))
+                    req(RM.getUserMetadata(pubkeys: Array(self.pQueue)))
+                    req(RM.getEvents(ids: Array(self.idQueue)))
                     self.pQueue.removeAll()
                     self.idQueue.removeAll()
                 }
