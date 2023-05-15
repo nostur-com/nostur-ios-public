@@ -38,12 +38,10 @@ struct KindResolver: View {
                 // TODO: NOTIFICATIONIZED UPDATE
                 EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
                 QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
-//                req(RM.getUserMetadata(pubkeys: nrPost.missingPs))
                 print("🔴🔴 NoteRow.onAppear fetching \(nrPost.missingPs.count) missing contacts (event.pubkey or event.pTags)")
             }
         }
         .onDisappear {
-//            return
             if nrPost.missingPs.count > 0 {
                 QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
             }

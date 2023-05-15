@@ -9,7 +9,6 @@ import SwiftUI
 
 struct PostRowDeletable: View {
     @ObservedObject var nrPost:NRPost // Need for .deletedById
-//    @ObservedObject var event:Event
     var hideFooter = true // For rendering in NewReply
     var inThread = false // For rendering in thread, hide "Replying to.."
     var connect:ThreadConnectDirection? = nil
@@ -19,7 +18,6 @@ struct PostRowDeletable: View {
     
     init(nrPost:NRPost, hideFooter:Bool = false, inThread:Bool = false, connect: ThreadConnectDirection? = nil, fullWidth:Bool = false, isReply:Bool = false, isDetail:Bool = false) {
         self.nrPost = nrPost
-//        self.event = nrPost.event
         self.hideFooter = hideFooter
         self.inThread = inThread
         self.connect = connect

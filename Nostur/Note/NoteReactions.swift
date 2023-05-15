@@ -38,7 +38,7 @@ struct NoteReactions: View {
                     EventRelationsQueue.shared.addAwaitingEvent(reaction)
                 }
             }
-            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missing.map { $0.pubkey })))
+            req(RM.getUserMetadata(pubkeys: missing.map { $0.pubkey }))
         }
 //        .onChange(of: reactions_) { newValue in
 //            var missing:[String] = []

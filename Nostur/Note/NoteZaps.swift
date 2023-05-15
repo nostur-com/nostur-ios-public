@@ -9,7 +9,6 @@ import SwiftUI
 
 
 struct NoteZaps: View {
-//    @Environment(\.managedObjectContext) var viewContext
     let sp:SocketPool = .shared
     let id:String
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)], predicate: NSPredicate(value: false))
@@ -24,7 +23,9 @@ struct NoteZaps: View {
     var body: some View {
         ScrollView {
             ForEach(zapsSorted) { zap in
-                NoteZapRow(event: zap)
+                if let zapFrom = zap.zapFromRequest {
+                    NoteZapRow(zap: zap, zapFrom:zapFrom)
+                }
             }
             Spacer()
         }
@@ -41,6 +42,16 @@ struct NoteZaps: View {
                 }
             }
             
+            var missing:[Event] = []
+            for zap in zaps {
+                if let zapFrom = zap.zapFromRequest {
+                    if zapFrom.contact == nil || zapFrom.contact?.metadata_created_at == 0 {
+                        missing.append(zapFrom)
+                        EventRelationsQueue.shared.addAwaitingEvent(zapFrom)
+                    }
+                }
+            }
+            req(RM.getUserMetadata(pubkeys: missing.map { $0.pubkey }))
         }
     }
 }
@@ -53,24 +64,23 @@ struct NoteZapRow: View {
     @AppStorage("devToggle") var devToggle:Bool = false
     
     // THE ZAP EVENT (FROM CUSTODIAL ZAP PROVIDER)
-    @ObservedObject var event:Event
+    var zap:Event
+    @ObservedObject var zapFrom:Event
     
     var fiatPrice:String {
         get {
-            String(format: "($%.02f)",(Double(event.naiveSats / 100000000 * er.bitcoinPrice)))
+            String(format: "($%.02f)",(Double(zap.naiveSats / 100000000 * er.bitcoinPrice)))
         }
     }
     
     var body: some View {
         
         HStack(alignment: .top) {
-            let contact_ = event.zapFromRequest?.contact_
+            let contact_ = zapFrom.contact_
             
-            PFP(pubkey: event.zapFromRequest?.pubkey ?? "WTF", pictureUrl: contact_?.picture, isFollowing: ns.followingPublicKeys.contains(event.zapFromRequest?.pubkey ?? "WTF"))
+            PFP(pubkey: zapFrom.pubkey, pictureUrl: contact_?.picture, isFollowing: ns.followingPublicKeys.contains(zapFrom.pubkey))
                 .onTapGesture {
-                    if let pubkey = event.zapFromRequest?.pubkey {
-                        navigateTo(ContactPath(key: pubkey))
-                    }
+                    navigateTo(ContactPath(key: zapFrom.pubkey))
                 }
             VStack(alignment: .leading) {
                 HStack {
@@ -86,9 +96,9 @@ struct NoteZapRow: View {
                             }
 
                             Group {
-                                Text("@\(contact_?.username ?? event.zapFromRequest?.authorKey ?? "?")").layoutPriority(1)
+                                Text("@\(contact_?.username ?? zapFrom.authorKey)").layoutPriority(1)
                                 Text(" · ") //
-                                Ago(event.date).layoutPriority(1) //
+                                Ago(zap.date).layoutPriority(1) //
                             }
                             .foregroundColor(.secondary)
                             .lineLimit(1)
@@ -97,16 +107,14 @@ struct NoteZapRow: View {
                     Spacer()
 
                 }
-                Text("Zapped \(event.naiveSats.satsFormatted) sats \(fiatPrice)")
-                Text(event.zapFromRequest?.content ?? "")
+                Text("Zapped \(zap.naiveSats.satsFormatted) sats \(fiatPrice)")
+                Text(zapFrom.content ?? "")
             }
         }
         .padding()
         .contentShape(Rectangle())
         .onTapGesture {
-            if (event.zapFromRequest != nil) {
-                navigateTo(ContactPath(key: event.zapFromRequest!.pubkey))
-            }
+            navigateTo(ContactPath(key: zapFrom.pubkey))
         }
         Divider()
     }

@@ -248,31 +248,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             self.replyingToUsernamesMarkDown = try? AttributedString(markdown: replyingToMarkdown)
         }
         
-        
-        // Todo fix, short preview view for NoteRow (not PostDetail)
-        
-//        self.contentElements =  {
-//            var gotVideo = false
-//            return contentElementsDetail
-//                .filter { element in
-//                    if case .video = element {
-//                        if (!gotVideo) {
-//                            gotVideo = true
-//                            return true
-//                        }
-//                        return false
-//                    }
-//                    if case .note1 = element {
-//                        return element == firstQuote
-//                    }
-//                    if case .nevent1 = element {
-//                        return element == firstQuote
-//                    }
-//                    else {
-//                        return true
-//                    }
-//                }
-//        }()
         self.renderedText = NRTextParser.shared.parseText(event, text: event.noteTextPrepared).text
         
         self.bookmarked = isBookmarked()

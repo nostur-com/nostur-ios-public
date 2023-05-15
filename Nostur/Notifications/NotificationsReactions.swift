@@ -44,11 +44,6 @@ struct NotificationsReactions: View {
         fl.events.compactMap {  $0.reactionToId == id ? $0 : nil }
     }
     
-    init(pubkey:String, blockedPubkeys:[String]) {
-        self.pubkey = pubkey
-        self.blockedPubkeys = blockedPubkeys
-    }
-    
     var body: some View {
         let _ = Self._printChanges()
         ScrollView {

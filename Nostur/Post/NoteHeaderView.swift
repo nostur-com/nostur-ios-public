@@ -117,7 +117,7 @@ struct PostHeader: View {
             }
         }
         if (!singleLine) {
-            HStack {
+            HStack(spacing:2) {
                 Text("@\(contact.anyUsername)").layoutPriority(1)
                 Text(" · ") //
                 Ago(nrPost.createdAt)

@@ -49,67 +49,11 @@ struct NotificationsZaps: View {
                 ForEach(zapsForMeDeduplicated) { zapInfo in
                     VStack {
                         if let nrPost = zapInfo.zappedEventNRPost {
-                            HStack(alignment: .top) {
-                                VStack {
-                                    Image(systemName: "bolt.fill")
-                                        .foregroundColor(Color("AccentColor"))
-                                    Text(Double(nrPost.zapTally).satsFormatted)
-                                        .font(.title2)
-                                    if (er.bitcoinPrice != 0.0) {
-                                        let fiatPrice = String(format: "$%.02f",(Double(nrPost.zapTally) / 100000000 * Double(er.bitcoinPrice)))
-
-                                        Text("\(fiatPrice)")
-                                            .font(.caption)
-                                            .opacity(nrPost.zapTally != 0 ? 0.5 : 0)
-                                    }
-                                }
-                                .frame(width:80)
-                                VStack(alignment:.leading, spacing: 3) {
-                                    Group {
-                                        ZapsForThisNote(
-                                            zaps: fl.events.filter {
-                                                $0.zappedEventId == nrPost.id
-                                            })
-                                        NoteMinimalContentView(nrPost: nrPost, lineLimit: 3)
-                                    }
-                                }
-                            }
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                navigateTo(nrPost)
-                            }
-                            .id(nrPost.id)
+                            PostZap(nrPost: nrPost, posts:fl.events)
                         }
                         else {
-                            HStack(alignment: .top) {
-                                VStack {
-                                    Image(systemName: "bolt.fill")
-                                        .foregroundColor(Color("AccentColor"))
-                                    Text(zapInfo.zap.naiveSats.satsFormatted)
-                                        .font(.title2)
-                                    if (er.bitcoinPrice != 0.0) {
-                                        let fiatPrice = String(format: "$%.02f",(Double(zapInfo.zap.naiveSats) / 100000000 * Double(er.bitcoinPrice)))
-
-                                        Text("\(fiatPrice)")
-                                            .font(.caption)
-                                            .opacity(zapInfo.zap.naiveSats != 0 ? 0.5 : 0)
-                                    }
-                                }
-                                .frame(width:80)
-                                VStack(alignment:.leading, spacing: 3) {
-                                    PFP(pubkey: zapInfo.zap.zapFromRequest?.pubkey ?? "WTF", pictureUrl: zapInfo.zap.zapFromRequest?.contact?.picture, isFollowing: ns.followingPublicKeys.contains(zapInfo.zap.zapFromRequest?.pubkey ?? "WTF"))
-                                    Text("**\(zapInfo.zap.zapFromRequest?.contact?.authorName ?? "??")** zapped your profile")
-                                    Text(zapInfo.zap.zapFromRequest?.noteText ?? "")
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                }
-                                .overlay(alignment: .topTrailing) {
-                                    Ago(zapInfo.zap.created_at).layoutPriority(2)
-                                        .foregroundColor(.gray)
-                                }
-                                .onTapGesture {
-                                    guard let pubkey = zapInfo.zap.zapFromRequest?.pubkey else { return }
-                                    navigateTo(ContactPath(key: pubkey))
-                                }
+                            if let zapFrom = zapInfo.zap.zapFromRequest {
+                                ProfileZap(zap: zapInfo.zap, zapFrom:zapFrom)
                             }
                         }
                     }
@@ -266,7 +210,96 @@ struct NotificationsZaps: View {
         fetchNewerTask.fetch()
     }
 }
-//
+
+struct PostZap: View {
+    let er:ExchangeRateModel = .shared // Not Observed for performance
+    @ObservedObject var nrPost:NRPost
+    var posts:[Event]
+    
+    var body: some View {
+        HStack(alignment: .top) {
+            VStack {
+                Image(systemName: "bolt.fill")
+                    .foregroundColor(Color("AccentColor"))
+                Text(Double(nrPost.zapTally).satsFormatted)
+                    .font(.title2)
+                if (er.bitcoinPrice != 0.0) {
+                    let fiatPrice = String(format: "$%.02f",(Double(nrPost.zapTally) / 100000000 * Double(er.bitcoinPrice)))
+
+                    Text("\(fiatPrice)")
+                        .font(.caption)
+                        .opacity(nrPost.zapTally != 0 ? 0.5 : 0)
+                }
+            }
+            .frame(width:80)
+            VStack(alignment:.leading, spacing: 3) {
+                Group {
+                    ZapsForThisNote(
+                        zaps: posts.filter {
+                            $0.zappedEventId == nrPost.id
+                        })
+                    NoteMinimalContentView(nrPost: nrPost, lineLimit: 3)
+                }
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            navigateTo(nrPost)
+        }
+    }
+}
+
+struct ProfileZap: View {
+    let er:ExchangeRateModel = .shared // Not Observed for performance
+    @EnvironmentObject var ns:NosturState
+    
+    var zap:Event
+    @ObservedObject var zapFrom:Event
+    
+    var body: some View {
+        HStack(alignment: .top) {
+            VStack {
+                Image(systemName: "bolt.fill")
+                    .foregroundColor(Color("AccentColor"))
+                Text(zap.naiveSats.satsFormatted)
+                    .font(.title2)
+                if (er.bitcoinPrice != 0.0) {
+                    let fiatPrice = String(format: "$%.02f",(Double(zap.naiveSats) / 100000000 * Double(er.bitcoinPrice)))
+
+                    Text("\(fiatPrice)")
+                        .font(.caption)
+                        .opacity(zap.naiveSats != 0 ? 0.5 : 0)
+                }
+            }
+            .frame(width:80)
+            VStack(alignment:.leading, spacing: 3) {
+                PFP(pubkey: zapFrom.pubkey, pictureUrl: zapFrom.contact_?.picture, isFollowing: ns.followingPublicKeys.contains(zapFrom.pubkey))
+                Text("**\(zapFrom.contact_?.authorName ?? "??")** zapped your profile")
+                Text(zapFrom.noteText)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .overlay(alignment: .topTrailing) {
+                Ago(zap.created_at).layoutPriority(2)
+                    .foregroundColor(.gray)
+            }
+            .onAppear {
+                if (zapFrom.contact_ == nil || zapFrom.contact_?.metadata_created_at == 0) {
+                    EventRelationsQueue.shared.addAwaitingEvent(zapFrom)
+                    QueuedFetcher.shared.enqueue(pTag: zapFrom.pubkey)
+                }
+            }
+            .onDisappear {
+                if (zapFrom.contact_ == nil || zapFrom.contact_?.metadata_created_at == 0) {
+                    QueuedFetcher.shared.dequeue(pTag: zapFrom.pubkey)
+                }
+            }
+            .onTapGesture {
+                navigateTo(ContactPath(key: zapFrom.pubkey))
+            }
+        }
+    }
+}
+
 struct ZapsForThisNote: View {
     var zaps:[Event]
 //    @Environment(\.managedObjectContext) var viewContext

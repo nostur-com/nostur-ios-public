@@ -78,6 +78,7 @@ struct ContentRenderer: View { // VIEW things
                             .padding(.horizontal, fullWidth ? 10 : 0)
                     case .video(let url):
                     SingleVideoViewer(url: url, pubkey: nrPost.pubkey, videoWidth: availableWidth, isFollowing:nrPost.contact?.following ?? false)
+                            .padding(.vertical, 5)
                     case .image(let url):
                     SingleMediaViewer(url: url, pubkey: nrPost.pubkey, imageWidth: availableWidth, isFollowing: nrPost.contact?.following ?? false, fullWidth: fullWidth)
                             .padding(.vertical, 5)

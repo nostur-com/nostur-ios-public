@@ -9,7 +9,7 @@ import SwiftUI
 
 struct MinimalQuotedNoteFragment: View {
     var sp:SocketPool = .shared
-    var nrPost:NRPost
+    @ObservedObject var nrPost:NRPost
     
     var body: some View {
         VStack(alignment:.leading) {
@@ -50,12 +50,12 @@ struct MinimalQuotedNoteFragment: View {
                 .stroke(.regularMaterial, lineWidth: 1)
         )
         .onAppear {
-            if (nrPost.contact == nil) {
+            if (nrPost.contact == nil || nrPost.contact?.metadata_created_at == 0) {
                 QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
             }
         }
         .onDisappear {
-            if (nrPost.contact == nil) {
+            if (nrPost.contact == nil || nrPost.contact?.metadata_created_at == 0) {
                 QueuedFetcher.shared.dequeue(pTag: nrPost.pubkey)
             }
         }
@@ -109,12 +109,12 @@ struct MinimalQuotedNote_Previews: PreviewProvider {
         
         VStack {
             // Mention at #[5]
-            let event0 = PreviewFetcher.fetchNRPost("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe", plainText: true)
+            let event0 = PreviewFetcher.fetchNRPost("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe")
         
             
-            let event1 = PreviewFetcher.fetchNRPost("dec5a86ad780edd26fb8a1b85f919ddace9cb2b2b5d3a68d5124802fc2da4ed3", plainText: true)
+            let event1 = PreviewFetcher.fetchNRPost("dec5a86ad780edd26fb8a1b85f919ddace9cb2b2b5d3a68d5124802fc2da4ed3")
             
-            let event2 = PreviewFetcher.fetchNRPost("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e", plainText: true)
+            let event2 = PreviewFetcher.fetchNRPost("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e")
             
             Spacer()
             if (event0 != nil) {

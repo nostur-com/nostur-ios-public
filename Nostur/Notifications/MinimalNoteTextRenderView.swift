@@ -9,14 +9,8 @@ import SwiftUI
 
 struct MinimalNoteTextRenderView: View {
     
-    let nrPost:NRPost
-    let lineLimit:Int
-    
-    
-    init(nrPost:NRPost, lineLimit:Int = 10) {
-        self.nrPost = nrPost
-        self.lineLimit = lineLimit
-    }
+    @ObservedObject var nrPost:NRPost
+    var lineLimit:Int = 10
     
     var body: some View {
         VStack(alignment: .leading) {

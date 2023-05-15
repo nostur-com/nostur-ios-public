@@ -227,10 +227,10 @@ struct PostAndParent: View {
                                     .padding(.top, 3)
                                     .padding(.bottom, 10)
                                     .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        navigateTo(nrPost)
-                                    }
+//                                    .contentShape(Rectangle())
+//                                    .onTapGesture {
+//                                        navigateTo(nrPost)
+//                                    }
                             case 1063:
                                 if let fileMetadata = nrPost.fileMetadata {
                                     Kind1063(nrPost, fileMetadata: fileMetadata, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
@@ -245,10 +245,10 @@ struct PostAndParent: View {
                                     .padding(.top, 3)
                                     .padding(.bottom, 10)
                                     .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        navigateTo(nrPost)
-                                    }
+//                                    .contentShape(Rectangle())
+//                                    .onTapGesture {
+//                                        navigateTo(nrPost)
+//                                    }
                         }
                     }
                     
