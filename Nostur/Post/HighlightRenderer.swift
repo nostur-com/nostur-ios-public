@@ -27,7 +27,7 @@ struct HighlightRenderer: View {
             if let hl = nrPost.highlightData, let hlPubkey = hl.highlightAuthorPubkey {
                 HStack {
                     Spacer()
-                    PFP(pubkey: hlPubkey, pictureUrl: hl.highlightAuthorPicture, size: 20, isFollowing: hl.highlightAuthorIsFollowing)
+                    PFP(pubkey: hlPubkey, nrContact: hl.highlightNrContact, size: 20)
                     Text(hl.highlightAuthorName ?? "Unknown")
                 }
                 .contentShape(Rectangle())

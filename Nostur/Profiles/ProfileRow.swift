@@ -18,7 +18,7 @@ struct ProfileRow: View {
     
     var body: some View {
         HStack(alignment: .top) {
-            PFP(pubkey: contact.pubkey, pictureUrl: contact.picture, isFollowing: ns.isFollowing(contact.pubkey))
+            PFP(pubkey: contact.pubkey, contact: contact)
             VStack(alignment: .leading) {
                 HStack {
                     VStack(alignment: .leading) {

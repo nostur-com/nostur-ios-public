@@ -24,7 +24,7 @@ struct FastAccountSwitcher: View {
         let _ = Self._printChanges()
         HStack(spacing:5) {
             ForEach(fewAccounts.indices, id:\.self) { index in
-                PFP(pubkey: fewAccounts[index].publicKey, pictureUrl: fewAccounts[index].picture, size: 25, isFollowing: true)
+                PFP(pubkey: fewAccounts[index].publicKey, account: fewAccounts[index], size: 25)
                     .padding(5)
                     .contentShape(Rectangle())
                     .onTapGesture {

@@ -29,7 +29,7 @@ struct Highlight: View {
     var body: some View {
         
         HStack(alignment: .top, spacing:0) {
-            PFP(pubkey: nrPost.pubkey, pictureUrl: nrPost.contact?.pictureUrl, isFollowing: nrPost.contact?.following ?? false)
+            PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact)
                 .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: DIMENSIONS.POST_ROW_PFP_HEIGHT)
                 .background(alignment: .top, content: {
                     Color("LightGray")
@@ -72,7 +72,7 @@ struct Highlight: View {
                     if let hl = nrPost.highlightData, let hlPubkey = hl.highlightAuthorPubkey {
                         HStack {
                             Spacer()
-                            PFP(pubkey: hlPubkey, pictureUrl: hl.highlightAuthorPicture, size: 20, isFollowing: hl.highlightAuthorIsFollowing)
+                            PFP(pubkey: hlPubkey, nrContact: hl.highlightNrContact, size: 20)
                                 .onTapGesture {
                                     navigateTo(ContactPath(key: hlPubkey))
                                 }

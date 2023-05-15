@@ -54,7 +54,7 @@ struct Search: View {
                             Button {
                                 sendNotification(.showSideBar)
                             } label: {
-                                PFP(pubkey: account.publicKey, pictureUrl: account.picture, size:30, isFollowing: true)
+                                PFP(pubkey: account.publicKey, account: account, size:30)
                             }
                             .accessibilityLabel("Account menu")
 

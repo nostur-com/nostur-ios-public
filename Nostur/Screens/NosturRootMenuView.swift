@@ -46,7 +46,7 @@ struct SideBar: View {
         VStack(alignment: .leading) {
             ProfileBanner(banner: account.banner, width: NOSTUR_SIDEBAR_WIDTH, offset: 0)
                 .overlay(alignment: .bottomLeading, content: {
-                    PFP(pubkey: account.publicKey, pictureUrl: account.picture, size:75, isFollowing: true)
+                    PFP(pubkey: account.publicKey, account: account, size:75)
                         .overlay(
                             Circle()
                                 .strokeBorder(Color.systemBackground, lineWidth: 3)

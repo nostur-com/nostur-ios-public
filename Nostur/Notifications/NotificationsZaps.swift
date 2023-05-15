@@ -273,8 +273,8 @@ struct ProfileZap: View {
             }
             .frame(width:80)
             VStack(alignment:.leading, spacing: 3) {
-                PFP(pubkey: zapFrom.pubkey, pictureUrl: zapFrom.contact_?.picture, isFollowing: ns.followingPublicKeys.contains(zapFrom.pubkey))
-                Text("**\(zapFrom.contact_?.authorName ?? "??")** zapped your profile")
+                PFP(pubkey: zapFrom.pubkey, contact: zapFrom.contact)
+                Text("**\(zapFrom.contact?.authorName ?? "??")** zapped your profile")
                 Text(zapFrom.noteText)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }

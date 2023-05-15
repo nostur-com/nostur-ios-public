@@ -34,11 +34,11 @@ struct AccountSwitcher: View {
         } label: {
             ZStack {
                 if let selectedAccount {
-                    PFP(pubkey: selectedAccount.publicKey, pictureUrl: selectedAccount.picture, size: 30, isFollowing: true)
+                    PFP(pubkey: selectedAccount.publicKey, account: selectedAccount, size: 30)
                 }
                 else {
                     ForEach(accounts.indices, id:\.self) { index in
-                        PFP(pubkey: accounts[index].publicKey, pictureUrl: accounts[index].picture, size: 30, isFollowing: true)
+                        PFP(pubkey: accounts[index].publicKey, account: accounts[index], size: 30)
                             .offset(x: -CGFloat(index*10))
                         
                     }

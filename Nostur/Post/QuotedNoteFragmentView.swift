@@ -32,7 +32,7 @@ struct QuotedNoteFragmentView: View {
                 VStack(alignment: .leading) { // Name + menu "replying to"
                     HStack(spacing:2) {
                         // profile image
-                        PFP(pubkey: nrPost.pubkey, pictureUrl: nrPost.contact?.pictureUrl, size: 20, isFollowing: nrPost.contact?.following ?? false)
+                        PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 20)
                             .onTapGesture {
                                 navigateTo(ContactPath(key: nrPost.pubkey)) // TODO: Direct to nrPost.vContact if possible
                             }

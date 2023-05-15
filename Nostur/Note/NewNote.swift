@@ -154,7 +154,7 @@ struct NewNote: View {
         if let account = ns.account {
             VStack {
                 HStack(alignment: .top) {
-                    PFP(pubkey: account.publicKey, pictureUrl: account.picture, isFollowing: true)
+                    PFP(pubkey: account.publicKey, account: account)
                     
                     ZStack(alignment:.leading) {
                         VStack(alignment: .leading) {

@@ -165,7 +165,7 @@ struct PostAndParent: View {
                 if nrPost.deletedById == nil {
                     
                     HStack(alignment:.top, spacing:0) {
-                        PFP(pubkey: nrPost.pubkey, pictureUrl: nrPost.contact?.pictureUrl, size: 50, isFollowing: nrPost.contact?.following ?? false)
+                        PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 50)
                             .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: 50)
                             .padding(.horizontal, DIMENSIONS.POST_ROW_PFP_HPADDING)
                             .onTapGesture {

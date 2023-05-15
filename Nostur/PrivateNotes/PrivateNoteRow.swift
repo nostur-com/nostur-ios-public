@@ -32,7 +32,7 @@ struct PrivateNoteRow: View {
             .padding(.bottom, 10)
             if let nrPost {
                 HStack {
-                    PFP(pubkey: nrPost.pubkey, pictureUrl: nrPost.contact?.pictureUrl, size: 25, isFollowing: nrPost.contact?.following ?? false)
+                    PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 25)
                         .onTapGesture {
                             navigateTo(ContactPath(key: nrPost.pubkey))
                         }
@@ -44,7 +44,7 @@ struct PrivateNoteRow: View {
             }
             else if let contact = note.contact {
                 HStack {
-                    PFP(pubkey: contact.pubkey, pictureUrl: contact.picture, size: 25, isFollowing: ns.isFollowing(contact.pubkey))
+                    PFP(pubkey: contact.pubkey, contact: contact, size: 25)
                     Text(contact.authorName) // Name
                         .foregroundColor(.secondary)
                         .fontWeight(.bold)

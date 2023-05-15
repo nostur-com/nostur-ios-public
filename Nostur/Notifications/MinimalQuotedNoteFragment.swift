@@ -17,7 +17,7 @@ struct MinimalQuotedNoteFragment: View {
                 VStack(alignment: .leading) { // Name + menu "replying to"
                     HStack(spacing:2) {
                         // profile image
-                        PFP(pubkey: nrPost.pubkey, pictureUrl: nrPost.contact?.pictureUrl, size: 20, isFollowing: nrPost.contact?.following ?? false)
+                        PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 20)
                         .opacity(0.5)
                         if let contact = nrPost.contact {
                             NameAndNip(contact: contact)

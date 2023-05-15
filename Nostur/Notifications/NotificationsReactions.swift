@@ -230,7 +230,7 @@ struct ReactionsForThisNote: View {
             ZStack(alignment:.leading) {
                 ForEach(withoutDuplicates.prefix(10).indices, id:\.self) { index in
                     ZStack(alignment:.leading) {
-                        PFP(pubkey: reactions[index].pubkey, pictureUrl: reactions[index].contact?.picture, isFollowing: ns.followingPublicKeys.contains(reactions[index].pubkey))
+                        PFP(pubkey: reactions[index].pubkey, contact: reactions[index].contact)
                             .id(reactions[index].id)
                             .zIndex(-Double(index))
                         Text(reactions[index].content == "+" ? "❤️" : reactions[index].content ?? "❤️")

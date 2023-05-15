@@ -66,11 +66,7 @@ struct ProfileView: View {
                         ToolbarItem(placement: .navigationBarLeading) {
                             VStack {
                                 HStack(spacing:2) {
-                                    PFP(pubkey: contact.pubkey,
-                                        pictureUrl: contact.picture,
-                                        size: 25,
-                                        isFollowing:ns.isFollowing(contact.pubkey)
-                                    )
+                                    PFP(pubkey: contact.pubkey, contact: contact, size: 25)
                                     .overlay(
                                         Circle()
                                             .strokeBorder(Color.systemBackground, lineWidth: 1)
@@ -97,7 +93,7 @@ struct ProfileView: View {
                         GeometryReader { geoBanner in
                             ProfileBanner(banner: contact.banner, width: dim.listWidth, offset: geoBanner.frame(in:.global).minY)
                                 .overlay(alignment: .bottomLeading, content: {
-                                    PFP(pubkey: contact.pubkey, pictureUrl: contact.picture, size: PFP_SIZE, isFollowing:ns.isFollowing(contact.pubkey))
+                                    PFP(pubkey: contact.pubkey, contact: contact, size: PFP_SIZE)
                                         .overlay(
                                             Circle()
                                                 .strokeBorder(Color.systemBackground, lineWidth: 3)

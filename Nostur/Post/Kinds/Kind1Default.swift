@@ -48,7 +48,7 @@ struct Kind1Default: View {
     var body: some View {
         
         HStack(alignment: .top, spacing:0) {
-            PFP(pubkey: nrPost.pubkey, pictureUrl: nrPost.contact?.pictureUrl, isFollowing: nrPost.contact?.following ?? false)
+            PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact)
                 .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: DIMENSIONS.POST_ROW_PFP_HEIGHT)
                 .background(alignment: .top) {
                     Color("LightGray")

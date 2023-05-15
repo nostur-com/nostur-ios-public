@@ -42,7 +42,7 @@ struct DeleteAccountSheet: View {
                     //                        .multilineTextAlignment(.center)
                     
                     HStack {
-                        PFP(pubkey: account.publicKey, pictureUrl: account.picture, isFollowing: true)
+                        PFP(pubkey: account.publicKey, account: account)
                         VStack(alignment:.leading) {
                             Text("\(ns.account?.display_name ?? "")")
                             Text("@\(ns.account?.name ?? "")")

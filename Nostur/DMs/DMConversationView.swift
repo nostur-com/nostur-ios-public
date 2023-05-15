@@ -126,7 +126,7 @@ struct DMConversationView: View {
                         header: {
                                 if let contactPubkey {
                                     VStack {
-                                        PFP(pubkey: contactPubkey, pictureUrl: contact?.picture, size: 100)
+                                        PFP(pubkey: contactPubkey, contact: contact, size: 100)
                                             .onTapGesture { navigateTo(ContactPath(key: contactPubkey)) }
                                         //                        ProfileBadgesContainer(pubkey: contactPubkey)
                                         

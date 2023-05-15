@@ -364,7 +364,7 @@ struct DMRow: View {
     var body: some View {
         HStack(alignment: .top) {
             ZStack {
-                PFP(pubkey: contactPubkey, pictureUrl: contact?.picture)
+                PFP(pubkey: contactPubkey, contact: contact)
                 if let unread {
                     Text("\(unread)")
                         .font(.footnote)

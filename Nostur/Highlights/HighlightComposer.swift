@@ -19,7 +19,7 @@ struct HighlightComposer: View {
         if let account = ns.account {
             VStack {
                 HStack(alignment: .top, spacing:0) {
-                    PFP(pubkey: account.publicKey, pictureUrl: account.picture, isFollowing: true)
+                    PFP(pubkey: account.publicKey, account: account)
                         .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: DIMENSIONS.POST_ROW_PFP_HEIGHT)
                         .padding(.horizontal, DIMENSIONS.POST_ROW_PFP_HPADDING)
 
@@ -46,7 +46,7 @@ struct HighlightComposer: View {
                             if let selectedAuthor = selectedAuthor {
                                 HStack {
                                     Spacer()
-                                    PFP(pubkey: selectedAuthor.pubkey, pictureUrl: selectedAuthor.picture, size: 20, isFollowing: true)
+                                    PFP(pubkey: selectedAuthor.pubkey, contact: selectedAuthor, size: 20)
                                     Text(selectedAuthor.authorName)
                                 }
                                 .padding(.trailing, 40)

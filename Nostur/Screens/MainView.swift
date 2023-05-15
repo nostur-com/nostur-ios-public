@@ -41,7 +41,7 @@ struct MainView: View {
                         if let account = self.account, !sm.showSidebar {
                             ToolbarItem(placement: .navigationBarLeading) {
                                 Button { sm.showSidebar.toggle() } label: {
-                                    PFP(pubkey: account.publicKey, pictureUrl: account.picture, size:30, isFollowing: true)
+                                    PFP(pubkey: account.publicKey, account: account, size:30)
                                 }
                                 .accessibilityLabel("Account menu")
                             

@@ -51,7 +51,7 @@ struct Kind1: View {
         
         VStack(spacing: 3) {
             HStack(alignment: .top, spacing:0) {
-                PFP(pubkey: nrPost.pubkey, pictureUrl: nrPost.contact?.pictureUrl, isFollowing: nrPost.contact?.following ?? false)
+                PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact)
                     .frame(width: 50, height: 50)
                     .onTapGesture {
                         navigateTo(ContactPath(key: nrPost.pubkey)) // TODO: if nrPost.contact navigate with that else by .pubkey
