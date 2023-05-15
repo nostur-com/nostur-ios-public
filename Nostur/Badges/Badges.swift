@@ -13,11 +13,11 @@ import Foundation
 func createBadgeDefinition(_ code:String, name:String, description:String, image1024:String, thumb256:String) -> NEvent {
     var badgeDef = NEvent(content: "")
     badgeDef.kind = .badgeDefinition
-    badgeDef.tags.append(NEventTag(type: "d", otherInformation: code))
-    badgeDef.tags.append(NEventTag(type: "name", otherInformation: name))
-    badgeDef.tags.append(NEventTag(type: "description", otherInformation: description))
-    badgeDef.tags.append(NEventTag(type: "image", otherInformation: image1024, "1024x1024"))
-    badgeDef.tags.append(NEventTag(type: "thumb", otherInformation: thumb256, "256x256"))
+    badgeDef.tags.append(NostrTag(["d", code]))
+    badgeDef.tags.append(NostrTag(["name", name]))
+    badgeDef.tags.append(NostrTag(["description", description]))
+    badgeDef.tags.append(NostrTag(["image", image1024, "1024x1024"]))
+    badgeDef.tags.append(NostrTag(["thumb", thumb256, "256x256"]))
     return badgeDef
 }
 
@@ -26,9 +26,9 @@ func createBadgeDefinition(_ code:String, name:String, description:String, image
 func createBadgeAward(_ pubkey:String, badgeCode:String, pubkeys:[String]) -> NEvent {
     var badgeAward = NEvent(content: "")
     badgeAward.kind = .badgeAward
-    badgeAward.tags.append(NEventTag(type: "a", otherInformation: "30009:\(pubkey):\(badgeCode)"))
+    badgeAward.tags.append(NostrTag(["a", "30009:\(pubkey):\(badgeCode)"]))
     for p in pubkeys {
-        badgeAward.tags.append(NEventTag.pubKey(publicKey: p))
+        badgeAward.tags.append(NostrTag(["p", p]))
     }
     return badgeAward
 }
@@ -37,13 +37,13 @@ func createBadgeAward(_ pubkey:String, badgeCode:String, pubkeys:[String]) -> NE
 func createProfileBadges(awards:[NEvent]) -> NEvent {
     var profileBadges = NEvent(content: "")
     profileBadges.kind = .profileBadges
-    profileBadges.tags.append(NEventTag(type: "d", otherInformation: "profile_badges"))
+    profileBadges.tags.append(NostrTag(["d", "profile_badges"]))
     var noDuplicateATags:Set<String> = []
     for award in awards {
         if let awardFirstA = award.firstA() {
             guard !noDuplicateATags.contains(awardFirstA) else { continue }
-            profileBadges.tags.append(NEventTag(type: "a", otherInformation: awardFirstA ))
-            profileBadges.tags.append(NEventTag(type: "e", otherInformation: award.id))
+            profileBadges.tags.append(NostrTag(["a", awardFirstA]))
+            profileBadges.tags.append(NostrTag(["e", award.id]))
             noDuplicateATags.insert(awardFirstA)
         }
     }
@@ -53,23 +53,23 @@ func createProfileBadges(awards:[NEvent]) -> NEvent {
 extension NEvent {
     
     // ON KIND:30009 - BADGE DEFINITION - TAGS/FIELDS
-    var badgeCode:NEventTag? {
+    var badgeCode:NostrTag? {
         tags.first(where: { $0.type == "d" })
     }
     
-    var badgeName:NEventTag? {
+    var badgeName:NostrTag? {
         tags.first(where: { $0.type == "name" })
     }
     
-    var badgeDescription:NEventTag? {
+    var badgeDescription:NostrTag? {
         tags.first(where: { $0.type == "description" })
     }
     
-    var badgeImage:NEventTag? {
+    var badgeImage:NostrTag? {
         tags.first(where: { $0.type == "image" })
     }
     
-    var badgeThumb:NEventTag? {
+    var badgeThumb:NostrTag? {
         tags.first(where: { $0.type == "thumb" })
     }
     
@@ -78,14 +78,14 @@ extension NEvent {
     
     
     // ON KIND:8 - BADGE AWARD - ["a","30009:alice:bravery"],
-    var badgeAtag:NEventTag? {
+    var badgeAtag:NostrTag? {
         tags.first(where: { $0.type == "a" })
     }
 }
 
-extension NEventTag {
+extension NostrTag {
     public var definition: String {
-        return underlyingData.suffix(from: 1).first!
+        return tag[1]
     }
 }
 
@@ -131,7 +131,7 @@ extension Event {
     var badgeA:String { kind == 30009 ? "\(String(kind)):\(pubkey):\(firstD() ?? "ERROR")" : "ERRORERRORERRORERRORERRORERROR" }
     
     // ALL THE P's this BADGE AWARD is awarding
-    var awardedTo:[NEventTag] {
+    var awardedTo:[NostrTag] {
         return badgeAwards.reduce([]) { partialResult, award in
             return partialResult + award.tags().filter { $0.type == "p" }
         }
@@ -202,7 +202,7 @@ extension Event {
             var badges:[ProfileBadge] = []
             let nTags = tags()
             
-            var badgeCollector: (Event?, NEventTag?, Event?) // Tuple of kind 30009, aTag, and kind 8 for readability
+            var badgeCollector: (Event?, NostrTag?, Event?) // Tuple of kind 30009, aTag, and kind 8 for readability
             
             // NIP-58: MUST BE PRESENT: A d tag with the unique identifier profile_badges
             if !nTags.contains(where: { nTag in
@@ -254,7 +254,7 @@ struct BadgeATag {
     let kind:Int64
     let pubkey:String
     let badgeCode:String
-    init(_ a:NEventTag) {
+    init(_ a:NostrTag) {
         let elements = a.value.split(separator: ":")
         guard elements.count >= 3 else {
             kind = 30009

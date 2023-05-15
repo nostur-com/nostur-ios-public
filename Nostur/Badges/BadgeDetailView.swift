@@ -37,7 +37,7 @@ struct BadgeDetailView: View {
         ScrollView {
             HStack(alignment: .top) {
                 VStack(alignment: .center) {
-                    if let pictureUrl = nBadge.badgeImage?.otherInformation[safe: 0] {
+                    if let pictureUrl = nBadge.badgeImage?.tag[safe: 1] {
                         if (pictureUrl.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
                             LazyImage(url: URL(string: pictureUrl)) { state in
                                 if let container = state.imageContainer {

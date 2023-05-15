@@ -142,15 +142,15 @@ struct NewReply: View {
                     let root = TagsHelpers(replyTo.tags()).replyToRootEtag()
                     
                     if (root != nil) { // ADD "ROOT" + "REPLY"
-                        let newRootTag = NEventTag(type: "e", otherInformation: root!.otherInformation[0], "", "root") // TODO RECOMMENDED RELAY HERE
+                        let newRootTag = NostrTag(["e", root!.tag[1], "", "root"]) // TODO RECOMMENDED RELAY HERE
                         newReply.tags.append(newRootTag)
                         
-                        let newReplyTag = NEventTag(type: "e", otherInformation: replyTo.id, "", "reply")
+                        let newReplyTag = NostrTag(["e", replyTo.id, "", "reply"])
                         
                         newReply.tags.append(newReplyTag)
                     }
                     else { // ADD ONLY "ROOT"
-                        let newRootTag = NEventTag(type: "e", otherInformation: replyTo.id, "", "root")
+                        let newRootTag = NostrTag(["e", replyTo.id, "", "root"])
                         newReply.tags.append(newRootTag)
                     }
                     
@@ -161,7 +161,7 @@ struct NewReply: View {
                     // TODO: DEDUPLICATE P TAGS
                     
                     // ADD PUBKEY OF REPLYING TO EVENT
-                    let replyToPtag = NEventTag(type: "p", otherInformation: replyTo.pubkey)
+                    let replyToPtag = NostrTag(["p", replyTo.pubkey])
                     
                     newReply.tags.append(replyToPtag)
                     vm.nEvent = newReply

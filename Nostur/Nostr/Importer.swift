@@ -139,7 +139,7 @@ class Importer {
                                 //                                print("🔴 noteInNote already in db")
                             }
                             event.content = "#[0]"
-                            event.tags.insert(NEventTag(type: "e", otherInformation: noteInNote.id, "", "mention"), at: 0)
+                            event.tags.insert(NostrTag(["e", noteInNote.id, "", "mention"]), at: 0)
                         }
                     }
                     

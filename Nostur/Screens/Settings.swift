@@ -540,7 +540,7 @@ extension Settings {
                 // update replies counter
                 if (event.kind == 1 && event.tagsSerialized != nil) {
                     do {
-                        if let tags = try? decoder.decode([NEventTag].self, from: Data(event.tagsSerialized!.utf8)) {
+                        if let tags = try? decoder.decode([NostrTag].self, from: Data(event.tagsSerialized!.utf8)) {
                             try _ = Event.updateRepliesCountCache(tags, context: bg)
                         }
                     }
@@ -567,7 +567,7 @@ extension Settings {
                 // update mentions count
                 if (event.kind == 1 && event.tagsSerialized != nil) {
                     do {
-                        if let tags = try? decoder.decode([NEventTag].self, from: Data(event.tagsSerialized!.utf8)) {
+                        if let tags = try? decoder.decode([NostrTag].self, from: Data(event.tagsSerialized!.utf8)) {
                             try _ = Event.updateMentionsCountCache(tags, context: bg)
                         }
                     }

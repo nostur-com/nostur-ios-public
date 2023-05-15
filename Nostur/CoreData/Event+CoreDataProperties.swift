@@ -444,7 +444,7 @@ extension Event {
     
     // NIP-10: Those marked with "reply" denote the id of the reply event being responded to.
     // NIP-10: Those marked with "root" denote the root id of the reply thread being responded to.
-    static func updateRepliesCountCache(_ tags:[NEventTag], context:NSManagedObjectContext) throws -> Bool {
+    static func updateRepliesCountCache(_ tags:[NostrTag], context:NSManagedObjectContext) throws -> Bool {
         // NIP-10: Those marked with "reply" denote the id of the reply event being responded to.
         
         let replyEtag = TagsHelpers(tags).replyToEtag()
@@ -573,7 +573,7 @@ extension Event {
     }
     
     // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
-    static func updateMentionsCountCache(_ tags:[NEventTag], context:NSManagedObjectContext) throws -> Bool {
+    static func updateMentionsCountCache(_ tags:[NostrTag], context:NSManagedObjectContext) throws -> Bool {
         // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
         if let mentionEtags = TagsHelpers(tags).newerMentionEtags() {
             for etag in mentionEtags {
@@ -613,11 +613,11 @@ extension Event {
     }
     
     
-    func tags() -> [NEventTag] {
+    func tags() -> [NostrTag] {
         let decoder = JSONDecoder()
         
         if (tagsSerialized != nil) {
-            guard let tags = try? decoder.decode([NEventTag].self, from: Data(tagsSerialized!.utf8)) else {
+            guard let tags = try? decoder.decode([NostrTag].self, from: Data(tagsSerialized!.utf8)) else {
                 return []
             }
             
@@ -642,7 +642,7 @@ extension Event {
     }
     
     func bolt11() -> String? {
-        tags().first(where: { $0.type == "bolt11" })?.otherInformation[safe: 0]
+        tags().first(where: { $0.type == "bolt11" })?.tag[1]
     }
     
     func firstP() -> String? {
@@ -677,7 +677,7 @@ extension Event {
         let decoder = JSONDecoder()
         
         if (tagsSerialized != nil) {
-            guard let tags = try? decoder.decode([NEventTag].self, from: Data(tagsSerialized!.utf8)) else {
+            guard let tags = try? decoder.decode([NostrTag].self, from: Data(tagsSerialized!.utf8)) else {
                 return nil
             }
             
@@ -758,12 +758,12 @@ extension Event {
     }
     
     
-    static func extractZapRequest(tags:[NEventTag]) -> NEvent? {
-        let description:NEventTag? = tags.first(where: { $0.type == "description" })
-        guard description?.otherInformation[safe: 0] != nil else { return nil }
+    static func extractZapRequest(tags:[NostrTag]) -> NEvent? {
+        let description:NostrTag? = tags.first(where: { $0.type == "description" })
+        guard description?.tag[safe: 1] != nil else { return nil }
         
         let decoder = JSONDecoder()
-        if let zapReqNEvent = try? decoder.decode(NEvent.self, from: description!.otherInformation[0].data(using: .utf8, allowLossyConversion: false)!) {
+        if let zapReqNEvent = try? decoder.decode(NEvent.self, from: description!.tag[1].data(using: .utf8, allowLossyConversion: false)!) {
             do {
                 
                 // Its note in note, should we verify? is this verified by relays? or zapper? should be...
@@ -1002,7 +1002,7 @@ extension Event {
             if let firstQuote = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
                 savedEvent.firstQuote = firstQuote
                 
-                if (firstE.otherInformation[safe: 2] == "mention") {
+                if (firstE.tag[safe: 3] == "mention") {
 //                    firstQuote.objectWillChange.send()
                     firstQuote.mentionsCount += 1
                     alreadyCounted = true
@@ -1158,17 +1158,17 @@ extension DataProvider {
 extension NEvent {
     
     
-    var mentionOnlyTags:[NEventTag] {
+    var mentionOnlyTags:[NostrTag] {
         let matches = content.matches(of: /#\[(\d+)\]/)
         let matchIndexes = matches.compactMap { Int($0.output.1) }
         let t = tags.enumerated().filter { matchIndexes.contains($0.offset) }.map { $0.element }
         let noRootOrReply = t.filter {
-            $0.type == "e" && $0.otherInformation[safe: 2] != "root" && $0.otherInformation[safe: 2] != "reply"
+            $0.type == "e" && $0.tag[safe: 3] != "root" && $0.tag[safe: 3] != "reply"
         }
         return noRootOrReply
     }
     
-    var threadETags:[NEventTag] {
+    var threadETags:[NostrTag] {
         let mentionStrings = mentionOnlyTags.map { $0.id }
         return tags.filter {
             $0.type == "e" && !mentionStrings.contains($0.id)
@@ -1176,20 +1176,20 @@ extension NEvent {
     }
     
     // E TAGS
-    func replyToEtag() -> NEventTag? {
+    func replyToEtag() -> NostrTag? {
         if threadETags.count == 0 {
             return nil
         }
         // PREFERRED NEW METHOD
         // NIP-10: Those marked with "reply" denote the id of the reply event being responded to.
-        let replyEtags = threadETags.filter { $0.otherInformation.count == 3 && $0.otherInformation[safe: 2] == "reply" }
+        let replyEtags = threadETags.filter { $0.tag.count == 4 && $0.tag[safe: 3] == "reply" }
         if (replyEtags.count != 0) {
             return replyEtags.first
         }
         
         // OLD METHOD NIP-10:
         // One "e" tag = REPLY
-        if threadETags.count == 1 && (threadETags.first?.otherInformation[safe: 2] == nil) {
+        if threadETags.count == 1 && (threadETags.first?.tag[safe: 3] == nil) {
             return threadETags.first
         }
         
@@ -1202,29 +1202,29 @@ extension NEvent {
         return nil
     }
     
-    func replyToRootEtag() -> NEventTag? {
+    func replyToRootEtag() -> NostrTag? {
         if threadETags.count == 0 {
             return nil
         }
-        let rootEtag = threadETags.filter { $0.otherInformation.count == 3 && $0.otherInformation[safe: 2] == "root" }.first
+        let rootEtag = threadETags.filter { $0.tag.count == 4 && $0.tag[safe: 3] == "root" }.first
         // PREFERRED NEW METHOD
         if (rootEtag != nil) {
             return rootEtag
         }
         
         // OLD METHOD
-        if threadETags.count == 1 && (threadETags.first?.otherInformation[safe: 2] == nil) {
+        if threadETags.count == 1 && (threadETags.first?.tag[safe: 3] == nil) {
             return threadETags.first
             
         }
-        if (threadETags.count >= 2) && (threadETags.first?.otherInformation[safe: 2] == nil) {
+        if (threadETags.count >= 2) && (threadETags.first?.tag[safe: 3] == nil) {
             return threadETags.first
             
         }
         return nil
     }
     
-    func firstMentionETag() -> NEventTag? {
+    func firstMentionETag() -> NostrTag? {
         if mentionOnlyTags.count == 0 {
             return nil
         }

@@ -197,7 +197,7 @@ class AccountManager {
                 }
                 
                 for contact in (Array(account.follows ?? Set<Contact>()).filter { $0.privateFollow == false } ) {
-                    newKind3Event.tags.append(NEventTag(type: "p", otherInformation: contact.pubkey ))
+                    newKind3Event.tags.append(NostrTag(["p", contact.pubkey]))
                 }
                 
                 let newKind3EventSigned = try newKind3Event.sign(keys)

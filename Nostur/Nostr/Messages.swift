@@ -250,7 +250,7 @@ public struct RequestMessage {
     
     // Fetch anything in the tags (only e -> "ids" and p -> "authors" kind=0  (for now))
     // For when you have 1 event, and want to fetch, reply to, mentions, contacts
-    static func getTags(_ tags:[NEventTag], limit:Int = 500, subscriptionId:String? = nil) -> String? {
+    static func getTags(_ tags:[NostrTag], limit:Int = 500, subscriptionId:String? = nil) -> String? {
         let ids = tags.filter { $0.type == "e" }.map { $0.id }
         let authors = tags.filter { $0.type == "p" }.map { $0.pubkey }
         
@@ -437,16 +437,16 @@ struct EventMessageBuilder {
     
     static func makeRepost(original: Event) -> NEvent {
         var repost = NEvent(content: "#[0]")
-        repost.tags.append(NEventTag(type: "e", otherInformation: original.id, "", "mention"))
-        repost.tags.append(NEventTag(type: "p", otherInformation: original.pubkey))
+        repost.tags.append(NostrTag(["e", original.id, "", "mention"]))
+        repost.tags.append(NostrTag(["p", original.pubkey]))
         repost.kind = .repost
         return repost
     }
     
     static func makeReactionEvent(reactingTo: Event) -> NEvent {
         var tags = reactingTo.tags().filter { $0.type == "e" || $0.type == "p" }
-        tags.append(NEventTag(type: "e", otherInformation: reactingTo.id))
-        tags.append(NEventTag(type: "p", otherInformation: reactingTo.pubkey))
+        tags.append(NostrTag(["e", reactingTo.id]))
+        tags.append(NostrTag(["p", reactingTo.pubkey]))
         
         var reactionEvent = NEvent(content: "+")
         reactionEvent.kind = .reaction
@@ -457,8 +457,8 @@ struct EventMessageBuilder {
     
     static func makeReactionEvent(reactingTo: NEvent) -> NEvent {
         var tags = reactingTo.tags.filter { $0.type == "e" || $0.type == "p" }
-        tags.append(NEventTag(type: "e", otherInformation: reactingTo.id))
-        tags.append(NEventTag(type: "p", otherInformation: reactingTo.publicKey))
+        tags.append(NostrTag(["e", reactingTo.id]))
+        tags.append(NostrTag(["p", reactingTo.publicKey]))
         
         var reactionEvent = NEvent(content: "+")
         reactionEvent.kind = .reaction
@@ -471,7 +471,7 @@ struct EventMessageBuilder {
         var event = NEvent(content: "")
         event.kind = .delete
         event.tags = [
-            NEventTag(type: "e", otherInformation: eventId),
+            NostrTag(["e", eventId]),
         ]
         return event
     }
@@ -480,8 +480,8 @@ struct EventMessageBuilder {
         var event = NEvent(content: note)
         event.kind = .report
         event.tags = [
-            NEventTag(type: "e", otherInformation: [eventId, type.rawValue]),
-            includeProfile ? NEventTag(type: "p", otherInformation: [pubkey, type.rawValue]) : NEventTag(type: "p", otherInformation: pubkey)
+            NostrTag(["e", eventId, type.rawValue]),
+            includeProfile ? NostrTag(["p", pubkey, type.rawValue]) : NostrTag(["p", pubkey])
         ]
         return event
     }
@@ -489,7 +489,7 @@ struct EventMessageBuilder {
     static func makeReportContact(pubkey:String, type:ReportType, note:String = "") -> NEvent {
         var event = NEvent(content: note)
         event.kind = .report
-        event.tags = [NEventTag(type: "p", otherInformation: [pubkey, type.rawValue])]
+        event.tags = [NostrTag(["p", pubkey, type.rawValue])]
         return event
     }
 }

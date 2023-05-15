@@ -12,15 +12,15 @@ func zapRequest(forPubkey pubkey: String, andEvent eventId: String? = nil, withM
     var zapRequest = NEvent(content:message)
     zapRequest.kind = .zapRequest
     
-    let pTag = NEventTag(type: "p", otherInformation: pubkey)
+    let pTag = NostrTag(["p", pubkey])
     zapRequest.tags.append(pTag)
     
     if (eventId != nil) {
-        let eTag = NEventTag(type: "e", otherInformation: eventId)
+        let eTag = NostrTag(["e", eventId!])
         zapRequest.tags.append(eTag)
     }
     
-    let relaysTag = NEventTag(type: "relays", otherInformation: relays)
+    let relaysTag = NostrTag(["relays"] + relays)
     zapRequest.tags.append(relaysTag)
     
     return zapRequest

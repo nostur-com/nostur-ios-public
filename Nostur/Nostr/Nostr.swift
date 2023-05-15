@@ -148,62 +148,29 @@ public enum NEventKind: Codable, Equatable {
     }
 }
 
-public struct NEventTag: Codable {
-    public let underlyingData: [String]
-
-    public var type: String {
-        return underlyingData.first!
-    }
+public struct NostrTag: Codable {
+    let tag: [String]
+    var type: String { tag.first ?? "" }
+    var id: String { tag[1] }
+    var pubkey: String { tag[1] }
+    var value: String { tag[1] }
     
-    public var id: String {
-        return underlyingData.suffix(from: 1).first!
-    }
-    
-    public var pubkey: String {
-        return underlyingData.suffix(from: 1).first!
-    }
-    
-    public var value: String {
-        return underlyingData.suffix(from: 1).first!
-    }
-
-    public var otherInformation: [String] {
-        return Array(underlyingData.suffix(from: 1))
-    }
-
-    public static func event(otherEventId: String, recommendedRelay: URL? = nil, type: String? = nil) -> NEventTag {
-        if let type {
-            return NEventTag(type: "e", otherInformation: otherEventId, (recommendedRelay?.absoluteString ?? ""), type)
-        }
-        else {
-            return NEventTag(type: "e", otherInformation: otherEventId, recommendedRelay?.absoluteString)
-        }
-    }
-    
-    public static func pubKey(publicKey: String, recommendedRelay: URL? = nil) -> NEventTag {
-        return NEventTag(type: "p", otherInformation: publicKey, recommendedRelay?.absoluteString)
-    }
-    
-    public init(type: String, otherInformation: String?...) {
-        underlyingData = [type] + otherInformation.compactMap { $0 }
-    }
-    
-    public init(type: String, otherInformation: [String]) {
-        underlyingData = [type] + otherInformation.compactMap { $0 }
+    public init(_ tag:[String]) {
+        self.tag = tag
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
-        underlyingData = try container.decode([String].self)
+        tag = try container.decode([String].self)
 
-        guard underlyingData.count > 0 else {
-            throw DecodingError.dataCorrupted(.init(codingPath: .init(), debugDescription: "missing required tag id"))
+        guard tag.count > 0 else {
+            throw DecodingError.dataCorrupted(.init(codingPath: .init(), debugDescription: "missing tag"))
         }
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.unkeyedContainer()
-        try container.encode(contentsOf: underlyingData)
+        try container.encode(contentsOf: tag)
     }
 }
 
@@ -212,7 +179,7 @@ struct NSerializableEvent: Encodable {
     let publicKey: String
     let createdAt: NTimestamp
     let kind: NEventKind
-    let tags: [NEventTag]
+    let tags: [NostrTag]
     let content: String
 
     func encode(to encoder: Encoder) throws {
@@ -238,7 +205,7 @@ struct NEvent: Codable {
     public var publicKey: String
     public var createdAt: NTimestamp
     public var kind: NEventKind
-    public var tags: [NEventTag]
+    public var tags: [NostrTag]
     public var content: String
     public var signature: String
 
@@ -336,7 +303,7 @@ struct NEvent: Codable {
     
     
     func bolt11() -> String? {
-        tags.first(where: { $0.type == "bolt11" })?.otherInformation[safe: 0]
+        tags.first(where: { $0.type == "bolt11" })?.tag[safe: 1]
     }
     
     func pTags() -> [String] {
@@ -381,7 +348,7 @@ class TagSerializer {
         encoder.outputFormatting = .withoutEscapingSlashes
     }
     
-    func encode(tags:[NEventTag]) -> String? {
+    func encode(tags:[NostrTag]) -> String? {
         if let tagsSerialized = try? encoder.encode(tags) {
             return String(data: tagsSerialized, encoding: .utf8)
         }
@@ -390,9 +357,9 @@ class TagSerializer {
 }
 
 struct TagsHelpers {
-    var tags:[NEventTag]
+    var tags:[NostrTag]
     
-    init(_ tags:[NEventTag]) {
+    init(_ tags:[NostrTag]) {
         self.tags = tags
     }
     
@@ -404,11 +371,11 @@ struct TagsHelpers {
         return eTags().last?.id ?? nil
     }
     
-    func eTags() -> [NEventTag] {
+    func eTags() -> [NostrTag] {
         return tags.filter { $0.type == "e" }
     }
     
-    func pTags() -> [NEventTag] {
+    func pTags() -> [NostrTag] {
         return tags.filter { $0.type == "p" }
     }
 
@@ -430,20 +397,20 @@ struct TagsHelpers {
     
     
     // E TAGS
-    func replyToEtag() -> NEventTag? {
+    func replyToEtag() -> NostrTag? {
         if noEtags() {
             return nil
         }
         // PREFERRED NEW METHOD
         // NIP-10: Those marked with "reply" denote the id of the reply event being responded to.
-        let replyEtags = tags.filter { $0.type == "e" && $0.otherInformation.count == 3 && $0.otherInformation[2] == "reply" }
+        let replyEtags = tags.filter { $0.type == "e" && $0.tag.count == 4 && $0.tag[3] == "reply" }
         if (replyEtags.count != 0) {
             return replyEtags.first
         }
 
         // OLD METHOD NIP-10:
         // One "e" tag = REPLY
-        if oneEtag() && (eTags().first?.otherInformation[safe: 2] == nil) {
+        if oneEtag() && (eTags().first?.tag[safe: 3] == nil) {
             return eTags().first
         }
         
@@ -456,34 +423,34 @@ struct TagsHelpers {
         return nil
     }
     
-    func replyToRootEtag() -> NEventTag? {
+    func replyToRootEtag() -> NostrTag? {
         if noEtags() {
             return nil
         }
-        let rootEtag = tags.filter { $0.type == "e" && $0.otherInformation.count == 3 && $0.otherInformation[2] == "root" }.first
+        let rootEtag = tags.filter { $0.type == "e" && $0.tag.count == 4 && $0.tag[3] == "root" }.first
         // PREFERRED NEW METHOD
         if (rootEtag != nil) {
             return rootEtag
         }
 
         // OLD METHOD
-        if oneEtag() && (eTags().first?.otherInformation[safe: 2] == nil) {
+        if oneEtag() && (eTags().first?.tag[safe: 3] == nil) {
             return eTags().first
 
         }
-        if (twoEtags() || manyEtags()) && (eTags().first?.otherInformation[safe: 2] == nil) {
+        if (twoEtags() || manyEtags()) && (eTags().first?.tag[safe: 3] == nil) {
             return eTags().first
 
         }
         return nil
     }
     
-    func mentionEtags() -> [NEventTag]? {
+    func mentionEtags() -> [NostrTag]? {
         if noEtags() {
             return nil
         }
         // PREFERRED NEW METHOD
-        let mentionEtags = tags.filter { $0.type == "e" && $0.otherInformation.count == 3 && $0.otherInformation[2] == "mention" }
+        let mentionEtags = tags.filter { $0.type == "e" && $0.tag.count == 4 && $0.tag[3] == "mention" }
         if mentionEtags.count > 0 {
             return mentionEtags
         }
@@ -495,12 +462,12 @@ struct TagsHelpers {
         return Array(etagsSlice)
     }
     
-    func newerMentionEtags() -> [NEventTag]? {
+    func newerMentionEtags() -> [NostrTag]? {
         if noEtags() {
             return nil
         }
         // PREFERRED NEW METHOD
-        let mentionEtags = tags.filter { $0.type == "e" && $0.otherInformation.count == 3 && $0.otherInformation[2] == "mention" }
+        let mentionEtags = tags.filter { $0.type == "e" && $0.tag.count == 4 && $0.tag[3] == "mention" }
         if mentionEtags.count > 0 {
             return mentionEtags
         }

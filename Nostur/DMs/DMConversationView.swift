@@ -223,7 +223,7 @@ struct DMConversationView: View {
                                             }
                                             
                                             nEvent.content = encrypted
-                                            nEvent.tags.append(NEventTag(type: "p", otherInformation: theirPubkey))
+                                            nEvent.tags.append(NostrTag(["p", theirPubkey]))
                                             
                                             
                                             if let signedEvent = try? ns.signEvent(nEvent) {

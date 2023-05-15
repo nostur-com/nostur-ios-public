@@ -135,8 +135,8 @@ func applyMentionsNip08(_ event:NEvent, bumpIndex:Bool = false) -> NEvent {
 
 
 // Returns all mentions as tags
-func getMentionsAsTags(_ text:String) -> [NEventTag] {
-    var mentionsAsTags:[NEventTag] = []
+func getMentionsAsTags(_ text:String) -> [NostrTag] {
+    var mentionsAsTags:[NostrTag] = []
     let notesAndNpubs = text.matches(of: /@(npub1|note)([023456789acdefghjklmnpqrstuvwxyz]{58})/)
 //    print(text)
 //    print("notesAndNpubs: \(notesAndNpubs.count)")
@@ -146,12 +146,12 @@ func getMentionsAsTags(_ text:String) -> [NEventTag] {
         // print(match.output.2) // sn0wdenkukak0d9dfczzeacvhkrgz92ak56egt7vdgzn8pv2wfqqhrjdv9
         if match.output.1 == "note1" {
             if let mention = toHex(String(match.output.0.dropFirst(1))) {
-                mentionsAsTags.append(NEventTag(type: "e", otherInformation: mention, "", "mention")) // TODO: ADD RELAY HINT
+                mentionsAsTags.append(NostrTag(["e", mention, "", "mention"])) // TODO: ADD RELAY HINT
             }
         }
         else if match.output.1 == "npub1" {
             if let mention = toHex(String(match.output.0.dropFirst(1))) {
-                mentionsAsTags.append(NEventTag(type: "p", otherInformation: mention)) // TODO: ADD RELAY HINT
+                mentionsAsTags.append(NostrTag(["p", mention])) // TODO: ADD RELAY HINT
             }
         }
     }
@@ -164,14 +164,14 @@ func toHex(_ bech:String) -> String? {
 }
 
 // Takes original tags, adds or inserts new mentioned tags the correct order (NIP-10)
-func nip10OrderedTags(oldTags:[NEventTag], mentionedTags:[NEventTag]) -> [NEventTag] {
+func nip10OrderedTags(oldTags:[NostrTag], mentionedTags:[NostrTag]) -> [NostrTag] {
     if oldTags.count == 0 {
         return mentionedTags
     }
-    var newTags:[NEventTag] = []
+    var newTags:[NostrTag] = []
     
     // Last "E" should always be the reply to be compatible with old clients
-    if (oldTags.filter { $0.type == "e" }.count == 1 && oldTags.filter { $0.type == "e" }.first?.otherInformation[safe: 2] != "mention") {
+    if (oldTags.filter { $0.type == "e" }.count == 1 && oldTags.filter { $0.type == "e" }.first?.tag[safe: 3] != "mention") {
         // so insert before last e
         newTags = mentionedTags + oldTags
         return newTags
@@ -193,7 +193,7 @@ func nip10OrderedTags(oldTags:[NEventTag], mentionedTags:[NEventTag]) -> [NEvent
 }
 
 // Takes a text with mentions, and a list of tags, replaces the mentions with the corresponding index in the tags if found.
-func replaceTagsWithIndexes(_ text:String, tags:[NEventTag], bumpIndex:Bool) -> String {
+func replaceTagsWithIndexes(_ text:String, tags:[NostrTag], bumpIndex:Bool) -> String {
     var newText = text
     let urlMatches = text.matchingStrings(regex:#"@(npub1|note1)([023456789acdefghjklmnpqrstuvwxyz]{58})"#)
     
@@ -240,9 +240,7 @@ func putHashtagsInTags(_ event:NEvent) -> NEvent {
         eventWithHashtags
             .tags
             .append(
-                NEventTag(type: "t",
-                          otherInformation: String(hashtagMatches[index][0].dropFirst())
-                         )
+                NostrTag(["t",String(hashtagMatches[index][0].dropFirst())])
             )
     }
     return eventWithHashtags

@@ -165,7 +165,7 @@ struct NewQuoteRepost: View {
                                 nEvent.content = nEvent.content + "\n--@!^@\(index)@^!@--"
                             }
                             nEvent.content = nEvent.content + "\n\n#[0]"
-                            nEvent.tags.insert(NEventTag.event(otherEventId: quotingEvent.id, type: "mention"), at: 0)
+                            nEvent.tags.insert(NostrTag(["e", quotingEvent.id, "", "mention"]), at: 0)
                             
                             if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
                                 nEvent.content = replaceNsecWithHunter2(nEvent.content)
@@ -262,7 +262,7 @@ struct NewQuoteRepost: View {
                             nEvent.content += "\n\(url)"
                         }
                         nEvent.content = nEvent.content + "\n#[0]"
-                        nEvent.tags.insert(NEventTag.event(otherEventId: quotingEvent.id, type: "mention"), at: 0)
+                        nEvent.tags.insert(NostrTag(["e", quotingEvent.id, "", "mention"]), at: 0)
                         if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
                             nEvent.content = replaceNsecWithHunter2(nEvent.content)
                         }
@@ -288,7 +288,7 @@ struct NewQuoteRepost: View {
             nEvent = applyMentionsNip08(nEvent, bumpIndex: true)
             nEvent = putHashtagsInTags(nEvent)
             nEvent.content = nEvent.content + "\n#[0]"
-            nEvent.tags.insert(NEventTag.event(otherEventId: quotingEvent.id, type: "mention"), at: 0)
+            nEvent.tags.insert(NostrTag(["e", quotingEvent.id, "", "mention"]), at: 0)
             if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
                 nEvent.content = replaceNsecWithHunter2(nEvent.content)
             }

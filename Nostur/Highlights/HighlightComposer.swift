@@ -123,9 +123,9 @@ struct HighlightComposer: View {
         nEvent.createdAt = NTimestamp.init(date: Date())
         nEvent.kind = .highlight
         if let selectedAuthor = selectedAuthor {
-            nEvent.tags.append(NEventTag(type: "p", otherInformation: selectedAuthor.pubkey))
+            nEvent.tags.append(NostrTag(["p", selectedAuthor.pubkey]))
         }
-        nEvent.tags.append(NEventTag(type: "r", otherInformation: highlight.url))
+        nEvent.tags.append(NostrTag(["r", highlight.url]))
         
         if let signedEvent = try? ns.signEvent(nEvent) {
             up.publishNow(signedEvent)

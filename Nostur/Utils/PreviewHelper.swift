@@ -167,7 +167,7 @@ class PreviewEnvironment {
                         event.content = "#[0]"
                         if let firstTag = event.tags.first {
                             if firstTag.type == "e" {
-                                event.tags[0] = NEventTag(type: "e", otherInformation: firstTag.id, "", "mention")
+                                event.tags[0] = NostrTag(["e", firstTag.id, "", "mention"])
                             }
                         }
                     }
