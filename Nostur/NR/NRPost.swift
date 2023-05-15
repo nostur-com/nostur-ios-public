@@ -595,6 +595,16 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var mainEvent:Event {
         DataProvider.shared().viewContext.object(with: event.objectID) as! Event
     }
+    
+    @MainActor public func like() {
+        self.objectWillChange.send()
+        self.liked = true
+    }
+    
+    @MainActor public func unlike() {
+        self.objectWillChange.send()
+        self.liked = false
+    }
 }
 
 struct KindFileMetadata {

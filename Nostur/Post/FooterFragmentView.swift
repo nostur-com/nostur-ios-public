@@ -16,19 +16,7 @@ struct FooterFragmentView: View {
     
     @ObservedObject var nrPost:NRPost
     @State var unpublishLikeId:UUID? = nil
-    @State var liked:Bool = false
-    @State var reposted:Bool = false
-    @State var replied:Bool = false
-    
-    init(nrPost: NRPost) {
-        self.nrPost = nrPost
-        liked = nrPost.liked
-        reposted = nrPost.reposted
-        replied = nrPost.replied
-//        _liked = State(initialValue: nrPost.liked)
-//        _reposted = State(initialValue: nrPost.reposted)
-//        _replied = State(initialValue: nrPost.replied)
-    }
+
     
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
@@ -76,7 +64,7 @@ struct FooterFragmentView: View {
                 Spacer()
                 
                 // LIKE
-                if (nrPost.liked || liked) {
+                if (nrPost.liked) {
                     HStack {
                         Image("LikeIconActive")
                             .foregroundColor(.red)
@@ -90,7 +78,7 @@ struct FooterFragmentView: View {
                         if unpublishLikeId != nil && up.cancel(unpublishLikeId!) {
                             ns.unlikePost(nrPost.mainEvent)
                             unpublishLikeId = nil
-                            liked = false
+                            nrPost.unlike()
                         }
                     }
                 }
@@ -109,7 +97,7 @@ struct FooterFragmentView: View {
                         }
                         if let signedEvent = ns.likePost(nrPost.mainEvent) {
                             unpublishLikeId = up.publish(signedEvent)
-                            liked = true
+                            nrPost.like()
                         }
                     }
                 }
