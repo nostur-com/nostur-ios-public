@@ -10,14 +10,14 @@ import Foundation
 extension String {
     
     private static var regexCache: [String: NSRegularExpression] = [
-        VPostTransformer.videoUrlPattern: try! NSRegularExpression(pattern: VPostTransformer.videoUrlPattern, options: []),
-        VPostTransformer.imageUrlPattern: try! NSRegularExpression(pattern: VPostTransformer.imageUrlPattern, options: []),
-        VPostTransformer.previewImagePlaceholder: try! NSRegularExpression(pattern: VPostTransformer.previewImagePlaceholder, options: []),
-        VPostTransformer.lightningInvoicePattern: try! NSRegularExpression(pattern: VPostTransformer.lightningInvoicePattern, options: []),
-        VPostTransformer.notePattern: try! NSRegularExpression(pattern: VPostTransformer.notePattern, options: []),
-        VPostTransformer.neventPattern: try! NSRegularExpression(pattern: VPostTransformer.neventPattern, options: []),
-        VPostTransformer.nprofilePattern: try! NSRegularExpression(pattern: VPostTransformer.nprofilePattern, options: []),
-        VPostTransformer.otherUrlsPattern: try! NSRegularExpression(pattern: VPostTransformer.otherUrlsPattern, options: []),
+        NRContentElementBuilder.videoUrlPattern: try! NSRegularExpression(pattern: NRContentElementBuilder.videoUrlPattern, options: []),
+        NRContentElementBuilder.imageUrlPattern: try! NSRegularExpression(pattern: NRContentElementBuilder.imageUrlPattern, options: []),
+        NRContentElementBuilder.previewImagePlaceholder: try! NSRegularExpression(pattern: NRContentElementBuilder.previewImagePlaceholder, options: []),
+        NRContentElementBuilder.lightningInvoicePattern: try! NSRegularExpression(pattern: NRContentElementBuilder.lightningInvoicePattern, options: []),
+        NRContentElementBuilder.notePattern: try! NSRegularExpression(pattern: NRContentElementBuilder.notePattern, options: []),
+        NRContentElementBuilder.neventPattern: try! NSRegularExpression(pattern: NRContentElementBuilder.neventPattern, options: []),
+        NRContentElementBuilder.nprofilePattern: try! NSRegularExpression(pattern: NRContentElementBuilder.nprofilePattern, options: []),
+        NRContentElementBuilder.otherUrlsPattern: try! NSRegularExpression(pattern: NRContentElementBuilder.otherUrlsPattern, options: []),
         "^(npub1)([023456789acdefghjklmnpqrstuvwxyz]{58})$": try! NSRegularExpression(pattern: "^(npub1)([023456789acdefghjklmnpqrstuvwxyz]{58})$", options: []),
         #"@(npub1|note1)([023456789acdefghjklmnpqrstuvwxyz]{58})"#: try! NSRegularExpression(pattern: #"@(npub1|note1)([023456789acdefghjklmnpqrstuvwxyz]{58})"#, options: []),
         #"(nsec1)([023456789acdefghjklmnpqrstuvwxyz]{58})"#: try! NSRegularExpression(pattern: #"(nsec1)([023456789acdefghjklmnpqrstuvwxyz]{58})"#, options: []),

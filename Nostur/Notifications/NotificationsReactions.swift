@@ -277,7 +277,7 @@ struct ReactionsForThisNote: View {
         
         guard (missingPubkeys + emptyContactPubkeys).count > 0 else { return }
         print("Fetching  \((missingPubkeys + emptyContactPubkeys).count) missing or empty contacts")
-        SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missingPubkeys + emptyContactPubkeys )))
+        QueuedFetcher.shared.enqueue(pTags:  missingPubkeys + emptyContactPubkeys)
     }
 }
 

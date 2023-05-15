@@ -122,7 +122,7 @@ class QueuedFetcher {
         }
     }
     
-    public func fetch() {
+    private func fetch() {
         fetchSubject.send()
     }
 }
