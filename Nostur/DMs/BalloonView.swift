@@ -33,6 +33,14 @@ struct BalloonView: View {
                     RoundedRectangle(cornerRadius: 16)
                         .fill(isSentByCurrentUser ? Color("AccentColor") : Color.gray)
                 )
+                .background(alignment: isSentByCurrentUser ? .bottomTrailing : .bottomLeading) {
+                    Image(systemName: "moon.fill")
+                        .foregroundColor(isSentByCurrentUser ? Color("AccentColor") : Color.gray)
+                        .scaleEffect(x: isSentByCurrentUser ? 1 : -1)
+                        .rotationEffect(.degrees(isSentByCurrentUser ? 35 : -35))
+                        .offset(x: isSentByCurrentUser ? 10 : -10, y: 0)
+                        .font(.system(size: 25))
+                }
                 .padding(.horizontal, 10)
                 .padding(isSentByCurrentUser ? .leading : .trailing, 50)
             
@@ -68,6 +76,12 @@ func convertToHieroglyphs(text: String) -> String {
 
 struct BalloonView_Previews: PreviewProvider {
     static var previews: some View {
-        BalloonView(message: "Some message", isSentByCurrentUser: true)
+        VStack {
+            BalloonView(message: "Some message \n Longer text blablabl still looks good \n another line yeee", isSentByCurrentUser: true)
+            BalloonView(message: "Some message", isSentByCurrentUser: false)
+            BalloonView(message: "Some message", isSentByCurrentUser: false)
+            BalloonView(message: "Some message", isSentByCurrentUser: true)
+            Spacer()
+        }
     }
 }
