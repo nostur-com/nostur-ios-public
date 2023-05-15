@@ -10,8 +10,7 @@ import CoreData
 
 struct PrivateNotesContainer: View {
     @EnvironmentObject var ns:NosturState
-     
-    
+
     var body: some View {
         let _ = Self._printChanges()
         VStack(spacing:0) {
@@ -109,7 +108,7 @@ struct PrivateNotesView: View {
                 let privateNotesComplete = privateNotesWithoutNRPost.map { pnInfo in
                     return PrivateNoteInfo(
                         note: pnInfo.note,
-                        nrPost: pnInfo.event != nil ? NRPost(event: pnInfo.event!.toBG()!, plainText: true) : nil,
+                        nrPost: pnInfo.event != nil ? NRPost(event: pnInfo.event!.toBG()!) : nil,
                         event: pnInfo.event
                     )
                 }

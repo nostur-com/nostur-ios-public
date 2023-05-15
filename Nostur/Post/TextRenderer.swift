@@ -112,10 +112,10 @@ class TextRenderer { // TEXT things
         var newText = text
 
         // NIP-08, handle #[0] #[1] etc
-        newText = parseTagIndexedMentions(event: event, text: text, plainText: true)
+        newText = parseTagIndexedMentions(event: event, text: text)
 
         // NIP-28 handle nostr:npub1, nostr:nprofile ...
-        newText = parseUserMentions(event: event, text: newText, plainText: true)
+        newText = parseUserMentions(event: event, text: newText)
 
         return newText
     }
