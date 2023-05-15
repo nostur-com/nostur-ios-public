@@ -10,12 +10,11 @@ import SwiftUI
 struct NRContentTextRenderer: View {
     
     let attributedStringWithPs:AttributedStringWithPs
-    let originalText:String
     let fullWidth = false
     @State var text:AttributedString? = nil
     
     var body: some View {
-        Text(text ?? attributedStringWithPs.text)
+        Text(text ?? attributedStringWithPs.output)
             .textSelection(.enabled)
             .multilineTextAlignment(TextAlignment.leading)
             .foregroundColor(.primary)
@@ -29,7 +28,7 @@ struct NRContentTextRenderer: View {
                         return notification.object as! String
                     })
                     .filter({ pubkey in
-                        guard !originalText.isEmpty else { return false }
+                        guard !attributedStringWithPs.input.isEmpty else { return false }
                         guard attributedStringWithPs.pTags.count > 0 else { return false }
                         return self.attributedStringWithPs.pTags.contains(pubkey)
                     })
@@ -37,10 +36,12 @@ struct NRContentTextRenderer: View {
             ) { pubkey in
                 
                 DataProvider.shared().bg.perform {
-                    let reparsed = NRTextParser.shared.parseText(attributedStringWithPs.event, text: originalText)
+                    let reparsed = NRTextParser.shared.parseText(attributedStringWithPs.event, text: attributedStringWithPs.input)
                     DispatchQueue.main.async {
-                        print("Reparsed: \(originalText)")
-                        self.text = reparsed.text
+                        print("Reparsed: \(reparsed.input) ----> \(reparsed.output)")
+                        if self.text != reparsed.output {
+                            self.text = reparsed.output
+                        }
                     }
                 }
             }

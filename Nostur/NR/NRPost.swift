@@ -248,7 +248,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             self.replyingToUsernamesMarkDown = try? AttributedString(markdown: replyingToMarkdown)
         }
         
-        self.renderedText = NRTextParser.shared.parseText(event, text: event.noteTextPrepared).text
+        self.renderedText = NRTextParser.shared.parseText(event, text: event.noteTextPrepared).output
         
         self.bookmarked = isBookmarked()
         self.liked = isLiked()

@@ -47,13 +47,13 @@ class NRTextParser { // TEXT things
             newerTextWithPs.text = Self.replaceHashtagsWithMarkdownLinks(in: newerTextWithPs.text)
             let finalText = try AttributedString(markdown: newerTextWithPs.text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
             
-            let a = AttributedStringWithPs(text: finalText, pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
+            let a = AttributedStringWithPs(input:text, output: finalText, pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
             return a
         }
         catch {
             let finalText = AttributedString(newerTextWithPs.text)
             print(error)
-            let a = AttributedStringWithPs(text: finalText, pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
+            let a = AttributedStringWithPs(input:text, output: finalText, pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
             return a
         }
     }

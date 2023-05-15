@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UIKit
 
 class NRContentElementBuilder {
     
@@ -33,14 +34,14 @@ class NRContentElementBuilder {
                 let nonMatch = (input as NSString).substring(with: nonMatchRange)
                 let matchString = (input as NSString).substring(with: matchRange)
                 
-                result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:nonMatch),nonMatch))
+                result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:nonMatch)))
                 
                 if matchString.matchingStrings(regex: Self.imageUrlPattern).count > 0 {
                     if let url = URL(string: matchString) {
                         result.append(ContentElement.image(url))
                     }
                     else {
-                        result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString), matchString))
+                        result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString)))
                     }
                 }
                 else if matchString.matchingStrings(regex: Self.videoUrlPattern).count > 0 {
@@ -48,7 +49,7 @@ class NRContentElementBuilder {
                         result.append(ContentElement.video(url))
                     }
                     else {
-                        result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString), matchString))
+                        result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString)))
                     }
                 }
                 else if matchString.matchingStrings(regex: Self.otherUrlsPattern).count > 0 {
@@ -57,7 +58,7 @@ class NRContentElementBuilder {
                         linkPreviewUrls.append(url)
                     }
                     else {
-                        result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString), matchString))
+                        result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString)))
                     }
                 }
                 else if matchString.matchingStrings(regex: Self.notePattern).count > 0 {
@@ -79,7 +80,7 @@ class NRContentElementBuilder {
                     }
                     catch {
                         print("problem decoding nevent in event.id: \(event.id)")
-                        result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString), matchString))
+                        result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString)))
                     }
                 }
                 else if matchString.matchingStrings(regex: Self.nprofilePattern).count > 0 {
@@ -90,14 +91,14 @@ class NRContentElementBuilder {
                     }
                     catch {
                         print("problem decoding nevent in profile.pubkey: \(event.id)")
-                        result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString), matchString))
+                        result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString)))
                     }
                 }
                 else if matchString.matchingStrings(regex: Self.lightningInvoicePattern).count > 0 {
                     result.append(ContentElement.lnbc(matchString))
                 }
                 else {
-                    result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString), matchString))
+                    result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString)))
                 }
                 
                 lastMatchEnd = matchRange.location + matchRange.length
@@ -107,7 +108,7 @@ class NRContentElementBuilder {
         let nonMatchRange = NSRange(location: lastMatchEnd, length: input.utf16.count - lastMatchEnd)
         let nonMatch = (input as NSString).substring(with: nonMatchRange)
         
-        result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:nonMatch), nonMatch))
+        result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:nonMatch)))
         return (result, linkPreviewUrls)
     }
     
@@ -122,4 +123,30 @@ class NRContentElementBuilder {
     static let otherUrlsPattern = ###"(?i)(https\:\/\/)[a-zA-Z0-9\-\.]+(?:\.[a-zA-Z]{2,999}+)+([\/\?\=\&\#\%\+\.]\@?[\S]+)*\/?[^\s\)]"### 
     static let pattern = "\(previewImagePlaceholder)|\(imageUrlPattern)|\(lightningInvoicePattern)|\(notePattern)|\(nprofilePattern)|\(neventPattern)|\(videoUrlPattern)|\(otherUrlsPattern)"
     static let regex = try! NSRegularExpression(pattern: pattern)
+}
+
+
+public typealias Ptag = String
+
+enum ContentElement: Hashable {
+//    case rendered(String)
+//    case plain(String)
+    case text(AttributedStringWithPs)
+    case note1(String)
+    case noteHex(String)
+    case lnbc(String)
+    case link(String, URL)
+    case image(URL)
+    case video(URL)
+    case linkPreview(URL)
+    case postPreviewImage(UIImage)
+    case nevent1(ShareableIdentifier)
+    case nprofile1(ShareableIdentifier)
+}
+
+struct AttributedStringWithPs: Hashable {
+    var input:String
+    var output:AttributedString
+    var pTags:[Ptag]
+    var event:Event
 }

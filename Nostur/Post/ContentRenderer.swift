@@ -16,17 +16,14 @@ struct ContentRenderer: View { // VIEW things
     let isDetail:Bool
     let fullWidth:Bool
     let availableWidth:CGFloat
-//    @ObservedObject var event:Event
-    @State var renderedElements:[ContentElement]
-//    @State var subscriptions = Set<AnyCancellable>()
+    let contentElements:[ContentElement]
     
     init(nrPost: NRPost, isDetail:Bool = false, fullWidth:Bool = false, availableWidth:CGFloat) {
         self.isDetail = isDetail
         self.nrPost = nrPost
-//        self.event = nrPost.event
         self.fullWidth = fullWidth
         self.availableWidth = availableWidth
-        _renderedElements = State(initialValue: isDetail ? nrPost.contentElementsDetail : nrPost.contentElements )
+        self.contentElements = isDetail ? nrPost.contentElementsDetail : nrPost.contentElements
     }
     
     @State var f:FullScreenItem?
@@ -34,8 +31,10 @@ struct ContentRenderer: View { // VIEW things
     
     var body: some View {
         VStack(alignment:.leading, spacing:0) {
-            ForEach(renderedElements.indices, id:\.self) { index in
-                switch renderedElements[index] {
+//            Text(contentElements.count.description).background(.yellow)
+//                .padding(.horizontal, 10)
+            ForEach(contentElements.indices, id:\.self) { index in
+                switch contentElements[index] {
                         //                    case .plain(let text):
                         //                        Text(text)
                         //                            .textSelection(.enabled)
@@ -63,12 +62,12 @@ struct ContentRenderer: View { // VIEW things
                             .padding(.vertical, 5)
                             .padding(.horizontal, fullWidth ? 10 : 0)
                         //                            .frame(maxWidth: .infinity, maxHeight:400, alignment: .leading)
-                    case .text(let attributedStringWithPs, let oringalText):
+                    case .text(let attributedStringWithPs):
                         // BROKEN SHIT
                         //                            Text(string)
                         //                            .fixedSize(horizontal: false, vertical: true)
                         //                            .overlay(MarkdownText(string))
-                        NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, originalText: oringalText)
+                        NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs)
                         //                            .padding(0)
                         //                            .frame(maxWidth: .infinity)
                         //                            .padding(.vertical, 5)
@@ -97,59 +96,6 @@ struct ContentRenderer: View { // VIEW things
                         EmptyView()
                 }
             }
-        }
-        //        .frame(maxWidth: .infinity, maxHeight:450, alignment: .leading)
-        .onAppear {
-            // TODO FIX ME....
-//            guard !nrPost.event.isPreview else { return }
-//            event.objectWillChange
-//                .sink {
-//                    
-////                    let followingKeys = NosturState.shared.followingPublicKeys
-//                    let context = DataProvider.shared().bg
-//                    context.perform {
-//                        let transformer = VPostTransformer.bg
-//                     
-//                        guard let privateEvent = context.object(with: event.objectID) as? Event else { return }
-//                        let renderedElements = transformer.renderElements(privateEvent).0
-//                        
-//                        let firstQuote = renderedElements.first(where: { element in
-//                            if case .note1 = element {
-//                                return true
-//                            }
-//                            return false
-//                        })
-//                        
-//                        var renderedForRow:[MarkdownElement] {
-//                            var gotVideo = false
-//                            return renderedElements
-//                                .filter { element in
-//                                    if case .video = element {
-//                                        if (!gotVideo) {
-//                                            gotVideo = true
-//                                            return true
-//                                        }
-//                                        return false
-//                                    }
-//                                    if case .note1 = element {
-//                                        return element == firstQuote
-//                                    }
-//                                    else {
-//                                        return true
-//                                    }
-//                                }
-//                        }
-//                                                
-//                        DispatchQueue.main.async {
-//                            self.renderedElements = isDetail ? renderedElements : renderedForRow
-//                        }
-//                    }
-////                    DataProvider.shared().container.performBackgroundTask { context in
-////
-////                    }
-//    
-//                }
-//                .store(in: &subscriptions)
         }
     }
 }
