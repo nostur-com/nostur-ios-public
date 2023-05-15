@@ -151,8 +151,9 @@ struct PostAndParent: View {
                             try? await Task.sleep(for: .seconds(4))
                             fetchEventFromRelayHint(replyToId, fastTags: nrPost.fastTags)
                         }
-                        EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
-                        req(RM.getEvent(id: replyToId))
+                        EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.001")
+                        QueuedFetcher.shared.enqueue(id: replyToId)
+//                        req(RM.getEvent(id: replyToId))
                     }
                     .onDisappear {
                         timerTask?.cancel()
@@ -300,7 +301,7 @@ struct PostAndParent: View {
                             PostRowDeletable(nrPost: nrPost, hideFooter: false, isReply:true)
                                 .onAppear {
                                     if (nrPost.missingPs.count > 0) {
-                                        EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
+                                        EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.002")
                                         QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
                                     }
                                 }
@@ -329,7 +330,7 @@ struct PostAndParent: View {
             .padding(.vertical, 10)
             .onAppear {
                 if (nrPost.missingPs.count > 0) {
-                    EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
+                    EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.003")
                     QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
                 }
 

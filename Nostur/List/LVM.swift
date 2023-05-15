@@ -271,7 +271,7 @@ class LVM: NSObject, ObservableObject {
     func fetchParents(_ danglers:[NRPost]) {
         danglers.forEach { nrPost in
             // TODO: FIXME
-            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
+            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "LVM.001")
         }
         
         let danglingFetchTask = ReqTask(
@@ -327,7 +327,7 @@ class LVM: NSObject, ObservableObject {
     func fetchRelated(_ recentNRPosts:ArraySlice<NRPost>) {
         let ids = recentNRPosts.map { $0.id }.compactMap { $0 }
         recentNRPosts.map { $0.event }.forEach { event in
-            EventRelationsQueue.shared.addAwaitingEvent(event)
+            EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "LVM.002")
         }
         req(RM.getEventReferences(ids: ids, subscriptionId: "RELATED-"+UUID().uuidString))
         print("Skip render and fetch related of \(ids.joined(separator: ",")) first.")
@@ -931,7 +931,7 @@ extension LVM {
             }
             eventsWithMissingContacts.forEach { event in
                 //TODO: STILL NEED THIS?? OR IN NRPOST IS ENOUGH?
-                EventRelationsQueue.shared.addAwaitingEvent(event)
+                EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "LVM.003")
             }
             print("added \(eventsWithMissingContacts.count) events to await for missing contacts \((missingPubkeys + emptyContactPubkeys).count) (total)")
             QueuedFetcher.shared.enqueue(pTags: missingPubkeys + emptyContactPubkeys)

@@ -55,8 +55,8 @@ struct NoteRow: View {
             // CASE - We need to fetch it
             else if nrPost.isRepost, let firstQuoteId = nrPost.firstQuoteId {
                 CenteredProgressView().onAppear {
-                    EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
-                    req(RM.getEvent(id: firstQuoteId))
+                    EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NoteRow.001")
+                    QueuedFetcher.shared.enqueue(id: firstQuoteId)
                 }
             }
             else { // IS NOT A REPOST

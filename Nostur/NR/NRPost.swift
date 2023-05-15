@@ -178,7 +178,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             self._contact = NRContact(contact: contact)
         }
         else {
-            EventRelationsQueue.shared.addAwaitingEvent(event); isAwaiting = true
+            EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.001"); isAwaiting = true
         }
         
         let nrContacts = event.contacts_.map { NRContact(contact: $0) }
@@ -204,7 +204,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         }
         self.missingPs = missingPs
         if !isAwaiting && self.missingPs.count > 0 {
-            EventRelationsQueue.shared.addAwaitingEvent(event); isAwaiting = true
+            EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.002"); isAwaiting = true
         }
         
         self.replyToId = event.replyToId
@@ -212,7 +212,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             self.replyTo = NRPost(event: replyTo)
         }
         else if !isAwaiting && event.replyToId != nil {
-            EventRelationsQueue.shared.addAwaitingEvent(event); isAwaiting = true
+            EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.003"); isAwaiting = true
         }
         
         self.replyToRootId = event.replyToRootId
@@ -220,7 +220,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             self.replyToRoot = NRPost(event: replyToRoot)
         }
         else if !isAwaiting && event.replyToRootId != nil {
-            EventRelationsQueue.shared.addAwaitingEvent(event); isAwaiting = true
+            EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.004"); isAwaiting = true
         }
         
         self.firstQuoteId = event.firstQuoteId
@@ -228,7 +228,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             self.firstQuote = NRPost(event: firstQuote)
         }
         else if !isAwaiting && event.firstQuoteId != nil {
-            EventRelationsQueue.shared.addAwaitingEvent(event); isAwaiting = true
+            EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.005"); isAwaiting = true
         }
         
         if event.kind == 9802 {

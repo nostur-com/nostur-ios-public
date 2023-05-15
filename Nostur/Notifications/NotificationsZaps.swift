@@ -284,7 +284,7 @@ struct ProfileZap: View {
             }
             .onAppear {
                 if (zapFrom.contact_ == nil || zapFrom.contact_?.metadata_created_at == 0) {
-                    EventRelationsQueue.shared.addAwaitingEvent(zapFrom)
+                    EventRelationsQueue.shared.addAwaitingEvent(zapFrom, debugInfo: "NoteZaps.002")
                     QueuedFetcher.shared.enqueue(pTag: zapFrom.pubkey)
                 }
             }

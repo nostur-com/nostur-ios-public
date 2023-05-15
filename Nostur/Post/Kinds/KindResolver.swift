@@ -36,7 +36,7 @@ struct KindResolver: View {
             
             if nrPost.missingPs.count > 0 {
                 // TODO: NOTIFICATIONIZED UPDATE
-                EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
+                EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "KindResolver.001")
                 QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
                 print("🔴🔴 NoteRow.onAppear fetching \(nrPost.missingPs.count) missing contacts (event.pubkey or event.pTags)")
             }

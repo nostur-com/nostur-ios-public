@@ -24,7 +24,7 @@ struct NoteHeaderView: View {
             else {
                 PlaceholderPostHeader(nrPost: nrPost, singleLine: singleLine)
                     .onAppear {
-                        EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
+                        EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NoteHeaderView.001")
                         QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
                     }
                     .onDisappear {
@@ -107,7 +107,7 @@ struct PostHeader: View {
         }
         .onAppear {
             if contact.metadata_created_at == 0 {
-                EventRelationsQueue.shared.addAwaitingContact(contact.contact)
+                EventRelationsQueue.shared.addAwaitingContact(contact.contact, debugInfo: "NoteHeaderView.001")
                 QueuedFetcher.shared.enqueue(pTag: contact.pubkey)
             }
         }
