@@ -65,14 +65,14 @@ class EventRelationsQueue {
         if event.managedObjectContext == ctx {
             ctx.perform {
                 self.waitingEvents.insert(event)
-                print("🟢🟢🟢 addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo)")
+                print("🟢🟢🟢 addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
             }
         }
         else {
             ctx.perform {
                 guard let privateEvent = self.ctx.object(with: event.objectID) as? Event else { return }
                 self.waitingEvents.insert(privateEvent)
-                print("🟢🟢🟢🔴🔴 WRONG CONTEXT: addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo)")
+                print("🟢🟢🟢🔴🔴 WRONG CONTEXT: addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
             }
         }
     }
@@ -103,14 +103,14 @@ class EventRelationsQueue {
         if contact.managedObjectContext == ctx {
             ctx.perform {
                 self.waitingContacts.insert(contact)
-                print("🟢🟢🟢 addAwaitingContact. now in queue: \(self.waitingContacts.count) -- \(debugInfo)")
+                print("🟢🟢🟢 addAwaitingContact. now in queue: \(self.waitingContacts.count) -- \(debugInfo ?? "")")
             }
         }
         else {
             ctx.perform {
                 guard let privateContact = self.ctx.object(with: contact.objectID) as? Contact else { return }
                 self.waitingContacts.insert(privateContact)
-                print("🟢🟢🟢 addAwaitingContact. now in queue: \(self.waitingContacts.count) -- \(debugInfo)")
+                print("🟢🟢🟢 addAwaitingContact. now in queue: \(self.waitingContacts.count) -- \(debugInfo ?? "")")
             }
         }
     }
