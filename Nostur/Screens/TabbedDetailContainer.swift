@@ -77,6 +77,8 @@ struct NosturTabButton: View {
                     }
             }
             Text(label)
+                .lineLimit(1)
+                .frame(maxWidth: 150)
         }
         .padding(.trailing, 23)
         .padding(.vertical, 10)
