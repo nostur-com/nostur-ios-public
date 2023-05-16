@@ -197,7 +197,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 return contact.pubkey
             }
             return nil
-        })
+        }) + [event.pubkey]
         event.fastPs.forEach { (tag, pubkey, hint) in
             if !eventContactPs.contains(pubkey) {
                 missingPs.append(pubkey)
@@ -205,14 +205,14 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         }
         self.missingPs = missingPs
         if !isAwaiting && self.missingPs.count > 0 {
-            EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.002"); isAwaiting = true
+            EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.002 - missingPs: \(missingPs.count)"); isAwaiting = true
         }
         
         self.replyToId = event.replyToId
         if withReplyTo, let replyTo = event.replyTo {
             self.replyTo = NRPost(event: replyTo)
         }
-        else if !isAwaiting && event.replyToId != nil {
+        else if !isAwaiting && withReplyTo && event.replyToId != nil {
             EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.003"); isAwaiting = true
         }
         
@@ -220,7 +220,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         if withReplyTo, let replyToRoot = event.replyToRoot {
             self.replyToRoot = NRPost(event: replyToRoot)
         }
-        else if !isAwaiting && event.replyToRootId != nil {
+        else if !isAwaiting && withReplyTo && event.replyToRootId != nil {
             EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.004"); isAwaiting = true
         }
         
@@ -346,7 +346,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         // Don't listen if there is no need to listen (performance?)
         
         if missingPs.count > 0 {
-            replyingToListener()
+            contactSavedListener()
         }
         
         if firstQuoteId != nil {
@@ -420,8 +420,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
     
     // For rerendering ReplyingToFragment, or setting .contact
-    private func replyingToListener() {
+    // Or Rebuilding content elements for mentions in text
+    private func contactSavedListener() {
 
+        // Rerender ReplyingToFragment when the new contact is saved (only if we replyToId is set)
+        // Rerender content elements also for mentions in text
         receiveNotification(.contactSaved)
             .map({ notification in
                 return notification.object as! Ptag
@@ -432,10 +435,14 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
             .sink { [weak self] pubkey in
                 guard let self = self else { return }
-                self.rerenderReplyingToFragment()
+                if self.replyToId != nil {
+                    self.rerenderReplyingToFragment()
+                }
+                self.rebuildContentElements()
             }
             .store(in: &subscriptions)
-        
+       
+        // Remove from missingPs so we don't fetch again at any .onAppear
         receiveNotification(.contactSaved)
             .map({ notification in
                 return notification.object as! Ptag
@@ -446,10 +453,12 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             .debounce(for: .seconds(1), scheduler: RunLoop.main)
             .sink { [weak self] pubkey in
                 guard let self = self else { return }
+                self.objectWillChange.send() // Need to update the views or they still have the old .missingPs
                 self.missingPs.removeAll(where: { $0 == pubkey } )
             }
             .store(in: &subscriptions)
         
+        // Create self.contact = nrContact
         receiveNotification(.contactSaved)
             .map({ notification in
                 return notification.object as! Ptag
@@ -466,12 +475,31 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                     DispatchQueue.main.async {
                         self?.objectWillChange.send()
                         self?.contact = nrContact
+                        self?.missingPs.removeAll(where: { $0 == pubkey } )
                     }
                 }
             }
             .store(in: &subscriptions)
     }
+
     
+    private func rebuildContentElements() {
+        DataProvider.shared().bg.perform { [weak self] in
+            guard let self = self else { return }
+            
+            let (contentElementsDetail, _) = NRContentElementBuilder.shared.buildElements(event)
+            let (contentElements, _) = filteredForPreview(contentElementsDetail)
+            
+            DispatchQueue.main.async {
+                // self.objectWillChange.send() // Not needed? because this is only for things not on screen yet
+                // for on screen we already use .onReceive
+                // if it doens't work we need to change let nrPost:NRPost to @ObserverdObject var nrPost:NRPost on ContentRenderer
+                // and enable self.objectWillChange.send() here.
+                self.contentElementsDetail = contentElementsDetail
+                self.contentElements = contentElements
+            }
+        }
+    }
     private func rerenderReplyingToFragment() {
         DataProvider.shared().bg.perform { [weak self] in
             guard let self = self else { return }
