@@ -71,13 +71,7 @@ class NotificationsManager: ObservableObject {
     
     init() {
         startTimer()
-        
-        // Don't check now, better give some time for relays to respond
-//        checkForNewPosts()
-//        checkForNewReactions()
-//        checkForNewZaps()
-//        checkForDMs()
-        
+                
         receiveNotification(.activeAccountChanged)
             .sink { _ in
                 self.unreadMentions = 0
@@ -128,18 +122,7 @@ class NotificationsManager: ObservableObject {
         
         let ago = since.agoString
         
-        SocketPool
-            .shared
-            .sendMessage(
-                ClientMessage(
-                    type: .REQ,
-                    message:
-                        RequestMessage
-                        .getMentions(
-                            pubkeys: [ns.activeAccountPublicKey], subscriptionId: "Notifications-CATCHUP-\(ago)", since: sinceNTimestamp)
-                )
-                , subscriptionId: "Notifications-CATCHUP-\(ago)"
-            )
+        req(RM.getMentions(pubkeys: [ns.activeAccountPublicKey], subscriptionId: "Notifications-CATCHUP-\(ago)", since: sinceNTimestamp))
     }
     
     func checkForNewPosts() {

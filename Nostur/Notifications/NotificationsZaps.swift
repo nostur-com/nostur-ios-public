@@ -49,7 +49,7 @@ struct NotificationsZaps: View {
                 ForEach(zapsForMeDeduplicated) { zapInfo in
                     VStack {
                         if let nrPost = zapInfo.zappedEventNRPost {
-                            PostZap(nrPost: nrPost, posts:fl.events)
+                            PostZap(nrPost: nrPost, zaps:fl.events)
                         }
                         else {
                             if let zapFrom = zapInfo.zap.zapFromRequest {
@@ -214,7 +214,7 @@ struct NotificationsZaps: View {
 struct PostZap: View {
     let er:ExchangeRateModel = .shared // Not Observed for performance
     @ObservedObject var nrPost:NRPost
-    var posts:[Event]
+    var zaps:[Event]
     
     var body: some View {
         HStack(alignment: .top) {
@@ -235,7 +235,7 @@ struct PostZap: View {
             VStack(alignment:.leading, spacing: 3) {
                 Group {
                     ZapsForThisNote(
-                        zaps: posts.filter {
+                        zaps: zaps.filter {
                             $0.zappedEventId == nrPost.id
                         })
                     NoteMinimalContentView(nrPost: nrPost, lineLimit: 3)

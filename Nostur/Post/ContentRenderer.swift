@@ -31,69 +31,58 @@ struct ContentRenderer: View { // VIEW things
     
     var body: some View {
         VStack(alignment:.leading, spacing:0) {
-//            Text(contentElements.count.description).background(.yellow)
-//                .padding(.horizontal, 10)
             ForEach(contentElements.indices, id:\.self) { index in
                 switch contentElements[index] {
-                        //                    case .plain(let text):
-                        //                        Text(text)
-                        //                            .textSelection(.enabled)
-                        //                            .multilineTextAlignment(.leading)
-                        //                            .accentColor(Color("AccentColor"))
-                        //                            .tint(Color("AccentColor"))
-                        //                            .lineSpacing(3)
-                    case .nevent1(let identifier):
-                        NEventView(identifier: identifier)
-                    case .nprofile1(let identifier):
-                        NProfileView(identifier: identifier)
-                    case .note1(let noteId):
-                        if let noteHex = hex(noteId) {
-                            QuoteById(id: noteHex)
-                                .padding(.vertical, 5)
-                                .padding(.horizontal, fullWidth ? 10 : 0)
-                        }
-                        else {
-                            let _ = print("🔴🔴🔴🔴 Problem converting \(noteId) to hex")
-                            EmptyView()
-                        }
-                        //                            .frame(maxWidth: .infinity, maxHeight:400, alignment: .leading)
-                    case .noteHex(let hex):
-                        QuoteById(id: hex)
+                case .nevent1(let identifier):
+                    NEventView(identifier: identifier)
+                case .nprofile1(let identifier):
+                    NProfileView(identifier: identifier)
+                case .note1(let noteId):
+                    if let noteHex = hex(noteId) {
+                        QuoteById(id: noteHex)
                             .padding(.vertical, 5)
                             .padding(.horizontal, fullWidth ? 10 : 0)
-                        //                            .frame(maxWidth: .infinity, maxHeight:400, alignment: .leading)
-                    case .text(let attributedStringWithPs):
-                        // BROKEN SHIT
-                        //                            Text(string)
-                        //                            .fixedSize(horizontal: false, vertical: true)
-                        //                            .overlay(MarkdownText(string))
-                        NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs)
-                        //                            .padding(0)
-                        //                            .frame(maxWidth: .infinity)
-                        //                            .padding(.vertical, 5)
-                        //                                                    .frame(maxWidth: .infinity, alignment: .leading)
-                    case .lnbc(let text):
-                        LightningInvoice(invoice: text)
-                            .padding(.horizontal, fullWidth ? 10 : 0)
-                    case .video(let url):
-                    SingleVideoViewer(url: url, pubkey: nrPost.pubkey, videoWidth: availableWidth, isFollowing:nrPost.contact?.following ?? false)
-                            .padding(.vertical, 5)
-                    case .image(let url):
-                    SingleMediaViewer(url: url, pubkey: nrPost.pubkey, imageWidth: availableWidth, isFollowing: nrPost.contact?.following ?? false, fullWidth: fullWidth)
-                            .padding(.vertical, 5)
-                    case .linkPreview(let url):
-                        // TODO: do no link preview if restrictAutoDownload...
-                        LinkPreviewView(url: url)
-                            .padding(.horizontal, fullWidth ? 10 : 0)
-                            .padding(.vertical, 5)
-                    case .postPreviewImage(let uiImage):
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(maxWidth: 600)
-                            .padding(.top, 10)
-                    default:
+                    }
+                    else {
+                        let _ = print("🔴🔴🔴🔴 Problem converting \(noteId) to hex")
                         EmptyView()
+                    }
+                case .noteHex(let hex):
+                    QuoteById(id: hex)
+                        .padding(.vertical, 5)
+                        .padding(.horizontal, fullWidth ? 10 : 0)
+                case .text(let attributedStringWithPs):
+                    // BROKEN SHIT
+                    //                            Text(string)
+                    //                            .fixedSize(horizontal: false, vertical: true)
+                    //                            .overlay(MarkdownText(string))
+                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs)
+                    //                            .padding(0)
+                    //                            .frame(maxWidth: .infinity)
+                    //                            .padding(.vertical, 5)
+                    //                                                    .frame(maxWidth: .infinity, alignment: .leading)
+                case .lnbc(let text):
+                    LightningInvoice(invoice: text)
+                        .padding(.horizontal, fullWidth ? 10 : 0)
+                case .video(let url):
+                    SingleVideoViewer(url: url, pubkey: nrPost.pubkey, videoWidth: availableWidth, isFollowing:nrPost.contact?.following ?? false)
+                        .padding(.vertical, 5)
+                case .image(let url):
+                    SingleMediaViewer(url: url, pubkey: nrPost.pubkey, imageWidth: availableWidth, isFollowing: nrPost.contact?.following ?? false, fullWidth: fullWidth)
+                        .padding(.vertical, 5)
+                case .linkPreview(let url):
+                    // TODO: do no link preview if restrictAutoDownload...
+                    LinkPreviewView(url: url)
+                        .padding(.horizontal, fullWidth ? 10 : 0)
+                        .padding(.vertical, 5)
+                case .postPreviewImage(let uiImage):
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: 600)
+                        .padding(.top, 10)
+                default:
+                    EmptyView()
                 }
             }
         }
@@ -145,10 +134,10 @@ struct QuoteById: View {
                     Color.clear
                         .frame(height: 150)
                         .task {
-    //                        let followingKeys = NosturState.shared.followingPublicKeys
-    //                        DataProvider.shared().container.performBackgroundTask { context in
+                            //                        let followingKeys = NosturState.shared.followingPublicKeys
+                            //                        DataProvider.shared().container.performBackgroundTask { context in
                             DataProvider.shared().bg.perform {
-    //                            let transformer = VPostTransformer.bg
+                                //                            let transformer = VPostTransformer.bg
                                 if let eventBG = event.toBG() {
                                     let nrPost = NRPost(event: eventBG)
                                     
