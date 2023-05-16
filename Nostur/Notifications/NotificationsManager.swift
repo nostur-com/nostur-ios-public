@@ -96,19 +96,12 @@ class NotificationsManager: ObservableObject {
     func relayCheckNewestNotifications() {
         guard ns.account != nil else { return }
         guard ns.activeAccountPublicKey != "" else { return }
-        
-        SocketPool
-            .shared
-            .sendMessage(
-                ClientMessage(
-                    type: .REQ,
-                    message:
-                        RequestMessage
-                        .getMentions(
-                            pubkeys: [ns.activeAccountPublicKey], subscriptionId: "Notifications")
-                )
-                , subscriptionId: "Notifications"
-            )
+        let calendar = Calendar.current
+        let ago = calendar.date(byAdding: .minute, value: -1, to: Date())!
+        let sinceNTimestamp = NTimestamp(date: ago)
+        req(RM.getMentions(pubkeys: [ns.activeAccountPublicKey],
+                           subscriptionId: "Notifications", since: sinceNTimestamp),
+            activeSubscriptionId: "Notifications")
     }
     
     func relayCheckSinceNotifications() {
