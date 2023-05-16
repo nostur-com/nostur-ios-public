@@ -537,7 +537,7 @@ class LVM: NSObject, ObservableObject {
             let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 4)  // 4 hours  ago
 
             // Continue from first (newest) on screen?
-            let since = (self.lvmState.nrPostLeafs.first?.created_at ?? hoursAgo) - (60 * 15) // (take 15 minutes earlier to not mis out of sync posts)
+            let since = (self.lvmState.nrPostLeafs.first?.created_at ?? hoursAgo) - (60 * 5) // (take 5 minutes earlier to not mis out of sync posts)
             let ago = Date(timeIntervalSince1970: Double(since)).agoString
 
             DispatchQueue.main.async {
