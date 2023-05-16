@@ -126,6 +126,10 @@ final class SocketPool: ObservableObject {
     }
     
     func sendMessage(_ message:ClientMessage, subscriptionId:String? = nil) {
+        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+            print("Canvas.sendMessage: \(message.type) \(message.message)")
+            return
+        }
         if (message.type == .REQ) {
             //            let read = sockets.values.filter { $0.read == true }.count
             //            if read > 0 {
