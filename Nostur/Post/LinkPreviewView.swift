@@ -17,7 +17,7 @@ struct LinkPreviewView: View {
     var body: some View {
         Group {
             HStack(alignment: .center, spacing:0) {
-                if let image = tags["image"] {
+                if let image = tags["image"], image.prefix(7) != "http://" {
                     LazyImage(
                         request: ImageRequest(url: URL(string:image),
                                               processors: [.resize(height: DIMENSIONS.PREVIEW_HEIGHT, upscale: true)],
@@ -55,6 +55,7 @@ struct LinkPreviewView: View {
             UIApplication.shared.open(url)
         }
         .task {
+            guard url.absoluteString.prefix(7) != "http://" else { return }
             if let tags = LinkPreviewCache.shared.retrieveObject(at: url) {
                 self.tags = tags
             }

@@ -228,7 +228,7 @@ struct SmoothList: UIViewControllerRepresentable {
                     })
                 )
                 
-                for url in item.linkPreviewURLs {
+                for url in item.linkPreviewURLs.filter({ $0.absoluteString.prefix(7) != "http://" }) {
                     fetchMetaTags(url: url) { result in
                         do {
                             let tags = try result.get()
@@ -310,7 +310,7 @@ struct SmoothList: UIViewControllerRepresentable {
                     })
                 )
                 
-                for url in item.linkPreviewURLs {
+                for url in item.linkPreviewURLs.filter({ $0.absoluteString.prefix(7) != "http://" }) {
                     if let tags = LinkPreviewCache.shared.retrieveObject(at: url) {
                         if let image = tags["image"], image.prefix(7) != "http://" {
                             imageRequests.append(ImageRequest(url: URL(string:image),
