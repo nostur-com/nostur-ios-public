@@ -223,10 +223,11 @@ class LVM: NSObject, ObservableObject {
         }
     }
     
-    func safeInsert(_ nrPosts:[NRPost]) {
+    func safeInsert(_ nrPosts:[NRPost]) -> [NRPost] {
         let onScreenIds = self.lvmState.nrPostLeafs.map { $0.id }
         let onlyNew = nrPosts.filter { !onScreenIds.contains($0.id) }
         self.lvmState.nrPostLeafs.insert(contentsOf: onlyNew, at: 0)
+        return onlyNew
     }
     
     func putNewThreadsOnScreen(_ newLeafThreadsWithDuplicates:[NRPost]) {
@@ -251,20 +252,32 @@ class LVM: NSObject, ObservableObject {
             let dropCount = min(newLeafThreads.count,dropLimit)
             let newNRPostLeafs = newLeafThreads + self.lvmState.nrPostLeafs.dropLast(dropCount)
             DispatchQueue.main.async {
-                self.safeInsert(newNRPostLeafs)
+                let inserted = self.safeInsert(newNRPostLeafs)
+                self.fetchAllMissingPs(inserted)
             }
             print("Removed \(dropCount) from the end")
         }
         else {
             DispatchQueue.main.async {
-                self.safeInsert(newLeafThreads)
+                let inserted = self.safeInsert(newLeafThreads)
+                self.fetchAllMissingPs(inserted)
             }
+            self.fetchAllMissingPs(newLeafThreads)
         }
         
         if !self.lvmState.isAtTop || !SettingsStore.shared.autoScroll {
             DispatchQueue.main.async {
                 self.lvmCounter.count += addedCount
             }
+        }
+    }
+    
+    func fetchAllMissingPs(_ posts:[NRPost]) {
+        DispatchQueue.global().async {
+            let missingPs = posts.reduce([Ptag]()) { partialResult, nrPost in
+                return partialResult + nrPost.missingPs
+            }
+            QueuedFetcher.shared.enqueue(pTags: missingPs)
         }
     }
     
