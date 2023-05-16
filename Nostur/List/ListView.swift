@@ -41,7 +41,15 @@ struct ListView: View {
                            fullWidthImages: $settings.fullWidthImages,
                            dim: dim,
                            onRowAppeared: { (sectionIndex, rowIndex) in
-                    
+                    guard vmState.state != .AWAITING_FIRST_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+                    guard vmState.state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+                    guard vmState.state != .SWITCHING_ACCOUNT else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
+                    //                        print("\(nrPost.id) index: \(vmState.nrPostLeafs.firstIndex(of: nrPost) ?? -1)")
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        if let lastAppearedId = vmState.nrPostLeafs[safe: rowIndex]?.id {
+                            vm.lastAppearedSubject.send(lastAppearedId)
+                        }
+                    }
                 },
                            onFinishedScrolling: { (isAtTop, indexPaths) in
                     
