@@ -28,10 +28,10 @@ struct ListView: View {
     }
     
     var body: some View {
-//        let _ = Self._printChanges()
+        //        let _ = Self._printChanges()
         VStack(spacing: 0) {
             if vmState.nrPostLeafs.count > 0 {
-//                Text("\(vmState.state.rawValue) | nrPosts: \(vmState.nrPostLeafs.count) | threadValue: \(vmState.nrPostLeafs.reduce(0, { $0 + $1.threadPostsCount } ) )")
+                //                Text("\(vmState.state.rawValue) | nrPosts: \(vmState.nrPostLeafs.count) | threadValue: \(vmState.nrPostLeafs.reduce(0, { $0 + $1.threadPostsCount } ) )")
                 SmoothList(needsRefresh: $needsRefresh,
                            needsFullReload: $needsFullReload,
                            needsScrollToTop: $needsScrollToTop,
@@ -40,31 +40,42 @@ struct ListView: View {
                            autoScroll: $settings.autoScroll,
                            fullWidthImages: $settings.fullWidthImages,
                            dim: dim,
-                           onRowAppeared: { (_, rowIndex, nrPost) in
+                           onRowAppeared: { (sectionIndex, rowIndex) in
+                    
+                },
+                           onFinishedScrolling: { (isAtTop, indexPaths) in
+                    
                     guard vmState.state != .AWAITING_FIRST_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
                     guard vmState.state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
                     guard vmState.state != .SWITCHING_ACCOUNT else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
                     //                        print("\(nrPost.id) index: \(vmState.nrPostLeafs.firstIndex(of: nrPost) ?? -1)")
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        if rowIndex == 0 || rowIndex == 1 { // not sure why just index 0 doesn't work 1% of the time
-                            vm.lvmCounter.count = 0
+                        if let firstIndex = indexPaths.min(by: { $0.row < $1.row }) {
+                            if firstIndex.row < 2 { // not sure why just index 0 doesn't work 1% of the time
+                                vm.lvmCounter.count = 0
+                            }
+                            
+                            if let lastAppearedId = vmState.nrPostLeafs[safe: firstIndex.row]?.id {
+                                vm.lastAppearedSubject.send(lastAppearedId)
+                            }
                         }
-                    }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-                        vm.lastAppearedSubject.send(nrPost.id)
-                    }
-                },
-                           onFinishedScrolling: { (isAtTop, indexPaths) in
-                    guard isAtTop != vmState.isAtTop else { return }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        
+                        guard isAtTop != vmState.isAtTop else { return }
                         self.vmState.isAtTop = isAtTop
-                        if indexPaths.contains(where: { $0.row == 0 }) {
-                            vm.lvmCounter.count = 0
-                        }
-//                        else if isAtTop {
+                    }
+//                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+//                        vm.lastAppearedSubject.send(nrPost.id)
+//                    }
+//
+                    
+                    
+//                    guard isAtTop != vmState.isAtTop else { return }
+//                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+//                        self.vmState.isAtTop = isAtTop
+//                        if indexPaths.contains(where: { $0.row == 0 }) {
 //                            vm.lvmCounter.count = 0
 //                        }
-                    }
+//                    }
                 })
                 .onChange(of: vmState.nrPostLeafs) { _ in
                     needsRefresh = true
@@ -113,7 +124,7 @@ struct ListView: View {
             }
         }
         .onAppear {
-//            vmState.viewIsVisible = (selectedSubTab != "List" && selectedSubTab == vm.id) || (selectedSubTab == "List" && selectedListId == vm.subscriptionId)
+            //            vmState.viewIsVisible = (selectedSubTab != "List" && selectedSubTab == vm.id) || (selectedSubTab == "List" && selectedListId == vm.subscriptionId)
             vmState.viewIsVisible = true
         }
         .onDisappear {
@@ -123,31 +134,31 @@ struct ListView: View {
     }
     
     func getRestoreScrollIndex() -> Int? {
-        //        print("🟢🟢 restoreScrollPosition:  \(vmState.state.rawValue) ")
+        print("🟢🟢 restoreScrollPosition:  \(vmState.state.rawValue) ")
         //        guard vm.state == .AWAITING_RESTORE_SCROLL || vm.state == .SWITCHING_ACCOUNT else { return } // Onlyif we didn't restore yet (so not like nav to post and back)
         guard vmState.state == .AWAITING_RESTORE_SCROLL else { return nil } // Onlyif we didn't restore yet (so not like nav to post and back)
         if let lastAppearedId = self.vmState.restoreScrollToId {
-            //            print("🟢🟢🟢 proxy.scrollTo \(lastAppeared.id)  --- \(vmState.nrPostLeafs.count)  ")
+            print("🟢🟢🟢 proxy.scrollTo \(lastAppearedId)  --- \(vmState.nrPostLeafs.count)  ")
             
             //            print(self.vmState.nrPosts[safe: 0]?.items.flatMap { [$0.id] + $0.parentPosts.map { $0.id } })
             vmState.state = .COMPLETED_RESTORED_FETCH_WITH_SCROLL
             if let index = vmState.nrPostLeafs.firstIndex(where: { $0.id == lastAppearedId }) {
-//                                print("🟢🟢🟢 should scroll to leaf index: \(index)")
+                print("🟢🟢🟢 should scroll to leaf index: \(index)")
                 return index
             }
             // or maybe the leaf is now a parent?
             else if let index = vmState.nrPostLeafs.firstIndex(where: { $0.parentPosts.map { $0.id }.contains(lastAppearedId) }) {
                 //            else if let index = vmState.nrPostLeafs.firstIndex(where: { $0.parentPosts.map { $0.id }.contains(lastAppeared.id) }) {
-//                                print("🟢🟢🟢 should scroll to leaf-to-parent index: \(index)")
+                print("🟢🟢🟢 should scroll to leaf-to-parent index: \(index)")
                 return index
             }
             else {
-//                                print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 dunno where to scroll to 1")
+                print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 dunno where to scroll to 1")
                 return nil
             }
         }
         else {
-//                        print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 dunno where to scroll to 2")
+            //                        print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 dunno where to scroll to 2")
             vmState.state = .COMPLETED_FIRST_FETCH
             return nil
             

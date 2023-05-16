@@ -411,6 +411,7 @@ class LVM: NSObject, ObservableObject {
     
     var lvmState:LVMState
     var lvmCounter = LVMCounter()
+    var restoreLeafs:String?
     
     init(pubkey:String, pubkeys:Set<String>, listId:String) {
 //        print("🟢🟢🟢🟣🟣🟣🟣🟣🟢🟢🟢 INIT 🟢🟢🟢🟢🟣🟣🟣🟣🟣🟣🟢🟢")
@@ -437,14 +438,19 @@ class LVM: NSObject, ObservableObject {
         self.listStateObjectId = ls!.objectID
         self.lastReadId = ls!.mostRecentAppearedId
         self.lastAppearedId = ls!.lastAppearedId
-        if (self.lastAppearedId != nil) {
+        self.restoreLeafs = ls!.leafs
+        if (self.restoreLeafs != nil) {
             self.lvmState.state = .AWAITING_RESTORED_FETCH
             self.lvmState.restoreScrollToId = self.lastAppearedId
             self.lvmState.restoreScrollToAnchor = ls?.lastAppearedAtAnchor ?? "BOTTOM"
 //            print("🟢🟢 lastAppeared.id on init: \(self.lastAppeared?.id ?? "")")
+            self.performLocalRestoreFetch()
+        }
+        else {
+            self.performLocalFetch()
         }
 //        print("🟢🟢🟢🟢🟢 performLocalFetch() - from init()")
-        self.performLocalFetch()
+        
         self.fetchFeedTimer?.invalidate()
         self.fetchFeedTimer = Timer.scheduledTimer(withTimeInterval: FETCH_FEED_INTERVAL, repeats: true) { [weak self] _ in
             guard let self = self else { return }
@@ -705,9 +711,9 @@ extension LVM {
                 }
                 
                 // TRACK ANCHOR
-                if let event = self.lvmState.nrPostLeafs.first(where: { $0.id == eventId }),
-                   let lastAppeared = self.lvmState.nrPostLeafs.first(where: { $0.id == self.lastAppearedId }) {
-                    self.lastAppearedAnchor = event.created_at > lastAppeared.created_at ? "BOTTOM" : "TOP"
+                if let eventIndex = self.lvmState.nrPostLeafs.firstIndex(where: { $0.id == eventId }),
+                   let lastAppearedIndex = self.lvmState.nrPostLeafs.firstIndex(where: { $0.id == self.lastAppearedId }) {
+                    self.lastAppearedAnchor = eventIndex > lastAppearedIndex ? "BOTTOM" : "TOP"
                 }
 
 //                self.lastAppearedId = eventId // So dont need to mangle contexts if we just need an id (for saving ListState)
@@ -775,6 +781,7 @@ extension LVM {
                     listState.lastAppearedAtAnchor = lastAppearedAnchor
                     listState.updatedAt = Date.now
 //                    listState.unreadCount = Int64(self.lvmCounter.unreadCounterNew)
+                    listState.leafs = self.lvmState.nrPostLeafs.map { $0.id }.joined(separator: ",")
                     do {
                         try context.save()
                     }
@@ -971,6 +978,32 @@ extension LVM: NSFetchedResultsControllerDelegate {
                     guard let posts = try? ctx.fetch(fr) else { return }
                     self.setUnorderedEvents(events: self.filterMutedWords(posts))
                 }
+            }
+        }
+    }
+    
+    func performLocalRestoreFetch(refreshInBackground:Bool = false) {
+        let ctx = DataProvider.shared().bg
+        ctx.perform {
+            if let leafs = self.restoreLeafs?.split(separator: ",") {
+                let fr = Event.fetchRequest()
+                fr.predicate = NSPredicate(format: "id IN %@", leafs)
+                if let events = try? ctx.fetch(fr) {
+                    self.unrenderedEvents = leafs
+                        .compactMap({ leafId in
+                            return events.first { event in
+                                return event.id == leafId
+                            }
+                        })
+                        .map {
+                            $0.parentEvents = Event.getParentEvents($0)
+                            return $0
+                        }
+                }
+                self.performLocalFetch()
+            }
+            else {
+                self.performLocalFetch()
             }
         }
     }

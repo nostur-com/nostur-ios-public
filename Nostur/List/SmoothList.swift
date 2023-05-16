@@ -17,7 +17,7 @@ enum SingleSection: CaseIterable {
 struct SmoothList: UIViewControllerRepresentable {
     typealias UIViewControllerType = UIViewController
     typealias CollectionViewHolderType = CViewHolder
-    typealias RowAppearedCallback = ((sectionIndex: Int, itemIndex: Int, item: NRPost)) -> Void
+    typealias RowAppearedCallback = ((sectionIndex: Int, itemIndex: Int)) -> Void
     typealias FinishedScrollingCallback = ((isAtTop: Bool, indexPaths:[IndexPath])) -> Void
     
     @Binding var needsRefresh: Bool
@@ -75,8 +75,11 @@ struct SmoothList: UIViewControllerRepresentable {
     }
     
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
+        print("🔴🔴🔴🔴🔴🔴 updateUIViewController 🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴")
+        
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
             if needsFullReload, let collectionViewHolder = context.coordinator.collectionViewHolder {
+                print("🔴🔴🔴🔴🔴🔴 fullReload 🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴")
                 fullReload(collectionViewHolder)
                 Task {
                     needsFullReload = false
@@ -84,6 +87,7 @@ struct SmoothList: UIViewControllerRepresentable {
             }
             
             if needsRefresh, let collectionViewHolder = context.coordinator.collectionViewHolder {
+                print("🔴🔴🔴🔴🔴🔴 refreshData 🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴")
                 refreshData(collectionViewHolder)
                 Task {
                     needsRefresh = false
@@ -91,6 +95,7 @@ struct SmoothList: UIViewControllerRepresentable {
             }
             
             if needsScrollToTop, let ch = context.coordinator.collectionViewHolder {
+                print("🔴🔴🔴🔴🔴🔴 scrollToTop 🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴")
                 // do the scroll
                 ch.collectionView.setContentOffset(CGPoint(x:0, y: autoScroll ? 0 : SMOOTHLIST_AUTOSCROLL_OFFSET), animated: true)
                 Task {
@@ -99,6 +104,7 @@ struct SmoothList: UIViewControllerRepresentable {
             }
             
             if needsScrollToIndex != nil, let ch = context.coordinator.collectionViewHolder {
+                print("🔴🔴🔴🔴🔴🔴 scrollToIndex 🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴")
                 if (needsScrollToIndex == 0) {
                     ch.collectionView.setContentOffset(CGPoint(x:0, y: autoScroll ? 0 : SMOOTHLIST_AUTOSCROLL_OFFSET), animated: true)
                 }
@@ -126,10 +132,7 @@ struct SmoothList: UIViewControllerRepresentable {
         collectionViewHolder.dataSource.apply(newSnapshot, animatingDifferences: !isInitialApply) {
             if (isInitialApply) { // Scroll to initial position
                 DispatchQueue.main.async {
-                    //                    guard let self = self else { return }
-                    //                    print("❤️❤️ \(self.needsScrollToIndex)")
                     if (self.needsScrollToIndex != nil) && (self.needsScrollToIndex! > 4) {
-                        //                        print("❤️❤️ \(self.needsScrollToIndex) 1")
                         collectionViewHolder.collectionView.scrollToItem(at: IndexPath(item: self.needsScrollToIndex!, section: 0), at: .top, animated: false)
                         
                         Task {
@@ -365,9 +368,7 @@ struct SmoothList: UIViewControllerRepresentable {
                 lastCalledTimestamp = currentTime
                 
                 // Your throttled code here
-                if let item = parent.data[safe: indexPath.row] {
-                    parent.onRowAppeared?((sectionIndex: indexPath.section, itemIndex: indexPath.row,  item: item))
-                }
+                parent.onRowAppeared?((sectionIndex: indexPath.section, itemIndex: indexPath.row))
             }
         }
         

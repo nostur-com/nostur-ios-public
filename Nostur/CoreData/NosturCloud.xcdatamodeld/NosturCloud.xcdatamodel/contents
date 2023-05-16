@@ -108,6 +108,7 @@
     <entity name="ListState" representedClassName="ListState" syncable="YES">
         <attribute name="lastAppearedAtAnchor" attributeType="String" defaultValueString="BOTTOM"/>
         <attribute name="lastAppearedId" optional="YES" attributeType="String"/>
+        <attribute name="leafs" optional="YES" attributeType="String"/>
         <attribute name="listId" attributeType="String" defaultValueString="ERRORERRORERRORERROR"/>
         <attribute name="mostRecentAppearedId" optional="YES" attributeType="String"/>
         <attribute name="pubkey" attributeType="String"/>

@@ -23,6 +23,7 @@ extension ListState {
     @NSManaged public var mostRecentAppearedId: String?
     @NSManaged public var updatedAt: Date
     @NSManaged public var unreadCount:Int64
+    @NSManaged public var leafs: String?
 
 }
 
