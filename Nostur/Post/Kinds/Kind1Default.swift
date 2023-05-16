@@ -83,6 +83,12 @@ struct Kind1Default: View {
                             .frame(maxWidth: .infinity)
                             .background(Color("LightGray").opacity(0.2))
                     }
+                    if let subject = nrPost.subject {
+                        Text(subject)
+                            .fontWeight(.bold)
+                            .lineLimit(3)
+                            
+                    }
                     ContentRenderer(nrPost: nrPost, fullWidth: false, availableWidth: imageWidth)
                         .frame(maxWidth: .infinity, alignment:.leading)
                         .contentShape(Rectangle())

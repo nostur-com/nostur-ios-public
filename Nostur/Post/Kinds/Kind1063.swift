@@ -45,10 +45,17 @@ struct Kind1063: View {
     }
     
     var body: some View {
-        if let height {
-            
-            SingleMediaViewer(url: URL(string: url)!, pubkey: nrPost.pubkey, imageWidth: availableWidth, isFollowing: true)
-                .frame(width: availableWidth, height: height)
+        VStack {
+            if let subject = nrPost.subject {
+                Text(subject)
+                    .fontWeight(.bold)
+                    .lineLimit(3)
+                    
+            }
+            if let height {
+                SingleMediaViewer(url: URL(string: url)!, pubkey: nrPost.pubkey, imageWidth: availableWidth, isFollowing: true)
+                    .frame(width: availableWidth, height: height)
+            }
         }
     }
 }

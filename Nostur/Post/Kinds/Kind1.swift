@@ -86,6 +86,12 @@ struct Kind1: View {
                             .frame(maxWidth: .infinity)
                             .background(Color("LightGray").opacity(0.2))
                     }
+                    if let subject = nrPost.subject {
+                        Text(subject)
+                            .fontWeight(.bold)
+                            .lineLimit(3)
+                            
+                    }
                     ContentRenderer(nrPost: nrPost, fullWidth: true, availableWidth: imageWidth)
                         .contentShape(Rectangle())
                         .onTapGesture {

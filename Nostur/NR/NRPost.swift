@@ -34,6 +34,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     let pubkey:String
 //    let npub:String
     
+    var subject:String?
     var content:String?
     var plainText:String = ""
     var replyingToUsernamesMarkDown:AttributedString?
@@ -255,6 +256,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         self.replied = isReplied()
         self.reposted = isReposted()
         self.hasPrivateNote = _hasPrivateNote()
+        
+        self.subject = fastTags.first(where: { $0.0 == "subject" })?.1
         
         listenForChanges()
     }
