@@ -30,15 +30,10 @@ struct KindResolver: View {
             }
         }
         .onAppear {
-//            return
-            // TODO: NOTIFICATIONIZED UPDATE
-            // TODO: NEED SOMEHOW REFERENCED Ps in NRPOST, COMPARE MISSING ... CONTACTS in NRPOST?
-            
             if nrPost.missingPs.count > 0 {
-                // TODO: NOTIFICATIONIZED UPDATE
                 EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "KindResolver.001")
                 QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
-                print("🔴🔴 NoteRow.onAppear fetching \(nrPost.missingPs.count) missing contacts (event.pubkey or event.pTags)")
+                print("🟠🟠 NoteRow.onAppear fetching \(nrPost.missingPs.count) missing contacts (event.pubkey or event.pTags)")
             }
         }
         .onDisappear {

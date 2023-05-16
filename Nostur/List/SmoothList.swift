@@ -185,11 +185,9 @@ struct SmoothList: UIViewControllerRepresentable {
                 guard let item = parent.data[safe: indexPath.row] else { continue }
                 
                 if item.missingPs.count > 0 {
-                    // TODO: NOTIFICATIONIZED UPDATE
                     EventRelationsQueue.shared.addAwaitingEvent(item.event, debugInfo: "SmoothList.001 - missingPs: \(item.missingPs.count)")
                     QueuedFetcher.shared.enqueue(pTags: item.missingPs)
-    //                req(RM.getUserMetadata(pubkeys: nrPost.missingPs))
-                    print("🔴🔴 Prefetcher: \(item.missingPs.count) missing contacts (event.pubkey or event.pTags)")
+                    print("🟠🟠 Prefetcher: \(item.missingPs.count) missing contacts (event.pubkey or event.pTags)")
                 }
                 
                 if let picture = item.contact?.pictureUrl, picture.prefix(7) != "http://" {

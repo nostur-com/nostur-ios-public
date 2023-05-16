@@ -345,6 +345,7 @@ extension View {
             .environmentObject(pe.sm)
             .environmentObject(pe.tm)
             .environmentObject(pe.dim)
+            .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
     }
 }
 
