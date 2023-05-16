@@ -509,7 +509,9 @@ struct ReplyAndParentView3_Previews: PreviewProvider {
 
             
             if let yt = PreviewFetcher.fetchNRPost("c7b4ef377ee4f6d71f6f59bc6bad607acb9c7c3675e3c0b2ca0ad2442b133e49") {
-                PostDetailView(nrPost: yt)
+                ScrollView {
+                    PostDetailView(nrPost: yt)
+                }
             }
    
         }
@@ -566,6 +568,19 @@ struct ReplyAndParentView7_Previews: PreviewProvider {
         NavigationStack {
             if let v = PreviewFetcher.fetchNRPost("c0d76c3c968775a62ca1dea28a73e1fc86d121e8e5e17f2e35aaad1436075f51") {
                 PostDetailView(nrPost: v)
+            }
+        }
+        .withPreviewEnvironment()
+    }
+}
+
+struct BetterReplies_Previews: PreviewProvider {
+    static var previews: some View {
+
+        NavigationStack {
+            if let matt = PreviewFetcher.fetchNRPost("e593fc759291a691cd0127643a0b9fac9d92613952845e207eb24332937c59d9") {
+                
+                PostDetailView(nrPost: matt)
             }
         }
         .withPreviewEnvironment()
