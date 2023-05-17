@@ -62,6 +62,7 @@ struct BookmarksView: View {
                             DataProvider.shared().save()
                         }
                 }
+                Spacer()
             }
             .background(Color("ListBackground"))
         }

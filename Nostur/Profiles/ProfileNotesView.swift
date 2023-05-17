@@ -28,30 +28,27 @@ struct ProfileNotesView: View {
                     .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
                     .id(nrPost.id)
             }
-            VStack {
-                if fl.nrPosts.count > 0 {
-                    Button("Show more") {
-                        fl.predicate = NSPredicate(format: "pubkey == %@ AND kind IN {1,6,9802}", pubkey)
-        //                fl.offset = (fl.nrPosts.count - 1)
-                        fl.loadMore(50)
-                        if let until = fl.nrPosts.last?.created_at {
-                            req(RM.getAuthorNotesUntil(pubkey: pubkey, until: NTimestamp(timestamp: Int(until)), limit:250))
-                        }
-                        else {
-                            req(RM.getAuthorNotes(pubkey: pubkey, limit:250))
-                        }
+            if fl.nrPosts.count > 0 {
+                Button("Show more") {
+                    fl.predicate = NSPredicate(format: "pubkey == %@ AND kind IN {1,6,9802}", pubkey)
+                    fl.loadMore(50)
+                    if let until = fl.nrPosts.last?.created_at {
+                        req(RM.getAuthorNotesUntil(pubkey: pubkey, until: NTimestamp(timestamp: Int(until)), limit:250))
                     }
-                    
+                    else {
+                        req(RM.getAuthorNotes(pubkey: pubkey, limit:250))
+                    }
                 }
-                else {
-                    ProgressView()
-                }
+                .hCentered()
+                .buttonStyle(.bordered)
+                .tint(.accentColor)
             }
-            .hCentered()
-            .buttonStyle(.bordered)
-            .tint(.accentColor)
+            else {
+                CenteredProgressView()
+            }
+            Spacer()
+                .frame(minHeight: 800)
         }
-        .frame(minHeight: 800)
         .background(Color("ListBackground"))
         .onAppear {
             guard !didLoad else { return }

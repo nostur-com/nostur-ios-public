@@ -41,6 +41,8 @@ struct ProfileMediaView: View {
                 }
             }
             .padding(10)
+            Spacer()
+                .frame(minHeight: 800)
         }
         .onAppear {
             guard !didLoad else { return }

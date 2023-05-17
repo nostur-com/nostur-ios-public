@@ -56,8 +56,8 @@ struct PrivateNotesView: View {
                         }
                     Divider()
                 }
+                Spacer()
             }
-//            Spacer()
         }
         .overlay(alignment:.topTrailing) {
             AccountSwitcher(accounts: accounts, selectedAccount: $selectedAccount)

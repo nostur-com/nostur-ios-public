@@ -29,29 +29,28 @@ struct ProfileLikesView: View {
                     .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
                     .id(nrPost.id)
             }
-            VStack {
-                if fl.nrPosts.count > 0 {
-                    Button("Show more") {
-                        fl.predicate = NSPredicate(format: "pubkey == %@ AND kind == 7", pubkey)
-                        fl.loadMore(50)
-                        if let until = fl.nrPosts.last?.created_at {
-                            req(RM.getAuthorReactions(pubkey: pubkey, limit:250, until: NTimestamp(timestamp: Int(until))))
-                        }
-                        else {
-                            req(RM.getAuthorReactions(pubkey: pubkey, limit:250))
-                        }
+            if fl.nrPosts.count > 0 {
+                Button("Show more") {
+                    fl.predicate = NSPredicate(format: "pubkey == %@ AND kind == 7", pubkey)
+                    fl.loadMore(50)
+                    if let until = fl.nrPosts.last?.created_at {
+                        req(RM.getAuthorReactions(pubkey: pubkey, limit:250, until: NTimestamp(timestamp: Int(until))))
                     }
-                    
+                    else {
+                        req(RM.getAuthorReactions(pubkey: pubkey, limit:250))
+                    }
                 }
-                else {
-                    ProgressView()
-                }
+                    .hCentered()
+                    .buttonStyle(.bordered)
+                    .tint(.accentColor)
+                
             }
-            .hCentered()
-            .buttonStyle(.bordered)
-            .tint(.accentColor)
+            else {
+                CenteredProgressView()
+            }
+            Spacer()
+                .frame(minHeight: 800)
         }
-        .frame(minHeight: 800)
         .background(Color("ListBackground"))
         .onAppear {
             guard !didLoad else { return }
