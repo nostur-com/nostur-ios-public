@@ -42,8 +42,8 @@ struct NEventView: View {
                     QuotedNoteFragmentView(nrPost: nrPost)
                 }
                 else if let event = events.first {
-                    Color.clear
-                        .frame(height: 200)
+                    CenteredProgressView()
+                        .frame(height: 250)
                         .task {
                             DataProvider.shared().bg.perform {
 //                                let transformer = VPostTransformer.bg
@@ -56,8 +56,8 @@ struct NEventView: View {
                         }
                 }
                 else {
-                    ProgressView()
-                        .hCentered()
+                    CenteredProgressView()
+                        .frame(height: 250)
                         .onAppear {
                             guard let eventId = identifier.eventId else {
                                 print("\(identifier.bech32string) has no eventId")
@@ -87,7 +87,6 @@ struct NEventView: View {
                                 task.cancel()
                             }
                         }
-                        .frame(height: 200)
                 }
             }
         }
