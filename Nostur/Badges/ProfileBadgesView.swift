@@ -151,7 +151,7 @@ struct BadgeIcon: View {
     var nBadge:NEvent { badge.toNEvent() }
 
     var body: some View {
-        if let pictureUrl = nBadge.badgeImage?.tag[safe: 1] {
+        if let pictureUrl = nBadge.badgeThumb?.tag[safe: 1] {
             if (pictureUrl.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
                 LazyImage(url: URL(string: pictureUrl)) { state in
                     if let container = state.imageContainer {
