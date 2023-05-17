@@ -19,8 +19,17 @@ struct ReportPostSheet: View {
             ScrollView {
                 PostRowDeletable(nrPost: nrPost, hideFooter: true)
                     .disabled(true)
-                    .opacity(0.8)
+                    .background(Color.systemBackground)
                     .boxShadow()
+                    .overlay(
+                        Rectangle().opacity(0.02)
+                            .onTapGesture {
+                                
+                            }
+                    )
+                    .padding(10)
+                    .opacity(0.8)
+                    .background(Color("ListBackground"))
             }
             .frame(maxHeight: 200)
             .clipped()
@@ -58,8 +67,7 @@ struct ReportPostSheet: View {
             }
             ToolbarItem(placement: .primaryAction) {
                 Button("Report") {
-                    // TODO: FIXME nrPost.event context
-                    guard let signedReport = NosturState.shared.report(nrPost.event, reportType: reason, note: comment, includeProfile: reportWhat == "Profile+Profile" ) else {
+                    guard let signedReport = NosturState.shared.report(nrPost.mainEvent, reportType: reason, note: comment, includeProfile: reportWhat == "Profile+Profile" ) else {
                         return
                     }
                     Unpublisher.shared.publishNow(signedReport)

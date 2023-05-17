@@ -94,6 +94,7 @@ private struct WithSheets: ViewModifier {
                 NavigationStack {
                     ReportPostSheet(nrPost: reportPost.nrPost)
                         .environmentObject(dim)
+                        .environmentObject(ns)
                 }
             })
         
