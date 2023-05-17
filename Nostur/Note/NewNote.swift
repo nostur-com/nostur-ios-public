@@ -131,7 +131,6 @@ public final class NewNoteText: ObservableObject {
 }
 
 struct NewNote: View {
-//    @Environment(\.managedObjectContext) var viewContext
     let PLACEHOLDER = "What's happening?"
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var ns:NosturState
@@ -151,19 +150,12 @@ struct NewNote: View {
     @State var subscriptions = Set<AnyCancellable>()
     
     var body: some View {
-        if let account = ns.account {
-            VStack {
-                HStack(alignment: .top) {
-                    PFP(pubkey: account.publicKey, account: account)
-                    
-                    ZStack(alignment:.leading) {
-                        VStack(alignment: .leading) {
-                            Text(PLACEHOLDER).foregroundColor(.gray)
-                                .opacity(vm.text == "" ? 1 : 0)
-                                .offset(x: 5.0, y: 7.0)
-                            Spacer()
-                        }
-                        VStack(alignment: .leading) {
+        VStack(spacing:0) {
+            if let account = ns.account {
+                ScrollView {
+                    VStack {
+                        HStack(alignment: .top) {
+                            PFP(pubkey: account.publicKey, account: account)
                             HighlightedTextEditor(
                                 text: $vm.text,
                                 pastedImages: $vm.pastedImages,
@@ -177,20 +169,129 @@ struct NewNote: View {
                                     vm.textView = editor.textView
                                 }
                             }
-                            .frame(minHeight: 200, idealHeight: 325, maxHeight: 550, alignment: .top)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                             .photosPicker(isPresented: $ipm.photoPickerShown, selection: $ipm.imageSelection, matching: .images, photoLibrary: .shared())
                             .onChange(of: ipm.newImage) { newImage in
                                 if let newImage {
                                     vm.pastedImages.append(newImage)
                                 }
                             }
-                            ImagePreviews(pastedImages: $vm.pastedImages)
-                            Spacer()
+                            .background(alignment:.topLeading) {
+                                Text(PLACEHOLDER).foregroundColor(.gray)
+                                    .opacity(vm.text == "" ? 1 : 1)
+                                    .offset(x: 5.0, y: 4.0)
+                            }
+                            AnyStatus(filter: "NewPost")
                         }
-                        AnyStatus(filter: "NewPost")
+                        HStack {
+                            ImagePreviews(pastedImages: $vm.pastedImages)
+                                .padding(.leading, DIMENSIONS.ROW_PFP_SPACE - 5)
+                        }
                     }
                 }
-                if vm.mentioning {
+                .padding(10)
+                .onAppear {
+                    updateEventWithNewText()
+                }
+                .onChange(of: vm.debouncedText) { newText in
+                    if (vm.nEvent == nil) {
+                        vm.nEvent = NEvent(content: newText)
+                    } else {
+                        vm.nEvent!.content = newText
+                    }
+                    
+                    guard let account = ns.account else { return }
+                    if let mentionTerm = mentionTerm(newText) {
+                        //                print ("mentionTerm \(mentionTerm) lastHit: \(vm.lastHit)")
+                        
+                        if mentionTerm == vm.lastHit {
+                            vm.mentioning = false
+                        }
+                        else {
+                            vm.mentioning = true
+                            vm.term = mentionTerm
+                            contacts.nsPredicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@) AND NOT pubkey IN %@", mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), account.blockedPubkeys_)
+                        }
+                        
+                    }
+                    else {
+                        vm.mentioning = false
+                    }
+                }
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button {
+                            dismiss() // TODO: If wrote something, confirm cancellation
+                        } label: {
+                            Text("Cancel")
+                        }
+                    }
+                    ToolbarItem {
+                        Button("Preview") {
+                            guard let account = ns.account else { return }
+                            guard var nEvent = vm.nEvent else { return }
+                            nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected:selectedMentions)
+                            nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
+                            nEvent = putHashtagsInTags(nEvent)
+                            nEvent.publicKey = account.publicKey
+                            
+                            if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
+                                nEvent.content = replaceNsecWithHunter2(nEvent.content)
+                            }
+                            for index in vm.pastedImages.indices {
+                                nEvent.content = nEvent.content + "\n--@!^@\(index)@^!@--"
+                            }
+                            DataProvider.shared().bg.perform {
+                                print(111)
+                                let previewEvent = createPreviewEvent(nEvent)
+                                print(222)
+                                if (vm.pastedImages.count > 0) {
+                                    print(333)
+                                    previewEvent.previewImages = vm.pastedImages
+                                }
+                                let nrPost = NRPost(event: previewEvent)
+                                DispatchQueue.main.async {
+                                    print(4444)
+                                    //                                self.previewEvent = previewEvent
+                                    self.previewNRPost = nrPost
+                                }
+                                DataProvider.shared().bg.delete(previewEvent)
+                            }
+                        }
+                        .cornerRadius(20)
+                        .disabled(uploading)
+                    }
+                    
+                    if let uploadError {
+                        ToolbarItem(placement: .principal) {
+                            Text(uploadError).foregroundColor(.red)
+                        }
+                    }
+                    
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button {
+                            sendNow()
+                        } label: {
+                            if (uploading) {
+                                ProgressView()
+                            }
+                            else {
+                                Text("Post")
+                            }
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .cornerRadius(20)
+                        .disabled(uploading)
+                        
+                    }
+                }
+                .sheet(item: $previewNRPost) { nrPost in
+                    NavigationStack {
+                        PostPreview(nrPost: nrPost, sendNow: self.sendNow, uploading: $uploading)
+                    }
+                }
+
+                if vm.mentioning && firstResults.count > 0 {
                     ScrollView {
                         LazyVStack {
                             ForEach(firstResults) { contact in
@@ -212,118 +313,12 @@ struct NewNote: View {
                             }
                         }
                     }
-                }
-                Spacer()
-            }
-            .padding(10)
-            .onAppear {
-                updateEventWithNewText()
-            }
-            .onChange(of: vm.debouncedText) { newText in
-                if (vm.nEvent == nil) {
-                    vm.nEvent = NEvent(content: newText)
-                } else {
-                    vm.nEvent!.content = newText
-                }
-                
-                guard let account = ns.account else { return }
-                if let mentionTerm = mentionTerm(newText) {
-                    //                print ("mentionTerm \(mentionTerm) lastHit: \(vm.lastHit)")
-                    
-                    if mentionTerm == vm.lastHit {
-                        vm.mentioning = false
-                    }
-                    else {
-                        vm.mentioning = true
-                        vm.term = mentionTerm
-                        contacts.nsPredicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@) AND NOT pubkey IN %@", mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), account.blockedPubkeys_)
-                    }
-                    
-                }
-                else {
-                    vm.mentioning = false
+                    .padding()
                 }
             }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        dismiss() // TODO: If wrote something, confirm cancellation
-                    } label: {
-                        Text("Cancel")
-                    }
-                }
-                ToolbarItem {
-                    Button("Preview") {
-                        guard let account = ns.account else { return }
-                        guard var nEvent = vm.nEvent else { return }
-                        nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected:selectedMentions)
-                        nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
-                        nEvent = putHashtagsInTags(nEvent)
-                        nEvent.publicKey = account.publicKey
-                        
-                        if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
-                            nEvent.content = replaceNsecWithHunter2(nEvent.content)
-                        }
-                        for index in vm.pastedImages.indices {
-                            nEvent.content = nEvent.content + "\n--@!^@\(index)@^!@--"
-                        }
-                        DataProvider.shared().bg.perform {
-                            print(111)
-                            let previewEvent = createPreviewEvent(nEvent)
-                            print(222)
-                            if (vm.pastedImages.count > 0) {
-                                print(333)
-                                previewEvent.previewImages = vm.pastedImages
-                            }
-                            let nrPost = NRPost(event: previewEvent)
-                            DispatchQueue.main.async {
-                                print(4444)
-//                                self.previewEvent = previewEvent
-                                self.previewNRPost = nrPost
-                            }
-                            DataProvider.shared().bg.delete(previewEvent)
-                        }
-                    }
-                    .cornerRadius(20)
-                    .disabled(uploading)
-                }
-                
-                if let uploadError {
-                    ToolbarItem(placement: .principal) {
-                        Text(uploadError).foregroundColor(.red)
-                    }
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        sendNow()
-                    } label: {
-                        if (uploading) {
-                            ProgressView()
-                        }
-                        else {
-                            Text("Post")
-                        }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .cornerRadius(20)
-                    .disabled(uploading)
-                    
-                }
+            else {
+                ProgressView()
             }
-            .sheet(item: $previewNRPost) { nrPost in
-                NavigationStack {
-                    PostPreview(nrPost: nrPost, sendNow: self.sendNow, uploading: $uploading)
-//                        .onDisappear {
-//                            DataProvider.shared().bg.perform {
-//                                DataProvider.shared().bg.delete(previewEvent)
-//                            }
-//                        }
-                }
-            }
-        }
-        else {
-            ProgressView()
         }
     }
     

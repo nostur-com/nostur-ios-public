@@ -34,77 +34,49 @@ struct NewQuoteRepost: View {
     }
     
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
             if let account = ns.account, let quotingNRPost {
-                VStack {
-                    ScrollView {
-                        HStack(alignment: .top) {
+                ScrollView {
+                    VStack {
+                        HStack(alignment: .top, spacing:0) {
                             PFP(pubkey: account.publicKey, account: account)
                                 .padding(.horizontal, 10)
-                            ZStack(alignment:.leading) {
-                                VStack(alignment: .leading) {
-                                    Text(PLACEHOLDER).foregroundColor(.gray)
-                                        .opacity(vm.text == "" ? 1 : 0)
-                                        .offset(x: 5.0, y: 7.0)
-                                    Spacer()
-                                }
-                                VStack(alignment: .leading) {
-                                    HighlightedTextEditor(
-                                        text: $vm.text,
-                                        pastedImages: $vm.pastedImages,
-                                        shouldBecomeFirstResponder: true,
-                                        highlightRules: NewNoteText.rules,
-                                        photoPickerTapped: {
-                                            ipm.photoPickerShown = true
-                                        })
-                                    .onSelectionChange { (range: NSRange) in
-                                        print(range)
-                                    }
-                                    .introspect { editor in
-                                        if (vm.textView == nil) {
-                                            vm.textView = editor.textView
-                                        }
-                                    }
-                                    .frame(minHeight: 50, maxHeight: 500)
-                                    .onChange(of: ipm.newImage) { newImage in
-                                        if let newImage {
-                                            vm.pastedImages.append(newImage)
-                                        }
-                                    }
-                                    ImagePreviews(pastedImages: $vm.pastedImages)
-                                    
-                                    QuotedNoteFragmentView(nrPost: quotingNRPost)
-                                        .frame(minHeight: 250, maxHeight: 500)
-                                    Spacer()
+                            
+                            HighlightedTextEditor(
+                                text: $vm.text,
+                                pastedImages: $vm.pastedImages,
+                                shouldBecomeFirstResponder: true,
+                                highlightRules: NewNoteText.rules,
+                                photoPickerTapped: {
+                                    ipm.photoPickerShown = true
+                                })
+                            .onSelectionChange { (range: NSRange) in
+                                print(range)
+                            }
+                            .introspect { editor in
+                                if (vm.textView == nil) {
+                                    vm.textView = editor.textView
                                 }
                             }
-                        }
-                        
-                        if vm.mentioning {
-                            ScrollView {
-                                LazyVStack {
-                                    ForEach(firstResults) { contact in
-                                        ContactSearchResultRow(contact: contact) {
-                                            guard vm.textView != nil else { return }
-                                            let mentionName = contact.handle
-                                            vm.text = vm.text.dropLast(vm.term.count) + mentionName
-                                            selectedMentions.append(contact)
-                                            vm.mentioning = false
-                                            vm.lastHit = mentionName
-                                            vm.term = ""
-                                            
-                                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { // after 0.3 sec to get the new .endOfDocument
-                                                //                                    self.vm.mentioning = false
-                                                let newPosition = vm.textView!.endOfDocument
-                                                vm.textView!.selectedTextRange = vm.textView!.textRange(from: newPosition, to: newPosition)
-                                            }
-                                        }
-                                    }
+                            .photosPicker(isPresented: $ipm.photoPickerShown, selection: $ipm.imageSelection, matching: .images, photoLibrary: .shared())
+                            .onChange(of: ipm.newImage) { newImage in
+                                if let newImage {
+                                    vm.pastedImages.append(newImage)
                                 }
                             }
+                            .background(alignment: .topLeading) {
+                                Text(PLACEHOLDER).foregroundColor(.gray)
+                                    .opacity(vm.text == "" ? 1 : 0)
+                                    .offset(x: 5.0, y: 7.0)
+                            }
                         }
-                        Spacer()
+                        ImagePreviews(pastedImages: $vm.pastedImages)
+                            .padding(.leading, DIMENSIONS.ROW_PFP_SPACE - 5)
+                        QuotedNoteFragmentView(nrPost: quotingNRPost)
+                            .padding(.leading, DIMENSIONS.ROW_PFP_SPACE - 5)
+//                            .frame(minHeight: 250, maxHeight: 500)
                     }
+//                        Spacer()
                 }
                 .padding(10)
                 .onAppear {
@@ -208,19 +180,44 @@ struct NewQuoteRepost: View {
                         //                        }
                     }
                 }
-            }
-            else {
-                ProgressView()
-                    .task {
-                        DataProvider.shared().bg.perform {
-                            if let quotingEventNG = quotingEvent.toBG() {
-                                let quotingNRPost = NRPost(event: quotingEventNG)
-                                DispatchQueue.main.async {
-                                    self.quotingNRPost = quotingNRPost
+                
+                if vm.mentioning && firstResults.count > 0 {
+                    ScrollView {
+                        LazyVStack {
+                            ForEach(firstResults) { contact in
+                                ContactSearchResultRow(contact: contact) {
+                                    guard vm.textView != nil else { return }
+                                    let mentionName = contact.handle
+                                    vm.text = vm.text.dropLast(vm.term.count) + mentionName
+                                    selectedMentions.append(contact)
+                                    vm.mentioning = false
+                                    vm.lastHit = mentionName
+                                    vm.term = ""
+                                    
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { // after 0.3 sec to get the new .endOfDocument
+                                        //                                    self.vm.mentioning = false
+                                        let newPosition = vm.textView!.endOfDocument
+                                        vm.textView!.selectedTextRange = vm.textView!.textRange(from: newPosition, to: newPosition)
+                                    }
                                 }
                             }
                         }
                     }
+                    .padding()
+                }
+            }
+            else {
+                ProgressView()
+            }
+        }
+        .task {
+            DataProvider.shared().bg.perform {
+                if let quotingEventNG = quotingEvent.toBG() {
+                    let quotingNRPost = NRPost(event: quotingEventNG)
+                    DispatchQueue.main.async {
+                        self.quotingNRPost = quotingNRPost
+                    }
+                }
             }
         }
     }
@@ -312,7 +309,7 @@ struct NewQuoteRepost_Previews: PreviewProvider {
         
 //        let id = "c3a040feac185585f984147cdaf7a7ec5774b06db29ff25017c45026e470daeb"
         
-        VStack {
+        NavigationStack {
             if let event = PreviewFetcher.fetchEvent() {
                 NewQuoteRepost(quotingEvent: event)
                 

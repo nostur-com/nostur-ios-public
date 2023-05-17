@@ -34,76 +34,49 @@ struct NewReply: View {
     @State var subscriptions = Set<AnyCancellable>()
     
     var body: some View {
-        VStack {
+        VStack(spacing:0) {
             if let account = ns.account, let replyToNRPost {
-                VStack {
-                    ScrollView {
+                ScrollView {
+                    VStack {
                         PostRowDeletable(nrPost: replyToNRPost, hideFooter: true)
-                        HStack {
+                        HStack(spacing:0) {
                             NewReplyingToFragment(contact: replyTo.contact, pubkey: replyTo.pubkey)
-                                .offset(x:80)
+                                .offset(x:70)
                             Spacer()
                         }
-                        HStack(alignment: .top) {
+                        HStack(alignment: .top, spacing: 0) {
                             PFP(pubkey: account.publicKey, account: account)
                                 .padding(.horizontal, 10)
-                            ZStack(alignment:.leading) {
-                                VStack(alignment: .leading) {
-                                    Text(PLACEHOLDER).foregroundColor(.gray)
-                                        .opacity(vm.text == "" ? 1 : 0)
-                                        .offset(x: 5.0, y: 7.0)
-                                    Spacer()
-                                }
-                                VStack(alignment: .leading) {
-                                    HighlightedTextEditor(
-                                        text: $vm.text,
-                                        pastedImages: $vm.pastedImages,
-                                        shouldBecomeFirstResponder: true,
-                                        highlightRules: NewNoteText.rules,
-                                        photoPickerTapped: {
-                                            ipm.photoPickerShown = true
-                                        })
-                                    .introspect { editor in
-                                        if (vm.textView == nil) {
-                                            vm.textView = editor.textView
-                                        }
-                                    }
-                                    .frame(minHeight: 100, idealHeight: 125, maxHeight: 250, alignment: .top)
-                                    .photosPicker(isPresented: $ipm.photoPickerShown, selection: $ipm.imageSelection, matching: .images, photoLibrary: .shared())
-                                    .onChange(of: ipm.newImage) { newImage in
-                                        if let newImage {
-                                            vm.pastedImages.append(newImage)
-                                        }
-                                    }
-                                    ImagePreviews(pastedImages: $vm.pastedImages)
-                                    Spacer()
+                            HighlightedTextEditor(
+                                text: $vm.text,
+                                pastedImages: $vm.pastedImages,
+                                shouldBecomeFirstResponder: true,
+                                highlightRules: NewNoteText.rules,
+                                photoPickerTapped: {
+                                    ipm.photoPickerShown = true
+                                })
+                            .introspect { editor in
+                                if (vm.textView == nil) {
+                                    vm.textView = editor.textView
                                 }
                             }
-                        }
-                        if vm.mentioning {
-                            ScrollView {
-                                LazyVStack {
-                                    ForEach(firstResults) { contact in
-                                        ContactSearchResultRow(contact: contact) {
-                                            guard vm.textView != nil else { return }
-                                            let mentionName = contact.handle
-                                            vm.text = vm.text.dropLast(vm.term.count) + mentionName
-                                            selectedMentions.append(contact)
-                                            vm.mentioning = false
-                                            vm.lastHit = mentionName
-                                            vm.term = ""
-                                            
-                                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { // after 0.3 sec to get the new .endOfDocument
-                                                //                                    self.vm.mentioning = false
-                                                let newPosition = vm.textView!.endOfDocument
-                                                vm.textView!.selectedTextRange = vm.textView!.textRange(from: newPosition, to: newPosition)
-                                            }
-                                        }
-                                    }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .photosPicker(isPresented: $ipm.photoPickerShown, selection: $ipm.imageSelection, matching: .images, photoLibrary: .shared())
+                            .onChange(of: ipm.newImage) { newImage in
+                                if let newImage {
+                                    vm.pastedImages.append(newImage)
                                 }
                             }
+                            .background(alignment:.topLeading) {
+                                Text(PLACEHOLDER).foregroundColor(.gray)
+                                    .opacity(vm.text == "" ? 1 : 1)
+                                    .offset(x: 5.0, y: 4.0)
+                            }
                         }
-                        Spacer()
+                        HStack {
+                            ImagePreviews(pastedImages: $vm.pastedImages)
+                                .padding(.leading, DIMENSIONS.ROW_PFP_SPACE)
+                        }
                     }
                 }
                 .padding(10)
@@ -235,19 +208,44 @@ struct NewReply: View {
                         //                        }
                     }
                 }
-            }
-            else {
-                ProgressView()
-                    .task {
-                        DataProvider.shared().bg.perform {
-                            if let replyToBG = replyTo.toBG() {
-                                let replyToNRPost = NRPost(event: replyToBG)
-                                DispatchQueue.main.async {
-                                    self.replyToNRPost = replyToNRPost
+                
+                if vm.mentioning && firstResults.count > 0 {
+                    ScrollView {
+                        LazyVStack {
+                            ForEach(firstResults) { contact in
+                                ContactSearchResultRow(contact: contact) {
+                                    guard vm.textView != nil else { return }
+                                    let mentionName = contact.handle
+                                    vm.text = vm.text.dropLast(vm.term.count) + mentionName
+                                    selectedMentions.append(contact)
+                                    vm.mentioning = false
+                                    vm.lastHit = mentionName
+                                    vm.term = ""
+                                    
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { // after 0.3 sec to get the new .endOfDocument
+                                        //                                    self.vm.mentioning = false
+                                        let newPosition = vm.textView!.endOfDocument
+                                        vm.textView!.selectedTextRange = vm.textView!.textRange(from: newPosition, to: newPosition)
+                                    }
                                 }
                             }
                         }
                     }
+                    .padding()
+                }
+            }
+            else {
+                ProgressView()
+            }
+        }
+        .task {
+            DataProvider.shared().bg.perform {
+                if let replyToBG = replyTo.toBG() {
+                    let replyToNRPost = NRPost(event: replyToBG)
+                    DispatchQueue.main.async {
+                        self.replyToNRPost = replyToNRPost
+                    }
+                }
             }
         }
     }
@@ -351,7 +349,7 @@ struct NewReply_Previews: PreviewProvider {
     static var previews: some View {
         
 //        let id = "c3a040feac185585f984147cdaf7a7ec5774b06db29ff25017c45026e470daeb"
-        VStack {
+        NavigationStack {
             if let event = PreviewFetcher.fetchEvent() {
                 NewReply(replyTo: event)
             }
