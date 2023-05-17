@@ -17,6 +17,7 @@ struct NotificationsReactions: View {
     let blockedPubkeys:[String]
     
     @StateObject var fl = FastLoader()
+    @State var didLoad = false
     @State var backlog = Backlog()
     @EnvironmentObject var ns:NosturState
     
@@ -96,6 +97,7 @@ struct NotificationsReactions: View {
         }
         .background(Color("ListBackground"))
         .onAppear {
+            guard !didLoad else { return }
             load()
         }
         .onReceive(receiveNotification(.newReactions)) { _ in
@@ -127,6 +129,7 @@ struct NotificationsReactions: View {
     @State var subscriptions = Set<AnyCancellable>()
     
     func load() {
+        didLoad = true
         fl.$events
             .sink { events in
                 let myNotesReactedTo = self.myNotesReactedTo(events)

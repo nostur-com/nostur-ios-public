@@ -23,6 +23,7 @@ struct NotificationsZaps: View {
     let blockedPubkeys:[String]
 
     @StateObject var fl = FastLoader()
+    @State var didLoad = false
     @State var backlog = Backlog()
     @EnvironmentObject var ns:NosturState
     
@@ -98,6 +99,7 @@ struct NotificationsZaps: View {
         }
         .background(Color("ListBackground"))
         .onAppear {
+            guard !didLoad else { return }
             load()
         }
         .onReceive(receiveNotification(.newZaps)) { _ in
@@ -132,7 +134,7 @@ struct NotificationsZaps: View {
     @State var subscriptions = Set<AnyCancellable>()
     
     func load() {
-        
+        didLoad = true
         fl.$events
             .sink(receiveValue: { events in
                 let zapsForMeDeduplicated = events

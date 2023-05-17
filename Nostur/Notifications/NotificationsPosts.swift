@@ -18,6 +18,7 @@ struct NotificationsPosts: View {
     @EnvironmentObject var ns:NosturState
     @StateObject var fl = FastLoader()
     @State var backlog = Backlog()
+    @State var didLoad = false
     
     init(pubkey: String, mutedRootIds: [String] = [], blockedPubkeys: [String] = []) {
         self.pubkey = pubkey
@@ -26,7 +27,7 @@ struct NotificationsPosts: View {
     }
     
     var body: some View {
-//        let _ = Self._printChanges()
+        let _ = Self._printChanges()
         ScrollView {
             LazyVStack(spacing: 0) {
                 ForEach(fl.nrPosts) { nrPost in
@@ -55,6 +56,7 @@ struct NotificationsPosts: View {
         }
         .background(Color("ListBackground"))
         .onAppear {
+            guard !didLoad else { return }
             load()
         }
         .onReceive(receiveNotification(.newMentions)) { _ in
@@ -91,6 +93,7 @@ struct NotificationsPosts: View {
     }
     
     func load() {
+        didLoad = true
         if (fl.nrPosts.count == 0) {
             req(RM.getMentions(
                 pubkeys: [pubkey],

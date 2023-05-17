@@ -61,6 +61,7 @@ struct NoteById: View {
 struct PostDetailView: View {
     let nrPost:NRPost
     var navTitleHidden:Bool = false
+    @State var didLoad = false
     
     init(nrPost: NRPost, navTitleHidden: Bool = false) {
         self.nrPost = nrPost
@@ -73,6 +74,8 @@ struct PostDetailView: View {
                 ScrollView {
                     PostAndParent(nrPost: nrPost, geoHeight: geometry.size.height, navTitleHidden:navTitleHidden)
                         .onAppear {
+                            guard !didLoad else { return }
+                            didLoad = true
                             // TODO: FIX: THIS DOESNT WORK IF PARENTS ARE STILL LOADING
                             proxy.scrollTo(nrPost.id, anchor: .top)
                         }
@@ -106,6 +109,7 @@ struct PostAndParent: View {
     let THREAD_LINE_OFFSET = 34.0
     @ObservedObject var settings:SettingsStore = .shared
     @State private var timerTask: Task<Void, Never>?
+    @State var didLoad = false
     
     init(nrPost: NRPost, isParent:Bool = false, geoHeight:CGFloat = CGFloat.zero, navTitleHidden:Bool = false, connect:ThreadConnectDirection? = nil) {
         self.nrPost = nrPost
@@ -147,6 +151,8 @@ struct PostAndParent: View {
             else if let replyToId = nrPost.replyToId {
                 CenteredProgressView()
                     .onAppear {
+                        guard !didLoad else { return }
+                        didLoad = true
                         timerTask = Task {
                             try? await Task.sleep(for: .seconds(4))
                             fetchEventFromRelayHint(replyToId, fastTags: nrPost.fastTags)
@@ -329,6 +335,8 @@ struct PostAndParent: View {
             .id(nrPost.id)
             .padding(.vertical, 10)
             .onAppear {
+                guard !didLoad else { return }
+                didLoad = true
                 if (nrPost.missingPs.count > 0) {
                     EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.003")
                     QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
