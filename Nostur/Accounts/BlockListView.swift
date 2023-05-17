@@ -83,39 +83,50 @@ struct BlockedAccounts:View {
 }
 
 struct MutedConversations: View {
-    @Environment(\.managedObjectContext) var viewContext
+    @ObservedObject var settings:SettingsStore = .shared
     @EnvironmentObject var ns:NosturState
-    
-    @FetchRequest(sortDescriptors: [], predicate: NSPredicate(value: false))
-    var mutedRootEvents:FetchedResults<Event>
-    
-    var nrPosts:[NRPost] {
-        mutedRootEvents.compactMap { NRPost(event: $0) }
-    }
+    @StateObject var fl = FastLoader()
+    @State var didLoad = false
+    @State var backlog = Backlog()
     
     var body: some View {
-        if let account = ns.account {
-            ScrollView {
-                ForEach(nrPosts) { nrPost in
-                    PostRowDeletable(nrPost: nrPost)
-                        .onSwipe(tint: Color.green, label: "Unmute", icon: "") {
-                            ns.objectWillChange.send()
-                            account.mutedRootIds_.removeAll(where: { $0 == nrPost.id })
-                            DataProvider.shared().save()
-                        }
-                    Divider()
+        Group {
+            if let account = ns.account {
+                LazyVStack(spacing: 0) {
+                    ForEach(fl.nrPosts) { nrPost in
+                        PostRowDeletable(nrPost: nrPost)
+                            .background(Color.systemBackground)
+                            .boxShadow()
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
+                            .id(nrPost.id)
+                            .onSwipe(tint: Color.green, label: "Unmute", icon: "") {
+                                ns.objectWillChange.send()
+                                account.mutedRootIds_.removeAll(where: { $0 == nrPost.id })
+                                fl.nrPosts = fl.nrPosts.filter { $0.id != nrPost.id }
+                                DataProvider.shared().save()
+                            }
+                    }
+                    Spacer()
+                }
+                .background(Color("ListBackground"))
+                .onChange(of: account.mutedRootIds_) { newValue in
+                    fl.reset()
+                    fl.predicate = NSPredicate(format: "id IN %@", newValue)
+                    fl.loadMore(1000)
                 }
             }
-            .onAppear {
-                mutedRootEvents.nsPredicate = NSPredicate(format: "id IN %@", account.mutedRootIds_)
-            }
-            .onChange(of: account.mutedRootIds_) { newValue in
-                mutedRootEvents.nsPredicate = NSPredicate(format: "id IN %@", newValue)
-            }
         }
-        else {
-            Text("Please choose account first")
+        .onAppear {
+            guard let account = ns.account else { return }
+            guard !didLoad else { return }
+            didLoad = true
+            fl.predicate = NSPredicate(format: "id IN %@", account.mutedRootIds_)
+            fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+            fl.loadMore(1000)
+            
         }
+        
     }
 }
 
@@ -123,7 +134,7 @@ struct BlockListView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
             BlockListView()
-                .withPreviewEnvironment()
         }
+        .withPreviewEnvironment()
     }
 }
