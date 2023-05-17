@@ -195,7 +195,7 @@ struct PostAndParent: View {
                                     case 9802:
                                         HighlightRenderer(nrPost: nrPost)
                                         .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                                    case 1,9734:
+                                    case 1,6,9734:
                                         ContentRenderer(nrPost: nrPost, isDetail: true, availableWidth: dim.availablePostDetailRowImageWidth())
                                             .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                                             .contentShape(Rectangle())
@@ -230,7 +230,7 @@ struct PostAndParent: View {
                                 .padding(.top, 3)
                                 .padding(.bottom, 10)
                                 .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                            case 1,9734:
+                            case 1,6,9734:
                                 ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
                                     .padding(.top, 3)
                                     .padding(.bottom, 10)

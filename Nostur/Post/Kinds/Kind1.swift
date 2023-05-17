@@ -80,7 +80,7 @@ struct Kind1: View {
                     Kind1063(nrPost, fileMetadata:fileMetadata, availableWidth: imageWidth)
                 }
                 else {
-                    if (nrPost.kind != 1) {
+                    if (nrPost.kind != 1) && (nrPost.kind != 6) {
                         Label("kind \(Double(nrPost.kind).clean) type not (yet) supported", systemImage: "exclamationmark.triangle.fill")
                             .hCentered()
                             .frame(maxWidth: .infinity)

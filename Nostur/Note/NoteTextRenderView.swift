@@ -32,7 +32,7 @@ struct NoteTextRenderView: View {
                        }
                 }
             }
-            else if nrPost.kind != 1 {
+            else if nrPost.kind != 1 && nrPost.kind != 6 {
                 VStack {
                     Label("kind \(Double(nrPost.kind).clean) type not (yet) supported", systemImage: "exclamationmark.triangle.fill")
                         .hCentered()
