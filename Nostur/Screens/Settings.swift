@@ -215,7 +215,7 @@ struct Settings: View {
                                 }
                             }
 
-                            Button { fixContactEventRelations() } label: { // TODO: THIS ONE NOT NEEDED ANYMORE??
+                            Button { fixContactEventRelations() } label: {
                                 Text("Fix event.pubkey -> event.contact")
                             }
 
@@ -390,11 +390,6 @@ extension Settings {
                     if let lastE = event.lastE() {
                         event.reactionToId = lastE
                     }
-                    
-                    // TODO: dont need this?
-        //            if let lastP = event.lastP() {
-        //                event.reactionToContactId = lastP
-        //            }
                 }
                 
                 // repost and kind 6

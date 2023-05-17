@@ -891,8 +891,6 @@ extension Event {
         }
         
         if event.kind == .zapNote {
-            //TODO: Do we need any objectWillChange.send() here??
-            
             // save 9734 seperate
             // so later we can do --> event(9735).zappedEvent(9734).contact
             let nZapRequest = Event.extractZapRequest(tags: event.tags)

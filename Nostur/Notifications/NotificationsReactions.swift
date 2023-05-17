@@ -10,7 +10,6 @@ import CoreData
 import Combine
 
 // NIP-25: The last p tag MUST be the pubkey of the event being reacted to.
-// TODO: Maybe when performance problems: store lastE + lasteE in Events table
 struct NotificationsReactions: View {
 
     let pubkey:String

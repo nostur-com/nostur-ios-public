@@ -7,9 +7,6 @@
 
 import SwiftUI
 
-// TODO: RESEARCH SWIFT USER GENERATED CONTEXT SANITIZING ETC.
-
-// TODO: HMM .renderedText does not update like NRContentTextRenderer
 struct NoteTextRenderView: View {
     @ObservedObject var nrPost:NRPost
     var useLinelimit = true

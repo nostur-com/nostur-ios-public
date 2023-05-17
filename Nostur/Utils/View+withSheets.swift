@@ -99,7 +99,6 @@ private struct WithSheets: ViewModifier {
         
             .onReceive(receiveNotification(.reportContact), perform: { notification in
                 let contact = notification.object as! Contact
-                // TODO: FETCH CONTACT FROM VIEWCONTEXt..
                 reportContact = ReportContact(contact: contact)
             })
             .sheet(item: $reportContact, content: { reportContact in

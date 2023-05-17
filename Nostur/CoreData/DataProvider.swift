@@ -197,7 +197,7 @@ class DataProvider: ObservableObject {
         }
     }
     
-    func bgSave() { // TODO: replace all viewContext.save() with this save
+    func bgSave() { 
         bg.perform { [weak self] in
             guard let self = self else { return }
             if self.bg.hasChanges {

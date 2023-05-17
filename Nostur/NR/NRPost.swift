@@ -282,7 +282,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             fr.predicate = NSPredicate(format: "created_at >= %i AND reactionToId == %@ AND pubkey == %@ AND kind == 7", created_at, id, account.publicKey)
             fr.fetchLimit = 1
             fr.resultType = .countResultType
-            //TODO: should check for "+","👍","🤙","❤️","🫂","🤗","😘","😍","💯","🤩","⚡️","🔥","💥","🚀"
             let count = (try? DataProvider.shared().bg.count(for: fr)) ?? 0
             return count > 0
         }
@@ -295,7 +294,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             fr.predicate = NSPredicate(format: "created_at > %i AND replyToId == %@ AND pubkey == %@ AND kind == 1", created_at, id, account.publicKey)
             fr.fetchLimit = 1
             fr.resultType = .countResultType
-            //TODO: should check for "+","👍","🤙","❤️","🫂","🤗","😘","😍","💯","🤩","⚡️","🔥","💥","🚀"
             let count = (try? DataProvider.shared().bg.count(for: fr)) ?? 0
             return count > 0
         }

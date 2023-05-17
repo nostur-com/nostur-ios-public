@@ -35,11 +35,3 @@ struct PostRowDeletable: View {
         }
     }
 }
-
-
-//// TODO: ADD PREVIEW
-//struct PostRowDeletable_Previews: PreviewProvider {
-//    static var previews: some View {
-//        PostRowDeletable()
-//    }
-//}

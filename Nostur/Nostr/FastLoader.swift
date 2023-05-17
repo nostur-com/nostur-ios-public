@@ -260,7 +260,6 @@ struct ImportedNotification {
 }
 
 
-// TODO: Make thread-safe
 class Backlog {
     
     var tasks = Set<ReqTask>()
@@ -277,7 +276,6 @@ class Backlog {
     
     private func removeOldTasks() {
         tasks.forEach { task in
-            // TODO: Swift access race in Nostur.Backlog.tasks.modify : Swift.Set<Nostur.ReqTask> at 0x12630f940
             if task.createdAt.timeIntervalSinceNow < -timeout {
                 task.onTimeout()
                 tasks.remove(task)
@@ -290,7 +288,6 @@ class Backlog {
     }
     
     public func add(_ task:ReqTask) {
-        // TODO: Swift access race in Nostur.Backlog.tasks.modify : Swift.Set<Nostur.ReqTask> at 0x12630f940
         tasks.insert(task)
     }
     

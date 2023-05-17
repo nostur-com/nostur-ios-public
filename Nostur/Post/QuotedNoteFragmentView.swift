@@ -18,13 +18,7 @@ struct QuotedNoteFragmentView: View {
     @EnvironmentObject var accountState:NosturState
     @State var viewSize:CGSize = .zero
      
-    let nrPost:NRPost
-//    @ObservedObject var event:Event
-    
-    init(nrPost: NRPost) {
-        self.nrPost = nrPost
-//        self.event = nrPost.event
-    }
+    @ObservedObject var nrPost:NRPost
     
     var body: some View {
         VStack(alignment:.leading) {
@@ -34,11 +28,10 @@ struct QuotedNoteFragmentView: View {
                         // profile image
                         PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 20)
                             .onTapGesture {
-                                navigateTo(ContactPath(key: nrPost.pubkey)) // TODO: Direct to nrPost.vContact if possible
+                                navigateTo(ContactPath(key: nrPost.pubkey))
                             }
                             
                         if let contact = nrPost.contact {
-//                            NameAndNip(contact: contact)
                             NameAndNip(contact: contact)
                         }
                         else {
@@ -86,21 +79,15 @@ struct QuotedNoteFragmentView: View {
         .onTapGesture {
             navigateTo(nrPost)
         }
-        
         .padding(10)
         .overlay(
             RoundedRectangle(cornerRadius: 15)
                 .stroke(.regularMaterial, lineWidth: 1)
         )
         .onAppear {
-            // should fetch setMetaData if
-            // No Contact
-            // Contact updated_at is very old
-            // followed contact meta data refresh should be updated at app wake up probably
             if (nrPost.contact == nil) || (nrPost.contact?.metadata_created_at == 0) {
                 print("🟢 NoteRow.onAppear event.contact == nil so: REQ.0:\(nrPost.pubkey)")
-                // TODO: FIXXXX
-//                EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
+                EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
                 QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
             }
         }

@@ -178,7 +178,6 @@
 		1FA51FF62978441200FE60EF /* Relay+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */; };
 		1FA51FF72978441200FE60EF /* Relay+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA51FF52978441200FE60EF /* Relay+CoreDataProperties.swift */; };
 		1FAC67AE29F5523200798661 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1FB448C62965F3D200038671 /* Assets.xcassets */; };
-		1FB130AF29C0C99D004AC98D /* Post.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB130AE29C0C99D004AC98D /* Post.swift */; };
 		1FB130B129C0DB07004AC98D /* NoteRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB130B029C0DB07004AC98D /* NoteRow.swift */; };
 		1FB130B329C0E5A4004AC98D /* NoteHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB130B229C0E5A4004AC98D /* NoteHeaderView.swift */; };
 		1FB130B529C0E8D8004AC98D /* ReplyingToFragmentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB130B429C0E8D8004AC98D /* ReplyingToFragmentView.swift */; };
@@ -483,7 +482,6 @@
 		1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Relay+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1FA51FF52978441200FE60EF /* Relay+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Relay+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1FAC67AF29F5527800798661 /* DisabledAssets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = DisabledAssets.xcassets; sourceTree = "<group>"; };
-		1FB130AE29C0C99D004AC98D /* Post.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Post.swift; sourceTree = "<group>"; };
 		1FB130B029C0DB07004AC98D /* NoteRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteRow.swift; sourceTree = "<group>"; };
 		1FB130B229C0E5A4004AC98D /* NoteHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteHeaderView.swift; sourceTree = "<group>"; };
 		1FB130B429C0E8D8004AC98D /* ReplyingToFragmentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplyingToFragmentView.swift; sourceTree = "<group>"; };
@@ -640,7 +638,6 @@
 				1F84840429C1A84B00AF129A /* NoteMenuView.swift */,
 				1FB130B029C0DB07004AC98D /* NoteRow.swift */,
 				1F4C1C292A07B21F0010573F /* NProfileView.swift */,
-				1FB130AE29C0C99D004AC98D /* Post.swift */,
 				1FB130BC29C1930A004AC98D /* PostDetailView.swift */,
 				1F6B444F29D5D1F700AD3191 /* PostOrThread.swift */,
 				1FD78EF62A0CC365003E7B3E /* PostRowDeletable.swift */,
@@ -1412,7 +1409,6 @@
 				1F1472DE29A71F6C00197393 /* NoteHeader.swift in Sources */,
 				1F065A9B29A3E67F003421D3 /* NotificationsReactions.swift in Sources */,
 				1FB6E6EE29E308E2008BE8A6 /* LinkPreviewThings.swift in Sources */,
-				1FB130AF29C0C99D004AC98D /* Post.swift in Sources */,
 				1F71E8B229EB4E4900B99340 /* NosturList+CoreDataClass.swift in Sources */,
 				1F83498129DE28290032E52B /* ProfileRelays.swift in Sources */,
 				1FB130BD29C1930A004AC98D /* PostDetailView.swift in Sources */,

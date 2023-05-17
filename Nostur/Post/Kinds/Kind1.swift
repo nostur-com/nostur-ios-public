@@ -54,7 +54,7 @@ struct Kind1: View {
                 PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact)
                     .frame(width: 50, height: 50)
                     .onTapGesture {
-                        navigateTo(ContactPath(key: nrPost.pubkey)) // TODO: if nrPost.contact navigate with that else by .pubkey
+                        navigateTo(ContactPath(key: nrPost.pubkey))
                     }
                     .padding(.horizontal, 10)
                 NoteHeaderView(nrPost: nrPost, singleLine: false)

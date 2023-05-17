@@ -57,7 +57,7 @@ struct Kind1Default: View {
                         .opacity(connect == .top || connect == .both ? 1 : 0)
                 }
                 .onTapGesture {
-                    navigateTo(ContactPath(key: nrPost.pubkey)) // TODO: if nrPost.contact navigate with that else by .pubkey
+                    navigateTo(ContactPath(key: nrPost.pubkey))
                 }
                 .padding(.horizontal, DIMENSIONS.POST_ROW_PFP_HPADDING)
 

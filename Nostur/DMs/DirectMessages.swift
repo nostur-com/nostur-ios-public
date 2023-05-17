@@ -121,7 +121,6 @@ struct DirectMessages: View {
     @FetchRequest
     var sent:FetchedResults<Event>
     
-    // TODO: Use Algorithms, and .chunked for performance? chain?
     var onlyMostRecentAll:[String: ([Event], Bool, Int, Int64, Event)] { // [pubkey: [dm], isAccepted, unreadCount, rootDM.createdAt, rootDM]
         // The final list of contacts (key) and latest dm (value)
         return computeOnlyMostRecentAll(sent: Array(sent), received: Array(received), pubkey: pubkey)

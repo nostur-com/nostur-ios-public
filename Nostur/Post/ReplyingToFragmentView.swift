@@ -14,7 +14,6 @@ struct ReplyingToFragmentView: View {
     
     var body: some View {
         Group {
-            // TODO: MAYBE DO LIKE NRContentTextRenderer with AttributedStringWithPs? So its more specific, don't rerender whole NRPost, just this specific view..
             if let rendered = nrPost.replyingToUsernamesMarkDown {
                 Text(rendered)
                         .fontWeight(.light)

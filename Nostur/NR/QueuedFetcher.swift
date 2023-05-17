@@ -16,7 +16,7 @@ class QueuedFetcher {
     var pQueue = Set<String>()
     var idQueue = Set<String>()
     
-    // TODO: finish recent cache
+    // TODO: finish recent cache - add recently tried queue, to not retry the same over and over..
     var recentPs = Set<String>()
     var recentIds = Set<String>()
     
@@ -26,7 +26,7 @@ class QueuedFetcher {
     private var enqueueIDsubject = PassthroughSubject<String, Never>()
     private var dequeueIDsubject = PassthroughSubject<String, Never>()
     
-    // TODO add recently tried queue, to not retry the same over and over..
+    
     
     init() {
         enqueuePsubject.sink { pTag in

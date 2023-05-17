@@ -57,11 +57,6 @@ struct NoteMinimalContentView_Previews: PreviewProvider {
         // f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e
         
         
-        // TODO: find repost of 97a1a5dab19064061b45937c4e3523782d34608bd13278def9af4d5107ece65c
-        // maybe: 7edef20143bb4df0c65dff3993bd9f7c5fb755fe6c8fa72cc847299afe52d8fa
-        
-       
-        
         List {
             let event0 = PreviewFetcher.fetchNRPost("21a1b8e4083c11eab8f280dc0c0bddf3837949df75662e181ad117bd0bd5fdf3")
     //        let event0 = PreviewFetcher.fetchNRPost("24ad21d57d59b03f4f9a8931f8bc4ccca84ed6ab257bf62cb84b0d04e0583118")

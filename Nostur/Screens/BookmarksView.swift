@@ -59,7 +59,7 @@ struct BookmarksView: View {
                         .onDelete {
                             vBookmark.mainEvent.bookmarkedBy = []
                             vBookmarks = vBookmarks.filter { $0.id != vBookmark.id }
-                                DataProvider.shared().save()
+                            DataProvider.shared().save()
                         }
                 }
             }

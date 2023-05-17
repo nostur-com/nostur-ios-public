@@ -89,8 +89,6 @@ class LVM: NSObject, ObservableObject {
         set { lastAppearedSubject.send(newValue) }
     }
     var lastAppearedAnchor = "BOTTOM"
-    
-    // TODO: THIS DOESNT WORK ANYMORE IF LEAF IS LATER IN A THREAD WITH NEW REPLY (NO LONGER LEAF)
     var lastAppearedIndex:Int? { lastAppearedId != nil ? lvmState.nrPostLeafs.firstIndex(where: { $0.id == self.lastAppearedId }) : nil }
     var lastReadId:String? // so we dont have to fetch from different context by objectId if we want to save ListState in background
     var lastReadIdIndex:Int? { lastReadId != nil ? lvmState.nrPostLeafs.firstIndex(where: { $0.id == self.lastReadId }) : nil }
@@ -173,10 +171,7 @@ class LVM: NSObject, ObservableObject {
 
             if currentNRPostLeafs.count == 0 {
                 let leafThreads = self.renderLeafs(added) // Transforms seperate posts into threads, .id for each thread is leaf.id
-                
-                // TODO: MAKE BETTER ALTERNATIVE
-//                putEventsWithMissingContactsInEventRelationsQueue(leafThreadsToFlatNRPosts(leafThreads))
-                
+                                
                 DispatchQueue.main.async {
                     self.nrPostLeafsOnScreenIds = self.getAllObjectIds(leafThreads)
                     self.lvmState.nrPostLeafs = leafThreads
@@ -238,8 +233,6 @@ class LVM: NSObject, ObservableObject {
             print("putNewThreadsOnScreen: skipped \(diff) duplicates")
         }
         
-        // TODO: MAKE BETTER ALTERNATIVE:
-//        putEventsWithMissingContactsInEventRelationsQueue(leafThreadsToFlatNRPosts(newLeafThreads))
         // leafs+parents count
         let addedCount = newLeafThreads.reduce(0, { partialResult, nrPost in
             return partialResult + nrPost.threadPostsCount
@@ -283,7 +276,6 @@ class LVM: NSObject, ObservableObject {
     
     func fetchParents(_ danglers:[NRPost]) {
         danglers.forEach { nrPost in
-            // TODO: FIXME
             EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "LVM.001")
         }
         
@@ -1093,7 +1085,7 @@ extension LVM: NSFetchedResultsControllerDelegate {
                     }
                 }
                 else {
-                    self.state = .AWAITING_RESTORE_SCROLL // POST IN LIST, BUT OUTSIDE MAX VISIBLE.. TODO: HANDLE THIS. NO CUTOFF NOW
+                    self.state = .AWAITING_RESTORE_SCROLL
                     newUnrenderedEvents = events.filter(onlyRootOrReplyingToFollower)
                         .map {
                             $0.parentEvents = Event.getParentEvents($0)

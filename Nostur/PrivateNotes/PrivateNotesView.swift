@@ -67,7 +67,6 @@ struct PrivateNotesView: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarHidden(true)
         .padding()
-//        .onReceive() // TODO: add reload for when add/delete on profile note.
         .onReceive(receiveNotification(.postAction)) { notification in
             let action = notification.object as! PostActionNotification
             if (action.type == .privateNote  && !action.hasPrivateNote) {

@@ -146,17 +146,14 @@ class Importer {
                     if event.kind == .contactList {
                         if event.publicKey == NosturState.EXPLORER_PUBKEY {
                             // use guest account p's for "Explorer" feed
-                            // TODO: Need objectWillChange.send() here or not?
                             let pTags = event.pTags()
                             Task { @MainActor in
-//                                NosturState.shared.objectWillChange.send()
                                 NosturState.shared.rawExplorePubkeys = Set(pTags)
                             }
                         }
 
                         let n = event
                         DispatchQueue.main.async {
-                            // TODO: Use notifications like this in importer more, to update active views
                             sendNotification(.newFollowingListFromRelay, n)
                         }
                     }
