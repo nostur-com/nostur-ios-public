@@ -121,6 +121,7 @@ struct PostAndParent: View {
     }
     
     var body: some View {
+        let _ = Self._printChanges()
         VStack {
             // MARK: PARENT NOTE
             // We have the event: replyTo_ = already .replyTo or lazy fetched with .replyToId
@@ -351,7 +352,8 @@ struct PostAndParent: View {
 //                    fixReplyToIfWeAlreadyHaveIt(event)
                     
                     // Here, because do all at import is slow?
-//                    fixIfWeHavePointingToAlreadyInCache(event)
+                    
+//                    fixIfWeHavePointingToAlreadyInCache(nrPost.mainEvent)
                     
                     EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
                     
@@ -415,24 +417,33 @@ struct PostAndParent: View {
 //    func fixIfWeHavePointingToAlreadyInCache(_ openedEvent:Event) {
 //        let pointingToEventReq = NSFetchRequest<Event>(entityName: "Event")
 //        //        pointingToEventReq.predicate = NSPredicate(format: "(kind IN {1,6} AND  (replyToId == %@ OR replyToRootId == %@ OR firstQuoteId == %@)", openedEvent.id, openedEvent.id, openedEvent.id)
-//        pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6,9802} AND %@ IN {replyToId,replyToRootId,firstQuoteId}", openedEvent.id)
+//        pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6,9802,7,9375} AND %@ IN {replyToId,replyToRootId,firstQuoteId,reactionToId,zappedEventId}", openedEvent.id)
 //        // TODO: NEED 6 ALSO OR NOT?
 //        //            pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6} AND %@ IN {replyToId,replyToRootId,firstQuoteId}", savedEvent.id)
 //        pointingToEventReq.sortDescriptors = []
+//        var reloadReplies = false
 //        if let pointingToEvents = try? viewContext.fetch(pointingToEventReq) {
 //            for event in pointingToEvents {
 //                if (event.replyToId != nil) && (event.replyToId == openedEvent.id) {
-//                    event.objectWillChange.send()
+//                    reloadReplies = true
 //                    event.replyTo = openedEvent
 //                }
 //                if (event.replyToRootId != nil) && (event.replyToRootId == openedEvent.id) {
-//                    event.objectWillChange.send()
+//                    reloadReplies = true
 //                    event.replyToRoot = openedEvent
 //                }
 //                if (event.firstQuoteId != nil) && (event.firstQuoteId == openedEvent.id) {
-//                    event.objectWillChange.send()
 //                    event.firstQuote = openedEvent
 //                }
+//                if (event.reactionToId != nil) && (event.reactionToId == openedEvent.id) {
+//                    event.reactionTo = openedEvent
+//                }
+//                if (event.zappedEventId != nil) && (event.zappedEventId == openedEvent.id) {
+//                    event.zappedEvent = openedEvent
+//                }
+//            }
+//            if reloadReplies {
+//                nrPost.loadReplies()
 //            }
 //        }
 //    }

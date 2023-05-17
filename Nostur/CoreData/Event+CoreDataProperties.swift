@@ -86,8 +86,12 @@ extension Event {
         guard contact == nil else { return contact }
         guard let ctx = managedObjectContext else { return nil }
         if let found = Contact.fetchByPubkey(pubkey, context: ctx) {
-            DispatchQueue.main.async {
+            if Thread.isMainThread {
                 found.objectWillChange.send()
+                self.contact = found
+                found.addToEvents(self)
+            }
+            else {
                 self.contact = found
                 found.addToEvents(self)
             }

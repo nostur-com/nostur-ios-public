@@ -282,7 +282,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     func connect(_ forceConnectionAttempt:Bool = false) {
         guard forceConnectionAttempt || self.skipped == self.exponentialReconnectBackOff else { // Should be 0 == 0 to continue, or 2 == 2 etc..
             self.skipped = skipped + 1
-            print("🏎️🏎️🔌🔴 Skipping reconnect. EB: (\(exponentialReconnectBackOff)) skipped: \(skipped)")
+            print("🏎️🏎️🔌🔴 Skipping reconnect. \(self.url) EB: (\(exponentialReconnectBackOff)) skipped: \(skipped)")
             return
         }
         if !isConnecting {
