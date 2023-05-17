@@ -27,6 +27,7 @@ struct ProfileZaps: View {
 //    @EnvironmentObject var ns:NosturState
 //    @StateObject var fl = FastLoader()
     @State var backlog = Backlog(timeout: 8)
+    @State var didLoad = false
     @State var nrPosts = ArraySlice<NRPost>()
     @State var zaps = ArraySlice<Event>()
     
@@ -92,8 +93,11 @@ struct ProfileZaps: View {
                 }
             }
         }
+        .frame(minHeight: 800)
         .background(Color("ListBackground"))
         .task {
+            guard !didLoad else { return }
+            didLoad = true
             loadZaps()
             
             let calendar = Calendar.current

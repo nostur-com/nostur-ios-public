@@ -103,6 +103,7 @@
 		1F6EB73A29E1C9B200B9DA83 /* EditNosturList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6EB73929E1C9B200B9DA83 /* EditNosturList.swift */; };
 		1F71037D296BD9DE006245CC /* Nostr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F71037C296BD9DE006245CC /* Nostr.swift */; };
 		1F7150D029ABC6CE00AAB1C3 /* TabButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7150CF29ABC6CE00AAB1C3 /* TabButton.swift */; };
+		1F716C752A14D4F300B202CA /* ProfileTabs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F716C742A14D4F300B202CA /* ProfileTabs.swift */; };
 		1F71B45529B0822300FA0400 /* ProfileBadgesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F71B45429B0822300FA0400 /* ProfileBadgesView.swift */; };
 		1F71E8B229EB4E4900B99340 /* NosturList+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF2C6C729EAD9C20096AC4A /* NosturList+CoreDataClass.swift */; };
 		1F71E8B329EB4E4C00B99340 /* NosturList+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF2C6C829EAD9C20096AC4A /* NosturList+CoreDataProperties.swift */; };
@@ -412,6 +413,7 @@
 		1F6EB73929E1C9B200B9DA83 /* EditNosturList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditNosturList.swift; sourceTree = "<group>"; };
 		1F71037C296BD9DE006245CC /* Nostr.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nostr.swift; sourceTree = "<group>"; };
 		1F7150CF29ABC6CE00AAB1C3 /* TabButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabButton.swift; sourceTree = "<group>"; };
+		1F716C742A14D4F300B202CA /* ProfileTabs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ProfileTabs.swift; path = Nostur/Profiles/ProfileTabs.swift; sourceTree = "<group>"; };
 		1F71B45429B0822300FA0400 /* ProfileBadgesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileBadgesView.swift; sourceTree = "<group>"; };
 		1F7265C129B2148200E4F9D4 /* Exporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Exporter.swift; sourceTree = "<group>"; };
 		1F740D9B29AF1BF600EFCCA7 /* Badges.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Badges.swift; sourceTree = "<group>"; };
@@ -948,6 +950,7 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
+				1F716C742A14D4F300B202CA /* ProfileTabs.swift */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1FB448C82965F3D200038671 /* Nostur.entitlements */,
 				1F313DED296980D8004C7366 /* Info.plist */,
@@ -1501,6 +1504,7 @@
 				1F7521192986D44E00C43DF0 /* MessageParser.swift in Sources */,
 				1FC38BA0297316AA004769F8 /* DummyEvents.swift in Sources */,
 				1F533E3329D35FD300748438 /* TextRenderer.swift in Sources */,
+				1F716C752A14D4F300B202CA /* ProfileTabs.swift in Sources */,
 				1FFF997D29CF4AF100ADAE23 /* ProfilePicFullScreenSheet.swift in Sources */,
 				1F2F54E72A02364900B6D7E4 /* GIFImage.swift in Sources */,
 				1F740D9F29AF36C800EFCCA7 /* BadgesIssuedView.swift in Sources */,

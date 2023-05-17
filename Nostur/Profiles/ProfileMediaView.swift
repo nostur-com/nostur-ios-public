@@ -17,6 +17,7 @@ struct ProfileMediaView: View {
     let pubkey:String
 //    @State var imageUrls:[URL] = []
     @StateObject var fl = FastLoader()
+    @State var didLoad = false
     @State var backlog = Backlog()
     
     let columns = [
@@ -42,6 +43,8 @@ struct ProfileMediaView: View {
             .padding(10)
         }
         .onAppear {
+            guard !didLoad else { return }
+            didLoad = true
             fl.nrPostTransform = false
             fl.predicate = NSPredicate(format: "pubkey == %@ AND kind == 1", pubkey)
             fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]

@@ -17,10 +17,7 @@ struct ProfileView: View {
     @ObservedObject var settings:SettingsStore = .shared
      
     @ObservedObject var contact:Contact
-    var pubkey:String
-    
-    @FetchRequest
-    var clEvents:FetchedResults<Event>
+    var pubkey:String    
     
     @FetchRequest
     var relayEvents:FetchedResults<Event>
@@ -29,7 +26,6 @@ struct ProfileView: View {
     var kind0Events:FetchedResults<Event>
     
     @State var profilePicViewerIsShown = false
-    @State var selectedSubTab = "Posts"
     @State var limit = 10
     @State var tabOffset = 0.0
     
@@ -37,10 +33,7 @@ struct ProfileView: View {
         self.contact = contact
         self.pubkey = contact.pubkey
         
-        let cl = Event.fetchRequest()
-        cl.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        cl.predicate = NSPredicate(format: "pubkey == %@ AND kind == 3", pubkey)
-        _clEvents = FetchRequest(fetchRequest: cl)
+        
         
         let rl = Event.fetchRequest()
         rl.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
@@ -195,7 +188,9 @@ struct ProfileView: View {
                                 Text("Following  ")
                                 
                                 Text("**♾️** Followers")
-                                    .onTapGesture { selectedSubTab = "Followers" }
+                                    .onTapGesture {
+                                        // selectedSubTab = "Followers"
+                                    }
                             }
                             .frame(height: 30)
                         }
@@ -203,107 +198,7 @@ struct ProfileView: View {
                         .padding(.top, 120)
                     }
                 }
-                Section {
-                    VStack {
-                        switch selectedSubTab {
-                            case "Posts":
-                                ProfileNotesView(pubkey: pubkey)
-                            case "Following":
-                                VStack {
-                                    if clEvents.count != 0, let pubkeys = clEvents.first!.contactPubkeys() {
-                                        
-                                        let silentFollows = clEvents.first!.pubkey == NosturState.shared.pubkey ? NosturState.shared.account?.follows_.filter { $0.privateFollow }.map { $0.pubkey } : []
-                                        
-                                        ContactList(pubkeys: pubkeys, silent:silentFollows)
-                                    }
-                                    else {
-                                        HStack {
-                                            Spacer()
-                                            ProgressView()
-                                                .padding(50)
-                                            Spacer()
-                                                .onAppear {
-                                                    print("🟢 ProfileView.onAppear no clEvent so REQ.3: \(pubkey)")
-                                                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: pubkey)))
-                                                }
-                                        }
-                                    }
-                                }
-                            case "Media":
-                                ProfileMediaView(pubkey: pubkey)
-                            case "Likes":
-                                ProfileLikesView(pubkey: pubkey)
-                            case "Zaps":
-                                ProfileZaps(pubkey: pubkey, contact: contact)
-//                                ProfileZapsView(pubkey:pubkey, contact: contact)
-//                            case "Relays":
-//                                VStack {
-//                                    if relayEvents.count != 0 {
-//                                        ProfileRelays(relayEvent: relayEvents.first!)
-//                                    }
-//                                    else if clEvents.count != 0 {
-//                                        ProfileRelaysView(clEvent: clEvents.first!)
-//                                    }
-//                                    else {
-//                                        HStack {
-//                                            Spacer()
-//                                            ProgressView()
-//                                                .padding(50)
-//                                            Spacer()
-//                                        }
-//                                        .onAppear {
-//                                            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserProfileKinds(pubkey: pubkey, kinds: [10002])))
-//                                            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: pubkey)))
-//                                        }
-//                                    }
-//                                }
-                            case "Followers":
-                                VStack {
-                                    Text("Followers").font(.headline).fontWeight(.heavy).padding(.vertical, 10)
-                                    FollowersList(pubkey: contact.pubkey)
-                                }
-                            default:
-                                Text("🥪")
-                        }
-                    }
-                } header: {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing:0) {
-                            TabButton(
-                                action: { selectedSubTab = "Posts" },
-                                title: "Posts",
-                                selected: selectedSubTab == "Posts")
-                            Spacer()
-                            TabButton(
-                                action: { selectedSubTab = "Following" },
-                                title: "Following",
-                                selected: selectedSubTab == "Following")
-                            Spacer()
-                            TabButton(
-                                action: { selectedSubTab = "Media" },
-                                title: "Media",
-                                selected: selectedSubTab == "Media")
-                            Spacer()
-                            TabButton(
-                                action: { selectedSubTab = "Likes" },
-                                title: "Likes",
-                                selected: selectedSubTab == "Likes")
-                            Spacer()
-                            TabButton(
-                                action: { selectedSubTab = "Zaps" },
-                                title: "Zaps",
-                                selected: selectedSubTab == "Zaps")
-                            //                                Spacer()
-                            //                                TabButton(
-                            //                                    action: { selectedSubTab = "Relays" },
-                            //                                    title: "Relays",
-                            //                                    selected: selectedSubTab == "Relays")
-                        }
-                        .frame(width: dim.listWidth)
-                    }
-                    .padding(.top, 10)
-                    .background(Color.systemBackground)
-                }
+                ProfileTabs(contact: contact)
             }
         }
         .onReceive(receiveNotification(.newFollowingListFromRelay)) { notification in

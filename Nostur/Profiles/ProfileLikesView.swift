@@ -16,6 +16,7 @@ struct ProfileLikesView: View {
     @ObservedObject var settings:SettingsStore = .shared
     @EnvironmentObject var ns:NosturState
     @StateObject var fl = FastLoader()
+    @State var didLoad = false
     @State var backlog = Backlog()
     
     var body: some View {
@@ -50,8 +51,11 @@ struct ProfileLikesView: View {
             .buttonStyle(.bordered)
             .tint(.accentColor)
         }
+        .frame(minHeight: 800)
         .background(Color("ListBackground"))
         .onAppear {
+            guard !didLoad else { return }
+            didLoad = true
             fl.transformer = { event in
                 if let reactionTo = event.reactionTo_ {
                     return NRPost(event: reactionTo)

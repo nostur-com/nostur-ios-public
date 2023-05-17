@@ -15,6 +15,7 @@ struct ProfileNotesView: View {
     @ObservedObject var settings:SettingsStore = .shared
     @EnvironmentObject var ns:NosturState
     @StateObject var fl = FastLoader()
+    @State var didLoad = false
     @State var backlog = Backlog()
     
     var body: some View {
@@ -50,8 +51,11 @@ struct ProfileNotesView: View {
             .buttonStyle(.bordered)
             .tint(.accentColor)
         }
+        .frame(minHeight: 800)
         .background(Color("ListBackground"))
         .onAppear {
+            guard !didLoad else { return }
+            didLoad = true
             fl.predicate = NSPredicate(format: "pubkey == %@ AND kind IN {1,6,9802} ", pubkey)
             fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
             
