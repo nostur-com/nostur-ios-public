@@ -175,7 +175,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         self.previewWeights = previewWeights
         
         var isAwaiting = false
-        if let contact = event.contact {
+        if let contact = event.contact_ {
             self._contact = NRContact(contact: contact)
         }
         else {
@@ -592,9 +592,21 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             self.withReplies = true
             repliesListener()
         }
-        
-        DataProvider.shared().bg.perform { [weak self] in
+        let ctx = DataProvider.shared().bg
+        ctx.perform { [weak self] in
             guard let self = self else { return }
+            
+            let fr = Event.fetchRequest()
+            fr.predicate = NSPredicate(format: "kind IN {1} AND %@ IN {replyToId,replyToRootId}", self.id)
+            if let foundReplies = try? ctx.fetch(fr) {
+                if let existingReplies = self.event.replies {
+                    self.event.replies = existingReplies.union(Set(foundReplies))
+                }
+                else {
+                    self.event.replies = Set(foundReplies)
+                }
+            }
+            
             let nrReplies = self.event.replies_.map { NRPost(event: $0) }
             DispatchQueue.main.async {
                 self.objectWillChange.send()
