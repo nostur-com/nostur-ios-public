@@ -46,17 +46,23 @@ struct PrivateNotesView: View {
     var body: some View {
         let _ = Self._printChanges()
         ScrollView {
-            LazyVStack {
-                ForEach(privateNotes) { pnInfo in
-                    PrivateNoteRow(note: pnInfo.note, nrPost: pnInfo.nrPost)
-                        .onDelete {
-                            privateNotes = privateNotes.filter { $0.note.id != pnInfo.note.id }
-                            viewContext.delete(pnInfo.note)
-                            DataProvider.shared().save()
-                        }
-                    Divider()
+            if privateNotes.count > 0 {
+                LazyVStack {
+                    ForEach(privateNotes) { pnInfo in
+                        PrivateNoteRow(note: pnInfo.note, nrPost: pnInfo.nrPost)
+                            .onDelete {
+                                privateNotes = privateNotes.filter { $0.note.id != pnInfo.note.id }
+                                viewContext.delete(pnInfo.note)
+                                DataProvider.shared().save()
+                            }
+                        Divider()
+                    }
+                    Spacer()
                 }
-                Spacer()
+            }
+            else {
+                Text("When you add a private note to a post or profile it will show up here.")
+                    .centered()
             }
         }
         .overlay(alignment:.topTrailing) {

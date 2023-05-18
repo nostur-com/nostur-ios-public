@@ -48,23 +48,29 @@ struct BookmarksView: View {
     var body: some View {
         let _ = Self._printChanges()
         ScrollView {
-            LazyVStack {
-                ForEach(vBookmarks) { vBookmark in
-                    PostRowDeletable(nrPost: vBookmark)
-                        .background(Color.systemBackground)
-                        .boxShadow()
-                        .padding(.vertical, 10)
-                        .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
-                        .id(vBookmark.id)
-                        .onDelete {
-                            vBookmark.mainEvent.bookmarkedBy = []
-                            vBookmarks = vBookmarks.filter { $0.id != vBookmark.id }
-                            DataProvider.shared().save()
-                        }
+            if vBookmarks.count > 0 {
+                LazyVStack {
+                    ForEach(vBookmarks) { vBookmark in
+                        PostRowDeletable(nrPost: vBookmark)
+                            .background(Color.systemBackground)
+                            .boxShadow()
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
+                            .id(vBookmark.id)
+                            .onDelete {
+                                vBookmark.mainEvent.bookmarkedBy = []
+                                vBookmarks = vBookmarks.filter { $0.id != vBookmark.id }
+                                DataProvider.shared().save()
+                            }
+                    }
+                    Spacer()
                 }
-                Spacer()
+                .background(Color("ListBackground"))
             }
-            .background(Color("ListBackground"))
+            else {
+                Text("When you bookmark a post it will show up here.")
+                    .centered()
+            }
         }
         .overlay(alignment:.topTrailing) {
             AccountSwitcher(accounts: accounts, selectedAccount: $selectedAccount)
