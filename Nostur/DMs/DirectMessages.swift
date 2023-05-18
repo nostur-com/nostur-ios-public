@@ -364,6 +364,17 @@ struct DMRow: View {
         HStack(alignment: .top) {
             ZStack {
                 PFP(pubkey: contactPubkey, contact: contact)
+                    .onAppear {
+                        if contact?.metadata_created_at == 0 {
+                            EventRelationsQueue.shared.addAwaitingEvent(recentDM)
+                            QueuedFetcher.shared.enqueue(pTag: contactPubkey)
+                        }
+                    }
+                    .onDisappear {
+                        if contact?.metadata_created_at == 0 {
+                            QueuedFetcher.shared.dequeue(pTag: contactPubkey)
+                        }
+                    }
                 if let unread {
                     Text("\(unread)")
                         .font(.footnote)
@@ -382,6 +393,16 @@ struct DMRow: View {
                             // TODO: FIXX WEIRD:
                             if let contact = contact {
                                 NameAndNip(contact: NRContact(contact: contact))
+                            }
+                            else {
+                                EmptyView()
+                                    .onAppear {
+                                        EventRelationsQueue.shared.addAwaitingEvent(recentDM)
+                                        QueuedFetcher.shared.enqueue(pTag: contactPubkey)
+                                    }
+                                    .onDisappear {
+                                        QueuedFetcher.shared.dequeue(pTag: contactPubkey)
+                                    }
                             }
                             
                             Group {
