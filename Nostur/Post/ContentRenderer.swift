@@ -57,6 +57,7 @@ struct ContentRenderer: View { // VIEW things
                     //                            .fixedSize(horizontal: false, vertical: true)
                     //                            .overlay(MarkdownText(string))
                     NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs)
+                        .padding(.horizontal, fullWidth ? 10 : 0)
                     //                            .padding(0)
                     //                            .frame(maxWidth: .infinity)
                     //                            .padding(.vertical, 5)
