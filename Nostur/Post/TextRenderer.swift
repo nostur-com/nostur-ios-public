@@ -244,7 +244,7 @@ extension String {
             .replacingOccurrences(of: "**", with: "\\*\\*")
             .replacingOccurrences(of: "[", with: "\\[")
             .replacingOccurrences(of: "]", with: "\\]")
-            .replacingOccurrences(of: "/", with: "\\/")
             .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "/", with: "\\/")
     }
 }
