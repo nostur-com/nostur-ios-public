@@ -9,7 +9,7 @@ import Foundation
 import CoreData
 import Combine
 
-let LVM_MAX_VISIBLE = 75 // Will only be ignored if last appeared is older
+let LVM_MAX_VISIBLE = 250 // Will only be ignored if last appeared is older
 
 class LVMState: ObservableObject {
     @Published var listId = "Following"
@@ -994,7 +994,9 @@ extension LVM: NSFetchedResultsControllerDelegate {
                 let fr = Event.fetchRequest()
                 fr.predicate = NSPredicate(format: "id IN %@", leafs)
                 if let events = try? ctx.fetch(fr) {
-                    self.unrenderedEvents = leafs
+                    
+                    
+                    let restoredPosts = leafs
                         .compactMap({ leafId in
                             return events.first { event in
                                 return event.id == leafId
@@ -1004,6 +1006,18 @@ extension LVM: NSFetchedResultsControllerDelegate {
                             $0.parentEvents = Event.getParentEvents($0)
                             return $0
                         }
+                    
+                    // don't load too many:
+                    // if restored posts > MAX.
+                    // and lastAppearedIndex < MAX-20 (so we can scroll at least 20 more back)
+                    // example 500 (RESTORED) > 250 (MAX), 77 (LAST APPEARED) < 230 (MAX - 20)
+                    // Then remove all after 250 (RESTORED.prefix(250))
+                    if restoredPosts.count > LVM_MAX_VISIBLE, let lastAppearedIndex = restoredPosts.firstIndex(where: { $0.id == self.lastAppearedId }), lastAppearedIndex < (LVM_MAX_VISIBLE-20)  {
+                        self.unrenderedEvents = Array(restoredPosts.prefix(250))
+                    }
+                    else {
+                        self.unrenderedEvents = restoredPosts
+                    }
                 }
                 self.performLocalFetch()
             }
@@ -1048,63 +1062,12 @@ extension LVM: NSFetchedResultsControllerDelegate {
                 }
                 self.state = .COMPLETED_FIRST_FETCH
                 
-            case .AWAITING_RESTORED_FETCH: // Show last read, until end
-                // show last 100 if LR is within it
-                // else show all
-            let lastAppearedIndex = self.lastAppearedId != nil ? self.unrenderedEvents.firstIndex(where: { $0.id == self.lastAppearedId }) ?? -1 : -1
-                
-                if (lastAppearedIndex == -1) { // LAST APPEARED NOT IN EVENTS (FORCED CUTOFF)
-                    newUnrenderedEvents = events.filter(onlyRootOrReplyingToFollower)
-                        .prefix(LVM_MAX_VISIBLE)
-                        .map {
-                            $0.parentEvents = Event.getParentEvents($0)
-                            return $0
-                        }
-                    let newEventIds = getAllEventIds(newUnrenderedEvents)
-                    let newCount = newEventIds.subtracting(nrPostLeafsOnScreenIds).count
-                    if newCount > 0 {
-                        self.unrenderedEvents = newUnrenderedEvents
-//                        print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 setUnorderedEvents \(newUnrenderedEvents.count) new: \(newCount) state:COMPLETED_FIRST_FETCH 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
-                    }
-                    self.state = .COMPLETED_FIRST_FETCH // POST NOT IN LIST, SO DONT RESTORE SCROLL.
-                }
-                else if (lastAppearedIndex < LVM_MAX_VISIBLE) {
-                    self.state = .AWAITING_RESTORE_SCROLL // POST IS IN LIST, SO WE CAN RESTORE SCROLL. (FORCED CUTOFF)
-                    
-                    newUnrenderedEvents = events.filter(onlyRootOrReplyingToFollower)
-                        .prefix(LVM_MAX_VISIBLE)
-                        .map {
-                            $0.parentEvents = Event.getParentEvents($0)
-                            return $0
-                        }
-                    let newEventIds = getAllEventIds(newUnrenderedEvents)
-                    let newCount = newEventIds.subtracting(nrPostLeafsOnScreenIds).count
-                    if newCount > 0 {
-                        self.unrenderedEvents = newUnrenderedEvents
-//                        print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 setUnorderedEvents \(newUnrenderedEvents.count) new: \(newCount) state:AWAITING_RESTORE_SCROLL 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
-                    }
-                }
-                else {
-                    self.state = .AWAITING_RESTORE_SCROLL
-                    newUnrenderedEvents = events.filter(onlyRootOrReplyingToFollower)
-                        .map {
-                            $0.parentEvents = Event.getParentEvents($0)
-                            return $0
-                        }
-                    let newEventIds = getAllEventIds(newUnrenderedEvents)
-                    let newCount = newEventIds.subtracting(nrPostLeafsOnScreenIds).count
-                    if newCount > 0 {
-                        self.unrenderedEvents = newUnrenderedEvents
-//                        print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 setUnorderedEvents \(newUnrenderedEvents.count) new: \(newCount) state:AWAITING_RESTORE_SCROLL 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
-                    }
-                }
-                
             default:
                 let lastCreatedAt = self.lvmState.nrPostLeafs.last?.created_at ?? 0 // SHOULD CHECK ONLY LEAFS BECAUSE ROOTS CAN BE VERY OLD
                 newUnrenderedEvents = events
                     .filter { $0.created_at > lastCreatedAt } // skip all older than first on screen (check LEAFS only)
                     .filter(onlyRootOrReplyingToFollower)
-                    .prefix(LVM_MAX_VISIBLE * 2)
+//                    .prefix(LVM_MAX_VISIBLE * 2)
                     .map {
                         $0.parentEvents = Event.getParentEvents($0)
                         return $0
