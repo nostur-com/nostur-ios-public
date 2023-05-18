@@ -55,7 +55,9 @@ struct NewQuoteRepost: View {
                             }
                             .introspect { editor in
                                 if (vm.textView == nil) {
-                                    vm.textView = editor.textView
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+                                        vm.textView = editor.textView
+                                    }
                                 }
                             }
                             .photosPicker(isPresented: $ipm.photoPickerShown, selection: $ipm.imageSelection, matching: .images, photoLibrary: .shared())

@@ -57,7 +57,9 @@ struct NewReply: View {
                                 })
                             .introspect { editor in
                                 if (vm.textView == nil) {
-                                    vm.textView = editor.textView
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+                                        vm.textView = editor.textView
+                                    }
                                 }
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)

@@ -65,6 +65,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     
     var shouldBecomeFirstResponder: Bool
     
+    let textView = NosturTextView()
     let highlightRules: [HighlightRule]
     var photoPickerTapped: PhotoPickerTappedCallback?
     
@@ -93,7 +94,6 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     }
     
     public func makeUIView(context: Context) -> UITextView {
-        let textView = NosturTextView()
         textView.backgroundColor = UIColor.clear
         textView.delegate = context.coordinator
         textView.pastedImageDelegate = context.coordinator
