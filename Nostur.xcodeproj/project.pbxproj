@@ -104,6 +104,7 @@
 		1F71037D296BD9DE006245CC /* Nostr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F71037C296BD9DE006245CC /* Nostr.swift */; };
 		1F7150D029ABC6CE00AAB1C3 /* TabButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7150CF29ABC6CE00AAB1C3 /* TabButton.swift */; };
 		1F716C752A14D4F300B202CA /* ProfileTabs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F716C742A14D4F300B202CA /* ProfileTabs.swift */; };
+		1F716C772A15F26100B202CA /* SmoothListAttempt382.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F716C762A15F26100B202CA /* SmoothListAttempt382.swift */; };
 		1F71B45529B0822300FA0400 /* ProfileBadgesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F71B45429B0822300FA0400 /* ProfileBadgesView.swift */; };
 		1F71E8B229EB4E4900B99340 /* NosturList+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF2C6C729EAD9C20096AC4A /* NosturList+CoreDataClass.swift */; };
 		1F71E8B329EB4E4C00B99340 /* NosturList+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF2C6C829EAD9C20096AC4A /* NosturList+CoreDataProperties.swift */; };
@@ -412,7 +413,8 @@
 		1F6EB73929E1C9B200B9DA83 /* EditNosturList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditNosturList.swift; sourceTree = "<group>"; };
 		1F71037C296BD9DE006245CC /* Nostr.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nostr.swift; sourceTree = "<group>"; };
 		1F7150CF29ABC6CE00AAB1C3 /* TabButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabButton.swift; sourceTree = "<group>"; };
-		1F716C742A14D4F300B202CA /* ProfileTabs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ProfileTabs.swift; path = Nostur/Profiles/ProfileTabs.swift; sourceTree = "<group>"; };
+		1F716C742A14D4F300B202CA /* ProfileTabs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileTabs.swift; sourceTree = "<group>"; };
+		1F716C762A15F26100B202CA /* SmoothListAttempt382.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmoothListAttempt382.swift; sourceTree = "<group>"; };
 		1F71B45429B0822300FA0400 /* ProfileBadgesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileBadgesView.swift; sourceTree = "<group>"; };
 		1F7265C129B2148200E4F9D4 /* Exporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Exporter.swift; sourceTree = "<group>"; };
 		1F740D9B29AF1BF600EFCCA7 /* Badges.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Badges.swift; sourceTree = "<group>"; };
@@ -947,7 +949,6 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
-				1F716C742A14D4F300B202CA /* ProfileTabs.swift */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1FB448C82965F3D200038671 /* Nostur.entitlements */,
 				1F313DED296980D8004C7366 /* Info.plist */,
@@ -1017,6 +1018,7 @@
 				1FB6E6FC29E48109008BE8A6 /* LVMManager.swift */,
 				1FF8BD1329D444D900C8C96A /* ProcessingStatus.swift */,
 				1FB6E70229E52EF3008BE8A6 /* SmoothList.swift */,
+				1F716C762A15F26100B202CA /* SmoothListAttempt382.swift */,
 			);
 			path = List;
 			sourceTree = "<group>";
@@ -1120,6 +1122,7 @@
 				1F14BA752985984100EACCD5 /* ProfileRelaysView.swift */,
 				1F14BA6F29854DFC00EACCD5 /* ProfileRow.swift */,
 				1F65002B29A759FB00B79AEF /* ProfileRowMissing.swift */,
+				1F716C742A14D4F300B202CA /* ProfileTabs.swift */,
 				1F65121A29C75AC9009FD4AE /* ProfileView.swift */,
 				1FC0A9502A0F8B9D00F9ABF6 /* ProfileZaps.swift */,
 			);
@@ -1373,6 +1376,7 @@
 				1F00337729BF0BF0007CE040 /* PrivateNotesView.swift in Sources */,
 				1F33098C298AEE5D00D4D8CF /* View+withNavigationDestinations.swift in Sources */,
 				1F065A9D29A3E9E0003421D3 /* DynamicFetchView.swift in Sources */,
+				1F716C772A15F26100B202CA /* SmoothListAttempt382.swift in Sources */,
 				1F4C1C282A07AB090010573F /* NEventView.swift in Sources */,
 				1F65002C29A759FB00B79AEF /* ProfileRowMissing.swift in Sources */,
 				1F33096529895D1600D4D8CF /* SidebarStack.swift in Sources */,

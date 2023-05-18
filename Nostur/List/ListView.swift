@@ -30,6 +30,11 @@ struct ListView: View {
     var body: some View {
         //        let _ = Self._printChanges()
         VStack(spacing: 0) {
+//            Text("leafs: \(vmState.nrPostLeafs.count)")
+//            if 1 == 2 {
+//                SmoothListAttempt382(nrPosts: vmState.nrPostLeafs)
+//            }
+//            else if 1 == 1 && vmState.nrPostLeafs.count > 0 {
             if vmState.nrPostLeafs.count > 0 {
                 //                Text("\(vmState.state.rawValue) | nrPosts: \(vmState.nrPostLeafs.count) | threadValue: \(vmState.nrPostLeafs.reduce(0, { $0 + $1.threadPostsCount } ) )")
                 SmoothList(needsRefresh: $needsRefresh,
