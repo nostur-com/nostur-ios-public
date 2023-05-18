@@ -156,7 +156,7 @@ struct SmoothList: UIViewControllerRepresentable {
         var scrollTimer: Timer?
         var prefetcher:ImagePrefetcher
         var prefetcherPFP:ImagePrefetcher
-        var prefetcherPFPnotFollowing:ImagePrefetcher
+//        var prefetcherPFPnotFollowing:ImagePrefetcher
         
         private var lastCalledTimestamp: TimeInterval = 0
         private let debounceInterval: TimeInterval = 0.3 // Adjust this value to control the throttling
@@ -171,15 +171,15 @@ struct SmoothList: UIViewControllerRepresentable {
             self.prefetcherPFP = ImagePrefetcher(pipeline: ImageProcessing.shared.pfp)
             self.prefetcherPFP.priority = .high
             
-            self.prefetcherPFPnotFollowing = ImagePrefetcher(pipeline: ImageProcessing.shared.pfpNotFollowing)
-            self.prefetcherPFP.priority = .normal
+//            self.prefetcherPFPnotFollowing = ImagePrefetcher(pipeline: ImageProcessing.shared.pfpNotFollowing)
+//            self.prefetcherPFPnotFollowing.priority = .normal
         }
         
         func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
             let imageWidth = parent.dim.availableNoteRowImageWidth()
             var imageRequests:[ImageRequest] = []
             var imageRequestsPFP:[ImageRequest] = []
-            var imageRequestsPFPnotFollowing:[ImageRequest] = []
+//            var imageRequestsPFPnotFollowing:[ImageRequest] = []
             
             for indexPath in indexPaths {
                 guard let item = parent.data[safe: indexPath.row] else { continue }
@@ -191,12 +191,7 @@ struct SmoothList: UIViewControllerRepresentable {
                 }
                 
                 if let picture = item.contact?.pictureUrl, picture.prefix(7) != "http://" {
-                    if item.contact?.following ?? false {
-                        imageRequestsPFP.append(imageRequestFor(picture))
-                    }
-                    else {
-                        imageRequestsPFPnotFollowing.append(imageRequestFor(picture))
-                    }
+                    imageRequestsPFP.append(pfpImageRequestFor(picture))
                 }
                 
                 imageRequestsPFP.append(contentsOf: item
@@ -204,16 +199,16 @@ struct SmoothList: UIViewControllerRepresentable {
                     .filter{ $0.contact?.following ?? false }
                     .compactMap { $0.contact?.pictureUrl }
                     .filter { $0.prefix(7) != "http://" }
-                    .map { imageRequestFor($0) }
+                    .map { pfpImageRequestFor($0) }
                 )
                 
-                imageRequestsPFPnotFollowing.append(contentsOf: item
-                    .parentPosts
-                    .filter{ !($0.contact?.following ?? false) }
-                    .compactMap { $0.contact?.pictureUrl }
-                    .filter { $0.prefix(7) != "http://" }
-                    .map { imageRequestFor($0) }
-                )
+//                imageRequestsPFPnotFollowing.append(contentsOf: item
+//                    .parentPosts
+//                    .filter{ !($0.contact?.following ?? false) }
+//                    .compactMap { $0.contact?.pictureUrl }
+//                    .filter { $0.prefix(7) != "http://" }
+//                    .map { imageRequestFor($0) }
+//                )
                 
                 
                 for imageUrl in item.imageUrls.filter({ $0.absoluteString.prefix(7) != "http://" })
@@ -258,17 +253,17 @@ struct SmoothList: UIViewControllerRepresentable {
                 //                print("prefetching for PFP: \(imageRequestsPFP.count)")
                 prefetcherPFP.startPrefetching(with: imageRequestsPFP)
             }
-            if imageRequestsPFPnotFollowing.count > 0 {
-                //                print("prefetching for PFP not following: \(imageRequestsPFPnotFollowing.count)")
-                prefetcherPFPnotFollowing.startPrefetching(with: imageRequestsPFPnotFollowing)
-            }
+//            if imageRequestsPFPnotFollowing.count > 0 {
+//                //                print("prefetching for PFP not following: \(imageRequestsPFPnotFollowing.count)")
+//                prefetcherPFPnotFollowing.startPrefetching(with: imageRequestsPFPnotFollowing)
+//            }
         }
         
         func collectionView(_ collectionView: UICollectionView, cancelPrefetchingForItemsAt indexPaths: [IndexPath]) {
             let imageWidth = parent.dim.availableNoteRowImageWidth()
             var imageRequests:[ImageRequest] = []
             var imageRequestsPFP:[ImageRequest] = []
-            var imageRequestsPFPnotFollowing:[ImageRequest] = []
+//            var imageRequestsPFPnotFollowing:[ImageRequest] = []
             
             for indexPath in indexPaths {
                 guard let item = parent.data[safe: indexPath.row] else { continue }
@@ -278,12 +273,7 @@ struct SmoothList: UIViewControllerRepresentable {
                 }
                 
                 if let picture = item.contact?.pictureUrl, picture.prefix(7) != "http://" {
-                    if item.contact?.following ?? false {
-                        imageRequestsPFP.append(imageRequestFor(picture))
-                    }
-                    else {
-                        imageRequestsPFPnotFollowing.append(imageRequestFor(picture))
-                    }
+                    imageRequestsPFP.append(pfpImageRequestFor(picture))
                 }
                 
                 imageRequestsPFP.append(contentsOf: item
@@ -291,7 +281,7 @@ struct SmoothList: UIViewControllerRepresentable {
                     .filter{ $0.contact?.following ?? false }
                     .compactMap { $0.contact?.pictureUrl }
                     .filter { $0.prefix(7) != "http://" }
-                    .map { imageRequestFor($0) }
+                    .map { pfpImageRequestFor($0) }
                 )
                 
 //                imageRequestsPFPnotFollowing.append(contentsOf: item
@@ -338,10 +328,10 @@ struct SmoothList: UIViewControllerRepresentable {
                 //                print("prefetching for PFP: \(imageRequestsPFP.count)")
                 prefetcherPFP.stopPrefetching(with: imageRequestsPFP)
             }
-            if imageRequestsPFPnotFollowing.count > 0 {
-                //                print("prefetching for PFP not following: \(imageRequestsPFPnotFollowing.count)")
-                prefetcherPFPnotFollowing.stopPrefetching(with: imageRequestsPFPnotFollowing)
-            }
+//            if imageRequestsPFPnotFollowing.count > 0 {
+//                //                print("prefetching for PFP not following: \(imageRequestsPFPnotFollowing.count)")
+//                prefetcherPFPnotFollowing.stopPrefetching(with: imageRequestsPFPnotFollowing)
+//            }
         }
         
         //        func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
@@ -566,7 +556,7 @@ struct SmoothList_PReviews: PreviewProvider {
 }
 
 
-func imageRequestFor(_ picture:String) -> ImageRequest {
+func pfpImageRequestFor(_ picture:String) -> ImageRequest {
     if !SettingsStore.shared.animatedPFPenabled || picture.suffix(4) != ".gif" {
         return ImageRequest(url: URL(string:picture),
                             processors: [.resize(size: CGSize(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: DIMENSIONS.POST_ROW_PFP_HEIGHT), unit: .points, contentMode: .aspectFill, crop: true, upscale: true)],
