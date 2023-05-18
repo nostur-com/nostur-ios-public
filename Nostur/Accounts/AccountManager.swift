@@ -118,7 +118,14 @@ class AccountManager {
             let keys = try NKeys(privateKeyHex: pk)
             let newKind0EventSigned = try newKind0Event.sign(keys)
             let newKind3EventSigned = try newKind3Event.sign(keys)
-
+            
+            if (account.picture.prefix(30) == "https://profilepics.nostur.com") || (account.banner.prefix(30) == "https://profilepics.nostur.com") {
+                print("Sending delete PFP and BANNER request")
+                deletePFPandBanner(pk: pk, pubkey: account.publicKey)
+            }
+//
+//            print("newKind0EventSigned: \(newKind0EventSigned)")
+//            print("newKind3EventSigned: \(newKind3EventSigned)")
             Unpublisher.shared.publishNow(newKind0EventSigned)
             Unpublisher.shared.publishNow(newKind3EventSigned)
             
@@ -130,12 +137,14 @@ class AccountManager {
             if (accounts.count < 1) {
                 NosturState.shared.onBoardingIsShown = true
                 sendNotification(.clearNavigation)
+                LVMManager.shared.listVMs.removeAll()
                 NosturState.shared.setAccount(account: nil)
                 DataProvider.shared().viewContext.delete(account)
             }
             else {
                 DataProvider.shared().viewContext.delete(account)
-                NosturState.shared.setAccount(account: accounts.first)
+                let accountsAfterDelete = NosturState.shared.accounts
+                NosturState.shared.setAccount(account:accountsAfterDelete.first)
             }
             try DataProvider.shared().viewContext.save()
         }
@@ -214,4 +223,30 @@ class AccountManager {
         }
         return nil
     }
+}
+
+
+func deletePFPandBanner(pk: String, pubkey:String) {
+
+    let url = URL(string: "https://nostur.com/wipeprofileandbanner.php")!
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    
+    guard let proof = signedDeleteProof(pk: pk, pubkey:pubkey) else { return }
+    request.setValue(proof.signature, forHTTPHeaderField: "X-Nostur-Signature")
+    request.setValue(proof.message, forHTTPHeaderField: "X-Nostur-Message")
+    request.setValue(proof.publicKey, forHTTPHeaderField: "X-Nostur-PublicKey")
+    
+    let session = URLSession(configuration: .default)
+    let task = session.dataTask(with: request) { data, response, error in
+        
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200..<300).contains(httpResponse.statusCode)
+              else {
+            print("error deleting profile and banner")
+            return
+        }
+        print("banner/profile delete request sent succesfully")
+    }
+    task.resume()
 }

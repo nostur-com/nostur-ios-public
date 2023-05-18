@@ -45,6 +45,11 @@ enum ImageUploadError: Error {
     case signingFailure
 }
 
+enum ImageDeleteError: Error {
+    case signingFailure
+    case requestFailure
+}
+
 struct MediaUploadService: Identifiable, Hashable {
     static func == (lhs: MediaUploadService, rhs: MediaUploadService) -> Bool {
         lhs.id == rhs.id

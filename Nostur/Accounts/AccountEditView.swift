@@ -640,3 +640,47 @@ func signedImageProof(imageData:Data) -> (signature: String, message: String, pu
 
     return (signature: signatureHexString, message: message, publicKey: publicKeyHexString)
 }
+
+
+// same as signedImageProof but without imageData, we just hash of the word DELETE
+func signedDeleteProof(pk privateKeyHexString:String, pubkey nostrPubkeyHex:String) -> (signature: String, message: String, publicKey: String)? {
+    
+    // NO EASY WAY TO VERIFY SCHNORR SIG IN PHP, SO JUST USE CRYPTOGRAPHY THAT JUST WORKS OUT OF THE BOX:
+    // SECURITY SHOULD BE THE SAME, YOU CAN ONLY REPLACE THE PROFILE PIC IF YOU HAVE THE PRIVATE KEY
+    // DOESNT MATTER IF THE SIGNATURE IS SCHNORR OR Curve25519
+    
+    // TODO: EVENTALLY REPLACE WITH NOSTR SCHNORR VERIFICATION WHEN THERE IS PROPER PHP SUPPORT SO WE DONT HAVE TO DERRIVE AN EXTRA KEY
+    
+    guard let privateKeyData = Data(fromHexEncodedString: privateKeyHexString) else { return nil }
+    // Create a SymmetricKey from the Schnorr private key data
+    let symmetricKey = SymmetricKey(data: privateKeyData)
+
+    
+    // Use HKDF to derive a Curve25519 private key
+    let info = "Curve25519 private key".data(using: .utf8)!
+    let salt = "Salty " + nostrPubkeyHex
+    guard let saltData = salt.data(using: .utf8) else { return nil }
+
+    let derivedKey = HKDF<SHA256>.deriveKey(inputKeyMaterial: symmetricKey, salt: saltData, info: info, outputByteCount: 32)
+
+    guard let privateKey = try? Curve25519.Signing.PrivateKey(rawRepresentation: derivedKey) else { return nil }
+//    guard let privateKey = try? Curve25519.Signing.PrivateKey(rawRepresentation: privateKeyData) else { return nil }
+
+    let publicKey = privateKey.publicKey
+    let publicKeyData = publicKey.rawRepresentation
+    let publicKeyHexString = publicKeyData.map { String(format: "%02hhx", $0) }.joined()
+    
+    
+    let sha256data = SHA256.hash(data: "DELETE".data(using: .utf8)!)
+    let sha256string = String(bytes:sha256data.bytes)
+
+    let message = "\(Int64(Date().timeIntervalSince1970).description)|\(sha256string)"
+    let messageData = message.data(using: .utf8)!
+
+    let signature = try! privateKey.signature(for: messageData)
+    let signatureHexString = signature.map { String(format: "%02hhx", $0) }.joined()
+
+    // Send `signatureHexString`, `message`, and `publicKeyHexString` to the server
+
+    return (signature: signatureHexString, message: message, publicKey: publicKeyHexString)
+}

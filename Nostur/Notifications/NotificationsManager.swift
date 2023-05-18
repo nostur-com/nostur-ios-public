@@ -243,6 +243,7 @@ class NotificationsManager: ObservableObject {
     }
     
     func checkForEverything() {
+        guard let account = ns.account else { return }
         guard !MessageParser.shared.messageBucket.isImporting else { return }
         
         relayCheckNewestNotifications() // or wait 3 seconds?
