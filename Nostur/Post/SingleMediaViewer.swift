@@ -56,29 +56,41 @@ struct SingleMediaViewer: View {
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
                                 .frame(height: 250)
-                                .onTapGesture {
-                                    sendNotification(.fullScreenView, FullScreenItem(url: url))
-                                }
-                        }
-                        
-                    }
-                    else if let image = state.image {
-                        if fullWidth {
-                            image
-                                .onTapGesture {
-                                    sendNotification(.fullScreenView, FullScreenItem(url: url))
-                                }
-                        }
-                        else {
-                            image
-                                .resizable()
-                                .scaledToFit()
-                                .frame(height: 250)
                                 .hCentered()
                                 .background(Color("LightGray").opacity(0.2))
                                 .onTapGesture {
                                     sendNotification(.fullScreenView, FullScreenItem(url: url))
                                 }
+                        }
+                    }
+                    else if let image = state.image {
+                        VStack(spacing:0) {
+                            if fullWidth {
+                                image
+                                    .onTapGesture {
+                                        sendNotification(.fullScreenView, FullScreenItem(url: url))
+                                    }
+                            }
+                            else {
+                                image
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(height: 250)
+                                    .hCentered()
+                                    .background(Color("LightGray").opacity(0.2))
+                                    .onTapGesture {
+                                        sendNotification(.fullScreenView, FullScreenItem(url: url))
+                                    }
+                            }
+                        }
+                        .overlay(alignment:.topLeading) {
+                            if state.isLoading { // does this conflict with showing preview images??
+                                HStack(spacing: 5) {
+                                    ImageProgressView(progress: state.progress)
+                                    Text("Loading...")
+                                }
+                                .background(Color("LightGray").opacity(0.5))
+                            }
                         }
                     }
                     else if state.isLoading { // does this conflict with showing preview images??

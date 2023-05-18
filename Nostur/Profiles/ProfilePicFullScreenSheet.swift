@@ -17,6 +17,8 @@ struct ProfilePicFullScreenSheet: View {
     @State private var lastScale: CGFloat = 1.0
     @State private var position: CGSize = .zero
     @State private var newPosition: CGSize = .zero
+    @State private var sharableImage:UIImage? = nil
+    @State private var sharableGif:Data? = nil
     
     var body: some View {
         
@@ -56,6 +58,12 @@ struct ProfilePicFullScreenSheet: View {
                 VStack {
                     HStack {
                         Spacer()
+                        if let sharableImage {
+                            ShareMediaButton(sharableImage: sharableImage)
+                        }
+                        else if let sharableGif {
+                            ShareGifButton(sharableGif: sharableGif)
+                        }
                         Image(systemName: "xmark.circle.fill")
                             .resizable()
                             .scaledToFit()
@@ -84,11 +92,19 @@ struct ProfilePicFullScreenSheet: View {
                                                 scale = 1.0
                                             }
                                         }
+                                        .onAppear {
+                                            sharableGif = gifData
+                                        }
                                 }
                                 else if let image = state.image {
                                     image
                                         .resizable()
                                         .aspectRatio(contentMode: .fill)
+                                        .onAppear {
+                                            if let image = state.imageContainer?.image {
+                                                sharableImage = image
+                                            }
+                                        }
                                 }
                                 else {
                                     Text("🧨")
@@ -98,7 +114,7 @@ struct ProfilePicFullScreenSheet: View {
                                 CenteredProgressView()
                             }
                         }
-                        .pipeline(isFollowing ? ImageProcessing.shared.pfp : ImageProcessing.shared.pfpNotFollowing)
+                        .pipeline(ImageProcessing.shared.pfp)
                         .priority(.high)
                     }
                     else {
@@ -115,13 +131,17 @@ struct ProfilePicFullScreenSheet: View {
                                             scale = 1.0
                                         }
                                     }
-                                
+                                    .onAppear {
+                                        if let image = state.imageContainer?.image {
+                                            sharableImage = image
+                                        }
+                                    }
                             }
                             else {
                                 CenteredProgressView()
                             }
                         }
-                        .pipeline(isFollowing ? ImageProcessing.shared.pfp : ImageProcessing.shared.pfpNotFollowing)
+                        .pipeline(ImageProcessing.shared.pfp)
                         .priority(.high)
                     }
                 }
