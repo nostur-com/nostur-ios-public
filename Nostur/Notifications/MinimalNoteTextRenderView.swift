@@ -16,7 +16,7 @@ struct MinimalNoteTextRenderView: View {
         VStack(alignment: .leading) {
             Text(nrPost.plainText)//.border(.cyan)
                 .lineLimit(lineLimit, reservesSpace: false)
-                .textSelection(.enabled)
+//                .textSelection(.enabled)
                 .multilineTextAlignment(TextAlignment.leading)
                 .foregroundColor(.primary.opacity(0.5))
                 .lineSpacing(3)

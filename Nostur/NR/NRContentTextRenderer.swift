@@ -15,11 +15,11 @@ struct NRContentTextRenderer: View {
     
     var body: some View {
         Text(text ?? attributedStringWithPs.output)
-            .textSelection(.enabled)
-            .multilineTextAlignment(TextAlignment.leading)
-            .foregroundColor(.primary)
-            .accentColor(Color("AccentColor"))
-            .tint(Color("AccentColor"))
+//            .textSelection(.enabled)
+//            .multilineTextAlignment(TextAlignment.leading)
+//            .foregroundColor(.primary)
+//            .accentColor(Color("AccentColor"))
+//            .tint(Color("AccentColor"))
             .lineSpacing(3)
             .padding(.horizontal, fullWidth ? 10 : 0)
             .onReceive(

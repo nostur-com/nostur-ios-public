@@ -41,7 +41,7 @@ struct NoteTextRenderView: View {
                     if !(nrPost.content ?? "").isEmpty {
                         Text(nrPost.content ?? "")//.border(.cyan)
                             .lineLimit(10, reservesSpace: false)
-                            .textSelection(.enabled)
+//                            .textSelection(.enabled)
                             .multilineTextAlignment(TextAlignment.leading)
                             .foregroundColor(.primary)
                             .accentColor(Color("AccentColor"))
@@ -55,7 +55,7 @@ struct NoteTextRenderView: View {
             else if (useLinelimit) {
                 Text(nrPost.renderedText)//.border(.cyan)
                     .lineLimit(10, reservesSpace: false)
-                    .textSelection(.enabled)
+//                    .textSelection(.enabled)
                     .multilineTextAlignment(TextAlignment.leading)
                     .foregroundColor(.primary)
                     .accentColor(Color("AccentColor"))
@@ -66,7 +66,7 @@ struct NoteTextRenderView: View {
             }
             else {
                 Text(nrPost.renderedText)//.border(.pink)
-                    .textSelection(.enabled)
+//                    .textSelection(.enabled)
                     .multilineTextAlignment(TextAlignment.leading)
                     .foregroundColor(.primary)
                     .accentColor(Color("AccentColor"))
