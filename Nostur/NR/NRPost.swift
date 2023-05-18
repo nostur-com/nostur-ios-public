@@ -228,6 +228,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         self.firstQuoteId = event.firstQuoteId
         if let firstQuote = event.firstQuote {
             self.firstQuote = NRPost(event: firstQuote)
+        } // why event.firstQuote_ doesn't work??
+        else if let firstQuoteId = event.firstQuoteId,  let firstQuote = try? Event.fetchEvent(id: firstQuoteId, context: DataProvider.shared().bg) {
+            self.firstQuote = NRPost(event: firstQuote)
         }
         else if !isAwaiting && event.firstQuoteId != nil {
             EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.005"); isAwaiting = true
