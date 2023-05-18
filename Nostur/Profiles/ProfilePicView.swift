@@ -101,7 +101,7 @@ struct InnerPFP: View {
                         color
                     }
                 }
-                .pipeline(isFollowing ? ImageProcessing.shared.pfp : ImageProcessing.shared.pfpNotFollowing)
+                .pipeline(ImageProcessing.shared.pfp)
                 .frame(width: size, height: size)
                 .background(color)
                 .cornerRadius(.greatestFiniteMagnitude)
@@ -144,7 +144,7 @@ struct InnerPFP: View {
                     }
                 }
                 .priority(.low) // lower prio for animated gif, saves bandwidth?
-                .pipeline(isFollowing ? ImageProcessing.shared.pfp : ImageProcessing.shared.pfpNotFollowing) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
+                .pipeline(ImageProcessing.shared.pfp) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
             }
         }
         else {

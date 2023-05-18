@@ -1013,9 +1013,15 @@ extension LVM: NSFetchedResultsControllerDelegate {
                     // example 500 (RESTORED) > 250 (MAX), 77 (LAST APPEARED) < 230 (MAX - 20)
                     // Then remove all after 250 (RESTORED.prefix(250))
                     if restoredPosts.count > LVM_MAX_VISIBLE, let lastAppearedIndex = restoredPosts.firstIndex(where: { $0.id == self.lastAppearedId }), lastAppearedIndex < (LVM_MAX_VISIBLE-20)  {
+                        DispatchQueue.main.async {
+                            self.lvmState.state = .AWAITING_RESTORE_SCROLL
+                        }
                         self.unrenderedEvents = Array(restoredPosts.prefix(250))
                     }
                     else {
+                        DispatchQueue.main.async {
+                            self.lvmState.state = .AWAITING_RESTORE_SCROLL
+                        }
                         self.unrenderedEvents = restoredPosts
                     }
                 }

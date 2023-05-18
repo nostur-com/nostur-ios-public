@@ -75,6 +75,7 @@ struct ProfileView: View {
                                 ProfileFollowButton(contact: contact)
                                     .offset(y: 123 + (max(-123,toolbarGEO.frame(in:.global).minY)))
                             }.frame(height: 40).clipped()
+                                .layoutPriority(2)
                         }
                     }
                 }

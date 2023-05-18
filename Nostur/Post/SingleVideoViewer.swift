@@ -50,17 +50,6 @@ struct SingleVideoViewer: View {
             else if videoShown {
                 if let asset, let videoSize {
                     
-//                    let isWide = videoSize.width > videoSize.height
-//                    let scaleFactor = videoWidth / videoSize.width
-//                    let tooHigh = (videoSize.height * scaleFactor) > 600
-//                    let scaleDownFactor = 600 / (videoSize.height * scaleFactor)
-//
-//                    let scaledWidth = videoSize.width * scaleFactor
-//                    let scaledHeight = videoSize.height * scaleFactor
-//
-//                    let width = tooHigh ? scaledWidth * scaleDownFactor : scaledWidth
-//                    let height = tooHigh ? scaledHeight * scaleDownFactor : scaledWidth
-                    
                     let scaledDimensions = getScaledVideoDimensions(videoSize: videoSize, availableWidth: videoWidth, maxHeight: 600)
                     
                     VPV(asset: asset, isPlaying: $isPlaying)
