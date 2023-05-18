@@ -51,15 +51,17 @@ struct SingleVideoViewer: View {
                 if let asset, let videoSize {
                     
 //                    let isWide = videoSize.width > videoSize.height
-                    let scaleFactor = videoWidth / videoSize.width
-                    let tooHigh = (videoSize.height * scaleFactor) > 600
-                    let scaleDownFactor = 600 / (videoSize.height * scaleFactor)
+//                    let scaleFactor = videoWidth / videoSize.width
+//                    let tooHigh = (videoSize.height * scaleFactor) > 600
+//                    let scaleDownFactor = 600 / (videoSize.height * scaleFactor)
+//
+//                    let scaledWidth = videoSize.width * scaleFactor
+//                    let scaledHeight = videoSize.height * scaleFactor
+//
+//                    let width = tooHigh ? scaledWidth * scaleDownFactor : scaledWidth
+//                    let height = tooHigh ? scaledHeight * scaleDownFactor : scaledWidth
                     
-                    let scaledWidth = videoSize.width * scaleFactor
-                    let scaledHeight = videoSize.height * scaleFactor
-                    
-                    let width = tooHigh ? scaledWidth * scaleDownFactor : scaledWidth
-                    let height = tooHigh ? scaledHeight * scaleDownFactor : scaledWidth
+                    let scaledDimensions = getScaledVideoDimensions(videoSize: videoSize, availableWidth: videoWidth, maxHeight: 600)
                     
                     VPV(asset: asset, isPlaying: $isPlaying)
                         .highPriorityGesture(
@@ -67,7 +69,7 @@ struct SingleVideoViewer: View {
                                 isPlaying.toggle()
                             }
                         )
-                        .frame(width: width, height: height)
+                        .frame(width: scaledDimensions.width, height: scaledDimensions.height)
                         .background(Color.black)
                         .onDisappear { isPlaying = false }
                         .overlay(
@@ -254,4 +256,24 @@ struct SingleVideoViewer_Previews: PreviewProvider {
 
         SingleVideoViewer(url:urlsFromContent[0],  pubkey: "dunno", videoWidth: UIScreen.main.bounds.width, isFollowing: true)
     }
+}
+
+struct ScaledDimensions {
+    let width:CGFloat
+    let height:CGFloat
+}
+
+func getScaledVideoDimensions(videoSize:CGSize, availableWidth:CGFloat, maxHeight:CGFloat = 600) -> ScaledDimensions {
+    let isWide = videoSize.width > videoSize.height
+    let scaleFactor = isWide ? (availableWidth / videoSize.width) : (maxHeight / videoSize.height)
+    
+//    let tooHigh = (videoSize.height * scaleFactor) > maxHeight
+//    let scaleDownFactor = maxHeight / (videoSize.height * scaleFactor)
+    
+    let scaledWidth = videoSize.width * scaleFactor
+    let scaledHeight = videoSize.height * scaleFactor
+    
+//    let width = tooHigh ? scaledWidth * scaleDownFactor : scaledWidth
+//    let height = tooHigh ? scaledHeight * scaleDownFactor : scaledWidth
+    return ScaledDimensions(width: scaledWidth, height: scaledHeight)
 }

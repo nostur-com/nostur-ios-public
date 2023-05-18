@@ -9,7 +9,7 @@ import SwiftUI
 import NukeUI
 import Nuke
 
-@MainActor
+//@MainActor
 struct SingleMediaViewer: View {
     @EnvironmentObject var ns:NosturState // Only needed for `imagesShown`
     let url:URL
@@ -29,7 +29,77 @@ struct SingleMediaViewer: View {
                    .background(Color("LightGray").opacity(0.2))
             }
             else if imagesShown {
-                makeImage(url: url)
+                LazyImage(request: ImageRequest(url: url,
+                                                processors: [.resize(width: imageWidth, upscale: true)],
+                                                userInfo: [.scaleKey: UIScreen.main.scale])) { state in
+                    
+                    if state.error != nil {
+                        Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
+                            .centered()
+                            .frame(height: fullWidth ? 600 : 250)
+                            .background(Color("LightGray").opacity(0.2))
+                            .onAppear {
+                                print("Failed to load image: \(state.error?.localizedDescription ?? "")")
+                            }
+                    }
+                    else if let container = state.imageContainer, container.type ==  .gif, let data = container.data {
+                        if fullWidth {
+                            GIFImage(data: data)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .onTapGesture {
+                                    sendNotification(.fullScreenView, FullScreenItem(url: url))
+                                }
+                        }
+                        else {
+                            GIFImage(data: data)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(height: 250)
+                                .onTapGesture {
+                                    sendNotification(.fullScreenView, FullScreenItem(url: url))
+                                }
+                        }
+                        
+                    }
+                    else if let image = state.image {
+                        if fullWidth {
+                            image
+                                .onTapGesture {
+                                    sendNotification(.fullScreenView, FullScreenItem(url: url))
+                                }
+                        }
+                        else {
+                            image
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 250)
+                                .hCentered()
+                                .background(Color("LightGray").opacity(0.2))
+                                .onTapGesture {
+                                    sendNotification(.fullScreenView, FullScreenItem(url: url))
+                                }
+                        }
+                    }
+                    else if state.isLoading { // does this conflict with showing preview images??
+                        HStack(spacing: 5) {
+                            ImageProgressView(progress: state.progress)
+                            Image(systemName: "multiply.circle.fill")
+                                .padding(10)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    imagesShown = false
+                                }
+                        }
+                        .centered()
+                        .frame(height: fullWidth ? 600 : 250)
+                        .background(Color("LightGray"))
+                    }
+                    else {
+                        Color("LightGray").opacity(0.2)
+                    }
+                }
+                .pipeline(ImageProcessing.shared.content)
             }
             else {
                 Text("Tap to load media")
@@ -47,81 +117,6 @@ struct SingleMediaViewer: View {
         .onAppear {
             imagesShown = !SettingsStore.shared.restrictAutoDownload || isFollowing
         }
-    }
-
-    // This is where the image view is created.
-    func makeImage(url: URL) -> some View {
-        LazyImage(request: ImageRequest(url: url,
-                                        processors: [.resize(width: imageWidth, upscale: true)],
-                                        userInfo: [.scaleKey: UIScreen.main.scale])) { state in
-            
-            if state.error != nil {
-                Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
-                    .centered()
-                    .frame(height: fullWidth ? 600 : 250)
-                    .background(Color("LightGray").opacity(0.2))
-                    .onAppear {
-                        print("Failed to load image: \(state.error?.localizedDescription ?? "")")
-                    }
-            }
-            else if let container = state.imageContainer, container.type ==  .gif, let data = container.data {
-                if fullWidth {
-                    GIFImage(data: data)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .onTapGesture {
-                            sendNotification(.fullScreenView, FullScreenItem(url: url))
-                        }
-                }
-                else {
-                    GIFImage(data: data)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(height: 250)
-                        .onTapGesture {
-                            sendNotification(.fullScreenView, FullScreenItem(url: url))
-                        }
-                }
-                
-            }
-            else if let image = state.image {
-                if fullWidth {
-                    image
-                        .onTapGesture {
-                            sendNotification(.fullScreenView, FullScreenItem(url: url))
-                        }
-                }
-                else {
-                    image
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 250)
-                        .hCentered()
-                        .background(Color("LightGray").opacity(0.2))
-                        .onTapGesture {
-                            sendNotification(.fullScreenView, FullScreenItem(url: url))
-                        }
-                }
-            }
-            else if state.isLoading { // does this conflict with showing preview images??
-                HStack(spacing: 5) {
-                    ImageProgressView(progress: state.progress)
-                    Image(systemName: "multiply.circle.fill")
-                        .padding(10)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            imagesShown = false
-                        }
-                }
-                .centered()
-                .frame(height: fullWidth ? 600 : 250)
-                .background(Color("LightGray"))
-            }
-            else {
-                Color("LightGray").opacity(0.2)
-            }
-        }
-        .pipeline(ImageProcessing.shared.content)
     }
 }
 

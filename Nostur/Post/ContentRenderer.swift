@@ -66,7 +66,7 @@ struct ContentRenderer: View { // VIEW things
                     LightningInvoice(invoice: text)
                         .padding(.horizontal, fullWidth ? 10 : 0)
                 case .video(let url):
-                    SingleVideoViewer(url: url, pubkey: nrPost.pubkey, videoWidth: availableWidth, isFollowing:nrPost.contact?.following ?? false)
+                    SingleVideoViewer(url: url, pubkey: nrPost.pubkey, videoWidth: availableWidth - 10, isFollowing:nrPost.following)
                         .padding(.vertical, 5)
                 case .image(let url):
                     SingleMediaViewer(url: url, pubkey: nrPost.pubkey, imageWidth: availableWidth, isFollowing: nrPost.following, fullWidth: fullWidth)

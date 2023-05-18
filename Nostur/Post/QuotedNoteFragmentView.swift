@@ -70,8 +70,11 @@ struct QuotedNoteFragmentView: View {
                            viewSize = size
                        }
                 }
-                if let firstImage = nrPost.imageUrls.first, viewSize.width > 0 {
-                    SingleMediaViewer(url: firstImage, pubkey: nrPost.pubkey, imageWidth: viewSize.width, isFollowing: nrPost.following)
+                if let firstMediaUrl = nrPost.imageUrls.first, firstMediaUrl.absoluteString.matchingStrings(regex: NRContentElementBuilder.videoUrlPattern).count > 0, viewSize.width > 0 {
+                    SingleVideoViewer(url: firstMediaUrl, pubkey: nrPost.pubkey, videoWidth: viewSize.width - 20, isFollowing:nrPost.following)
+                }
+                else if let firstMediaUrl = nrPost.imageUrls.first, viewSize.width > 0 {
+                    SingleMediaViewer(url: firstMediaUrl, pubkey: nrPost.pubkey, imageWidth: viewSize.width, isFollowing: nrPost.following)
                 }
             }
         }
