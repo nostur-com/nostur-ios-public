@@ -27,6 +27,7 @@ struct Search: View {
     @State var searchText = ""
     @State var searchTask:Task<Void, Never>? = nil
     @State var backlog = Backlog()
+    @ObservedObject var settings:SettingsStore = .shared
 
     var body: some View {
         let _ = Self._printChanges()
@@ -67,9 +68,11 @@ struct Search: View {
                 }
             }
             .overlay(alignment: .bottom) {
-                ProcessingStatus()
-                    .opacity(0.85)
-                    .padding(.bottom, 10)
+                if settings.statusBubble {
+                    ProcessingStatus()
+                        .opacity(0.85)
+                        .padding(.bottom, 10)
+                }
             }
             .withNavigationDestinations()
             .navigationTitle("Search")

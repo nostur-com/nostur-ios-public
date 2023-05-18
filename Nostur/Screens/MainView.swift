@@ -15,6 +15,7 @@ struct MainView: View {
     @State var showingNewNote = false
     @State var noteCancellationId:UUID?
     @EnvironmentObject var sm:SideBarModel
+    @ObservedObject var settings:SettingsStore = .shared
     
     var body: some View {
         let _ = Self._printChanges()
@@ -28,9 +29,11 @@ struct MainView: View {
                             .padding([.trailing], 25)
                     }
                     .overlay(alignment: .bottom) {
-                        ProcessingStatus()
-                            .opacity(0.85)
-                            .padding(.bottom, 10)
+                        if settings.statusBubble {
+                            ProcessingStatus()
+                                .opacity(0.85)
+                                .padding(.bottom, 10)
+                        }
                     }
                     .sheet(isPresented: $showingNewNote) {
                         NavigationStack {

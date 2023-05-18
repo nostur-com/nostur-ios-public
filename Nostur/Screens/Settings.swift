@@ -83,6 +83,10 @@ struct Settings: View {
                     Text("Auto scroll to new posts")
                     Text("When at top, auto scroll if there are new posts")
                 }
+                Toggle(isOn: $settings.statusBubble) {
+                    Text("Loading indicator")
+                    Text("Shows when items are being processed")
+                }
             }
             
             Section(header: Text("Image uploading")) {

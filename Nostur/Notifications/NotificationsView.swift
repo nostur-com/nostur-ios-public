@@ -46,6 +46,7 @@ struct NotificationsView: View {
     let sp:SocketPool = .shared
     
     @State var tab = "Posts"
+    @ObservedObject var settings:SettingsStore = .shared
     
     
     var body: some View {
@@ -88,9 +89,11 @@ struct NotificationsView: View {
             Spacer()
         }
         .overlay(alignment: .bottom) {
-            ProcessingStatus()
-                .opacity(0.85)
-                .padding(.bottom, 10)
+            if settings.statusBubble {
+                ProcessingStatus()
+                    .opacity(0.85)
+                    .padding(.bottom, 10)
+            }
         }
         .padding(.top, 5)
         .navigationTitle(tab)

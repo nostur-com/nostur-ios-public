@@ -83,5 +83,6 @@ struct ProcessingStatus: View {
 struct ProcessingStatus_Previews: PreviewProvider {
     static var previews: some View {
         ProcessingStatus()
+            .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
     }
 }
