@@ -44,15 +44,15 @@ extension Int64 {
 
         switch Int(self) {
         case 0..<thousand:
-            return String(format: "%.0f", self)
+            return String(format: "%.0f", Double(self))
         case thousand..<million:
-            return String(format: "%.1fK", Int(self) / thousand)
+            return String(format: "%.1fK", Double(self) / Double(thousand))
         case million..<billion:
-            return String(format: "%.1fM", Int(self) / million)
+            return String(format: "%.1fM", Double(self) / Double(million))
         case billion..<trillion:
-            return String(format: "%.1fB", Int(self) / billion)
+            return String(format: "%.1fB", Double(self) / Double(billion))
         default:
-            return String(format: "%.1fT", Int(self) / trillion)
+            return String(format: "%.1fT", Double(self) / Double(trillion))
         }
     }
 }

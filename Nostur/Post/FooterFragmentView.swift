@@ -72,8 +72,8 @@ struct FooterFragmentView: View {
 //                        RollingOnUpdateNumber(event.likesCount).opacity(event.likesCount == 0 ? 0 : 1)
                     }
                     .foregroundColor(.red)
-                    .contentShape(Rectangle())
                     .padding(5)
+                    .contentShape(Rectangle())
                     .onTapGesture {
                         if unpublishLikeId != nil && up.cancel(unpublishLikeId!) {
                             ns.unlikePost(nrPost.mainEvent)
@@ -106,24 +106,24 @@ struct FooterFragmentView: View {
                 LightningButton(tally: nrPost.zapTally, nrPost: nrPost)
                     .opacity(nrPost.contact?.anyLud ?? false ? 1 : 0.3)
                     .disabled(!(nrPost.contact?.anyLud ?? false))
-                Spacer() 
+                Spacer()
 
 
                 // BOOKMARK
                 if (nrPost.bookmarked) {
                     Image("BookmarkIconActive")
                         .foregroundColor(.orange)
+                        .padding(5)
                         .contentShape(Rectangle())
-                        .padding(.vertical, 5)
-                        .padding(.leading, 10)
+//                        .padding(.leading, 10)
                         .onTapGesture {
                             ns.removeBookmark(nrPost.mainEvent)
                         }
                 }
                 else {
                     Image("BookmarkIcon")
-                        .padding(.vertical, 5)
-                        .padding(.leading, 10)
+                        .padding(5)
+//                        .padding(.leading, 10)
                         .contentShape(Rectangle())
                         .onTapGesture {
                             let impactMed = UIImpactFeedbackGenerator(style: .medium)

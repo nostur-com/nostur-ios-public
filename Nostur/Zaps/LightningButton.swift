@@ -13,23 +13,28 @@ struct LightningButton: View {
     var tally:Int64 // SATS (1000 SATS ~= 20 cent)
     var nrPost:NRPost?
     @State var isLoading = false
+    
+    var tallyString:String {
+        if (er.bitcoinPrice != 0.0) {
+            let fiatPrice = String(format: "$%.02f",(Double(tally) / 100000000 * Double(er.bitcoinPrice)))
+            return fiatPrice
+        }
+        return String(tally.formatNumber)
+    }
+    
     var body: some View {
         if isLoading {
             ProgressView()
                 .colorInvert()
+                .padding(5)
         }
         else {
-            Group {
+            HStack {
                 Image("BoltIcon")
-                if (er.bitcoinPrice != 0.0) {
-                    let fiatPrice = String(format: "$%.02f",(Double(tally) / 100000000 * Double(er.bitcoinPrice)))
-                    
-                    Text("\(fiatPrice)").opacity(tally != 0 ? 1 : 0)
-                }
-                else {
-                    Text("\(tally.formatNumber)").opacity(tally != 0 ? 1 : 0)
-                }
+                Text(tallyString).opacity(tally != 0 ? 1 : 0)
             }
+            .padding(5)
+            .contentShape(Rectangle())
             .onTapGesture {
                 guard ns.account?.privateKey != nil else {
                     ns.readOnlyAccountSheetShown = true
