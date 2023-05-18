@@ -28,7 +28,7 @@ final class NosturState : ObservableObject {
         }
     }
 
-    var followingPublicKeys:Set<String> {
+    var _followingPublicKeys:Set<String> {
         get {
             guard let account = account else { return Set<String>()}
             
@@ -38,6 +38,14 @@ final class NosturState : ObservableObject {
             return withoutBlocked
         }
     }
+    
+    var followingPublicKeys:Set<String> = [] {
+        didSet {
+            self.bgFollowingPublicKeys = followingPublicKeys
+        }
+    }
+    
+    var bgFollowingPublicKeys:Set<String> = []
     
     var explorePubkeys:Set<String> {
         get {
@@ -95,6 +103,7 @@ final class NosturState : ObservableObject {
         if let account {
             activeAccountPublicKey = account.publicKey
             // load state for new account
+            followingPublicKeys = _followingPublicKeys
             lastNotificationReceivedAt = account.lastNotificationReceivedAt
             lastProfileReceivedAt = account.lastProfileReceivedAt
             

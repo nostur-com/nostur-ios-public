@@ -110,6 +110,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
     var relays:String = ""
     
+    var following = false
     var replied = false
     var liked = false
     var reposted = false
@@ -251,6 +252,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         
         self.renderedText = NRTextParser.shared.parseText(event, text: event.noteTextPrepared).output
         
+        self.following = NosturState.shared.bgFollowingPublicKeys.contains(event.pubkey)
         self.bookmarked = isBookmarked()
         self.liked = isLiked()
         self.replied = isReplied()
@@ -321,7 +323,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         return KindHightlight(
             highlightAuthorPubkey: event.fastTags.first(where: { $0.0 == "p" } )?.1,
             highlightAuthorPicture: event.contacts?.first?.picture,
-            highlightAuthorIsFollowing: false, // TODO: FIX highlight isfollowing
+            highlightAuthorIsFollowing: hlNrContact?.following ?? false,
             highlightAuthorName: event.contacts?.first?.authorName,
             highlightUrl: event.fastTags.first(where: { $0.0 == "r" } )?.1,
             highlightNrContact: hlNrContact
@@ -366,7 +368,25 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         actionListener()
         likesListener()
         zapsListener()
+        isFollowingListener()
     }
+    
+    private func isFollowingListener() {
+        receiveNotification(.followersChanged)
+            .sink { [weak self] notification in
+                guard let self = self else { return }
+                let followingPubkeys = notification.object as! Set<String>
+                let isFollowing = followingPubkeys.contains(self.pubkey)
+                if isFollowing != self.following {
+                    DispatchQueue.main.async {
+                        self.objectWillChange.send()
+                        self.following = isFollowing
+                    }
+                }
+            }
+            .store(in: &subscriptions)
+    }
+    
     
     private func likesListener() {
         event.likesDidChange

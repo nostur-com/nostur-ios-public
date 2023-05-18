@@ -11,7 +11,7 @@ struct Kind1063: View {
     
     let MAX_HEIGHT = 250.0
     
-    let nrPost:NRPost
+    @ObservedObject var nrPost:NRPost
     let url:String
     let availableWidth:CGFloat
     var height:CGFloat? = nil
@@ -53,7 +53,7 @@ struct Kind1063: View {
                     
             }
             if let height {
-                SingleMediaViewer(url: URL(string: url)!, pubkey: nrPost.pubkey, imageWidth: availableWidth, isFollowing: true)
+                SingleMediaViewer(url: URL(string: url)!, pubkey: nrPost.pubkey, imageWidth: availableWidth, isFollowing: nrPost.following)
                     .frame(width: availableWidth, height: height)
             }
         }

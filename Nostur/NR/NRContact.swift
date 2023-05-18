@@ -49,7 +49,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     var lud06:String?
     var lud16:String?
     
-    var following:Bool = false // TODO: FIX FOLLOWING
+    var following:Bool = false
     var zapperPubkey: String?
     
     let contact:Contact // Only touch this in BG context!!!
@@ -74,6 +74,23 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         
         // self.following = // todo
         listenForChanges()
+        isFollowingListener()
+    }
+    
+    private func isFollowingListener() {
+        receiveNotification(.followersChanged)
+            .sink { [weak self] notification in
+                guard let self = self else { return }
+                let followingPubkeys = notification.object as! Set<String>
+                let isFollowing = followingPubkeys.contains(self.pubkey)
+                if isFollowing != self.following {
+                    DispatchQueue.main.async {
+                        self.objectWillChange.send()
+                        self.following = isFollowing
+                    }
+                }
+            }
+            .store(in: &subscriptions)
     }
     
     var subscriptions = Set<AnyCancellable>()

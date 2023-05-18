@@ -12,7 +12,7 @@ import Combine
 
 // Renders embeds (VIEWS), not links (in TEXT)
 struct ContentRenderer: View { // VIEW things
-    let nrPost:NRPost
+    @ObservedObject var nrPost:NRPost
     let isDetail:Bool
     let fullWidth:Bool
     let availableWidth:CGFloat
@@ -68,7 +68,7 @@ struct ContentRenderer: View { // VIEW things
                     SingleVideoViewer(url: url, pubkey: nrPost.pubkey, videoWidth: availableWidth, isFollowing:nrPost.contact?.following ?? false)
                         .padding(.vertical, 5)
                 case .image(let url):
-                    SingleMediaViewer(url: url, pubkey: nrPost.pubkey, imageWidth: availableWidth, isFollowing: nrPost.contact?.following ?? false, fullWidth: fullWidth)
+                    SingleMediaViewer(url: url, pubkey: nrPost.pubkey, imageWidth: availableWidth, isFollowing: nrPost.following, fullWidth: fullWidth)
                         .padding(.vertical, 5)
                 case .linkPreview(let url):
                     // TODO: do no link preview if restrictAutoDownload...
