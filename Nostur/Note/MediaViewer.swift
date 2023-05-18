@@ -267,6 +267,8 @@ struct FullImageViewer: View {
     @State private var newPosition: CGSize = .zero
     @State var isPlaying = true
     @State private var gestureStartTime: Date?
+    @State private var sharableImage:UIImage? = nil
+    @State private var sharableGif:Data? = nil
 
     
     var body: some View {
@@ -353,6 +355,9 @@ struct FullImageViewer: View {
                                             scale = 1.0
                                         }
                                     }
+                                    .onAppear {
+                                        sharableGif = data
+                                    }
                             }
                             else if let image = state.image {
                                 image
@@ -365,6 +370,11 @@ struct FullImageViewer: View {
                                     .onTapGesture {
                                         withAnimation {
                                             scale = 1.0
+                                        }
+                                    }
+                                    .onAppear {
+                                        if let image = state.imageContainer?.image {
+                                            sharableImage = image
                                         }
                                     }
                             }
@@ -388,6 +398,12 @@ struct FullImageViewer: View {
                 VStack {
                     HStack {
                         Spacer()
+                        if let sharableImage {
+                            ShareMediaButton(sharableImage: sharableImage)
+                        }
+                        else if let sharableGif {
+                            ShareGifButton(sharableGif: sharableGif)
+                        }
                         Image(systemName: "xmark.circle.fill")
                             .resizable()
                             .scaledToFit()
@@ -407,6 +423,46 @@ struct FullImageViewer: View {
             }
         }
     }
+}
+
+struct ShareMediaButton: View {
+    
+    var sharableImage:UIImage
+    @State private var showShareSheet = false
+
+    
+    var body: some View {
+        Button { showShareSheet = true } label: { Image(systemName: "square.and.arrow.up") }
+            .sheet(isPresented: $showShareSheet) {
+                ActivityView(activityItems: [sharableImage])
+            }
+                        
+    }
+}
+
+struct ShareGifButton: View {
+    
+    var sharableGif:Data
+    @State private var showShareSheet = false
+
+    
+    var body: some View {
+        Button { showShareSheet = true } label: { Image(systemName: "square.and.arrow.up") }
+            .sheet(isPresented: $showShareSheet) {
+                ActivityView(activityItems: [sharableGif])
+            }
+                        
+    }
+}
+
+struct ActivityView: UIViewControllerRepresentable {
+    let activityItems: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 func getImgUrlsFromContent(_ content:String) -> [URL] {
