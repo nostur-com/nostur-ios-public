@@ -399,7 +399,7 @@ func uploadPFPImage(image: UIImage) -> AnyPublisher<String, Error> {
         let upscaleFactor = SIDE / image.size.width
         let newHeight = image.size.height * upscaleFactor
         let x = 0.0
-        let y = -((newHeight-SIDE)/2)
+        let y = -((newHeight-SIDE)/2).rounded(.down)
         let drawRect = CGRect(x: x, y: y, width: SIDE, height: newHeight)
         image.draw(in: drawRect)
     }
@@ -407,7 +407,7 @@ func uploadPFPImage(image: UIImage) -> AnyPublisher<String, Error> {
         // HEIGHT IS TOO SMALL:
         let upscaleFactor = SIDE / image.size.height
         let newWidth = image.size.width * upscaleFactor
-        let x = -((newWidth-SIDE)/2)
+        let x = -((newWidth-SIDE)/2).rounded(.down)
         let y = 0.0
         let drawRect = CGRect(x: x, y: y, width: newWidth, height: SIDE)
         image.draw(in: drawRect)
@@ -417,7 +417,7 @@ func uploadPFPImage(image: UIImage) -> AnyPublisher<String, Error> {
         let downscaleFactor = image.size.width / SIDE
         let newHeight = image.size.height / downscaleFactor
         let x = 0.0
-        let y = -((newHeight-SIDE)/2)
+        let y = -((newHeight-SIDE)/2).rounded(.down)
         let drawRect = CGRect(x: x, y: y, width: SIDE, height: newHeight)
         image.draw(in: drawRect)
     }
@@ -425,7 +425,7 @@ func uploadPFPImage(image: UIImage) -> AnyPublisher<String, Error> {
         // HEIGHT SMALLER THAN WIDTH, BUT TOO BIG
         let downscaleFactor = image.size.height / SIDE
         let newWidth = image.size.width / downscaleFactor
-        let x = -((newWidth-SIDE)/2)
+        let x = -((newWidth-SIDE)/2).rounded(.down)
         let y = 0.0
         let drawRect = CGRect(x: x, y: y, width: newWidth, height: SIDE)
         image.draw(in: drawRect)
@@ -500,9 +500,9 @@ func scaleImageToFill(image: UIImage, height: CGFloat, width: CGFloat) -> UIImag
     let widthRatio = width / size.width
     let heightRatio = height / size.height
     let scaleRatio = max(widthRatio, heightRatio)
-    let scaledSize = CGSize(width: size.width * scaleRatio, height: size.height * scaleRatio)
+    let scaledSize = CGSize(width: (size.width * scaleRatio).rounded(.down), height: (size.height * scaleRatio).rounded(.down))
     let origin = CGPoint(x: (width - scaledSize.width) / 2, y: (height - scaledSize.height) / 2)
-    UIGraphicsBeginImageContextWithOptions(CGSize(width: width, height: height), false, 0)
+    UIGraphicsBeginImageContextWithOptions(CGSize(width: width.rounded(.down), height: height.rounded(.down)), false, 0)
     image.draw(in: CGRect(origin: origin, size: scaledSize))
     let scaledImage = UIGraphicsGetImageFromCurrentImageContext()
     UIGraphicsEndImageContext()

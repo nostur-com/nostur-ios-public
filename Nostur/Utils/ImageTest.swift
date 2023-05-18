@@ -93,7 +93,7 @@ func profilePic(_ image: UIImage, preserveAspect:Bool = true) -> UIImage? {
         let upscaleFactor = SIDE / image.size.width
         let newHeight = image.size.height * upscaleFactor
         let x = 0.0
-        let y = -((newHeight-SIDE)/2)
+        let y = -((newHeight-SIDE)/2).rounded(.down)
         let drawRect = CGRect(x: x, y: y, width: SIDE, height: newHeight)
         image.draw(in: drawRect)
     }
@@ -101,7 +101,7 @@ func profilePic(_ image: UIImage, preserveAspect:Bool = true) -> UIImage? {
         // HEIGHT IS TOO SMALL:
         let upscaleFactor = SIDE / image.size.height
         let newWidth = image.size.width * upscaleFactor
-        let x = -((newWidth-SIDE)/2)
+        let x = -((newWidth-SIDE)/2).rounded(.down)
         let y = 0.0
         let drawRect = CGRect(x: x, y: y, width: newWidth, height: SIDE)
         image.draw(in: drawRect)
@@ -111,7 +111,7 @@ func profilePic(_ image: UIImage, preserveAspect:Bool = true) -> UIImage? {
         let downscaleFactor = image.size.width / SIDE
         let newHeight = image.size.height / downscaleFactor
         let x = 0.0
-        let y = -((newHeight-SIDE)/2)
+        let y = -((newHeight-SIDE)/2).rounded(.down)
         let drawRect = CGRect(x: x, y: y, width: SIDE, height: newHeight)
         image.draw(in: drawRect)
     }
@@ -119,7 +119,7 @@ func profilePic(_ image: UIImage, preserveAspect:Bool = true) -> UIImage? {
         // HEIGHT SMALLER THAN WIDTH, BUT TOO BIG
         let downscaleFactor = image.size.height / SIDE
         let newWidth = image.size.width / downscaleFactor
-        let x = -((newWidth-SIDE)/2)
+        let x = -((newWidth-SIDE)/2).rounded(.down)
         let y = 0.0
         let drawRect = CGRect(x: x, y: y, width: newWidth, height: SIDE)
         image.draw(in: drawRect)
