@@ -138,7 +138,7 @@ final class SocketPool: ObservableObject {
             //            print("⬇️⬇️ REQ ON \(read) RELAYS: \(String(message.message))")
         }
         
-        Task(priority: .utility) {
+        Task(priority: .utility) { [unowned self] in
             for (_, managedClient) in self.sockets {
                 //                print("active subscriptions \(managedClient.url): \(managedClient.activeSubscriptions.count)")
                 guard managedClient.read || managedClient.write else {

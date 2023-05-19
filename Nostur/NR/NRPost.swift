@@ -450,8 +450,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             .map({ notification in
                 return notification.object as! Ptag
             })
-            .filter({ pTag in
-                self.missingPs.contains(pTag)
+            .filter({ [weak self] pTag in
+                guard let self = self else { return false }
+                return self.missingPs.contains(pTag)
             })
             .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
             .sink { [weak self] pubkey in
@@ -468,8 +469,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             .map({ notification in
                 return notification.object as! Ptag
             })
-            .filter({ pTag in
-                self.missingPs.contains(pTag)
+            .filter({ [weak self] pTag in
+                guard let self = self else { return false }
+                return self.missingPs.contains(pTag)
             })
             .debounce(for: .seconds(1), scheduler: RunLoop.main)
             .sink { [weak self] pubkey in
@@ -484,8 +486,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             .map({ notification in
                 return notification.object as! Ptag
             })
-            .filter({ pTag in
-                self.pubkey == pTag
+            .filter({ [weak self] pTag in
+                guard let self = self else { return false }
+                return self.pubkey == pTag
             })
             .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
             .sink { [weak self] pubkey in

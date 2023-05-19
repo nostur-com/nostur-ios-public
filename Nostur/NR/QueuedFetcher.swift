@@ -29,31 +29,31 @@ class QueuedFetcher {
     
     
     init() {
-        enqueuePsubject.sink { pTag in
+        enqueuePsubject.sink { [unowned self] pTag in
             guard !self.pQueue.contains(pTag) else { return }
             self.pQueue.insert(pTag)
         }
         .store(in: &subscriptions)
         
-        dequeuePsubject.sink { pTag in
+        dequeuePsubject.sink { [unowned self] pTag in
             self.pQueue.remove(pTag)
         }
         .store(in: &subscriptions)
         
-        enqueueIDsubject.sink { eventId in
+        enqueueIDsubject.sink { [unowned self] eventId in
             guard !self.idQueue.contains(eventId) else { return }
             self.idQueue.insert(eventId)
         }
         .store(in: &subscriptions)
         
-        dequeueIDsubject.sink { eventId in
+        dequeueIDsubject.sink { [unowned self] eventId in
             self.idQueue.remove(eventId)
         }
         .store(in: &subscriptions)
         
         fetchSubject
             .debounce(for: .seconds(0.15), scheduler: RunLoop.main)
-            .sink { _ in
+            .sink { [unowned self] _ in
                 guard self.pQueue.count > 0 || self.idQueue.count > 0 else { return }
                 
                 if self.idQueue.count == 0 {

@@ -73,7 +73,7 @@ class NotificationsManager: ObservableObject {
         startTimer()
                 
         receiveNotification(.activeAccountChanged)
-            .sink { _ in
+            .sink { [unowned self] _ in
                 self.unreadMentions = 0
                 self.unreadReactions = 0
                 self.unreadZaps = 0
@@ -125,8 +125,7 @@ class NotificationsManager: ObservableObject {
         let blockedPubkeys = account.blockedPubkeys_
         
         let context = DataProvider.shared().bg
-        context.perform { [weak self] in
-            guard let self = self else { return }
+        context.perform { [unowned self] in
             let lastSeenPostCreatedAt = account.toBG()?.lastSeenPostCreatedAt ?? 0
             
             // Same query as in NotificationsPosts.init. should be kept in sync, refactor to 1 function source someday

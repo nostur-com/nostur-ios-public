@@ -49,7 +49,8 @@ class FastLoader: ObservableObject {
         bgContext = DataProvider.shared().bg
         loadNewerSubject
             .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
-            .sink { parameters in
+            .sink { [weak self] parameters in
+                guard let self = self else { return }
                 let (limit, taskId) = parameters
                 self._loadNewer(limit, taskId: taskId)
             }
@@ -57,7 +58,8 @@ class FastLoader: ObservableObject {
         
         loadNewerEventsSubject
             .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
-            .sink { parameters in
+            .sink { [weak self] parameters in
+                guard let self = self else { return }
                 let (limit, taskId) = parameters
                 self._loadNewerEvents(limit, taskId: taskId)
             }
@@ -65,7 +67,8 @@ class FastLoader: ObservableObject {
         
         loadOlderEventsSubject
             .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
-            .sink { parameters in
+            .sink { [weak self] parameters in
+                guard let self = self else { return }
                 let (limit, taskId) = parameters
                 self._loadOlderEvents(limit, taskId: taskId)
             }
@@ -100,7 +103,8 @@ class FastLoader: ObservableObject {
         
         if nrPostTransform {
             next.fetchOffset = max(0, self.nrPosts.count - 1)
-            bgContext.perform {
+            bgContext.perform { [weak self] in
+                guard let self = self else { return }
                 let dbEventIds = (try? self.bgContext.fetch(next)) ?? []
                 let currentNRPostIds = Set(self.nrPosts.map { item in
                     item.id
@@ -167,7 +171,8 @@ class FastLoader: ObservableObject {
         next.sortDescriptors = sortDescriptors
         next.fetchLimit = limit ?? 1000
         next.fetchOffset = 0
-        bgContext.perform {
+        bgContext.perform { [weak self] in
+            guard let self = self else { return }
             let dbEventIds = (try? self.bgContext.fetch(next)) ?? []
             let currentNRPostIds = Set(self.nrPosts.map { item in
                 item.id

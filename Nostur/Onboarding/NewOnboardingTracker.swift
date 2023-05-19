@@ -43,8 +43,8 @@ class NewOnboardingTracker {
     private var account:Account?
 
     public func start(pubkey: String) throws {
-        self.bg.performAndWait {
-            self.cancel()
+        self.bg.performAndWait { [weak self] in
+            self?.cancel()
         }
         self.backlog = Backlog()
         self.pubkey = pubkey
@@ -78,8 +78,7 @@ class NewOnboardingTracker {
     }
     
     private func stopAfterDelay() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(10)) { [weak self] in
-            guard let self = self else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(10)) {
             self.bg.perform { [weak self] in
                 self?.cancel()
             }

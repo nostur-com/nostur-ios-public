@@ -638,18 +638,21 @@ extension LVM {
         
         receiveNotification(.explorePubkeysChanged)
             .sink { [weak self] notification in
+                guard let self = self else { return }
+                guard self.subscriptionId == "Explore" else { return }
                 let pubkeys = notification.object as! Set<String>
-                self?.pubkeys = pubkeys
-                self?.performLocalFetch()
+                self.pubkeys = pubkeys
+                self.performLocalFetch()
             }
             .store(in: &subscriptions)
         
         receiveNotification(.listPubkeysChanged)
             .sink { [weak self] notification in
+                guard let self = self else { return }
                 let newPubkeyInfo = notification.object as! NewPubkeysForList
-                guard newPubkeyInfo.subscriptionId == self?.subscriptionId else { return }
-                self?.pubkeys = newPubkeyInfo.pubkeys
-                self?.performLocalFetch(refreshInBackground: true)
+                guard newPubkeyInfo.subscriptionId == self.subscriptionId else { return }
+                self.pubkeys = newPubkeyInfo.pubkeys
+                self.performLocalFetch(refreshInBackground: true)
             }
             .store(in: &subscriptions)
         
@@ -778,7 +781,8 @@ extension LVM {
                 let lastAppearedId = self.lastAppearedId
                 let lastAppearedAnchor = self.lastAppearedAnchor
                 let lastReadId = self.lastReadId
-                context.perform {
+                context.perform { [weak self] in
+                    guard let self = self else { return }
                     guard let listStateObjectId = self.listStateObjectId else { return }
                     guard let listState = context.object(with: listStateObjectId) as? ListState else { return }
                     listState.lastAppearedId = lastAppearedId
@@ -964,7 +968,8 @@ extension LVM: NSFetchedResultsControllerDelegate {
     // MARK: FROM DB TO SCREEN STEP 1: FETCH REQUEST
     func performLocalFetch(refreshInBackground:Bool = false) {
         let ctx = DataProvider.shared().bg
-        ctx.perform {
+        ctx.perform { [weak self] in
+            guard let self = self else { return }
             //        print("🏎️🏎️ \(Date.now) performLocalFetch \(self.subscriptionId)")
             if let mostRecent = self.lvmState.nrPostLeafs.first {
                 //            print("🟢🟢🟢🟢🟢🟢 from mostRecent \(mostRecent.id)")
@@ -989,7 +994,8 @@ extension LVM: NSFetchedResultsControllerDelegate {
     
     func performLocalRestoreFetch(refreshInBackground:Bool = false) {
         let ctx = DataProvider.shared().bg
-        ctx.perform {
+        ctx.perform { [weak self] in
+            guard let self = self else { return }
             if let leafs = self.restoreLeafs?.split(separator: ",") {
                 let fr = Event.fetchRequest()
                 fr.predicate = NSPredicate(format: "id IN %@", leafs)

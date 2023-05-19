@@ -28,7 +28,8 @@ class LVMManager {
         
         
         receiveNotification(.activeAccountChanged)
-            .sink { notification in
+            .sink { [weak self] notification in
+                guard let self = self else { return }
                 guard let account = notification.object as? Account else { return }
                 self.listVMs.removeAll(where: { $0.pubkey == account.publicKey })
             }

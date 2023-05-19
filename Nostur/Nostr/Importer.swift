@@ -21,6 +21,8 @@ class Importer {
     
     static let shared = Importer()
     
+    let decoder = JSONDecoder()
+    
     init() {
         self.preloadExistingIdsCache()
         print("\(existingIds.count) existing ids in cache")
@@ -44,8 +46,10 @@ class Importer {
         fr.fetchLimit = 5000
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         fr.propertiesToFetch = ["id"]
-        if let results = try? DataProvider.shared().viewContext.fetch(fr) {
-            self.existingIds = Set(results.map { $0.id })
+        DataProvider.shared().bg.perform { [unowned self] in
+            if let results = try? DataProvider.shared().bg.fetch(fr) {
+                self.existingIds = Set(results.map { $0.id })
+            }
         }
     }
     
@@ -74,11 +78,9 @@ class Importer {
 
         let isSignatureVerificationEnabled = self.settingsStore.isSignatureVerificationEnabled
         
-        let context = DataProvider.shared().bg // SLOW???
-        
-//        var last:Event? = nil
-        
-        context.perform {
+        let context = DataProvider.shared().bg        
+        context.perform { [unowned self] in
+//            guard let self = self else { return }
             do {
                 var count = 0
                 var alreadyInIdCacheSkipped = 0
@@ -125,7 +127,6 @@ class Importer {
                     // ANNOYING FIX FOR KIND 6 WITH JSON STRING OF ANOTHER EVENT IN EVENT.CONTENT. WTF
                     var kind6firstQuote:Event?
                     if event.kind == .repost && (event.content.prefix(2) == #"{""# || event.content == "") {
-                        let decoder = JSONDecoder()
                         if event.content == "" {
                             if let firstE = event.firstE() {
                                 kind6firstQuote = try? Event.fetchEvent(id: firstE, context: context)
