@@ -146,6 +146,12 @@ struct ProfileView: View {
                                         }
                                     }
                                     
+                                    Button {
+                                        sendNotification(.addRemoveToListsheet, contact)
+                                    } label: {
+                                        Label("Add/Remove from lists", systemImage: "person.2.crop.square.stack")
+                                    }
+                                    
                                     
                                     Button {
                                         ns.objectWillChange.send()
