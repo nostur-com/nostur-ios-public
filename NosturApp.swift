@@ -67,6 +67,7 @@ struct NosturApp: App {
     private var importer:Importer = .shared // Need to initialize here on MAIN, else the first init will be in wrong background context
     private var queuedFetcher:QueuedFetcher = .shared
     private var sp:SocketPool = .shared
+    private var mp:MessageParser = .shared
     
     
     @State var fg:FollowingGuardian = .shared

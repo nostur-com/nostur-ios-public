@@ -6,25 +6,22 @@
 //
 
 import Foundation
+import Collections
 
 class MessageParser {
     
     static let shared = MessageParser()
 
-    var sp = SocketPool.shared
-    var messageBucket = ThreadSafeFIFOQueue<RelayMessage>()
+    private var context = DataProvider.shared().bg
+    private var sp = SocketPool.shared
+    public var messageBucket = Deque<RelayMessage>()
     
     func socketReceivedMessage(text:String, relayUrl:String, client:NewWebSocket) {
-        do {
-//            ThreadWarning.which("socketReceivedMessage")
-            // Validation is CPU intensive. Moved it to Importer right before save step
-            // so we dont waste cpu on duplicates etc
-            guard let message = try? RelayMessage.parseRelayMessage(text: text, relay: relayUrl, skipValidation: true) else {
-//                print("🚒🚒🚒 \(relayUrl) could not parse message. or verify sig: \(text)")
-                throw "could not parse message. or verify sig"
-            }
-            
-            switch message.type {
+        self.context.perform { [unowned self] in
+            do {
+                let message = try RelayMessage.parseRelayMessage(text: text, relay: relayUrl, skipValidation: true)
+                
+                switch message.type {
                 case .AUTH:
                     print("🟢🟢 \(relayUrl): \(message.message)")
                 case .OK:
@@ -47,38 +44,31 @@ class MessageParser {
                     if (message.type == .EVENT) {
                         guard let nEvent = message.event else { print("🔴🔴 uhh, where is nEvent "); return }
                         
-                        Task.detached(priority: .medium) { [weak self] in
-                            guard let self = self else { return }
-                            
-                            let sameMessageInQueue = self.messageBucket.all()
-                                .filter { $0.type != nil && $0.type == .EVENT }
-                                .compactMap { $0.event?.id }
-                                .firstIndex(of: nEvent.id )
-                            if (sameMessageInQueue != nil) {
-//                                print("🧜🧜 Message already in queue (\(queuedMessages.count)). skipped. \(message.event!.id)")
-                              //  ThreadWarning.shouldNotBeMain()
-                                return
-                            }
-                            else {
-                                self.messageBucket.addMessage(message)
-//                                print("🏎️🏎️ \(Date.now) addedRelayMessage \(message.message)")
-                                Importer.shared.addedRelayMessage.send()
-                            }
+                        let sameMessageInQueue = self.messageBucket.contains(where: {
+                            $0.type == .EVENT && nEvent.id == $0.event?.id
+                        })
+                        if (sameMessageInQueue) {
+                            return
+                        }
+                        else {
+                            self.messageBucket.append(message)
+                            Importer.shared.addedRelayMessage.send()
                         }
                     }
+                }
             }
-        }
-        catch RelayMessage.error.UNKNOWN_MESSAGE_TYPE {
-            print("🟠 \(relayUrl) Unknown message type: \(text)")
-        }
-        catch RelayMessage.error.FAILED_TO_PARSE {
-            print("🟠 \(relayUrl) Could not parse text received: \(text)")
-        }
-        catch RelayMessage.error.FAILED_TO_PARSE_EVENT {
-            print("🟠 \(relayUrl) Could not parse EVENT: \(text)")
-        }
-        catch {
-            print("🔴🔴 \(relayUrl) \(error)")
+            catch RelayMessage.error.UNKNOWN_MESSAGE_TYPE {
+                print("🟠 \(relayUrl) Unknown message type: \(text)")
+            }
+            catch RelayMessage.error.FAILED_TO_PARSE {
+                print("🟠 \(relayUrl) Could not parse text received: \(text)")
+            }
+            catch RelayMessage.error.FAILED_TO_PARSE_EVENT {
+                print("🟠 \(relayUrl) Could not parse EVENT: \(text)")
+            }
+            catch {
+                print("🔴🔴 \(relayUrl) \(error)")
+            }
         }
     }
 }

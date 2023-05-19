@@ -243,7 +243,10 @@ class NotificationsManager: ObservableObject {
     
     func checkForEverything() {
         guard ns.account != nil else { return }
-        guard !MessageParser.shared.messageBucket.isImporting else { return }
+        let isImporting = DataProvider.shared().bg.performAndWait {
+            return Importer.shared.isImporting
+        }
+        guard !isImporting else { print("⏳ Still importing, new fetch skipped."); return }
         
         relayCheckNewestNotifications() // or wait 3 seconds?
         

@@ -12,6 +12,8 @@ import Combine
 
 class Importer {
     
+    var isImporting = false
+    var needsImport = false
     var subscriptions = Set<AnyCancellable>()
     var addedRelayMessage = PassthroughSubject<Void, Never>()
 
@@ -54,45 +56,39 @@ class Importer {
     }
     
     public func importEvents() {
-        let messageBucket = MessageParser.shared.messageBucket
-        if (messageBucket.isImporting) {
-            let itemsCount = messageBucket.count
-//            print("🏎️🏎️ ALREADY IMPORTING. SKIPPED importEvents with \(itemsCount) in bucket 🏎️🏎️")
-            messageBucket.needsImport = true
-            if itemsCount > 0 {
-                DispatchQueue.main.async {
-                    sendNotification(.listStatus, "Processing \(itemsCount) items...")
-                }
-            }
-            return
-        }
-        
-        messageBucket.isImporting = true
-        
-        let itemsCount = messageBucket.count
-        guard itemsCount != 0 else { messageBucket.isImporting = false; return }
-        
-        DispatchQueue.main.async {
-            sendNotification(.listStatus, "Processing \(itemsCount) items...")
-        }
-
-        let isSignatureVerificationEnabled = self.settingsStore.isSignatureVerificationEnabled
-        
-        let context = DataProvider.shared().bg        
+        let context = DataProvider.shared().bg
         context.perform { [unowned self] in
-//            guard let self = self else { return }
+            if (self.isImporting) {
+                let itemsCount = MessageParser.shared.messageBucket.count
+                self.needsImport = true
+                if itemsCount > 0 {
+                    DispatchQueue.main.async {
+                        sendNotification(.listStatus, "Processing \(itemsCount) items...")
+                    }
+                }
+                return
+            }
+            self.isImporting = true
+            let forImportsCount = MessageParser.shared.messageBucket.count
+            guard forImportsCount != 0 else { self.isImporting = false; return }
+            
+            DispatchQueue.main.async {
+                sendNotification(.listStatus, "Processing \(forImportsCount) items...")
+            }
+            
+            let isSignatureVerificationEnabled = self.settingsStore.isSignatureVerificationEnabled
+            
             do {
                 var count = 0
                 var alreadyInIdCacheSkipped = 0
                 var alreadyInDBskipped = 0
                 var saved = 0
-                let forImportsCount = messageBucket.count
                 
                 // We send a notification every .save with the saved subscriptionIds
                 // so other parts of the system can start fetching from local db
                 var subscriptionIds = Set<String>()
                 
-                while let message = messageBucket.takeMessage() {
+                while let message = MessageParser.shared.messageBucket.popFirst() {
                     count = count + 1
                     guard var event = message.event else {
                         print("🔴🔴 message.event is nil \(message.message)")
@@ -253,10 +249,10 @@ class Importer {
                 print("🏎️🏎️🔴🔴🔴🔴 Failed to import because:")
                 print("🏎️🏎️🔴🔴🔴🔴 \(error)")
             }
-            messageBucket.isImporting = false
-            if (messageBucket.needsImport) {
+            self.isImporting = false
+            if (self.needsImport) {
                 print("🏎️🏎️ Chaining next import ")
-                messageBucket.needsImport = false
+                self.needsImport = false
                 self.importEvents()
             }
             else {

@@ -519,7 +519,10 @@ class LVM: NSObject, ObservableObject {
             return
         }
 //        performLocalFetch()
-        guard !MessageParser.shared.messageBucket.isImporting else { print("⏳ Still importing, new fetch skipped."); return }
+        let isImporting = DataProvider.shared().bg.performAndWait {
+            return Importer.shared.isImporting
+        }
+        guard !isImporting else { print("⏳ Still importing, new fetch skipped."); return }
         
         if !UserDefaults.standard.bool(forKey: "firstTimeCompleted") {
             DispatchQueue.main.async {

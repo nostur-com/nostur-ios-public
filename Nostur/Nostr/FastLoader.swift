@@ -280,10 +280,13 @@ class Backlog {
     }
     
     private func removeOldTasks() {
-        tasks.forEach { task in
-            if task.createdAt.timeIntervalSinceNow < -timeout {
-                task.onTimeout()
-                tasks.remove(task)
+        DataProvider.shared().bg.perform { [weak self] in
+            guard let self = self else { return }
+            self.tasks.forEach { task in
+                if task.createdAt.timeIntervalSinceNow < -self.timeout {
+                    task.onTimeout()
+                    self.tasks.remove(task)
+                }
             }
         }
     }
