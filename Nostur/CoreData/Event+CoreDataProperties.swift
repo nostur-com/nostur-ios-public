@@ -599,9 +599,7 @@ extension Event {
     
     var fastTags:[(String, String, String?)] {
         guard let tagsSerialized = tagsSerialized else { return [] }
-        guard let jsonData = tagsSerialized.data(using: .utf8) else {
-            return []
-        }
+        guard let jsonData = tagsSerialized.data(using: .utf8) else { return [] }
         
         guard let jsonArray = try? JSONSerialization.jsonObject(with: jsonData, options: []) as? [[String]] else {
             return []

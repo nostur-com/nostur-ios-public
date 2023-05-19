@@ -7,6 +7,7 @@
 
 import Foundation
 
+// TODO: We only access this from .bg now? so we don't need the seperate ThreadSafeFIFO queue anymore??
 class ThreadSafeFIFOQueue<T> {
     private var queue: [T]
     private var isImporting_ = false

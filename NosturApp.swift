@@ -57,10 +57,18 @@ struct NosturApp: App {
     @StateObject private var ns:NosturState = .shared
     @StateObject private var tm:DetailTabsModel = .shared
     @StateObject private var nm:NotificationsManager = .shared
+    
+    
+    // These singletons always exists during the apps lifetime, so we can use [unowned self] etc
+    // the owner is NosturApp
     private var dataProvider = DataProvider.shared()
     private var eventRelationsQueue:EventRelationsQueue = .shared
     private var lvmManager:LVMManager = .shared
     private var importer:Importer = .shared // Need to initialize here on MAIN, else the first init will be in wrong background context
+    private var queuedFetcher:QueuedFetcher = .shared
+    private var sp:SocketPool = .shared
+    
+    
     @State var fg:FollowingGuardian = .shared
     
     @State var isViewDisplayed = false

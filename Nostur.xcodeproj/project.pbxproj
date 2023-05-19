@@ -84,7 +84,6 @@
 		1F539DAB299D4B2A00F3B8CA /* NewAccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F539DAA299D4B2900F3B8CA /* NewAccountSheet.swift */; };
 		1F539DAD299D52E200F3B8CA /* AddExistingAccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F539DAC299D52E200F3B8CA /* AddExistingAccountSheet.swift */; };
 		1F558B3C29FE4DA0002938A3 /* EventRelationsQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F558B3B29FE4DA0002938A3 /* EventRelationsQueue.swift */; };
-		1F57C54729927A0000DFE063 /* AppTopBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F57C54629927A0000DFE063 /* AppTopBar.swift */; };
 		1F57C54B299285B300DFE063 /* Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F57C54A299285B300DFE063 /* Search.swift */; };
 		1F5BA91429A8C27200002652 /* NewNoteButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5BA91329A8C27200002652 /* NewNoteButton.swift */; };
 		1F5BBE40297BC7E600F4AF03 /* EventsError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5BBE3F297BC7E600F4AF03 /* EventsError.swift */; };
@@ -394,7 +393,6 @@
 		1F539DAA299D4B2900F3B8CA /* NewAccountSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewAccountSheet.swift; sourceTree = "<group>"; };
 		1F539DAC299D52E200F3B8CA /* AddExistingAccountSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddExistingAccountSheet.swift; sourceTree = "<group>"; };
 		1F558B3B29FE4DA0002938A3 /* EventRelationsQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventRelationsQueue.swift; sourceTree = "<group>"; };
-		1F57C54629927A0000DFE063 /* AppTopBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTopBar.swift; sourceTree = "<group>"; };
 		1F57C54A299285B300DFE063 /* Search.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Search.swift; sourceTree = "<group>"; };
 		1F5BA91329A8C27200002652 /* NewNoteButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewNoteButton.swift; sourceTree = "<group>"; };
 		1F5BBE3F297BC7E600F4AF03 /* EventsError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsError.swift; sourceTree = "<group>"; };
@@ -673,7 +671,6 @@
 			children = (
 				1F5BA91229A8C25700002652 /* Timeline */,
 				1FFF997A29CEE15000ADAE23 /* About.swift */,
-				1F57C54629927A0000DFE063 /* AppTopBar.swift */,
 				1F00337429BF0A44007CE040 /* BookmarksAndPrivateNotes.swift */,
 				1F1ABC482981718700D03FA9 /* BookmarksView.swift */,
 				1FB6E6FA29E3B827008BE8A6 /* MainView.swift */,
@@ -1545,7 +1542,6 @@
 				1F987EB329805F33001E352E /* String+matchingStrings.swift in Sources */,
 				1FC4555F29CB673200DE3239 /* NewDMToSelector.swift in Sources */,
 				1F21DDBE29F0174700C564EF /* NewSocketPool.swift in Sources */,
-				1F57C54729927A0000DFE063 /* AppTopBar.swift in Sources */,
 				1FC82F3629AE327700B81CE5 /* SmartRelayManager.swift in Sources */,
 				1FF21E7E29ACC02E00203623 /* FollowingAndExplore.swift in Sources */,
 				1F49C80629B8D7EA005C960D /* NewQuoteRepost.swift in Sources */,

@@ -155,7 +155,7 @@ final class NosturState : ObservableObject {
     
     func follow(_ pubkey:String) {
         guard let account = account else { return }
-        self.objectWillChange.send()
+//        self.objectWillChange.send()
         // find existing contact
         if let contact = Contact.contactBy(pubkey: pubkey, context: viewContext) {
             account.addToFollows(contact)
@@ -174,7 +174,7 @@ final class NosturState : ObservableObject {
     
     func follow(_ contact:Contact) {
         guard let account = account else { return }
-        self.objectWillChange.send()
+//        self.objectWillChange.send()
         account.addToFollows(contact)
         
         DataProvider.shared().save()
@@ -187,7 +187,7 @@ final class NosturState : ObservableObject {
             return
         }
         guard let account = account else { return }
-        self.objectWillChange.send()
+//        self.objectWillChange.send()
         account.removeFromFollows(contact)
         DataProvider.shared().save()
         sendNotification(.followersChanged, account.followingPublicKeys)
@@ -199,7 +199,7 @@ final class NosturState : ObservableObject {
             return
         }
         guard let account = account else { return }
-        self.objectWillChange.send()
+//        self.objectWillChange.send()
         account.removeFromFollows(contact)
         DataProvider.shared().save()
         sendNotification(.followersChanged, account.followingPublicKeys)
