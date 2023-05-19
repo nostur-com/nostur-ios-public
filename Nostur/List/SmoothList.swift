@@ -422,7 +422,7 @@ final class CViewHolder {
     let collectionView: UICollectionView
     typealias DataSourceType = DataSourcy<SingleSection, String>
     private(set) lazy var dataSource: DataSourceType = createDataSource()
-    private let coordinator: SmoothList.Coordinator
+    private let coordinator: SmoothList.Coordinator?
     private var layoutListConfiguration = UICollectionLayoutListConfiguration(appearance: .plain)
     
     init(
@@ -513,11 +513,11 @@ final class CViewHolder {
             cellProvider: { [weak self] collectionView, indexPath, identifier -> UICollectionViewCell? in
                 guard let self = self else { return nil }
                 
-                guard let nrPost = self.coordinator.parent.data.first(where: { $0.id == identifier }) else {
+                guard let nrPost = self.coordinator?.parent.data.first(where: { $0.id == identifier }) else {
                     return self.collectionView.dequeueConfiguredReusableCell(using: MissingCellRegistration, for: indexPath, item: "🧨")
                 }
                 
-                if self.coordinator.parent.fullWidthImages {
+                if self.coordinator?.parent.fullWidthImages ?? false {
                     return self.collectionView.dequeueConfiguredReusableCell(using: FullWidthPostOrThreadCellRegistration, for: indexPath, item: nrPost)
                 }
                 return self.collectionView.dequeueConfiguredReusableCell(using: PostOrThreadCellRegistration, for: indexPath, item: nrPost)
