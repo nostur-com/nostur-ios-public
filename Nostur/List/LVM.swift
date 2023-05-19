@@ -479,15 +479,21 @@ class LVM: NSObject, ObservableObject {
         fetchFeedTimerNextTick()
     }
     
+    deinit {
+        self.fetchFeedTimer?.invalidate()
+    }
     
     // FETCHES NOTHING, BUT AFTER THAT IS REALTIME FOR NEW EVENTS
     private func wtfFetch(subscriptionId:String) {
+        guard pubkeys.count > 0 else { return }
         let now = NTimestamp(date: Date.now)
         req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString, limit:10, subscriptionId: subscriptionId, until: now))
     }
     
     // FETCHES NOTHING, BUT AFTER THAT IS REALTIME FOR NEW EVENTS
     private func fetchRealtimeSinceNow(subscriptionId:String) {
+        guard pubkeys.count > 0 else { return }
+        guard self.pubkeysPrefixString != "" else { return }
         let now = NTimestamp(date: Date.now)
         req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: subscriptionId, since: now), activeSubscriptionId: subscriptionId)
     }
@@ -495,10 +501,14 @@ class LVM: NSObject, ObservableObject {
     // FETCHES ALL NEW, UNTIL NOW
     private func fetchNewestUntilNow(subscriptionId:String) {
         let now = NTimestamp(date: Date.now)
+        guard pubkeys.count > 0 else { return }
+        guard self.pubkeysPrefixString != "" else { return }
         req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: "CATCHUP-" + subscriptionId, until: now))
     }
     
     private func fetchNewerSince(subscriptionId:String, since: NTimestamp) {
+        guard pubkeys.count > 0 else { return }
+        guard self.pubkeysPrefixString != "" else { return }
         req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: "RESUME-" + subscriptionId, since: since))
     }
     
@@ -629,6 +639,7 @@ extension LVM {
         receiveNotification(.followersChanged)
             .sink { [weak self] notification in
                 guard let self = self else { return }
+                guard self.subscriptionId == "Following" else { return }
                 SocketPool.shared.allowNewFollowingSubscriptions()
                 let pubkeys = notification.object as! Set<String>
                 self.pubkeys = pubkeys
