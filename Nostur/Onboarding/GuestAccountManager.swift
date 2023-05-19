@@ -12,9 +12,11 @@ class GuestAccountManager {
     
     private var context = DataProvider.shared().viewContext
     
-    public func createGuestAccount() {
-        guard (try? Account.fetchAccount(publicKey: NosturState.GUEST_ACCOUNT_PUBKEY, context: context)) == nil else { return }
-        context.performAndWait {
+    public func createGuestAccount() -> Account {
+        if let account = try? Account.fetchAccount(publicKey: NosturState.GUEST_ACCOUNT_PUBKEY, context: context) {
+            return account
+        }
+        return context.performAndWait {
             let account = Account(context: context)
             account.id = UUID()
             account.createdAt = Date()
@@ -24,6 +26,7 @@ class GuestAccountManager {
             account.about = "Just trying things out"
             account.publicKey = NosturState.GUEST_ACCOUNT_PUBKEY
             try! context.save()
+            return account
         }
     }
 }

@@ -25,8 +25,7 @@ struct TryGuestAccountSheet: View {
                 .padding()
             
             Button {
-                letsGo = true
-                ns.onBoardingIsShown = false
+                tryGuestAccount()
             } label: {
                 Text("Let's go!")
                     .frame(maxWidth: .infinity)
@@ -36,18 +35,45 @@ struct TryGuestAccountSheet: View {
         }
         .frame(maxWidth: 300)
         .onAppear {
-            if let account = try? Account.fetchAccount(publicKey: NosturState.GUEST_ACCOUNT_PUBKEY, context: viewContext) {
-                ns.setAccount(account: account)
+            // Start onboarding already.. speed up..
+            let countBefore = ns.accounts.count
+            if !ns.accounts.contains(where: { $0.publicKey == NosturState.GUEST_ACCOUNT_PUBKEY }) {
+                let guestAccount = GuestAccountManager.shared.createGuestAccount()
+                ns.setAccount(account: guestAccount)
+                if ns.accounts.count > countBefore {
+                    didCreate = true
+                }
+            }
+            do {
+                try NewOnboardingTracker.shared.start(pubkey: NosturState.GUEST_ACCOUNT_PUBKEY)
+    //                    print("✈️✈️✈️ ONBORADING SPEED UP, FETCHING 0 + 3")
+    //                    req(RM.getUserMetadataAndContactList(pubkey: NosturState.GUEST_ACCOUNT_PUBKEY))
+            }
+            catch {
+                print("🔴🔴✈️✈️✈️ ONBORADING ERROR 123")
             }
         }
         .onDisappear {
-            if (letsGo) {
-                ns.onBoardingIsShown = false
-                dismiss()
+            // back without trying out guest, so should cancel onboarding and creating guest
+            let guestAccount = try? Account.fetchAccount(publicKey: NosturState.GUEST_ACCOUNT_PUBKEY, context: viewContext)
+            
+            if let guestAccount, !letsGo && didCreate {
+                viewContext.delete(guestAccount)
+                Importer.shared.existingIds = []
+                NewOnboardingTracker.shared.abort()
+            }
+            else {
+                ns.setAccount(account: guestAccount)
             }
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
+    }
+    
+    func tryGuestAccount() {
+        letsGo = true
+        ns.onBoardingIsShown = false
+        dismiss()
     }
 }
 

@@ -93,14 +93,11 @@ struct NosturApp: App {
                     
                 }
 //                else if isOnboarding || ns.accounts.count == 0 {
-                else if isOnboarding || ns.accounts.count == 0 {
-                    //                if !didAcceptTerms || isOnboarding || ns.accounts.count == 0 {
+//                else if isOnboarding || ns.accounts.count == 0 {
+                else if !didAcceptTerms || isOnboarding || ns.accounts.count == 0 {
                     Onboarding()
                         .environmentObject(ns)
                         .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
-                        .onReceive(receiveNotification(.onBoardingIsShownChanged)) { notification in   let onBoardingIsShown = notification.object as! Bool
-                            isOnboarding = onBoardingIsShown
-                        }
                         .onAppear { isOnboarding = true }
                 }
                 else {
@@ -123,15 +120,17 @@ struct NosturApp: App {
                                     }
                                 }
                             }
-                            .onReceive(receiveNotification(.onBoardingIsShownChanged)) { notification in
-                                let onBoardingIsShown = notification.object as! Bool
-                                isOnboarding = onBoardingIsShown
-                            }
                     }
                 }
             }
             .onAppear  { startNosturing(); self.isViewDisplayed = true }
             .onDisappear { self.isViewDisplayed = false }
+            .onReceive(receiveNotification(.onBoardingIsShownChanged)) { notification in
+                let onBoardingIsShown = notification.object as! Bool
+                if onBoardingIsShown != isOnboarding {
+                    isOnboarding = onBoardingIsShown
+                }
+            }
         }
         .onChange(of: scenePhase) { newScenePhase in
             switch newScenePhase {
@@ -183,7 +182,7 @@ struct NosturApp: App {
         if (!firstTimeCompleted) {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                 // fetch guest account kind 0 + 3
-                GuestAccountManager.shared.createGuestAccount()
+                _ = GuestAccountManager.shared.createGuestAccount()
                 do {
                     try NewOnboardingTracker.shared.start(pubkey: NosturState.GUEST_ACCOUNT_PUBKEY)
 //                    print("✈️✈️✈️ ONBORADING SPEED UP, FETCHING 0 + 3")
