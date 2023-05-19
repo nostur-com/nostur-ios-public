@@ -167,9 +167,9 @@ final class NosturState : ObservableObject {
             account.addToFollows(contact)
         }
 
-        DataProvider.shared().save()
+//        DataProvider.shared().save()
         sendNotification(.followersChanged, account.followingPublicKeys)
-        publishNewContactList()
+        self.publishNewContactList()
     }
     
     func follow(_ contact:Contact) {
@@ -177,9 +177,9 @@ final class NosturState : ObservableObject {
 //        self.objectWillChange.send()
         account.addToFollows(contact)
         
-        DataProvider.shared().save()
+//        DataProvider.shared().save()
         sendNotification(.followersChanged, account.followingPublicKeys)
-        publishNewContactList()
+        self.publishNewContactList()
     }
     
     func unfollow(_ pubkey: String) {
@@ -189,21 +189,21 @@ final class NosturState : ObservableObject {
         guard let account = account else { return }
 //        self.objectWillChange.send()
         account.removeFromFollows(contact)
-        DataProvider.shared().save()
+//        DataProvider.shared().save()
         sendNotification(.followersChanged, account.followingPublicKeys)
-        publishNewContactList()
+        self.publishNewContactList()
     }
     
     func unfollow(_ contact:Contact) {
-        guard let contact = Contact.contactBy(pubkey: contact.pubkey, context: viewContext) else {
-            return
-        }
+//        guard let contact = Contact.contactBy(pubkey: contact.pubkey, context: viewContext) else {
+//            return
+//        }
         guard let account = account else { return }
 //        self.objectWillChange.send()
         account.removeFromFollows(contact)
-        DataProvider.shared().save()
+//        DataProvider.shared().save()
         sendNotification(.followersChanged, account.followingPublicKeys)
-        publishNewContactList()
+        self.publishNewContactList()
     }
     
     func publishNewContactList() {
