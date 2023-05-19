@@ -368,10 +368,25 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             replyAndReplyRootListener()
         }
         
+        if let account = NosturState.shared.bgAccount, account.publicKey == pubkey {
+            relaysUpdatedListener()
+        }
+        
         actionListener()
         likesListener()
         zapsListener()
         isFollowingListener()
+    }
+    
+    private func relaysUpdatedListener() {
+        event.relaysUpdated
+            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
+            .sink { [weak self] relays in
+                guard let self = self else { return }
+                self.objectWillChange.send()
+                self.relays = relays
+            }
+            .store(in: &subscriptions)
     }
     
     private func isFollowingListener() {

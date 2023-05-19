@@ -10,7 +10,7 @@ import SwiftUI
 struct NoteMenuView: View {
     let up:Unpublisher = .shared
     @EnvironmentObject var ns:NosturState
-    var nrPost:NRPost
+    @ObservedObject var nrPost:NRPost
     
     var body: some View {
         ZStack {

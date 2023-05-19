@@ -22,6 +22,7 @@ public class Event: NSManagedObject, Identifiable {
     var firstQuoteUpdated = PassthroughSubject<Event, Never>()
     var contactUpdated = PassthroughSubject<Contact, Never>()
     var contactsUpdated = PassthroughSubject<[Contact], Never>()
+    var relaysUpdated = PassthroughSubject<String, Never>()
     
 //    private var eventsQueue = DispatchQueue(label: "com.nostur.events")
     

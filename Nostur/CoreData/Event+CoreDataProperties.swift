@@ -822,6 +822,7 @@ extension Event {
                 relays.append(relay)
                 let uniqueRelays = Set(relays)
                 event.relays = uniqueRelays.joined(separator: " ")
+                event.relaysUpdated.send(event.relays)
                 if bg.hasChanges {
                     do {
                         try bg.save()
