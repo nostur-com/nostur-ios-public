@@ -64,6 +64,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         // self.following = // todo
         listenForChanges()
         isFollowingListener()
+        listenForNip05()
     }
     
     private func isFollowingListener() {
@@ -83,6 +84,19 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     }
     
     var subscriptions = Set<AnyCancellable>()
+    
+    private func listenForNip05() {
+        self.contact.nip05updated
+            .sink { [weak self] isVerified in
+                guard let self = self else { return }
+                guard isVerified != self.nip05verified else { return }
+                DispatchQueue.main.async {
+                    self.objectWillChange.send()
+                    self.nip05verified = isVerified
+                }
+            }
+            .store(in: &subscriptions)
+    }
     
     private func listenForChanges() {
         self.contact.contactUpdated

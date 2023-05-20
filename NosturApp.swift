@@ -69,6 +69,7 @@ struct NosturApp: App {
     private var sp:SocketPool = .shared
     private var mp:MessageParser = .shared
     private var zpvq:ZapperPubkeyVerificationQueue = .shared
+    private var nip05verifier:NIP05Verifier = .shared
     
     
     @State var fg:FollowingGuardian = .shared
