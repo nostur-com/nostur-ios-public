@@ -81,9 +81,9 @@ struct NewQuoteRepost: View {
 //                        Spacer()
                 }
                 .padding(10)
-                .onAppear {
-                    updateEventWithNewText()
-                }
+//                .onAppear {
+//                    updateEventWithNewText()
+//                }
                 .onChange(of: vm.debouncedText) { newText in
                     if (vm.nEvent == nil) {
                         vm.nEvent = NEvent(content: newText)
@@ -224,13 +224,13 @@ struct NewQuoteRepost: View {
         }
     }
     
-    func updateEventWithNewText() {
-        if (vm.nEvent == nil) {
-            vm.nEvent = NEvent(content: replaceMentionsWithHandles(vm.text, selected: selectedMentions))
-        } else {
-            vm.nEvent!.content = replaceMentionsWithHandles(vm.text, selected: selectedMentions)
-        }
-    }
+//    func updateEventWithNewText() {
+//        if (vm.nEvent == nil) {
+//            vm.nEvent = NEvent(content: replaceMentionsWithHandles(vm.text, selected: selectedMentions))
+//        } else {
+//            vm.nEvent!.content = replaceMentionsWithHandles(vm.text, selected: selectedMentions)
+//        }
+//    }
     
     func sendNow() {
         guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }

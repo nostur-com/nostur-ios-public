@@ -7,69 +7,73 @@
 
 import Foundation
 
-func replaceMentionsWithHandles(_ text:String, selected:[Contact] = []) -> String {
-    let blocked = NosturState.shared.account?.blockedPubkeys_ ?? []
-    let mentions = text.matches(of: /(@(\w+))/)
-    var newText = text
-    let mentionsByLongest = mentions.sorted(by: { $0.output.2.count > $1.output.2.count })
-    for mention in mentionsByLongest {
+//func replaceMentionsWithHandles(_ text:String, selected:[Contact] = []) -> String {
+//    let blocked = NosturState.shared.account?.blockedPubkeys_ ?? []
+//    let mentions = text.matches(of: /((?:^|\s)(@(\w+)))/)
+//    var newText = text
+//    let mentionsByLongest = mentions.sorted(by: { $0.output.2.count > $1.output.2.count })
+//    for mention in mentionsByLongest {
+//        print("replaceMentionsWithHandles:")
 //        print(mention.output.0) // @tester
 //        print(mention.output.1) // @tester
 //        print(mention.output.2) // tester
-        
-        let term = mention.output.2.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        let fr = Contact.fetchRequest()
-        fr.predicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@) AND NOT pubkey IN %@", term, term, blocked)
-        
-        // prio selected contacts
-        
-        // MATCH EXACT FIRST
-        if let result = selected.first(where: {
-            let displayName = ($0.display_name ?? "").lowercased()
-            let name = ($0.name ?? "").lowercased()
-            
-            if displayName == term { return true }
-            if name == term { return true }
-            return false
-        }) {
-//            print("selected [exact] result: \(result.authorName)")
-            newText = newText.replacingOccurrences(of: mention.output.1, with: result.handle, options: [.caseInsensitive])
-            continue
-        }
-        
-        // ELSE TRY CONTAINS:
-        else if let result = selected.first(where: {
-            let displayName = ($0.display_name ?? "").lowercased()
-            let name = ($0.name ?? "").lowercased()
-            
-            if displayName.contains(term) { return true }
-            if name.contains(term) { return true }
-            return false
-        }) {
-//            print("selected [contains] result: \(result.authorName)")
-            newText = newText.replacingOccurrences(of: mention.output.1, with: result.handle, options: [.caseInsensitive])
-            continue
-        }
-        
-        // FINALLY TRY SEARCHING IN DB
-        else if let result = try? DataProvider.shared().viewContext.fetch(fr).first {
-//            print("any result: \(result.authorName)")
-            newText = newText.replacingOccurrences(of: mention.output.1, with: "@\(result.handle)", options: [.caseInsensitive])
-        }
-    }
-    return newText
-}
+//        print(mention.output.3) // tester
+//
+//        let term = mention.output.2.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+//        let fr = Contact.fetchRequest()
+//        fr.predicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@) AND NOT pubkey IN %@", term, term, blocked)
+//
+//        // prio selected contacts
+//
+//        // MATCH EXACT FIRST
+//        if let result = selected.first(where: {
+//            let displayName = ($0.display_name ?? "").lowercased()
+//            let name = ($0.name ?? "").lowercased()
+//
+//            if displayName == term { return true }
+//            if name == term { return true }
+//            return false
+//        }) {
+////            print("selected [exact] result: \(result.authorName)")
+//            newText = newText.replacingOccurrences(of: mention.output.1, with: result.handle, options: [.caseInsensitive])
+//            continue
+//        }
+//
+//        // ELSE TRY CONTAINS:
+//        else if let result = selected.first(where: {
+//            let displayName = ($0.display_name ?? "").lowercased()
+//            let name = ($0.name ?? "").lowercased()
+//
+//            if displayName.contains(term) { return true }
+//            if name.contains(term) { return true }
+//            return false
+//        }) {
+////            print("selected [contains] result: \(result.authorName)")
+//            newText = newText.replacingOccurrences(of: mention.output.1, with: result.handle, options: [.caseInsensitive])
+//            continue
+//        }
+//
+//        // FINALLY TRY SEARCHING IN DB
+//        else if let result = try? DataProvider.shared().viewContext.fetch(fr).first {
+////            print("any result: \(result.authorName)")
+//            newText = newText.replacingOccurrences(of: mention.output.1, with: "@\(result.handle)", options: [.caseInsensitive])
+//        }
+//    }
+//    return newText
+//}
 
 func replaceMentionsWithNpubs(_ text:String, selected:[Contact] = []) -> String {
     let blocked = NosturState.shared.account?.blockedPubkeys_ ?? []
-    let mentions = text.matches(of: /(@(\x{2063}\x{2064}[^\x{2063}\x{2064}]+\x{2064}\x{2063}|\w+))/)
+    let mentions = text.matches(of: /(?:^|\s)((@(\x{2063}\x{2064}[^\x{2063}\x{2064}]+\x{2064}\x{2063}|\w+)))/)
     var newText = text
-    let mentionsByLongest = mentions.sorted(by: { $0.output.2.count > $1.output.2.count })
+    let mentionsByLongest = mentions.sorted(by: { $0.output.3.count > $1.output.3.count })
     for mention in mentionsByLongest {
-//        print(mention.output.0) // @Tester
-//        print(mention.output.1) // @Tester
-//        print(mention.output.2) // Tester
-        let term = mention.output.2.trimmingCharacters(in: .whitespacesAndNewlines)
+        print("replaceMentionsWithNpubs")
+        print(mention.output.0) // @Tester
+        print(mention.output.1) // @Tester
+        print(mention.output.2) // @Tester
+        print(mention.output.3) // Tester
+        let term = mention.output.3.trimmingCharacters(in: .whitespacesAndNewlines)
             .lowercased()
             .replacingOccurrences(of: "\u{2063}", with: "")
             .replacingOccurrences(of: "\u{2064}", with: "")
@@ -86,7 +90,7 @@ func replaceMentionsWithNpubs(_ text:String, selected:[Contact] = []) -> String 
             return false
         }) {
 //            print("selected [exact!] result: \(result.authorName)")
-            newText = newText.replacingOccurrences(of: mention.output.1, with: "@\(result.npub)", options: [.caseInsensitive])
+            newText = newText.replacingOccurrences(of: mention.output.2, with: "@\(result.npub)", options: [.caseInsensitive])
             continue
         }
         
@@ -100,14 +104,14 @@ func replaceMentionsWithNpubs(_ text:String, selected:[Contact] = []) -> String 
             return false
         }) {
 //            print("selected [contains!] result: \(result.authorName)")
-            newText = newText.replacingOccurrences(of: mention.output.1, with: "@\(result.npub)", options: [.caseInsensitive])
+            newText = newText.replacingOccurrences(of: mention.output.2, with: "@\(result.npub)", options: [.caseInsensitive])
             continue
         }
                 
         
         else if let result = try? DataProvider.shared().viewContext.fetch(fr).first {
 //            print("any! result \(result.handle) \(result.npub)")
-            newText = newText.replacingOccurrences(of: mention.output.1, with: "@\(result.npub)", options: [.caseInsensitive])
+            newText = newText.replacingOccurrences(of: mention.output.2, with: "@\(result.npub)", options: [.caseInsensitive])
         }
     }
     return newText

@@ -119,8 +119,8 @@ public final class NewNoteText: ObservableObject {
             TextFormattingRule(fontTraits: .traitBold)
         ])
     ]
-    static let typingRegex = try! NSRegularExpression(pattern: "(@\\x{2063}\\x{2064}[^\\x{2063}\\x{2064}]+\\x{2064}\\x{2063}|(?<![/\\?])#)", options: [])
-    static let mentionRegex = try! NSRegularExpression(pattern: "(@\\w+|(?<![/\\?])#\\S+)", options: [])
+    static let typingRegex = try! NSRegularExpression(pattern: "((?:^|\\s)@\\x{2063}\\x{2064}[^\\x{2063}\\x{2064}]+\\x{2064}\\x{2063}|(?<![/\\?])#)", options: [])
+    static let mentionRegex = try! NSRegularExpression(pattern: "((?:^|\\s)@\\w+|(?<![/\\?])#\\S+)", options: [])
     private var bag = Set<AnyCancellable>()
     
     public init(dueTime: TimeInterval = 0.2) {
@@ -196,9 +196,9 @@ struct NewNote: View {
                     }
                 }
                 .padding(10)
-                .onAppear {
-                    updateEventWithNewText()
-                }
+//                .onAppear {
+//                    updateEventWithNewText()
+//                }
                 .onChange(of: vm.debouncedText) { newText in
                     if (vm.nEvent == nil) {
                         vm.nEvent = NEvent(content: newText)
@@ -323,13 +323,14 @@ struct NewNote: View {
         }
     }
     
-    func updateEventWithNewText() {
-        if (vm.nEvent == nil) {
-            vm.nEvent = NEvent(content: replaceMentionsWithHandles(vm.text, selected:selectedMentions))
-        } else {
-            vm.nEvent!.content = replaceMentionsWithHandles(vm.text, selected:selectedMentions)
-        }
-    }
+//    func updateEventWithNewText() {
+//        return
+//        if (vm.nEvent == nil) {
+//            vm.nEvent = NEvent(content: replaceMentionsWithHandles(vm.text, selected:selectedMentions))
+//        } else {
+//            vm.nEvent!.content = replaceMentionsWithHandles(vm.text, selected:selectedMentions)
+//        }
+//    }
     
     func sendNow() {
         guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
