@@ -215,20 +215,11 @@ struct ProfileView: View {
             }
         }
         .task {
-//            return
-            if (NIP05.shouldVerify(contact)) {
-                if (await NIP05.verify(nip05: contact.nip05!, expectedPubkey: contact.pubkey)) {
-                    await viewContext.perform {
-                        contact.nip05verifiedAt = Date.now
-                        do { try viewContext.save() }
-                        catch { print("1) What") }
-                    }
-                    print("👍👍 nip05 verified \(contact.pubkey) \(contact.nip05!) ")
-                }
+            if (NIP05Verifier.shouldVerify(contact)) {
+                NIP05Verifier.shared.verify(contact)
             }
         }
         .task {
-//            return
             guard contact.anyLud else { return }
             do {
                 if let lud16 = contact.lud16, lud16 != "" {
@@ -256,31 +247,17 @@ struct ProfileView: View {
             }
         }
         .onChange(of: contact.nip05) { nip05 in
-//            return
-            if (NIP05.shouldVerify(contact)) {
-                Task {
-                    if (await NIP05.verify(nip05: contact.nip05!, expectedPubkey: contact.pubkey)) {
-                        await viewContext.perform {
-                            contact.nip05verifiedAt = Date.now
-                            do { try viewContext.save() }
-                            catch { print("w🚗at") }
-                        }
-                        print("👍👍 nip05 verified \(contact.pubkey) \(contact.nip05!) ")
-                    }
-                }
+            if (NIP05Verifier.shouldVerify(contact)) {
+                NIP05Verifier.shared.verify(contact)
             }
         }
         .task {
-//            return
-            //            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadataAndBadges(pubkey: pubkey)))
-            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserProfileKinds(pubkey: pubkey, kinds: [0,3,30008,10002])))
+            EventRelationsQueue.shared.addAwaitingContact(contact)
+            req(RM.getUserProfileKinds(pubkey: pubkey, kinds: [0,3,30008,10002]))
         }
         .fullScreenCover(isPresented: $profilePicViewerIsShown) {
             ProfilePicFullScreenSheet(profilePicViewerIsShown: $profilePicViewerIsShown, pictureUrl:contact.picture!, isFollowing: ns.isFollowing(contact.pubkey))
         }
-//        .navigationBarHidden(true)
-//        .ignoresSafeArea(edges: .top)
-//        .edgesIgnoringSafeArea(.top)
     }
 }
 

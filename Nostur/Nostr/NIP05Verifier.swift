@@ -16,7 +16,7 @@ class NIP05Verifier {
     
     private var cancellables = Set<AnyCancellable>()
     
-    private var fourWeeksAgo = Date.now.addingTimeInterval(-(28 * 86400))
+    public static var fourWeeksAgo = Date.now.addingTimeInterval(-(28 * 86400))
     
     init() {
         verifySubject
@@ -25,7 +25,7 @@ class NIP05Verifier {
                 contact.nip05 != nil
             }
             .filter { contact in
-                return (contact.nip05verifiedAt == nil || (contact.nip05verifiedAt != nil) && (contact.nip05verifiedAt! < self.fourWeeksAgo))
+                return (contact.nip05verifiedAt == nil || (contact.nip05verifiedAt != nil) && (contact.nip05verifiedAt! < Self.fourWeeksAgo))
             }
             .filter { contact in
                 let nip05trimmed = contact.nip05!.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -72,6 +72,11 @@ class NIP05Verifier {
     public func verify(_ contact: Contact) {
         print("nip05: going to verify \(contact.nip05 ?? "")")
         verifySubject.send(contact)
+    }
+    
+    static func shouldVerify(_ contact: Contact) -> Bool {
+        guard contact.nip05 != nil else { return false }
+        return (contact.nip05verifiedAt == nil || (contact.nip05verifiedAt != nil) && (contact.nip05verifiedAt! < Self.fourWeeksAgo))
     }
 }
 
