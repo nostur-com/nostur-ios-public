@@ -87,7 +87,7 @@ struct InnerPFP: View {
     var body: some View {
         if let pictureUrl, pictureUrl.prefix(7) != "http://" {
             if (!settings.animatedPFPenabled) || (pictureUrl.suffix(4) != ".gif") {
-                LazyImage(request: ImageRequest(url: URL(string:pictureUrl), processors: [.resize(size: CGSize(width: size, height: size), unit: .points, contentMode: .aspectFill, crop: true, upscale: true)], userInfo: [.scaleKey: UIScreen.main.scale])) { state in
+                LazyImage(request: ImageRequest(url: URL(string:pictureUrl), processors: [.resize(size: CGSize(width: size, height: size), unit: .points, contentMode: .aspectFill, crop: true, upscale: true)], userInfo: [.scaleKey: UIScreen.main.scale]), transaction: .init(animation: .none)) { state in
                     if let image = state.image {
                         if pictureUrl.suffix(4) == ".gif" {
                             image
@@ -107,7 +107,7 @@ struct InnerPFP: View {
                 .cornerRadius(.greatestFiniteMagnitude)
             }
             else if (pictureUrl.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
-                LazyImage(url: URL(string: pictureUrl)) { state in
+                LazyImage(url: URL(string: pictureUrl), transaction: .init(animation: .none)) { state in
                     if let container = state.imageContainer {
                         if container.type == .gif, let gifData = container.data {
                             ZStack {

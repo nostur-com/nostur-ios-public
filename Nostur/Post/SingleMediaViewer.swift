@@ -31,7 +31,7 @@ struct SingleMediaViewer: View {
             else if imagesShown {
                 LazyImage(request: ImageRequest(url: url,
                                                 processors: [.resize(width: imageWidth, upscale: true)],
-                                                userInfo: [.scaleKey: UIScreen.main.scale])) { state in
+                                                userInfo: [.scaleKey: UIScreen.main.scale]), transaction: .init(animation: .none)) { state in
                     
                     if state.error != nil {
                         Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")

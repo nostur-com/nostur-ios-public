@@ -21,7 +21,7 @@ struct LinkPreviewView: View {
                     LazyImage(
                         request: ImageRequest(url: URL(string:image),
                                               processors: [.resize(height: DIMENSIONS.PREVIEW_HEIGHT, upscale: true)],
-                        userInfo: [.scaleKey: UIScreen.main.scale])) { state in
+                        userInfo: [.scaleKey: UIScreen.main.scale]), transaction: .init(animation: .none)) { state in
                             if let image = state.image { image }
                     }
                     .pipeline(ImageProcessing.shared.content)
