@@ -282,7 +282,7 @@ struct NewNote: View {
                         }
                         .buttonStyle(.borderedProminent)
                         .cornerRadius(20)
-                        .disabled(uploading)
+                        .disabled(uploading || vm.text.isEmpty)
                         
                     }
                 }

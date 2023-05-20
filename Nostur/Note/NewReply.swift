@@ -199,7 +199,7 @@ struct NewReply: View {
                         }
                         .buttonStyle(.borderedProminent)
                         .cornerRadius(20)
-                        .disabled(uploading)
+                        .disabled(uploading || vm.text.isEmpty)
                     }
                 }
                 .sheet(item: $previewNRPost) { nrPost in

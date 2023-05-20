@@ -68,11 +68,11 @@ func replaceMentionsWithNpubs(_ text:String, selected:[Contact] = []) -> String 
     var newText = text
     let mentionsByLongest = mentions.sorted(by: { $0.output.3.count > $1.output.3.count })
     for mention in mentionsByLongest {
-        print("replaceMentionsWithNpubs")
-        print(mention.output.0) // @Tester
-        print(mention.output.1) // @Tester
-        print(mention.output.2) // @Tester
-        print(mention.output.3) // Tester
+//        print("replaceMentionsWithNpubs")
+//        print(mention.output.0) // @Tester
+//        print(mention.output.1) // @Tester
+//        print(mention.output.2) // @Tester
+//        print(mention.output.3) // Tester
         let term = mention.output.3.trimmingCharacters(in: .whitespacesAndNewlines)
             .lowercased()
             .replacingOccurrences(of: "\u{2063}", with: "")
