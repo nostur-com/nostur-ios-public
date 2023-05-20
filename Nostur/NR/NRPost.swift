@@ -125,15 +125,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var linkPreviewURLs:[URL] = []
     var previewWeights:PreviewWeights
     
-    var anyDisplayName:String {
+    var anyName:String {
         if let contact = contact {
             return contact.anyName
-        }
-        return String(pubkey.suffix(11))
-    }
-    var anyUsername:String {
-        if let contact = contact {
-            return contact.anyUsername
         }
         return String(pubkey.suffix(11))
     }

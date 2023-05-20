@@ -45,7 +45,7 @@ struct PrivateNoteRow: View {
             else if let contact = note.contact {
                 HStack {
                     PFP(pubkey: contact.pubkey, contact: contact, size: 25)
-                    Text(contact.authorName) // Name
+                    Text(contact.anyName) // Name
                         .foregroundColor(.secondary)
                         .fontWeight(.bold)
                         .lineLimit(1)
@@ -56,9 +56,9 @@ struct PrivateNoteRow: View {
                             .layoutPriority(3)
                     }
                     
-                    Text("@\(contact.username)").layoutPriority(1)
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
+//                    Text("@\(contact.username)").layoutPriority(1)
+//                        .foregroundColor(.secondary)
+//                        .lineLimit(1)
                     Text(contact.about ?? "").lineLimit(1)
                         .foregroundColor(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)

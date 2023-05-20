@@ -55,30 +55,26 @@ class TextRenderer { // TEXT things
     }
 
     func contactUsername(fromPubkey pubkey:String, event:Event) -> String {
-        if let username = PubkeyUsernameCache.shared.retrieveObject(at: pubkey) {
-            return username
+        if let anyName = PubkeyUsernameCache.shared.retrieveObject(at: pubkey) {
+            return anyName
         }
         if let eventContact = event.contact, eventContact.pubkey == pubkey {
-            let username = eventContact.username != "" ? eventContact.username : eventContact.authorName
-            PubkeyUsernameCache.shared.setObject(for: pubkey, value: username)
-            return username
+            PubkeyUsernameCache.shared.setObject(for: pubkey, value: eventContact.anyName)
+            return eventContact.anyName
         }
         if let contact = event.contacts?.first(where: { $0.pubkey == pubkey }) {
-            let username = contact.username != "" ? contact.username : contact.authorName
-            PubkeyUsernameCache.shared.setObject(for: pubkey, value: username)
-            return username
+            PubkeyUsernameCache.shared.setObject(for: pubkey, value: contact.anyName)
+            return contact.anyName
         }
         if event.replyTo?.contact?.pubkey == pubkey {
             let contact = event.replyTo!.contact!
-            let username = contact.username != "" ? contact.username : contact.authorName
-            PubkeyUsernameCache.shared.setObject(for: pubkey, value: username)
-            return username
+            PubkeyUsernameCache.shared.setObject(for: pubkey, value: contact.anyName)
+            return contact.anyName
         }
         // SLOW?
         if let contact = Contact.fetchByPubkey(pubkey, context: context) {
-            let username = contact.username != "" ? contact.username : contact.authorName
-            PubkeyUsernameCache.shared.setObject(for: pubkey, value: username)
-            return username
+            PubkeyUsernameCache.shared.setObject(for: pubkey, value: contact.anyName)
+            return contact.anyName
         }
         return "..."
     }

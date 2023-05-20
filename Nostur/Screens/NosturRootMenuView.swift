@@ -70,8 +70,8 @@ struct SideBar: View {
                 .zIndex(30)
             List {
                 VStack(alignment: .leading) {
-                    Text("\(account.display_name != "" ? account.display_name : account.name)").font(.headline)
-                    Text("@\(account.name)").font(.subheadline)
+                    Text("\(account.name)").font(.headline)
+//                    Text("@\(account.name)").font(.subheadline)
                     Text(try! AttributedString(markdown: "**\(account.follows?.count ?? 0)**  Following")).font(.caption)
                 }
 

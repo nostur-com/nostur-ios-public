@@ -114,33 +114,23 @@ struct AccountRow: View {
     @EnvironmentObject var ns:NosturState
     
     var body: some View {
-        HStack(alignment: .center) {
+        HStack(alignment: .center, spacing: 10) {
             PFP(pubkey: account.publicKey, account: account, size: 35)
             VStack(alignment: .leading) {
                 HStack {
                     VStack(alignment: .leading) {
-                        HStack(spacing:3) {
-                            Text(account.display_name).font(.headline).foregroundColor(.primary)
-                                .lineLimit(1)
+                        Text(account.name).font(.headline).foregroundColor(.primary)
+                            .lineLimit(1)
+                        if (account.privateKey == nil) {
+                            Text("Read only").font(.system(size: 12.0))
+                                .padding(.horizontal, 8)
+                                .background(.blue)
+                                .foregroundColor(.white)
+                                .cornerRadius(8)
                         }
-                        
-                        HStack {
-                            Text("@\(account.name)").font(.subheadline).foregroundColor(.secondary)
-                                .lineLimit(1)
-                            if (account.privateKey == nil) {
-                                Text("Read only").font(.system(size: 12.0))
-                                    .padding(.horizontal, 8)
-                                    .background(.cyan)
-                                    .foregroundColor(.white)
-                                //                                        .background(.background)
-                                    .cornerRadius(8)
-                                
-                                
-                            }
-                        }
-                    }.multilineTextAlignment(.leading)
+                    }
+                    .multilineTextAlignment(.leading)
                     Spacer()
-                    
                 }
             }
             if (account == ns.account) {
@@ -150,6 +140,7 @@ struct AccountRow: View {
                     .frame(width: 25, height: 25)
             }
         }
+        .padding(5)
     }
 }
 

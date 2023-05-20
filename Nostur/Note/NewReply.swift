@@ -334,7 +334,7 @@ struct NewReplyingToFragment: View {
                 .fontWeight(.light)
             Group {
                 if let contact {
-                    Text("@\(contact.username)")
+                    Text("@\(contact.anyName)")
                 }
                 else {
                     Text("@\(String(pubkey.prefix(5)))")

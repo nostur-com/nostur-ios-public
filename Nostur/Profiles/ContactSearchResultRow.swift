@@ -12,12 +12,6 @@ struct ContactSearchResultRow: View {
     @EnvironmentObject var ns:NosturState
     var onSelect:(() -> Void)?
     
-    var showUsername:Bool { // show (user)name if (user)name is different from display name
-        guard !contact.username.isEmpty else { return false }
-        guard contact.username.lowercased() != contact.anyName.lowercased() else { return false }
-        return true
-    }
-    
     var body: some View {
         HStack(alignment: .top) {
             PFP(pubkey: contact.pubkey, contact: contact)
@@ -33,10 +27,6 @@ struct ContactSearchResultRow: View {
                                     .font(.system(size: 14))
                                     .foregroundColor(Color("AccentColor"))
                             }
-                        }
-                        if showUsername {
-                            Text("@\(contact.username)").font(.subheadline).foregroundColor(.secondary)
-                                .lineLimit(1)
                         }
                     }.multilineTextAlignment(.leading)
                     Spacer()

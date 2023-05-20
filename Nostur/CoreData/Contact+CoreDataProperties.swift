@@ -137,20 +137,20 @@ extension Contact : Identifiable {
         return nameOrNil ?? displayNameOrNil ?? npub
     }
     
-    var username:String {
-        guard let username = name else { return authorKey }
-        if (SettingsStore.shared.hideEmojisInNames) {
-            return username.unicodeScalars.filter {
-                
-                !($0.value >= 0x13000 && $0.value <= 0x1342E) && // EGYPTIAN HIEROGLYPHS
-                !$0.properties.isEmoji  // EMOJIS
-                
-            }.reduce("") { $0 + String($1) }
-        }
-        else {
-            return username
-        }
-    }
+//    var username:String {
+//        guard let username = name else { return authorKey }
+//        if (SettingsStore.shared.hideEmojisInNames) {
+//            return username.unicodeScalars.filter {
+//
+//                !($0.value >= 0x13000 && $0.value <= 0x1342E) && // EGYPTIAN HIEROGLYPHS
+//                !$0.properties.isEmoji  // EMOJIS
+//
+//            }.reduce("") { $0 + String($1) }
+//        }
+//        else {
+//            return username
+//        }
+//    }
     
     // Display name, with fallbacks: (User)name, pubkey (prefix), or "?:?"
     var authorName: String { anyName }
@@ -171,21 +171,21 @@ extension Contact : Identifiable {
         }
     }
     
-    var displayName: String? {
-        guard let displayName = display_name else { return nil }
-        
-        if (SettingsStore.shared.hideEmojisInNames) {
-            return (displayName.unicodeScalars.filter {
-
-                !($0.value >= 0x13000 && $0.value <= 0x1342E) && // EGYPTIAN HIEROGLYPHS
-                !$0.properties.isEmoji  // EMOJIS
-
-            }.reduce("") { $0 + String($1) })
-        }
-        else {
-            return displayName
-        }
-    }
+//    var displayName: String? {
+//        guard let displayName = display_name else { return nil }
+//
+//        if (SettingsStore.shared.hideEmojisInNames) {
+//            return (displayName.unicodeScalars.filter {
+//
+//                !($0.value >= 0x13000 && $0.value <= 0x1342E) && // EGYPTIAN HIEROGLYPHS
+//                !$0.properties.isEmoji  // EMOJIS
+//
+//            }.reduce("") { $0 + String($1) })
+//        }
+//        else {
+//            return displayName
+//        }
+//    }
     
 
     
@@ -318,8 +318,8 @@ extension Contact : Identifiable {
     }
     
     static func updateRelatedEvents(_ contact:Contact) {
-        let username = contact.username != "" ? contact.username : contact.anyName
-        PubkeyUsernameCache.shared.setObject(for: contact.pubkey, value: username)
+        let name = (contact.display_name ?? "") != "" ? contact.display_name : contact.name
+        PubkeyUsernameCache.shared.setObject(for: contact.pubkey, value: name)
         
         let awaitingEvents = EventRelationsQueue.shared.getAwaitingBgEvents()
         

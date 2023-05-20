@@ -13,13 +13,6 @@ struct NoteHeader: View {
     var singleLine:Bool = true
     var hideEmojis:Bool
     
-    var showUsername:Bool { // show (user)name if (user)name is different from display name
-        guard let contact = event.contact else { return false }
-        guard !contact.username.isEmpty else { return false }
-        guard contact.username.lowercased() != contact.anyName.lowercased() else { return false }
-        return true
-    }
-    
     init(event:Event, singleLine:Bool = true) {
         self.event = event
         self.singleLine = singleLine
@@ -55,13 +48,7 @@ struct NoteHeader: View {
                     }
                     
                     if (singleLine) {
-                        Group {
-                            if showUsername {
-                                Text("@\(event.contact?.username ?? "...")").layoutPriority(1)
-                                Text(" · ") //
-                            }
-                            Ago(event.date).layoutPriority(1)
-                        }
+                        Ago(event.date).layoutPriority(1)
                         .foregroundColor(.secondary)
                         .lineLimit(1)
                     }
@@ -71,16 +58,9 @@ struct NoteHeader: View {
                 }
             }
             if (!singleLine) {
-                HStack {
-                    if showUsername {
-                        Text("@\(event.contact?.username ?? "...") · ")
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                    }
-                    Text(event.ago)
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
-                }
+                Text(event.ago)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
             }
         }
         

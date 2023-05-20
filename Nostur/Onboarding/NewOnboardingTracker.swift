@@ -198,7 +198,7 @@ class NewOnboardingTracker {
         }
 
         account.objectWillChange.send()
-        account.display_name = metaData.display_name ?? ""
+//        account.display_name = metaData.display_name ?? ""
         account.name = metaData.name ?? ""
         account.about = metaData.about ?? ""
         account.picture = metaData.picture ?? ""

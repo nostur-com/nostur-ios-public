@@ -120,7 +120,7 @@ struct ProfileView: View {
                             .padding(.top, 10)
                             
                             HStack(spacing:0) {
-                                Text("\(contact.authorName) ").font(.system(size: 24, weight:.bold))
+                                Text("\(contact.anyName) ").font(.system(size: 24, weight:.bold))
                                 if (contact.nip05veried) {
                                     Group {
                                         Image(systemName: "checkmark.seal.fill")
@@ -130,7 +130,7 @@ struct ProfileView: View {
                             }
                             
                             HStack {
-                                Text("@\(contact.username)").foregroundColor(.secondary)
+//                                Text("@\(contact.username)").foregroundColor(.secondary)
                                 ContactPrivateNoteToggle(contact: contact)
                                 Menu {
                                     Button {
@@ -158,12 +158,12 @@ struct ProfileView: View {
                                         ns.account!.blockedPubkeys_ = ns.account!.blockedPubkeys_ + [contact.pubkey]
                                         sendNotification(.blockListUpdated, ns.account!.blockedPubkeys_)
                                     } label: {
-                                        Label("Block @\(contact.username)", systemImage: "slash.circle")
+                                        Label("Block \(contact.anyName)", systemImage: "slash.circle")
                                     }
                                     Button {
                                         sendNotification(.reportContact, contact)
                                     } label: {
-                                        Label("Report @\(contact.username)", systemImage: "flag")
+                                        Label("Report \(contact.anyName)", systemImage: "flag")
                                     }
                                     
                                     

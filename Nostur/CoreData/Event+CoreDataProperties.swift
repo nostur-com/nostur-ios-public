@@ -153,8 +153,8 @@ extension Event {
     
     var replies_: [Event] { Array(replies ?? []) }
     
-    var username: String { contact?.username ?? authorKey }
-    var name: String { contact?.authorName ?? authorKey }
+//    var username: String { contact?.username ?? authorKey }
+//    var name: String { contact?.authorName ?? authorKey }
     
     static func getParentEvents(_ event:Event) -> [Event] {
         let RECURSION_LIMIT = 35 // PREVENT SPAM THREADS

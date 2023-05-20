@@ -13,7 +13,7 @@ class AccountManager {
     
     static var shared = AccountManager()
     
-    func generateAccount(display_name:String = "", name:String = "", about:String = "", context: NSManagedObjectContext) -> Account {
+    func generateAccount(name:String = "", about:String = "", context: NSManagedObjectContext) -> Account {
         let newKeys = NKeys.newKeys()
         storeKeys(newKeys)
         
@@ -24,7 +24,7 @@ class AccountManager {
             let account = Account(context: context)
             account.id = UUID()
             account.createdAt = Date()
-            account.display_name = display_name
+//            account.display_name = display_name
             account.name = name
             account.about = about
             account.publicKey = newKeys.publicKeyHex()
@@ -159,7 +159,7 @@ class AccountManager {
         }
         
         // create nostr .setMetadata event
-        var setMetadataContent = NSetMetadata(name: account.name, display_name: account.display_name, about: account.about, picture: account.picture)
+        var setMetadataContent = NSetMetadata(name: account.name, about: account.about, picture: account.picture)
         if account.nip05 != "" { setMetadataContent.nip05 = account.nip05 }
         if account.lud16 != "" { setMetadataContent.lud16 = account.lud16 }
         if account.lud06 != "" { setMetadataContent.lud06 = account.lud06 }

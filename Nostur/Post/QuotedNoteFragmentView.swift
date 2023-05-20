@@ -104,7 +104,7 @@ struct QuotedNoteFragmentView: View {
     struct NameAndNip: View {
         @ObservedObject var contact:NRContact
         var body: some View {
-            Text(contact.displayName ?? "") // Name
+            Text(contact.anyName) // Name
                 .font(.system(size: 14))
                 .foregroundColor(.primary)
                 .fontWeight(.bold)
@@ -114,9 +114,9 @@ struct QuotedNoteFragmentView: View {
                     .foregroundColor(Color("AccentColor"))
                     .layoutPriority(3)
             }
-            Text("@\(contact.anyUsername)") //
-                .font(.system(size: 14))
-                .foregroundColor(.secondary)
+//            Text("@\(contact.anyUsername)") //
+//                .font(.system(size: 14))
+//                .foregroundColor(.secondary)
         }
     }
 }

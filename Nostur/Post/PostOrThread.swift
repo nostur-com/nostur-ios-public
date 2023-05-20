@@ -54,7 +54,7 @@ struct PostOrThread_Previews: PreviewProvider {
                                 GeometryReader { geo in
                                     HStack {
                                         Spacer()
-                                        Text("H: \(nrPost.anyUsername): \(Int(geo.size.height))")
+                                        Text("H: \(nrPost.anyName): \(Int(geo.size.height))")
                                             .padding(10)
                                             .foregroundColor(.white)
                                             .background(.red)

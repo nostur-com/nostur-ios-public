@@ -139,26 +139,18 @@ struct TabbedDetailContainer: View {
     
     func tabName(tab:DetailTabsModel.Tab) -> String {
         if let nrPost = tab.nrPost {
-            if nrPost.anyDisplayName != "" {
-                return nrPost.anyDisplayName
-            }
-            return String(nrPost.anyUsername)
+            return nrPost.anyName
         }
         if let event = tab.event {
-            if event.name != "" {
-                return event.name
+            if let anyName = event.contact?.anyName {
+                return anyName
             }
             else {
                 return String(event.pubkey.suffix(11))
             }
         }
         if let contact = tab.contact {
-            if contact.authorName != "" {
-                return contact.authorName
-            }
-            else {
-                return String(contact.pubkey.suffix(11))
-            }
+            return contact.anyName
         }
         return "＿"
     }

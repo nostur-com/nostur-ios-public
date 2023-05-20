@@ -65,7 +65,7 @@ struct MinimalQuotedNoteFragment: View {
         @ObservedObject var contact:NRContact // for rendering nip check (after just verified) etc
  
         var body: some View {
-            Text(contact.displayName ?? "") // Name
+            Text(contact.anyName) // Name
                 .font(.system(size: 14))
                 .foregroundColor(.primary.opacity(0.5))
                 .fontWeight(.bold)
@@ -77,9 +77,9 @@ struct MinimalQuotedNoteFragment: View {
                     .layoutPriority(3)
             }
             
-            Text("@\(contact.anyUsername)") //
-                .font(.system(size: 14))
-                .foregroundColor(.secondary.opacity(0.5))
+//            Text("@\(contact.anyUsername)") //
+//                .font(.system(size: 14))
+//                .foregroundColor(.secondary.opacity(0.5))
         }
     }
 }

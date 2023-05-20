@@ -31,7 +31,7 @@ struct PostRowDeletable: View {
             NoteRow(nrPost: nrPost, hideFooter: hideFooter, inThread: inThread, connect: connect, fullWidth: fullWidth, isReply: isReply, isDetail: isDetail)
         }
         else {
-            Text("_Post deleted by \(nrPost.anyDisplayName)_").hCentered()
+            Text("_Post deleted by \(nrPost.anyName)_").hCentered()
         }
     }
 }

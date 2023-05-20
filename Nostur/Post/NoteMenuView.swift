@@ -63,7 +63,7 @@ struct NoteMenuView: View {
                             ns.follow(nrPost.mainEvent.contact!)
                         }
                     } label: {
-                        Label("Follow @\(nrPost.anyUsername)", systemImage: "person.fill")
+                        Label("Follow \(nrPost.anyName)", systemImage: "person.fill")
                     }
                 }
 
@@ -80,7 +80,7 @@ struct NoteMenuView: View {
                     }
                     sendNotification(.blockListUpdated, ns.account!.blockedPubkeys_)
                 } label: {
-                    Label("Block @\(nrPost.anyUsername)", systemImage: "slash.circle")
+                    Label("Block \(nrPost.anyName)", systemImage: "slash.circle")
                 }
                 
                 Button {

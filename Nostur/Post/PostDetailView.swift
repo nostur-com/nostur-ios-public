@@ -280,7 +280,7 @@ struct PostAndParent: View {
                     }
                 }
                 else {
-                    Text("_Post deleted by \(nrPost.anyDisplayName)_")
+                    Text("_Post deleted by \(nrPost.anyName)_")
                         .hCentered()
                 }
                 

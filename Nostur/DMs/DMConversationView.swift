@@ -132,7 +132,7 @@ struct DMConversationView: View {
                                         
                                         if let contact = contact {
                                             HStack(spacing:1) {
-                                                Text("\(contact.authorName) ").font(.headline)
+                                                Text("\(contact.anyName) ").font(.headline)
                                                 if (contact.nip05veried) {
                                                     Group {
                                                         Image(systemName: "checkmark.seal.fill")
@@ -140,11 +140,6 @@ struct DMConversationView: View {
                                                     }.foregroundColor(Color("AccentColor"))
                                                 }
                                             }
-                                            
-                                            HStack {
-                                                Text("@\(contact.username)").foregroundColor(.secondary)
-                                            }
-                                            
                                             if (ns.followsYou(contact)) {
                                                 Text("Follows you").font(.system(size: 12))
                                                     .foregroundColor(.white)

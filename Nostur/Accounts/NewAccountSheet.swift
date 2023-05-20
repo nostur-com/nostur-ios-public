@@ -16,12 +16,12 @@ struct NewAccountSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) private var viewContext
     
-    @State var display_name = ""
+//    @State var display_name = ""
     @State var name = ""
     @State var about = ""
     
     enum FocusedField {
-        case display_name
+        case name
     }
     
     @FocusState private var focusedField: FocusedField?
@@ -31,17 +31,12 @@ struct NewAccountSheet: View {
     
     var body: some View {
             VStack {
-                TextField("Full Name", text: $display_name)
+                TextField("Name", text: $name)
                     .padding()
                     .background(grayBackground)
                     .cornerRadius(5.0)
                     .padding(.bottom, 20)
-                    .focused($focusedField, equals: .display_name)
-                TextField("Username/Handle", text: $name)
-                    .padding()
-                    .background(grayBackground)
-                    .cornerRadius(5.0)
-                    .padding(.bottom, 20)
+                    .focused($focusedField, equals: .name)
                 TextField("Something about yourself (bio)", text: $about)
                     .lineLimit(5)
                     .padding()
@@ -75,13 +70,13 @@ struct NewAccountSheet: View {
             .frame(maxWidth: 300)
             .controlSize(.large)
             .buttonStyle(.bordered)
-            .onAppear { focusedField = .display_name }
+            .onAppear { focusedField = .name }
             .navigationTitle("Create new account")
             .navigationBarTitleDisplayMode(.inline)
     }
     
     func createAccount() {
-        let newAccount = AccountManager.shared.generateAccount(display_name: display_name, name: name, about: about, context: viewContext)
+        let newAccount = AccountManager.shared.generateAccount(name: name, about: about, context: viewContext)
 
         do {
             

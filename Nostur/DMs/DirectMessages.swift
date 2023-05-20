@@ -404,12 +404,7 @@ struct DMRow: View {
                                         QueuedFetcher.shared.dequeue(pTag: contactPubkey)
                                     }
                             }
-                            
-                            Group {
-                                Text("@\(contact?.username ?? String(npub(contactPubkey).prefix(11)))").layoutPriority(1)
-                                Text(" · ") //
-                                Ago(recentDM.date).layoutPriority(1) //
-                            }
+                            Ago(recentDM.date).layoutPriority(1)
                             .foregroundColor(.secondary)
                             .lineLimit(1)
                         }

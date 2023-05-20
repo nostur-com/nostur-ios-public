@@ -21,7 +21,7 @@ class GuestAccountManager {
             account.id = UUID()
             account.createdAt = Date()
             account.createdAt = Date()
-            account.display_name = "Nostur Rookie"
+//            account.display_name = "Nostur Rookie"
             account.name = "NosturRookie"
             account.about = "Just trying things out"
             account.publicKey = NosturState.GUEST_ACCOUNT_PUBKEY

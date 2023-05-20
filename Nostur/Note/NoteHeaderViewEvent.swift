@@ -48,24 +48,16 @@ struct PlaceholderPostHeaderEvent: View {
                     .layoutPriority(2)
                 
                 if (singleLine) {
-                    Group {
-                        Text("@\(String(event.pubkey.suffix(11)))").layoutPriority(1)
-                        Text(" · ") //
-                        Ago(event.date)
-                            .layoutPriority(2)
-                    }
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
+                    Ago(event.date)
+                        .layoutPriority(2)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
                 }
             }
         }
         if (!singleLine) {
-            HStack {
-                Text("@\(String(event.pubkey.suffix(11)))").layoutPriority(1)
-                Text(" · ") //
-                Ago(event.date)
-                    .layoutPriority(2)
-            }
+            Ago(event.date)
+                .layoutPriority(2)
             .foregroundColor(.secondary)
             .lineLimit(1)
         }
@@ -76,12 +68,6 @@ struct PostHeaderEvent: View {
     @ObservedObject var contact:Contact
     let event:Event
     let singleLine:Bool
-    
-    var showUsername:Bool { // show (user)name if (user)name is different from display name
-        guard !contact.username.isEmpty else { return false }
-        guard contact.username.lowercased() != contact.anyName.lowercased() else { return false }
-        return true
-    }
     
     var body: some View {
         HStack(spacing:5) {
@@ -99,14 +85,8 @@ struct PostHeaderEvent: View {
                 }
                 
                 if (singleLine) {
-                    Group {
-                        if showUsername {
-                            Text("@\(contact.username)").layoutPriority(1)
-                            Text(" · ")
-                        }
-                        Ago(event.date)
-                            .layoutPriority(2)
-                    }
+                    Ago(event.date)
+                        .layoutPriority(2)
                     .foregroundColor(.secondary)
                     .lineLimit(1)
                 }
@@ -124,16 +104,10 @@ struct PostHeaderEvent: View {
             }
         }
         if (!singleLine) {
-            HStack(spacing:2) {
-                if showUsername {
-                    Text("@\(contact.username)").layoutPriority(1)
-                    Text(" · ")
-                }
-                Ago(event.date)
-                    .layoutPriority(2)
-            }
-            .foregroundColor(.secondary)
-            .lineLimit(1)
+            Ago(event.date)
+                .layoutPriority(2)
+                .foregroundColor(.secondary)
+                .lineLimit(1)
         }
     }
 }

@@ -23,14 +23,8 @@ class NRContact: ObservableObject, Identifiable, Hashable {
 //    let npub:String
 
     var anyName:String
-    var displayName:String?
-    var username:String?
-    var anyUsername:String {
-        if let username = username, !username.isEmpty {
-            return username
-        }
-        return String(pubkey.suffix(11))
-    }
+    var display_name:String?
+    var name:String?
     var pictureUrl:String?
     var about:String?
     
@@ -52,8 +46,8 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         self.contact = contact
         self.pubkey = contact.pubkey
         self.anyName = contact.anyName
-        self.displayName = contact.displayName
-        self.username = contact.username
+        self.display_name = contact.display_name
+        self.name = contact.name
         self.pictureUrl = contact.picture
         self.about = contact.about
         
@@ -95,8 +89,9 @@ class NRContact: ObservableObject, Identifiable, Hashable {
             .sink { [weak self] contact in
                 guard let self = self else { return }
                 
-                let displayName = contact.display_name
-                let username = contact.name
+                let anyName = contact.anyName
+                let display_name = contact.display_name
+                let name = contact.name
                 let pictureUrl = contact.picture
                 let about = contact.about
                 
@@ -113,8 +108,9 @@ class NRContact: ObservableObject, Identifiable, Hashable {
                 DispatchQueue.main.async {
                     self.objectWillChange.send()
                     
-                    self.displayName = displayName
-                    self.username = username
+                    self.anyName = anyName
+                    self.display_name = display_name
+                    self.name = name
                     self.pictureUrl = pictureUrl
                     self.about = about
                     

@@ -42,15 +42,15 @@ class PreviewEnvironment {
             account.createdAt = Date()
             account.id = UUID()
             account.publicKey = "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
-            account.display_name = "bitcoiner_since_2013 ⚡️"
-            account.name = "bitcoinerrrrr"
+//            account.display_name = ""
+            account.name = "bitcoiner_since_2013 ⚡️"
             account.about = "test account"
             
             let account3 = Account(context: self.context)
             account3.createdAt = Date()
             account3.id = UUID()
             account3.publicKey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
-            account3.display_name = "Fabian"
+//            account3.display_name = "Fabian"
             account3.name = "Fabian"
             account3.nip05 = "Fabian@nostur.com"
             account3.about = "Author of Nostur.com"
@@ -65,8 +65,8 @@ class PreviewEnvironment {
             xaccount.id = UUID()
             xaccount.publicKey = "11707ab5c187f4534ea7b4ad67cd9914cd07f7812b5ea2fdd91685ac84c91f5b"
     //        xaccount.privateKey = "184a90b0cbdf4b4a318d33f6464593d9936430c6793fed82d9b6ec3b8f12804f"
-            xaccount.display_name = "The Ellen"
-            xaccount.name = "eltje"
+//            xaccount.display_name = "The Ellen"
+            xaccount.name = "Eltje"
             xaccount.about = "Test"
             
             let relay = Relay(context: self.context)

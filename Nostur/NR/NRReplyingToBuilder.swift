@@ -57,36 +57,31 @@ class NRReplyingToBuilder { // TEXT things
 
 
 func contactUsername(fromPubkey pubkey:String, event:Event) -> String {
-    if let username = PubkeyUsernameCache.shared.retrieveObject(at: pubkey) {
-        return username
+    if let anyName = PubkeyUsernameCache.shared.retrieveObject(at: pubkey) {
+        return anyName
     }
     if let contact = event.contact, contact.pubkey == pubkey {
-        let username = !contact.username.isEmpty ? contact.username : contact.authorName
-        PubkeyUsernameCache.shared.setObject(for: pubkey, value: username)
-        return username
+        PubkeyUsernameCache.shared.setObject(for: pubkey, value: contact.anyName)
+        return contact.anyName
     }
     if let contact = event.contacts?.first(where: { $0.pubkey == pubkey }) {
-        let username = !contact.username.isEmpty ? contact.username : contact.authorName
-        PubkeyUsernameCache.shared.setObject(for: pubkey, value: username)
-        return username
+        PubkeyUsernameCache.shared.setObject(for: pubkey, value: contact.anyName)
+        return contact.anyName
     }
     if let contact = event.replyTo?.contact, pubkey == contact.pubkey {
-        let username = !contact.username.isEmpty ? contact.username : contact.authorName
-        PubkeyUsernameCache.shared.setObject(for: pubkey, value: username)
-        return username
+        PubkeyUsernameCache.shared.setObject(for: pubkey, value: contact.anyName)
+        return contact.anyName
     }
     
     if let contact = EventRelationsQueue.shared.getAwaitingBgContacts().first(where: { $0.pubkey == pubkey }) {
-        let username = !contact.username.isEmpty ? contact.username : contact.authorName
-        PubkeyUsernameCache.shared.setObject(for: pubkey, value: username)
-        return username
+        PubkeyUsernameCache.shared.setObject(for: pubkey, value: contact.anyName)
+        return contact.anyName
     }
     
     if let context = event.managedObjectContext {
         if let contact = Contact.fetchByPubkey(pubkey, context: context) {
-            let username = !contact.username.isEmpty ? contact.username : contact.authorName
-            PubkeyUsernameCache.shared.setObject(for: pubkey, value: username)
-            return username
+            PubkeyUsernameCache.shared.setObject(for: pubkey, value: contact.anyName)
+            return contact.anyName
         }
     }
     return "..."

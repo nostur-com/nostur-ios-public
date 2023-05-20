@@ -78,16 +78,16 @@ struct PostHeader: View {
     let nrPost:NRPost
     let singleLine:Bool
     
-    var showUsername:Bool { // show (user)name if (user)name is different from display name
-        guard !contact.anyUsername.isEmpty else { return false }
-        guard contact.anyUsername.lowercased() != contact.anyName.lowercased() else { return false }
-        return true
-    }
+//    var showUsername:Bool { // show (user)name if (user)name is different from display name
+//        guard !contact.anyUsername.isEmpty else { return false }
+//        guard contact.anyUsername.lowercased() != contact.anyName.lowercased() else { return false }
+//        return true
+//    }
     
     var body: some View {
         HStack(spacing:5) {
             Group {
-                Text(contact.anyName ?? "") // Name
+                Text(contact.anyName)
                     .foregroundColor(.primary)
                     .fontWeight(.bold)
                     .lineLimit(1)
@@ -100,16 +100,10 @@ struct PostHeader: View {
                 }
                 
                 if (singleLine) {
-                    Group {
-                        if showUsername {
-                            Text("@\(contact.username ?? String(contact.pubkey.suffix(11)))").layoutPriority(1)
-                            Text(" · ")
-                        }
-                        Ago(nrPost.createdAt)
-                            .layoutPriority(2)
-                    }
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
+                    Ago(nrPost.createdAt)
+                        .layoutPriority(2)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
                 }
             }
         }
@@ -125,16 +119,10 @@ struct PostHeader: View {
             }
         }
         if (!singleLine) {
-            HStack(spacing:2) {
-                if showUsername {
-                    Text("@\(contact.anyUsername)").layoutPriority(1)
-                    Text(" · ")
-                }
-                Ago(nrPost.createdAt)
-                    .layoutPriority(2)
-            }
-            .foregroundColor(.secondary)
-            .lineLimit(1)
+            Ago(nrPost.createdAt)
+                .layoutPriority(2)
+                .foregroundColor(.secondary)
+                .lineLimit(1)
         }
     }
 }
@@ -192,7 +180,7 @@ struct NameAndNip: View {
     @ObservedObject var contact:NRContact // for rendering nip check (after just verified) etc
 
     var body: some View {
-        Text(contact.displayName ?? "") // Name
+        Text(contact.anyName) // Name
             .foregroundColor(.primary)
             .fontWeight(.bold)
             .lineLimit(1)

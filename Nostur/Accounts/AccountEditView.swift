@@ -49,15 +49,8 @@ struct AccountEditView: View {
                         
                         Group {
                             Section(header: Text("Your name") ) {
-                                TextField("Enter your name", text: $account.display_name).disabled(shouldDisable)
+                                TextField("Enter your name", text: $account.name).disabled(shouldDisable)
                                     .disableAutocorrection(true)
-                            }
-                            
-                            Section(header: Text("Your username") ) {
-                                TextField("Enter your username", text: $account.name).disabled(shouldDisable)
-                                    .keyboardType(.URL)
-                                    .disableAutocorrection(true)
-                                    .textInputAutocapitalization(.never)
                             }
                             
                             Section(header: Text("Bio") ) {
@@ -285,7 +278,7 @@ extension AccountEditView {
         if account.lud16 != "" { setMetadataContent.lud16 = account.lud16 }
         if account.lud06 != "" { setMetadataContent.lud06 = account.lud06 }
         if account.banner != "" { setMetadataContent.banner = account.banner }
-        if account.display_name != "" { setMetadataContent.display_name = account.display_name }
+//        if account.display_name != "" { setMetadataContent.display_name = account.display_name }
         
         if (account.privateKey != nil) {
             do {
