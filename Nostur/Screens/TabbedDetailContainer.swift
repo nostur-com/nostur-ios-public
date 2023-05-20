@@ -184,6 +184,10 @@ struct TabbedDetailContainer: View {
                                 onSelect: {
                                     guard let t = tm.tabs[safe: index] else { return }
                                     tm.selected = t
+                                    if let nrPost = tm.selected?.nrPost {
+                                        EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
+                                        req(RM.getEventReferences(ids: [nrPost.id], subscriptionId: "REALTIME-DETAIL"))
+                                    }
                                 }, onClose: {
                                     if (tm.selected == tm.tabs[safe: index]) {
                                         if (index != 0) {
@@ -191,6 +195,15 @@ struct TabbedDetailContainer: View {
                                         }
                                         else if (tm.tabs.count > 1) {
                                             tm.selected = tm.tabs[1]
+                                        }
+                                        if let nrPost = tm.selected?.nrPost {
+                                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
+                                            req(RM.getEventReferences(ids: [nrPost.id], subscriptionId: "REALTIME-DETAIL"))
+                                        }
+                                        else {
+                                            // Close REALTIME-DETAIL subscription if the new active tab is not a nrPost
+                                            let closeMessage = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: "REALTIME-DETAIL"))
+                                            SocketPool.shared.sendMessage(closeMessage)
                                         }
                                     }
                                     tm.tabs.remove(at: index)

@@ -306,6 +306,7 @@ struct PostAndParent: View {
                                  , id:\.self) { nrPost in
                             
                             PostRowDeletable(nrPost: nrPost, hideFooter: false, isReply:true)
+                                .id(nrPost.id)
                                 .onAppear {
                                     if (nrPost.missingPs.count > 0) {
                                         EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.002")
@@ -320,6 +321,7 @@ struct PostAndParent: View {
                             Divider()
                         }
                     }
+                    .animation(Animation.spring(), value: nrPost.replies)
                     
                     // If there are less than 5 replies, put some empty space so our detail note is at top of screen
                     if (nrPost.replies.count < 5) {
@@ -366,6 +368,8 @@ struct PostAndParent: View {
                     
                     // Fetch all that reference this detail note (Replies, zaps, reactions)
                     req(RM.getEventReferences(ids: [nrPost.id], subscriptionId: "DETAIL-"+UUID().uuidString))
+                    // REAL TIME UPDATES FOR POST DETAIL
+                    req(RM.getEventReferences(ids: [nrPost.id], subscriptionId: "REALTIME-DETAIL", since: NTimestamp(date: Date.now)))
 
                     if let replyToRootId = nrPost.replyToRootId {
                         // Fetch all that reference the root note
