@@ -109,7 +109,7 @@ func computeRequestTotalUnread(_ onlyMostRecentRequests:[(Event, Int64)], lastSe
 }
 
 struct DirectMessages: View {
-    @ObservedObject var nm:NotificationsManager = .shared
+    @EnvironmentObject var nm:NotificationsManager
     @State var navPath = NavigationPath()
     @AppStorage("selected_tab") var selectedTab = "Messages"
     @EnvironmentObject var ns:NosturState

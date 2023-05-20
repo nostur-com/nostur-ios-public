@@ -20,6 +20,7 @@ class PreviewEnvironment {
     let tm:DetailTabsModel = .shared
     let dim:DIMENSIONS = .shared
     let ss:SettingsStore = .shared
+    let nm:NotificationsManager = .shared
     let sm = SideBarModel()
     let userDefaults:UserDefaults
     let context:NSManagedObjectContext
@@ -36,6 +37,7 @@ class PreviewEnvironment {
         }()
         
         self.context = DataProvider.shared().container.viewContext
+        var account3:Account? = nil
         
         context.performAndWait {
             let account = Account(context: self.context)
@@ -46,16 +48,18 @@ class PreviewEnvironment {
             account.name = "bitcoiner_since_2013 ⚡️"
             account.about = "test account"
             
-            let account3 = Account(context: self.context)
-            account3.createdAt = Date()
-            account3.id = UUID()
-            account3.publicKey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
-//            account3.display_name = "Fabian"
-            account3.name = "Fabian"
-            account3.nip05 = "Fabian@nostur.com"
-            account3.about = "Author of Nostur.com"
-            account3.picture = "https://profilepics.nostur.com/profilepic_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/profilepic.jpg?1682440972"
-            account3.banner = "https://profilepics.nostur.com/banner_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/banner.jpg?1682440972"
+            account3 = Account(context: self.context)
+            if let account3 {
+                account3.createdAt = Date()
+                account3.id = UUID()
+                account3.publicKey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
+                //            account3.display_name = "Fabian"
+                account3.name = "Fabian"
+                account3.nip05 = "Fabian@nostur.com"
+                account3.about = "Author of Nostur.com"
+                account3.picture = "https://profilepics.nostur.com/profilepic_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/profilepic.jpg?1682440972"
+                account3.banner = "https://profilepics.nostur.com/banner_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/banner.jpg?1682440972"
+            }
     //        account3.banner = "https://nostur.com/fabian/banner.jpg"
                     
 //            let keys = NKeys.newKeys()
@@ -150,6 +154,8 @@ class PreviewEnvironment {
     //            }
             }
             
+            let decoder = JSONDecoder()
+            
             for relayMessage in relayMessages {
                 var event = relayMessage.event!
                 
@@ -161,7 +167,6 @@ class PreviewEnvironment {
                 
                 // ANNOYING FIX FOR KIND 6 WITH JSON STRING OF ANOTHER EVENT IN EVENT.CONTENT. WTF
                 if event.kind == .repost && event.content.prefix(2) == #"{""# {
-                    let decoder = JSONDecoder()
                     if let noteInNote = try? decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
                         _ = Event.saveEvent(event: noteInNote)
                         event.content = "#[0]"
@@ -183,27 +188,6 @@ class PreviewEnvironment {
                 if event.kind == .zapNote {
                     let _ = Event.updateZapTallyCache(savedEvent, context: self.context)
                 }
-                
-    //            // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
-    //            if event.kind == .custom(7) {
-    //                do { try _ = Event.updateLikeCountCache(event.tags, content:event.content, context: context) } catch {
-    //                    print("🦋🦋🔴🔴🔴 problem updating Like Count Cache .id \(event.id)")
-    //                }
-    //            }
-    //
-    //            // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REPLIES, MENTIONS)
-    //            if event.kind == .textNote {
-    //                // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
-    //                do { try _ = Event.updateMentionsCountCache(event.tags, context: context) } catch {
-    //                    print("🦋🦋🔴🔴🔴 problem updateMentionsCountCache .id \(event.id)")
-    //                }
-    //
-    //                // NIP-10: Those marked with "reply" denote the id of the reply event being responded to.
-    //                // NIP-10: Those marked with "root" denote the root id of the reply thread being responded to.
-    //                do { try _ = Event.updateRepliesCountCache(event.tags, context: context) } catch {
-    //                    print("🦋🦋🔴🔴🔴 problem updateRepliesCountCache .id \(event.id)")
-    //                }
-    //            }
                 
             }
             
@@ -240,25 +224,25 @@ class PreviewEnvironment {
             
             if let contact4 = PreviewFetcher.fetchContact(
                 "4742221ccfbe3bee6d5823715df6864ec45dd8e6bf619527463716fe79a06427", context: self.context) {
-                account3.addToFollows(contact4)
+                account3!.addToFollows(contact4)
             }
             
             if let contact5 = PreviewFetcher.fetchContact(
                 "4eb88310d6b4ed95c6d66a395b3d3cf559b85faec8f7691dafd405a92e055d6d", context: self.context) {
-                account3.addToFollows(contact5)
+                account3!.addToFollows(contact5)
             }
             
             if let c = PreviewFetcher.fetchContact("3d2e51508699f98f0f2bdbe7a45b673c687fe6420f466dc296d90b908d51d594", context: self.context) {
-                account3.addToFollows(c) // MATT
+                account3!.addToFollows(c) // MATT
             }
             if let c = PreviewFetcher.fetchContact("6f35047caf7432fc0ab54a28fed6c82e7b58230bf98302bf18350ff71e10430a", context: self.context) {
-                account3.addToFollows(c) // WILL
+                account3!.addToFollows(c) // WILL
             }
             if let c = PreviewFetcher.fetchContact("de7ecd1e2976a6adb2ffa5f4db81a7d812c8bb6698aa00dcf1e76adb55efd645", context: self.context) {
-                account3.addToFollows(c) // MELVIN
+                account3!.addToFollows(c) // MELVIN
             }
             
-            account3.blockedPubkeys_.append("743416b4943b20b8e1ed6c6d8fc81bbb7a27797c4cd3acafae4cc3d1ed67dd4d;")
+            account3!.blockedPubkeys_.append("743416b4943b20b8e1ed6c6d8fc81bbb7a27797c4cd3acafae4cc3d1ed67dd4d;")
             
             NosturList.generateExamples(context: self.context)
             
@@ -273,7 +257,7 @@ class PreviewEnvironment {
                 for _ in 0..<10 {
                     let privateNote = PrivateNote(context: self.context)
                     privateNote.content = ["Some more text here, I think I need to fix this in some way or another, I don't know how yet. But this text is a bit longer.","I made a private note here\nYo!","I made a private note here\nWith some more lines\n\nCool", "This is good"].randomElement()!
-                    privateNote.by = [account,account3].randomElement()
+                    privateNote.by = [account,account3!].randomElement()
                     privateNote.post = randomTextEvents.randomElement()
                     privateNote.createdAt = Date.now
                     privateNote.updatedAt = Date.now
@@ -288,20 +272,19 @@ class PreviewEnvironment {
                 for _ in 0..<10 {
                     let privateNote = PrivateNote(context: self.context)
                     privateNote.content = ["Some more text here, I think I need to fix this in some way or another, I don't know how yet. But this text is a bit longer.","I made a private note here\nYo!","I made a private note here\nWith some more lines\n\nCool", "This is good"].randomElement()!
-                    privateNote.by = [account,account3].randomElement()
+                    privateNote.by = [account,account3!].randomElement()
                     privateNote.contact = randomContacts.randomElement()
                     privateNote.createdAt = Date.now
                     privateNote.updatedAt = Date.now
                 }
                 
-                account3.blockedPubkeys_.append(contentsOf:randomContacts.randomSample(count: 3).map { $0.pubkey })
-                account3.mutedRootIds_.append("505d4b36cf1bd646e55d16558d8562f838d50e296b6058561ef3490198d4cf77")
-                account3.mutedRootIds_.append("6d966c92a50e00d63b4f1303397f2ea96fb781efacd8f9071fd77e5ddd589a8c")
+                account3!.blockedPubkeys_.append(contentsOf:randomContacts.randomSample(count: 3).map { $0.pubkey })
+                account3!.mutedRootIds_.append("505d4b36cf1bd646e55d16558d8562f838d50e296b6058561ef3490198d4cf77")
+                account3!.mutedRootIds_.append("6d966c92a50e00d63b4f1303397f2ea96fb781efacd8f9071fd77e5ddd589a8c")
             }
             print ("☢️☢️☢️ LOADED (SHOULD ONLY APPEAR ONCE) ☢️☢️☢️")
         }
         
-        let account = PreviewFetcher.fetchAccount(PREVIEW_ACCOUNT_ID, context: self.context)
         if let clNevent = PreviewFetcher.fetchEvents(PREVIEW_ACCOUNT_ID, kind: 3, context: self.context).first?.toNEvent() {
             
             let pTags = clNevent.pTags()
@@ -320,11 +303,9 @@ class PreviewEnvironment {
                 newContact.updated_at = 0
                 existingAndCreatedContacts.append(newContact)
             }
-            if let account {
-                account.addToFollows(NSSet(array: existingAndCreatedContacts))
-            }
+            account3!.addToFollows(NSSet(array: existingAndCreatedContacts))
         }
-        ns.setAccount(account: account)
+        ns.setAccount(account: account3!)
     }
     
 }
@@ -336,13 +317,13 @@ extension View {
         let pe:PreviewEnvironment = .shared
 
         return self.defaultAppStorage(pe.userDefaults)
-            .environment(\.managedObjectContext,
-                          pe.context)
+            .environment(\.managedObjectContext, pe.context)
             .environmentObject(pe.ns)
             .environmentObject(pe.sp)
             .environmentObject(pe.er)
             .environmentObject(pe.ss)
             .environmentObject(pe.sm)
+            .environmentObject(pe.nm)
             .environmentObject(pe.tm)
             .environmentObject(pe.dim)
             .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
