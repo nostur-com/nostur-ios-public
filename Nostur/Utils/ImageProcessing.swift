@@ -23,6 +23,7 @@ class ImageProcessing {
         ImagePipeline.shared = ImagePipeline(configuration: .withDataCache)
         
         pfp = ImagePipeline {
+            $0.isUsingPrepareForDisplay = true
             $0.isProgressiveDecodingEnabled = true
             $0.dataLoader = DataLoader(configuration: {
                 // Disable disk caching built into URLSession
@@ -40,6 +41,7 @@ class ImageProcessing {
         }
         
         pfpNotFollowing = ImagePipeline {
+            $0.isUsingPrepareForDisplay = true
             $0.isProgressiveDecodingEnabled = true
             $0.dataLoader = DataLoader(configuration: {
                 // Disable disk caching built into URLSession
@@ -57,6 +59,7 @@ class ImageProcessing {
         }
         
         banner = ImagePipeline {
+            $0.isUsingPrepareForDisplay = true
             $0.dataLoader = DataLoader(configuration: {
                 // Disable disk caching built into URLSession
                 let conf = DataLoader.defaultConfiguration
@@ -73,6 +76,7 @@ class ImageProcessing {
         }
         
         content = ImagePipeline {
+            $0.isUsingPrepareForDisplay = true
             $0.isProgressiveDecodingEnabled = true
             $0.dataLoader = DataLoader(configuration: {
                 // Disable disk caching built into URLSession
