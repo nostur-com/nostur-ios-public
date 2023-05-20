@@ -46,23 +46,22 @@ struct NoteRow: View {
                     navigateTo(ContactPath(key: nrPost.pubkey))
                 }
                 .padding(.leading, 40)
-            }
-            
-            if nrPost.isRepost, let firstQuote = nrPost.firstQuote {
-                // CASE - WE HAVE IT IN VPOST
-                KindResolver(nrPost: firstQuote, inThread: inThread, connect: connect)
-            }
-            // CASE - We need to fetch it
-            else if nrPost.isRepost, let firstQuoteId = nrPost.firstQuoteId {
-                CenteredProgressView()
-                    .frame(height: 250)
-                    .onAppear {
-                        EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NoteRow.001")
-                        QueuedFetcher.shared.enqueue(id: firstQuoteId)
-                    }
-                    .onDisappear {
-                        QueuedFetcher.shared.dequeue(id: firstQuoteId)
-                    }
+                
+                if let firstQuote = nrPost.firstQuote {
+                    // CASE - WE REPOSTED POST ALREADY
+                    KindResolver(nrPost: firstQuote, inThread: inThread, connect: connect)
+                }
+                else if let firstQuoteId = nrPost.firstQuoteId {
+                    CenteredProgressView()
+                        .frame(height: 250)
+                        .onAppear {
+                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NoteRow.001")
+                            QueuedFetcher.shared.enqueue(id: firstQuoteId)
+                        }
+                        .onDisappear {
+                            QueuedFetcher.shared.dequeue(id: firstQuoteId)
+                        }
+                }
             }
             else { // IS NOT A REPOST
                 KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: hideFooter, inThread: inThread, isReply: isReply, isDetail:isDetail, connect: connect)
