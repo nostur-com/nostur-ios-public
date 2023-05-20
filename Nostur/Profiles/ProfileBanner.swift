@@ -16,7 +16,7 @@ struct ProfileBanner: View {
     let BANNER_HEIGHT = 150.0
     
     var body: some View {
-        let _ = Self._printChanges()
+//        let _ = Self._printChanges()
         Group {
             if let banner {
                 if (banner.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)

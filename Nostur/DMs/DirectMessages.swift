@@ -178,7 +178,7 @@ struct DirectMessages: View {
         sent.fetchLimit = 999
         sent.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         _sent = FetchRequest(fetchRequest: sent)
-    }
+        }
     
     var body: some View {
         let _ = Self._printChanges()

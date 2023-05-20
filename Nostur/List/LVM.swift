@@ -865,119 +865,16 @@ extension LVM {
 //            .store(in: &subscriptions)
     }
     
-    
-
-    
-    func didReachEnd() {
-        guard state != .AWAITING_FIRST_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-        guard state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
-        guard state != .SWITCHING_ACCOUNT else { return } // Only set last appeared if we
-        
-        self.lvmCounter.count = 0
-    }
-    
     func requestForJustAppeared(_ nrPosts:[NRPost]) {
         guard self.viewIsVisible else { return }
         let events = nrPosts.map { $0.event }
         let ids = ids(events)
-        let contacts = events.compactMap {
-            $0.isRepost
-                ? $0.firstQuote?.contact
-                : $0.contact
-        }
-        let shouldVerifyContacts = contacts.filter { NIP05.shouldVerify($0) }
         
-//        ThreadWarning.which("requestForJustAppeared on \(self.id)")
         fetchStuffForLastAddedNotes(ids: ids)
-        fetchMissingReplyToContacts(events: events) // TODO: FIXME
-        
-        // TODO: FIX BROKEN
-//        let context = DataProvider.shared().container.newBackgroundContext()
-//        context.perform {
-        NIP05.verifyBatch(contacts: shouldVerifyContacts, context: DataProvider.shared().viewContext)
-//        }
     }
-    
-    // TODO: WE NEED TO USE THIS.. JUST MOVED FROM ListView TO LVM but not updated yet
-    func fetchMissingReplyToContacts(events:[Event]) {
-        print("🟢🟢 fetchMissingReplyToContacts for events.count: \(events.count)")
-        // PLAN
-        // FOR EVERY EVENT
-        //   TAKE P's. IF P IS NOT IN EVENT.CONTACTS, ADD IT
-        // FINALLY, EVERY MISSING OR EMPTY CONTACT
-        //  sp.fetch!
-        let pubkeys = events.flatMap { $0.fastTags.filter { $0.0 == "p" } }.map { $0.1 }
-        let context = DataProvider.shared().bg
-        context.perform {
-            var bgEvents = [Event]()
-            for mainEvent in events {
-                if let event = context.object(with: mainEvent.objectID) as? Event {
-                    bgEvents.append(event)
-                    let pubkeys = Array(Set(event.fastPs.map { $0.1 }))
-                    if pubkeys.count > 0 {
-                        let contacts = Contact.fetchByPubkeys(pubkeys, context: context)
-                        event.objectWillChange.send()
-                        event.addToContacts(NSSet(array: contacts))
-                    }
-                    
-                    if let firstQuote = event.firstQuote_ {
-                        bgEvents.append(firstQuote)
-                        let firstQuotePubkeys = Array(Set(firstQuote.fastPs.map { $0.1 }))
-                        if firstQuotePubkeys.count > 0 {
-                            let contacts = Contact.fetchByPubkeys(firstQuotePubkeys, context: context)
-                            firstQuote.objectWillChange.send()
-                            firstQuote.addToContacts(NSSet(array: contacts))
-                        }
-                    }
-                    
-                }
-            }
-            let contacts = Contact.fetchByPubkeys(pubkeys, context: context)
-            let missingPubkeys = pubkeys.filter {
-                contacts.map { $0.pubkey }.firstIndex(of: $0) == nil
-            }
-            let emptyContactPubkeys = pubkeys
-                .compactMap { pubkey in
-                    contacts.first(where: { $0.pubkey == pubkey })
-                }
-                .filter { $0.metadata_created_at == 0 }
-                .map { $0.pubkey }
-            
-            guard (missingPubkeys + emptyContactPubkeys).count > 0 else { return }
-            //        ThreadWarning.which("SocketPool.shared.sendMessag 💖💖💖")
-            
-            var eventsWithMissingContacts = [Event]()
-            (missingPubkeys + emptyContactPubkeys).forEach { pubkey in
-                bgEvents.forEach { event in
-                    if let tags = event.tagsSerialized, tags.contains(serializedP(pubkey)) {
-                        eventsWithMissingContacts.append(event)
-                    }
-                    if let firstQuote = event.firstQuote_ {
-                        if let firstQuoteTags = firstQuote.tagsSerialized, firstQuoteTags.contains(serializedP(pubkey)) {
-                            eventsWithMissingContacts.append(firstQuote)
-                        }
-                    }
-                }
-            }
-            eventsWithMissingContacts.forEach { event in
-                //TODO: STILL NEED THIS?? OR IN NRPOST IS ENOUGH?
-                EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "LVM.003")
-            }
-            print("added \(eventsWithMissingContacts.count) events to await for missing contacts \((missingPubkeys + emptyContactPubkeys).count) (total)")
-            QueuedFetcher.shared.enqueue(pTags: missingPubkeys + emptyContactPubkeys)
-        }
-    }
-    
-//    func putEventsWithMissingContactsInEventRelationsQueue(_ nrPosts:[NRPost]) {
-//        nrPosts
-//            .filter { $0.missingContacts }
-//            .forEach {
-//                EventRelationsQueue.shared.addAwaitingEvent($0.event)
-//            }
-//    }
 }
 
-extension LVM: NSFetchedResultsControllerDelegate {
+extension LVM {
     
     // MARK: FROM DB TO SCREEN STEP 1: FETCH REQUEST
     func performLocalFetch(refreshInBackground:Bool = false) {
@@ -1109,21 +1006,7 @@ extension LVM: NSFetchedResultsControllerDelegate {
                 return
         }
     }
-    
-    func updateUnreadCount() {
-        guard let lastReadId = self.lastReadId else {
-            self.lvmCounter.count = 0 //threadCount(lvmState.nrPosts)
-            return
-        }
-        if let index = lvmState.nrPostLeafs.firstIndex(where: { $0.id == lastReadId }) {
-            let postsAfterLastRead = lvmState.nrPostLeafs.suffix(from: index + 1)
-            self.lvmCounter.count = threadCount(Array(postsAfterLastRead))
-        }
-        else {
-            self.lvmCounter.count = 0 //threadCount(lvmState.nrPosts)
-        }
-    }
-    
+        
     func onlyRootOrReplyingToFollower(_ event:Event) -> Bool {
         // TODO: Add setting to show replies to all...
         return true
@@ -1191,8 +1074,6 @@ func threadCount(_ nrPosts:[NRPost]) -> Int {
         (partialResult + nrPost.threadPostsCount)
     }
 }
-
-
 
 struct NewPubkeysForList {
     var subscriptionId:String
