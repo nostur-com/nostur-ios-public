@@ -70,8 +70,12 @@ class NIP05Verifier {
     }
     
     public func verify(_ contact: Contact) {
-        print("nip05: going to verify \(contact.nip05 ?? "")")
-        verifySubject.send(contact)
+        DataProvider.shared().bg.perform { [unowned self] in
+            if let privateContact = try? DataProvider.shared().bg.object(with: contact.objectID) as? Contact {
+                print("nip05: going to verify \(privateContact.nip05 ?? "") for \(privateContact.pubkey)")
+                self.verifySubject.send(privateContact)
+            }
+        }
     }
     
     static func shouldVerify(_ contact: Contact) -> Bool {
