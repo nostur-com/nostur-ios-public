@@ -113,9 +113,13 @@ public final class NewNoteText: ObservableObject {
         HighlightRule(pattern: NewNoteText.mentionRegex, formattingRules: [
             TextFormattingRule(key: .foregroundColor, value: UIColor(named: "AccentColor")!),
             TextFormattingRule(fontTraits: .traitBold)
-//            TextFormattingRule(key: .font, value: codeFont)
+        ]),
+        HighlightRule(pattern: NewNoteText.typingRegex, formattingRules: [
+            TextFormattingRule(key: .foregroundColor, value: UIColor(named: "AccentColor")!),
+            TextFormattingRule(fontTraits: .traitBold)
         ])
     ]
+    static let typingRegex = try! NSRegularExpression(pattern: "(@\\x{2063}\\x{2064}[^\\x{2063}\\x{2064}]+\\x{2064}\\x{2063}|(?<![/\\?])#)", options: [])
     static let mentionRegex = try! NSRegularExpression(pattern: "(@\\w+|(?<![/\\?])#\\S+)", options: [])
     private var bag = Set<AnyCancellable>()
     
@@ -244,17 +248,12 @@ struct NewNote: View {
                                 nEvent.content = nEvent.content + "\n--@!^@\(index)@^!@--"
                             }
                             DataProvider.shared().bg.perform {
-                                print(111)
                                 let previewEvent = createPreviewEvent(nEvent)
-                                print(222)
                                 if (vm.pastedImages.count > 0) {
-                                    print(333)
                                     previewEvent.previewImages = vm.pastedImages
                                 }
                                 let nrPost = NRPost(event: previewEvent)
                                 DispatchQueue.main.async {
-                                    print(4444)
-                                    //                                self.previewEvent = previewEvent
                                     self.previewNRPost = nrPost
                                 }
                                 DataProvider.shared().bg.delete(previewEvent)
@@ -300,7 +299,7 @@ struct NewNote: View {
                                 ContactSearchResultRow(contact: contact) {
                                     guard vm.textView != nil else { return }
                                     let mentionName = contact.handle
-                                    vm.text = vm.text.dropLast(vm.term.count) + (mentionName)
+                                    vm.text = "\(vm.text.dropLast(vm.term.count))\u{2063}\u{2064}\(mentionName)\u{2064}\u{2063}"
                                     selectedMentions.append(contact)
                                     vm.mentioning = false
                                     vm.lastHit = mentionName

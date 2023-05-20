@@ -218,7 +218,7 @@ struct NewReply: View {
                                 ContactSearchResultRow(contact: contact) {
                                     guard vm.textView != nil else { return }
                                     let mentionName = contact.handle
-                                    vm.text = vm.text.dropLast(vm.term.count) + mentionName
+                                    vm.text = "\(vm.text.dropLast(vm.term.count))\u{2063}\u{2064}\(mentionName)\u{2064}\u{2063}"
                                     selectedMentions.append(contact)
                                     vm.mentioning = false
                                     vm.lastHit = mentionName

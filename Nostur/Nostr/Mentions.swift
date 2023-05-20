@@ -62,14 +62,17 @@ func replaceMentionsWithHandles(_ text:String, selected:[Contact] = []) -> Strin
 
 func replaceMentionsWithNpubs(_ text:String, selected:[Contact] = []) -> String {
     let blocked = NosturState.shared.account?.blockedPubkeys_ ?? []
-    let mentions = text.matches(of: /(@(\w+))/)
+    let mentions = text.matches(of: /(@(\x{2063}\x{2064}[^\x{2063}\x{2064}]+\x{2064}\x{2063}|\w+))/)
     var newText = text
     let mentionsByLongest = mentions.sorted(by: { $0.output.2.count > $1.output.2.count })
     for mention in mentionsByLongest {
 //        print(mention.output.0) // @Tester
 //        print(mention.output.1) // @Tester
 //        print(mention.output.2) // Tester
-        let term = mention.output.2.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let term = mention.output.2.trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+            .replacingOccurrences(of: "\u{2063}", with: "")
+            .replacingOccurrences(of: "\u{2064}", with: "")
         let fr = Contact.fetchRequest()
         fr.predicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@) AND NOT pubkey IN %@", term, term, blocked)
         
