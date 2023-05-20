@@ -33,58 +33,49 @@ struct ProfileMediaView: View {
     }
     
     var body: some View {
-        ScrollView {
+        VStack {
             LazyVGrid(columns: columns, spacing: 5) {
                 ForEach(imageUrls.indices, id: \.self) { index in
-                    // Lazy image here
-                    MediaThumb(imageUrls[index], size: squareSize, priority: index < 10 ? .veryHigh : .low)
+                    MediaThumb(imageUrls[index], size: squareSize)
                 }
             }
             .padding(10)
-            Spacer()
-                .frame(minHeight: 800)
+            .onAppear {
+                guard !didLoad else { return }
+                didLoad = true
+                fl.nrPostTransform = false
+                fl.predicate = NSPredicate(format: "pubkey == %@ AND kind == 1", pubkey)
+                fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+                fl.loadMore(1000)
+                
+                
+                // All this below should already be done from ProfileNotesView.. soo.. disable
+                // if there is nothing on screen, fetch most recent 1000
+    //            let fetchNewerLimit = 1000
+    //            let fetchNewerTask = ReqTask(
+    //                reqCommand: { (taskId) in
+    //                    print("\(taskId) 🟠🟠 fetchNewerTask.fetch()")
+    //                    req(RM.getAuthorKind1(pubkey: pubkey, limit:fetchNewerLimit, subscriptionId: taskId))
+    //                },
+    //                processResponseCommand: { (taskId) in
+    //                    print("\(taskId) 🟠🟠🟠 processResponseCommand")
+    //                    let currentNewestCreatedAt = fl.nrPosts.first?.created_at ?? 0
+    //                    fl.predicate = NSPredicate(
+    //                        format:
+    //                            "created_at >= %i " +
+    //                            "AND pubkey == %@ " + // blockedPubkeys + [pubkey]
+    //                            "AND kind == 1",
+    //                            currentNewestCreatedAt,
+    //                            pubkey
+    //                    )
+    //                    fl.loadNewerEvents(fetchNewerLimit, taskId:taskId)
+    //                })
+    //
+    //            backlog.add(fetchNewerTask)
+    //            fetchNewerTask.fetch()
+            }
         }
-        .onAppear {
-            guard !didLoad else { return }
-            didLoad = true
-            fl.nrPostTransform = false
-            fl.predicate = NSPredicate(format: "pubkey == %@ AND kind == 1", pubkey)
-            fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-            fl.loadMore(1000)
-            
-            
-            // All this below should already be done from ProfileNotesView.. soo.. disable
-            // if there is nothing on screen, fetch most recent 1000
-//            let fetchNewerLimit = 1000
-//            let fetchNewerTask = ReqTask(
-//                reqCommand: { (taskId) in
-//                    print("\(taskId) 🟠🟠 fetchNewerTask.fetch()")
-//                    req(RM.getAuthorKind1(pubkey: pubkey, limit:fetchNewerLimit, subscriptionId: taskId))
-//                },
-//                processResponseCommand: { (taskId) in
-//                    print("\(taskId) 🟠🟠🟠 processResponseCommand")
-//                    let currentNewestCreatedAt = fl.nrPosts.first?.created_at ?? 0
-//                    fl.predicate = NSPredicate(
-//                        format:
-//                            "created_at >= %i " +
-//                            "AND pubkey == %@ " + // blockedPubkeys + [pubkey]
-//                            "AND kind == 1",
-//                            currentNewestCreatedAt,
-//                            pubkey
-//                    )
-//                    fl.loadNewerEvents(fetchNewerLimit, taskId:taskId)
-//                })
-//
-//            backlog.add(fetchNewerTask)
-//            fetchNewerTask.fetch()
-        }
-//        .onReceive(receiveNotification(.importedMessagesFromSubscriptionIds)) { notification in
-//            let importedNotification = notification.object as! ImportedNotification
-//            let reqTasks = backlog.tasks(with: importedNotification.subscriptionIds)
-//            reqTasks.forEach { task in
-//                task.process()
-//            }
-//        }
+            .frame(minHeight: 800)
     }
 }
 
@@ -92,12 +83,11 @@ struct MediaThumb: View {
     
     let url:URL
     let squareSize:CGFloat
-    @State var priority:ImageRequest.Priority = .low
+    @State var priority:ImageRequest.Priority = .normal
     
-    init(_ url:URL, size:CGFloat, priority:ImageRequest.Priority = .low) {
+    init(_ url:URL, size:CGFloat) {
         self.url = url
         self.squareSize = size
-        self.priority = priority
     }
     
     var body: some View {
