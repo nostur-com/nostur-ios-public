@@ -254,7 +254,7 @@ struct Settings: View {
             }
         }
         .onAppear {
-            sliderValue = settings.defaultZapAmount
+            sliderValue = Double(mapExponentialToLinear(value: Float(settings.defaultZapAmount) , min: Float(SLIDER_MIN), max: Float(SLIDER_MAX), exponent: 7))
             
             let bg = DataProvider.shared().container.newBackgroundContext()
             bg.perform {

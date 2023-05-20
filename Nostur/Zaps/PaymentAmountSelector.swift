@@ -15,19 +15,23 @@ struct PaymentAmountSelector: View {
     let sp:SocketPool = .shared
     let paymentInfo:PaymentInfo
     
-    @State var amount:Float = 0.0 // SATS (1000 SATS ~= 20 cent)
+    let SLIDER_MIN = 21.0
+    let SLIDER_MAX = 2000000.0
+    
+    @State var sliderValue:Float = 0.0 // SATS (1000 SATS ~= 20 cent)
+//    @State var amount:Float = 0.0 // SATS (1000 SATS ~= 20 cent)
     @State var exchangeRate:Double? = 0.0 // BTC 23167
     @State var fiatPrice = "" // $0.00
     @State var zapMessage = ""
     @Environment(\.dismiss) private var dismiss
     
     var amountS:Float {
-        mapLinearToExponential(value: amount, min: Float(paymentInfo.min), max: Float(paymentInfo.max), exponent: 7)
+        mapLinearToExponential(value: sliderValue, min: Float(SLIDER_MIN), max: Float(SLIDER_MAX), exponent: 7)
     }
     
     init(paymentInfo:PaymentInfo) {
         self.paymentInfo = paymentInfo
-        self.amount = Float(ss.defaultZapAmount) // SATS (1000 SATS ~= 20 cent)
+//        self.amount = Float(ss.defaultZapAmount) // SATS (1000 SATS ~= 20 cent)
     }
     
     func amountSelected(amount:Float, zapMessage:String) {
@@ -63,7 +67,7 @@ struct PaymentAmountSelector: View {
         else {
             Task {
                 do {
-                    let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount:UInt64(amount * 1000))
+                    let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount:UInt64(amountS * 1000))
                     
                     if response.pr != nil {
                         await MainActor.run {
@@ -86,12 +90,18 @@ struct PaymentAmountSelector: View {
                     Text("Send sats:").font(.title2)
                     Text(ceil(Double(amountS)).clean).font(.title2)
                     Text("sats").font(.title2)
-                    if (fiatPrice != "") {
+                    if (fiatPrice != "($0.00)") {
                         Text("\(fiatPrice)").font(.title2)
                     }
                 }
-                Slider(value: $amount, in: Float(paymentInfo.min)...Float(paymentInfo.max))
-                    .padding()
+                Slider(value: $sliderValue, in: Float(SLIDER_MIN)...Float(SLIDER_MAX)) {
+                    
+                } minimumValueLabel: {
+                    Text("\(SLIDER_MIN.clean)")
+                } maximumValueLabel: {
+                    Text("\(SLIDER_MAX.clean)")
+                }
+                .padding()
                 if (paymentInfo.supportsZap) {
                     HStack(alignment: .center) {
                         TextField("Add public note (optional)", text: $zapMessage)
@@ -112,7 +122,10 @@ struct PaymentAmountSelector: View {
                 }.buttonStyle(.borderedProminent)
             }
             .onAppear {
-                amount = Float(ss.defaultZapAmount)
+                sliderValue = mapExponentialToLinear(value: Float(ss.defaultZapAmount) , min: Float(SLIDER_MIN), max: Float(SLIDER_MAX), exponent: 7)
+                if (exchangeRate != nil) {
+                    fiatPrice = String(format: "($%.02f)", (ceil(Double(amountS)) / 100000000 * exchangeRate!))
+                }
             }
             .task {
                 guard let url = URL(string: "https://api.kraken.com/0/public/Ticker?pair=XXBTZUSD") else { return }
@@ -173,3 +186,10 @@ func mapLinearToExponential(value: Float, min: Float, max: Float, exponent: Floa
     let exponentialValue = pow(normalizedValue, exponent)
     return min + (max - min) * exponentialValue
 }
+
+func mapExponentialToLinear(value: Float, min: Float, max: Float, exponent: Float = 3) -> Float {
+    let normalizedValue = (value - min) / (max - min)
+    let linearValue = pow(normalizedValue, 1/exponent)
+    return min + (max - min) * linearValue
+}
+
