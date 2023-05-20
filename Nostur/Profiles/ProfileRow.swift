@@ -16,6 +16,12 @@ struct ProfileRow: View {
     var withoutFollowButton = false
     @ObservedObject var contact:Contact
     
+    var showUsername:Bool { // show (user)name if (user)name is different from display name
+        guard !contact.username.isEmpty else { return false }
+        guard contact.username.lowercased() != contact.anyName.lowercased() else { return false }
+        return true
+    }
+    
     var body: some View {
         HStack(alignment: .top) {
             PFP(pubkey: contact.pubkey, contact: contact)
@@ -23,7 +29,7 @@ struct ProfileRow: View {
                 HStack {
                     VStack(alignment: .leading) {
                         HStack(spacing:3) {
-                            Text(contact.authorName).font(.headline).foregroundColor(.primary)
+                            Text(contact.anyName).font(.headline).foregroundColor(.primary)
                                 .lineLimit(1)
 
                             if (contact.nip05veried) {
@@ -33,8 +39,11 @@ struct ProfileRow: View {
                             }
                         }
 
-                        Text("@\(contact.username)").font(.subheadline).foregroundColor(.secondary)
-                            .lineLimit(1)
+                        if showUsername {
+                            Text("@\(contact.username)").font(.subheadline).foregroundColor(.secondary)
+                                .lineLimit(1)
+                        }
+                        
                     }.multilineTextAlignment(.leading)
                     Spacer()
                     if (!withoutFollowButton) {
