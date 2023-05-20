@@ -240,11 +240,11 @@ class TextRenderer { // TEXT things
 extension String {
     func escapeMD() -> String {
         return self
-            .replacingOccurrences(of: "__", with: "\\_\\_")
+            .replacingOccurrences(of: "\\", with: "\\\\")
             .replacingOccurrences(of: "**", with: "\\*\\*")
             .replacingOccurrences(of: "[", with: "\\[")
             .replacingOccurrences(of: "]", with: "\\]")
-            .replacingOccurrences(of: "\\", with: "\\\\")
             .replacingOccurrences(of: "/", with: "\\/")
+            .replacingOccurrences(of: "__", with: "\\_\\_")
     }
 }
