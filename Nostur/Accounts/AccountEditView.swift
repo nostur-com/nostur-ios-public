@@ -59,7 +59,7 @@ struct AccountEditView: View {
                                     .disabled(shouldDisable)
                             }
                             
-                            Section(header: Text("NIP-05 identifier") ) {
+                            Section(header: Text("Nostr username (NIP-05)") ) {
                                 TextField("", text: $account.nip05).keyboardType(.emailAddress).disabled(shouldDisable)
                                     .keyboardType(.URL)
                                     .disableAutocorrection(true)
