@@ -18,8 +18,8 @@ struct ReplyingToFragmentView: View {
                 Text(rendered)
                         .fontWeight(.light)
                         .foregroundColor(.secondary)
-                        .accentColor(Color("AccentColor"))
-                        .tint(Color("AccentColor"))
+//                        .accentColor(Color("AccentColor"))
+//                        .tint(Color("AccentColor"))
                         .frame(maxWidth:.infinity, alignment: .leading)
                 }
         }
