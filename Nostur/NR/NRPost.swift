@@ -637,7 +637,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             guard let self = self else { return }
             
             let fr = Event.fetchRequest()
-            fr.predicate = NSPredicate(format: "kind IN {1} AND %@ IN {replyToId,replyToRootId}", self.id)
+            fr.predicate = NSPredicate(format: "kind == 1 AND replyToId == %@", self.id)
             if let foundReplies = try? ctx.fetch(fr) {
                 if let existingReplies = self.event.replies {
                     self.event.replies = existingReplies.union(Set(foundReplies))
