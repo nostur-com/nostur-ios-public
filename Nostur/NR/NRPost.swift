@@ -13,7 +13,7 @@ public typealias NRPostID = String
 // NRPost SHOULD BE CREATED IN BACKGROUND THREAD
 class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
-    private var nrPostQueue = DispatchQueue(label: "com.nostur.nrPostQueue")
+    private var nrPostQueue = DispatchQueue(label: "com.nostur.nrPostQueue", attributes: .concurrent)
     
     static func == (lhs: NRPost, rhs: NRPost) -> Bool {
         lhs.id == rhs.id
@@ -45,7 +45,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var _contact:NRContact?
     var contact:NRContact?  {
         get { nrPostQueue.sync { _contact } }
-        set { nrPostQueue.async { self._contact = newValue } }
+        set { nrPostQueue.async(flags: .barrier) { self._contact = newValue } }
     }
     
     var referencedContacts:[NRContact] = []
@@ -53,14 +53,14 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     private var _parentPosts:[NRPost] = []
     var parentPosts: [NRPost] {
         get { nrPostQueue.sync { _parentPosts } }
-        set { nrPostQueue.async { self._parentPosts = newValue } }
+        set { nrPostQueue.async(flags: .barrier) { self._parentPosts = newValue } }
     }
     
     private var _replies: [NRPost] = []
 
     var replies: [NRPost] {
         get { nrPostQueue.sync { _replies } }
-        set { nrPostQueue.async { self._replies = newValue } }
+        set { nrPostQueue.async(flags: .barrier) { self._replies = newValue } }
     }
     
     
@@ -79,17 +79,17 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
     var replyTo:NRPost?  {
         get { nrPostQueue.sync { _replyTo } }
-        set { nrPostQueue.async { self._replyTo = newValue } }
+        set { nrPostQueue.async(flags: .barrier) { self._replyTo = newValue } }
     }
     
     var replyToRoot:NRPost? {
         get { nrPostQueue.sync { _replyToRoot } }
-        set { nrPostQueue.async { self._replyToRoot = newValue } }
+        set { nrPostQueue.async(flags: .barrier) { self._replyToRoot = newValue } }
     }
     
     var firstQuote:NRPost? {
         get { nrPostQueue.sync { _firstQuote } }
-        set { nrPostQueue.async { self._firstQuote = newValue } }
+        set { nrPostQueue.async(flags: .barrier) { self._firstQuote = newValue } }
     }
     
     

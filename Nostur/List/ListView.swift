@@ -46,6 +46,7 @@ struct ListView: View {
                            fullWidthImages: $settings.fullWidthImages,
                            dim: dim,
                            onRowAppeared: { (sectionIndex, rowIndex) in
+                    guard vmState.state != .AWAITING_RESTORE_SCROLL else { return }
                     guard vmState.state != .AWAITING_FIRST_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
                     guard vmState.state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
                     guard vmState.state != .SWITCHING_ACCOUNT else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
@@ -57,14 +58,14 @@ struct ListView: View {
                     }
                 },
                            onFinishedScrolling: { (isAtTop, indexPaths) in
-                    
+                    guard vmState.state != .AWAITING_RESTORE_SCROLL else { return }
                     guard vmState.state != .AWAITING_FIRST_FETCH else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
                     guard vmState.state != .AWAITING_SCROLL else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
                     guard vmState.state != .SWITCHING_ACCOUNT else { return } // Only set last appeared if we already restored, (so not when programmatically .scrollTo)
                     //                        print("\(nrPost.id) index: \(vmState.nrPostLeafs.firstIndex(of: nrPost) ?? -1)")
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                         if let firstIndex = indexPaths.min(by: { $0.row < $1.row }) {
-                            if firstIndex.row < 2 { // not sure why just index 0 doesn't work 1% of the time
+                            if firstIndex.row < 1 { // not sure why just index 0 doesn't work 1% of the time
                                 vm.lvmCounter.count = 0
                             }
                             
