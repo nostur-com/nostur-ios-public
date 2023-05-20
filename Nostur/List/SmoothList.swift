@@ -75,7 +75,7 @@ struct SmoothList: UIViewControllerRepresentable {
     }
     
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
-        print("🔴🔴🔴🔴🔴🔴 updateUIViewController 🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴")
+//        print("🔴🔴🔴🔴🔴🔴 updateUIViewController 🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴")
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
             if needsFullReload, let collectionViewHolder = context.coordinator.collectionViewHolder {

@@ -168,6 +168,8 @@
 		1F8B1362297B36DB002EB8CF /* Bytes+HexString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8B1357297B36DB002EB8CF /* Bytes+HexString.swift */; };
 		1F8B1363297B36DB002EB8CF /* BytesConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8B1358297B36DB002EB8CF /* BytesConvertible.swift */; };
 		1F8B1365297B3BE8002EB8CF /* ContactProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8B1364297B3BE8002EB8CF /* ContactProfile.swift */; };
+		1F91D8F62A17C55F00C419A3 /* Collections in Frameworks */ = {isa = PBXBuildFile; productRef = 1F91D8F52A17C55F00C419A3 /* Collections */; };
+		1F91D8F82A186E5200C419A3 /* AnimatedNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F91D8F72A186E5200C419A3 /* AnimatedNumber.swift */; };
 		1F927C6F297DB34A0024F665 /* Queue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F927C6E297DB3490024F665 /* Queue.swift */; };
 		1F9499C9299F568900F628B4 /* WelcomeSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9499C8299F568900F628B4 /* WelcomeSheet.swift */; };
 		1F9499CB299F715800F628B4 /* TryGuestAccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9499CA299F715800F628B4 /* TryGuestAccountSheet.swift */; };
@@ -472,6 +474,7 @@
 		1F8B1357297B36DB002EB8CF /* Bytes+HexString.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Bytes+HexString.swift"; sourceTree = "<group>"; };
 		1F8B1358297B36DB002EB8CF /* BytesConvertible.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BytesConvertible.swift; sourceTree = "<group>"; };
 		1F8B1364297B3BE8002EB8CF /* ContactProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactProfile.swift; sourceTree = "<group>"; };
+		1F91D8F72A186E5200C419A3 /* AnimatedNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedNumber.swift; sourceTree = "<group>"; };
 		1F927C6E297DB3490024F665 /* Queue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Queue.swift; sourceTree = "<group>"; };
 		1F9499C8299F568900F628B4 /* WelcomeSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeSheet.swift; sourceTree = "<group>"; };
 		1F9499CA299F715800F628B4 /* TryGuestAccountSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TryGuestAccountSheet.swift; sourceTree = "<group>"; };
@@ -603,6 +606,7 @@
 				1FB6E6F529E31C71008BE8A6 /* HTMLEntities in Frameworks */,
 				1F3E135429C89B9F00D076EA /* NukeVideo in Frameworks */,
 				1F75257629962AA300477AF2 /* Nuke in Frameworks */,
+				1F91D8F62A17C55F00C419A3 /* Collections in Frameworks */,
 				1F2F54EA2A0236E500B6D7E4 /* Gifu in Frameworks */,
 				1FC4D40B2997E58E004E88CD /* KeychainAccess in Frameworks */,
 				1F006B0A29D0A9BE0048C6DD /* Algorithms in Frameworks */,
@@ -929,6 +933,14 @@
 			path = "System Extensions";
 			sourceTree = "<group>";
 		};
+		1F91D8F92A188DE800C419A3 /* ViewFragments */ = {
+			isa = PBXGroup;
+			children = (
+				1F91D8F72A186E5200C419A3 /* AnimatedNumber.swift */,
+			);
+			path = ViewFragments;
+			sourceTree = "<group>";
+		};
 		1F96793029BF748400E78173 /* PrivateNotes */ = {
 			isa = PBXGroup;
 			children = (
@@ -971,7 +983,6 @@
 		1FB448BC2965F3D000038671 /* Nostur */ = {
 			isa = PBXGroup;
 			children = (
-				1F685B502A0D1886009EEC9B /* NR */,
 				1F4773A3296CA7040049454B /* Accounts */,
 				1F740D9D29AF36AB00EFCCA7 /* Badges */,
 				1F25B395297A508200A8A5A7 /* CoreData */,
@@ -983,6 +994,7 @@
 				1FDF0ED729EBA26300B56AC4 /* NosturList */,
 				1FEA78592979A18E007CC8E7 /* Note */,
 				1FC2DFF229A9328F00C8A9DA /* Notifications */,
+				1F685B502A0D1886009EEC9B /* NR */,
 				1F02EA5D299FE52300FC89EB /* Onboarding */,
 				1F00E8C129C2626500797B78 /* Post */,
 				1FB448C92965F3D200038671 /* Preview Content */,
@@ -992,6 +1004,7 @@
 				1FC6807829DB0BDC003EE054 /* Reporting */,
 				1F25B394297A4FB400A8A5A7 /* Screens */,
 				1F45C7EE29EF998D00F58772 /* Utils */,
+				1F91D8F92A188DE800C419A3 /* ViewFragments */,
 				1FCA273A299A4F2100298881 /* Zaps */,
 			);
 			path = Nostur;
@@ -1203,6 +1216,7 @@
 				1FB6E6F429E31C71008BE8A6 /* HTMLEntities */,
 				1F21DDC029F01B3000C564EF /* CombineWebSocket */,
 				1F2F54E92A0236E500B6D7E4 /* Gifu */,
+				1F91D8F52A17C55F00C419A3 /* Collections */,
 			);
 			productName = Nostur;
 			productReference = 1FB448BA2965F3D000038671 /* Nostur.app */;
@@ -1377,6 +1391,7 @@
 				1F4C1C282A07AB090010573F /* NEventView.swift in Sources */,
 				1F65002C29A759FB00B79AEF /* ProfileRowMissing.swift in Sources */,
 				1F33096529895D1600D4D8CF /* SidebarStack.swift in Sources */,
+				1F91D8F82A186E5200C419A3 /* AnimatedNumber.swift in Sources */,
 				1F740DA529AF5F6900EFCCA7 /* ContactsSearch.swift in Sources */,
 				1FB448BE2965F3D000038671 /* NosturApp.swift in Sources */,
 				1FC2DFF429A9330600C8A9DA /* ProfileLightningButton.swift in Sources */,
@@ -1988,6 +2003,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1F75257429962AA300477AF2 /* XCRemoteSwiftPackageReference "Nuke" */;
 			productName = NukeUI;
+		};
+		1F91D8F52A17C55F00C419A3 /* Collections */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1F558B3D29FE66CE002938A3 /* XCRemoteSwiftPackageReference "swift-collections" */;
+			productName = Collections;
 		};
 		1FB6E6F429E31C71008BE8A6 /* HTMLEntities */ = {
 			isa = XCSwiftPackageProductDependency;
