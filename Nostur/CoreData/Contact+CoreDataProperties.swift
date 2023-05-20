@@ -341,6 +341,24 @@ extension Contact : Identifiable {
             EventRelationsQueue.shared.removeAwaitingEvent(waitingEvent)
         }
         
+        let awaitingZaps = ZapperPubkeyVerificationQueue.shared.getQueuedZaps()
+        awaitingZaps.forEach { zap in
+            if (zap.zappedContactPubkey == contact.pubkey) {
+                zap.objectWillChange.send() // Needed for zaps on notification screen
+                if zap.zappedContact == nil {
+                    zap.zappedContact = contact
+                }
+                if let zapperPubkey = contact.zapperPubkey,
+                    zapperPubkey == zap.pubkey,
+                    let zappedEvent = zap.zappedEvent {
+                    zappedEvent.zapTally = zappedEvent.zapTally + Int64(zap.naiveSats)
+                    zappedEvent.zapsCount = zappedEvent.zapsCount + 1
+                    zappedEvent.zapsDidChange.send((zappedEvent.zapsCount, zappedEvent.zapTally))
+                    print("⚡️👍 zap \(zap.id) verified after fetching contact \(contact.pubkey)")
+                }
+            }
+        }
+        
         let pubkey = contact.pubkey
         DispatchQueue.main.async {
             sendNotification(.contactSaved, pubkey)

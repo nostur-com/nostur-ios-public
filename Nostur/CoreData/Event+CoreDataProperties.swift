@@ -543,33 +543,33 @@ extension Event {
     }
     
     
-    static func updateZapTallyCache(_ event:Event, context:NSManagedObjectContext) -> Bool {
-        let nEvent = event.toNEvent()
+    static func updateZapTallyCache(_ zap:Event, context:NSManagedObjectContext) -> Bool {
+        guard let zappedContact = zap.zappedContact else { // NO CONTACT
+            if let zappedPubkey = zap.zappedContactPubkey {
+                print("⚡️⏳ missing contact for zap. fetching: \(zappedPubkey), and queueing zap \(zap.id)")
+                QueuedFetcher.shared.enqueue(pTag: zappedPubkey)
+                ZapperPubkeyVerificationQueue.shared.addZap(zap)
+            }
+            return false
+        }
         
-        //        if (1 == 2) {
-        //            /*
-        //             TODO: Disabled for now, because all zaps will be ignored because we havent fetched zapperPubkey for anyone yet Consider valid on import, to immediatly show amounts. Use seperate queue to fetch and verify zapperpubkey, then invalidate if wrong later.
-        //             */
-        //            // we need to have contact.zapperPubkey first... ughh
-        //            let pTag = nEvent.tags.first { $0.type == "p" }
-        //            guard pTag != nil else { return false }
-        //            let contact = Contact.fetchByPubkey(pTag!.pubkey, context: context)
-        //            guard contact != nil else { return false }
-        //
-        //            guard contact!.zapperPubkey != nil else { return false }
-        //            guard contact!.zapperPubkey! == event.pubkey else { return false }
-        //        }
+        guard zappedContact.metadata_created_at != 0 else { // CONTACT INFO MISSING
+                print("⚡️⏳ missing contact info for zap. fetching: \(zappedContact.pubkey), and queueing zap \(zap.id)")
+            QueuedFetcher.shared.enqueue(pTag: zappedContact.pubkey)
+                ZapperPubkeyVerificationQueue.shared.addZap(zap)
+            return false
+        }
         
-        // zapped event
-        guard let firstE = nEvent.firstE() else { return false }
-        let request = NSFetchRequest<Event>(entityName: "Event")
-        request.entity = Event.entity()
-        request.predicate = NSPredicate(format: "id == %@", firstE)
-        request.fetchLimit = 1
-        
-        if let zappedEvent = try! context.fetch(request).first {
-//            zappedEvent.objectWillChange.send()
-            zappedEvent.zapTally = zappedEvent.zapTally + Int64(event.naiveSats)
+        // Check if zapper pubkey matches contacts published zapper pubkey
+        if let zappedContact = zap.zappedContact, let zapperPubkey = zappedContact.zapperPubkey {
+            guard zap.pubkey == zapperPubkey else {
+                print("⚡️🔴 zapper pubkey does not match contacts published zapper pubkey. zap: \(zap.id)")
+                return false
+            }
+        }
+                
+        if let zappedEvent = zap.zappedEvent {
+            zappedEvent.zapTally = zappedEvent.zapTally + Int64(zap.naiveSats)
             zappedEvent.zapsCount = zappedEvent.zapsCount + 1
             zappedEvent.zapsDidChange.send((zappedEvent.zapsCount, zappedEvent.zapTally))
         }

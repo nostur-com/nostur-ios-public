@@ -68,6 +68,7 @@ struct NosturApp: App {
     private var queuedFetcher:QueuedFetcher = .shared
     private var sp:SocketPool = .shared
     private var mp:MessageParser = .shared
+    private var zpvq:ZapperPubkeyVerificationQueue = .shared
     
     
     @State var fg:FollowingGuardian = .shared
