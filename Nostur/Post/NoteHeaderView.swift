@@ -78,10 +78,16 @@ struct PostHeader: View {
     let nrPost:NRPost
     let singleLine:Bool
     
+    var showUsername:Bool { // show (user)name if (user)name is different from display name
+        guard !contact.anyUsername.isEmpty else { return false }
+        guard contact.anyUsername.lowercased() != contact.anyName.lowercased() else { return false }
+        return true
+    }
+    
     var body: some View {
-        HStack(spacing:2) {
+        HStack(spacing:5) {
             Group {
-                Text(contact.displayName ?? "") // Name
+                Text(contact.anyName ?? "") // Name
                     .foregroundColor(.primary)
                     .fontWeight(.bold)
                     .lineLimit(1)
@@ -95,8 +101,10 @@ struct PostHeader: View {
                 
                 if (singleLine) {
                     Group {
-                        Text("@\(contact.username ?? String(contact.pubkey.suffix(11)))").layoutPriority(1)
-                        Text(" · ") //
+                        if showUsername {
+                            Text("@\(contact.username ?? String(contact.pubkey.suffix(11)))").layoutPriority(1)
+                            Text(" · ")
+                        }
                         Ago(nrPost.createdAt)
                             .layoutPriority(2)
                     }
@@ -118,8 +126,10 @@ struct PostHeader: View {
         }
         if (!singleLine) {
             HStack(spacing:2) {
-                Text("@\(contact.anyUsername)").layoutPriority(1)
-                Text(" · ") //
+                if showUsername {
+                    Text("@\(contact.anyUsername)").layoutPriority(1)
+                    Text(" · ")
+                }
                 Ago(nrPost.createdAt)
                     .layoutPriority(2)
             }

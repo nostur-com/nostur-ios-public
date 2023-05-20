@@ -142,9 +142,7 @@ struct TabbedDetailContainer: View {
             if nrPost.anyDisplayName != "" {
                 return nrPost.anyDisplayName
             }
-            else {
-                return String(nrPost.pubkey.suffix(11))
-            }
+            return String(nrPost.anyUsername)
         }
         if let event = tab.event {
             if event.name != "" {

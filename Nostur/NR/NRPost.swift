@@ -127,7 +127,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
     var anyDisplayName:String {
         if let contact = contact {
-            return contact.anyDisplayName
+            return contact.anyName
         }
         return String(pubkey.suffix(11))
     }

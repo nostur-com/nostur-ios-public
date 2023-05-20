@@ -77,10 +77,16 @@ struct PostHeaderEvent: View {
     let event:Event
     let singleLine:Bool
     
+    var showUsername:Bool { // show (user)name if (user)name is different from display name
+        guard !contact.username.isEmpty else { return false }
+        guard contact.username.lowercased() != contact.anyName.lowercased() else { return false }
+        return true
+    }
+    
     var body: some View {
-        HStack(spacing:2) {
+        HStack(spacing:5) {
             Group {
-                Text(contact.authorName) // Name
+                Text(contact.anyName) // Name
                     .foregroundColor(.primary)
                     .fontWeight(.bold)
                     .lineLimit(1)
@@ -94,8 +100,10 @@ struct PostHeaderEvent: View {
                 
                 if (singleLine) {
                     Group {
-                        Text("@\(contact.username)").layoutPriority(1)
-                        Text(" · ") //
+                        if showUsername {
+                            Text("@\(contact.username)").layoutPriority(1)
+                            Text(" · ")
+                        }
                         Ago(event.date)
                             .layoutPriority(2)
                     }
@@ -117,8 +125,10 @@ struct PostHeaderEvent: View {
         }
         if (!singleLine) {
             HStack(spacing:2) {
-                Text("@\(contact.username)").layoutPriority(1)
-                Text(" · ") //
+                if showUsername {
+                    Text("@\(contact.username)").layoutPriority(1)
+                    Text(" · ")
+                }
                 Ago(event.date)
                     .layoutPriority(2)
             }
@@ -132,7 +142,7 @@ struct NameAndNipContact: View {
     @ObservedObject var contact:Contact // for rendering nip check (after just verified) etc
 
     var body: some View {
-        Text(contact.authorName) // Name
+        Text(contact.anyName) // Name
             .foregroundColor(.primary)
             .fontWeight(.bold)
             .lineLimit(1)
@@ -149,11 +159,34 @@ struct NameAndNipContact: View {
 struct NoteHeaderViewEvent_Previews: PreviewProvider {
     static var previews: some View {
         
-        VStack {
+        VStack(spacing: 10) {
             if let event = PreviewFetcher.fetchEvent("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0") {
-                NoteHeaderViewEvent(event: event)
+                NoteHeaderViewEvent(event: event, singleLine: false)
+            }
+            
+            if let event = PreviewFetcher.fetchEvent() {
+                NoteHeaderViewEvent(event: event, singleLine: false)
+            }
+            
+            if let event = PreviewFetcher.fetchEvent() {
+                NoteHeaderViewEvent(event: event, singleLine: false)
+            }
+            
+            Divider()
+            
+            if let event = PreviewFetcher.fetchEvent() {
+                NoteHeaderViewEvent(event: event, singleLine: true)
+            }
+            
+            if let event = PreviewFetcher.fetchEvent() {
+                NoteHeaderViewEvent(event: event, singleLine: true)
+            }
+            
+            if let event = PreviewFetcher.fetchEvent() {
+                NoteHeaderViewEvent(event: event, singleLine: true)
             }
         }
+        .padding()
         .withPreviewEnvironment()
         
     }

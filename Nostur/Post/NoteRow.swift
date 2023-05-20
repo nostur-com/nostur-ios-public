@@ -36,7 +36,7 @@ struct NoteRow: View {
                     Image(systemName: "arrow.2.squarepath")
                         .fontWeight(.bold)
                         .scaleEffect(0.6)
-                    Text("**\(nrPost.contact?.anyDisplayName ?? "...") reposted**").font(.subheadline)
+                    Text("**\(nrPost.contact?.anyName ?? "...") reposted**").font(.subheadline)
                         .onTapGesture {
                             UIPasteboard.general.string = nrPost.mainEvent.toNEvent().eventJson()
                         }

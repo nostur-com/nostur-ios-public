@@ -138,42 +138,52 @@ extension Contact : Identifiable {
     }
     
     var username:String {
+        guard let username = name else { return authorKey }
         if (SettingsStore.shared.hideEmojisInNames) {
-            if (name != nil) {
-                return name!.unicodeScalars.filter {
-                    
-                    !($0.value >= 0x13000 && $0.value <= 0x1342E) && // EGYPTIAN HIEROGLYPHS
-                    !$0.properties.isEmoji  // EMOJIS
-                    
-                }.reduce("") { $0 + String($1) }
-            }
-            else {
-                return authorKey
-            }
+            return username.unicodeScalars.filter {
+                
+                !($0.value >= 0x13000 && $0.value <= 0x1342E) && // EGYPTIAN HIEROGLYPHS
+                !$0.properties.isEmoji  // EMOJIS
+                
+            }.reduce("") { $0 + String($1) }
         }
         else {
-            return name ?? authorKey
+            return username
         }
     }
     
     // Display name, with fallbacks: (User)name, pubkey (prefix), or "?:?"
-    var authorName: String {
+    var authorName: String { anyName }
+    var anyName: String {
         let displayName = display_name != nil && display_name != "" ? display_name : nil
         let name = name != nil && name != "" ? name : nil
         let theName = displayName ?? name
         
         if (SettingsStore.shared.hideEmojisInNames) {
-        
-            return theName ?? authorKey
-//            return (theName?.unicodeScalars.filter {
-//                
-//                !($0.value >= 0x13000 && $0.value <= 0x1342E) && // EGYPTIAN HIEROGLYPHS
-//                !$0.properties.isEmoji  // EMOJIS
-//                
-//            }.reduce("") { $0 + String($1) }) ?? authorKey
+            return (theName?.unicodeScalars.filter {
+                !($0.value >= 0x13000 && $0.value <= 0x1342E) && // EGYPTIAN HIEROGLYPHS
+                !$0.properties.isEmoji  // EMOJIS
+                
+            }.reduce("") { $0 + String($1) }) ?? authorKey
         }
         else {
             return theName ?? authorKey
+        }
+    }
+    
+    var displayName: String? {
+        guard let displayName = display_name else { return nil }
+        
+        if (SettingsStore.shared.hideEmojisInNames) {
+            return (displayName.unicodeScalars.filter {
+
+                !($0.value >= 0x13000 && $0.value <= 0x1342E) && // EGYPTIAN HIEROGLYPHS
+                !$0.properties.isEmoji  // EMOJIS
+
+            }.reduce("") { $0 + String($1) })
+        }
+        else {
+            return displayName
         }
     }
     
@@ -308,7 +318,7 @@ extension Contact : Identifiable {
     }
     
     static func updateRelatedEvents(_ contact:Contact) {
-        let username = contact.username != "" ? contact.username : contact.authorName
+        let username = contact.username != "" ? contact.username : contact.anyName
         PubkeyUsernameCache.shared.setObject(for: contact.pubkey, value: username)
         
         let awaitingEvents = EventRelationsQueue.shared.getAwaitingBgEvents()
