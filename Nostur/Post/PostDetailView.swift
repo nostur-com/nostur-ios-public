@@ -460,13 +460,25 @@ struct DetailFooterFragment: View {
     var body: some View {
         Divider()
         HStack(spacing: 20) {
-            Text("**\(nrPost.mentionsCount)** reposts")//.onTapGesture { }
+//            HStack(spacing:5) {
+//                AnimatedNumber(number: nrPost.mentionsCount)
+//                    .fontWeight(.bold)
+//                Text("reposts")//.onTapGesture { }
+//            }
             
             NavigationLink(value: ViewPath.NoteReactions(id: nrPost.id)) {
-                Text("**\(nrPost.likesCount)** reactions")
+                HStack(spacing:5) {
+                    AnimatedNumber(number: nrPost.likesCount)
+                        .fontWeight(.bold)
+                    Text("reactions")
+                }
             }
             NavigationLink(value: ViewPath.NoteZaps(id: nrPost.id)) {
-                Text("**\(nrPost.zapsCount)** zaps")
+                HStack(spacing:5) {
+                    AnimatedNumber(number: nrPost.zapsCount)
+                        .fontWeight(.bold)
+                    Text("zaps")
+                }
             }
         
             Spacer()

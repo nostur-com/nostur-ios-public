@@ -619,6 +619,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                     let nrReplies = replies.map { NRPost(event: $0) }
                     DispatchQueue.main.async {
                         self.objectWillChange.send()
+                        self.repliesCount = Int64(nrReplies.count)
                         self.replies = nrReplies
                     }
                 }
@@ -649,6 +650,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             let nrReplies = self.event.replies_.map { NRPost(event: $0) }
             DispatchQueue.main.async {
                 self.objectWillChange.send()
+                self.repliesCount = Int64(nrReplies.count)
                 self.replies = nrReplies
             }
         }

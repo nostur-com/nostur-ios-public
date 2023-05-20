@@ -31,7 +31,7 @@ struct LightningButton: View {
         else {
             HStack {
                 Image("BoltIcon")
-                Text(tallyString).opacity(tally != 0 ? 1 : 0)
+                AnimatedNumberString(number: tallyString).opacity(tally == 0 ? 0 : 1)
             }
             .padding(5)
             .contentShape(Rectangle())
