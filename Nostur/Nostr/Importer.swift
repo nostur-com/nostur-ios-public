@@ -27,7 +27,6 @@ class Importer {
     
     init() {
         self.preloadExistingIdsCache()
-        print("\(existingIds.count) existing ids in cache")
         triggerImportWhenRelayMessagesAreAdded()
     }
     
@@ -51,6 +50,7 @@ class Importer {
         DataProvider.shared().bg.perform { [unowned self] in
             if let results = try? DataProvider.shared().bg.fetch(fr) {
                 self.existingIds = Set(results.map { $0.id })
+                print("\(self.existingIds.count) existing ids added to cache")
             }
         }
     }

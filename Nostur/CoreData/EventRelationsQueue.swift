@@ -29,57 +29,79 @@ class EventRelationsQueue {
     private var ctx:NSManagedObjectContext
     private var waitingEvents = Set<Event>() // Contains events only from background context
     private var waitingEventsSubject = CurrentValueSubject<Set<Event>, Never>([])
-    private var delayedRemove = PassthroughSubject<Event, Never>()
+//    private var delayedRemove = PassthroughSubject<Event, Never>()
     
     private var waitingContacts = Set<Contact>() // Contains events only from background context
     private var waitingContactsSubject = CurrentValueSubject<Set<Contact>, Never>([])
-    private var delayedContactRemove = PassthroughSubject<Contact, Never>()
+//    private var delayedContactRemove = PassthroughSubject<Contact, Never>()
     
     private var subscriptions = Set<AnyCancellable>()
     
     init() {
         ctx = DataProvider.shared().bg
-        delayedRemove
-            .delay(for: .seconds(5), scheduler: DispatchQueue.global())
-            .sink { [unowned self] event in
-                self.ctx.perform {
-                    self.waitingEvents.remove(event)
-                }
-            }
-            .store(in: &subscriptions)
+//        delayedRemove
+//            .delay(for: .seconds(5), scheduler: DispatchQueue.global())
+//            .sink { [unowned self] event in
+//                self.ctx.perform {
+//                    self.waitingEvents.remove(event)
+//                }
+//            }
+//            .store(in: &subscriptions)
         
-        delayedContactRemove
-            .delay(for: .seconds(5), scheduler: DispatchQueue.global())
-            .sink { [unowned self] contact in
-                self.ctx.perform {
-                    self.waitingContacts.remove(contact)
-                }
-            }
-            .store(in: &subscriptions)
+//        delayedContactRemove
+//            .delay(for: .seconds(5), scheduler: DispatchQueue.global())
+//            .sink { [unowned self] contact in
+//                self.ctx.perform {
+//                    self.waitingContacts.remove(contact)
+//                }
+//            }
+//            .store(in: &subscriptions)
     }
     
     
     /// Adds event to the queue waiting for related data that is being fetched
     /// - Parameter event: Event should be from .bg context, if not this function will fetch it from .bg using .objectID
     public func addAwaitingEvent(_ event:Event, debugInfo:String? = "") {
-        if event.managedObjectContext == ctx {
-            ctx.perform { [unowned self] in
-                self.waitingEvents.insert(event)
-                print("🟢🟢🟢 addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
+        let isBGevent = event.managedObjectContext == ctx
+        if Thread.isMainThread {
+            if isBGevent {
+                ctx.perform { [unowned self] in
+                    self.waitingEvents.insert(event)
+                    print("🟢🟢🟢🔴🔴 WRONG THREAD: addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
+                }
+            }
+            else {
+                ctx.perform { [unowned self] in
+                    guard let privateEvent = self.ctx.object(with: event.objectID) as? Event else { return }
+                    self.waitingEvents.insert(privateEvent)
+                    print("🟢🟢🟢🔴🔴 WRONG THREAD+MAINEVENT: addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
+                }
             }
         }
         else {
-            ctx.perform { [unowned self] in
+            if isBGevent {
+                self.waitingEvents.insert(event)
+                print("🟢🟢🟢🟢🟢 addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
+            }
+            else {
                 guard let privateEvent = self.ctx.object(with: event.objectID) as? Event else { return }
                 self.waitingEvents.insert(privateEvent)
-                print("🟢🟢🟢🔴🔴 WRONG CONTEXT: addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
+                print("🟢🟢🟢🟢🔴 WRONG MAINEVENT. addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
             }
         }
     }
     
+//    public func removeAwaitingEvent(_ event:Event) {
+//        // Don't remove immediatly, give a few extra seconds, maybe needs to fetch more than 1 relation
+//        self.delayedRemove.send(event)
+//    }
+    
     public func removeAwaitingEvent(_ event:Event) {
-        // Don't remove immediatly, give a few extra seconds, maybe needs to fetch more than 1 relation
-        self.delayedRemove.send(event)
+        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(5)) {
+            self.ctx.perform {
+                self.waitingEvents.remove(event)
+            }
+        }
     }
     
     /// Returns events that are waiting for relations to be updated, like .contact, .contacts, .replyTo etc
@@ -115,9 +137,17 @@ class EventRelationsQueue {
         }
     }
     
+//    public func removeAwaitingContact(_ contact:Contact) {
+//        // Don't remove immediatly, give a few extra seconds, maybe needs to fetch more than 1 relation
+//        self.delayedContactRemove.send(contact)
+//    }
+    
     public func removeAwaitingContact(_ contact:Contact) {
-        // Don't remove immediatly, give a few extra seconds, maybe needs to fetch more than 1 relation
-        self.delayedContactRemove.send(contact)
+        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(5)) {
+            self.ctx.perform {
+                self.waitingContacts.remove(contact)
+            }
+        }
     }
     
     /// Returns contacts that are waiting for info to be updated
