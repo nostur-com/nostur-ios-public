@@ -71,8 +71,8 @@ if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
                 let pubkeysOwn = Set(account.follows?.filter { !$0.privateFollow } .map({ c in c.pubkey }) ?? [])
                 let pubkeysRelay = Set(nEvent.pTags())
                 
-                print("🫂🫂 \(pubkeysOwn.joined(separator: ","))")
-                print("🫂🫂 \(pubkeysRelay.joined(separator: ","))")
+//                print("🫂🫂 \(pubkeysOwn.joined(separator: ","))")
+//                print("🫂🫂 \(pubkeysRelay.joined(separator: ","))")
                 
                 let removed = pubkeysOwn.subtracting(pubkeysRelay)
                 let added = pubkeysRelay.subtracting(pubkeysOwn)

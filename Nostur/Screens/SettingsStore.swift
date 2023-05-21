@@ -71,7 +71,6 @@ final class SettingsStore: ObservableObject {
         defaults.register(defaults: [
             Keys.lastMaintenanceTimestamp: 0,
             Keys.replaceNsecWithHunter2: true,
-            Keys.sleepGoal: 8,
             Keys.defaultZapAmount: 1000,
             Keys.hideEmojisInNames: false,
             Keys.hideBadges: false,
@@ -87,6 +86,7 @@ final class SettingsStore: ObservableObject {
 
         cancellable = NotificationCenter.default
             .publisher(for: UserDefaults.didChangeNotification)
+            .print("UserDefaults.didChangeNotificatio")
             .map { _ in () }
             .subscribe(objectWillChange)
     }
@@ -164,12 +164,6 @@ final class SettingsStore: ObservableObject {
     var defaultZapAmount: Double {
         set { defaults.set(newValue, forKey: Keys.defaultZapAmount) }
         get { defaults.double(forKey: Keys.defaultZapAmount) }
-    }
-
-    enum SleepTrackingMode: String, CaseIterable {
-        case low
-        case moderate
-        case aggressive
     }
 
     var defaultLightningWallet: LightningWallet {

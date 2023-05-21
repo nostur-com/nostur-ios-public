@@ -131,10 +131,10 @@ final class SocketPool: ObservableObject {
             return
         }
         if (message.type == .REQ) {
-            //            let read = sockets.values.filter { $0.read == true }.count
-            //            if read > 0 {
-            //                print("⬇️⬇️ REQ ON \(read) RELAYS: \(String(message.message.prefix(260)))")
-            //            }
+            let read = sockets.values.filter { $0.read == true }.count
+            if read > 0 && subscriptionId == nil {
+                print("⬇️⬇️ REQ ON \(read) RELAYS: \(String(message.message.prefix(260)))")
+            }
             //            print("⬇️⬇️ REQ ON \(read) RELAYS: \(String(message.message))")
         }
         
@@ -147,8 +147,12 @@ final class SocketPool: ObservableObject {
                 }
                 
                 if message.type == .REQ && managedClient.read { // REQ FOR ALL READ RELAYS
-                    if (!managedClient.isConnected) && (!managedClient.isConnecting) {
-                        managedClient.connect()
+                    if (!managedClient.isConnected) {
+                        if (!managedClient.isConnecting) {
+                            managedClient.connect()
+                        }
+                        /// hmm don't continue with .sendMessage (or does it queue until connection??? not sure...)
+                        continue
                     }
                     // skip if we already have an active subcription
                     if subscriptionId != nil && managedClient.activeSubscriptions.contains(subscriptionId!) { continue }
@@ -158,7 +162,9 @@ final class SocketPool: ObservableObject {
                             print("🏎️🏎️⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count)")
                         }
                     }
-                    print(" ⬇️⬇️ REQUESTING: \(String(message.message.prefix(260)))")
+                    if subscriptionId != nil {
+                        print(" ⬇️⬇️ REQUESTING: \(String(message.message.prefix(260)))")
+                    }
 //                    print("⬇️⬇️ REQUESTING: \(String(message.message))")
                     managedClient.client.sendMessage(message.message)
                 }
