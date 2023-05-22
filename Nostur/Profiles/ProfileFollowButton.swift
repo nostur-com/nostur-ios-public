@@ -46,13 +46,13 @@ struct ProfileFollowButton: View {
                 }
             } label: {
                 Text("Edit profile")
-                    .sheet(item: $editingAccount) { account in
-                        NavigationStack {
-                            AccountEditView(account: account)
-                        }
-                    }
             }
             .buttonStyle(NosturButton())
+            .sheet(item: $editingAccount) { account in
+                NavigationStack {
+                    AccountEditView(account: account)
+                }
+            }
         }
     }
 }

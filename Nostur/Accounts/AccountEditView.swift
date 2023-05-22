@@ -40,6 +40,7 @@ struct AccountEditView: View {
                     HStack {
                         ProfilePicPicker($account.picture, newPicture:$newPicture)
                             .offset(x: 20, y: 60)
+                            
                         Spacer()
                     }
                 }
@@ -167,7 +168,6 @@ struct AccountEditView: View {
                 Button("Cancel") {
                     dismiss()
                 }
-                .foregroundColor(Color.primary)
             }
             
             if let uploadError {
@@ -216,7 +216,6 @@ struct AccountEditView: View {
                     }
                     else {
                         Text("Save")
-                            .foregroundColor(Color.primary)
                     }
                 }
                 .disabled(uploading)
