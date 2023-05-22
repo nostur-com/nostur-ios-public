@@ -49,6 +49,10 @@ struct CircularProfileImage: View {
                     )
                 )
             }
+            .overlay(
+                Circle()
+                    .strokeBorder(Color.systemBackground, lineWidth: 2)
+            )
     }
 }
 
