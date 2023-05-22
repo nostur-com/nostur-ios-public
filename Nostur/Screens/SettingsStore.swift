@@ -33,7 +33,7 @@ final class SettingsStore: ObservableObject {
         static let defaultMediaUploadService = "media_upload_service"
     }
 
-    private let cancellable: Cancellable
+//    private let cancellable: Cancellable
     private let defaults: UserDefaults
 
     let objectWillChange = PassthroughSubject<Void, Never>()
@@ -84,11 +84,13 @@ final class SettingsStore: ObservableObject {
             Keys.statusBubble: false
         ])
 
-        cancellable = NotificationCenter.default
-            .publisher(for: UserDefaults.didChangeNotification)
-            .print("UserDefaults.didChangeNotificatio")
-            .map { _ in () }
-            .subscribe(objectWillChange)
+        // Don't use this anymore because re-renders too much, like when moving window on macOS
+        // Manually call objectWillChange.send() now for changes that need screen updates
+//        cancellable = NotificationCenter.default
+//            .publisher(for: UserDefaults.didChangeNotification)
+//            .print("UserDefaults.didChangeNotificatio")
+//            .map { _ in () }
+//            .subscribe(objectWillChange)
     }
     
     var defaultMediaUploadService: MediaUploadService {
@@ -112,42 +114,42 @@ final class SettingsStore: ObservableObject {
     }
     
     var hideBadges: Bool {
-        set { defaults.set(newValue, forKey: Keys.hideBadges) }
+        set { defaults.set(newValue, forKey: Keys.hideBadges); objectWillChange.send() }
         get { defaults.bool(forKey: Keys.hideBadges) }
     }
     
     var animatedPFPenabled: Bool {
-        set { defaults.set(newValue, forKey: Keys.animatedPFPenabled) }
+        set { defaults.set(newValue, forKey: Keys.animatedPFPenabled); objectWillChange.send() }
         get { defaults.bool(forKey: Keys.animatedPFPenabled) }
     }
     
     var rowFooterEnabled: Bool {
-        set { defaults.set(newValue, forKey: Keys.rowFooterEnabled) }
+        set { defaults.set(newValue, forKey: Keys.rowFooterEnabled); objectWillChange.send() }
         get { defaults.bool(forKey: Keys.rowFooterEnabled) }
     }
     
     var statusBubble: Bool {
-        set { defaults.set(newValue, forKey: Keys.statusBubble) }
+        set { defaults.set(newValue, forKey: Keys.statusBubble); objectWillChange.send() }
         get { defaults.bool(forKey: Keys.statusBubble) }
     }
     
     var autoScroll: Bool {
-        set { defaults.set(newValue, forKey: Keys.autoScroll) }
+        set { defaults.set(newValue, forKey: Keys.autoScroll); objectWillChange.send() }
         get { defaults.bool(forKey: Keys.autoScroll) }
     }
     
     var fullWidthImages: Bool {
-        set { defaults.set(newValue, forKey: Keys.fullWidthImages) }
+        set { defaults.set(newValue, forKey: Keys.fullWidthImages); objectWillChange.send() }
         get { defaults.bool(forKey: Keys.fullWidthImages) }
     }
 
     var hideEmojisInNames: Bool {
-        set { defaults.set(newValue, forKey: Keys.hideEmojisInNames) }
+        set { defaults.set(newValue, forKey: Keys.hideEmojisInNames); objectWillChange.send() }
         get { defaults.bool(forKey: Keys.hideEmojisInNames) }
     }
     
     var restrictAutoDownload: Bool {
-        set { defaults.set(newValue, forKey: Keys.restrictAutoDownload) }
+        set { defaults.set(newValue, forKey: Keys.restrictAutoDownload); objectWillChange.send() }
         get { defaults.bool(forKey: Keys.restrictAutoDownload) }
     }
     
