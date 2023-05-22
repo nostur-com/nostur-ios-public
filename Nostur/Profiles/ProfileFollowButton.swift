@@ -40,6 +40,7 @@ struct ProfileFollowButton: View {
         }
         else {
             Button {
+                guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
                 if let account = ns.account {
                     editingAccount = account
                 }
