@@ -40,8 +40,11 @@ struct ProfileBanner: View {
                             }
                             else {
                                 HStack {
-                                    Rectangle()
-                                        .foregroundColor(.gray)
+                                    LinearGradient(
+                                        gradient: Gradient(colors: [Color.systemBackground, Color("AccentColor")]),
+                                        startPoint: .bottom,
+                                        endPoint: .top
+                                    )
                                         .frame(width: width, height: BANNER_HEIGHT)
                                         .scaleEffect(1 + max(0,offset / BANNER_HEIGHT ), anchor: .bottom)
                                 }
@@ -49,8 +52,11 @@ struct ProfileBanner: View {
                         }
                         else {
                             HStack {
-                                Rectangle()
-                                    .foregroundColor(.gray)
+                                LinearGradient(
+                                    gradient: Gradient(colors: [Color.systemBackground, Color("AccentColor")]),
+                                    startPoint: .bottom,
+                                    endPoint: .top
+                                )
                                     .frame(width: width, height: BANNER_HEIGHT)
                                     .scaleEffect(1 + max(0,offset / BANNER_HEIGHT ), anchor: .bottom)
                             }
@@ -71,8 +77,11 @@ struct ProfileBanner: View {
                         }
                         else {
                             HStack {
-                                Rectangle()
-                                    .foregroundColor(.gray)
+                                LinearGradient(
+                                    gradient: Gradient(colors: [Color.systemBackground, Color("AccentColor")]),
+                                    startPoint: .bottom,
+                                    endPoint: .top
+                                )
                                     .frame(width: width, height: BANNER_HEIGHT)
                             }
                         }
@@ -82,8 +91,11 @@ struct ProfileBanner: View {
             }
             else {
                 HStack {
-                    Rectangle()
-                        .foregroundColor(.gray)
+                    LinearGradient(
+                        gradient: Gradient(colors: [Color.systemBackground, Color("AccentColor")]),
+                        startPoint: .bottom,
+                        endPoint: .top
+                    )
                         .frame(width: width, height: BANNER_HEIGHT)
 //                        .scaleEffect(1 + max(0,offset / BANNER_HEIGHT ), anchor: .bottom)
                 }
