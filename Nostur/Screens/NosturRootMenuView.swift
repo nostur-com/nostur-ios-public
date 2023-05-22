@@ -52,6 +52,10 @@ struct SideBar: View {
                                 .strokeBorder(Color.systemBackground, lineWidth: 3)
                         )
                         .offset(x: 10, y:37)
+                        .onTapGesture {
+                            navigateTo(ContactPath(key: account.publicKey))
+                            sm.showSidebar = false
+                        }
                 })
                 .overlay(alignment:.bottomTrailing) {
                     HStack(spacing: 10) {
