@@ -38,6 +38,7 @@ struct ProfileMediaView: View {
                 ForEach(imageUrls.indices, id: \.self) { index in
                     MediaThumb(imageUrls[index], size: squareSize)
                 }
+                Spacer()
             }
             .padding(10)
             .onAppear {
@@ -75,7 +76,7 @@ struct ProfileMediaView: View {
     //            fetchNewerTask.fetch()
             }
         }
-            .frame(minHeight: 800)
+        .frame(minHeight: 800)
     }
 }
 

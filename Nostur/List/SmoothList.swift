@@ -64,9 +64,7 @@ struct SmoothList: UIViewControllerRepresentable {
     
     func refresh(_ collectionViewHolder:CViewHolder, coordinator:Coordinator) {
         collectionViewHolder.dataSource = collectionViewHolder.createDataSource(lvm: coordinator.lvm)
-        
-        print("COUNTER WTF: \(coordinator.lvm.uuid.uuidString)")
-        
+    
         coordinator.subscriptions.removeAll()
         var newSnapshot = NSDiffableDataSourceSnapshot<SingleSection, String>()
         newSnapshot.appendSections([SingleSection.main])
@@ -78,9 +76,7 @@ struct SmoothList: UIViewControllerRepresentable {
             .filter({ posts in
                 posts.count != 0
             })
-            .sink { posts in
-                print("COUNTER SINKSINKSNISNK \(posts.count)")
-                
+            .sink { posts in                
                 guard let dataSource = collectionViewHolder.dataSource else { return }
                 var newSnapshot = NSDiffableDataSourceSnapshot<SingleSection, String>()
                 newSnapshot.appendSections([SingleSection.main])

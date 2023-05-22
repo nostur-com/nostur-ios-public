@@ -196,6 +196,7 @@ struct TabbedDetailContainer: View {
                                             SocketPool.shared.sendMessage(closeMessage)
                                         }
                                     }
+                                    // TODO make tabs identifyable, and make animation
                                     tm.tabs.remove(at: index)
                                 }, label: tm.tabs[safe: index] != nil ? "\(tabName(tab: tm.tabs[safe: index]!))" : "?")
                             .padding(.leading, index == 0 ? 30 : 0)

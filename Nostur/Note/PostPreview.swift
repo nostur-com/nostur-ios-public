@@ -30,7 +30,7 @@ struct PostPreview: View {
                 .onPreferenceChange(SizePreferenceKey.self) { size in
                     guard size.width > 0 else { return }
                     dim.listWidth = size.width
-                    print("🟣🟣🟣🟣🟣 NEW DETAIL WIDTH \(size.width) -- Scale: \(UIScreen.main.scale) ")
+//                    print("🟣🟣🟣🟣🟣 NEW DETAIL WIDTH \(size.width) -- Scale: \(UIScreen.main.scale) ")
                 }
             AnyStatus()
             PostRowDeletable(nrPost: nrPost)
