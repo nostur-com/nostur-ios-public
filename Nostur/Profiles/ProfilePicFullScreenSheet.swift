@@ -60,9 +60,11 @@ struct ProfilePicFullScreenSheet: View {
                         Spacer()
                         if let sharableImage {
                             ShareMediaButton(sharableImage: sharableImage)
+                                .zIndex(3)
                         }
                         else if let sharableGif {
                             ShareGifButton(sharableGif: sharableGif)
+                                .zIndex(3)
                         }
                         Image(systemName: "xmark.circle.fill")
                             .resizable()
@@ -75,6 +77,7 @@ struct ProfilePicFullScreenSheet: View {
                     }
                     Spacer()
                 }
+                .zIndex(30)
                 VStack {
                     if (pictureUrl.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
                         LazyImage(url: URL(string: pictureUrl)) { state in
