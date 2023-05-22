@@ -31,7 +31,7 @@ struct FollowingAndExplore: View { //, Equatable {
     }
     
     var body: some View {
-        let _ = Self._printChanges()
+//        let _ = Self._printChanges()
             VStack(spacing:0) {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing:0) {
@@ -58,39 +58,25 @@ struct FollowingAndExplore: View { //, Equatable {
                     }
                     .frame(width: dim.listWidth)
                 }
-                switch selectedSubTab {
-                    case "Following":
-                        if account.followingPublicKeys.count > 0 {
-                            ListViewContainer(vm: LVMManager.shared.followingLVM(forAccount: account))
-                        }
-                        else {
-                            ProgressView()
-                                .centered()
-                        }
-                    case "Explore":
-                        if ns.rawExplorePubkeys.count > 0 {
-                          ListViewContainer(vm: LVMManager.shared.exploreLVM(forAccount: account))
-                        }
-                        else {
-                            ProgressView()
-                                .centered()
-                        }
-                    case "List":
-                        if let list = selectedList {
-                            ListViewContainer(vm: LVMManager.shared.listLVM(forAccount: account, andList: list))
-                                .navigationTitle(list.name_)
-                                .id(list.subscriptionId)
-                        }
-                        else {
-                            ProgressView()
-                                .centered()
-                        }
-                    default:
-                        Text("🥪")
-                            .centered()
+                
+                ZStack {
+                    // FOLLOWING
+                    ListViewContainer(vm: LVMManager.shared.followingLVM(forAccount: account))
+                        .opacity(selectedSubTab == "Following" ? 1 : 0)
+                    
+                    // LISTS
+                    ForEach(lists) { list in
+                        ListViewContainer(vm: LVMManager.shared.listLVM(forAccount: account, andList: list))
+                            .navigationTitle(list.name_)
+                            .id(list.subscriptionId)
+                            .opacity(selectedSubTab == "List" && list == selectedList ? 1 : 0)
+                    }
 
-
+                    // EXPLORE
+                    ListViewContainer(vm: LVMManager.shared.exploreLVM(forAccount: account))
+                        .opacity(selectedSubTab == "Explore" ? 1 : 0)
                 }
+                
             }
             .onAppear {
                 if selectedSubTab == "List" {
