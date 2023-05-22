@@ -536,6 +536,7 @@ extension Event {
             request.fetchLimit = 1
             
             if let reactingToEvent = try context.fetch(request).first {
+                reactingToEvent.likesDidChange.send(reactingToEvent.likesCount)
                 event.reactionTo = reactingToEvent
                 event.reactionToId = reactingToEvent.id
             }
