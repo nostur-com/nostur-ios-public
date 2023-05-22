@@ -10,7 +10,6 @@ import SwiftUI
 struct FollowingAndExplore: View { //, Equatable {
     @EnvironmentObject var dim:DIMENSIONS
     @ObservedObject var account:Account
-    @EnvironmentObject var ns:NosturState
     @AppStorage("selected_tab") var selectedTab = "Main"
     @AppStorage("selected_subtab") var selectedSubTab = "Following"
     @AppStorage("selected_listId") var selectedListId = ""
@@ -61,7 +60,7 @@ struct FollowingAndExplore: View { //, Equatable {
                 
                 ZStack {
                     // FOLLOWING
-                    if (ns.followingPublicKeys.count <= 1) {
+                    if (account.followingPublicKeys.count <= 1) {
                         VStack {
                             Spacer()
                             Text("You are not following anyone yet, visit the explore tab and follow some people")
