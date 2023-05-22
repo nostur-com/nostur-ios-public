@@ -9,24 +9,23 @@ import SwiftUI
 
 struct PostOrThread: View {
     var nrPost: NRPost
-    let fullWidth:Bool
-    
-    init(nrPost: NRPost, fullWidth: Bool = false) {
-        self.nrPost = nrPost
-        self.fullWidth = fullWidth
-    }
+//    let fullWidth:Bool
+    @ObservedObject var settings:SettingsStore = .shared
 
     var body: some View {
         VStack(spacing:0) {
             ForEach(nrPost.parentPosts.indices, id:\.self) { index in
                 PostRowDeletable(nrPost: nrPost.parentPosts[index],
                         inThread: (nrPost.replyToId != nil && index != 0),
-                        connect: nrPost.parentPosts[index].replyToId != nil || index > 0 ? .both : .bottom, fullWidth: fullWidth, isDetail: false)
+                                 connect: nrPost.parentPosts[index].replyToId != nil || index > 0 ? .both : .bottom, fullWidth: settings.fullWidthImages, isDetail: false)
                     .id(nrPost.parentPosts[index].id)
             }
-            PostRowDeletable(nrPost: nrPost, inThread: nrPost.replyToId != nil && nrPost.parentPosts.count > 0, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: fullWidth, isDetail: false)
+            PostRowDeletable(nrPost: nrPost, inThread: nrPost.replyToId != nil && nrPost.parentPosts.count > 0, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false)
                 .id(nrPost.id)
         }
+        .boxShadow()
+        .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+        .padding(.vertical, 10)
     }
 }
 
