@@ -364,9 +364,9 @@ struct SmoothList: UIViewControllerRepresentable {
                 
                 if let firstIndex = indexPaths.min(by: { $0.row < $1.row }) {
                     if firstIndex.row < 1 { // not sure why just index 0 doesn't work 1% of the time
-                        print("COUNTER E: \(lvm.lvmCounter.count)")
+//                        print("COUNTER E: \(lvm.lvmCounter.count)")
                         lvm.lvmCounter.count = 0
-                        print("COUNTER EE: \(lvm.lvmCounter.count)")
+//                        print("COUNTER EE: \(lvm.lvmCounter.count)")
                         lvm.isAtTop = true
                     }
                     
@@ -494,7 +494,7 @@ final class CViewHolder {
                 guard let self = self else { return nil }
                 
                 guard let nrPost = lvm.lvmState.nrPostLeafs.first(where: { $0.id == identifier }) else {
-                    print("COUNTER 🧨 nrPostLeafs.count: \(lvm.lvmState.nrPostLeafs.count), cant find id: \(identifier)")
+//                    print("COUNTER 🧨 nrPostLeafs.count: \(lvm.lvmState.nrPostLeafs.count), cant find id: \(identifier)")
                     return collectionView.dequeueConfiguredReusableCell(using: MissingCellRegistration, for: indexPath, item: "🧨")
                 }
                 

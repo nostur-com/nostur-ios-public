@@ -29,11 +29,11 @@ class LVMState: ObservableObject {
             _nrPostLeafs = nrPostLeafs
         }
     }
-    @Published var _nrPostLeafs:[NRPost] = [] {
-        didSet {
-            print("COUNTER nrPostLeafs.count: \(nrPostLeafs.count) - state: \(state.rawValue)")
-        }
-    } // need nrPostLeafs + _nrPostLeafs because if we have .sink on just 1, the data source apply in SmoothList is empty...
+    @Published var _nrPostLeafs:[NRPost] = [] //{
+//        didSet {
+//            print("COUNTER nrPostLeafs.count: \(nrPostLeafs.count) - state: \(state.rawValue)")
+//        }
+//    } // need nrPostLeafs + _nrPostLeafs because if we have .sink on just 1, the data source apply in SmoothList is empty...
     @Published var initialIndex:Int = 0
     @Published var state:LVM.LIST_STATE = .INIT
 }
@@ -223,9 +223,9 @@ class LVM: NSObject, ObservableObject {
                     self.nrPostLeafsOnScreenIds = self.getAllObjectIds(leafThreads)
                     self.lvmState.initialIndex = self.getRestoreScrollIndex(leafThreads, lastAppearedId: self.restoreScrollToId) ?? 0
                     self.lvmState.nrPostLeafs = leafThreads
-                    print("COUNTER B: \(self.lvmCounter.count)")
+//                    print("COUNTER B: \(self.lvmCounter.count)")
                     self.lvmCounter.count = self.itemsAfterLastRead < 5 ? 0 : self.itemsAfterLastRead
-                    print("COUNTER BB: \(self.lvmCounter.count)")
+//                    print("COUNTER BB: \(self.lvmCounter.count)")
                 }
             }
             else {
@@ -313,9 +313,9 @@ class LVM: NSObject, ObservableObject {
         
         DispatchQueue.main.async {
             if !self.isAtTop || !SettingsStore.shared.autoScroll {
-                print("COUNTER C: \(self.lvmCounter.count)")
+//                print("COUNTER C: \(self.lvmCounter.count)")
                 self.lvmCounter.count += addedCount
-                print("COUNTER CC: \(self.lvmCounter.count)")
+//                print("COUNTER CC: \(self.lvmCounter.count)")
             }
         }
         
@@ -751,9 +751,9 @@ extension LVM {
                     let newNRPostLeaf = NRPost(event: event, withParents: true)
                     DispatchQueue.main.async {
                         self.lvmState.nrPostLeafs.insert(newNRPostLeaf, at: 0)
-                        print("COUNTER D: \(self.lvmCounter.count)")
+//                        print("COUNTER D: \(self.lvmCounter.count)")
                         self.lvmCounter.count = self.isAtTop && SettingsStore.shared.autoScroll ? 0 : (self.lvmCounter.count + 1)
-                        print("COUNTER DD: \(self.lvmCounter.count)")
+//                        print("COUNTER DD: \(self.lvmCounter.count)")
                     }
                 }
             }
@@ -795,7 +795,7 @@ extension LVM {
                 guard self.lastAppearedIndex != nil else { return }
                 guard self.lvmState.nrPostLeafs.count > 0 else { return }
                 
-                print("COUNTER . new lastAppearedId. Index is: \(self.lastAppearedIndex) ")
+//                print("COUNTER . new lastAppearedId. Index is: \(self.lastAppearedIndex) ")
                 
                 // Put onScreenSeen, so when when a new leaf for a long thread is inserted at top, it won't show all the parents you already seen again
                 if !self.onScreenSeen.contains(eventId) {
@@ -805,9 +805,9 @@ extension LVM {
                 // unread should only go down, not up
                 // only way to go up is when new posts are added.
                 if self.itemsAfterLastAppeared != 0 && self.itemsAfterLastAppeared < self.lvmCounter.count {
-                    print("COUNTER A: \(self.lvmCounter.count)")
+//                    print("COUNTER A: \(self.lvmCounter.count)")
                     self.lvmCounter.count = self.itemsAfterLastAppeared
-                    print("COUNTER AA: \(self.lvmCounter.count)")
+//                    print("COUNTER AA: \(self.lvmCounter.count)")
                     self.lastReadId = eventId
                 }
                 else if self.lastReadId == nil {

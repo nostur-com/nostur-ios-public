@@ -192,7 +192,6 @@
 		1FB448BE2965F3D000038671 /* NosturApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB448BD2965F3D000038671 /* NosturApp.swift */; };
 		1FB448C52965F3D000038671 /* NosturTabsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB448C42965F3D000038671 /* NosturTabsView.swift */; };
 		1FB448CB2965F3D200038671 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1FB448CA2965F3D200038671 /* Preview Assets.xcassets */; };
-		1FB4D3FD29BAF1A6004DB537 /* ListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB4D3FC29BAF1A6004DB537 /* ListView.swift */; };
 		1FB4D3FF29BB3C7E004DB537 /* ListUnreadCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB4D3FE29BB3C7E004DB537 /* ListUnreadCounter.swift */; };
 		1FB4FCD629B87D3D0034D03A /* ImageProcessing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB4FCD529B87D3D0034D03A /* ImageProcessing.swift */; };
 		1FB62D0E296FFF1400A0055B /* RelayEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB62D0D296FFF1400A0055B /* RelayEditView.swift */; };
@@ -248,6 +247,7 @@
 		1FC82F3629AE327700B81CE5 /* SmartRelayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC82F3529AE327700B81CE5 /* SmartRelayManager.swift */; };
 		1FCA273E299A6A1A00298881 /* LightningButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCA273D299A6A1A00298881 /* LightningButton.swift */; };
 		1FCC2F292A19275200202EFA /* NIP05Verifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCC2F282A19275200202EFA /* NIP05Verifier.swift */; };
+		1FCC2F2D2A1B2CD100202EFA /* ImageTesting1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCC2F2C2A1B2CD100202EFA /* ImageTesting1.swift */; };
 		1FCEA0B72999413C00A309DC /* Double+clean.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCEA0B62999413C00A309DC /* Double+clean.swift */; };
 		1FCFDDCB29FCC735005320B8 /* Share highlight with Nostur.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1FC7A54429FA46F000645FEF /* Share highlight with Nostur.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		1FCFDDD229FCEA91005320B8 /* HighlightComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCFDDD129FCEA91005320B8 /* HighlightComposer.swift */; };
@@ -501,7 +501,6 @@
 		1FB448C62965F3D200038671 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1FB448C82965F3D200038671 /* Nostur.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = Nostur.entitlements; path = Nostur/Nostur.entitlements; sourceTree = "<group>"; };
 		1FB448CA2965F3D200038671 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		1FB4D3FC29BAF1A6004DB537 /* ListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListView.swift; sourceTree = "<group>"; };
 		1FB4D3FE29BB3C7E004DB537 /* ListUnreadCounter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListUnreadCounter.swift; sourceTree = "<group>"; };
 		1FB4FCD529B87D3D0034D03A /* ImageProcessing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageProcessing.swift; sourceTree = "<group>"; };
 		1FB62D0D296FFF1400A0055B /* RelayEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayEditView.swift; sourceTree = "<group>"; };
@@ -558,6 +557,7 @@
 		1FC82F3529AE327700B81CE5 /* SmartRelayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartRelayManager.swift; sourceTree = "<group>"; };
 		1FCA273D299A6A1A00298881 /* LightningButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightningButton.swift; sourceTree = "<group>"; };
 		1FCC2F282A19275200202EFA /* NIP05Verifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP05Verifier.swift; sourceTree = "<group>"; };
+		1FCC2F2C2A1B2CD100202EFA /* ImageTesting1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ImageTesting1.swift; path = Nostur/ImageTesting1.swift; sourceTree = "<group>"; };
 		1FCEA0B62999413C00A309DC /* Double+clean.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Double+clean.swift"; sourceTree = "<group>"; };
 		1FCFDDD129FCEA91005320B8 /* HighlightComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightComposer.swift; sourceTree = "<group>"; };
 		1FD3DE0229BE325B007E1E6E /* PrivateNoteToggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateNoteToggle.swift; sourceTree = "<group>"; };
@@ -960,6 +960,7 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
+				1FCC2F2C2A1B2CD100202EFA /* ImageTesting1.swift */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1FB448C82965F3D200038671 /* Nostur.entitlements */,
 				1F313DED296980D8004C7366 /* Info.plist */,
@@ -1024,7 +1025,6 @@
 			isa = PBXGroup;
 			children = (
 				1FB4D3FE29BB3C7E004DB537 /* ListUnreadCounter.swift */,
-				1FB4D3FC29BAF1A6004DB537 /* ListView.swift */,
 				1FD8AD7429D87D0B00693302 /* ListViewContainer.swift */,
 				1F00E8C229C2FE7800797B78 /* LVM.swift */,
 				1FB6E6FC29E48109008BE8A6 /* LVMManager.swift */,
@@ -1465,6 +1465,7 @@
 				1FE5068E29B391CF006A16D8 /* FastAccountSwitcher.swift in Sources */,
 				1FC78F6729CA18410009C1C7 /* Ago.swift in Sources */,
 				1FC2DFEF29A9128D00C8A9DA /* MinimalNoteTextRenderView.swift in Sources */,
+				1FCC2F2D2A1B2CD100202EFA /* ImageTesting1.swift in Sources */,
 				1F1DCB8D2999290E0085223E /* LightningInvoice.swift in Sources */,
 				1F1ABC492981718700D03FA9 /* BookmarksView.swift in Sources */,
 				1FB130B329C0E5A4004AC98D /* NoteHeaderView.swift in Sources */,
@@ -1543,7 +1544,6 @@
 				1FB3FBA52A01673F0018CBD7 /* SingleVideoViewer.swift in Sources */,
 				1F45C7E829EE8FF100F58772 /* BannerPicPicker.swift in Sources */,
 				1FD49733297FCB5E0084F14E /* PreviewHelper.swift in Sources */,
-				1FB4D3FD29BAF1A6004DB537 /* ListView.swift in Sources */,
 				1F810B3529E67145006B1614 /* MutedWordsView.swift in Sources */,
 				1F14BA6E29854B8E00EACCD5 /* ContactList.swift in Sources */,
 				1FE9D2962A0E0F2200256B90 /* NRContentElementBuilder.swift in Sources */,
