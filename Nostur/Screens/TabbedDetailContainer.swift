@@ -239,7 +239,7 @@ struct TabbedDetailContainer: View {
                 }
             }
             .environmentObject(dim)
-            Spacer()
+//            Spacer()
         }
         .navigationBarTitle("")
         .navigationBarTitleDisplayMode(.inline)
