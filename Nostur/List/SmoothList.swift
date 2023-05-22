@@ -26,7 +26,7 @@ struct SmoothList: UIViewControllerRepresentable {
     //    private var onRowAppeared: RowAppearedCallback?
     //    private var onFinishedScrolling: FinishedScrollingCallback?
     
-    init(lvm:LVM, dim: DIMENSIONS) {
+    init(lvm:LVM, dim:DIMENSIONS) {
         self.lvm = lvm
         self.dim = dim
     }
@@ -56,9 +56,24 @@ struct SmoothList: UIViewControllerRepresentable {
             
             
         }
-        collectionViewHolder.dataSource = collectionViewHolder.createDataSource(lvm: coordinator.parent.lvm)
         
-        lvm.lvmState.$_nrPostLeafs
+//        refresh(collectionViewHolder, coordinator: coordinator)
+        
+        return collectionViewHolder
+    }
+    
+    func refresh(_ collectionViewHolder:CViewHolder, coordinator:Coordinator) {
+        collectionViewHolder.dataSource = collectionViewHolder.createDataSource(lvm: coordinator.lvm)
+        
+        print("COUNTER WTF: \(coordinator.lvm.uuid.uuidString)")
+        
+        coordinator.subscriptions.removeAll()
+        var newSnapshot = NSDiffableDataSourceSnapshot<SingleSection, String>()
+        newSnapshot.appendSections([SingleSection.main])
+        guard let dataSource = collectionViewHolder.dataSource else { return }
+        dataSource.apply(newSnapshot, animatingDifferences: false)
+        
+        coordinator.lvm.lvmState.$_nrPostLeafs
         //            .dropFirst()
             .filter({ posts in
                 posts.count != 0
@@ -76,8 +91,8 @@ struct SmoothList: UIViewControllerRepresentable {
                 dataSource.apply(newSnapshot, animatingDifferences: !isInitialApply) {
                     if (isInitialApply) { // Scroll to initial position
                         DispatchQueue.main.async {
-                            if (self.lvm.lvmState.initialIndex != 0) && (self.lvm.lvmState.initialIndex > 4) {
-                                collectionViewHolder.collectionView.scrollToItem(at: IndexPath(item: self.lvm.lvmState.initialIndex, section: 0), at: .top, animated: false)
+                            if (coordinator.lvm.lvmState.initialIndex != 0) && (coordinator.lvm.lvmState.initialIndex > 4) {
+                                collectionViewHolder.collectionView.scrollToItem(at: IndexPath(item: coordinator.lvm.lvmState.initialIndex, section: 0), at: .top, animated: false)
                             }
                             else {
                                 if !SettingsStore.shared.autoScroll {
@@ -90,67 +105,25 @@ struct SmoothList: UIViewControllerRepresentable {
                 }
             }
             .store(in: &coordinator.subscriptions)
-        
-        return collectionViewHolder
     }
     
     func makeCoordinator() -> Coordinator {
-        return Coordinator(parent: self)
+        return Coordinator(parent: self, lvm: self.lvm)
     }
     
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
-        
-        
-        //        print("🔴🔴🔴🔴🔴🔴 updateUIViewController 🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴")
-        
-        //        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-        
-        
-        
-        //            if needsRefresh, let collectionViewHolder = context.coordinator.collectionViewHolder {
-        //                print("COUNTER 🔴🔴🔴🔴🔴🔴 refreshData | initialIndex: \(initialIndex.description) 🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴")
-        //                refreshData(collectionViewHolder)
-        //                Task {
-        //                    needsRefresh = false
-        //                }
-        //            }
-        //
-        //            if needsScrollToTop, let ch = context.coordinator.collectionViewHolder {
-        //                print("🔴🔴🔴🔴🔴🔴 scrollToTop 🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴")
-        //                // do the scroll
-        //                ch.collectionView.setContentOffset(CGPoint(x:0, y: autoScroll ? 0 : SMOOTHLIST_AUTOSCROLL_OFFSET), animated: true)
-        //                Task {
-        //                    needsScrollToTop = false
-        //                }
-        //            }
-        
-        //            if needsScrollToIndex != nil, let ch = context.coordinator.collectionViewHolder {
-        //                print("🔴🔴🔴🔴🔴🔴 scrollToIndex 🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴")
-        //                if (needsScrollToIndex == 0) {
-        //                    ch.collectionView.setContentOffset(CGPoint(x:0, y: autoScroll ? 0 : SMOOTHLIST_AUTOSCROLL_OFFSET), animated: true)
-        //                }
-        //                else {
-        //                    ch.collectionView.scrollToItem(at: IndexPath(item: needsScrollToIndex!, section: 0), at: .top, animated: false)
-        //                }
-        //
-        //                Task {
-        //                    needsScrollToIndex = nil
-        //                }
-        //            }
-        //        }
+        print("🔴🔴🔴🔴🔴🔴 updateUIViewController 🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴")
+        // TODO: add check to know of we should refresh???
+        if let cvh = context.coordinator.collectionViewHolder {
+            context.coordinator.lvm = lvm
+            refresh(cvh, coordinator: context.coordinator)
+        }
     }
     
-    //    private func fullReload(_ collectionViewHolder: CollectionViewHolderType) {
-    //        collectionViewHolder.collectionView.reloadData()
-    //    }
-    //    private func refreshData(_ collectionViewHolder: CollectionViewHolderType) {
-    //
-    //
-    //    }
-    //
     final class Coordinator: NSObject, UICollectionViewDelegate, UIScrollViewDelegate, UICollectionViewDataSourcePrefetching, UICollectionViewDelegateFlowLayout { //, UICollectionViewDataSource {
         var subscriptions = Set<AnyCancellable>()
         let parent: SmoothList
+        var lvm: LVM
         var collectionViewHolder: CollectionViewHolderType?
         var scrollTimer: Timer?
         var prefetcher:ImagePrefetcher
@@ -161,7 +134,8 @@ struct SmoothList: UIViewControllerRepresentable {
         private let debounceInterval: TimeInterval = 0.3 // Adjust this value to control the throttling
         
         
-        init(parent: SmoothList) {
+        init(parent: SmoothList, lvm: LVM) {
+            self.lvm = lvm
             self.parent = parent
             
             self.prefetcher = ImagePrefetcher(pipeline: ImageProcessing.shared.content)
@@ -181,7 +155,7 @@ struct SmoothList: UIViewControllerRepresentable {
             //            var imageRequestsPFPnotFollowing:[ImageRequest] = []
             
             for indexPath in indexPaths {
-                guard let item =  self.parent.lvm.lvmState.nrPostLeafs[safe: indexPath.row] else { continue }
+                guard let item = lvm.lvmState.nrPostLeafs[safe: indexPath.row] else { continue }
                 
                 if item.missingPs.count > 0 {
                     EventRelationsQueue.shared.addAwaitingEvent(item.event, debugInfo: "SmoothList.001 - missingPs: \(item.missingPs.count)")
@@ -265,7 +239,7 @@ struct SmoothList: UIViewControllerRepresentable {
             //            var imageRequestsPFPnotFollowing:[ImageRequest] = []
             
             for indexPath in indexPaths {
-                guard let item = self.parent.lvm.lvmState.nrPostLeafs[safe: indexPath.row] else { continue }
+                guard let item = lvm.lvmState.nrPostLeafs[safe: indexPath.row] else { continue }
                 
                 if item.missingPs.count > 0 {
                     QueuedFetcher.shared.dequeue(pTags: item.missingPs)
@@ -367,8 +341,8 @@ struct SmoothList: UIViewControllerRepresentable {
                 lastCalledTimestamp = currentTime
                 
                 // Your throttled code here
-                if let lastAppearedId = self.parent.lvm.lvmState.nrPostLeafs[safe: indexPath.row]?.id {
-                    self.parent.lvm.lastAppearedIdSubject.send(lastAppearedId)
+                if let lastAppearedId = lvm.lvmState.nrPostLeafs[safe: indexPath.row]?.id {
+                    lvm.lastAppearedIdSubject.send(lastAppearedId)
                 }
                 // TODO: new onRowAppeard..
                 //                parent.onRowAppeared?((sectionIndex: indexPath.section, itemIndex: indexPath.row))
@@ -387,21 +361,21 @@ struct SmoothList: UIViewControllerRepresentable {
                 return
             }
             if scrollView.contentOffset.y > 150 {
-                self.parent.lvm.isAtTop = false
+                lvm.isAtTop = false
                 //                print("IS AT TOP FALSE")
             }
             else {
                 
                 if let firstIndex = indexPaths.min(by: { $0.row < $1.row }) {
                     if firstIndex.row < 1 { // not sure why just index 0 doesn't work 1% of the time
-                        print("COUNTER E: \(self.parent.lvm.lvmCounter.count)")
-                        self.parent.lvm.lvmCounter.count = 0
-                        print("COUNTER EE: \(self.parent.lvm.lvmCounter.count)")
-                        self.parent.lvm.isAtTop = true
+                        print("COUNTER E: \(lvm.lvmCounter.count)")
+                        lvm.lvmCounter.count = 0
+                        print("COUNTER EE: \(lvm.lvmCounter.count)")
+                        lvm.isAtTop = true
                     }
                     
-                    if let lastAppearedId = self.parent.lvm.lvmState.nrPostLeafs[safe: firstIndex.row]?.id {
-                        self.parent.lvm.lastAppearedIdSubject.send(lastAppearedId)
+                    if let lastAppearedId = lvm.lvmState.nrPostLeafs[safe: firstIndex.row]?.id {
+                        lvm.lastAppearedIdSubject.send(lastAppearedId)
                     }
                 }
                 

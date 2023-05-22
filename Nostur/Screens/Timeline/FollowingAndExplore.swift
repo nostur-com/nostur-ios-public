@@ -61,8 +61,25 @@ struct FollowingAndExplore: View { //, Equatable {
                 
                 ZStack {
                     // FOLLOWING
-                    ListViewContainer(vm: LVMManager.shared.followingLVM(forAccount: account))
-                        .opacity(selectedSubTab == "Following" ? 1 : 0)
+                    if (ns.followingPublicKeys.count <= 1) {
+                        VStack {
+                            Spacer()
+                            Text("You are not following anyone yet, visit the explore tab and follow some people")
+                                .multilineTextAlignment(.center)
+                                .padding(.all, 30.0)
+                            
+                            Button {
+                                selectedSubTab = "Explore"
+                            } label: {
+                                Text("Explore")
+                            }.buttonStyle(.borderedProminent)
+                            Spacer()
+                        }
+                    }
+                    else {
+                        ListViewContainer(vm: LVMManager.shared.followingLVM(forAccount: account))
+                            .opacity(selectedSubTab == "Following" ? 1 : 0)
+                    }
                     
                     // LISTS
                     ForEach(lists) { list in
@@ -88,7 +105,7 @@ struct FollowingAndExplore: View { //, Equatable {
                     }
                 }
             }
-            .navigationTitle(selectedSubTab)
+            .navigationTitle(selectedSubTab == "List" ? (selectedList?.name_ ?? "List") : selectedSubTab)
 //            .navigationBarHidden(true)
             .navigationBarTitleDisplayMode(.inline)
     }

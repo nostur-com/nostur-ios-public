@@ -310,13 +310,15 @@ class LVM: NSObject, ObservableObject {
             self.fetchAllMissingPs(newLeafThreads)
         }
         
-        if !self.isAtTop || !SettingsStore.shared.autoScroll {
-            DispatchQueue.main.async {
+        
+        DispatchQueue.main.async {
+            if !self.isAtTop || !SettingsStore.shared.autoScroll {
                 print("COUNTER C: \(self.lvmCounter.count)")
                 self.lvmCounter.count += addedCount
                 print("COUNTER CC: \(self.lvmCounter.count)")
             }
         }
+        
     }
     
     func fetchAllMissingPs(_ posts:[NRPost]) {
@@ -356,7 +358,9 @@ class LVM: NSObject, ObservableObject {
             timeoutCommand: { [weak self] (taskId) in
                 guard let self = self else { return }
 //                print("🟠🟠 timeout.. should just render whatever \(danglers.compactMap { $0.event.replyTo_ == nil }.count)")
-                self.putNewThreadsOnScreen(danglers)
+                DispatchQueue.main.async {
+                    self.putNewThreadsOnScreen(danglers)
+                }
             })
 
         backlog.add(danglingFetchTask)
@@ -487,8 +491,8 @@ class LVM: NSObject, ObservableObject {
             ls!.listId = listId
             ls!.pubkey = pubkey
             ls!.updatedAt = Date.now
-            do { try ctx.save() }
-            catch { print("could not save new listState") }
+//            do { try ctx.save() }
+//            catch { print("could not save new listState") }
         }
         
         self.listStateObjectId = ls!.objectID

@@ -11,11 +11,12 @@ import SwiftUI
 
 struct ListViewContainer: View {
     
-    let vm:LVM    
+    @EnvironmentObject var dim:DIMENSIONS
+    var vm:LVM
     
     var body: some View {
-        let _ = Self._printChanges()
-        ListView(vm:vm)
+//        let _ = Self._printChanges()
+        SmoothList(lvm: vm, dim: dim)
             .overlay(alignment: .topTrailing) {
                 ListUnreadCounter(vmCounter: vm.lvmCounter)
                     .padding(.trailing, 10)
@@ -24,12 +25,6 @@ struct ListViewContainer: View {
 
 //        .background(Color.cyan) // Somehow becomes bottom tabbar background color
     }
-}
-
-enum ListType {
-    case account
-    case explore
-    case list
 }
 
 struct What: View {
