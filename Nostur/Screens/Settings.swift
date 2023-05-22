@@ -8,6 +8,7 @@
 import SwiftUI
 import Combine
 import CoreData
+import Nuke
 
 struct Settings: View {
     @EnvironmentObject var ns: NosturState
@@ -45,6 +46,11 @@ struct Settings: View {
     
     @State var sliderValue = 0.0
     @State var deleteAccountIsShown = false
+    
+    @State var pfpSize = "Calculating..."
+    @State var contentSize = "Calculating..."
+    @State var bannerSize = "Calculating..."
+    @State var badgesSize = "Calculating..."
 
     var body: some View {
 
@@ -163,6 +169,89 @@ struct Settings: View {
                         } catch {
                             let nsError = error as NSError
                             fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+                        }
+                    }
+                }
+            }
+            
+            Section(header: Text("Caches")) {
+                HStack {
+                    Text("Profile pictures: \(pfpSize)")
+                        .task(priority: .medium) {
+                            let cache = ImageProcessing.shared.pfp.configuration.dataCache as! DataCache
+                            pfpSize = "\((cache.totalSize / 1024 / 1024)) MB"
+                        }
+                    Spacer()
+                    Button("Clear") {
+                        pfpSize = "Clearing..."
+                        Task.detached(priority: .userInitiated) {
+                            let cache = ImageProcessing.shared.pfp.configuration.dataCache as! DataCache
+                            cache.removeAll()
+                            cache.flush()
+                            Task { @MainActor in
+                                pfpSize = "\((cache.totalSize / 1024 / 1024)) MB"
+                                settings.objectWillChange.send()
+                            }
+                        }
+                    }
+                }
+                HStack {
+                    Text("Post content: \(contentSize)")
+                        .task(priority: .medium) {
+                            let cache = ImageProcessing.shared.content.configuration.dataCache as! DataCache
+                            contentSize = "\((cache.totalSize / 1024 / 1024)) MB"
+                        }
+                    Spacer()
+                    Button("Clear") {
+                        contentSize = "Clearing..."
+                        Task.detached(priority: .userInitiated) {
+                            let cache = ImageProcessing.shared.content.configuration.dataCache as! DataCache
+                            cache.removeAll()
+                            cache.flush()
+                            Task { @MainActor in
+                                contentSize = "\((cache.totalSize / 1024 / 1024)) MB"
+                                settings.objectWillChange.send()
+                            }
+                        }
+                    }
+                }
+                HStack {
+                    Text("Profile banners: \(bannerSize)")
+                        .task(priority: .medium) {
+                            let cache = ImageProcessing.shared.banner.configuration.dataCache as! DataCache
+                            bannerSize = "\((cache.totalSize / 1024 / 1024)) MB"
+                        }
+                    Spacer()
+                    Button("Clear") {
+                        bannerSize = "Clearing..."
+                        Task.detached(priority: .userInitiated) {
+                            let cache = ImageProcessing.shared.banner.configuration.dataCache as! DataCache
+                            cache.removeAll()
+                            cache.flush()
+                            Task { @MainActor in
+                                bannerSize = "\((cache.totalSize / 1024 / 1024)) MB"
+                                settings.objectWillChange.send()
+                            }
+                        }
+                    }
+                }
+                HStack {
+                    Text("Badges: \(badgesSize)")
+                        .task(priority: .medium) {
+                            let cache = ImageProcessing.shared.badges.configuration.dataCache as! DataCache
+                            badgesSize = "\((cache.totalSize / 1024 / 1024)) MB"
+                        }
+                    Spacer()
+                    Button("Clear") {
+                        badgesSize = "Clearing..."
+                        Task.detached(priority: .userInitiated) {
+                            let cache = ImageProcessing.shared.badges.configuration.dataCache as! DataCache
+                            cache.removeAll()
+                            cache.flush()
+                            Task { @MainActor in
+                                badgesSize = "\((cache.totalSize / 1024 / 1024)) MB"
+                                settings.objectWillChange.send()
+                            }
                         }
                     }
                 }
