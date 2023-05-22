@@ -942,15 +942,17 @@ extension LVM {
     
     // MARK: FROM DB TO SCREEN STEP 1: FETCH REQUEST
     func performLocalFetch(refreshInBackground:Bool = false) {
+        var mostRecentEvent:Event? = self.lvmState.nrPostLeafs.first?.event
+        let visibleOrInRefreshInBackground = self.viewIsVisible || refreshInBackground
         let ctx = DataProvider.shared().bg
         ctx.perform { [weak self] in
             guard let self = self else { return }
             //        print("🏎️🏎️ \(Date.now) performLocalFetch \(self.subscriptionId)")
-            if let mostRecent = self.lvmState.nrPostLeafs.first {
+            if let mostRecentEvent = mostRecentEvent {
                 //            print("🟢🟢🟢🟢🟢🟢 from mostRecent \(mostRecent.id)")
-                let fr = Event.postsByPubkeys(self.pubkeys, mostRecent: mostRecent.event)
+                let fr = Event.postsByPubkeys(self.pubkeys, mostRecent: mostRecentEvent)
                 
-                if self.viewIsVisible || refreshInBackground {
+                if visibleOrInRefreshInBackground {
                     guard let posts = try? ctx.fetch(fr) else { return }
                     self.setUnorderedEvents(events: self.filterMutedWords(posts))
                 }
@@ -959,7 +961,7 @@ extension LVM {
                 //            print("🟢🟢🟢🟢🟢🟢 from lastAppearedCreatedAt \(self.lastAppeared?.created_at ?? 0)")
                 let fr = Event.postsByPubkeys(self.pubkeys, lastAppearedCreatedAt: self.lastAppearedCreatedAt ?? 0)
                 
-                if self.viewIsVisible || refreshInBackground {
+                if visibleOrInRefreshInBackground {
                     guard let posts = try? ctx.fetch(fr) else { return }
                     self.setUnorderedEvents(events: self.filterMutedWords(posts))
                 }
