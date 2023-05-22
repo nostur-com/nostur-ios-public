@@ -192,17 +192,17 @@ struct PostAndParent: View {
 //                                ReplyingToFragmentView(nrPost: nrPost)
 //                                    .padding(.vertical, 3)
                                 switch nrPost.kind {
-                                    case 9802:
+                                    case 9802: // highlight
                                         HighlightRenderer(nrPost: nrPost)
                                         .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                                    case 1,6,9734:
+                                    case 1,6,9734: // text, repost, zap request
                                         ContentRenderer(nrPost: nrPost, isDetail: true, availableWidth: dim.availablePostDetailRowImageWidth())
                                             .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                                             .contentShape(Rectangle())
                                             .onTapGesture {
                                                 navigateTo(nrPost)
                                             }
-                                    case 1063:
+                                    case 1063: // File Metadata
                                         NoteTextRenderView(nrPost: nrPost)
                                     default:
                                         Label("kind \(Double(nrPost.kind).clean) type not (yet) supported", systemImage: "exclamationmark.triangle.fill")

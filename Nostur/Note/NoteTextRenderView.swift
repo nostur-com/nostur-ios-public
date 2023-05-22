@@ -32,6 +32,9 @@ struct NoteTextRenderView: View {
                        }
                 }
             }
+            else if nrPost.kind == 9802 {
+                HighlightRenderer(nrPost: nrPost)
+            }
             else if nrPost.kind != 1 && nrPost.kind != 6 {
                 VStack {
                     Label("kind \(Double(nrPost.kind).clean) type not (yet) supported", systemImage: "exclamationmark.triangle.fill")
