@@ -45,7 +45,7 @@ class MessageParser {
                         guard let nEvent = message.event else { print("🔴🔴 uhh, where is nEvent "); return }
                         
                         let sameMessageInQueue = self.messageBucket.contains(where: {
-                            $0.type == .EVENT && nEvent.id == $0.event?.id
+                             nEvent.id == $0.event?.id && $0.type == .EVENT
                         })
                         if (sameMessageInQueue) {
                             return

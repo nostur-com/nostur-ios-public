@@ -53,7 +53,7 @@ struct Maintenance {
     
         let lastMaintenanceTimestamp = Date(timeIntervalSince1970: TimeInterval(SettingsStore.shared.lastMaintenanceTimestamp))
         let hoursAgo = Date(timeIntervalSinceNow: (-24 * 60 * 60))
-//        guard lastMaintenanceTimestamp < hoursAgo else { L.maintenance.info("Skipping maintenance"); return } // don't do maintenance more than once every 24 hours
+        guard lastMaintenanceTimestamp < hoursAgo else { L.maintenance.info("Skipping maintenance"); return } // don't do maintenance more than once every 24 hours
         SettingsStore.shared.lastMaintenanceTimestamp = Int(Date.now.timeIntervalSince1970)
         L.maintenance.info("Starting maintenance")
         

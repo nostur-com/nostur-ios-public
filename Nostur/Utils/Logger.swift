@@ -16,5 +16,6 @@ class L {
     static let importing = Logger(subsystem: "com.nostur.Nostur", category: "Importing")
     static let rerender = Logger(subsystem: "com.nostur.Nostur", category: "Rerendering")
     static let maintenance = Logger(subsystem: "com.nostur.Nostur", category: "Maintenance")
+    static let fetching = Logger(subsystem: "com.nostur.Nostur", category: "Fetching")
 }
 
