@@ -10,13 +10,14 @@ import Combine
 
 class NIP05Verifier {
     static let shared = NIP05Verifier()
-    private let maxConcurrentRequests = 3
-    private let bufferSize = 100
+    private let maxConcurrentRequests = 2
+    private let bufferSize = 50
     private var verifySubject = PassthroughSubject<Contact, Never>()
     
     private var cancellables = Set<AnyCancellable>()
     
     public static var fourWeeksAgo = Date.now.addingTimeInterval(-(28 * 86400))
+    private var decoder = JSONDecoder()
     
     init() {
         verifySubject
@@ -52,9 +53,8 @@ class NIP05Verifier {
             }
             .filter { (task, data) in data != nil }
             .sink { (task, data) in
-                let decoder = JSONDecoder()
-                if let nostrJson = try? decoder.decode(NostrJson.self, from: data!) {
-                    DataProvider.shared().bg.perform {
+                DataProvider.shared().bg.perform {
+                    if let nostrJson = try? self.decoder.decode(NostrJson.self, from: data!) {
                         if let pubkey = nostrJson.names[task.name] {
                             if pubkey != "" && pubkey == task.contact.pubkey {
                                 task.contact.objectWillChange.send()
@@ -75,6 +75,10 @@ if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
     return
 }
 #endif
+        if contact.managedObjectContext == DataProvider.shared().bg {
+            self.verifySubject.send(contact)
+        }
+        
         DataProvider.shared().bg.perform { [unowned self] in
             if let privateContact = DataProvider.shared().bg.object(with: contact.objectID) as? Contact {
                 print("nip05: going to verify \(privateContact.nip05 ?? "") for \(privateContact.pubkey)")
