@@ -12,17 +12,21 @@ import SwiftUI
 struct ListViewContainer: View {
     
     @EnvironmentObject var dim:DIMENSIONS
-    var vm:LVM
+    @ObservedObject var vm:LVM
     
     var body: some View {
 //        let _ = Self._printChanges()
-        SmoothList(lvm: vm, dim: dim)
-            .overlay(alignment: .topTrailing) {
-                ListUnreadCounter(vmCounter: vm.lvmCounter)
-                    .padding(.trailing, 10)
-                    .padding(.top, 5)
+        ZStack {
+            SmoothList(lvm: vm, dim: dim)
+                .overlay(alignment: .topTrailing) {
+                    ListUnreadCounter(vmCounter: vm.lvmCounter)
+                        .padding(.trailing, 10)
+                        .padding(.top, 5)
+                }
+            if vm.state == .INIT {
+                CenteredProgressView()
             }
-
+        }
 //        .background(Color.cyan) // Somehow becomes bottom tabbar background color
     }
 }

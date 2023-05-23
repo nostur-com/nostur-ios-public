@@ -19,7 +19,7 @@ class LVM: NSObject, ObservableObject {
     //        nrPostLeafs.flatMap { $0.parentPosts.map { $0 } + [$0] }
     //    }
         
-    var state:LVM.LIST_STATE = .INIT
+    @Published var state:LVM.LIST_STATE = .INIT
     var didSetNrPostLeafs = PassthroughSubject<Void, Never>()
     var nrPostLeafs:[NRPost] = [] {
         didSet {
@@ -176,6 +176,7 @@ class LVM: NSObject, ObservableObject {
         let leafsAndParentIdsOnScreen = leafsAndParentIdsOnScreen
         let leafIdsOnScreen = leafIdsOnScreen
         let currentNRPostLeafs = self.nrPostLeafs // viewContext. First (0) is newest
+        let onScreenSeen = self.onScreenSeen
         
         context.perform { [weak self] in
             guard let self = self else { return }
@@ -204,11 +205,11 @@ class LVM: NSObject, ObservableObject {
             print("Transformed \(transformedObjectIds.count) posts")
 
             if currentNRPostLeafs.count == 0 {
-                let leafThreads = self.renderLeafs(added) // Transforms seperate posts into threads, .id for each thread is leaf.id
+                let leafThreads = self.renderLeafs(added, onScreenSeen:onScreenSeen) // Transforms seperate posts into threads, .id for each thread is leaf.id
                                 
                 DispatchQueue.main.async {
                     self.initialIndex = self.getRestoreScrollIndex(leafThreads, lastAppearedId: self.restoreScrollToId) ?? 0
-                    L.sl.debug("⭐️ LVM.initialIndex: \(self.initialIndex)")
+                    L.sl.info("⭐️ LVM.initialIndex: \(self.initialIndex)")
                     self.nrPostLeafs = leafThreads
 //                    print("COUNTER B: \(self.lvmCounter.count)")
                     self.lvmCounter.count = self.itemsAfterLastRead < 5 ? 0 : self.itemsAfterLastRead
@@ -216,7 +217,7 @@ class LVM: NSObject, ObservableObject {
                 }
             }
             else {
-                let newLeafThreadsWithMissingParents = self.renderNewLeafs(added, onScreen:currentNRPostLeafs)
+                let newLeafThreadsWithMissingParents = self.renderNewLeafs(added, onScreen:currentNRPostLeafs, onScreenSeen: onScreenSeen)
                 
                 let (danglers, newLeafThreads) = extractDanglingReplies(newLeafThreadsWithMissingParents)
 //                self.needsReplyTo.append(contentsOf: danglers)
@@ -359,7 +360,7 @@ class LVM: NSObject, ObservableObject {
         print("Skip render and fetch related of \(ids.joined(separator: ",")) first.")
     }
     
-    func renderLeafs(_ nrPosts:[NRPost]) -> [NRPost] {
+    func renderLeafs(_ nrPosts:[NRPost], onScreenSeen:Set<String>) -> [NRPost] {
         let sortedByLongest = nrPosts.sorted(by: { $0.parentPosts.count > $1.parentPosts.count })
 
         var renderedIds = [String]()
@@ -404,13 +405,13 @@ class LVM: NSObject, ObservableObject {
 //            .sorted(by: { $0.parentPosts.first?.created_at ?? $0.created_at > $1.parentPosts.first?.created_at ?? $1.created_at })
     }
     
-    func renderNewLeafs(_ nrPosts:[NRPost], onScreen:[NRPost]) -> [NRPost] {
+    func renderNewLeafs(_ nrPosts:[NRPost], onScreen:[NRPost], onScreenSeen:Set<String>) -> [NRPost] {
         let onScreenLeafIds = onScreen.map { $0.id }
         let onScreenAllIds = onScreen.flatMap { [$0.id] + $0.parentPosts.map { $0.id } }
         
         
         // First do same as first fetch
-        let nrPostLeafs = self.renderLeafs(nrPosts)
+        let nrPostLeafs = self.renderLeafs(nrPosts, onScreenSeen: onScreenSeen)
         
         
         // Then remove everything that is already on screen
@@ -771,9 +772,7 @@ extension LVM {
 //                print("COUNTER . new lastAppearedId. Index is: \(self.lastAppearedIndex) ")
                 
                 // Put onScreenSeen, so when when a new leaf for a long thread is inserted at top, it won't show all the parents you already seen again
-                if !self.onScreenSeen.contains(eventId) {
-                    self.onScreenSeen.insert(eventId)
-                }
+                self.onScreenSeen.insert(eventId)
                 
                 // unread should only go down, not up
                 // only way to go up is when new posts are added.
@@ -846,7 +845,7 @@ extension LVM {
             listState.mostRecentAppearedId = lastReadId
             listState.updatedAt = Date.now
             listState.leafs = leafs
-            L.sl.debug("⭐️ saveListState: lastAppearedId: \(lastAppearedId?.description.prefix(11) ?? "??") (index: \(self.lastAppearedIndex?.description ?? "??"))")
+            L.sl.info("⭐️ saveListState: lastAppearedId: \(lastAppearedId?.description.prefix(11) ?? "??") (index: \(self.lastAppearedIndex?.description ?? "??"))")
             do {
                 try context.save()
             }
@@ -918,7 +917,7 @@ extension LVM {
     
     // MARK: FROM DB TO SCREEN STEP 1: FETCH REQUEST
     func performLocalFetch(refreshInBackground:Bool = false) {
-        var mostRecentEvent:Event? = self.nrPostLeafs.first?.event
+        let mostRecentEvent:Event? = self.nrPostLeafs.first?.event
         let visibleOrInRefreshInBackground = self.viewIsVisible || refreshInBackground
         let ctx = DataProvider.shared().bg
         ctx.perform { [weak self] in
