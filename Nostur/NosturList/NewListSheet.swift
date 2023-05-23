@@ -48,6 +48,7 @@ struct NewListSheet: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Next") {
                     newList = NosturList(context: DataProvider.shared().viewContext)
+                    newList?.id = UUID()
                     newList?.name = title
                     contactSelectionVisible = true
                 }

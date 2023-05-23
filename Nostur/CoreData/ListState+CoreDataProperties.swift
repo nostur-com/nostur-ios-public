@@ -28,6 +28,13 @@ extension ListState {
 }
 
 extension ListState : Identifiable {
+    
+    var leafIds:[String] {
+        if let leafs = self.leafs {
+            return leafs.split(separator: ",").map { String($0) }
+        }
+        return []
+    }
 
     static func fetchListState(_ pubkey:String? = nil, listId:String, context:NSManagedObjectContext) -> ListState? {
         let r = ListState.fetchRequest()

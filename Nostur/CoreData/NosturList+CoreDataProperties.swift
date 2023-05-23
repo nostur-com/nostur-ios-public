@@ -16,6 +16,7 @@ extension NosturList {
         return NSFetchRequest<NosturList>(entityName: "NosturList")
     }
 
+    @NSManaged public var id: UUID?
     @NSManaged public var createdAt: Date?
     @NSManaged public var name: String?
     @NSManaged public var refreshedAt: Date?
@@ -34,8 +35,9 @@ extension NosturList {
     }
     
     var subscriptionId:String {
-        let idLength = objectID.description.count
-        return "List-" + String(objectID.description.prefix(min(idLength,18)))
+        let id = id?.uuidString ?? "UNKNOWN"
+        let idLength = id.count
+        return "List-" + String(id.prefix(min(idLength,18)))
     }
 }
 

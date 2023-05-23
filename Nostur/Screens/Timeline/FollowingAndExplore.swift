@@ -89,7 +89,7 @@ struct FollowingAndExplore: View { //, Equatable {
                     }
 
                     // EXPLORE
-                    ListViewContainer(vm: LVMManager.shared.exploreLVM(forAccount: account))
+                    ListViewContainer(vm: LVMManager.shared.exploreLVM())
                         .opacity(selectedSubTab == "Explore" ? 1 : 0)
                 }
                 

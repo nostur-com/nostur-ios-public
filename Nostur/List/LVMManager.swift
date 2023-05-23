@@ -34,13 +34,6 @@ class LVMManager {
                 self.listVMs.removeAll(where: { $0.pubkey != account.publicKey })
             }
             .store(in: &subscriptions)
-        
-//        receiveNotification(.followersChanged)
-//            .sink { notification in
-//                guard let account = notification.object as? Account else { return }
-//                self.listVMs.removeAll(where: { $0.pubkey == account.publicKey })
-//            }
-//            .store(in: &subscriptions)
     }
     
     func followingLVM(forAccount account:Account) -> LVM {
@@ -51,11 +44,11 @@ class LVMManager {
         listVMs.append(lvm)
         return lvm
     }
-    func exploreLVM(forAccount account:Account) -> LVM {
-        if let lvm = listVMs.first(where: { $0.pubkey == account.publicKey && $0.id == "Explore" }) {
+    func exploreLVM() -> LVM {
+        if let lvm = listVMs.first(where: { $0.id == "Explore" }) {
             return lvm
         }
-        let lvm = LVM(pubkey: account.publicKey, pubkeys: NosturState.shared.explorePubkeys, listId: "Explore")
+        let lvm = LVM(pubkeys: NosturState.shared.explorePubkeys, listId: "Explore")
         listVMs.append(lvm)
         return lvm
     }

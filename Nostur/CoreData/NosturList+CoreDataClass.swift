@@ -20,4 +20,9 @@ public class NosturList: NSManagedObject {
             list.addToContacts(NSSet(array: contacts.randomSample(count: 10)))
         }
     }
+    
+    static func fetchLists(context:NSManagedObjectContext) -> [NosturList] {
+        let request = NSFetchRequest<NosturList>(entityName: "NosturList")
+        return (try? context.fetch(request)) ?? []
+    }
 }

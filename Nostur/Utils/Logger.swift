@@ -15,5 +15,6 @@ class L {
     static let sockets = Logger(subsystem: "com.nostur.Nostur", category: "Sockets")
     static let importing = Logger(subsystem: "com.nostur.Nostur", category: "Importing")
     static let rerender = Logger(subsystem: "com.nostur.Nostur", category: "Rerendering")
+    static let maintenance = Logger(subsystem: "com.nostur.Nostur", category: "Maintenance")
 }
 

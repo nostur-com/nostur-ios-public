@@ -50,12 +50,15 @@ struct Maintenance {
     //TODO: Find out which tags can be deleted..
     static func maintenance(context:NSManagedObjectContext) {
         
+    
         let lastMaintenanceTimestamp = Date(timeIntervalSince1970: TimeInterval(SettingsStore.shared.lastMaintenanceTimestamp))
         let hoursAgo = Date(timeIntervalSinceNow: (-24 * 60 * 60))
-        guard lastMaintenanceTimestamp < hoursAgo else { return } // don't do maintenance more than once every 24 hours
+//        guard lastMaintenanceTimestamp < hoursAgo else { L.maintenance.info("Skipping maintenance"); return } // don't do maintenance more than once every 24 hours
         SettingsStore.shared.lastMaintenanceTimestamp = Int(Date.now.timeIntervalSince1970)
+        L.maintenance.info("Starting maintenance")
         
         context.perform {
+            
             let frA = Account.fetchRequest()
             let allAccounts = Array(try! context.fetch(frA))
             let ownAccountPubkeys = allAccounts.reduce([String]()) { partialResult, account in
@@ -91,6 +94,52 @@ struct Maintenance {
             let xDaysAgo = Date.now.addingTimeInterval(-4 * 86400) // 4 days
             
             
+            // TODO: Move list maintaince to after: guard lastMaintenanceTimestamp ...
+            
+            // Steps .. get ALL list states (This is ordered by most recent updated at)
+            let listStates = ListState.fetchListStates(context: context)
+            
+            // ListStates we don't delete are in this bag:
+            var keepListStates:[ListState] = []
+            
+            // Keep 1 (most recent) "Explore", it is not tied to account
+            if let explore = listStates.first(where: { $0.listId == "Explore"}) {
+                keepListStates.append(explore)
+            }
+            // For every account keep the most recent "Following"
+            ownAccountPubkeys.forEach {  pubkey in
+                if let following = listStates.first(where: { $0.listId == "Following" && $0.pubkey == pubkey}) {
+                    keepListStates.append(following)
+                }
+            }
+            // For every NosturList, keep most recent
+            let nosturLists = NosturList.fetchLists(context: context)
+            nosturLists.forEach { nosturList in
+                if nosturList.id == nil {
+                    nosturList.id = UUID()
+                }
+                if let list = listStates.first(where: { $0.listId == nosturList.subscriptionId }) {
+                    keepListStates.append(list)
+                }
+            }
+            
+            // Ok, now delete all listStates not in keepListStates
+            var deletedLists = 0
+            var postsIdToKeep = Set<String>()
+            listStates.forEach { listState in
+                if !keepListStates.contains(listState) {
+                    context.delete(listState)
+                    deletedLists += 1
+                }
+                else {
+                    postsIdToKeep = postsIdToKeep.union(Set(listState.leafIds))
+                }
+            }
+            
+            L.maintenance.info("Deleted \(deletedLists) old list states")
+            L.maintenance.info("Going to keep \(postsIdToKeep.count) posts that are part of listState.leafs")
+          
+            
             
             // CLEAN UP EVENTS WITHOUT SIG (BUG FROM PostPreview)
             let frNoSig = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
@@ -102,10 +151,10 @@ struct Maintenance {
             do {
                 let result = try context.execute(frNoSigbatchDelete) as! NSBatchDeleteResult
                 if ((result.result as? Int ?? 0) > 0) {
-                    print("🧹🧹 Deleted \(result.result!) events without signature")
+                    L.maintenance.info("🧹🧹 Deleted \(result.result.debugDescription) events without signature")
                 }
             } catch {
-                print("🔴🔴 Failed to delete events without signature")
+                L.maintenance.info("🔴🔴 Failed to delete events without signature")
             }
             
             
@@ -119,8 +168,11 @@ struct Maintenance {
             // DONT DELETE MUTED BLOCKED, SO OUR BLOCK LIST STILL FUNCTIONS....
             // TODO: DONT EXPORT MUTED / BLOCKED. KEEP HERE SO WE DONT HAVE TO KEEP ..REPARSING
             
+            // Ids to keep: own bookmarks, privatenotes, leafs from list states
+            let mergedIds = Set(ownAccountBookmarkIds).union(Set(ownAccountPrivateNoteEventIds)).union(postsIdToKeep)
+            
             let fr16 = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
-            fr16.predicate = NSPredicate(format: "created_at < %i AND kind IN {1,6,9802} AND NOT id IN %@ AND NOT id IN %@ AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountBookmarkIds, ownAccountPrivateNoteEventIds, ownAccountPubkeys, regex)
+            fr16.predicate = NSPredicate(format: "created_at < %i AND kind IN {1,6,9802} AND NOT id IN %@ AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), mergedIds, ownAccountPubkeys, regex)
             
             let fr16batchDelete = NSBatchDeleteRequest(fetchRequest: fr16)
             fr16batchDelete.resultType = .resultTypeCount
@@ -128,10 +180,10 @@ struct Maintenance {
             do {
                 let result = try context.execute(fr16batchDelete) as! NSBatchDeleteResult
                 if ((result.result as? Int ?? 0) > 0) {
-                    print("🧹🧹 Deleted \(result.result!) kind {1,6,1,6,9802} events")
+                    L.maintenance.info("🧹🧹 Deleted \(result.result.debugDescription) kind {1,6,1,6,9802} events")
                 }
             } catch {
-                print("🔴🔴 Failed to delete {1,6,1,9802} data")
+                L.maintenance.info("🔴🔴 Failed to delete {1,6,1,9802} data")
             }
             
             
@@ -139,7 +191,7 @@ struct Maintenance {
             //                try context.save()
             //            }
             //            catch {
-            //                print("maintenance error on save(): \(error)")
+            //                L.maintenance.info("maintenance error on save(): \(error)")
             //            }
             //
             
@@ -158,10 +210,10 @@ struct Maintenance {
             do {
                 let result = try context.execute(fr9734batchDelete) as! NSBatchDeleteResult
                 if ((result.result as? Int ?? 0) > 0) {
-                    print("🧹🧹 Deleted \(result.result!) kind {9734,8,7} events")
+                    L.maintenance.info("🧹🧹 Deleted \(result.result.debugDescription) kind {9734,8,7} events")
                 }
             } catch {
-                print("🔴🔴 Failed to delete 9734,7,8 data")
+                L.maintenance.info("🔴🔴 Failed to delete 9734,7,8 data")
             }
             //            }
             
@@ -169,7 +221,7 @@ struct Maintenance {
             //                try context.save()
             //            }
             //            catch {
-            //                print("maintenance error on save(): \(error)")
+            //                L.maintenance.info("maintenance error on save(): \(error)")
             //            }
             
             // KIND 9735
@@ -185,10 +237,10 @@ struct Maintenance {
             do {
                 let result = try context.execute(fr9735batchDelete) as! NSBatchDeleteResult
                 if ((result.result as? Int ?? 0) > 0) {
-                    print("🧹🧹 Deleted \(result.result!) kind 9735 events")
+                    L.maintenance.info("🧹🧹 Deleted \(result.result.debugDescription) kind 9735 events")
                 }
             } catch {
-                print("🔴🔴 Failed to delete 9734 data")
+                L.maintenance.info("🔴🔴 Failed to delete 9734 data")
             }
             //            }
             
@@ -196,7 +248,7 @@ struct Maintenance {
             //                try context.save()
             //            }
             //            catch {
-            //                print("maintenance error on save(): \(error)")
+            //                L.maintenance.info("maintenance error on save(): \(error)")
             //            }
             
             
@@ -213,10 +265,10 @@ struct Maintenance {
             do {
                 let result = try context.execute(fr0batchDelete) as! NSBatchDeleteResult
                 if ((result.result as? Int ?? 0) > 0) {
-                    print("🧹🧹 Deleted \(result.result!) kind=0 events")
+                    L.maintenance.info("🧹🧹 Deleted \(result.result.debugDescription) kind=0 events")
                 }
             } catch {
-                print("🔴🔴 Failed to delete kind=0 data")
+                L.maintenance.info("🔴🔴 Failed to delete kind=0 data")
             }
             //            }
             
@@ -224,7 +276,7 @@ struct Maintenance {
             //                try context.save()
             //            }
             //            catch {
-            //                print("maintenance error on save(): \(error)")
+            //                L.maintenance.info("maintenance error on save(): \(error)")
             //            }
             //
             // DELETE OLDER KIND 3 EVENTS
@@ -252,12 +304,12 @@ struct Maintenance {
             
             do {
                 if forDeletion.count > 0 {
-                    print("🧹🧹 Deleted \(forDeletion.count) kind 3 events")
+                    L.maintenance.info("🧹🧹 Deleted \(forDeletion.count) kind 3 events")
                 }
                 try context.save()
             }
             catch {
-                print("🧹🧹 🔴🔴 maintenance error on save(), nothing deleted: \(error)")
+                L.maintenance.info("🧹🧹 🔴🔴 maintenance error on save(), nothing deleted: \(error)")
             }
         }
     }
@@ -287,7 +339,7 @@ struct Maintenance {
                         }
                         if metaData.banner != nil {
                             contact.banner = metaData.banner!
-                            print("🟡🟡 Updated banner \(metaData.banner!) for \(contact.pubkey)")
+                            L.maintenance.info("🟡🟡 Updated banner \(metaData.banner!) for \(contact.pubkey)")
                         }
                     }
                 }
@@ -295,7 +347,7 @@ struct Maintenance {
             }
             
             catch let error {
-                print("😢😢😢 XX \(error)")
+                L.maintenance.info("😢😢😢 XX \(error)")
             }
         }
     }
@@ -309,7 +361,7 @@ struct Maintenance {
         //                r.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)]
         //
         //                guard let allContacts = try? r.execute() else {
-        //                    print("😢 XX")
+        //                    L.maintenance.info("😢 XX")
         //                    return
         //                }
         //
@@ -319,7 +371,7 @@ struct Maintenance {
         //
         //                try DataProvider.shared().container.viewContext.save()
         //            } catch let error  {
-        //                print("😢😢😢 XX \(error)")
+        //                L.maintenance.info("😢😢😢 XX \(error)")
         //            }
         //        }
     }
