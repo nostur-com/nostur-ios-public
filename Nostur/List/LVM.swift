@@ -46,7 +46,7 @@ class LVM: NSObject, ObservableObject {
     var id:String // "Following", "Explore", "List-0xb893daf22106244b"
     
     var listStateObjectId:NSManagedObjectID?
-    var pubkey:String
+    var pubkey:String?
     var pubkeys:Set<String>
     
     // for performance, .map .prefix(10) can maybe cause microhang with many pubkeys
@@ -462,29 +462,40 @@ class LVM: NSObject, ObservableObject {
     var lvmCounter = LVMCounter()
     var restoreLeafs:String?
     
-    init(pubkey:String, pubkeys:Set<String>, listId:String) {
+    init(pubkey:String? = nil, pubkeys:Set<String>, listId:String) {
         self.pubkey = pubkey
         self.pubkeys = pubkeys
         self.id = listId
         super.init()
         
         let ctx = DataProvider.shared().viewContext
+        let bg = DataProvider.shared().bg
         var ls:ListState?
-        ls = ListState.fetchListState(pubkey, listId: listId, context: ctx)
-        
-        if (ls == nil) {
-            ls = ListState(context: ctx)
-            ls!.listId = listId
-            ls!.pubkey = pubkey
-            ls!.updatedAt = Date.now
-//            do { try ctx.save() }
-//            catch { print("could not save new listState") }
+        if let pubkey {
+            ls = ListState.fetchListState(pubkey, listId: listId, context: ctx)
+        }
+        else {
+            ls = ListState.fetchListState(listId: listId, context: ctx)
         }
         
-        self.listStateObjectId = ls!.objectID
-        self.lastReadId = ls!.mostRecentAppearedId
-        self.lastAppearedIdSubject.send(ls!.lastAppearedId)
-        self.restoreLeafs = ls!.leafs
+        if (ls == nil) {
+            bg.perform {
+                ls = ListState(context: bg)
+                ls!.listId = listId
+                ls!.pubkey = pubkey
+                ls!.updatedAt = Date.now
+                do { try bg.save() }
+                catch { print("could not save new listState") }
+                self.listStateObjectId = ls!.objectID
+            }
+        }
+        else {
+            self.listStateObjectId = ls!.objectID
+            self.lastReadId = ls!.mostRecentAppearedId
+            self.lastAppearedIdSubject.send(ls!.lastAppearedId)
+            self.restoreLeafs = ls!.leafs
+        }
+        
         if (self.restoreLeafs != nil) {
 //            self.lvmState.state = .AWAITING_RESTORED_FETCH
             self.restoreScrollToId = ls!.lastAppearedId
@@ -863,7 +874,7 @@ extension LVM {
                 try context.save()
             }
             catch {
-                print("🔴🔴 Error saving list state \(self.id) \(listState.pubkey)")
+                print("🔴🔴 Error saving list state \(self.id) \(listState.pubkey ?? "")")
             }
         }
     }

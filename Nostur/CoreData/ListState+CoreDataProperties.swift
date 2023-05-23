@@ -16,7 +16,7 @@ extension ListState {
         return NSFetchRequest<ListState>(entityName: "ListState")
     }
 
-    @NSManaged public var pubkey: String
+    @NSManaged public var pubkey: String?
     @NSManaged public var listId: String
     @NSManaged public var lastAppearedAtAnchor: String
     @NSManaged public var lastAppearedId: String?
@@ -29,10 +29,15 @@ extension ListState {
 
 extension ListState : Identifiable {
 
-    static func fetchListState(_ pubkey:String, listId:String, context:NSManagedObjectContext) -> ListState? {
+    static func fetchListState(_ pubkey:String? = nil, listId:String, context:NSManagedObjectContext) -> ListState? {
         let r = ListState.fetchRequest()
         r.sortDescriptors = [NSSortDescriptor(keyPath: \ListState.updatedAt, ascending: false)]
-        r.predicate = NSPredicate(format: "pubkey == %@ AND listId = %@", pubkey, listId)
+        if let pubkey {
+            r.predicate = NSPredicate(format: "pubkey == %@ AND listId = %@", pubkey, listId)
+        }
+        else {
+            r.predicate = NSPredicate(format: "listId = %@", listId)
+        }
         return try? context.fetch(r).first
     }
 }
