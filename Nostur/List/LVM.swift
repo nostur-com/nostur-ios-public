@@ -11,34 +11,28 @@ import Combine
 
 let LVM_MAX_VISIBLE = 250 // Will only be ignored if last appeared is older
 
-class LVMState: ObservableObject {
-//    @Published var listId = "Following"
-//    @Published var isAtTop = true
-//    @Published var restoreScrollToAnchor = "BOTTOM"  // @TODO: Maybe doesn't need to be @Published?
-    
-    
-    // because we no longer have just posts, but threads with parents on screen
-    // we can no longer just ask 5 before or after, we need to flatten the threads
-    var flattenedPostsOnScreen:[NRPost] {
-        nrPostLeafs.flatMap { $0.parentPosts.map { $0 } + [$0] }
-    }
-    
-    // LAST IS OLDEST, NEWEST IS AT TOP (FIRST
-    var nrPostLeafs:[NRPost] = [] {
-        didSet {
-            _nrPostLeafs = nrPostLeafs
-        }
-    }
-    @Published var _nrPostLeafs:[NRPost] = [] //{
-//        didSet {
-//            print("COUNTER nrPostLeafs.count: \(nrPostLeafs.count) - state: \(state.rawValue)")
-//        }
-//    } // need nrPostLeafs + _nrPostLeafs because if we have .sink on just 1, the data source apply in SmoothList is empty...
-    @Published var state:LVM.LIST_STATE = .INIT
-}
 
 //@MainActor
 class LVM: NSObject, ObservableObject {
+    
+    //    var flattenedPostsOnScreen:[NRPost] {
+    //        nrPostLeafs.flatMap { $0.parentPosts.map { $0 } + [$0] }
+    //    }
+        
+    var state:LVM.LIST_STATE = .INIT
+    var didSetNrPostLeafs = PassthroughSubject<Void, Never>()
+    var nrPostLeafs:[NRPost] = [] {
+        didSet {
+            leafsAndParentIdsOnScreen = self.getAllObjectIds(nrPostLeafs)
+            leafIdsOnScreen = Set(nrPostLeafs.map { $0.id })
+            didSetNrPostLeafs.send()
+        }
+    }
+    var leafsAndParentIdsOnScreen:Set<String> = [] // Should always be in sync with nrPostLeafs
+    var leafIdsOnScreen:Set<String> = []
+    var onScreenSeen:Set<NRPostID> = []
+    var alreadySkipped = false
+    var danglingObjectIds:Set<NRPostID> = [] // posts that are transformed, but somehow not on screen. either we put on on screen or not, dont transform over and over again, so for some reason these are not on screen, dont know why. keep track here and dont transform again
     
     let ot:NewOnboardingTracker = .shared
     
@@ -59,14 +53,6 @@ class LVM: NSObject, ObservableObject {
             return selectedSubTab == "List" && selectedListId == id
         }
         return selectedSubTab == id
-    }
-    var state:LIST_STATE {
-        get { lvmState.state }
-        set {
-            DispatchQueue.main.async {
-                self.lvmState.state = newValue
-            }
-        }
     }
     
     // @AppStorage things
@@ -91,7 +77,7 @@ class LVM: NSObject, ObservableObject {
     func didAppear() {
         print("🟢🟢 \(self.id) didAppear")
         self.restoreSubscription()
-        if lvmState.nrPostLeafs.count == 0 {
+        if nrPostLeafs.count == 0 {
             if (self.restoreLeafs != nil) {
                 self.performLocalRestoreFetch()
             }
@@ -120,24 +106,16 @@ class LVM: NSObject, ObservableObject {
     var lastAppearedIdSubject = CurrentValueSubject<String?, Never>(nil) // Need it for debounce etc
     var lastAppearedIndex:Int? {
         lastAppearedIdSubject.value != nil
-        ? lvmState.nrPostLeafs.firstIndex(where: { $0.id == self.lastAppearedIdSubject.value! })
+        ? nrPostLeafs.firstIndex(where: { $0.id == self.lastAppearedIdSubject.value! })
         : nil
     }
     var lastReadId:String? // so we dont have to fetch from different context by objectId if we want to save ListState in background
-    var lastReadIdIndex:Int? { lastReadId != nil ? lvmState.nrPostLeafs.firstIndex(where: { $0.id == self.lastReadId! }) : nil }
+    var lastReadIdIndex:Int? { lastReadId != nil ? nrPostLeafs.firstIndex(where: { $0.id == self.lastReadId! }) : nil }
     
     private var subscriptions = Set<AnyCancellable>()
     
     var startRenderingSubject = CurrentValueSubject<[Event], Never>([])
-    
-    var onScreenSeen:Set<NRPostID> = []
-    var alreadySkipped = false
-    var danglingObjectIds:Set<NRPostID> = [] // posts that are transformed, but somehow not on screen. either we put on on screen or not, dont transform over and over again, so for some reason these are not on screen, dont know why. keep track here and dont transform again
-    
     var didCatchup = false
-    
-    var nrPostLeafsOnScreenIds:Set<String> = [] // Should always be in sync with lvmState.nrPostLeafs
-    
     var backlog = Backlog()
     
     private func getAllObjectIds(_ nrPosts:[NRPost]) -> Set<NRPostID> {
@@ -195,9 +173,9 @@ class LVM: NSObject, ObservableObject {
         let context = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" ? DataProvider.shared().viewContext : DataProvider.shared().bg // Should be use shared().bg instead??
         
         // onScreenIds includes leafs and parents, so all posts.
-        let onScreenIds = getAllObjectIds(self.lvmState.nrPostLeafs)
-        let onScreenLeafIds = self.lvmState.nrPostLeafs.map { $0.id }
-        let currentNRPostLeafs = self.lvmState.nrPostLeafs // viewContext. First (0) is newest
+        let leafsAndParentIdsOnScreen = leafsAndParentIdsOnScreen
+        let leafIdsOnScreen = leafIdsOnScreen
+        let currentNRPostLeafs = self.nrPostLeafs // viewContext. First (0) is newest
         
         context.perform { [weak self] in
             guard let self = self else { return }
@@ -206,7 +184,7 @@ class LVM: NSObject, ObservableObject {
             var transformedObjectIds = Set<NRPostID>()
             for event in events {
 //                guard !danglingObjectIds.contains(event.objectID) else { continue } // Skip if the post is already on screen
-                guard !onScreenIds.contains(event.id) else {
+                guard !leafsAndParentIdsOnScreen.contains(event.id) else {
                     if let existingNRPost = currentNRPostLeafs.first(where: { $0.id == event.id }) {
                         newNRPostLeafs.append(existingNRPost)
                     }
@@ -229,10 +207,9 @@ class LVM: NSObject, ObservableObject {
                 let leafThreads = self.renderLeafs(added) // Transforms seperate posts into threads, .id for each thread is leaf.id
                                 
                 DispatchQueue.main.async {
-                    self.nrPostLeafsOnScreenIds = self.getAllObjectIds(leafThreads)
                     self.initialIndex = self.getRestoreScrollIndex(leafThreads, lastAppearedId: self.restoreScrollToId) ?? 0
                     print("⭐️ LVM.initialIndex: \(self.initialIndex)")
-                    self.lvmState.nrPostLeafs = leafThreads
+                    self.nrPostLeafs = leafThreads
 //                    print("COUNTER B: \(self.lvmCounter.count)")
                     self.lvmCounter.count = self.itemsAfterLastRead < 5 ? 0 : self.itemsAfterLastRead
 //                    print("COUNTER BB: \(self.lvmCounter.count)")
@@ -247,22 +224,24 @@ class LVM: NSObject, ObservableObject {
                 if danglers.count > 0 {
                     fetchParents(danglers)
                 }
-                putNewThreadsOnScreen(newLeafThreads, onScreenLeafIds:onScreenLeafIds, currentNRPostLeafs: currentNRPostLeafs)
-                
+                putNewThreadsOnScreen(newLeafThreads, leafIdsOnScreen:leafIdsOnScreen, currentNRPostLeafs: currentNRPostLeafs)
             }
         }
     }
     
-    func safeInsert(_ nrPosts:[NRPost], onScreenLeafIds:[String]) -> [NRPost] {
-        let onlyNew = nrPosts.filter { !onScreenLeafIds.contains($0.id) }
-        self.lvmState.nrPostLeafs.insert(contentsOf: onlyNew, at: 0)
+    func safeInsert(_ nrPosts:[NRPost]) -> [NRPost] {
+        let leafIdsOnScreen = Set(self.nrPostLeafs.map { $0.id })
+        let onlyNew = nrPosts
+            .filter { !leafIdsOnScreen.contains($0.id) }
+            .uniqued(on: { $0.id })
+        self.nrPostLeafs.insert(contentsOf: onlyNew, at: 0)
         return onlyNew
     }
     
     var isAtTop = true
     
-    func putNewThreadsOnScreen(_ newLeafThreadsWithDuplicates:[NRPost], onScreenLeafIds:[String], currentNRPostLeafs:[NRPost]) {
-        let newLeafThreads = newLeafThreadsWithDuplicates.filter { !onScreenLeafIds.contains($0.id) }
+    func putNewThreadsOnScreen(_ newLeafThreadsWithDuplicates:[NRPost], leafIdsOnScreen:Set<String>, currentNRPostLeafs:[NRPost]) {
+        let newLeafThreads = newLeafThreadsWithDuplicates.filter { !leafIdsOnScreen.contains($0.id) }
         let diff = newLeafThreadsWithDuplicates.count - newLeafThreads.count
         if diff > 0 {
             print("putNewThreadsOnScreen: skipped \(diff) duplicates")
@@ -280,14 +259,14 @@ class LVM: NSObject, ObservableObject {
             let dropCount = min(newLeafThreads.count,dropLimit)
             let newNRPostLeafs = newLeafThreads + currentNRPostLeafs.dropLast(dropCount)
             DispatchQueue.main.async {
-                let inserted = self.safeInsert(newNRPostLeafs, onScreenLeafIds:onScreenLeafIds)
+                let inserted = self.safeInsert(newNRPostLeafs)
                 self.fetchAllMissingPs(inserted)
             }
             print("Removed \(dropCount) from the end")
         }
         else {
             DispatchQueue.main.async {
-                let inserted = self.safeInsert(newLeafThreads, onScreenLeafIds:onScreenLeafIds)
+                let inserted = self.safeInsert(newLeafThreads)
                 self.fetchAllMissingPs(inserted)
             }
             self.fetchAllMissingPs(newLeafThreads)
@@ -343,9 +322,7 @@ class LVM: NSObject, ObservableObject {
 //                print("🟠🟠 timeout.. should just render whatever \(danglers.compactMap { $0.event.replyTo_ == nil }.count)")
 
                 DispatchQueue.main.async {
-                    let onScreenLeafIds = self.lvmState.nrPostLeafs.map { $0.id }
-                    let currentNRPostLeafs = self.lvmState.nrPostLeafs // viewContext. First (0) is newest
-                    self.putNewThreadsOnScreen(danglers, onScreenLeafIds: onScreenLeafIds, currentNRPostLeafs: currentNRPostLeafs)
+                    self.putNewThreadsOnScreen(danglers, leafIdsOnScreen: self.leafIdsOnScreen, currentNRPostLeafs: self.nrPostLeafs)
                 }
             })
 
@@ -458,7 +435,6 @@ class LVM: NSObject, ObservableObject {
             .sorted(by: { $0.created_at > $1.created_at })
     }
     
-    var lvmState = LVMState()
     var lvmCounter = LVMCounter()
     var restoreLeafs:String?
     
@@ -497,9 +473,9 @@ class LVM: NSObject, ObservableObject {
         }
         
         if (self.restoreLeafs != nil) {
-//            self.lvmState.state = .AWAITING_RESTORED_FETCH
+//            self.state = .AWAITING_RESTORED_FETCH
             self.restoreScrollToId = ls!.lastAppearedId
-//            self.lvmState.restoreScrollToAnchor = ls?.lastAppearedAtAnchor ?? "BOTTOM"
+//            self.restoreScrollToAnchor = ls?.lastAppearedAtAnchor ?? "BOTTOM"
 //            print("🟢🟢 lastAppeared.id on init: \(self.lastAppeared?.id ?? "")")
             self.performLocalRestoreFetch()
         }
@@ -580,7 +556,7 @@ class LVM: NSObject, ObservableObject {
         
         fetchRealtimeSinceNow(subscriptionId: self.id) // Subscription should stay active
         
-        if lvmState.nrPostLeafs.count == 0 { // Nothing on screen
+        if nrPostLeafs.count == 0 { // Nothing on screen
             fetchNewestUntilNow(subscriptionId: self.id) // This one closes after EOSE
 //            fetchProfiles(pubkeys: self.pubkeys, subscriptionId: "Profiles")
         }
@@ -589,7 +565,7 @@ class LVM: NSObject, ObservableObject {
             let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 4)  // 4 hours  ago
 
             // Continue from first (newest) on screen?
-            let since = (self.lvmState.nrPostLeafs.first?.created_at ?? hoursAgo) - (60 * 5) // (take 5 minutes earlier to not mis out of sync posts)
+            let since = (self.nrPostLeafs.first?.created_at ?? hoursAgo) - (60 * 5) // (take 5 minutes earlier to not mis out of sync posts)
             let ago = Date(timeIntervalSince1970: Double(since)).agoString
 
             DispatchQueue.main.async {
@@ -630,7 +606,7 @@ extension LVM {
         let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 4)  // 4 hours  ago
 
         // Continue from first (newest) on screen?
-        let since = (self.lvmState.nrPostLeafs.first?.created_at ?? hoursAgo) - (60 * 15) // (take 15 minutes earlier to not mis out of sync posts)
+        let since = (self.nrPostLeafs.first?.created_at ?? hoursAgo) - (60 * 15) // (take 15 minutes earlier to not mis out of sync posts)
         let ago = Date(timeIntervalSince1970: Double(since)).agoString
 
         DispatchQueue.main.async {
@@ -747,7 +723,7 @@ extension LVM {
                     
                     let newNRPostLeaf = NRPost(event: event, withParents: true)
                     DispatchQueue.main.async {
-                        self.lvmState.nrPostLeafs.insert(newNRPostLeaf, at: 0)
+                        self.nrPostLeafs.insert(newNRPostLeaf, at: 0)
 //                        print("COUNTER D: \(self.lvmCounter.count)")
                         self.lvmCounter.count = self.isAtTop && SettingsStore.shared.autoScroll ? 0 : (self.lvmCounter.count + 1)
 //                        print("COUNTER DD: \(self.lvmCounter.count)")
@@ -761,7 +737,7 @@ extension LVM {
         receiveNotification(.muteListUpdated)
             .sink { [weak self] notification in
                 guard let self = self else { return }
-                self.lvmState.nrPostLeafs = self.lvmState.nrPostLeafs.filter(notMuted)
+                self.nrPostLeafs = self.nrPostLeafs.filter(notMuted)
             }
             .store(in: &subscriptions)
         
@@ -769,7 +745,7 @@ extension LVM {
             .sink { [weak self] notification in
                 guard let self = self else { return }
                 let words = notification.object as! [String]
-                self.lvmState.nrPostLeafs = self.lvmState.nrPostLeafs.filter { notMutedWords(in: $0.event.noteText, mutedWords: words) }
+                self.nrPostLeafs = self.nrPostLeafs.filter { notMutedWords(in: $0.event.noteText, mutedWords: words) }
             }
             .store(in: &subscriptions)
     }
@@ -785,12 +761,12 @@ extension LVM {
         
     func trackLastAppeared() {
         lastAppearedIdSubject
-//            .throttle(for: 0.05, scheduler: RunLoop.main, latest: true)
+            .throttle(for: 0.05, scheduler: RunLoop.main, latest: true)
             .compactMap { $0 }
             .sink { [weak self] eventId in
                 guard let self = self else { return }
                 guard self.lastAppearedIndex != nil else { return }
-                guard self.lvmState.nrPostLeafs.count > 0 else { return }
+                guard self.nrPostLeafs.count > 0 else { return }
                 
 //                print("COUNTER . new lastAppearedId. Index is: \(self.lastAppearedIndex) ")
                 
@@ -818,8 +794,8 @@ extension LVM {
     // 0 1 2 [3] 4 5 6 7 8 9
     // Old version, without threads
 //    var itemsAfterLastAppeared:Int {
-//        guard let lastAppearedIndex = self.lastAppearedIndex else { return self.lvmState.nrPosts.count }
-//        return max(0,((self.lvmState.nrPosts.count - lastAppearedIndex) - 1))
+//        guard let lastAppearedIndex = self.lastAppearedIndex else { return self.nrPosts.count }
+//        return max(0,((self.nrPosts.count - lastAppearedIndex) - 1))
 //    }
     
     // With threads. cannot simply count, need to use the thread count value
@@ -827,7 +803,7 @@ extension LVM {
         guard let lastAppearedIndex = self.lastAppearedIndex else {
             return 0
         }
-        let postsAfterLastAppeared = self.lvmState.nrPostLeafs.prefix(lastAppearedIndex)
+        let postsAfterLastAppeared = self.nrPostLeafs.prefix(lastAppearedIndex)
         let count = threadCount(Array(postsAfterLastAppeared)) // TODO: Performance, can use ArraySlice somehow? swift-algorithms?
         return max(0,count) // cant go negative
     }
@@ -836,7 +812,7 @@ extension LVM {
         guard let lastReadIndex = self.lastReadIdIndex else {
             return 0
         }
-        let postsAfterLastRead = self.lvmState.nrPostLeafs.prefix(lastReadIndex)
+        let postsAfterLastRead = self.nrPostLeafs.prefix(lastReadIndex)
         let count = threadCount(Array(postsAfterLastRead)) // TODO: Performance, can use ArraySlice somehow? swift-algorithms?
         return max(0,count) // cant go negative
     }
@@ -860,7 +836,7 @@ extension LVM {
         let context = DataProvider.shared().bg
         let lastAppearedId = self.lastAppearedIdSubject.value
         let lastReadId = self.lastReadId
-        let leafs = self.lvmState.nrPostLeafs.map { $0.id }.joined(separator: ",")
+        let leafs = self.nrPostLeafs.map { $0.id }.joined(separator: ",")
         context.perform { [weak self] in
             guard let self = self else { return }
             guard let listStateObjectId = self.listStateObjectId else { return }
@@ -886,7 +862,7 @@ extension LVM {
         //        $lastAppeared
 //        lastAppearedSubject
 //            .filter({ _ in
-//                self.lvmState.nrPostLeafs.count > 0 // Don't do anything if there is nothing on screen yet!
+//                self.nrPostLeafs.count > 0 // Don't do anything if there is nothing on screen yet!
 //            })
 //            .debounce(for: .seconds(1), scheduler: RunLoop.main)
 //            .throttle(for: .seconds(5), scheduler: RunLoop.main, latest: true)
@@ -897,7 +873,7 @@ extension LVM {
 //                guard let self = self else { return }
 //                guard let event = event else { return }
 //                // get 5 posts before or after
-//                let fp = self.lvmState.flattenedPostsOnScreen
+//                let fp = self.flattenedPostsOnScreen
 //                if event.created_at > (self.lastAppeared?.created_at ?? 0) {
 //                    // get before
 //                    if let indexOfPost = fp.firstIndex(where: { $0.id == event.id }) {
@@ -941,7 +917,7 @@ extension LVM {
     
     // MARK: FROM DB TO SCREEN STEP 1: FETCH REQUEST
     func performLocalFetch(refreshInBackground:Bool = false) {
-        var mostRecentEvent:Event? = self.lvmState.nrPostLeafs.first?.event
+        var mostRecentEvent:Event? = self.nrPostLeafs.first?.event
         let visibleOrInRefreshInBackground = self.viewIsVisible || refreshInBackground
         let ctx = DataProvider.shared().bg
         ctx.perform { [weak self] in
@@ -996,13 +972,13 @@ extension LVM {
                     // Then remove all after 250 (RESTORED.prefix(250))
                     if restoredPosts.count > LVM_MAX_VISIBLE, let lastAppearedIndex = restoredPosts.firstIndex(where: { $0.id == self.lastAppearedIdSubject.value }), lastAppearedIndex < (LVM_MAX_VISIBLE-20)  {
 //                        DispatchQueue.main.async {
-//                            self.lvmState.state = .AWAITING_RESTORE_SCROLL
+//                            self.state = .AWAITING_RESTORE_SCROLL
 //                        }
                         self.startRenderingSubject.send(Array(restoredPosts.prefix(250)))
                     }
                     else {
 //                        DispatchQueue.main.async {
-//                            self.lvmState.state = .AWAITING_RESTORE_SCROLL
+//                            self.state = .AWAITING_RESTORE_SCROLL
 //                        }
                         self.startRenderingSubject.send(restoredPosts)
                     }
@@ -1017,7 +993,7 @@ extension LVM {
     
     var lastAppearedCreatedAt:Int64? {
         guard let lastAppearedId = self.lastAppearedIdSubject.value else { return nil }
-        return lvmState.nrPostLeafs.first(where: { $0.id == lastAppearedId })?.created_at
+        return nrPostLeafs.first(where: { $0.id == lastAppearedId })?.created_at
     }
     
     func filterMutedWords(_ events:[Event]) -> [Event] {
@@ -1043,7 +1019,7 @@ extension LVM {
                         return $0
                     }
                 let newEventIds = getAllEventIds(newUnrenderedEvents)
-                let newCount = newEventIds.subtracting(nrPostLeafsOnScreenIds).count
+                let newCount = newEventIds.subtracting(leafsAndParentIdsOnScreen).count
                 if newCount > 0 {
                     self.startRenderingSubject.send(newUnrenderedEvents)
 //                    print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 setUnorderedEvents \(newUnrenderedEvents.count) new: \(newCount) state:COMPLETED_FIRST_FETCH 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
@@ -1051,7 +1027,7 @@ extension LVM {
 //                self.state = .COMPLETED_FIRST_FETCH
                 
             default:
-                let lastCreatedAt = self.lvmState.nrPostLeafs.last?.created_at ?? 0 // SHOULD CHECK ONLY LEAFS BECAUSE ROOTS CAN BE VERY OLD
+                let lastCreatedAt = self.nrPostLeafs.last?.created_at ?? 0 // SHOULD CHECK ONLY LEAFS BECAUSE ROOTS CAN BE VERY OLD
                 newUnrenderedEvents = events
                     .filter { $0.created_at > lastCreatedAt } // skip all older than first on screen (check LEAFS only)
                     .filter(onlyRootOrReplyingToFollower)
@@ -1062,7 +1038,7 @@ extension LVM {
                     }
 
                 let newEventIds = getAllEventIds(newUnrenderedEvents)
-                let newCount = newEventIds.subtracting(nrPostLeafsOnScreenIds).count
+                let newCount = newEventIds.subtracting(leafsAndParentIdsOnScreen).count
                 if newCount > 0 {
                     self.startRenderingSubject.send(newUnrenderedEvents)
 //                    print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 setUnorderedEvents \(newUnrenderedEvents.count) new: \(newCount) state:default 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")

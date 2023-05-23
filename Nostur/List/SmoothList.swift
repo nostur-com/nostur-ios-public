@@ -9,8 +9,6 @@ import SwiftUI
 import Nuke
 import Combine
 
-let SMOOTHLIST_AUTOSCROLL_OFFSET = 3.0
-
 enum SingleSection: CaseIterable {
     case main
 }
@@ -21,8 +19,6 @@ struct SmoothList: UIViewControllerRepresentable {
     
     var dim: DIMENSIONS
     var lvm: LVM
-    //    private var onRowAppeared: RowAppearedCallback?
-    //    private var onFinishedScrolling: FinishedScrollingCallback?
     
     init(lvm:LVM, dim:DIMENSIONS) {
         self.lvm = lvm
@@ -60,9 +56,6 @@ struct SmoothList: UIViewControllerRepresentable {
             
             
         }
-        
-//        refresh(collectionViewHolder, coordinator: coordinator)
-        
         return collectionViewHolder
     }
     
@@ -80,12 +73,10 @@ struct SmoothList: UIViewControllerRepresentable {
         coordinator.subscriptions.removeAll()
         collectionViewHolder.dataSource = collectionViewHolder.createDataSource(lvm: coordinator.lvm)
 
-        coordinator.lvm.lvmState.$_nrPostLeafs
-            .filter({ posts in
-                posts.count != 0
-            })
-            .sink { posts in
+        coordinator.lvm.didSetNrPostLeafs
+            .sink {
                 guard let dataSource = collectionViewHolder.dataSource else { return }
+                let posts = coordinator.lvm.nrPostLeafs
                 var snapshot = NSDiffableDataSourceSnapshot<SingleSection, String>()
                 snapshot.appendSections([SingleSection.main])
                 snapshot.appendItems(posts.map { $0.id }, toSection: SingleSection.main)
@@ -93,41 +84,52 @@ struct SmoothList: UIViewControllerRepresentable {
                 let isInitialApply = dataSource.snapshot().sectionIdentifiers.isEmpty
                 
                 print("⭐️ SmoothList: $_nrPostLeafs.sink -> dataSource.apply(snapshot) (posts: \(posts.count)) (isInitialApply: \(isInitialApply))")
-                dataSource.apply(snapshot, animatingDifferences: !isInitialApply) {
+                
+                let restoreTopId:String? = collectionViewHolder.collectionView.contentOffset.y == 0 ? dataSource.snapshot(for: .main).items.first : nil
+                
+                print("⭐️ SmoothList: restoreTopId: \(restoreTopId ?? "-") contentOffset.y: \(collectionViewHolder.collectionView.contentOffset.y.description)")
+                
+                if (restoreTopId != nil) {
+                    CATransaction.begin()
+                    CATransaction.setDisableActions(true)
+                }
+                
+                dataSource.apply(snapshot, animatingDifferences: !isInitialApply && restoreTopId == nil) {
                     if (isInitialApply) { // Scroll to initial position
-                        DispatchQueue.main.async {
-                            
-                            // Not at top
-                            if (coordinator.lvm.initialIndex > 4) {
-                                print("⭐️ SmoothList:   ↳  dataSource.apply - scrollToItem: \(coordinator.lvm.initialIndex.description)")
-                                coordinator.lvm.isAtTop = false
-                                collectionViewHolder.collectionView.scrollToItem(at: IndexPath(item: coordinator.lvm.initialIndex, section: 0), at: .top, animated: false)
-                            }
-                            else {
-                                coordinator.lvm.isAtTop = true
-                                if !SettingsStore.shared.autoScroll {
-                                    print("⭐️ SmoothList:   ↳  dataSource.apply - setContentOffset: SMOOTHLIST_AUTOSCROLL_OFFSET")
-                                    collectionViewHolder.collectionView.setContentOffset(CGPoint(x:0, y: SMOOTHLIST_AUTOSCROLL_OFFSET), animated: false)
+                        // ON FIRST LOAD: SCROLL TO SOME INDEX (RESTORE)
+                        if (coordinator.lvm.initialIndex > 4) {
+                            print("⭐️ SmoothList:   ↳  dataSource.apply - scrollToItem: \(coordinator.lvm.initialIndex.description)")
+                            coordinator.lvm.isAtTop = false
+                            collectionViewHolder.collectionView.scrollToItem(at: IndexPath(item: coordinator.lvm.initialIndex, section: 0), at: .top, animated: false)
+                        }
+                        else if (collectionViewHolder.collectionView.contentOffset.y == 0) {
+                            // IF WE ARE AT TOP, ALWAYS SET COUNTER TO 0
+                            print("⭐️ SmoothList:   ↳  dataSource.apply - contentOffset.y == 0. --> force counter to 0")
+                            coordinator.lvm.lvmCounter.count = 0
+                        }
+                    }
+                    else {
+                        // KEEP POSITION AFTER INSERT, IF AUTOSCROLL IS DISABLED
+                        if !SettingsStore.shared.autoScroll {
+                            if let restoreTopId {
+                                if let restoreIndex = posts.firstIndex(where: { $0.id == restoreTopId }) {
+                                    print("⭐️ SmoothList: restoreTopId: \(restoreTopId) found at index: \(restoreIndex)")
+                                    print("⭐️ SmoothList: scrollToItem: \(restoreIndex)")
+                                    collectionViewHolder.collectionView.scrollToItem(at: IndexPath(item: restoreIndex, section: 0), at: .top, animated: false)
                                 }
                             }
+                        }
+                        if (restoreTopId != nil) {
+                            CATransaction.commit()
                         }
                     }
                 }
             }
             .store(in: &coordinator.subscriptions)
-    
         
-//        var newSnapshot = NSDiffableDataSourceSnapshot<SingleSection, String>()
-//        newSnapshot.appendSections([SingleSection.main])
-//        guard let dataSource = collectionViewHolder.dataSource else { return }
-//        dataSource.apply(newSnapshot, animatingDifferences: false)
     }
-    
-    
-    
-    
-    
-    final class Coordinator: NSObject, UICollectionViewDelegate, UIScrollViewDelegate, UICollectionViewDataSourcePrefetching, UICollectionViewDelegateFlowLayout { //, UICollectionViewDataSource {
+ 
+    final class Coordinator: NSObject, UICollectionViewDelegate, UIScrollViewDelegate, UICollectionViewDataSourcePrefetching, UICollectionViewDelegateFlowLayout {
         var subscriptions = Set<AnyCancellable>()
         let parent: SmoothList
         var lvm: LVM
@@ -162,7 +164,7 @@ struct SmoothList: UIViewControllerRepresentable {
             //            var imageRequestsPFPnotFollowing:[ImageRequest] = []
             
             for indexPath in indexPaths {
-                guard let item = lvm.lvmState.nrPostLeafs[safe: indexPath.row] else { continue }
+                guard let item = lvm.nrPostLeafs[safe: indexPath.row] else { continue }
                 
                 if item.missingPs.count > 0 {
                     EventRelationsQueue.shared.addAwaitingEvent(item.event, debugInfo: "SmoothList.001 - missingPs: \(item.missingPs.count)")
@@ -246,7 +248,7 @@ struct SmoothList: UIViewControllerRepresentable {
             //            var imageRequestsPFPnotFollowing:[ImageRequest] = []
             
             for indexPath in indexPaths {
-                guard let item = lvm.lvmState.nrPostLeafs[safe: indexPath.row] else { continue }
+                guard let item = lvm.nrPostLeafs[safe: indexPath.row] else { continue }
                 
                 if item.missingPs.count > 0 {
                     QueuedFetcher.shared.dequeue(pTags: item.missingPs)
@@ -338,22 +340,26 @@ struct SmoothList: UIViewControllerRepresentable {
         //        }
         
         func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-            // Calculate the time since the last call
-            let currentTime = Date().timeIntervalSince1970
-            let timeSinceLastCall = currentTime - lastCalledTimestamp
             
-            // Check if the debounceInterval has passed
-            if timeSinceLastCall > debounceInterval {
-                // Update the lastCalledTimestamp
-                lastCalledTimestamp = currentTime
-                
-                // Your throttled code here
-                if let lastAppearedId = lvm.lvmState.nrPostLeafs[safe: indexPath.row]?.id {
-                    lvm.lastAppearedIdSubject.send(lastAppearedId)
-                }
-                // TODO: new onRowAppeard..
-                //                parent.onRowAppeared?((sectionIndex: indexPath.section, itemIndex: indexPath.row))
+            if let lastAppearedId = lvm.nrPostLeafs[safe: indexPath.row]?.id {
+                lvm.lastAppearedIdSubject.send(lastAppearedId)
             }
+            
+            // SAME CODE BUT THROTTLED, DISABLED....
+            // Calculate the time since the last call
+//            let currentTime = Date().timeIntervalSince1970
+//            let timeSinceLastCall = currentTime - lastCalledTimestamp
+//
+//            // Check if the debounceInterval has passed
+//            if timeSinceLastCall > debounceInterval {
+//                // Update the lastCalledTimestamp
+//                lastCalledTimestamp = currentTime
+//
+//                // Your throttled code here
+//                if let lastAppearedId = lvm.nrPostLeafs[safe: indexPath.row]?.id {
+//                    lvm.lastAppearedIdSubject.send(lastAppearedId)
+//                }
+//            }
         }
         
         func scrollViewDidScroll(_ scrollView: UIScrollView) {
@@ -379,16 +385,16 @@ struct SmoothList: UIViewControllerRepresentable {
 //                        print("COUNTER EE: \(lvm.lvmCounter.count)")
                     }
                     
-                    if let lastAppearedId = lvm.lvmState.nrPostLeafs[safe: firstIndex.row]?.id {
+                    if let lastAppearedId = lvm.nrPostLeafs[safe: firstIndex.row]?.id {
                         lvm.lastAppearedIdSubject.send(lastAppearedId)
                     }
                 }
                 
-                if (!SettingsStore.shared.autoScroll) && (scrollView.contentOffset.y < SMOOTHLIST_AUTOSCROLL_OFFSET) {
-                    // if really at top, push back a little, so new items inserted at top don't push all down
-                    //                    scrollView.layoutIfNeeded();
-                    scrollView.setContentOffset(CGPoint(x: scrollView.contentOffset.x, y: SMOOTHLIST_AUTOSCROLL_OFFSET), animated: true)
-                }
+//                if (!SettingsStore.shared.autoScroll) && (scrollView.contentOffset.y < SMOOTHLIST_AUTOSCROLL_OFFSET) {
+//                    // if really at top, push back a little, so new items inserted at top don't push all down
+//                    //                    scrollView.layoutIfNeeded();
+//                    scrollView.setContentOffset(CGPoint(x: scrollView.contentOffset.x, y: SMOOTHLIST_AUTOSCROLL_OFFSET), animated: true)
+//                }
             }
         }
     }
@@ -462,28 +468,11 @@ final class CViewHolder {
         .init { cell, indexPath, nrPost in
             cell.contentConfiguration = UIHostingConfiguration {
                 PostOrThread(nrPost: nrPost)
-                //                    .frame(maxWidth: .infinity)
             }
             .background(Color("ListBackground")) // Between and around every PostOrThread (NoteRows)
             .margins(.all, 0)
-            //            cell.layer.shouldRasterize = true
-            //            cell.layer.rasterizationScale = UIScreen.main.scale
         }
     }()
-    
-    //    private var FullWidthPostOrThreadCellRegistration: UICollectionView.CellRegistration<UICollectionViewListCell, NRPost> = {
-    //        .init { cell, indexPath, nrPost in
-    //            cell.contentConfiguration = UIHostingConfiguration {
-    //                PostOrThread(nrPost: nrPost, fullWidth: true)
-    //                    .boxShadow()
-    //                    .padding(.vertical, 10)
-    //            }
-    //            .background(Color("ListBackground")) // Between and around every PostOrThread (NoteRows)
-    //            .margins(.all, 0)
-    //            //            cell.layer.shouldRasterize = true
-    //            //            cell.layer.rasterizationScale = UIScreen.main.scale
-    //        }
-    //    }()
     
     private var MissingCellRegistration: UICollectionView.CellRegistration<UICollectionViewListCell, String> = {
         .init { cell, indexPath, item in
@@ -502,15 +491,9 @@ final class CViewHolder {
             collectionView: collectionView,
             cellProvider: { [weak self] collectionView, indexPath, identifier -> UICollectionViewCell? in
                 guard let self = self else { return nil }
-                
-                guard let nrPost = lvm.lvmState.nrPostLeafs.first(where: { $0.id == identifier }) else {
-//                    print("COUNTER 🧨 nrPostLeafs.count: \(lvm.lvmState.nrPostLeafs.count), cant find id: \(identifier)")
+                guard let nrPost = lvm.nrPostLeafs.first(where: { $0.id == identifier }) else {
                     return collectionView.dequeueConfiguredReusableCell(using: MissingCellRegistration, for: indexPath, item: "🧨")
                 }
-                
-                //                if self.coordinator?.parent.fullWidthImages ?? false {
-                //                    return self.collectionView.dequeueConfiguredReusableCell(using: FullWidthPostOrThreadCellRegistration, for: indexPath, item: nrPost)
-                //                }
                 return collectionView.dequeueConfiguredReusableCell(using: PostOrThreadCellRegistration, for: indexPath, item: nrPost)
             }
         )
