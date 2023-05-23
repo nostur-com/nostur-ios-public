@@ -89,12 +89,17 @@ struct SmoothList: UIViewControllerRepresentable {
                 
                 print("⭐️ SmoothList: restoreTopId: \(restoreTopId ?? "-") contentOffset.y: \(collectionViewHolder.collectionView.contentOffset.y.description)")
                 
-                if (restoreTopId != nil) {
+                if !SettingsStore.shared.autoScroll && restoreTopId != nil {
                     CATransaction.begin()
                     CATransaction.setDisableActions(true)
                 }
                 
-                dataSource.apply(snapshot, animatingDifferences: !isInitialApply && restoreTopId == nil) {
+                // Never animate on the first load (!isInitialApply)
+                // Then only animate if we don't restore to top (restoreTopId == nil)
+                // or if we have auto scroll enabled (SettingsStore.shared.autoScroll)
+                let shouldAnimate = !isInitialApply && (restoreTopId == nil || SettingsStore.shared.autoScroll)
+                
+                dataSource.apply(snapshot, animatingDifferences: shouldAnimate) {
                     if (isInitialApply) { // Scroll to initial position
                         // ON FIRST LOAD: SCROLL TO SOME INDEX (RESTORE)
                         if (coordinator.lvm.initialIndex > 4) {
@@ -119,7 +124,7 @@ struct SmoothList: UIViewControllerRepresentable {
                                 }
                             }
                         }
-                        if (restoreTopId != nil) {
+                        if !SettingsStore.shared.autoScroll && restoreTopId != nil {
                             CATransaction.commit()
                         }
                     }

@@ -761,7 +761,7 @@ extension LVM {
         
     func trackLastAppeared() {
         lastAppearedIdSubject
-            .throttle(for: 0.05, scheduler: RunLoop.main, latest: true)
+//            .throttle(for: 0.05, scheduler: RunLoop.main, latest: false)
             .compactMap { $0 }
             .sink { [weak self] eventId in
                 guard let self = self else { return }
@@ -777,7 +777,8 @@ extension LVM {
                 
                 // unread should only go down, not up
                 // only way to go up is when new posts are added.
-                if self.itemsAfterLastAppeared != 0 && self.itemsAfterLastAppeared < self.lvmCounter.count {
+                if self.itemsAfterLastAppeared < self.lvmCounter.count {
+//                if self.itemsAfterLastAppeared != 0 && self.itemsAfterLastAppeared < self.lvmCounter.count {
 //                    print("COUNTER A: \(self.lvmCounter.count)")
                     self.lvmCounter.count = self.itemsAfterLastAppeared
 //                    print("COUNTER AA: \(self.lvmCounter.count)")
