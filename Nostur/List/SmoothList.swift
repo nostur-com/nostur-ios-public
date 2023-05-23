@@ -18,8 +18,6 @@ enum SingleSection: CaseIterable {
 struct SmoothList: UIViewControllerRepresentable {
     typealias UIViewControllerType = UIViewController
     typealias CollectionViewHolderType = CViewHolder
-    typealias RowAppearedCallback = ((sectionIndex: Int, itemIndex: Int)) -> Void
-    typealias FinishedScrollingCallback = ((isAtTop: Bool, indexPaths:[IndexPath])) -> Void
     
     var dim: DIMENSIONS
     var lvm: LVM
@@ -31,7 +29,13 @@ struct SmoothList: UIViewControllerRepresentable {
         self.dim = dim
     }
     
+    func makeCoordinator() -> Coordinator {
+        print("⭐️ SmoothList: makeCoordinator")
+        return Coordinator(parent: self, lvm: self.lvm)
+    }
+    
     func makeUIViewController(context: Context) -> UIViewControllerType {
+        print("⭐️ SmoothList: makeUIViewController")
         let viewController = UIViewControllerType()
         let collectionViewHolder = makeCollectionViewHolder(parent: viewController, coordinator:context.coordinator)
         context.coordinator.collectionViewHolder = collectionViewHolder
@@ -40,7 +44,7 @@ struct SmoothList: UIViewControllerRepresentable {
     
     private func makeCollectionViewHolder(parent viewController: UIViewControllerType,
                                           coordinator: Coordinator) -> CollectionViewHolderType {
-        
+        print("⭐️ SmoothList: makeCollectionViewHolder")
         let collectionViewHolder = CViewHolder(coordinator: coordinator) { uiCollectionView in
             //            uiCollectionView.translatesAutoresizingMaskIntoConstraints = false
             uiCollectionView.translatesAutoresizingMaskIntoConstraints = false
@@ -62,37 +66,47 @@ struct SmoothList: UIViewControllerRepresentable {
         return collectionViewHolder
     }
     
-    func refresh(_ collectionViewHolder:CViewHolder, coordinator:Coordinator) {
-        collectionViewHolder.dataSource = collectionViewHolder.createDataSource(lvm: coordinator.lvm)
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
+        print("⭐️ SmoothList: updateUIViewController")
+        // TODO: add check to know of we should refresh???
+        if let cvh = context.coordinator.collectionViewHolder {
+            context.coordinator.lvm = lvm
+            refresh(cvh, coordinator: context.coordinator)
+        }
+    }
     
+    func refresh(_ collectionViewHolder:CViewHolder, coordinator:Coordinator) {
+        print("⭐️ SmoothList: refresh")
         coordinator.subscriptions.removeAll()
-        var newSnapshot = NSDiffableDataSourceSnapshot<SingleSection, String>()
-        newSnapshot.appendSections([SingleSection.main])
-        guard let dataSource = collectionViewHolder.dataSource else { return }
-        dataSource.apply(newSnapshot, animatingDifferences: false)
-        
+        collectionViewHolder.dataSource = collectionViewHolder.createDataSource(lvm: coordinator.lvm)
+
         coordinator.lvm.lvmState.$_nrPostLeafs
-        //            .dropFirst()
             .filter({ posts in
                 posts.count != 0
             })
-            .sink { posts in                
+            .sink { posts in
                 guard let dataSource = collectionViewHolder.dataSource else { return }
-                var newSnapshot = NSDiffableDataSourceSnapshot<SingleSection, String>()
-                newSnapshot.appendSections([SingleSection.main])
-                newSnapshot.appendItems(posts.map { $0.id }, toSection: SingleSection.main)
+                var snapshot = NSDiffableDataSourceSnapshot<SingleSection, String>()
+                snapshot.appendSections([SingleSection.main])
+                snapshot.appendItems(posts.map { $0.id }, toSection: SingleSection.main)
                 
                 let isInitialApply = dataSource.snapshot().sectionIdentifiers.isEmpty
                 
-                dataSource.apply(newSnapshot, animatingDifferences: !isInitialApply) {
+                print("⭐️ SmoothList: $_nrPostLeafs.sink -> dataSource.apply(snapshot) (posts: \(posts.count)) (isInitialApply: \(isInitialApply))")
+                dataSource.apply(snapshot, animatingDifferences: !isInitialApply) {
                     if (isInitialApply) { // Scroll to initial position
                         DispatchQueue.main.async {
-                            if (coordinator.lvm.lvmState.initialIndex != 0) && (coordinator.lvm.lvmState.initialIndex > 4) {
-                                collectionViewHolder.collectionView.scrollToItem(at: IndexPath(item: coordinator.lvm.lvmState.initialIndex, section: 0), at: .top, animated: false)
+                            
+                            // Not at top
+                            if (coordinator.lvm.initialIndex > 4) {
+                                print("⭐️ SmoothList:   ↳  dataSource.apply - scrollToItem: \(coordinator.lvm.initialIndex.description)")
+                                coordinator.lvm.isAtTop = false
+                                collectionViewHolder.collectionView.scrollToItem(at: IndexPath(item: coordinator.lvm.initialIndex, section: 0), at: .top, animated: false)
                             }
                             else {
+                                coordinator.lvm.isAtTop = true
                                 if !SettingsStore.shared.autoScroll {
-                                    //                            print("❤️❤️ no autoscroll please, offset a little")
+                                    print("⭐️ SmoothList:   ↳  dataSource.apply - setContentOffset: SMOOTHLIST_AUTOSCROLL_OFFSET")
                                     collectionViewHolder.collectionView.setContentOffset(CGPoint(x:0, y: SMOOTHLIST_AUTOSCROLL_OFFSET), animated: false)
                                 }
                             }
@@ -101,20 +115,17 @@ struct SmoothList: UIViewControllerRepresentable {
                 }
             }
             .store(in: &coordinator.subscriptions)
+    
+        
+//        var newSnapshot = NSDiffableDataSourceSnapshot<SingleSection, String>()
+//        newSnapshot.appendSections([SingleSection.main])
+//        guard let dataSource = collectionViewHolder.dataSource else { return }
+//        dataSource.apply(newSnapshot, animatingDifferences: false)
     }
     
-    func makeCoordinator() -> Coordinator {
-        return Coordinator(parent: self, lvm: self.lvm)
-    }
     
-    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
-        print("🔴🔴🔴🔴🔴🔴 updateUIViewController 🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴")
-        // TODO: add check to know of we should refresh???
-        if let cvh = context.coordinator.collectionViewHolder {
-            context.coordinator.lvm = lvm
-            refresh(cvh, coordinator: context.coordinator)
-        }
-    }
+    
+    
     
     final class Coordinator: NSObject, UICollectionViewDelegate, UIScrollViewDelegate, UICollectionViewDataSourcePrefetching, UICollectionViewDelegateFlowLayout { //, UICollectionViewDataSource {
         var subscriptions = Set<AnyCancellable>()
@@ -358,16 +369,14 @@ struct SmoothList: UIViewControllerRepresentable {
             }
             if scrollView.contentOffset.y > 150 {
                 lvm.isAtTop = false
-                //                print("IS AT TOP FALSE")
             }
             else {
-                
+                lvm.isAtTop = true
                 if let firstIndex = indexPaths.min(by: { $0.row < $1.row }) {
                     if firstIndex.row < 1 { // not sure why just index 0 doesn't work 1% of the time
 //                        print("COUNTER E: \(lvm.lvmCounter.count)")
                         lvm.lvmCounter.count = 0
 //                        print("COUNTER EE: \(lvm.lvmCounter.count)")
-                        lvm.isAtTop = true
                     }
                     
                     if let lastAppearedId = lvm.lvmState.nrPostLeafs[safe: firstIndex.row]?.id {
@@ -488,7 +497,8 @@ final class CViewHolder {
     }()
     
     func createDataSource(lvm: LVM) -> DataSourceType {
-        DataSourcy<SingleSection, String>(
+        print("⭐️ SmoothList: CViewHolder.createDataSource")
+        return DataSourcy<SingleSection, String>(
             collectionView: collectionView,
             cellProvider: { [weak self] collectionView, indexPath, identifier -> UICollectionViewCell? in
                 guard let self = self else { return nil }

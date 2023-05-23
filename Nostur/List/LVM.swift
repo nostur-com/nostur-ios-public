@@ -34,7 +34,6 @@ class LVMState: ObservableObject {
 //            print("COUNTER nrPostLeafs.count: \(nrPostLeafs.count) - state: \(state.rawValue)")
 //        }
 //    } // need nrPostLeafs + _nrPostLeafs because if we have .sink on just 1, the data source apply in SmoothList is empty...
-    @Published var initialIndex:Int = 0
     @Published var state:LVM.LIST_STATE = .INIT
 }
 
@@ -87,6 +86,7 @@ class LVM: NSObject, ObservableObject {
     }
     
     var restoreScrollToId:String? = nil
+    var initialIndex:Int = 0 // derived from restoreScrollToId's index
     
     func didAppear() {
         print("🟢🟢 \(self.id) didAppear")
@@ -99,6 +99,15 @@ class LVM: NSObject, ObservableObject {
                 self.performLocalFetch()
             }
         }
+    }
+    
+    func nextTickNow() {
+        self.fetchFeedTimer?.invalidate()
+        self.fetchFeedTimer = Timer.scheduledTimer(withTimeInterval: FETCH_FEED_INTERVAL, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            self.fetchFeedTimerNextTick()
+        }
+        fetchFeedTimerNextTick()
     }
     
     enum LIST_STATE:String {
@@ -185,14 +194,14 @@ class LVM: NSObject, ObservableObject {
     private func processPostsInBackground(_ events:[Event]) { // events are from viewContext
         let context = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" ? DataProvider.shared().viewContext : DataProvider.shared().bg // Should be use shared().bg instead??
         
+        // onScreenIds includes leafs and parents, so all posts.
+        let onScreenIds = getAllObjectIds(self.lvmState.nrPostLeafs)
+        let onScreenLeafIds = self.lvmState.nrPostLeafs.map { $0.id }
+        let currentNRPostLeafs = self.lvmState.nrPostLeafs // viewContext. First (0) is newest
+        
         context.perform { [weak self] in
             guard let self = self else { return }
-            
-            // onScreenIds includes leafs and parents, so all posts.
-            let onScreenIds = getAllObjectIds(self.lvmState.nrPostLeafs)
-            let currentNRPostLeafs = self.lvmState.nrPostLeafs // viewContext. First (0) is newest
-            
-//            let transformer = VPostTransformer.bg
+
             var newNRPostLeafs:[NRPost] = []
             var transformedObjectIds = Set<NRPostID>()
             for event in events {
@@ -221,7 +230,8 @@ class LVM: NSObject, ObservableObject {
                                 
                 DispatchQueue.main.async {
                     self.nrPostLeafsOnScreenIds = self.getAllObjectIds(leafThreads)
-                    self.lvmState.initialIndex = self.getRestoreScrollIndex(leafThreads, lastAppearedId: self.restoreScrollToId) ?? 0
+                    self.initialIndex = self.getRestoreScrollIndex(leafThreads, lastAppearedId: self.restoreScrollToId) ?? 0
+                    print("⭐️ LVM.initialIndex: \(self.initialIndex)")
                     self.lvmState.nrPostLeafs = leafThreads
 //                    print("COUNTER B: \(self.lvmCounter.count)")
                     self.lvmCounter.count = self.itemsAfterLastRead < 5 ? 0 : self.itemsAfterLastRead
@@ -229,32 +239,7 @@ class LVM: NSObject, ObservableObject {
                 }
             }
             else {
-                
-//                // FOR REALTIME, FETCH RELATED OF LAST 4 POSTS
-//                if !alreadySkipped && transformedObjectIds.count > 0 && transformedObjectIds.count < 5 {
-////                    print("🏎️🏎️ \(Date.now) SKIP RENDER")
-//                    fetchRelated(added.prefix(4))
-//                    alreadySkipped = true // Skip this render, wait for the next one so we have the
-//
-//                    // DO NEXT TICK IN HALF TIME (5 instead of 10 seconds
-//                    self.fetchFeedTimer?.invalidate()
-//                    self.fetchFeedTimer = Timer.scheduledTimer(withTimeInterval: FETCH_FEED_INTERVAL/3, repeats: true) { [weak self] _ in
-//                        guard let self = self else { return }
-//                        self.fetchFeedTimerNextTick()
-//                    }
-//                    return
-//                }
-//                else {
-//                    alreadySkipped = false
-//                    // Back to normal ticks of 10 seconds
-//                    self.fetchFeedTimer?.invalidate()
-//                    self.fetchFeedTimer = Timer.scheduledTimer(withTimeInterval: FETCH_FEED_INTERVAL, repeats: true) { [weak self] _ in
-//                        guard let self = self else { return }
-//                        self.fetchFeedTimerNextTick()
-//                    }
-//                }
-
-                let newLeafThreadsWithMissingParents = self.renderNewLeafs(added, onScreen:self.lvmState.nrPostLeafs)
+                let newLeafThreadsWithMissingParents = self.renderNewLeafs(added, onScreen:currentNRPostLeafs)
                 
                 let (danglers, newLeafThreads) = extractDanglingReplies(newLeafThreadsWithMissingParents)
 //                self.needsReplyTo.append(contentsOf: danglers)
@@ -262,24 +247,22 @@ class LVM: NSObject, ObservableObject {
                 if danglers.count > 0 {
                     fetchParents(danglers)
                 }
-                putNewThreadsOnScreen(newLeafThreads)
+                putNewThreadsOnScreen(newLeafThreads, onScreenLeafIds:onScreenLeafIds, currentNRPostLeafs: currentNRPostLeafs)
                 
             }
         }
     }
     
-    func safeInsert(_ nrPosts:[NRPost]) -> [NRPost] {
-        let onScreenIds = self.lvmState.nrPostLeafs.map { $0.id }
-        let onlyNew = nrPosts.filter { !onScreenIds.contains($0.id) }
+    func safeInsert(_ nrPosts:[NRPost], onScreenLeafIds:[String]) -> [NRPost] {
+        let onlyNew = nrPosts.filter { !onScreenLeafIds.contains($0.id) }
         self.lvmState.nrPostLeafs.insert(contentsOf: onlyNew, at: 0)
         return onlyNew
     }
     
     var isAtTop = true
     
-    func putNewThreadsOnScreen(_ newLeafThreadsWithDuplicates:[NRPost]) {
-        let onScreenIds = getAllObjectIds(self.lvmState.nrPostLeafs)
-        let newLeafThreads = newLeafThreadsWithDuplicates.filter { !onScreenIds.contains($0.id) }
+    func putNewThreadsOnScreen(_ newLeafThreadsWithDuplicates:[NRPost], onScreenLeafIds:[String], currentNRPostLeafs:[NRPost]) {
+        let newLeafThreads = newLeafThreadsWithDuplicates.filter { !onScreenLeafIds.contains($0.id) }
         let diff = newLeafThreadsWithDuplicates.count - newLeafThreads.count
         if diff > 0 {
             print("putNewThreadsOnScreen: skipped \(diff) duplicates")
@@ -291,20 +274,20 @@ class LVM: NSObject, ObservableObject {
         })
         
         // clean up a bit if needed
-        if self.lvmState.nrPostLeafs.count > LVM_MAX_VISIBLE && self.isAtTop {
+        if currentNRPostLeafs.count > LVM_MAX_VISIBLE && self.isAtTop {
             // dont drop all
-            let dropLimit = max(0,(self.lvmState.nrPostLeafs.count - 10)) // also not negative
+            let dropLimit = max(0,(currentNRPostLeafs.count - 10)) // also not negative
             let dropCount = min(newLeafThreads.count,dropLimit)
-            let newNRPostLeafs = newLeafThreads + self.lvmState.nrPostLeafs.dropLast(dropCount)
+            let newNRPostLeafs = newLeafThreads + currentNRPostLeafs.dropLast(dropCount)
             DispatchQueue.main.async {
-                let inserted = self.safeInsert(newNRPostLeafs)
+                let inserted = self.safeInsert(newNRPostLeafs, onScreenLeafIds:onScreenLeafIds)
                 self.fetchAllMissingPs(inserted)
             }
             print("Removed \(dropCount) from the end")
         }
         else {
             DispatchQueue.main.async {
-                let inserted = self.safeInsert(newLeafThreads)
+                let inserted = self.safeInsert(newLeafThreads, onScreenLeafIds:onScreenLeafIds)
                 self.fetchAllMissingPs(inserted)
             }
             self.fetchAllMissingPs(newLeafThreads)
@@ -358,8 +341,11 @@ class LVM: NSObject, ObservableObject {
             timeoutCommand: { [weak self] (taskId) in
                 guard let self = self else { return }
 //                print("🟠🟠 timeout.. should just render whatever \(danglers.compactMap { $0.event.replyTo_ == nil }.count)")
+
                 DispatchQueue.main.async {
-                    self.putNewThreadsOnScreen(danglers)
+                    let onScreenLeafIds = self.lvmState.nrPostLeafs.map { $0.id }
+                    let currentNRPostLeafs = self.lvmState.nrPostLeafs // viewContext. First (0) is newest
+                    self.putNewThreadsOnScreen(danglers, onScreenLeafIds: onScreenLeafIds, currentNRPostLeafs: currentNRPostLeafs)
                 }
             })
 
@@ -863,6 +849,7 @@ extension LVM {
         let context = DataProvider.shared().bg
         let lastAppearedId = self.lastAppearedIdSubject.value
         let lastReadId = self.lastReadId
+        let leafs = self.lvmState.nrPostLeafs.map { $0.id }.joined(separator: ",")
         context.perform { [weak self] in
             guard let self = self else { return }
             guard let listStateObjectId = self.listStateObjectId else { return }
@@ -870,7 +857,8 @@ extension LVM {
             listState.lastAppearedId = lastAppearedId
             listState.mostRecentAppearedId = lastReadId
             listState.updatedAt = Date.now
-            listState.leafs = self.lvmState.nrPostLeafs.map { $0.id }.joined(separator: ",")
+            listState.leafs = leafs
+            print("⭐️ saveListState: lastAppearedId: \(lastAppearedId?.description.prefix(11) ?? "??") (index: \(self.lastAppearedIndex?.description ?? "??"))")
             do {
                 try context.save()
             }
