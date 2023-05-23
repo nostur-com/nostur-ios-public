@@ -163,7 +163,7 @@ struct TabbedDetailContainer: View {
                 .onPreferenceChange(SizePreferenceKey.self) { size in
                     guard size.width > 0 else { return }
                     dim.listWidth = size.width
-                    print("🟣🟣🟣🟣🟣 NEW DETAIL WIDTH \(size.width) -- Scale: \(UIScreen.main.scale) ")
+                    L.og.debug("🟣🟣🟣🟣🟣 NEW DETAIL WIDTH \(size.width) -- Scale: \(UIScreen.main.scale) ")
                 }
             ScrollViewReader { proxy in
                 ScrollView(.horizontal, showsIndicators: false) {

@@ -26,12 +26,12 @@ struct SmoothList: UIViewControllerRepresentable {
     }
     
     func makeCoordinator() -> Coordinator {
-        print("⭐️ SmoothList: makeCoordinator")
+        L.sl.debug("⭐️ SmoothList: makeCoordinator")
         return Coordinator(parent: self, lvm: self.lvm)
     }
     
     func makeUIViewController(context: Context) -> UIViewControllerType {
-        print("⭐️ SmoothList: makeUIViewController")
+        L.sl.debug("⭐️ SmoothList: makeUIViewController")
         let viewController = UIViewControllerType()
         let collectionViewHolder = makeCollectionViewHolder(parent: viewController, coordinator:context.coordinator)
         context.coordinator.collectionViewHolder = collectionViewHolder
@@ -40,7 +40,7 @@ struct SmoothList: UIViewControllerRepresentable {
     
     private func makeCollectionViewHolder(parent viewController: UIViewControllerType,
                                           coordinator: Coordinator) -> CollectionViewHolderType {
-        print("⭐️ SmoothList: makeCollectionViewHolder")
+        L.sl.debug("⭐️ SmoothList: makeCollectionViewHolder")
         let collectionViewHolder = CViewHolder(coordinator: coordinator) { uiCollectionView in
             //            uiCollectionView.translatesAutoresizingMaskIntoConstraints = false
             uiCollectionView.translatesAutoresizingMaskIntoConstraints = false
@@ -60,7 +60,7 @@ struct SmoothList: UIViewControllerRepresentable {
     }
     
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
-        print("⭐️ SmoothList: updateUIViewController")
+        L.sl.debug("⭐️ SmoothList: updateUIViewController")
         // TODO: add check to know of we should refresh???
         if let cvh = context.coordinator.collectionViewHolder {
             context.coordinator.lvm = lvm
@@ -69,7 +69,7 @@ struct SmoothList: UIViewControllerRepresentable {
     }
     
     func refresh(_ collectionViewHolder:CViewHolder, coordinator:Coordinator) {
-        print("⭐️ SmoothList: refresh")
+        L.sl.debug("⭐️ SmoothList: refresh")
         coordinator.subscriptions.removeAll()
         collectionViewHolder.dataSource = collectionViewHolder.createDataSource(lvm: coordinator.lvm)
 
@@ -83,11 +83,11 @@ struct SmoothList: UIViewControllerRepresentable {
                 
                 let isInitialApply = dataSource.snapshot().sectionIdentifiers.isEmpty
                 
-                print("⭐️ SmoothList: $_nrPostLeafs.sink -> dataSource.apply(snapshot) (posts: \(posts.count)) (isInitialApply: \(isInitialApply))")
+                L.sl.debug("⭐️ SmoothList: $_nrPostLeafs.sink -> dataSource.apply(snapshot) (posts: \(posts.count)) (isInitialApply: \(isInitialApply))")
                 
                 let restoreTopId:String? = collectionViewHolder.collectionView.contentOffset.y == 0 ? dataSource.snapshot(for: .main).items.first : nil
                 
-                print("⭐️ SmoothList: restoreTopId: \(restoreTopId ?? "-") contentOffset.y: \(collectionViewHolder.collectionView.contentOffset.y.description)")
+                L.sl.debug("⭐️ SmoothList: restoreTopId: \(restoreTopId ?? "-") contentOffset.y: \(collectionViewHolder.collectionView.contentOffset.y.description)")
                 
                 if !SettingsStore.shared.autoScroll && restoreTopId != nil {
                     CATransaction.begin()
@@ -103,13 +103,13 @@ struct SmoothList: UIViewControllerRepresentable {
                     if (isInitialApply) { // Scroll to initial position
                         // ON FIRST LOAD: SCROLL TO SOME INDEX (RESTORE)
                         if (coordinator.lvm.initialIndex > 4) {
-                            print("⭐️ SmoothList:   ↳  dataSource.apply - scrollToItem: \(coordinator.lvm.initialIndex.description)")
+                            L.sl.debug("⭐️ SmoothList:   ↳  dataSource.apply - scrollToItem: \(coordinator.lvm.initialIndex.description)")
                             coordinator.lvm.isAtTop = false
                             collectionViewHolder.collectionView.scrollToItem(at: IndexPath(item: coordinator.lvm.initialIndex, section: 0), at: .top, animated: false)
                         }
                         else if (collectionViewHolder.collectionView.contentOffset.y == 0) {
                             // IF WE ARE AT TOP, ALWAYS SET COUNTER TO 0
-                            print("⭐️ SmoothList:   ↳  dataSource.apply - contentOffset.y == 0. --> force counter to 0")
+                            L.sl.debug("⭐️ SmoothList:   ↳  dataSource.apply - contentOffset.y == 0. --> force counter to 0")
                             coordinator.lvm.lvmCounter.count = 0
                         }
                     }
@@ -118,8 +118,8 @@ struct SmoothList: UIViewControllerRepresentable {
                         if !SettingsStore.shared.autoScroll {
                             if let restoreTopId {
                                 if let restoreIndex = posts.firstIndex(where: { $0.id == restoreTopId }) {
-                                    print("⭐️ SmoothList: restoreTopId: \(restoreTopId) found at index: \(restoreIndex)")
-                                    print("⭐️ SmoothList: scrollToItem: \(restoreIndex)")
+                                    L.sl.debug("⭐️ SmoothList: restoreTopId: \(restoreTopId) found at index: \(restoreIndex)")
+                                    L.sl.debug("⭐️ SmoothList: scrollToItem: \(restoreIndex)")
                                     collectionViewHolder.collectionView.scrollToItem(at: IndexPath(item: restoreIndex, section: 0), at: .top, animated: false)
                                 }
                             }
@@ -491,7 +491,7 @@ final class CViewHolder {
     }()
     
     func createDataSource(lvm: LVM) -> DataSourceType {
-        print("⭐️ SmoothList: CViewHolder.createDataSource")
+        L.sl.debug("⭐️ SmoothList: CViewHolder.createDataSource")
         return DataSourcy<SingleSection, String>(
             collectionView: collectionView,
             cellProvider: { [weak self] collectionView, indexPath, identifier -> UICollectionViewCell? in

@@ -54,7 +54,7 @@ class DataProvider: ObservableObject {
         description.url = defaultDirectoryURL.appendingPathComponent("Nostur.sqlite") // ("Nostur-iCloud.sqlite")
         description.configuration = "Default"
         
-        print("🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀 \(description.url?.absoluteString ?? "")")
+        L.og.debug("🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀 \(description.url?.absoluteString ?? "")")
         
         if inMemory {
             description.url = URL(fileURLWithPath: "/dev/null")

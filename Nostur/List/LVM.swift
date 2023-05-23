@@ -208,7 +208,7 @@ class LVM: NSObject, ObservableObject {
                                 
                 DispatchQueue.main.async {
                     self.initialIndex = self.getRestoreScrollIndex(leafThreads, lastAppearedId: self.restoreScrollToId) ?? 0
-                    print("⭐️ LVM.initialIndex: \(self.initialIndex)")
+                    L.sl.debug("⭐️ LVM.initialIndex: \(self.initialIndex)")
                     self.nrPostLeafs = leafThreads
 //                    print("COUNTER B: \(self.lvmCounter.count)")
                     self.lvmCounter.count = self.itemsAfterLastRead < 5 ? 0 : self.itemsAfterLastRead
@@ -846,7 +846,7 @@ extension LVM {
             listState.mostRecentAppearedId = lastReadId
             listState.updatedAt = Date.now
             listState.leafs = leafs
-            print("⭐️ saveListState: lastAppearedId: \(lastAppearedId?.description.prefix(11) ?? "??") (index: \(self.lastAppearedIndex?.description ?? "??"))")
+            L.sl.debug("⭐️ saveListState: lastAppearedId: \(lastAppearedId?.description.prefix(11) ?? "??") (index: \(self.lastAppearedIndex?.description ?? "??"))")
             do {
                 try context.save()
             }

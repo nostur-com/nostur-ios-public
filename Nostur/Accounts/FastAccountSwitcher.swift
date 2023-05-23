@@ -21,7 +21,7 @@ struct FastAccountSwitcher: View {
     }
     
     var body: some View {
-        let _ = Self._printChanges()
+//        let _ = Self._printChanges()
         HStack(spacing:5) {
             ForEach(fewAccounts.indices, id:\.self) { index in
                 PFP(pubkey: fewAccounts[index].publicKey, account: fewAccounts[index], size: 25)

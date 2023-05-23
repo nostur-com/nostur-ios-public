@@ -48,7 +48,7 @@ final class SocketPool: ObservableObject {
                     _ = sp.addSocket(relayId: relay.objectID, url: relay.url!, read:relay.read, write: relay.write)
                 }
             } catch {
-                print("🔴🔴🔴 Fail in SocketPool.shared.setup(), \(error)")
+                L.sockets.error("🔴🔴🔴 Fail in SocketPool.shared.setup(), \(error)")
             }
         }
     }
@@ -133,14 +133,13 @@ final class SocketPool: ObservableObject {
         if (message.type == .REQ) {
             let read = sockets.values.filter { $0.read == true }.count
             if read > 0 && subscriptionId == nil {
-                print("⬇️⬇️ REQ ON \(read) RELAYS: \(String(message.message.prefix(260)))")
+                L.sockets.debug("⬇️⬇️ REQ ON \(read) RELAYS: \(message.message)")
             }
             //            print("⬇️⬇️ REQ ON \(read) RELAYS: \(String(message.message))")
         }
         
         Task(priority: .utility) { [unowned self] in
             for (_, managedClient) in self.sockets {
-                //                print("active subscriptions \(managedClient.url): \(managedClient.activeSubscriptions.count)")
                 guard managedClient.read || managedClient.write else {
                     // Skip if relay is not selected for reading or writing events
                     continue
@@ -159,11 +158,11 @@ final class SocketPool: ObservableObject {
                     if (subscriptionId != nil) {
                         DispatchQueue.main.async {
                             managedClient.activeSubscriptions.append(subscriptionId!)
-                            print("🏎️🏎️⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count)")
+                            L.sockets.debug("🏎️🏎️⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count)")
                         }
                     }
                     if subscriptionId != nil {
-                        print(" ⬇️⬇️ REQUESTING: \(String(message.message.prefix(260)))")
+                        L.sockets.debug(" ⬇️⬇️ REQUESTING: \(message.message)")
                     }
 //                    print("⬇️⬇️ REQUESTING: \(String(message.message))")
                     managedClient.client.sendMessage(message.message)
@@ -175,14 +174,14 @@ final class SocketPool: ObservableObject {
                         continue
                         //                        managedClient.connect()
                     }
-                    //                    print("🔚🔚 CLOSE: \(String(message.message.prefix(260)))")
+                    L.sockets.debug("🔚🔚 CLOSE: \(message.message)")
                     managedClient.client.sendMessage(message.message)
                 }
                 else if message.type == .EVENT && managedClient.write { // EVENT IS ONLY FOR WRITE RELAYS
                     if (!managedClient.isConnected) && (!managedClient.isConnecting) {
                         managedClient.connect()
                     }
-                    print("🚀🚀🚀 PUBLISHING TO \(managedClient.url): \(message.message)")
+                    L.sockets.debug("🚀🚀🚀 PUBLISHING TO \(managedClient.url): \(message.message)")
                     managedClient.client.sendMessage(message.message)
                 }
             }
@@ -288,7 +287,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     func connect(_ forceConnectionAttempt:Bool = false) {
         guard forceConnectionAttempt || self.skipped == self.exponentialReconnectBackOff else { // Should be 0 == 0 to continue, or 2 == 2 etc..
             self.skipped = skipped + 1
-            print("🏎️🏎️🔌🔴 Skipping reconnect. \(self.url) EB: (\(exponentialReconnectBackOff)) skipped: \(skipped)")
+            L.sockets.debug("🏎️🏎️🔌🔴 Skipping reconnect. \(self.url) EB: (\(self.exponentialReconnectBackOff)) skipped: \(self.skipped)")
             return
         }
         if !isConnecting {
@@ -313,7 +312,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
             self.isConnected = false
         }
         self.activeSubscriptions = []
-        print("🏎️🏎️🔌 DISCONNECTED \(self.url)")
+        L.sockets.debug("🏎️🏎️🔌 DISCONNECTED \(self.url)")
         DispatchQueue.main.async {
             sendNotification(.socketNotification, "Disconnected: \(self.url)")
         }
@@ -329,19 +328,19 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
         }
         self.activeSubscriptions = []
         self.exponentialReconnectBackOff = max(1, self.exponentialReconnectBackOff * 2)
-        print("🏎️🏎️🔌🔴 DISCONNECTED WITH ERROR \(self.url): \(error.localizedDescription)")
+        L.sockets.debug("🏎️🏎️🔌🔴 DISCONNECTED WITH ERROR \(self.url): \(error.localizedDescription)")
         DispatchQueue.main.async {
             sendNotification(.socketNotification, "Disconnected: \(self.url)")
         }
     }
     
     func didReceiveMessage(_ text:String) {
-//        print("🟠🟠🏎️🔌 RECEIVED: \(self.url): \(String(text.prefix(260)))")
+        L.sockets.debug("🟠🟠🏎️🔌 RECEIVED: \(self.url): \(text)")
         MessageParser.shared.socketReceivedMessage(text: text, relayUrl: self.url, client:client)
     }
     
     func didReceiveData(_ data:Data) {
-        print("🔌 RECEIVED DATA \(self.url): \(data.count)")
+        L.sockets.debug("🔌 RECEIVED DATA \(self.url): \(data.count)")
     }
     
     public func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
@@ -353,9 +352,8 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
         self.activeSubscriptions = []
         self.exponentialReconnectBackOff = 0
         self.skipped = 0
-        print("🏎️🏎️🔌 CONNECTED \(self.url)")
+        L.sockets.debug("🏎️🏎️🔌 CONNECTED \(self.url)")
         LVMManager.shared.restoreSubscriptions()
-        //                print("🔌 CONNECTED \(self.url): \(headers)")
     }
     
     
@@ -371,7 +369,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
         DispatchQueue.main.async {
             sendNotification(.socketNotification, "Disconnected: \(self.url)")
         }
-        print("🏎️🏎️🔌 DISCONNECTED \(self.url): with code: \(closeCode.rawValue) \(String(describing: reason != nil ? String(data: reason!, encoding: .utf8) : "") )")
+        L.sockets.debug("🏎️🏎️🔌 DISCONNECTED \(self.url): with code: \(closeCode.rawValue) \(String(describing: reason != nil ? String(data: reason!, encoding: .utf8) : "") )")
         
     }
 }
@@ -434,7 +432,7 @@ class NewWebSocket {
     
     func sendMessage(_ text:String) {
         guard let webSocket = webSocket else {
-            print("🔴🔴 Not connected. Did not sendMessage \(self.url)")
+            L.sockets.debug("🔴🔴 Not connected. Did not sendMessage \(self.url)")
             return
         }
 //        print("🟠🟠🏎️🔌🔌 SEND \(self.url): \(text)")
@@ -530,7 +528,7 @@ final class EphemeralSocketPool: ObservableObject {
             if let socket = self?.sockets.first(where: { (key: String, value: NewEphemeralClient) in
                 key == url
             }) {
-                print("Removing ephemeral relay \(url)")
+                L.sockets.debug("Removing ephemeral relay \(url)")
                 socket.value.disconnect()
                 self?.sockets.removeValue(forKey: url)
             }
@@ -579,7 +577,7 @@ class NewEphemeralClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDel
     }
     
     func didDisconnect() {
-        print("🏎️🏎️🔌 DISCONNECTED \(self.url)")
+        L.sockets.debug("🏎️🏎️🔌 DISCONNECTED \(self.url)")
     }
     
     func didDisconnectWithError(_ error: Error) {
@@ -587,25 +585,25 @@ class NewEphemeralClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDel
             let shortURL = URL(string: self.url)?.baseURL?.description ?? self.url
             sendNotification(.socketNotification, "Error: \(shortURL) \(error.localizedDescription)")
         }
-        print("🏎️🏎️🔌🔴 DISCONNECTED WITH ERROR \(self.url): \(error.localizedDescription)")
+        L.sockets.debug("🏎️🏎️🔌🔴 DISCONNECTED WITH ERROR \(self.url): \(error.localizedDescription)")
     }
     
     func didReceiveMessage(_ text:String) {
-        print("🔌 RECEIVED TEXT \(self.url): \(text)")
+        L.sockets.debug("🔌 RECEIVED TEXT \(self.url): \(text)")
         MessageParser.shared.socketReceivedMessage(text: text, relayUrl: self.url, client:client)
     }
     
     func didReceiveData(_ data:Data) {
-        print("🔌 RECEIVED DATA \(self.url): \(data.count)")
+        L.sockets.debug("🔌 RECEIVED DATA \(self.url): \(data.count)")
     }
     
     public func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
-        print("🔌 CONNECTED \(self.url)")
+        L.sockets.debug("🔌 CONNECTED \(self.url)")
     }
     
     
     public func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
-        print("🏎️🏎️🔌 DISCONNECTED \(self.url): with code: \(closeCode.rawValue) \(String(describing: reason != nil ? String(data: reason!, encoding: .utf8) : "") )")
+        L.sockets.debug("🏎️🏎️🔌 DISCONNECTED \(self.url): with code: \(closeCode.rawValue) \(String(describing: reason != nil ? String(data: reason!, encoding: .utf8) : "") )")
     }
 }
 

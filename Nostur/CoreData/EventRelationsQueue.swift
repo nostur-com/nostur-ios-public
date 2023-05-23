@@ -67,26 +67,26 @@ class EventRelationsQueue {
             if isBGevent {
                 ctx.perform { [unowned self] in
                     self.waitingEvents.insert(event)
-                    print("🟢🟢🟢🔴🔴 WRONG THREAD: addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
+                    L.og.debug("🟢🟢🟢🔴🔴 WRONG THREAD: addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
                 }
             }
             else {
                 ctx.perform { [unowned self] in
                     guard let privateEvent = self.ctx.object(with: event.objectID) as? Event else { return }
                     self.waitingEvents.insert(privateEvent)
-                    print("🟢🟢🟢🔴🔴 WRONG THREAD+MAINEVENT: addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
+                    L.og.debug("🟢🟢🟢🔴🔴 WRONG THREAD+MAINEVENT: addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
                 }
             }
         }
         else {
             if isBGevent {
                 self.waitingEvents.insert(event)
-                print("🟢🟢🟢🟢🟢 addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
+                L.og.debug("🟢🟢🟢🟢🟢 addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
             }
             else {
                 guard let privateEvent = self.ctx.object(with: event.objectID) as? Event else { return }
                 self.waitingEvents.insert(privateEvent)
-                print("🟢🟢🟢🟢🔴 WRONG MAINEVENT. addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
+                L.og.debug("🟢🟢🟢🟢🔴 WRONG MAINEVENT. addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
             }
         }
     }
@@ -125,14 +125,14 @@ class EventRelationsQueue {
         if contact.managedObjectContext == ctx {
             ctx.perform { [unowned self] in
                 self.waitingContacts.insert(contact)
-                print("🟢🟢🟢 addAwaitingContact. now in queue: \(self.waitingContacts.count) -- \(debugInfo ?? "")")
+                L.og.debug("🟢🟢🟢 addAwaitingContact. now in queue: \(self.waitingContacts.count) -- \(debugInfo ?? "")")
             }
         }
         else {
             ctx.perform { [unowned self] in
                 guard let privateContact = self.ctx.object(with: contact.objectID) as? Contact else { return }
                 self.waitingContacts.insert(privateContact)
-                print("🟢🟢🟢 addAwaitingContact. now in queue: \(self.waitingContacts.count) -- \(debugInfo ?? "")")
+                L.og.debug("🟢🟢🟢 addAwaitingContact. now in queue: \(self.waitingContacts.count) -- \(debugInfo ?? "")")
             }
         }
     }
