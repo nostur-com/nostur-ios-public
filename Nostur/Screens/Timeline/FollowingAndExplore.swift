@@ -81,16 +81,16 @@ struct FollowingAndExplore: View { //, Equatable {
                     }
                     
                     // LISTS
-//                    ForEach(lists) { list in
-//                        ListViewContainer(vm: LVMManager.shared.listLVM(forList: list))
-//                            .navigationTitle(list.name_)
-//                            .id(list.subscriptionId)
-//                            .opacity(selectedSubTab == "List" && list == selectedList ? 1 : 0)
-//                    }
+                    ForEach(lists) { list in
+                        ListViewContainer(vm: LVMManager.shared.listLVM(forList: list))
+                            .navigationTitle(list.name_)
+                            .id(list.subscriptionId)
+                            .opacity(selectedSubTab == "List" && list == selectedList ? 1 : 0)
+                    }
 
                     // EXPLORE
-//                    ListViewContainer(vm: LVMManager.shared.exploreLVM(forAccount: account))
-//                        .opacity(selectedSubTab == "Explore" ? 1 : 0)
+                    ListViewContainer(vm: LVMManager.shared.exploreLVM(forAccount: account))
+                        .opacity(selectedSubTab == "Explore" ? 1 : 0)
                 }
                 
             }
