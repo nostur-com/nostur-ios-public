@@ -82,19 +82,39 @@ struct InnerPFP: View {
     var size:CGFloat = 50
     var color:Color
     var isFollowing = false // will use later to put non following in seperate cache
-    let settings:SettingsStore = .shared
+    @ObservedObject var settings:SettingsStore = .shared
+    
+//    var thumbOptions:ImageRequest.ThumbnailOptions {
+//        var thumbOptions = ImageRequest.ThumbnailOptions(size: CGSize(width: size, height: size))
+////        thumbOptions.createThumbnailFromImageAlways = true
+////        thumbOptions.shouldCacheImmediately = true
+//        return thumbOptions
+//    }
     
     var body: some View {
         if let pictureUrl, pictureUrl.prefix(7) != "http://" {
             if (!settings.animatedPFPenabled) || (pictureUrl.suffix(4) != ".gif") {
-                LazyImage(request: ImageRequest(url: URL(string:pictureUrl), processors: [.resize(size: CGSize(width: size, height: size), unit: .points, contentMode: .aspectFill, crop: true, upscale: true)], userInfo: [.scaleKey: UIScreen.main.scale]), transaction: .init(animation: .none)) { state in
+                LazyImage(request: ImageRequest(
+                    url: URL(string:pictureUrl),
+//                    userInfo: [.thumbnailKey: thumbOptions]
+                    processors: [.resize(size: CGSize(width: size, height: size), unit: .points, contentMode: .aspectFill, crop: true, upscale: true)],
+                    userInfo: [.scaleKey: UIScreen.main.scale]
+//                    userInfo: [.scaleKey: 1, .thumbnailKey: thumbOptions]
+//                    userInfo: [.scaleKey: UIScreen.main.scale, .thumbnailKey: thumbOptions]
+                ), transaction: .init(animation: .none)) { state in
+//                    if let container = state.imageContainer {
+//                        let _ = print("userInfo: \(container.userInfo.description)")
+//                    }
                     if let image = state.image {
                         if pictureUrl.suffix(4) == ".gif" {
                             image
                                 .resizable() // BUG: Still .gif gets wrong dimensions, so need .resizable()
+                                .aspectRatio(contentMode: .fill)
                         }
                         else {
                             image
+//                                .resizable()
+//                                .aspectRatio(contentMode: .fill)
                         }
                     }
                     else {
@@ -103,7 +123,7 @@ struct InnerPFP: View {
                 }
                 .pipeline(ImageProcessing.shared.pfp)
                 .frame(width: size, height: size)
-                .background(color)
+//                .background(color)
                 .cornerRadius(.greatestFiniteMagnitude)
             }
             else if (pictureUrl.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
@@ -163,22 +183,29 @@ struct ProfilePicViewWrapper: View {
     // me
     // 5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0
     
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
-        predicate: NSPredicate(format: "pubkey == %@", "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"),
-        animation: .none)
-    var contacts:FetchedResults<Contact>
-    
     var body: some View {
         //        EmptyView()
         VStack {
-            PFP(pubkey: "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", contact: contacts.first, size: 150)
-                .frame(width: 150, height: 150)
-                .background(.green)
             
-            PFP(pubkey: "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", contact: contacts.first)
-                .frame(width: 50, height: 50)
-                .background(.red)
+            if let gladstein = PreviewFetcher.fetchContact("58c741aa630c2da35a56a77c1d05381908bd10504fdd2d8b43f725efa6d23196") {
+                PFP(pubkey: gladstein.pubkey, contact: gladstein)
+            }
+            if let ani = PreviewFetcher.fetchContact("3f770d65d3a764a9c5cb503ae123e62ec7598ad035d836e2a810f3877a745b24") {
+                PFP(pubkey: ani.pubkey, contact: ani)
+            }
+            
+            if let gladstein = PreviewFetcher.fetchNRContact("58c741aa630c2da35a56a77c1d05381908bd10504fdd2d8b43f725efa6d23196") {
+                PFP(pubkey: gladstein.pubkey, nrContact: gladstein, size: 150)
+            }
+            
+            if let pfp = PreviewFetcher.fetchNRContact("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0") {
+                PFP(pubkey: pfp.pubkey, nrContact: pfp)
+            }
+            
+            if let pfp = PreviewFetcher.fetchNRContact("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0") {
+                PFP(pubkey: pfp.pubkey, nrContact: pfp, size: 150)
+                    .background(.green)
+            }
         }
     }
 }
