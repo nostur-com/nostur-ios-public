@@ -9,7 +9,7 @@ import Foundation
 import CoreData
 import Combine
 
-let LVM_MAX_VISIBLE = 250 // Will only be ignored if last appeared is older
+let LVM_MAX_VISIBLE = 100 // Will only be ignored if last appeared is older
 
 
 //@MainActor
@@ -20,12 +20,12 @@ class LVM: NSObject, ObservableObject {
     //    }
         
     @Published var state:LVM.LIST_STATE = .INIT
-    var didSetNrPostLeafs = PassthroughSubject<Void, Never>()
+    var didSetNrPostLeafs = PassthroughSubject<[String], Never>()
+    var didSetOlderNrPostLeafs = PassthroughSubject<[String], Never>()
     var nrPostLeafs:[NRPost] = [] {
         didSet {
             leafsAndParentIdsOnScreen = self.getAllObjectIds(nrPostLeafs)
             leafIdsOnScreen = Set(nrPostLeafs.map { $0.id })
-            didSetNrPostLeafs.send()
         }
     }
     var leafsAndParentIdsOnScreen:Set<String> = [] // Should always be in sync with nrPostLeafs
@@ -38,10 +38,16 @@ class LVM: NSObject, ObservableObject {
     
     let FETCH_FEED_INTERVAL = 9.0
     var id:String // "Following", "Explore", "List-0xb893daf22106244b"
+    var uuid = UUID().uuidString
+    var name:String = "" // for debugging
     
     var listStateObjectId:NSManagedObjectID?
     var pubkey:String?
-    var pubkeys:Set<String>
+    var pubkeys:Set<String> {
+        didSet {
+            L.lvm.info("\(self.id) \(self.name) - pubkeys.count \(oldValue.count) -> \(self.pubkeys.count)")
+        }
+    }
     
     // for performance, .map .prefix(10) can maybe cause microhang with many pubkeys
     var pubkeysPrefixString:String {
@@ -75,24 +81,27 @@ class LVM: NSObject, ObservableObject {
     var initialIndex:Int = 0 // derived from restoreScrollToId's index
     
     func didAppear() {
-        print("🟢🟢 \(self.id) didAppear")
-        self.restoreSubscription()
-        if nrPostLeafs.count == 0 {
-            if (self.restoreLeafs != nil) {
-                self.performLocalRestoreFetch()
-            }
-            else {
-                self.performLocalFetch()
-            }
+        guard instantFinished else {
+            startInstantFeed()
+            return
         }
+        L.lvm.info("🟢🟢 \(self.id) \(self.pubkey?.short ?? "") didAppear")
+        self.restoreSubscription()
+        
+        
+        // TODO: Provide a setting to enable this again, instead of InstantFeed()...
+//        if nrPostLeafs.count == 0 {
+//            if (self.restoreLeafs != nil) {
+//                self.performLocalRestoreFetch()
+//            }
+//            else {
+//                self.performLocalFetch()
+//            }
+//        }
     }
     
     func nextTickNow() {
-        self.fetchFeedTimer?.invalidate()
-        self.fetchFeedTimer = Timer.scheduledTimer(withTimeInterval: FETCH_FEED_INTERVAL, repeats: true) { [weak self] _ in
-            guard let self = self else { return }
-            self.fetchFeedTimerNextTick()
-        }
+        self.configureTimer()
         fetchFeedTimerNextTick()
     }
     
@@ -103,6 +112,7 @@ class LVM: NSObject, ObservableObject {
     
     private var fetchFeedTimer: Timer?
     
+    var throttledCommand = PassthroughSubject<() -> (), Never>()
     var lastAppearedIdSubject = CurrentValueSubject<String?, Never>(nil) // Need it for debounce etc
     var lastAppearedIndex:Int? {
         lastAppearedIdSubject.value != nil
@@ -113,8 +123,12 @@ class LVM: NSObject, ObservableObject {
     var lastReadIdIndex:Int? { lastReadId != nil ? nrPostLeafs.firstIndex(where: { $0.id == self.lastReadId! }) : nil }
     
     private var subscriptions = Set<AnyCancellable>()
+    public func cleanUp() {
+        self.subscriptions.removeAll()
+    }
     
     var startRenderingSubject = CurrentValueSubject<[Event], Never>([])
+    var startRenderingOlderSubject = CurrentValueSubject<[Event], Never>([])
     var didCatchup = false
     var backlog = Backlog()
     
@@ -144,7 +158,7 @@ class LVM: NSObject, ObservableObject {
     func getRestoreScrollIndex(_ nrPostLeafs:[NRPost], lastAppearedId:String? = nil) -> Int? {
         if let lastAppearedId {
             if let index = nrPostLeafs.firstIndex(where: { $0.id == lastAppearedId }) {
-                print("🟢🟢🟢 should scroll to leaf index: \(index)")
+                L.lvm.info("🟢🟢🟢 \(self.id) \(self.pubkey?.short ?? "") should scroll to leaf index: \(index)")
                 if index+1 < nrPostLeafs.count {
                     return index+1
                 }
@@ -152,14 +166,14 @@ class LVM: NSObject, ObservableObject {
             }
             // or maybe the leaf is now a parent?
             else if let index = nrPostLeafs.firstIndex(where: { $0.parentPosts.map { $0.id }.contains(lastAppearedId) }) {
-                print("🟢🟢🟢 should scroll to leaf-to-parent index: \(index)")
+                L.lvm.info("🟢🟢🟢 \(self.id) \(self.pubkey?.short ?? "") should scroll to leaf-to-parent index: \(index)")
                 if index+1 < nrPostLeafs.count {
                     return index+1
                 }
                 return index
             }
             else {
-                print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 dunno where to scroll to 1")
+                L.lvm.info("🟢🟢🟢 \(self.id) \(self.pubkey?.short ?? "") dunno where to scroll to 1")
                 return nil
             }
         }
@@ -169,7 +183,9 @@ class LVM: NSObject, ObservableObject {
     }
     
     // MARK: FROM DB TO SCREEN STEP 3:
-    private func processPostsInBackground(_ events:[Event]) { // events are from viewContext
+    private func processPostsInBackground(_ events:[Event], older:Bool = false) { // events are from viewContext
+        let taskId = UUID().uuidString
+        L.lvm.notice("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") Start transforming \(events.count) events - \(taskId)")
         let context = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" ? DataProvider.shared().viewContext : DataProvider.shared().bg // Should be use shared().bg instead??
         
         // onScreenIds includes leafs and parents, so all posts.
@@ -202,17 +218,18 @@ class LVM: NSObject, ObservableObject {
 //                .suffix(LVM_MAX_VISIBLE) // Don't add too many posts
 
             guard transformedObjectIds.count > 0 else { return }
-            print("Transformed \(transformedObjectIds.count) posts")
+            L.lvm.notice("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") Transformed \(transformedObjectIds.count) posts - \(taskId)")
 
             if currentNRPostLeafs.count == 0 {
                 let leafThreads = self.renderLeafs(added, onScreenSeen:onScreenSeen) // Transforms seperate posts into threads, .id for each thread is leaf.id
                                 
                 DispatchQueue.main.async {
                     self.initialIndex = self.getRestoreScrollIndex(leafThreads, lastAppearedId: self.restoreScrollToId) ?? 0
-                    L.sl.info("⭐️ LVM.initialIndex: \(self.initialIndex)")
+                    L.sl.info("⭐️ LVM.initialIndex: \(self.name) \(self.initialIndex) - \(taskId)")
                     self.nrPostLeafs = leafThreads
+                    self.didSetNrPostLeafs.send(leafThreads.map { $0.id })
 //                    print("COUNTER B: \(self.lvmCounter.count)")
-                    self.lvmCounter.count = self.itemsAfterLastRead < 5 ? 0 : self.itemsAfterLastRead
+//                    self.lvmCounter.count = self.itemsAfterLastRead < 5 ? 0 : self.itemsAfterLastRead
 //                    print("COUNTER BB: \(self.lvmCounter.count)")
                 }
             }
@@ -223,29 +240,36 @@ class LVM: NSObject, ObservableObject {
 //                self.needsReplyTo.append(contentsOf: danglers)
 //                print("🟠🟠 danglers: \(danglers.count)")
                 if danglers.count > 0 {
-                    fetchParents(danglers)
+                    fetchParents(danglers, older:older)
                 }
-                putNewThreadsOnScreen(newLeafThreads, leafIdsOnScreen:leafIdsOnScreen, currentNRPostLeafs: currentNRPostLeafs)
+                putNewThreadsOnScreen(newLeafThreads, leafIdsOnScreen:leafIdsOnScreen, currentNRPostLeafs: currentNRPostLeafs, older:older)
             }
         }
     }
     
-    func safeInsert(_ nrPosts:[NRPost]) -> [NRPost] {
+    func safeInsert(_ nrPosts:[NRPost], older:Bool = false) -> [NRPost] {
         let leafIdsOnScreen = Set(self.nrPostLeafs.map { $0.id })
         let onlyNew = nrPosts
             .filter { !leafIdsOnScreen.contains($0.id) }
             .uniqued(on: { $0.id })
-        self.nrPostLeafs.insert(contentsOf: onlyNew, at: 0)
+        if older {
+            self.nrPostLeafs.append(contentsOf: onlyNew) // ADD TO THE END (OLDER POSTS, NEXT PAGE)
+            self.didSetOlderNrPostLeafs.send(onlyNew.map { $0.id })
+        }
+        else {
+            self.nrPostLeafs.insert(contentsOf: onlyNew, at: 0) // ADD TO THE TOP, NEW POSTS.
+            self.didSetNrPostLeafs.send(onlyNew.map{ $0.id })
+        }
         return onlyNew
     }
     
     var isAtTop = true
     
-    func putNewThreadsOnScreen(_ newLeafThreadsWithDuplicates:[NRPost], leafIdsOnScreen:Set<String>, currentNRPostLeafs:[NRPost]) {
+    func putNewThreadsOnScreen(_ newLeafThreadsWithDuplicates:[NRPost], leafIdsOnScreen:Set<String>, currentNRPostLeafs:[NRPost], older:Bool = false) {
         let newLeafThreads = newLeafThreadsWithDuplicates.filter { !leafIdsOnScreen.contains($0.id) }
         let diff = newLeafThreadsWithDuplicates.count - newLeafThreads.count
         if diff > 0 {
-            print("putNewThreadsOnScreen: skipped \(diff) duplicates")
+            L.lvm.info("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") putNewThreadsOnScreen: skipped \(diff) duplicates")
         }
         
         // leafs+parents count
@@ -254,7 +278,7 @@ class LVM: NSObject, ObservableObject {
         })
         
         // clean up a bit if needed
-        if currentNRPostLeafs.count > LVM_MAX_VISIBLE && self.isAtTop {
+        if currentNRPostLeafs.count > LVM_MAX_VISIBLE && self.isAtTop && !older {
             // dont drop all
             let dropLimit = max(0,(currentNRPostLeafs.count - 10)) // also not negative
             let dropCount = min(newLeafThreads.count,dropLimit)
@@ -263,17 +287,17 @@ class LVM: NSObject, ObservableObject {
                 let inserted = self.safeInsert(newNRPostLeafs)
                 self.fetchAllMissingPs(inserted)
             }
-            print("Removed \(dropCount) from the end")
+            L.lvm.info("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") Removed \(dropCount) from the end")
         }
         else {
             DispatchQueue.main.async {
-                let inserted = self.safeInsert(newLeafThreads)
+                let inserted = self.safeInsert(newLeafThreads, older:older)
                 self.fetchAllMissingPs(inserted)
             }
             self.fetchAllMissingPs(newLeafThreads)
         }
         
-        
+        guard !older else { return }
         DispatchQueue.main.async {
             if !self.isAtTop || !SettingsStore.shared.autoScroll {
 //                print("COUNTER C: \(self.lvmCounter.count)")
@@ -293,14 +317,15 @@ class LVM: NSObject, ObservableObject {
         }
     }
     
-    func fetchParents(_ danglers:[NRPost]) {
+    func fetchParents(_ danglers:[NRPost], older:Bool = false) {
         danglers.forEach { nrPost in
             EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "LVM.001")
         }
         
         let danglingFetchTask = ReqTask(
-            reqCommand: { (taskId) in
-//                print("\(taskId) 🟠🟠 danglingFetchTask.fetch() - \(danglers.count)")
+            reqCommand: { [weak self] (taskId) in
+                guard let self = self else { return }
+                L.lvm.info("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") - \(taskId) 🟠🟠 danglingFetchTask.fetch() - \(danglers.count)")
                 let danglerIds = danglers.compactMap { $0.replyToId }
                 if danglerIds.count > 0 {
                     req(RM.getEvents(ids: danglerIds, subscriptionId: taskId))
@@ -309,13 +334,16 @@ class LVM: NSObject, ObservableObject {
             processResponseCommand: { [weak self] (taskId) in
 //                print("\(taskId) 🟠🟠🟠 processResponseCommand")
                 guard let self = self else { print("\(taskId) 🟠🟠🟠 processResponseCommand RETURN!"); return }
-                
-//                print("🟢🟢🟢🟢🟢🟢 dangling before \(danglers.count)")
-//                print("🟢🟢🟢🟢🟢🟢 found \(danglers.compactMap { $0.event.replyTo_ }.count ) parents")
+                let lastCreatedAt = self.nrPostLeafs.last?.created_at ?? 0 // SHOULD CHECK ONLY LEAFS BECAUSE ROOTS CAN BE VERY OLD
                 DataProvider.shared().bg.perform { [weak self] in
                     guard let self = self else { return }
                     let danglingEvents = danglers.map { $0.event }
-                    self.setUnorderedEvents(events: self.filterMutedWords(danglingEvents))
+                    if older {
+                        self.setOlderEvents(events: self.filterMutedWords(danglingEvents))
+                    }
+                    else {
+                        self.setUnorderedEvents(events: self.filterMutedWords(danglingEvents), lastCreatedAt:lastCreatedAt)
+                    }
                 }
             },
             timeoutCommand: { [weak self] (taskId) in
@@ -323,7 +351,7 @@ class LVM: NSObject, ObservableObject {
 //                print("🟠🟠 timeout.. should just render whatever \(danglers.compactMap { $0.event.replyTo_ == nil }.count)")
 
                 DispatchQueue.main.async {
-                    self.putNewThreadsOnScreen(danglers, leafIdsOnScreen: self.leafIdsOnScreen, currentNRPostLeafs: self.nrPostLeafs)
+                    self.putNewThreadsOnScreen(danglers, leafIdsOnScreen: self.leafIdsOnScreen, currentNRPostLeafs: self.nrPostLeafs, older: older)
                 }
             })
 
@@ -357,7 +385,7 @@ class LVM: NSObject, ObservableObject {
             EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "LVM.002")
         }
         req(RM.getEventReferences(ids: ids, subscriptionId: "RELATED-"+UUID().uuidString))
-        print("Skip render and fetch related of \(ids.joined(separator: ",")) first.")
+        L.lvm.info("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") Skip render and fetch related of \(ids.joined(separator: ",")) first.")
     }
     
     func renderLeafs(_ nrPosts:[NRPost], onScreenSeen:Set<String>) -> [NRPost] {
@@ -439,7 +467,10 @@ class LVM: NSObject, ObservableObject {
     var lvmCounter = LVMCounter()
     var restoreLeafs:String?
     
-    init(pubkey:String? = nil, pubkeys:Set<String>, listId:String) {
+    var instantFeed = InstantFeed()
+    
+    init(pubkey:String? = nil, pubkeys:Set<String>, listId:String, name:String = "") {
+        self.name = name
         self.pubkey = pubkey
         self.pubkeys = pubkeys
         self.id = listId
@@ -456,13 +487,14 @@ class LVM: NSObject, ObservableObject {
         }
         
         if (ls == nil) {
-            bg.perform {
+            bg.perform { [weak self] in
+                guard let self = self else { return }
                 ls = ListState(context: bg)
                 ls!.listId = listId
                 ls!.pubkey = pubkey
                 ls!.updatedAt = Date.now
                 do { try bg.save() }
-                catch { print("could not save new listState") }
+                catch { L.lvm.error("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") could not save new listState") }
                 self.listStateObjectId = ls!.objectID
             }
         }
@@ -474,22 +506,14 @@ class LVM: NSObject, ObservableObject {
         }
         
         if (self.restoreLeafs != nil) {
-//            self.state = .AWAITING_RESTORED_FETCH
-            self.restoreScrollToId = ls!.lastAppearedId
-//            self.restoreScrollToAnchor = ls?.lastAppearedAtAnchor ?? "BOTTOM"
-//            print("🟢🟢 lastAppeared.id on init: \(self.lastAppeared?.id ?? "")")
-            self.performLocalRestoreFetch()
+//            self.restoreScrollToId = ls!.lastAppearedId
+//            self.performLocalRestoreFetch()
         }
         else {
-            self.performLocalFetch()
+//            self.performLocalFetch()
         }
-//        print("🟢🟢🟢🟢🟢 performLocalFetch() - from init()")
         
-        self.fetchFeedTimer?.invalidate()
-        self.fetchFeedTimer = Timer.scheduledTimer(withTimeInterval: FETCH_FEED_INTERVAL, repeats: true) { [weak self] _ in
-            guard let self = self else { return }
-            self.fetchFeedTimerNextTick()
-        }
+//        self.configureTimer()
         
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
             let d = UserDefaults(suiteName: "preview_user_defaults")!
@@ -501,19 +525,62 @@ class LVM: NSObject, ObservableObject {
             selectedListId = (UserDefaults.standard.string(forKey: "selected_listId") ?? "Unknown")
         }
         addSubscriptions()
-        fetchFeedTimerNextTick()
+//        fetchFeedTimerNextTick()
+     
+        
+        if viewIsVisible {
+            startInstantFeed()
+        }
+    }
+    
+    func startInstantFeed() {
+        guard !instantFinished else { return }
+        let completeInstantFeed = { [weak self] events in
+            guard let self = self else { return }
+            self.startRenderingSubject.send(events)
+            
+            if (!instantFinished) {
+                self.performLocalFetchAfterImport()
+            }
+//            fetchFeedTimerNextTick()
+            instantFinished = true
+        }
+        if id == "Following", let pubkey {
+            instantFeed.start(pubkey, onComplete: completeInstantFeed)
+        }
+        else {
+            instantFeed.start(pubkeys, onComplete: completeInstantFeed)
+        }
+    }
+    
+    var instantFinished = false {
+        didSet {
+            if instantFinished {
+                L.og.notice("🟪 instantFinished")
+                self.configureTimer()
+            }
+        }
+    }
+    
+    func configureTimer() {
+        self.fetchFeedTimer?.invalidate()
+        self.fetchFeedTimer = Timer.scheduledTimer(withTimeInterval: FETCH_FEED_INTERVAL, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            self.fetchFeedTimerNextTick()
+        }
     }
     
     deinit {
+        L.lvm.info("⭐️ LVM.deinit \(self.id) \(self.name)/\(self.pubkey?.short ?? "")")
         self.fetchFeedTimer?.invalidate()
     }
     
-    // FETCHES NOTHING, BUT AFTER THAT IS REALTIME FOR NEW EVENTS
-    private func wtfFetch(subscriptionId:String) {
-        guard pubkeys.count > 0 else { return }
-        let now = NTimestamp(date: Date.now)
-        req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString, limit:10, subscriptionId: subscriptionId, until: now))
-    }
+//    // FETCHES NOTHING, BUT AFTER THAT IS REALTIME FOR NEW EVENTS
+//    private func wtfFetch(subscriptionId:String) {
+//        guard pubkeys.count > 0 else { return }
+//        let now = NTimestamp(date: Date.now)
+//        req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString, limit:10, subscriptionId: subscriptionId, until: now))
+//    }
     
     // FETCHES NOTHING, BUT AFTER THAT IS REALTIME FOR NEW EVENTS
     private func fetchRealtimeSinceNow(subscriptionId:String) {
@@ -537,17 +604,27 @@ class LVM: NSObject, ObservableObject {
         req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: "RESUME-" + subscriptionId, since: since))
     }
     
+    private func fetchNextPage() {
+        guard pubkeys.count > 0 else { return }
+        guard self.pubkeysPrefixString != "" else { return }
+        guard let last = self.nrPostLeafs.last else { return }
+        let until = NTimestamp(date: last.createdAt)
+        req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString,
+                                  limit: 250,
+                                  subscriptionId: "PAGE-" + UUID().uuidString,
+                                  until: until))
+    }
+    
     // MARK: STEP 0: FETCH FROM RELAYS
     func fetchFeedTimerNextTick() {
         guard self.viewIsVisible else {
 //            print("🏎️🏎️ NOT VISIBLE \(self.subscriptionId)")
             return
         }
-//        performLocalFetch()
         let isImporting = DataProvider.shared().bg.performAndWait {
             return Importer.shared.isImporting
         }
-        guard !isImporting else { print("⏳ Still importing, new fetch skipped."); return }
+        guard !isImporting else { L.lvm.info("\(self.id) \(self.name) ⏳ Still importing, new fetch skipped."); return }
         
         if !UserDefaults.standard.bool(forKey: "firstTimeCompleted") {
             DispatchQueue.main.async {
@@ -558,7 +635,8 @@ class LVM: NSObject, ObservableObject {
         fetchRealtimeSinceNow(subscriptionId: self.id) // Subscription should stay active
         
         if nrPostLeafs.count == 0 { // Nothing on screen
-            fetchNewestUntilNow(subscriptionId: self.id) // This one closes after EOSE
+            // Dont need anymore because InstantFeed()?:
+//            fetchNewestUntilNow(subscriptionId: self.id) // This one closes after EOSE
 //            fetchProfiles(pubkeys: self.pubkeys, subscriptionId: "Profiles")
         }
         else { // Already on screen, app probably returned from from background
@@ -572,7 +650,8 @@ class LVM: NSObject, ObservableObject {
             DispatchQueue.main.async {
                 if (!self.didCatchup) {
                     // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
-                    DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(8)) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(8)) { [weak self] in
+                        guard let self = self else { return }
                         self.fetchNewerSince(subscriptionId: "\(self.id)-\(ago)", since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
                         fetchProfiles(pubkeys: self.pubkeys, subscriptionId: "Profiles")
                     }
@@ -587,36 +666,33 @@ class LVM: NSObject, ObservableObject {
 extension LVM {
     
     func restoreSubscription() {
+        guard instantFinished else { return } // TODO: maybe do instant thing again if too much time in between relaunch
         self.didCatchup = false
         // Always try to restore timer
-        self.fetchFeedTimer?.invalidate()
-        self.fetchFeedTimer = Timer.scheduledTimer(withTimeInterval: FETCH_FEED_INTERVAL, repeats: true) { [weak self] _ in
-            guard let self = self else { return }
-            self.fetchFeedTimerNextTick()
-        }
+        self.configureTimer()
         
         guard viewIsVisible else {
-            print("🏎️🏎️ \(Date.now) NOT VISIBLE, NOT RESTORING: \(self.id)")
+            L.lvm.info("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") NOT VISIBLE, NOT RESTORING. current selectedSubTab: \(self.selectedSubTab) and selectedListId: \(self.selectedListId)")
             return
         }
         
-        print("🏎️🏎️ \(Date.now) restoreSubscription \(self.id)")
+        L.lvm.info("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") restoreSubscription")
         fetchRealtimeSinceNow(subscriptionId: self.id)
-        print("🏎️🏎️ \(Date.now) fetchRealtimeSinceNow() ")
         
         let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 4)  // 4 hours  ago
 
         // Continue from first (newest) on screen?
-        let since = (self.nrPostLeafs.first?.created_at ?? hoursAgo) - (60 * 15) // (take 15 minutes earlier to not mis out of sync posts)
+        let since = (self.nrPostLeafs.first?.created_at ?? hoursAgo) - (60 * 5) // (take 5 minutes earlier to not mis out of sync posts)
         let ago = Date(timeIntervalSince1970: Double(since)).agoString
 
         DispatchQueue.main.async {
             if (!self.didCatchup) {
                 // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
-                DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(8)) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(8)) { [weak self] in
+                    guard let self = self else { return }
                     self.fetchNewerSince(subscriptionId: "\(self.id)-\(ago)", since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
                         fetchProfiles(pubkeys: self.pubkeys, subscriptionId: "Profiles")
-                    print("🏎️🏎️ \(Date.now) restoreSubscription + 8 seconds fetchNewerSince() \(self.id)")
+                    L.lvm.info("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") restoreSubscription + 8 seconds fetchNewerSince()")
                 }
                 self.didCatchup = true
             }
@@ -631,9 +707,22 @@ extension LVM {
         keepFilteringMuted()
         showOwnNewPostsImmediately()
         trackPubkeysChanged()
-        performLocalFetchAfterImport()
+        renderFromLocalIfWeHaveNothingNewAndScreenIsEmpty()
+//        performLocalFetchAfterImport()
         processIncomingParents()
         trackTabVisibility()
+        loadMoreWhenNearBottom()
+        throttledCommands()
+    }
+    
+    func throttledCommands() {
+        throttledCommand
+            .throttle(for: .seconds(5), scheduler: RunLoop.main, latest: false)
+            .sink { command in
+                L.lvm.info("🪡🪡 Running throttled command")
+                command()
+            }
+            .store(in: &subscriptions)
     }
     
     func trackTabVisibility() {
@@ -671,8 +760,22 @@ extension LVM {
         receiveNotification(.newEventsInDatabase)
             .debounce(for: .seconds(2), scheduler: RunLoop.main)
             .sink { [weak self] _ in
-//                print("🟢🟢🟢🟢🟢 performLocalFetch() - from .newEventsInDatabase")
-                self?.performLocalFetch()
+                guard let self = self else { return }
+                guard instantFinished else { return }
+                L.lvm.info("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") performLocalFetchAfterImport \(self.uuid)")
+                self.performLocalFetch()
+            }
+            .store(in: &subscriptions)
+    }
+    
+    func renderFromLocalIfWeHaveNothingNewAndScreenIsEmpty() {
+        receiveNotification(.noNewEventsInDatabase)
+            .debounce(for: .seconds(2.5), scheduler: RunLoop.main)
+            .sink { [weak self] _ in
+                guard let self = self else { return }
+                guard self.nrPostLeafs.count == 0 else { return }
+                L.lvm.info("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") renderFromLocalIfWeHaveNothingNew")
+                self.performLocalFetch()
             }
             .store(in: &subscriptions)
     }
@@ -725,6 +828,7 @@ extension LVM {
                     let newNRPostLeaf = NRPost(event: event, withParents: true)
                     DispatchQueue.main.async {
                         self.nrPostLeafs.insert(newNRPostLeaf, at: 0)
+                        self.didSetNrPostLeafs.send([newNRPostLeaf.id])
 //                        print("COUNTER D: \(self.lvmCounter.count)")
                         self.lvmCounter.count = self.isAtTop && SettingsStore.shared.autoScroll ? 0 : (self.lvmCounter.count + 1)
 //                        print("COUNTER DD: \(self.lvmCounter.count)")
@@ -739,6 +843,7 @@ extension LVM {
             .sink { [weak self] notification in
                 guard let self = self else { return }
                 self.nrPostLeafs = self.nrPostLeafs.filter(notMuted)
+                self.didSetNrPostLeafs.send( self.nrPostLeafs.map{ $0.id })
             }
             .store(in: &subscriptions)
         
@@ -747,6 +852,7 @@ extension LVM {
                 guard let self = self else { return }
                 let words = notification.object as! [String]
                 self.nrPostLeafs = self.nrPostLeafs.filter { notMutedWords(in: $0.event.noteText, mutedWords: words) }
+                self.didSetNrPostLeafs.send(self.nrPostLeafs.map { $0.id })
             }
             .store(in: &subscriptions)
     }
@@ -756,6 +862,13 @@ extension LVM {
            .removeDuplicates()
            .sink { [weak self] posts in
                self?.processPostsInBackground(posts)
+           }
+           .store(in: &subscriptions)
+        
+        startRenderingOlderSubject
+           .removeDuplicates()
+           .sink { [weak self] posts in
+               self?.processPostsInBackground(posts, older: true)
            }
            .store(in: &subscriptions)
     }
@@ -785,6 +898,30 @@ extension LVM {
                 }
                 else if self.lastReadId == nil {
                     self.lastReadId = eventId
+                }
+            }
+            .store(in: &subscriptions)
+    }
+    
+    func loadMoreWhenNearBottom() {
+        lastAppearedIdSubject
+//            .throttle(for: 0.05, scheduler: RunLoop.main, latest: false)
+            .compactMap { $0 }
+            .sink { [weak self] eventId in
+                guard let self = self else { return }
+                guard let lastAppeareadIndex = self.lastAppearedIndex else { return }
+                guard self.nrPostLeafs.count > 0 else { return }
+                
+                if lastAppeareadIndex > (self.nrPostLeafs.count-15) {
+                    L.lvm.info("📖 Appeared: \(lastAppeareadIndex)/\(self.nrPostLeafs.count) - fetching more")
+                    self.throttledCommand.send {
+                        self.fetchNextPage()
+                    }
+                }
+                
+                if lastAppeareadIndex > (self.nrPostLeafs.count-5) {
+                    L.lvm.info("📖 Appeared: \(lastAppeareadIndex)/\(self.nrPostLeafs.count) - loading more from local")
+                    self.performLocalOlderFetch()
                 }
             }
             .store(in: &subscriptions)
@@ -845,12 +982,12 @@ extension LVM {
             listState.mostRecentAppearedId = lastReadId
             listState.updatedAt = Date.now
             listState.leafs = leafs
-            L.sl.info("⭐️ saveListState: lastAppearedId: \(lastAppearedId?.description.prefix(11) ?? "??") (index: \(self.lastAppearedIndex?.description ?? "??"))")
+            L.lvm.info("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") saveListState. lastAppearedId: \(lastAppearedId?.description.prefix(11) ?? "??") (index: \(self.lastAppearedIndex?.description ?? "??"))")
             do {
                 try context.save()
             }
             catch {
-                print("🔴🔴 Error saving list state \(self.id) \(listState.pubkey ?? "")")
+                L.lvm.error("🔴🔴 \(self.id) \(self.name)/\(self.pubkey?.short ?? "") Error saving list state \(self.id) \(listState.pubkey ?? "")")
             }
         }
     }
@@ -919,27 +1056,29 @@ extension LVM {
     func performLocalFetch(refreshInBackground:Bool = false) {
         let mostRecentEvent:Event? = self.nrPostLeafs.first?.event
         let visibleOrInRefreshInBackground = self.viewIsVisible || refreshInBackground
+        guard visibleOrInRefreshInBackground else {
+            L.lvm.info("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") performLocalFetch cancelled - view is not visible")
+            return
+        }
         let ctx = DataProvider.shared().bg
+        let lastCreatedAt = self.nrPostLeafs.last?.created_at ?? 0 // SHOULD CHECK ONLY LEAFS BECAUSE ROOTS CAN BE VERY OLD
         ctx.perform { [weak self] in
             guard let self = self else { return }
-            //        print("🏎️🏎️ \(Date.now) performLocalFetch \(self.subscriptionId)")
+            L.lvm.info("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") performLocalFetch LVM.id (\(self.uuid)")
             if let mostRecentEvent = mostRecentEvent {
                 //            print("🟢🟢🟢🟢🟢🟢 from mostRecent \(mostRecent.id)")
                 let fr = Event.postsByPubkeys(self.pubkeys, mostRecent: mostRecentEvent)
                 
-                if visibleOrInRefreshInBackground {
-                    guard let posts = try? ctx.fetch(fr) else { return }
-                    self.setUnorderedEvents(events: self.filterMutedWords(posts))
-                }
+                
+                guard let posts = try? ctx.fetch(fr) else { return }
+                self.setUnorderedEvents(events: self.filterMutedWords(posts), lastCreatedAt:lastCreatedAt)
             }
             else {
-                //            print("🟢🟢🟢🟢🟢🟢 from lastAppearedCreatedAt \(self.lastAppeared?.created_at ?? 0)")
+//                print("🟢🟢🟢🟢🟢🟢 from lastAppearedCreatedAt \(self.lastAppeared?.created_at ?? 0)")
                 let fr = Event.postsByPubkeys(self.pubkeys, lastAppearedCreatedAt: self.lastAppearedCreatedAt ?? 0)
-                
-                if visibleOrInRefreshInBackground {
-                    guard let posts = try? ctx.fetch(fr) else { return }
-                    self.setUnorderedEvents(events: self.filterMutedWords(posts))
-                }
+
+                guard let posts = try? ctx.fetch(fr) else { return }
+                self.setUnorderedEvents(events: self.filterMutedWords(posts), lastCreatedAt:lastCreatedAt)
             }
         }
     }
@@ -991,6 +1130,19 @@ extension LVM {
         }
     }
     
+    
+    func performLocalOlderFetch() {
+        guard let oldestEvent = self.nrPostLeafs.last?.event else { return }
+        let ctx = DataProvider.shared().bg
+        ctx.perform { [weak self] in
+            guard let self = self else { return }
+            L.lvm.info("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") performLocalOlderFetch LVM.id (\(self.uuid)")
+            let fr = Event.postsByPubkeys(self.pubkeys, until: oldestEvent)
+            guard let posts = try? ctx.fetch(fr) else { return }
+            self.setOlderEvents(events: self.filterMutedWords(posts))
+        }
+    }
+    
     var lastAppearedCreatedAt:Int64? {
         guard let lastAppearedId = self.lastAppearedIdSubject.value else { return nil }
         return nrPostLeafs.first(where: { $0.id == lastAppearedId })?.created_at
@@ -1005,7 +1157,7 @@ extension LVM {
     }
     
     // MARK: FROM DB TO SCREEN STEP 2: FIRST FILTER PASS, GETTING PARENTS AND LIMIT, NOT ON SCREEN YET
-    func setUnorderedEvents(events:[Event]) {
+    func setUnorderedEvents(events:[Event], lastCreatedAt:Int64 = 0) {
 //        guard events.count > 0 else { return }
         var newUnrenderedEvents:[Event]
         
@@ -1027,7 +1179,6 @@ extension LVM {
 //                self.state = .COMPLETED_FIRST_FETCH
                 
             default:
-                let lastCreatedAt = self.nrPostLeafs.last?.created_at ?? 0 // SHOULD CHECK ONLY LEAFS BECAUSE ROOTS CAN BE VERY OLD
                 newUnrenderedEvents = events
                     .filter { $0.created_at > lastCreatedAt } // skip all older than first on screen (check LEAFS only)
                     .filter(onlyRootOrReplyingToFollower)
@@ -1045,6 +1196,27 @@ extension LVM {
                 }
                 
                 return
+        }
+    }
+    
+    
+    
+    func setOlderEvents(events:[Event]) {
+        
+        var newUnrenderedEvents:[Event]
+        
+        newUnrenderedEvents = events
+            .filter(onlyRootOrReplyingToFollower)
+            .map {
+                $0.parentEvents = Event.getParentEvents($0)
+                return $0
+            }
+
+        let newEventIds = getAllEventIds(newUnrenderedEvents)
+        let newCount = newEventIds.subtracting(leafsAndParentIdsOnScreen).count
+        if newCount > 0 {
+            self.startRenderingOlderSubject.send(newUnrenderedEvents)
+            
         }
     }
         
@@ -1076,8 +1248,19 @@ extension Event {
         
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        fr.fetchLimit = 1000
+        fr.fetchLimit = 50
         fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN {1,6,9802} AND id != \"\"", cutOffPoint,  pubkeys)
+        return fr
+    }
+    
+    
+    static func postsByPubkeys(_ pubkeys:Set<String>, until:Event) -> NSFetchRequest<Event> {
+        let cutOffPoint = until.created_at + (1 * 60)
+        
+        let fr = Event.fetchRequest()
+        fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+        fr.fetchLimit = 50
+        fr.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN {1,6,9802} AND id != \"\"", cutOffPoint,  pubkeys)
         return fr
     }
     
@@ -1104,7 +1287,7 @@ extension Event {
         
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        fr.fetchLimit = 1000
+        fr.fetchLimit = 50
         fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN {1,6,9802} AND id != \"\"", newCutOffPoint,  pubkeys)
         return fr
     }

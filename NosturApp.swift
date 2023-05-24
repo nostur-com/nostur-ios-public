@@ -175,6 +175,8 @@ struct NosturApp: App {
     }
     
     func startNosturing() {
+        UserDefaults.standard.register(defaults: ["selected_subtab" : "Following"])
+        
         if (ns.account == nil && ns.accounts.count >= 1) { // NosturState will set last active account in .init, else we set here:
             ns.setAccount(account: ns.accounts.last!)
         }

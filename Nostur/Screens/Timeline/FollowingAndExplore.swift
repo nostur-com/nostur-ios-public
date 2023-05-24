@@ -20,6 +20,7 @@ struct FollowingAndExplore: View { //, Equatable {
     @FetchRequest
     var lists:FetchedResults<NosturList>
     @State var selectedList:NosturList?
+    @State var followingVM:LVM? = nil
     
     init(account:Account) {
         self.account = account
@@ -60,7 +61,7 @@ struct FollowingAndExplore: View { //, Equatable {
                 
                 ZStack {
                     // FOLLOWING
-                    if (account.followingPublicKeys.count <= 1) {
+                    if (followingVM == nil || account.followingPublicKeys.count <= 1) {
                         VStack {
                             Spacer()
                             Text("You are not following anyone yet, visit the explore tab and follow some people")
@@ -76,8 +77,10 @@ struct FollowingAndExplore: View { //, Equatable {
                         }
                     }
                     else {
-                        ListViewContainer(vm: LVMManager.shared.followingLVM(forAccount: account))
-                            .opacity(selectedSubTab == "Following" ? 1 : 0)
+                        if let followingVM {
+                            ListViewContainer(vm: followingVM)
+                                .opacity(selectedSubTab == "Following" ? 1 : 0)
+                        }
                     }
                     
                     // LISTS
@@ -103,7 +106,19 @@ struct FollowingAndExplore: View { //, Equatable {
                         selectedList = lists.first
                     }
                 }
+                followingVM = LVMManager.shared.followingLVM(forAccount: account)
             }
+            .onChange(of: account, perform: { newAccount in
+                guard account != newAccount else { return }
+                L.og.info("Account changed from: \(account.name)/\(account.publicKey) to \(newAccount.name)/\(newAccount.publicKey)")
+                // TODO: Should remove old lvm's here
+                LVMManager.shared.listVMs.filter { $0.pubkey == account.publicKey }
+                    .forEach { lvm in
+                        lvm.cleanUp()
+                    }
+                LVMManager.shared.listVMs.removeAll(where: { $0.pubkey == account.publicKey })
+                followingVM = LVMManager.shared.followingLVM(forAccount: newAccount)
+            })
             .navigationTitle(selectedSubTab == "List" ? (selectedList?.name_ ?? "List") : selectedSubTab)
 //            .navigationBarHidden(true)
             .navigationBarTitleDisplayMode(.inline)

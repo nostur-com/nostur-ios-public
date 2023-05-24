@@ -227,6 +227,10 @@ extension Notification.Name {
         return Notification.Name("newEventsInDatabase")
     }
     
+    static var noNewEventsInDatabase: Notification.Name {
+        return Notification.Name("newEventsInDatabase")
+    }
+    
     static var newHighlight: Notification.Name {
         return Notification.Name("newHighlight")
     }

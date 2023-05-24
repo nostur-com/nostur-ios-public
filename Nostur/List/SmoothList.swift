@@ -26,12 +26,12 @@ struct SmoothList: UIViewControllerRepresentable {
     }
     
     func makeCoordinator() -> Coordinator {
-        L.sl.info("⭐️ SmoothList \(self.lvm.id): makeCoordinator")
+        L.sl.info("⭐️ SmoothList \(self.lvm.id) \(self.lvm.pubkey?.short ?? "-"): makeCoordinator")
         return Coordinator(parent: self, lvm: self.lvm)
     }
     
     func makeUIViewController(context: Context) -> UIViewControllerType {
-        L.sl.info("⭐️ SmoothList \(context.coordinator.lvm.id): makeUIViewController")
+        L.sl.info("⭐️ SmoothList \(context.coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): makeUIViewController")
         let viewController = UIViewControllerType()
         let collectionViewHolder = makeCollectionViewHolder(parent: viewController, coordinator:context.coordinator)
         context.coordinator.collectionViewHolder = collectionViewHolder
@@ -45,7 +45,7 @@ struct SmoothList: UIViewControllerRepresentable {
     
     private func makeCollectionViewHolder(parent viewController: UIViewControllerType,
                                           coordinator: Coordinator) -> CollectionViewHolderType {
-        L.sl.info("⭐️ SmoothList \(coordinator.lvm.id): makeCollectionViewHolder")
+        L.sl.info("⭐️ SmoothList \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): makeCollectionViewHolder")
         let collectionViewHolder = CViewHolder(coordinator: coordinator) { uiCollectionView in
             //            uiCollectionView.translatesAutoresizingMaskIntoConstraints = false
             uiCollectionView.translatesAutoresizingMaskIntoConstraints = false
@@ -65,29 +65,52 @@ struct SmoothList: UIViewControllerRepresentable {
     }
     
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
-//        L.sl.info("⭐️ SmoothList \(context.coordinator.lvm.id): updateUIViewController")
+        L.sl.info("⭐️ SmoothList \(context.coordinator.lvm.id): OLD updateUIViewController \(context.coordinator.lvm.uuid)")
+        L.sl.info("⭐️ SmoothList \(self.lvm.id): NEW updateUIViewController \(self.lvm.uuid)")
+        
+        if (lvm.uuid != context.coordinator.lvm.uuid) { // Update LVM if we have a new one
+            // clean up old
+            context.coordinator.subscriptions.removeAll()
+            var snapshot = NSDiffableDataSourceSnapshot<SingleSection, String>()
+            snapshot.appendSections([SingleSection.main])
+            context.coordinator.collectionViewHolder?.dataSource?.apply(snapshot)
+            
+            // set up new
+            if let cvh = context.coordinator.collectionViewHolder {
+                context.coordinator.lvm = self.lvm
+                refresh(cvh, coordinator: context.coordinator)
+            }
+        }
+    }
+    
+    static func dismantleUIViewController(_ uiViewController: Self.UIViewControllerType, coordinator: Self.Coordinator) {
+        L.sl.info("⭐️ SmoothList. dismantleUIViewController \(coordinator.lvm.id) \(coordinator.lvm.pubkey?.short ?? "-")")
+        coordinator.subscriptions.removeAll()
     }
     
     func refresh(_ collectionViewHolder:CViewHolder, coordinator:Coordinator) {
-        L.sl.info("⭐️ SmoothList \(coordinator.lvm.id): refresh")
+        L.sl.info("⭐️ SmoothList \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): refresh")
         coordinator.subscriptions.removeAll()
         collectionViewHolder.dataSource = collectionViewHolder.createDataSource(lvm: coordinator.lvm)
+        var snapshot = NSDiffableDataSourceSnapshot<SingleSection, String>()
+        snapshot.appendSections([SingleSection.main])
+        collectionViewHolder.dataSource?.apply(snapshot, animatingDifferences: false)
 
         coordinator.lvm.didSetNrPostLeafs
-            .sink {
+            .sink { ids in
                 guard let dataSource = collectionViewHolder.dataSource else { return }
+                let isInitialApply = dataSource.snapshot(for: .main).items.count == 0 
+                var snapshot = dataSource.snapshot()
+                if let firstId = snapshot.itemIdentifiers(inSection: .main).first {
+                    snapshot.insertItems(ids, beforeItem: firstId)
+                }
+                else {
+                    snapshot.appendItems(ids, toSection: .main)
+                }
                 let posts = coordinator.lvm.nrPostLeafs
-                var snapshot = NSDiffableDataSourceSnapshot<SingleSection, String>()
-                snapshot.appendSections([SingleSection.main])
-                snapshot.appendItems(posts.map { $0.id }, toSection: SingleSection.main)
-                
-                let isInitialApply = dataSource.snapshot().sectionIdentifiers.isEmpty
-                
                 
                 let restoreToId:String? = collectionViewHolder.collectionView.contentOffset.y == 0 ? dataSource.snapshot(for: .main).items.first : nil
-                
-                L.sl.info("⭐️ SmoothList \(coordinator.lvm.id): $_nrPostLeafs.sink -> dataSource.apply(snapshot) restoreToId: \(restoreToId ?? "??") (posts: \(posts.count)) (isInitialApply: \(isInitialApply))")
-                
+                                
                 if !SettingsStore.shared.autoScroll && restoreToId != nil {
                     CATransaction.begin()
                     CATransaction.setDisableActions(true)
@@ -98,17 +121,19 @@ struct SmoothList: UIViewControllerRepresentable {
                 // or if we have auto scroll enabled (SettingsStore.shared.autoScroll)
                 let shouldAnimate = !isInitialApply && (restoreToId == nil || SettingsStore.shared.autoScroll)
                 
+                let beforeCount = !isInitialApply ? dataSource.snapshot().numberOfItems(inSection: .main) : 0
+                
                 dataSource.apply(snapshot, animatingDifferences: shouldAnimate) {
                     if (isInitialApply) { // Scroll to initial position
                         // ON FIRST LOAD: SCROLL TO SOME INDEX (RESTORE)
                         if (coordinator.lvm.initialIndex > 4) {
-                            L.sl.info("⭐️ SmoothList \(coordinator.lvm.id):   ↳  dataSource.isInitialApply - scrollToItem: \(coordinator.lvm.initialIndex.description)")
+                            L.sl.info("⭐️⭐️⭐️ SmoothList \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): initial - scrollToItem: \(coordinator.lvm.initialIndex.description) posts: \(posts.count)")
                             coordinator.lvm.isAtTop = false
                             collectionViewHolder.collectionView.scrollToItem(at: IndexPath(item: coordinator.lvm.initialIndex, section: 0), at: .top, animated: false)
                         }
                         else if (collectionViewHolder.collectionView.contentOffset.y == 0) {
                             // IF WE ARE AT TOP, ALWAYS SET COUNTER TO 0
-                            L.sl.info("⭐️ SmoothList \(coordinator.lvm.id):   ↳  dataSource.isInitialApply - contentOffset.y == 0. --> force counter to 0")
+                            L.sl.info("⭐️⭐️⭐️ SmoothList \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): Initial - posts: \(posts.count) - force counter to 0")
                             coordinator.lvm.lvmCounter.count = 0
                         }
                         
@@ -119,8 +144,7 @@ struct SmoothList: UIViewControllerRepresentable {
                         if !SettingsStore.shared.autoScroll {
                             if let restoreToId {
                                 if let restoreIndex = posts.firstIndex(where: { $0.id == restoreToId }) {
-                                    L.sl.info("⭐️ SmoothList \(coordinator.lvm.id):  ↳  updating - restoreToId: \(restoreToId) found at index: \(restoreIndex)")
-                                    L.sl.info("⭐️ SmoothList \(coordinator.lvm.id):  ↳  updating - scrollToItem: \(restoreIndex)")
+                                    L.sl.info("⭐️⭐️ SmoothList \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): adding \(posts.count - beforeCount) posts - scrollToItem: \(restoreIndex), restoreToId: \(restoreToId)")
                                     collectionViewHolder.collectionView.scrollToItem(at: IndexPath(item: restoreIndex, section: 0), at: .top, animated: false)
                                 }
                             }
@@ -129,6 +153,20 @@ struct SmoothList: UIViewControllerRepresentable {
                             CATransaction.commit()
                         }
                     }
+                }
+            }
+            .store(in: &coordinator.subscriptions)
+        
+        
+        coordinator.lvm.didSetOlderNrPostLeafs
+            .sink { ids in
+                guard let dataSource = collectionViewHolder.dataSource else { return }
+                var snapshot = dataSource.snapshot()
+                guard let lastId = snapshot.itemIdentifiers(inSection: .main).last else { return }
+
+                snapshot.insertItems(ids, afterItem: lastId)
+                dataSource.apply(snapshot, animatingDifferences: false) {
+                    L.sl.info("⭐️⭐️ SmoothList \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): added \(ids.count) posts to the end of list")
                 }
             }
             .store(in: &coordinator.subscriptions)
@@ -492,7 +530,7 @@ final class CViewHolder {
     }()
     
     func createDataSource(lvm: LVM) -> DataSourceType {
-        L.sl.info("⭐️ SmoothList \(lvm.id): CViewHolder.createDataSource")
+        L.sl.info("⭐️ SmoothList \(lvm.id) \(lvm.pubkey?.short ?? "-"): CViewHolder.createDataSource")
         return DataSourcy<SingleSection, String>(
             collectionView: collectionView,
             cellProvider: { [weak self] collectionView, indexPath, identifier -> UICollectionViewCell? in
