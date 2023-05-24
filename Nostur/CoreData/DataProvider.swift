@@ -54,7 +54,7 @@ class DataProvider: ObservableObject {
         description.url = defaultDirectoryURL.appendingPathComponent("Nostur.sqlite") // ("Nostur-iCloud.sqlite")
         description.configuration = "Default"
         
-        L.og.debug("🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀 \(description.url?.absoluteString ?? "")")
+        L.og.info("🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀 \(description.url?.absoluteString ?? "")")
         
         if inMemory {
             description.url = URL(fileURLWithPath: "/dev/null")
@@ -126,7 +126,7 @@ class DataProvider: ObservableObject {
     /// Synchronously deletes given records in the Core Data store with the specified object IDs.
     func deleteEvents(identifiedBy objectIDs: [NSManagedObjectID]) {
         let viewContext = container.viewContext
-        logger.debug("Start deleting data from the store...")
+        logger.info("Start deleting data from the store...")
         
         viewContext.perform {
             objectIDs.forEach { objectID in
@@ -135,7 +135,7 @@ class DataProvider: ObservableObject {
             }
         }
         
-        logger.debug("Successfully deleted data.")
+        logger.info("Successfully deleted data.")
     }
     
     func removeOldEvents() {

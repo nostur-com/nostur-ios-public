@@ -23,7 +23,7 @@ class MessageParser {
                 
                 switch message.type {
                 case .AUTH:
-                    print("🟢🟢 \(relayUrl): \(message.message)")
+                    L.og.info("🟢🟢 \(relayUrl): \(message.message)")
                 case .OK:
                     print("\(relayUrl): \(message.message)")
                     if message.success ?? false {
@@ -32,7 +32,7 @@ class MessageParser {
                         }
                     }
                 case .NOTICE:
-                    print("\(relayUrl): \(message.message)")
+                    L.og.notice("\(relayUrl): \(message.message)")
                 case .EOSE:
                     // Keep these subscriptions open.
                     guard let subscriptionId = message.subscriptionId else { return }
@@ -42,7 +42,7 @@ class MessageParser {
                     }
                 default:
                     if (message.type == .EVENT) {
-                        guard let nEvent = message.event else { print("🔴🔴 uhh, where is nEvent "); return }
+                        guard let nEvent = message.event else { L.og.info("🔴🔴 uhh, where is nEvent "); return }
                         
                         let sameMessageInQueue = self.messageBucket.contains(where: {
                              nEvent.id == $0.event?.id && $0.type == .EVENT
@@ -58,16 +58,16 @@ class MessageParser {
                 }
             }
             catch RelayMessage.error.UNKNOWN_MESSAGE_TYPE {
-                print("🟠 \(relayUrl) Unknown message type: \(text)")
+                L.og.notice("🟠 \(relayUrl) Unknown message type: \(text)")
             }
             catch RelayMessage.error.FAILED_TO_PARSE {
-                print("🟠 \(relayUrl) Could not parse text received: \(text)")
+                L.og.notice("🟠 \(relayUrl) Could not parse text received: \(text)")
             }
             catch RelayMessage.error.FAILED_TO_PARSE_EVENT {
-                print("🟠 \(relayUrl) Could not parse EVENT: \(text)")
+                L.og.notice("🟠 \(relayUrl) Could not parse EVENT: \(text)")
             }
             catch {
-                print("🔴🔴 \(relayUrl) \(error)")
+                L.og.error("🔴🔴 \(relayUrl) \(error)")
             }
         }
     }

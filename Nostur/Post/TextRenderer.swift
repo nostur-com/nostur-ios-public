@@ -49,7 +49,7 @@ class TextRenderer { // TEXT things
         }
         catch {
             let finalText = AttributedString(newText)
-            print(error)
+            L.og.error("Error rendering \(finalText) .. error: \(error)")
             return finalText
         }
     }
@@ -175,7 +175,7 @@ class TextRenderer { // TEXT things
                         }
                     }
                     catch {
-                        print("problem decoding npub")
+                        L.og.error("problem decoding npub \(npub) in event id: \(event.id)")
                     }
                 case "nostr:nprof":
                     let nprofile = String(match.dropFirst(6))
@@ -191,7 +191,7 @@ class TextRenderer { // TEXT things
                         }
                     }
                     catch {
-                        print("problem decoding nprofile")
+                        L.og.error("problem decoding nprofile \(nprofile) in event id: \(event.id)")
                     }
                 default:
                     print("eeuh")

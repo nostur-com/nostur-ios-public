@@ -73,8 +73,8 @@ struct ProfileLightningButton: View {
                     }
                 }
                 catch {
-                    print("🔴🔴🔴🔴 problem in lnurlp")
-                    print(error)
+                    L.fetching.error("🔴🔴🔴🔴 problem in lnurlp lud16 \(lud16) \(error)")
+//                    print(error)
                 }
             }
         }
@@ -101,8 +101,7 @@ struct ProfileLightningButton: View {
                     }
                 }
                 catch {
-                    print("🔴🔴🔴🔴 problem in lnurlp")
-                    print(error)
+                    L.fetching.error("🔴🔴🔴🔴 problem in lnurlp lud06 \(lud06) \(error)")
                 }
             }
         }

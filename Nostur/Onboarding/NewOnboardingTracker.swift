@@ -62,7 +62,7 @@ class NewOnboardingTracker {
         }
         .store(in: &subscriptions)
         
-        print("✈️✈️ OnboardingTracker.start()")
+        L.onboarding.info("✈️✈️ OnboardingTracker.start(\(pubkey.short))")
         try self.bg.performAndWait {
             if let account = try? Account.fetchAccount(publicKey: pubkey, context: self.bg) {
                 self.account = account
@@ -91,7 +91,8 @@ class NewOnboardingTracker {
     }
     
     private func cancel() {
-        print("✈️✈️✈️✈️✈️✈️ ONBOARDING COMPLETED/CANCELLED \(String(describing: self.account?.followingPublicKeys.count) ) followers for \(self.account?.name ?? "") \(self.account?.display_name ?? "")")
+        guard let account = self.account else { return }
+        L.onboarding.info("✈️✈️✈️✈️✈️✈️ ONBOARDING COMPLETED/CANCELLED \(String(describing: self.account?.followingPublicKeys.count) ) followers for \(self.account?.name ?? "") \(self.account?.display_name ?? "")")
 //        self.pubkey = nil
 //        self.account = nil
 //        self.backlog = Backlog()
@@ -121,9 +122,9 @@ class NewOnboardingTracker {
         let fetchProfileAndFollowersTask = ReqTask(
             prefix: "FPF-",
             reqCommand: { (taskId) in
-                print("\(taskId) ✈️✈️ fetchProfileAndFollowersTask.reqCommand()")
+                L.onboarding.info("\(taskId) ✈️✈️ fetchProfileAndFollowersTask.reqCommand()")
                 guard self.fetchedOwnProfileTask == false && self.fetchedFollowersTask == false else {
-                    print("\(taskId) ✈️✈️ SKIPPED - ALREADY HAVE BOTH")
+                    L.onboarding.info("\(taskId) ✈️✈️ SKIPPED - ALREADY HAVE BOTH")
                     return
                 }
                 Importer.shared.existingIds.removeAll() // Because else we dont fetch new info... if we just fetched it before, maybe during onboarding
@@ -131,7 +132,7 @@ class NewOnboardingTracker {
             },
             processResponseCommand: { [weak self] (taskId) in
                 guard let self = self else { return }
-                print("\(taskId) ✈️✈️ fetchProfileAndFollowersTask.processResponseCommand()")
+                L.onboarding.info("\(taskId) ✈️✈️ fetchProfileAndFollowersTask.processResponseCommand()")
                 self.bg.perform { [weak self] in
                     guard let self = self else { return }
                     if !self.fetchedOwnProfileTask {
@@ -153,7 +154,7 @@ class NewOnboardingTracker {
     }
     
     private func processKind3() {
-        print("✈️✈️ processing kind 3")
+        L.onboarding.info("✈️✈️ processing kind 3")
         guard let pubkey = self.pubkey else { return }
         guard let account = self.account else { return }
         if let kind3 = Event.fetchReplacableEvent(3, pubkey: pubkey, context: self.bg) {
@@ -167,11 +168,11 @@ class NewOnboardingTracker {
                 sendNotification(.followersChanged, followingPublicKeys)
             }
             self.fetchedFollowersTask = true
-            print("✈️✈️ processed kind 3")
+            L.onboarding.info("✈️✈️ processed kind 3")
             self.fetchProfilesOfFollowers(pTags)
         }
         else {
-            print("✈️✈️ kind 3 not found. ")
+            L.onboarding.info("✈️✈️ kind 3 not found. ")
         }
     }
     
@@ -179,7 +180,7 @@ class NewOnboardingTracker {
         guard let pubkey = self.pubkey else { return }
         if let kind0 = Event.fetchReplacableEvent(0, pubkey: pubkey, context: self.bg) {
             self.createRelaysFromKind0Content(kind0.content ?? "")
-            print("✈️✈️ created relays from kind 0")
+            L.onboarding.info("✈️✈️ created relays from kind 0")
             
             self.preloadAccountInfo(kind0)
             
@@ -206,7 +207,7 @@ class NewOnboardingTracker {
         account.nip05 = metaData.nip05 ?? ""
         account.lud16 = metaData.lud16 ?? ""
         account.lud06 = metaData.lud06 ?? ""
-        print("✈️✈️ Preloaded account info")
+        L.onboarding.info("✈️✈️ Preloaded account info")
     }
     
     private func fetchProfilesOfFollowers(_ pTags:[String]) {
@@ -214,12 +215,12 @@ class NewOnboardingTracker {
         let fetchProfilesOfFollowersTask = ReqTask(
             prefix: "FPoF-",
             reqCommand: { (taskId) in
-                print("\(taskId) ✈️✈️ fetchProfilesOfFollowersTask.reqCommand()")
+                L.onboarding.info("\(taskId) ✈️✈️ fetchProfilesOfFollowersTask.reqCommand()")
                 req(RM.getUserMetadata(pubkeys: pTags, subscriptionId: taskId))
             },
             processResponseCommand: { [weak self] (taskId) in
                 guard let self = self else { return }
-                print("\(taskId) ✈️✈️ fetchProfilesOfFollowersTask.processResponseCommand()")
+                L.onboarding.info("\(taskId) ✈️✈️ fetchProfilesOfFollowersTask.processResponseCommand()")
                 self.fetchedProfilesOfFollowersTask = true
             })
         backlog.add(fetchProfilesOfFollowersTask)
@@ -253,12 +254,12 @@ class NewOnboardingTracker {
                 let decoder = JSONDecoder()
                 let relays = try decoder.decode(Kind3Relays.self, from: contentData)
                 if relays.relays.count > 0 {
-                    print("✈️✈️✈️ found \(relays.relays.count) existing relays")
+                    L.onboarding.info("✈️✈️✈️ found \(relays.relays.count) existing relays")
                 }
                 relays.relays.forEach { relay in
                     let fr = Relay.fetchRequest()
                     fr.predicate = NSPredicate(format: "url == %@", relay.url.lowercased())
-                    print("✈️✈️✈️ adding \(relay.url) ")
+                    L.onboarding.info("✈️✈️✈️ adding \(relay.url) ")
                     if let existingRelay = try? self.bg.fetch(fr).first {
                         existingRelay.read = relay.readWrite.read ?? false
                         existingRelay.write = relay.readWrite.write ?? false

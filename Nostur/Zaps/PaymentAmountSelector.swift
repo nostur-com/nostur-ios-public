@@ -59,8 +59,7 @@ struct PaymentAmountSelector: View {
                     }
                 }
                 catch {
-                    print("problem fetching ln invoice / or signing zap request note")
-                    print(error)
+                    L.fetching.notice("problem fetching ln invoice / or signing zap request note. callback: \(paymentInfo.callback) \(error)")
                 }
             }
         }
@@ -76,8 +75,7 @@ struct PaymentAmountSelector: View {
                     }
                 }
                 catch {
-                    print("problem fetching ln invoice")
-                    print(error)
+                    L.fetching.notice("problem fetching ln invoice. callback:\(paymentInfo.callback) \(error)")
                 }
             }
         }

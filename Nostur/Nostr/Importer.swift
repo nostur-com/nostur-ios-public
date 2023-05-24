@@ -37,6 +37,7 @@ class Importer {
             .sink { () in
 //                print("🏎️🏎️ \(Date.now) Import requested, 1.5 sec after new relay message(s)")
 //                print("🏎️🏎️ \(Date.now) Import requested, 0.1 after last debounce of new relay message(s)")
+                L.importing.info("🏎️🏎️ importEvents() after relay message received (throttled 1.5 seconds)")
                 self.importEvents()
             }
             .store(in: &subscriptions)
@@ -70,7 +71,9 @@ class Importer {
             }
             self.isImporting = true
             let forImportsCount = MessageParser.shared.messageBucket.count
-            guard forImportsCount != 0 else { self.isImporting = false; return }
+            guard forImportsCount != 0 else {
+                L.importing.info("🏎️🏎️ importEvents() nothing to import.")
+                self.isImporting = false; return }
             
             DispatchQueue.main.async {
                 sendNotification(.listStatus, "Processing \(forImportsCount) items...")
@@ -91,7 +94,7 @@ class Importer {
                 while let message = MessageParser.shared.messageBucket.popFirst() {
                     count = count + 1
                     guard var event = message.event else {
-                        print("🔴🔴 message.event is nil \(message.message)")
+                        L.importing.error("🔴🔴 message.event is nil \(message.message)")
                         continue
                     }
                     
@@ -115,7 +118,7 @@ class Importer {
                     
                     if (isSignatureVerificationEnabled) {
                         guard try event.verified() else {
-                            print("😡😡 hey invalid sig yo 😡😡")
+                            L.importing.info("😡😡 hey invalid sig yo 😡😡")
                             continue
                         }
                     }
@@ -172,7 +175,7 @@ class Importer {
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
                     if event.kind == .reaction {
                         do { try _ = Event.updateLikeCountCache(savedEvent, content:event.content, context: context) } catch {
-                            print("🦋🦋🔴🔴🔴 problem updating Like Count Cache .id \(event.id)")
+                            L.importing.error("🦋🦋🔴🔴🔴 problem updating Like Count Cache .id \(event.id)")
                         }
                     }
                     
@@ -185,7 +188,7 @@ class Importer {
                     if event.kind == .textNote || event.kind == .repost {
                         // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
                         do { try _ = Event.updateMentionsCountCache(event.tags, context: context) } catch {
-                            print("🦋🦋🔴🔴🔴 problem updateMentionsCountCache .id \(event.id)")
+                            L.importing.error("🦋🦋🔴🔴🔴 problem updateMentionsCountCache .id \(event.id)")
                         }
                         
                         // NIP-10: Those marked with "reply" denote the id of the reply event being responded to.
@@ -203,7 +206,7 @@ class Importer {
                         if (context.hasChanges) {
                             do {
                                 try context.save()
-                                print("🏎️🏎️ \(Date.now) 💾 Saved \(count)/\(forImportsCount)")
+                                L.importing.info("🏎️🏎️ \(Date.now) 💾 Saved \(count)/\(forImportsCount)")
                                 let mainQueueCount = count
                                 let mainQueueForImportsCount = forImportsCount
                                 let importedNotification = ImportedNotification(subscriptionIds: subscriptionIds)
@@ -215,7 +218,7 @@ class Importer {
                                 subscriptionIds.removeAll()
                             }
                             catch {
-                                print("🏎️🏎️ \(Date.now) 🔴🔴🔴 Error on batch \(count)/\(forImportsCount): \(error)")
+                                L.importing.error("🏎️🏎️ \(Date.now) 🔴🔴🔴 Error on batch \(count)/\(forImportsCount): \(error)")
                             }
                         }
                     }
@@ -223,7 +226,7 @@ class Importer {
                 if (context.hasChanges) {
                     try context.save() // This is saving bg context to main, not to disk
                     if (saved > 0) {
-                        print("🏎️🏎️ \(Date.now) 💾 Processed: \(forImportsCount), saved: \(saved), skipped (new cache): \(alreadyInIdCacheSkipped), skipped (db): \(alreadyInDBskipped)")
+                        L.importing.info("🏎️🏎️ \(Date.now) 💾 Processed: \(forImportsCount), saved: \(saved), skipped (new cache): \(alreadyInIdCacheSkipped), skipped (db): \(alreadyInDBskipped)")
                         let mainQueueCount = count
                         let mainQueueForImportsCount = forImportsCount
                         let importedNotification = ImportedNotification(subscriptionIds: subscriptionIds)
@@ -238,20 +241,20 @@ class Importer {
 //                        }
                     }
                     else {
-                        print("🏎️🏎️ \(Date.now) 💾 Finished, nothing saved. -- Processed: \(forImportsCount), saved: \(saved), skipped (new cache): \(alreadyInIdCacheSkipped), skipped (db): \(alreadyInDBskipped)")
+                        L.importing.info("🏎️🏎️ \(Date.now) 💾 Finished, nothing saved. -- Processed: \(forImportsCount), saved: \(saved), skipped (new cache): \(alreadyInIdCacheSkipped), skipped (db): \(alreadyInDBskipped)")
                     }
                 }
                 else {
-//                    print("🏎️🏎️ Nothing imported, no changes.")
+                    L.importing.info("🏎️🏎️ Nothing imported, no changes in \(count) messages")
+                    sendNotification(.noNewEventsInDatabase)
                 }
             }
             catch {
-                print("🏎️🏎️🔴🔴🔴🔴 Failed to import because:")
-                print("🏎️🏎️🔴🔴🔴🔴 \(error)")
+                L.importing.error("🏎️🏎️🔴🔴🔴🔴 Failed to import because: \(error)")
             }
             self.isImporting = false
             if (self.needsImport) {
-                print("🏎️🏎️ Chaining next import ")
+                L.importing.info("🏎️🏎️ Chaining next import ")
                 self.needsImport = false
                 self.importEvents()
             }

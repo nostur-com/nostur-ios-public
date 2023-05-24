@@ -60,7 +60,7 @@ class NIP05Verifier {
                                 task.contact.objectWillChange.send()
                                 task.contact.nip05verifiedAt = Date.now
                                 task.contact.nip05updated.send(true)
-                                print("👍 nip05 verified \(task.contact.nip05 ?? "")")
+                                L.fetching.info("👍 nip05 verified \(task.contact.nip05 ?? "")")
                             }
                         }
                     }

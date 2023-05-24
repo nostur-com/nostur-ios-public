@@ -146,7 +146,7 @@ struct NosturApp: App {
         .onChange(of: scenePhase) { newScenePhase in
             switch newScenePhase {
                 case .active:
-                    L.og.debug("🏎️🏎️ \(Date.now) scenePhase active")
+                    L.og.notice("⭐️⭐️🏎️🏎️ \(Date.now) scenePhase active")
                     EventRelationsQueue.shared.removeAll()
                     SocketPool.shared.connectAll()
                     lvmManager.restoreSubscriptions()
