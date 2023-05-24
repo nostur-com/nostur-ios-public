@@ -12,6 +12,8 @@ class NewOnboardingTracker {
     
     static let shared = NewOnboardingTracker()
     
+    private var guestAlreadyStarted = false
+    
     // Who are we onboarding?
     private var pubkey:String?
     
@@ -41,8 +43,16 @@ class NewOnboardingTracker {
     
     private var bg = DataProvider.shared().bg
     private var account:Account?
+    
+    public var isOnboarding:Bool {
+        account != nil
+    }
 
     public func start(pubkey: String) throws {
+        if pubkey == NosturState.GUEST_ACCOUNT_PUBKEY {
+            if guestAlreadyStarted { return }
+            guestAlreadyStarted = true
+        }
         self.bg.performAndWait { [weak self] in
             self?.cancel()
         }
@@ -88,6 +98,7 @@ class NewOnboardingTracker {
     public func abort() {
         self.subscriptions.removeAll()
         self.backlog = Backlog()
+        self.account = nil
     }
     
     private func cancel() {
@@ -99,6 +110,7 @@ class NewOnboardingTracker {
         subscriptions.forEach { sub in
             sub.cancel()
         }
+        self.account = nil
     }
     
     deinit {
@@ -153,12 +165,14 @@ class NewOnboardingTracker {
         fetchProfileAndFollowersTask.fetch()
     }
     
+    public var didFetchKind3 = PassthroughSubject<Event, Never>()
+    
     private func processKind3() {
         L.onboarding.info("✈️✈️ processing kind 3")
         guard let pubkey = self.pubkey else { return }
         guard let account = self.account else { return }
         if let kind3 = Event.fetchReplacableEvent(3, pubkey: pubkey, context: self.bg) {
-            
+            didFetchKind3.send(kind3)
             let pTags = kind3.fastPs.map { $0.1 }
             let existingAndCreatedContacts = self.createContactsFromPs(pTags)
             account.addToFollows(NSSet(array: existingAndCreatedContacts))
