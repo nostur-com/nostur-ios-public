@@ -867,6 +867,7 @@ extension LVM {
         
         startRenderingOlderSubject
            .removeDuplicates()
+           .receive(on: RunLoop.main)
            .sink { [weak self] posts in
                self?.processPostsInBackground(posts, older: true)
            }
