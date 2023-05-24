@@ -474,9 +474,22 @@ class NewWebSocket {
     var webSocket_:WebSocket?
     var connection_:AnyCancellable?
     var pinger:AnyCancellable?
-    var senderAfterPing:AnyCancellable?
+    var senderAfterPing_:AnyCancellable?
 
     var delegate:NewWebSocketDelegate?
+    
+    var senderAfterPing:AnyCancellable? {
+        get {
+            websocketQueue.sync {
+                self.senderAfterPing_
+            }
+        }
+        set {
+            websocketQueue.async(flags: .barrier) {
+                self.senderAfterPing_ = newValue
+            }
+        }
+    }
     
     var connection:AnyCancellable? {
         get {
