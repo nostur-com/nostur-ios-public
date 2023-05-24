@@ -19,45 +19,37 @@
 // 7. Update and save relation, send objectWillChange
 
 import Foundation
-import Combine
 import CoreData
 
 class EventRelationsQueue {
     
-    static let shared = EventRelationsQueue()
+    typealias EventId = String
+    typealias ContactPubkey = String
     
-    private var ctx:NSManagedObjectContext
-    private var waitingEvents = Set<Event>() // Contains events only from background context
-    private var waitingEventsSubject = CurrentValueSubject<Set<Event>, Never>([])
-//    private var delayedRemove = PassthroughSubject<Event, Never>()
-    
-    private var waitingContacts = Set<Contact>() // Contains events only from background context
-    private var waitingContactsSubject = CurrentValueSubject<Set<Contact>, Never>([])
-//    private var delayedContactRemove = PassthroughSubject<Contact, Never>()
-    
-    private var subscriptions = Set<AnyCancellable>()
-    
-    init() {
-        ctx = DataProvider.shared().bg
-//        delayedRemove
-//            .delay(for: .seconds(5), scheduler: DispatchQueue.global())
-//            .sink { [unowned self] event in
-//                self.ctx.perform {
-//                    self.waitingEvents.remove(event)
-//                }
-//            }
-//            .store(in: &subscriptions)
-        
-//        delayedContactRemove
-//            .delay(for: .seconds(5), scheduler: DispatchQueue.global())
-//            .sink { [unowned self] contact in
-//                self.ctx.perform {
-//                    self.waitingContacts.remove(contact)
-//                }
-//            }
-//            .store(in: &subscriptions)
+    struct QueuedEvent {
+        let event:Event
+        let queuedAt: Date
     }
     
+    struct QueuedContact {
+        let contact:Contact
+        let queuedAt: Date
+    }
+    
+    static let shared = EventRelationsQueue()
+    
+    private var ctx = DataProvider.shared().bg
+    private var waitingEvents = [EventId:QueuedEvent]()
+    private var waitingContacts = [ContactPubkey:QueuedContact]()
+    private var cleanUpTimer: Timer?
+    
+    init() {
+        cleanUpTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true, block: { [unowned self] timer in
+            let now = Date()
+            self.waitingEvents = self.waitingEvents.filter { now.timeIntervalSince($0.value.queuedAt) < 30 }
+            self.waitingContacts = self.waitingContacts.filter { now.timeIntervalSince($0.value.queuedAt) < 30 }
+        })
+    }
     
     /// Adds event to the queue waiting for related data that is being fetched
     /// - Parameter event: Event should be from .bg context, if not this function will fetch it from .bg using .objectID
@@ -66,93 +58,92 @@ class EventRelationsQueue {
         if Thread.isMainThread {
             if isBGevent {
                 ctx.perform { [unowned self] in
-                    self.waitingEvents.insert(event)
-                    L.og.debug("🟢🟢🟢🔴🔴 WRONG THREAD: addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
+                    self.waitingEvents[event.id] = QueuedEvent(event: event, queuedAt: Date.now)
+                    L.og.info("🟢🟢🟢🔴🔴 WRONG THREAD: addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
                 }
             }
             else {
                 ctx.perform { [unowned self] in
                     guard let privateEvent = self.ctx.object(with: event.objectID) as? Event else { return }
-                    self.waitingEvents.insert(privateEvent)
-                    L.og.debug("🟢🟢🟢🔴🔴 WRONG THREAD+MAINEVENT: addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
+                    self.waitingEvents[privateEvent.id] = QueuedEvent(event: privateEvent, queuedAt: Date.now)
+                    L.og.info("🟢🟢🟢🔴🔴 WRONG THREAD+MAINEVENT: addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
                 }
             }
         }
         else {
             if isBGevent {
-                self.waitingEvents.insert(event)
-                L.og.debug("🟢🟢🟢🟢🟢 addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
+                self.waitingEvents[event.id] = QueuedEvent(event: event, queuedAt: Date.now)
+                L.og.info("🟢🟢🟢🟢🟢 addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
             }
             else {
                 guard let privateEvent = self.ctx.object(with: event.objectID) as? Event else { return }
-                self.waitingEvents.insert(privateEvent)
-                L.og.debug("🟢🟢🟢🟢🔴 WRONG MAINEVENT. addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
+                self.waitingEvents[privateEvent.id] = QueuedEvent(event: privateEvent, queuedAt: Date.now)
+                L.og.info("🟢🟢🟢🟢🔴 WRONG MAINEVENT. addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
             }
         }
     }
-    
-//    public func removeAwaitingEvent(_ event:Event) {
-//        // Don't remove immediatly, give a few extra seconds, maybe needs to fetch more than 1 relation
-//        self.delayedRemove.send(event)
-//    }
-    
+
     public func removeAwaitingEvent(_ event:Event) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(5)) {
-            self.ctx.perform {
-                self.waitingEvents.remove(event)
-            }
-        }
+        // Don't remove immediatly, give a few extra seconds, maybe needs to fetch more than 1 relation
+//        self.delayedRemove(event, after: 5)
     }
     
     /// Returns events that are waiting for relations to be updated, like .contact, .contacts, .replyTo etc
     /// - Returns: Events, these are background context (.bg)
-    public func getAwaitingBgEvents() -> Set<Event> {
-        return self.waitingEvents
+    public func getAwaitingBgEvents() -> [Event] {
+        return self.waitingEvents.values.map { $0.event }
+    }
+    
+    public func getAwaitingBgEvent(byId id:EventId) -> Event? {
+        return self.waitingEvents[id]?.event
     }
     
     public func removeAll() {
         ctx.perform {
-            self.waitingEvents = Set<Event>()
-            self.waitingContacts = Set<Contact>()
+            self.waitingEvents = [EventId:QueuedEvent]()
+            self.waitingContacts = [ContactPubkey:QueuedContact]()
         }
     }
-    
-    
     
     /// Adds contact to the queue waiting for info to be updated
     /// - Parameter contact: Contact should be from .bg context, if not this function will fetch it from .bg using .objectID
     public func addAwaitingContact(_ contact:Contact, debugInfo:String? = "") {
         if contact.managedObjectContext == ctx {
             ctx.perform { [unowned self] in
-                self.waitingContacts.insert(contact)
-                L.og.debug("🟢🟢🟢 addAwaitingContact. now in queue: \(self.waitingContacts.count) -- \(debugInfo ?? "")")
+                self.waitingContacts[contact.pubkey] = QueuedContact(contact: contact, queuedAt: Date.now)
+                L.og.info("🟢🟢🟢 addAwaitingContact. now in queue: \(self.waitingContacts.count) -- \(debugInfo ?? "")")
             }
         }
         else {
             ctx.perform { [unowned self] in
                 guard let privateContact = self.ctx.object(with: contact.objectID) as? Contact else { return }
-                self.waitingContacts.insert(privateContact)
-                L.og.debug("🟢🟢🟢 addAwaitingContact. now in queue: \(self.waitingContacts.count) -- \(debugInfo ?? "")")
+                self.waitingContacts[privateContact.pubkey] = QueuedContact(contact: privateContact, queuedAt: Date.now)
+                L.og.info("🟢🟢🟢 addAwaitingContact. now in queue: \(self.waitingContacts.count) -- \(debugInfo ?? "")")
             }
         }
     }
     
-//    public func removeAwaitingContact(_ contact:Contact) {
-//        // Don't remove immediatly, give a few extra seconds, maybe needs to fetch more than 1 relation
-//        self.delayedContactRemove.send(contact)
+//    private func delayedContactRemove(_ contact:Contact, after:Int = 15) {
+//        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(after)) {
+//            self.ctx.perform {
+//                self.waitingContacts.remove(contact)
+//            }
+//        }
 //    }
     
     public func removeAwaitingContact(_ contact:Contact) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(5)) {
-            self.ctx.perform {
-                self.waitingContacts.remove(contact)
-            }
-        }
+        // Don't remove immediatly, give a few extra seconds, maybe needs to fetch more than 1 relation
+//        self.delayedContactRemove(contact, after: 10)
     }
     
     /// Returns contacts that are waiting for info to be updated
     /// - Returns: Contacts, these are background context (.bg)
-    public func getAwaitingBgContacts() -> Set<Contact> {
-        return self.waitingContacts
+    public func getAwaitingBgContacts() -> [Contact] {
+        return self.waitingContacts.values.map { $0.contact }
+    }
+    
+    
+    public func getAwaitingBgContact(byPubkey pubkey:ContactPubkey) -> Contact? {
+        return self.waitingContacts[pubkey]?.contact
     }
 }

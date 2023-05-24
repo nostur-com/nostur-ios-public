@@ -862,7 +862,12 @@ extension Event {
         savedEvent.pubkey = event.publicKey
         savedEvent.likesCount = 0
         savedEvent.isRepost = event.kind == .repost
-        savedEvent.contact = Contact.fetchByPubkey(event.publicKey, context: context)
+        if let contact = EventRelationsQueue.shared.getAwaitingBgContacts().first(where: { $0.pubkey == event.publicKey }) {
+            savedEvent.contact = contact
+        }
+        else {
+            savedEvent.contact = Contact.fetchByPubkey(event.publicKey, context: context)
+        }
         savedEvent.tagsSerialized = TagSerializer.shared.encode(tags: event.tags)
         savedEvent.relays = relay ?? ""
         
@@ -1080,19 +1085,16 @@ extension Event {
             
             let awaitingEvents = EventRelationsQueue.shared.getAwaitingBgEvents()
             
-            awaitingEvents.forEach { waitingEvent in
+            for waitingEvent in awaitingEvents {
                 if (waitingEvent.replyToId != nil) && (waitingEvent.replyToId == savedEvent.id) {
-//                    waitingEvent.objectWillChange.send()
                     waitingEvent.replyTo = savedEvent
                     waitingEvent.replyToUpdated.send(savedEvent)
                 }
                 if (waitingEvent.replyToRootId != nil) && (waitingEvent.replyToRootId == savedEvent.id) {
-//                    waitingEvent.objectWillChange.send()
                     waitingEvent.replyToRoot = savedEvent
                     waitingEvent.replyToRootUpdated.send(savedEvent)
                 }
                 if (waitingEvent.firstQuoteId != nil) && (waitingEvent.firstQuoteId == savedEvent.id) {
-//                    waitingEvent.objectWillChange.send()
                     waitingEvent.firstQuote = savedEvent
                     waitingEvent.firstQuoteUpdated.send(savedEvent)
                 }
@@ -1101,7 +1103,6 @@ extension Event {
         }
         
         return savedEvent
-//        }
     }
     
     // Lets hope Event (Core Data) to nEvent will always keep correct id/sig and not lose integrity due to different storage

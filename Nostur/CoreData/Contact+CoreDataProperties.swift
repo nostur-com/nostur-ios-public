@@ -312,6 +312,7 @@ extension Contact : Identifiable {
                 contact.lud06 = metaData.lud06
                 contact.metadata_created_at = Int64(event.createdAt.timestamp) // by author kind 0
                 contact.updated_at = Int64(Date.now.timeIntervalSince1970) // by Nostur
+                EventRelationsQueue.shared.addAwaitingContact(contact)
                 updateRelatedEvents(contact)
             }
         }
@@ -327,7 +328,7 @@ extension Contact : Identifiable {
         
         let awaitingEvents = EventRelationsQueue.shared.getAwaitingBgEvents()
         
-        awaitingEvents.forEach { waitingEvent in
+        for waitingEvent in awaitingEvents {
             if (waitingEvent.pubkey == contact.pubkey) {
                 waitingEvent.objectWillChange.send() // Needed for zaps on notification screen
                 if waitingEvent.contact == nil {
