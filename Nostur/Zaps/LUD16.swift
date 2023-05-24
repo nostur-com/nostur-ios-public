@@ -38,9 +38,9 @@ struct LNUrlResponse: Codable {
 class LUD16 {
 
     static func getCallbackUrl(lud06:String) async throws -> LUD16response {
-        print(lud06)
+//        print(lud06)
         guard let lud06url = try? Bech32.decode(lnurl: lud06) else { throw "cant decode lnurl" }
-        print(lud06url.absoluteURL)
+//        print(lud06url.absoluteURL)
         
         let request = URLRequest(url: lud06url)
         

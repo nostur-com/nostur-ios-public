@@ -15,7 +15,6 @@ struct ListViewContainer: View {
     @ObservedObject var vm:LVM
     
     var body: some View {
-//        let _ = Self._printChanges()
         ZStack {
             SmoothList(lvm: vm, dim: dim)
                 .overlay(alignment: .topTrailing) {
@@ -27,7 +26,6 @@ struct ListViewContainer: View {
                 CenteredProgressView()
             }
         }
-//        .background(Color.cyan) // Somehow becomes bottom tabbar background color
     }
 }
 
