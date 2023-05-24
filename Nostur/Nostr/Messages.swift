@@ -531,6 +531,13 @@ func req(_ rm:String, activeSubscriptionId:String? = nil) {
     )
 }
 
+func reqP(_ rm:String, activeSubscriptionId:String? = nil) {
+    SocketPool.shared.sendMessageAfterPing(
+        ClientMessage(type: .REQ, message: rm),
+        subscriptionId: activeSubscriptionId
+    )
+}
+
 public typealias RM = RequestMessage
 
 

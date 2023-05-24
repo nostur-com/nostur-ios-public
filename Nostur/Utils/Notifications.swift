@@ -262,4 +262,8 @@ extension Notification.Name {
     static var postAction: Notification.Name {
         return Notification.Name("postAction")
     }
+    
+    static var pong: Notification.Name {
+        return Notification.Name("pong")
+    }
 }

@@ -151,7 +151,7 @@ final class SocketPool: ObservableObject {
                             managedClient.connect()
                         }
                         /// hmm don't continue with .sendMessage (or does it queue until connection??? not sure...)
-                        continue
+//                        continue
                     }
                     // skip if we already have an active subcription
                     if subscriptionId != nil && managedClient.activeSubscriptions.contains(subscriptionId!) { continue }
@@ -184,6 +184,88 @@ final class SocketPool: ObservableObject {
                     L.sockets.info("🚀🚀🚀 PUBLISHING TO \(managedClient.url): \(message.message)")
                     managedClient.client.sendMessage(message.message)
                 }
+            }
+        }
+    }
+    
+    func sendMessageAfterPing(_ message:ClientMessage, subscriptionId:String? = nil) {
+        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+            print("Canvas.sendMessage: \(message.type) \(message.message)")
+            return
+        }
+        if (message.type == .REQ) {
+            let read = sockets.values.filter { $0.read == true }.count
+            if read > 0 && subscriptionId == nil {
+                L.sockets.info("🟪⬇️⬇️ REQ ON \(read) RELAYS: \(message.message)")
+            }
+            //            print("⬇️⬇️ REQ ON \(read) RELAYS: \(String(message.message))")
+        }
+        
+        Task(priority: .utility) { [unowned self] in
+            for (_, managedClient) in self.sockets {
+                guard managedClient.read || managedClient.write else {
+                    // Skip if relay is not selected for reading or writing events
+                    continue
+                }
+                
+                if message.type == .REQ && managedClient.read { // REQ FOR ALL READ RELAYS
+                    if (!managedClient.isConnected) {
+                        if (!managedClient.isConnecting) {
+                            managedClient.connect()
+                        }
+                        /// hmm don't continue with .sendMessage (or does it queue until connection??? not sure...)
+//                        continue
+                    }
+                    // skip if we already have an active subcription
+                    if subscriptionId != nil && managedClient.activeSubscriptions.contains(subscriptionId!) { continue }
+                    if (subscriptionId != nil) {
+                        DispatchQueue.main.async {
+                            managedClient.activeSubscriptions.append(subscriptionId!)
+                            L.sockets.info("🟪🏎️🏎️⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count)")
+                        }
+                    }
+                    if subscriptionId != nil {
+                        L.sockets.info(" 🟪⬇️⬇️ REQUESTING: \(message.message)")
+                    }
+//                    print("⬇️⬇️ REQUESTING: \(String(message.message))")
+                    managedClient.client.sendMessageAfterPing(message.message)
+                }
+                else if  message.type == .CLOSE { // CLOSE FOR ALL RELAYS
+                    if (!managedClient.read) { continue }
+                    if (!managedClient.isConnected) && (!managedClient.isConnecting) {
+                        // Already closed? no need to connect and send CLOSE message
+                        continue
+                        //                        managedClient.connect()
+                    }
+                    L.sockets.info("🟪🔚🔚 CLOSE: \(message.message)")
+                    // FOR close we dont need to ping first, if it fails we dont care
+                    managedClient.client.sendMessage(message.message)
+                }
+                else if message.type == .EVENT && managedClient.write { // EVENT IS ONLY FOR WRITE RELAYS
+                    if (!managedClient.isConnected) && (!managedClient.isConnecting) {
+                        managedClient.connect()
+                    }
+                    L.sockets.info("🟪🚀🚀🚀 PUBLISHING TO \(managedClient.url): \(message.message)")
+                    managedClient.client.sendMessageAfterPing(message.message)
+                }
+            }
+        }
+    }
+    
+    func ping() {
+        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+            print("ping")
+            return
+        }
+        
+        Task(priority: .utility) { [unowned self] in
+            for (_, managedClient) in self.sockets {
+                guard managedClient.read else {
+                    // Skip if relay is not selected for reading or writing events
+                    continue
+                }
+                managedClient.client.ping()
+
             }
         }
     }
@@ -285,7 +367,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     }
     
     func connect(_ forceConnectionAttempt:Bool = false) {
-        guard forceConnectionAttempt || self.skipped == self.exponentialReconnectBackOff else { // Should be 0 == 0 to continue, or 2 == 2 etc..
+        guard self.exponentialReconnectBackOff == 1 || forceConnectionAttempt || self.skipped == self.exponentialReconnectBackOff else { // Should be 0 == 0 to continue, or 2 == 2 etc..
             self.skipped = skipped + 1
             L.sockets.info("🏎️🏎️🔌🔴 Skipping reconnect. \(self.url) EB: (\(self.exponentialReconnectBackOff)) skipped: \(self.skipped)")
             return
@@ -391,6 +473,8 @@ class NewWebSocket {
     private var websocketQueue = DispatchQueue(label: "com.nostur.websocket")
     var webSocket_:WebSocket?
     var connection_:AnyCancellable?
+    var pinger:AnyCancellable?
+    var senderAfterPing:AnyCancellable?
 
     var delegate:NewWebSocketDelegate?
     
@@ -428,6 +512,60 @@ class NewWebSocket {
         self.socketQueue.maxConcurrentOperationCount = 1
         //        connect()
         //        startPinger()
+    }
+    
+    func sendMessageAfterPing(_ text:String) {
+        L.sockets.info("🟪 sendMessageAfterPing  \(text)")
+        guard let webSocket = webSocket else {
+            L.sockets.info("🟪🔴🔴 Not connected.  \(self.url)")
+            return
+        }
+        senderAfterPing = webSocket.ping()
+            .sink(receiveCompletion: { completion in
+                    switch completion {
+                    case .failure(let error):
+                        // Handle the failure case
+                        L.sockets.info("🟪Failure: \(error)")
+                    case .finished:
+                        // The ping completed successfully
+                        L.sockets.info("🟪 Ping succeeded on \(self.url). Sending \(text)")
+                        let _ = webSocket.send(text)
+                            .sink(receiveCompletion: {
+                                print($0)
+                                L.sockets.info("🟪 WHAT")
+                            }, receiveValue: {
+                                print($0)
+                                L.sockets.info("🟪 WHAT OK")
+                            })
+                        sendNotification(.pong)
+                    }
+                }, receiveValue: { _ in
+                    // Handle the received value (optional, based on your requirements)
+//                    L.sockets.info("Received value during ping")
+                })
+    }
+    
+    func ping() {
+        L.sockets.info("Trying to ping: \(self.url)")
+        guard let webSocket = webSocket else {
+            L.sockets.info("🔴🔴 Not connected. ????? \(self.url)")
+            return
+        }
+        pinger = webSocket.ping()
+            .sink(receiveCompletion: { completion in
+                    switch completion {
+                    case .failure(let error):
+                        // Handle the failure case
+                        L.sockets.info("Failure: \(error)")
+                    case .finished:
+                        // The ping completed successfully
+                        L.sockets.info("Ping succeeded")
+                        sendNotification(.pong)
+                    }
+                }, receiveValue: { _ in
+                    // Handle the received value (optional, based on your requirements)
+//                    L.sockets.info("Received value during ping")
+                })
     }
     
     func sendMessage(_ text:String) {
