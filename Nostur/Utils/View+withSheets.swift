@@ -200,7 +200,7 @@ private struct WithSheets: ViewModifier {
             // New highlight
             .onReceive(receiveNotification(.newHighlight)) { notification in
                 let newHighlight = notification.object as! NewHighlight
-                print(newHighlight)
+//                print(newHighlight)
                 self.newHighlight = newHighlight
             }
             .sheet(item: $newHighlight) { newHighlight in

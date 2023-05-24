@@ -30,7 +30,6 @@ class QueuedFetcher {
     
     init() {
         enqueuePsubject.sink { [unowned self] pTag in
-            guard !self.pQueue.contains(pTag) else { return }
             self.pQueue.insert(pTag)
         }
         .store(in: &subscriptions)
@@ -41,7 +40,6 @@ class QueuedFetcher {
         .store(in: &subscriptions)
         
         enqueueIDsubject.sink { [unowned self] eventId in
-            guard !self.idQueue.contains(eventId) else { return }
             self.idQueue.insert(eventId)
         }
         .store(in: &subscriptions)
@@ -88,6 +86,14 @@ class QueuedFetcher {
         self.fetch()
     }
     
+    public func enqueue(pTags: Set<String>) {
+        guard pTags.count > 0 else { return }
+        pTags.forEach { pTag in
+            enqueuePsubject.send(pTag)
+        }
+        self.fetch()
+    }
+    
     public func dequeue(pTag: String) {
         dequeuePsubject.send(pTag)
     }
@@ -98,6 +104,11 @@ class QueuedFetcher {
         }
     }
     
+    public func dequeue(pTags: Set<String>) {
+        pTags.forEach { pTag in
+            dequeuePsubject.send(pTag)
+        }
+    }
     
     public func enqueue(id: String) {
         enqueueIDsubject.send(id)

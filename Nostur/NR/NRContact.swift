@@ -89,8 +89,8 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         self.contact.nip05updated
             .sink { [weak self] isVerified in
                 guard let self = self else { return }
-                guard isVerified != self.nip05verified else { return }
                 DispatchQueue.main.async {
+                    guard isVerified != self.nip05verified else { return }
                     self.objectWillChange.send()
                     self.nip05verified = isVerified
                 }

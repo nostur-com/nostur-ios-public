@@ -9,6 +9,10 @@ import Foundation
 
 extension String {
     
+    var short:String {
+        String(self.prefix(min(self.count,11)))
+    }
+    
     private static var regexCache: [String: NSRegularExpression] = [
         NRContentElementBuilder.videoUrlPattern: try! NSRegularExpression(pattern: NRContentElementBuilder.videoUrlPattern, options: []),
         NRContentElementBuilder.imageUrlPattern: try! NSRegularExpression(pattern: NRContentElementBuilder.imageUrlPattern, options: []),

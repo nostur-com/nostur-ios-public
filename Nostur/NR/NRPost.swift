@@ -100,7 +100,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
     let event:Event // Only touch this in BG context!!!
     
-    var missingPs:[String] // missing or have no contact info
+    var missingPs:Set<String> // missing or have no contact info
     var fastTags:[(String, String, String?)] = []
     
     
@@ -180,12 +180,12 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         let nrContacts = event.contacts_.map { NRContact(contact: $0) }
         self.referencedContacts = nrContacts
         
-        var missingPs = [String]()
+        var missingPs = Set<String>()
         if self._contact == nil {
-            missingPs.append(event.pubkey)
+            missingPs.insert(event.pubkey)
         }
         else if let c = self._contact, c.metadata_created_at == 0 {
-            missingPs.append(event.pubkey)
+            missingPs.insert(event.pubkey)
         }
         let eventContactPs = nrContacts.compactMap({ contact in
             if contact.metadata_created_at != 0 {
@@ -195,7 +195,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         }) + [event.pubkey]
         event.fastPs.forEach { (tag, pubkey, hint) in
             if !eventContactPs.contains(pubkey) {
-                missingPs.append(pubkey)
+                missingPs.insert(pubkey)
             }
         }
         self.missingPs = missingPs
@@ -486,7 +486,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             .sink { [weak self] pubkey in
                 guard let self = self else { return }
                 self.objectWillChange.send() // Need to update the views or they still have the old .missingPs
-                self.missingPs.removeAll(where: { $0 == pubkey } )
+                self.missingPs.remove(pubkey)
             }
             .store(in: &subscriptions)
         
@@ -508,7 +508,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                     DispatchQueue.main.async {
                         self?.objectWillChange.send()
                         self?.contact = nrContact
-                        self?.missingPs.removeAll(where: { $0 == pubkey } )
                     }
                 }
             }

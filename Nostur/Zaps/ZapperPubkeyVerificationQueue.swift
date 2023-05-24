@@ -21,10 +21,11 @@ class ZapperPubkeyVerificationQueue {
     init() {
         ctx = DataProvider.shared().bg
         delayedRemove
-            .delay(for: .seconds(25), scheduler: DispatchQueue.global())
             .sink { [unowned self] event in
-                self.ctx.perform {
-                    self.queuedZaps.remove(event)
+                DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(25)) {
+                    self.ctx.perform {
+                        self.queuedZaps.remove(event)
+                    }
                 }
             }
             .store(in: &subscriptions)
