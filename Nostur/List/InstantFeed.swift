@@ -37,7 +37,7 @@ class InstantFeed {
 //    }
     var pubkeys:Set<Pubkey>? {
         didSet {
-            if let pubkeys {
+            if pubkeys != nil {
                 fetchPostsFromRelays()
             }
         }
@@ -84,9 +84,18 @@ class InstantFeed {
         Task.detached {
             self.bg.perform { [weak self] in
                 guard let self = self else { return }
-                if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: self.bg) {
+                if let account = try? Account.fetchAccount(publicKey: pubkey, context: bg), account.follows_.count > 0 {
+                    L.og.notice("🟪 Using account.follows")
+                    self.pubkeys = Set(account.follows_.map { $0.pubkey } + [account.publicKey])
+                }
+                else if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: self.bg) {
                     L.og.notice("🟪 Found clEvent in database")
-                    self.pubkeys = Set(clEvent.fastPs.map { $0.1 })
+                    if let pubkey = self.pubkey {
+                        self.pubkeys = Set(clEvent.fastPs.map { $0.1 } + [pubkey])
+                    }
+                    else {
+                        self.pubkeys = Set(clEvent.fastPs.map { $0.1 })
+                    }
                 }
                 else {
                     let getContactListTask = ReqTask(prefix: "CLT-") { taskId in

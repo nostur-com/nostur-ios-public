@@ -179,7 +179,9 @@ class NewOnboardingTracker {
             let followingPublicKeys = account.followingPublicKeys
             DataProvider.shared().bgSave()
             DispatchQueue.main.async {
-                sendNotification(.followersChanged, followingPublicKeys)
+                if NosturState.shared.activeAccountPublicKey == pubkey {
+                    sendNotification(.followersChanged, followingPublicKeys)
+                }
             }
             self.fetchedFollowersTask = true
             L.onboarding.info("✈️✈️ processed kind 3")
