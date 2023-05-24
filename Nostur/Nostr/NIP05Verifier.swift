@@ -33,20 +33,23 @@ class NIP05Verifier {
                 let nip05parts = nip05trimmed.split(separator: "@", maxSplits: 1, omittingEmptySubsequences: true)
                 return nip05parts.count == 2 && FailedURLCache.shared.retrieveObject(at: String(nip05parts[1])) == nil
             }
-            .compactMap({ contact in
+            .compactMap({ contact in 
                 let nip05trimmed = contact.nip05!.trimmingCharacters(in: .whitespacesAndNewlines)
                 let nip05parts = nip05trimmed.split(separator: "@", maxSplits: 1, omittingEmptySubsequences: true)
                     
                 let domain = String(nip05parts[1])
                 let name = String(nip05parts[0])
                 
-                let nip05url = URL(string: "https://\(domain)/.well-known/nostr.json?name=\(name)")!
+                let nip05url = URL(string: "https://\(domain)/.well-known/nostr.json?name=\(name)")
                 
                 return NIP05Task(contact: contact, nip05url: nip05url, domain: domain, name: name)
             })
+            .filter {
+                $0.nip05url != nil
+            }
             .buffer(size: bufferSize, prefetch: .byRequest, whenFull: .dropOldest)
             .flatMap(maxPublishers: .max(maxConcurrentRequests)) { task -> AnyPublisher<(NIP05Task, Data?), Never> in
-                URLSession.shared.dataTaskPublisher(for: task.nip05url)
+                URLSession.shared.dataTaskPublisher(for: task.nip05url!)
                     .map { (task, $0.data) }
                     .replaceError(with: (task, nil))
                     .eraseToAnyPublisher()
@@ -95,7 +98,7 @@ if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
 
 struct NIP05Task {
     var contact:Contact
-    let nip05url:URL
+    let nip05url:URL?
     let domain:String
     let name:String
     var nostrJson:NostrJson? = nil
