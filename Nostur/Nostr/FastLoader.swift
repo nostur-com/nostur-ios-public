@@ -270,12 +270,28 @@ class Backlog {
     var tasks = Set<ReqTask>()
     var timer:Timer?
     var timeout = 60.0
+    var subscriptions = Set<AnyCancellable>()
     
-    init(timeout:Double = 60.0) {
+    // With auto: true we don't need receiveNotification(.importedMessagesFromSubscriptionIds) on a View's .onReceive
+    // the Backlog itself will listen for .importedMessagesFromSubscriptionIds notifications and
+    // trigger the task.process() commands
+    init(timeout:Double = 60.0, auto:Bool = false) {
         self.timeout = timeout
         timer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] timer in
             guard let self = self else { return }
             self.removeOldTasks()
+        }
+        if (auto) {
+            receiveNotification(.importedMessagesFromSubscriptionIds)
+                .sink(receiveValue: { [weak self] notification in
+                    guard let self = self else { return }
+                    let importedNotification = notification.object as! ImportedNotification
+                    let reqTasks = self.tasks(with: importedNotification.subscriptionIds)
+                    reqTasks.forEach { task in
+                        task.process()
+                    }
+                })
+                .store(in: &subscriptions)
         }
     }
     
@@ -312,7 +328,7 @@ class Backlog {
     }
 }
 
-struct ReqTask: Identifiable, Hashable {
+class ReqTask: Identifiable, Hashable {
     
     static func == (lhs: ReqTask, rhs: ReqTask) -> Bool {
         lhs.id == rhs.id
@@ -328,21 +344,37 @@ struct ReqTask: Identifiable, Hashable {
     var subscriptionId:String { (prefix ?? "") + id }
     
     let reqCommand:(_ taskId:String) -> Void
-    let processResponseCommand:(_ taskId:String) -> Void
+//    let processResponseCommand:(_ taskId:String) -> Void
     let timeoutCommand:((_ taskId:String) -> Void)?
     
+    // Use full subscriptionId instead of prefix to have multiple listeners for a task
+    // eg. Onboarding + InstantFeed, both having a task with exact subscriptionId: "pubkey-3"
+    // So both can listen for "pubkey-3" notifications. 
     init(prefix:String? = nil, reqCommand: @escaping (_: String) -> Void, processResponseCommand: @escaping (_: String) -> Void, timeoutCommand: ( (_: String) -> Void)? = nil) {
         self.prefix = prefix
         self.reqCommand = reqCommand
-        self.processResponseCommand = processResponseCommand
+//        self.processResponseCommand = processResponseCommand
+//        self.processResponseCommand = processResponseCommand
         self.timeoutCommand = timeoutCommand
+        processSubject
+            .debounce(for: 0.1, scheduler: RunLoop.main)
+            .sink { [weak self] _ in
+                guard let self = self else { return }
+                processResponseCommand(self.subscriptionId)
+            }
+            .store(in: &subscriptions)
     }
     
     public func fetch() {
         self.reqCommand(subscriptionId)
     }
+    
+    var subscriptions = Set<AnyCancellable>()
+    var processSubject = PassthroughSubject<Void, Never>()
+    
     public func process() {
-        self.processResponseCommand(subscriptionId)
+        self.processSubject.send()
+//        self.processResponseCommand(subscriptionId)
     }
     
     public func onTimeout() {
