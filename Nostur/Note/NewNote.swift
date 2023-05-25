@@ -152,14 +152,14 @@ struct NewNote: View {
     @State var selectedMentions:[Contact] = []
     @State var previewNRPost:NRPost?
     @State var subscriptions = Set<AnyCancellable>()
+    @State var gifSheetShown = false
     
     var body: some View {
         VStack(spacing:0) {
             if let account = ns.account {
-                ScrollView {
-                    VStack {
-                        HStack(alignment: .top) {
-                            PFP(pubkey: account.publicKey, account: account)
+                VStack {
+                    HStack(alignment: .top) {
+                        PFP(pubkey: account.publicKey, account: account)
                             HighlightedTextEditor(
                                 text: $vm.text,
                                 pastedImages: $vm.pastedImages,
@@ -167,7 +167,11 @@ struct NewNote: View {
                                 highlightRules: NewNoteText.rules,
                                 photoPickerTapped: {
                                     ipm.photoPickerShown = true
-                                })
+                                },
+                                gifsTapped: {
+                                    gifSheetShown = true
+                                }
+                            )
                             .introspect { editor in
                                 if (vm.textView == nil) {
                                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
@@ -175,7 +179,6 @@ struct NewNote: View {
                                     }
                                 }
                             }
-                            .frame(maxWidth: .infinity, alignment: .leading)
                             .photosPicker(isPresented: $ipm.photoPickerShown, selection: $ipm.imageSelection, matching: .images, photoLibrary: .shared())
                             .onChange(of: ipm.newImage) { newImage in
                                 if let newImage {
@@ -187,18 +190,21 @@ struct NewNote: View {
                                     .opacity(vm.text == "" ? 1 : 1)
                                     .offset(x: 5.0, y: 4.0)
                             }
+                            .sheet(isPresented: $gifSheetShown) {
+                                NavigationStack {
+                                    GifSearcher { gifUrl in
+                                        vm.text += gifUrl + "\n"
+                                    }
+                                }
+                            }
                             AnyStatus(filter: "NewPost")
-                        }
-                        HStack {
-                            ImagePreviews(pastedImages: $vm.pastedImages)
-                                .padding(.leading, DIMENSIONS.ROW_PFP_SPACE - 5)
-                        }
+                    }
+                    HStack {
+                        ImagePreviews(pastedImages: $vm.pastedImages)
+                            .padding(.leading, DIMENSIONS.ROW_PFP_SPACE - 5)
                     }
                 }
                 .padding(10)
-//                .onAppear {
-//                    updateEventWithNewText()
-//                }
                 .onChange(of: vm.debouncedText) { newText in
                     if (vm.nEvent == nil) {
                         vm.nEvent = NEvent(content: newText)
@@ -208,8 +214,6 @@ struct NewNote: View {
                     
                     guard let account = ns.account else { return }
                     if let mentionTerm = mentionTerm(newText) {
-                        //                print ("mentionTerm \(mentionTerm) lastHit: \(vm.lastHit)")
-                        
                         if mentionTerm == vm.lastHit {
                             vm.mentioning = false
                         }

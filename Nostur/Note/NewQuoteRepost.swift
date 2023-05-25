@@ -28,6 +28,7 @@ struct NewQuoteRepost: View {
     @State var uploading = false
     @State var uploadError:String?
     @State var subscriptions = Set<AnyCancellable>()
+    @State var gifSheetShown = false
     
     init(quotingEvent:Event) {
         self.quotingEvent = quotingEvent
@@ -49,6 +50,9 @@ struct NewQuoteRepost: View {
                                 highlightRules: NewNoteText.rules,
                                 photoPickerTapped: {
                                     ipm.photoPickerShown = true
+                                },
+                                gifsTapped: {
+                                    gifSheetShown = true
                                 })
                             .onSelectionChange { (range: NSRange) in
                                 print(range)
@@ -60,6 +64,8 @@ struct NewQuoteRepost: View {
                                     }
                                 }
                             }
+                            .frame(height: 200)
+                            .padding(.bottom, 10)
                             .photosPicker(isPresented: $ipm.photoPickerShown, selection: $ipm.imageSelection, matching: .images, photoLibrary: .shared())
                             .onChange(of: ipm.newImage) { newImage in
                                 if let newImage {
@@ -71,6 +77,14 @@ struct NewQuoteRepost: View {
                                     .opacity(vm.text == "" ? 1 : 0)
                                     .offset(x: 5.0, y: 7.0)
                             }
+                            .sheet(isPresented: $gifSheetShown) {
+                                NavigationStack {
+                                    GifSearcher { gifUrl in
+                                        vm.text += gifUrl + "\n"
+                                    }
+                                }
+                            }
+                            AnyStatus(filter: "NewPost")
                         }
                         ImagePreviews(pastedImages: $vm.pastedImages)
                             .padding(.leading, DIMENSIONS.ROW_PFP_SPACE - 5)
@@ -81,9 +95,6 @@ struct NewQuoteRepost: View {
 //                        Spacer()
                 }
                 .padding(10)
-//                .onAppear {
-//                    updateEventWithNewText()
-//                }
                 .onChange(of: vm.debouncedText) { newText in
                     if (vm.nEvent == nil) {
                         vm.nEvent = NEvent(content: newText)

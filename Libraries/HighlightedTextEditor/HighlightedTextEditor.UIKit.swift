@@ -10,10 +10,12 @@ import SwiftUI
 import UIKit
 
 public typealias PhotoPickerTappedCallback = () -> Void
+public typealias GifsTappedCallback = () -> Void
 
 protocol PastedImagesDelegate: UITextViewDelegate {
     func didPasteImage(_ image:UIImage)
     func photoPickerTapped()
+    func gifsTapped()
 }
 
 class NosturTextView: UITextView {
@@ -46,6 +48,10 @@ class NosturTextView: UITextView {
         pastedImageDelegate?.photoPickerTapped()
     }
     
+    @objc func gifsTapped() {
+        pastedImageDelegate?.gifsTapped()
+    }
+    
 }
 
 public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor {
@@ -68,6 +74,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     let textView = NosturTextView()
     let highlightRules: [HighlightRule]
     var photoPickerTapped: PhotoPickerTappedCallback?
+    var gifsTapped: GifsTappedCallback?
     
     private(set) var onEditingChanged: OnEditingChangedCallback?
     private(set) var onCommit: OnCommitCallback?
@@ -80,13 +87,15 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         pastedImages: Binding<[UIImage]>,
         shouldBecomeFirstResponder: Bool,
         highlightRules: [HighlightRule],
-        photoPickerTapped: PhotoPickerTappedCallback? = nil
+        photoPickerTapped: PhotoPickerTappedCallback? = nil,
+        gifsTapped: GifsTappedCallback? = nil
     ) {
         _text = text
         _pastedImages = pastedImages
         self.shouldBecomeFirstResponder = shouldBecomeFirstResponder
         self.highlightRules = highlightRules
         self.photoPickerTapped = photoPickerTapped
+        self.gifsTapped = gifsTapped
     }
     
     public func makeCoordinator() -> Coordinator {
@@ -94,20 +103,34 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     }
     
     public func makeUIView(context: Context) -> UITextView {
+        textView.isScrollEnabled = true
         textView.backgroundColor = UIColor.clear
         textView.delegate = context.coordinator
         textView.pastedImageDelegate = context.coordinator
         
         let doneToolbar: UIToolbar = UIToolbar(frame: CGRect.init(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 50))
         doneToolbar.barStyle = .default
-               
-        let flexSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
-        let done: UIBarButtonItem = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(textView.photoPickerTapped))
-        done.image = UIImage(systemName: "photo")
-               
-        let items = [done, flexSpace]
-        doneToolbar.items = items
-        doneToolbar.sizeToFit()
+                       
+        let photoButton = UIButton(type: .system)
+        photoButton.setImage(UIImage(systemName: "photo"), for: .normal)
+        photoButton.addTarget(self, action: #selector(textView.photoPickerTapped), for: .touchUpInside)
+        let photos = UIBarButtonItem(customView: photoButton)
+    
+        let gifButton = UIButton(type: .system)
+        gifButton.setImage(UIImage(named: "GifButton"), for: .normal)
+    
+        gifButton.imageView?.contentMode = .scaleAspectFit
+        gifButton.sizeToFit()
+        
+        gifButton.addTarget(self, action: #selector(textView.gifsTapped), for: .touchUpInside)
+        let gifs = UIBarButtonItem(customView: gifButton)
+
+        let flexibleSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+        
+        let toolbarItems: [UIBarButtonItem] = [photos, gifs, flexibleSpace]
+
+        doneToolbar.setItems(toolbarItems, animated: false)
+      
 
         textView.inputAccessoryView = doneToolbar
         
@@ -119,7 +142,6 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     }
     
     public func updateUIView(_ uiView: UITextView, context: Context) {
-        uiView.isScrollEnabled = false
         context.coordinator.updatingUIView = true
         
         uiView.backgroundColor = text.isEmpty ? UIColor.clear : UIColor.systemBackground
@@ -136,7 +158,6 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         }
         updateTextViewModifiers(uiView)
         runIntrospect(uiView)
-//        uiView.isScrollEnabled = true
         uiView.selectedTextRange = context.coordinator.selectedTextRange
         context.coordinator.updatingUIView = false
     }
@@ -164,6 +185,11 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
             tapped()
         }
         
+        func gifsTapped() {
+            guard let gifsTapped = self.parent.gifsTapped else { return }
+            gifsTapped()
+        }
+        
         var parent: HighlightedTextEditor
         var selectedTextRange: UITextRange?
         var updatingUIView = false
@@ -180,6 +206,16 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
             
             parent.text = textView.text
             selectedTextRange = textView.selectedTextRange
+            
+//            let size = CGSize(width: textView.frame.size.width, height: .infinity)
+//            let estimatedSize = textView.sizeThatFits(size)
+//            guard textView.contentSize.height < 200.0 else { textView.isScrollEnabled = true; return }
+//            textView.isScrollEnabled = false
+//            textView.constraints.forEach { (constraint) in
+//                if constraint.firstAttribute == .height {
+//                    constraint.constant = estimatedSize.height
+//                }
+//            }
         }
         
         public func textViewDidChangeSelection(_ textView: UITextView) {

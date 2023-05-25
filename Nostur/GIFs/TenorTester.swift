@@ -1,0 +1,226 @@
+//
+//  TenorTester.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 17/05/2023.
+//
+
+import SwiftUI
+import NukeUI
+
+struct GifSearcher: View {
+    
+    @Environment(\.dismiss) var dismiss
+    @State var searchTerm = ""
+    @State var searchResults:[TenorResult] = []
+    @State var topResults:[TenorResult] = []
+    @State var tags:[TenorCategory] = []
+    @State var autocompleteResults:[String] = []
+    @State var suggestionResults:[String] = []
+    var onSelect:(String) -> ()
+    
+    let columns = [
+        GridItem(.flexible()),
+        GridItem(.flexible()),
+        GridItem(.flexible())
+    ]
+    
+    var body: some View {
+        VStack {
+            SearchBox(prompt: "Search GIF", text: $searchTerm)
+            if autocompleteResults.count > 0 {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    LazyHStack {
+                        ForEach(autocompleteResults.indices, id:\.self) { index in
+                            Button(autocompleteResults[index]) {
+                                searchTerm = autocompleteResults[index]
+//                                autocompleteResults = []
+//                                suggestionResults = []
+                            }
+                            .buttonStyle(.borderedProminent)
+                        }
+                    }
+                }
+                .frame(height: 30)
+            }
+            if suggestionResults.count > 0 {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    LazyHStack {
+                        ForEach(suggestionResults.indices, id:\.self) { index in
+                            Button(suggestionResults[index]) {
+                                searchTerm = suggestionResults[index]
+//                                autocompleteResults = []
+//                                suggestionResults = []
+                            }
+                            .buttonStyle(.borderedProminent)
+                        }
+                    }
+                }
+                .frame(height: 30)
+            }
+            ScrollView {
+                LazyVGrid(columns: columns, spacing: 5) {
+                    ForEach(searchResults) { gifResult in
+                        VStack {
+                            if let gif = gifResult.media_formats["nanogif"], let url = URL(string: gif.url) {
+                                LazyImage(url: url) { state in
+                                    if let container = state.imageContainer, container.type ==  .gif, let data = container.data {
+                                        GIFImage(data: data)
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fit)
+                                            .hCentered()
+                                            .background(Color("LightGray").opacity(0.2))
+                                            .onTapGesture {
+                                                if let url = gifResult.media_formats["gif"]?.url {
+                                                    onSelect(url)
+                                                    dismiss()
+                                                }
+                                            }
+                                    }
+                                }
+                                .frame(height: 90)
+                            }
+                        }
+                    }
+                    ForEach(topResults) { gifResult in
+                        VStack {
+                            if let gif = gifResult.media_formats["nanogif"], let url = URL(string: gif.url) {
+                                LazyImage(url: url) { state in
+                                    if let container = state.imageContainer, container.type ==  .gif, let data = container.data {
+                                        GIFImage(data: data)
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fit)
+                                            .hCentered()
+                                            .background(Color("LightGray").opacity(0.2))
+                                            .onTapGesture {
+                                                if let url = gifResult.media_formats["gif"]?.url {
+                                                    onSelect(url)
+                                                    dismiss()
+                                                }
+                                            }
+                                    }
+                                }
+                                .frame(height: 90)
+                            }
+                        }
+                    }
+//                    ForEach(tags) { tag in
+//                        Text(tag.name)
+//                    }
+                }
+            }
+            Spacer()
+            .onChange(of: searchTerm) { newValue in
+                search(newValue)
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") { dismiss() }
+            }
+        }
+        .padding()
+        .onAppear {
+            initial()
+        }
+    }
+    
+    func search(_ searchTerm:String) {
+        // the test search term
+        
+        // Define the results upper limit
+        let limit = 20
+        
+        // make initial search request for the first 8 items
+        let searchRequest = URLRequest(url: URL(string: String(format: "https://tenor.googleapis.com/v2/search?q=%@&key=%@&client_key=%@&limit=%d&media_filter=gif,nanogif",
+                                                               searchTerm,
+                                                               apikey,
+                                                               clientkey,
+                                                               limit))!)
+        
+        makeWebRequest(urlRequest: searchRequest, callback: self.tenorSearchHandler)
+        
+        // Get up to 5 results from the autocomplete suggestions - using the default locale of en_US
+           let autoRequest = URLRequest(url: URL(string: String(format: "https://tenor.googleapis.com/v2/autocomplete?key=%@&client_key=%@&q=%@&limit=%d",
+                                                                    apikey,
+                                                                    clientkey,
+                                                                    searchTerm,
+                                                                    5))!)
+        makeWebRequest(urlRequest: autoRequest, callback: tenorAutoCompleteResultsHandler)
+        
+        // Get the top 5 search suggestions - using the default locale of en_US
+            let suggestRequest = URLRequest(url: URL(string: String(format: "https://tenor.googleapis.com/v2/search_suggestions?key=%@&client_key=%@&q=%@&limit=%d",
+                                                                     apikey,
+                                                                     clientkey,
+                                                                     searchTerm,
+                                                                     10))!)
+            makeWebRequest(urlRequest: suggestRequest, callback: tenorSuggestionResultsHandler)
+        
+        // Data will be loaded by each request's callback
+    }
+    
+    func initial() {
+        // Get the top 10 featured GIFs (updated throughout the day) - using the default locale of en_US
+           let featuredRequest = URLRequest(url: URL(string: String(format: "https://tenor.googleapis.com/v2/featured?key=%@&client_key=%@&limit=%d",
+                                                                    apikey,
+                                                                    clientkey,
+                                                                    10))!)
+        
+           makeWebRequest(urlRequest: featuredRequest, callback: tenorFeaturedResultsHandler)
+
+
+//           // Get the current list of categories - using the default locale of en_US
+//           let categoryRequest = URLRequest(url: URL(string: String(format: "https://tenor.googleapis.com/v2/categories?key=%@&client_key=%@&limit=%d",
+//                                                                    apikey, clientkey, 10))!)
+//           makeWebRequest(urlRequest: categoryRequest, callback: tenorCategoryResultsHandler)
+
+    }
+    
+    
+    
+    func tenorSearchHandler(response: TenorResponse)
+    {
+        if let results = response.results {
+            self.searchResults = results
+        }
+    }
+    
+    func tenorCategoryResultsHandler(response: TenorResponse)
+    {
+        if let tags = response.tags {
+            self.tags = tags
+        }
+    }
+    
+    func tenorFeaturedResultsHandler(response: TenorResponse)
+    {
+        if let results = response.results {
+            self.topResults = results
+        }
+    }
+    
+    func tenorAutoCompleteResultsHandler(response: AutoCompleteResponse)
+    {
+        if let results = response.results {
+            self.autocompleteResults = results
+        }
+    }
+    
+    func tenorSuggestionResultsHandler(response: AutoCompleteResponse)
+    {
+        if let results = response.results {
+            self.suggestionResults = results
+        }
+    }
+}
+
+struct TenorTester_Previews: PreviewProvider {
+    static var previews: some View {
+        NavigationStack {
+            GifSearcher { gifURL in
+                print("Gif selected: \(gifURL)")
+            }
+        }
+        .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
+    }
+}
