@@ -16,7 +16,10 @@ struct GifSearcher: View {
     @State var topResults:[TenorResult] = []
     @State var tags:[TenorCategory] = []
     @State var autocompleteResults:[String] = []
-    @State var suggestionResults:[String] = []
+    @State var _suggestionResults:[String] = []
+    var bothResults:[String] {
+        autocompleteResults + _suggestionResults.filter { !autocompleteResults.contains($0) }
+    }
     var onSelect:(String) -> ()
     
     let columns = [
@@ -31,24 +34,9 @@ struct GifSearcher: View {
             if autocompleteResults.count > 0 {
                 ScrollView(.horizontal, showsIndicators: false) {
                     LazyHStack {
-                        ForEach(autocompleteResults.indices, id:\.self) { index in
-                            Button(autocompleteResults[index]) {
-                                searchTerm = autocompleteResults[index]
-//                                autocompleteResults = []
-//                                suggestionResults = []
-                            }
-                            .buttonStyle(.borderedProminent)
-                        }
-                    }
-                }
-                .frame(height: 30)
-            }
-            if suggestionResults.count > 0 {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    LazyHStack {
-                        ForEach(suggestionResults.indices, id:\.self) { index in
-                            Button(suggestionResults[index]) {
-                                searchTerm = suggestionResults[index]
+                        ForEach(bothResults.indices, id:\.self) { index in
+                            Button(bothResults[safe: index] ?? "") {
+                                searchTerm = bothResults[safe: index] ?? ""
 //                                autocompleteResults = []
 //                                suggestionResults = []
                             }
@@ -213,7 +201,7 @@ struct GifSearcher: View {
     func tenorSuggestionResultsHandler(response: AutoCompleteResponse)
     {
         if let results = response.results {
-            self.suggestionResults = results
+            self._suggestionResults = results
         }
     }
 }
