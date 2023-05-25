@@ -132,41 +132,47 @@ struct GifSearcher: View {
         let limit = 20
         
         // make initial search request for the first 8 items
-        let searchRequest = URLRequest(url: URL(string: String(format: "https://tenor.googleapis.com/v2/search?q=%@&key=%@&client_key=%@&limit=%d&media_filter=gif,nanogif",
-                                                               searchTerm,
-                                                               apikey,
-                                                               clientkey,
-                                                               limit))!)
+        if let url = URL(string: String(format: "https://tenor.googleapis.com/v2/search?q=%@&key=%@&client_key=%@&limit=%d&media_filter=gif,nanogif",
+                                        searchTerm,
+                                        apikey,
+                                        clientkey,
+                                        limit)) {
+            let searchRequest = URLRequest(url: url)
+            makeWebRequest(urlRequest: searchRequest, callback: self.tenorSearchHandler)
+        }
         
-        makeWebRequest(urlRequest: searchRequest, callback: self.tenorSearchHandler)
         
         // Get up to 5 results from the autocomplete suggestions - using the default locale of en_US
-           let autoRequest = URLRequest(url: URL(string: String(format: "https://tenor.googleapis.com/v2/autocomplete?key=%@&client_key=%@&q=%@&limit=%d",
-                                                                    apikey,
-                                                                    clientkey,
-                                                                    searchTerm,
-                                                                    5))!)
-        makeWebRequest(urlRequest: autoRequest, callback: tenorAutoCompleteResultsHandler)
+        if let url = URL(string: String(format: "https://tenor.googleapis.com/v2/autocomplete?key=%@&client_key=%@&q=%@&limit=%d",
+                                        apikey,
+                                        clientkey,
+                                        searchTerm,
+                                        5)) {
+            let autoRequest = URLRequest(url: url)
+            makeWebRequest(urlRequest: autoRequest, callback: tenorAutoCompleteResultsHandler)
+        }
         
-        // Get the top 5 search suggestions - using the default locale of en_US
-            let suggestRequest = URLRequest(url: URL(string: String(format: "https://tenor.googleapis.com/v2/search_suggestions?key=%@&client_key=%@&q=%@&limit=%d",
-                                                                     apikey,
-                                                                     clientkey,
-                                                                     searchTerm,
-                                                                     10))!)
+        if let url = URL(string: String(format: "https://tenor.googleapis.com/v2/search_suggestions?key=%@&client_key=%@&q=%@&limit=%d",
+                                        apikey,
+                                        clientkey,
+                                        searchTerm,
+                                        10)) {
+            // Get the top 5 search suggestions - using the default locale of en_US
+            let suggestRequest = URLRequest(url: url)
             makeWebRequest(urlRequest: suggestRequest, callback: tenorSuggestionResultsHandler)
-        
-        // Data will be loaded by each request's callback
+        }
     }
     
     func initial() {
         // Get the top 10 featured GIFs (updated throughout the day) - using the default locale of en_US
-           let featuredRequest = URLRequest(url: URL(string: String(format: "https://tenor.googleapis.com/v2/featured?key=%@&client_key=%@&limit=%d",
-                                                                    apikey,
-                                                                    clientkey,
-                                                                    10))!)
-        
-           makeWebRequest(urlRequest: featuredRequest, callback: tenorFeaturedResultsHandler)
+        if let url = URL(string: String(format: "https://tenor.googleapis.com/v2/featured?key=%@&client_key=%@&limit=%d",
+                                        apikey,
+                                        clientkey,
+                                        10)) {
+            let featuredRequest = URLRequest(url: url)
+            
+            makeWebRequest(urlRequest: featuredRequest, callback: tenorFeaturedResultsHandler)
+        }
 
 
 //           // Get the current list of categories - using the default locale of en_US
@@ -175,8 +181,6 @@ struct GifSearcher: View {
 //           makeWebRequest(urlRequest: categoryRequest, callback: tenorCategoryResultsHandler)
 
     }
-    
-    
     
     func tenorSearchHandler(response: TenorResponse)
     {
