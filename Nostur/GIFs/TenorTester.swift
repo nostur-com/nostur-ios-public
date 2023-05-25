@@ -70,25 +70,27 @@ struct GifSearcher: View {
                             }
                         }
                     }
-                    ForEach(topResults) { gifResult in
-                        VStack {
-                            if let gif = gifResult.media_formats["nanogif"], let url = URL(string: gif.url) {
-                                LazyImage(url: url) { state in
-                                    if let container = state.imageContainer, container.type ==  .gif, let data = container.data {
-                                        GIFImage(data: data)
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fit)
-                                            .hCentered()
-                                            .background(Color("LightGray").opacity(0.2))
-                                            .onTapGesture {
-                                                if let url = gifResult.media_formats["gif"]?.url {
-                                                    onSelect(url)
-                                                    dismiss()
+                    if searchResults.count == 0 {
+                        ForEach(topResults) { gifResult in
+                            VStack {
+                                if let gif = gifResult.media_formats["nanogif"], let url = URL(string: gif.url) {
+                                    LazyImage(url: url) { state in
+                                        if let container = state.imageContainer, container.type ==  .gif, let data = container.data {
+                                            GIFImage(data: data)
+                                                .resizable()
+                                                .aspectRatio(contentMode: .fit)
+                                                .hCentered()
+                                                .background(Color("LightGray").opacity(0.2))
+                                                .onTapGesture {
+                                                    if let url = gifResult.media_formats["gif"]?.url {
+                                                        onSelect(url)
+                                                        dismiss()
+                                                    }
                                                 }
-                                            }
+                                        }
                                     }
+                                    .frame(height: 90)
                                 }
-                                .frame(height: 90)
                             }
                         }
                     }
@@ -117,7 +119,7 @@ struct GifSearcher: View {
         // the test search term
         
         // Define the results upper limit
-        let limit = 20
+        let limit = 30
         
         // make initial search request for the first 8 items
         if let url = URL(string: String(format: "https://tenor.googleapis.com/v2/search?q=%@&key=%@&client_key=%@&limit=%d&media_filter=gif,nanogif",
@@ -145,7 +147,7 @@ struct GifSearcher: View {
                                         clientkey,
                                         searchTerm,
                                         10)) {
-            // Get the top 5 search suggestions - using the default locale of en_US
+            // Get the top 10 search suggestions - using the default locale of en_US
             let suggestRequest = URLRequest(url: url)
             makeWebRequest(urlRequest: suggestRequest, callback: tenorSuggestionResultsHandler)
         }
