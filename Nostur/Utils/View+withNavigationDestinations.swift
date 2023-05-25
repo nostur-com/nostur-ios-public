@@ -20,6 +20,14 @@ struct HashtagPath: Hashable {
     var hashTag:String
 }
 
+struct Nevent1Path: Hashable {
+    var nevent1:String
+}
+
+struct Nprofile1Path: Hashable {
+    var nprofile1:String
+}
+
 enum ViewPath: Hashable {
     case Post(nrPost:NRPost)
     case Blocklist

@@ -342,11 +342,19 @@ struct Search: View {
             }
             .onReceive(receiveNotification(.navigateTo)) { notification in
                 let destination = notification.object as! NavigationDestination
-                guard type(of: destination.destination) == HashtagPath.self || !IS_IPAD else { return }
+                guard type(of: destination.destination) == Nevent1Path.self || type(of: destination.destination) == Nprofile1Path.self || type(of: destination.destination) == HashtagPath.self || !IS_IPAD else { return }
                 guard selectedTab == "Search" else { return }
                 if (type(of: destination.destination) == HashtagPath.self) {
                     let hashtag = (destination.destination as! HashtagPath).hashTag
                     searchText = "#\(hashtag)"
+                }
+                else if (type(of: destination.destination) == Nevent1Path.self) {
+                    let nevent1 = (destination.destination as! Nevent1Path).nevent1
+                    searchText = nevent1
+                }
+                else if (type(of: destination.destination) == Nprofile1Path.self) {
+                    let nprofile1 = (destination.destination as! Nprofile1Path).nprofile1
+                    searchText = nprofile1
                 }
                 else {
                     navPath.append(destination.destination)

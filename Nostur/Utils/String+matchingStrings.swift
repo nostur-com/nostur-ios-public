@@ -39,7 +39,7 @@ extension String {
     
     
     func matchingStrings(regex: String) -> [[String]] {
-        guard let regex = String.regexCache[regex] else { return [] }
+        let regex = (String.regexCache[regex]) ?? (try! NSRegularExpression(pattern: regex, options: []))
         let nsString = self as NSString
         let results  = regex.matches(in: self, options: [], range: NSMakeRange(0, nsString.length))
         return results.map { result in
