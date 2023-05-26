@@ -62,6 +62,20 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
     
     
+    private var _repliesToRoot: [NRPost] = [] {
+        didSet {
+            if withGroupedReplies {
+                self.groupRepliesToRoot()
+            }
+        }
+    }
+
+    var repliesToRoot: [NRPost] {
+        get { nrPostQueue.sync { _repliesToRoot } }
+        set { nrPostQueue.async(flags: .barrier) { self._repliesToRoot = newValue } }
+    }
+    var groupedReplies = [NRPost]()
+    
     let isRepost:Bool
     var threadPostsCount:Int
     var isTruncated:Bool = false
@@ -127,6 +141,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
     
     private var withReplyTo = false
+    private var withGroupedReplies = false
     private var withReplies = false
     private var withParents = false
     
@@ -140,6 +155,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         self.ago = event.ago
         self._parentPosts = withParents ? event.parentEvents.map { NRPost(event: $0) } : []
         self._replies = withReplies ? event.replies_.map { NRPost(event: $0) } : []
+        self._repliesToRoot = []
         self.threadPostsCount = 1 + event.parentEvents.count
         self.isRepost = event.isRepost
         self.deletedById = event.deletedById
@@ -604,17 +620,25 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 DataProvider.shared().bg.perform { [weak self] in
                     guard let self = self else { return }
                     let nrReplies = replies.map { NRPost(event: $0) }
-                    DispatchQueue.main.async {
-                        self.objectWillChange.send()
+                    
+                    if (withGroupedReplies) {
                         self.repliesCount = Int64(nrReplies.count)
                         self.replies = nrReplies
+                        self.groupRepliesToRoot()
+                    }
+                    else {
+                        DispatchQueue.main.async {
+                            self.objectWillChange.send()
+                            self.repliesCount = Int64(nrReplies.count)
+                            self.replies = nrReplies
+                        }
                     }
                 }
             }
             .store(in: &subscriptions)
     }
     
-    public func loadReplies() {
+    private func loadReplies() {
         if (!self.withReplies) {
             self.withReplies = true
             repliesListener()
@@ -678,35 +702,113 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
 }
 
+extension NRPost { // Helpers for grouped replies
+    
+    // To make repliesSorted work we need repliesToRoot first (.loadRepliesToRoot())
+    var groupedRepliesSorted:[NRPost] { // Read from bottom to top.
+        groupedReplies
+            // 4. Everything else last, newest at bottom
+            .sorted(by: { $0.created_at < $1.created_at })
+            // 3. People you follow third
+            .sorted(by: { $0.following && !$1.following })
+            // 2. Replies replied by author second
+            .sorted(by: {
+                ($0.pubkey == self.pubkey) &&
+                ($1.pubkey != self.pubkey)
+            })
+            // 1. Own direct replies first
+            .sorted(by: {
+                ($0.pubkey == self.pubkey && $0.replyToId == self.id) &&
+                ($1.pubkey != self.pubkey || $1.replyToId != self.id)
+            })
     }
     
+    public func loadGroupedReplies() {
+        self.loadReplies()
+        if (!self.withGroupedReplies) {
+            self.withGroupedReplies = true
+            repliesToRootListener()
+        }
+        let ctx = DataProvider.shared().bg
+        ctx.perform { [weak self] in
+            guard let self = self else { return }
+            let fr = Event.fetchRequest()
+            if let replyToRootId = self.replyToRootId { // We are not root, so load replies for actual root instead
+                fr.predicate = NSPredicate(format: "replyToRootId = %@ AND kind == 1", replyToRootId)
+            }
+            else {
+                fr.predicate = NSPredicate(format: "replyToRootId = %@ AND kind == 1", self.id)
+            }
+            fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: true )]
+            let repliesToRoot = (try? DataProvider.shared().bg.fetch(fr)) ?? []
+            let nrRepliesToRoot = repliesToRoot.map { NRPost(event: $0, withReplyTo: false, withParents: false, withReplies: false, plainText: false) } // Don't load replyTo/parents here, we do it in groupRepliesToRoot()
+            self.repliesToRoot = nrRepliesToRoot
+        }
     }
     
+    private func repliesToRootListener() {
+        self.event.replyToRootUpdated
+            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
+            .sink { reply in
+                DataProvider.shared().bg.perform { [weak self] in
+                    guard let self = self else { return }
+                    
+                    let nrReply = NRPost(event: reply, withReplyTo: false, withParents: false, withReplies: false, plainText: false) // Don't load replyTo/parents here, we do it in groupRepliesToRoot()
+                    self.repliesToRoot.append(nrReply)
+                }
+            }
+            .store(in: &subscriptions)
     }
     
+    var repliesToLeaf:[NRPost] {
+        // if we are not root we cannot use replyToRootId
+        // we need only the replies under our leaf id
+        // so we have to traverse manually:
+        
+        // we just start from a leaf and traverse up, if we hit our self.id its ours,
+        // else it will go up to the actual root and we dont need it
+        
+        var ourReplies:[NRPost] = []
+        for post in repliesToRoot {
+            if traversesUpToThisPost(post.event) {
+                ourReplies.append(post)
+            }
+        }
+        return ourReplies
+    }
+    
+    private func traversesUpToThisPost(_ event:Event) -> Bool {
+        var currentEvent:Event? = event
+        while currentEvent != nil {
+            if let replyToId = currentEvent?.replyToId, replyToId == self.id {
+                return true
+            }
+            currentEvent = currentEvent?.replyTo__
+        }
+        return false
+    }
+    
+    private func groupRepliesToRoot() {
+        DataProvider.shared().bg.perform { [weak self] in
+            guard let self = self else { return }
+            // Load parents/replyTo
+            let groupedThreads = (self.replies + (self.replyToRootId != nil ? self.repliesToLeaf : self.repliesToRoot))
+                .uniqued(on: { $0.id })
+                .filter { // Only take eventual replies by author, or direct replies to root by others
+                    $0.pubkey == self.pubkey ||
+                    $0.replyToId == self.id
+                }
+                .map { reply in
+                    // use until:self.id so we don't render duplicates
+                    reply.event.parentEvents = Event.getParentEvents(reply.event, fixRelations: true, until:self.id)
+                    reply.parentPosts = reply.event.parentEvents.map { NRPost(event: $0) }
+                    reply.threadPostsCount = 1 + reply.event.parentEvents.count
 
 //                    if let replyTo = reply.event.replyTo__ { // TODO: NEED THIS OR NO?
 //                        reply.replyTo = NRPost(event: replyTo)
 //                    }
                     return reply
                 }
-            
-//            let authorThreads = nrPost.repliesToRoot.filter {
-//                $0.pubkey == nrPost.pubkey //&& $0.id != nrPost.id
-//            }
-//            .map { authorReply in
-//                authorReply.event.parentEvents = Event.getParentEvents(authorReply.event, fixRelations: true)
-//                    .filter { $0.id != nrPost.id } // Don't rerender the root
-//                authorReply.parentPosts = authorReply.event.parentEvents.map { NRPost(event: $0) }
-//                authorReply.threadPostsCount = 1 + authorReply.event.parentEvents.count
-//
-//                if let replyTo = authorReply.event.replyTo__ {
-//                    authorReply.replyTo = NRPost(event: replyTo)
-//                }
-//                return authorReply
-//            }
-//
-//            let allThreads = authorThreads + nrPost.replies
             
             // Dictionary to store unique items with highest values
             var uniqueThreads = [NRPostID: NRPost]()
@@ -736,7 +838,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             }
         }
     }
-    
-    
-    
 }
+
+
+

@@ -116,6 +116,18 @@ extension Event {
         return nil
     }
     
+    var replyTo__:Event? {
+        guard replyTo == nil else { return replyTo }
+        guard let replyToId = replyToId else { return nil }
+        guard let ctx = managedObjectContext else { return nil }
+        if let found = try? Event.fetchEvent(id: replyToId, context: ctx) {
+            self.replyTo = found
+            found.addToReplies(self)
+            return found
+        }
+        return nil
+    }
+    
     var replyToRoot_:Event? {
         guard replyToRoot == nil else { return replyToRoot }
         guard let replyToRootId = replyToRootId else { return nil }
@@ -156,7 +168,8 @@ extension Event {
 //    var username: String { contact?.username ?? authorKey }
 //    var name: String { contact?.authorName ?? authorKey }
     
-    static func getParentEvents(_ event:Event) -> [Event] {
+    // Gets all parents. If until(id) is set, it will stop and wont traverse further, to prevent rendering duplicates
+    static func getParentEvents(_ event:Event, fixRelations:Bool = false, until:String? = nil) -> [Event] {
         let RECURSION_LIMIT = 35 // PREVENT SPAM THREADS
         var parentEvents = [Event]()
         var currentEvent:Event? = event
@@ -165,7 +178,12 @@ extension Event {
             if i > RECURSION_LIMIT {
                 break
             }
-            if let replyTo = currentEvent?.replyTo {
+            
+            if until != nil && currentEvent!.replyToId == until {
+                break
+            }
+            
+            if let replyTo = fixRelations ? currentEvent?.replyTo__ : currentEvent?.replyTo {
                 parentEvents.append(replyTo)
                 currentEvent = replyTo
                 i = i + 1
@@ -451,6 +469,8 @@ extension Event {
     static func updateRepliesCountCache(_ tags:[NostrTag], context:NSManagedObjectContext) throws -> Bool {
         // NIP-10: Those marked with "reply" denote the id of the reply event being responded to.
         
+        
+        // TODO: USE AWAITING EVENTS HERE. OR NOT, IT IS NO LONGER USED. ONLY IN SETTINGS DEV MODE FIXER
         let replyEtag = TagsHelpers(tags).replyToEtag()
         
         if (replyEtag != nil) {
@@ -547,7 +567,7 @@ extension Event {
     static func updateZapTallyCache(_ zap:Event, context:NSManagedObjectContext) -> Bool {
         guard let zappedContact = zap.zappedContact else { // NO CONTACT
             if let zappedPubkey = zap.zappedContactPubkey {
-                print("⚡️⏳ missing contact for zap. fetching: \(zappedPubkey), and queueing zap \(zap.id)")
+                L.fetching.info("⚡️⏳ missing contact for zap. fetching: \(zappedPubkey), and queueing zap \(zap.id)")
                 QueuedFetcher.shared.enqueue(pTag: zappedPubkey)
                 ZapperPubkeyVerificationQueue.shared.addZap(zap)
             }
@@ -555,7 +575,7 @@ extension Event {
         }
         
         guard zappedContact.metadata_created_at != 0 else { // CONTACT INFO MISSING
-                print("⚡️⏳ missing contact info for zap. fetching: \(zappedContact.pubkey), and queueing zap \(zap.id)")
+            L.fetching.info("⚡️⏳ missing contact info for zap. fetching: \(zappedContact.pubkey), and queueing zap \(zap.id)")
             QueuedFetcher.shared.enqueue(pTag: zappedContact.pubkey)
                 ZapperPubkeyVerificationQueue.shared.addZap(zap)
             return false
@@ -564,7 +584,7 @@ extension Event {
         // Check if zapper pubkey matches contacts published zapper pubkey
         if let zappedContact = zap.zappedContact, let zapperPubkey = zappedContact.zapperPubkey {
             guard zap.pubkey == zapperPubkey else {
-                print("⚡️🔴 zapper pubkey does not match contacts published zapper pubkey. zap: \(zap.id)")
+                L.og.info("⚡️🔴 zapper pubkey does not match contacts published zapper pubkey. zap: \(zap.id)")
                 return false
             }
         }
@@ -954,27 +974,28 @@ extension Event {
                     replyTo.addToReplies(savedEvent)
                     replyTo.repliesCount += 1
                     replyTo.repliesUpdated.send(replyTo.replies_)
+                    
+                    savedEvent.replyToUpdated.send(replyTo)
                 }
             }
             
             // IF THE THERE IS A ROOT, AND ITS NOT THE SAME AS THE REPLY TO
             // DO THE SAME AS WITH THE REPLY BEFORE
             if let replyToRootEtag = event.replyToRootEtag() {
-                if (replyToRootEtag.id != savedEvent.replyToId) { // If reply root is same as reply, dont double add.
-                    savedEvent.replyToRootId = replyToRootEtag.id
-                    if (savedEvent.replyToId == nil) { // IF IT HAS ONLY A ROOT REPLY, NO NORMAL REPLY: THEN REPLYTOROOT = REPLYTO
-                        savedEvent.replyToId = replyToRootEtag.id
+                savedEvent.replyToRootId = replyToRootEtag.id
+                
+                if let replyToRoot = try? Event.fetchEvent(id: replyToRootEtag.id, context: context) {
+                    savedEvent.replyToRoot = replyToRoot
+                    
+                    if (savedEvent.replyToId == nil) {
+                        savedEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
                         
-                        // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
-                        if let replyToRoot = try? Event.fetchEvent(id: replyToRootEtag.id, context: context) {
-                            savedEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
-                            
-//                            replyToRoot.objectWillChafnge.send()
-                            replyToRoot.addToReplies(savedEvent)
-                            replyToRoot.repliesCount += 1
-                            replyToRoot.repliesUpdated.send(replyToRoot.replies_)
-                        }
+                        replyToRoot.addToReplies(savedEvent)
+                        replyToRoot.repliesCount += 1
+                        replyToRoot.repliesUpdated.send(replyToRoot.replies_)
                     }
+                    
+                    savedEvent.replyToRootUpdated.send(replyToRoot)
                 }
             }
             

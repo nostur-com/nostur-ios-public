@@ -169,7 +169,7 @@ struct PostAndParent: View {
             }
             // OUR (DETAIL) REPLY:
             // MARK: DETAIL NOTE
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 0) {
                 if nrPost.deletedById == nil {
                     
                     HStack(alignment:.top, spacing:0) {
@@ -276,7 +276,7 @@ struct PostAndParent: View {
                         FooterFragmentView(nrPost: nrPost)
                             .padding(.vertical, 5)
                             .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
-                        Divider()
+//                        Divider()
                     }
                 }
                 else {
@@ -286,49 +286,51 @@ struct PostAndParent: View {
                 
                 if (!isParent) {
                     // MARK: REPLIES TO OUR MAIN NOTE
-                    LazyVStack {
-                        ForEach (nrPost.replies
-                            .sorted(by: { $0.created_at < $1.created_at } )
-                            .filter({ nrPost in
-                            if ns.account != nil {
-                                return !(Set(ns.account!.blockedPubkeys_)).contains(nrPost.pubkey)
-                            }
-                            else {
-                                return true
-                            }
-                        })
-                                 // newest at bottom
-                            .sorted(by: { $0.created_at < $1.created_at })
-                                 // following first
-                            .sorted(by: { ns.isFollowing($0.pubkey) && !ns.isFollowing($1.pubkey) })
-                                 // OP first even more first.
-                            .sorted(by: { $0.pubkey == nrPost.pubkey && $1.pubkey != nrPost.pubkey })
-                                 , id:\.self) { nrPost in
-                            
-                            PostRowDeletable(nrPost: nrPost, hideFooter: false, isReply:true)
-                                .id(nrPost.id)
-                                .onAppear {
-                                    if (nrPost.missingPs.count > 0) {
-                                        EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.002")
-                                        QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
-                                    }
-                                }
-                                .onDisappear {
-                                    if (nrPost.missingPs.count > 0) {
-                                        QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
-                                    }
-                                }
-                            Divider()
-                        }
-                    }
-                    .animation(Animation.spring(), value: nrPost.replies)
+                    ThreadReplies(nrPost: nrPost)
+                    
+//                    LazyVStack {
+//                        ForEach (nrPost.replies
+//                            .sorted(by: { $0.created_at < $1.created_at } )
+//                            .filter({ nrPost in
+//                            if ns.account != nil {
+//                                return !(Set(ns.account!.blockedPubkeys_)).contains(nrPost.pubkey)
+//                            }
+//                            else {
+//                                return true
+//                            }
+//                        })
+//                                 // newest at bottom
+//                            .sorted(by: { $0.created_at < $1.created_at })
+//                                 // following first
+//                            .sorted(by: { ns.isFollowing($0.pubkey) && !ns.isFollowing($1.pubkey) })
+//                                 // OP first even more first.
+//                            .sorted(by: { $0.pubkey == nrPost.pubkey && $1.pubkey != nrPost.pubkey })
+//                                 , id:\.self) { nrPost in
+//
+//                            PostRowDeletable(nrPost: nrPost, hideFooter: false, isReply:true)
+//                                .id(nrPost.id)
+//                                .onAppear {
+//                                    if (nrPost.missingPs.count > 0) {
+//                                        EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.002")
+//                                        QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
+//                                    }
+//                                }
+//                                .onDisappear {
+//                                    if (nrPost.missingPs.count > 0) {
+//                                        QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
+//                                    }
+//                                }
+//                            Divider()
+//                        }
+//                    }
+//                    .animation(Animation.spring(), value: nrPost.replies)
                     
                     // If there are less than 5 replies, put some empty space so our detail note is at top of screen
                     if (nrPost.replies.count < 5) {
                         let height = geoHeight - 280
-                        Rectangle().frame(width: 100, height: (height < 280 ? 400 : height))
-                            .background(.clear)
-                            .foregroundColor(.clear)
+                        Rectangle().frame(height: (height < 280 ? 400 : height))
+                            .background(Color("ListBackground"))
+                            .foregroundColor(Color("ListBackground"))
                     }
                     
                     Spacer()
@@ -340,15 +342,15 @@ struct PostAndParent: View {
             .onAppear {
                 guard !didLoad else { return }
                 didLoad = true
+                EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.003")
                 if (nrPost.missingPs.count > 0) {
-                    EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.003")
                     QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
                 }
 
                 nrPost.loadReplyTo()
                 
                 if (!isParent) {
-                    nrPost.loadReplies()
+//                    nrPost.loadReplies()
 
                     // Fix replyTo if we already have it?
 //                    fixReplyToIfWeAlreadyHaveIt(event)

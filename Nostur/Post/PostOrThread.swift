@@ -8,7 +8,8 @@
 import SwiftUI
 
 struct PostOrThread: View {
-    var nrPost: NRPost
+    @ObservedObject var nrPost: NRPost
+//    var nrPost: NRPost
 //    let fullWidth:Bool
     @ObservedObject var settings:SettingsStore = .shared
 
