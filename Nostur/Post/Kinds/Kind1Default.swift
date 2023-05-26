@@ -16,18 +16,20 @@ struct Kind1Default: View {
     var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
     let isReply:Bool // is reply on PostDetail
     let isDetail:Bool
+    let grouped:Bool
      
     let sp:SocketPool = .shared
     let up:Unpublisher = .shared
     @ObservedObject var settings:SettingsStore = .shared
     
-    init(nrPost: NRPost, hideFooter:Bool = true, inThread:Bool = false, connect:ThreadConnectDirection? = nil, isReply:Bool = false, isDetail:Bool = false) {
+    init(nrPost: NRPost, hideFooter:Bool = true, inThread:Bool = false, connect:ThreadConnectDirection? = nil, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false) {
         self.nrPost = nrPost
         self.hideFooter = hideFooter
         self.inThread = inThread
         self.connect = connect
         self.isReply = isReply
         self.isDetail = isDetail
+        self.grouped = grouped
     }
     
     let THREAD_LINE_OFFSET = 34.0
@@ -67,7 +69,7 @@ struct Kind1Default: View {
                     Spacer()
                     NoteMenuView(nrPost: nrPost)
                 }
-                if !inThread {
+                if !inThread && !grouped {
                     ReplyingToFragmentView(nrPost: nrPost)
 //                            .padding(.bottom, 3)
                         .contentShape(Rectangle())

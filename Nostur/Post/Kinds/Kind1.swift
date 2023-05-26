@@ -16,13 +16,14 @@ struct Kind1: View {
     var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
     let isReply:Bool // is reply of PostDetail
     let isDetail:Bool
+    let grouped:Bool
 //    @ObservedObject var event:Event
      
     let sp:SocketPool = .shared
     let up:Unpublisher = .shared
     @ObservedObject var settings:SettingsStore = .shared
     
-    init(nrPost: NRPost, hideFooter:Bool = true, inThread:Bool = false, connect:ThreadConnectDirection? = nil, isReply:Bool = false, isDetail:Bool = false) {
+    init(nrPost: NRPost, hideFooter:Bool = true, inThread:Bool = false, connect:ThreadConnectDirection? = nil, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false) {
         self.nrPost = nrPost
 //        self.event = nrPost.event
         self.hideFooter = hideFooter
@@ -30,6 +31,7 @@ struct Kind1: View {
         self.connect = connect
         self.isReply = isReply
         self.isDetail = isDetail
+        self.grouped = grouped
     }
     
     let THREAD_LINE_OFFSET = 34.0
@@ -72,10 +74,12 @@ struct Kind1: View {
             }
             .padding(.bottom, 10)
             VStack(alignment:.leading, spacing: 3) {// Post container
-                ReplyingToFragmentView(nrPost: nrPost)
-                    .padding(.horizontal, 10)
-                    .contentShape(Rectangle())
-                    .onTapGesture { navigateTo(nrPost) }
+                if !inThread && !grouped {
+                    ReplyingToFragmentView(nrPost: nrPost)
+                        .padding(.horizontal, 10)
+                        .contentShape(Rectangle())
+                        .onTapGesture { navigateTo(nrPost) }
+                }
                 if let fileMetadata = nrPost.fileMetadata {
                     Kind1063(nrPost, fileMetadata:fileMetadata, availableWidth: imageWidth)
                 }

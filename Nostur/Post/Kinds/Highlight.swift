@@ -13,15 +13,15 @@ struct Highlight: View {
     let hideFooter:Bool // For rendering in NewReply
     let inThread:Bool // For rendering in thread
     var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
-//    @ObservedObject var event:Event
+    let grouped:Bool
     @ObservedObject var settings:SettingsStore = .shared
     
-    init(nrPost: NRPost, hideFooter:Bool = true, inThread:Bool = false, connect:ThreadConnectDirection? = nil) {
+    init(nrPost: NRPost, hideFooter:Bool = true, inThread:Bool = false, connect:ThreadConnectDirection? = nil, grouped:Bool = false) {
         self.nrPost = nrPost
-//        self.event = nrPost.event
         self.hideFooter = hideFooter
         self.inThread = inThread
         self.connect = connect
+        self.grouped = grouped
     }
     
     let THREAD_LINE_OFFSET = 34.0
@@ -48,7 +48,7 @@ struct Highlight: View {
                     Spacer()
                     NoteMenuView(nrPost: nrPost)
                 }
-                if !inThread {
+                if !inThread && !grouped {
                     ReplyingToFragmentView(nrPost: nrPost)
 //                            .padding(.bottom, 3)
                         .contentShape(Rectangle())

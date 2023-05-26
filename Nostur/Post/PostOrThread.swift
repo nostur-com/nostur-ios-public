@@ -9,8 +9,7 @@ import SwiftUI
 
 struct PostOrThread: View {
     @ObservedObject var nrPost: NRPost
-//    var nrPost: NRPost
-//    let fullWidth:Bool
+    var grouped = false
     @ObservedObject var settings:SettingsStore = .shared
 
     var body: some View {
@@ -18,10 +17,10 @@ struct PostOrThread: View {
             ForEach(nrPost.parentPosts.indices, id:\.self) { index in
                 PostRowDeletable(nrPost: nrPost.parentPosts[index],
                         inThread: (nrPost.replyToId != nil && index != 0),
-                                 connect: nrPost.parentPosts[index].replyToId != nil || index > 0 ? .both : .bottom, fullWidth: settings.fullWidthImages, isDetail: false)
+                                 connect: nrPost.parentPosts[index].replyToId != nil || index > 0 ? .both : .bottom, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
                     .id(nrPost.parentPosts[index].id)
             }
-            PostRowDeletable(nrPost: nrPost, inThread: nrPost.replyToId != nil && nrPost.parentPosts.count > 0, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false)
+            PostRowDeletable(nrPost: nrPost, inThread: nrPost.replyToId != nil && nrPost.parentPosts.count > 0, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
                 .id(nrPost.id)
         }
         .boxShadow()

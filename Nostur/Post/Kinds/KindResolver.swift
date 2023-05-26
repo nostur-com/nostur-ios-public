@@ -16,17 +16,18 @@ struct KindResolver: View {
     var isReply:Bool = false 
     var isDetail:Bool = false
     var connect:ThreadConnectDirection? = nil
+    var grouped:Bool = false
     
     var body: some View {
         VStack {
             if nrPost.isHighlight {
-                Highlight(nrPost: nrPost, hideFooter: false, inThread:inThread, connect:connect)
+                Highlight(nrPost: nrPost, hideFooter: false, inThread:inThread, connect:connect, grouped: grouped)
             }
             else if fullWidth {
-                Kind1(nrPost: nrPost, hideFooter:false, isDetail:isDetail)
+                Kind1(nrPost: nrPost, hideFooter:false, isDetail:isDetail, grouped: grouped)
             }
             else {
-                Kind1Default(nrPost: nrPost, hideFooter:false, connect: connect, isDetail:isDetail)
+                Kind1Default(nrPost: nrPost, hideFooter:false, connect: connect, isDetail:isDetail, grouped: grouped)
             }
         }
         .onAppear {
