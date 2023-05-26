@@ -18,7 +18,7 @@ struct ListViewContainer: View {
         ZStack {
             SmoothList(lvm: vm, dim: dim)
                 .overlay(alignment: .topTrailing) {
-                    ListUnreadCounter(vmCounter: vm.lvmCounter)
+                    ListUnreadCounter(vm: vm)
                         .padding(.trailing, 10)
                         .padding(.top, 5)
                 }

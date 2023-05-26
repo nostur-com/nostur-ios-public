@@ -16,7 +16,13 @@ class LVMCounter: ObservableObject {
 }
 
 struct ListUnreadCounter: View {
+    var vm:LVM
     @ObservedObject var vmCounter:LVMCounter
+    
+    init(vm: LVM) {
+        self.vm = vm
+        self.vmCounter = vm.lvmCounter
+    }
     
     var body: some View {
         if (vmCounter.count > 0) {
@@ -47,9 +53,9 @@ struct ListUnreadCounter: View {
 
 struct Previews_ListUnreadCounter_Previews: PreviewProvider {
     
-    @StateObject static var lvmCounter = LVMCounter(count: 42)
+    @StateObject static var lvm = LVM(pubkeys: [], listId: "Explore")
     
     static var previews: some View {
-        ListUnreadCounter(vmCounter: lvmCounter)
+        ListUnreadCounter(vm: lvm)
     }
 }

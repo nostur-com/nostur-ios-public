@@ -28,11 +28,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     let ago:String
     
     let id:NRPostID
-//    let note1:String
     let kind:Int64
     
     let pubkey:String
-//    let npub:String
     
     var subject:String?
     var content:String?
@@ -91,18 +89,14 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         get { nrPostQueue.sync { _firstQuote } }
         set { nrPostQueue.async(flags: .barrier) { self._firstQuote = newValue } }
     }
-    
-    
-    
+  
     var firstE:String? // Needed for muting
-    
     var deletedById:String?
     
     let event:Event // Only touch this in BG context!!!
     
     var missingPs:Set<String> // missing or have no contact info
     var fastTags:[(String, String, String?)] = []
-    
     
     var isHighlight:Bool { highlightData != nil}
     var highlightData:KindHightlight?
@@ -684,169 +678,65 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
 }
 
-struct KindFileMetadata {
-    var url:String
-    var m:String?
-    var hash:String?
-    var dim:String?
-    var blurhash:String?
-}
+    }
+    
+    }
+    
+    }
+    
 
-struct KindHightlight {
-    var highlightAuthorPubkey:String?
-    var highlightAuthorPicture:String?
-    var highlightAuthorIsFollowing:Bool
-    var highlightAuthorName:String?
-    var highlightUrl:String?
-    var highlightNrContact: NRContact?
-}
-
-/// add back later
-///
-
-//var following:Bool
-//var plainText:String
-//var renderedText:AttributedString
-//var replyingToUsernamesMarkDown:AttributedString? // See ReplyingToFragment
-//var imageUrls:[URL] // See ImageViewer
-//var renderedElements:[MarkdownElement] // NoteRow.Kind1
-//var renderedElementsDetail:[MarkdownElement] // PostDetail.Kind1
+//                    if let replyTo = reply.event.replyTo__ { // TODO: NEED THIS OR NO?
+//                        reply.replyTo = NRPost(event: replyTo)
+//                    }
+                    return reply
+                }
+            
+//            let authorThreads = nrPost.repliesToRoot.filter {
+//                $0.pubkey == nrPost.pubkey //&& $0.id != nrPost.id
+//            }
+//            .map { authorReply in
+//                authorReply.event.parentEvents = Event.getParentEvents(authorReply.event, fixRelations: true)
+//                    .filter { $0.id != nrPost.id } // Don't rerender the root
+//                authorReply.parentPosts = authorReply.event.parentEvents.map { NRPost(event: $0) }
+//                authorReply.threadPostsCount = 1 + authorReply.event.parentEvents.count
 //
-//var liked = false
-//var reposted = false
-//var replied = false
+//                if let replyTo = authorReply.event.replyTo__ {
+//                    authorReply.replyTo = NRPost(event: replyTo)
+//                }
+//                return authorReply
+//            }
+//
+//            let allThreads = authorThreads + nrPost.replies
+            
+            // Dictionary to store unique items with highest values
+            var uniqueThreads = [NRPostID: NRPost]()
 
-struct PostActionNotification {
-    let type:ActionType
-    let eventId:String
-    
-    var bookmarked:Bool = false
-    var hasPrivateNote:Bool = false
-    
-    enum ActionType {
-        case bookmark
-        case liked
-        case reposted
-        case replied
-        case privateNote
-    }
-}
+            for thread in groupedThreads {
+                if let replyToId = thread.replyToId, replyToId == self.id {
+                    uniqueThreads[thread.id] = thread
+                    continue // replying to root, so handle like normal reply.
+                }
+                
+                let firstId = thread.parentPosts.first?.id ?? thread.id
+                if let existingThread = uniqueThreads[firstId] {
+                    if thread.threadPostsCount > existingThread.threadPostsCount {
+                        uniqueThreads[firstId] = thread
+                    }
+                } else {
+                    uniqueThreads[firstId] = thread
+                }
+            }
 
-
-class PreviewWeights {
-    var posts = 0.0
-    var videos = 0.0
-    var pictures = 0.0
-    var linkPreviews = 0.0
-    var other = 0.0
-    var text = 0.0
-    
-    var weight:Double {
-        var weight  = (posts * 0.8)
-            weight += (videos * 0.8)
-            weight += (pictures * 0.8)
-            weight += (linkPreviews * 0.3)
-            weight += (other * 0.8)
-            weight += (text * 0.0000001)
-        
-        return weight
-    }
-    
-    var moreItems:Bool {
-        (morePosts + moreVideos + morePictures + moreLinkPreviews + moreOther) > 0
-    }
-    
-    var moreItemsCount:Int {
-        (morePosts + moreVideos + morePictures + moreLinkPreviews + moreOther)
-    }
-    
-    var morePosts = 0
-    var moreVideos = 0
-    var morePictures = 0
-    var moreLinkPreviews = 0
-    var moreOther = 0
-    var moreText = 0
-}
-
-func filteredForPreview(_ contentElements:[ContentElement]) -> ([ContentElement], PreviewWeights) {
-    let w = PreviewWeights()
-    
-    let previewElements = contentElements.filter { element in
-        switch element {
-        case .note1:
-            w.posts += 1;
-            guard w.weight < 1 else {
-                w.morePosts += 1
-                return false
+            // Retrieve the unique items with highest values
+            let groupedReplies = Array(uniqueThreads.values)
+            
+            DispatchQueue.main.async {
+                self.objectWillChange.send()
+                self.groupedReplies = groupedReplies
             }
-            return true
-        case .noteHex:
-            w.posts += 1;
-            guard w.weight < 1 else {
-                w.morePosts += 1
-                return false
-            }
-            return true
-        case .lnbc:
-            w.other += 1;
-            guard w.weight < 1 else {
-                w.moreOther += 1
-                return false
-            }
-            return true
-        case .image:
-            w.pictures += 1;
-            guard w.weight < 1 else {
-                w.morePictures += 1
-                return false
-            }
-            return true
-        case .video:
-            w.videos += 1;
-            guard w.weight < 1 else {
-                w.moreVideos += 1
-                return false
-            }
-            return true
-        case .linkPreview:
-            w.linkPreviews += 1;
-            guard w.weight < 1 else {
-                w.moreLinkPreviews += 1
-                return false
-            }
-            return true
-        case .postPreviewImage:
-            return true
-        case .nevent1:
-            w.posts += 1;
-            guard w.weight < 1 else {
-                w.morePosts += 1
-                return false
-            }
-            return true
-        case .nprofile1:
-            w.other += 1;
-            guard w.weight < 1 else {
-                w.moreOther += 1
-                return false
-            }
-            return true
-        case .text:
-            w.text += 1;
-            guard w.weight < 1 else {
-                w.moreText += 1
-                return false
-            }
-            return true
-        default:
-            w.other += 1;
-            guard w.weight < 1 else {
-                w.moreOther += 1
-                return false
-            }
-            return true
         }
     }
     
-    return (previewElements, w)
+    
+    
 }
