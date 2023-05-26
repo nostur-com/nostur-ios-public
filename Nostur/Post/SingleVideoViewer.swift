@@ -253,16 +253,29 @@ struct ScaledDimensions {
 }
 
 func getScaledVideoDimensions(videoSize:CGSize, availableWidth:CGFloat, maxHeight:CGFloat = 600) -> ScaledDimensions {
-    let isWide = videoSize.width > videoSize.height
-    let scaleFactor = isWide ? (availableWidth / videoSize.width) : (maxHeight / videoSize.height)
+
+    let videoAspect = videoSize.width / videoSize.height
     
-//    let tooHigh = (videoSize.height * scaleFactor) > maxHeight
-//    let scaleDownFactor = maxHeight / (videoSize.height * scaleFactor)
+    let scaleH = videoSize.height/maxHeight
+    let scaleW = videoSize.width/availableWidth
     
-    let scaledWidth = videoSize.width * scaleFactor
-    let scaledHeight = videoSize.height * scaleFactor
+    if scaleH <= 1 && scaleW <= 1 { // w and h both fit on screen
+        // return without scaling
+        L.og.info("getScaledVideoDimensions: availableWidth:\(availableWidth) - maxHeight: \(maxHeight) videoSize:\(videoSize.width)x\(videoSize.height) no scaling needed ")
+        return ScaledDimensions(width: videoSize.width, height: videoSize.height)
+    }
     
-//    let width = tooHigh ? scaledWidth * scaleDownFactor : scaledWidth
-//    let height = tooHigh ? scaledHeight * scaleDownFactor : scaledWidth
+    if scaleW > scaleH { // Width too big, scale down:
+        let scaledWidth = videoSize.width / scaleW
+        let scaledHeight = scaledWidth / videoAspect
+        L.og.info("getScaledVideoDimensions: availableWidth:\(availableWidth) - maxHeight: \(maxHeight) videoSize:\(videoSize.width)x\(videoSize.height) --scaled--> \(scaledWidth)x\(scaledHeight) ")
+        return ScaledDimensions(width: scaledWidth, height: scaledHeight)
+    }
+    
+    // else it means height is too big, scale down:
+    let scaledHeight = videoSize.height / scaleH
+    let scaledWidth = scaledHeight * videoAspect
+    
+    L.og.info("getScaledVideoDimensions: availableWidth:\(availableWidth) - maxHeight: \(maxHeight) videoSize:\(videoSize.width)x\(videoSize.height) --scaled--> \(scaledWidth)x\(scaledHeight) ")
     return ScaledDimensions(width: scaledWidth, height: scaledHeight)
 }

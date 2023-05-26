@@ -174,6 +174,22 @@ struct NoteRow_Previews: PreviewProvider {
                     //                    PostRowDeletable(nrPost: eventLong!)
                     //                }
                     
+                    if let video = PreviewFetcher.fetchNRPost("59eeb003cf61b329a0c3be1c2d36aae7b6342ec7092d0ee71a4b7d104de8ea10") {
+                        PostRowDeletable(nrPost: video)
+                            .background(Color.systemBackground)
+                            .boxShadow()
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, 10)
+                    }
+                    
+                    if let video = PreviewFetcher.fetchNRPost("cae89d3f54cacf1dfd4ca97077a033350538d1bbdc19dfb571f0b76afe2c9fbc") {
+                        PostRowDeletable(nrPost: video)
+                            .background(Color.systemBackground)
+                            .boxShadow()
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, 10)
+                    }
+                    
                     if let kind1063quoted = PreviewFetcher.fetchNRPost("71a965d8e8546f8927cea23ad865a429dbec0215f36c5e0edad2323eb00f4851") {
                         PostRowDeletable(nrPost: kind1063quoted)
                     }
