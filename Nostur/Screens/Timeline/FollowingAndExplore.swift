@@ -86,7 +86,6 @@ struct FollowingAndExplore: View { //, Equatable {
                     // LISTS
                     ForEach(lists) { list in
                         ListViewContainer(vm: LVMManager.shared.listLVM(forList: list))
-                            .navigationTitle(list.name_)
                             .id(list.subscriptionId)
                             .opacity(selectedSubTab == "List" && list == selectedList ? 1 : 0)
                     }
