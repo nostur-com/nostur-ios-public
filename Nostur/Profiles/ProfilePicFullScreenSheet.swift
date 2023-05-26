@@ -122,7 +122,23 @@ struct ProfilePicFullScreenSheet: View {
                     }
                     else {
                         LazyImage(url: URL(string: pictureUrl)) { state in
-                            if let image = state.image {
+                            if state.imageContainer?.type == .gif, let gifData = state.imageContainer?.data {
+                                GIFImage(data: gifData)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .scaleEffect(scale)
+                                    .offset(position)
+                                    .gesture(magnifyAndDragGesture)
+                                    .onTapGesture {
+                                        withAnimation {
+                                            scale = 1.0
+                                        }
+                                    }
+                                    .onAppear {
+                                        sharableGif = gifData
+                                    }
+                            }
+                            else if let image = state.image {
                                 image
                                     .resizable()
                                     .scaledToFit()

@@ -19,7 +19,6 @@ class ImageProcessing {
     var badges:ImagePipeline
     var video:ImagePipeline
     
-    /// <#Description#>
     init() {
         ImagePipeline.shared = ImagePipeline(configuration: .withDataCache)
         

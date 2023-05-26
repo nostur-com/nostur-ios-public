@@ -94,36 +94,30 @@ struct InnerPFP: View {
     var body: some View {
         if let pictureUrl, pictureUrl.prefix(7) != "http://" {
             if (!settings.animatedPFPenabled) || (pictureUrl.suffix(4) != ".gif") {
-                LazyImage(request: ImageRequest(
-                    url: URL(string:pictureUrl),
-//                    userInfo: [.thumbnailKey: thumbOptions]
-                    processors: [.resize(size: CGSize(width: size, height: size), unit: .points, contentMode: .aspectFill, crop: true, upscale: true)],
-                    userInfo: [.scaleKey: UIScreen.main.scale]
-//                    userInfo: [.scaleKey: 1, .thumbnailKey: thumbOptions]
-//                    userInfo: [.scaleKey: UIScreen.main.scale, .thumbnailKey: thumbOptions]
-                ), transaction: .init(animation: .none)) { state in
-//                    if let container = state.imageContainer {
-//                        let _ = print("userInfo: \(container.userInfo.description)")
-//                    }
+                LazyImage(
+                    request:
+                        ImageRequest(
+                            url: URL(string:pictureUrl),
+                            processors: [
+                                .resize(size: CGSize(width: size, height: size),
+                                        unit: .points,
+                                        contentMode: .aspectFill,
+                                        crop: true,
+                                        upscale: true)],
+                            userInfo: [.scaleKey: UIScreen.main.scale])
+                ) { state in
                     if let image = state.image {
-                        if pictureUrl.suffix(4) == ".gif" {
+                        if state.imageContainer?.type == .gif {
                             image
                                 .resizable() // BUG: Still .gif gets wrong dimensions, so need .resizable()
                                 .aspectRatio(contentMode: .fill)
                         }
-                        else {
-                            image
-//                                .resizable()
-//                                .aspectRatio(contentMode: .fill)
-                        }
+                        else { image }
                     }
-                    else {
-                        color
-                    }
+                    else { color }
                 }
                 .pipeline(ImageProcessing.shared.pfp)
                 .frame(width: size, height: size)
-//                .background(color)
                 .cornerRadius(.greatestFiniteMagnitude)
             }
             else if (pictureUrl.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
