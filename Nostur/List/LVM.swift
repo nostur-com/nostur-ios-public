@@ -14,10 +14,9 @@ let LVM_MAX_VISIBLE = 50 // Will only be ignored if last appeared is older
 class LVM: NSObject, ObservableObject {
         
     @Published var state:LVM.LIST_STATE = .INIT
-    var didSetNrPostLeafs = PassthroughSubject<[String], Never>()
-    var didSetOlderNrPostLeafs = PassthroughSubject<[String], Never>()
-    var nrPostLeafs:[NRPost] = [] {
+    @Published var nrPostLeafs:[NRPost] = [] {
         didSet {
+            if state != .READY { state = .READY }
             leafsAndParentIdsOnScreen = self.getAllObjectIds(nrPostLeafs)
             leafIdsOnScreen = Set(nrPostLeafs.map { $0.id })
         }
@@ -221,7 +220,6 @@ class LVM: NSObject, ObservableObject {
                     self.initialIndex = self.getRestoreScrollIndex(leafThreads, lastAppearedId: self.restoreScrollToId) ?? 0
                     L.sl.info("⭐️ LVM.initialIndex: \(self.name) \(self.initialIndex) - \(taskId)")
                     self.nrPostLeafs = leafThreads
-                    self.didSetNrPostLeafs.send(leafThreads.map { $0.id })
 //                    print("COUNTER B: \(self.lvmCounter.count)")
 //                    self.lvmCounter.count = self.itemsAfterLastRead < 5 ? 0 : self.itemsAfterLastRead
 //                    print("COUNTER BB: \(self.lvmCounter.count)")
@@ -248,11 +246,9 @@ class LVM: NSObject, ObservableObject {
             .uniqued(on: { $0.id })
         if older {
             self.nrPostLeafs.append(contentsOf: onlyNew) // ADD TO THE END (OLDER POSTS, NEXT PAGE)
-            self.didSetOlderNrPostLeafs.send(onlyNew.map { $0.id })
         }
         else {
             self.nrPostLeafs.insert(contentsOf: onlyNew, at: 0) // ADD TO THE TOP, NEW POSTS.
-            self.didSetNrPostLeafs.send(onlyNew.map{ $0.id })
         }
         return onlyNew
     }
@@ -824,7 +820,6 @@ extension LVM {
                     let newNRPostLeaf = NRPost(event: event, withParents: true)
                     DispatchQueue.main.async {
                         self.nrPostLeafs.insert(newNRPostLeaf, at: 0)
-                        self.didSetNrPostLeafs.send([newNRPostLeaf.id])
 //                        print("COUNTER D: \(self.lvmCounter.count)")
                         self.lvmCounter.count = self.isAtTop && SettingsStore.shared.autoScroll ? 0 : (self.lvmCounter.count + 1)
 //                        print("COUNTER DD: \(self.lvmCounter.count)")
@@ -839,7 +834,6 @@ extension LVM {
             .sink { [weak self] notification in
                 guard let self = self else { return }
                 self.nrPostLeafs = self.nrPostLeafs.filter(notMuted)
-                self.didSetNrPostLeafs.send( self.nrPostLeafs.map{ $0.id })
             }
             .store(in: &subscriptions)
         
@@ -848,7 +842,6 @@ extension LVM {
                 guard let self = self else { return }
                 let words = notification.object as! [String]
                 self.nrPostLeafs = self.nrPostLeafs.filter { notMutedWords(in: $0.event.noteText, mutedWords: words) }
-                self.didSetNrPostLeafs.send(self.nrPostLeafs.map { $0.id })
             }
             .store(in: &subscriptions)
     }

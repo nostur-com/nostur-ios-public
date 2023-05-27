@@ -27,7 +27,7 @@ struct SmoothList: UIViewControllerRepresentable {
     
     func makeCoordinator() -> Coordinator {
         L.sl.info("⭐️ SmoothList \(self.lvm.id) \(self.lvm.pubkey?.short ?? "-"): makeCoordinator")
-        return Coordinator(parent: self, lvm: self.lvm)
+        return Coordinator(parent: self)
     }
     
     func makeUIViewController(context: Context) -> UIViewControllerType {
@@ -36,7 +36,7 @@ struct SmoothList: UIViewControllerRepresentable {
         let collectionViewHolder = makeCollectionViewHolder(parent: viewController, coordinator:context.coordinator)
         context.coordinator.collectionViewHolder = collectionViewHolder
         
-        if let cvh = context.coordinator.collectionViewHolder {
+        if context.coordinator.collectionViewHolder != nil {
             configureCollectionView(context: context)
         }
         return viewController
@@ -47,6 +47,7 @@ struct SmoothList: UIViewControllerRepresentable {
         
         // configure lvm
         context.coordinator.lvm = lvm
+        context.coordinator.data = lvm.nrPostLeafs
         
         // load posts
         refresh(cvh, coordinator: context.coordinator)
@@ -94,13 +95,15 @@ struct SmoothList: UIViewControllerRepresentable {
         
         if (lvm.uuid != context.coordinator.lvm.uuid) { // Update LVM if we have a new one
             // clean up old
-            context.coordinator.subscriptions.removeAll()
-            var snapshot = NSDiffableDataSourceSnapshot<SingleSection, String>()
-            snapshot.appendSections([SingleSection.main])
-            context.coordinator.collectionViewHolder?.dataSource?.apply(snapshot)
+//            context.coordinator.subscriptions.removeAll()
+//            context.coordinator.lvm = lvm
+//            context.coordinator.data = lvm.nrPostLeafs
+//            var snapshot = NSDiffableDataSourceSnapshot<SingleSection, String>()
+//            snapshot.appendSections([SingleSection.main])
+//            context.coordinator.collectionViewHolder?.dataSource?.apply(snapshot)
             
             // set up new
-            if let cvh = context.coordinator.collectionViewHolder {
+            if context.coordinator.collectionViewHolder != nil {
                 configureCollectionView(context: context)
             }
         }
@@ -114,23 +117,20 @@ struct SmoothList: UIViewControllerRepresentable {
     func refresh(_ collectionViewHolder:CViewHolder, coordinator:Coordinator) {
         L.sl.info("⭐️ SmoothList \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): refresh")
         coordinator.subscriptions.removeAll()
-        collectionViewHolder.dataSource = collectionViewHolder.createDataSource(lvm: coordinator.lvm)
+        collectionViewHolder.dataSource = collectionViewHolder.createDataSource(coordinator: coordinator)
         var snapshot = NSDiffableDataSourceSnapshot<SingleSection, String>()
         snapshot.appendSections([SingleSection.main])
+        snapshot.appendItems(coordinator.data.map { $0.id }, toSection: .main)
         collectionViewHolder.dataSource?.apply(snapshot, animatingDifferences: false)
 
-        coordinator.lvm.didSetNrPostLeafs
-            .sink { ids in
+        coordinator.lvm.$nrPostLeafs
+            .sink { data in
+                coordinator.data = data
                 guard let dataSource = collectionViewHolder.dataSource else { return }
                 let isInitialApply = dataSource.snapshot(for: .main).items.count == 0 
-                var snapshot = dataSource.snapshot()
-                if let firstId = snapshot.itemIdentifiers(inSection: .main).first {
-                    snapshot.insertItems(ids, beforeItem: firstId)
-                }
-                else {
-                    snapshot.appendItems(ids, toSection: .main)
-                }
-                let posts = coordinator.lvm.nrPostLeafs
+                var snapshot = NSDiffableDataSourceSnapshot<SingleSection, String>()
+                snapshot.appendSections([SingleSection.main])
+                snapshot.appendItems(data.map { $0.id }, toSection: .main)
                 
                 let restoreToId:String? = collectionViewHolder.collectionView.contentOffset.y == 0 ? dataSource.snapshot(for: .main).items.first : nil
                                 
@@ -150,25 +150,23 @@ struct SmoothList: UIViewControllerRepresentable {
                     if (isInitialApply) { // Scroll to initial position
                         // ON FIRST LOAD: SCROLL TO SOME INDEX (RESTORE)
                         if (coordinator.lvm.initialIndex > 4) {
-                            L.sl.info("⭐️⭐️⭐️ SmoothList \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): initial - scrollToItem: \(coordinator.lvm.initialIndex.description) posts: \(posts.count)")
+                            L.sl.info("⭐️⭐️⭐️ SmoothList \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): initial - scrollToItem: \(coordinator.lvm.initialIndex.description) posts: \(data.count)")
                             coordinator.lvm.isAtTop = false
                             collectionViewHolder.collectionView.scrollToItem(at: IndexPath(item: coordinator.lvm.initialIndex, section: 0), at: .top, animated: false)
                         }
                         else if (collectionViewHolder.collectionView.contentOffset.y == 0) {
                             // IF WE ARE AT TOP, ALWAYS SET COUNTER TO 0
-                            L.sl.info("⭐️⭐️⭐️ SmoothList \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): Initial - posts: \(posts.count) - force counter to 0")
+                            L.sl.info("⭐️⭐️⭐️ SmoothList \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): Initial - posts: \(data.count) - force counter to 0")
                             coordinator.lvm.lvmCounter.count = 0
                             coordinator.lvm.lastReadId = coordinator.lvm.nrPostLeafs.first?.id
                         }
-                        
-                        coordinator.lvm.state = .READY
                     }
                     else {
                         // KEEP POSITION AFTER INSERT, IF AUTOSCROLL IS DISABLED
                         if !SettingsStore.shared.autoScroll {
                             if let restoreToId {
-                                if let restoreIndex = posts.firstIndex(where: { $0.id == restoreToId }) {
-                                    L.sl.info("⭐️⭐️ SmoothList \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): adding \(posts.count - beforeCount) posts - scrollToItem: \(restoreIndex), restoreToId: \(restoreToId)")
+                                if let restoreIndex = data.firstIndex(where: { $0.id == restoreToId }) {
+                                    L.sl.info("⭐️⭐️ SmoothList \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): adding \(data.count - beforeCount) posts - scrollToItem: \(restoreIndex), restoreToId: \(restoreToId)")
                                     collectionViewHolder.collectionView.scrollToItem(at: IndexPath(item: restoreIndex, section: 0), at: .top, animated: false)
                                 }
                             }
@@ -180,27 +178,13 @@ struct SmoothList: UIViewControllerRepresentable {
                 }
             }
             .store(in: &coordinator.subscriptions)
-        
-        
-        coordinator.lvm.didSetOlderNrPostLeafs
-            .sink { ids in
-                guard let dataSource = collectionViewHolder.dataSource else { return }
-                var snapshot = dataSource.snapshot()
-                guard let lastId = snapshot.itemIdentifiers(inSection: .main).last else { return }
-
-                snapshot.insertItems(ids, afterItem: lastId)
-                dataSource.apply(snapshot, animatingDifferences: false) {
-                    L.sl.info("⭐️⭐️ SmoothList \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): added \(ids.count) posts to the end of list")
-                }
-            }
-            .store(in: &coordinator.subscriptions)
-        
     }
  
     final class Coordinator: NSObject, UICollectionViewDelegate, UIScrollViewDelegate, UICollectionViewDataSourcePrefetching, UICollectionViewDelegateFlowLayout {
         var subscriptions = Set<AnyCancellable>()
         let parent: SmoothList
         var lvm: LVM
+        var data:[NRPost] = []
         var collectionViewHolder: CollectionViewHolderType?
         var scrollTimer: Timer?
         var prefetcher:ImagePrefetcher
@@ -211,9 +195,9 @@ struct SmoothList: UIViewControllerRepresentable {
         private let debounceInterval: TimeInterval = 0.3 // Adjust this value to control the throttling
         
         
-        init(parent: SmoothList, lvm: LVM) {
-            self.lvm = lvm
+        init(parent: SmoothList) {
             self.parent = parent
+            self.lvm = parent.lvm
             
             self.prefetcher = ImagePrefetcher(pipeline: ImageProcessing.shared.content)
             self.prefetcher.priority = .normal
@@ -232,7 +216,7 @@ struct SmoothList: UIViewControllerRepresentable {
             //            var imageRequestsPFPnotFollowing:[ImageRequest] = []
             
             for indexPath in indexPaths {
-                guard let item = lvm.nrPostLeafs[safe: indexPath.row] else { continue }
+                guard let item = data[safe: indexPath.row] else { continue }
                 
                 if item.missingPs.count > 0 {
                     EventRelationsQueue.shared.addAwaitingEvent(item.event, debugInfo: "SmoothList.001 - missingPs: \(item.missingPs.count)")
@@ -316,7 +300,7 @@ struct SmoothList: UIViewControllerRepresentable {
             //            var imageRequestsPFPnotFollowing:[ImageRequest] = []
             
             for indexPath in indexPaths {
-                guard let item = lvm.nrPostLeafs[safe: indexPath.row] else { continue }
+                guard let item = data[safe: indexPath.row] else { continue }
                 
                 if item.missingPs.count > 0 {
                     QueuedFetcher.shared.dequeue(pTags: item.missingPs)
@@ -409,7 +393,7 @@ struct SmoothList: UIViewControllerRepresentable {
         
         func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
             
-            if let lastAppearedId = lvm.nrPostLeafs[safe: indexPath.row]?.id {
+            if let lastAppearedId = data[safe: indexPath.row]?.id {
                 lvm.lastAppearedIdSubject.send(lastAppearedId)
             }
             
@@ -453,7 +437,7 @@ struct SmoothList: UIViewControllerRepresentable {
 //                        print("COUNTER EE: \(lvm.lvmCounter.count)")
                     }
                     
-                    if let lastAppearedId = lvm.nrPostLeafs[safe: firstIndex.row]?.id {
+                    if let lastAppearedId = data[safe: firstIndex.row]?.id {
                         lvm.lastAppearedIdSubject.send(lastAppearedId)
                     }
                 }
@@ -465,6 +449,28 @@ struct SmoothList: UIViewControllerRepresentable {
 //                }
             }
         }
+        
+        
+        public var PostOrThreadCellRegistration: UICollectionView.CellRegistration<UICollectionViewListCell, NRPost> = {
+            .init { cell, indexPath, nrPost in
+                cell.contentConfiguration = UIHostingConfiguration {
+                    PostOrThread(nrPost: nrPost)
+                }
+                .background(Color("ListBackground")) // Between and around every PostOrThread (NoteRows)
+                .margins(.all, 0)
+            }
+        }()
+        
+        public var MissingCellRegistration: UICollectionView.CellRegistration<UICollectionViewListCell, String> = {
+            .init { cell, indexPath, item in
+                cell.contentConfiguration = UIHostingConfiguration {
+                    Text(item)
+                        .hCentered()
+                }
+                .background(Color("ListBackground")) // Between and around every PostOrThread (NoteRows)
+                .margins(.all, 0)
+            }
+        }()
     }
 }
 
@@ -532,37 +538,15 @@ final class CViewHolder {
         }
     }
     
-    private var PostOrThreadCellRegistration: UICollectionView.CellRegistration<UICollectionViewListCell, NRPost> = {
-        .init { cell, indexPath, nrPost in
-            cell.contentConfiguration = UIHostingConfiguration {
-                PostOrThread(nrPost: nrPost)
-            }
-            .background(Color("ListBackground")) // Between and around every PostOrThread (NoteRows)
-            .margins(.all, 0)
-        }
-    }()
-    
-    private var MissingCellRegistration: UICollectionView.CellRegistration<UICollectionViewListCell, String> = {
-        .init { cell, indexPath, item in
-            cell.contentConfiguration = UIHostingConfiguration {
-                Text(item)
-                    .hCentered()
-            }
-            .background(Color("ListBackground")) // Between and around every PostOrThread (NoteRows)
-            .margins(.all, 0)
-        }
-    }()
-    
-    func createDataSource(lvm: LVM) -> DataSourceType {
-        L.sl.info("⭐️ SmoothList \(lvm.id) \(lvm.pubkey?.short ?? "-"): CViewHolder.createDataSource")
+    func createDataSource(coordinator: SmoothList.Coordinator) -> DataSourceType {
+        L.sl.info("⭐️ SmoothList \(coordinator.lvm.id) \(coordinator.lvm.pubkey?.short ?? "-"): CViewHolder.createDataSource")
         return DataSourcy<SingleSection, String>(
             collectionView: collectionView,
-            cellProvider: { [weak self] collectionView, indexPath, identifier -> UICollectionViewCell? in
-                guard let self = self else { return nil }
-                guard let nrPost = lvm.nrPostLeafs.first(where: { $0.id == identifier }) else {
-                    return collectionView.dequeueConfiguredReusableCell(using: MissingCellRegistration, for: indexPath, item: "🧨")
+            cellProvider: { collectionView, indexPath, identifier -> UICollectionViewCell? in
+                guard let nrPost = coordinator.data.first(where: { $0.id == identifier }) else {
+                    return collectionView.dequeueConfiguredReusableCell(using: coordinator.MissingCellRegistration, for: indexPath, item: "🧨")
                 }
-                return collectionView.dequeueConfiguredReusableCell(using: PostOrThreadCellRegistration, for: indexPath, item: nrPost)
+                return collectionView.dequeueConfiguredReusableCell(using: coordinator.PostOrThreadCellRegistration, for: indexPath, item: nrPost)
             }
         )
     }
