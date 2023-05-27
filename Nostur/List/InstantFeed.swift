@@ -159,6 +159,7 @@ class InstantFeed {
                 } timeoutCommand: { taskId in
                     if self.events == nil {
                         L.og.notice("🟪 \(taskId) TIMEOUT: Could not fetch posts from relays using \(pubkeys.count) pubkeys. Our pubkey: \(self.pubkey?.short ?? "-") ")
+                        self.events = []
                     }
                 }
                 
