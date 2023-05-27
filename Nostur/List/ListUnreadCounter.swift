@@ -41,8 +41,11 @@ struct ListUnreadCounter: View {
                     .opacity(0.85)
                     .shadow(color: Color.gray.opacity(0.5), radius: 5)
             )
-            .onTapGesture {
-                sendNotification(.shouldScrollToRecent)
+            .onTapGesture(count: 2) {
+                sendNotification(.shouldScrollToTop)
+            }
+            .onTapGesture(count: 1) {
+                sendNotification(.shouldScrollToFirstUnread)
             }
         }
         else {
@@ -51,11 +54,28 @@ struct ListUnreadCounter: View {
     }
 }
 
+struct Previews_ListUnreadCounter_PreviewsWrapper: View {
+    
+    @StateObject var lvm = LVM(pubkeys: [], listId: "Explore")
+    
+    var body: some View {
+        VStack {
+            ListUnreadCounter(vm: lvm)
+
+            Button("Add +1") {
+                lvm.lvmCounter.count += 1
+            }
+            .padding(.top, 30)
+        }
+        .onAppear {
+            lvm.lvmCounter.count = 7
+        }
+    }
+}
+
 struct Previews_ListUnreadCounter_Previews: PreviewProvider {
-    
-    @StateObject static var lvm = LVM(pubkeys: [], listId: "Explore")
-    
     static var previews: some View {
-        ListUnreadCounter(vm: lvm)
+        Previews_ListUnreadCounter_PreviewsWrapper()
+            .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
     }
 }

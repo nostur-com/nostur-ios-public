@@ -51,15 +51,11 @@ extension Notification.Name {
         return Notification.Name("addedNotes")
     }
     
-    static var shouldScrollToNote: Notification.Name {
-        return Notification.Name("shouldScrollToNote")
+    static var shouldScrollToTop: Notification.Name {
+        return Notification.Name("shouldScrollToTop")
     }
     
-    static var shouldScrollToUnreadNote: Notification.Name {
-        return Notification.Name("shouldScrollToUnreadNote")
-    }
-    
-    static var shouldScrollToRecent: Notification.Name {
+    static var shouldScrollToFirstUnread: Notification.Name {
         return Notification.Name("shouldScrollToRecent")
     }
     

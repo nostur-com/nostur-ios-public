@@ -37,10 +37,36 @@ struct SmoothList: UIViewControllerRepresentable {
         context.coordinator.collectionViewHolder = collectionViewHolder
         
         if let cvh = context.coordinator.collectionViewHolder {
-            context.coordinator.lvm = lvm
-            refresh(cvh, coordinator: context.coordinator)
+            configureCollectionView(context: context)
         }
         return viewController
+    }
+    
+    private func configureCollectionView(context: Context) {
+        guard let cvh = context.coordinator.collectionViewHolder else { return }
+        
+        // configure lvm
+        context.coordinator.lvm = lvm
+        
+        // load posts
+        refresh(cvh, coordinator: context.coordinator)
+        
+        // set up 'scroll to'- listener
+        receiveNotification(.shouldScrollToFirstUnread)
+            .sink { _ in
+                guard context.coordinator.lvm.viewIsVisible else { return }
+                guard context.coordinator.lvm.lvmCounter.count > 0 else { return }
+                guard let row = context.coordinator.lvm.lastReadIdIndex else { return }
+                cvh.collectionView.scrollToItem(at: IndexPath(item: max(0,row-1), section: 0), at: .top, animated: true)
+            }
+            .store(in: &context.coordinator.subscriptions)
+
+        receiveNotification(.shouldScrollToTop)
+            .sink { _ in
+                guard context.coordinator.lvm.viewIsVisible else { return }
+                cvh.collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .top, animated: true)
+            }
+            .store(in: &context.coordinator.subscriptions)
     }
     
     private func makeCollectionViewHolder(parent viewController: UIViewControllerType,
@@ -58,8 +84,6 @@ struct SmoothList: UIViewControllerRepresentable {
                 viewController.view.topAnchor.constraint(equalTo: uiCollectionView.topAnchor), // Add this line
                 viewController.view.bottomAnchor.constraint(equalTo: uiCollectionView.bottomAnchor)
             ])
-            
-            
         }
         return collectionViewHolder
     }
@@ -77,8 +101,7 @@ struct SmoothList: UIViewControllerRepresentable {
             
             // set up new
             if let cvh = context.coordinator.collectionViewHolder {
-                context.coordinator.lvm = self.lvm
-                refresh(cvh, coordinator: context.coordinator)
+                configureCollectionView(context: context)
             }
         }
     }
@@ -135,6 +158,7 @@ struct SmoothList: UIViewControllerRepresentable {
                             // IF WE ARE AT TOP, ALWAYS SET COUNTER TO 0
                             L.sl.info("⭐️⭐️⭐️ SmoothList \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): Initial - posts: \(posts.count) - force counter to 0")
                             coordinator.lvm.lvmCounter.count = 0
+                            coordinator.lvm.lastReadId = coordinator.lvm.nrPostLeafs.first?.id
                         }
                         
                         coordinator.lvm.state = .READY
