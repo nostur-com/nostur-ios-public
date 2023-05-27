@@ -9,7 +9,7 @@ import Foundation
 import CoreData
 import Combine
 
-let LVM_MAX_VISIBLE = 100 // Will only be ignored if last appeared is older
+let LVM_MAX_VISIBLE = 50 // Will only be ignored if last appeared is older
 
 
 //@MainActor
@@ -666,7 +666,9 @@ class LVM: NSObject, ObservableObject {
 extension LVM {
     
     func restoreSubscription() {
-        guard instantFinished else { return } // TODO: maybe do instant thing again if too much time in between relaunch
+        guard instantFinished else {
+            L.lvm.info("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") instantFinished=false, not restoring subscription! \(self.selectedSubTab) and selectedListId: \(self.selectedListId)")
+            return } // TODO: maybe do instant thing again if too much time in between relaunch
         self.didCatchup = false
         // Always try to restore timer
         self.configureTimer()
