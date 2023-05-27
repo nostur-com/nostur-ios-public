@@ -102,6 +102,9 @@ extension Event {
     
     var replyTo_:Event? {
         guard replyTo == nil else { return replyTo }
+        if replyToId == nil && replyToRootId != nil { // Only replyToRootId? Treat as replyToId
+            replyToId = replyToRootId
+        }
         guard let replyToId = replyToId else { return nil }
         guard let ctx = managedObjectContext else { return nil }
         if let found = try? Event.fetchEvent(id: replyToId, context: ctx) {
@@ -118,6 +121,9 @@ extension Event {
     
     var replyTo__:Event? {
         guard replyTo == nil else { return replyTo }
+        if replyToId == nil && replyToRootId != nil { // Only replyToRootId? Treat as replyToId
+            replyToId = replyToRootId
+        }
         guard let replyToId = replyToId else { return nil }
         guard let ctx = managedObjectContext else { return nil }
         if let found = try? Event.fetchEvent(id: replyToId, context: ctx) {
@@ -988,6 +994,7 @@ extension Event {
                     savedEvent.replyToRoot = replyToRoot
                     
                     if (savedEvent.replyToId == nil) {
+                        savedEvent.replyToId = savedEvent.replyToRootId // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
                         savedEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
                         
                         replyToRoot.addToReplies(savedEvent)
