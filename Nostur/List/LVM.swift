@@ -11,13 +11,7 @@ import Combine
 
 let LVM_MAX_VISIBLE = 50 // Will only be ignored if last appeared is older
 
-
-//@MainActor
 class LVM: NSObject, ObservableObject {
-    
-    //    var flattenedPostsOnScreen:[NRPost] {
-    //        nrPostLeafs.flatMap { $0.parentPosts.map { $0 } + [$0] }
-    //    }
         
     @Published var state:LVM.LIST_STATE = .INIT
     var didSetNrPostLeafs = PassthroughSubject<[String], Never>()
@@ -1086,52 +1080,52 @@ extension LVM {
         }
     }
     
-    func performLocalRestoreFetch(refreshInBackground:Bool = false) {
-        let ctx = DataProvider.shared().bg
-        ctx.perform { [weak self] in
-            guard let self = self else { return }
-            if let leafs = self.restoreLeafs?.split(separator: ",") {
-                let fr = Event.fetchRequest()
-                fr.predicate = NSPredicate(format: "id IN %@", leafs)
-                if let events = try? ctx.fetch(fr) {
-                    
-                    
-                    let restoredPosts = leafs
-                        .compactMap({ leafId in
-                            return events.first { event in
-                                return event.id == leafId
-                            }
-                        })
-                        .map {
-                            $0.parentEvents = Event.getParentEvents($0)
-                            return $0
-                        }
-                    
-                    // don't load too many:
-                    // if restored posts > MAX.
-                    // and lastAppearedIndex < MAX-20 (so we can scroll at least 20 more back)
-                    // example 500 (RESTORED) > 250 (MAX), 77 (LAST APPEARED) < 230 (MAX - 20)
-                    // Then remove all after 250 (RESTORED.prefix(250))
-                    if restoredPosts.count > LVM_MAX_VISIBLE, let lastAppearedIndex = restoredPosts.firstIndex(where: { $0.id == self.lastAppearedIdSubject.value }), lastAppearedIndex < (LVM_MAX_VISIBLE-20)  {
-//                        DispatchQueue.main.async {
-//                            self.state = .AWAITING_RESTORE_SCROLL
+//    func performLocalRestoreFetch(refreshInBackground:Bool = false) {
+//        let ctx = DataProvider.shared().bg
+//        ctx.perform { [weak self] in
+//            guard let self = self else { return }
+//            if let leafs = self.restoreLeafs?.split(separator: ",") {
+//                let fr = Event.fetchRequest()
+//                fr.predicate = NSPredicate(format: "id IN %@", leafs)
+//                if let events = try? ctx.fetch(fr) {
+//
+//
+//                    let restoredPosts = leafs
+//                        .compactMap({ leafId in
+//                            return events.first { event in
+//                                return event.id == leafId
+//                            }
+//                        })
+//                        .map {
+//                            $0.parentEvents = Event.getParentEvents($0)
+//                            return $0
 //                        }
-                        self.startRenderingSubject.send(Array(restoredPosts.prefix(250)))
-                    }
-                    else {
-//                        DispatchQueue.main.async {
-//                            self.state = .AWAITING_RESTORE_SCROLL
-//                        }
-                        self.startRenderingSubject.send(restoredPosts)
-                    }
-                }
-                self.performLocalFetch()
-            }
-            else {
-                self.performLocalFetch()
-            }
-        }
-    }
+//
+//                    // don't load too many:
+//                    // if restored posts > MAX.
+//                    // and lastAppearedIndex < MAX-20 (so we can scroll at least 20 more back)
+//                    // example 500 (RESTORED) > 250 (MAX), 77 (LAST APPEARED) < 230 (MAX - 20)
+//                    // Then remove all after 250 (RESTORED.prefix(250))
+//                    if restoredPosts.count > LVM_MAX_VISIBLE, let lastAppearedIndex = restoredPosts.firstIndex(where: { $0.id == self.lastAppearedIdSubject.value }), lastAppearedIndex < (LVM_MAX_VISIBLE-20)  {
+////                        DispatchQueue.main.async {
+////                            self.state = .AWAITING_RESTORE_SCROLL
+////                        }
+//                        self.startRenderingSubject.send(Array(restoredPosts.prefix(250)))
+//                    }
+//                    else {
+////                        DispatchQueue.main.async {
+////                            self.state = .AWAITING_RESTORE_SCROLL
+////                        }
+//                        self.startRenderingSubject.send(restoredPosts)
+//                    }
+//                }
+//                self.performLocalFetch()
+//            }
+//            else {
+//                self.performLocalFetch()
+//            }
+//        }
+//    }
     
     
     func performLocalOlderFetch() {
@@ -1161,12 +1155,11 @@ extension LVM {
     
     // MARK: FROM DB TO SCREEN STEP 2: FIRST FILTER PASS, GETTING PARENTS AND LIMIT, NOT ON SCREEN YET
     func setUnorderedEvents(events:[Event], lastCreatedAt:Int64 = 0) {
-//        guard events.count > 0 else { return }
+
         var newUnrenderedEvents:[Event]
         
         switch (self.state) {
             case .INIT: // Show last X (FORCED CUTOFF)
-                
                 newUnrenderedEvents = events.filter(onlyRootOrReplyingToFollower)
                     .prefix(LVM_MAX_VISIBLE)
                     .map {
@@ -1177,15 +1170,12 @@ extension LVM {
                 let newCount = newEventIds.subtracting(leafsAndParentIdsOnScreen).count
                 if newCount > 0 {
                     self.startRenderingSubject.send(newUnrenderedEvents)
-//                    print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 setUnorderedEvents \(newUnrenderedEvents.count) new: \(newCount) state:COMPLETED_FIRST_FETCH 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
                 }
-//                self.state = .COMPLETED_FIRST_FETCH
                 
             default:
                 newUnrenderedEvents = events
                     .filter { $0.created_at > lastCreatedAt } // skip all older than first on screen (check LEAFS only)
                     .filter(onlyRootOrReplyingToFollower)
-//                    .prefix(LVM_MAX_VISIBLE * 2)
                     .map {
                         $0.parentEvents = Event.getParentEvents($0)
                         return $0
@@ -1195,7 +1185,6 @@ extension LVM {
                 let newCount = newEventIds.subtracting(leafsAndParentIdsOnScreen).count
                 if newCount > 0 {
                     self.startRenderingSubject.send(newUnrenderedEvents)
-//                    print("🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 setUnorderedEvents \(newUnrenderedEvents.count) new: \(newCount) state:default 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢")
                 }
                 
                 return
