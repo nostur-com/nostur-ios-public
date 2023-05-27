@@ -138,7 +138,30 @@ struct NewQuoteRepost: View {
                         }
                     }
                     
-                    ToolbarItem {
+                    if IS_CATALYST {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button {
+                                ipm.photoPickerShown = true
+                            } label: {
+                                Image(systemName: "photo")
+                            }
+                            .buttonStyle(.borderless)
+                            .disabled(uploading)
+
+                        }
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button {
+                                gifSheetShown = true
+                            } label: {
+                                Image("GifButton")
+                            }
+                            .buttonStyle(.borderless)
+                            .disabled(uploading)
+
+                        }
+                    }
+                    
+                    ToolbarItem(placement: .navigationBarTrailing) {
                         Button("Preview") {
                             guard let account = ns.account else { return }
                             guard var nEvent = vm.nEvent else { return }
@@ -167,7 +190,8 @@ struct NewQuoteRepost: View {
                                 DataProvider.shared().bg.delete(previewEvent)
                             }
                         }
-                        .cornerRadius(20)
+                        .buttonStyle(.borderless)
+                        .disabled(uploading)
                     }
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button {
