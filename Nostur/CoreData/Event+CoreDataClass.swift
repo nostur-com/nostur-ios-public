@@ -43,5 +43,19 @@ public class Event: NSManagedObject, Identifiable {
     
     var isPreview:Bool = false
     var previewImages:[UIImage] = []
+    
+    public override func validateValue(_ value: AutoreleasingUnsafeMutablePointer<AnyObject?>, forKey key: String) throws {
+        
+        // Daily maintenance deletes old events, but these events don't have proper inverse relationship (not needed)
+        // But core data seems to cry about it, and crashes when it tries to access a relation that has been deleted
+        // Ignoring validation seems to fix it, hopefully it doesn't break other things...
+        let skipValidationFor = ["reactionTo", "replyToRoot", "firstQuote", "zappedFromRequest", "zappedEvent"]
+        if skipValidationFor.contains(key) {
+            // Ignore validation for the relationship
+            return
+        }
+        
+        try super.validateValue(value, forKey: key)
+    }
 }
 
