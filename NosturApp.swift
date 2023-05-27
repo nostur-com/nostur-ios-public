@@ -89,7 +89,7 @@ struct NosturApp: App {
                             .font(.title2)
                         Text("The database could not be loaded.")
                             .padding(.bottom, 20)
-                        Text("Sorry, this can happen during TestFlight.")
+                        Text("Sorry, this was not supposed to happen.")
                             .padding(.bottom, 20)
                     }
                     VStack(alignment: .leading) {
