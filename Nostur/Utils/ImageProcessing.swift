@@ -22,7 +22,6 @@ class ImageProcessing {
     init() {
         ImagePipeline.shared = ImagePipeline(configuration: .withDataCache)
         
-//        pfp = ImagePipeline(configuration: .withDataCache)
         pfp = ImagePipeline {
 //            $0.isUsingPrepareForDisplay = true
 //            $0.isProgressiveDecodingEnabled = true
