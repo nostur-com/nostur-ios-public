@@ -24,23 +24,23 @@ public class Event: NSManagedObject, Identifiable {
     var contactsUpdated = PassthroughSubject<[Contact], Never>()
     var relaysUpdated = PassthroughSubject<String, Never>()
     
-//    private var eventsQueue = DispatchQueue(label: "com.nostur.events")
+    //    private var eventsQueue = DispatchQueue(label: "com.nostur.events")
     
     var parentEvents: [Event] = []
     
-//    var parentEvents: [Event] {
-//        get {
-//            return eventsQueue.sync {
-//                _parentEvents
-//            }
-//        }
-//        set {
-//            eventsQueue.async(flags: .barrier) {
-//                self._parentEvents = newValue
-//            }
-//        }
-//    }
- 
+    //    var parentEvents: [Event] {
+    //        get {
+    //            return eventsQueue.sync {
+    //                _parentEvents
+    //            }
+    //        }
+    //        set {
+    //            eventsQueue.async(flags: .barrier) {
+    //                self._parentEvents = newValue
+    //            }
+    //        }
+    //    }
+    
     var isPreview:Bool = false
     var previewImages:[UIImage] = []
 }
