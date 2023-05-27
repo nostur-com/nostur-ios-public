@@ -62,7 +62,8 @@ struct PrivateNotesView: View {
             }
             else {
                 Text("When you add a private note to a post or profile it will show up here.")
-                    .centered()
+                    .hCentered()
+                    .padding(.top, 40)
             }
         }
         .overlay(alignment:.topTrailing) {

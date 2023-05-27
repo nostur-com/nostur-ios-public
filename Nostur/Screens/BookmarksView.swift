@@ -69,7 +69,8 @@ struct BookmarksView: View {
             }
             else {
                 Text("When you bookmark a post it will show up here.")
-                    .centered()
+                    .hCentered()
+                    .padding(.top, 40)
             }
         }
         .overlay(alignment:.topTrailing) {
