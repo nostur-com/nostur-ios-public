@@ -72,7 +72,7 @@ class Importer {
             self.isImporting = true
             let forImportsCount = MessageParser.shared.messageBucket.count
             guard forImportsCount != 0 else {
-                L.importing.info("🏎️🏎️ importEvents() nothing to import.")
+                L.importing.debug("🏎️🏎️ importEvents() nothing to import.")
                 self.isImporting = false; return }
             
             DispatchQueue.main.async {
@@ -206,7 +206,7 @@ class Importer {
                         if (context.hasChanges) {
                             do {
                                 try context.save()
-                                L.importing.info("🏎️🏎️ \(Date.now) 💾 Saved \(count)/\(forImportsCount)")
+                                L.importing.info("💾💾 Saved \(count)/\(forImportsCount)")
                                 let mainQueueCount = count
                                 let mainQueueForImportsCount = forImportsCount
                                 let importedNotification = ImportedNotification(subscriptionIds: subscriptionIds)
@@ -218,7 +218,7 @@ class Importer {
                                 subscriptionIds.removeAll()
                             }
                             catch {
-                                L.importing.error("🏎️🏎️ \(Date.now) 🔴🔴🔴 Error on batch \(count)/\(forImportsCount): \(error)")
+                                L.importing.error("🏎️🏎️ 🔴🔴🔴 Error on batch \(count)/\(forImportsCount): \(error)")
                             }
                         }
                     }
@@ -226,7 +226,7 @@ class Importer {
                 if (context.hasChanges) {
                     try context.save() // This is saving bg context to main, not to disk
                     if (saved > 0) {
-                        L.importing.info("🏎️🏎️ \(Date.now) 💾 Processed: \(forImportsCount), saved: \(saved), skipped (new cache): \(alreadyInIdCacheSkipped), skipped (db): \(alreadyInDBskipped)")
+                        L.importing.info("💾💾 Processed: \(forImportsCount), saved: \(saved), skipped (new cache): \(alreadyInIdCacheSkipped), skipped (db): \(alreadyInDBskipped)")
                         let mainQueueCount = count
                         let mainQueueForImportsCount = forImportsCount
                         let importedNotification = ImportedNotification(subscriptionIds: subscriptionIds)
@@ -236,16 +236,13 @@ class Importer {
                             sendNotification(.newEventsInDatabase)
                         }
                         subscriptionIds.removeAll()
-//                        if saved == 1, let last {
-//                            print("Saved: \(last.toNEvent().eventJson())")
-//                        }
                     }
                     else {
-                        L.importing.info("🏎️🏎️ \(Date.now) 💾 Finished, nothing saved. -- Processed: \(forImportsCount), saved: \(saved), skipped (new cache): \(alreadyInIdCacheSkipped), skipped (db): \(alreadyInDBskipped)")
+                        L.importing.info("💾   Finished, nothing saved. -- Processed: \(forImportsCount), saved: \(saved), skipped (new cache): \(alreadyInIdCacheSkipped), skipped (db): \(alreadyInDBskipped)")
                     }
                 }
                 else {
-                    L.importing.info("🏎️🏎️ Nothing imported, no changes in \(count) messages")
+                    L.importing.debug("🏎️🏎️ Nothing imported, no changes in \(count) messages")
                     sendNotification(.noNewEventsInDatabase)
                 }
             }
@@ -254,7 +251,7 @@ class Importer {
             }
             self.isImporting = false
             if (self.needsImport) {
-                L.importing.info("🏎️🏎️ Chaining next import ")
+                L.importing.debug("🏎️🏎️ Chaining next import ")
                 self.needsImport = false
                 self.importEvents()
             }
