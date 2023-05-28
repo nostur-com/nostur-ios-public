@@ -52,6 +52,8 @@ private struct WithSheets: ViewModifier {
     // New highlight sheet
     @State var newHighlight:NewHighlight? = nil
     
+    @State var contextMenuNrPost:NRPost? = nil
+    
     func body(content: Content) -> some View {
         content
             .onReceive(receiveNotification(.fullScreenView)) { notification in
@@ -208,6 +210,17 @@ private struct WithSheets: ViewModifier {
                     HighlightComposer(highlight: newHighlight)
                         .environmentObject(ns)
                 }
+            }
+        
+            // Lazy note context menu (because Menu() on every post is slow???)
+            .onReceive(receiveNotification(.showNoteMenu)) { notification in
+                let nrPost = notification.object as! NRPost
+                self.contextMenuNrPost = nrPost
+            }
+            .sheet(item: $contextMenuNrPost) { nrPost in
+                LazyNoteMenuSheet(nrPost: nrPost)
+                    .environmentObject(ns)
+                    .presentationDetents([.medium])
             }
     }
     

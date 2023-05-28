@@ -61,7 +61,7 @@ struct Kind1: View {
                     .padding(.horizontal, 10)
                 NoteHeaderView(nrPost: nrPost, singleLine: false)
                 Spacer()
-                NoteMenuView(nrPost: nrPost)
+                LazyNoteMenuButton(nrPost: nrPost)
                     .padding(.horizontal, 20)
             }
             .background(alignment: .leading) {

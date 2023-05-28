@@ -262,4 +262,8 @@ extension Notification.Name {
     static var pong: Notification.Name {
         return Notification.Name("pong")
     }
+    
+    static var showNoteMenu: Notification.Name {
+        return Notification.Name("showNoteMenu")
+    }
 }

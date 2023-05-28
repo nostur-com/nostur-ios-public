@@ -185,7 +185,7 @@ struct PostAndParent: View {
                                 NoteHeaderView(nrPost: nrPost, singleLine: isParent)
                                 Spacer()
                                 EventPrivateNoteToggle(nrPost: nrPost)
-                                NoteMenuView(nrPost: nrPost)
+                                LazyNoteMenuButton(nrPost: nrPost)
                             }
                             .padding(.trailing, 10)
                             if isParent {

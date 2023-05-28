@@ -67,7 +67,7 @@ struct Kind1Default: View {
                 HStack { // name + reply + context menu
                     NoteHeaderView(nrPost: nrPost)
                     Spacer()
-                    NoteMenuView(nrPost: nrPost)
+                    LazyNoteMenuButton(nrPost: nrPost)
                 }
                 if missingReplyTo {
                     ReplyingToFragmentView(nrPost: nrPost)
