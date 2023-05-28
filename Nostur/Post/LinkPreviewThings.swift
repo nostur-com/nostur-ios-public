@@ -51,13 +51,16 @@ func parseMetaTags(html: String) -> [String: String] {
         let propertyRange = match.range(at: 1)
         let contentRange = match.range(at: 2)
         let property = (html as NSString).substring(with: propertyRange)
-        let content = (html as NSString).substring(with: contentRange)
-        metaTags[property] = content
+        
+        if ["image", "title", "description"].contains(property) {
+            let content = (html as NSString).substring(with: contentRange)
+            metaTags[property] = property == "image" ? content : content.htmlUnescape()
+        }
     }
     
     // fallback title
     if let titleMatch = html.firstMatch(of: /<title(?:.*)>([^<]*)<\/title>/.ignoresCase())?.output {
-        metaTags["fallback_title"] = String(titleMatch.1)
+        metaTags["fallback_title"] = String(titleMatch.1).htmlUnescape()
     }
     
     return metaTags

@@ -22,21 +22,21 @@ struct LinkPreviewView: View {
                         request: ImageRequest(url: URL(string:image),
                                               processors: [.resize(height: DIMENSIONS.PREVIEW_HEIGHT, upscale: true)],
                         userInfo: [.scaleKey: UIScreen.main.scale]), transaction: .init(animation: .none)) { state in
-                            if let image = state.image { image }
+                            if let image = state.image { image.interpolation(.none) }
                     }
                     .pipeline(ImageProcessing.shared.content)
                 }
                 VStack(alignment:.leading, spacing:0) {
                     if let title = tags["title"] {
-                        Text(title.htmlUnescape()).lineLimit(1)
+                        Text(title).lineLimit(1)
                             .fontWeight(.bold)
                     }
                     else if let title = tags["fallback_title"] {
-                        Text(title.htmlUnescape()).lineLimit(1)
+                        Text(title).lineLimit(1)
                             .fontWeight(.bold)
                     }
                     if let description = tags["description"] {
-                        Text(description.htmlUnescape()).lineLimit(2)
+                        Text(description).lineLimit(2)
                             .font(.caption)
                     }
                     Text(url.absoluteString).lineLimit(1)
