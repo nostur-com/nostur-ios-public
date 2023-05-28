@@ -52,7 +52,7 @@ struct PlaceholderPostHeader: View {
                     Group {
                         Text("@\(String(nrPost.pubkey.suffix(11)))").layoutPriority(1)
                         Text(" · ") //
-                        Ago(nrPost.createdAt)
+                        Ago(nrPost.createdAt, agoText: nrPost.ago)
                             .layoutPriority(2)
                     }
                     .foregroundColor(.secondary)
@@ -64,7 +64,7 @@ struct PlaceholderPostHeader: View {
             HStack {
                 Text("@\(String(nrPost.pubkey.suffix(11)))").layoutPriority(1)
                 Text(" · ") //
-                Ago(nrPost.createdAt)
+                Ago(nrPost.createdAt, agoText: nrPost.ago)
                     .layoutPriority(2)
             }
             .foregroundColor(.secondary)
@@ -100,7 +100,7 @@ struct PostHeader: View {
                 }
                 
                 if (singleLine) {
-                    Ago(nrPost.createdAt)
+                    Ago(nrPost.createdAt, agoText: nrPost.ago)
                         .layoutPriority(2)
                         .foregroundColor(.secondary)
                         .lineLimit(1)
@@ -119,7 +119,7 @@ struct PostHeader: View {
             }
         }
         if (!singleLine) {
-            Ago(nrPost.createdAt)
+            Ago(nrPost.createdAt, agoText: nrPost.ago)
                 .layoutPriority(2)
                 .foregroundColor(.secondary)
                 .lineLimit(1)

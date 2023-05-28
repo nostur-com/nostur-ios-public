@@ -12,8 +12,9 @@ struct Ago: View {
     let date:Date
     let timer = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
     
-    init(_ date:Date) {
+    init(_ date:Date, agoText:String? = nil) {
         self.date = date
+        self.agoText = agoText // Shaving miliseconds, so we dont have to .agoString again, already did it when creating NRPost()
     }
     
     init(_ timestamp:Int64) {
