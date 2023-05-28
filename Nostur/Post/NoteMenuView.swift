@@ -128,7 +128,6 @@ struct NoteMenuView: View {
             }
         }
     }
-    
 }
 
 struct NoteMenuView_Previews: PreviewProvider {
