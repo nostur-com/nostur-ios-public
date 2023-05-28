@@ -1005,8 +1005,9 @@ extension Event {
                         replyToRoot.repliesUpdated.send(replyToRoot.replies_)
                         savedEvent.replyToUpdated.send(replyToRoot)
                     }
-                    
-                    savedEvent.replyToRootUpdated.send(replyToRoot)
+                    else {
+                        savedEvent.replyToRootUpdated.send(replyToRoot)
+                    }
                 }
             }
             
