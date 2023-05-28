@@ -10,7 +10,7 @@ import SwiftUI
 struct NoteRow: View {
     @ObservedObject var nrPost:NRPost
     var hideFooter = true // For rendering in NewReply
-    var inThread = false // For rendering in thread, hide "Replying to.."
+    var missingReplyTo = false // For rendering in thread, hide "Replying to.."
     var connect:ThreadConnectDirection? = nil
     let fullWidth:Bool
     let isReply:Bool // is reply on PostDetail (needs 2*10 less box width)
@@ -19,10 +19,10 @@ struct NoteRow: View {
     
     private let sp:SocketPool = .shared
     
-    init(nrPost:NRPost, hideFooter:Bool = false, inThread:Bool = false, connect: ThreadConnectDirection? = nil, fullWidth:Bool = false, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false) {
+    init(nrPost:NRPost, hideFooter:Bool = false, missingReplyTo:Bool = false, connect: ThreadConnectDirection? = nil, fullWidth:Bool = false, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false) {
         self.nrPost = nrPost
         self.hideFooter = hideFooter
-        self.inThread = inThread
+        self.missingReplyTo = missingReplyTo
         self.connect = connect
         self.fullWidth = fullWidth
         self.isReply = isReply
@@ -51,7 +51,7 @@ struct NoteRow: View {
                 
                 if let firstQuote = nrPost.firstQuote {
                     // CASE - WE REPOSTED POST ALREADY
-                    KindResolver(nrPost: firstQuote, inThread: inThread, connect: connect, grouped: grouped)
+                    KindResolver(nrPost: firstQuote, missingReplyTo: missingReplyTo, connect: connect, grouped: grouped)
                 }
                 else if let firstQuoteId = nrPost.firstQuoteId {
                     CenteredProgressView()
@@ -66,7 +66,7 @@ struct NoteRow: View {
                 }
             }
             else { // IS NOT A REPOST
-                KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: hideFooter, inThread: inThread, isReply: isReply, isDetail:isDetail, connect: connect, grouped: grouped)
+                KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: missingReplyTo, isReply: isReply, isDetail:isDetail, connect: connect, grouped: grouped)
             }
         }
         .padding(.top, 20)

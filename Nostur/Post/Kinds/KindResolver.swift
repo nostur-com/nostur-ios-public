@@ -12,7 +12,7 @@ struct KindResolver: View {
     @ObservedObject var nrPost:NRPost
     var fullWidth:Bool = false
     var hideFooter:Bool = false // For rendering in NewReply
-    var inThread:Bool = false // For rendering in thread
+    var missingReplyTo:Bool = false // For rendering in thread
     var isReply:Bool = false 
     var isDetail:Bool = false
     var connect:ThreadConnectDirection? = nil
@@ -21,13 +21,13 @@ struct KindResolver: View {
     var body: some View {
         VStack {
             if nrPost.isHighlight {
-                Highlight(nrPost: nrPost, hideFooter: false, inThread:inThread, connect:connect, grouped: grouped)
+                Highlight(nrPost: nrPost, hideFooter: false, missingReplyTo:missingReplyTo, connect:connect, grouped: grouped)
             }
             else if fullWidth {
-                Kind1(nrPost: nrPost, hideFooter:false, isDetail:isDetail, grouped: grouped)
+                Kind1(nrPost: nrPost, hideFooter:false, missingReplyTo: missingReplyTo, isDetail:isDetail, grouped: grouped)
             }
             else {
-                Kind1Default(nrPost: nrPost, hideFooter:false, connect: connect, isDetail:isDetail, grouped: grouped)
+                Kind1Default(nrPost: nrPost, hideFooter:false, missingReplyTo: missingReplyTo, connect: connect, isDetail:isDetail, grouped: grouped)
             }
         }
         .onAppear {

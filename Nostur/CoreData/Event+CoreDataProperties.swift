@@ -990,16 +990,20 @@ extension Event {
             if let replyToRootEtag = event.replyToRootEtag() {
                 savedEvent.replyToRootId = replyToRootEtag.id
                 
+                if (savedEvent.replyToId == nil) {
+                    savedEvent.replyToId = savedEvent.replyToRootId // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
+                }
+                
                 if let replyToRoot = try? Event.fetchEvent(id: replyToRootEtag.id, context: context) {
                     savedEvent.replyToRoot = replyToRoot
                     
-                    if (savedEvent.replyToId == nil) {
-                        savedEvent.replyToId = savedEvent.replyToRootId // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
+                    if (savedEvent.replyToId == savedEvent.replyToRootId) {
                         savedEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
                         
                         replyToRoot.addToReplies(savedEvent)
                         replyToRoot.repliesCount += 1
                         replyToRoot.repliesUpdated.send(replyToRoot.replies_)
+                        savedEvent.replyToUpdated.send(replyToRoot)
                     }
                     
                     savedEvent.replyToRootUpdated.send(replyToRoot)

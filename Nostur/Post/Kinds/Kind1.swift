@@ -12,7 +12,7 @@ struct Kind1: View {
     @EnvironmentObject var dim:DIMENSIONS
     @ObservedObject var nrPost:NRPost
     let hideFooter:Bool // For rendering in NewReply
-    let inThread:Bool // For rendering in thread
+    let missingReplyTo:Bool // For rendering in thread
     var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
     let isReply:Bool // is reply of PostDetail
     let isDetail:Bool
@@ -23,11 +23,11 @@ struct Kind1: View {
     let up:Unpublisher = .shared
     @ObservedObject var settings:SettingsStore = .shared
     
-    init(nrPost: NRPost, hideFooter:Bool = true, inThread:Bool = false, connect:ThreadConnectDirection? = nil, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false) {
+    init(nrPost: NRPost, hideFooter:Bool = true, missingReplyTo:Bool = false, connect:ThreadConnectDirection? = nil, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false) {
         self.nrPost = nrPost
 //        self.event = nrPost.event
         self.hideFooter = hideFooter
-        self.inThread = inThread
+        self.missingReplyTo = missingReplyTo
         self.connect = connect
         self.isReply = isReply
         self.isDetail = isDetail
@@ -74,7 +74,7 @@ struct Kind1: View {
             }
             .padding(.bottom, 10)
             VStack(alignment:.leading, spacing: 3) {// Post container
-                if !inThread && !grouped {
+                if missingReplyTo {
                     ReplyingToFragmentView(nrPost: nrPost)
                         .padding(.horizontal, 10)
                         .contentShape(Rectangle())

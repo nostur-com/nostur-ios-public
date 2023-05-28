@@ -10,17 +10,18 @@ import SwiftUI
 struct PostOrThread: View {
     @ObservedObject var nrPost: NRPost
     var grouped = false
+    var rootId:String? = nil
     @ObservedObject var settings:SettingsStore = .shared
 
     var body: some View {
         VStack(spacing:0) {
             ForEach(nrPost.parentPosts.indices, id:\.self) { index in
                 PostRowDeletable(nrPost: nrPost.parentPosts[index],
-                        inThread: (nrPost.replyToId != nil && index != 0),
+                                 missingReplyTo: nrPost.parentPosts[index].replyToId != rootId && nrPost.parentPosts[index].replyToId != nil && index == 0,
                                  connect: nrPost.parentPosts[index].replyToId != nil || index > 0 ? .both : .bottom, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
                     .id(nrPost.parentPosts[index].id)
             }
-            PostRowDeletable(nrPost: nrPost, inThread: nrPost.replyToId != nil && nrPost.parentPosts.count > 0, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
+            PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && nrPost.parentPosts.count == 0, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
                 .id(nrPost.id)
         }
         .boxShadow()

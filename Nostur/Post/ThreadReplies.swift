@@ -14,7 +14,7 @@ struct ThreadReplies: View {
     var body: some View {
         LazyVStack {
             ForEach(nrPost.groupedRepliesSorted) { reply in
-                PostOrThread(nrPost: reply, grouped:true)
+                PostOrThread(nrPost: reply, grouped:true, rootId: nrPost.id)
             }
             .animation(Animation.spring(), value: nrPost.groupedRepliesSorted)
             Spacer()
