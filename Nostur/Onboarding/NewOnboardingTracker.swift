@@ -102,7 +102,7 @@ class NewOnboardingTracker {
     }
     
     private func cancel() {
-        guard let account = self.account else { return }
+        guard self.account != nil else { return }
         L.onboarding.info("✈️✈️✈️✈️✈️✈️ ONBOARDING COMPLETED/CANCELLED \(String(describing: self.account?.followingPublicKeys.count) ) followers for \(self.account?.name ?? "") \(self.account?.display_name ?? "")")
 //        self.pubkey = nil
 //        self.account = nil
