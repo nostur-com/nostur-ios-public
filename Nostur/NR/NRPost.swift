@@ -65,7 +65,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     private var _repliesToRoot: [NRPost] = [] {
         didSet {
             if withGroupedReplies {
-                self.groupRepliesToRoot()
+                self.groupRepliesToRoot.send()
             }
         }
     }
@@ -144,6 +144,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     private var withGroupedReplies = false
     private var withReplies = false
     private var withParents = false
+    
+    private var groupRepliesToRoot = PassthroughSubject<Void, Never>()
     
     init(event: Event, withReplyTo:Bool = false, withParents:Bool = false, withReplies:Bool = false, plainText:Bool = false) {
         self.event = event // Only touch this in BG context!!!
@@ -268,7 +270,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         
         self.subject = fastTags.first(where: { $0.0 == "subject" })?.1
         
-        listenForChanges()
+        setupSubscriptions()
     }
     
     private func isBookmarked() -> Bool {
@@ -349,7 +351,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
     var subscriptions = Set<AnyCancellable>()
     
-    private func listenForChanges() {
+    private func setupSubscriptions() {
         // Don't listen if there is no need to listen (performance?)
         
         if missingPs.count > 0 {
@@ -380,6 +382,14 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         likesListener()
         zapsListener()
         isFollowingListener()
+        
+        groupRepliesToRoot
+            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
+            .sink { [weak self] _ in
+                guard let self = self else { return }
+                self._groupRepliesToRoot()
+            }
+            .store(in: &subscriptions)
     }
     
     private func relaysUpdatedListener() {
@@ -624,7 +634,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                     if (withGroupedReplies) {
                         self.repliesCount = Int64(nrReplies.count)
                         self.replies = nrReplies
-                        self.groupRepliesToRoot()
+                        self.groupRepliesToRoot.send()
                     }
                     else {
                         DispatchQueue.main.async {
@@ -748,13 +758,15 @@ extension NRPost { // Helpers for grouped replies
     
     private func repliesToRootListener() {
         self.event.replyToRootUpdated
-            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
+//            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { reply in
                 DataProvider.shared().bg.perform { [weak self] in
                     guard let self = self else { return }
                     
                     let nrReply = NRPost(event: reply, withReplyTo: false, withParents: false, withReplies: false, plainText: false) // Don't load replyTo/parents here, we do it in groupRepliesToRoot()
                     self.repliesToRoot.append(nrReply)
+                    // we probably need to debounce here...
+                    self.groupRepliesToRoot.send()
                 }
             }
             .store(in: &subscriptions)
@@ -788,7 +800,7 @@ extension NRPost { // Helpers for grouped replies
         return false
     }
     
-    private func groupRepliesToRoot() {
+    private func _groupRepliesToRoot() {
         DataProvider.shared().bg.perform { [weak self] in
             guard let self = self else { return }
             // Load parents/replyTo
