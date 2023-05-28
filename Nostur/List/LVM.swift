@@ -910,7 +910,7 @@ extension LVM {
                     }
                 }
                 
-                if lastAppeareadIndex > (self.nrPostLeafs.count-7) {
+                if lastAppeareadIndex > (self.nrPostLeafs.count-10) {
                     L.lvm.info("📖 Appeared: \(lastAppeareadIndex)/\(self.nrPostLeafs.count) - loading more from local")
                     self.performLocalOlderFetch()
                 }
