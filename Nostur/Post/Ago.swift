@@ -10,7 +10,6 @@ import SwiftUI
 struct Ago: View {
     
     let date:Date
-    let timer = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
     
     init(_ date:Date, agoText:String? = nil) {
         self.date = date
@@ -25,7 +24,7 @@ struct Ago: View {
     
     var body: some View {
         Text(agoText ?? date.agoString)
-            .onReceive(timer) { _ in
+            .onReceive(NosturState.shared.agoTimer) { _ in
                 if date.agoString != agoText {
                     agoText = date.agoString
                 }

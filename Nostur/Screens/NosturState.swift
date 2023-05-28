@@ -14,6 +14,8 @@ final class NosturState : ObservableObject {
     
     public static let shared = NosturState()
     
+    let agoTimer = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
+    
     static let GUEST_ACCOUNT_PUBKEY = "c118d1b814a64266730e75f6c11c5ffa96d0681bfea594d564b43f3097813844"
     static let EXPLORER_PUBKEY = "afba415fa31944f579eaf8d291a1d76bc237a527a878e92d7e3b9fc669b14320"
     @Published var onBoardingIsShown = false {
