@@ -47,6 +47,9 @@ struct PlaceholderPostHeader: View {
                     .fontWeight(.bold)
                     .lineLimit(1)
                     .layoutPriority(2)
+                    .onTapGesture {
+                        navigateTo(ContactPath(key: nrPost.pubkey))
+                    }
                 
                 if (singleLine) {
                     Group {
@@ -92,6 +95,9 @@ struct PostHeader: View {
                     .fontWeight(.bold)
                     .lineLimit(1)
                     .layoutPriority(2)
+                    .onTapGesture {
+                        navigateTo(ContactPath(key: nrPost.pubkey))
+                    }
                 
                 if (contact.nip05verified) {
                     Image(systemName: "checkmark.seal.fill")
