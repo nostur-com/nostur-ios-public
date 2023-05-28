@@ -56,6 +56,9 @@ struct MainView: View {
                                 .scaledToFit()
                                 .frame(height:30)
                                 .clipShape(Circle())
+                                .onTapGesture {
+                                    sendNotification(.shouldScrollToTop)
+                                }
                         }
                     }
             }

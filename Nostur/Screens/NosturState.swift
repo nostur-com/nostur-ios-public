@@ -350,7 +350,9 @@ final class NosturState : ObservableObject {
         }
         else {
             viewContext.delete(account)
-            setAccount(account: accounts.last)
+            if account == self.account {
+                setAccount(account: accounts.last)
+            }
         }
         try! viewContext.save()
     }
