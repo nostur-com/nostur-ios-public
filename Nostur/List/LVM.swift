@@ -185,7 +185,6 @@ class LVM: NSObject, ObservableObject {
         let leafsAndParentIdsOnScreen = leafsAndParentIdsOnScreen
         let leafIdsOnScreen = leafIdsOnScreen
         let currentNRPostLeafs = self.nrPostLeafs // viewContext. First (0) is newest
-        let onScreenSeen = self.onScreenSeen
         
         context.perform { [weak self] in
             guard let self = self else { return }
@@ -214,7 +213,7 @@ class LVM: NSObject, ObservableObject {
             L.lvm.notice("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") Transformed \(transformedObjectIds.count) posts - \(taskId)")
 
             if currentNRPostLeafs.count == 0 {
-                let leafThreads = self.renderLeafs(added, onScreenSeen:onScreenSeen) // Transforms seperate posts into threads, .id for each thread is leaf.id
+                let leafThreads = self.renderLeafs(added, onScreenSeen:self.onScreenSeen) // Transforms seperate posts into threads, .id for each thread is leaf.id
                                 
                 DispatchQueue.main.async {
                     self.initialIndex = self.getRestoreScrollIndex(leafThreads, lastAppearedId: self.restoreScrollToId) ?? 0
@@ -226,7 +225,7 @@ class LVM: NSObject, ObservableObject {
                 }
             }
             else {
-                let newLeafThreadsWithMissingParents = self.renderNewLeafs(added, onScreen:currentNRPostLeafs, onScreenSeen: onScreenSeen)
+                let newLeafThreadsWithMissingParents = self.renderNewLeafs(added, onScreen:currentNRPostLeafs, onScreenSeen: self.onScreenSeen)
                 
                 let (danglers, newLeafThreads) = extractDanglingReplies(newLeafThreadsWithMissingParents)
 //                self.needsReplyTo.append(contentsOf: danglers)
@@ -874,9 +873,7 @@ extension LVM {
                 guard self.nrPostLeafs.count > 0 else { return }
                 
 //                print("COUNTER . new lastAppearedId. Index is: \(self.lastAppearedIndex) ")
-                
-                // Put onScreenSeen, so when when a new leaf for a long thread is inserted at top, it won't show all the parents you already seen again
-                self.onScreenSeen.insert(eventId)
+
                 
                 // unread should only go down, not up
                 // only way to go up is when new posts are added.
@@ -889,6 +886,12 @@ extension LVM {
                 }
                 else if self.lastReadId == nil {
                     self.lastReadId = eventId
+                }
+                
+                // Put onScreenSeen, so when when a new leaf for a long thread is inserted at top, it won't show all the parents you already seen again
+                DataProvider.shared().bg.perform { [weak self] in
+                    guard let self = self else { return }
+                    self.onScreenSeen.insert(eventId)
                 }
             }
             .store(in: &subscriptions)
