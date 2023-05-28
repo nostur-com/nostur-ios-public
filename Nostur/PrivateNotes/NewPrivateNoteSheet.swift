@@ -14,14 +14,12 @@ struct NewPrivateNoteSheet: View {
     
     var post:Event?
     var contact:Contact?
-    var onDismiss:() -> Void
     
     @State var content = ""
     
-    init(contact:Contact? = nil, post: Event? = nil, onDismiss: @escaping () -> Void) {
+    init(contact:Contact? = nil, post: Event? = nil) {
         self.post = post
         self.contact = contact
-        self.onDismiss = onDismiss
     }
     
     var body: some View {
@@ -42,6 +40,7 @@ struct NewPrivateNoteSheet: View {
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button("Save") {
+                        dismiss()
                         do {
                             guard let account = ns.account else { return }
                             guard post != nil || contact != nil else { return }
@@ -64,7 +63,6 @@ struct NewPrivateNoteSheet: View {
                             try viewContext.save()
                         }
                         catch { print("problem saving private note \(error)") }
-                        dismiss()
                     }
                 }
             }
@@ -77,7 +75,7 @@ struct NewPrivateNoteSheet_Previews: PreviewProvider {
         
         VStack {
             if let event = PreviewFetcher.fetchEvent() {
-                NewPrivateNoteSheet(post: event, onDismiss: {})
+                NewPrivateNoteSheet(post: event)//, onDismiss: {})
             }
         }
         .withPreviewEnvironment()

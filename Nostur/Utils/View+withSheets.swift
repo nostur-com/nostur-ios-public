@@ -12,10 +12,6 @@ public extension View {
     func withSheets() -> some View {
         modifier(WithSheets())
     }
-    
-    //    func withSheets(perform action: @escaping () -> Void) -> some View {
-    //        modifier(WithSheets())
-    //    }
 }
 
 private struct WithSheets: ViewModifier {
@@ -30,6 +26,7 @@ private struct WithSheets: ViewModifier {
     @State var fullImage:FullScreenItem? = nil
     @State var reportPost:ReportPost? = nil
     @State var reportContact:ReportContact? = nil
+    @State var addRemoveContactFromList:Contact? = nil
     
     // Confirmation dialogs
     @State var restoreContactSheet = false
@@ -42,9 +39,6 @@ private struct WithSheets: ViewModifier {
     @State var replyToEvent:Event? = nil
     @State var quoteOrRepostEvent:Event? = nil
     @State var quotePostEvent:Event? = nil
-    
-    // Add/Remove contact from list
-    @State var addRemoveContactFromList:Contact? = nil
     
     // Zap sheet
     @State var paymentInfo:PaymentInfo? = nil
@@ -69,7 +63,7 @@ private struct WithSheets: ViewModifier {
                 self.privateNote = note
             }
             .sheet(item: $privateNote) { note in
-                EditPrivateNoteSheet(privateNote: note, onDismiss: onDismiss)
+                EditPrivateNoteSheet(privateNote: note)
             }
            
             .onReceive(receiveNotification(.newPrivateNoteOnPost)) { notification in
@@ -77,7 +71,7 @@ private struct WithSheets: ViewModifier {
                 post = try! Event.fetchEvent(id: id, context: viewContext)
             }
             .sheet(item: $post) { post in
-                NewPrivateNoteSheet(post: post, onDismiss: onDismiss)
+                NewPrivateNoteSheet(post: post)
             }
              
             .onReceive(receiveNotification(.newPrivateNoteOnContact)) { notification in
@@ -85,7 +79,7 @@ private struct WithSheets: ViewModifier {
                 contact = Contact.fetchByPubkey(pubkey, context: viewContext)
             }
             .sheet(item: $contact) { contact in
-                NewPrivateNoteSheet(contact: contact, onDismiss: onDismiss)
+                NewPrivateNoteSheet(contact: contact)
             }
         
             .onReceive(receiveNotification(.reportPost), perform: { notification in
@@ -189,20 +183,17 @@ private struct WithSheets: ViewModifier {
                 PaymentAmountSelector(paymentInfo:paymentInfo)
             }
         
-            .onReceive(receiveNotification(.addRemoveToListsheet), perform: { notification in
+            .onReceive(receiveNotification(.addRemoveToListsheet)) { notification in
                 let contact = notification.object as! Contact
                 addRemoveContactFromList = contact
-            })
-            .sheet(item: $addRemoveContactFromList, content: { contact in
-                NavigationStack {
-                    AddRemoveToListsheet(contact: contact)
-                }
-            })
-        
+            }
+            .sheet(item: $addRemoveContactFromList) { contact in
+                AddRemoveToListsheet(contact: contact)
+            }
+
             // New highlight
             .onReceive(receiveNotification(.newHighlight)) { notification in
                 let newHighlight = notification.object as! NewHighlight
-//                print(newHighlight)
                 self.newHighlight = newHighlight
             }
             .sheet(item: $newHighlight) { newHighlight in
@@ -223,13 +214,6 @@ private struct WithSheets: ViewModifier {
                     .presentationDetents([.medium])
             }
     }
-    
-    func onDismiss() {
-        privateNote = nil
-        post = nil
-        contact = nil
-    }
-    
 }
 
 

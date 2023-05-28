@@ -16,11 +16,11 @@ struct EditPrivateNoteSheet: View {
     
     @State var privateNoteToRemove:PrivateNote?
     
-    var onDismiss:() -> Void
+//    var onDismiss:() -> Void
     
-    init(privateNote: PrivateNote, onDismiss: @escaping () -> Void) {
+    init(privateNote: PrivateNote) {//, onDismiss: @escaping () -> Void) {
         self.privateNote = privateNote
-        self.onDismiss = onDismiss
+//        self.onDismiss = onDismiss
     }
     
     var body: some View {
@@ -101,7 +101,7 @@ struct EditPrivateNoteSheet_Previews: PreviewProvider {
             }()
             
             
-            EditPrivateNoteSheet(privateNote: note, onDismiss: {})
+            EditPrivateNoteSheet(privateNote: note)//, onDismiss: {})
         }
         .withPreviewEnvironment()
     }
