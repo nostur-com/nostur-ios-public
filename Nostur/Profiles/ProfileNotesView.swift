@@ -21,7 +21,7 @@ struct ProfileNotesView: View {
     var body: some View {
         LazyVStack(spacing: 0) {
             ForEach(fl.nrPosts) { nrPost in
-                PostRowDeletable(nrPost: nrPost)
+                PostRowDeletable(nrPost: nrPost, missingReplyTo: true)
                     .background(Color.systemBackground)
                     .boxShadow()
                     .padding(.vertical, 10)
