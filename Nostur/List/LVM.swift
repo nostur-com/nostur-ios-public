@@ -973,7 +973,7 @@ extension LVM {
             listState.mostRecentAppearedId = lastReadId
             listState.updatedAt = Date.now
             listState.leafs = leafs
-            L.lvm.info("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") saveListState. lastAppearedId: \(lastAppearedId?.description.prefix(11) ?? "??") (index: \(self.lastAppearedIndex?.description ?? "??"))")
+            L.lvm.debug("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") saveListState. lastAppearedId: \(lastAppearedId?.description.prefix(11) ?? "??") (index: \(self.lastAppearedIndex?.description ?? "??"))")
             do {
                 try context.save()
             }
