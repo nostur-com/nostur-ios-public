@@ -109,10 +109,11 @@ struct InnerPFP: View {
                     if let image = state.image {
                         if state.imageContainer?.type == .gif {
                             image
+                                .interpolation(.none)
                                 .resizable() // BUG: Still .gif gets wrong dimensions, so need .resizable()
                                 .aspectRatio(contentMode: .fill)
                         }
-                        else { image }
+                        else { image.interpolation(.none) }
                     }
                     else { color }
                 }
@@ -127,6 +128,7 @@ struct InnerPFP: View {
                             ZStack {
                                 if let image = state.image {
                                     image
+                                        .interpolation(.none)
                                         .resizable()
                                         .aspectRatio(contentMode: .fill)
                                         .frame(width: size, height: size)
@@ -142,6 +144,7 @@ struct InnerPFP: View {
                         }
                         else if let image = state.image {
                             image
+                                .interpolation(.none)
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
                                 .frame(width: size, height: size)

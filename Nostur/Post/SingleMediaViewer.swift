@@ -67,12 +67,14 @@ struct SingleMediaViewer: View {
                         VStack(spacing:0) {
                             if fullWidth {
                                 image
+                                    .interpolation(.none)
                                     .onTapGesture {
                                         sendNotification(.fullScreenView, FullScreenItem(url: url))
                                     }
                             }
                             else {
                                 image
+                                    .interpolation(.none)
                                     .resizable()
                                     .scaledToFit()
                                     .frame(height: 250)
