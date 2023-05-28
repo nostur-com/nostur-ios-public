@@ -41,7 +41,7 @@ struct LazyNoteMenuSheet: View {
                             sendNotification(.addRemoveToListsheet, contact)
                         }
                     } label: {
-                        Label("Add/Remove from lists", systemImage: "person.2.crop.square.stack")
+                        Label("Add/Remove \(nrPost.anyName) from lists", systemImage: "person.2.crop.square.stack")
                     }
                     Button {
                         dismiss()
@@ -154,13 +154,17 @@ struct LazyNoteMenuSheet: View {
                 }
 
                 if nrPost.relays != "" {
-                    Group {
-                        Divider()
-                        ForEach(nrPost.relays.split(separator: " "), id:\.self) { relay in
-                            Button(String(relay)) { }
-                                .disabled(true)
+                    VStack(alignment: .leading) {
+                        if let pubkey = ns.account?.publicKey, pubkey == nrPost.pubkey {
+                            Text("Sent to:")
                         }
-                    }
+                        else {
+                            Text("Received from:")
+                        }
+                        ForEach(nrPost.relays.split(separator: " "), id:\.self) { relay in
+                            Text(String(relay)).lineLimit(1)
+                        }
+                    }.foregroundColor(.gray)
                 }
             }
             .listStyle(.plain)
