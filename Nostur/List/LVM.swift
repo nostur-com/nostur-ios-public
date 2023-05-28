@@ -657,14 +657,14 @@ extension LVM {
     
     func restoreSubscription() {
         guard instantFinished else {
-            L.lvm.info("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") instantFinished=false, not restoring subscription! \(self.selectedSubTab) and selectedListId: \(self.selectedListId)")
+            L.lvm.debug("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") instantFinished=false, not restoring subscription! \(self.selectedSubTab) and selectedListId: \(self.selectedListId)")
             return } // TODO: maybe do instant thing again if too much time in between relaunch
         self.didCatchup = false
         // Always try to restore timer
         self.configureTimer()
         
         guard viewIsVisible else {
-            L.lvm.info("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") NOT VISIBLE, NOT RESTORING. current selectedSubTab: \(self.selectedSubTab) and selectedListId: \(self.selectedListId)")
+            L.lvm.debug("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") NOT VISIBLE, NOT RESTORING. current selectedSubTab: \(self.selectedSubTab) and selectedListId: \(self.selectedListId)")
             return
         }
         
@@ -765,6 +765,7 @@ extension LVM {
             .debounce(for: .seconds(2.5), scheduler: RunLoop.main)
             .sink { [weak self] _ in
                 guard let self = self else { return }
+                guard self.viewIsVisible else { return }
                 guard self.nrPostLeafs.count == 0 else { return }
                 L.lvm.info("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") renderFromLocalIfWeHaveNothingNew")
                 self.performLocalFetch()
@@ -1047,7 +1048,7 @@ extension LVM {
         let mostRecentEvent:Event? = self.nrPostLeafs.first?.event
         let visibleOrInRefreshInBackground = self.viewIsVisible || refreshInBackground
         guard visibleOrInRefreshInBackground else {
-            L.lvm.info("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") performLocalFetch cancelled - view is not visible")
+            L.lvm.debug("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") performLocalFetch cancelled - view is not visible")
             return
         }
         let ctx = DataProvider.shared().bg

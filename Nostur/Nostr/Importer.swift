@@ -37,7 +37,7 @@ class Importer {
             .sink { () in
 //                print("🏎️🏎️ \(Date.now) Import requested, 1.5 sec after new relay message(s)")
 //                print("🏎️🏎️ \(Date.now) Import requested, 0.1 after last debounce of new relay message(s)")
-                L.importing.info("🏎️🏎️ importEvents() after relay message received (throttled 1.5 seconds)")
+                L.importing.debug("🏎️🏎️ importEvents() after relay message received (throttled 1.5 seconds)")
                 self.importEvents()
             }
             .store(in: &subscriptions)
