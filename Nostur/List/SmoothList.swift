@@ -426,10 +426,15 @@ struct SmoothList: UIViewControllerRepresentable {
                 return
             }
             if scrollView.contentOffset.y > 150 {
-                lvm.isAtTop = false
+                DataProvider.shared().bg.perform { [weak self] in
+                    self?.lvm.isAtTop = false // TODO: Data race in Nostur.LVM.isAtTop.getter : Swift.Bool at 0x1183b0100
+                    // Moved it to bg now. or should we check LVM and put all on main?
+                }
             }
             else {
-                lvm.isAtTop = true
+                DataProvider.shared().bg.perform { [weak self] in
+                    self?.lvm.isAtTop = true
+                }
                 if let firstIndex = indexPaths.min(by: { $0.row < $1.row }) {
                     if firstIndex.row < 1 { // not sure why just index 0 doesn't work 1% of the time
 //                        print("COUNTER E: \(lvm.lvmCounter.count)")
