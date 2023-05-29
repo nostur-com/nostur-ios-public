@@ -16,11 +16,21 @@ class LVM: NSObject, ObservableObject {
     @Published var state:LVM.LIST_STATE = .INIT
     @Published var nrPostLeafs:[NRPost] = [] {
         didSet {
+//            guard nrPostLeafs.count > 0 else { return }
             if state != .READY { state = .READY }
             leafsAndParentIdsOnScreen = self.getAllObjectIds(nrPostLeafs)
             leafIdsOnScreen = Set(nrPostLeafs.map { $0.id })
+            // fetch next page
+            if let oldLastId = oldValue.last?.id, let currentLastId = nrPostLeafs.last?.id, oldLastId != currentLastId {
+                performingLocalOlderFetch = false
+                L.lvm.info("📖 \(self.nrPostLeafs.count) posts loaded. prefetching next page")
+                self.throttledCommand.send {
+                    self.fetchNextPage()
+                }
+            }
         }
     }
+    var performingLocalOlderFetch = false
     var leafsAndParentIdsOnScreen:Set<String> = [] // Should always be in sync with nrPostLeafs
     var leafIdsOnScreen:Set<String> = []
     var onScreenSeen:Set<NRPostID> = []
@@ -267,7 +277,7 @@ class LVM: NSObject, ObservableObject {
         })
         
         // clean up a bit if needed
-        if currentNRPostLeafs.count > LVM_MAX_VISIBLE && self.isAtTop && !older {
+        if !older && currentNRPostLeafs.count > LVM_MAX_VISIBLE && self.isAtTop && !older { // TODO: Data race in Nostur.LVM.isAtTop.getter : Swift.Bool at 0x1183b0100
             // dont drop all
             let dropLimit = max(0,(currentNRPostLeafs.count - 10)) // also not negative
             let dropCount = min(newLeafThreads.count,dropLimit)
@@ -906,14 +916,14 @@ extension LVM {
                 guard let lastAppeareadIndex = self.lastAppearedIndex else { return }
                 guard self.nrPostLeafs.count > 0 else { return }
                 
-                if lastAppeareadIndex > (self.nrPostLeafs.count-17) {
-                    L.lvm.info("📖 Appeared: \(lastAppeareadIndex)/\(self.nrPostLeafs.count) - fetching more")
-                    self.throttledCommand.send {
-                        self.fetchNextPage()
-                    }
-                }
+//                if lastAppeareadIndex > (self.nrPostLeafs.count-17) {
+//                    L.lvm.info("📖 Appeared: \(lastAppeareadIndex)/\(self.nrPostLeafs.count) - fetching more")
+//                    self.throttledCommand.send {
+//                        self.fetchNextPage()
+//                    }
+//                }
                 
-                if lastAppeareadIndex > (self.nrPostLeafs.count-10) {
+                if lastAppeareadIndex > (self.nrPostLeafs.count-5) {
                     L.lvm.info("📖 Appeared: \(lastAppeareadIndex)/\(self.nrPostLeafs.count) - loading more from local")
                     self.performLocalOlderFetch()
                 }
@@ -1126,8 +1136,10 @@ extension LVM {
     
     
     func performLocalOlderFetch() {
+        guard !performingLocalOlderFetch else { return }
         guard let oldestEvent = self.nrPostLeafs.last?.event else { return }
         let ctx = DataProvider.shared().bg
+        performingLocalOlderFetch = true
         ctx.perform { [weak self] in
             guard let self = self else { return }
             L.lvm.info("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") performLocalOlderFetch LVM.id (\(self.uuid)")
