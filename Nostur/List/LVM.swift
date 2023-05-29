@@ -349,8 +349,10 @@ class LVM: NSObject, ObservableObject {
                 guard let self = self else { return }
 //                print("🟠🟠 timeout.. should just render whatever \(danglers.compactMap { $0.event.replyTo_ == nil }.count)")
 
+                let leafIdsOnScreen = leafIdsOnScreen
+                let currentNRPostLeafs = self.nrPostLeafs // viewContext. First (0) is newest
                 DispatchQueue.main.async {
-                    self.putNewThreadsOnScreen(danglers, leafIdsOnScreen: self.leafIdsOnScreen, currentNRPostLeafs: self.nrPostLeafs, older: older)
+                    self.putNewThreadsOnScreen(danglers, leafIdsOnScreen: leafIdsOnScreen, currentNRPostLeafs: currentNRPostLeafs, older: older)
                 }
             })
 
