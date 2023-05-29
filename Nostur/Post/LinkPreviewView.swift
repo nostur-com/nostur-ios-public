@@ -22,7 +22,11 @@ struct LinkPreviewView: View {
                         request: ImageRequest(url: URL(string:image),
                                               processors: [.resize(height: DIMENSIONS.PREVIEW_HEIGHT, upscale: true)],
                         userInfo: [.scaleKey: UIScreen.main.scale]), transaction: .init(animation: .none)) { state in
-                            if let image = state.image { image.interpolation(.none).resizable() }
+                            if let image = state.image {
+                                image.interpolation(.none)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                            }
                     }
                     .pipeline(ImageProcessing.shared.content)
                 }
