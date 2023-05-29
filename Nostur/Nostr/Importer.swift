@@ -32,12 +32,13 @@ class Importer {
     
     func triggerImportWhenRelayMessagesAreAdded() {
         addedRelayMessage
+//            .throttle(for: 1.5, scheduler: DispatchQueue.global(), latest: true)
+            .debounce(for: .seconds(0.3), scheduler: DispatchQueue.global())
             .throttle(for: 1.5, scheduler: DispatchQueue.global(), latest: true)
-//            .debounce(for: .seconds(0.1), scheduler: DispatchQueue.global())
             .sink { () in
 //                print("🏎️🏎️ \(Date.now) Import requested, 1.5 sec after new relay message(s)")
 //                print("🏎️🏎️ \(Date.now) Import requested, 0.1 after last debounce of new relay message(s)")
-                L.importing.debug("🏎️🏎️ importEvents() after relay message received (throttled 1.5 seconds)")
+                L.importing.debug("🏎️🏎️ importEvents() after relay message received (throttle = 1.5 seconds), but sends first after debounce (0.3)")
                 self.importEvents()
             }
             .store(in: &subscriptions)
@@ -243,7 +244,9 @@ class Importer {
                 }
                 else {
                     L.importing.debug("🏎️🏎️ Nothing imported, no changes in \(count) messages")
-                    sendNotification(.noNewEventsInDatabase)
+                    if count > 50 {
+                        sendNotification(.noNewEventsInDatabase)
+                    }
                 }
             }
             catch {

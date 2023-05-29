@@ -120,8 +120,8 @@ class LVM: NSObject, ObservableObject {
         self.subscriptions.removeAll()
     }
     
-    var startRenderingSubject = CurrentValueSubject<[Event], Never>([])
-    var startRenderingOlderSubject = CurrentValueSubject<[Event], Never>([])
+    var startRenderingSubject = PassthroughSubject<[Event], Never>()
+    var startRenderingOlderSubject = PassthroughSubject<[Event], Never>()
     var didCatchup = false
     var backlog = Backlog()
     
@@ -599,7 +599,7 @@ class LVM: NSObject, ObservableObject {
         guard let last = self.nrPostLeafs.last else { return }
         let until = NTimestamp(date: last.createdAt)
         req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString,
-                                  limit: 250,
+                                  limit: 100,
                                   subscriptionId: "PAGE-" + UUID().uuidString,
                                   until: until))
     }
@@ -749,7 +749,7 @@ extension LVM {
     
     func performLocalFetchAfterImport() {
         receiveNotification(.newEventsInDatabase)
-            .debounce(for: .seconds(2), scheduler: RunLoop.main)
+            .throttle(for: .seconds(2.5), scheduler: RunLoop.main, latest: true)
             .sink { [weak self] _ in
                 guard let self = self else { return }
                 guard instantFinished else { return }
@@ -761,7 +761,7 @@ extension LVM {
     
     func renderFromLocalIfWeHaveNothingNewAndScreenIsEmpty() {
         receiveNotification(.noNewEventsInDatabase)
-            .debounce(for: .seconds(2.5), scheduler: RunLoop.main)
+            .throttle(for: .seconds(2.5), scheduler: RunLoop.main, latest: true)
             .sink { [weak self] _ in
                 guard let self = self else { return }
                 guard self.viewIsVisible else { return }
@@ -1237,7 +1237,7 @@ extension Event {
         
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        fr.fetchLimit = 50
+        fr.fetchLimit = 15
         fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN {1,6,9802} AND id != \"\"", cutOffPoint,  pubkeys)
         return fr
     }
@@ -1248,7 +1248,7 @@ extension Event {
         
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        fr.fetchLimit = 50
+        fr.fetchLimit = 15
         fr.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN {1,6,9802} AND id != \"\"", cutOffPoint,  pubkeys)
         return fr
     }
@@ -1276,7 +1276,7 @@ extension Event {
         
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        fr.fetchLimit = 50
+        fr.fetchLimit = 15
         fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN {1,6,9802} AND id != \"\"", newCutOffPoint,  pubkeys)
         return fr
     }
