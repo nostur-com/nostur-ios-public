@@ -60,28 +60,31 @@ struct LazyNoteMenuSheet: View {
                     }
                     HStack {
                         Button {
-                            dismiss()
                             UIPasteboard.general.string = nrPost.mainEvent.plainText
+                            dismiss()
                         } label: {
                             Label("Copy post text", systemImage: "doc.on.clipboard")
                         }
+                        .buttonStyle(.plain)
                         Divider()
                         Button {
-                            dismiss()
                             UIPasteboard.general.string = nrPost.mainEvent.noteId
+                            dismiss()
                         } label: {
                             Text("ID")
                                 .padding(.horizontal, 5)
                         }
+                        .buttonStyle(.plain)
                         Divider()
                         Button {
-                            dismiss()
                             UIPasteboard.general.string = nrPost.id
+                            dismiss()
                         } label: {
                             Text("hex")
                                 .padding(.horizontal, 5)
     //                        Label("Copy hex", systemImage: "doc.on.clipboard")
                         }
+                        .buttonStyle(.plain)
                         Divider()
                         Button {
                             dismiss()
