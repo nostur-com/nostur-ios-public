@@ -719,7 +719,7 @@ extension LVM {
     
     func throttledCommands() {
         throttledCommand
-            .throttle(for: .seconds(3.5), scheduler: RunLoop.main, latest: false)
+            .throttle(for: .seconds(1.5), scheduler: RunLoop.main, latest: true)
             .sink { command in
                 L.lvm.info("🪡🪡 Running throttled command")
                 command()
@@ -924,7 +924,7 @@ extension LVM {
 //                    }
 //                }
                 
-                if lastAppeareadIndex > (self.nrPostLeafs.count-5) {
+                if lastAppeareadIndex > (self.nrPostLeafs.count-7) {
                     L.lvm.info("📖 Appeared: \(lastAppeareadIndex)/\(self.nrPostLeafs.count) - loading more from local")
                     self.performLocalOlderFetch()
                 }

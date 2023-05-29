@@ -83,12 +83,12 @@ class NotificationsManager: ObservableObject {
             .store(in: &subscriptions)
         
         // Check relays for newest messages NOW
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-            self.relayCheckNewestNotifications()
-        }
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+//            self.relayCheckNewestNotifications()
+//        }
         
         // Check relays for since... later
-        DispatchQueue.main.asyncAfter(deadline: .now() + 11) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 8) { // TODO: Change to event based instead of timer. (after instant feed finished)
             self.relayCheckSinceNotifications()
         }
     }
