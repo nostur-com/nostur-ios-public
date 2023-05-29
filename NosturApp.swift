@@ -53,7 +53,7 @@ class DIMENSIONS: ObservableObject {
 struct NosturApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("firstTimeCompleted") var firstTimeCompleted = false
-    @AppStorage("did_accept_terms") var didAcceptTerms = true // TODO: set to false for app store
+    @AppStorage("did_accept_terms") var didAcceptTerms = false // TODO: set to false for app store
     @StateObject private var ns:NosturState = .shared
     @StateObject private var tm:DetailTabsModel = .shared
     @StateObject private var nm:NotificationsManager = .shared
