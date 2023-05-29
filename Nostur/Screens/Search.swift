@@ -311,7 +311,7 @@ struct Search: View {
                 // search in names/usernames
                 else {
                     searching = false
-                    contacts.nsPredicate = NSPredicate(format: "name CONTAINS[cd] %@ OR display_name CONTAINS[cd] %@", searchTrimmed, searchTrimmed)
+                    contacts.nsPredicate = NSPredicate(format: "name CONTAINS[cd] %@ OR display_name CONTAINS[cd] %@ OR about CONTAINS[cd] %@", searchTrimmed, searchTrimmed, searchTrimmed)
                     
                     let fr = Event.fetchRequest()
                     fr.predicate = NSPredicate(format: "kind == 1 AND content CONTAINS[cd] %@ AND NOT content BEGINSWITH %@", searchTrimmed, "lnbc")
