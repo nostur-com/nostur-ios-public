@@ -110,7 +110,6 @@ struct FollowingAndExplore: View { //, Equatable {
             .onChange(of: account, perform: { newAccount in
                 guard account != newAccount else { return }
                 L.og.info("Account changed from: \(account.name)/\(account.publicKey) to \(newAccount.name)/\(newAccount.publicKey)")
-                // TODO: Should remove old lvm's here
                 LVMManager.shared.listVMs.filter { $0.pubkey == account.publicKey }
                     .forEach { lvm in
                         lvm.cleanUp()

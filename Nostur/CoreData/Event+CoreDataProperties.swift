@@ -956,12 +956,6 @@ extension Event {
                 savedEvent.reactionToId = lastE
                 savedEvent.reactionTo = try? Event.fetchEvent(id: lastE, context: context)
             }
-            
-            // TODO: dont need this?
-            //            if let lastP = event.lastP() {
-            //                savedEvent.reactionToContactId = lastP
-            //                savedEvent.reactionToContact = Contact.fetchByPubkey(lastP, context: context)
-            //            }
         }
         
         if (event.kind == .textNote) {
@@ -969,9 +963,7 @@ extension Event {
             // CACHE THE REPLY "E" IN replyToId
             if let replyToEtag = event.replyToEtag() {
                 savedEvent.replyToId = replyToEtag.id
-                
-                // TODO: COULD USE EventsRelationsQeuue here...
-                
+                                
                 // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
                 if let replyTo = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToEtag.id) {
                     savedEvent.replyTo = replyTo

@@ -387,72 +387,6 @@ struct PostAndParent: View {
             }
         }
     }
-    
-//    func fixReplyToIfWeAlreadyHaveIt(_ openedEvent:Event) {
-//        if openedEvent.replyTo_ == nil && openedEvent.replyToId != nil {
-//            // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
-//            if let replyTo = try? Event.fetchEvent(id: openedEvent.replyToId!, context: viewContext) {
-//                openedEvent.objectWillChange.send()
-//                openedEvent.replyTo = replyTo
-//
-//                replyTo.objectWillChange.send()
-//                replyTo.addToReplies(openedEvent)
-//                //                replyTo.repliesCount += 1 // TODO: Count again here?? or we already counted ??
-//            }
-//        }
-//
-//        // IF THE THERE IS A ROOT, AND ITS NOT THE SAME AS THE REPLY TO
-//        // DO THE SAME AS WITH THE REPLY BEFORE
-//        if (openedEvent.replyToRootId != openedEvent.replyToId) { // If reply root is same as reply, dont double add.
-//            if (openedEvent.replyToId == nil) { // IF IT HAS ONLY A ROOT REPLY, NO NORMAL REPLY: THEN REPLYTOROOT = REPLYTO
-//                openedEvent.replyToId = openedEvent.replyToRootId
-//
-//                // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
-//                if let replyToRoot = try? Event.fetchEvent(id: openedEvent.replyToRootId!, context: viewContext) {
-//                    openedEvent.objectWillChange.send()
-//                    openedEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
-//
-//                    replyToRoot.objectWillChange.send()
-//                    replyToRoot.addToReplies(openedEvent)
-//                    //                    replyToRoot.repliesCount += 1 // TODO: Count again here?? or we already counted ??
-//                }
-//            }
-//        }
-//    }
-    
-//    func fixIfWeHavePointingToAlreadyInCache(_ openedEvent:Event) {
-//        let pointingToEventReq = NSFetchRequest<Event>(entityName: "Event")
-//        //        pointingToEventReq.predicate = NSPredicate(format: "(kind IN {1,6} AND  (replyToId == %@ OR replyToRootId == %@ OR firstQuoteId == %@)", openedEvent.id, openedEvent.id, openedEvent.id)
-//        pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6,9802,7,9375} AND %@ IN {replyToId,replyToRootId,firstQuoteId,reactionToId,zappedEventId}", openedEvent.id)
-//        // TODO: NEED 6 ALSO OR NOT?
-//        //            pointingToEventReq.predicate = NSPredicate(format: "kind IN {1,6} AND %@ IN {replyToId,replyToRootId,firstQuoteId}", savedEvent.id)
-//        pointingToEventReq.sortDescriptors = []
-//        var reloadReplies = false
-//        if let pointingToEvents = try? viewContext.fetch(pointingToEventReq) {
-//            for event in pointingToEvents {
-//                if (event.replyToId != nil) && (event.replyToId == openedEvent.id) {
-//                    reloadReplies = true
-//                    event.replyTo = openedEvent
-//                }
-//                if (event.replyToRootId != nil) && (event.replyToRootId == openedEvent.id) {
-//                    reloadReplies = true
-//                    event.replyToRoot = openedEvent
-//                }
-//                if (event.firstQuoteId != nil) && (event.firstQuoteId == openedEvent.id) {
-//                    event.firstQuote = openedEvent
-//                }
-//                if (event.reactionToId != nil) && (event.reactionToId == openedEvent.id) {
-//                    event.reactionTo = openedEvent
-//                }
-//                if (event.zappedEventId != nil) && (event.zappedEventId == openedEvent.id) {
-//                    event.zappedEvent = openedEvent
-//                }
-//            }
-//            if reloadReplies {
-//                nrPost.loadReplies()
-//            }
-//        }
-//    }
 }
 
 struct DetailFooterFragment: View {
@@ -462,12 +396,6 @@ struct DetailFooterFragment: View {
     var body: some View {
         Divider()
         HStack(spacing: 20) {
-//            HStack(spacing:5) {
-//                AnimatedNumber(number: nrPost.mentionsCount)
-//                    .fontWeight(.bold)
-//                Text("reposts")//.onTapGesture { }
-//            }
-            
             NavigationLink(value: ViewPath.NoteReactions(id: nrPost.id)) {
                 HStack(spacing:5) {
                     AnimatedNumber(number: nrPost.likesCount)

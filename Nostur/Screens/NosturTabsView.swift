@@ -25,7 +25,6 @@ struct NosturTabsView: View {
                     .onPreferenceChange(SizePreferenceKey.self) { size in
                         guard size.width > 0 else { return }
                         dim.listWidth = size.width
-//                        print("🟣🟣🟣🟣🟣 NEW WIDTH \(size.width) -- Scale: \(UIScreen.main.scale) ")
                     }
                 TabView(selection: $selectedTab) {
                     MainView()
@@ -88,7 +87,6 @@ struct NosturTabsView: View {
 
 extension NosturTabsView {
     func handleUrl(_ url:URL) {
-        // TODO: CHECK INPUT!!! SECURITY!
         L.og.info("handleUrl: \(url.absoluteString)")
         // LINKS FROM ANYWHERE (NPUB1/NOTE1)
         let nostr = url.absoluteString.matchingStrings(regex: "^(nostr:)(npub1|note1)([023456789acdefghjklmnpqrstuvwxyz]{58})$")
@@ -171,23 +169,3 @@ extension NosturTabsView {
         }
     }
 }
-//
-//struct ContentView_Previews: PreviewProvider {
-//    //    @State static var showMenu = false
-//    //    @State static var selectedTab = "Timeline"
-//    //
-//    //    @State static var timelinePath = NavigationPath()
-//    //    @State static var searchPath = NavigationPath()
-//    //    @State static var accountsPath = NavigationPath()
-//    //    @State static var bookmarksPath = NavigationPath()
-//    //    @State static var notificationsPath = NavigationPath()
-//    //    @State static var messagesPath = NavigationPath()
-//    //    @State static var configurationPath = NavigationPath()
-//    //    @State static var detailPath = NavigationPath()
-//    //    @State static var showSidebar = false
-//    
-//    static var previews: some View {
-//        NosturTabsView()
-//            .withPreviewEnvironment()
-//    }
-//}

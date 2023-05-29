@@ -389,8 +389,6 @@ struct DMRow: View {
                 HStack {
                     VStack(alignment: .leading) {
                         HStack(alignment: .center, spacing:3) {
-                            
-                            // TODO: FIXX WEIRD:
                             if let contact = contact {
                                 NameAndNip(contact: NRContact(contact: contact))
                             }

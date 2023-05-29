@@ -28,35 +28,12 @@ func zapRequest(forPubkey pubkey: String, andEvent eventId: String? = nil, withM
 
 
 extension Event {
-//    var bolt11Invoice:Invoice? {
-//        get {
-//            guard let bolt11 = bolt11() else { return nil }
-//            if let pInvoice = Invoice.fromStr(s: bolt11).getValue() {
-//                return pInvoice
-//            }
-//            return nil
-//        }
-//    }
-    
-    
     // Homegrown bolt11 amount decoder because LightningDevKit is sloooooooow
     // Also Homegrown parsing of serializedTags because EventTags.init slow...
     var naiveSats:Double {
         guard let bolt11 = naiveBolt11() else { return 0.0 }
         return naiveBolt11AmountDecoder(bolt11)
     }
-    
-    // THE AMOUNT PAID
-    // TODO: Maybe cache at import?
-//    var sats:Double {
-//        get {
-//            guard bolt11Invoice != nil else { return 0 }
-//            if (bolt11Invoice!.amountMilliSatoshis() != nil) {
-//                return Double(bolt11Invoice!.amountMilliSatoshis()!)/1000
-//            }
-//            return 0
-//        }
-//    }
 }
 
 

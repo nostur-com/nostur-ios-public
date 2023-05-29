@@ -217,7 +217,6 @@ class LVM: NSObject, ObservableObject {
             
             let added = newNRPostLeafs
 //                .filter(notMuted) // TODO ADD BACK NOT MUtED IN RIGHT CONTEXT / THREAD
-//                .suffix(LVM_MAX_VISIBLE) // Don't add too many posts
 
             guard transformedObjectIds.count > 0 else { return }
             L.lvm.notice("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") Transformed \(transformedObjectIds.count) posts - \(taskId)")
@@ -277,7 +276,7 @@ class LVM: NSObject, ObservableObject {
         })
         
         // clean up a bit if needed
-        if !older && currentNRPostLeafs.count > LVM_MAX_VISIBLE && self.isAtTop && !older { // TODO: Data race in Nostur.LVM.isAtTop.getter : Swift.Bool at 0x1183b0100
+        if !older && currentNRPostLeafs.count > LVM_MAX_VISIBLE && self.isAtTop && !older {
             // dont drop all
             let dropLimit = max(0,(currentNRPostLeafs.count - 10)) // also not negative
             let dropCount = min(newLeafThreads.count,dropLimit)
@@ -947,7 +946,7 @@ extension LVM {
             return 0
         }
         let postsAfterLastAppeared = self.nrPostLeafs.prefix(lastAppearedIndex)
-        let count = threadCount(Array(postsAfterLastAppeared)) // TODO: Performance, can use ArraySlice somehow? swift-algorithms?
+        let count = threadCount(Array(postsAfterLastAppeared))
         return max(0,count) // cant go negative
     }
     
@@ -956,7 +955,7 @@ extension LVM {
             return 0
         }
         let postsAfterLastRead = self.nrPostLeafs.prefix(lastReadIndex)
-        let count = threadCount(Array(postsAfterLastRead)) // TODO: Performance, can use ArraySlice somehow? swift-algorithms?
+        let count = threadCount(Array(postsAfterLastRead))
         return max(0,count) // cant go negative
     }
     
