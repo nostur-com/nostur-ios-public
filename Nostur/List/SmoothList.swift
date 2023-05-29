@@ -93,15 +93,7 @@ struct SmoothList: UIViewControllerRepresentable {
         L.sl.info("⭐️ SmoothList \(context.coordinator.lvm.id): OLD updateUIViewController \(context.coordinator.lvm.uuid)")
         L.sl.info("⭐️ SmoothList \(self.lvm.id): NEW updateUIViewController \(self.lvm.uuid)")
         
-        if (lvm.uuid != context.coordinator.lvm.uuid) { // Update LVM if we have a new one
-            // clean up old
-//            context.coordinator.subscriptions.removeAll()
-//            context.coordinator.lvm = lvm
-//            context.coordinator.data = lvm.nrPostLeafs
-//            var snapshot = NSDiffableDataSourceSnapshot<SingleSection, String>()
-//            snapshot.appendSections([SingleSection.main])
-//            context.coordinator.collectionViewHolder?.dataSource?.apply(snapshot)
-            
+        if (lvm.uuid != context.coordinator.lvm.uuid) {
             // set up new
             if context.coordinator.collectionViewHolder != nil {
                 configureCollectionView(context: context)
