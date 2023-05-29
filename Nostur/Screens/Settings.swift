@@ -257,75 +257,75 @@ struct Settings: View {
                 }
             }
             
-            Section(header: Text("Dev")) {
-                Toggle(isOn: $devToggle) {
-                    VStack(alignment: .leading) {
-                        Text("Dev mode")
-                        if (devToggle) {
-                            Text(vm.throttleText)
-                        }
-                    }
-                }.padding(10)
-                if (devToggle) {
-                    VStack(alignment: .leading) {
-                        Group {
-
-                            Button { removeOlderKind3Events() } label: {
-                                Text("Remove old contact lists (kind=3)")
-                            }
-
-                            Button { Maintenance.maintenance(context: viewContext) } label: {
-                                Text("Clean up older than 3 days")
-                            }
-
-                            Button { fixPointers() } label: {
-                                Text("Rebuild referenced things (tagsSerialized -> someId, anotherId)")
-                            }
-
-                            Button { rebuildCountingCache() } label: {
-                                Text("Rebuild counter cache (likes, mentions, replies, zaps)")
-                            }
-
-                            Button { rebuildContactCache() } label: {
-                                Text("Rebuild contact cache (banner, picture etc)")
-                            }
-                        }
-                        .buttonStyle(.bordered)
-
-
-                        Group {
-                            Button { deleteAll = true } label: {
-                                Text("Delete all contacts \(contactsCount?.description ?? "")")
-                            }.confirmationDialog("SURE???", isPresented: $deleteAll, actions: {
-                                Button("YES DELETE ALL CONTACTS", role: .destructive) { deleteAllContacts() }
-                            })
-
-                            Button { showDeleteAllEventsConfirmation = true } label: {
-                                Text("Delete all events \(eventsCount?.description ?? "")")
-                            }.confirmationDialog("DELETE ALL EVENTS????", isPresented: $showDeleteAllEventsConfirmation) {
-                                Button("YES DELETE ALL EVENTS", role: .destructive) {
-                                    deleteAllEvents()
-                                }
-                            }
-
-                            Button { fixContactEventRelations() } label: {
-                                Text("Fix event.pubkey -> event.contact")
-                            }
-
-                            Button { putContactsInEventsForPs() } label: {
-                                Text("Fix contacts (p) in event")
-                            }
-
-                            Button { fixRelations() } label: { Text("Fix relations (replyToId -> replyTo) etc") }
-
-                            Button { clearImageCache()} label: {
-                                Text("Clear image cache")
-                            }
-                        }
-                        .buttonStyle(.bordered)
-                    }
-                }
-            }
+//            Section(header: Text("Dev")) {
+//                Toggle(isOn: $devToggle) {
+//                    VStack(alignment: .leading) {
+//                        Text("Dev mode")
+//                        if (devToggle) {
+//                            Text(vm.throttleText)
+//                        }
+//                    }
+//                }.padding(10)
+//                if (devToggle) {
+//                    VStack(alignment: .leading) {
+//                        Group {
+//
+//                            Button { removeOlderKind3Events() } label: {
+//                                Text("Remove old contact lists (kind=3)")
+//                            }
+//
+//                            Button { Maintenance.maintenance(context: viewContext) } label: {
+//                                Text("Clean up older than 3 days")
+//                            }
+//
+//                            Button { fixPointers() } label: {
+//                                Text("Rebuild referenced things (tagsSerialized -> someId, anotherId)")
+//                            }
+//
+//                            Button { rebuildCountingCache() } label: {
+//                                Text("Rebuild counter cache (likes, mentions, replies, zaps)")
+//                            }
+//
+//                            Button { rebuildContactCache() } label: {
+//                                Text("Rebuild contact cache (banner, picture etc)")
+//                            }
+//                        }
+//                        .buttonStyle(.bordered)
+//
+//
+//                        Group {
+//                            Button { deleteAll = true } label: {
+//                                Text("Delete all contacts \(contactsCount?.description ?? "")")
+//                            }.confirmationDialog("SURE???", isPresented: $deleteAll, actions: {
+//                                Button("YES DELETE ALL CONTACTS", role: .destructive) { deleteAllContacts() }
+//                            })
+//
+//                            Button { showDeleteAllEventsConfirmation = true } label: {
+//                                Text("Delete all events \(eventsCount?.description ?? "")")
+//                            }.confirmationDialog("DELETE ALL EVENTS????", isPresented: $showDeleteAllEventsConfirmation) {
+//                                Button("YES DELETE ALL EVENTS", role: .destructive) {
+//                                    deleteAllEvents()
+//                                }
+//                            }
+//
+//                            Button { fixContactEventRelations() } label: {
+//                                Text("Fix event.pubkey -> event.contact")
+//                            }
+//
+//                            Button { putContactsInEventsForPs() } label: {
+//                                Text("Fix contacts (p) in event")
+//                            }
+//
+//                            Button { fixRelations() } label: { Text("Fix relations (replyToId -> replyTo) etc") }
+//
+//                            Button { clearImageCache()} label: {
+//                                Text("Clear image cache")
+//                            }
+//                        }
+//                        .buttonStyle(.bordered)
+//                    }
+//                }
+//            }
 //                Section(header: Text("Private key protector")) {
 //                    Toggle(isOn: $settings.replaceNsecWithHunter2Enabled) {
 //                        Text("Don't allow nsec in posts")
