@@ -15,7 +15,6 @@ final class SettingsStore: ObservableObject {
     
     public enum Keys {
         static let lastMaintenanceTimestamp = "last_maintenance_timestamp"
-        static let sleepGoal = "sleep_goal"
         
         static let isSignatureVerificationEnabled = "signature_verification_enabled"
         static let replaceNsecWithHunter2 = "replace_nsec_with_hunter2"
@@ -45,7 +44,8 @@ final class SettingsStore: ObservableObject {
         LightningWallet(name: "Muun", scheme: "muun:lightning:"), // guessed. must check if works
         LightningWallet(name: "Phoenix", scheme: "phoenix:lightning:"), // guessed. must check if works
         LightningWallet(name: "Breez", scheme: "breez:lightning:"), // https://github.com/breez/breezmobile/issues/300
-        LightningWallet(name: "BlueWallet", scheme: "bluewallet:lightning:") // https://github.com/BlueWallet/BlueWallet/wiki/Deeplinking
+        LightningWallet(name: "BlueWallet", scheme: "bluewallet:lightning:"), // https://github.com/BlueWallet/BlueWallet/wiki/Deeplinking
+        LightningWallet(name: "Zeus", scheme: "zeusln:lightning:") // https://github.com/ZeusLN/zeus/blob/b0d129114390d8c6f56904e6c7a7404ca09a80f5/ios/zeus/Info.plist#LL42C5-L42C27
     ]
     
     public static let mediaUploadServiceOptions = [
@@ -104,7 +104,7 @@ final class SettingsStore: ObservableObject {
         }
 
         set {
-            defaults.set(newValue.id, forKey: Keys.defaultMediaUploadService)
+            defaults.set(newValue.id, forKey: Keys.defaultMediaUploadService); objectWillChange.send()
         }
     }
     
@@ -179,7 +179,7 @@ final class SettingsStore: ObservableObject {
         }
 
         set {
-            defaults.set(newValue.id, forKey: Keys.defaultLightningWallet)
+            defaults.set(newValue.id, forKey: Keys.defaultLightningWallet); objectWillChange.send()
         }
     }
 }
