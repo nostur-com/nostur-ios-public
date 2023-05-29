@@ -26,12 +26,12 @@ struct SmoothList: UIViewControllerRepresentable {
     }
     
     func makeCoordinator() -> Coordinator {
-        L.sl.info("⭐️ SmoothList \(self.lvm.id) \(self.lvm.pubkey?.short ?? "-"): makeCoordinator")
+        L.sl.debug("⭐️ SmoothList \(self.lvm.id) \(self.lvm.pubkey?.short ?? "-"): makeCoordinator")
         return Coordinator(parent: self)
     }
     
     func makeUIViewController(context: Context) -> UIViewControllerType {
-        L.sl.info("⭐️ SmoothList \(context.coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): makeUIViewController")
+        L.sl.debug("⭐️ SmoothList \(context.coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): makeUIViewController")
         let viewController = UIViewControllerType()
         let collectionViewHolder = makeCollectionViewHolder(parent: viewController, coordinator:context.coordinator)
         context.coordinator.collectionViewHolder = collectionViewHolder
@@ -110,7 +110,7 @@ struct SmoothList: UIViewControllerRepresentable {
     }
     
     static func dismantleUIViewController(_ uiViewController: Self.UIViewControllerType, coordinator: Self.Coordinator) {
-        L.sl.info("⭐️ SmoothList. dismantleUIViewController \(coordinator.lvm.id) \(coordinator.lvm.pubkey?.short ?? "-")")
+        L.sl.debug("⭐️ SmoothList. dismantleUIViewController \(coordinator.lvm.id) \(coordinator.lvm.pubkey?.short ?? "-")")
         coordinator.subscriptions.removeAll()
     }
     
@@ -539,7 +539,7 @@ final class CViewHolder {
     }
     
     func createDataSource(coordinator: SmoothList.Coordinator) -> DataSourceType {
-        L.sl.info("⭐️ SmoothList \(coordinator.lvm.id) \(coordinator.lvm.pubkey?.short ?? "-"): CViewHolder.createDataSource")
+        L.sl.debug("⭐️ SmoothList \(coordinator.lvm.id) \(coordinator.lvm.pubkey?.short ?? "-"): CViewHolder.createDataSource")
         return DataSourcy<SingleSection, String>(
             collectionView: collectionView,
             cellProvider: { collectionView, indexPath, identifier -> UICollectionViewCell? in
