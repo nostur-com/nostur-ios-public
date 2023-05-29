@@ -749,6 +749,9 @@ extension NRPost { // Helpers for grouped replies
             }
             fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: true )]
             let repliesToRoot = (try? DataProvider.shared().bg.fetch(fr)) ?? []
+            for reply in repliesToRoot { // Add to queue because some may be missing .replyTo
+                EventRelationsQueue.shared.addAwaitingEvent(reply)
+            }
             let nrRepliesToRoot = repliesToRoot.map { NRPost(event: $0, withReplyTo: false, withParents: false, withReplies: false, plainText: false) } // Don't load replyTo/parents here, we do it in groupRepliesToRoot()
             self.repliesToRoot = nrRepliesToRoot
         }
@@ -797,11 +800,13 @@ extension NRPost { // Helpers for grouped replies
         return false
     }
     
-    private func _groupRepliesToRoot(_ replies:[NRPost]) {
+    private func _groupRepliesToRoot(_ newReplies:[NRPost]) {
         DataProvider.shared().bg.perform { [weak self] in
             guard let self = self else { return }
+            
+            let replies = (newReplies.count == 0 ? self.replies : newReplies)
             // Load parents/replyTo
-            let groupedThreads = ((replies.count == 0 ? self.replies : replies) + (self.replyToRootId != nil ? self.repliesToLeaf : self.repliesToRoot))
+            let groupedThreads = (replies + (self.replyToRootId != nil ? self.repliesToLeaf : self.repliesToRoot))
                 .uniqued(on: { $0.id })
                 .filter { // Only take eventual replies by author, or direct replies to root by others
                     $0.pubkey == self.pubkey ||

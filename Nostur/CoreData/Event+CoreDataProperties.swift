@@ -973,15 +973,19 @@ extension Event {
                 // TODO: COULD USE EventsRelationsQeuue here...
                 
                 // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
-                if let replyTo = try? Event.fetchEvent(id: replyToEtag.id, context: context) {
+                if let replyTo = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToEtag.id) {
                     savedEvent.replyTo = replyTo
-                    
-//                    replyTo.objectWillChange.send()
                     replyTo.addToReplies(savedEvent)
                     replyTo.repliesCount += 1
                     replyTo.repliesUpdated.send(replyTo.replies_)
-                    
-                    savedEvent.replyToUpdated.send(replyTo)
+//                  savedEvent.replyToUpdated.send(replyTo) // TODO: This event can't have any updates, its brand new..??
+                }
+                else if let replyTo = try? Event.fetchEvent(id: replyToEtag.id, context: context) {
+                    savedEvent.replyTo = replyTo
+                    replyTo.addToReplies(savedEvent)
+                    replyTo.repliesCount += 1
+                    replyTo.repliesUpdated.send(replyTo.replies_)
+//                  savedEvent.replyToUpdated.send(replyTo) // TODO: This event can't have any updates, its brand new..??
                 }
             }
             
@@ -989,24 +993,37 @@ extension Event {
             // DO THE SAME AS WITH THE REPLY BEFORE
             if let replyToRootEtag = event.replyToRootEtag() {
                 savedEvent.replyToRootId = replyToRootEtag.id
+                // Need to put it in queue to fix relations for replies to root / grouped replies
+                EventRelationsQueue.shared.addAwaitingEvent(savedEvent, debugInfo: "saveEvent.123")
                 
                 if (savedEvent.replyToId == nil) {
                     savedEvent.replyToId = savedEvent.replyToRootId // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
                 }
-                
-                if let replyToRoot = try? Event.fetchEvent(id: replyToRootEtag.id, context: context) {
+                if let replyToRoot = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToRootEtag.id) {
+                    savedEvent.replyToRoot = replyToRoot
+                    if (savedEvent.replyToId == savedEvent.replyToRootId) {
+                        savedEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
+                        replyToRoot.addToReplies(savedEvent)
+                        replyToRoot.repliesCount += 1
+                        replyToRoot.repliesUpdated.send(replyToRoot.replies_)
+//                        savedEvent.replyToUpdated.send(replyToRoot) // TODO: This event can't have any updates, its brand new..??
+                    }
+                    else {
+//                        savedEvent.replyToRootUpdated.send(replyToRoot) // TODO: This event can't have any updates, its brand new..??
+                    }
+                }
+                else if let replyToRoot = try? Event.fetchEvent(id: replyToRootEtag.id, context: context) {
                     savedEvent.replyToRoot = replyToRoot
                     
                     if (savedEvent.replyToId == savedEvent.replyToRootId) {
                         savedEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
-                        
                         replyToRoot.addToReplies(savedEvent)
                         replyToRoot.repliesCount += 1
                         replyToRoot.repliesUpdated.send(replyToRoot.replies_)
-                        savedEvent.replyToUpdated.send(replyToRoot)
+//                        savedEvent.replyToUpdated.send(replyToRoot) // TODO: This event can't have any updates, its brand new..??
                     }
                     else {
-                        savedEvent.replyToRootUpdated.send(replyToRoot)
+//                        savedEvent.replyToRootUpdated.send(replyToRoot) // TODO: This event can't have any updates, its brand new..??
                     }
                 }
             }
