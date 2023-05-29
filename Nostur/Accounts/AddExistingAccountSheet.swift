@@ -97,10 +97,7 @@ struct AddExistingAccountSheet: View {
         
         let account = Account(context: viewContext)
         account.id = UUID()
-        account.createdAt = Date()
-        // TODO: Check if valid pubkey before save.
-        // TODO: Check if account already exists..
-                
+        account.createdAt = Date()        
         account.publicKey = keys.publicKeyHex()
         account.privateKey = keys.privateKeyHex()
         

@@ -95,8 +95,6 @@ struct Maintenance {
             let xDaysAgo = Date.now.addingTimeInterval(-4 * 86400) // 4 days
             
             
-            // TODO: Move list maintaince to after: guard lastMaintenanceTimestamp ...
-            
             // Steps .. get ALL list states (This is ordered by most recent updated at)
             let listStates = ListState.fetchListStates(context: context)
             
