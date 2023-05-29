@@ -79,19 +79,28 @@ struct AddExistingAccountSheet: View {
     }
     
     func addExistingAccount(privkey:String) {
-        Importer.shared.existingIds.removeAll() // Because else we dont fetch new info... if we just fetched it before, maybe during onboarding
-        let account = Account(context: viewContext)
-        account.id = UUID()
-        account.createdAt = Date()
-        // TODO: Check if valid pubkey before save.
-        // TODO: Check if account already exists..
-        
         guard let keys = try? NKeys(privateKeyHex: privkey) else {
             invalidKey = true
             key = ""
             return
         }
         
+        if let existingAccount = (try? Account.fetchAccount(publicKey: keys.publicKeyHex(), context: viewContext)) {
+            existingAccount.privateKey = keys.privateKeyHex()
+            ns.setAccount(account: existingAccount)
+            ns.onBoardingIsShown = false
+            return
+        }
+        
+        Importer.shared.existingIds.removeAll() // Because else we dont fetch new info... if we just fetched it before, maybe during onboarding
+        
+        
+        let account = Account(context: viewContext)
+        account.id = UUID()
+        account.createdAt = Date()
+        // TODO: Check if valid pubkey before save.
+        // TODO: Check if account already exists..
+                
         account.publicKey = keys.publicKeyHex()
         account.privateKey = keys.privateKeyHex()
         
@@ -131,12 +140,15 @@ struct AddExistingAccountSheet: View {
     }
     
     func addExistingReadOnlyAccount(pubkey:String) {
+        if let existingAccount = (try? Account.fetchAccount(publicKey: pubkey, context: viewContext)) {
+            ns.setAccount(account: existingAccount)
+            ns.onBoardingIsShown = false
+            return
+        }
         Importer.shared.existingIds.removeAll() // Because else we dont fetch new info... if we just fetched it before, maybe during onboarding
         let account = Account(context: viewContext)
         account.id = UUID()
         account.createdAt = Date()
-        // TODO: Check if valid pubkey before save.
-        // Convert npub to hex... etc
         account.publicKey = pubkey
         
         
