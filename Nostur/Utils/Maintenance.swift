@@ -10,8 +10,9 @@ import CoreData
 
 struct Maintenance {
 
-    static let BOOTSTRAP_RELAYS = ["wss://nos.lol", "wss://relay.damus.io" , "wss://nostr.wine", "wss://nostr.mutinywallet.com", "wss://purplepag.es"]
+    static let BOOTSTRAP_RELAYS = ["wss://relay.nostr.band", "wss://nos.lol", "wss://nostr.wine", "wss://nostr.mutinywallet.com", "wss://purplepag.es"]
     
+    // wss://relay.damus.io // shows only cameri bug
     // time out... "wss://nostr.fmt.wiz.biz"
     // too many subscriptions "wss://relay.snort.social"
     
