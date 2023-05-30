@@ -48,9 +48,9 @@ class AccountManager {
             let privateKeyHex = try keychain
                 .get(pubkey)
             return privateKeyHex
-        } catch let error {
-            print("🔴🔴🔴 could not get key from keychain")
-            print("🔴🔴🔴 \(error)")
+        } catch {
+            L.og.error("🔴🔴🔴 could not get key from keychain")
+//            L.og.debug("🔴🔴🔴 \(error)") // disabled, don't want to risk any key material showing up in some error
             return nil
         }
     }
@@ -72,9 +72,9 @@ class AccountManager {
             try keychain
                 .accessibility(.whenUnlocked)
                 .set(keys.privateKeyHex(), key: keys.publicKeyHex())
-        } catch let error {
-            print("🔴🔴🔴 could not store key in keychain")
-            print("🔴🔴🔴 \(error)")
+        } catch {
+            L.og.error("🔴🔴🔴 could not store key in keychain")
+//            L.og.debug("🔴🔴🔴 \(error)") // disabled, don't want to risk any key material showing up in some error
         }
     }
     
@@ -84,9 +84,9 @@ class AccountManager {
             try keychain
                 .accessibility(.whenUnlocked)
                 .set(privateKeyHex, key: forPublicKeyHex)
-        } catch let error {
-            print("🔴🔴🔴 could not store key in keychain")
-            print("🔴🔴🔴 \(error)")
+        } catch {
+            L.og.error("🔴🔴🔴 could not store key in keychain")
+//            L.og.debug("🔴🔴🔴 \(error)") // disabled, don't want to risk any key material showing up in some error
         }
     }
     
@@ -94,9 +94,9 @@ class AccountManager {
         let keychain = Keychain(service: "nostur.com.Nostur")
         do {
             try keychain.remove(forPublicKeyHex)
-        } catch let error {
-            print("🔴🔴🔴 could not remove key from keychain")
-            print("🔴🔴🔴 \(error)")
+        } catch {
+            L.og.error("🔴🔴🔴 could not remove key from keychain")
+//            L.og.debug("🔴🔴🔴 \(error)") // disabled, don't want to risk any key material showing up in some error
         }
     }
     
@@ -149,7 +149,7 @@ class AccountManager {
             try DataProvider.shared().viewContext.save()
         }
         catch {
-            print("🔴🔴🔴🔴🔴 Could not wipe or delete account 🔴🔴🔴🔴🔴")
+            L.og.error("🔴🔴🔴🔴🔴 Could not wipe or delete account 🔴🔴🔴🔴🔴")
         }
     }
     
@@ -179,7 +179,7 @@ class AccountManager {
                 return newKind0EventSigned
             }
             catch {
-                print("🔴🔴🔴🔴 Could not sign/save/broadcast event 🔴🔴🔴🔴")
+                L.og.error("🔴🔴🔴🔴 Could not sign/save/broadcast event 🔴🔴🔴🔴")
                 return nil
             }
         }
@@ -217,7 +217,7 @@ class AccountManager {
                 return newKind3EventSigned
             }
             catch {
-                print("🔴🔴🔴🔴 Could not sign/save/broadcast event 🔴🔴🔴🔴")
+                L.og.error("🔴🔴🔴🔴 Could not sign/save/broadcast event 🔴🔴🔴🔴")
                 return nil
             }
         }
@@ -243,10 +243,10 @@ func deletePFPandBanner(pk: String, pubkey:String) {
         guard let httpResponse = response as? HTTPURLResponse,
               (200..<300).contains(httpResponse.statusCode)
               else {
-            print("error deleting profile and banner")
+            L.og.error("error deleting profile and banner")
             return
         }
-        print("banner/profile delete request sent succesfully")
+        L.og.info("banner/profile delete request sent succesfully")
     }
     task.resume()
 }
