@@ -376,9 +376,8 @@ public extension View {
 
 private struct WithPreviewEnvironment: ViewModifier {
     
-    @State var pe = PreviewEnvironment.shared
+    var pe = PreviewEnvironment.shared
 //    @State var setup:PreviewSetup? = nil
-//    @State var didSetup = false
     
     init(_ setup:PreviewSetup? = nil) {
         if pe.loadAccount() {
