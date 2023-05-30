@@ -310,6 +310,12 @@ public struct RequestMessage {
 """
     }
     
+    static func getFollowers(pubkey:String, subscriptionId:String? = nil) -> String {
+        return """
+["REQ", "\(subscriptionId ?? "FOLL-" + UUID().uuidString)", {"#p": ["\(pubkey)"], "kinds": [3]}]
+"""
+    }
+    
     static func getAuthorKind1(pubkey:String, limit:Int = 100, subscriptionId:String? = nil) -> String {
         return """
 ["REQ", "\(subscriptionId ?? "A1-" + UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [1], "limit": \(limit)}]

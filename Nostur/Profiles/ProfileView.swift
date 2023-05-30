@@ -28,6 +28,7 @@ struct ProfileView: View {
     @State var profilePicViewerIsShown = false
     @State var limit = 10
     @State var tabOffset = 0.0
+    @State var selectedSubTab = "Posts"
     
     init(contact:Contact) {
         self.contact = contact
@@ -196,7 +197,7 @@ struct ProfileView: View {
                                 
                                 Text("**♾️** Followers")
                                     .onTapGesture {
-                                        // selectedSubTab = "Followers"
+                                        selectedSubTab = "Followers"
                                     }
                             }
                             .frame(height: 30)
@@ -205,7 +206,7 @@ struct ProfileView: View {
                         .padding(.top, 120)
                     }
                 }
-                ProfileTabs(contact: contact)
+                ProfileTabs(contact: contact, selectedSubTab: $selectedSubTab)
             }
         }
         .onReceive(receiveNotification(.newFollowingListFromRelay)) { notification in

@@ -37,34 +37,29 @@ struct FollowersList: View {
 //        }
 //    }
     
+    var clEventsPerPubkey:[Event] {
+        clEvents.uniqued(on: { $0.pubkey })
+    }
+    
     var clEventsFollowingPubkeyWithContact:[Event] {
-        get { clEvents.filter { $0.contact != nil } }
+        get { clEventsPerPubkey
+            .filter { $0.contact != nil } }
     }
     
     var clEventsFollowingPubkeyMissingContact:[Event] {
-        get { clEvents.filter { $0.contact == nil } }
+        get { clEventsPerPubkey
+            .filter { $0.contact == nil } }
     }
     
     var body: some View {
         VStack {
-            Text("Total: \(clEvents.count)")
-            if (clEvents.count > 75) {
-                LazyVStack {
-                    ForEach(clEventsFollowingPubkeyWithContact) { event in
-                        ProfileRow(contact: event.contact!)
-                            .frame(height: 120)
-                        Divider()
-                    }
-                }
-            }
-            else {
+            Text("Total: \(clEventsPerPubkey.count)")
+            LazyVStack {
                 ForEach(clEventsFollowingPubkeyWithContact) { event in
                     ProfileRow(contact: event.contact!)
+                        .frame(height: 120)
                     Divider()
                 }
-            }
-        
-            VStack {
                 ForEach(clEventsFollowingPubkeyMissingContact, id:\.self) { event in
                     ProfileRowMissing(pubkey: event.pubkey)
                         .frame(height: 120)
@@ -77,6 +72,8 @@ struct FollowersList: View {
             guard missing.count != 0 else { return }
             print("Fetching \(missing.count) missing contacts")
             QueuedFetcher.shared.enqueue(pTags: missing)
+            
+            req(RM.getFollowers(pubkey: pubkey))
         }
         .onDisappear {
             let missing = clEventsFollowingPubkeyMissingContact.map { $0.pubkey }
