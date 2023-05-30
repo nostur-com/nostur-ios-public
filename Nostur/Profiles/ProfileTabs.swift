@@ -11,15 +11,15 @@ struct ProfileTabs: View {
     
     @ObservedObject var contact:Contact
     var pubkey:String { contact.pubkey }
-    @State var selectedSubTab = "Posts"
+    @Binding var selectedSubTab:String
     @EnvironmentObject var dim:DIMENSIONS
     
     @FetchRequest
     var clEvents:FetchedResults<Event>
     
-    init(contact: Contact) {
+    init(contact: Contact, selectedSubTab:Binding<String>) {
         self.contact = contact
-        
+        self._selectedSubTab = selectedSubTab
         let cl = Event.fetchRequest()
         cl.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         cl.predicate = NSPredicate(format: "pubkey == %@ AND kind == 3", contact.pubkey)
@@ -33,7 +33,7 @@ struct ProfileTabs: View {
                     case "Posts":
                         ProfileNotesView(pubkey: pubkey)
                     case "Following":
-                        VStack {
+                        LazyVStack {
                             if clEvents.count != 0, let pubkeys = clEvents.first!.contactPubkeys() {
                                 
                                 let silentFollows = clEvents.first!.pubkey == NosturState.shared.pubkey ? NosturState.shared.account?.follows_.filter { $0.privateFollow }.map { $0.pubkey } : []
@@ -139,7 +139,7 @@ struct ProfileTabs_Previews: PreviewProvider {
         
         ScrollView {
             if let contact = PreviewFetcher.fetchContact(f) {
-                ProfileTabs(contact: contact)
+                ProfileTabs(contact: contact, selectedSubTab: .constant("Posts"))
             }
         }
         .withPreviewEnvironment({ pe in

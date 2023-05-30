@@ -62,7 +62,7 @@ struct Search: View {
                         }
                     }
                     ToolbarItem(placement: .principal) {
-                        SearchBox(prompt: "Search...", text: $searchText)
+                        SearchBox(prompt: String(localized: "Search...", comment: "Placeholder text in a search input box"), text: $searchText)
                             .padding(10)
                     }
                 }

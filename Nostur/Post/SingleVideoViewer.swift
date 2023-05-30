@@ -93,7 +93,7 @@ struct SingleVideoViewer: View {
                 else if videoState == .loading {
                     HStack(spacing: 5) {
                         ProgressView()
-                        Text("\(percent)%")
+                        Text(percent, format:.percent)
                         Image(systemName: "multiply.circle.fill")
                             .onTapGesture {
                                 task?.cancel()
@@ -211,7 +211,6 @@ struct VPV: UIViewRepresentable {
         else {
             videoPlayerView.playerLayer.player?.pause()
             videoPlayerView.playerLayer.player?.isMuted = true
-            
         }
     }
 }
@@ -244,6 +243,7 @@ struct SingleVideoViewer_Previews: PreviewProvider {
         let urlsFromContent = getImgUrlsFromContent(content1)
 
         SingleVideoViewer(url:urlsFromContent[0],  pubkey: "dunno", videoWidth: UIScreen.main.bounds.width, isFollowing: true)
+            .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
     }
 }
 

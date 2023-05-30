@@ -18,7 +18,7 @@ struct ContactsSearch: View, Equatable {
 
     let followingPubkeys:Set<String>
     let sp:SocketPool = .shared
-    var prompt:LocalizedStringKey
+    var prompt:String
     var onSelectContacts:((Set<Contact>) -> Void)?
     var onSelectContact:((Contact) -> Void)?
     

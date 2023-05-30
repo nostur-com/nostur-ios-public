@@ -18,11 +18,11 @@ struct BookmarksAndPrivateNotes: View {
                 HStack {
                     TabButton(action: {
                         selectedSubTab = "Bookmarks"
-                    }, title: "Bookmarks", selected: selectedSubTab == "Bookmarks")
+                    }, title: String(localized: "Bookmarks", comment: "Tab to switch to bookmarks"), selected: selectedSubTab == "Bookmarks")
                     
                     TabButton(action: {
                         selectedSubTab = "Private Notes"
-                    }, title: "Private Notes", selected: selectedSubTab == "Private Notes")
+                    }, title: String(localized: "Private Notes", comment: "Tab to switch to private notes"), selected: selectedSubTab == "Private Notes")
                 }
                 switch selectedSubTab {
                     case "Bookmarks":

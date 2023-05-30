@@ -1,0 +1,45 @@
+/* No comment provided by engineer. */
+"\n**%lld** Following" = "**%lld** volgend";
+
+/* No comment provided by engineer. */
+"\nThis will **wipe** your:\n - Public nostr profile\n - Public nostr following list\n" = "Het volgende wordt **gewist**:\n- Je openbare nostr profiel\n- Je openbare nostr volglijst";
+
+/* No comment provided by engineer. */
+"_Post deleted by %@_" = "_Bericht verwijderd door %@_";
+
+/* No comment provided by engineer. */
+"_Post deleted by author_" = "_Bericht verwijderd door verzender_";
+
+/* No comment provided by engineer. */
+"**%@ reposted**" = "**%@ heeft opnieuw gepost";
+
+/* No comment provided by engineer. */
+"**%@** and %lld others reacted on your post" = "**%@** en %lld anderen hebben gereageerd op je bericht";
+
+/* No comment provided by engineer. */
+"**%@** and %lld others zapped your post" = "**%@** en %lld anderen hebben je bericht gezapt";
+
+/* No comment provided by engineer. */
+"**%@** reacted on your post" = "**%@** heeft op je bericht gereageerd";
+
+/* No comment provided by engineer. */
+"**%@** zapped your post" = "**%@** heeft op je bericht gezapt";
+
+/* No comment provided by engineer. */
+"**%@** zapped your profile" = "**%@** heeft je profiel gezapt";
+
+/* No comment provided by engineer. */
+"**%lld** " = "**%lld**";
+
+/* No comment provided by engineer. */
+"**♾️** Followers" = "**♾️** Volgers";
+
+/* No comment provided by engineer. */
+"**PRIVATE KEY:** %@∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗" = "**PRIVÉ SLEUTEL:** %@∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗";
+
+/* No comment provided by engineer. */
+"**PUBLIC KEY:** %@" = "**PUBLIEKE SLEUTEL:** %@";
+
+/* No comment provided by engineer. */
+"**Terms and Conditions**\n" = "**Voorwaarden**";
+

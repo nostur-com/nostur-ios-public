@@ -116,7 +116,7 @@ struct SingleMediaViewer: View {
                 .pipeline(ImageProcessing.shared.content)
             }
             else {
-                Text("Tap to load media")
+                Text("Tap to load media", comment: "An image placeholder the user can tap to load media (usually an image or gif)")
                    .centered()
                    .frame(height: fullWidth ? 600 : 250)
                    .background(Color("LightGray").opacity(0.2))
@@ -207,7 +207,7 @@ struct ImageProgressView: View {
     var body: some View {
         ProgressView()
         if (progress.fraction != 0) {
-            Text("\(Int(ceil(progress.fraction * 100))) %")
+            Text(Int(ceil(progress.fraction * 100)), format: .percent)
         }
     }
 }

@@ -10,7 +10,7 @@ import SwiftUI
 struct SearchBox: View {
     
     @StateObject var debounceObject = DebounceObject()
-    var prompt:LocalizedStringKey
+    var prompt:String
     @Binding var text:String
     
     var body: some View {
