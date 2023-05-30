@@ -72,6 +72,9 @@ struct NewDMToSelector_Previews: PreviewProvider {
         NavigationStack {
             NewDMToSelector(toPubkey: $toPubkey, toContact: $toContact)
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadDMs()
+        })
     }
 }

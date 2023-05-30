@@ -204,7 +204,7 @@ struct BadgesReceivedView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
             BadgesReceivedContainer()
-                .withPreviewEnvironment()
+                .withPreviewEnvironment({ pe in pe.loadBadges() })
         }
     }
 }

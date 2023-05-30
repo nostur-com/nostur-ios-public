@@ -121,6 +121,9 @@ struct BookmarksView_Previews: PreviewProvider {
         VStack {
             BookmarksContainer()
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadPosts()
+            pe.loadBookmarks()
+        })
     }
 }

@@ -206,12 +206,15 @@ struct NoteHeaderView_Previews: PreviewProvider {
         VStack {
             PreviewHeaderView(authorName: "Fabian", username: "fabian")
             
-            let event7 = PreviewFetcher.fetchNRPost("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0")
-            if (event7 != nil) {
-                NoteHeaderView(nrPost: event7!)
+            if let p = PreviewFetcher.fetchNRPost("953dbf6a952f43f70dbb4d6432593ba5b7f149a786d1750e4aa4cef40522c0a0") {
+                NoteHeaderView(nrPost: p)
                     .withPreviewEnvironment()
             }
         }
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadPosts()
+        })
         
     }
 }

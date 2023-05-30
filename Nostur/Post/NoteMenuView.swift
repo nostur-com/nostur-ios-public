@@ -133,11 +133,14 @@ struct NoteMenuView: View {
 struct NoteMenuView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
-            if let event7 = PreviewFetcher.fetchNRPost() {
-                NoteMenuView(nrPost: event7)
+            if let p = PreviewFetcher.fetchNRPost() {
+                NoteMenuView(nrPost: p)
             }
             Spacer()
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadPosts()
+        })
     }
 }

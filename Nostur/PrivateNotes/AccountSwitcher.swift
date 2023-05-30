@@ -62,6 +62,8 @@ struct AccountSwitcher_Previews: PreviewProvider {
             let accounts = NosturState.shared.accounts
             AccountSwitcher(accounts: accounts, selectedAccount: $selectedAccount)
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadAccounts()
+        })
     }
 }

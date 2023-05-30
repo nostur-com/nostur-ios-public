@@ -79,9 +79,7 @@ struct TryGuestAccountSheet: View {
 
 struct TryGuestAccountSheet_Previews: PreviewProvider {
     static var previews: some View {
-        VStack {
-            TryGuestAccountSheet()
-        }
-        .withPreviewEnvironment()
+        TryGuestAccountSheet()
+            .withPreviewEnvironment()
     }
 }

@@ -13,7 +13,7 @@ struct NoteZaps: View {
     let id:String
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)], predicate: NSPredicate(value: false))
     var zaps:FetchedResults<Event>
-    var zapsSorted:[Event] { zaps.sorted(by: { $0.naiveSats > $1.naiveSats }) }
+    var zapsSorted:[Event] { zaps.sorted(by: { $0.naiveSats > $1.naiveSats }).uniqued(on: { $0.id }) }
     
     init(id:String) {
         self.id = id
@@ -135,8 +135,9 @@ struct NoteZaps_Previews: PreviewProvider {
                 NoteZaps(id: odell.id)
             }
         }
-        .withPreviewEnvironment()
-        
-    
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadZaps()
+        })
     }
 }

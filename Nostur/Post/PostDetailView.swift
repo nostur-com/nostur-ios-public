@@ -427,7 +427,10 @@ struct Kind1063detail_Previews: PreviewProvider {
                 PostDetailView(nrPost:kind1063)
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadKind1063()
+        })
     }
 }
 
@@ -438,7 +441,11 @@ struct Kind1063detailQuoted_Previews: PreviewProvider {
                 PostDetailView(nrPost:kind1063q)
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadKind1063()
+            pe.loadPosts()
+        })
     }
 }
 
@@ -449,7 +456,11 @@ struct ReplyAndParentView_Previews: PreviewProvider {
                 PostDetailView(nrPost: xx)
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            // TOOD: FIND NEW IDS
+            pe.loadContacts()
+            pe.loadPosts()
+        })
     }
 }
 
@@ -462,7 +473,10 @@ struct ReplyAndParentView2_Previews: PreviewProvider {
             }
 
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadPosts()
+        })
     }
 }
 
@@ -480,7 +494,10 @@ struct ReplyAndParentView3_Previews: PreviewProvider {
             }
    
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadPosts()
+        })
     }
 }
 
@@ -496,7 +513,10 @@ struct ReplyAndParentView4_Previews: PreviewProvider {
             }
  
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadPosts()
+        })
     }
 }
 
@@ -511,7 +531,10 @@ struct ReplyAndParentView5_Previews: PreviewProvider {
             }
 
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadPosts()
+        })
     }
 }
 
@@ -523,7 +546,10 @@ struct ReplyAndParentView6_Previews: PreviewProvider {
                 PostDetailView(nrPost: rootWithReplies)
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadPosts()
+        })
     }
 }
 
@@ -535,7 +561,10 @@ struct ReplyAndParentView7_Previews: PreviewProvider {
                 PostDetailView(nrPost: v)
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadPosts()
+        })
     }
 }
 
@@ -548,6 +577,9 @@ struct BetterReplies_Previews: PreviewProvider {
                 PostDetailView(nrPost: matt)
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadPosts()
+        })
     }
 }

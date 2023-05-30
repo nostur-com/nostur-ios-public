@@ -98,17 +98,10 @@ struct RelaysView: View {
 
 struct RelaysView_Previews: PreviewProvider {
     static var previews: some View {
-        
-        let ns:NosturState = .shared
-        
-//        let cm = ConnectionManager()
-//        var cm:SocketPool = .shared
-        
         NavigationStack {
             RelaysView()
-                .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
-                .environmentObject(ns)
-//                .environmentObject(cm)
+                .padding()
         }
+        .withPreviewEnvironment({ pe in pe.loadRelay() })
     }
 }

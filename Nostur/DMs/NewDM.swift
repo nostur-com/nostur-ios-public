@@ -48,6 +48,6 @@ struct NewDM_Previews: PreviewProvider {
         NavigationStack {
             NewDM(showingNewDM: $showingNewDM, tab: $tab)
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in pe.loadDMs() })
     }
 }

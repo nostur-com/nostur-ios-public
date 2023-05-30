@@ -73,6 +73,9 @@ struct QuoteOrRepostChoiceSheet_Previews: PreviewProvider {
                 QuoteOrRepostChoiceSheet(originalEvent: event, quotePostEvent: $quotePostEvent)
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadPosts()
+        })
     }
 }

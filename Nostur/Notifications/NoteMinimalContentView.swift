@@ -44,9 +44,6 @@ struct NoteMinimalContentView_Previews: PreviewProvider {
         // #[0]
         // 1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0
         
-        // note.id 6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81
-        // pubkey: 5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0
-        
         // with youtube preview
         // id: 576375cd4a87e40f15a7842b43fe4a35651e89a34371b2a41ca79ca7dced1113
         
@@ -116,6 +113,9 @@ struct NoteMinimalContentView_Previews: PreviewProvider {
             .listRowInsets(EdgeInsets())
             
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadPosts()
+        })
     }
 }

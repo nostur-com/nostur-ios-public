@@ -210,15 +210,13 @@ struct BadgeIcon: View {
 struct ProfileBadgesView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
-//            let pb = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
-            let pb = "5273115b3fad8a2d102e3335c0755083ed0baba48bd92c0c149a610212ccc3eb" // kind 30008
-            
+            let pb = "d7df976260e394f6708d4071ef1baa450e7390967c5dab640d528dd8a7d72894" // kind 30008
             if let profileBadgesEvent = PreviewFetcher.fetchEvent(pb) {
                 ProfileBadgesView(verifiedBadges: profileBadgesEvent.verifiedBadges)
                     
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in pe.loadBadges() })
     }
     
 }

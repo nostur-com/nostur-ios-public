@@ -39,6 +39,6 @@ struct FastAccountSwitcher: View {
 struct FastAccountSwitcher_Previews: PreviewProvider {
     static var previews: some View {
         FastAccountSwitcher()
-            .withPreviewEnvironment()
+            .withPreviewEnvironment({ pe in pe.loadAccounts() })
     }
 }

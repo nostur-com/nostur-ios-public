@@ -64,6 +64,8 @@ struct ProfileFollowButton_Previews: PreviewProvider {
                 ProfileFollowButton(contact: contact)
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+        })
     }
 }

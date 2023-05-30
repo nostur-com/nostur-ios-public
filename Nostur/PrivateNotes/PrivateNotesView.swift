@@ -131,6 +131,10 @@ struct PrivateNotesView_Previews: PreviewProvider {
         NavigationStack {
             PrivateNotesContainer()
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadPosts()
+            pe.loadPrivateNotes()
+        })
     }
 }

@@ -63,6 +63,9 @@ struct NewListSheet_Previews: PreviewProvider {
         NavigationStack {
             NewListSheet()
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadNosturLists()
+        })
     }
 }

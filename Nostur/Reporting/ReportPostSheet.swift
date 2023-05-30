@@ -85,6 +85,9 @@ struct ReportPostSheet_Previews: PreviewProvider {
                 ReportPostSheet(nrPost: nrPost)
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadPosts()
+        })
     }
 }

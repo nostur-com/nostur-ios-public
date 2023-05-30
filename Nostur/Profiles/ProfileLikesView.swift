@@ -110,6 +110,11 @@ struct ProfileLikesView_Previews: PreviewProvider {
         ScrollView {
             ProfileLikesView(pubkey: pubkey)
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            // TODO: FIX PREVIEW
+            pe.loadContacts()
+            pe.loadPosts()
+            pe.loadRepliesAndReactions()
+        })
     }
 }

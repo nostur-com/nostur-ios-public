@@ -84,6 +84,9 @@ struct NosturListsView_Previews: PreviewProvider {
             NosturListsView()
                 .withNavigationDestinations()
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadNosturLists()
+        })
     }
 }

@@ -93,6 +93,8 @@ struct MutedWordsView_Previews: PreviewProvider {
         NavigationStack {
             MutedWordsView()
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadBlockedAndMuted()
+        })
     }
 }

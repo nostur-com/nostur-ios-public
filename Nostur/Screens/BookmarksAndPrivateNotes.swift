@@ -54,6 +54,11 @@ struct BookmarksAndPrivateNotes: View {
 struct BookmarksAndPrivateNotes_Previews: PreviewProvider {
     static var previews: some View {
         BookmarksAndPrivateNotes()
-            .withPreviewEnvironment()
+            .withPreviewEnvironment({ pe in
+                pe.loadContacts()
+                pe.loadPosts()
+                pe.loadBookmarks()
+                pe.loadPrivateNotes()
+            })
     }
 }

@@ -167,6 +167,9 @@ struct ProfileMediaView_Previews: PreviewProvider {
         NavigationStack {
             ProfileMediaView(pubkey: pubkey)
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadMedia()
+        })
     }
 }

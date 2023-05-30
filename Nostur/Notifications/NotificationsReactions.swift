@@ -286,10 +286,12 @@ struct ReactionsForThisNote: View {
 struct NotificationsV_Previews: PreviewProvider {
     static var previews: some View {
         let pubkey = "04c915daefee38317fa734444acee390a8269fe5810b2241e5e6dd343dfbecc9"
-//        let pubkey = "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
         VStack {
             NotificationsReactions(pubkey: pubkey, blockedPubkeys: [])
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadRepliesAndReactions()
+        })
     }
 }

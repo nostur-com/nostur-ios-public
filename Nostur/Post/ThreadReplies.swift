@@ -55,6 +55,9 @@ struct ThreadReplies2_Previews: PreviewProvider {
                 }
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadPosts()
+        })
     }
 }

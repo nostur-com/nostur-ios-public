@@ -147,6 +147,6 @@ struct BadgeDetailView_Previews: PreviewProvider {
                 BadgeDetailView(badge: badge)
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in pe.loadBadges() })
     }
 }

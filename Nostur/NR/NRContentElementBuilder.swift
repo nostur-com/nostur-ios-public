@@ -67,8 +67,10 @@ class NRContentElementBuilder {
                 }
                 else if matchString.matchingStrings(regex: Self.previewImagePlaceholder).count > 0 {
                     let m = matchString.matchingStrings(regex: Self.previewImagePlaceholder)
-                    if let p = event.previewImages[safe: Int(m[0][0])] {
-                        result.append(ContentElement.postPreviewImage(p))
+                    if let index = Int(m[0][0]) {
+                        if let p = event.previewImages[safe: index] {
+                            result.append(ContentElement.postPreviewImage(p))
+                        }
                     }
                 }
                 else if matchString.matchingStrings(regex: Self.neventPattern).count > 0 {

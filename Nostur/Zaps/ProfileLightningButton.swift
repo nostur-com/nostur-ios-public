@@ -115,6 +115,6 @@ struct ProfileLightningButton_Previews: PreviewProvider {
                 ProfileLightningButton(contact: contact)
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in pe.loadContacts() })
     }
 }

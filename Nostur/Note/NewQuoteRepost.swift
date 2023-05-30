@@ -352,7 +352,9 @@ struct NewQuoteRepost_Previews: PreviewProvider {
                 
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadPosts()
+        })
     }
 }
 

@@ -52,9 +52,7 @@ struct WelcomeSheet: View {
 
 struct WelcomeSheet_Previews: PreviewProvider {
     static var previews: some View {
-        VStack {
-            WelcomeSheet()
-        }
-        .withPreviewEnvironment()
+        WelcomeSheet(offerTryOut: true)
+            .withPreviewEnvironment()
     }
 }

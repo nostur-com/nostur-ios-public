@@ -76,10 +76,12 @@ struct ContactList_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
             
-            let pubkeys = ["5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0", "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240","017903df5d1aa3c7497e40f6f423a7664ada998dfc77f0802ff3bd6e5c2e7625"]
+            let pubkeys = [ "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240","017903df5d1aa3c7497e40f6f423a7664ada998dfc77f0802ff3bd6e5c2e7625"]
             
             ContactList(pubkeys: pubkeys)
-                .withPreviewEnvironment()
+                .withPreviewEnvironment({ pe in
+                    pe.loadContacts()
+                })
             
         }
     }

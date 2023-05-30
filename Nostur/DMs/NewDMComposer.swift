@@ -79,7 +79,7 @@ struct NewDMComposer: View {
 
 struct NewDMComposer_Previews: PreviewProvider {
     
-    @State static var toPubkey:String? = "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0"
+    @State static var toPubkey:String? = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
     @State static var toContact:Contact? = nil
     @State static var message = ""
     @State static var showingNewDM = true

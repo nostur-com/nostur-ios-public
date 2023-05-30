@@ -90,24 +90,6 @@ struct ContentRenderer: View { // VIEW things
     }
 }
 
-struct RowContentRenderer_Previews: PreviewProvider {
-    
-    static var previews: some View {
-        
-        ScrollView {
-            VStack {
-                if let nrPost = PreviewFetcher.fetchNRPost("9b34fd9a53398fb51493d68ecfd0d64ff922d0cdf5ffd8f0ffab46c9a3cf54e3") {
-                    ContentRenderer(nrPost: nrPost, availableWidth: UIScreen.main.bounds.width)
-                }
-                if let nrPost = PreviewFetcher.fetchNRPost("102177a51af895883e9256b70b2caff6b9ef90230359ee20f6dc7851ec9e5d5a") {
-                    ContentRenderer(nrPost: nrPost, availableWidth: UIScreen.main.bounds.width)
-                }
-            }
-        }
-        .withPreviewEnvironment()
-    }
-}
-
 struct QuoteById: View {
     
     let id:String
@@ -202,6 +184,29 @@ struct Kind1ById: View {
                     //                    SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEventAndReferences(id: id)))
                 }
         }
+    }
+}
+
+
+struct ContentRenderer_Previews: PreviewProvider {
+    
+    static var previews: some View {
+        
+        ScrollView {
+            VStack {
+                if let nrPost = PreviewFetcher.fetchNRPost("9b34fd9a53398fb51493d68ecfd0d64ff922d0cdf5ffd8f0ffab46c9a3cf54e3") {
+                    ContentRenderer(nrPost: nrPost, availableWidth: UIScreen.main.bounds.width)
+                }
+                if let nrPost = PreviewFetcher.fetchNRPost("102177a51af895883e9256b70b2caff6b9ef90230359ee20f6dc7851ec9e5d5a") {
+                    ContentRenderer(nrPost: nrPost, availableWidth: UIScreen.main.bounds.width)
+                }
+            }
+        }
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadPosts()
+            pe.loadMedia()
+        })
     }
 }
 

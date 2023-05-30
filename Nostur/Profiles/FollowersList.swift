@@ -95,7 +95,10 @@ struct FollowersList_Previews: PreviewProvider {
             let pubkey = "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240"
             
             FollowersList(pubkey: pubkey)
-                .withPreviewEnvironment()
+                .withPreviewEnvironment({ pe in
+                    pe.loadContacts()
+                    pe.loadContactLists()
+                })
             
         }
     }

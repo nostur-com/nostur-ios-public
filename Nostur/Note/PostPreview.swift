@@ -143,6 +143,9 @@ struct PostPreview_Previews: PreviewProvider {
                 PostPreview(nrPost: nrPost, sendNow: { print("send!") }, uploading: $uploading)
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadZaps()
+        })
     }
 }

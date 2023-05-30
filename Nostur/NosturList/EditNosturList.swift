@@ -92,6 +92,9 @@ struct EditList_Previews: PreviewProvider {
                 .withNavigationDestinations()
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadNosturLists()
+        })
     }
 }

@@ -154,7 +154,7 @@ struct BadgesIssuedView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
             BadgesIssuedContainer()
-                .withPreviewEnvironment()
+                .withPreviewEnvironment({ pe in pe.loadBadges() })
         }
     }
 }

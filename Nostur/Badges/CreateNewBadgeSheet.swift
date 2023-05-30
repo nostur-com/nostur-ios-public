@@ -84,7 +84,7 @@ struct CreateNewBadgeSheet_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
             CreateNewBadgeSheet()
-                .withPreviewEnvironment()
+                .withPreviewEnvironment({ pe in pe.loadBadges() })
         }
     }
 }

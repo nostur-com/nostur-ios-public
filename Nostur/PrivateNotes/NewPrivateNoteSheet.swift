@@ -78,6 +78,8 @@ struct NewPrivateNoteSheet_Previews: PreviewProvider {
                 NewPrivateNoteSheet(post: event)//, onDismiss: {})
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadPosts()
+        })
     }
 }

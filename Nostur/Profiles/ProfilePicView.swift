@@ -177,9 +177,6 @@ struct ProfilePicViewWrapper: View {
     // animated gif profile pic
     // 3f770d65d3a764a9c5cb503ae123e62ec7598ad035d836e2a810f3877a745b24
     
-    // me
-    // 5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0
-    
     var body: some View {
         //        EmptyView()
         VStack {
@@ -195,11 +192,11 @@ struct ProfilePicViewWrapper: View {
                 PFP(pubkey: gladstein.pubkey, nrContact: gladstein, size: 150)
             }
             
-            if let pfp = PreviewFetcher.fetchNRContact("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0") {
+            if let pfp = PreviewFetcher.fetchNRContact("9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e") {
                 PFP(pubkey: pfp.pubkey, nrContact: pfp)
             }
             
-            if let pfp = PreviewFetcher.fetchNRContact("5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0") {
+            if let pfp = PreviewFetcher.fetchNRContact("9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e") {
                 PFP(pubkey: pfp.pubkey, nrContact: pfp, size: 150)
                     .background(.green)
             }
@@ -210,6 +207,6 @@ struct ProfilePicViewWrapper: View {
 struct ProfilePicView_Previews: PreviewProvider {
     static var previews: some View {
         ProfilePicViewWrapper()
-            .withPreviewEnvironment()
+            .withPreviewEnvironment({ pe in pe.loadContacts() })
     }
 }

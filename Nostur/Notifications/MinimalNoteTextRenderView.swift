@@ -88,6 +88,9 @@ struct MinimalNoteTextRenderView_Previews: PreviewProvider {
                 Divider()
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadPosts()
+        })
     }
 }

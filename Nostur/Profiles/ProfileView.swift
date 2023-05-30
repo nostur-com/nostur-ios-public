@@ -274,7 +274,7 @@ struct ProfileView_Previews: PreviewProvider {
                 ProfileView(contact: contact)
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in pe.loadContacts() })
     }
 }
 

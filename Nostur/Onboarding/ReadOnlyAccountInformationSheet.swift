@@ -37,9 +37,7 @@ struct ReadOnlyAccountInformationSheet: View {
 
 struct ReadOnlyAccountInformationSheet_Previews: PreviewProvider {
     static var previews: some View {
-        VStack {
-            ReadOnlyAccountInformationSheet()
-        }
-        .withPreviewEnvironment()
+        ReadOnlyAccountInformationSheet()
+            .withPreviewEnvironment()
     }
 }

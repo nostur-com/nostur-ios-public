@@ -100,7 +100,10 @@ struct NEventView_Previews: PreviewProvider {
                 NEventView(identifier: identifier)
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadPosts()
+        })
         
     }
 }

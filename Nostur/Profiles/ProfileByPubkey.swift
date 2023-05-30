@@ -57,7 +57,9 @@ struct ProfileByPubkey: View {
 
 struct ProfileByPubkey_Previews: PreviewProvider {
     static var previews: some View {
-        ProfileByPubkey(pubkey: "5e9c1fb5fe7e1695833539636a30d678e54e3e4e1214ff3d3f71501bbfd62cd0")
-            .withPreviewEnvironment()
+        ProfileByPubkey(pubkey: "77bbc321087905d98f941bd9d4cc4d2856fdc0f2f083f3ae167544e1a3b39e91")
+            .withPreviewEnvironment({ pe in
+                pe.loadContacts()
+            })
     }
 }

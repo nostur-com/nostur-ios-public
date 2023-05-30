@@ -112,6 +112,8 @@ struct ProfileBanner_Previews: PreviewProvider {
                 ProfileBanner(banner:contact.banner, width: UIScreen.main.bounds.width, offset: 0)
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+        })
     }
 }

@@ -430,7 +430,9 @@ struct NewNote_Previews: PreviewProvider {
         NavigationStack {
             NewNote(noteCancellationId: $noteCancellationId)
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadPosts()
+        })
     }
 }
 

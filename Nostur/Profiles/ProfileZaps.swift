@@ -224,7 +224,11 @@ struct ProfileZaps_Previews: PreviewProvider {
                 ProfileZaps(pubkey:pubkey, contact:contact)
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            // TODO: FIX THESE
+            pe.loadContacts()
+            pe.loadZaps()
+        })
     }
 }
 

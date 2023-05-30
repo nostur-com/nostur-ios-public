@@ -66,6 +66,8 @@ struct ReportContactSheet_Previews: PreviewProvider {
                 ReportContactSheet(contact: contact)
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+        })
     }
 }

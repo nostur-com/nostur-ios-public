@@ -190,5 +190,6 @@ struct MediaPicker_Previews: PreviewProvider {
         ProfilePicPicker($picture, newPicture:$newPicture)
             .hCentered()
             .listRowBackground(Color(.systemGroupedBackground))
+            .withPreviewEnvironment()
     }
 }

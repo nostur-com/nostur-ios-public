@@ -61,6 +61,8 @@ struct HighlightRenderer_Previews: PreviewProvider {
                 HighlightRenderer(nrPost: nrPost)
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadPosts()
+        })
     }
 }

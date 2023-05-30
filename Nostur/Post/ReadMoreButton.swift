@@ -36,6 +36,6 @@ struct ReadMoreButton_Previews: PreviewProvider {
                 ReadMoreButton(nrPost: nostrReport)
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in pe.loadPosts() })
     }
 }

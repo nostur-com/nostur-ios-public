@@ -142,6 +142,9 @@ struct ProfileTabs_Previews: PreviewProvider {
                 ProfileTabs(contact: contact)
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+//            pe.loadPosts()
+        })
     }
 }

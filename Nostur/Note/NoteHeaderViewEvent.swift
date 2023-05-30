@@ -161,7 +161,10 @@ struct NoteHeaderViewEvent_Previews: PreviewProvider {
             }
         }
         .padding()
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadPosts()
+        })
         
     }
 }

@@ -407,6 +407,8 @@ struct NewReply_Previews: PreviewProvider {
                 NewReply(replyTo: event)
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadPosts()
+        })
     }
 }

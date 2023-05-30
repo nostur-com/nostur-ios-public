@@ -14,7 +14,7 @@ public class NosturList: NSManagedObject {
 
     static func generateExamples(context: NSManagedObjectContext) {
         let contacts = PreviewFetcher.allContacts(context: context)
-        for i in 0..<3 {
+        for i in 0..<10 {
             let list = NosturList(context: context)
             list.name = "Example List \(i)"
             list.addToContacts(NSSet(array: contacts.randomSample(count: 10)))

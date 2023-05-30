@@ -20,7 +20,7 @@ struct AddRemoveToListsheet: View {
     var lists:FetchedResults<NosturList>
     
     @State var selectedLists:Set<NosturList> = []
-
+    
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -88,8 +88,11 @@ struct AddRemoveToListsheet_Previews: PreviewProvider {
         NavigationStack {
             if let contact = PreviewFetcher.fetchContact() {
                 AddRemoveToListsheet(contact: contact)
-                }
             }
-        .withPreviewEnvironment()
+        }
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadNosturLists()
+        })
     }
 }

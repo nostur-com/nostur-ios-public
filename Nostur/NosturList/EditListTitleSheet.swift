@@ -53,12 +53,14 @@ struct EditListTitleSheet: View {
 
 struct EditListTitleSheet_Previews: PreviewProvider {
     static var previews: some View {
-        if let list = PreviewFetcher.fetchList() {
-            NavigationStack {
+        NavigationStack {
+            if let list = PreviewFetcher.fetchList() {
                 EditListTitleSheet(list: list)
                     .withNavigationDestinations()
             }
-            .withPreviewEnvironment()
         }
+        .withPreviewEnvironment({ pe in
+            pe.loadNosturLists()
+        })
     }
 }

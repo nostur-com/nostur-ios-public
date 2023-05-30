@@ -318,7 +318,7 @@ struct Previews_DMConversationView_Previews: PreviewProvider {
                 DMConversationView(recentDM: recent, pubkey: preston)
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in pe.loadDMs() })
     }
 }
 

@@ -306,6 +306,12 @@ struct NoteRow_Previews: PreviewProvider {
             }
             .background(Color("ListBackground"))
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadPosts()
+            pe.loadReposts()
+            pe.loadHighlights()
+            pe.loadKind1063()
+        })
     }
 }

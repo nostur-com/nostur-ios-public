@@ -9,6 +9,7 @@ import SwiftUI
 import CoreData
 
 struct NotificationsContainer: View {
+    @StateObject private var nm:NotificationsManager = .shared
     @EnvironmentObject var ns:NosturState
     @Environment(\.managedObjectContext) var viewContext
     @AppStorage("selected_tab") var selectedTab = "Main"
@@ -112,6 +113,12 @@ struct NotificationsView: View {
 struct NotificationsView_Previews: PreviewProvider {
     static var previews: some View {
         NotificationsContainer()
-            .withPreviewEnvironment()
+            .withPreviewEnvironment({ pe in
+                // TODO: doesn't work:
+//                pe.loadContacts()
+//                pe.loadPosts()
+//                pe.loadRepliesAndReactions()
+//                pe.loadZaps()
+            })
     }
 }

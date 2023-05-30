@@ -28,9 +28,7 @@ struct Onboarding: View {
 
 struct Onboarding_Previews: PreviewProvider {
     static var previews: some View {
-        VStack {
-            Onboarding()
-        }
-        .withPreviewEnvironment()
+        Onboarding()
+            .withPreviewEnvironment()
     }
 }

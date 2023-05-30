@@ -150,6 +150,8 @@ struct ContactsSearch_Previews: PreviewProvider {
             ContactsSearch(followingPubkeys: NosturState.shared.followingPublicKeys,
                            prompt: "Search")
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+        })
     }
 }

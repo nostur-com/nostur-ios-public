@@ -90,7 +90,7 @@ struct NProfileView_Previews: PreviewProvider {
                 NProfileView(identifier: identifier)
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in pe.loadContacts() })
         
     }
 }

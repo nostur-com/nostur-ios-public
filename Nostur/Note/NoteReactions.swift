@@ -106,7 +106,11 @@ struct Reactions_Previews: PreviewProvider {
                 NoteReactions(id: noteWithReactions!.id)
             }
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+//            pe.loadContacts()
+//            pe.loadPosts()
+            pe.loadRepliesAndReactions()
+        })
         
     }
 }

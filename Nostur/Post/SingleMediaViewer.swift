@@ -177,7 +177,9 @@ struct Gif_Previews: PreviewProvider {
             }
         }
         .background(Color("ListBackground"))
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadMedia()
+        })
     }
 }
 

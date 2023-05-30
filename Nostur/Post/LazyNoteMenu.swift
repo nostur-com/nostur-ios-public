@@ -195,6 +195,8 @@ struct LazyNoteMenu_Previews: PreviewProvider {
             }
             Color.clear.withSheets()
         }
-        .withPreviewEnvironment()
+        .withPreviewEnvironment({ pe in
+            pe.loadPosts()
+        })
     }
 }
