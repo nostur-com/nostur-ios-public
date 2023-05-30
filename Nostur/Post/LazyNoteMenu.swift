@@ -109,14 +109,30 @@ struct LazyNoteMenuSheet: View {
                     if (nrPost.mainEvent.contact == nil) {
                         // TODO: Contact is created so it can be unblocked in Blocklist. Should not have to create contact just for this.
                         _ = DataProvider.shared().newContact(pubkey: nrPost.event.pubkey)
-                        ns.objectWillChange.send()
-                        ns.account!.blockedPubkeys_ = ns.account!.blockedPubkeys_ + [nrPost.pubkey]
+//                        ns.objectWillChange.send()
+                        DataProvider.shared().bg.perform {
+                            guard let account = ns.account?.toBG() else { return }
+                            let newBlockedKeys = account.blockedPubkeys_ + [nrPost.pubkey]
+                            account.blockedPubkeys_ = newBlockedKeys
+                        
+                            DataProvider.shared().bgSave()
+                            DispatchQueue.main.async {
+                                sendNotification(.blockListUpdated, newBlockedKeys)
+                            }
+                        }
                     }
                     else {
-                        ns.objectWillChange.send()
-                        ns.account!.blockedPubkeys_ = ns.account!.blockedPubkeys_ + [nrPost.pubkey]
+                        DataProvider.shared().bg.perform {
+                            guard let account = ns.account?.toBG() else { return }
+                            let newBlockedKeys = account.blockedPubkeys_ + [nrPost.pubkey]
+                            account.blockedPubkeys_ = newBlockedKeys
+                            
+                            DataProvider.shared().bgSave()
+                            DispatchQueue.main.async {
+                                sendNotification(.blockListUpdated, newBlockedKeys)
+                            }
+                        }
                     }
-                    sendNotification(.blockListUpdated, ns.account!.blockedPubkeys_)
                 } label: {
                     Label("Block \(nrPost.anyName)", systemImage: "slash.circle")
                 }

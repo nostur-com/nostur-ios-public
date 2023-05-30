@@ -756,6 +756,7 @@ extension NRPost { // Helpers for grouped replies
         let ctx = DataProvider.shared().bg
         ctx.perform { [weak self] in
             guard let self = self else { return }
+            guard let account = NosturState.shared.account?.toBG() else { return }
             let fr = Event.fetchRequest()
             if let replyToRootId = self.replyToRootId { // We are not root, so load replies for actual root instead
                 fr.predicate = NSPredicate(format: "replyToRootId = %@ AND kind == 1", replyToRootId)
@@ -768,7 +769,9 @@ extension NRPost { // Helpers for grouped replies
             for reply in repliesToRoot { // Add to queue because some may be missing .replyTo
                 EventRelationsQueue.shared.addAwaitingEvent(reply)
             }
-            let nrRepliesToRoot = repliesToRoot.map { NRPost(event: $0, withReplyTo: false, withParents: false, withReplies: false, plainText: false) } // Don't load replyTo/parents here, we do it in groupRepliesToRoot()
+            let nrRepliesToRoot = repliesToRoot
+                .filter { !Set(account.blockedPubkeys_).contains($0.pubkey) }
+                .map { NRPost(event: $0, withReplyTo: false, withParents: false, withReplies: false, plainText: false) } // Don't load replyTo/parents here, we do it in groupRepliesToRoot()
             self.repliesToRoot = nrRepliesToRoot
         }
     }
@@ -819,11 +822,18 @@ extension NRPost { // Helpers for grouped replies
     private func _groupRepliesToRoot(_ newReplies:[NRPost]) {
         DataProvider.shared().bg.perform { [weak self] in
             guard let self = self else { return }
+            guard let account = NosturState.shared.account?.toBG() else {
+                L.og.error("_groupRepliesToRoot: We should have an account here");
+                return
+            }
             
             let replies = (newReplies.count == 0 ? self.replies : newReplies)
             // Load parents/replyTo
             let groupedThreads = (replies + (self.replyToRootId != nil ? self.repliesToLeaf : self.repliesToRoot))
                 .uniqued(on: { $0.id })
+                .filter({ nrPost in
+                    return !(Set(account.blockedPubkeys_)).contains(nrPost.pubkey)
+                })
                 .filter { // Only take eventual replies by author, or direct replies to root by others
                     $0.pubkey == self.pubkey ||
                     $0.replyToId == self.id

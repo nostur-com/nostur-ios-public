@@ -23,6 +23,12 @@ struct ThreadReplies: View {
         .onAppear {
             nrPost.loadGroupedReplies()
         }
+        .onReceive(receiveNotification(.blockListUpdated)) { _ in
+            nrPost.loadGroupedReplies()
+        }
+        .onReceive(receiveNotification(.muteListUpdated)) { _ in
+            nrPost.loadGroupedReplies()
+        }
     }
         
 }

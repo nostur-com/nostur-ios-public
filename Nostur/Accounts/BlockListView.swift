@@ -75,6 +75,10 @@ struct BlockedAccounts:View {
             .onChange(of: ns.account!.blockedPubkeys_) { newValue in
                 blockedContacts.nsPredicate = NSPredicate(format: "pubkey IN %@", newValue)
             }
+            .onReceive(receiveNotification(.blockListUpdated)) { notification in
+                let newBlockList = notification.object as! [String]
+                blockedContacts.nsPredicate = NSPredicate(format: "pubkey IN %@", newBlockList)
+            }
         }
         else {
             Text("Please choose account first")
