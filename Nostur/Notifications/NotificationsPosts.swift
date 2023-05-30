@@ -114,7 +114,6 @@ struct NotificationsPosts: View {
         
         fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         fl.loadMore(25)
-//        fl.loadMoreBG(15)
 
         if let first = fl.nrPosts.first, let account = ns.account {
             let firstCreatedAt = first.created_at

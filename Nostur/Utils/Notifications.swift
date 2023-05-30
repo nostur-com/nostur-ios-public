@@ -266,4 +266,8 @@ extension Notification.Name {
     static var showNoteMenu: Notification.Name {
         return Notification.Name("showNoteMenu")
     }
+    
+    static var notificationsTabAppeared: Notification.Name {
+        return Notification.Name("notificationsTabAppeared")
+    }
 }

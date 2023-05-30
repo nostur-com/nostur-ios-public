@@ -182,7 +182,6 @@ struct NotificationsZaps: View {
                 }
                 DataProvider.shared().bgSave()
             }
-            
         }
         
         let fetchNewerTask = ReqTask(

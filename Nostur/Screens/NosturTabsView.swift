@@ -59,6 +59,11 @@ struct NosturTabsView: View {
                 TabbedDetailContainer()
             }
         }
+        .onChange(of: selectedTab) { newValue in
+            if newValue == "Notifications" {
+                sendNotification(.notificationsTabAppeared) // use for resetting unread count 
+            }
+        }
         .onOpenURL { url in
             self.handleUrl(url)
         }

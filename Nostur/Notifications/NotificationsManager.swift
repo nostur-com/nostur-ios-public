@@ -352,6 +352,61 @@ class NotificationsManager: ObservableObject {
             else {
                 account.toBG()?.lastSeenPostCreatedAt = Int64(Date.now.timeIntervalSince1970)
             }
+            DataProvider.shared().bgSave()
+        }
+    }
+    
+    func markReactionsAsRead() {
+        guard let account = ns.account else { return }
+        let pubkey = account.publicKey
+        let blockedPubkeys = account.blockedPubkeys_
+        
+        let r2 = Event.fetchRequest()
+        r2.predicate = NSPredicate(format:
+                                    "NOT pubkey IN %@ " +
+                                    "AND kind == 7 " +
+                                    "AND reactionTo.pubkey == %@",
+                                    blockedPubkeys + [pubkey],
+                                    pubkey)
+        r2.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        r2.fetchLimit = 1
+        
+        let ctx = DataProvider.shared().bg
+        ctx.perform {
+            if let mostRecent = try? ctx.fetch(r2).first {
+                account.toBG()?.lastSeenReactionCreatedAt = mostRecent.created_at
+            }
+            else {
+                account.toBG()?.lastSeenReactionCreatedAt = Int64(Date.now.timeIntervalSince1970)
+            }
+            DataProvider.shared().bgSave()
+        }
+    }
+    
+    func markZapsAsRead() {
+        guard let account = ns.account else { return }
+        let pubkey = account.publicKey
+        let blockedPubkeys = account.blockedPubkeys_
+        
+        let r2 = Event.fetchRequest()
+        r2.predicate = NSPredicate(format:
+                                    "zappedContactPubkey == %@" + // ONLY TO ME
+                                    "AND kind == 9735 " + // ONLY ZAPS
+                                    "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS
+                                    pubkey,
+                                    blockedPubkeys)
+        r2.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        r2.fetchLimit = 1
+        
+        let ctx = DataProvider.shared().bg
+        ctx.perform {
+            if let mostRecent = try? ctx.fetch(r2).first {
+                account.toBG()?.lastSeenZapCreatedAt = mostRecent.created_at
+            }
+            else {
+                account.toBG()?.lastSeenZapCreatedAt = Int64(Date.now.timeIntervalSince1970)
+            }
+            DataProvider.shared().bgSave()
         }
     }
 }

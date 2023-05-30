@@ -48,7 +48,7 @@ struct NotificationsView: View {
     
     @State var tab = "Posts"
     @ObservedObject var settings:SettingsStore = .shared
-    
+    @State var markAsReadDelayer:Timer?
     
     var body: some View {
         let _ = Self._printChanges()
@@ -57,22 +57,21 @@ struct NotificationsView: View {
                 TabButton(action: {
                     withAnimation {
                         tab = "Posts"
-                        nm.unreadMentions = 0
-                        NotificationsManager.shared.markMentionsAsRead()
+//                        nm.unreadMentions = 0
                     }
                 }, title: "Posts", selected: tab == "Posts", unread: nm.unreadMentions)
                 
                 TabButton(action: {
                     withAnimation {
                         tab = "Reactions"
-                        nm.unreadReactions = 0
+//                        nm.unreadReactions = 0
                     }
                 }, title: "Reactions", selected: tab == "Reactions", unread: nm.unreadReactions)
                 
                 TabButton(action: {
                     withAnimation {
                         tab = "Zaps"
-                        nm.unreadZaps = 0
+//                        nm.unreadZaps = 0
                     }
                 }, title: "Zaps", selected: tab == "Zaps", unread: nm.unreadZaps)
             }
@@ -89,6 +88,12 @@ struct NotificationsView: View {
             }
             Spacer()
         }
+        .onReceive(receiveNotification(.notificationsTabAppeared)) { _ in
+            markActiveTabAsRead()
+        }
+        .onChange(of: tab, perform: { newValue in
+            markActiveTabAsRead()
+        })
         .overlay(alignment: .bottom) {
             if settings.statusBubble {
                 ProcessingStatus()
@@ -100,11 +105,21 @@ struct NotificationsView: View {
         .navigationTitle(tab)
         .navigationBarHidden(true)
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear {
+    }
+    
+    func markActiveTabAsRead() {
+        markAsReadDelayer?.invalidate()
+        
+        markAsReadDelayer = Timer.scheduledTimer(withTimeInterval: 2.5, repeats: false) { _ in
+            // Mark unread for active tab
             if tab == "Posts" {
-                DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(3)) {
-                    self.nm.unreadMentions = 0
-                }
+                NotificationsManager.shared.markMentionsAsRead()
+            }
+            else if tab == "Reactions" {
+                NotificationsManager.shared.markReactionsAsRead()
+            }
+            else {
+                NotificationsManager.shared.markZapsAsRead()
             }
         }
     }
