@@ -695,6 +695,22 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         }
     }
     
+    public func loadParents() {
+        DataProvider.shared().bg.perform { [weak self] in
+            guard let self = self else { return }
+            
+            let parents = Event.getParentEvents(self.event, fixRelations: true)//, until:self.id)
+            let parentPosts = parents.map { NRPost(event: $0) }
+            let threadPostsCount = 1 + self.event.parentEvents.count
+            
+            DispatchQueue.main.async {
+                self.objectWillChange.send()
+                self.parentPosts = parentPosts
+                self.threadPostsCount = threadPostsCount
+            }
+        }
+    }
+    
     var mainEvent:Event {
         DataProvider.shared().viewContext.object(with: event.objectID) as! Event
     }

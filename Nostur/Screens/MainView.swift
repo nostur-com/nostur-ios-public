@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct MainView: View {
+    @State var fg:FollowingGuardian = .shared // If we put this on NosturApp the preview environment keeps loading it
     @AppStorage("selected_tab") var selectedTab = "Main"
     @AppStorage("selected_subtab") var selectedSubTab = "Following"
     @State var navPath = NavigationPath()
