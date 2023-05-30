@@ -20,94 +20,6 @@ struct DirectMessagesContainer: View {
     }
 }
 
-func computeOnlyMostRecentAll(sent:[Event],received:[Event],pubkey:String) -> [String: ([Event], Bool, Int, Int64, Event)] {
-    var recent = [String: ([Event], Bool, Int, Int64, Event)]() // dict: [pubkey: [dm], isAccepted, unreadCount, rootDM.createdAt, rootDM]
-    
-    // combine all dms, initiated by me and others, and sort them
-    let allDms = (sent + received)
-        .sorted(by: { $0.created_at < $1.created_at }) // Root DMs will be index 0
-    
-    
-    for dm in allDms {
-        if dm.pubkey == pubkey { // dm by me (take event.firstP)
-            if let contactPubkey = dm.firstP() {
-                if recent[contactPubkey] == nil {
-                    recent[contactPubkey] = ([dm], true, 0, dm.created_at, dm) // sent so consider accepted
-                }
-                else {
-                    let dms = recent[contactPubkey]!.0 + [dm]
-                    let unread = recent[contactPubkey]!.2 + 0 // +0 because sent by me.
-                    recent[contactPubkey] = (dms, true, unread, recent[contactPubkey]!.3, recent[contactPubkey]!.4) // maybe this dict key was received before, but now also responded so consider accepted
-                }
-            }
-        }
-        else { // dm by someone else (take event.pubkey)
-            if recent[dm.pubkey] == nil {
-                let count = dm.created_at > dm.lastSeenDMCreatedAt ? 1 : 0
-                recent[dm.pubkey] = ([dm], dm.dmAccepted, count, dm.created_at, dm) // The first, rootDM, controls isAccepted or not
-                                                             // check rootDM.lastSeenDMCreatedAt for +1 or +0
-            }
-            else {
-                let current = recent[dm.pubkey]
-                let count = dm.created_at > current?.0.first?.lastSeenDMCreatedAt ?? 0 ? 1 : 0
-                let dms = current!.0 + [dm]
-                let unread = current!.2 + count // check rootDM.lastSeenDMCreatedAt for +1 or +0
-                let isAccepted = current!.1 || (current?.0.first?.dmAccepted ?? false)
-                recent[dm.pubkey] = (dms, isAccepted, unread, recent[dm.pubkey]!.3, recent[dm.pubkey]!.4)
-            }
-        }
-    }
-    
-    return recent
-}
-
-func computeOnlyMostRecentAccepted(_ onlyMostRecentAll:[String: ([Event], Bool, Int, Int64, Event)]) -> [(Event, Int)] {
-    onlyMostRecentAll
-        .filter { $0.value.1 == true }
-        .compactMap {
-            // Take newest message from the conversation and unread count
-            if let newestMessage = $0.value.0.sorted(by: { $0.created_at > $1.created_at }).first {
-                return (
-                            newestMessage, // newest message
-                            $0.value.2 // unread count
-                       )
-            }
-            else {
-                return nil
-            }
-        }
-        .sorted(by: { $0.0.created_at > $1.0.created_at }) // not sure if need to sort again?
-}
-
-func computeOnlyMostRecentRequests(_ onlyMostRecentAll:[String: ([Event], Bool, Int, Int64, Event)]) -> [(Event, Int64)] {
-    onlyMostRecentAll
-        .filter { $0.value.1 == false }
-        .compactMap {
-            if let first = $0.value.0.sorted(by: { $0.created_at > $1.created_at }).first {
-                return (first, $0.value.3)
-            }
-            return nil
-        }
-        .sorted(by: { $0.0.created_at > $1.0.created_at }) // not sure if need to sort again?
-}
-
-func computeOnlyMostRecentAcceptedTotalUnread(_ onlyMostRecentAccepted:[(Event, Int)]) -> Int {
-    onlyMostRecentAccepted.reduce(0) { (partialResult, recentDMtuple) in
-        let (_, unread) = recentDMtuple
-        return partialResult + unread
-    }
-}
-
-func computeRequestTotalUnread(_ onlyMostRecentRequests:[(Event, Int64)], lastSeenDMRequestCreatedAt:Int64) -> Int {
-    return onlyMostRecentRequests.reduce(0) { (partialResult, requestDMtuple) in
-        let (_, createdAt) = requestDMtuple
-        if (createdAt > lastSeenDMRequestCreatedAt) {
-            return partialResult + 1
-        }
-        return partialResult
-    }
-}
-
 struct DirectMessages: View {
     @EnvironmentObject var nm:NotificationsManager
     @State var navPath = NavigationPath()
@@ -194,14 +106,14 @@ struct DirectMessages: View {
                             } label: {
                                 VStack(spacing:0) {
                                     HStack {
-                                        Text("Accepted").lineLimit(1)
+                                        Text("Accepted", comment: "Tab title for accepted DMs (Direct Messages)").lineLimit(1)
                                             .frame(maxWidth: .infinity)
                                             .padding(.top, 8)
                                             .padding(.bottom, 5)
                                         if onlyMostRecentAcceptedTotalUnread > 0 {
                                             Menu {
                                                 Button { markAllAsRead() } label: {
-                                                    Label("Mark all as read", systemImage: "envelope.open")
+                                                    Label(String(localized: "Mark all as read", comment:"Menu action to mark all messages as read"), systemImage: "envelope.open")
                                                 }
                                             } label: {
                                                 Text("\(onlyMostRecentAcceptedTotalUnread)")
@@ -228,7 +140,7 @@ struct DirectMessages: View {
                                     }
                                     tab = "Requests"
                                 }
-                            }, title: "Requests", selected: tab == "Requests", unread: requestsTotalUnread)
+                            }, title: String(localized: "Requests", comment: "Tab title for DM (Direct Message) requests"), selected: tab == "Requests", unread: requestsTotalUnread)
                         }
 //                        Picker(selection: $tab, label: Text("DMs")) {
 //                            Text("Accepted").tag("Accepted")
@@ -251,7 +163,7 @@ struct DirectMessages: View {
 //                                    .searchable(text: $debounceObject.text, placement: .navigationBarDrawer(displayMode: .automatic), prompt: Text("Filter by name"))
                                 }
                                 else {
-                                    Text("You have not received any messages")
+                                    Text("You have not received any messages", comment: "Shown on the DM view when there aren't any direct messages to show")
                                         .centered()
                                 }
                             case "Requests":
@@ -267,7 +179,7 @@ struct DirectMessages: View {
                                     }
                                 }
                                 else {
-                                    Text("No message requests")
+                                    Text("No message requests", comment: "Shown on the DM requests view when there aren't any message requests to show")
                                         .centered()
                                 }
                             default:
@@ -277,7 +189,7 @@ struct DirectMessages: View {
                     }
                     NewDMButton(showingNewDM: $showingNewDM)
                 }
-                Text("Note: The contents of DMs is encrypted but the metadata is not. Who you send a messages to and when is public.")
+                Text("Note: The contents of DMs is encrypted but the metadata is not. Who you send a messages to and when is public.", comment:"Informational message on the DM screen")
                     .foregroundColor(.gray)
                     .padding(.horizontal, 20)
             }
@@ -289,7 +201,7 @@ struct DirectMessages: View {
             .navigationDestination(for: Event.self) { rootDM in
                 DMConversationView(recentDM: rootDM, pubkey: self.pubkey)
             }
-            .navigationTitle("Messages")
+            .navigationTitle(String(localized: "Messages", comment: "Navigation title for DMs (Direct Messages)"))
             .navigationBarTitleDisplayMode(.inline)
             .withNavigationDestinations()
         }
