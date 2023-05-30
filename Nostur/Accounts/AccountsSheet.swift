@@ -26,6 +26,7 @@ struct AccountsSheet: View {
     @State var logoutAccount:Account? = nil
     
     var body: some View {
+        let _ = Self._printChanges()
         NavigationStack {
             VStack(spacing: 15) {
                 List {
