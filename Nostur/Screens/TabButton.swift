@@ -69,5 +69,6 @@ struct TabButton_Previews: PreviewProvider {
             }, title: "testing!", selected: true)
                       
         }
+            .withPreviewEnvironment()
     }
 }

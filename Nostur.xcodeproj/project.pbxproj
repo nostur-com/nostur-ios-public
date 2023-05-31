@@ -65,6 +65,8 @@
 		1F33EC3729B613F800615FB9 /* MediaViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F33EC3629B613F800615FB9 /* MediaViewer.swift */; };
 		1F33EC3929B6849800615FB9 /* Centered.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F33EC3829B6849800615FB9 /* Centered.swift */; };
 		1F38AFEC2A2642D00035641E /* DMfunctions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F38AFEB2A2642D00035641E /* DMfunctions.swift */; };
+		1F38AFEF2A27156C0035641E /* UIVideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F38AFEE2A27156C0035641E /* UIVideoView.swift */; };
+		1F38AFF12A27166C0035641E /* VideoHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F38AFF02A27166C0035641E /* VideoHelpers.swift */; };
 		1F3C3F9629755D4C00E813FD /* NosturState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3C3F9529755D4C00E813FD /* NosturState.swift */; };
 		1F3D4BB72A25CC140084F939 /* AppView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3D4BB62A25CC140084F939 /* AppView.swift */; };
 		1F3E134F29C87BF400D076EA /* GifImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3E134E29C87BF400D076EA /* GifImageView.swift */; };
@@ -389,6 +391,8 @@
 		1F33EC3629B613F800615FB9 /* MediaViewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaViewer.swift; sourceTree = "<group>"; };
 		1F33EC3829B6849800615FB9 /* Centered.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Centered.swift; sourceTree = "<group>"; };
 		1F38AFEB2A2642D00035641E /* DMfunctions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DMfunctions.swift; sourceTree = "<group>"; };
+		1F38AFEE2A27156C0035641E /* UIVideoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIVideoView.swift; sourceTree = "<group>"; };
+		1F38AFF02A27166C0035641E /* VideoHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoHelpers.swift; sourceTree = "<group>"; };
 		1F3C3F9529755D4C00E813FD /* NosturState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturState.swift; sourceTree = "<group>"; };
 		1F3D4BB62A25CC140084F939 /* AppView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppView.swift; path = Nostur/AppView.swift; sourceTree = "<group>"; };
 		1F3E134E29C87BF400D076EA /* GifImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GifImageView.swift; sourceTree = "<group>"; };
@@ -656,6 +660,7 @@
 		1F00E8C129C2626500797B78 /* Post */ = {
 			isa = PBXGroup;
 			children = (
+				1F38AFED2A2715250035641E /* Video */,
 				1FD78EED2A0CB770003E7B3E /* Kinds */,
 				1FC78F6629CA18410009C1C7 /* Ago.swift */,
 				1F0088EA29D735080016F111 /* ContentRenderer.swift */,
@@ -675,7 +680,6 @@
 				1FB130BE29C1A314004AC98D /* QuotedNoteFragmentView.swift */,
 				1FB130B429C0E8D8004AC98D /* ReplyingToFragmentView.swift */,
 				1FF8BD1129D41BBD00C8C96A /* SingleMediaViewer.swift */,
-				1FB3FBA42A01673F0018CBD7 /* SingleVideoViewer.swift */,
 				1F2F54EB2A028C6B00B6D7E4 /* SubscriptionManager.swift */,
 				1F533E3229D35FD300748438 /* TextRenderer.swift */,
 				1FC0A9562A10E44500F9ABF6 /* ReadMoreButton.swift */,
@@ -758,6 +762,16 @@
 				1FC38B9F297316AA004769F8 /* DummyEvents.swift */,
 			);
 			path = DummyData;
+			sourceTree = "<group>";
+		};
+		1F38AFED2A2715250035641E /* Video */ = {
+			isa = PBXGroup;
+			children = (
+				1FB3FBA42A01673F0018CBD7 /* SingleVideoViewer.swift */,
+				1F38AFEE2A27156C0035641E /* UIVideoView.swift */,
+				1F38AFF02A27166C0035641E /* VideoHelpers.swift */,
+			);
+			path = Video;
 			sourceTree = "<group>";
 		};
 		1F45C7EE29EF998D00F58772 /* Utils */ = {
@@ -1422,6 +1436,7 @@
 				1FC0A9552A1094BD00F9ABF6 /* AccountSwitcher.swift in Sources */,
 				1F45C7F529EFB13F00F58772 /* NostrBuildMediaUploadService.swift in Sources */,
 				1F0088EB29D735080016F111 /* ContentRenderer.swift in Sources */,
+				1F38AFF12A27166C0035641E /* VideoHelpers.swift in Sources */,
 				1FC78F6F29CAD3510009C1C7 /* DMConversationView.swift in Sources */,
 				1F8B135C297B36DB002EB8CF /* Data+Bytes.swift in Sources */,
 				1FD78EF32A0CB878003E7B3E /* Highlight.swift in Sources */,
@@ -1478,6 +1493,7 @@
 				1FC268C729A2CC4F00A2B577 /* NoteReactions.swift in Sources */,
 				1FCA273E299A6A1A00298881 /* LightningButton.swift in Sources */,
 				1FB448C52965F3D000038671 /* NosturTabsView.swift in Sources */,
+				1F38AFEF2A27156C0035641E /* UIVideoView.swift in Sources */,
 				1F3E134F29C87BF400D076EA /* GifImageView.swift in Sources */,
 				1F756531296AE4260078474E /* RelaysView.swift in Sources */,
 				1FBE8224299A745600FB41CE /* PaymentAmountSelector.swift in Sources */,
