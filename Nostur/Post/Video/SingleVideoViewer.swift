@@ -11,14 +11,6 @@ import Nuke
 import NukeVideo
 import AVFoundation
 
-enum VideoLoadingState {
-    case initial
-    case loading
-    case ready
-    case error
-    case cancelled
-}
-
 @MainActor
 struct SingleVideoViewer: View {
     
@@ -38,7 +30,6 @@ struct SingleVideoViewer: View {
     @State var percent = 0
     @State var autoplay = false
 
-    
     var body: some View {
         VStack {
             if url.absoluteString.prefix(7) == "http://" {
@@ -52,7 +43,7 @@ struct SingleVideoViewer: View {
                     
                     let scaledDimensions = getScaledVideoDimensions(videoSize: videoSize, availableWidth: videoWidth, maxHeight: 600)
                     
-                    VPV(asset: asset, isPlaying: $isPlaying)
+                    UIVideoViewer(asset: asset, isPlaying: $isPlaying)
                         .highPriorityGesture(
                             TapGesture().onEnded { _ in
                                 isPlaying.toggle()
@@ -179,66 +170,23 @@ struct SingleVideoViewer: View {
     }
 }
 
-struct VPV: UIViewRepresentable {
-    @State var asset:AVAsset
-    @State var videoPlayerView:VideoPlayerView
-    @Binding var isPlaying:Bool
-    
-    init(asset: AVAsset, isPlaying:Binding<Bool>) {
-        self.videoPlayerView = VideoPlayerView()
-        self.asset = asset
-        _isPlaying = isPlaying
-    }
-    
-    func makeUIView(context: Context) -> UIView {
-        videoPlayerView.asset = asset
-        //        videoPlayerView.playerLayer.player?.
-        if (isPlaying) {
-            videoPlayerView.play()
-            videoPlayerView.playerLayer.player?.isMuted = false
-        }
-        else {
-            videoPlayerView.playerLayer.player?.pause()
-        }
-        return videoPlayerView
-    }
-    
-    func updateUIView(_ uiView: UIView, context: Context) {
-        if (isPlaying) {
-            videoPlayerView.play()
-            videoPlayerView.playerLayer.player?.isMuted = false
-        }
-        else {
-            videoPlayerView.playerLayer.player?.pause()
-            videoPlayerView.playerLayer.player?.isMuted = true
-        }
-    }
-}
-
-func getVideoDimensions(asset: AVAsset) async -> CGSize? {
-    // Get the video track
-    guard let videoTrack = try? await asset.loadTracks(withMediaType: .video).first else {
-        return nil
-    }
-
-    // Get the natural size of the video track
-    guard let naturalSize = try? await videoTrack.load(.naturalSize) else { return nil }
-
-    // Get the preferred transform to handle any video orientation
-    guard let preferredTransform = try? await videoTrack.load(.preferredTransform) else { return nil }
-
-    // Calculate the corrected video dimensions considering the orientation
-    let correctedSize = CGSize(
-        width: abs(CGFloat(preferredTransform.a) * naturalSize.width + CGFloat(preferredTransform.c) * naturalSize.height),
-        height: abs(CGFloat(preferredTransform.b) * naturalSize.width + CGFloat(preferredTransform.d) * naturalSize.height)
-    )
-
-    return correctedSize
+enum VideoLoadingState {
+    case initial
+    case loading
+    case ready
+    case error
+    case cancelled
 }
 
 struct SingleVideoViewer_Previews: PreviewProvider {
     static var previews: some View {
-        let content1 = "one image: https://www.volvocars.com/images/v/-/media/applications/pdpspecificationpage/my24/ex90-electric/reveal/hero/desktop/04-headlight-video.mp4 dunno"
+        
+    // Use ImageDecoderRegistory to add the decoder to the
+    let _ = ImageDecoderRegistry.shared.register(ImageDecoders.Video.init)
+        
+//        let content1 = "one image: https://www.volvocars.com/images/v/-/media/applications/pdpspecificationpage/my24/ex90-electric/reveal/hero/desktop/04-headlight-video.mp4 dunno"
+
+        let content1 = "one image: https://nostur.com/test1.mp4 dunno"
 
         let urlsFromContent = getImgUrlsFromContent(content1)
 
@@ -247,35 +195,3 @@ struct SingleVideoViewer_Previews: PreviewProvider {
     }
 }
 
-struct ScaledDimensions {
-    let width:CGFloat
-    let height:CGFloat
-}
-
-func getScaledVideoDimensions(videoSize:CGSize, availableWidth:CGFloat, maxHeight:CGFloat = 600) -> ScaledDimensions {
-
-    let videoAspect = videoSize.width / videoSize.height
-    
-    let scaleH = videoSize.height/maxHeight
-    let scaleW = videoSize.width/availableWidth
-    
-    if scaleH <= 1 && scaleW <= 1 { // w and h both fit on screen
-        // return without scaling
-        L.og.info("getScaledVideoDimensions: availableWidth:\(availableWidth) - maxHeight: \(maxHeight) videoSize:\(videoSize.width)x\(videoSize.height) no scaling needed ")
-        return ScaledDimensions(width: videoSize.width, height: videoSize.height)
-    }
-    
-    if scaleW > scaleH { // Width too big, scale down:
-        let scaledWidth = videoSize.width / scaleW
-        let scaledHeight = scaledWidth / videoAspect
-        L.og.info("getScaledVideoDimensions: availableWidth:\(availableWidth) - maxHeight: \(maxHeight) videoSize:\(videoSize.width)x\(videoSize.height) --scaled--> \(scaledWidth)x\(scaledHeight) ")
-        return ScaledDimensions(width: scaledWidth, height: scaledHeight)
-    }
-    
-    // else it means height is too big, scale down:
-    let scaledHeight = videoSize.height / scaleH
-    let scaledWidth = scaledHeight * videoAspect
-    
-    L.og.info("getScaledVideoDimensions: availableWidth:\(availableWidth) - maxHeight: \(maxHeight) videoSize:\(videoSize.width)x\(videoSize.height) --scaled--> \(scaledWidth)x\(scaledHeight) ")
-    return ScaledDimensions(width: scaledWidth, height: scaledHeight)
-}
