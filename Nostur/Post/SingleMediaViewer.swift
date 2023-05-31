@@ -19,11 +19,18 @@ struct SingleMediaViewer: View {
     let isFollowing:Bool
     var fullWidth:Bool = false
     @State var imagesShown = false
+    @State var loadNonHttpsAnyway = false
 
     var body: some View {
         VStack {
-            if url.absoluteString.prefix(7) == "http://" {
-                Text("non-https media blocked")
+            if url.absoluteString.prefix(7) == "http://" && !loadNonHttpsAnyway {
+                VStack {
+                    Text("non-https media blocked")
+                    Button("Show anyway") {
+                        imagesShown = true
+                        loadNonHttpsAnyway = true
+                    }
+                }
                    .centered()
                    .frame(height: fullWidth ? 600 : 250)
                    .background(Color("LightGray").opacity(0.2))

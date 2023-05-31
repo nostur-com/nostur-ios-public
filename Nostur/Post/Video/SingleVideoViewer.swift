@@ -29,11 +29,22 @@ struct SingleVideoViewer: View {
     @State var task:AsyncImageTask? = nil
     @State var percent = 0
     @State var autoplay = false
+    @State var loadNonHttpsAnyway = false
 
     var body: some View {
         VStack {
-            if url.absoluteString.prefix(7) == "http://" {
-                Text("non-https media blocked")
+            if url.absoluteString.prefix(7) == "http://" && !loadNonHttpsAnyway {
+                VStack {
+                    Text("non-https media blocked")
+                    Button("Show anyway") {
+                        loadNonHttpsAnyway = true
+                        videoShown = true
+                        autoplay = true
+                        Task {
+                            await loadVideo()
+                        }
+                    }
+                }
                    .centered()
                    .frame(height: fullWidth ? 600 : 250)
                    .background(Color("LightGray").opacity(0.2))
