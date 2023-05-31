@@ -148,8 +148,8 @@ struct SmoothList: UIViewControllerRepresentable {
                         }
                         else if (collectionViewHolder.collectionView.contentOffset.y == 0) {
                             // IF WE ARE AT TOP, ALWAYS SET COUNTER TO 0
-                            L.sl.info("⭐️⭐️⭐️ SmoothList \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): Initial - posts: \(data.count) - force counter to 0")
-                            coordinator.lvm.lvmCounter.count = 0
+//                            L.sl.info("⭐️⭐️⭐️ SmoothList \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): Initial - posts: \(data.count) - force counter to 0")
+//                            coordinator.lvm.lvmCounter.count = 0 // Publishing changes from within view updates is not allowed, this will cause undefined behavior.
                             coordinator.lvm.lastReadId = coordinator.lvm.nrPostLeafs.first?.id
                         }
                     }
