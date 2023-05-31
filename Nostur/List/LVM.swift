@@ -810,8 +810,13 @@ extension LVM {
                 guard let self = self else { return }
                 let newPubkeyInfo = notification.object as! NewPubkeysForList
                 guard newPubkeyInfo.subscriptionId == self.id else { return }
+                L.og.info("LVM .listPubkeysChanged \(self.pubkeys.count) -> \(newPubkeyInfo.pubkeys.count)")
                 self.pubkeys = newPubkeyInfo.pubkeys
-                self.performLocalFetch(refreshInBackground: true)
+                instantFinished = false
+                nrPostLeafs = []
+                leafIdsOnScreen = []
+                leafsAndParentIdsOnScreen = []
+                startInstantFeed()
             }
             .store(in: &subscriptions)
         

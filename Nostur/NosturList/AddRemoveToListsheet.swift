@@ -74,6 +74,9 @@ struct AddRemoveToListsheet: View {
                         dismiss()
                         contact.lists_ = Array(self.selectedLists)
                         DataProvider.shared().save()
+                        for list in lists {
+                            sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: list.subscriptionId, pubkeys: Set(list.contacts_.map { $0.pubkey })))
+                        }
                     }
                 }
             }
