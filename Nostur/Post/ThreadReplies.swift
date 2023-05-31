@@ -10,6 +10,7 @@ import SwiftUI
 struct ThreadReplies: View {
     @ObservedObject var nrPost:NRPost
     @EnvironmentObject var ns:NosturState
+    @State var timer:Timer? = nil
     
     var body: some View {
         LazyVStack {
@@ -22,6 +23,13 @@ struct ThreadReplies: View {
         .background(Color("ListBackground"))
         .onAppear {
             nrPost.loadGroupedReplies()
+            
+            // After many attempts, still some replyTo's are missing, somewhere some observable is not
+            // triggering, cant find out where. So use this workaround...
+            timer?.invalidate()
+            timer = Timer.scheduledTimer(withTimeInterval: 2.5, repeats: false, block: { _ in
+                nrPost.loadGroupedReplies()
+            })
         }
         .onReceive(receiveNotification(.blockListUpdated)) { _ in
             nrPost.loadGroupedReplies()
