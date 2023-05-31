@@ -59,7 +59,9 @@ struct NosturTabsView: View {
         }
         .onChange(of: selectedTab) { newValue in
             if newValue == "Notifications" {
-                sendNotification(.notificationsTabAppeared) // use for resetting unread count 
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    sendNotification(.notificationsTabAppeared) // use for resetting unread count
+                }
             }
         }
         .onReceive(receiveNotification(.updateNotificationsCount)) { notification in

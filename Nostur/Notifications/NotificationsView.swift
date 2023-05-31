@@ -110,7 +110,7 @@ struct NotificationsView: View {
     func markActiveTabAsRead() {
         markAsReadDelayer?.invalidate()
         
-        markAsReadDelayer = Timer.scheduledTimer(withTimeInterval: 2.5, repeats: false) { _ in
+        markAsReadDelayer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { _ in
             // Mark unread for active tab
             if tab == "Posts" {
                 NotificationsManager.shared.markMentionsAsRead()
