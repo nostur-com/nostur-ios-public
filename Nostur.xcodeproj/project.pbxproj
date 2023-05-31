@@ -67,6 +67,7 @@
 		1F38AFEC2A2642D00035641E /* DMfunctions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F38AFEB2A2642D00035641E /* DMfunctions.swift */; };
 		1F38AFEF2A27156C0035641E /* UIVideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F38AFEE2A27156C0035641E /* UIVideoView.swift */; };
 		1F38AFF12A27166C0035641E /* VideoHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F38AFF02A27166C0035641E /* VideoHelpers.swift */; };
+		1F38AFF42A2789C80035641E /* MacListsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F38AFF32A2789C70035641E /* MacListsView.swift */; };
 		1F3C3F9629755D4C00E813FD /* NosturState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3C3F9529755D4C00E813FD /* NosturState.swift */; };
 		1F3D4BB72A25CC140084F939 /* AppView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3D4BB62A25CC140084F939 /* AppView.swift */; };
 		1F3E134F29C87BF400D076EA /* GifImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3E134E29C87BF400D076EA /* GifImageView.swift */; };
@@ -393,6 +394,7 @@
 		1F38AFEB2A2642D00035641E /* DMfunctions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DMfunctions.swift; sourceTree = "<group>"; };
 		1F38AFEE2A27156C0035641E /* UIVideoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIVideoView.swift; sourceTree = "<group>"; };
 		1F38AFF02A27166C0035641E /* VideoHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoHelpers.swift; sourceTree = "<group>"; };
+		1F38AFF32A2789C70035641E /* MacListsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacListsView.swift; sourceTree = "<group>"; };
 		1F3C3F9529755D4C00E813FD /* NosturState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturState.swift; sourceTree = "<group>"; };
 		1F3D4BB62A25CC140084F939 /* AppView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppView.swift; path = Nostur/AppView.swift; sourceTree = "<group>"; };
 		1F3E134E29C87BF400D076EA /* GifImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GifImageView.swift; sourceTree = "<group>"; };
@@ -705,6 +707,7 @@
 		1F25B394297A4FB400A8A5A7 /* Screens */ = {
 			isa = PBXGroup;
 			children = (
+				1F38AFF22A2789B70035641E /* Mac */,
 				1FFF997A29CEE15000ADAE23 /* About.swift */,
 				1F00337429BF0A44007CE040 /* BookmarksAndPrivateNotes.swift */,
 				1F1ABC482981718700D03FA9 /* BookmarksView.swift */,
@@ -772,6 +775,14 @@
 				1F38AFF02A27166C0035641E /* VideoHelpers.swift */,
 			);
 			path = Video;
+			sourceTree = "<group>";
+		};
+		1F38AFF22A2789B70035641E /* Mac */ = {
+			isa = PBXGroup;
+			children = (
+				1F38AFF32A2789C70035641E /* MacListsView.swift */,
+			);
+			path = Mac;
 			sourceTree = "<group>";
 		};
 		1F45C7EE29EF998D00F58772 /* Utils */ = {
@@ -1452,6 +1463,7 @@
 				1F810B3329E670AB006B1614 /* MutedWords+CoreDataClass.swift in Sources */,
 				1F685B562A0D6E96009EEC9B /* NRReplyingToBuilder.swift in Sources */,
 				1F539DAB299D4B2A00F3B8CA /* NewAccountSheet.swift in Sources */,
+				1F38AFF42A2789C80035641E /* MacListsView.swift in Sources */,
 				1FE9D2982A0E104D00256B90 /* NRTextParser.swift in Sources */,
 				1F27A92A2A25E4FB0094ECD9 /* RollingNumberView.swift in Sources */,
 				1FF9BF1629DC966700D16EE7 /* ReportContactSheet.swift in Sources */,
