@@ -194,6 +194,10 @@ extension Notification.Name {
     static var socketNotification: Notification.Name {
         return Notification.Name("socketNotification")
     }
+        
+    static var socketConnected: Notification.Name {
+        return Notification.Name("socketConnected")
+    }
     
     static var anyStatus: Notification.Name {
         return Notification.Name("anyStatus")

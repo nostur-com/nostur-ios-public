@@ -64,5 +64,6 @@ struct AnyStatus_Previews: PreviewProvider {
                 sendNotification(.anyStatus, ("This is a message", "Test"))
             }
         }
+        .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
     }
 }

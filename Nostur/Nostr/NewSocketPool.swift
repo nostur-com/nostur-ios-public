@@ -435,6 +435,9 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
         self.exponentialReconnectBackOff = 0
         self.skipped = 0
         L.sockets.info("🏎️🏎️🔌 CONNECTED \(self.url)")
+        DispatchQueue.main.async {
+            sendNotification(.socketConnected, "Connected: \(self.url)")
+        }
         LVMManager.shared.restoreSubscriptions()
     }
     

@@ -11,8 +11,10 @@ struct ProcessingStatus: View {
     
     @State var message:String? = nil
     @State var socketMessage:String? = nil
+    @State var connectedMessage:String? = nil
     @State var dismissTask:Task<Void, Never>? = nil
     @State var dismissSocketTask:Task<Void, Never>? = nil
+    @State var dismissConnectedTask:Task<Void, Never>? = nil
     
     var body: some View {
         VStack {
@@ -34,6 +36,16 @@ struct ProcessingStatus: View {
                     .background(Capsule().fill(Color.red))
                     .clipShape(Capsule())
             }
+            if let connectedMessage {
+                Text(connectedMessage)
+                    .lineLimit(2)
+                    .font(.caption2)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Capsule().fill(Color.green))
+                    .clipShape(Capsule())
+            }
             else {
                 EmptyView()
             }
@@ -48,6 +60,10 @@ struct ProcessingStatus: View {
         .onReceive(receiveNotification(.socketNotification)) { notification in
             let message = notification.object as? String
             setTemporarySocketMessage(message)
+        }
+        .onReceive(receiveNotification(.socketConnected)) { notification in
+            let message = notification.object as? String
+            setTemporaryConnectedMessage(message)
         }
     }
     
@@ -71,9 +87,23 @@ struct ProcessingStatus: View {
         self.dismissSocketTask = Task {
             // dismiss message after 2.1 seconds
             do {
-                try await Task.sleep(nanoseconds: 2_100_000_000)
+                try await Task.sleep(nanoseconds: 1_500_000_000)
                 withAnimation {
                     self.socketMessage = nil
+                }
+            } catch { }
+        }
+    }
+    
+    func setTemporaryConnectedMessage(_ message:String?) {
+        self.connectedMessage = message
+        self.dismissConnectedTask?.cancel()
+        self.dismissConnectedTask = Task {
+            // dismiss message after 2.1 seconds
+            do {
+                try await Task.sleep(nanoseconds: 2_600_000_000)
+                withAnimation {
+                    self.connectedMessage = nil
                 }
             } catch { }
         }
