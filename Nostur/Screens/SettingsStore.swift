@@ -80,7 +80,7 @@ final class SettingsStore: ObservableObject {
             Keys.rowFooterEnabled: true,
             Keys.autoScroll: false,
             Keys.fullWidthImages: false,
-            Keys.defaultMediaUploadService: "imgur.com",
+            Keys.defaultMediaUploadService: "nostrcheck.me",
             Keys.statusBubble: false
         ])
 
