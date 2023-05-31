@@ -369,8 +369,8 @@ extension PreviewEnvironment {
 public typealias PreviewSetup = (_ pe:PreviewEnvironment) -> ()
 
 public extension View {
-    func withPreviewEnvironment(_ setup:PreviewSetup? = nil) -> some View {
-        modifier(WithPreviewEnvironment(setup))
+    func withPreviewEnvironment(_ setup:PreviewSetup? = nil, previewDevice:PreviewDevice = PreviewDevice(rawValue: "iPhone 14")) -> some View {
+        modifier(WithPreviewEnvironment(setup, previewDevice: previewDevice))
     }
 }
 
@@ -378,8 +378,10 @@ private struct WithPreviewEnvironment: ViewModifier {
     
     var pe = PreviewEnvironment.shared
 //    @State var setup:PreviewSetup? = nil
+    let previewDevice:PreviewDevice
     
-    init(_ setup:PreviewSetup? = nil) {
+    init(_ setup:PreviewSetup? = nil, previewDevice:PreviewDevice) {
+        self.previewDevice = previewDevice
         if pe.loadAccount() {
             if let setup {
                 setup(pe)
@@ -398,7 +400,7 @@ private struct WithPreviewEnvironment: ViewModifier {
     //                    .environmentObject(pe.nm)
             .environmentObject(pe.tm)
             .environmentObject(pe.dim)
-            .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
+            .previewDevice(previewDevice)
     }
 }
 
