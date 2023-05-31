@@ -314,13 +314,14 @@ struct Search: View {
                     contacts.nsPredicate = NSPredicate(format: "name CONTAINS[cd] %@ OR display_name CONTAINS[cd] %@ OR about CONTAINS[cd] %@", searchTrimmed, searchTrimmed, searchTrimmed)
                     
                     let fr = Event.fetchRequest()
+                    fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
                     fr.predicate = NSPredicate(format: "kind == 1 AND content CONTAINS[cd] %@ AND NOT content BEGINSWITH %@", searchTrimmed, "lnbc")
                     fr.fetchLimit = 150
                     DataProvider.shared().bg.perform {
-                        if let result = try? DataProvider.shared().bg.fetch(fr).first {
-                            let nrPost = NRPost(event: result)
+                        if let results = try? DataProvider.shared().bg.fetch(fr) {
+                            let nrPosts = results.map { NRPost(event: $0) }
                             DispatchQueue.main.async {
-                                self.nrPosts = [nrPost]
+                                self.nrPosts = nrPosts
                             }
                         }
                     }
