@@ -64,6 +64,7 @@ struct LazyNoteMenuSheet: View {
                             dismiss()
                         } label: {
                             Label("Copy post text", systemImage: "doc.on.clipboard")
+                                .padding(.trailing, 5)
                         }
                         .buttonStyle(.plain)
                         Divider()
@@ -75,6 +76,16 @@ struct LazyNoteMenuSheet: View {
                                 .padding(.horizontal, 5)
                         }
                         .buttonStyle(.plain)
+                        .overlay(
+                            Color.white
+                                .opacity(0.01)
+                                .scaleEffect(x: 1.75, y:1.7)
+                        )
+                        .onTapGesture {
+                            UIPasteboard.general.string = nrPost.mainEvent.noteId
+                            dismiss()
+                        }
+                        
                         Divider()
                         Button {
                             UIPasteboard.general.string = nrPost.id
@@ -82,16 +93,34 @@ struct LazyNoteMenuSheet: View {
                         } label: {
                             Text("hex")
                                 .padding(.horizontal, 5)
-    //                        Label("Copy hex", systemImage: "doc.on.clipboard")
                         }
                         .buttonStyle(.plain)
+                        .overlay(
+                            Color.white
+                                .opacity(0.01)
+                                .scaleEffect(x: 1.3, y:1.7)
+                        )
+                        .onTapGesture {
+                            UIPasteboard.general.string = nrPost.id
+                            dismiss()
+                        }
                         Divider()
                         Button {
                             dismiss()
                             UIPasteboard.general.string = nrPost.mainEvent.toNEvent().eventJson()
                         } label: {
                             Text("source")
-    //                        Label("Copy source", systemImage: "doc.on.clipboard")
+                                .padding(.horizontal, 5)
+                        }
+                        .buttonStyle(.plain)
+                        .overlay(
+                            Color.white
+                                .opacity(0.01)
+                                .scaleEffect(x: 1.35, y:1.7)
+                        )
+                        .onTapGesture {
+                            dismiss()
+                            UIPasteboard.general.string = nrPost.mainEvent.toNEvent().eventJson()
                         }
                     }
                     Button {
@@ -200,6 +229,19 @@ struct LazyNoteMenuSheet: View {
                 }
             }
         }
+    }
+}
+
+struct LazyNoteMenuSheet_Previews: PreviewProvider {
+    static var previews: some View {
+        VStack {
+            if let nrPost = PreviewFetcher.fetchNRPost() {
+                LazyNoteMenuSheet(nrPost:nrPost)
+            }
+        }
+        .withPreviewEnvironment({ pe in
+            pe.loadPosts()
+        })
     }
 }
 
