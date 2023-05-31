@@ -6,6 +6,28 @@
 //
 
 import SwiftUI
+import Combine
+
+class FollowingViewModel: ObservableObject {
+    static let main = FollowingViewModel()
+    
+    @Published var account:Account? = nil {
+        didSet {
+            if let account {
+                activeVM = LVMManager.shared.followingLVM(forAccount: account)
+                hideReplies = activeVM?.hideReplies ?? false
+            }
+        }
+    }
+    @Published var activeVM:LVM? = nil
+    
+    @Published var hideReplies:Bool = false {
+        didSet {
+            guard let vm = activeVM else { return }
+            vm.hideReplies = hideReplies
+        }
+    }
+}
 
 struct FollowingAndExplore: View { //, Equatable {
     @EnvironmentObject var dim:DIMENSIONS
@@ -17,18 +39,11 @@ struct FollowingAndExplore: View { //, Equatable {
     @State var showingNewNote = false
     @State var noteCancellationId:UUID?
     
-    @FetchRequest
+    @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath:\NosturList.createdAt, ascending: false)], predicate: NSPredicate(format: "showAsTab == true"))
     var lists:FetchedResults<NosturList>
-    @State var selectedList:NosturList?
-    @State var followingVM:LVM? = nil
-    
-    init(account:Account) {
-        self.account = account
-        let r = NosturList.fetchRequest()
-        r.predicate = NSPredicate(format: "showAsTab == true")
-        r.sortDescriptors = [NSSortDescriptor(keyPath:\NosturList.createdAt, ascending: false)]
-        _lists = FetchRequest(fetchRequest: r)
-    }
+    @State private var selectedList:NosturList?
+    @StateObject private var followingVM:FollowingViewModel = .main
+    @StateObject private var exploreVM:LVM = LVMManager.shared.exploreLVM()
     
     var body: some View {
 //        let _ = Self._printChanges()
@@ -39,6 +54,18 @@ struct FollowingAndExplore: View { //, Equatable {
                             action: { selectedSubTab = "Following" },
                             title: "Following",
                             selected: selectedSubTab == "Following")
+                        .contextMenu {
+                            Button {
+                                followingVM.hideReplies.toggle()
+                            } label: {
+                                    if followingVM.hideReplies {
+                                        Label(String(localized: "Show replies", comment: "Setting in context menu to show replies in the feed"), systemImage: "bubble.left.and.bubble.right.fill")
+                                    }
+                                    else {
+                                        Label(String(localized: "Hide replies", comment: "Setting in context menu to hide replies from the feed"), systemImage: "bubble.left.and.bubble.right.fill")
+                                    }
+                            }
+                        }
                         Spacer()
                         ForEach(lists) { list in
                             TabButton(
@@ -49,19 +76,45 @@ struct FollowingAndExplore: View { //, Equatable {
                                 },
                                 title: list.name_,
                                 selected: selectedSubTab == "List" && selectedList == list )
+                            .contextMenu {
+                                NavigationLink(value: list) { Text("Edit List", comment: "In context menu, to take the user to edit list screen") }
+                                Button {
+                                    list.hideReplies.toggle()
+                                    LVMManager.shared.listLVM(forList: list).hideReplies = list.hideReplies
+                                } label: {
+                                        if list.hideReplies {
+                                            Label(String(localized: "Show replies", comment: "Setting in context menu to show replies in the feed"), systemImage: "bubble.left.and.bubble.right.fill")
+                                        }
+                                        else {
+                                            Label(String(localized: "Hide replies", comment: "Setting in context menu to hide replies from the feed"), systemImage: "bubble.left.and.bubble.right.fill")
+                                        }
+                                }
+                            }
                             Spacer()
                         }
                         TabButton(
                             action: { selectedSubTab = "Explore"},
                             title: "Explore",
                             selected: selectedSubTab == "Explore")
+                        .contextMenu {
+                            Button {
+                                exploreVM.hideReplies.toggle()
+                            } label: {
+                                if exploreVM.hideReplies {
+                                        Label(String(localized: "Show replies", comment: "Setting in context menu to show replies in the feed"), systemImage: "bubble.left.and.bubble.right.fill")
+                                    }
+                                    else {
+                                        Label(String(localized: "Hide replies", comment: "Setting in context menu to hide replies from the feed"), systemImage: "bubble.left.and.bubble.right.fill")
+                                    }
+                            }
+                        }
                     }
                     .frame(width: dim.listWidth)
                 }
                 
                 ZStack {
                     // FOLLOWING
-                    if (followingVM == nil || account.followingPublicKeys.count <= 1) {
+                    if (followingVM.activeVM == nil || account.followingPublicKeys.count <= 1) {
                         VStack {
                             Spacer()
                             Text("You are not following anyone yet, visit the explore tab and follow some people")
@@ -77,8 +130,8 @@ struct FollowingAndExplore: View { //, Equatable {
                         }
                     }
                     else {
-                        if let followingVM {
-                            ListViewContainer(vm: followingVM)
+                        if let vm = followingVM.activeVM {
+                            ListViewContainer(vm: vm)
                                 .opacity(selectedSubTab == "Following" ? 1 : 0)
                         }
                     }
@@ -91,7 +144,7 @@ struct FollowingAndExplore: View { //, Equatable {
                     }
 
                     // EXPLORE
-                    ListViewContainer(vm: LVMManager.shared.exploreLVM())
+                    ListViewContainer(vm: exploreVM)
                         .opacity(selectedSubTab == "Explore" ? 1 : 0)
                 }
                 
@@ -105,7 +158,7 @@ struct FollowingAndExplore: View { //, Equatable {
                         selectedList = lists.first
                     }
                 }
-                followingVM = LVMManager.shared.followingLVM(forAccount: account)
+                followingVM.account = account
             }
             .onChange(of: account, perform: { newAccount in
                 guard account != newAccount else { return }
@@ -115,10 +168,9 @@ struct FollowingAndExplore: View { //, Equatable {
                         lvm.cleanUp()
                     }
                 LVMManager.shared.listVMs.removeAll(where: { $0.pubkey == account.publicKey })
-                followingVM = LVMManager.shared.followingLVM(forAccount: newAccount)
+                self.followingVM.account = newAccount
             })
             .navigationTitle(selectedSubTab == "List" ? (selectedList?.name_ ?? "List") : selectedSubTab)
-//            .navigationBarHidden(true)
             .navigationBarTitleDisplayMode(.inline)
     }
 }

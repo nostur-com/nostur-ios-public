@@ -51,6 +51,16 @@ class LVM: NSObject, ObservableObject {
             L.lvm.info("\(self.id) \(self.name) - pubkeys.count \(oldValue.count) -> \(self.pubkeys.count)")
         }
     }
+    @Published var hideReplies = false {
+        didSet {
+            guard oldValue != hideReplies else { return }
+            nrPostLeafs = []
+            leafIdsOnScreen = []
+            leafsAndParentIdsOnScreen = []
+            self.performLocalFetch()
+            self.saveListState()
+        }
+    }
     
     // for performance, .map .prefix(10) can maybe cause microhang with many pubkeys
     var pubkeysPrefixString:String {
@@ -210,7 +220,7 @@ class LVM: NSObject, ObservableObject {
                     continue
                 } // Skip if the post is already on screen
 
-                let newNRPostLeaf = NRPost(event: event, withParents: true)
+                let newNRPostLeaf = NRPost(event: event, withParents: hideReplies ? false : true)
                 transformedObjectIds.insert(newNRPostLeaf.id)
                 newNRPostLeafs.append(newNRPostLeaf)
             }
@@ -503,6 +513,7 @@ class LVM: NSObject, ObservableObject {
             self.lastReadId = ls!.mostRecentAppearedId
             self.lastAppearedIdSubject.send(ls!.lastAppearedId)
             self.restoreLeafs = ls!.leafs
+            self.hideReplies = ls!.hideReplies
         }
         
         if (self.restoreLeafs != nil) {
@@ -992,6 +1003,7 @@ extension LVM {
             listState.mostRecentAppearedId = lastReadId
             listState.updatedAt = Date.now
             listState.leafs = leafs
+            listState.hideReplies = hideReplies
             L.lvm.debug("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") saveListState. lastAppearedId: \(lastAppearedId?.description.prefix(11) ?? "??") (index: \(self.lastAppearedIndex?.description ?? "??"))")
             do {
                 try context.save()
@@ -1077,7 +1089,7 @@ extension LVM {
             L.lvm.info("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") performLocalFetch LVM.id (\(self.uuid)")
             if let mostRecentEvent = mostRecentEvent {
                 //            print("🟢🟢🟢🟢🟢🟢 from mostRecent \(mostRecent.id)")
-                let fr = Event.postsByPubkeys(self.pubkeys, mostRecent: mostRecentEvent)
+                let fr = Event.postsByPubkeys(self.pubkeys, mostRecent: mostRecentEvent, hideReplies: self.hideReplies)
                 
                 
                 guard let posts = try? ctx.fetch(fr) else { return }
@@ -1085,7 +1097,7 @@ extension LVM {
             }
             else {
 //                print("🟢🟢🟢🟢🟢🟢 from lastAppearedCreatedAt \(self.lastAppeared?.created_at ?? 0)")
-                let fr = Event.postsByPubkeys(self.pubkeys, lastAppearedCreatedAt: self.lastAppearedCreatedAt ?? 0)
+                let fr = Event.postsByPubkeys(self.pubkeys, lastAppearedCreatedAt: self.lastAppearedCreatedAt ?? 0, hideReplies: self.hideReplies)
 
                 guard let posts = try? ctx.fetch(fr) else { return }
                 self.setUnorderedEvents(events: self.filterMutedWords(posts), lastCreatedAt:lastCreatedAt)
@@ -1149,7 +1161,7 @@ extension LVM {
         ctx.perform { [weak self] in
             guard let self = self else { return }
             L.lvm.info("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") performLocalOlderFetch LVM.id (\(self.uuid)")
-            let fr = Event.postsByPubkeys(self.pubkeys, until: oldestEvent)
+            let fr = Event.postsByPubkeys(self.pubkeys, until: oldestEvent, hideReplies: self.hideReplies)
             guard let posts = try? ctx.fetch(fr) else { return }
             self.setOlderEvents(events: self.filterMutedWords(posts))
         }
@@ -1178,7 +1190,7 @@ extension LVM {
                 newUnrenderedEvents = events.filter(onlyRootOrReplyingToFollower)
                     .prefix(LVM_MAX_VISIBLE)
                     .map {
-                        $0.parentEvents = Event.getParentEvents($0)
+                        $0.parentEvents = hideReplies ? [] : Event.getParentEvents($0)
                         return $0
                     }
                 let newEventIds = getAllEventIds(newUnrenderedEvents)
@@ -1192,7 +1204,7 @@ extension LVM {
                     .filter { $0.created_at > lastCreatedAt } // skip all older than first on screen (check LEAFS only)
                     .filter(onlyRootOrReplyingToFollower)
                     .map {
-                        $0.parentEvents = Event.getParentEvents($0)
+                        $0.parentEvents = hideReplies ? [] : Event.getParentEvents($0)
                         return $0
                     }
 
@@ -1250,28 +1262,38 @@ func notMuted(_ nrPost:NRPost) -> Bool {
 
 extension Event {
     
-    static func postsByPubkeys(_ pubkeys:Set<String>, mostRecent:Event) -> NSFetchRequest<Event> {
+    static func postsByPubkeys(_ pubkeys:Set<String>, mostRecent:Event, hideReplies:Bool = false) -> NSFetchRequest<Event> {
         let cutOffPoint = mostRecent.created_at - (15 * 60)
         
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         fr.fetchLimit = 15
-        fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN {1,6,9802} AND id != \"\"", cutOffPoint,  pubkeys)
+        if hideReplies {
+            fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN {1,6,9802} AND replyToId == nil AND id != \"\"", cutOffPoint,  pubkeys)
+        }
+        else {
+            fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN {1,6,9802} AND id != \"\"", cutOffPoint,  pubkeys)
+        }
         return fr
     }
     
     
-    static func postsByPubkeys(_ pubkeys:Set<String>, until:Event) -> NSFetchRequest<Event> {
+    static func postsByPubkeys(_ pubkeys:Set<String>, until:Event, hideReplies:Bool = false) -> NSFetchRequest<Event> {
         let cutOffPoint = until.created_at + (1 * 60)
         
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         fr.fetchLimit = 15
-        fr.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN {1,6,9802} AND id != \"\"", cutOffPoint,  pubkeys)
+        if hideReplies {
+            fr.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN {1,6,9802} AND replyToId == nil AND id != \"\"", cutOffPoint,  pubkeys)
+        }
+        else {
+            fr.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN {1,6,9802} AND id != \"\"", cutOffPoint,  pubkeys)
+        }
         return fr
     }
     
-    static func postsByPubkeys(_ pubkeys:Set<String>, lastAppearedCreatedAt:Int64 = 0) -> NSFetchRequest<Event> {
+    static func postsByPubkeys(_ pubkeys:Set<String>, lastAppearedCreatedAt:Int64 = 0, hideReplies:Bool = false) -> NSFetchRequest<Event> {
         
         let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 8) // 8 hours ago
         
@@ -1282,8 +1304,13 @@ extension Event {
         // get 15 events before lastAppearedCreatedAt (or 8 hours ago, if we dont have it)
         let frBefore = Event.fetchRequest()
         frBefore.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        frBefore.fetchLimit = 15 
-        frBefore.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN {1,6,9802} AND id != \"\"", cutOffPoint,  pubkeys)
+        frBefore.fetchLimit = 15
+        if hideReplies {
+            frBefore.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN {1,6,9802} AND replyToId == nil AND id != \"\"", cutOffPoint,  pubkeys)
+        }
+        else {
+            frBefore.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN {1,6,9802} AND id != \"\"", cutOffPoint,  pubkeys)
+        }
         
         let ctx = DataProvider.shared().bg
         let newFirstEvent = ctx.performAndWait {
@@ -1295,7 +1322,12 @@ extension Event {
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         fr.fetchLimit = 15
-        fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN {1,6,9802} AND id != \"\"", newCutOffPoint,  pubkeys)
+        if hideReplies {
+            fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN {1,6,9802} AND replyToId == nil AND id != \"\"", newCutOffPoint,  pubkeys)
+        }
+        else {
+            fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN {1,6,9802} AND id != \"\"", newCutOffPoint,  pubkeys)
+        }
         return fr
     }
 }

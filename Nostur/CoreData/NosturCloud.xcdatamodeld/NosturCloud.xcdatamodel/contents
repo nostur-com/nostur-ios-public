@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21754" systemVersion="22E261" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21754" systemVersion="22F66" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="Account" representedClassName=".Account" syncable="YES">
         <attribute name="about" attributeType="String" defaultValueString=""/>
         <attribute name="banner" attributeType="String" defaultValueString=""/>
@@ -106,6 +106,7 @@
         </uniquenessConstraints>
     </entity>
     <entity name="ListState" representedClassName="ListState" syncable="YES">
+        <attribute name="hideReplies" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="lastAppearedId" optional="YES" attributeType="String"/>
         <attribute name="leafs" optional="YES" attributeType="String"/>
         <attribute name="listId" attributeType="String" defaultValueString="ERRORERRORERRORERROR"/>
@@ -119,6 +120,7 @@
     </entity>
     <entity name="NosturList" representedClassName=".NosturList" syncable="YES">
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="hideReplies" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="refreshedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>

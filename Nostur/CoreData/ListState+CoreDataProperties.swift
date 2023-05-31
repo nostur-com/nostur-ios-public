@@ -24,6 +24,7 @@ extension ListState {
     @NSManaged public var updatedAt: Date
     @NSManaged public var unreadCount:Int64
     @NSManaged public var leafs: String?
+    @NSManaged public var hideReplies: Bool
 
 }
 
