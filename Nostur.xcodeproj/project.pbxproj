@@ -96,8 +96,6 @@
 		1F5BA91429A8C27200002652 /* NewNoteButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5BA91329A8C27200002652 /* NewNoteButton.swift */; };
 		1F5BBE40297BC7E600F4AF03 /* EventsError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5BBE3F297BC7E600F4AF03 /* EventsError.swift */; };
 		1F5F5A5C29838F1D00DED8F4 /* DataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5F5A5B29838F1D00DED8F4 /* DataProvider.swift */; };
-		1F6192462A26260A00EBA119 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1F6192442A26260A00EBA119 /* InfoPlist.strings */; };
-		1F6192492A26260A00EBA119 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1F6192472A26260A00EBA119 /* Localizable.strings */; };
 		1F65002C29A759FB00B79AEF /* ProfileRowMissing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F65002B29A759FB00B79AEF /* ProfileRowMissing.swift */; };
 		1F65121B29C75AC9009FD4AE /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F65121A29C75AC9009FD4AE /* ProfileView.swift */; };
 		1F685B522A0D18D2009EEC9B /* NRContact.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F685B512A0D18D2009EEC9B /* NRContact.swift */; };
@@ -423,8 +421,6 @@
 		1F5BA91329A8C27200002652 /* NewNoteButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewNoteButton.swift; sourceTree = "<group>"; };
 		1F5BBE3F297BC7E600F4AF03 /* EventsError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsError.swift; sourceTree = "<group>"; };
 		1F5F5A5B29838F1D00DED8F4 /* DataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataProvider.swift; sourceTree = "<group>"; };
-		1F6192452A26260A00EBA119 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		1F6192482A26260A00EBA119 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/Localizable.strings; sourceTree = "<group>"; };
 		1F65002B29A759FB00B79AEF /* ProfileRowMissing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileRowMissing.swift; sourceTree = "<group>"; };
 		1F65121A29C75AC9009FD4AE /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		1F685B512A0D18D2009EEC9B /* NRContact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRContact.swift; sourceTree = "<group>"; };
@@ -1035,7 +1031,6 @@
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1FB448C82965F3D200038671 /* Nostur.entitlements */,
 				1F313DED296980D8004C7366 /* Info.plist */,
-				1F6192472A26260A00EBA119 /* Localizable.strings */,
 				1FB448BD2965F3D000038671 /* NosturApp.swift */,
 				1F3D4BB62A25CC140084F939 /* AppView.swift */,
 				1FB448C62965F3D200038671 /* Assets.xcassets */,
@@ -1172,7 +1167,6 @@
 				1FC7A54929FA46F000645FEF /* ActionRequestHandler.swift */,
 				1FC7A54B29FA46F000645FEF /* Action.js */,
 				1FC7A54D29FA46F000645FEF /* Info.plist */,
-				1F6192442A26260A00EBA119 /* InfoPlist.strings */,
 			);
 			path = "Highlight with Nostur";
 			sourceTree = "<group>";
@@ -1344,7 +1338,6 @@
 			knownRegions = (
 				en,
 				Base,
-				nl,
 			);
 			mainGroup = 1FB448B12965F3D000038671;
 			packageReferences = (
@@ -1373,7 +1366,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				1FAC67AE29F5523200798661 /* Assets.xcassets in Resources */,
-				1F6192492A26260A00EBA119 /* Localizable.strings in Resources */,
 				1FB448CB2965F3D200038671 /* Preview Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1383,7 +1375,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				1FC7A54C29FA46F000645FEF /* Action.js in Resources */,
-				1F6192462A26260A00EBA119 /* InfoPlist.strings in Resources */,
 				1FC7A54829FA46F000645FEF /* Media.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1690,26 +1681,6 @@
 		};
 /* End PBXTargetDependency section */
 
-/* Begin PBXVariantGroup section */
-		1F6192442A26260A00EBA119 /* InfoPlist.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				1F6192452A26260A00EBA119 /* nl */,
-			);
-			name = InfoPlist.strings;
-			sourceTree = "<group>";
-		};
-		1F6192472A26260A00EBA119 /* Localizable.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				1F6192482A26260A00EBA119 /* nl */,
-			);
-			name = Localizable.strings;
-			path = Nostur;
-			sourceTree = "<group>";
-		};
-/* End PBXVariantGroup section */
-
 /* Begin XCBuildConfiguration section */
 		1FB448CC2965F3D200038671 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -1861,7 +1832,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.1;
-				MARKETING_VERSION = 1.0.44;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = nostur.com.Nostur;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -1907,7 +1878,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.1;
-				MARKETING_VERSION = 1.0.44;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = nostur.com.Nostur;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -1938,7 +1909,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.44;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "nostur.com.Nostur.Share-highlight-with-Nostur";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -1968,7 +1939,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.44;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "nostur.com.Nostur.Share-highlight-with-Nostur";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
