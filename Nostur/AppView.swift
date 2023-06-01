@@ -42,7 +42,7 @@ struct AppView: View {
             }
 //                else if isOnboarding || ns.accounts.count == 0 {
 //                else if isOnboarding || ns.accounts.count == 0 {
-            else if !didAcceptTerms || isOnboarding || ns.accounts.count == 0 {
+            else if !didAcceptTerms || isOnboarding || ns.accounts.count == 0 || ns.activeAccountPublicKey.isEmpty {
                 Onboarding()
                     .environmentObject(ns)
                     .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)

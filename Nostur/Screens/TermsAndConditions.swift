@@ -62,7 +62,7 @@ For any questions, please contact feedback@nostur.com.
             
             Button("Accept") {
                 didAcceptTerms = true
-                if NosturState.shared.accounts.count > 0 {
+                if !NosturState.shared.activeAccountPublicKey.isEmpty {
                     NosturState.shared.onBoardingIsShown = false
                 }
             }
