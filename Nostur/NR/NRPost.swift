@@ -635,6 +635,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                         self.groupRepliesToRoot.send(nrReplies)
                     }
                     else {
+                        self.event.repliesCount = Int64(nrReplies.count) // Fix wrong count in db
                         DispatchQueue.main.async {
                             self.objectWillChange.send()
                             self.repliesCount = Int64(nrReplies.count)
@@ -667,6 +668,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             }
             
             let nrReplies = self.event.replies_.map { NRPost(event: $0) }
+            self.event.repliesCount = Int64(nrReplies.count) // Fix wrong count in db
             DispatchQueue.main.async {
                 self.objectWillChange.send()
                 self.repliesCount = Int64(nrReplies.count)
@@ -872,6 +874,7 @@ extension NRPost { // Helpers for grouped replies
             // Retrieve the unique items with highest values
             let groupedReplies = Array(uniqueThreads.values)
             
+            self.event.repliesCount = Int64(replies.count) // Fix wrong count in db
             DispatchQueue.main.async {
                 self.objectWillChange.send()
                 self.repliesCount = Int64(replies.count)
