@@ -64,8 +64,12 @@ struct SideTabs:View {
     @Binding var columnsCount:Int
     var body: some View {
         VStack {
-            Button("Add") { addColumn() }
-            Button("Remove") { removeColumn() }
+            Button { addColumn() } label: {
+                Image(systemName: "rectangle.righthalf.inset.fill.arrow.right")
+            }
+            Button { removeColumn() } label: {
+                Image(systemName: "rectangle.lefthalf.inset.fill.arrow.left")
+            }
             Spacer()
         }
         .padding(.top, 100)
