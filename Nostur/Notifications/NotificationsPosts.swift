@@ -20,23 +20,54 @@ struct NotificationsPosts: View {
     @State var backlog = Backlog()
     @State var didLoad = false
     
+    @FetchRequest
+    var pNotifications:FetchedResults<PersistentNotification>
+    
     init(pubkey: String, mutedRootIds: [String] = [], blockedPubkeys: [String] = []) {
         self.pubkey = pubkey
         self.mutedRootIds = mutedRootIds
         self.blockedPubkeys = blockedPubkeys
+        
+        let fr = PersistentNotification.fetchRequest()
+        fr.sortDescriptors = [NSSortDescriptor(keyPath: \PersistentNotification.createdAt, ascending: false)]
+        fr.predicate = NSPredicate(format: "pubkey == %@", pubkey)
+        _pNotifications = FetchRequest(fetchRequest: fr)
+    }
+    
+    var notifications:[PostOrNotification] {
+        // combine nrPosts and PersistentNotifications in the list
+        return pNotifications.map { pNot in
+            PostOrNotification(type: .NOTIFICATION, notification: pNot)
+        } + fl.nrPosts.map({ nrPost in
+            PostOrNotification(type: .POST, post: nrPost)
+        })
+        .sorted(by: { p1, p2 in
+            p1.createdAt > p2.createdAt
+        })
     }
     
     var body: some View {
         let _ = Self._printChanges()
         ScrollView {
             LazyVStack(spacing: 0) {
-                ForEach(fl.nrPosts) { nrPost in
-                    PostRowDeletable(nrPost: nrPost, missingReplyTo: true)
-                        .background(Color.systemBackground)
-                        .boxShadow()
-                        .padding(.vertical, 10)
-                        .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
-                        .id(nrPost.id)
+                ForEach(notifications) { pNotification in
+                    switch pNotification.type {
+                    case .NOTIFICATION:
+                        NewFollowersNotificationView(notification: pNotification.notification!)
+                            .padding(10)
+                            .background(Color.systemBackground)
+                            .boxShadow()
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
+                            .id(pNotification.id)
+                    case .POST:
+                        PostRowDeletable(nrPost: pNotification.post!, missingReplyTo: true)
+                            .background(Color.systemBackground)
+                            .boxShadow()
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
+                            .id(pNotification.id)
+                    }
                 }
                 VStack {
                     if fl.nrPosts.count > 0 {
@@ -199,7 +230,28 @@ struct NotificationsNotes_Previews: PreviewProvider {
         .withPreviewEnvironment({ pe in
             pe.loadContacts()
             pe.loadPosts()
+            pe.loadNewFollowersNotification()
         })
     }
 }
 
+
+
+struct PostOrNotification: Identifiable {
+    let type:PostOrNotificationType
+    var post:NRPost?
+    var notification:PersistentNotification?
+    
+    var id:String {
+        type.hashValue.description + (type == .POST ? post!.id : notification!.id.uuidString)
+    }
+    
+    var createdAt:Date {
+        (type == .POST ? post!.createdAt : notification!.createdAt)
+    }
+    
+    enum PostOrNotificationType {
+        case POST
+        case NOTIFICATION
+    }
+}

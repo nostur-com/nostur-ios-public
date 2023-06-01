@@ -310,7 +310,12 @@ public struct RequestMessage {
 """
     }
     
-    static func getFollowers(pubkey:String, subscriptionId:String? = nil) -> String {
+    static func getFollowers(pubkey:String, since:NTimestamp? = nil, subscriptionId:String? = nil) -> String {
+        if let since {
+            return """
+    ["REQ", "\(subscriptionId ?? "FOLL-" + UUID().uuidString)", {"#p": ["\(pubkey)"], "kinds": [3], "since": \(since.timestamp)}]
+    """
+        }
         return """
 ["REQ", "\(subscriptionId ?? "FOLL-" + UUID().uuidString)", {"#p": ["\(pubkey)"], "kinds": [3]}]
 """

@@ -7,6 +7,7 @@
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="display_name" attributeType="String" defaultValueString=""/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="lastFollowerCreatedAt" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="lastNotificationReceivedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="lastProfileReceivedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="lastSeenDMRequestCreatedAt" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
@@ -127,6 +128,14 @@
         <attribute name="showAsTab" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
         <attribute name="type" optional="YES" attributeType="String"/>
         <relationship name="contacts" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact" inverseName="lists" inverseEntity="Contact"/>
+    </entity>
+    <entity name="PersistentNotification" representedClassName="PersistentNotification" syncable="YES">
+        <attribute name="content" attributeType="String" defaultValueString=""/>
+        <attribute name="createdAt" attributeType="Date" defaultDateTimeInterval="-978332400" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" defaultValueString="11111111-1111-1111-1111-111111111111" usesScalarValueType="NO"/>
+        <attribute name="pubkey" attributeType="String"/>
+        <attribute name="readAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="type_" attributeType="String"/>
     </entity>
     <entity name="PrivateNote" representedClassName="PrivateNote" syncable="YES">
         <attribute name="content" attributeType="String" defaultValueString=""/>

@@ -13,6 +13,7 @@ extension Account {
     @NSManaged public var lastSeenReactionCreatedAt:Int64
     @NSManaged public var lastSeenZapCreatedAt:Int64
     @NSManaged public var lastSeenDMRequestCreatedAt:Int64
+    @NSManaged public var lastFollowerCreatedAt:Int64
     
 //    public override func willChangeValue(forKey key: String) {
 //        // Don't refresh views when these properties change. Not needed.

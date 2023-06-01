@@ -150,8 +150,16 @@ class NotificationsManager: ObservableObject {
             r2.fetchLimit = self.FETCH_LIMIT
             r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
             r2.resultType = .countResultType
+            
+            let r3 = PersistentNotification.fetchRequest()
+            r3.predicate = NSPredicate(format: "readAt == nil")
+            r3.fetchLimit = self.FETCH_LIMIT
+            r3.sortDescriptors = [NSSortDescriptor(keyPath:\PersistentNotification.createdAt, ascending: false)]
+            r3.resultType = .countResultType
              
-            let unreadMentions = (try? context.count(for: r2)) ?? 0
+            var unreadMentions = (try? context.count(for: r2)) ?? 0
+            var unreadNewFollowers = (try? context.count(for: r3)) ?? 0
+            unreadMentions += unreadNewFollowers
             DispatchQueue.main.async {
                 if unreadMentions != self.unreadMentions {
                     self.unreadMentions = min(unreadMentions,9999)
@@ -344,6 +352,13 @@ class NotificationsManager: ObservableObject {
         r2.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         r2.fetchLimit = 1
         
+        // Also do new follower notifications
+        let r3 = NSBatchUpdateRequest(entityName: "PersistentNotification")
+        r3.propertiesToUpdate = ["readAt": NSDate()]
+        r3.predicate = NSPredicate(format: "readAt == nil")
+        r3.resultType = .updatedObjectIDsResultType
+
+        
         let ctx = DataProvider.shared().bg
         ctx.perform {
             if let mostRecent = try? ctx.fetch(r2).first {
@@ -352,6 +367,7 @@ class NotificationsManager: ObservableObject {
             else {
                 account.toBG()?.lastSeenPostCreatedAt = Int64(Date.now.timeIntervalSince1970)
             }
+            let result = try? ctx.execute(r3) as? NSBatchUpdateResult
             DataProvider.shared().bgSave()
         }
     }
