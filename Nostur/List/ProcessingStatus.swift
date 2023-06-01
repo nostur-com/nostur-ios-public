@@ -20,6 +20,7 @@ struct ProcessingStatus: View {
         VStack {
             if let message {
                 Text(message)
+                    .lineLimit(1)
                     .foregroundColor(.white)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
@@ -38,7 +39,7 @@ struct ProcessingStatus: View {
             }
             if let connectedMessage {
                 Text(connectedMessage)
-                    .lineLimit(2)
+                    .lineLimit(1)
                     .font(.caption2)
                     .foregroundColor(.white)
                     .padding(.horizontal, 10)
