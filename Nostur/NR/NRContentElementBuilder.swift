@@ -67,7 +67,7 @@ class NRContentElementBuilder {
                 }
                 else if matchString.matchingStrings(regex: Self.previewImagePlaceholder).count > 0 {
                     let m = matchString.matchingStrings(regex: Self.previewImagePlaceholder)
-                    if let index = Int(m[0][0]) {
+                    if let index = Int(m[0][1]) {
                         if let p = event.previewImages[safe: index] {
                             result.append(ContentElement.postPreviewImage(p))
                         }
