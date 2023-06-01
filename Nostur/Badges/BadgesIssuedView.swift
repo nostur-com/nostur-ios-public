@@ -53,7 +53,7 @@ struct BadgesIssuedView: View {
 //            }
         }
         .onAppear {
-            // fetch missing batch definitions:
+            // fetch missing badge definitions:
             // or just all...
             let req = RequestMessage.getBadgesCreatedAndAwarded(pubkey: pubkey)
             let message = ClientMessage(type: .REQ, message: req)

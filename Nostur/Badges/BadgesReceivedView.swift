@@ -64,7 +64,7 @@ struct BadgesReceivedView: View {
         }
         .navigationTitle("")
         .onAppear {
-            // fetch missing batch definitions:
+            // fetch missing badge definitions:
             // or just all...
             let req = RequestMessage.getEvents(ids: badgeAwardsToMe.map { $0.id })
             let message = ClientMessage(type: .REQ, message: req)
