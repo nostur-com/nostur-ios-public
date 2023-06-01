@@ -31,9 +31,15 @@ struct NosturRootMenu: View {
             else {
                 if 1 == 2 && IS_MAC {
                     MacListsView()
+                        .onOpenURL { url in
+                            self.handleUrl(url)
+                        }
                 }
                 else {
                     NosturTabsView()
+                        .onOpenURL { url in
+                            self.handleUrl(url)
+                        }
                 }
             }
         }
@@ -41,9 +47,6 @@ struct NosturRootMenu: View {
         .onAppear {
             ImageDecoderRegistry.shared.register(ImageDecoders.Video.init)
             configureAudioSession()
-        }
-        .onOpenURL { url in
-            self.handleUrl(url)
         }
     }
     
