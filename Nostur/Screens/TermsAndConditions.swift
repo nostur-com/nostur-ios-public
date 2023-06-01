@@ -62,6 +62,9 @@ For any questions, please contact feedback@nostur.com.
             
             Button("Accept") {
                 didAcceptTerms = true
+                if NosturState.shared.accounts.count > 0 {
+                    NosturState.shared.onBoardingIsShown = false
+                }
             }
         }
     }
