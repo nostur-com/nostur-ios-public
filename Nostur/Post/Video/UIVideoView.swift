@@ -36,12 +36,16 @@ struct UIVideoViewer: UIViewRepresentable {
     
     func updateUIView(_ uiView: UIView, context: Context) {
         if (isPlaying) {
+            do { try AVAudioSession.sharedInstance().setActive(true) }
+            catch { }
             videoPlayerView.play()
             videoPlayerView.playerLayer.player?.isMuted = false
         }
         else {
             videoPlayerView.playerLayer.player?.pause()
             videoPlayerView.playerLayer.player?.isMuted = true
+            do { try AVAudioSession.sharedInstance().setActive(false) }
+            catch { }
         }
     }
 }

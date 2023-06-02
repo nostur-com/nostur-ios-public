@@ -62,7 +62,11 @@ struct SingleVideoViewer: View {
                         )
                         .frame(width: scaledDimensions.width, height: scaledDimensions.height)
                         .background(Color.black)
-                        .onDisappear { isPlaying = false }
+                        .onDisappear {
+                            if isPlaying {
+                                isPlaying = false
+                            }
+                        }
                         .overlay(
                             Button(action: {
                                 if isPlaying {
