@@ -36,11 +36,11 @@ struct NotificationsPosts: View {
     
     var notifications:[PostOrNotification] {
         // combine nrPosts and PersistentNotifications in the list
-        return pNotifications.map { pNot in
+        return (pNotifications.map { pNot in
             PostOrNotification(type: .NOTIFICATION, notification: pNot)
         } + fl.nrPosts.map({ nrPost in
             PostOrNotification(type: .POST, post: nrPost)
-        })
+        }))
         .sorted(by: { p1, p2 in
             p1.createdAt > p2.createdAt
         })
@@ -223,13 +223,14 @@ struct NotificationsPosts: View {
 
 struct NotificationsNotes_Previews: PreviewProvider {
     static var previews: some View {
-        let pubkey = "a4ec6308a9c3a9e5eb6d02ac4d7ea64701e294c598010d1dd5e53a838aae1bea"
+        let pubkey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
         VStack {
             NotificationsPosts(pubkey: pubkey, mutedRootIds: [], blockedPubkeys: [])
         }
         .withPreviewEnvironment({ pe in
             pe.loadContacts()
-            pe.loadPosts()
+//            pe.loadPosts()
+//            pe.loadNotifications()
             pe.loadNewFollowersNotification()
         })
     }
