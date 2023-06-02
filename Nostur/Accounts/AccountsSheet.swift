@@ -39,7 +39,7 @@ struct AccountsSheet: View {
                                 dismiss()
                             }
                             .swipeActions(edge: .trailing) {
-                                Button("Log out", role: .destructive) {
+                                Button(String(localized:"Log out", comment:"Log out button"), role: .destructive) {
                                     logoutAccount = account
                                 }
                             }
@@ -49,38 +49,38 @@ struct AccountsSheet: View {
                 
                 NavigationLink {
                     NewAccountSheet()
-                } label: { Text("Create new account") }
+                } label: { Text("Create new account", comment:"Button to create a new account") }
                 
                 NavigationLink {
                     AddExistingAccountSheet()
-                } label: { Text("Add existing account") }
+                } label: { Text("Add existing account", comment:"Button to add an existing account") }
                 Spacer()
             }
             .padding(20)
-            .navigationTitle("Accounts")
+            .navigationTitle(String(localized:"Accounts", comment:"Navigation title for Accounts screen"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(content: {
                 if (withDismissButton) {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Close") { dismiss() }
+                        Button(String(localized: "Close", comment: "Button to close this screen")) { dismiss() }
                     }
                 }
             })
             .actionSheet(item: $logoutAccount) { account in
                 ActionSheet(
-                    title: Text("Confirm log out"),
+                    title: Text("Confirm log out", comment: "Title of sheet that asks the user to confirm logout action"),
                     message: account.privateKey != nil
                     ? Text("""
                                      Make sure you have a back-up of your private key (nsec)
                                      Nostur cannot recover your account without it
-                                     """)
+                                     """, comment: "Informational text during logout action")
                     : Text("""
                                      Account: @\(account.name) / \(account.display_name)
-                                     """)
+                                     """, comment: "Informational text during logout action, showing Account name/handle")
                     ,
                     buttons: account.privateKey != nil
                     ? [
-                        .destructive(Text("Log out"), action: {
+                        .destructive(Text("Log out", comment: "Button to log out"), action: {
                             ns.logout(account)
                             
                             if (ns.accounts.count < 1) {
@@ -88,14 +88,14 @@ struct AccountsSheet: View {
                             }
                             
                         }),
-                        .default(Text("Copy private key (nsec) to clipboard"), action: {
+                        .default(Text("Copy private key (nsec) to clipboard", comment: "Button to copy private key to clipboard"), action: {
                             if let pk = ns.account?.privateKey {
                                 UIPasteboard.general.string = nsec(pk)
                             }
                         }),
                         .cancel(Text("Cancel"))
                     ] : [
-                        .destructive(Text("Log out"), action: {
+                        .destructive(Text("Log out", comment: "Button to log out"), action: {
                             ns.logout(account)
                             
                             if (ns.accounts.count < 1) {
@@ -123,7 +123,7 @@ struct AccountRow: View {
                         Text(account.name).font(.headline).foregroundColor(.primary)
                             .lineLimit(1)
                         if (account.privateKey == nil) {
-                            Text("Read only").font(.system(size: 12.0))
+                            Text("Read only", comment: "Label to indicate this a Read Only account").font(.system(size: 12.0))
                                 .padding(.horizontal, 8)
                                 .background(.blue)
                                 .foregroundColor(.white)

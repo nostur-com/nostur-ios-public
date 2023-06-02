@@ -22,13 +22,13 @@ struct AddExistingAccountSheet: View {
     var body: some View {
             ZStack {
                 VStack {
-                    TextField("Public or private key (npub or nsec)", text: $key)
+                    TextField(String(localized:"Public or private key (npub or nsec)", comment:"Input field to enter public or private key on Add Existing Account screen"), text: $key)
                         .padding()
                         .background(grayBackground)
                         .cornerRadius(5.0)
                         .padding(.bottom, 20)
                     
-                    Text("Keys are stored on your device in iOS keychain").foregroundColor(.gray)
+                    Text("Keys are stored on your device in iOS keychain", comment:"Informational message about key storage on Add Existing Account screen").foregroundColor(.gray)
                         .font(.caption2)
                     
                     Button {
@@ -57,7 +57,7 @@ struct AddExistingAccountSheet: View {
                         NavigationLink {
                             TryGuestAccountSheet()
                         } label: {
-                            Text("Skip and try as guest first")
+                            Text("Skip and try as guest first", comment: "Button to skip adding account and use the guest account instead")
                         }
                         .buttonStyle(.borderless)   
                         .padding(.top, 20)
@@ -65,16 +65,16 @@ struct AddExistingAccountSheet: View {
                 }
                 VStack {
                     Spacer()
-                    Text("Note: You can also add someone elses public key to try out Nostur from their perspective.").foregroundColor(.gray)
+                        Text("Note: You can also add someone elses public key to try out Nostur from their perspective.", comment: "Informational message on Add Existing Account screen").foregroundColor(.gray)
                 }
             }
             .controlSize(.large)
             .buttonStyle(.bordered)
             .padding()
-            .alert("Invalid key", isPresented: $invalidKey) {
+            .alert(String(localized:"Invalid key", comment: "Message shown when user has entered an invalid key"), isPresented: $invalidKey) {
                 Button("OK", role: .cancel) { }
             }
-            .navigationTitle("Add existing account")
+                        .navigationTitle(String(localized:"Add existing account", comment: "Navigation title for Add Existing Account screen"))
             .navigationBarTitleDisplayMode(.inline)
     }
     
@@ -132,7 +132,7 @@ struct AddExistingAccountSheet: View {
             try NewOnboardingTracker.shared.start(pubkey: account.publicKey)
         }
         catch {
-            print("🔴🔴 Failed to start onboarding")
+            L.og.error("🔴🔴 Failed to start onboarding")
         }
     }
     
@@ -175,7 +175,7 @@ struct AddExistingAccountSheet: View {
             try NewOnboardingTracker.shared.start(pubkey: account.publicKey)
         }
         catch {
-            print("🔴🔴 Failed to start onboarding")
+            L.og.error("🔴🔴 Failed to start onboarding")
         }
     }
 }
