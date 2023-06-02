@@ -213,11 +213,8 @@ extension PreviewEnvironment {
     func loadNewFollowersNotification() {
         guard let account = NosturState.shared.account else { L.og.debug("Preview.loadNewFollowersNotification - missing Account"); return }
         context.performAndWait {
-            let newFollowersNotification = PersistentNotification(context: self.context)
-            newFollowersNotification.createdAt = .now
-            newFollowersNotification.pubkey = account.publicKey
-            newFollowersNotification.type = .newFollowers
-            newFollowersNotification.content = "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240,32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245,5195320c049ccff15766e070413bbec1c021bca03ee022838724a8ffb680bf3a,3f770d65d3a764a9c5cb503ae123e62ec7598ad035d836e2a810f3877a745b24,3f770d65d3a764a9c5cb503ae123e62ec7598ad035d836e2a810f3877a745b24,febbaba219357c6c64adfa2e01789f274aa60e90c289938bfc80dd91facb2899,aff9a9f017f32b2e8b60754a4102db9d9cf9ff2b967804b50e070780aa45c9a8"
+            let followers = "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240,32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245,5195320c049ccff15766e070413bbec1c021bca03ee022838724a8ffb680bf3a,3f770d65d3a764a9c5cb503ae123e62ec7598ad035d836e2a810f3877a745b24,3f770d65d3a764a9c5cb503ae123e62ec7598ad035d836e2a810f3877a745b24,febbaba219357c6c64adfa2e01789f274aa60e90c289938bfc80dd91facb2899,aff9a9f017f32b2e8b60754a4102db9d9cf9ff2b967804b50e070780aa45c9a8".split(separator: ",").map { String($0) }
+            let _ = PersistentNotification.create(pubkey: account.publicKey, followers: followers, context: context)
         }
     }
 
