@@ -16,4 +16,14 @@ public class PersistentNotification: NSManagedObject {
         case none = "NONE"
         case newFollowers = "NEW_FOLLOWERS"
     }
+    
+    static func create(pubkey:String, followers:[String], context:NSManagedObjectContext) -> PersistentNotification {
+        let newFollowersNotification = PersistentNotification(context: context)
+        newFollowersNotification.id = UUID()
+        newFollowersNotification.createdAt = .now
+        newFollowersNotification.pubkey = pubkey
+        newFollowersNotification.type = .newFollowers
+        newFollowersNotification.content = followers.joined(separator: ",")
+        return newFollowersNotification
+    }
 }

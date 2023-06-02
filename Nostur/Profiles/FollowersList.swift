@@ -73,7 +73,12 @@ struct FollowersList: View {
             print("Fetching \(missing.count) missing contacts")
             QueuedFetcher.shared.enqueue(pTags: missing)
             
-            req(RM.getFollowers(pubkey: pubkey))
+            if pubkey == NosturState.shared.activeAccountPublicKey {
+                FollowerNotifier.shared.checkForUpdatedContactList()
+            }
+            else {
+                req(RM.getFollowers(pubkey: pubkey))
+            }
         }
         .onDisappear {
             let missing = clEventsFollowingPubkeyMissingContact.map { $0.pubkey }

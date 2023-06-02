@@ -120,12 +120,11 @@ class FollowerNotifier {
         guard newFollowerPubkeys.count > 0 else { return }
         ctx.perform { [weak self] in
             guard let self = self else { return }
-            let newFollowersNotification = PersistentNotification(context: self.ctx)
-            newFollowersNotification.id = UUID()
-            newFollowersNotification.createdAt = .now
-            newFollowersNotification.pubkey = pubkey
-            newFollowersNotification.type = .newFollowers
-            newFollowersNotification.content = self.newFollowerPubkeys.joined(separator: ",")
+            let newFollowersNotification = PersistentNotification.create(
+                pubkey: pubkey,
+                followers: Array(self.newFollowerPubkeys),
+                context: self.ctx
+            )
             
             if let account = NosturState.shared.account?.toBG() {
                 account.lastFollowerCreatedAt = Int64(Date.now.timeIntervalSince1970) // HM not needed since we use mostRecent (PNotification)
