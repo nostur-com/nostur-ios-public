@@ -49,18 +49,18 @@ struct AccountEditView: View {
                     Form {
                         
                         Group {
-                            Section(header: Text("Your name") ) {
-                                TextField("Enter your name", text: $account.name).disabled(shouldDisable)
+                            Section(header: Text("Your name", comment: "Label for entering your name on Edit Profile screen") ) {
+                                TextField(String(localized:"Enter your name", comment:"Placeholder on input field on Edit Profile screen"), text: $account.name).disabled(shouldDisable)
                                     .disableAutocorrection(true)
                             }
                             
-                            Section(header: Text("Bio") ) {
-                                TextField("Something about yourself", text:$account.about, axis: .vertical)
+                            Section(header: Text("Bio", comment: "Label for entering a bio about yourself on Edit Profile screen") ) {
+                                TextField(String(localized:"Something about yourself", comment:"Placeholder on input field for Bio on Edit Profile screen"), text:$account.about, axis: .vertical)
                                     .lineLimit(3...5)
                                     .disabled(shouldDisable)
                             }
                             
-                            Section(header: Text("Nostr username (NIP-05)") ) {
+                            Section(header: Text("Nostr username (NIP-05)", comment: "Label for entering a NIP-05 username on Edit Profile screen") ) {
                                 TextField("", text: $account.nip05).keyboardType(.emailAddress).disabled(shouldDisable)
                                     .keyboardType(.URL)
                                     .disableAutocorrection(true)
@@ -69,23 +69,22 @@ struct AccountEditView: View {
                         }
                         //                    .listRowInsets(EdgeInsets())
                         
-                        Section(header: Text("Lightning Address (LUD-16)") ) {
+                        Section(header: Text("Lightning Address (LUD-16)", comment: "Label for entering a LUD-16 Lightning Address on Edit Profile screen") ) {
                             TextField("", text: $account.lud16).keyboardType(.emailAddress).disabled(shouldDisable)
                                 .keyboardType(.URL)
                                 .disableAutocorrection(true)
                                 .textInputAutocapitalization(.never)
                         }
                         
-                        Section(header: Text("Lightning Address (LUD-06)") ) {
+                        Section(header: Text("Lightning Address (LUD-06)", comment: "Label for entering a LUD-06 Lighting Address on Edit Profile screen") ) {
                             TextField("", text: $account.lud06).keyboardType(.URL).disabled(shouldDisable)
                                 .keyboardType(.URL)
                                 .disableAutocorrection(true)
                                 .textInputAutocapitalization(.never)
                         }
-                        
                         if (newPicture == nil) {
-                            Section(header: Text("Profile picture URL") ) {
-                                TextField("https://nostur.com/profile.jpg", text: $account.picture).keyboardType(.URL).disabled(shouldDisable)
+                            Section(header: Text("Profile picture URL", comment: "Label for entering an URL to profile picture on Edit Profile screen") ) {
+                                TextField(String("https://nostur.com/profile.jpg"), text: $account.picture).keyboardType(.URL).disabled(shouldDisable)
                                     .keyboardType(.URL)
                                     .disableAutocorrection(true)
                                     .textInputAutocapitalization(.never)
@@ -93,8 +92,8 @@ struct AccountEditView: View {
                         }
                         
                         if (newBanner == nil) {
-                            Section(header: Text("Profile banner URL") ) {
-                                TextField("https://nostur.com/banner.jpg", text: $account.banner).keyboardType(.URL).disabled(shouldDisable)
+                            Section(header: Text("Profile banner URL", comment: "Label for entering an URL to profile banner on Edit Profile screen") ) {
+                                TextField(String("https://nostur.com/banner.jpg"), text: $account.banner).keyboardType(.URL).disabled(shouldDisable)
                                     .keyboardType(.URL)
                                     .disableAutocorrection(true)
                                     .textInputAutocapitalization(.never)
@@ -102,32 +101,32 @@ struct AccountEditView: View {
                         }
                         
                         if (shouldDisable) {
-                            Section(header:Text("Import private key")) {
-                                TextField("nsec1...", text: $newPrivateKey).foregroundColor(.primary)
+                            Section(header:Text("Import private key", comment: "Label for importing your private key on Edit Profile screen")) {
+                                TextField(String("nsec1..."), text: $newPrivateKey).foregroundColor(.primary)
                                     .keyboardType(.URL)
                                     .disableAutocorrection(true)
                                     .textInputAutocapitalization(.never)
                             }.foregroundColor(.primary)
                         }
                         
-                        Section(header: Text(shouldDisable ? "Public key" : "Keys") ) {
+                        Section(header: Text(shouldDisable ? "Public key" : "Keys", comment: "Header above private and public key on Edit Profile screen") ) {
                             HStack {
-                                Text("**PUBLIC KEY:** \(account.npub)").lineLimit(1)
+                                Text("**PUBLIC KEY:** \(account.npub)", comment: "Field that shows a public key").lineLimit(1)
                                 Image(systemName: "doc.on.doc.fill")
                                     .onTapGesture {
                                         UIPasteboard.general.string = account.npub
-                                        sendNotification(.anyStatus, ("Public key copied to clipboard", "COPYKEYS"))
+                                        sendNotification(.anyStatus, (String(localized: "Public key copied to clipboard", comment: "Notification shown after user tapped to copy"), "COPYKEYS"))
                                     }
                             }
                             
                             if (!shouldDisable && account.nsec != nil) {
                                 HStack {
-                                    Text("**PRIVATE KEY:** \(String(account.nsec!.prefix(7)))∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗").lineLimit(1)
+                                    Text("**PRIVATE KEY:** \(String(account.nsec!.prefix(7)))∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗", comment: "Field that shows a partial private key").lineLimit(1)
                                     Spacer()
                                     Image(systemName: "doc.on.doc.fill")
                                         .onTapGesture {
                                             UIPasteboard.general.string = account.nsec!
-                                            sendNotification(.anyStatus, ("Private key copied to clipboard", "COPYKEYS"))
+                                            sendNotification(.anyStatus, (String(localized:"Private key copied to clipboard", comment:"Notifiation shown after user tapped to copy"), "COPYKEYS"))
                                         }
                                 }
                             }
@@ -161,7 +160,7 @@ struct AccountEditView: View {
             }
         }
         .background(Color(.systemGroupedBackground))
-        .navigationTitle("Edit profile")
+        .navigationTitle(String(localized:"Edit profile", comment: "Navigation title for Edit Profile screen"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
@@ -185,12 +184,12 @@ struct AccountEditView: View {
                             .sink(receiveCompletion: { result in
                                 switch result {
                                     case .failure(let error):
-                                        print("Error uploading images: \(error.localizedDescription)")
+                                    L.og.error("Error uploading images: \(error.localizedDescription)")
                                         uploadError = "Image upload error"
                                         sendNotification(.anyStatus, ("Upload error: \(error.localizedDescription)", "NewPost"))
                                         uploading = false
                                     case .finished:
-                                        print("PFP uploaded successfully")
+                                    L.og.info("PFP uploaded successfully")
                                 }
                             }, receiveValue: { urls in
                                 print(urls)
@@ -215,13 +214,13 @@ struct AccountEditView: View {
                         ProgressView()
                     }
                     else {
-                        Text("Save")
+                        Text("Save", comment: "Save button on the Edit Profile screen")
                     }
                 }
                 .disabled(uploading)
             }
         }
-        .alert("Invalid private key", isPresented: $invalidPrivateKey) {
+        .alert(String(localized:"Invalid private key", comment:"Message shown after user entered an invalid private key"), isPresented: $invalidPrivateKey) {
             Button("OK", role: .cancel) { }
         }
         .onAppear {
@@ -262,7 +261,7 @@ extension AccountEditView {
             dismiss()
         }
         catch {
-            print("Error saving account")
+            L.og.error("Error saving account")
         }
     }
     
@@ -298,7 +297,7 @@ extension AccountEditView {
                 up.publishNow(newKind0EventSigned)
             }
             catch {
-                print("🔴🔴🔴🔴 Could not sign/save/broadcast event 🔴🔴🔴🔴")
+                L.og.error("🔴🔴🔴🔴 Could not sign/save/broadcast event 🔴🔴🔴🔴")
             }
         }
     }
