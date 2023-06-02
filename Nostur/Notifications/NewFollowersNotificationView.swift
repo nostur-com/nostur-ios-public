@@ -26,7 +26,7 @@ struct NewFollowersNotificationView: View {
     var body: some View {
         VStack(alignment:.leading) {
             ZStack(alignment:.leading) {
-                ForEach(contacts.indices, id:\.self) { index in
+                ForEach(contacts.prefix(10).indices, id:\.self) { index in
                     PFP(pubkey: contacts[index].pubkey, contact: contacts[index])
                         .id(contacts[index].pubkey)
                         .onTapGesture {
