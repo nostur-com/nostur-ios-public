@@ -33,7 +33,7 @@ class ImageProcessing {
             }())
 
             let dataCache = try! DataCache(name: "com.nostur.image.pfp")
-            dataCache.sizeLimit = 1024 * 1024 * 500
+            dataCache.sizeLimit = 1024 * 1024 * 1500
 
             $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 100)
             $0.dataCache = dataCache
