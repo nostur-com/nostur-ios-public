@@ -40,7 +40,8 @@ struct NoteRow: View {
                         .scaleEffect(0.6)
                     Text("**\(nrPost.contact?.anyName ?? "...") reposted**").font(.subheadline)
                         .onTapGesture {
-                            UIPasteboard.general.string = nrPost.mainEvent.toNEvent().eventJson()
+                            navigateTo(ContactPath(key: nrPost.pubkey))
+//                            UIPasteboard.general.string = nrPost.mainEvent.toNEvent().eventJson()
                         }
                 }
                 .foregroundColor(.gray)
