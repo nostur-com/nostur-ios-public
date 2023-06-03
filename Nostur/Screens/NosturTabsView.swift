@@ -57,6 +57,7 @@ struct NosturTabsView: View {
                 TabbedDetailContainer()
             }
         }
+        .withLightningEffect()
         .onChange(of: selectedTab) { newValue in
             if newValue == "Notifications" {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {

@@ -274,4 +274,8 @@ extension Notification.Name {
     static var notificationsTabAppeared: Notification.Name {
         return Notification.Name("notificationsTabAppeared")
     }
+    
+    static var lightningStrike: Notification.Name {
+        return Notification.Name("lightningStrike")
+    }
 }
