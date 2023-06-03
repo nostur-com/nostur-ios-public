@@ -27,7 +27,8 @@ struct Settings: View {
     
     @State var deleteAll = false
     @State var showDeleteAllEventsConfirmation = false
-
+    @State var albyNWCsheetShown = false
+    @State var customNWCsheetShown = false
     
 //    @State var showDocPicker = false
     @State var showExporter = false
@@ -127,6 +128,16 @@ struct Settings: View {
                     }
                     Text("Zap \(settings.defaultZapAmount.satsFormatted) sats by default (\(fiatPrice))")
                 }
+                .onChange(of: settings.defaultLightningWallet) { newWallet in
+                    if newWallet.scheme == "nostur:nwc:alby:" {
+                        // trigger alby setup
+                        albyNWCsheetShown = true
+                    }
+                    if newWallet.scheme == "nostur:nwc:custom:" {
+                        // trigger custom NWC setup
+                        customNWCsheetShown = true
+                    }
+                }
             }
             
             Section(header: Text("Data export")) {
@@ -164,7 +175,7 @@ struct Settings: View {
                         do {
                             try viewContext.save()
                             if (relay.read || relay.write) {
-                                _ = sp.addSocket(relayId: relay.objectID, url: relay.url!, read: relay.read, write: relay.write)
+                                _ = sp.addSocket(relayId: relay.objectID.uriRepresentation().absoluteString, url: relay.url!, read: relay.read, write: relay.write)
                             }
                         } catch {
                             let nsError = error as NSError
@@ -369,6 +380,18 @@ struct Settings: View {
         .sheet(isPresented: $deleteAccountIsShown) {
             NavigationStack {
                 DeleteAccountSheet()
+                    .environmentObject(ns)
+            }
+        }
+        .sheet(isPresented: $albyNWCsheetShown) {
+            NavigationStack {
+                AlbyNWCConnectSheet()
+                    .environmentObject(ns)
+            }
+        }
+        .sheet(isPresented: $customNWCsheetShown) {
+            NavigationStack {
+                CustomNWCConnectSheet()
                     .environmentObject(ns)
             }
         }

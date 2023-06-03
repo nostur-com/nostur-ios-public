@@ -30,6 +30,7 @@ final class SettingsStore: ObservableObject {
         static let statusBubble = "statusBubble"
         static let fullWidthImages = "full_width_images"
         static let defaultMediaUploadService = "media_upload_service"
+        static let activeNWCconnectionId = "active_nwc_connection_id"
     }
 
 //    private let cancellable: Cancellable
@@ -45,7 +46,9 @@ final class SettingsStore: ObservableObject {
         LightningWallet(name: "Phoenix", scheme: "phoenix:lightning:"), // guessed. must check if works
         LightningWallet(name: "Breez", scheme: "breez:lightning:"), // https://github.com/breez/breezmobile/issues/300
         LightningWallet(name: "BlueWallet", scheme: "bluewallet:lightning:"), // https://github.com/BlueWallet/BlueWallet/wiki/Deeplinking
-        LightningWallet(name: "Zeus", scheme: "zeusln:lightning:") // https://github.com/ZeusLN/zeus/blob/b0d129114390d8c6f56904e6c7a7404ca09a80f5/ios/zeus/Info.plist#LL42C5-L42C27
+        LightningWallet(name: "Zeus", scheme: "zeusln:lightning:"), // https://github.com/ZeusLN/zeus/blob/b0d129114390d8c6f56904e6c7a7404ca09a80f5/ios/zeus/Info.plist#LL42C5-L42C27
+        LightningWallet(name: "Alby (Nostr Wallet Connect)", scheme: "nostur:nwc:alby:"), // NWC
+        LightningWallet(name: "Custom Nostr Wallet Connect...", scheme: "nostur:nwc:custom:") // CUSTOM NWC
     ]
     
     public static let mediaUploadServiceOptions = [
@@ -81,7 +84,8 @@ final class SettingsStore: ObservableObject {
             Keys.autoScroll: false,
             Keys.fullWidthImages: false,
             Keys.defaultMediaUploadService: "nostrcheck.me",
-            Keys.statusBubble: false
+            Keys.statusBubble: false,
+            Keys.activeNWCconnectionId: "",
         ])
 
         // Don't use this anymore because re-renders too much, like when moving window on macOS
@@ -166,6 +170,11 @@ final class SettingsStore: ObservableObject {
     var defaultZapAmount: Double {
         set { defaults.set(newValue, forKey: Keys.defaultZapAmount) }
         get { defaults.double(forKey: Keys.defaultZapAmount) }
+    }
+    
+    var activeNWCconnectionId: String {
+        set { objectWillChange.send(); defaults.set(newValue, forKey: Keys.activeNWCconnectionId)  }
+        get { defaults.string(forKey: Keys.activeNWCconnectionId) ?? "" }
     }
 
     var defaultLightningWallet: LightningWallet {
