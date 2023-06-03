@@ -82,11 +82,13 @@ class FollowerNotifier {
                 let account = notification.object as! Account
                 guard account.privateKey != nil else { return }
                 L.og.info("Checking for new after account switch")
+                let pubkey = account.publicKey
                 
-                self.ctx.perform {
+                self.ctx.perform { [weak self] in
+                    guard let self = self else { return }
                     if let mostRecent = PersistentNotification.fetchPersistentNotification(context: self.ctx) {
                         let since = NTimestamp(date: mostRecent.createdAt)
-                        req(RM.getFollowers(pubkey: account.publicKey, since: since))
+                        req(RM.getFollowers(pubkey: pubkey, since: since))
                     }
                     else {
                         let since = Int(Date.now.timeIntervalSince1970 - (3600 * 3*24)) // how long ago  ago
@@ -117,10 +119,10 @@ class FollowerNotifier {
     }
     
     private func _generateNewFollowersNotification(_ pubkey:String) {
-        guard newFollowerPubkeys.count > 0 else { return }
         ctx.perform { [weak self] in
             guard let self = self else { return }
-            let newFollowersNotification = PersistentNotification.create(
+            guard self.newFollowerPubkeys.count > 0 else { return }
+            _ = PersistentNotification.create(
                 pubkey: pubkey,
                 followers: Array(self.newFollowerPubkeys),
                 context: self.ctx
