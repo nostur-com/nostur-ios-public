@@ -77,7 +77,7 @@ struct RelayEditView: View {
                                 if (edittingSocket?.url != relayUrl) {
                                     edittingSocket?.client.disconnect()
                                     sp.removeSocket(relay.objectID)
-                                    let replacedSocket = sp.addSocket(relayId: relay.objectID, url: relayUrl, read: relay.read, write: relay.write)
+                                    let replacedSocket = sp.addSocket(relayId: relay.objectID.uriRepresentation().absoluteString, url: relayUrl, read: relay.read, write: relay.write)
                                     replacedSocket.connect(true)
 //                                    replacedSocket.client.connect()
                                 }
@@ -129,7 +129,7 @@ struct RelayEditView: View {
                         if (socket.url != correctedRelayUrl) {
                             socket.client.disconnect()
                             sp.removeSocket(relay.objectID)
-                            _ = sp.addSocket(relayId: relay.objectID, url: correctedRelayUrl, read: relay.read, write: relay.write)
+                            _ = sp.addSocket(relayId: relay.objectID.uriRepresentation().absoluteString, url: correctedRelayUrl, read: relay.read, write: relay.write)
                         }
                         else {
                             // read/write change?
@@ -169,8 +169,8 @@ struct RelayEditView_Previews: PreviewProvider {
         let sp:SocketPool = .shared
         
         func socketForRelay(relay: Relay) -> NewManagedClient {
-            guard let socket = sp.sockets[relay.objectID] else {
-                let addedSocket = sp.addSocket(relayId: relay.objectID, url: relay.url!, read: relay.read, write: relay.write)
+            guard let socket = sp.sockets[relay.objectID.uriRepresentation().absoluteString] else {
+                let addedSocket = sp.addSocket(relayId: relay.objectID.uriRepresentation().absoluteString, url: relay.url!, read: relay.read, write: relay.write)
                 return addedSocket
             }
             return socket
