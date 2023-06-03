@@ -1,0 +1,89 @@
+//
+//  ZapButton.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 02/06/2023.
+//
+
+import SwiftUI
+
+// Zap button uses NWC if available, else just falls back to the old LightningButton
+struct ZapButton: View {
+    var tally:Int64 // SATS (1000 SATS ~= 20 cent)
+    @ObservedObject var nrPost:NRPost
+    @ObservedObject var ss:SettingsStore = .shared
+    @State var cancellationId:UUID? = nil
+    @State var activeColor = Self.grey
+    static let grey = Color.init(red: 113/255, green: 118/255, blue: 123/255)
+    
+    var body: some View {
+        if !ss.activeNWCconnectionId.isEmpty, let contact = nrPost.contact?.contact {
+            if let cancellationId {
+                Button {
+                    if Unpublisher.shared.cancel(cancellationId) {
+                        NWCRequestQueue.shared.removeRequest(byCancellationId: cancellationId)
+                        NWCZapQueue.shared.removeZap(byCancellationId: cancellationId)
+                        self.cancellationId = nil
+                    }
+                } label: {
+                    Image("BoltIconActive").foregroundColor(activeColor)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                }
+            }
+            // TODO elsif zap .failed .overlay error !
+            else if [.initiated,.nwcConfirmed,.zapReceiptConfirmed].contains(nrPost.zapState) {
+                Image("BoltIconActive").foregroundColor(.yellow)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+            }
+            else {
+                Image("BoltIcon")
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .overlay(
+                        GeometryReader { geo in
+                            Color.white.opacity(0.001)
+                                .onTapGesture {
+                                    let impactMed = UIImpactFeedbackGenerator(style: .medium)
+                                    impactMed.impactOccurred()
+                                    sendNotification(.lightningStrike, LightningStrike(location:geo.frame(in: .global).origin, amount:ss.defaultZapAmount))
+                                    withAnimation(.easeIn(duration: 0.25).delay(0.25)) {// wait 0.25 for the strike
+                                        activeColor = .yellow
+                                    }
+                                    cancellationId = UUID()
+                                    DataProvider.shared().bg.perform {
+                                        let zap = Zap(amount: Int64(ss.defaultZapAmount), contact: contact, eventId: nrPost.id, cancellationId: cancellationId!)
+                                        NWCZapQueue.shared.sendZap(zap)
+                                        nrPost.event.zapState = .initiated
+                                    }
+                                }
+                        }
+                    )
+            }
+        }
+        else {
+            LightningButton(tally:tally, nrPost: nrPost)
+        }
+    }
+}
+
+struct ZapButton_Previews: PreviewProvider {
+    static var previews: some View {
+        VStack {
+            if let nrPost = PreviewFetcher.fetchNRPost("49635b590782cb1ab1580bd7e9d85ba586e6e99e48664bacf65e71821ae79df1") {
+                ZapButton(tally:nrPost.zapTally, nrPost: nrPost)
+            }
+            
+            
+            Image("BoltIconActive").foregroundColor(.yellow)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+        }
+        .withPreviewEnvironment({ pe in
+            SettingsStore.shared.activeNWCconnectionId = "test"
+            pe.loadContacts()
+            pe.loadZaps()
+        })
+    }
+}
