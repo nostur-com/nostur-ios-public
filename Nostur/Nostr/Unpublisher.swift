@@ -53,9 +53,9 @@ class Unpublisher: ObservableObject {
         return cancellationId
     }
     
-    func publish(_ nEvent:NEvent) -> UUID {
+    func publish(_ nEvent:NEvent, cancellationId:UUID? = nil) -> UUID {
         print("going to publish")
-        let cancellationId = UUID()
+        let cancellationId = cancellationId ?? UUID()
         queue.append(Unpublished(type:.other, cancellationId: cancellationId, nEvent: nEvent, createdAt: Date.now))
         return cancellationId
     }
@@ -93,6 +93,11 @@ class Unpublisher: ObservableObject {
     }
     
     private func sendToRelays(_ nEvent:NEvent) {
+        if nEvent.kind == .nwcRequest {
+            L.og.info("⚡️ Sending .nwcRequest to NWC relay")
+            sp.sendMessage(ClientMessage(onlyForNWCRelay: true, message: nEvent.wrappedEventJson()))
+            return
+        }
         // Always save event first
         if try! Event.fetchEvent(id: nEvent.id, context: viewContext) == nil {
             let bgContext = DataProvider.shared().bg
