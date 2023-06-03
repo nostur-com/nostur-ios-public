@@ -14,19 +14,19 @@ import Combine
 // Structure is:
 // SocketPool
 //  .sockets
-//      [NSManagedObjectID] = ManagedClient
+//      [NSManagedObjectID.URIRepresentation.absoluteString] = ManagedClient
 //                                    .client
 //                                    .activeSubscriptions
 //
-//      [NSManagedObjectID] = ManagedClient
+//      [NSManagedObjectID.URIRepresentation.absoluteString] = ManagedClient
 //                                    .client
 //                                    .activeSubscriptions
 //
-//      [NSManagedObjectID] = ManagedClient
+//      [NSManagedObjectID.URIRepresentation.absoluteString] = ManagedClient
 //                                    .client
 //                                    .activeSubscriptions
 //
-//      [NSManagedObjectID] = ManagedClient
+//      [NSManagedObjectID.URIRepresentation.absoluteString] = ManagedClient
 //                                    .client
 //                                    .activeSubscriptions
 
@@ -34,9 +34,9 @@ final class SocketPool: ObservableObject {
     
     static let shared = SocketPool()
     
-    @Published var sockets:[NSManagedObjectID : NewManagedClient] = [:]
+    @Published var sockets:[String : NewManagedClient] = [:]
     
-    func setup() {
+    func setup(_ activeNWCconnectionId:String) {
         DataProvider.shared().viewContext.performAndWait {
             do {
                 let fetchRequest: NSFetchRequest<Relay> = Relay.fetchRequest()
@@ -45,7 +45,11 @@ final class SocketPool: ObservableObject {
                 
                 // CONNECT TO RELAYS
                 for relay in relays {
-                    _ = sp.addSocket(relayId: relay.objectID, url: relay.url!, read:relay.read, write: relay.write)
+                    _ = sp.addSocket(relayId: relay.objectID.uriRepresentation().absoluteString, url: relay.url!, read:relay.read, write: relay.write)
+                }
+                // If we have NWC relays, connect to those too
+                if !activeNWCconnectionId.isEmpty, let nwc = NWCConnection.fetchConnection(activeNWCconnectionId, context: DataProvider.shared().viewContext) {
+                    _ = sp.addNWCSocket(connectionId:nwc.connectionId, url: nwc.relay)
                 }
             } catch {
                 L.sockets.error("🔴🔴🔴 Fail in SocketPool.shared.setup(), \(error)")
@@ -77,7 +81,7 @@ final class SocketPool: ObservableObject {
         }
     }
     
-    func addSocket(relayId:NSManagedObjectID, url:String, read:Bool = true, write: Bool = false) -> NewManagedClient {
+    func addSocket(relayId:String, url:String, read:Bool = true, write: Bool = false) -> NewManagedClient {
         if (!sockets.keys.contains(relayId)) {
             let urlURL:URL = URL(string: url) ?? URL(string:"wss://localhost:123456/invalid_relay_url")!
             var request = URLRequest(url: urlURL)
@@ -102,6 +106,30 @@ final class SocketPool: ObservableObject {
         }
     }
     
+    func addNWCSocket(connectionId:String, url:String) -> NewManagedClient {
+        if (!sockets.keys.contains(connectionId)) {
+            let urlURL:URL = URL(string: url) ?? URL(string:"wss://localhost:123456/invalid_relay_url")!
+            var request = URLRequest(url: urlURL)
+            //             request.setValue(["wamp"].joined(separator: ","), forHTTPHeaderField: "Sec-WebSocket-Protocol")
+            
+            request.timeoutInterval = 15
+            
+            let client = NewWebSocket(url: url)
+            
+            let managedClient = NewManagedClient(relayId: connectionId, url: url, client:client, read: true, write: true, isNWC: true)
+            
+            client.delegate = managedClient
+            
+            managedClient.connect()
+            
+            sockets[connectionId] = managedClient
+            return managedClient
+        }
+        else {
+            return sockets[connectionId]!
+        }
+    }
+    
     func socketByUrl(_ url:String) -> NewManagedClient? {
         let managedClient = sockets.filter { relayId, managedClient in
             managedClient.url == url.lowercased()
@@ -120,6 +148,12 @@ final class SocketPool: ObservableObject {
     }
     
     func removeSocket(_ relayId:NSManagedObjectID) {
+        if (sockets.keys.contains(relayId.uriRepresentation().absoluteString)) {
+            sockets.removeValue(forKey: relayId.uriRepresentation().absoluteString)
+        }
+    }
+    
+    func removeSocket(_ relayId:String) {
         if (sockets.keys.contains(relayId)) {
             sockets.removeValue(forKey: relayId)
         }
@@ -140,49 +174,89 @@ final class SocketPool: ObservableObject {
         
         Task(priority: .utility) { [unowned self] in
             for (_, managedClient) in self.sockets {
-                guard managedClient.read || managedClient.write else {
-                    // Skip if relay is not selected for reading or writing events
-                    continue
-                }
-                
-                if message.type == .REQ && managedClient.read { // REQ FOR ALL READ RELAYS
-                    if (!managedClient.isConnected) {
-                        if (!managedClient.isConnecting) {
+                if message.onlyForNWCRelay && managedClient.isNWC { // Logic for NWC relay is a bit different, no read/write difference
+                    if message.type == .REQ {
+                        if (!managedClient.isConnected) {
+                            if (!managedClient.isConnecting) {
+                                L.og.info("⚡️ sendMessage: not connected yet, connecting to NWC relay \(managedClient.url)")
+                                managedClient.connect()
+                            }
+                        }
+                        // skip if we already have an active subcription
+                        if subscriptionId != nil && managedClient.activeSubscriptions.contains(subscriptionId!) { continue }
+                        if (subscriptionId != nil) {
+                            DispatchQueue.main.async {
+                                managedClient.activeSubscriptions.append(subscriptionId!)
+                                L.sockets.info("🏎️🏎️⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count)")
+                            }
+                        }
+                        if subscriptionId != nil {
+                            L.sockets.info(" ⬇️⬇️ REQUESTING: \(message.message)")
+                        }
+                        managedClient.client.sendMessage(message.message)
+                    }
+                    else if  message.type == .CLOSE {
+                        if (!managedClient.isConnected) && (!managedClient.isConnecting) {
+                            continue
+                        }
+                        L.sockets.info("🔚🔚 CLOSE: \(message.message)")
+                        managedClient.client.sendMessage(message.message)
+                    }
+                    else if message.type == .EVENT {
+                        if (!managedClient.isConnected) && (!managedClient.isConnecting) {
                             managedClient.connect()
                         }
-                        /// hmm don't continue with .sendMessage (or does it queue until connection??? not sure...)
-//                        continue
+                        L.sockets.info("🚀🚀🚀 PUBLISHING TO \(managedClient.url): \(message.message)")
+                        managedClient.client.sendMessage(message.message)
                     }
-                    // skip if we already have an active subcription
-                    if subscriptionId != nil && managedClient.activeSubscriptions.contains(subscriptionId!) { continue }
-                    if (subscriptionId != nil) {
-                        DispatchQueue.main.async {
-                            managedClient.activeSubscriptions.append(subscriptionId!)
-                            L.sockets.info("🏎️🏎️⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count)")
-                        }
-                    }
-                    if subscriptionId != nil {
-                        L.sockets.info(" ⬇️⬇️ REQUESTING: \(message.message)")
-                    }
-//                    print("⬇️⬇️ REQUESTING: \(String(message.message))")
-                    managedClient.client.sendMessage(message.message)
                 }
-                else if  message.type == .CLOSE { // CLOSE FOR ALL RELAYS
-                    if (!managedClient.read) { continue }
-                    if (!managedClient.isConnected) && (!managedClient.isConnecting) {
-                        // Already closed? no need to connect and send CLOSE message
+                
+                else {
+                    if message.onlyForNWCRelay { continue }
+                    guard managedClient.read || managedClient.write else {
+                        // Skip if relay is not selected for reading or writing events
                         continue
-                        //                        managedClient.connect()
                     }
-                    L.sockets.info("🔚🔚 CLOSE: \(message.message)")
-                    managedClient.client.sendMessage(message.message)
-                }
-                else if message.type == .EVENT && managedClient.write { // EVENT IS ONLY FOR WRITE RELAYS
-                    if (!managedClient.isConnected) && (!managedClient.isConnecting) {
-                        managedClient.connect()
+                    
+                    if message.type == .REQ && managedClient.read { // REQ FOR ALL READ RELAYS
+                        if (!managedClient.isConnected) {
+                            if (!managedClient.isConnecting) {
+                                managedClient.connect()
+                            }
+                            /// hmm don't continue with .sendMessage (or does it queue until connection??? not sure...)
+                            //                        continue
+                        }
+                        // skip if we already have an active subcription
+                        if subscriptionId != nil && managedClient.activeSubscriptions.contains(subscriptionId!) { continue }
+                        if (subscriptionId != nil) {
+                            DispatchQueue.main.async {
+                                managedClient.activeSubscriptions.append(subscriptionId!)
+                                L.sockets.info("🏎️🏎️⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count)")
+                            }
+                        }
+                        if subscriptionId != nil {
+                            L.sockets.info(" ⬇️⬇️ REQUESTING: \(message.message)")
+                        }
+                        //                    print("⬇️⬇️ REQUESTING: \(String(message.message))")
+                        managedClient.client.sendMessage(message.message)
                     }
-                    L.sockets.info("🚀🚀🚀 PUBLISHING TO \(managedClient.url): \(message.message)")
-                    managedClient.client.sendMessage(message.message)
+                    else if  message.type == .CLOSE { // CLOSE FOR ALL RELAYS
+                        if (!managedClient.read) { continue }
+                        if (!managedClient.isConnected) && (!managedClient.isConnecting) {
+                            // Already closed? no need to connect and send CLOSE message
+                            continue
+                            //                        managedClient.connect()
+                        }
+                        L.sockets.info("🔚🔚 CLOSE: \(message.message)")
+                        managedClient.client.sendMessage(message.message)
+                    }
+                    else if message.type == .EVENT && managedClient.write { // EVENT IS ONLY FOR WRITE RELAYS
+                        if (!managedClient.isConnected) && (!managedClient.isConnecting) {
+                            managedClient.connect()
+                        }
+                        L.sockets.info("🚀🚀🚀 PUBLISHING TO \(managedClient.url): \(message.message)")
+                        managedClient.client.sendMessage(message.message)
+                    }
                 }
             }
         }
@@ -207,46 +281,84 @@ final class SocketPool: ObservableObject {
                     // Skip if relay is not selected for reading or writing events
                     continue
                 }
-                
-                if message.type == .REQ && managedClient.read { // REQ FOR ALL READ RELAYS
-                    if (!managedClient.isConnected) {
-                        if (!managedClient.isConnecting) {
+                if message.onlyForNWCRelay && managedClient.isNWC { // Logic for NWC relay is a bit different, no read/write difference
+                    if message.type == .REQ {
+                        if (!managedClient.isConnected) {
+                            if (!managedClient.isConnecting) {
+                                L.og.info("⚡️ sendMessage: not connected yet, connecting to NWC relay \(managedClient.url)")
+                                managedClient.connect()
+                            }
+                        }
+                        // skip if we already have an active subcription
+                        if subscriptionId != nil && managedClient.activeSubscriptions.contains(subscriptionId!) { continue }
+                        if (subscriptionId != nil) {
+                            DispatchQueue.main.async {
+                                managedClient.activeSubscriptions.append(subscriptionId!)
+                                L.sockets.info("🏎️🏎️⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count)")
+                            }
+                        }
+                        if subscriptionId != nil {
+                            L.sockets.info(" ⬇️⬇️ REQUESTING: \(message.message)")
+                        }
+                        managedClient.client.sendMessageAfterPing(message.message)
+                    }
+                    else if  message.type == .CLOSE {
+                        if (!managedClient.isConnected) && (!managedClient.isConnecting) {
+                            continue
+                        }
+                        L.sockets.info("🔚🔚 CLOSE: \(message.message)")
+                        managedClient.client.sendMessageAfterPing(message.message)
+                    }
+                    else if message.type == .EVENT {
+                        if (!managedClient.isConnected) && (!managedClient.isConnecting) {
                             managedClient.connect()
                         }
-                        /// hmm don't continue with .sendMessage (or does it queue until connection??? not sure...)
-//                        continue
+                        L.sockets.info("🚀🚀🚀 PUBLISHING TO \(managedClient.url): \(message.message)")
+                        managedClient.client.sendMessageAfterPing(message.message)
                     }
-                    // skip if we already have an active subcription
-                    if subscriptionId != nil && managedClient.activeSubscriptions.contains(subscriptionId!) { continue }
-                    if (subscriptionId != nil) {
-                        DispatchQueue.main.async {
-                            managedClient.activeSubscriptions.append(subscriptionId!)
-                            L.sockets.info("🟪🏎️🏎️⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count)")
+                }
+                else {
+                    if message.onlyForNWCRelay { continue }
+                    if message.type == .REQ && managedClient.read { // REQ FOR ALL READ RELAYS
+                        if (!managedClient.isConnected) {
+                            if (!managedClient.isConnecting) {
+                                managedClient.connect()
+                            }
+                            /// hmm don't continue with .sendMessage (or does it queue until connection??? not sure...)
+    //                        continue
                         }
+                        // skip if we already have an active subcription
+                        if subscriptionId != nil && managedClient.activeSubscriptions.contains(subscriptionId!) { continue }
+                        if (subscriptionId != nil) {
+                            DispatchQueue.main.async {
+                                managedClient.activeSubscriptions.append(subscriptionId!)
+                                L.sockets.info("🟪🏎️🏎️⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count)")
+                            }
+                        }
+                        if subscriptionId != nil {
+                            L.sockets.info(" 🟪⬇️⬇️ REQUESTING: \(message.message)")
+                        }
+    //                    print("⬇️⬇️ REQUESTING: \(String(message.message))")
+                        managedClient.client.sendMessageAfterPing(message.message)
                     }
-                    if subscriptionId != nil {
-                        L.sockets.info(" 🟪⬇️⬇️ REQUESTING: \(message.message)")
+                    else if  message.type == .CLOSE { // CLOSE FOR ALL RELAYS
+                        if (!managedClient.read) { continue }
+                        if (!managedClient.isConnected) && (!managedClient.isConnecting) {
+                            // Already closed? no need to connect and send CLOSE message
+                            continue
+                            //                        managedClient.connect()
+                        }
+                        L.sockets.info("🟪🔚🔚 CLOSE: \(message.message)")
+                        // FOR close we dont need to ping first, if it fails we dont care
+                        managedClient.client.sendMessage(message.message)
                     }
-//                    print("⬇️⬇️ REQUESTING: \(String(message.message))")
-                    managedClient.client.sendMessageAfterPing(message.message)
-                }
-                else if  message.type == .CLOSE { // CLOSE FOR ALL RELAYS
-                    if (!managedClient.read) { continue }
-                    if (!managedClient.isConnected) && (!managedClient.isConnecting) {
-                        // Already closed? no need to connect and send CLOSE message
-                        continue
-                        //                        managedClient.connect()
+                    else if message.type == .EVENT && managedClient.write { // EVENT IS ONLY FOR WRITE RELAYS
+                        if (!managedClient.isConnected) && (!managedClient.isConnecting) {
+                            managedClient.connect()
+                        }
+                        L.sockets.info("🟪🚀🚀🚀 PUBLISHING TO \(managedClient.url): \(message.message)")
+                        managedClient.client.sendMessageAfterPing(message.message)
                     }
-                    L.sockets.info("🟪🔚🔚 CLOSE: \(message.message)")
-                    // FOR close we dont need to ping first, if it fails we dont care
-                    managedClient.client.sendMessage(message.message)
-                }
-                else if message.type == .EVENT && managedClient.write { // EVENT IS ONLY FOR WRITE RELAYS
-                    if (!managedClient.isConnected) && (!managedClient.isConnecting) {
-                        managedClient.connect()
-                    }
-                    L.sockets.info("🟪🚀🚀🚀 PUBLISHING TO \(managedClient.url): \(message.message)")
-                    managedClient.client.sendMessageAfterPing(message.message)
                 }
             }
         }
@@ -305,8 +417,9 @@ final class SocketPool: ObservableObject {
 
 class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDelegate, ObservableObject {
     
-    var relayId:NSManagedObjectID
+    var relayId:String
     var url:String
+    var isNWC:Bool
     var client:NewWebSocket
     var exponentialReconnectBackOff = 0
     var _skipped = 0
@@ -358,12 +471,13 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
         }
     }
     
-    init(relayId: NSManagedObjectID, url: String, client:NewWebSocket, read: Bool = true, write: Bool = false) {
+    init(relayId: String, url: String, client:NewWebSocket, read: Bool = true, write: Bool = false, isNWC:Bool = false) {
         self.relayId = relayId
         self.url = url.lowercased()
         self.read = read
         self.write = write
         self.client = client
+        self.isNWC = isNWC
     }
     
     func connect(_ forceConnectionAttempt:Bool = false) {
