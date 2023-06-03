@@ -52,6 +52,18 @@ struct NosturRootMenu: View {
     
     func handleUrl(_ url:URL) {
         L.og.info("handleUrl: \(url.absoluteString)")
+        L.og.info("handleUrl: \(url.query(percentEncoded: false) ?? "-")")
+        // handleUrl: nostrwalletconnect://69effe7b49a6dd5cf525bd0905917a5005ffe480b58eeb8e861418cf3ae760d9?relay=wss://relay.getalby.com/v1&secret=fd13a09410350ef329a95f63fba2694c8ff81b0590454ffa97eee732fef4acfb&lud16=weathereddarkness25@getalby.com
+        
+        
+        
+        
+        // CALLBACK FROM NWC
+        if let _ = url.absoluteString.firstMatch(of: /^nostur:\/\/nwc_callback$/) {
+            sendNotification(.nwcCallbackReceived)
+            return
+        }
+        
         // LINKS FROM ANYWHERE (NPUB1/NOTE1)
         let nostr = url.absoluteString.matchingStrings(regex: "^(nostr:)(npub1|note1)([023456789acdefghjklmnpqrstuvwxyz]{58})$")
         if nostr.count == 1 && nostr[0].count == 4 {
