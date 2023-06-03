@@ -23,9 +23,22 @@ public class Event: NSManagedObject, Identifiable {
     var contactUpdated = PassthroughSubject<Contact, Never>()
     var contactsUpdated = PassthroughSubject<[Contact], Never>()
     var relaysUpdated = PassthroughSubject<String, Never>()
+    var zapStateChanged = PassthroughSubject<ZapState?, Never>()
     
     //    private var eventsQueue = DispatchQueue(label: "com.nostur.events")
     
+    enum ZapState:String {
+        case initiated = "INITIATED"
+        case nwcConfirmed = "NWC_CONFIRMED"
+        case zapReceiptConfirmed = "ZAP_RECEIPT_CONFIRMED"
+        case failed = "FAILED"
+    }
+    
+    var zapState:ZapState? {
+        didSet {
+            zapStateChanged.send(zapState)
+        }
+    }
     var parentEvents: [Event] = []
     
     //    var parentEvents: [Event] {

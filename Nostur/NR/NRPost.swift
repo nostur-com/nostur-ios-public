@@ -118,6 +118,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
     var relays:String = ""
     
+    var zapState:Event.ZapState?
     var following = false
     var replied = false
     var liked = false
@@ -261,6 +262,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         
         self.renderedText = NRTextParser.shared.parseText(event, text: event.noteTextPrepared).output
         
+        if isZapped() {
+            self.zapState = .zapReceiptConfirmed
+        } else {
+            self.zapState = event.zapState
+        }
         self.following = NosturState.shared.bgFollowingPublicKeys.contains(event.pubkey)
         self.bookmarked = isBookmarked()
         self.liked = isLiked()
@@ -283,6 +289,20 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     private func _hasPrivateNote() -> Bool {
         if let account = NosturState.shared.bgAccount, let notes = account.privateNotes {
             return notes.first(where: { $0.post == self.event }) != nil
+        }
+        return false
+    }
+    
+    private func isZapped() -> Bool {
+        if let account = NosturState.shared.bgAccount {
+            let fr = Event.fetchRequest()
+            // TODO: refactor code/db, change zapFromRequest.pubkey to zapSenderPubkey so no join needed
+            // TODO: OR.. we get zapReq when its included in zap, so we can check that
+            fr.predicate = NSPredicate(format: "created_at >= %i AND kind == 9734 AND pubkey == %@ AND tagsSerialized CONTAINS %@", created_at, account.publicKey, serializedE(self.id))
+            fr.fetchLimit = 1
+            fr.resultType = .countResultType
+            let count = (try? DataProvider.shared().bg.count(for: fr)) ?? 0
+            return count > 0
         }
         return false
     }
@@ -439,6 +459,16 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 self.objectWillChange.send()
                 self.zapTally = tally
                 self.zapsCount = count
+            }
+            .store(in: &subscriptions)
+        
+        event.zapStateChanged
+            .sink { [weak self] zapState in
+                guard let self = self else { return }
+                DispatchQueue.main.async {
+                    self.objectWillChange.send()
+                    self.zapState = zapState
+                }
             }
             .store(in: &subscriptions)
     }
