@@ -85,6 +85,9 @@ public enum NEventKind: Codable, Equatable {
     case zapNote
     case highlight
     case relayList
+    case nwcInfo
+    case nwcRequest
+    case nwcResponse
     case badgeDefinition
     case badgeAward
     case profileBadges
@@ -105,6 +108,9 @@ public enum NEventKind: Codable, Equatable {
         case  9735: self = .zapNote
         case  9802: self = .highlight
         case 10002: self = .relayList
+        case 13194: self = .nwcInfo
+        case 23194: self = .nwcRequest
+        case 23195: self = .nwcResponse
         case 30009: self = .badgeDefinition
         case     8: self = .badgeAward
         case 30008: self = .profileBadges
@@ -127,7 +133,9 @@ public enum NEventKind: Codable, Equatable {
         case .zapNote:              return 9735
         case .highlight:            return 9802
         case .relayList:            return 10002
-                
+        case .nwcInfo:              return 13194
+        case .nwcRequest:           return 23194
+        case .nwcResponse:          return 23195
         case .badgeDefinition:      return 30009
         case .badgeAward:           return 8
         case .profileBadges:        return 30008
