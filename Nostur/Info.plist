@@ -30,7 +30,10 @@
 	<key>LSMinimumSystemVersion</key>
 	<string>13.2.0</string>
 	<key>NSAppTransportSecurity</key>
-	<dict/>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -75,10 +78,5 @@
 			</dict>
 		</dict>
 	</array>
-    <key>NSAppTransportSecurity</key>
-    <dict>
-        <key>NSAllowsArbitraryLoads</key>
-        <true/>
-    </dict>
 </dict>
 </plist>
