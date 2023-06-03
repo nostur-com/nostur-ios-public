@@ -275,6 +275,14 @@ extension Notification.Name {
         return Notification.Name("notificationsTabAppeared")
     }
     
+    static var nwcCallbackReceived: Notification.Name {
+        return Notification.Name("nwcCallbackReceived")
+    }
+      
+    static var nwcInfoReceived: Notification.Name {
+        return Notification.Name("nwcInfoReceived")
+    }
+    
     static var lightningStrike: Notification.Name {
         return Notification.Name("lightningStrike")
     }
