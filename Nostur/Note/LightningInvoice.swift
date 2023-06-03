@@ -33,7 +33,7 @@ struct KrakenApiResponse: Codable {
 
 struct LightningInvoice: View {
     @Environment(\.openURL) var openURL
-    
+    let ss:SettingsStore = .shared
     var invoice:String
     @State var divider:Double = 1 // 1 = SATS, 100000000 = BTC
     @State var fiatPrice = ""
@@ -61,7 +61,8 @@ struct LightningInvoice: View {
                         divider = divider == 1 ? 100000000 : 1
                     }
                 Button {
-                    openURL(URL(string: "lightning:\(invoice)")!)
+                    // TODO: change to default lightning wallet url
+                    openURL(URL(string: "\(ss.defaultLightningWallet.scheme)\(invoice)")!)
                 } label: { Text(isExpired ? "Expired" : "Pay").frame(minWidth: 150) }
                     .buttonStyle(.borderedProminent)
                     .cornerRadius(20)
