@@ -22,7 +22,7 @@ class GuestAccountManager {
             account.createdAt = Date()
             account.createdAt = Date()
 //            account.display_name = "Nostur Rookie"
-            account.name = "NosturRookie"
+            account.name = "Nostur Guest Account"
             account.about = "Just trying things out"
             account.publicKey = NosturState.GUEST_ACCOUNT_PUBKEY
             try! context.save()
