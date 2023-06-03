@@ -15,6 +15,8 @@ public class PersistentNotification: NSManagedObject {
     public enum PersistentNotificationType:String {
         case none = "NONE"
         case newFollowers = "NEW_FOLLOWERS"
+        case failedZap = "FAILED_ZAP"
+        case failedZaps = "FAILED_ZAPS"
     }
     
     static func create(pubkey:String, followers:[String], context:NSManagedObjectContext) -> PersistentNotification {
@@ -25,5 +27,25 @@ public class PersistentNotification: NSManagedObject {
         newFollowersNotification.type = .newFollowers
         newFollowersNotification.content = followers.joined(separator: ",")
         return newFollowersNotification
+    }
+    
+    static func createFailedNWCZap(pubkey:String, message:String, context:NSManagedObjectContext) -> PersistentNotification {
+        let failedZapNotification = PersistentNotification(context: context)
+        failedZapNotification.id = UUID()
+        failedZapNotification.createdAt = .now
+        failedZapNotification.pubkey = pubkey
+        failedZapNotification.type = .failedZap
+        failedZapNotification.content = message
+        return failedZapNotification
+    }
+    
+    static func createFailedNWCZaps(pubkey:String, message:String, context:NSManagedObjectContext) -> PersistentNotification {
+        let failedZapNotification = PersistentNotification(context: context)
+        failedZapNotification.id = UUID()
+        failedZapNotification.createdAt = .now
+        failedZapNotification.pubkey = pubkey
+        failedZapNotification.type = .failedZaps
+        failedZapNotification.content = message
+        return failedZapNotification
     }
 }
