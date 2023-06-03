@@ -158,8 +158,8 @@ class NotificationsManager: ObservableObject {
             r3.resultType = .countResultType
              
             var unreadMentions = (try? context.count(for: r2)) ?? 0
-            var unreadNewFollowers = (try? context.count(for: r3)) ?? 0
-            unreadMentions += unreadNewFollowers
+            let unreadNewFollowers = (try? context.count(for: r3)) ?? 0
+            unreadMentions = unreadMentions + unreadNewFollowers
             DispatchQueue.main.async {
                 if unreadMentions != self.unreadMentions {
                     self.unreadMentions = min(unreadMentions,9999)
@@ -367,7 +367,7 @@ class NotificationsManager: ObservableObject {
             else {
                 account.toBG()?.lastSeenPostCreatedAt = Int64(Date.now.timeIntervalSince1970)
             }
-            let result = try? ctx.execute(r3) as? NSBatchUpdateResult
+            let _ = try? ctx.execute(r3) as? NSBatchUpdateResult
             DataProvider.shared().bgSave()
         }
     }
