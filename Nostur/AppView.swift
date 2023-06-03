@@ -10,8 +10,10 @@ import Combine
 
 struct AppView: View {
     @StateObject private var ns:NosturState = .shared
+    private var nwcRQ:NWCRequestQueue = .shared
     @AppStorage("firstTimeCompleted") var firstTimeCompleted = false
     @AppStorage("did_accept_terms") var didAcceptTerms = false // TODO: set to false for app store
+    let ss:SettingsStore = .shared
     @State var isViewDisplayed = false
     @State var isOnboarding = false
     
@@ -97,7 +99,15 @@ struct AppView: View {
             Maintenance.ensureBootstrapRelaysExist(context: DataProvider.shared().container.viewContext)
         }
         
-        SocketPool.shared.setup()
+        SocketPool.shared.setup(ss.activeNWCconnectionId)
+        if !ss.activeNWCconnectionId.isEmpty {
+            DataProvider.shared().bg.perform {
+                if let nwcConnection = NWCConnection.fetchConnection(ss.activeNWCconnectionId, context: DataProvider.shared().bg) {
+                    NWCRequestQueue.shared.nwcConnection = nwcConnection
+                    Importer.shared.nwcConnection = nwcConnection
+                }
+            }
+        }
         
         if (!firstTimeCompleted) {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
