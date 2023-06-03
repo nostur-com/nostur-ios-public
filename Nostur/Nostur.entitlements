@@ -11,6 +11,7 @@
 	<key>keychain-access-groups</key>
 	<array>
 		<string>$(AppIdentifierPrefix)nostur.com.Nostur</string>
+        <string>$(AppIdentifierPrefix)nwc</string>
 	</array>
 </dict>
 </plist>
