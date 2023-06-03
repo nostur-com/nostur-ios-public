@@ -129,6 +129,15 @@
         <attribute name="type" optional="YES" attributeType="String"/>
         <relationship name="contacts" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact" inverseName="lists" inverseEntity="Contact"/>
     </entity>
+    <entity name="NWCConnection" representedClassName="NWCConnection" syncable="YES">
+        <attribute name="connectionId" attributeType="String"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="methods" attributeType="String" defaultValueString=""/>
+        <attribute name="pubkey" attributeType="String"/>
+        <attribute name="relay" optional="YES" attributeType="String"/>
+        <attribute name="type" optional="YES" attributeType="String"/>
+        <attribute name="walletPubkey" attributeType="String"/>
+    </entity>
     <entity name="PersistentNotification" representedClassName="PersistentNotification" syncable="YES">
         <attribute name="content" attributeType="String" defaultValueString=""/>
         <attribute name="createdAt" attributeType="Date" defaultDateTimeInterval="-978332400" usesScalarValueType="NO"/>
