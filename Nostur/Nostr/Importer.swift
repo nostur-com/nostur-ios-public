@@ -24,6 +24,7 @@ class Importer {
     static let shared = Importer()
     
     let decoder = JSONDecoder()
+    var nwcConnection:NWCConnection?
     
     init() {
         self.preloadExistingIdsCache()
@@ -81,7 +82,6 @@ class Importer {
             }
             
             let isSignatureVerificationEnabled = self.settingsStore.isSignatureVerificationEnabled
-            
             do {
                 var count = 0
                 var alreadyInIdCacheSkipped = 0
@@ -91,11 +91,70 @@ class Importer {
                 // We send a notification every .save with the saved subscriptionIds
                 // so other parts of the system can start fetching from local db
                 var subscriptionIds = Set<String>()
-                
                 while let message = MessageParser.shared.messageBucket.popFirst() {
                     count = count + 1
                     guard var event = message.event else {
                         L.importing.error("🔴🔴 message.event is nil \(message.message)")
+                        continue
+                    }
+                    
+                    if (isSignatureVerificationEnabled) {
+                        guard try event.verified() else {
+                            L.importing.info("😡😡 hey invalid sig yo 😡😡")
+                            continue
+                        }
+                    }
+                    
+                    if event.kind == .nwcInfo {
+                        guard let nwcConnection = self.nwcConnection else { continue }
+                        guard event.publicKey == nwcConnection.walletPubkey else { continue }
+                        L.og.info("⚡️ Received 13194 info event, saving methods: \(event.content)")
+                        nwcConnection.methods = event.content
+                        DispatchQueue.main.async {
+                            sendNotification(.nwcInfoReceived, NWCInfoNotifcation(methods: event.content))
+                        }
+                        continue
+                    }
+                    
+                    if event.kind == .nwcResponse {
+                        guard let nwcConnection = self.nwcConnection else { continue }
+                        guard let pk = nwcConnection.privateKey else { continue }
+                        guard let decrypted = NKeys.decryptDirectMessageContent(withPrivateKey: pk, pubkey: event.publicKey, content: event.content) else {
+                            L.og.error("Could not decrypt nwcResponse, \(event.eventJson())")
+                            continue
+                        }
+                        guard let nwcResponse = try? decoder.decode(NWCResponse.self, from: decrypted.data(using: .utf8)!) else {
+                            L.og.error("Could not parse/decode nwcResponse, \(event.eventJson()) - \(decrypted)")
+                            continue
+                        }
+                        guard let firstE = event.eTags().first, let awaitingRequest = NWCRequestQueue.shared.getAwaitingRequest(byId: firstE) else {
+                            L.og.error("No matching nwc request for response, or e-tag missing, \(event.eventJson()) - \(decrypted)")
+                            continue
+                        }
+                        guard let awaitingZap = NWCZapQueue.shared.getAwaitingZap(byId: awaitingRequest.zap.id) else {
+                            L.og.error("No matching zap request for response, \(decrypted)")
+                            continue
+                        }
+                        if let error = nwcResponse.error {
+                            if let eventId = awaitingZap.eventId {
+                                let message = "Zap failed for (post)[nostur:e:\(eventId)] \(error.message)"
+                                _ = PersistentNotification.createFailedNWCZap(pubkey: NosturState.shared.activeAccountPublicKey, message: message, context: context)
+                            }
+                            else {
+                                let message = "Zap failed for (contact)[nostur:p:\(awaitingZap.contact.pubkey)] \(error.message)"
+                                _ = PersistentNotification.createFailedNWCZap(pubkey: NosturState.shared.activeAccountPublicKey, message: message, context: context)
+                            }
+                            continue
+                        }
+                        guard let result_type = nwcResponse.result_type, result_type == "pay_invoice" else {
+                            L.og.error("Unknown or missing result_type, \(nwcResponse.result_type ?? "") - \(decrypted)")
+                            continue
+                        }
+                        if let result = nwcResponse.result {
+                            L.og.info("⚡️ Zap success \(result.preimage ?? "-") - \(decrypted)")
+                            NWCZapQueue.shared.removeZap(byId: awaitingZap.id)
+                            NWCRequestQueue.shared.removeRequest(byId: awaitingRequest.request.id)
+                        }
                         continue
                     }
                     
@@ -115,13 +174,6 @@ class Importer {
                     guard Event.eventExists(id: event.id, context: context) == false else {
                         alreadyInDBskipped = alreadyInDBskipped + 1
                         continue
-                    }
-                    
-                    if (isSignatureVerificationEnabled) {
-                        guard try event.verified() else {
-                            L.importing.info("😡😡 hey invalid sig yo 😡😡")
-                            continue
-                        }
                     }
                     
                     // ANNOYING FIX FOR KIND 6 WITH JSON STRING OF ANOTHER EVENT IN EVENT.CONTENT. WTF
