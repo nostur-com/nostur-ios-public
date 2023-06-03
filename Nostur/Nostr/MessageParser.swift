@@ -36,7 +36,7 @@ class MessageParser {
                 case .EOSE:
                     // Keep these subscriptions open.
                     guard let subscriptionId = message.subscriptionId else { return }
-                    if !["Following","Explore","Notifications","REALTIME-DETAIL"].contains(subscriptionId) && String(subscriptionId.prefix(5)) != "List-" {
+                    if !["Following","Explore","Notifications","REALTIME-DETAIL","NWC"].contains(subscriptionId) && String(subscriptionId.prefix(5)) != "List-" {
                         // Send close message to this specific socket, not all.
                         client.sendMessage(ClientMessage.close(subscriptionId: subscriptionId))
                     }
