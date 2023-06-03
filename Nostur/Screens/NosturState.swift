@@ -282,6 +282,28 @@ final class NosturState : ObservableObject {
         }
     }
     
+    func signEventBg(_ event:NEvent) throws -> NEvent {
+        guard let account = self.account?.toBG() else {
+            L.og.error("🔴🔴🔴🔴🔴 Acccount missing, could not sign 🔴🔴🔴🔴🔴")
+            throw "account missing, could not sign"
+        }
+        guard let pk = account.privateKey else {
+            L.og.error("🔴🔴🔴🔴🔴 private key missing, could not sign 🔴🔴🔴🔴🔴")
+            throw "keys missing, could not sign"
+        }
+        
+        var eventToSign = event
+        do {
+            let keys = try NKeys(privateKeyHex: pk)
+            let signedEvent = try eventToSign.sign(keys)
+            return signedEvent
+        }
+        catch {
+            L.og.error("🔴🔴🔴🔴🔴 Could not sign event 🔴🔴🔴🔴🔴")
+            throw "Could not sign event"
+        }
+    }
+    
     func followsYou(_ contact:Contact) -> Bool {
         guard let clEvent = contact.clEvent else { return false }
         guard let account = account else { return false }
