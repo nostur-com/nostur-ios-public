@@ -17,6 +17,7 @@ public class PersistentNotification: NSManagedObject {
         case newFollowers = "NEW_FOLLOWERS"
         case failedZap = "FAILED_ZAP"
         case failedZaps = "FAILED_ZAPS"
+        case failedLightningInvoice = "FAILED_LIGHTNING_INVOICE"
     }
     
     static func create(pubkey:String, followers:[String], context:NSManagedObjectContext) -> PersistentNotification {
@@ -35,6 +36,16 @@ public class PersistentNotification: NSManagedObject {
         failedZapNotification.createdAt = .now
         failedZapNotification.pubkey = pubkey
         failedZapNotification.type = .failedZap
+        failedZapNotification.content = message
+        return failedZapNotification
+    }
+    
+    static func createFailedLightningInvoice(pubkey:String, message:String, context:NSManagedObjectContext) -> PersistentNotification {
+        let failedZapNotification = PersistentNotification(context: context)
+        failedZapNotification.id = UUID()
+        failedZapNotification.createdAt = .now
+        failedZapNotification.pubkey = pubkey
+        failedZapNotification.type = .failedLightningInvoice
         failedZapNotification.content = message
         return failedZapNotification
     }
