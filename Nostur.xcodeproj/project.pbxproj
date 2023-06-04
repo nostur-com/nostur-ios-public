@@ -299,6 +299,7 @@
 		1FE0C71329FAE82C00381586 /* ProfileFollowButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE0C71229FAE82C00381586 /* ProfileFollowButton.swift */; };
 		1FE0C71529FAEA9F00381586 /* ProfileBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE0C71429FAEA9F00381586 /* ProfileBanner.swift */; };
 		1FE5068E29B391CF006A16D8 /* FastAccountSwitcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE5068D29B391CF006A16D8 /* FastAccountSwitcher.swift */; };
+		1FE69EB62A2CE95000FE73B4 /* ZapNotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE69EB52A2CE95000FE73B4 /* ZapNotificationsView.swift */; };
 		1FE9D2962A0E0F2200256B90 /* NRContentElementBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE9D2952A0E0F2200256B90 /* NRContentElementBuilder.swift */; };
 		1FE9D2982A0E104D00256B90 /* NRTextParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE9D2972A0E104D00256B90 /* NRTextParser.swift */; };
 		1FE9D29A2A0E1D2A00256B90 /* NRContentTextRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE9D2992A0E1D2A00256B90 /* NRContentTextRenderer.swift */; };
@@ -638,6 +639,7 @@
 		1FE0C71229FAE82C00381586 /* ProfileFollowButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileFollowButton.swift; sourceTree = "<group>"; };
 		1FE0C71429FAEA9F00381586 /* ProfileBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileBanner.swift; sourceTree = "<group>"; };
 		1FE5068D29B391CF006A16D8 /* FastAccountSwitcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastAccountSwitcher.swift; sourceTree = "<group>"; };
+		1FE69EB52A2CE95000FE73B4 /* ZapNotificationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZapNotificationsView.swift; sourceTree = "<group>"; };
 		1FE9D2952A0E0F2200256B90 /* NRContentElementBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRContentElementBuilder.swift; sourceTree = "<group>"; };
 		1FE9D2972A0E104D00256B90 /* NRTextParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTextParser.swift; sourceTree = "<group>"; };
 		1FE9D2992A0E1D2A00256B90 /* NRContentTextRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRContentTextRenderer.swift; sourceTree = "<group>"; };
@@ -1186,6 +1188,7 @@
 				1F7525832997B21D00477AF2 /* NotificationsView.swift */,
 				1F4820F129A9F808000EDFDA /* NotificationsZaps.swift */,
 				1F9DC3A72A28E35900119D73 /* NewFollowersNotificationView.swift */,
+				1FE69EB52A2CE95000FE73B4 /* ZapNotificationsView.swift */,
 			);
 			path = Notifications;
 			sourceTree = "<group>";
@@ -1462,6 +1465,7 @@
 				1F810B2E29E65639006B1614 /* TermsAndConditions.swift in Sources */,
 				1F45C7EA29EF930F00F58772 /* ImageUploading.swift in Sources */,
 				1FD78EF52A0CBE18003E7B3E /* KindResolver.swift in Sources */,
+				1FE69EB62A2CE95000FE73B4 /* ZapNotificationsView.swift in Sources */,
 				1F5BBE40297BC7E600F4AF03 /* EventsError.swift in Sources */,
 				1F3E135929C8B11F00D076EA /* Event+PrivateNotes.swift in Sources */,
 				1F05FE7C2A1F83C40005A254 /* Testing.swift in Sources */,
