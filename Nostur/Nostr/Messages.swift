@@ -375,9 +375,14 @@ public struct RequestMessage {
 """
     }
     
-    static func getNWCResponses(pubkey:String, walletPubkey:String, limit:Int = 25, subscriptionId:String? = nil) -> String {
+    static func getNWCResponses(pubkey:String, walletPubkey:String, limit:Int? = nil, subscriptionId:String? = nil) -> String {
+        if let limit {
+            return """
+    ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(walletPubkey)"], "#p": ["\(pubkey)"], "kinds": [23195], "limit": \(limit)}]
+    """
+        }
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(walletPubkey)"], "#p": ["\(pubkey)"], "kinds": [23195], "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(walletPubkey)"], "#p": ["\(pubkey)"], "kinds": [23195]}]
 """
     }
     
@@ -557,7 +562,7 @@ func req(_ rm:String, activeSubscriptionId:String? = nil) {
 
 func reqP(_ rm:String, activeSubscriptionId:String? = nil) {
     SocketPool.shared.sendMessageAfterPing(
-        ClientMessage(type: .REQ, message: rm),
+        ClientMessage(onlyForNWCRelay: activeSubscriptionId == "NWC", type: .REQ, message: rm),
         subscriptionId: activeSubscriptionId
     )
 }

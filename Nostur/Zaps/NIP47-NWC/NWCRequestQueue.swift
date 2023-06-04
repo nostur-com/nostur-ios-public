@@ -78,7 +78,7 @@ class NWCRequestQueue {
         if Thread.isMainThread {
             fatalError("Fix this")
         }
-        req(RM.getNWCResponses(pubkey: pubkey, walletPubkey: walletPubkey), activeSubscriptionId: "NWC")
+        reqP(RM.getNWCResponses(pubkey: pubkey, walletPubkey: walletPubkey, subscriptionId: "NWC"), activeSubscriptionId: "NWC")
         DispatchQueue.main.async {
             _ = Unpublisher.shared.publish(request, cancellationId:cancellationId)
         }
