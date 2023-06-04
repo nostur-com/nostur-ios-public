@@ -131,29 +131,45 @@ class Importer {
                             L.og.error("No matching nwc request for response, or e-tag missing, \(event.eventJson()) - \(decrypted)")
                             continue
                         }
-                        guard let awaitingZap = NWCZapQueue.shared.getAwaitingZap(byId: awaitingRequest.zap.id) else {
-                            L.og.error("No matching zap request for response, \(decrypted)")
-                            continue
-                        }
-                        if let error = nwcResponse.error {
-                            if let eventId = awaitingZap.eventId {
-                                let message = "Zap failed for (post)[nostur:e:\(eventId)] \(error.message)"
-                                _ = PersistentNotification.createFailedNWCZap(pubkey: NosturState.shared.activeAccountPublicKey, message: message, context: context)
+                        if let awaitingZap = awaitingRequest.zap {
+                            // HANDLE ZAPS
+                            if let error = nwcResponse.error {
+                                if let eventId = awaitingZap.eventId {
+                                    let message = "Zap failed for (post)[nostur:e:\(eventId)] \(error.message)"
+                                    _ = PersistentNotification.createFailedNWCZap(pubkey: NosturState.shared.activeAccountPublicKey, message: message, context: context)
+                                }
+                                else {
+                                    let message = "Zap failed for (contact)[nostur:p:\(awaitingZap.contact.pubkey)] \(error.message)"
+                                    _ = PersistentNotification.createFailedNWCZap(pubkey: NosturState.shared.activeAccountPublicKey, message: message, context: context)
+                                }
+                                continue
                             }
-                            else {
-                                let message = "Zap failed for (contact)[nostur:p:\(awaitingZap.contact.pubkey)] \(error.message)"
-                                _ = PersistentNotification.createFailedNWCZap(pubkey: NosturState.shared.activeAccountPublicKey, message: message, context: context)
+                            guard let result_type = nwcResponse.result_type, result_type == "pay_invoice" else {
+                                L.og.error("Unknown or missing result_type, \(nwcResponse.result_type ?? "") - \(decrypted)")
+                                continue
                             }
-                            continue
+                            if let result = nwcResponse.result {
+                                L.og.info("⚡️ Zap success \(result.preimage ?? "-") - \(decrypted)")
+                                NWCZapQueue.shared.removeZap(byId: awaitingZap.id)
+                                NWCRequestQueue.shared.removeRequest(byId: awaitingRequest.request.id)
+                            }
                         }
-                        guard let result_type = nwcResponse.result_type, result_type == "pay_invoice" else {
-                            L.og.error("Unknown or missing result_type, \(nwcResponse.result_type ?? "") - \(decrypted)")
-                            continue
-                        }
-                        if let result = nwcResponse.result {
-                            L.og.info("⚡️ Zap success \(result.preimage ?? "-") - \(decrypted)")
-                            NWCZapQueue.shared.removeZap(byId: awaitingZap.id)
-                            NWCRequestQueue.shared.removeRequest(byId: awaitingRequest.request.id)
+                        else {
+                            // HANDLE OLD BOLT11 INVOICE PAYMENT
+                            if let error = nwcResponse.error {
+                                let message = "Failed to pay lightning invoice \(error.message)"
+                                _ = PersistentNotification.createFailedLightningInvoice(pubkey: NosturState.shared.activeAccountPublicKey, message: message, context: context)
+                                L.og.error("⚡️ Failed to pay lightning invoice \(error.message)")
+                                continue
+                            }
+                            guard let result_type = nwcResponse.result_type, result_type == "pay_invoice" else {
+                                L.og.error("⚡️ Unknown or missing result_type, \(nwcResponse.result_type ?? "") - \(decrypted)")
+                                continue
+                            }
+                            if let result = nwcResponse.result {
+                                L.og.info("⚡️ Lighting Invoice Payment (Not Zap) success \(result.preimage ?? "-") - \(decrypted)")
+                                NWCRequestQueue.shared.removeRequest(byId: awaitingRequest.request.id)
+                            }
                         }
                         continue
                     }
