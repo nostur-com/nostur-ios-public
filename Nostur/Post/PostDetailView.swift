@@ -36,9 +36,9 @@ struct NoteById: View {
             else if (events.first != nil) {
                 ProgressView()
                     .task {
-                        if let event = events.first {
+                        if let event = events.first, let bgEvent = event.toBG() {
                             DataProvider.shared().bg.perform {
-                                let nrPost = NRPost(event: event, withReplies: true)
+                                let nrPost = NRPost(event: bgEvent, withReplies: true)
                                 
                                 DispatchQueue.main.async {
                                     self.nrPost = nrPost
