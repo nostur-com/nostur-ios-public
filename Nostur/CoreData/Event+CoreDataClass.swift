@@ -32,6 +32,7 @@ public class Event: NSManagedObject, Identifiable {
         case nwcConfirmed = "NWC_CONFIRMED"
         case zapReceiptConfirmed = "ZAP_RECEIPT_CONFIRMED"
         case failed = "FAILED"
+        case cancelled = "CANCELLED" // (by Undo)
     }
     
     var zapState:ZapState? {

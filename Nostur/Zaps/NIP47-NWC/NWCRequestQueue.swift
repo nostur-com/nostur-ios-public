@@ -26,7 +26,8 @@ class NWCRequestQueue {
     
     struct QueuedNWCRequest {
         let request: NEvent // kind 23194
-        let zap: Zap
+        var zap: Zap?
+        var cancellationId: UUID?
         let queuedAt: Date
     }
     
@@ -52,8 +53,8 @@ class NWCRequestQueue {
                 guard let self = self else { return }
                 var failedZaps = [Zap]()
                 for req in self.waitingRequests.filter({ now.timeIntervalSince($0.value.queuedAt) >= 30 }) {
-                    if let error = req.value.zap.error {
-                        failedZaps.append(req.value.zap)
+                    if req.value.zap?.error != nil {
+                        failedZaps.append(req.value.zap!)
                     }
                 }
                 self.waitingRequests = self.waitingRequests.filter { now.timeIntervalSince($0.value.queuedAt) < 30 }
@@ -69,7 +70,7 @@ class NWCRequestQueue {
         })
     }
     
-    public func sendRequest(_ request:NEvent, zap:Zap, debugInfo:String? = "") {
+    public func sendRequest(_ request:NEvent, zap:Zap? = nil, cancellationId:UUID? = nil, debugInfo:String? = "") {
         guard let pubkey = nwcConnection?.pubkey, let walletPubkey = nwcConnection?.walletPubkey else {
             L.og.error("NWC connection missing")
             return
@@ -79,9 +80,9 @@ class NWCRequestQueue {
         }
         req(RM.getNWCResponses(pubkey: pubkey, walletPubkey: walletPubkey), activeSubscriptionId: "NWC")
         DispatchQueue.main.async {
-            _ = Unpublisher.shared.publish(request, cancellationId:zap.cancellationId)
+            _ = Unpublisher.shared.publish(request, cancellationId:cancellationId)
         }
-        self.waitingRequests[request.id] = QueuedNWCRequest(request: request, zap:zap, queuedAt: Date.now)
+        self.waitingRequests[request.id] = QueuedNWCRequest(request: request, zap:zap, cancellationId: cancellationId, queuedAt: Date.now)
         L.og.info("⚡️ NWC: sendRequest. now in queue: \(self.waitingRequests.count) -- \(debugInfo ?? "")")
     }
     
@@ -108,7 +109,7 @@ class NWCRequestQueue {
     
     public func removeRequest(byCancellationId cancellationId:UUID) {
         if let r = self.waitingRequests.first (where: { rId, qR in
-            qR.zap.cancellationId == cancellationId
+            qR.cancellationId == cancellationId
         }) {
             self.waitingRequests.removeValue(forKey: r.value.request.id)
         }

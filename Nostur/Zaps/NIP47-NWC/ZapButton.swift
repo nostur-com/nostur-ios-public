@@ -20,11 +20,13 @@ struct ZapButton: View {
         if !ss.activeNWCconnectionId.isEmpty, let contact = nrPost.contact?.contact {
             if let cancellationId {
                 Button {
-                    if Unpublisher.shared.cancel(cancellationId) {
-                        NWCRequestQueue.shared.removeRequest(byCancellationId: cancellationId)
-                        NWCZapQueue.shared.removeZap(byCancellationId: cancellationId)
-                        self.cancellationId = nil
-                    }
+                    _ = Unpublisher.shared.cancel(cancellationId)
+                    NWCRequestQueue.shared.removeRequest(byCancellationId: cancellationId)
+                    NWCZapQueue.shared.removeZap(byCancellationId: cancellationId)
+                    self.cancellationId = nil
+                    nrPost.zapState = .cancelled
+                    activeColor = Self.grey
+                    L.og.info("⚡️ Zap cancelled")
                 } label: {
                     Image("BoltIconActive").foregroundColor(activeColor)
                         .padding(.horizontal, 10)
@@ -39,6 +41,7 @@ struct ZapButton: View {
             }
             else {
                 Image("BoltIcon")
+                    .foregroundColor(activeColor)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
                     .overlay(
@@ -52,6 +55,7 @@ struct ZapButton: View {
                                         activeColor = .yellow
                                     }
                                     cancellationId = UUID()
+                                    nrPost.zapState = .initiated
                                     DataProvider.shared().bg.perform {
                                         let zap = Zap(amount: Int64(ss.defaultZapAmount), contact: contact, eventId: nrPost.id, cancellationId: cancellationId!)
                                         NWCZapQueue.shared.sendZap(zap)
