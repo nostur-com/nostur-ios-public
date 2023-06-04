@@ -7,29 +7,7 @@
 
 import SwiftUI
 
-struct KrakenApiResponse: Codable {
-    
-    //    https://api.kraken.com/0/public/Ticker?pair=XXBTZUSD
-    //    {
-    //        "result": {
-    //            "XXBTZUSD": {
-    //                "c": [
-    //                    "21921.00000",
-    //                    "0.00062338"
-    //                ]
-    //            }
-    //        }
-    //    }
-    
-    struct Result: Codable {
-        struct XXBTZUSD: Codable {
-            var c: [String]
-        }
-        var XXBTZUSD:XXBTZUSD
-    }
-    
-    var result:Result
-}
+
 
 struct LightningInvoice: View {
     @Environment(\.openURL) var openURL
