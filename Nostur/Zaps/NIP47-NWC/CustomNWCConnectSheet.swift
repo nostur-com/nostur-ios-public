@@ -172,16 +172,14 @@ struct CustomNWCConnectSheet: View {
 
             removeExistingNWCsocket()
             DispatchQueue.main.async {
+                L.og.info("⚡️ Adding NWC connection")
                 _ = SocketPool.shared.addNWCSocket(connectionId:connectionId, url: relay)
+                NWCRequestQueue.shared.nwcConnection = c
+                Importer.shared.nwcConnection = c
+                
+                L.og.info("⚡️ Fetching 13194 (info) from NWC relay")
+                SocketPool.shared.sendMessageAfterPing(ClientMessage(onlyForNWCRelay: true, message: RM.getNWCInfo(walletPubkey: walletPubkey)))
             }
-            
-            NWCRequestQueue.shared.nwcConnection = c
-            Importer.shared.nwcConnection = c
-            
-            L.og.info("⚡️ Fetching 13194 (info) from NWC relay")
-
-            SocketPool.shared.sendMessage(ClientMessage(onlyForNWCRelay: true, message: RM.getNWCInfo(walletPubkey: walletPubkey)))
-            
         }
         
         connectionTimeout?.invalidate()
