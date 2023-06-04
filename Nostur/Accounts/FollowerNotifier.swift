@@ -92,7 +92,7 @@ class FollowerNotifier {
                     }
                     else {
                         let since = Int(Date.now.timeIntervalSince1970 - (3600 * 3*24)) // how long ago  ago
-                        req(RM.getFollowers(pubkey: account.publicKey, since: NTimestamp(timestamp: since)))
+                        req(RM.getFollowers(pubkey: pubkey, since: NTimestamp(timestamp: since)))
                     }
                 }
             }
@@ -108,6 +108,7 @@ class FollowerNotifier {
                 guard nEvent.kind == .contactList else { return }
                 guard nEvent.pTags().contains(NosturState.shared.activeAccountPublicKey) else { return }
                 guard let account = NosturState.shared.account else { return }
+                guard self.currentFollowerPubkeys.count > 0 else { return }
                 guard account.privateKey != nil else { return }
                 
                 if !self.currentFollowerPubkeys.contains(nEvent.publicKey) {
