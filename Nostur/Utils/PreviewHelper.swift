@@ -218,6 +218,14 @@ extension PreviewEnvironment {
         }
     }
 
+    func loadZapsNotifications() {
+        guard let account = NosturState.shared.account else { L.og.debug("Preview.loadZapsNotifications - missing Account"); return }
+        context.performAndWait {
+            let content = "Zap failed for [post](nostur:e:78b8d514554a03dadd366e920768e439d3a45495ca3efa89010229aae823c07c) Something went wrong while paying invoice: not enough balance. Make sure you have at least 1% reserved for potential fees"
+            let _ = PersistentNotification.createFailedNWCZap(pubkey: account.publicKey, message: content, context: context)
+        }
+    }
+    
     // Needs account(s) and some kind = 1 events first
     func loadBookmarks() {
         context.performAndWait {

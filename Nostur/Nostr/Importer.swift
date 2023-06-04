@@ -136,12 +136,12 @@ class Importer {
                             if let error = nwcResponse.error {
                                 L.og.info("⚡️ NWC response with error: \(error.code) - \(error.message)")
                                 if let eventId = awaitingZap.eventId {
-                                    let message = "Zap failed for (post)[nostur:e:\(eventId)] \(error.message)"
+                                    let message = "Zap failed for [post](nostur:e:\(eventId)).\n\(error.message)"
                                     _ = PersistentNotification.createFailedNWCZap(pubkey: NosturState.shared.activeAccountPublicKey, message: message, context: context)
                                     L.og.info("⚡️ Created notification: Zap failed for [post](nostur:e:\(eventId)). \(error.message)")
                                 }
                                 else {
-                                    let message = "Zap failed for (contact)[nostur:p:\(awaitingZap.contact.pubkey)] \(error.message)"
+                                    let message = "Zap failed for [contact](nostur:p:\(awaitingZap.contact.pubkey)).\n\(error.message)"
                                     _ = PersistentNotification.createFailedNWCZap(pubkey: NosturState.shared.activeAccountPublicKey, message: message, context: context)
                                     L.og.info("⚡️ Created notification: Zap failed for [contact](nostur:p:\(awaitingZap.contact.pubkey)). \(error.message)")
                                 }
@@ -160,7 +160,7 @@ class Importer {
                         else {
                             // HANDLE OLD BOLT11 INVOICE PAYMENT
                             if let error = nwcResponse.error {
-                                let message = "Failed to pay lightning invoice \(error.message)"
+                                let message = "Failed to pay lightning invoice.\n\(error.message)"
                                 _ = PersistentNotification.createFailedLightningInvoice(pubkey: NosturState.shared.activeAccountPublicKey, message: message, context: context)
                                 L.og.error("⚡️ Failed to pay lightning invoice. \(error.message)")
                                 continue

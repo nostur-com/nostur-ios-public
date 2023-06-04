@@ -9,6 +9,8 @@
 import Foundation
 import CoreData
 
+public typealias PNType = PersistentNotification.PersistentNotificationType
+
 @objc(PersistentNotification)
 public class PersistentNotification: NSManagedObject {
 

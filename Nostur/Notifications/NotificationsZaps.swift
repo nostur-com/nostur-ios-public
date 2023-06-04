@@ -22,12 +22,16 @@ struct NotificationsZaps: View {
     let pubkey:String
     let blockedPubkeys:[String]
 
+    @ObservedObject var settings:SettingsStore = .shared
     @StateObject var fl = FastLoader()
     @State var didLoad = false
     @State var backlog = Backlog()
     @EnvironmentObject var ns:NosturState
     
     @State var zapsForMeDeduplicated = [ZapInfo]()
+    
+    @FetchRequest
+    var pNotifications:FetchedResults<PersistentNotification>
     
     func zapsForNote(_ zap:Event, zapsForMe:[Event]) -> [Event] {
         return zapsForMe.filter { zap in
@@ -41,27 +45,56 @@ struct NotificationsZaps: View {
     init(pubkey:String, blockedPubkeys:[String]) {
         self.pubkey = pubkey
         self.blockedPubkeys = blockedPubkeys
+        
+        let fr = PersistentNotification.fetchRequest()
+        fr.sortDescriptors = [NSSortDescriptor(keyPath: \PersistentNotification.createdAt, ascending: false)]
+        fr.predicate = NSPredicate(format: "pubkey == %@ AND type_ IN %@", pubkey, [PNType.failedZap.rawValue,PNType.failedZaps.rawValue,PNType.failedLightningInvoice.rawValue])
+        _pNotifications = FetchRequest(fetchRequest: fr)
+    }
+    
+    var notifications:[ZapOrNotification] {
+        // combine nrPosts and PersistentNotifications in the list
+        return (pNotifications.map { pNot in
+            ZapOrNotification(type: .NOTIFICATION, notification: pNot)
+        } + zapsForMeDeduplicated.map({ zapInfo in
+            ZapOrNotification(type: .ZAP, zapInfo: zapInfo)
+        }))
+        .sorted(by: { p1, p2 in
+            p1.createdAt > p2.createdAt
+        })
     }
     
     var body: some View {
         let _ = Self._printChanges()
         ScrollView {
             LazyVStack(alignment:.leading, spacing: 0) {
-                ForEach(zapsForMeDeduplicated) { zapInfo in
-                    VStack {
-                        if let nrPost = zapInfo.zappedEventNRPost {
-                            PostZap(nrPost: nrPost, zaps:fl.events)
-                        }
-                        else {
-                            if let zapFrom = zapInfo.zap.zapFromRequest {
-                                ProfileZap(zap: zapInfo.zap, zapFrom:zapFrom)
+                ForEach(notifications) { pNotification in
+                    switch pNotification.type {
+                    case .NOTIFICATION:
+                        ZapNotificationView(notification: pNotification.notification!)
+                            .padding(10)
+                            .background(Color.systemBackground)
+                            .boxShadow()
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
+                            .id(pNotification.id)
+                    case .ZAP:
+                        VStack {
+                            if let nrPost = pNotification.zapInfo!.zappedEventNRPost {
+                                PostZap(nrPost: nrPost, zaps:fl.events)
+                            }
+                            else {
+                                if let zapFrom = pNotification.zapInfo!.zap.zapFromRequest {
+                                    ProfileZap(zap: pNotification.zapInfo!.zap, zapFrom:zapFrom)
+                                }
                             }
                         }
+                        .padding(10)
+                        .background(Color.systemBackground)
+                        .boxShadow()
+                        .padding(10)
+                        .id(pNotification.id)
                     }
-                    .padding(10)
-                    .background(Color.systemBackground)
-                    .boxShadow()
-                    .padding(10)
                 }
                 VStack {
                     if zapsForMeDeduplicated.count > 0 {
@@ -398,5 +431,25 @@ struct NotificationsZaps_Previews: PreviewProvider {
         let pubkey = "32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245"
         NotificationsZaps(pubkey: pubkey, blockedPubkeys:[])
             .withPreviewEnvironment()
+    }
+}
+
+
+struct ZapOrNotification: Identifiable {
+    let type:ZapOrNotificationType
+    var zapInfo:ZapInfo?
+    var notification:PersistentNotification?
+    
+    var id:String {
+        type.hashValue.description + (type == .ZAP ? zapInfo!.id : notification!.id.uuidString)
+    }
+    
+    var createdAt:Date {
+        (type == .ZAP ? zapInfo!.zap.date : notification!.createdAt)
+    }
+    
+    enum ZapOrNotificationType {
+        case ZAP
+        case NOTIFICATION
     }
 }

@@ -152,7 +152,7 @@ class NotificationsManager: ObservableObject {
             r2.resultType = .countResultType
             
             let r3 = PersistentNotification.fetchRequest()
-            r3.predicate = NSPredicate(format: "readAt == nil")
+            r3.predicate = NSPredicate(format: "readAt == nil AND type_ == %@", PNType.newFollowers.rawValue)
             r3.fetchLimit = self.FETCH_LIMIT
             r3.sortDescriptors = [NSSortDescriptor(keyPath:\PersistentNotification.createdAt, ascending: false)]
             r3.resultType = .countResultType
@@ -231,10 +231,18 @@ class NotificationsManager: ObservableObject {
         r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         r2.resultType = .countResultType
         
+        let r3 = PersistentNotification.fetchRequest()
+        r3.predicate = NSPredicate(format: "readAt == nil AND type_ IN %@", [PNType.failedLightningInvoice.rawValue,PNType.failedZap.rawValue,PNType.failedZaps.rawValue])
+        r3.fetchLimit = self.FETCH_LIMIT
+        r3.sortDescriptors = [NSSortDescriptor(keyPath:\PersistentNotification.createdAt, ascending: false)]
+        r3.resultType = .countResultType
+        
         
         let context = DataProvider.shared().bg
         context.perform {
-            let unreadZaps = (try? context.count(for: r2)) ?? 0
+            var unreadZaps = (try? context.count(for: r2)) ?? 0
+            let unreadZapNotifications = (try? context.count(for: r3)) ?? 0
+            unreadZaps = unreadZaps + unreadZapNotifications
             DispatchQueue.main.async {
                 if unreadZaps != self.unreadZaps {
                     self.unreadZaps = min(unreadZaps,9999)
@@ -355,7 +363,7 @@ class NotificationsManager: ObservableObject {
         // Also do new follower notifications
         let r3 = NSBatchUpdateRequest(entityName: "PersistentNotification")
         r3.propertiesToUpdate = ["readAt": NSDate()]
-        r3.predicate = NSPredicate(format: "readAt == nil")
+        r3.predicate = NSPredicate(format: "readAt == nil && type_ == %@", PNType.newFollowers.rawValue)
         r3.resultType = .updatedObjectIDsResultType
 
         
@@ -414,6 +422,12 @@ class NotificationsManager: ObservableObject {
         r2.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         r2.fetchLimit = 1
         
+        // Also do zap notifications
+        let r3 = NSBatchUpdateRequest(entityName: "PersistentNotification")
+        r3.propertiesToUpdate = ["readAt": NSDate()]
+        r3.predicate = NSPredicate(format: "readAt == nil && type_ IN %@", [PNType.failedLightningInvoice.rawValue,PNType.failedZap.rawValue,PNType.failedZaps.rawValue])
+        r3.resultType = .updatedObjectIDsResultType
+        
         let ctx = DataProvider.shared().bg
         ctx.perform {
             if let mostRecent = try? ctx.fetch(r2).first {
@@ -422,6 +436,7 @@ class NotificationsManager: ObservableObject {
             else {
                 account.toBG()?.lastSeenZapCreatedAt = Int64(Date.now.timeIntervalSince1970)
             }
+            let _ = try? ctx.execute(r3) as? NSBatchUpdateResult
             DataProvider.shared().bgSave()
         }
     }

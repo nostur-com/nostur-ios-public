@@ -30,7 +30,7 @@ struct NotificationsPosts: View {
         
         let fr = PersistentNotification.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \PersistentNotification.createdAt, ascending: false)]
-        fr.predicate = NSPredicate(format: "pubkey == %@", pubkey)
+        fr.predicate = NSPredicate(format: "pubkey == %@ AND type_ == %@", pubkey, PNType.newFollowers.rawValue)
         _pNotifications = FetchRequest(fetchRequest: fr)
     }
     
