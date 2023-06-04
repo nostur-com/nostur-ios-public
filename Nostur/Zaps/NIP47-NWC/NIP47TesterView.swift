@@ -8,13 +8,17 @@
 import SwiftUI
 
 struct NIP47TesterView: View {
+    
+    let TEST_PK = ""
+    let TEST_LNINVOICE = ""
+    
     var body: some View {
-        @State var text = ###"["EVENT","04F429AE-AC49-427A-BA6A-F8DF1B55153E",{"id":"c7297407ca44e04507b93a9bc8405040a1b1832c448e9f92b7ee75cc77287f2a","pubkey":"69effe7b49a6dd5cf525bd0905917a5005ffe480b58eeb8e861418cf3ae760d9","created_at":1685763498,"kind":23195,"tags":[["p","9b374c36a01469aba0464b7c7bb9b317a5f252849c31ee2c4e8759a05acdacc4"],["e","24326be7d25ca1615bd4614ba2d2fedaf6ebe9b2d18ebc3480b41c80a60c608a"]],"content":"GikLVM/Adlhs+bTpU0Laap5ae72WGBzF4TW0aw1T82b9laOS3lV7C8nAsXDPg6R5LzPbHYtoDBuFIYERHfcVO7Ku4yrx9c0/qH8WuX7MotK4kwVTTMRFzHNdfvI14YLp?iv=3jFdORwKXde4EVxMYcEGcg==","sig":"726c49ac6e1a7e024cd1886dc29b40ec61a20ce9bc5e74a17b15f9897f808867eef7bd0e188e55699867bf3a09d83bd6da5fd828634670f08cdc0393a28b748e"}]"###
+        @State var decodeTestText = ###"["EVENT","NWC",{"id":"65fdedf91ac75d599698d2851df2b0e12f1b418923b582a0b523f0f78f693175","pubkey":"69effe7b49a6dd5cf525bd0905917a5005ffe480b58eeb8e861418cf3ae760d9","created_at":1685888392,"kind":23195,"tags":[["p","1b5c3cfef0614ecf20f8f189f288341ed7c16ce55f64a58d73cbbe4ca044e81f"],["e","ee7a21ed83b293f11dafc86efe8117211da9140fff8a3c35087f67b298e8180c"]],"content":"hLCDxyeOP3GJdUtvOIVloDopQKVVaUUH0A6/PTkpqJJHvGQrIQHphl4iEO4+0d76onjFimsDz/mi1SmSkvFLeUUsPyCojiAHiU9xhY+4KWZZktcURTZP91ckYh8LF1SfLrZOxFe6KiCRiyEu3JM1illbtVxyTqtzMVFaLKMksi+HPwpFNGlS4yK9CDFIEhHI70Q8d7gWrdMVY/0M5UrmVAP2qmx7PThiYlTS2otbG+0=?iv=AJzKzR0PAi5Xi8KsVgxUWA==","sig":"c388dc5467d3ccd3afc7d93bdd111e460accf976a78b1d63dee65f92a71a58419d11164405f210d28c3b7bff514a9131f8da3cd80894e8719235b71fa13a170a"}]"###
         VStack {
             Button("decode test") {
                 var mmessage:RelayMessage? = nil
                 do {
-                    mmessage = try RelayMessage.parseRelayMessage(text: text, relay: "wss://relay.getalby.com/v1", skipValidation: true)
+                    mmessage = try RelayMessage.parseRelayMessage(text: decodeTestText, relay: "wss://relay.getalby.com/v1", skipValidation: true)
                 }
                 catch {
                     print(error)
@@ -23,8 +27,7 @@ struct NIP47TesterView: View {
 //                guard let message = try? RelayMessage.parseRelayMessage(text: text, relay: "wss://relay.getalby.com/v1", skipValidation: true) else { print("fail1"); return }
                 guard message.type == .EVENT, let event = message.event else { print("fail2"); return }
                  
-                let pk = ""
-                guard let decrypted = NKeys.decryptDirectMessageContent(withPrivateKey: pk, pubkey: event.publicKey, content: event.content) else {
+                guard let decrypted = NKeys.decryptDirectMessageContent(withPrivateKey: TEST_PK, pubkey: event.publicKey, content: event.content) else {
                     print("Could not decrypt nwcResponse, \(event.eventJson())")
                     return
                 }
@@ -46,11 +49,9 @@ struct NIP47TesterView: View {
             }
             Button("Send payment test") {
                 let walletPubkey = "69effe7b49a6dd5cf525bd0905917a5005ffe480b58eeb8e861418cf3ae760d9"
-//                let pubkey = "9b374c36a01469aba0464b7c7bb9b317a5f252849c31ee2c4e8759a05acdacc4"
-                if let keys = try? NKeys(privateKeyHex: "") {
+                if let keys = try? NKeys(privateKeyHex: TEST_PK) {
                     
-                    let lninvoice = ""
-                    let request = NWCRequest(method: "pay_invoice", params: NWCRequest.NWCParams(invoice: lninvoice))
+                    let request = NWCRequest(method: "pay_invoice", params: NWCRequest.NWCParams(invoice: TEST_LNINVOICE))
                     let encoder = JSONEncoder()
                     
                     if let requestJsonData = try? encoder.encode(request) {
