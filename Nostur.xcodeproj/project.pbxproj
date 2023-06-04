@@ -444,7 +444,7 @@
 		1F5BA91329A8C27200002652 /* NewNoteButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewNoteButton.swift; sourceTree = "<group>"; };
 		1F5BBE3F297BC7E600F4AF03 /* EventsError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsError.swift; sourceTree = "<group>"; };
 		1F5F5A5B29838F1D00DED8F4 /* DataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataProvider.swift; sourceTree = "<group>"; };
-		1F62F4C52A2C572700783892 /* KrakenApiResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = KrakenApiResponse.swift; path = Nostur/Zaps/KrakenApiResponse.swift; sourceTree = "<group>"; };
+		1F62F4C52A2C572700783892 /* KrakenApiResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KrakenApiResponse.swift; sourceTree = "<group>"; };
 		1F65002B29A759FB00B79AEF /* ProfileRowMissing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileRowMissing.swift; sourceTree = "<group>"; };
 		1F65121A29C75AC9009FD4AE /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		1F685B512A0D18D2009EEC9B /* NRContact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRContact.swift; sourceTree = "<group>"; };
@@ -1085,7 +1085,6 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
-				1F62F4C52A2C572700783892 /* KrakenApiResponse.swift */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1FB448C82965F3D200038671 /* Nostur.entitlements */,
 				1F313DED296980D8004C7366 /* Info.plist */,
@@ -1236,6 +1235,7 @@
 			children = (
 				1F2DD4272A29C0AA0028A062 /* NIP47-NWC */,
 				1F69854E29F2B63E006F813F /* Bolt11.swift */,
+				1F62F4C52A2C572700783892 /* KrakenApiResponse.swift */,
 				1FCA273D299A6A1A00298881 /* LightningButton.swift */,
 				1F6943B62A2B017500064DBA /* LightningEffect.swift */,
 				1FBE8221299A6F3D00FB41CE /* LUD16.swift */,
