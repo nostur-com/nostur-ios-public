@@ -65,7 +65,7 @@ struct NosturRootMenu: View {
         }
         
         // LINKS FROM ANYWHERE (NPUB1/NOTE1)
-        let nostr = url.absoluteString.matchingStrings(regex: "^(nostr:)(npub1|note1)([023456789acdefghjklmnpqrstuvwxyz]{58})$")
+        let nostr = url.absoluteString.matchingStrings(regex: "^(nostr:|nostur:nostr:)(npub1|note1)([023456789acdefghjklmnpqrstuvwxyz]{58})$")
         if nostr.count == 1 && nostr[0].count == 4 {
             L.og.info("nostr: link: \(nostr[0][2])\(nostr[0][3])")
             let key = try! NIP19(displayString: "\(nostr[0][2])\(nostr[0][3])")
@@ -81,7 +81,7 @@ struct NosturRootMenu: View {
         }
         
         // (NEW) LINKS FROM ANYWHERE (NEVENT1/NPROFILE1)
-        let nostrSharable = url.absoluteString.matchingStrings(regex: "^(nostr:)(nevent1|nprofile1)([023456789acdefghjklmnpqrstuvwxyz]+\\b)$")
+        let nostrSharable = url.absoluteString.matchingStrings(regex: "^(nostr:|nostur:nostr:)(nevent1|nprofile1)([023456789acdefghjklmnpqrstuvwxyz]+\\b)$")
         if nostrSharable.count == 1 && nostrSharable[0].count == 4 {
             L.og.info("nostr: nevent1/nprofile1: \(nostrSharable[0][2])\(nostrSharable[0][3])")
             selectedTab = "Search"
