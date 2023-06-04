@@ -188,7 +188,8 @@ final class SettingsStore: ObservableObject {
         }
 
         set {
-            defaults.set(newValue.id, forKey: Keys.defaultLightningWallet); objectWillChange.send()
+            objectWillChange.send()
+            defaults.set(newValue.id, forKey: Keys.defaultLightningWallet);
         }
     }
 }

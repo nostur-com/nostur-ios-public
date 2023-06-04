@@ -133,9 +133,12 @@ struct Settings: View {
                         // trigger alby setup
                         albyNWCsheetShown = true
                     }
-                    if newWallet.scheme == "nostur:nwc:custom:" {
+                    else if newWallet.scheme == "nostur:nwc:custom:" {
                         // trigger custom NWC setup
                         customNWCsheetShown = true
+                    }
+                    else {
+                        settings.activeNWCconnectionId = ""
                     }
                 }
             }

@@ -85,7 +85,6 @@ struct ZapButton_Previews: PreviewProvider {
                 .padding(.vertical, 5)
         }
         .withPreviewEnvironment({ pe in
-            SettingsStore.shared.activeNWCconnectionId = "test"
             pe.loadContacts()
             pe.loadZaps()
         })
