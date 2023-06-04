@@ -212,47 +212,14 @@ class Zap {
         DataProvider.shared().bg.perform { [weak self] in
             guard let self = self else { return }
             guard let pr = self.pr else { state = .ERROR; return }
-            guard let walletPubkey = NWCRequestQueue.shared.nwcConnection?.walletPubkey else { state = .ERROR; return }
-            guard let pk = NWCRequestQueue.shared.nwcConnection?.privateKey else { state = .ERROR; return }
             
-            if let keys = try? NKeys(privateKeyHex: pk) {
-                
-                let request = NWCRequest(method: "pay_invoice", params: NWCRequest.NWCParams(invoice: pr))
-                let encoder = JSONEncoder()
-                
-                if let requestJsonData = try? encoder.encode(request) {
-                    if let requestJsonString = String(data: requestJsonData, encoding: .utf8) {
-                        var nwcReq = NEvent(content: requestJsonString)
-                        nwcReq.kind = .nwcRequest
-                        nwcReq.tags.append(NostrTag(["p",walletPubkey]))
-                        
-                        L.og.debug("⚡️ Going to encrypt and send: \(nwcReq.eventJson())")
-                        
-                        guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex(), pubkey: walletPubkey, content: nwcReq.content) else {
-                            print("🔴🔴 Could encrypt content")
-                            return
-                        }
-                        
-                        nwcReq.content = encrypted
-                        
-                        if let signedReq = try? nwcReq.sign(keys) {
-//                            print(signedReq.wrappedEventJson())
-                            NWCRequestQueue.shared.sendRequest(signedReq, zap: self)
-                            self.state = .NWC_PAY_REQUEST_SENT
-                            return
-                            // after send, should get
-//                            [
-//                              "OK",
-//                              "bdd9129877cf7982e01d923bd52bc15ecfdf720c3d0e77012a04c7077d1af55d",
-//                              true,
-//                              ""
-//                            ]
-                        }
-                    }
-                }
+            if nwcSendPayInvoiceRequest(pr, zap:self, cancellationId: self.cancellationId) {
+                self.state = .NWC_PAY_REQUEST_SENT
             }
-            state = .ERROR
-            self.error = "Problem sending NWC payment command"
+            else {
+                state = .ERROR
+                self.error = "Problem sending NWC payment command"
+            }
         }
     }
 }
@@ -262,3 +229,78 @@ class Zap {
 //2. fetch invoice from callback [we include zap request here]
 //3. pay invoice with NWC
 //4. handle NWC response or time out
+
+func nwcSendPayInvoiceRequest(_ pr:String, zap:Zap? = nil, cancellationId:UUID? = nil) -> Bool {
+    L.og.debug("⚡️ nwcSendPayInvoiceRequest called \(pr)")
+    var pk:String?
+    var walletPubkey:String?
+    
+    if Thread.isMainThread {
+        guard !SettingsStore.shared.activeNWCconnectionId.isEmpty else { return false }
+        guard let nwc = NWCConnection.fetchConnection(SettingsStore.shared.activeNWCconnectionId, context: DataProvider.shared().viewContext) else { return false }
+        
+        guard let mainPK = nwc.privateKey else { L.og.error("⚡️ Problem with private key or nwcConnection"); return false }
+        pk = mainPK
+        walletPubkey = nwc.walletPubkey
+    }
+    else {
+        guard let bgPK = NWCRequestQueue.shared.nwcConnection?.privateKey else { L.og.error("⚡️ Problem with private key or nwcConnection"); return false }
+        guard let bgWalletPubkey = NWCRequestQueue.shared.nwcConnection?.walletPubkey else { L.og.error("⚡️ Problem with walletPubkey or nwcConnection"); return false }
+        pk = bgPK
+        walletPubkey = bgWalletPubkey
+    }
+    guard let pk = pk else { return false }
+    guard let walletPubkey = walletPubkey else { return false }
+    
+    if let keys = try? NKeys(privateKeyHex: pk) {
+        
+        let request = NWCRequest(method: "pay_invoice", params: NWCRequest.NWCParams(invoice: pr))
+        let encoder = JSONEncoder()
+        
+        if let requestJsonData = try? encoder.encode(request) {
+            if let requestJsonString = String(data: requestJsonData, encoding: .utf8) {
+                var nwcReq = NEvent(content: requestJsonString)
+                nwcReq.kind = .nwcRequest
+                nwcReq.tags.append(NostrTag(["p",walletPubkey]))
+                
+                L.og.debug("⚡️ Going to encrypt and send: \(nwcReq.eventJson())")
+                
+                guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex(), pubkey: walletPubkey, content: nwcReq.content) else {
+                    L.og.error("⚡️ Problem encrypting request")
+                    return false
+                }
+                
+                nwcReq.content = encrypted
+                
+                if let signedReq = try? nwcReq.sign(keys) {
+//                            print(signedReq.wrappedEventJson())
+                    if (Thread.isMainThread) {
+                        DataProvider.shared().bg.perform {
+                            NWCRequestQueue.shared.sendRequest(signedReq, zap: zap, cancellationId: cancellationId)
+                        }
+                    }
+                    else {
+                        NWCRequestQueue.shared.sendRequest(signedReq, zap: zap, cancellationId: cancellationId)
+                    }
+                    return true
+                    // after send, should get
+//                            [
+//                              "OK",
+//                              "bdd9129877cf7982e01d923bd52bc15ecfdf720c3d0e77012a04c7077d1af55d",
+//                              true,
+//                              ""
+//                            ]
+                }
+                else {
+                    L.og.error("⚡️ Problem signing: \(nwcReq.eventJson())")
+                    return false
+                }
+            }
+        }
+        
+        L.og.error("⚡️ Problem encoding request")
+        return false
+    }
+    L.og.error("⚡️ Problem with NWC private key")
+    return false
+}
