@@ -24,6 +24,7 @@ struct PaymentAmountSelector: View {
     @State var fiatPrice = "" // $0.00
     @State var zapMessage = ""
     @Environment(\.dismiss) private var dismiss
+    @State var errorMessage:String? = nil
     
     var amountS:Float {
         mapLinearToExponential(value: sliderValue, min: Float(SLIDER_MIN), max: Float(SLIDER_MAX), exponent: 7)
@@ -53,8 +54,20 @@ struct PaymentAmountSelector: View {
                     let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount:UInt64(amount * 1000), zapRequestNote: signedZapRequestNote)
                     
                     if response.pr != nil {
-                        await MainActor.run {
-                            openURL(URL(string: "\(ss.defaultLightningWallet.scheme)\(response.pr!)")!)
+                        if ss.defaultLightningWallet.scheme.contains(":nwc:") && !ss.activeNWCconnectionId.isEmpty {
+                            // NWC WALLET INSTANT ZAPS
+                            if nwcSendPayInvoiceRequest(response.pr!) {
+                                dismiss()
+                            }
+                            else {
+                                errorMessage = "There was a problem, could not send sats"
+                            }
+                        }
+                        else {
+                         // OLD STYLE WALLET
+                            await MainActor.run {
+                                openURL(URL(string: "\(ss.defaultLightningWallet.scheme)\(response.pr!)")!)
+                            }
                         }
                     }
                 }
@@ -69,8 +82,21 @@ struct PaymentAmountSelector: View {
                     let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount:UInt64(amountS * 1000))
                     
                     if response.pr != nil {
-                        await MainActor.run {
-                            openURL(URL(string: "\(ss.defaultLightningWallet.scheme)\(response.pr!)")!)
+                        
+                        if ss.defaultLightningWallet.scheme.contains(":nwc:") && !ss.activeNWCconnectionId.isEmpty {
+                            // NWC WALLET INSTANT ZAPS
+                            if nwcSendPayInvoiceRequest(response.pr!) {
+                                dismiss()
+                            }
+                            else {
+                                errorMessage = "There was a problem, could not send sats"
+                            }
+                        }
+                        else {
+                         // OLD STYLE WALLET
+                            await MainActor.run {
+                                openURL(URL(string: "\(ss.defaultLightningWallet.scheme)\(response.pr!)")!)
+                            }
                         }
                     }
                 }
@@ -117,7 +143,12 @@ struct PaymentAmountSelector: View {
                     Text("Pay").padding(10)
                         .foregroundColor(.white)
                         .frame(minWidth: 200)
+                        .disabled(errorMessage != nil)
                 }.buttonStyle(.borderedProminent)
+                
+                if let errorMessage {
+                    Text(errorMessage).fontWeight(.bold).foregroundColor(.red)
+                }
             }
             .onAppear {
                 sliderValue = mapExponentialToLinear(value: Float(ss.defaultZapAmount) , min: Float(SLIDER_MIN), max: Float(SLIDER_MAX), exponent: 7)
@@ -148,7 +179,7 @@ struct PaymentAmountSelector: View {
        
                 }
                 catch {
-                    print("could not get price from kraken")
+                    L.og.info("could not get price from kraken")
                 }
                 
             }

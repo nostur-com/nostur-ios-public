@@ -17,7 +17,7 @@ struct ZapButton: View {
     static let grey = Color.init(red: 113/255, green: 118/255, blue: 123/255)
     
     var body: some View {
-        if !ss.activeNWCconnectionId.isEmpty, let contact = nrPost.contact?.contact {
+        if ss.defaultLightningWallet.scheme.contains(":nwc:") && !ss.activeNWCconnectionId.isEmpty, let contact = nrPost.contact?.contact {
             if let cancellationId {
                 Button {
                     _ = Unpublisher.shared.cancel(cancellationId)
