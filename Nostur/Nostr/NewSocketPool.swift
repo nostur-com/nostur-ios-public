@@ -174,9 +174,6 @@ final class SocketPool: ObservableObject {
                 if managedClient.isNWC { // Logic for NWC relay is a bit different, no read/write difference
                     if !message.onlyForNWCRelay { continue }
                     
-                    // WTF WTF!!
-                    
-                    
                     if message.type == .REQ {
                         if (!managedClient.isConnected) {
                             if (!managedClient.isConnecting) {
@@ -184,17 +181,8 @@ final class SocketPool: ObservableObject {
                                 managedClient.connect()
                             }
                         }
-                        // skip if we already have an active subcription
-                        if subscriptionId != nil && managedClient.activeSubscriptions.contains(subscriptionId!) { continue }
-                        if (subscriptionId != nil) {
-                            DispatchQueue.main.async {
-                                managedClient.activeSubscriptions.append(subscriptionId!)
-                                L.sockets.info("🏎️🏎️⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count) onlyForNWCRelay: \(message.onlyForNWCRelay) managedClient.isNWC: \(managedClient.isNWC)")
-                            }
-                        }
-                        if subscriptionId != nil {
-                            L.sockets.info(" ⬇️⬇️ REQUESTING: \(message.message)")
-                        }
+                        // For NWC we just replace active subscriptions, else doesn't work
+                        L.sockets.info(" ⬇️⬇️ REQUESTING: \(message.message)")
                         managedClient.client.sendMessage(message.message)
                     }
                     else if  message.type == .CLOSE {
@@ -272,10 +260,7 @@ final class SocketPool: ObservableObject {
         }
         if (message.type == .REQ) {
             let read = sockets.values.filter { $0.read == true }.count
-            if read > 0 && subscriptionId == nil {
-                L.sockets.info("🟪⬇️⬇️ REQ ON \(read) RELAYS: \(message.message)")
-            }
-            //            print("⬇️⬇️ REQ ON \(read) RELAYS: \(String(message.message))")
+            if read > 0 && subscriptionId == nil { L.sockets.info("🟪⬇️⬇️ REQ ON \(read) RELAYS: \(message.message)") }
         }
         
         Task(priority: .utility) { [unowned self] in
@@ -660,10 +645,11 @@ class NewWebSocket {
                     switch completion {
                     case .failure(let error):
                         // Handle the failure case
-                        L.sockets.info("🟪Failure: \(error)")
+                        L.sockets.info("🟪 Failure: \(error)")
                     case .finished:
                         // The ping completed successfully
                         L.sockets.info("🟪 Ping succeeded on \(self.url). Sending \(text)")
+                        L.sockets.debug("🟠🟠🏎️🔌🔌 SEND \(self.url): \(text)")
                         let _ = webSocket.send(text)
                             .sink(receiveCompletion: {
                                 print($0)
@@ -708,14 +694,14 @@ class NewWebSocket {
             L.sockets.info("🔴🔴 Not connected. Did not sendMessage \(self.url)")
             return
         }
-//        print("🟠🟠🏎️🔌🔌 SEND \(self.url): \(text)")
+        L.sockets.debug("🟠🟠🏎️🔌🔌 SEND \(self.url): \(text)")
         let _ = webSocket.send(text)
             .sink(receiveCompletion: {
                 print($0)
-                print("WHAT")
+                L.sockets.info("? WHAT")
             }, receiveValue: {
                 print($0)
-                print("WHAT OK")
+                L.sockets.info("? WHAT OK")
             } )
     }
     

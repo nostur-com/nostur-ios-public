@@ -38,8 +38,10 @@ class MessageParser {
                     guard let subscriptionId = message.subscriptionId else { return }
                     if !["Following","Explore","Notifications","REALTIME-DETAIL","NWC"].contains(subscriptionId) && String(subscriptionId.prefix(5)) != "List-" {
                         // Send close message to this specific socket, not all.
+                        L.og.debug("🔌🔌 EOSE received. Sending CLOSE to \(client.url) for \(subscriptionId)")
                         client.sendMessage(ClientMessage.close(subscriptionId: subscriptionId))
                     }
+                    L.og.debug("🔌🔌 EOSE received. keeping OPEN. \(client.url) for \(subscriptionId)")
                 default:
                     if (message.type == .EVENT) {
                         guard let nEvent = message.event else { L.og.info("🔴🔴 uhh, where is nEvent "); return }
