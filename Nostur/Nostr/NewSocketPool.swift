@@ -166,15 +166,17 @@ final class SocketPool: ObservableObject {
         }
         if (message.type == .REQ) {
             let read = sockets.values.filter { $0.read == true }.count
-            if read > 0 && subscriptionId == nil {
-                L.sockets.info("⬇️⬇️ REQ ON \(read) RELAYS: \(message.message)")
-            }
-            //            print("⬇️⬇️ REQ ON \(read) RELAYS: \(String(message.message))")
+            if read > 0 && subscriptionId == nil { L.sockets.info("⬇️⬇️ REQ ON \(read) RELAYS: \(message.message)") }
         }
         
         Task(priority: .utility) { [unowned self] in
             for (_, managedClient) in self.sockets {
-                if message.onlyForNWCRelay && managedClient.isNWC { // Logic for NWC relay is a bit different, no read/write difference
+                if managedClient.isNWC { // Logic for NWC relay is a bit different, no read/write difference
+                    if !message.onlyForNWCRelay { continue }
+                    
+                    // WTF WTF!!
+                    
+                    
                     if message.type == .REQ {
                         if (!managedClient.isConnected) {
                             if (!managedClient.isConnecting) {
@@ -187,7 +189,7 @@ final class SocketPool: ObservableObject {
                         if (subscriptionId != nil) {
                             DispatchQueue.main.async {
                                 managedClient.activeSubscriptions.append(subscriptionId!)
-                                L.sockets.info("🏎️🏎️⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count)")
+                                L.sockets.info("🏎️🏎️⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count) onlyForNWCRelay: \(message.onlyForNWCRelay) managedClient.isNWC: \(managedClient.isNWC)")
                             }
                         }
                         if subscriptionId != nil {
@@ -213,6 +215,7 @@ final class SocketPool: ObservableObject {
                 
                 else {
                     if message.onlyForNWCRelay { continue }
+                    
                     guard managedClient.read || managedClient.write else {
                         // Skip if relay is not selected for reading or writing events
                         continue
@@ -231,7 +234,7 @@ final class SocketPool: ObservableObject {
                         if (subscriptionId != nil) {
                             DispatchQueue.main.async {
                                 managedClient.activeSubscriptions.append(subscriptionId!)
-                                L.sockets.info("🏎️🏎️⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count)")
+                                L.sockets.info("🏎️🏎️⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count) onlyForNWCRelay: \(message.onlyForNWCRelay) managedClient.isNWC: \(managedClient.isNWC)")
                             }
                         }
                         if subscriptionId != nil {
@@ -281,7 +284,8 @@ final class SocketPool: ObservableObject {
                     // Skip if relay is not selected for reading or writing events
                     continue
                 }
-                if message.onlyForNWCRelay && managedClient.isNWC { // Logic for NWC relay is a bit different, no read/write difference
+                if managedClient.isNWC { // Logic for NWC relay is a bit different, no read/write difference
+                    if !message.onlyForNWCRelay { continue }
                     if message.type == .REQ {
                         if (!managedClient.isConnected) {
                             if (!managedClient.isConnecting) {
@@ -294,7 +298,7 @@ final class SocketPool: ObservableObject {
                         if (subscriptionId != nil) {
                             DispatchQueue.main.async {
                                 managedClient.activeSubscriptions.append(subscriptionId!)
-                                L.sockets.info("🏎️🏎️⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count)")
+                                L.sockets.info("🏎️🏎️⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count) onlyForNWCRelay: \(message.onlyForNWCRelay) managedClient.isNWC: \(managedClient.isNWC)")
                             }
                         }
                         if subscriptionId != nil {
@@ -319,6 +323,7 @@ final class SocketPool: ObservableObject {
                 }
                 else {
                     if message.onlyForNWCRelay { continue }
+                    
                     if message.type == .REQ && managedClient.read { // REQ FOR ALL READ RELAYS
                         if (!managedClient.isConnected) {
                             if (!managedClient.isConnecting) {
@@ -332,7 +337,7 @@ final class SocketPool: ObservableObject {
                         if (subscriptionId != nil) {
                             DispatchQueue.main.async {
                                 managedClient.activeSubscriptions.append(subscriptionId!)
-                                L.sockets.info("🟪🏎️🏎️⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count)")
+                                L.sockets.info("🏎️🏎️⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count) onlyForNWCRelay: \(message.onlyForNWCRelay) managedClient.isNWC: \(managedClient.isNWC)")
                             }
                         }
                         if subscriptionId != nil {

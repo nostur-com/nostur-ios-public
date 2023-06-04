@@ -15,7 +15,7 @@ struct ClientMessage {
         case CLOSE
     }
     
-    var onlyForNWCRelay = false
+    var onlyForNWCRelay:Bool = false
     var type:ClientMessage.type = .EVENT
     var message:String
     
