@@ -864,6 +864,14 @@ extension LVM {
             }
             .store(in: &subscriptions)
         
+        receiveNotification(.blockListUpdated)
+            .sink { [weak self] notification in
+                guard let self = self else { return }
+                let blockedPubkeys = notification.object as! [String]
+                self.nrPostLeafs = self.nrPostLeafs.filter({ !blockedPubkeys.contains($0.pubkey) })
+            }
+            .store(in: &subscriptions)
+        
         receiveNotification(.mutedWordsChanged)
             .sink { [weak self] notification in
                 guard let self = self else { return }
