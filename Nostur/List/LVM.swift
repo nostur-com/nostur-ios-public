@@ -568,6 +568,12 @@ class LVM: NSObject, ObservableObject {
         didSet {
             if instantFinished {
                 L.og.notice("🟪 instantFinished")
+                // if nothing on screen, fetch from local
+                DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+                    if self.nrPostLeafs.count == 0 {
+                        self.performLocalFetch()
+                    }
+                }
                 self.configureTimer()
             }
         }
