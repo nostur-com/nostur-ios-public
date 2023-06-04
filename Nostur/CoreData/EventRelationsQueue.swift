@@ -23,7 +23,7 @@ import CoreData
 
 class EventRelationsQueue {
     
-    let SPAM_LIMIT = 350
+    let SPAM_LIMIT = 2000
     
     typealias EventId = String
     typealias ContactPubkey = String
