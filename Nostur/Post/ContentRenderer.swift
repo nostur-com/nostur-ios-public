@@ -63,7 +63,7 @@ struct ContentRenderer: View { // VIEW things
                     //                            .padding(.vertical, 5)
                     //                                                    .frame(maxWidth: .infinity, alignment: .leading)
                 case .lnbc(let text):
-                    LightningInvoice(invoice: text)
+                    LightningInvoice(invoice: text, nrPost:nrPost)
                         .padding(.horizontal, fullWidth ? 10 : 0)
                 case .video(let url):
                     SingleVideoViewer(url: url, pubkey: nrPost.pubkey, videoWidth: availableWidth - 10, isFollowing:nrPost.following)

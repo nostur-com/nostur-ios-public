@@ -33,10 +33,13 @@ struct KrakenApiResponse: Codable {
 
 struct LightningInvoice: View {
     @Environment(\.openURL) var openURL
-    let ss:SettingsStore = .shared
+    @ObservedObject var ss:SettingsStore = .shared
     var invoice:String
+    @ObservedObject var nrPost:NRPost
     @State var divider:Double = 1 // 1 = SATS, 100000000 = BTC
     @State var fiatPrice = ""
+    @State var cancellationId:UUID? = nil
+    @State var activeColor = Color.red
     
     var bolt11:Bolt11.Invoice? {
         Bolt11.decode(string: invoice)
@@ -52,7 +55,6 @@ struct LightningInvoice: View {
     var body: some View {
         VStack {
             if let bolt11 = bolt11 {
-                let _ = print("final: \(bolt11)")
                 Text("Bitcoin Lightning Invoice ⚡️").font(.caption)
                 Divider()
                 Text("\(bolt11.amount != nil ? (Double(bolt11.amount!.int64)/divider).clean.description : "any") \(divider == 1 ? "sats" : "BTC") \(fiatPrice)")
@@ -60,13 +62,63 @@ struct LightningInvoice: View {
                     .onTapGesture {
                         divider = divider == 1 ? 100000000 : 1
                     }
-                Button {
-                    // TODO: change to default lightning wallet url
-                    openURL(URL(string: "\(ss.defaultLightningWallet.scheme)\(invoice)")!)
-                } label: { Text(isExpired ? "Expired" : "Pay").frame(minWidth: 150) }
-                    .buttonStyle(.borderedProminent)
-                    .cornerRadius(20)
-                    .disabled(isExpired)
+                
+                
+                if ss.defaultLightningWallet.scheme.contains(":nwc:") && !ss.activeNWCconnectionId.isEmpty && bolt11.amount != nil {
+                    if let cancellationId {
+                        // INSTANT ZAP TRIGGERED, CAN CANCEL
+                        Button {
+                            if Unpublisher.shared.cancel(cancellationId) {
+                                NWCRequestQueue.shared.removeRequest(byCancellationId: cancellationId)
+                            }
+                            self.cancellationId = nil
+                        } label: { Text(isExpired ? "Expired" : "Payment attempted").frame(minWidth: 150) }
+                            .buttonStyle(.borderedProminent)
+                            .cornerRadius(20)
+                            .disabled(isExpired)
+                    }
+                    else {
+                        // BUTTON TO PAY INVOICE (DISABLED IF EXPIRED)
+                        Text(isExpired ? "Expired" : "Pay")
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .foregroundColor(isExpired ? Color.gray : Color.white)
+                            .background(isExpired ? Color.gray.opacity(0.5) : Color("AccentColor"))
+                            .cornerRadius(8)
+                            .frame(minWidth: 150)
+                            .overlay(
+                                GeometryReader { geo in
+                                    Color.white.opacity(0.001)
+                                        .onTapGesture {
+                                            guard !isExpired else { return }
+                                            
+                                            cancellationId = UUID()
+                                            if nwcSendPayInvoiceRequest(invoice, cancellationId: cancellationId) {
+                                                let impactMed = UIImpactFeedbackGenerator(style: .medium)
+                                                impactMed.impactOccurred()
+                                                sendNotification(.lightningStrike, LightningStrike(location:geo.frame(in: .global).origin, amount:Double(bolt11.amount!.int64)/divider))
+                                                withAnimation(.easeIn(duration: 0.25).delay(0.25)) {// wait 0.25 for the strike
+                                                    activeColor = .yellow
+                                                }
+                                            }
+                                            else {
+                                                cancellationId = nil
+                                                // TODO: feedback somehow
+                                            }
+                                        }
+                                }
+                            )
+                    }
+                }
+                else {
+                    // OLD STYLE WITHOUT NWC / INSTANT ZAPS
+                    Button {
+                        openURL(URL(string: "\(ss.defaultLightningWallet.scheme)\(invoice)")!)
+                    } label: { Text(isExpired ? "Expired" : "Pay").frame(minWidth: 150) }
+                        .buttonStyle(.borderedProminent)
+                        .cornerRadius(20)
+                        .disabled(isExpired)
+                }
             }
             else {
                 Text("Unable to decode lightning invoice")
@@ -128,12 +180,6 @@ struct LightningInvoice_Previews: PreviewProvider {
             let invoice = "lnbc469970n1p373e49pp5ey9mxfcy9k62clpjvqwsrju64p0378cll0mzehtccj2ulqnamkzqdqvw3jhxarfdenscqzpgxqyz5vqsp5m8zsyfs936f2vfkshvdfhntmr596079hwryr2r8dpr8ahy6hu6hq9qyyssqlcvvw6gmq09hwzw2kxfe03enc25plxzfmupxwx4xr8hddn972nzq7m0jf9sxenw23qg6nv55678nrnnr4fe3wkwm6pczmaxs0r7yftgqd6lgya"
             
             VStack {
-                Text("Just the invoice:")
-                LightningInvoice(invoice:invoice)
-                
-                Text("\n\n\n")
-                
-                Text("In a note")
                 if let nrPost = { () -> NRPost? in
                     if let event = PreviewFetcher.fetchEvent() {
                         event.content = invoice
@@ -146,7 +192,11 @@ struct LightningInvoice_Previews: PreviewProvider {
             }
             .padding(20)
         }
-        .withPreviewEnvironment()
+        .withLightningEffect()
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+            pe.loadPosts()
+        })
     }
     
 }
