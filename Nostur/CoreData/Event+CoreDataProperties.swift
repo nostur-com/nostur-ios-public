@@ -930,9 +930,18 @@ extension Event {
                 
                 savedEvent.zapFromRequest = zapRequest
                 if let firstE = event.firstE() {
-//                    savedEvent.objectWillChange.send()
                     savedEvent.zappedEventId = firstE
-                    savedEvent.zappedEvent = try? Event.fetchEvent(id: firstE, context: context)
+                    
+                    if let awaitingEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstE) {
+                        savedEvent.zappedEvent = awaitingEvent
+                    }
+                    else {
+                        savedEvent.zappedEvent = try? Event.fetchEvent(id: firstE, context: context)
+                    }
+                    if let zapRequest, zapRequest.pubkey == NosturState.shared.activeAccountPublicKey {
+                        savedEvent.zappedEvent?.zapState = .zapReceiptConfirmed
+                        savedEvent.zappedEvent?.zapStateChanged.send(.zapReceiptConfirmed)
+                    }
                 }
                 if let firstP = event.firstP() {
 //                    savedEvent.objectWillChange.send()
