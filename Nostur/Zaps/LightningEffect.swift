@@ -48,9 +48,9 @@ struct LightingEffectTester: View {
     
     var body: some View {
         GeometryReader { geo in
-            VStack {
+            VStack(alignment: .trailing) {
                 Spacer()
-                Text("Example view - text 1 ")
+                Text("Example view - text Example view  1 ")
                 Text("Example view - text 2 ")
                 Text("Example view - text 3 ")
                 Image("BoltIcon")
@@ -61,7 +61,7 @@ struct LightingEffectTester: View {
                         GeometryReader { geo in
                             Color.white.opacity(0.001)
                                 .onTapGesture {
-                                    sendNotification(.lightningStrike, LightningStrike(location:geo.frame(in: .global).origin, amount:21.0))
+                                    sendNotification(.lightningStrike, LightningStrike(location:geo.frame(in: .global).origin, amount:Double.random(in: 1000...119000)))
                                     withAnimation(.easeIn(duration: 0.25).delay(0.25)) {// wait 0.25 for the strike
                                         activeColor = .yellow
                                     }
@@ -141,12 +141,13 @@ private struct WithLightningEffect: ViewModifier {
                         .stroke(LinearGradient(gradient: Gradient(colors: [boltColorBegin, boltColorMiddle, boltColorEnd]), startPoint: .top, endPoint: .bottom), lineWidth: boltWidth)
                         .opacity(bolt != .awaiting ? 1 : 0)
                     Image("BoltIconActive").foregroundColor(.yellow)
-                        .padding(.horizontal, 20)
+                        .padding(.horizontal, 40)
                         .overlay(alignment: .topLeading) {
                             Text(amount.satsFormatted).foregroundColor(.yellow)
+                                .shadow(color: .black, radius: 1)
                         }
                         .scaleEffect(boltScale)
-                        .offset(x: endLocation.x + 12 - 20, y: endLocation.y - 44)
+                        .offset(x: endLocation.x + 12 - 40, y: endLocation.y - 44)
                         .opacity(boltOpacity)
                 }.opacity(bolt == .awaiting ? 1.0 : 1.0)
             }
