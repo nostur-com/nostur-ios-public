@@ -23,6 +23,8 @@ import CoreData
 
 class EventRelationsQueue {
     
+    let SPAM_LIMIT = 350
+    
     typealias EventId = String
     typealias ContactPubkey = String
     
@@ -61,12 +63,14 @@ class EventRelationsQueue {
         if Thread.isMainThread {
             if isBGevent {
                 ctx.perform { [unowned self] in
+                    guard self.waitingEvents.count < SPAM_LIMIT else { L.og.info("🔴 SPAM_LIMIT hit, addAwaitingEvent() cancelled"); return }
                     self.waitingEvents[event.id] = QueuedEvent(event: event, queuedAt: Date.now)
                     L.og.info("🟢🟢🟢🔴🔴 WRONG THREAD: addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
                 }
             }
             else {
                 ctx.perform { [unowned self] in
+                    guard self.waitingEvents.count < SPAM_LIMIT else { L.og.info("🔴 SPAM_LIMIT hit, addAwaitingEvent() cancelled"); return }
                     guard let privateEvent = self.ctx.object(with: event.objectID) as? Event else { return }
                     self.waitingEvents[privateEvent.id] = QueuedEvent(event: privateEvent, queuedAt: Date.now)
                     L.og.info("🟢🟢🟢🔴🔴 WRONG THREAD+MAINEVENT: addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
@@ -74,6 +78,7 @@ class EventRelationsQueue {
             }
         }
         else {
+            guard self.waitingEvents.count < SPAM_LIMIT else { L.og.info("🔴 SPAM_LIMIT hit, addAwaitingEvent() cancelled"); return }
             if isBGevent {
                 self.waitingEvents[event.id] = QueuedEvent(event: event, queuedAt: Date.now)
                 L.og.info("🟢🟢🟢🟢🟢 addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
@@ -111,6 +116,7 @@ class EventRelationsQueue {
     /// Adds contact to the queue waiting for info to be updated
     /// - Parameter contact: Contact should be from .bg context, if not this function will fetch it from .bg using .objectID
     public func addAwaitingContact(_ contact:Contact, debugInfo:String? = "") {
+        guard self.waitingContacts.count < SPAM_LIMIT else { L.og.info("🔴 SPAM_LIMIT hit, addAwaitingContact() cancelled"); return }
         if contact.managedObjectContext == ctx {
             ctx.perform { [unowned self] in
                 self.waitingContacts[contact.pubkey] = QueuedContact(contact: contact, queuedAt: Date.now)

@@ -159,15 +159,18 @@ extension Contact : Identifiable {
         let name = name != nil && name != "" ? name : nil
         let theName = displayName ?? name
         
+        if theName == nil { return authorKey }
+        let spamFixedName = String(theName!.prefix(255)) // 255 SPAM LIMIT
+        
         if (SettingsStore.shared.hideEmojisInNames) {
-            return (theName?.unicodeScalars.filter {
+            return (spamFixedName.unicodeScalars.filter {
                 !($0.value >= 0x13000 && $0.value <= 0x1342E) && // EGYPTIAN HIEROGLYPHS
                 !$0.properties.isEmoji  // EMOJIS
                 
-            }.reduce("") { $0 + String($1) }) ?? authorKey
+            }.reduce("") { $0 + String($1) })
         }
         else {
-            return theName ?? authorKey
+            return spamFixedName
         }
     }
     

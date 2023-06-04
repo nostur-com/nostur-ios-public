@@ -10,7 +10,7 @@ import SwiftUI
 struct ReadMoreButton: View {
     var nrPost:NRPost
     
-    var moreItems:Int { nrPost.previewWeights.moreItemsCount }
+    var moreItems:Int { nrPost.previewWeights?.moreItemsCount ?? 0 }
     
     var body: some View {
         HStack {

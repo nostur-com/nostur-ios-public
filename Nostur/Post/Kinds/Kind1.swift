@@ -101,7 +101,7 @@ struct Kind1: View {
                         .onTapGesture {
                             navigateTo(nrPost)
                         }
-                    if (nrPost.previewWeights.moreItems) {
+                    if (nrPost.previewWeights?.moreItems ?? false) {
                         ReadMoreButton(nrPost: nrPost)
                     }
                 }

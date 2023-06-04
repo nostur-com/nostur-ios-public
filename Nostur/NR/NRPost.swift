@@ -13,6 +13,8 @@ public typealias NRPostID = String
 // NRPost SHOULD BE CREATED IN BACKGROUND THREAD
 class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
+    let SPAM_LIMIT_P = 50
+    
     private var nrPostQueue = DispatchQueue(label: "com.nostur.nrPostQueue", attributes: .concurrent)
     
     static func == (lhs: NRPost, rhs: NRPost) -> Bool {
@@ -132,7 +134,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var zapTally:Int64 = 0
     var imageUrls:[URL] = [] // SmoothList uses this for prefetching
     var linkPreviewURLs:[URL] = []
-    var previewWeights:PreviewWeights
+    var previewWeights:PreviewWeights?
+    var plainTextOnly = false
     
     var anyName:String {
         if let contact = contact {
@@ -173,14 +176,17 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         self.withParents = withParents
         self.withReplies = withReplies
         self.withReplyTo = withReplyTo
+        self.plainTextOnly = plainText
         
-        let (contentElementsDetail, linkPreviewURLs) = NRContentElementBuilder.shared.buildElements(event)
-        self.linkPreviewURLs = linkPreviewURLs
-        
-        self.contentElementsDetail = contentElementsDetail
-        let (contentElements, previewWeights) = filteredForPreview(contentElementsDetail)
-        self.contentElements = contentElements
-        self.previewWeights = previewWeights
+        if !plainText { // plainText is actually plainTextOnly, for rendering in muted spam stuff
+            let (contentElementsDetail, linkPreviewURLs) = NRContentElementBuilder.shared.buildElements(event)
+            self.linkPreviewURLs = linkPreviewURLs
+            
+            self.contentElementsDetail = contentElementsDetail
+            let (contentElements, previewWeights) = filteredForPreview(contentElementsDetail)
+            self.contentElements = contentElements
+            self.previewWeights = previewWeights
+        }
         
         var isAwaiting = false
         if let contact = event.contact_ {
@@ -206,7 +212,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             }
             return nil
         }) + [event.pubkey]
-        event.fastPs.forEach { (tag, pubkey, hint) in
+        event.fastPs.prefix(SPAM_LIMIT_P).forEach { (tag, pubkey, hint) in
             if !eventContactPs.contains(pubkey) {
                 missingPs.insert(pubkey)
             }
@@ -275,6 +281,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         self.hasPrivateNote = _hasPrivateNote()
         
         self.subject = fastTags.first(where: { $0.0 == "subject" })?.1
+        if let subject {
+            self.subject = String(subject.prefix(255)) // 255 SPAM LIMIT
+        }
         
         setupSubscriptions()
     }

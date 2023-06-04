@@ -22,6 +22,7 @@ struct ThreadReplies: View {
         }
         .background(Color("ListBackground"))
         .onAppear {
+            guard !nrPost.plainTextOnly else { L.og.info("plaintext enabled, probably spam") ; return }
             nrPost.loadGroupedReplies()
             
             // After many attempts, still some replyTo's are missing, somewhere some observable is not

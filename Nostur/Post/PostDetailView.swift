@@ -231,6 +231,10 @@ struct PostAndParent: View {
                                 .padding(.bottom, 10)
                                 .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                             case 1,6,9734:
+                            if nrPost.plainTextOnly {
+                                NoteMinimalContentView(nrPost: nrPost, lineLimit: 350)
+                            }
+                            else {
                                 ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
                                     .padding(.top, 3)
                                     .padding(.bottom, 10)
@@ -239,6 +243,7 @@ struct PostAndParent: View {
 //                                    .onTapGesture {
 //                                        navigateTo(nrPost)
 //                                    }
+                            }
                             case 1063:
                                 if let fileMetadata = nrPost.fileMetadata {
                                     Kind1063(nrPost, fileMetadata: fileMetadata, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
@@ -340,6 +345,7 @@ struct PostAndParent: View {
             .id(nrPost.id)
             .padding(.vertical, 10)
             .onAppear {
+                guard !nrPost.plainTextOnly else { L.og.info("plaintext enabled, probably spam") ; return }
                 guard !didLoad else { return }
                 didLoad = true
                 EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.003")

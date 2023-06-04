@@ -96,24 +96,31 @@ struct MutedConversations: View {
     var body: some View {
         Group {
             if let account = ns.account {
-                LazyVStack(spacing: 0) {
+                LazyVStack() {
                     ForEach(fl.nrPosts) { nrPost in
-                        PostRowDeletable(nrPost: nrPost)
-                            .background(Color.systemBackground)
-                            .boxShadow()
-                            .padding(.vertical, 10)
-                            .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
-                            .id(nrPost.id)
-                            .onSwipe(tint: Color.green, label: "Unmute", icon: "") {
-                                ns.objectWillChange.send()
-                                account.mutedRootIds_.removeAll(where: { $0 == nrPost.id })
-                                fl.nrPosts = fl.nrPosts.filter { $0.id != nrPost.id }
-                                DataProvider.shared().save()
-                            }
+                        HStack {
+                            PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 25)
+                                .onTapGesture {
+                                    navigateTo(ContactPath(key: nrPost.pubkey))
+                                }
+                            MinimalNoteTextRenderView(nrPost: nrPost, lineLimit: 1)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .contentShape(Rectangle())
+                                .onTapGesture { navigateTo(nrPost) }
+                        }
+                        .padding(10)
+                        .id(nrPost.id)
+                        .onSwipe(tint: Color.green, label: "Unmute", icon: "") {
+                            ns.objectWillChange.send()
+                            account.mutedRootIds_.removeAll(where: { $0 == nrPost.id })
+                            fl.nrPosts = fl.nrPosts.filter { $0.id != nrPost.id }
+                            DataProvider.shared().save()
+                        }
+                        Divider()
                     }
                     Spacer()
                 }
-                .background(Color("ListBackground"))
+//                .background(Color("ListBackground"))
                 .onChange(of: account.mutedRootIds_) { newValue in
                     fl.reset()
                     fl.predicate = NSPredicate(format: "id IN %@", newValue)
@@ -127,6 +134,9 @@ struct MutedConversations: View {
             didLoad = true
             fl.predicate = NSPredicate(format: "id IN %@", account.mutedRootIds_)
             fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+            fl.transformer = { event in
+                NRPost(event: event, withReplyTo: false, withParents: false, withReplies: false, plainText: true)
+            }
             fl.loadMore(1000)
             
         }

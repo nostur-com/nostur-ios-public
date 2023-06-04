@@ -97,7 +97,7 @@ struct Kind1Default: View {
                         .onTapGesture {
                             navigateTo(nrPost)
                         }
-                    if (nrPost.previewWeights.moreItems) {
+                    if (nrPost.previewWeights?.moreItems ?? false) {
                         ReadMoreButton(nrPost: nrPost)
                             .padding(.vertical, 5)
                             .hCentered()
