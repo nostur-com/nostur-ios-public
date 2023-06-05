@@ -65,7 +65,9 @@ struct SmoothList: UIViewControllerRepresentable {
         receiveNotification(.shouldScrollToTop)
             .sink { _ in
                 guard context.coordinator.lvm.viewIsVisible else { return }
-                cvh.collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .top, animated: true)
+                if context.coordinator.lvm.nrPostLeafs.count > 0 {
+                    cvh.collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .top, animated: true)
+                }
             }
             .store(in: &context.coordinator.subscriptions)
     }
