@@ -112,6 +112,7 @@ final class NosturState : ObservableObject {
             // Remove currectly active "Following" subscriptions from connected sockets
             SocketPool.shared.removeActiveAccountSubscriptions()
             if sendActiveAccountChangedNotification {
+                FollowingGuardian.shared.didReceiveContactListThisSession = false
                 sendNotification(.activeAccountChanged, account)
             }
         }

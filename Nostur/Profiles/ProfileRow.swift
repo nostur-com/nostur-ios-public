@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ProfileRow: View {
     @EnvironmentObject var ns:NosturState
+    @ObservedObject var fg:FollowingGuardian = .shared
     let sp:SocketPool = .shared
      
     // Following/Unfollowing tap is slow so update UI and do in background:
@@ -64,6 +65,7 @@ struct ProfileRow: View {
                         } label: {
                             FollowButton(isFollowing:isFollowing, isPrivateFollowing:contact.privateFollow)
                         }
+                        .disabled(!fg.didReceiveContactListThisSession)
                     }
                 }
                 Text(contact.about ?? "").foregroundColor(.primary)

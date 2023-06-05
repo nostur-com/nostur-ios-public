@@ -10,6 +10,7 @@ import SwiftUI
 struct ProfileFollowButton: View {
     @ObservedObject var contact:Contact
     @EnvironmentObject var ns:NosturState
+    @ObservedObject var fg:FollowingGuardian = .shared
     @State var isFollowing = false
     @State var editingAccount:Account?
     
@@ -32,6 +33,7 @@ struct ProfileFollowButton: View {
             } label: {
                 FollowButton(isFollowing:isFollowing, isPrivateFollowing:contact.privateFollow)
             }
+            .disabled(!fg.didReceiveContactListThisSession)
             .onAppear {
                 if (ns.isFollowing(contact)) {
                     isFollowing = true

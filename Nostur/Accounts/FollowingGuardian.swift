@@ -12,7 +12,15 @@ import Combine
 // If contacts are reduced (by another (broken) client) it can ask you to restore
 // It also adds new followers you added through other clients
 
-class FollowingGuardian {
+class FollowingGuardian: ObservableObject {
+    
+    @Published var didReceiveContactListThisSession = false {
+        didSet {
+            if didReceiveContactListThisSession {
+                L.og.info("🙂🙂FollowingGuardian.didReceiveContactListThisSession: \(self.didReceiveContactListThisSession)")
+            }
+        }
+    }
     
     static let shared = FollowingGuardian()
     
@@ -36,12 +44,8 @@ if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
     
     func checkForUpdatedContactList() {
         guard !NosturState.shared.activeAccountPublicKey.isEmpty else { return }
-        print("Checking for updated contact list")
-        SocketPool.shared.sendMessage(ClientMessage(
-                type: .REQ,
-                message: RequestMessage.getAuthorContactsList(
-                    pubkey: NosturState.shared.activeAccountPublicKey
-                )))
+        L.og.info("Checking for updated contact list")
+        reqP(RM.getAuthorContactsList(pubkey: NosturState.shared.activeAccountPublicKey))
     }
     
     func listenForAccountChanged() {
@@ -50,9 +54,7 @@ if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
             .sink { notification in
                 let account = notification.object as! Account
                 guard account.privateKey != nil else { return }
-                SocketPool.shared.sendMessage(ClientMessage(
-                        type: .REQ,
-                        message: RequestMessage.getAuthorContactsList(pubkey: account.publicKey)))
+                reqP(RM.getAuthorContactsList(pubkey: account.publicKey))
             }
             .store(in: &subscriptions)
     }
@@ -76,12 +78,13 @@ if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
                 
                 let removed = pubkeysOwn.subtracting(pubkeysRelay)
                 let added = pubkeysRelay.subtracting(pubkeysOwn)
+                L.og.info("receiveNotification(.newFollowingListFromRelay): added: \(added)")
                 
                 self.followNewContacts(added: added, account: account)
                 
                 if removed.count > 0 {
                     sendNotification(.requestConfirmationChangedFollows, removed)
-                    print("Removed keys: \(removed)")
+                    L.og.info("receiveNotification(.newFollowingListFromRelay): removed: \(removed)")
                 }
             }
             .store(in: &subscriptions)
@@ -125,6 +128,7 @@ if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
                 account.addToFollows(newContact)
             }
         }
+        
         guard let clEvent = try? AccountManager.createContactListEvent(account: account) else {
             print("🔴🔴 Could not create new clEvent")
             return

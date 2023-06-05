@@ -191,11 +191,33 @@ class Importer {
                     
                     guard !self.existingIds.contains(event.id) else {
                         alreadyInIdCacheSkipped = alreadyInIdCacheSkipped + 1
+                        if event.publicKey == NosturState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
+                            DispatchQueue.main.async {
+                                FollowingGuardian.shared.didReceiveContactListThisSession = true
+                            }
+                        }
                         continue
                     }
                     
                     guard Event.eventExists(id: event.id, context: context) == false else {
                         alreadyInDBskipped = alreadyInDBskipped + 1
+                        if event.publicKey == NosturState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
+                            DispatchQueue.main.async {
+                                FollowingGuardian.shared.didReceiveContactListThisSession = true
+                            }
+                        }
+                        continue
+                    }
+                    // Skip if we already have a newer kind 3
+                    if  event.kind == .contactList,
+                        let existingKind3 = Event.fetchReplacableEvent(3, pubkey: event.publicKey, context: context),
+                        existingKind3.created_at > Int64(event.createdAt.timestamp)
+                    {
+                        if event.publicKey == NosturState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
+                            DispatchQueue.main.async {
+                                FollowingGuardian.shared.didReceiveContactListThisSession = true
+                            }
+                        }
                         continue
                     }
                     
@@ -225,6 +247,11 @@ class Importer {
                             let pTags = event.pTags()
                             Task { @MainActor in
                                 NosturState.shared.rawExplorePubkeys = Set(pTags)
+                            }
+                        }
+                        if event.publicKey == NosturState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
+                            DispatchQueue.main.async {
+                                FollowingGuardian.shared.didReceiveContactListThisSession = true
                             }
                         }
 

@@ -34,6 +34,7 @@ struct NosturButton: ButtonStyle {
 }
 
 struct FollowButton: View {
+    @Environment(\.isEnabled) private var isEnabled
     @Environment(\.colorScheme) var colorScheme
     var isFollowing: Bool = false
     var isPrivateFollowing:Bool = false
@@ -55,6 +56,7 @@ struct FollowButton: View {
                 RoundedRectangle(cornerRadius: 15)
                     .stroke(.gray, lineWidth: 1)
             }
+            .opacity(isEnabled ? 1.0 : 0.3)
     }
 }
 
@@ -63,8 +65,17 @@ struct FollowButton_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
             FollowButton(isFollowing: false, isPrivateFollowing: false)
+            FollowButton(isFollowing: false, isPrivateFollowing: false)
+                .disabled(true)
+            
             FollowButton(isFollowing: true, isPrivateFollowing: false)
+            FollowButton(isFollowing: true, isPrivateFollowing: false)
+                .disabled(true)
+            
             FollowButton(isFollowing: true, isPrivateFollowing: true)
+            FollowButton(isFollowing: true, isPrivateFollowing: true)
+                .disabled(true)
         }
+        .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
     }
 }
