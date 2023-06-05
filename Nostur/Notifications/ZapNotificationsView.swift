@@ -10,13 +10,62 @@ import SwiftUI
 struct ZapNotificationView: View {
     var notification:PersistentNotification
     
-    var body: some View {
-        VStack {
-            if let rendered = try? AttributedString(markdown: notification.content, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace)) {
-                Text(rendered)
+    func createLinks(_ fails:FailedZaps) -> String {
+        var links = [String]()
+        for index in fails.failedZaps.indices {
+            if let eventId = fails.failedZaps[index].eventId {
+                links.append("[post #\(index+1)](nostur:e:\(eventId))")
             }
             else {
-                Text(notification.content)
+                links.append("[contact #\(index+1)](nostur:p:\(fails.failedZaps[index].contactPubkey))")
+            }
+        }
+        return links.formatted(.list(type: .and))
+    }
+    
+    func createErrorLinks(_ fails:FailedZaps) -> String {
+        var links = [String]()
+        for index in fails.failedZaps.indices {
+            if let eventId = fails.failedZaps[index].eventId {
+                links.append("[post #\(index+1)](nostur:e:\(eventId)): \(fails.failedZaps[index].error)")
+            }
+            else {
+                links.append("[contact #\(index+1)](nostur:p:\(fails.failedZaps[index].contactPubkey)): \(fails.failedZaps[index].error)")
+            }
+        }
+        return links.joined(separator: "\n")
+    }
+    
+    var body: some View {
+        VStack {
+            switch notification.type {
+            case .failedZaps:
+                if let parsed = try? JSONDecoder().decode(FailedZaps.self, from: notification.content.data(using: .utf8)!) {
+                    let forRendering = "Zaps failed on: \(createErrorLinks(parsed))."
+                    if let rendered = try? AttributedString(markdown: forRendering, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace)) {
+                        Text(rendered)
+                    }
+                    else {
+                        Text(notification.content)
+                    }
+                }
+            case .failedZapsTimeout:
+                if let parsed = try? JSONDecoder().decode(FailedZaps.self, from: notification.content.data(using: .utf8)!) {
+                    let forRendering = "Zaps failed on: \(createLinks(parsed)) (Timeout)."
+                    if let rendered = try? AttributedString(markdown: forRendering, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace)) {
+                        Text(rendered)
+                    }
+                    else {
+                        Text(notification.content)
+                    }
+                }
+            default:
+                if let rendered = try? AttributedString(markdown: notification.content, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace)) {
+                    Text(rendered)
+                }
+                else {
+                    Text(notification.content)
+                }
             }
         }
         .frame(maxWidth:.infinity, alignment:.leading)

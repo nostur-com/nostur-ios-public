@@ -18,7 +18,8 @@ public class PersistentNotification: NSManagedObject {
         case none = "NONE"
         case newFollowers = "NEW_FOLLOWERS"
         case failedZap = "FAILED_ZAP"
-        case failedZaps = "FAILED_ZAPS"
+        case failedZaps = "FAILED_ZAPS" // Error
+        case failedZapsTimeout = "FAILED_ZAPS_TIMEOUT" // Timeout
         case failedLightningInvoice = "FAILED_LIGHTNING_INVOICE"
     }
     
@@ -53,6 +54,16 @@ public class PersistentNotification: NSManagedObject {
     }
     
     static func createFailedNWCZaps(pubkey:String, message:String, context:NSManagedObjectContext) -> PersistentNotification {
+        let failedZapNotification = PersistentNotification(context: context)
+        failedZapNotification.id = UUID()
+        failedZapNotification.createdAt = .now
+        failedZapNotification.pubkey = pubkey
+        failedZapNotification.type = .failedZaps
+        failedZapNotification.content = message
+        return failedZapNotification
+    }
+    
+    static func createTimeoutNWCZaps(pubkey:String, message:String, context:NSManagedObjectContext) -> PersistentNotification {
         let failedZapNotification = PersistentNotification(context: context)
         failedZapNotification.id = UUID()
         failedZapNotification.createdAt = .now

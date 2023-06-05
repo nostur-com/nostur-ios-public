@@ -111,7 +111,7 @@ class Importer {
                         L.og.info("⚡️ Received 13194 info event, saving methods: \(event.content)")
                         nwcConnection.methods = event.content
                         DispatchQueue.main.async {
-                            sendNotification(.nwcInfoReceived, NWCInfoNotifcation(methods: event.content))
+                            sendNotification(.nwcInfoReceived, NWCInfoNotification(methods: event.content))
                         }
                         continue
                     }
@@ -145,6 +145,8 @@ class Importer {
                                     _ = PersistentNotification.createFailedNWCZap(pubkey: NosturState.shared.activeAccountPublicKey, message: message, context: context)
                                     L.og.info("⚡️ Created notification: Zap failed for [contact](nostur:p:\(awaitingZap.contact.pubkey)). \(error.message)")
                                 }
+                                NWCZapQueue.shared.removeZap(byId: awaitingZap.id)
+                                NWCRequestQueue.shared.removeRequest(byId: awaitingRequest.request.id)
                                 continue
                             }
                             guard let result_type = nwcResponse.result_type, result_type == "pay_invoice" else {
@@ -163,6 +165,7 @@ class Importer {
                                 let message = "Failed to pay lightning invoice.\n\(error.message)"
                                 _ = PersistentNotification.createFailedLightningInvoice(pubkey: NosturState.shared.activeAccountPublicKey, message: message, context: context)
                                 L.og.error("⚡️ Failed to pay lightning invoice. \(error.message)")
+                                NWCRequestQueue.shared.removeRequest(byId: awaitingRequest.request.id)
                                 continue
                             }
                             guard let result_type = nwcResponse.result_type, result_type == "pay_invoice" else {

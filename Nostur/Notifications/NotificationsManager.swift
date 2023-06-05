@@ -232,7 +232,7 @@ class NotificationsManager: ObservableObject {
         r2.resultType = .countResultType
         
         let r3 = PersistentNotification.fetchRequest()
-        r3.predicate = NSPredicate(format: "readAt == nil AND type_ IN %@", [PNType.failedLightningInvoice.rawValue,PNType.failedZap.rawValue,PNType.failedZaps.rawValue])
+        r3.predicate = NSPredicate(format: "readAt == nil AND type_ IN %@", [PNType.failedLightningInvoice.rawValue,PNType.failedZap.rawValue,PNType.failedZaps.rawValue,PNType.failedZapsTimeout.rawValue])
         r3.fetchLimit = self.FETCH_LIMIT
         r3.sortDescriptors = [NSSortDescriptor(keyPath:\PersistentNotification.createdAt, ascending: false)]
         r3.resultType = .countResultType
@@ -425,7 +425,7 @@ class NotificationsManager: ObservableObject {
         // Also do zap notifications
         let r3 = NSBatchUpdateRequest(entityName: "PersistentNotification")
         r3.propertiesToUpdate = ["readAt": NSDate()]
-        r3.predicate = NSPredicate(format: "readAt == nil && type_ IN %@", [PNType.failedLightningInvoice.rawValue,PNType.failedZap.rawValue,PNType.failedZaps.rawValue])
+        r3.predicate = NSPredicate(format: "readAt == nil && type_ IN %@", [PNType.failedLightningInvoice.rawValue,PNType.failedZap.rawValue,PNType.failedZaps.rawValue,PNType.failedZapsTimeout.rawValue])
         r3.resultType = .updatedObjectIDsResultType
         
         let ctx = DataProvider.shared().bg
