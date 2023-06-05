@@ -215,7 +215,7 @@ extension Event {
     
     func toBG() -> Event? {
         if Thread.isMainThread {
-            print("🔴🔴🔴 toBG() should be in bg already, switching now but should fix code")
+            L.og.info("🔴🔴🔴 toBG() should be in bg already, switching now but should fix code")
             return DataProvider.shared().bg.performAndWait {
                 return DataProvider.shared().bg.object(with: self.objectID) as? Event
             }
@@ -762,7 +762,7 @@ extension Event {
     
     static func eventExists(id:String, context:NSManagedObjectContext) -> Bool {
         if Thread.isMainThread {
-            print("☠️☠️☠️☠️ eventExists")
+            L.og.info("☠️☠️☠️☠️ eventExists")
         }
         let request = NSFetchRequest<Event>(entityName: "Event")
         request.entity = Event.entity()
@@ -775,8 +775,7 @@ extension Event {
         do {
             count = try context.count(for: request)
         } catch {
-            print("some error in eventExists()")
-            print(error)
+            L.og.error("some error in eventExists() \(error)")
             return false
         }
         
@@ -801,7 +800,7 @@ extension Event {
                 return zapReqNEvent
             }
             catch {
-                print(error)
+                L.og.error("extractZapRequest \(error)")
                 return nil
             }
         }
@@ -855,7 +854,7 @@ extension Event {
                         try bg.save()
                     }
                     catch {
-                        print("🔴🔴 error updateRelays \(error)")
+                        L.og.error("🔴🔴 error updateRelays \(error)")
                     }
                 }
             }
@@ -1104,7 +1103,7 @@ extension Event {
             do {
                 _ = try context.execute(batchDelete) as! NSBatchDeleteResult
             } catch {
-                print("🔴🔴 Failed to delete older kind 3 events")
+                L.og.error("🔴🔴 Failed to delete older kind 3 events")
             }
         }
         
