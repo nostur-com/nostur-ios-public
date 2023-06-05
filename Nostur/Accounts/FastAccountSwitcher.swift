@@ -28,8 +28,10 @@ struct FastAccountSwitcher: View {
                     .padding(5)
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        ns.setAccount(account: fewAccounts[index])
-                        sm.showSidebar = false
+                        if let account = fewAccounts[safe: index] { // Swift runtime failure: Index out of bounds + 0 (<compiler-generated>:0) . Added check because maybe tap gesture fires too late??
+                            ns.setAccount(account: fewAccounts[index])
+                            sm.showSidebar = false
+                        }
                     }
             }
         }
