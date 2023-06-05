@@ -1,10 +1,3 @@
-//
-//  AlbyNWCConnectSheet.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 02/06/2023.
-//
-
 import SwiftUI
 
 struct AlbyNWCConnectSheet: View {
@@ -30,7 +23,7 @@ struct AlbyNWCConnectSheet: View {
                 Text("Connect your **Alby** wallet with **Nostur** for a seamless zapping experience")
                     .multilineTextAlignment(.center)
             }
-        
+            
             if (nwcConnectSuccess) {
                 Image(systemName: "checkmark.circle.fill")
                     .resizable()
@@ -74,7 +67,7 @@ struct AlbyNWCConnectSheet: View {
                     .buttonStyle(.borderedProminent)
             }
             
-
+            
         }
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle((String(localized:"Nostr Wallet Connect", comment:"Navigation title for setting up Nostr Wallet Connect (NWC)")))
@@ -95,14 +88,15 @@ struct AlbyNWCConnectSheet: View {
             }
         }
         .onAppear {
+            // Determine if we show "Connection success" or disconnect button
             if !ss.activeNWCconnectionId.isEmpty {
                 nwcConnectSuccess = true
                 showDisconnect = true // Only show after opening again, because showing right after connecting is confusing
             }
         }
         .onReceive(receiveNotification(.nwcCallbackReceived)) { _ in
+            // When we redirect back from Alby to app:
             nwcConnectSuccess = true
-//            ss.objectWillChange.send() // to update zap buttons
             ss.activeNWCconnectionId = awaitingConnectionId
             
             DataProvider.shared().bg.perform {
@@ -128,9 +122,9 @@ struct AlbyNWCConnectSheet: View {
             openURL(nwcUrl)
         }
         
-//        if let nwcUrl = URL(string:"https://nwc.getalby.com/apps/new?c=Nostur") { // This one returns with 'nostrwalletconnect'
-//            openURL(nwcUrl)
-//        }
+        //        if let nwcUrl = URL(string:"https://nwc.getalby.com/apps/new?c=Nostur") { // This one returns with 'nostrwalletconnect' scheme so not usable.
+        //            openURL(nwcUrl)
+        //        }
     }
 }
 
@@ -139,6 +133,6 @@ struct AlbyNWCConnectSheet_Previews: PreviewProvider {
         NavigationStack {
             AlbyNWCConnectSheet()
         }
-            .previewDevice("iPhone 14")
+        .previewDevice("iPhone 14")
     }
 }

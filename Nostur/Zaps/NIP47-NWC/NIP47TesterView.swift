@@ -1,12 +1,6 @@
-//
-//  NIP47TesterView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 04/06/2023.
-//
-
 import SwiftUI
 
+/// Just for testing things
 struct NIP47TesterView: View {
     
     let TEST_PK = ""

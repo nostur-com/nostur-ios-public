@@ -1,10 +1,3 @@
-//
-//  CustomNWCConnectSheet.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 03/06/2023.
-//
-
 import SwiftUI
 
 struct CustomNWCConnectSheet: View {
@@ -28,10 +21,6 @@ struct CustomNWCConnectSheet: View {
     
     var body: some View {
         VStack {
-//            Button("hack \(activeNWCconnectionId)") {
-//                activeNWCconnectionId = "B9CEC557-8300-4A0F-BA4D-ACA9AFEE6942"
-//            }
-//            Text(verbatim: "Nostur Wallet Connect").font(.title)
             if (nwcConnectSuccess) {
                 Text("Your wallet is now connected with **Nostur**, you can now enjoy a seamless zapping experience!")
                     .multilineTextAlignment(.center)
@@ -41,9 +30,9 @@ struct CustomNWCConnectSheet: View {
                 Text("Connect your NWC compatible wallet with **Nostur** for a seamless zapping experience")
                     .multilineTextAlignment(.center)
                     .padding(10)
-                    
+                
             }
-        
+            
             if (nwcConnectSuccess) {
                 Image(systemName: "checkmark.circle.fill")
                     .resizable()
@@ -89,7 +78,7 @@ struct CustomNWCConnectSheet: View {
                             .padding()
                     }
                 }
-
+                
             }
         }
         .navigationBarTitleDisplayMode(.inline)
@@ -97,16 +86,12 @@ struct CustomNWCConnectSheet: View {
         .toolbar {
             if nwcConnectSuccess {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
+                    Button("Done") { dismiss() }
                 }
             }
             else {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
+                    Button("Cancel") { dismiss() }
                 }
             }
         }
@@ -114,15 +99,15 @@ struct CustomNWCConnectSheet: View {
             if !ss.activeNWCconnectionId.isEmpty, let nwc = NWCConnection.fetchConnection(ss.activeNWCconnectionId, context: DataProvider.shared().viewContext), nwc.type == "CUSTOM" {
                 
                 nwcConnectSuccess = true
-                showDisconnect = true
-                // Only show after opening again, because showing right after connecting is confusing
+                showDisconnect = true // Only show after opening again, because showing right after connecting is confusing
             }
             else {
                 ss.activeNWCconnectionId = ""
             }
         }
         .onReceive(receiveNotification(.nwcInfoReceived)) { notification in
-            let nwcInfoNotification = notification.object as! NWCInfoNotifcation
+            // Here we received the info event from the NWC relay
+            let nwcInfoNotification = notification.object as! NWCInfoNotification
             
             DataProvider.shared().bg.perform {
                 if let _ = NWCConnection.fetchConnection(awaitingConnectionId, context: DataProvider.shared().bg) {
@@ -150,7 +135,7 @@ struct CustomNWCConnectSheet: View {
               let relay = nwc.relay,
               let walletPubkey = nwc.walletPubkey
         else {
-            nwcErrorMessage = "Problem parsing NWC connection URI"
+            nwcErrorMessage = String(localized:"Problem parsing NWC connection URI", comment:"Error message during NWC setup")
             return
         }
         
@@ -158,7 +143,7 @@ struct CustomNWCConnectSheet: View {
             guard let c = NWCConnection.createCustomConnection(context: DataProvider.shared().bg, secret: secret) else {
                 L.og.error("Problem handling secret in NWCConnection.createCustomConnection")
                 DispatchQueue.main.async {
-                    nwcErrorMessage = "Could not parse secret from NWC connection URI"
+                    nwcErrorMessage = String(localized: "Could not parse secret from NWC connection URI", comment: "Error message during NWC setup")
                 }
                 return
             }
@@ -169,7 +154,7 @@ struct CustomNWCConnectSheet: View {
                 awaitingConnectionId = connectionId
                 tryingConnection = true
             }
-
+            
             removeExistingNWCsocket()
             DispatchQueue.main.async {
                 L.og.info("⚡️ Adding NWC connection")
@@ -184,7 +169,7 @@ struct CustomNWCConnectSheet: View {
         
         connectionTimeout?.invalidate()
         connectionTimeout = Timer.scheduledTimer(withTimeInterval: 15.0, repeats: false, block: { _ in
-            nwcErrorMessage = "Could not fetch NWC info event from \(relay)"
+            nwcErrorMessage = String(localized:"Could not fetch NWC info event from \(relay)", comment:"Error message during NWC setup")
         })
     }
     
@@ -212,11 +197,11 @@ struct CustomNWCConnectSheet_Previews: PreviewProvider {
         NavigationStack {
             CustomNWCConnectSheet()
         }
-            .previewDevice("iPhone 14")
+        .previewDevice("iPhone 14")
     }
 }
 
-struct NWCInfoNotifcation: Identifiable {
+struct NWCInfoNotification: Identifiable {
     let id = UUID()
     let methods:String
 }

@@ -9,12 +9,13 @@ import Foundation
 
 // Instant zaps
 // 1. Update UI as if Zap already happened
-// 2. Add Zap Request Tracker to Queue
-// 3. Zap Request Tracker fetches invoice callback
-// 4. Zap Request Tracker sends zap request
-// 5. Make sure NWC subscription is active
-// 6. Send payment request (23194)
-// 7. Wait for payment response (23195)
+// 2. Add Zap to ZapQueue
+// 3. Zap fetches callback from ln pay end point
+// 4. Zap fetches invoice from callback [we include zap request here]
+// 5. Zap triggers sending NWC request in NWCRequestQueue
+// 6. Make sure NWC subscription is active
+// 7. Send payment request (23194)
+// 8. Wait for payment response (23195) (In Importer)
 // 8a. If ok, remove from queue
 // 8b. If error, show notification on Zaps screen
 // 8c. If time out, show notification on Zaps screen

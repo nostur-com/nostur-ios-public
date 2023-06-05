@@ -1,14 +1,7 @@
-//
-//  NIP47SecretManager.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 04/06/2023.
-//
-
 import Foundation
 import KeychainAccess
 
-// Copy pasta from AccountManager, changed a bit and use background context
+/// Copy pasta from AccountManager, changed a bit and use background context
 class NIP47SecretManager {
     
     static let shared = NIP47SecretManager()
@@ -32,7 +25,6 @@ class NIP47SecretManager {
             return privateKeyHex
         } catch {
             L.og.error("🔴🔴🔴 could not get key from keychain")
-//            L.og.debug("🔴🔴🔴 \(error)") // disabled, don't want to risk any key material showing up in some error
             return nil
         }
     }
@@ -57,7 +49,6 @@ class NIP47SecretManager {
                 .set(keys.privateKeyHex(), key: connectionId)
         } catch {
             L.og.error("🔴🔴🔴 could not store key in keychain")
-//            L.og.debug("🔴🔴🔴 \(error)") // disabled, don't want to risk any key material showing up in some error
         }
     }
     
@@ -67,7 +58,6 @@ class NIP47SecretManager {
             try keychain.remove(connectionId)
         } catch {
             L.og.error("🔴🔴🔴 could not remove key from keychain")
-//            L.og.debug("🔴🔴🔴 \(error)") // disabled, don't want to risk any key material showing up in some error
         }
     }
 }

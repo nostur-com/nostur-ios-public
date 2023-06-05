@@ -1,19 +1,18 @@
-//
-//  AppView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 30/05/2023.
-//
-
 import SwiftUI
 import Combine
 
+
+
+/// The main app view
+///
+/// Shows one of 3: Onboarding, Main app screen, or Critical database failure preventing the app from loading further
 struct AppView: View {
-    @StateObject private var ns:NosturState = .shared
-    private var nwcRQ:NWCRequestQueue = .shared
     @AppStorage("firstTimeCompleted") var firstTimeCompleted = false
-    @AppStorage("did_accept_terms") var didAcceptTerms = false // TODO: set to false for app store
+    @AppStorage("did_accept_terms") var didAcceptTerms = false
+    private var nwcRQ:NWCRequestQueue = .shared
     let ss:SettingsStore = .shared
+    @StateObject private var ns:NosturState = .shared
+    
     @State var isViewDisplayed = false
     @State var isOnboarding = false
     
@@ -42,8 +41,6 @@ struct AppView: View {
                 .padding()
                 
             }
-//                else if isOnboarding || ns.accounts.count == 0 {
-//                else if isOnboarding || ns.accounts.count == 0 {
             else if !didAcceptTerms || isOnboarding || ns.accounts.count == 0 || ns.activeAccountPublicKey.isEmpty {
                 Onboarding()
                     .environmentObject(ns)
@@ -99,6 +96,7 @@ struct AppView: View {
             Maintenance.ensureBootstrapRelaysExist(context: DataProvider.shared().container.viewContext)
         }
         
+        // Setup connections
         SocketPool.shared.setup(ss.activeNWCconnectionId)
         if !ss.activeNWCconnectionId.isEmpty {
             DataProvider.shared().bg.perform {
@@ -111,20 +109,17 @@ struct AppView: View {
         
         if (!firstTimeCompleted) {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                // fetch guest account kind 0 + 3
                 _ = GuestAccountManager.shared.createGuestAccount()
                 do {
                     try NewOnboardingTracker.shared.start(pubkey: NosturState.GUEST_ACCOUNT_PUBKEY)
-//                    print("✈️✈️✈️ ONBORADING SPEED UP, FETCHING 0 + 3")
-//                    req(RM.getUserMetadataAndContactList(pubkey: NosturState.GUEST_ACCOUNT_PUBKEY))
                 }
                 catch {
-                    print("🔴🔴✈️✈️✈️ ONBORADING ERROR 123")
+                    L.og.error("🔴🔴✈️✈️✈️ ONBORADING ERROR")
                 }
             }
         }
         if (ns.rawExplorePubkeys.count == 0) {
-            // Fetch updated contactlist for epxlorer feed
+            // Fetch updated contactlist for Explore feed
             
             // First get from cache
             let r = Event.fetchRequest()

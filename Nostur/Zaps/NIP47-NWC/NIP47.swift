@@ -1,17 +1,6 @@
-//
-//  NIP47.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 02/06/2023.
-//
-
 import Foundation
 
-////NIP-47 info event: 13194
-////NIP-47 request: 23194
-////NIP-47 response: 23195
-
-
+/// NIP-47 request: 23194
 struct NWCRequest: Codable {
     let method:String // "pay_invoice", // method, string
     let params:NWCParams
@@ -21,6 +10,7 @@ struct NWCRequest: Codable {
     }
 }
 
+/// NIP-47 response: 23195
 struct NWCResponse: Codable {
     var result_type:String? // "pay_invoice", //indicates the structure of the result field. Field is required but alby doesn't have in case of error.
     var error:NWCResponseError? // object, non-null in case of error
