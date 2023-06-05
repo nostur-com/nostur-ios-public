@@ -696,7 +696,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             guard let self = self else { return }
             
             let fr = Event.fetchRequest()
-            fr.predicate = NSPredicate(format: "kind == 1 AND replyToId == %@", self.id)
+            fr.predicate = NSPredicate(format: "kind == 1 AND replyToId == %@", String(self.id)) // _PFManagedObject_coerceValueForKeyWithDescription + 1472 (NSManagedObject.m:0) - Maybe fix with String(self.id)
             if let foundReplies = try? ctx.fetch(fr) {
                 if let existingReplies = self.event.replies {
                     self.event.replies = existingReplies.union(Set(foundReplies))
