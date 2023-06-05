@@ -74,7 +74,7 @@ final class SettingsStore: ObservableObject {
         defaults.register(defaults: [
             Keys.lastMaintenanceTimestamp: 0,
             Keys.replaceNsecWithHunter2: true,
-            Keys.defaultZapAmount: 1000,
+            Keys.defaultZapAmount: 21,
             Keys.hideEmojisInNames: false,
             Keys.hideBadges: false,
             Keys.restrictAutoDownload: false,
