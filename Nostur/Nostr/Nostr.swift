@@ -297,9 +297,9 @@ struct NEvent: Codable {
         return true
     }
 
-    func eventJson() -> String {
+    func eventJson(_ outputFormatting:JSONEncoder.OutputFormatting? = nil) -> String {
         let encoder = JSONEncoder()
-        encoder.outputFormatting = .withoutEscapingSlashes
+        encoder.outputFormatting = outputFormatting ?? .withoutEscapingSlashes
         let finalMessage = try! encoder.encode(self)
 
         return String(data: finalMessage, encoding: .utf8)!

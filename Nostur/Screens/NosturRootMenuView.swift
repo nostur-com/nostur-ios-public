@@ -161,6 +161,7 @@ struct SideBar: View {
     @AppStorage("selected_tab") var selectedTab = "Main"
     @State var accountsSheetIsShown = false
     @State var logoutAccount:Account? = nil
+    @State var showAnySigner = false
     
     var body: some View {
         let _ = Self._printChanges()
@@ -240,6 +241,11 @@ struct SideBar: View {
                 } label: {
                     Label("Block list", systemImage: "person.badge.minus")
                 }
+                Button {
+                    showAnySigner = true
+                } label: {
+                    Label("Signer", systemImage: "signature")
+                }
 //                Button {} label: {
 //                    Label("About", systemImage: "info")
 //                }
@@ -265,6 +271,12 @@ struct SideBar: View {
             NavigationStack {
                 AccountsSheet()
                     .presentationDetents([.fraction(0.45), .medium, .large])
+                    .environmentObject(ns)
+            }
+        }
+        .sheet(isPresented: $showAnySigner) {
+            NavigationStack {
+                AnySigner()
                     .environmentObject(ns)
             }
         }
