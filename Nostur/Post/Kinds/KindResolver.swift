@@ -32,9 +32,10 @@ struct KindResolver: View {
         }
         .onAppear {
             if nrPost.missingPs.count > 0 {
-                EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "KindResolver.001")
-                QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
-                print("🟠🟠 NoteRow.onAppear fetching \(nrPost.missingPs.count) missing contacts (event.pubkey or event.pTags)")
+                DataProvider.shared().bg.perform {
+                    EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "KindResolver.001")
+                    QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
+                }
             }
         }
         .onDisappear {

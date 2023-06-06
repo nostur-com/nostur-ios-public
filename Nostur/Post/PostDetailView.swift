@@ -293,43 +293,6 @@ struct PostAndParent: View {
                     // MARK: REPLIES TO OUR MAIN NOTE
                     ThreadReplies(nrPost: nrPost)
                     
-//                    LazyVStack {
-//                        ForEach (nrPost.replies
-//                            .sorted(by: { $0.created_at < $1.created_at } )
-//                            .filter({ nrPost in
-//                            if ns.account != nil {
-//                                return !(Set(ns.account!.blockedPubkeys_)).contains(nrPost.pubkey)
-//                            }
-//                            else {
-//                                return true
-//                            }
-//                        })
-//                                 // newest at bottom
-//                            .sorted(by: { $0.created_at < $1.created_at })
-//                                 // following first
-//                            .sorted(by: { ns.isFollowing($0.pubkey) && !ns.isFollowing($1.pubkey) })
-//                                 // OP first even more first.
-//                            .sorted(by: { $0.pubkey == nrPost.pubkey && $1.pubkey != nrPost.pubkey })
-//                                 , id:\.self) { nrPost in
-//
-//                            PostRowDeletable(nrPost: nrPost, hideFooter: false, isReply:true)
-//                                .id(nrPost.id)
-//                                .onAppear {
-//                                    if (nrPost.missingPs.count > 0) {
-//                                        EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.002")
-//                                        QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
-//                                    }
-//                                }
-//                                .onDisappear {
-//                                    if (nrPost.missingPs.count > 0) {
-//                                        QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
-//                                    }
-//                                }
-//                            Divider()
-//                        }
-//                    }
-//                    .animation(Animation.spring(), value: nrPost.replies)
-                    
                     // If there are less than 5 replies, put some empty space so our detail note is at top of screen
                     if (nrPost.replies.count < 5) {
                         let height = geoHeight - 280
@@ -348,47 +311,40 @@ struct PostAndParent: View {
                 guard !nrPost.plainTextOnly else { L.og.info("plaintext enabled, probably spam") ; return }
                 guard !didLoad else { return }
                 didLoad = true
-                EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.003")
-                if (nrPost.missingPs.count > 0) {
-                    QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
-                }
-
                 nrPost.loadReplyTo()
                 
-                if (!isParent) {
-//                    nrPost.loadReplies()
-
-                    // Fix replyTo if we already have it?
-//                    fixReplyToIfWeAlreadyHaveIt(event)
-                    
-                    // Here, because do all at import is slow?
-                    
-//                    fixIfWeHavePointingToAlreadyInCache(nrPost.mainEvent)
-                    
-//                    EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.004")
-                    
-                    // Fetch all related (e and p.kind=0)
-                    // (the events and contacts mentioned in this DETAIL NOTE.
-                    if let message = RequestMessage.getFastTags(nrPost.fastTags) {
-                        
-                        sp.sendMessage(ClientMessage(type: .REQ, message: message))
+                DataProvider.shared().bg.perform {
+                    EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.003")
+                    if (nrPost.missingPs.count > 0) {
+                        QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
                     }
                     
-                    // Fetch all that reference this detail note (Replies, zaps, reactions)
-                    req(RM.getEventReferences(ids: [nrPost.id], subscriptionId: "DETAIL-"+UUID().uuidString))
-                    // REAL TIME UPDATES FOR POST DETAIL
-                    req(RM.getEventReferences(ids: [nrPost.id], subscriptionId: "REALTIME-DETAIL", since: NTimestamp(date: Date.now)))
-
-                    if let replyToRootId = nrPost.replyToRootId {
-                        // Fetch all that reference the root note
-                        // to build the thread, maybe kind=1 is enough, or all...?
-                        req(RM.getEventReferences(ids: [replyToRootId], subscriptionId: "ROOT-"+UUID().uuidString, kinds:[1]))
+                    if (!isParent) {
+                        
+                        // Fetch all related (e and p.kind=0)
+                        // (the events and contacts mentioned in this DETAIL NOTE.
+                        if let message = RequestMessage.getFastTags(nrPost.fastTags) {
+                            sp.sendMessage(ClientMessage(type: .REQ, message: message))
+                        }
+                        
+                        // Fetch all that reference this detail note (Replies, zaps, reactions)
+                        req(RM.getEventReferences(ids: [nrPost.id], subscriptionId: "DETAIL-"+UUID().uuidString))
+                        // REAL TIME UPDATES FOR POST DETAIL
+                        req(RM.getEventReferences(ids: [nrPost.id], subscriptionId: "REALTIME-DETAIL", since: NTimestamp(date: Date.now)))
+                        
+                        if let replyToRootId = nrPost.replyToRootId {
+                            // Fetch all that reference the root note
+                            // to build the thread, maybe kind=1 is enough, or all...?
+                            req(RM.getEventReferences(ids: [replyToRootId], subscriptionId: "ROOT-"+UUID().uuidString, kinds:[1]))
+                        }
                     }
                 }
             }
             .onDisappear {
-                if (nrPost.missingPs.count > 0) {
-                    QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
+                DataProvider.shared().bg.perform {
+                    if (nrPost.missingPs.count > 0) {
+                        QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
+                    }
                 }
             }
         }

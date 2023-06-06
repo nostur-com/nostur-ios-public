@@ -24,8 +24,10 @@ struct NoteHeaderView: View {
             else {
                 PlaceholderPostHeader(nrPost: nrPost, singleLine: singleLine)
                     .onAppear {
-                        EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NoteHeaderView.001")
-                        QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
+                        DataProvider.shared().bg.perform {
+                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NoteHeaderView.001")
+                            QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
+                        }
                     }
                     .onDisappear {
                         QueuedFetcher.shared.dequeue(pTag: nrPost.pubkey)

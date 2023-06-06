@@ -994,7 +994,7 @@ extension Event {
             if let replyToRootEtag = event.replyToRootEtag() {
                 savedEvent.replyToRootId = replyToRootEtag.id
                 // Need to put it in queue to fix relations for replies to root / grouped replies
-                EventRelationsQueue.shared.addAwaitingEvent(savedEvent, debugInfo: "saveEvent.123")
+//                EventRelationsQueue.shared.addAwaitingEvent(savedEvent, debugInfo: "saveEvent.123")
                 
                 if (savedEvent.replyToId == nil) {
                     savedEvent.replyToId = savedEvent.replyToRootId // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
