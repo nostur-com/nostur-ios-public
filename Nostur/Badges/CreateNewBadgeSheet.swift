@@ -1,10 +1,3 @@
-//
-//  CreateNewBadgeSheet.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 01/03/2023.
-//
-
 import SwiftUI
 
 struct CreateNewBadgeSheet: View {
@@ -31,16 +24,16 @@ struct CreateNewBadgeSheet: View {
     
     var body: some View {
         Form {
-            TextField("Code (bravery, verified_human, early_adoptor)", text: $badgeCode)
+            TextField(String(localized:"Code (bravery, verified_human, early_adoptor)", comment:"Label for input field for badge code on Badge creation screen"), text: $badgeCode)
                 .lineLimit(1)
                 .focused($focusedField, equals: .badgeCode)
-            TextField("Name", text: $name)
+            TextField(String(localized:"Name", comment:"Label for input field for badge name on Badge creation screen"), text: $name)
                 .lineLimit(1)
-            TextField("Description", text: $description)
+            TextField(String(localized:"Description", comment:"Label for input field for badge description on Badge creation screen"), text: $description)
                 .lineLimit(2)
-            TextField("Image URL (1024x1024)", text: $image1024)
+            TextField(String(localized:"Image URL (1024x1024)", comment:"Label for input field for badge image on Badge creation screen"), text: $image1024)
                 .lineLimit(1)
-            TextField("Thumbnail URL (256x256)", text: $image256)
+            TextField(String(localized:"Thumbnail URL (256x256)", comment:"Label for input field for badge image on Badge creation screen"), text: $image256)
                 .lineLimit(1)
         }
         .toolbar {
@@ -60,22 +53,20 @@ struct CreateNewBadgeSheet: View {
                 }).disabled(name == "" || description == "" || badgeCode == "")
             }
         }
-        .navigationTitle("Create new badge")
+        .navigationTitle(String(localized:"Create new badge", comment:"Navigation title for Badge creation screen"))
         .onAppear { focusedField = .badgeCode }
     }
     func createBadge() {
         let newBadge = createBadgeDefinition(badgeCode, name: name, description: description, image1024: image1024, thumb256: image256)
-
+        
         do {    
             guard let newBadgeSigned = try? ns.signEvent(newBadge) else { throw "could not create newBadgeSigned " }
             _ = Event.saveEventFromMain(event: newBadgeSigned)
             DataProvider.shared().bgSave()
-//            print(newBadgeSigned.wrappedEventJson())
             up.publishNow(newBadgeSigned)
         }
         catch {
-            print("🔴🔴 could not create badge")
-            print(error)
+            L.og.error("🔴🔴 could not create badge \(error)")
         }
     }
 }

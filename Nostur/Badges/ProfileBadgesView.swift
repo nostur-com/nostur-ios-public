@@ -1,9 +1,3 @@
-//
-//  BadgesReceivedView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 01/03/2023.
-//
 import SwiftUI
 import Nuke
 import NukeUI
@@ -20,10 +14,10 @@ struct ProfileBadgesContainer: View {
     }
     
     @State var refreshHack = false
-
+    
     init(pubkey:String) {
         self.pubkey = pubkey
-
+        
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         fr.predicate = NSPredicate(format: "kind == 30008 AND pubkey == %@", pubkey)
@@ -41,7 +35,7 @@ struct ProfileBadgesContainer: View {
                     let allEs = first.tags()
                         .filter { $0.type == "e" }
                         .map { $0.id }
-
+                    
                     var filters: [(Int64, String, String)] = []
                     first.tags()
                         .filter { $0.type == "a" }
@@ -50,14 +44,14 @@ struct ProfileBadgesContainer: View {
                             let filter = (a.kind, a.badgeCode, a.pubkey)
                             filters.append(filter)
                         }
-
+                    
                     print("🚺🚺 \(allEs.count)")
                     if (allEs.count > 0) {
                         let reqE = RequestMessage.getEvents(ids: allEs)
                         let messageE = ClientMessage(type: .REQ, message: reqE)
                         SocketPool.shared.sendMessage(messageE) // Get badge awards (kind .8)
                     }
-
+                    
                     if (filters.count > 0) {
                         let reqD = RequestMessage.getBadgeDefinitions(filters: Array(filters.prefix(10)))
                         let messageD = ClientMessage(type: .REQ, message: reqD)
@@ -69,7 +63,7 @@ struct ProfileBadgesContainer: View {
                         let allEs = newValue!.tags()
                             .filter { $0.type == "e" }
                             .map { $0.id }
-
+                        
                         var filters: [(Int64, String, String)] = []
                         newValue!.tags()
                             .filter { $0.type == "a" }
@@ -78,15 +72,15 @@ struct ProfileBadgesContainer: View {
                                 let filter = (a.kind, a.badgeCode, a.pubkey)
                                 filters.append(filter)
                             }
-
+                        
                         print("🚺🚺🚺🚺🚺 \(allEs.count)")
                         if (allEs.count > 0) {
                             let reqE = RequestMessage.getEvents(ids: allEs)
                             let messageE = ClientMessage(type: .REQ, message: reqE)
                             SocketPool.shared.sendMessage(messageE) // Get badge awards (kind .8)
-
+                            
                         }
-
+                        
                         if (filters.count > 0) {
                             let reqD = RequestMessage.getBadgeDefinitions(filters: filters)
                             let messageD = ClientMessage(type: .REQ, message: reqD)
@@ -138,7 +132,7 @@ struct ProfileBadgesView: View {
                         } label: {
                             Text("Close")
                         }
-
+                        
                     }
                 }
             }
@@ -149,7 +143,7 @@ struct ProfileBadgesView: View {
 struct BadgeIcon: View {
     var badge:Event
     var nBadge:NEvent { badge.toNEvent() }
-
+    
     var body: some View {
         if let pictureUrl = nBadge.badgeThumb?.tag[safe: 1] {
             if (pictureUrl.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
@@ -185,8 +179,8 @@ struct BadgeIcon: View {
             }
             else {
                 LazyImage(request: ImageRequest(url: URL(string:pictureUrl),
-                            processors: [.resize(width: 32)],
-                            userInfo: [.scaleKey: UIScreen.main.scale])) { state in
+                                                processors: [.resize(width: 32)],
+                                                userInfo: [.scaleKey: UIScreen.main.scale])) { state in
                     if let image = state.image {
                         image
                             .resizable()
@@ -201,7 +195,7 @@ struct BadgeIcon: View {
                         Image(systemName: "exclamationmark.triangle.fill")
                     }
                 }
-                .pipeline(ImageProcessing.shared.badges)
+                                                .pipeline(ImageProcessing.shared.badges)
             }
         }
     }
@@ -213,7 +207,7 @@ struct ProfileBadgesView_Previews: PreviewProvider {
             let pb = "d7df976260e394f6708d4071ef1baa450e7390967c5dab640d528dd8a7d72894" // kind 30008
             if let profileBadgesEvent = PreviewFetcher.fetchEvent(pb) {
                 ProfileBadgesView(verifiedBadges: profileBadgesEvent.verifiedBadges)
-                    
+                
             }
         }
         .withPreviewEnvironment({ pe in pe.loadBadges() })

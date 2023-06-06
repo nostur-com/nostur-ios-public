@@ -1,10 +1,3 @@
-//
-//  BadgesView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 01/03/2023.
-//
-
 import SwiftUI
 import Nuke
 import NukeUI
@@ -22,7 +15,7 @@ struct BadgesIssuedContainer:View {
         if (ns.account != nil) {
             BadgesIssuedView(pubkey: ns.account!.publicKey)
         }
-        else { Text("No account selected ")}
+        else { Text("No account selected")}
     }
 }
 
@@ -43,14 +36,11 @@ struct BadgesIssuedView: View {
     var body: some View {
         let _ = Self._printChanges()
         VStack {
-//            Button { createNewBadgeSheetShown = true } label: { Text("Create new badge") }
-//            NavigationStack {
-                List(badges) { badge in
-                    NavigationLink(value: Badge(badge)) {
-                        BadgeIssuedRow(badge: badge)
-                    }
+            List(badges) { badge in
+                NavigationLink(value: Badge(badge)) {
+                    BadgeIssuedRow(badge: badge)
                 }
-//            }
+            }
         }
         .onAppear {
             // fetch missing badge definitions:
@@ -64,11 +54,11 @@ struct BadgesIssuedView: View {
                 Button(action: {
                     createNewBadgeSheetShown = true
                 }, label: {
-                    Text("Create new badge")
+                    Text("Create new badge", comment: "Button to create a new badge")
                 })
             }
         }
-        .navigationTitle("Badges")
+        .navigationTitle(String(localized:"Badges", comment:"Navigation title of Bagdes screen"))
         .sheet(isPresented: $createNewBadgeSheetShown) {
             NavigationStack {
                 CreateNewBadgeSheet()
@@ -116,8 +106,8 @@ struct BadgeIssuedRow: View {
                     }
                     else {
                         LazyImage(request: ImageRequest(url: URL(string:pictureUrl),
-                                    processors: [.resize(width: 50)],
-                                    userInfo: [.scaleKey: UIScreen.main.scale])) { state in
+                                                        processors: [.resize(width: 50)],
+                                                        userInfo: [.scaleKey: UIScreen.main.scale])) { state in
                             if let image = state.image {
                                 image
                                     .resizable()
@@ -130,9 +120,7 @@ struct BadgeIssuedRow: View {
                                 CenteredProgressView()
                             }
                         }
-//                        .processors([.resize(width: 50)])
-                        .pipeline(ImageProcessing.shared.badges)
-    //                    .priority(.low)
+                                                        .pipeline(ImageProcessing.shared.badges)
                     }
                 }
             }
@@ -142,7 +130,7 @@ struct BadgeIssuedRow: View {
                 Text(nBadge.badgeName?.value ?? "No name")
                     .font(.subheadline)
                 Text(nBadge.badgeDescription?.value ?? "No description").font(.caption2)
-                Text("Awarded to \(badge.awardedTo.count) people").font(.caption)
+                Text("Awarded to \(badge.awardedTo.count) people", comment: "Text showing how many badges have been awarded").font(.caption)
             }.padding(10)
         }
         .navigationTitle("")

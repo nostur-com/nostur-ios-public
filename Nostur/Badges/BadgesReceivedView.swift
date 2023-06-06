@@ -1,9 +1,3 @@
-//
-//  BadgesReceivedView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 01/03/2023.
-//
 import SwiftUI
 import Nuke
 import NukeUI
@@ -101,8 +95,7 @@ struct BadgesReceivedView: View {
             self.selection.removeAll()
         }
         catch {
-            print("🔴🔴 could not create badge")
-            print(error)
+            L.og.error("🔴🔴 could not create badge \(error)")
         }
     }
 }
@@ -180,9 +173,7 @@ struct BadgeReceivedRow: View {
                                 CenteredProgressView()
                             }
                         }
-//                        .processors([.resize(width: 50)])
                         .pipeline(ImageProcessing.shared.badges)
-    //                    .priority(.low)
                     }
                 }
             }
@@ -192,7 +183,7 @@ struct BadgeReceivedRow: View {
                 Text(nBadge.badgeName?.value ?? "No name")
                     .font(.subheadline)
                 Text(nBadge.badgeDescription?.value ?? "No description").font(.caption2)
-                Text("Awarded to \(badge.awardedTo.count) people").font(.caption)
+                Text("Awarded to \(badge.awardedTo.count) people", comment: "Text showing how many badges have been awarded").font(.caption)
             }.padding(10)
         }
         .navigationTitle("")
