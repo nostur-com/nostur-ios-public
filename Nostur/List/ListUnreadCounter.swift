@@ -1,10 +1,3 @@
-//
-//  ListUnreadCounter.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 10/03/2023.
-//
-
 import SwiftUI
 
 class LVMCounter: ObservableObject {

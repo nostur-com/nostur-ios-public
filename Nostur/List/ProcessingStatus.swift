@@ -1,10 +1,3 @@
-//
-//  ProcessingStatus.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 29/03/2023.
-//
-
 import SwiftUI
 
 struct ProcessingStatus: View {

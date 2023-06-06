@@ -1,23 +1,5 @@
-//
-//  InstantFeed.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 24/05/2023.
-//
-
 import Foundation
 import Combine
-
-// Time to fix onboarding delays
-
-// GOAL: AFTER LOGGING IN ON NEW ACCOUNT, SHOW FEED AS FAST AS POSSIBLE
-
-// LETS SHOW 30 NEW POSTS (NOT REPLIES)
-    // PROBLEM: we cant fetch only new posts, we must fetch many then check if they are not reply (firstE etc..)
-
-// LETS GO BACKWARDS FROM THE FINISH
-
-
 
 class InstantFeed {
     typealias CompletionHandler = ([Event]) -> ()

@@ -1,10 +1,3 @@
-//
-//  SmoothList.swift Super smooth scrolling
-//  Nostur
-//
-//  Created by Fabian Lachman on 11/04/2023.
-//
-
 import SwiftUI
 import Nuke
 import Combine

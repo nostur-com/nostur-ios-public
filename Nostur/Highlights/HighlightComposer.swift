@@ -1,10 +1,3 @@
-//
-//  HighlightComposer.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 29/04/2023.
-//
-
 import SwiftUI
 
 struct HighlightComposer: View {
@@ -76,8 +69,7 @@ struct HighlightComposer: View {
                 Spacer()
             }
             .padding(.top, 20)
-            .navigationTitle("Share highlight")
-    //        .navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(String(localized:"Share highlight", comment:"Navigation title for screen to Share a Highlighted Text"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
@@ -85,12 +77,12 @@ struct HighlightComposer: View {
                 ToolbarItem(placement: .primaryAction) {
                     HStack {
                         if selectedAuthor != nil {
-                            Button("Remove author") { selectedAuthor = nil }
+                            Button(String(localized:"Remove author", comment: "Button to Remove author from Highlight")) { selectedAuthor = nil }
                         }
                         else {
-                            Button("Include author") { isAuthorSelectionShown = true }
+                            Button(String(localized:"Include author", comment: "Button to include author in Highlight")) { isAuthorSelectionShown = true }
                         }
-                        Button("Post") { send() }
+                        Button(String(localized:"Post", comment: "Button to post a highlight")) { send() }
                             .buttonStyle(.borderedProminent)
                     }
                 }
@@ -103,7 +95,7 @@ struct HighlightComposer: View {
                         isAuthorSelectionShown = false
                     })
                     .equatable()
-                    .navigationTitle("Find author")
+                    .navigationTitle(String(localized:"Find author", comment:"Navigation title of Find author screen"))
                     .navigationBarTitleDisplayMode(.inline)
                     .toolbar {
                         ToolbarItem(placement: .cancellationAction) {

@@ -1,10 +1,3 @@
-//
-//  LVMManager.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 11/04/2023.
-//
-
 import Foundation
 import Combine
 
@@ -25,15 +18,6 @@ class LVMManager {
                 }
             }
             .store(in: &subscriptions)
-        
-        // BELOW DOESN'T WORK. MOVED TO FollowingAndExplore .onChange(of: account, perform: { newAccount in
-//        receiveNotification(.activeAccountChanged)
-//            .sink { [weak self] notification in
-//                guard let self = self else { return }
-//                guard let account = notification.object as? Account else { return }
-//                self.listVMs.removeAll(where: { $0.pubkey != account.publicKey })
-//            }
-//            .store(in: &subscriptions)
     }
     
     func followingLVM(forAccount account:Account) -> LVM {
