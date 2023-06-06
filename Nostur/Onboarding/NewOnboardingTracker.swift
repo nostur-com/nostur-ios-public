@@ -1,10 +1,3 @@
-//
-//  NewOnboardingTracker.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 10/05/2023.
-//
-
 import Foundation
 import Combine
 
@@ -288,7 +281,7 @@ class NewOnboardingTracker {
                     }
                 }
             } catch {
-                print("Error decoding JSON: \(error)")
+                L.og.error("Error decoding JSON: \(error)")
             }
         }
     }

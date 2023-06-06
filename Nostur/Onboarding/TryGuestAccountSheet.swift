@@ -1,10 +1,3 @@
-//
-//  TryGuesTAccountSheet.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 17/02/2023.
-//
-
 import SwiftUI
 
 struct TryGuestAccountSheet: View {
@@ -19,15 +12,15 @@ struct TryGuestAccountSheet: View {
     var body: some View {
         let _ = Self._printChanges()
         VStack(alignment: .center) {
-            Text("Try Nostur as guest").font(.largeTitle)
+            Text("Try Nostur as guest", comment:"Heading for message").font(.largeTitle)
             
-            Text("The guest account is already following some people. You can read posts and view profiles, but you cannot post or like things until you create a new account yourself").multilineTextAlignment(.center)
+            Text("The guest account is already following some people. You can read posts and view profiles, but you cannot post or like things until you create a new account yourself", comment: "Message during onboarding about the Guest Account").multilineTextAlignment(.center)
                 .padding()
             
             Button {
                 tryGuestAccount()
             } label: {
-                Text("Let's go!")
+                Text("Let's go!", comment: "Button to start using Nostur, during onboarding")
                     .frame(maxWidth: .infinity)
             }
             .controlSize(.large)

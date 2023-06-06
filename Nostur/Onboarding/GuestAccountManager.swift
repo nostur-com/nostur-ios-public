@@ -1,10 +1,3 @@
-//
-//  GuestAccountManager.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 10/05/2023.
-//
-
 import Foundation
 
 class GuestAccountManager {
