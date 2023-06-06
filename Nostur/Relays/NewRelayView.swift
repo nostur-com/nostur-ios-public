@@ -1,10 +1,3 @@
-//
-//  NewRelayView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 08/01/2023.
-//
-
 import SwiftUI
 
 struct NewRelayView: View {
@@ -26,7 +19,7 @@ struct NewRelayView: View {
                 }
             }
             .padding()
-            .navigationTitle("Add relay")
+            .navigationTitle(String(localized:"Add relay", comment:"Navigation title for Add relay screen"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {

@@ -1,10 +1,3 @@
-//
-//  RelayEditView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 12/01/2023.
-//
-
 import SwiftUI
 
 struct RelayEditView: View {
@@ -33,8 +26,8 @@ struct RelayEditView: View {
         let _ = Self._printChanges()
         VStack {
             Form {
-                Section(header: Text("Relay URL") ) {
-                    TextField("wss://nostr.relay.url.here", text: $relayUrl)
+                Section(header: Text("Relay URL", comment: "Relay URL header") ) {
+                    TextField(String(localized:"wss://nostr.relay.url.here", comment:"Placeholder for entering a relay URL"), text: $relayUrl)
                         .keyboardType(.URL)
                         .disableAutocorrection(true)
                         .textInputAutocapitalization(.never)
@@ -44,33 +37,33 @@ struct RelayEditView: View {
                     guard newValue != edittingSocket?.url else { return } // init from "" to socket.url
                     edittingSocket?.disconnect()
                 }
-                Section(header: Text("Relay settings") ) {
+                Section(header: Text("Relay settings", comment: "Relay settings header") ) {
                     Toggle(isOn: $relay.read) {
-                        Text("Receive from this relay")
+                        Text("Receive from this relay", comment: "Label for toggle to receive from this relay")
                     }
                     Toggle(isOn: $relay.write) {
-                        Text("Publish to this relay") .background(refresh ? Color.clear : Color.clear)
+                        Text("Publish to this relay", comment: "Label for toggle to publish to this relay") .background(refresh ? Color.clear : Color.clear)
                     }
                 }
-                Section(header: Text("Status") ) {
+                Section(header: Text("Status", comment: "Connection status header") ) {
                     HStack {
                         if (isConnected) {
                             Image(systemName: "circle.fill")
                                 .foregroundColor(.green)
                                 .opacity(1)
-                            Text("Connected")
+                            Text("Connected", comment: "Relay status when connected")
                             Spacer()
                             Button {
                                 edittingSocket?.disconnect()
                             } label: {
-                                Text("Disconnect")
+                                Text("Disconnect", comment: "Button to disconnect from relay")
                             }
                         }
                         else {
                             Image(systemName: "circle.fill")
                                 .foregroundColor(.gray)
                                 .opacity(0.2)
-                            Text("Disconnected")
+                            Text("Disconnected", comment: "Relay status when disconnected")
                             Spacer()
                             Button {
                                 // url change?
@@ -84,14 +77,14 @@ struct RelayEditView: View {
                                 edittingSocket?.connect(true)
 //                                edittingSocket?.client.connect()
                             } label: {
-                                Text("Connect")
+                                Text("Connect", comment: "Button to connect to relay")
                             }
                         }
                     }
                 }
             }
         }
-        .navigationTitle("Edit relay")
+        .navigationTitle(String(localized:"Edit relay", comment:"Navigation title for Edit relay screen"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
@@ -113,7 +106,7 @@ struct RelayEditView: View {
                         do {
                             try viewContext.save()
                         } catch {
-                            print("could not save after removing relay")
+                            L.og.error("could not save after removing relay")
                         }
                     }
                 }
@@ -138,7 +131,7 @@ struct RelayEditView: View {
                         }
                     }
                     catch {
-                        print("problem ")
+                        L.og.error("problem ")
                     }
                     dismiss()
                 }

@@ -1,10 +1,3 @@
-//
-//  RelaysView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 08/01/2023.
-//
-
 import SwiftUI
 import CoreData
 
