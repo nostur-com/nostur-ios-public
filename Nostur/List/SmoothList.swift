@@ -121,7 +121,8 @@ struct SmoothList: UIViewControllerRepresentable {
             .sink { data in
                 coordinator.data = data
                 guard let dataSource = collectionViewHolder.dataSource else { return }
-                let isInitialApply = dataSource.snapshot(for: .main).items.count == 0 
+                let currentNumberOfItems = dataSource.snapshot().numberOfItems(inSection: .main)
+                let isInitialApply =  currentNumberOfItems == 0
                 var snapshot = NSDiffableDataSourceSnapshot<SingleSection, String>()
                 snapshot.appendSections([SingleSection.main])
                 snapshot.appendItems(data.map { $0.id }, toSection: .main)
@@ -138,7 +139,9 @@ struct SmoothList: UIViewControllerRepresentable {
                 // or if we have auto scroll enabled (SettingsStore.shared.autoScroll)
                 let shouldAnimate = !isInitialApply && (restoreToId == nil || SettingsStore.shared.autoScroll)
                 
-                let beforeCount = !isInitialApply ? dataSource.snapshot().numberOfItems(inSection: .main) : 0
+                let beforeCount = !isInitialApply ? currentNumberOfItems : 0
+                
+                L.sl.info("⭐️⭐️ SmoothList \(coordinator.lvm.id) \(self.lvm.pubkey?.short ?? "-"): \(currentNumberOfItems) → \(data.count)")
                 
                 dataSource.apply(snapshot, animatingDifferences: shouldAnimate) {
                     if (isInitialApply) { // Scroll to initial position

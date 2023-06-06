@@ -9,18 +9,20 @@ import Foundation
 import CoreData
 import Combine
 
-let LVM_MAX_VISIBLE = 50 // Will only be ignored if last appeared is older
+let LVM_MAX_VISIBLE = 20 // Will only be ignored if last appeared is older
 
 class LVM: NSObject, ObservableObject {
         
     @Published var state:LVM.LIST_STATE = .INIT
     @Published var nrPostLeafs:[NRPost] = [] {
         didSet {
-//            guard nrPostLeafs.count > 0 else { return }
             if state != .READY { state = .READY }
             leafsAndParentIdsOnScreen = self.getAllObjectIds(nrPostLeafs)
             leafIdsOnScreen = Set(nrPostLeafs.map { $0.id })
-            // fetch next page
+            
+            // Pre-fetch next page.
+            // Don't prefetch again unless the last post on screen has changed (this happens when a page is added during infinite scroll):
+            // Don't prefetch again if the posts on screen are less than before (posts get removed from bottom, when new ones are added to top):
             if let oldLastId = oldValue.last?.id, let currentLastId = nrPostLeafs.last?.id, oldLastId != currentLastId {
                 performingLocalOlderFetch = false
                 L.lvm.info("📖 \(self.nrPostLeafs.count) posts loaded. prefetching next page")
@@ -262,11 +264,32 @@ class LVM: NSObject, ObservableObject {
         let onlyNew = nrPosts
             .filter { !leafIdsOnScreen.contains($0.id) }
             .uniqued(on: { $0.id })
+        
         if older {
-            self.nrPostLeafs.append(contentsOf: onlyNew) // ADD TO THE END (OLDER POSTS, NEXT PAGE)
+            // ADD TO THE END (OLDER POSTS, NEXT PAGE)
+            self.nrPostLeafs = self.nrPostLeafs + onlyNew
         }
         else {
-            self.nrPostLeafs.insert(contentsOf: onlyNew, at: 0) // ADD TO THE TOP, NEW POSTS.
+            // ADD TO THE TOP, NEW POSTS.
+            
+            let nrPostLeafsWithNew = onlyNew + self.nrPostLeafs
+            
+            // IF AT TOP, TRUNCATE:
+            
+            let dropCount = max(0, nrPostLeafsWithNew.count - LVM_MAX_VISIBLE) // Drop any above LVM_MAX_VISIBLE
+            if self.isAtTop && dropCount > 5 { // No need to drop all the time, do in batches of 5, or 10?
+                let nrPostLeafsWithNewTruncated = nrPostLeafsWithNew.dropLast(dropCount)
+                self.nrPostLeafs = Array(nrPostLeafsWithNewTruncated)
+                L.lvm.info("\(self.id) \(self.name) safeInsert() dropped \(dropCount) from end ");
+            }
+            else {
+                if Set(nrPostLeafsWithNew.map{ $0.id }).subtracting(Set(self.nrPostLeafs.map { $0.id })).count > 0 {
+                    self.nrPostLeafs = nrPostLeafsWithNew
+                }
+                else {
+                    L.lvm.debug("\(self.id) \(self.name) safeInsert() no new items in Set. skipped ");
+                }
+            }
         }
         return onlyNew
     }
@@ -277,7 +300,7 @@ class LVM: NSObject, ObservableObject {
         let newLeafThreads = newLeafThreadsWithDuplicates.filter { !leafIdsOnScreen.contains($0.id) }
         let diff = newLeafThreadsWithDuplicates.count - newLeafThreads.count
         if diff > 0 {
-            L.lvm.info("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") putNewThreadsOnScreen: skipped \(diff) duplicates")
+            L.lvm.debug("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") putNewThreadsOnScreen: skipped \(diff) duplicates")
         }
         
         // leafs+parents count
@@ -285,32 +308,15 @@ class LVM: NSObject, ObservableObject {
             return partialResult + nrPost.threadPostsCount
         })
         
-        // clean up a bit if needed
-        if !older && currentNRPostLeafs.count > LVM_MAX_VISIBLE && self.isAtTop && !older {
-            // dont drop all
-            let dropLimit = max(0,(currentNRPostLeafs.count - 10)) // also not negative
-            let dropCount = min(newLeafThreads.count,dropLimit)
-            let newNRPostLeafs = newLeafThreads + currentNRPostLeafs.dropLast(dropCount)
-            DispatchQueue.main.async {
-                let inserted = self.safeInsert(newNRPostLeafs)
-                self.fetchAllMissingPs(inserted)
-            }
-            L.lvm.info("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") Removed \(dropCount) from the end")
-        }
-        else {
-            DispatchQueue.main.async {
-                let inserted = self.safeInsert(newLeafThreads, older:older)
-                self.fetchAllMissingPs(inserted)
-            }
-            self.fetchAllMissingPs(newLeafThreads)
+        DispatchQueue.main.async {
+            let inserted = self.safeInsert(newLeafThreads, older: older)
+            self.fetchAllMissingPs(inserted)
         }
         
         guard !older else { return }
         DispatchQueue.main.async {
             if !self.isAtTop || !SettingsStore.shared.autoScroll {
-//                print("COUNTER C: \(self.lvmCounter.count)")
                 self.lvmCounter.count += addedCount
-//                print("COUNTER CC: \(self.lvmCounter.count)")
             }
         }
         
@@ -946,13 +952,6 @@ extension LVM {
                 guard let self = self else { return }
                 guard let lastAppeareadIndex = self.lastAppearedIndex else { return }
                 guard self.nrPostLeafs.count > 0 else { return }
-                
-//                if lastAppeareadIndex > (self.nrPostLeafs.count-17) {
-//                    L.lvm.info("📖 Appeared: \(lastAppeareadIndex)/\(self.nrPostLeafs.count) - fetching more")
-//                    self.throttledCommand.send {
-//                        self.fetchNextPage()
-//                    }
-//                }
                 
                 if lastAppeareadIndex > (self.nrPostLeafs.count-7) {
                     L.lvm.info("📖 Appeared: \(lastAppeareadIndex)/\(self.nrPostLeafs.count) - loading more from local")
