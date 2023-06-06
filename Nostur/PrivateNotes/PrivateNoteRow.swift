@@ -1,10 +1,3 @@
-//
-//  PrivateNoteRow.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 14/05/2023.
-//
-
 import SwiftUI
 
 struct PrivateNoteRow: View {
@@ -55,10 +48,6 @@ struct PrivateNoteRow: View {
                             .foregroundColor(Color("AccentColor"))
                             .layoutPriority(3)
                     }
-                    
-//                    Text("@\(contact.username)").layoutPriority(1)
-//                        .foregroundColor(.secondary)
-//                        .lineLimit(1)
                     Text(contact.about ?? "").lineLimit(1)
                         .foregroundColor(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)

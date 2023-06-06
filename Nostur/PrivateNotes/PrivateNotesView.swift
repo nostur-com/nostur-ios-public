@@ -1,10 +1,3 @@
-//
-//  PrivateNotesView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 13/03/2023.
-//
-
 import SwiftUI
 import CoreData
 
@@ -18,7 +11,7 @@ struct PrivateNotesContainer: View {
                 PrivateNotesView(account: ns.account!)
             }
             else {
-                Text("Select account account first")
+                Text("Select account account first", comment: "Message shown when user needs to select account first")
             }
         }
     }
@@ -61,7 +54,7 @@ struct PrivateNotesView: View {
                 }
             }
             else {
-                Text("When you add a private note to a post or profile it will show up here.")
+                Text("When you add a private note to a post or profile it will show up here.", comment: "Message shown when private note screen is empty")
                     .hCentered()
                     .padding(.top, 40)
             }
@@ -70,7 +63,7 @@ struct PrivateNotesView: View {
             AccountSwitcher(accounts: accounts, selectedAccount: $selectedAccount)
                 .padding(.horizontal)
         }
-        .navigationTitle("Private Notes")
+        .navigationTitle(String(localized:"Private Notes", comment:"Navigation title for Private Notes screen"))
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarHidden(true)
         .padding()

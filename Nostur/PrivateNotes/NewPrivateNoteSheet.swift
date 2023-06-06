@@ -1,10 +1,3 @@
-//
-//  NewPrivateNoteSheet.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 13/03/2023.
-//
-
 import SwiftUI
 
 struct NewPrivateNoteSheet: View {
@@ -27,12 +20,24 @@ struct NewPrivateNoteSheet: View {
             Form {
                 TextField(
                     text: $content,
-                    prompt: Text("Enter private note about \(contact != nil ? (contact?.name ?? "this user") : "this post") for yourself"),
+                    prompt: {
+                        if contact != nil {
+                            if let name = contact?.anyName {
+                                return Text("Enter private note about \(name) for yourself", comment: "Placeholder for entering note about (name)")
+                            }
+                            else {
+                                return Text("Enter private note about this user for yourself", comment: "Placeholder for entering private note")
+                            }
+                        }
+                        else {
+                            return Text("Enter private note about this post for yourself", comment:"Placeholder for entering private note")
+                        }
+                    }(),
                     axis: .vertical) {
-                    Text("Private note")
-                }.lineLimit(10, reservesSpace: true)
+                        Text("Private note")
+                    }.lineLimit(10, reservesSpace: true)
             }
-            .navigationTitle("New private note")
+            .navigationTitle(String(localized: "New private note", comment: "Navigation title for new private note screen"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -62,7 +67,7 @@ struct NewPrivateNoteSheet: View {
                             
                             try viewContext.save()
                         }
-                        catch { print("problem saving private note \(error)") }
+                        catch { L.og.error("problem saving private note \(error)") }
                     }
                 }
             }

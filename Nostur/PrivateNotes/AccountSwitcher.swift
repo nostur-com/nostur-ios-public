@@ -1,10 +1,3 @@
-//
-//  AccountSwitcher.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 14/05/2023.
-//
-
 import SwiftUI
 
 struct AccountSwitcher: View {
@@ -17,7 +10,7 @@ struct AccountSwitcher: View {
                 $selectedAccount.wrappedValue = nil
             } label: {
                 HStack {
-                    Text("All accounts")
+                    Text("All accounts", comment: "Menu item to select All accounts")
                     Spacer()
                 }
             }
@@ -26,7 +19,7 @@ struct AccountSwitcher: View {
                     selectedAccount = account
                 } label: {
                     HStack {
-                        Text("@\(account.name)")
+                        Text(verbatim: "@\(account.name)")
                         Spacer()
                     }
                 }
