@@ -1,10 +1,3 @@
-//
-//  ChatInputField.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 22/03/2023.
-//
-
 import SwiftUI
 
 struct ChatInputField: View {
@@ -16,10 +9,10 @@ struct ChatInputField: View {
     }
     
     @FocusState private var focusedField: FocusedField?
-
+    
     var body: some View {
         HStack {
-            TextField("Type your message...", text: $message)
+            TextField(String(localized:"Type your message...", comment:"Placeholder for input field for new direct message"), text: $message)
                 .padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 0))
                 .background(Color.clear)
                 .focused($focusedField, equals: .message)

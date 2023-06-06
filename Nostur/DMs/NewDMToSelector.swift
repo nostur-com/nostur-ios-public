@@ -1,10 +1,3 @@
-//
-//  NewDMToSelector.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 22/03/2023.
-//
-
 import SwiftUI
 
 struct NewDMToSelector: View {
@@ -39,8 +32,8 @@ struct NewDMToSelector: View {
             }
             .padding()
         }
-        .searchable(text: $debounceObject.text, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search contact")
-        .navigationTitle("New direct message")
+        .searchable(text: $debounceObject.text, placement: .navigationBarDrawer(displayMode: .always), prompt: String(localized: "Search contact", comment: "Placeholder in contact search field"))
+        .navigationTitle(String(localized: "New direct message", comment: "Navigation title for a new Direct Message"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {

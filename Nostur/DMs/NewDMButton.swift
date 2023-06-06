@@ -1,15 +1,8 @@
-//
-//  NewDMButton.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 22/03/2023.
-//
-
 import SwiftUI
 
 struct NewDMButton: View {
     @EnvironmentObject var ns:NosturState
-     
+    
     @Binding var showingNewDM:Bool
     
     var body: some View {
@@ -22,7 +15,7 @@ struct NewDMButton: View {
                     showingNewDM = true
                 } label: {
                     ZStack {
-                        Circle() // Transparent plug.circle looks weird - so make white here
+                        Circle()
                             .foregroundColor(Color(.white))
                             .frame(width: 45, height: 30)
                             .padding(30)
@@ -35,7 +28,6 @@ struct NewDMButton: View {
                     }
                 }
             }
-            //                .offset(x:-30,y:-55)
         }
     }
 }

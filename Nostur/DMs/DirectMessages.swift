@@ -1,10 +1,3 @@
-//
-//  DirectMessages.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 22/03/2023.
-//
-
 import SwiftUI
 
 struct DirectMessagesContainer: View {
@@ -76,8 +69,8 @@ struct DirectMessages: View {
         received.predicate = NSPredicate(
             format:
                 "kind == 4 " +
-                "AND tagsSerialized CONTAINS %@ " +
-                "AND NOT pubkey IN %@",
+            "AND tagsSerialized CONTAINS %@ " +
+            "AND NOT pubkey IN %@",
             serializedP(pubkey),
             blockedPubkeys)
         received.fetchLimit = 999
@@ -90,7 +83,7 @@ struct DirectMessages: View {
         sent.fetchLimit = 999
         sent.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         _sent = FetchRequest(fetchRequest: sent)
-        }
+    }
     
     var body: some View {
         let _ = Self._printChanges()
@@ -142,48 +135,41 @@ struct DirectMessages: View {
                                 }
                             }, title: String(localized: "Requests", comment: "Tab title for DM (Direct Message) requests"), selected: tab == "Requests", unread: requestsTotalUnread)
                         }
-//                        Picker(selection: $tab, label: Text("DMs")) {
-//                            Text("Accepted").tag("Accepted")
-//                            Text("Requests").tag("Requests")
-//                        }
-//                        .pickerStyle(.segmented)
-                        
                         switch (tab) {
-                            case "Accepted":
-                                if onlyMostRecentAccepted.count > 0 {
-                                    List(onlyMostRecentAcceptedFiltered, id:\.0) { (dm, unread) in
-                                        NavigationLink(value: dm) {
-                                            DMRow(recentDM: dm, pubkey: pubkey, unread: unread)
-                                        }
-                                    }
-                                    .listStyle(.plain)
-                                    .onAppear {
-                                        sendNotification(.updateDMsCount, requestsTotalUnread + onlyMostRecentAcceptedTotalUnread)
-                                    }
-//                                    .searchable(text: $debounceObject.text, placement: .navigationBarDrawer(displayMode: .automatic), prompt: Text("Filter by name"))
-                                }
-                                else {
-                                    Text("You have not received any messages", comment: "Shown on the DM view when there aren't any direct messages to show")
-                                        .centered()
-                                }
-                            case "Requests":
-                                if onlyMostRecentRequests.count > 0 {
-                                    List(onlyMostRecentRequests, id:\.0) { (dm, rootDMcreatedAt) in
-                                        NavigationLink(value: dm) {
-                                            DMRow(recentDM: dm, pubkey: pubkey)
-                                        }
-                                    }
-                                    .listStyle(.plain)
-                                    .onAppear {
-                                        updateLastSeenDMRequestCreatedAt()
+                        case "Accepted":
+                            if onlyMostRecentAccepted.count > 0 {
+                                List(onlyMostRecentAcceptedFiltered, id:\.0) { (dm, unread) in
+                                    NavigationLink(value: dm) {
+                                        DMRow(recentDM: dm, pubkey: pubkey, unread: unread)
                                     }
                                 }
-                                else {
-                                    Text("No message requests", comment: "Shown on the DM requests view when there aren't any message requests to show")
-                                        .centered()
+                                .listStyle(.plain)
+                                .onAppear {
+                                    sendNotification(.updateDMsCount, requestsTotalUnread + onlyMostRecentAcceptedTotalUnread)
                                 }
-                            default:
-                                EmptyView()
+                            }
+                            else {
+                                Text("You have not received any messages", comment: "Shown on the DM view when there aren't any direct messages to show")
+                                    .centered()
+                            }
+                        case "Requests":
+                            if onlyMostRecentRequests.count > 0 {
+                                List(onlyMostRecentRequests, id:\.0) { (dm, rootDMcreatedAt) in
+                                    NavigationLink(value: dm) {
+                                        DMRow(recentDM: dm, pubkey: pubkey)
+                                    }
+                                }
+                                .listStyle(.plain)
+                                .onAppear {
+                                    updateLastSeenDMRequestCreatedAt()
+                                }
+                            }
+                            else {
+                                Text("No message requests", comment: "Shown on the DM requests view when there aren't any message requests to show")
+                                    .centered()
+                            }
+                        default:
+                            EmptyView()
                         }
                         
                     }
@@ -206,12 +192,7 @@ struct DirectMessages: View {
             .withNavigationDestinations()
         }
         .task {
-            SocketPool.shared
-                .sendMessage(
-                    ClientMessage(
-                        type: .REQ,
-                        message: RequestMessage
-                            .getAuthorDMs(pubkey: pubkey)))
+            req(RM.getAuthorDMs(pubkey: pubkey))
         }
         .onReceive(receiveNotification(.navigateTo)) { notification in
             let destination = notification.object as! NavigationDestination
@@ -243,7 +224,6 @@ struct DirectMessages: View {
         
         account.lastSeenDMRequestCreatedAt = latestRootDMcreatedAt
         sendNotification(.updateDMsCount, requestsTotalUnread + onlyMostRecentAcceptedTotalUnread)
-        // view context save here?? or on close / app background..
     }
 }
 
@@ -315,8 +295,8 @@ struct DMRow: View {
                                     }
                             }
                             Ago(recentDM.date).layoutPriority(1)
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
+                                .foregroundColor(.secondary)
+                                .lineLimit(1)
                         }
                     }.multilineTextAlignment(.leading)
                     Spacer()

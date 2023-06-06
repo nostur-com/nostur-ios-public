@@ -1,10 +1,3 @@
-//
-//  NewDMComposer.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 23/03/2023.
-//
-
 import SwiftUI
 
 struct NewDMComposer: View {
@@ -38,16 +31,16 @@ struct NewDMComposer: View {
                     nEvent.content = replaceNsecWithHunter2(nEvent.content)
                 }
                 guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: pk, pubkey: theirPubkey, content: nEvent.content) else {
-                    print("🔴🔴 Could encrypt content")
+                    L.og.error("🔴🔴 Could encrypt content")
                     return
                 }
                 nEvent.content = encrypted
                 nEvent.tags.append(NostrTag(["p", theirPubkey]))
                 
                 if let signedEvent = try? ns.signEvent(nEvent) {
-//                        print(signedEvent.wrappedEventJson())
+                    //                        print(signedEvent.wrappedEventJson())
                     up.publishNow(signedEvent)
-//                        noteCancellationId = up.publish(signedEvent)
+                    //                        noteCancellationId = up.publish(signedEvent)
                     message = ""
                     
                     showingNewDM = false
@@ -56,12 +49,12 @@ struct NewDMComposer: View {
                     // spinner
                     // then go to saved event from db after 1 second
                     //                DMConversationView(rootDM: rootDM, pubkey: self.pubkey)
-
+                    
                 }
             }
         }
         .padding()
-        .navigationTitle("New message")
+        .navigationTitle(String(localized: "New message", comment: "Navigation title for a new Direct Message"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
@@ -71,7 +64,7 @@ struct NewDMComposer: View {
                 } label: {
                     Text("Cancel")
                 }
-
+                
             }
         }
     }

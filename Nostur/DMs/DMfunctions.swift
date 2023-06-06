@@ -1,10 +1,3 @@
-//
-//  DMfunctions.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 30/05/2023.
-//
-
 import Foundation
 
 func computeOnlyMostRecentAll(sent:[Event],received:[Event],pubkey:String) -> [String: ([Event], Bool, Int, Int64, Event)] {
@@ -32,7 +25,7 @@ func computeOnlyMostRecentAll(sent:[Event],received:[Event],pubkey:String) -> [S
             if recent[dm.pubkey] == nil {
                 let count = dm.created_at > dm.lastSeenDMCreatedAt ? 1 : 0
                 recent[dm.pubkey] = ([dm], dm.dmAccepted, count, dm.created_at, dm) // The first, rootDM, controls isAccepted or not
-                                                             // check rootDM.lastSeenDMCreatedAt for +1 or +0
+                // check rootDM.lastSeenDMCreatedAt for +1 or +0
             }
             else {
                 let current = recent[dm.pubkey]
@@ -55,9 +48,9 @@ func computeOnlyMostRecentAccepted(_ onlyMostRecentAll:[String: ([Event], Bool, 
             // Take newest message from the conversation and unread count
             if let newestMessage = $0.value.0.sorted(by: { $0.created_at > $1.created_at }).first {
                 return (
-                            newestMessage, // newest message
-                            $0.value.2 // unread count
-                       )
+                    newestMessage, // newest message
+                    $0.value.2 // unread count
+                )
             }
             else {
                 return nil
