@@ -1,10 +1,3 @@
-//
-//  ContactList.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 28/01/2023.
-//
-
 import SwiftUI
 
 struct ContactList: View {
@@ -40,7 +33,6 @@ struct ContactList: View {
     
     var body: some View {
         VStack {
-//            Text("Total: \(pubkeys.count)\(silent.count > 0 ? " + \(silent.count) silent/private" : "")")
             LazyVStack {
                 ForEach(contacts) { contact in
                     ProfileRow(contact: contact)
@@ -60,7 +52,7 @@ struct ContactList: View {
         }
         .onAppear {
             guard missing.count != 0 else { return }
-            print("Fetching \(missing.count) missing contacts")
+            L.og.info("Fetching \(missing.count) missing contacts")
             QueuedFetcher.shared.enqueue(pTags: missing)
         }
         .onDisappear {

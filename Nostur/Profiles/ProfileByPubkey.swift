@@ -1,10 +1,3 @@
-//
-//  ProfileByPubkey.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 26/04/2023.
-//
-
 import SwiftUI
 
 struct ProfileByPubkey: View {
@@ -37,8 +30,8 @@ struct ProfileByPubkey: View {
         }
         else {
             ProgressView().onAppear {
-                print("🟢 ProfileByPubkey.onAppear no contact so REQ.0: \(pubkey)")
-                sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: pubkey)))
+                L.og.info("🟢 ProfileByPubkey.onAppear no contact so REQ.0: \(pubkey)")
+                req(RM.getUserMetadata(pubkey: pubkey))
             }
             .sheet(item: $editingAccount) { account in
                 NavigationStack {

@@ -1,10 +1,3 @@
-//
-//  ProfileRow.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 28/01/2023.
-//
-
 import SwiftUI
 
 struct ProfileRow: View {
@@ -16,12 +9,6 @@ struct ProfileRow: View {
     @State var isFollowing = false
     var withoutFollowButton = false
     @ObservedObject var contact:Contact
-    
-//    var showUsername:Bool { // show (user)name if (user)name is different from display name
-//        guard !contact.username.isEmpty else { return false }
-//        guard contact.username.lowercased() != contact.anyName.lowercased() else { return false }
-//        return true
-//    }
     
     var body: some View {
         HStack(alignment: .top) {
@@ -39,12 +26,6 @@ struct ProfileRow: View {
                                     .foregroundColor(Color("AccentColor"))
                             }
                         }
-
-//                        if showUsername {
-//                            Text("@\(contact.username)").font(.subheadline).foregroundColor(.secondary)
-//                                .lineLimit(1)
-//                        }
-                        
                     }.multilineTextAlignment(.leading)
                     Spacer()
                     if (!withoutFollowButton) {
@@ -87,10 +68,6 @@ struct ProfileRow: View {
 
 struct ProfileRow_Previews: PreviewProvider {
     static var previews: some View {
-        
-        // snowden: 84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240
-        
-        
         ScrollView {
 //            let pubkey = "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240"
             

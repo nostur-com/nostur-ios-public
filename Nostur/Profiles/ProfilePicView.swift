@@ -1,15 +1,6 @@
-//
-//  ProfilePicView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 19/01/2023.
-//
-
 import SwiftUI
 import NukeUI
 import Nuke
-//import AnimatedImage
-
 
 struct PFP: View {
     
@@ -83,13 +74,6 @@ struct InnerPFP: View {
     var color:Color
     var isFollowing = false // will use later to put non following in seperate cache
     @ObservedObject var settings:SettingsStore = .shared
-    
-//    var thumbOptions:ImageRequest.ThumbnailOptions {
-//        var thumbOptions = ImageRequest.ThumbnailOptions(size: CGSize(width: size, height: size))
-////        thumbOptions.createThumbnailFromImageAlways = true
-////        thumbOptions.shouldCacheImmediately = true
-//        return thumbOptions
-//    }
     
     var body: some View {
         if let pictureUrl, pictureUrl.prefix(7) != "http://" {

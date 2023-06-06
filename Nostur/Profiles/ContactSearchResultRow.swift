@@ -1,10 +1,3 @@
-//
-//  ContactSearchResultRow.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 01/03/2023.
-//
-
 import SwiftUI
 
 struct ContactSearchResultRow: View {
@@ -49,10 +42,7 @@ struct ContactSearchResultRow: View {
 struct ContactSearchResultRow_Previews: PreviewProvider {
     static var previews: some View {
         
-        // snowden: 84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240
         let pubkey = "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240"
-        
-        
         
         VStack {
             if let contact = PreviewFetcher.fetchContact(pubkey) {

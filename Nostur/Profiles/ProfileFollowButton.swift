@@ -1,10 +1,3 @@
-//
-//  ProfileFollowButton.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 28/04/2023.
-//
-
 import SwiftUI
 
 struct ProfileFollowButton: View {
@@ -47,7 +40,7 @@ struct ProfileFollowButton: View {
                     editingAccount = account
                 }
             } label: {
-                Text("Edit profile")
+                Text("Edit profile", comment: "Button to edit own profile")
             }
             .buttonStyle(NosturButton())
             .sheet(item: $editingAccount) { account in

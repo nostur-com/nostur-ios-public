@@ -1,9 +1,3 @@
-//
-//  ContactsSearch.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 01/03/2023.
-//
 import SwiftUI
 import Combine
 
@@ -46,9 +40,9 @@ struct ContactsSearch: View, Equatable {
                 SearchBox(prompt: prompt, text: $searchText)
 
                 if (followingPubkeys.count > 1 || 1 == 1) {
-                    Picker("Filter contacts", selection: $contactFilter) {
-                        Text("Following").tag("Following")
-                        Text("All").tag("All")
+                    Picker(String(localized:"Filter contacts", comment: "Label to filter contacts"), selection: $contactFilter) {
+                        Text("Following", comment: "Menu choice to filter by Following").tag("Following")
+                        Text("All", comment: "Menu choice to filter by All").tag("All")
                     }
                     .pickerStyle(.segmented)
                 }
@@ -129,9 +123,17 @@ struct ContactsSearch: View, Equatable {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 if onSelectContacts != nil {
-                    Button(selectedContacts.count > 0 ? "Add (\(selectedContacts.count))" : "Done") {
-                        guard let onSelectContacts = onSelectContacts else { return }
-                        onSelectContacts(selectedContacts)
+                    if selectedContacts.count > 0 {
+                        Button(String(localized:"Add (\(selectedContacts.count))", comment: "Button to 'Add (amount)' contacts")) {
+                            guard let onSelectContacts = onSelectContacts else { return }
+                            onSelectContacts(selectedContacts)
+                        }
+                    }
+                    else {
+                        Button("Done") {
+                            guard let onSelectContacts = onSelectContacts else { return }
+                            onSelectContacts(selectedContacts)
+                        }
                     }
                 }
                 else {

@@ -1,10 +1,3 @@
-//
-//  ProfileBanner.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 28/04/2023.
-//
-
 import SwiftUI
 import NukeUI
 import Nuke
@@ -16,7 +9,7 @@ struct ProfileBanner: View {
     let BANNER_HEIGHT = 150.0
     
     var body: some View {
-//        let _ = Self._printChanges()
+        //        let _ = Self._printChanges()
         Group {
             if let banner {
                 if (banner.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
@@ -28,7 +21,7 @@ struct ProfileBanner: View {
                                     .aspectRatio(contentMode: .fill)
                                     .frame(width: width, height: BANNER_HEIGHT)
                                     .clipped()
-                                    .scaleEffect(1 + max(0,offset / BANNER_HEIGHT ), anchor: .bottom)                                
+                                    .scaleEffect(1 + max(0,offset / BANNER_HEIGHT ), anchor: .bottom)
                             }
                             else if let image = state.image {
                                 image
@@ -45,8 +38,8 @@ struct ProfileBanner: View {
                                         startPoint: .bottom,
                                         endPoint: .top
                                     )
-                                        .frame(width: width, height: BANNER_HEIGHT)
-                                        .scaleEffect(1 + max(0,offset / BANNER_HEIGHT ), anchor: .bottom)
+                                    .frame(width: width, height: BANNER_HEIGHT)
+                                    .scaleEffect(1 + max(0,offset / BANNER_HEIGHT ), anchor: .bottom)
                                 }
                             }
                         }
@@ -57,8 +50,8 @@ struct ProfileBanner: View {
                                     startPoint: .bottom,
                                     endPoint: .top
                                 )
-                                    .frame(width: width, height: BANNER_HEIGHT)
-                                    .scaleEffect(1 + max(0,offset / BANNER_HEIGHT ), anchor: .bottom)
+                                .frame(width: width, height: BANNER_HEIGHT)
+                                .scaleEffect(1 + max(0,offset / BANNER_HEIGHT ), anchor: .bottom)
                             }
                         }
                     }
@@ -82,7 +75,7 @@ struct ProfileBanner: View {
                                     startPoint: .bottom,
                                     endPoint: .top
                                 )
-                                    .frame(width: width, height: BANNER_HEIGHT)
+                                .frame(width: width, height: BANNER_HEIGHT)
                             }
                         }
                     }
@@ -96,8 +89,8 @@ struct ProfileBanner: View {
                         startPoint: .bottom,
                         endPoint: .top
                     )
-                        .frame(width: width, height: BANNER_HEIGHT)
-//                        .scaleEffect(1 + max(0,offset / BANNER_HEIGHT ), anchor: .bottom)
+                    .frame(width: width, height: BANNER_HEIGHT)
+                    //                        .scaleEffect(1 + max(0,offset / BANNER_HEIGHT ), anchor: .bottom)
                 }
             }
         }

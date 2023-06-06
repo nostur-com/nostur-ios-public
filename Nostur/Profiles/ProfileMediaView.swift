@@ -1,10 +1,3 @@
-//
-//  ProfileMediaView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 26/04/2023.
-//
-
 import SwiftUI
 import CoreData
 import Nuke
@@ -15,7 +8,6 @@ struct ProfileMediaView: View {
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var dim:DIMENSIONS
     let pubkey:String
-//    @State var imageUrls:[URL] = []
     @StateObject var fl = FastLoader()
     @State var didLoad = false
     @State var backlog = Backlog()
@@ -48,32 +40,6 @@ struct ProfileMediaView: View {
                 fl.predicate = NSPredicate(format: "pubkey == %@ AND kind == 1", pubkey)
                 fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
                 fl.loadMore(1000)
-                
-                
-                // All this below should already be done from ProfileNotesView.. soo.. disable
-                // if there is nothing on screen, fetch most recent 1000
-    //            let fetchNewerLimit = 1000
-    //            let fetchNewerTask = ReqTask(
-    //                reqCommand: { (taskId) in
-    //                    print("\(taskId) 🟠🟠 fetchNewerTask.fetch()")
-    //                    req(RM.getAuthorKind1(pubkey: pubkey, limit:fetchNewerLimit, subscriptionId: taskId))
-    //                },
-    //                processResponseCommand: { (taskId) in
-    //                    print("\(taskId) 🟠🟠🟠 processResponseCommand")
-    //                    let currentNewestCreatedAt = fl.nrPosts.first?.created_at ?? 0
-    //                    fl.predicate = NSPredicate(
-    //                        format:
-    //                            "created_at >= %i " +
-    //                            "AND pubkey == %@ " + // blockedPubkeys + [pubkey]
-    //                            "AND kind == 1",
-    //                            currentNewestCreatedAt,
-    //                            pubkey
-    //                    )
-    //                    fl.loadNewerEvents(fetchNewerLimit, taskId:taskId)
-    //                })
-    //
-    //            backlog.add(fetchNewerTask)
-    //            fetchNewerTask.fetch()
             }
         }
         .frame(minHeight: 800)
@@ -133,12 +99,6 @@ struct MediaThumb: View {
                         .onTapGesture {
                             priority = .veryHigh
                         }
-//                                Image(systemName: "multiply.circle.fill")
-//                                    .padding(10)
-//                                    .contentShape(Rectangle())
-//                                    .onTapGesture {
-//                                        // how to cancel??, need to hide the view...
-//                                    }
                 }
                 .centered()
                 .frame(width:squareSize, height:squareSize)

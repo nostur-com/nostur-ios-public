@@ -1,15 +1,6 @@
-//
-//  ProfileLikesView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 31/01/2023.
-//
-
 import SwiftUI
 import CoreData
 
-
-// Posts on user profile screen
 struct ProfileLikesView: View {
     
     let pubkey:String
@@ -30,7 +21,7 @@ struct ProfileLikesView: View {
                     .id(nrPost.id)
             }
             if fl.nrPosts.count > 0 {
-                Button("Show more") {
+                Button(String(localized:"Show more", comment: "Button to show more items")) {
                     fl.predicate = NSPredicate(format: "pubkey == %@ AND kind == 7", pubkey)
                     fl.loadMore(50)
                     if let until = fl.nrPosts.last?.created_at {
@@ -74,7 +65,7 @@ struct ProfileLikesView: View {
                     req(RM.getAuthorReactions(pubkey: pubkey, limit:fetchNewerLimit, subscriptionId: taskId))
                 },
                 processResponseCommand: { (taskId) in
-                    print("\(taskId) 🟠🟠🟠 processResponseCommand")
+                    L.og.debug("\(taskId) 🟠🟠🟠 processResponseCommand")
                     let currentNewestCreatedAt = fl.nrPosts.first?.created_at ?? 0
                     fl.predicate = NSPredicate(
                         format:
@@ -102,9 +93,6 @@ struct ProfileLikesView: View {
 
 struct ProfileLikesView_Previews: PreviewProvider {
     static var previews: some View {
-        
-        // snowden: 84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240
-        
         let pubkey = "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240"
         
         ScrollView {

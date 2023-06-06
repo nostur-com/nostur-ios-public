@@ -29,7 +29,7 @@ struct ProfileNotesView: View {
                     .id(nrPost.id)
             }
             if fl.nrPosts.count > 0 {
-                Button("Show more") {
+                Button(String(localized:"Show more", comment: "Button to show more items")) {
                     fl.predicate = NSPredicate(format: "pubkey == %@ AND kind IN {1,6,9802}", pubkey)
                     fl.loadMore(50)
                     if let until = fl.nrPosts.last?.created_at {
@@ -61,12 +61,12 @@ struct ProfileNotesView: View {
             let fetchNewerLimit = 1000
             let fetchNewerTask = ReqTask(
                 reqCommand: { (taskId) in
-                    print("\(taskId) 🟠🟠 fetchNewerTask.fetch()")
+                    L.og.debug("\(taskId) 🟠🟠 fetchNewerTask.fetch()")
                     // Just get max 250 most recent events:
                     req(RM.getAuthorNotes(pubkey: pubkey, limit:fetchNewerLimit, subscriptionId: taskId))
                 },
                 processResponseCommand: { (taskId) in
-                    print("\(taskId) 🟠🟠🟠 processResponseCommand")
+                    L.og.debug("\(taskId) 🟠🟠🟠 processResponseCommand")
                     let currentNewestCreatedAt = fl.nrPosts.first?.created_at ?? 0
                     fl.predicate = NSPredicate(
                         format:

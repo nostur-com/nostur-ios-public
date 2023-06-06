@@ -1,10 +1,3 @@
-//
-//  FollowersList.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 12/02/2023.
-//
-
 import SwiftUI
 
 struct FollowersList: View {
@@ -70,7 +63,7 @@ struct FollowersList: View {
         .onAppear {
             let missing = clEventsFollowingPubkeyMissingContact.map { $0.pubkey }
             guard missing.count != 0 else { return }
-            print("Fetching \(missing.count) missing contacts")
+            L.og.info("Fetching \(missing.count) missing contacts")
             QueuedFetcher.shared.enqueue(pTags: missing)
             
             if pubkey == NosturState.shared.activeAccountPublicKey {

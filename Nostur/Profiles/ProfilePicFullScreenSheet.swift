@@ -1,10 +1,3 @@
-//
-//  ProfilePicFullScreenSheet.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 25/03/2023.
-//
-
 import SwiftUI
 import NukeUI
 
