@@ -1,10 +1,3 @@
-//
-//  ReportContactSheet.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 05/04/2023.
-//
-
 import SwiftUI
 
 struct ReportContactSheet: View {
@@ -22,24 +15,24 @@ struct ReportContactSheet: View {
                 .boxShadow()
             
             Form {
-                Section(header: Text("Report Information"), footer: VStack {
-                    Text("Your report is public, other users can use your report to improve the network")
+                Section(header: Text("Report Information", comment: "Heading when entering Report details"), footer: VStack {
+                    Text("Your report is public, other users can use your report to improve the network", comment: "Informational message")
                 }) {
-                    Picker(selection: $reason, label: Text("Reason")) {
-                        Text("Impersonation").tag(ReportType.impersonation)
-                        Text("Spam").tag(ReportType.spam)
-                        Text("Nudity").tag(ReportType.nudity)
-                        Text("Profanity").tag(ReportType.profanity)
-                        Text("Illegal content").tag(ReportType.illegal)
+                    Picker(selection: $reason, label: Text("Reason", comment: "Label for the reason of a report")) {
+                        Text("Impersonation", comment: "Menu item in choice list").tag(ReportType.impersonation)
+                        Text("Spam", comment: "Menu item in choice list").tag(ReportType.spam)
+                        Text("Nudity", comment: "Menu item in choice list").tag(ReportType.nudity)
+                        Text("Profanity", comment: "Menu item in choice list").tag(ReportType.profanity)
+                        Text("Illegal content", comment: "Menu item in choice list").tag(ReportType.illegal)
                     }
                         
-                    TextField("Extra information", text: $comment)
+                    TextField(String(localized:"Extra information", comment: "Label for report field to give extra information"), text: $comment)
                 }
             }
             Spacer()
         }
         .padding()
-        .navigationTitle("Report person")
+        .navigationTitle(String(localized: "Report person", comment: "Navigation title"))
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel", role: .cancel) {
@@ -47,7 +40,7 @@ struct ReportContactSheet: View {
                 }
             }
             ToolbarItem(placement: .primaryAction) {
-                Button("Report") {
+                Button(String(localized: "Report", comment: "Button to publish report")) {
                     guard let signedReport = NosturState.shared.reportContact(pubkey: contact.pubkey, reportType: reason, note: comment) else {
                         return
                     }

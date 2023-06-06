@@ -1,10 +1,3 @@
-//
-//  ReportPostSheet.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 03/04/2023.
-//
-
 import SwiftUI
 
 struct ReportPostSheet: View {
@@ -35,30 +28,30 @@ struct ReportPostSheet: View {
             .clipped()
             
             Form {
-                Section(header: Text("Report Information"), footer: VStack {
-                    Text("Your report is public, other users can use your report to improve the network")
+                Section(header: Text("Report Information", comment: "Heading when entering Report details"), footer: VStack {
+                    Text("Your report is public, other users can use your report to improve the network", comment: "Informational message")
                 }) {
-                    Picker(selection: $reason, label: Text("Reason")) {
-                        Text("Spam").tag(ReportType.spam)
-                        Text("Impersonation").tag(ReportType.impersonation)
-                        Text("Nudity").tag(ReportType.nudity)
-                        Text("Profanity").tag(ReportType.profanity)
-                        Text("Illegal content").tag(ReportType.illegal)
+                    Picker(selection: $reason, label: Text("Reason", comment: "Label for the reason of a report")) {
+                        Text("Impersonation", comment: "Menu item in choice list").tag(ReportType.impersonation)
+                        Text("Spam", comment: "Menu item in choice list").tag(ReportType.spam)
+                        Text("Nudity", comment: "Menu item in choice list").tag(ReportType.nudity)
+                        Text("Profanity", comment: "Menu item in choice list").tag(ReportType.profanity)
+                        Text("Illegal content", comment: "Menu item in choice list").tag(ReportType.illegal)
                     }
                     
-                    Picker(selection: $reportWhat, label: Text("Report")) {
-                        Text("This post").tag("Post")
-                        Text("This post & user").tag("Profile+Profile")
+                    Picker(selection: $reportWhat, label: Text("Report", comment: "Label for choice of what to report")) {
+                        Text("This post", comment: "Menu choice").tag("Post")
+                        Text("This post & user", comment: "Menu choice").tag("Profile+Profile")
                     }
                         
-                    TextField("Extra information", text: $comment)
+                    TextField(String(localized:"Extra information", comment: "Label for report field to give extra information"), text: $comment)
                 }
             }
             .frame(maxHeight: .infinity)
             Spacer()
         }
         .padding()
-        .navigationTitle("Report post")
+        .navigationTitle(String(localized: "Report post", comment: "Navigation title"))
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel", role: .cancel) {
@@ -66,7 +59,7 @@ struct ReportPostSheet: View {
                 }
             }
             ToolbarItem(placement: .primaryAction) {
-                Button("Report") {
+                Button(String(localized: "Report", comment: "Button to publish report")) {
                     guard let signedReport = NosturState.shared.report(nrPost.mainEvent, reportType: reason, note: comment, includeProfile: reportWhat == "Profile+Profile" ) else {
                         return
                     }
