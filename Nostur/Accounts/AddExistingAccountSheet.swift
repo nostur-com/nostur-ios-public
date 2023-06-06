@@ -1,10 +1,3 @@
-//
-//  AddExistingAccountSheet.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 16/02/2023.
-//
-
 import SwiftUI
 
 struct AddExistingAccountSheet: View {
@@ -101,21 +94,13 @@ struct AddExistingAccountSheet: View {
         account.publicKey = keys.publicKeyHex()
         account.privateKey = keys.privateKeyHex()
         
-        
-//        let ot = OnboardingTracker.shared
-//        ot.startOnboarding(pubkey: account.publicKey)
-        
-        
-//        // 1. Prefill from cached event
-//        Account.preFillReadOnlyAccountInfo(account: account, context: viewContext, forceOverwrite: true)
-//        Account.preFillReadOnlyAccountFollowing(account: account, context: viewContext)
-        
         // Remove existing metadata events, so can proper parse again from Importers. Else get filtered by duplicate filter
         if let contactEvents = Event.setMetaDataEvents(byAuthorPubkey: account.publicKey, context: viewContext) {
             for contactEvent in contactEvents {
                 viewContext.delete(contactEvent)
             }
         }
+        
         // Remove existing CL events, so can proper parse again from Importers. Else get filtered by duplicate filter
         if let clEvents = Event.contactListEvents(byAuthorPubkey: account.publicKey, context: viewContext) {
             for clEvent in clEvents {
@@ -124,7 +109,6 @@ struct AddExistingAccountSheet: View {
         }
 
         try! viewContext.save()
-//        ns.objectWillChange.send()
         ns.setAccount(account: account)
         ns.onBoardingIsShown = false
         
@@ -148,10 +132,6 @@ struct AddExistingAccountSheet: View {
         account.createdAt = Date()
         account.publicKey = pubkey
         
-        
-        // 1. Prefill from cached event
-//        Account.preFillReadOnlyAccountInfo(account: account, context: viewContext, forceOverwrite: true)
-//        Account.preFillReadOnlyAccountFollowing(account: account, context: viewContext)
         
         // Remove existing metadata events, so can proper parse again from Importers. Else get filtered by duplicate filter
         if let contactEvents = Event.setMetaDataEvents(byAuthorPubkey: account.publicKey, context: viewContext) {

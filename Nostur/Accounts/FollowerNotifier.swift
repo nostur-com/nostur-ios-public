@@ -1,17 +1,10 @@
-//
-//  FollowerNotifier.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 01/06/2023.
-//
-
 import Foundation
 import Combine
 
 // The follower notififier tracks if you have new followers
 // To get your followers the filter "#p": [your pubkey], "kinds": [3]  is used
 // We get the full list and store the most recent .created_at
-// If we find a newer .created_at from a new .pubkey we generate a notification in the app
+// If we find a newer .created_at from a our .pubkey we generate a notification in the app
 
 class FollowerNotifier {
     
@@ -101,7 +94,6 @@ class FollowerNotifier {
     
     func listenForNewContactListEvents() {
         receiveNotification(.newFollowingListFromRelay)
-//            .receive(on: RunLoop.main)
             .sink { [weak self] notification in
                 guard let self = self else { return }
                 let nEvent = notification.object as! NEvent

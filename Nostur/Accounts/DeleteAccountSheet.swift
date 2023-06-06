@@ -1,10 +1,3 @@
-//
-//  DeleteAccountSheet.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 31/03/2023.
-//
-
 import SwiftUI
 import Combine
 
@@ -37,9 +30,8 @@ struct DeleteAccountSheet: View {
         VStack {
             if let account = ns.account {
                 VStack(alignment: .leading) {
-                    Text("Are you sure you want to delete your account?\n")
+                    Text("Are you sure you want to delete your account?\n", comment: "Confirmation text when you want to delete your account")
                         .font(.headline)
-                    //                        .multilineTextAlignment(.center)
                     
                     HStack {
                         PFP(pubkey: account.publicKey, account: account)
@@ -49,9 +41,9 @@ struct DeleteAccountSheet: View {
                         }
                     }
                     
-                    Text("\nThis will **wipe** your:\n - Public nostr profile\n - Public nostr following list\n")
+                    Text("\nThis will **wipe** your:\n - Public nostr profile\n - Public nostr following list\n", comment:"Confirmation text when you want to delete your account")
                     
-                    Text("This will **delete** your:\n - Account from Nostur\n - Private key (nsec) from Apple Keychain")
+                    Text("This will **delete** your:\n - Account from Nostur\n - Private key (nsec) from Apple Keychain", comment: "Confirmation text when you want to delete your account")
                     
                 }
                 .padding(30)
@@ -62,7 +54,7 @@ struct DeleteAccountSheet: View {
                             guard let nsec = account.nsec else { return }
                             UIPasteboard.general.string = nsec
                         } label: {
-                            Label("Copy private key", systemImage: "doc.on.doc")
+                            Label(String(localized: "Copy private key", comment: "Button to copy your private key to clipboard"), systemImage: "doc.on.doc")
                         }
                         .buttonStyle(.borderedProminent)
                         
@@ -77,12 +69,11 @@ struct DeleteAccountSheet: View {
                     }
                 }
                 else {
-                    Text("Deleting in \(remaining) seconds")
+                    Text("Deleting in \(remaining) seconds", comment: "Text that is counting down when you are deleting your account")
                     Button(role: .cancel) {
                         cancel?.cancel()
                     } label: {
                         Text("Cancel")
-                        //                        Image(systemName: "trash")
                     }
                     .buttonStyle(.borderedProminent)
                 }
@@ -100,7 +91,7 @@ struct DeleteAccountSheet: View {
                 }
             }
         }
-        .navigationTitle("Delete account")
+        .navigationTitle(String(localized:"Delete account", comment: "Navigation title of Delete account screen"))
     }
 }
 

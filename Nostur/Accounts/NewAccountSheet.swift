@@ -1,10 +1,3 @@
-//
-//  NewAccountSheet.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 16/02/2023.
-//
-
 import SwiftUI
 import secp256k1
 import Foundation
@@ -16,7 +9,6 @@ struct NewAccountSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) private var viewContext
     
-//    @State var display_name = ""
     @State var name = ""
     @State var about = ""
     
@@ -31,13 +23,13 @@ struct NewAccountSheet: View {
     
     var body: some View {
             VStack {
-                TextField("Name", text: $name)
+                TextField(String(localized: "Name", comment:"Label of Name text field on Create new account screen"), text: $name)
                     .padding()
                     .background(grayBackground)
                     .cornerRadius(5.0)
                     .padding(.bottom, 20)
                     .focused($focusedField, equals: .name)
-                TextField("Something about yourself (bio)", text: $about)
+                TextField(String(localized:"Something about yourself (bio)", comment:"Label of bio/about text field on Create new account screen"), text: $about)
                     .lineLimit(5)
                     .padding()
                     .background(grayBackground)
@@ -59,7 +51,7 @@ struct NewAccountSheet: View {
                     NavigationLink {
                         TryGuestAccountSheet()
                     } label: {
-                        Text("Skip and try as guest first")
+                        Text("Skip and try as guest first", comment: "Button to skip creating account and login as guest")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderless)
@@ -71,7 +63,7 @@ struct NewAccountSheet: View {
             .controlSize(.large)
             .buttonStyle(.bordered)
             .onAppear { focusedField = .name }
-            .navigationTitle("Create new account")
+            .navigationTitle(String(localized:"Create new account", comment: "Navigation title of create new account screen"))
             .navigationBarTitleDisplayMode(.inline)
     }
     

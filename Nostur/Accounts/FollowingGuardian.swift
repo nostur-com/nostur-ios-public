@@ -1,10 +1,3 @@
-//
-//  FollowingGuardian.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 02/04/2023.
-//
-
 import Foundation
 import Combine
 
@@ -17,7 +10,7 @@ class FollowingGuardian: ObservableObject {
     @Published var didReceiveContactListThisSession = false {
         didSet {
             if didReceiveContactListThisSession {
-                L.og.info("🙂🙂FollowingGuardian.didReceiveContactListThisSession: \(self.didReceiveContactListThisSession)")
+                L.og.info("🙂🙂 FollowingGuardian.didReceiveContactListThisSession: \(self.didReceiveContactListThisSession)")
             }
         }
     }
@@ -25,14 +18,13 @@ class FollowingGuardian: ObservableObject {
     static let shared = FollowingGuardian()
     
     var subscriptions = Set<AnyCancellable>()
-//    var lastRemovedPubkeys:Set<String>? // These we can restore after asking user
     var checkForNewTimer:Timer?
     
     init() {
 #if DEBUG
-if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
-    return
-}
+        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+            return
+        }
 #endif
         listenForNewContactListEvents()
         listenForAccountChanged()
@@ -73,8 +65,8 @@ if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
                 let pubkeysOwn = Set(account.follows?.filter { !$0.privateFollow } .map({ c in c.pubkey }) ?? [])
                 let pubkeysRelay = Set(nEvent.pTags())
                 
-//                print("🫂🫂 \(pubkeysOwn.joined(separator: ","))")
-//                print("🫂🫂 \(pubkeysRelay.joined(separator: ","))")
+                //                print("🫂🫂 \(pubkeysOwn.joined(separator: ","))")
+                //                print("🫂🫂 \(pubkeysRelay.joined(separator: ","))")
                 
                 let removed = pubkeysOwn.subtracting(pubkeysRelay)
                 let added = pubkeysRelay.subtracting(pubkeysOwn)
@@ -95,7 +87,7 @@ if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
         account.objectWillChange.send()
         
         let context = DataProvider.shared().viewContext
-        for pubkey in added { // sanity... limit 25
+        for pubkey in added {
             let contact = Contact.fetchByPubkey(pubkey, context: context)
             if let contact {
                 account.addToFollows(contact)
@@ -130,7 +122,7 @@ if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
         }
         
         guard let clEvent = try? AccountManager.createContactListEvent(account: account) else {
-            print("🔴🔴 Could not create new clEvent")
+            L.og.error("🔴🔴 Could not create new clEvent")
             return
         }
         _ = Unpublisher.shared.publishLast(clEvent, ofType: .contactList)

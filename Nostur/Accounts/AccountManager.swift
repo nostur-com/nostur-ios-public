@@ -1,10 +1,3 @@
-//
-//  AccountManager.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 11/02/2023.
-//
-
 import Foundation
 import KeychainAccess
 import CoreData
@@ -17,27 +10,17 @@ class AccountManager {
         let newKeys = NKeys.newKeys()
         storeKeys(newKeys)
         
-        //        print("Private key: \(privateKeyHex)") for testing. dont print this ever
-        print("Public key: \(newKeys.publicKeyHex())")
-        
         let account = context.performAndWait {
             let account = Account(context: context)
             account.id = UUID()
             account.createdAt = Date()
-//            account.display_name = display_name
             account.name = name
             account.about = about
             account.publicKey = newKeys.publicKeyHex()
             
-            do {
-                try context.save()
-                return account
-            } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-            }
+            try! context.save()
+                
+            return account
         }
         return account
     }
@@ -50,7 +33,6 @@ class AccountManager {
             return privateKeyHex
         } catch {
             L.og.error("🔴🔴🔴 could not get key from keychain")
-//            L.og.debug("🔴🔴🔴 \(error)") // disabled, don't want to risk any key material showing up in some error
             return nil
         }
     }
@@ -74,7 +56,6 @@ class AccountManager {
                 .set(keys.privateKeyHex(), key: keys.publicKeyHex())
         } catch {
             L.og.error("🔴🔴🔴 could not store key in keychain")
-//            L.og.debug("🔴🔴🔴 \(error)") // disabled, don't want to risk any key material showing up in some error
         }
     }
     
@@ -86,7 +67,6 @@ class AccountManager {
                 .set(privateKeyHex, key: forPublicKeyHex)
         } catch {
             L.og.error("🔴🔴🔴 could not store key in keychain")
-//            L.og.debug("🔴🔴🔴 \(error)") // disabled, don't want to risk any key material showing up in some error
         }
     }
     
@@ -96,7 +76,6 @@ class AccountManager {
             try keychain.remove(forPublicKeyHex)
         } catch {
             L.og.error("🔴🔴🔴 could not remove key from keychain")
-//            L.og.debug("🔴🔴🔴 \(error)") // disabled, don't want to risk any key material showing up in some error
         }
     }
     
@@ -123,9 +102,7 @@ class AccountManager {
                 print("Sending delete PFP and BANNER request")
                 deletePFPandBanner(pk: pk, pubkey: account.publicKey)
             }
-//
-//            print("newKind0EventSigned: \(newKind0EventSigned)")
-//            print("newKind3EventSigned: \(newKind3EventSigned)")
+            
             Unpublisher.shared.publishNow(newKind0EventSigned)
             Unpublisher.shared.publishNow(newKind3EventSigned)
             
@@ -191,7 +168,6 @@ class AccountManager {
             throw "Account has no private key"
         }
         
-        
         if (account.privateKey != nil) {
             do {
                 let keys = try NKeys(privateKeyHex: account.privateKey!)
@@ -200,7 +176,7 @@ class AccountManager {
                 newKind3Event.kind = .contactList
                 
                 // keep existing content if we have it. Should be ignored as per spec https://github.com/nostr-protocol/nips/blob/master/02.md
-                // but some clients use it to store their garbage
+                // but some clients use it to store their stuff
                 if let existingKind3 = Event.contactListEvents(byAuthorPubkey: account.publicKey, context: DataProvider.shared().viewContext)?.first {
                     newKind3Event.content = existingKind3.content ?? ""
                 }
@@ -211,9 +187,6 @@ class AccountManager {
                 
                 let newKind3EventSigned = try newKind3Event.sign(keys)
                 
-                print(newKind3EventSigned.eventJson())
-                print(newKind3EventSigned.wrappedEventJson())
-                
                 return newKind3EventSigned
             }
             catch {
@@ -223,30 +196,4 @@ class AccountManager {
         }
         return nil
     }
-}
-
-
-func deletePFPandBanner(pk: String, pubkey:String) {
-
-    let url = URL(string: "https://nostur.com/wipeprofileandbanner.php")!
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    
-    guard let proof = signedDeleteProof(pk: pk, pubkey:pubkey) else { return }
-    request.setValue(proof.signature, forHTTPHeaderField: "X-Nostur-Signature")
-    request.setValue(proof.message, forHTTPHeaderField: "X-Nostur-Message")
-    request.setValue(proof.publicKey, forHTTPHeaderField: "X-Nostur-PublicKey")
-    
-    let session = URLSession(configuration: .default)
-    let task = session.dataTask(with: request) { data, response, error in
-        
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200..<300).contains(httpResponse.statusCode)
-              else {
-            L.og.error("error deleting profile and banner")
-            return
-        }
-        L.og.info("banner/profile delete request sent succesfully")
-    }
-    task.resume()
 }

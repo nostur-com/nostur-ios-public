@@ -1,41 +1,34 @@
-//
-//  BlockListView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 04/02/2023.
-//
-
 import SwiftUI
 
 struct BlockListView: View {
-
+    
     @State var tab = "Blocked"
     
     var body: some View {
         VStack {
             HStack {
                 TabButton(action: {
-                        tab = "Blocked"
-                }, title: "Blocked", selected: tab == "Blocked")
+                    tab = "Blocked"
+                }, title: String(localized: "Blocked", comment: "Title of tab where Blocked users are listed"), selected: tab == "Blocked")
                 
                 TabButton(action: {
-                        tab = "Muted"
-                }, title: "Muted conversations", selected: tab == "Muted")
-//                TabButton(action: {
-//                        tab = "Muted words"
-//                }, title: "Muted words", selected: tab == "Muted words")
+                    tab = "Muted"
+                }, title: String(localized:"Muted conversations", comment:"Title of tab where Muted conversations are listed"), selected: tab == "Muted")
+                //                TabButton(action: {
+                //                        tab = "Muted words"
+                //                }, title: "Muted words", selected: tab == "Muted words")
             }
             switch tab {
-                case "Blocked":
-                    BlockedAccounts()
-                    Text("Swipe to unblock/unmute")
-                case "Muted":
-                    MutedConversations()
-                    Text("Swipe to unblock/unmute")
-//                case "Muted words":
-//                    MutedWordsView()
-                default:
-                    BlockedAccounts()
+            case "Blocked":
+                BlockedAccounts()
+                Text("Swipe to unblock/unmute", comment: "Informational text")
+            case "Muted":
+                MutedConversations()
+                Text("Swipe to unblock/unmute", comment: "Informational text")
+                //                case "Muted words":
+                //                    MutedWordsView()
+            default:
+                BlockedAccounts()
             }
             Spacer()
         }
@@ -120,7 +113,7 @@ struct MutedConversations: View {
                     }
                     Spacer()
                 }
-//                .background(Color("ListBackground"))
+                //                .background(Color("ListBackground"))
                 .onChange(of: account.mutedRootIds_) { newValue in
                     fl.reset()
                     fl.predicate = NSPredicate(format: "id IN %@", newValue)
