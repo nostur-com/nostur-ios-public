@@ -1,15 +1,8 @@
-//
-//  ProfileZaps.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 13/05/2023.
-//
-
 import SwiftUI
 import CoreData
 
 
-// HMM how to deal with zaps (High profile accounts vs normal users)
+// how to deal with zaps (High profile accounts vs normal users)
 // Get all zaps from last week (.since filter)
 // If low, get last month (.since)
 // If low, get all...?
@@ -24,8 +17,6 @@ struct ProfileZaps: View {
     let pubkey:String
     @ObservedObject var contact:Contact
     @ObservedObject var settings:SettingsStore = .shared
-//    @EnvironmentObject var ns:NosturState
-//    @StateObject var fl = FastLoader()
     @State var backlog = Backlog(timeout: 8)
     @State var didLoad = false
     @State var nrPosts = ArraySlice<NRPost>()
@@ -41,7 +32,7 @@ struct ProfileZaps: View {
             if nrPosts.count != 0 {
                 Grid {
                     GridRow {
-                        Text("Zaps received recently")
+                        Text("Zaps received recently", comment: "Heading")
                             .foregroundColor(.gray)
                             .font(.system(size: 20))
                             .gridCellColumns(2)
@@ -49,8 +40,8 @@ struct ProfileZaps: View {
                     }
                     Divider()
                     GridRow {
-                        Text("Zaps")
-                        Text("Sats")
+                        Text("Zaps", comment: "Heading")
+                        Text("Sats", comment: "Heading (short for Satoshis)")
                     }
                     .font(.system(size: 20))
                     Group {
@@ -58,13 +49,13 @@ struct ProfileZaps: View {
                             Text(verifiedZapsCount.description)
                                 .foregroundColor(.green)
                                 .padding(5)
-                            Text("\(verifiedZapsSum.clean)")
+                            Text(verbatim:"\(verifiedZapsSum.clean)")
                                 .foregroundColor(.green)
                                 .padding(5)
                         }
                         GridRow {
-                            Text("")
-                            Text("\(verifiedZapsFiat)")
+                            Text(verbatim:"")
+                            Text(verbatim:"\(verifiedZapsFiat)")
                                 .foregroundColor(.green).opacity(0.4)
                         }
                     }
@@ -74,7 +65,7 @@ struct ProfileZaps: View {
                 
                 Divider()
                 
-                Text("Most received recently on")
+                Text("Most received recently on", comment: "Heading above posts which received the most zaps")
                     .foregroundColor(.gray)
                     .font(.system(size: 20))
             }
@@ -115,7 +106,7 @@ struct ProfileZaps: View {
                     try60days()
                 }
             )
-
+            
             backlog.add(fetchNewerTask)
             fetchNewerTask.fetch()
         }
@@ -159,7 +150,7 @@ struct ProfileZaps: View {
                 self.loadZaps()
             },
             timeoutCommand: { (taskId) in
-                print("No zaps to be found, checked 14, 60, 180 days ago.")
+                L.og.info("No zaps to be found, checked 14, 60, 180 days ago.")
             }
         )
         
@@ -187,13 +178,13 @@ struct ProfileZaps: View {
                 }
                 
                 let verifiedZapsCount = verifiedZaps.count
-
+                
                 let verifiedZapsSum = verifiedZaps.reduce(0) { partialResult, zap in
                     return partialResult + zap.naiveSats
                 }
-
+                
                 let verifiedZapsFiat = String(format: "($%.02f)",(Double(verifiedZapsSum / 100000000 * er.bitcoinPrice)))
-                        
+                
                 let nrPosts = zaps
                     .uniqued(on: { $0.zappedEventId })
                     .compactMap { $0.zappedEvent }
@@ -219,7 +210,7 @@ struct ProfileZaps_Previews: PreviewProvider {
         ScrollView {
             let pubkey = "32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245"
             let contact = PreviewFetcher.fetchContact(pubkey)
-        
+            
             if let contact {
                 ProfileZaps(pubkey:pubkey, contact:contact)
             }

@@ -1,10 +1,3 @@
-//
-//  ProfileTabs.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 17/05/2023.
-//
-
 import SwiftUI
 
 struct ProfileTabs: View {
@@ -47,7 +40,7 @@ struct ProfileTabs: View {
                                         .padding(50)
                                     Spacer()
                                         .onAppear {
-                                            print("🟢 ProfileView.onAppear no clEvent so REQ.3: \(pubkey)")
+                                            L.og.info("🟢 ProfileView.onAppear no clEvent so REQ.3: \(pubkey)")
                                             req(RM.getAuthorContactsList(pubkey: pubkey))
                                         }
                                 }
@@ -59,31 +52,9 @@ struct ProfileTabs: View {
                         ProfileLikesView(pubkey: pubkey)
                     case "Zaps":
                         ProfileZaps(pubkey: pubkey, contact: contact)
-//                                ProfileZapsView(pubkey:pubkey, contact: contact)
-//                            case "Relays":
-//                                VStack {
-//                                    if relayEvents.count != 0 {
-//                                        ProfileRelays(relayEvent: relayEvents.first!)
-//                                    }
-//                                    else if clEvents.count != 0 {
-//                                        ProfileRelaysView(clEvent: clEvents.first!)
-//                                    }
-//                                    else {
-//                                        HStack {
-//                                            Spacer()
-//                                            ProgressView()
-//                                                .padding(50)
-//                                            Spacer()
-//                                        }
-//                                        .onAppear {
-//                                            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserProfileKinds(pubkey: pubkey, kinds: [10002])))
-//                                            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getAuthorContactsList(pubkey: pubkey)))
-//                                        }
-//                                    }
-//                                }
                     case "Followers":
                         VStack {
-                            Text("Followers").font(.headline).fontWeight(.heavy).padding(.vertical, 10)
+                            Text("Followers", comment: "Heading").font(.headline).fontWeight(.heavy).padding(.vertical, 10)
                             FollowersList(pubkey: contact.pubkey)
                         }
                     default:
@@ -95,27 +66,27 @@ struct ProfileTabs: View {
                 HStack(spacing:0) {
                     TabButton(
                         action: { selectedSubTab = "Posts" },
-                        title: "Posts",
+                        title: String(localized:"Posts", comment:"Tab title"),
                         selected: selectedSubTab == "Posts")
                     Spacer()
                     TabButton(
                         action: { selectedSubTab = "Following" },
-                        title: "Following",
+                        title: String(localized:"Following", comment:"Tab title"),
                         selected: selectedSubTab == "Following")
                     Spacer()
                     TabButton(
                         action: { selectedSubTab = "Media" },
-                        title: "Media",
+                        title: String(localized:"Media", comment:"Tab title"),
                         selected: selectedSubTab == "Media")
                     Spacer()
                     TabButton(
                         action: { selectedSubTab = "Likes" },
-                        title: "Likes",
+                        title: String(localized:"Likes", comment:"Tab title"),
                         selected: selectedSubTab == "Likes")
                     Spacer()
                     TabButton(
                         action: { selectedSubTab = "Zaps" },
-                        title: "Zaps",
+                        title: String(localized:"Zaps", comment:"Tab title"),
                         selected: selectedSubTab == "Zaps")
                     //                                Spacer()
                     //                                TabButton(
@@ -134,9 +105,6 @@ struct ProfileTabs: View {
 struct ProfileTabs_Previews: PreviewProvider {
     static var previews: some View {
         let f = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
-        //        let snowden = PreviewFetcher.fetchContact(pubkey)
-        //        let testgif = "32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245"
-        
         ScrollView {
             if let contact = PreviewFetcher.fetchContact(f) {
                 ProfileTabs(contact: contact, selectedSubTab: .constant("Posts"))
@@ -144,7 +112,6 @@ struct ProfileTabs_Previews: PreviewProvider {
         }
         .withPreviewEnvironment({ pe in
             pe.loadContacts()
-//            pe.loadPosts()
         })
     }
 }

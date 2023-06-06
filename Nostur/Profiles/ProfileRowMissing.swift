@@ -1,10 +1,3 @@
-//
-//  ProfileRowMissing.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 23/02/2023.
-//
-
 import SwiftUI
 
 struct ProfileRowMissing: View {
@@ -19,18 +12,18 @@ struct ProfileRowMissing: View {
                     HStack {
                         VStack(alignment: .leading) {
                             HStack(spacing:3) {
-                                Text("No kind 0 event").font(.headline).foregroundColor(.primary)
+                                Text(verbatim: "No kind 0 event").font(.headline).foregroundColor(.primary)
                                     .redacted(reason: .placeholder)
                                     .lineLimit(1)
                             }
                             
-                            Text("@missing").font(.subheadline).foregroundColor(.secondary)
+                            Text(verbatim: "@missing").font(.subheadline).foregroundColor(.secondary)
                                 .redacted(reason: .placeholder)
                                 .lineLimit(1)
                         }.multilineTextAlignment(.leading)
                         Spacer()
                     }
-                    Text("").foregroundColor(.primary)
+                    Text(verbatim:"").foregroundColor(.primary)
                         .multilineTextAlignment(.leading)
                 }
             }

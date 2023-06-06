@@ -1,10 +1,3 @@
-//
-//  ProfileView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 19/03/2023.
-//
-
 import SwiftUI
 import Nuke
 import NukeUI
@@ -137,20 +130,20 @@ struct ProfileView: View {
                                     Button {
                                         UIPasteboard.general.string = contact.npub
                                     } label: {
-                                        Label("Copy npub", systemImage: "doc.on.clipboard")
+                                        Label(String(localized:"Copy npub", comment:"Menu action"), systemImage: "doc.on.clipboard")
                                     }
                                     if let kind0 = kind0Events.first {
                                         Button {
                                             UIPasteboard.general.string = kind0.toNEvent().eventJson()
                                         } label: {
-                                            Label("Copy profile source", systemImage: "doc.on.clipboard")
+                                            Label(String(localized:"Copy profile source", comment:"Menu action"), systemImage: "doc.on.clipboard")
                                         }
                                     }
                                     
                                     Button {
                                         sendNotification(.addRemoveToListsheet, contact)
                                     } label: {
-                                        Label("Add/Remove from lists", systemImage: "person.2.crop.square.stack")
+                                        Label(String(localized:"Add/Remove from lists", comment:"Menu action"), systemImage: "person.2.crop.square.stack")
                                     }
                                     
                                     
@@ -159,12 +152,13 @@ struct ProfileView: View {
                                         ns.account!.blockedPubkeys_ = ns.account!.blockedPubkeys_ + [contact.pubkey]
                                         sendNotification(.blockListUpdated, ns.account!.blockedPubkeys_)
                                     } label: {
-                                        Label("Block \(contact.anyName)", systemImage: "slash.circle")
+                                        Label(
+                                            String(localized:"Block \(contact.anyName)", comment:"Menu action"), systemImage: "slash.circle")
                                     }
                                     Button {
                                         sendNotification(.reportContact, contact)
                                     } label: {
-                                        Label("Report \(contact.anyName)", systemImage: "flag")
+                                        Label(String(localized:"Report \(contact.anyName)", comment:"Menu action"), systemImage: "flag")
                                     }
                                     
                                     
@@ -173,7 +167,7 @@ struct ProfileView: View {
                                         .fontWeight(.bold)
                                 }
                                 if (ns.followsYou(contact)) {
-                                    Text("Follows you").font(.system(size: 12))
+                                    Text("Follows you", comment: "Label shown when someone follows you").font(.system(size: 12))
                                         .foregroundColor(.white)
                                         .padding(.horizontal, 7)
                                         .padding(.vertical, 2)
@@ -193,9 +187,9 @@ struct ProfileView: View {
                                 else {
                                     Text("**\(contact.followingPubkeys.count)** ")
                                 }
-                                Text("Following  ")
+                                Text("Following  ", comment: "Label for Following count")
                                 
-                                Text("**♾️** Followers")
+                                Text("**♾️** Followers", comment: "Label for followers count")
                                     .onTapGesture {
                                         selectedSubTab = "Followers"
                                     }
@@ -228,7 +222,7 @@ struct ProfileView: View {
                     await MainActor.run {
                         if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
                             contact.zapperPubkey = response.nostrPubkey!
-                            print("contact.zapperPubkey updated: \(response.nostrPubkey!)")
+                            L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
                         }
                     }
                 }
@@ -237,14 +231,13 @@ struct ProfileView: View {
                     await MainActor.run {
                         if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
                             contact.zapperPubkey = response.nostrPubkey!
-                            print("contact.zapperPubkey updated: \(response.nostrPubkey!)")
+                            L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
                         }
                     }
                 }
             }
             catch {
-                print("problem in lnurlp")
-                print(error)
+                L.og.error("problem in lnurlp \(error)")
             }
         }
         .onChange(of: contact.nip05) { nip05 in
