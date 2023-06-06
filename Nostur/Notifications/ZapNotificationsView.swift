@@ -1,10 +1,3 @@
-//
-//  ZapNotificationsView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 04/06/2023.
-//
-
 import SwiftUI
 
 struct ZapNotificationView: View {
@@ -24,13 +17,15 @@ struct ZapNotificationView: View {
     }
     
     func createErrorLinks(_ fails:FailedZaps) -> String {
+        let postKey = String(localized: "post", comment: "The word \"post\" when used as post #1, post #2 and post #3.")
+        let contactKey = String(localized: "contact", comment: "The word \"contact\" when used as contact #1, contact #2 and contact #3.")
         var links = [String]()
         for index in fails.failedZaps.indices {
             if let eventId = fails.failedZaps[index].eventId {
-                links.append("[post #\(index+1)](nostur:e:\(eventId)): \(fails.failedZaps[index].error)")
+                links.append("[\(postKey) #\(index+1)](nostur:e:\(eventId)): \(fails.failedZaps[index].error)")
             }
             else {
-                links.append("[contact #\(index+1)](nostur:p:\(fails.failedZaps[index].contactPubkey)): \(fails.failedZaps[index].error)")
+                links.append("[\(contactKey) #\(index+1)](nostur:p:\(fails.failedZaps[index].contactPubkey)): \(fails.failedZaps[index].error)")
             }
         }
         return links.joined(separator: "\n")
@@ -41,7 +36,7 @@ struct ZapNotificationView: View {
             switch notification.type {
             case .failedZaps:
                 if let parsed = try? JSONDecoder().decode(FailedZaps.self, from: notification.content.data(using: .utf8)!) {
-                    let forRendering = "Zaps failed on: \(createErrorLinks(parsed))."
+                    let forRendering = String(localized:"Zaps failed on: \(createErrorLinks(parsed)).", comment: "Message for failed zaps on: (post 1, post 2, post 3...)")
                     if let rendered = try? AttributedString(markdown: forRendering, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace)) {
                         Text(rendered)
                     }
@@ -51,7 +46,7 @@ struct ZapNotificationView: View {
                 }
             case .failedZapsTimeout:
                 if let parsed = try? JSONDecoder().decode(FailedZaps.self, from: notification.content.data(using: .utf8)!) {
-                    let forRendering = "Zaps failed on: \(createLinks(parsed)) (Timeout)."
+                    let forRendering = String(localized: "Zaps failed on: \(createLinks(parsed)) (Timeout).", comment: "Message for failed zaps on: (contact #1, contact #2, contact #3...) because time out.")
                     if let rendered = try? AttributedString(markdown: forRendering, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace)) {
                         Text(rendered)
                     }

@@ -1,10 +1,3 @@
-////
-////  NotificationsZaps.swift
-////  Nostur
-////
-////  Created by Fabian Lachman on 25/02/2023.
-////
-//
 import SwiftUI
 import CoreData
 import Combine
@@ -228,7 +221,7 @@ struct NotificationsZaps: View {
                 ))
             },
             processResponseCommand: { (taskId) in
-//                    print("🟠🟠🟠 processResponseCommand \(taskId)")
+                L.og.debug("🟠🟠🟠 processResponseCommand \(taskId)")
                 let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
                 fl.predicate = NSPredicate(
                     format:
@@ -308,7 +301,7 @@ struct ProfileZap: View {
             .frame(width:80)
             VStack(alignment:.leading, spacing: 3) {
                 PFP(pubkey: zapFrom.pubkey, contact: zapFrom.contact)
-                Text("**\(zapFrom.contact?.authorName ?? "??")** zapped your profile")
+                Text("**\(zapFrom.contact?.authorName ?? "??")** zapped your profile", comment: "Message when someone zapped your profile")
                 Text(zapFrom.noteText)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -389,10 +382,10 @@ struct ZapsForThisNote: View {
                 }
             }
             if (deduplicated.values.count > 1) {
-                Text("**\(deduplicated.values.first(where: { $0.4 != nil })?.4 ?? "???")** and \(deduplicated.values.count - 1) others zapped your post")
+                Text("**\(deduplicated.values.first(where: { $0.4 != nil })?.4 ?? "???")** and \(deduplicated.values.count - 1) others zapped your post", comment: "Message when (name) and X others zapped your post")
             }
             else {
-                Text("**\(deduplicated.values.first(where: { $0.4 != nil })?.4 ?? "???")** zapped your post")
+                Text("**\(deduplicated.values.first(where: { $0.4 != nil })?.4 ?? "???")** zapped your post", comment: "Message when (name) zapped your post")
             }
         }
         .frame(maxWidth:.infinity, alignment: .leading)
@@ -402,28 +395,7 @@ struct ZapsForThisNote: View {
                     .foregroundColor(.gray)
             }
         }
-        //        .onAppear {
-        ////            self.fetchMissingEventContacts(events:Array(withoutDuplicates.prefix(10)))
-        //        }
     }
-    //
-    //    func fetchMissingEventContacts(events:[Event]) {
-    //        let pubkeys = pubkeys(events)
-    //        let contacts = Contact.fetchByPubkeys(pubkeys, context: viewContext)
-    //        let missingPubkeys = pubkeys.filter {
-    //            contacts.map { $0.pubkey }.firstIndex(of: $0) == nil
-    //        }
-    //        let emptyContactPubkeys = pubkeys
-    //            .compactMap { pubkey in
-    //                contacts.first(where: { $0.pubkey == pubkey })
-    //            }
-    //            .filter { $0.updated_at == 0 }
-    //            .map { $0.pubkey }
-    //
-    //        guard (missingPubkeys + emptyContactPubkeys).count > 0 else { return }
-    //        print("Fetching  \((missingPubkeys + emptyContactPubkeys).count) missing or empty contacts")
-    //        SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missingPubkeys + emptyContactPubkeys )))
-    //    }
 }
 
 struct NotificationsZaps_Previews: PreviewProvider {

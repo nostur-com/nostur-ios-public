@@ -1,10 +1,3 @@
-//
-//  Reactions.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 20/02/2023.
-//
-
 import SwiftUI
 
 struct NoteReactions: View {
@@ -44,18 +37,7 @@ struct NoteReactions: View {
             }
             
             QueuedFetcher.shared.enqueue(pTags: missing.map { $0.pubkey })
-            
-//            req(RM.getUserMetadata(pubkeys: missing.map { $0.pubkey }))
         }
-//        .onChange(of: reactions_) { newValue in
-//            var missing:[String] = []
-//            for reaction in newValue {
-//                if reaction.contact == nil || reaction.contact?.metadata_created_at == 0 {
-//                    missing.append(reaction.pubkey)
-//                }
-//            }
-//            sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: missing)))
-//        }
     }
 }
 
@@ -71,8 +53,6 @@ struct ReactionRow: View {
                     navigateTo(ContactPath(key: reaction.pubkey))
                 }
             VStack(alignment: .leading) {
-//                Text("contact_:\(reaction.contact == nil ? "nil" : reaction.contact!.authorName)")
-//                Text("contact_.meta:\(reaction.contact != nil ? reaction.contact!.metadata_created_at.description : "nil")")
                 NoteHeaderViewEvent(event: reaction)
                 Text(reaction.content == "+" ? "❤️" : reaction.content ?? "")
             }
@@ -82,16 +62,6 @@ struct ReactionRow: View {
         .onTapGesture {
             navigateTo(ContactPath(key: reaction.pubkey))
         }
-//        .onAppear {
-//            if reaction.contact == nil || reaction.contact?.metadata_created_at == 0 {
-//                QueuedFetcher.shared.enqueue(pTag: reaction.pubkey)
-//            }
-//        }
-//        .onDisappear {
-//            if reaction.contact == nil || reaction.contact?.metadata_created_at == 0 {
-//                QueuedFetcher.shared.dequeue(pTag: reaction.pubkey)
-//            }
-//        }
         Divider()
     }
 }

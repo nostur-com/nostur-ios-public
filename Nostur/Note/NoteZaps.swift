@@ -1,10 +1,3 @@
-//
-//  NoteZaps.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 20/02/2023.
-//
-
 import SwiftUI
 
 
@@ -60,8 +53,6 @@ struct NoteZaps: View {
             }
             
             QueuedFetcher.shared.enqueue(pTags: missing.map { $0.pubkey })
-            
-//            req(RM.getUserMetadata(pubkeys: missing.map { $0.pubkey }))
         }
     }
 }
@@ -91,8 +82,6 @@ struct NoteZapRow: View {
                     navigateTo(ContactPath(key: zapFrom.pubkey))
                 }
             VStack(alignment: .leading) {
-//                Text("contact_:\(zapFrom.contact == nil ? "nil" : zapFrom.contact!.authorName)")
-//                Text("contact_.meta:\(zapFrom.contact != nil ? zapFrom.contact!.metadata_created_at.description : "nil")")
                 NoteHeaderViewEvent(event: zapFrom)
                 Text("Zapped \(zap.naiveSats.satsFormatted) sats \(fiatPrice)")
                 Text(zapFrom.content ?? "")
@@ -103,16 +92,6 @@ struct NoteZapRow: View {
         .onTapGesture {
             navigateTo(ContactPath(key: zapFrom.pubkey))
         }
-//        .onAppear {
-//            if zapFrom.contact == nil || zapFrom.contact?.metadata_created_at == 0 {
-//                QueuedFetcher.shared.enqueue(pTag: zapFrom.pubkey)
-//            }
-//        }
-//        .onDisappear {
-//            if zapFrom.contact == nil || zapFrom.contact?.metadata_created_at == 0 {
-//                QueuedFetcher.shared.dequeue(pTag: zapFrom.pubkey)
-//            }
-//        }
         Divider()
     }
 }
@@ -121,7 +100,7 @@ struct NoteZaps_Previews: PreviewProvider {
     static var previews: some View {
         // Some fake and real Zaps
         
-        let odell = PreviewFetcher.fetchEvent("81b2dba2a3d2c92eedab1f966119bda65555d926b97bb41a14c07187472f6159")
+        let dunno1 = PreviewFetcher.fetchEvent("81b2dba2a3d2c92eedab1f966119bda65555d926b97bb41a14c07187472f6159")
         
         let dunno = PreviewFetcher.fetchEvent("7682031bb0b06d7b9c417dae30141357a74b4f089ebd46226990d418e2def565")
         
@@ -131,8 +110,8 @@ struct NoteZaps_Previews: PreviewProvider {
                 NoteZaps(id: dunno.id)
             }
             
-            if let odell {
-                NoteZaps(id: odell.id)
+            if let dunno1 {
+                NoteZaps(id: dunno1.id)
             }
         }
         .withPreviewEnvironment({ pe in

@@ -1,10 +1,3 @@
-//
-//  PostPreview.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 04/04/2023.
-//
-
 import SwiftUI
 
 struct PostPreview: View {
@@ -30,7 +23,6 @@ struct PostPreview: View {
                 .onPreferenceChange(SizePreferenceKey.self) { size in
                     guard size.width > 0 else { return }
                     dim.listWidth = size.width
-//                    print("🟣🟣🟣🟣🟣 NEW DETAIL WIDTH \(size.width) -- Scale: \(UIScreen.main.scale) ")
                 }
             AnyStatus()
             PostRowDeletable(nrPost: nrPost)
@@ -42,7 +34,7 @@ struct PostPreview: View {
         .padding(10)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Back") {
+                Button(String(localized:"Back", comment:"Button to go back")) {
                     dismiss()
                 }
             }
@@ -54,7 +46,7 @@ struct PostPreview: View {
                         ProgressView()
                     }
                     else {
-                        Text("Post")
+                        Text("Post", comment: "Button to post (publish) a new post")
                     }
                 }
                 .buttonStyle(.borderedProminent)
@@ -62,7 +54,7 @@ struct PostPreview: View {
                 .disabled(uploading)
             }
         }
-        .navigationTitle("Post preview")
+        .navigationTitle(String(localized: "Post preview", comment: "Navigation title for Post Preview screen"))
         .navigationBarTitleDisplayMode(.inline)
     }
 }

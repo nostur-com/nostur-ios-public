@@ -1,10 +1,3 @@
-//
-//  NoteMinimalContentView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 24/02/2023.
-//
-
 import SwiftUI
 
 struct NoteMinimalContentView: View {

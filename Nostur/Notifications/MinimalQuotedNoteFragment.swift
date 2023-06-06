@@ -1,10 +1,3 @@
-//
-//  MinimalQuotedNoteFragment.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 24/02/2023.
-//
-
 import SwiftUI
 
 struct MinimalQuotedNoteFragment: View {
@@ -76,10 +69,6 @@ struct MinimalQuotedNoteFragment: View {
                     .foregroundColor(Color("AccentColor"))
                     .layoutPriority(3)
             }
-            
-//            Text("@\(contact.anyUsername)") //
-//                .font(.system(size: 14))
-//                .foregroundColor(.secondary.opacity(0.5))
         }
     }
 }

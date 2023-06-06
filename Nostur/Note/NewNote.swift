@@ -1,9 +1,6 @@
-//
-//  NewNote.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 11/02/2023.
-//
+// TODO: NewNote, NewQuoteRepost and NewReply should be refactored. Too much copy pasta now
+// TODO: Should enable undo, similar to likes or zaps
+// TODO: Should add drafts and auto-save
 
 import SwiftUI
 import Combine
@@ -135,7 +132,7 @@ public final class NewNoteText: ObservableObject {
 }
 
 struct NewNote: View {
-    let PLACEHOLDER = "What's happening?"
+    let PLACEHOLDER = String(localized:"What's happening?", comment: "Placeholder text for typing a new post")
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var ns:NosturState
     let up:Unpublisher = .shared
@@ -259,7 +256,7 @@ struct NewNote: View {
                         }
                     }
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Preview") {
+                        Button(String(localized:"Preview", comment:"Preview button when creating a new post")) {
                             guard let account = ns.account else { return }
                             guard var nEvent = vm.nEvent else { return }
                             nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected:selectedMentions)
@@ -302,7 +299,7 @@ struct NewNote: View {
                                 ProgressView()
                             }
                             else {
-                                Text("Post")
+                                Text("Post", comment: "Button to post (publish) a new post")
                             }
                         }
                         .buttonStyle(.borderedProminent)
@@ -369,11 +366,11 @@ struct NewNote: View {
                 .sink(receiveCompletion: { result in
                     switch result {
                         case .failure(let error):
-                            print("Error uploading images: \(error.localizedDescription)")
+                        L.og.error("Error uploading images: \(error.localizedDescription)")
                             uploadError = "Image upload error"
                             sendNotification(.anyStatus, ("Upload error: \(error.localizedDescription)", "NewPost"))
                         case .finished:
-                            print("All images uploaded successfully")
+                        L.og.debug("All images uploaded successfully")
                     }
                 }, receiveValue: { urls in
                     
@@ -390,25 +387,18 @@ struct NewNote: View {
                             nEvent.content = replaceNsecWithHunter2(nEvent.content)
                         }
                         if let signedEvent = try? ns.signEvent(nEvent) {
-                            //                        print(signedEvent.wrappedEventJson())
                             up.publishNow(signedEvent)
-                            //                        noteCancellationId = up.publish(signedEvent)
                             dismiss()
-//                            previewEvent = nil
                         }
                     }
-//                    print("Uploaded image URLs: \(urls)")
                 })
                 .store(in: &subscriptions)
             
             
         }
         else {
-//            print("1: \(nEvent.content)")
             nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected:selectedMentions)
-//            print("2: \(nEvent.content)")
             nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
-//            print("3: \(nEvent.content)")
             nEvent = putHashtagsInTags(nEvent)
             
             if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
@@ -416,9 +406,7 @@ struct NewNote: View {
             }
             if let signedEvent = try? ns.signEvent(nEvent) {
                 up.publishNow(signedEvent)
-                //                        noteCancellationId = up.publish(signedEvent)
                 dismiss()
-//                previewEvent = nil
             }
         }
     }

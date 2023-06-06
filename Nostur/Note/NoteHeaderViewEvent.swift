@@ -1,14 +1,7 @@
-//
-//  NoteHeaderViewEvent.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 15/05/2023.
-//
-
 import SwiftUI
 
 struct NoteHeaderViewEvent: View {
-     
+    
     @ObservedObject var event:Event
     var singleLine:Bool = true
     
@@ -30,7 +23,6 @@ struct NoteHeaderViewEvent: View {
                     }
             }
         }
-//        .frame(maxWidth: .infinity)
     }
 }
 
@@ -58,8 +50,8 @@ struct PlaceholderPostHeaderEvent: View {
         if (!singleLine) {
             Ago(event.date)
                 .layoutPriority(2)
-            .foregroundColor(.secondary)
-            .lineLimit(1)
+                .foregroundColor(.secondary)
+                .lineLimit(1)
         }
     }
 }
@@ -87,8 +79,8 @@ struct PostHeaderEvent: View {
                 if (singleLine) {
                     Ago(event.date)
                         .layoutPriority(2)
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
                 }
             }
         }
@@ -114,14 +106,14 @@ struct PostHeaderEvent: View {
 
 struct NameAndNipContact: View {
     @ObservedObject var contact:Contact // for rendering nip check (after just verified) etc
-
+    
     var body: some View {
         Text(contact.anyName) // Name
             .foregroundColor(.primary)
             .fontWeight(.bold)
             .lineLimit(1)
             .layoutPriority(2)
-
+        
         if (contact.nip05veried) {
             Image(systemName: "checkmark.seal.fill")
                 .foregroundColor(Color("AccentColor"))

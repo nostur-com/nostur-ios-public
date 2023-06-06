@@ -1,10 +1,3 @@
-//
-//  NotificationsView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 11/02/2023.
-//
-
 import SwiftUI
 import CoreData
 
@@ -59,21 +52,21 @@ struct NotificationsView: View {
                         tab = "Posts"
 //                        nm.unreadMentions = 0
                     }
-                }, title: "Posts", selected: tab == "Posts", unread: nm.unreadMentions)
+                }, title: String(localized: "Posts", comment:"Title of tab"), selected: tab == "Posts", unread: nm.unreadMentions)
                 
                 TabButton(action: {
                     withAnimation {
                         tab = "Reactions"
 //                        nm.unreadReactions = 0
                     }
-                }, title: "Reactions", selected: tab == "Reactions", unread: nm.unreadReactions)
+                }, title: String(localized: "Reactions", comment:"Title of tab"), selected: tab == "Reactions", unread: nm.unreadReactions)
                 
                 TabButton(action: {
                     withAnimation {
                         tab = "Zaps"
 //                        nm.unreadZaps = 0
                     }
-                }, title: "Zaps", selected: tab == "Zaps", unread: nm.unreadZaps)
+                }, title: String(localized: "Zaps", comment:"Title of tab"), selected: tab == "Zaps", unread: nm.unreadZaps)
             }
             
             switch (tab) {

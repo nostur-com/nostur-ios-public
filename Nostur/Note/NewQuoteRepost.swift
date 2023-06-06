@@ -1,15 +1,8 @@
-//
-//  NewQuoteRepost.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 08/03/2023.
-//
-
 import SwiftUI
 import Combine
 
 struct NewQuoteRepost: View {
-    let PLACEHOLDER = "Add comment"
+    let PLACEHOLDER = String(localized: "Add comment", comment: "Placholder when typing a new reply")
     var quotingEvent:Event
     
     @Environment(\.dismiss) private var dismiss
@@ -162,7 +155,7 @@ struct NewQuoteRepost: View {
                     }
                     
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Preview") {
+                        Button(String(localized:"Preview", comment:"Preview button when creating a new reply")) {
                             guard let account = ns.account else { return }
                             guard var nEvent = vm.nEvent else { return }
                             nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected:selectedMentions)
@@ -201,7 +194,7 @@ struct NewQuoteRepost: View {
                                 ProgressView()
                             }
                             else {
-                                Text("Post")
+                                Text("Post", comment: "Button to post (publish) a new reply")
                             }
                         }
                         .buttonStyle(.borderedProminent)
@@ -259,14 +252,6 @@ struct NewQuoteRepost: View {
         }
     }
     
-//    func updateEventWithNewText() {
-//        if (vm.nEvent == nil) {
-//            vm.nEvent = NEvent(content: replaceMentionsWithHandles(vm.text, selected: selectedMentions))
-//        } else {
-//            vm.nEvent!.content = replaceMentionsWithHandles(vm.text, selected: selectedMentions)
-//        }
-//    }
-    
     func sendNow() {
         guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
         guard var nEvent = vm.nEvent else { return }
@@ -280,10 +265,10 @@ struct NewQuoteRepost: View {
                 .sink(receiveCompletion: { result in
                     switch result {
                         case .failure(let error):
-                            print("Error uploading images: \(error.localizedDescription)")
+                        L.og.error("Error uploading images: \(error.localizedDescription)")
                             sendNotification(.anyStatus, ("Upload error: \(error.localizedDescription)", "NewPost"))
                         case .finished:
-                            print("All images uploaded successfully")
+                        L.og.debug("All images uploaded successfully")
                     }
                 }, receiveValue: { urls in
                     
@@ -301,17 +286,11 @@ struct NewQuoteRepost: View {
                             nEvent.content = replaceNsecWithHunter2(nEvent.content)
                         }
                         if let signedEvent = try? ns.signEvent(nEvent) {
-                            //            let _ = up.publish(signedEvent)
-                            //            print(signedEvent.wrappedEventJson())
-                            //            quotingEvent.reposted = true
-                            // .needsviewupdate?
                             up.publishNow(signedEvent)
                             sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: quotingEvent.id))
                             dismiss()
-//                            previewEvent = nil
                         }
                     }
-//                    print("Uploaded image URLs: \(urls)")
                 })
                 .store(in: &subscriptions)
             
@@ -327,14 +306,9 @@ struct NewQuoteRepost: View {
                 nEvent.content = replaceNsecWithHunter2(nEvent.content)
             }
             if let signedEvent = try? ns.signEvent(nEvent) {
-                //            let _ = up.publish(signedEvent)
-                //            print(signedEvent.wrappedEventJson())
-                //            quotingEvent.reposted = true
-                // .needsviewupdate?
                 up.publishNow(signedEvent)
                 sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: quotingEvent.id))
                 dismiss()
-//                previewEvent = nil
             }
         }
     }
@@ -343,13 +317,9 @@ struct NewQuoteRepost: View {
 struct NewQuoteRepost_Previews: PreviewProvider {
     @State static var noteCancellationId:UUID?
     static var previews: some View {
-        
-//        let id = "c3a040feac185585f984147cdaf7a7ec5774b06db29ff25017c45026e470daeb"
-        
         NavigationStack {
             if let event = PreviewFetcher.fetchEvent() {
                 NewQuoteRepost(quotingEvent: event)
-                
             }
         }
         .withPreviewEnvironment({ pe in

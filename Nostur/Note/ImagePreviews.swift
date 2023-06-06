@@ -1,10 +1,3 @@
-//
-//  ImagePreviews.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 16/04/2023.
-//
-
 import SwiftUI
 import UIKit
 
@@ -32,8 +25,8 @@ struct ImagePreviews: View {
                                 _ = pastedImages.remove(at: index)
                                 print("remove: \(index)")
                             },
-                            alignment: .topTrailing
-                        )
+                        alignment: .topTrailing
+                    )
             }
         }
     }
@@ -48,7 +41,6 @@ struct ImagePreviews_Previews: PreviewProvider {
     }
 }
 
-
 struct PostPreviewImages: View {
     let images:[UIImage]
     init(_ images:[UIImage]) {
@@ -59,7 +51,6 @@ struct PostPreviewImages: View {
             Image(uiImage: images[index])
                 .resizable()
                 .scaledToFit()
-//                .frame(maxWidth: 600)
                 .padding(.bottom, 10)
         }
     }

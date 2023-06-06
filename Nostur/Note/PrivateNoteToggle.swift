@@ -1,10 +1,3 @@
-//
-//  PrivateNoteToggle.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 12/03/2023.
-//
-
 import SwiftUI
 
 struct ContactPrivateNoteToggle: View {
@@ -30,7 +23,7 @@ struct ContactPrivateNoteToggle: View {
 
 struct EventPrivateNoteToggle: View {
     @ObservedObject var nrPost:NRPost
-
+    
     var body: some View {
         HStack {
             Button {
@@ -58,7 +51,7 @@ struct PrivateNoteToggle_Previews: PreviewProvider {
             }
         }
         .withPreviewEnvironment({ pe in
-//            pe.loadContacts()
+            //            pe.loadContacts()
             pe.loadPosts()
         })
     }

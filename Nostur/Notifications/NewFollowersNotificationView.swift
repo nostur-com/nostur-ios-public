@@ -1,10 +1,3 @@
-//
-//  NewFollowersNotificationView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 01/06/2023.
-//
-
 import SwiftUI
 
 struct NewFollowersNotificationView: View {
@@ -37,11 +30,11 @@ struct NewFollowersNotificationView: View {
                 }
             }
             if (contacts.count > 1) {
-                Text("**\(contacts.first?.anyName ?? "???")** and \(contacts.count - 1) others are now following you")
+                Text("**\(contacts.first?.anyName ?? "???")** and \(contacts.count - 1) others are now following you", comment: "Message when (name) and X others are now following yoru")
                     
             }
             else {
-                Text("**\(contacts.first?.anyName ?? "???")** is now following you")
+                Text("**\(contacts.first?.anyName ?? "???")** is now following you", comment: "Message when (name) is now following you")
             }
         }
         .frame(maxWidth:.infinity, alignment:.leading)
@@ -49,28 +42,7 @@ struct NewFollowersNotificationView: View {
             Ago(notification.createdAt).layoutPriority(2)
                 .foregroundColor(.gray)
         }
-//        .onAppear {
-//            self.fetchMissingEventContacts(events:Array(withoutDuplicates.prefix(10)))
-//        }
     }
-    
-//    func fetchMissingEventContacts(events:[Event]) {
-//        let pubkeys = pubkeys(events)
-//        let contacts = Contact.fetchByPubkeys(pubkeys, context: viewContext)
-//        let missingPubkeys = pubkeys.filter {
-//            contacts.map { $0.pubkey }.firstIndex(of: $0) == nil
-//        }
-//        let emptyContactPubkeys = pubkeys
-//            .compactMap { pubkey in
-//                contacts.first(where: { $0.pubkey == pubkey })
-//            }
-//            .filter { $0.metadata_created_at == 0 }
-//            .map { $0.pubkey }
-//
-//        guard (missingPubkeys + emptyContactPubkeys).count > 0 else { return }
-//        print("Fetching  \((missingPubkeys + emptyContactPubkeys).count) missing or empty contacts")
-//        QueuedFetcher.shared.enqueue(pTags:  missingPubkeys + emptyContactPubkeys)
-//    }
 }
 
 struct NewFollowersNotificationView_Previews: PreviewProvider {

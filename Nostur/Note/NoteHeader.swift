@@ -1,14 +1,7 @@
-//
-//  NoteHeader.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 23/02/2023.
-//
-
 import SwiftUI
 
 struct NoteHeader: View {
-     
+    
     @ObservedObject var event:Event
     var singleLine:Bool = true
     var hideEmojis:Bool
@@ -20,8 +13,6 @@ struct NoteHeader: View {
     }
     
     var body: some View {
-        //        NavigationLink(value: event, label: {
-        
         VStack(alignment: .leading, spacing:0) { // Name + menu "replying to"
             HStack(spacing:5) {
                 Group {
@@ -42,15 +33,14 @@ struct NoteHeader: View {
                     
                     if (event.contact?.nip05veried ?? false) {
                         Image(systemName: "checkmark.seal.fill")
-//                            .font(.system(size: 14))
                             .foregroundColor(Color("AccentColor"))
                             .layoutPriority(3)
                     }
                     
                     if (singleLine) {
                         Ago(event.date).layoutPriority(1)
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
                     }
                 }
                 .onTapGesture {
@@ -63,16 +53,11 @@ struct NoteHeader: View {
                     .lineLimit(1)
             }
         }
-        
-        
-        //        })
     }
 }
 
 struct NoteHeader_Previews: PreviewProvider {
     static var previews: some View {
-        
-//        let id = "1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0"
         VStack(alignment: .leading, spacing: 10) {
             
             if let event = PreviewFetcher.fetchEvent() {

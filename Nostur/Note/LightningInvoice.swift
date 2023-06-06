@@ -1,13 +1,4 @@
-//
-//  LightningInvoice.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 12/02/2023.
-//
-
 import SwiftUI
-
-
 
 struct LightningInvoice: View {
     @Environment(\.openURL) var openURL
@@ -33,7 +24,7 @@ struct LightningInvoice: View {
     var body: some View {
         VStack {
             if let bolt11 = bolt11 {
-                Text("Bitcoin Lightning Invoice ⚡️").font(.caption)
+                Text("Bitcoin Lightning Invoice ⚡️", comment:"Title oof a card that displays a lightning invoice").font(.caption)
                 Divider()
                 Text("\(bolt11.amount != nil ? (Double(bolt11.amount!.int64)/divider).clean.description : "any") \(divider == 1 ? "sats" : "BTC") \(fiatPrice)")
                     .font(.title3).padding(.bottom, 10)
@@ -92,14 +83,21 @@ struct LightningInvoice: View {
                     // OLD STYLE WITHOUT NWC / INSTANT ZAPS
                     Button {
                         openURL(URL(string: "\(ss.defaultLightningWallet.scheme)\(invoice)")!)
-                    } label: { Text(isExpired ? "Expired" : "Pay").frame(minWidth: 150) }
+                    } label: {
+                        if isExpired {
+                            Text("Expired", comment:"Button of an expired lightning invoice (disabled)").frame(minWidth: 150)
+                        }
+                        else {
+                            Text("Pay", comment:"Button to pay a lightning invoice").frame(minWidth: 150)
+                        }
+                    }
                         .buttonStyle(.borderedProminent)
                         .cornerRadius(20)
                         .disabled(isExpired)
                 }
             }
             else {
-                Text("Unable to decode lightning invoice")
+                Text("Unable to decode lightning invoice", comment:"Error message")
             }
         }
         .padding(20)
@@ -124,7 +122,7 @@ struct LightningInvoice: View {
                 }
             }
             catch {
-                print("could not get price from kraken")
+                L.og.debug("could not get price from kraken")
             }
         }
         
@@ -146,7 +144,7 @@ func fetchBitcoinPrice() async -> Double? {
         return Double(response.result.XXBTZUSD.c[0])
     }
     catch {
-        print("could not get price from kraken")
+        L.og.debug("could not get price from kraken")
         return nil
     }
 }

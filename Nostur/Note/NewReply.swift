@@ -1,10 +1,3 @@
-//
-//  NewReply.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 11/02/2023.
-//
-
 import SwiftUI
 import Combine
 
@@ -18,9 +11,6 @@ struct NewReply: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var ns:NosturState
     let up:Unpublisher = .shared
-//    @Binding var noteCancellationId:UUID?
-    
-//    @State var newReplyEvent:NEvent
     
     @StateObject var vm = NewNoteText()
     @StateObject var ipm = ImagePickerModel()
@@ -208,7 +198,7 @@ struct NewReply: View {
                     }
                     
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Preview") {
+                        Button(String(localized:"Preview", comment:"Preview button when creating a new post")) {
                             guard let account = ns.account else { return }
                             guard var nEvent = vm.nEvent else { return }
                             nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected:selectedMentions)
@@ -245,7 +235,7 @@ struct NewReply: View {
                                 ProgressView()
                             }
                             else {
-                                Text("Post")
+                                Text("Post", comment: "Button to post (publish) a new post")
                             }
                         }
                         .buttonStyle(.borderedProminent)

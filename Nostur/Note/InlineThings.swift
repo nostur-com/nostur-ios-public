@@ -1,22 +1,16 @@
-//
-//  InlineThings.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 14/04/2023.
-//
-
 import SwiftUI
 import Foundation
 import CoreData
+import UIKit
 
-//renderer
+// So close to getting the hashtags working. Disabled/not used until completely fixed.
+// Forgot what the issue I ran into when I disabled this code 2 months ago, maybe something with not linking the right hashtag
+
+// renderer
 // string -> md links -> string -> hashtags -> NSAttributedString
 
 // view
 // -> NSAttributedString -> UIViewRepresentable view
-
-import SwiftUI
-import UIKit
 
 class NewTextRenderer { // TEXT things
     let context:NSManagedObjectContext
@@ -523,26 +517,27 @@ extension NSMutableAttributedString {
 //}
 
 struct HashtagRenderer_Previews: PreviewProvider {
-    
     static var previews: some View {
-        if let event = PreviewFetcher.fetchEvent("9b34fd9a53398fb51493d68ecfd0d64ff922d0cdf5ffd8f0ffab46c9a3cf54e3") {
-            let renderer = NewTextRenderer(event: event)
-            let toMarkdown = renderer.convertToMarkdown(event, text: event.noteText)
-            
-            ScrollView {
-                VStack {
-                    Text("Test")
-                    MarkdownText("This __is__ #bitcoin **and** #nostur [doesnt work](https://nostur.com) #nostr and #zaps hey #Zapped or #lightning")
-                        .fixedSize(horizontal: false, vertical: true)
-                    Spacer()
-//                        .frame(maxWidth: .infinity)
-                    MarkdownText(toMarkdown)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Spacer()
+        VStack {
+            if let event = PreviewFetcher.fetchEvent("9b34fd9a53398fb51493d68ecfd0d64ff922d0cdf5ffd8f0ffab46c9a3cf54e3") {
+                let renderer = NewTextRenderer(event: event)
+                let toMarkdown = renderer.convertToMarkdown(event, text: event.noteText)
+                
+                ScrollView {
+                    VStack {
+                        Text("Test")
+                        MarkdownText("This __is__ #bitcoin **and** #nostur [doesnt work](https://nostur.com) #nostr and #zaps hey #Zapped or #lightning")
+                            .fixedSize(horizontal: false, vertical: true)
+                        Spacer()
+    //                        .frame(maxWidth: .infinity)
+                        MarkdownText(toMarkdown)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Spacer()
+                    }
                 }
             }
-            .withPreviewEnvironment()
         }
+        .withPreviewEnvironment({ pe in pe.loadMedia() })
     }
 }
 

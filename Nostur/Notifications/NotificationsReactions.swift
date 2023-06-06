@@ -1,15 +1,7 @@
-//
-//  Notifications.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 21/02/2023.
-//
-
 import SwiftUI
 import CoreData
 import Combine
 
-// NIP-25: The last p tag MUST be the pubkey of the event being reacted to.
 struct NotificationsReactions: View {
 
     let pubkey:String
