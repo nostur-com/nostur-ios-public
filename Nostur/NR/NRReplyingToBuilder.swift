@@ -1,18 +1,6 @@
-//
-//  NRReplyingToBuilder.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 12/05/2023.
-//
-
 import CoreData
 
-// Renders links for the text parts of post contents (in TEXT)
-// Handles profile links
-// Tag links
-// Other links
-// DOES NOT handle note links or image links, because those are embeds, handled by ContentRenderer
-class NRReplyingToBuilder { // TEXT things
+class NRReplyingToBuilder {
     
     static let shared = NRReplyingToBuilder()
 
@@ -42,19 +30,6 @@ class NRReplyingToBuilder { // TEXT things
     }
 
 }
-
-//extension String {
-//    func escapeMD() -> String {
-//        return self
-//            .replacingOccurrences(of: "__", with: "\\_\\_")
-//            .replacingOccurrences(of: "**", with: "\\*\\*")
-//            .replacingOccurrences(of: "[", with: "\\[")
-//            .replacingOccurrences(of: "]", with: "\\]")
-//            .replacingOccurrences(of: "/", with: "\\/")
-//            .replacingOccurrences(of: "\\", with: "\\\\")
-//    }
-//}
-
 
 func contactUsername(fromPubkey pubkey:String, event:Event) -> String {
     if let anyName = PubkeyUsernameCache.shared.retrieveObject(at: pubkey) {

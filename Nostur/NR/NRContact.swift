@@ -1,10 +1,3 @@
-//
-//  NRPost.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 11/05/2023.
-//
-
 import Foundation
 import Combine
 
@@ -20,7 +13,6 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         
     var id:String { pubkey }
     let pubkey:String
-//    let npub:String
 
     var anyName:String
     var display_name:String?

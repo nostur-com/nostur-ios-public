@@ -1,10 +1,3 @@
-//
-//  NRContentElementBuilder.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 12/05/2023.
-//
-
 import Foundation
 import UIKit
 
@@ -15,11 +8,10 @@ class NRContentElementBuilder {
     
     func buildElements(_ event:Event) -> ([ContentElement], [URL]) {
         if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
-            print("☠️☠️☠️☠️ renderElements on MAIN thread....")
+            L.og.info("☠️☠️☠️☠️ renderElements on MAIN thread....")
         }
         
         let input = event.noteTextPrepared
-        
         
         let range = NSRange(location: 0, length: input.utf16.count)
         
@@ -81,7 +73,7 @@ class NRContentElementBuilder {
                         
                     }
                     catch {
-                        print("problem decoding nevent in event.id: \(event.id)")
+                        L.og.notice("problem decoding nevent in event.id: \(event.id) - \(nevent1String)")
                         result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString)))
                     }
                 }
@@ -92,7 +84,7 @@ class NRContentElementBuilder {
                         result.append(ContentElement.nprofile1(identifier))
                     }
                     catch {
-                        print("problem decoding nevent in profile.pubkey: \(event.id)")
+                        L.og.notice("problem decoding nevent in profile.pubkey: \(event.id) - \(nprofile1String)")
                         result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString)))
                     }
                 }
@@ -126,7 +118,6 @@ class NRContentElementBuilder {
     static let pattern = "\(previewImagePlaceholder)|\(imageUrlPattern)|\(lightningInvoicePattern)|\(notePattern)|\(nprofilePattern)|\(neventPattern)|\(videoUrlPattern)|\(otherUrlsPattern)"
     static let regex = try! NSRegularExpression(pattern: pattern)
 }
-
 
 public typealias Ptag = String
 

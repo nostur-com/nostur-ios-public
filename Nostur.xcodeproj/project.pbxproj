@@ -1184,13 +1184,13 @@
 				1F006B0429D08FAA0048C6DD /* Event+Notifications.swift */,
 				1FC2DFEE29A9128D00C8A9DA /* MinimalNoteTextRenderView.swift */,
 				1FC2DFF029A9142400C8A9DA /* MinimalQuotedNoteFragment.swift */,
+				1F9DC3A72A28E35900119D73 /* NewFollowersNotificationView.swift */,
 				1FC2DFEC29A90F6C00C8A9DA /* NoteMinimalContentView.swift */,
 				1F1B55B229BD07CC006E1930 /* NotificationsManager.swift */,
 				1F2F54EF2A02942B00B6D7E4 /* NotificationsPosts.swift */,
 				1F065A9A29A3E67F003421D3 /* NotificationsReactions.swift */,
 				1F7525832997B21D00477AF2 /* NotificationsView.swift */,
 				1F4820F129A9F808000EDFDA /* NotificationsZaps.swift */,
-				1F9DC3A72A28E35900119D73 /* NewFollowersNotificationView.swift */,
 				1FE69EB52A2CE95000FE73B4 /* ZapNotificationsView.swift */,
 			);
 			path = Notifications;
@@ -1306,10 +1306,10 @@
 		1FEA78592979A18E007CC8E7 /* Note */ = {
 			isa = PBXGroup;
 			children = (
+				1F33EC3629B613F800615FB9 /* FullImageViewer.swift */,
 				1FDF0ED829EC047C00B56AC4 /* ImagePreviews.swift */,
 				1FEA8D4A29E967B5004A83D3 /* InlineThings.swift */,
 				1F1DCB8C2999290E0085223E /* LightningInvoice.swift */,
-				1F33EC3629B613F800615FB9 /* FullImageViewer.swift */,
 				1F75257F2997854200477AF2 /* NewNote.swift */,
 				1F49C80529B8D7EA005C960D /* NewQuoteRepost.swift */,
 				1FC4D4052997C493004E88CD /* NewReply.swift */,

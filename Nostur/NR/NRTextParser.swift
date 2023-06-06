@@ -1,17 +1,4 @@
-//
-//  NRTextBuilder.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 12/05/2023.
-//
-
 import Foundation
-import CoreData
-
-struct TextWithPs: Hashable {
-    var text:String
-    var pTags:[Ptag]
-}
 
 // Renders links for the text parts of post contents (in TEXT)
 // Handles profile links
@@ -22,7 +9,6 @@ class NRTextParser { // TEXT things
     static let shared = NRTextParser()
     private let context = DataProvider.shared().bg
     
-//    var event:Event? // The current event, so we dont need to duplicate .tags parsing
     private var tags:[(String, String, String?)] = [] // Faster tags, and only decode once at init
 
     func parseText(_ event:Event, text: String) -> AttributedStringWithPs {
@@ -184,4 +170,9 @@ class NRTextParser { // TEXT things
                                   with: "[$0](nostur:t:$2)",
                                   options: .regularExpression)
     }
+}
+
+struct TextWithPs: Hashable {
+    var text:String
+    var pTags:[Ptag]
 }
