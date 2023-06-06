@@ -89,8 +89,8 @@ struct QuotedNoteFragmentView: View {
         )
         .onAppear {
             if (nrPost.contact == nil) || (nrPost.contact?.metadata_created_at == 0) {
-                print("🟢 NoteRow.onAppear event.contact == nil so: REQ.0:\(nrPost.pubkey)")
-                EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
+                L.og.info("🟢 NoteRow.onAppear event.contact == nil so: REQ.0:\(nrPost.pubkey)")
+                EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NoteRow.onAppear")
                 QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
             }
         }

@@ -29,7 +29,7 @@ class NWCZapQueue {
     
     init() {
         cleanUpTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true, block: { [unowned self] timer in
-            L.og.debug("NWCZapQueue.cleanUpTimer fired")
+//            L.og.debug("NWCZapQueue.cleanUpTimer fired")
             let now = Date()
             
             DataProvider.shared().bg.perform { [weak self] in

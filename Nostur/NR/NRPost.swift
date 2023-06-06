@@ -808,7 +808,7 @@ extension NRPost { // Helpers for grouped replies
             fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: true )]
             let repliesToRoot = (try? DataProvider.shared().bg.fetch(fr)) ?? []
             for reply in repliesToRoot { // Add to queue because some may be missing .replyTo
-                EventRelationsQueue.shared.addAwaitingEvent(reply)
+                EventRelationsQueue.shared.addAwaitingEvent(reply, debugInfo: "reply in .repliesToRoot")
             }
             let nrRepliesToRoot = repliesToRoot
                 .filter { !Set(account.blockedPubkeys_).contains($0.pubkey) }

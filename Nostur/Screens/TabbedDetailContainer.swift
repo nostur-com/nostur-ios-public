@@ -175,7 +175,7 @@ struct TabbedDetailContainer: View {
                                     guard let t = tm.tabs[safe: index] else { return }
                                     tm.selected = t
                                     if let nrPost = tm.selected?.nrPost {
-                                        EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
+                                        EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NosturTabButton.onSelect")
                                         req(RM.getEventReferences(ids: [nrPost.id], subscriptionId: "REALTIME-DETAIL"))
                                     }
                                 }, onClose: {
@@ -187,7 +187,7 @@ struct TabbedDetailContainer: View {
                                             tm.selected = tm.tabs[1]
                                         }
                                         if let nrPost = tm.selected?.nrPost {
-                                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
+                                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NosturTabButton.onClose")
                                             req(RM.getEventReferences(ids: [nrPost.id], subscriptionId: "REALTIME-DETAIL"))
                                         }
                                         else {

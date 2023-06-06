@@ -365,7 +365,7 @@ struct PostAndParent: View {
                     
 //                    fixIfWeHavePointingToAlreadyInCache(nrPost.mainEvent)
                     
-                    EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
+//                    EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.004")
                     
                     // Fetch all related (e and p.kind=0)
                     // (the events and contacts mentioned in this DETAIL NOTE.

@@ -54,7 +54,7 @@ class NWCRequestQueue {
     
     init() {
         cleanUpTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true, block: { [unowned self] timer in
-            L.og.debug("NWCRequestQueue.cleanUpTimer fired")
+//            L.og.debug("NWCRequestQueue.cleanUpTimer fired")
             let now = Date()
             
             DataProvider.shared().bg.perform { [weak self] in
