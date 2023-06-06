@@ -7,47 +7,14 @@
 
 import Foundation
 
+// TODO: remove before open source 
 let apikey = "AIzaSyCF_4cPv7n0t_dxsVx_SbNPwf9Y1DNi9_0"
 let clientkey = "nostur_app"
-
-
-/**
- Execute web request to retrieve the top GIFs returned(in batches of 8) for the given search term.
- */
-func requestData()
-{
-    // the test search term
-    let searchTerm = "excited"
-    
-    // Define the results upper limit
-    let limit = 8
-    
-    // make initial search request for the first 8 items
-    let searchRequest = URLRequest(url: URL(string: String(format: "https://tenor.googleapis.com/v2/search?q=%@&key=%@&client_key=%@&limit=%d",
-                                                           searchTerm,
-                                                           apikey,
-                                                           clientkey,
-                                                           limit))!)
-    
-    makeWebRequest(urlRequest: searchRequest, callback: tenorSearchHandler)
-    
-    // Data will be loaded by each request's callback
-}
-
-func tenorSearchHandler(response: TenorResponse)
-{
-
-    
-    // Load the GIFs into your view
-//    print("Result GIFS: \(response.results)")
-    
-}
 
 /**
  Async URL requesting function.
  */
-func makeWebRequest<T: Decodable>(urlRequest: URLRequest, callback: @escaping (T) -> ())
-{
+func makeWebRequest<T: Decodable>(urlRequest: URLRequest, callback: @escaping (T) -> ()) {
     // Make the async request and pass the resulting JSON object to the callback
     let task = URLSession.shared.dataTask(with: urlRequest) { (data, response, error) in
         do {
@@ -62,8 +29,6 @@ func makeWebRequest<T: Decodable>(urlRequest: URLRequest, callback: @escaping (T
     }
     task.resume()
 }
-
-
 
 
 // Function for handling a user's selection of a GIF to share.
@@ -86,10 +51,8 @@ func registerShare(gifId: String, searchTerm: String) {
 /**
  Web response handler for search requests.
  */
-func tenorShareHandler(response: TenorResponse)
-{
+func tenorShareHandler(response: TenorResponse) {
     // no response expected from the registershare endpoint
-    
 }
 
 struct AutoCompleteResponse: Codable {
@@ -117,10 +80,6 @@ struct TenorResult: Codable, Identifiable {
     let title: String
     let url: String
 }
-//
-//struct TenorMedia: Codable {
-//    let gif: TenorGif
-//}
 
 struct TenorGif: Codable {
     let url: String

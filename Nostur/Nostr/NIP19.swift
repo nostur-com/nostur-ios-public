@@ -1,10 +1,3 @@
-//
-//  File.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 21/01/2023.
-//
-
 import Foundation
 
 //var key = try! NIP19(displayString: "npub")
@@ -40,9 +33,6 @@ struct NIP19 {
         let (_, checksum) = try bech32.decode(displayString)
         self.key = try bech32.convertBits(from: 5, to: 8, pad: false, idata: checksum).makeBytes()
     }
-    
-    // NIP-19 nprofile
-    
 }
 
 func note1(_ hex:String) -> String? {

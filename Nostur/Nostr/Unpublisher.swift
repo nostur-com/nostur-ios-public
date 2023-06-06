@@ -1,10 +1,3 @@
-//
-//  Unpublisher.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 10/02/2023.
-//
-
 import Foundation
 import CoreData
 import UIKit
@@ -23,7 +16,7 @@ import UIKit
  }
  
  */
-class Unpublisher: ObservableObject {
+class Unpublisher {
     
     enum type {
         case other
@@ -54,7 +47,7 @@ class Unpublisher: ObservableObject {
     }
     
     func publish(_ nEvent:NEvent, cancellationId:UUID? = nil) -> UUID {
-        print("going to publish")
+        L.og.info("Going to publish")
         let cancellationId = cancellationId ?? UUID()
         queue.append(Unpublished(type:.other, cancellationId: cancellationId, nEvent: nEvent, createdAt: Date.now))
         return cancellationId
@@ -109,7 +102,7 @@ class Unpublisher: ObservableObject {
                     do {
                         try Event.updateReactionTo(savedEvent, context: bgContext)
                     } catch {
-                        print("🦋🦋🔴🔴🔴 problem updating Like relation .id \(nEvent.id)")
+                        L.og.error("🦋🦋🔴🔴🔴 problem updating Like relation .id \(nEvent.id)")
                     }
                 }
                 Importer.shared.existingIds.insert(savedEvent.id)

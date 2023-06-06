@@ -1,10 +1,3 @@
-//
-//  EditListTitleSheet.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 24/04/2023.
-//
-
 import SwiftUI
 
 struct EditListTitleSheet: View {
@@ -17,12 +10,12 @@ struct EditListTitleSheet: View {
     var body: some View {
         VStack {
             Form {
-                Section(header: Text("Title")) {
-                    TextField("Title of your list", text: $newTitle)
+                Section(header: Text("Title", comment: "Header for entering title of a List")) {
+                    TextField(String(localized:"Title of your list", comment:"Placeholder for input field to enter title of a List"), text: $newTitle)
                         .textInputAutocapitalization(.never)
                         .disableAutocorrection(true)
                     
-                    Toggle(isOn: $showAsTab, label: { Text("Pin on tab bar")})
+                    Toggle(isOn: $showAsTab, label: { Text("Pin on tab bar", comment: "Toggle to pin/unpin a list on tab bar")})
                 }
             }
             Spacer()

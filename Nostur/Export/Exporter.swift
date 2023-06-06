@@ -1,10 +1,3 @@
-//
-//  Exporter.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 03/03/2023.
-//
-
 import Foundation
 import SwiftUI
 import CoreData
@@ -27,6 +20,8 @@ final class Exporter {
         let r = Event.fetchRequest()
         r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)]
         r.predicate = NSPredicate(format: "pubkey == %@ and sig != nil", pubkey)
+        
+        // TODO: Add options for included related stuff (quotes, replies etc)
         
         
         var jsonl:[String] = []

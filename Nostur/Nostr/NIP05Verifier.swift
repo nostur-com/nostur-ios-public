@@ -1,10 +1,3 @@
-//
-//  NIP05VerificationPipeline.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 20/05/2023.
-//
-
 import Foundation
 import Combine
 

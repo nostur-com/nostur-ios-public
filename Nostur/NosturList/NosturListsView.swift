@@ -1,10 +1,3 @@
-//
-//  NosturLists.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 15/04/2023.
-//
-
 import SwiftUI
 
 struct NosturListsView: View {
@@ -26,7 +19,7 @@ struct NosturListsView: View {
                             listToDelete = list
                             confirmDeleteShown = true
                         } label: {
-                            Label("DeleteDelete", systemImage: "trash")
+                            Label("Delete", systemImage: "trash")
                         }
                         
                     }
@@ -35,12 +28,12 @@ struct NosturListsView: View {
         
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Create new list") {
+                Button(String(localized:"Create new list", comment: "Button to create a new List")) {
                     newListSheet = true
                 }
             }
         }
-        .navigationTitle("Lists")
+        .navigationTitle(String(localized:"Lists", comment: "Navigation title for Lists screen"))
         .navigationBarTitleDisplayMode(.inline)
         .confirmationDialog("Delete list \(listToDelete?.name ?? "")", isPresented: $confirmDeleteShown, titleVisibility: .visible) {
             Button("Delete", role: .destructive) {

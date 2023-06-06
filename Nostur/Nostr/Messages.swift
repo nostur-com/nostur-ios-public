@@ -1,10 +1,3 @@
-//
-//  Messages.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 29/01/2023.
-//
-
 import Foundation
 
 // Message ready to sent, with envelope  EVENT/REQ/CLOSE
@@ -91,14 +84,7 @@ struct RelayMessage {
         guard let relayMessage = try? decoder.decode(NMessage.self, from: dataFromString) else {
             throw error.FAILED_TO_PARSE
         }
-//        guard let json = try? JSON(data: dataFromString) else {
-//            throw error.FAILED_TO_PARSE
-//        }
-        
-//        let decoder = JSONDecoder()
-//        guard let event = try? decoder.decode(NEvent.self, from: Data(json[2].rawData())) else {
-//            throw error.FAILED_TO_PARSE_EVENT
-//        }
+
         guard let nEvent = relayMessage.event else {
             throw "WHERES THE PAYLOAD BRO"
         }
@@ -112,8 +98,12 @@ struct RelayMessage {
     }
 }
 
-// REQ messages for requesting with filters
+/// REQ messages for requesting with filters
+///
+/// This struct has gotten out of hand, was supposed to be temporary to just try things
+/// a few messages, now its still used for every message..
 public struct RequestMessage {
+    // TODO: make proper request filter class
     
     static func getBadgeDefinitions(filters:[(Int64, String, String)], subscriptionId:String? = nil) -> String {
         // (kinds, badgeCode, author)

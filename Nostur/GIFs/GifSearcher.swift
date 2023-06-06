@@ -1,10 +1,3 @@
-//
-//  TenorTester.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 17/05/2023.
-//
-
 import SwiftUI
 import NukeUI
 
@@ -30,7 +23,7 @@ struct GifSearcher: View {
     
     var body: some View {
         VStack {
-            SearchBox(prompt: "Search GIF", text: $searchTerm)
+            SearchBox(prompt: String(localized:"Search GIF", comment:"Placeholder in GIF search field"), text: $searchTerm)
             if autocompleteResults.count > 0 {
                 ScrollView(.horizontal, showsIndicators: false) {
                     LazyHStack {

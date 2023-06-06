@@ -1,10 +1,3 @@
-//
-//  Nostr.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 09/01/2023.
-//
-
 import SwiftUI
 import Foundation
 import secp256k1
@@ -202,13 +195,7 @@ struct NSerializableEvent: Encodable {
 }
 
 struct NEvent: Codable {
-
-    enum EventError : Error {
-        case InvalidId
-        case InvalidSignature
-        case EOSE
-    }
-
+    
     public var id: String
     public var publicKey: String
     public var createdAt: NTimestamp
@@ -225,6 +212,12 @@ struct NEvent: Codable {
         case tags
         case content
         case signature = "sig"
+    }
+    
+    enum EventError : Error {
+        case InvalidId
+        case InvalidSignature
+        case EOSE
     }
 
     init(content:NSetMetadata) {
@@ -271,7 +264,7 @@ struct NEvent: Codable {
     }
 
     func verified() throws -> Bool {
-        print("✍️ VERIFYING SIG ✍️")
+        L.og.debug("✍️ VERIFYING SIG ✍️")
         let serializableEvent = NSerializableEvent(publicKey: self.publicKey, createdAt: self.createdAt, kind:self.kind, tags: self.tags, content: self.content)
 
         let encoder = JSONEncoder()

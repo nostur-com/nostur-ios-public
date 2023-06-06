@@ -1,10 +1,3 @@
-//
-//  AddRemoveToListsheet.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 26/04/2023.
-//
-
 import SwiftUI
 import Combine
 
@@ -80,7 +73,7 @@ struct AddRemoveToListsheet: View {
                     }
                 }
             }
-            .navigationTitle("Add/Remove from list")
+            .navigationTitle(String(localized:"Add/Remove from list", comment: "Navigation title for screen to add or remove contacts to List"))
             .navigationBarTitleDisplayMode(.inline)
         }
     }

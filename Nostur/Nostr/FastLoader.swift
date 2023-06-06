@@ -1,24 +1,6 @@
-//
-//  FastLoader.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 03/05/2023.
-//
-
 import Foundation
 import CoreData
 import Combine
-
-// Loads anything fast
-// First loads 10 so on screen is instant
-    // first 10 from viewContext or not?
-
-// Loads remaining after that (in background thread)
-
-// Should be realtime
-
-// Should fetch more from network
-// Should use subscriptionIds to match incoming messages
 
 // Usage
 
@@ -133,31 +115,6 @@ class FastLoader: ObservableObject {
         }
     }
     
-//    // Only for .nrPosts, not .events
-//    public func loadMoreBG(_ limit:Int? = nil) {
-//        let next = Event.fetchRequest()
-//        next.predicate = predicate
-//        next.sortDescriptors = sortDescriptors
-//        next.fetchOffset = max(0, self.nrPosts.count - 1)
-//        next.fetchLimit = limit ?? self.limit
-//
-//        self.limit = limit ?? self.limit
-//
-//        bgContext.perform {
-//            let dbEventIds = (try? self.bgContext.fetch(next)) ?? []
-//            let currentNRPostIds = Set(self.nrPosts.map { item in
-//                item.id
-//            })
-//            let onlyUnrendered = dbEventIds.filter { item in
-//                !currentNRPostIds.contains(item.id)
-//            }
-//            let nextItems = onlyUnrendered.map { NRPost(event: $0) }
-//            DispatchQueue.main.async {
-//                self.nrPosts = self.nrPosts + nextItems
-//            }
-//        }
-//    }
-    
     // Only for .nrPosts, not .events
     public func loadNewer(_ limit:Int? = nil, taskId:String) {
         self.loadNewerSubject.send((limit, taskId))
@@ -165,7 +122,7 @@ class FastLoader: ObservableObject {
     
     // Only for .nrPosts, not .events
     private func _loadNewer(_ limit:Int? = nil, taskId:String) {
-        print("\(taskId) 🟠🟠🟠🟠 _loadNewer()")
+        L.og.debug("\(taskId) 🟠🟠🟠🟠 _loadNewer()")
         let next = Event.fetchRequest()
         next.predicate = predicate
         next.sortDescriptors = sortDescriptors
@@ -182,7 +139,7 @@ class FastLoader: ObservableObject {
             }
             let nextItems = onlyUnrendered.compactMap { self.transformer($0) }
             DispatchQueue.main.async {
-                print("\(taskId) 🟠🟠🟠🟠🟠 self.nrPosts = nextItems (\(nextItems.count)) + self.nrPosts ")
+                L.og.debug("\(taskId) 🟠🟠🟠🟠🟠 self.nrPosts = nextItems (\(nextItems.count)) + self.nrPosts ")
                 self.nrPosts = nextItems + self.nrPosts
             }
         }
@@ -196,7 +153,7 @@ class FastLoader: ObservableObject {
     
     // Only for .events, not .nrPosts, on main
     private func _loadNewerEvents(_ limit:Int? = nil, taskId:String) {
-        print("\(taskId) 🟠🟠🟠🟠 _loadNewerEvents()")
+        L.og.debug("\(taskId) 🟠🟠🟠🟠 _loadNewerEvents()")
         let next = Event.fetchRequest()
         next.predicate = predicate
         next.sortDescriptors = sortDescriptors
@@ -210,7 +167,7 @@ class FastLoader: ObservableObject {
             !currentEventIds.contains(item.id)
         }
         Task { @MainActor in
-            print("\(taskId) 🟠🟠🟠🟠🟠 self.events = nextItems (\(nextItems.count)) + self.events ")
+            L.og.debug("\(taskId) 🟠🟠🟠🟠🟠 self.events = nextItems (\(nextItems.count)) + self.events ")
             self.events = nextItems + self.events
         }
     }
@@ -223,7 +180,7 @@ class FastLoader: ObservableObject {
     
     // Only for .events, not .nrPosts, on main
     private func _loadOlderEvents(_ limit:Int? = nil, taskId:String) {
-        print("\(taskId) 🟠🟠🟠🟠 _loadOlderEvents()")
+        L.og.debug("\(taskId) 🟠🟠🟠🟠 _loadOlderEvents()")
         let next = Event.fetchRequest()
         next.predicate = predicate
         next.sortDescriptors = sortDescriptors
@@ -237,33 +194,28 @@ class FastLoader: ObservableObject {
             !currentEventIds.contains(item.id)
         }
         Task { @MainActor in
-            print("\(taskId) 🟠🟠🟠🟠🟠 self.events = self.events + nextItems (\(nextItems.count)) ")
+            L.og.debug("\(taskId) 🟠🟠🟠🟠🟠 self.events = self.events + nextItems (\(nextItems.count)) ")
             self.events = self.events + nextItems
         }
     }
 }
-
-
 
 struct RelayFetchResult {
     let id:String
     let age:RelayFetchResult.age
     
     let events:[Event]
-    
-    
+
     enum age {
         case newer
         case older
     }
 }
 
-
 struct ImportedNotification {
     let id = UUID()
     let subscriptionIds:Set<String>
 }
-
 
 class Backlog {
     
@@ -344,7 +296,6 @@ class ReqTask: Identifiable, Hashable {
     var subscriptionId:String { (prefix ?? "") + id }
     
     let reqCommand:(_ taskId:String) -> Void
-//    let processResponseCommand:(_ taskId:String) -> Void
     let timeoutCommand:((_ taskId:String) -> Void)?
     
     // Use full subscriptionId instead of prefix to have multiple listeners for a task
@@ -353,8 +304,6 @@ class ReqTask: Identifiable, Hashable {
     init(prefix:String? = nil, reqCommand: @escaping (_: String) -> Void, processResponseCommand: @escaping (_: String) -> Void, timeoutCommand: ( (_: String) -> Void)? = nil) {
         self.prefix = prefix
         self.reqCommand = reqCommand
-//        self.processResponseCommand = processResponseCommand
-//        self.processResponseCommand = processResponseCommand
         self.timeoutCommand = timeoutCommand
         processSubject
             .debounce(for: 0.1, scheduler: RunLoop.main)
@@ -374,11 +323,10 @@ class ReqTask: Identifiable, Hashable {
     
     public func process() {
         self.processSubject.send()
-//        self.processResponseCommand(subscriptionId)
     }
     
     public func onTimeout() {
-        print("🟠🟠 removing task \(subscriptionId) after timeout")
+        L.og.debug("🟠🟠 removing task \(self.subscriptionId) after timeout")
         self.timeoutCommand?(subscriptionId)
     }
 }

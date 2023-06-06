@@ -1,10 +1,3 @@
-//
-//  NKeys.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 22/03/2023.
-//
-
 import Foundation
 import secp256k1
 import CommonCrypto
@@ -52,6 +45,21 @@ struct NKeys {
 // NIP-04 Direct Messaging
 // From https://github.com/Galaxoid-Labs/NostrKit
 // From https://github.com/cnixbtc/NostrKit
+//
+// MIT License
+//
+// Copyright (c) 2022 cnixbtc
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
 extension NKeys {
     static func decryptDirectMessageContent(withPrivateKey privateKey: String?, pubkey: String, content: String) -> String? {
         guard let privateKey else {
