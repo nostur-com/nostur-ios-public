@@ -1,10 +1,3 @@
-//
-//  NoteRow.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 14/03/2023.
-//
-
 import SwiftUI
 
 struct NoteRow: View {
@@ -38,10 +31,9 @@ struct NoteRow: View {
                     Image(systemName: "arrow.2.squarepath")
                         .fontWeight(.bold)
                         .scaleEffect(0.6)
-                    Text("**\(nrPost.contact?.anyName ?? "...") reposted**").font(.subheadline)
+                    Text("**\(nrPost.contact?.anyName ?? "...") reposted**", comment: "Heading for reposted post: '(Name) reposted'").font(.subheadline)
                         .onTapGesture {
                             navigateTo(ContactPath(key: nrPost.pubkey))
-//                            UIPasteboard.general.string = nrPost.mainEvent.toNEvent().eventJson()
                         }
                 }
                 .foregroundColor(.gray)

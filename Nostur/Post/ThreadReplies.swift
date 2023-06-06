@@ -1,10 +1,3 @@
-//
-//  ThreadReplies.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 25/05/2023.
-//
-
 import SwiftUI
 
 struct ThreadReplies: View {
@@ -41,21 +34,6 @@ struct ThreadReplies: View {
     }
         
 }
-
-//struct ThreadReplies_Previews: PreviewProvider {
-//    static var previews: some View {
-//
-//        let exampleId = "e593fc759291a691cd0127643a0b9fac9d92613952845e207eb24332937c59d9"
-//
-//        NavigationStack {
-//            if let example = PreviewFetcher.fetchEvent(exampleId) {
-//                let nrPost = NRPost(event: example, withReplyTo: false, withParents: false, withReplies: true, plainText: false)
-//                ThreadReplies(nrPost: nrPost)
-//            }
-//        }
-//        .withPreviewEnvironment()
-//    }
-//}
 
 struct ThreadReplies2_Previews: PreviewProvider {
     static var previews: some View {

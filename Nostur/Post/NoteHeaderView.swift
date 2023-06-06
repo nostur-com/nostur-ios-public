@@ -1,13 +1,7 @@
-//
-//  NoteHeaderView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 15/03/2023.
-//
 import SwiftUI
 
 struct NoteHeaderView: View {
-     
+    
     @ObservedObject var nrPost:NRPost
     var singleLine:Bool = true
     
@@ -55,8 +49,8 @@ struct PlaceholderPostHeader: View {
                 
                 if (singleLine) {
                     Group {
-                        Text("@\(String(nrPost.pubkey.suffix(11)))").layoutPriority(1)
-                        Text(" · ") //
+                        Text(verbatim:"@\(String(nrPost.pubkey.suffix(11)))").layoutPriority(1)
+                        Text(verbatim:" · ") //
                         Ago(nrPost.createdAt, agoText: nrPost.ago)
                             .layoutPriority(2)
                     }
@@ -67,8 +61,8 @@ struct PlaceholderPostHeader: View {
         }
         if (!singleLine) {
             HStack {
-                Text("@\(String(nrPost.pubkey.suffix(11)))").layoutPriority(1)
-                Text(" · ") //
+                Text(verbatim:"@\(String(nrPost.pubkey.suffix(11)))").layoutPriority(1)
+                Text(verbatim:" · ") //
                 Ago(nrPost.createdAt, agoText: nrPost.ago)
                     .layoutPriority(2)
             }
@@ -82,12 +76,6 @@ struct PostHeader: View {
     @ObservedObject var contact:NRContact
     let nrPost:NRPost
     let singleLine:Bool
-    
-//    var showUsername:Bool { // show (user)name if (user)name is different from display name
-//        guard !contact.anyUsername.isEmpty else { return false }
-//        guard contact.anyUsername.lowercased() != contact.anyName.lowercased() else { return false }
-//        return true
-//    }
     
     var body: some View {
         HStack(spacing:5) {
@@ -136,7 +124,7 @@ struct PostHeader: View {
 }
 
 struct PreviewHeaderView: View {
-
+    
     var authorName:String
     var username:String
     var nip05verified = false
@@ -146,13 +134,13 @@ struct PreviewHeaderView: View {
         VStack(alignment: .leading, spacing:0) { // Name + menu "replying to"
             HStack(spacing:2) {
                 Group {
-    
+                    
                     Text(authorName) // Name
                         .foregroundColor(.primary)
                         .fontWeight(.bold)
                         .lineLimit(1)
                         .layoutPriority(2)
-
+                    
                     if (nip05verified) {
                         Image(systemName: "checkmark.seal.fill")
                             .foregroundColor(Color("AccentColor"))
@@ -163,9 +151,9 @@ struct PreviewHeaderView: View {
                     
                     if (singleLine) {
                         Group {
-                            Text("@\(username)").layoutPriority(1)
-                            Text(" · ") //
-                            Text("1s")
+                            Text(verbatim:"@\(username)").layoutPriority(1)
+                            Text(verbatim:" · ") //
+                            Text(verbatim:"1s")
                                 .layoutPriority(2)
                         }
                         .foregroundColor(.secondary)
@@ -174,7 +162,7 @@ struct PreviewHeaderView: View {
                 }
             }
             if (!singleLine) {
-                Text("@\(username) · 1s")
+                Text(verbatim: "@\(username) · 1s")
                     .foregroundColor(.secondary)
                     .lineLimit(1)
             }
@@ -183,17 +171,15 @@ struct PreviewHeaderView: View {
 }
 
 struct NameAndNip: View {
-//    @ObservedObject var contact:Contact // for rendering nip check (after just verified) etc
-//    var contact:NRContact
     @ObservedObject var contact:NRContact // for rendering nip check (after just verified) etc
-
+    
     var body: some View {
         Text(contact.anyName) // Name
             .foregroundColor(.primary)
             .fontWeight(.bold)
             .lineLimit(1)
             .layoutPriority(2)
-
+        
         if (contact.nip05verified) {
             Image(systemName: "checkmark.seal.fill")
                 .foregroundColor(Color("AccentColor"))

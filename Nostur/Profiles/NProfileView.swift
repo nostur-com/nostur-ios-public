@@ -1,16 +1,9 @@
-//
-//  NProfileView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 07/05/2023.
-//
-
 import SwiftUI
 
 struct NProfileView: View {
     
     let identifier:ShareableIdentifier
-        
+    
     var body: some View {
         if let pubkey = identifier.pubkey {
             NProfileViewInner(predicate: NSPredicate(format: "pubkey == %@", pubkey), identifier: identifier)
@@ -34,7 +27,7 @@ struct NProfileView: View {
                 predicate: predicate
             )
             self.identifier = identifier
-         }
+        }
         
         var body: some View {
             VStack {
@@ -49,7 +42,7 @@ struct NProfileView: View {
                                 print("\(identifier.bech32string) has no pubkey")
                                 return
                             }
-                            print("🟢 Fetching for NEventView \(pubkey) / \(identifier.bech32string)")
+                            L.og.info("🟢 Fetching for NEventView \(pubkey) / \(identifier.bech32string)")
                             req(RM.getUserMetadata(pubkey: pubkey))
                             
                             if identifier.relays.count > 0 {

@@ -1,10 +1,3 @@
-//
-//  ReadMoreButton.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 14/05/2023.
-//
-
 import SwiftUI
 
 struct ReadMoreButton: View {
@@ -14,8 +7,13 @@ struct ReadMoreButton: View {
     
     var body: some View {
         HStack {
-            Text("This post has \(moreItems) more \(moreItems > 1 ? "items" : "item")")
-            Button("Show") { navigateTo(nrPost) }
+            if moreItems > 1 {
+                Text("This post has \(moreItems) more items", comment: "Message shown when there are more items in a post")
+            }
+            else if moreItems == 1 {
+                Text("This post has 1 more item", comment: "Message shown when a post has 1 more item")
+            }
+            Button(String(localized: "Show", comment: "Button to show more items in a post")) { navigateTo(nrPost) }
                 .buttonStyle(.bordered)
         }
         .padding(.leading, 8)

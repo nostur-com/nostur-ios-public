@@ -1,10 +1,3 @@
-//
-//  LazyNoteMenu.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 28/05/2023.
-//
-
 import SwiftUI
 
 struct LazyNoteMenuButton: View {
@@ -41,7 +34,7 @@ struct LazyNoteMenuSheet: View {
                             sendNotification(.addRemoveToListsheet, contact)
                         }
                     } label: {
-                        Label("Add/Remove \(nrPost.anyName) from lists", systemImage: "person.2.crop.square.stack")
+                        Label(String(localized:"Add/Remove \(nrPost.anyName) from lists", comment: "Post context menu button"), systemImage: "person.2.crop.square.stack")
                     }
                     Button {
                         dismiss()
@@ -56,14 +49,14 @@ struct LazyNoteMenuSheet: View {
                             }
                         }
                     } label: {
-                        Label("Add private note", systemImage: "note.text")
+                        Label(String(localized:"Add private note", comment: "Post context menu button"), systemImage: "note.text")
                     }
                     HStack {
                         Button {
                             UIPasteboard.general.string = nrPost.mainEvent.plainText
                             dismiss()
                         } label: {
-                            Label("Copy post text", systemImage: "doc.on.clipboard")
+                            Label(String(localized:"Copy post text", comment: "Post context menu button"), systemImage: "doc.on.clipboard")
                                 .padding(.trailing, 5)
                         }
                         .buttonStyle(.plain)
@@ -72,7 +65,7 @@ struct LazyNoteMenuSheet: View {
                             UIPasteboard.general.string = nrPost.mainEvent.noteId
                             dismiss()
                         } label: {
-                            Text("ID")
+                            Text("ID", comment:"Label for post identifier (ID)")
                                 .padding(.horizontal, 5)
                         }
                         .buttonStyle(.plain)
@@ -91,7 +84,7 @@ struct LazyNoteMenuSheet: View {
                             UIPasteboard.general.string = nrPost.id
                             dismiss()
                         } label: {
-                            Text("hex")
+                            Text("hex", comment: "Short label for the word 'hexadecimal'")
                                 .padding(.horizontal, 5)
                         }
                         .buttonStyle(.plain)
@@ -109,7 +102,7 @@ struct LazyNoteMenuSheet: View {
                             dismiss()
                             UIPasteboard.general.string = nrPost.mainEvent.toNEvent().eventJson()
                         } label: {
-                            Text("source")
+                            Text("source", comment: "The word 'source' as in source code")
                                 .padding(.horizontal, 5)
                         }
                         .buttonStyle(.plain)
@@ -129,21 +122,20 @@ struct LazyNoteMenuSheet: View {
                             ns.follow(nrPost.mainEvent.contact!)
                         }
                     } label: {
-                        Label("Follow \(nrPost.anyName)", systemImage: "person.fill")
+                        Label(String(localized:"Follow \(nrPost.anyName)", comment: "Post context menu button to Follow (name)"), systemImage: "person.fill")
                     }
                 }
-
+                
                 Button {
                     dismiss()
                     if (nrPost.mainEvent.contact == nil) {
                         // TODO: Contact is created so it can be unblocked in Blocklist. Should not have to create contact just for this.
                         _ = DataProvider.shared().newContact(pubkey: nrPost.event.pubkey)
-//                        ns.objectWillChange.send()
                         DataProvider.shared().bg.perform {
                             guard let account = ns.account?.toBG() else { return }
                             let newBlockedKeys = account.blockedPubkeys_ + [nrPost.pubkey]
                             account.blockedPubkeys_ = newBlockedKeys
-                        
+                            
                             DataProvider.shared().bgSave()
                             DispatchQueue.main.async {
                                 sendNotification(.blockListUpdated, newBlockedKeys)
@@ -163,51 +155,56 @@ struct LazyNoteMenuSheet: View {
                         }
                     }
                 } label: {
-                    Label("Block \(nrPost.anyName)", systemImage: "slash.circle")
+                    Label(String(localized:"Block \(nrPost.anyName)", comment: "Post context menu action to Block (name)"), systemImage: "slash.circle")
                 }
-
+                
                 Button {
                     dismiss()
-                    print("Mute conversation")
+                    L.og.info("Mute conversation")
                     ns.muteConversation(nrPost)
                 } label: {
-                    Label("Mute conversation", systemImage: "bell.slash.fill")
+                    Label(String(localized:"Mute conversation", comment: "Post context menu action to mute conversation"), systemImage: "bell.slash.fill")
                 }
-
+                
                 Button {
                     dismiss()
                     DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
                         sendNotification(.reportPost, nrPost)
                     }
                 } label: {
-                    Label("Report", systemImage: "flag")
+                    Label(String(localized:"Report", comment:"Post context menu action to Report a post or user"), systemImage: "flag")
                 }
-
+                
                 if (NosturState.shared.activeAccountPublicKey == nrPost.pubkey) {
                     Button {
                         dismiss()
                         sendNotification(.requestDeletePost, nrPost.id)
                     } label: {
-                        Label("Delete", systemImage: "trash")
+                        Label(String(localized:"Delete", comment:"Post context menu action to Delete a post"), systemImage: "trash")
                     }
                 }
-
+                
                 Button {
                     dismiss()
                     guard ns.account != nil else { return }
                     let nEvent = nrPost.mainEvent.toNEvent()
                     up.publishNow(nEvent)
                 } label: {
-                    Label("Rebroadcast\(nrPost.pubkey == NosturState.shared.activeAccountPublicKey ? " (again)" : "")", systemImage: "dot.radiowaves.left.and.right")
+                    if nrPost.pubkey == NosturState.shared.activeAccountPublicKey {
+                        Label(String(localized:"Rebroadcast (again)", comment: "Button to broadcast own post again"), systemImage: "dot.radiowaves.left.and.right")
+                    }
+                    else {
+                        Label(String(localized:"Rebroadcast", comment: "Button to rebroadcast a post"), systemImage: "dot.radiowaves.left.and.right")
+                    }
                 }
-
+                
                 if nrPost.relays != "" {
                     VStack(alignment: .leading) {
                         if let pubkey = ns.account?.publicKey, pubkey == nrPost.pubkey {
-                            Text("Sent to:")
+                            Text("Sent to:", comment:"Heading for list of relays sent to")
                         }
                         else {
-                            Text("Received from:")
+                            Text("Received from:", comment:"Heading for list of relays received from")
                         }
                         ForEach(nrPost.relays.split(separator: " "), id:\.self) { relay in
                             Text(String(relay)).lineLimit(1)
@@ -216,7 +213,7 @@ struct LazyNoteMenuSheet: View {
                 }
             }
             .listStyle(.plain)
-            .navigationTitle("Post actions")
+            .navigationTitle(String(localized:"Post actions", comment:"Title of sheet showing actions to perform on post"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -225,7 +222,7 @@ struct LazyNoteMenuSheet: View {
                     } label: {
                         Text("Cancel")
                     }
-
+                    
                 }
             }
         }

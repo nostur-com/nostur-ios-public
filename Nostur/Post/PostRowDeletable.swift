@@ -1,10 +1,3 @@
-//
-//  PostRowDeletable.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 11/05/2023.
-//
-
 import SwiftUI
 
 struct PostRowDeletable: View {
@@ -33,7 +26,7 @@ struct PostRowDeletable: View {
             NoteRow(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, fullWidth: fullWidth, isReply: isReply, isDetail: isDetail, grouped:grouped)
         }
         else {
-            Text("_Post deleted by \(nrPost.anyName)_").hCentered()
+            Text("_Post deleted by \(nrPost.anyName)_", comment: "Message shown when a post is deleted by (name)").hCentered()
         }
     }
 }

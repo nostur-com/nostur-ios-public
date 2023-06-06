@@ -176,3 +176,15 @@ struct TextWithPs: Hashable {
     var text:String
     var pTags:[Ptag]
 }
+
+extension String {
+    func escapeMD() -> String {
+        return self
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "**", with: "\\*\\*")
+            .replacingOccurrences(of: "[", with: "\\[")
+            .replacingOccurrences(of: "]", with: "\\]")
+            .replacingOccurrences(of: "/", with: "\\/")
+            .replacingOccurrences(of: "__", with: "\\_\\_")
+    }
+}

@@ -1,10 +1,3 @@
-//
-//  Kind1.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 11/05/2023.
-//
-
 import SwiftUI
 
 // Note Full width
@@ -17,7 +10,6 @@ struct Kind1: View {
     let isReply:Bool // is reply of PostDetail
     let isDetail:Bool
     let grouped:Bool
-//    @ObservedObject var event:Event
      
     let sp:SocketPool = .shared
     let up:Unpublisher = .shared
@@ -25,7 +17,6 @@ struct Kind1: View {
     
     init(nrPost: NRPost, hideFooter:Bool = true, missingReplyTo:Bool = false, connect:ThreadConnectDirection? = nil, isReply:Bool = false, isDetail:Bool = false, grouped:Bool = false) {
         self.nrPost = nrPost
-//        self.event = nrPost.event
         self.hideFooter = hideFooter
         self.missingReplyTo = missingReplyTo
         self.connect = connect
@@ -85,7 +76,7 @@ struct Kind1: View {
                 }
                 else {
                     if (nrPost.kind != 1) && (nrPost.kind != 6) {
-                        Label("kind \(Double(nrPost.kind).clean) type not (yet) supported", systemImage: "exclamationmark.triangle.fill")
+                        Label(String(localized:"kind \(Double(nrPost.kind).clean) type not (yet) supported", comment: "Message shown when a 'kind X' post is not yet supported"), systemImage: "exclamationmark.triangle.fill")
                             .hCentered()
                             .frame(maxWidth: .infinity)
                             .background(Color("LightGray").opacity(0.2))

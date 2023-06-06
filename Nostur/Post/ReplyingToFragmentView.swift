@@ -1,10 +1,3 @@
-//
-//  ReplyingToFragment.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 27/01/2023.
-//
-
 import SwiftUI
 import Combine
 
@@ -18,8 +11,6 @@ struct ReplyingToFragmentView: View {
                 Text(rendered)
                         .fontWeight(.light)
                         .foregroundColor(.secondary)
-//                        .accentColor(Color("AccentColor"))
-//                        .tint(Color("AccentColor"))
                         .frame(maxWidth:.infinity, alignment: .leading)
                 }
         }

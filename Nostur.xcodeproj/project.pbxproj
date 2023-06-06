@@ -53,7 +53,6 @@
 		1F2F54E52A02242900B6D7E4 /* HighlightRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2F54E42A02242900B6D7E4 /* HighlightRenderer.swift */; };
 		1F2F54E72A02364900B6D7E4 /* GIFImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2F54E62A02364900B6D7E4 /* GIFImage.swift */; };
 		1F2F54EA2A0236E500B6D7E4 /* Gifu in Frameworks */ = {isa = PBXBuildFile; productRef = 1F2F54E92A0236E500B6D7E4 /* Gifu */; };
-		1F2F54EC2A028C6B00B6D7E4 /* SubscriptionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2F54EB2A028C6B00B6D7E4 /* SubscriptionManager.swift */; };
 		1F2F54EE2A02904E00B6D7E4 /* FastLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2F54ED2A02904E00B6D7E4 /* FastLoader.swift */; };
 		1F2F54F02A02942B00B6D7E4 /* NotificationsPosts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2F54EF2A02942B00B6D7E4 /* NotificationsPosts.swift */; };
 		1F30FAA929705EBD008439C8 /* NosturCloud.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1F30FAA729705EBD008439C8 /* NosturCloud.xcdatamodeld */; };
@@ -90,7 +89,6 @@
 		1F4AFC4829733E2400CC1F90 /* Event+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4AFC4629733E2400CC1F90 /* Event+CoreDataProperties.swift */; };
 		1F4C1C282A07AB090010573F /* NEventView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4C1C272A07AB090010573F /* NEventView.swift */; };
 		1F4C1C2A2A07B21F0010573F /* NProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4C1C292A07B21F0010573F /* NProfileView.swift */; };
-		1F533E3329D35FD300748438 /* TextRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F533E3229D35FD300748438 /* TextRenderer.swift */; };
 		1F539DAB299D4B2A00F3B8CA /* NewAccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F539DAA299D4B2900F3B8CA /* NewAccountSheet.swift */; };
 		1F539DAD299D52E200F3B8CA /* AddExistingAccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F539DAC299D52E200F3B8CA /* AddExistingAccountSheet.swift */; };
 		1F53BEA82A2B7D4700678DC1 /* CustomNWCConnectSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F53BEA72A2B7D4700678DC1 /* CustomNWCConnectSheet.swift */; };
@@ -165,7 +163,6 @@
 		1F8418992A2BDCB1001EFE7A /* NIP47SecretManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8418982A2BDCB1001EFE7A /* NIP47SecretManager.swift */; };
 		1F84189B2A2BDD1A001EFE7A /* NIP47TesterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F84189A2A2BDD1A001EFE7A /* NIP47TesterView.swift */; };
 		1F84189D2A2BDE45001EFE7A /* NWCRequestQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F84189C2A2BDE45001EFE7A /* NWCRequestQueue.swift */; };
-		1F84840529C1A84B00AF129A /* NoteMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F84840429C1A84B00AF129A /* NoteMenuView.swift */; };
 		1F88490029B4EF6000145340 /* ZapValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8848FF29B4EF6000145340 /* ZapValidator.swift */; };
 		1F88490E29B537B400145340 /* HighlightingTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F88490229B537B400145340 /* HighlightingTextEditor.swift */; };
 		1F88490F29B537B400145340 /* URL.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F88490429B537B400145340 /* URL.swift */; };
@@ -396,7 +393,6 @@
 		1F2E760429F6DF6C00E67CE7 /* EditListTitleSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditListTitleSheet.swift; sourceTree = "<group>"; };
 		1F2F54E42A02242900B6D7E4 /* HighlightRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightRenderer.swift; sourceTree = "<group>"; };
 		1F2F54E62A02364900B6D7E4 /* GIFImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GIFImage.swift; sourceTree = "<group>"; };
-		1F2F54EB2A028C6B00B6D7E4 /* SubscriptionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionManager.swift; sourceTree = "<group>"; };
 		1F2F54ED2A02904E00B6D7E4 /* FastLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastLoader.swift; sourceTree = "<group>"; };
 		1F2F54EF2A02942B00B6D7E4 /* NotificationsPosts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsPosts.swift; sourceTree = "<group>"; };
 		1F30FAA829705EBD008439C8 /* NosturCloud.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = NosturCloud.xcdatamodel; sourceTree = "<group>"; };
@@ -433,7 +429,6 @@
 		1F4AFC4629733E2400CC1F90 /* Event+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Event+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1F4C1C272A07AB090010573F /* NEventView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NEventView.swift; sourceTree = "<group>"; };
 		1F4C1C292A07B21F0010573F /* NProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NProfileView.swift; path = Nostur/Profiles/NProfileView.swift; sourceTree = SOURCE_ROOT; };
-		1F533E3229D35FD300748438 /* TextRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextRenderer.swift; sourceTree = "<group>"; };
 		1F539DAA299D4B2900F3B8CA /* NewAccountSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewAccountSheet.swift; sourceTree = "<group>"; };
 		1F539DAC299D52E200F3B8CA /* AddExistingAccountSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddExistingAccountSheet.swift; sourceTree = "<group>"; };
 		1F53BEA72A2B7D4700678DC1 /* CustomNWCConnectSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomNWCConnectSheet.swift; sourceTree = "<group>"; };
@@ -503,7 +498,6 @@
 		1F8418982A2BDCB1001EFE7A /* NIP47SecretManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP47SecretManager.swift; sourceTree = "<group>"; };
 		1F84189A2A2BDD1A001EFE7A /* NIP47TesterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP47TesterView.swift; sourceTree = "<group>"; };
 		1F84189C2A2BDE45001EFE7A /* NWCRequestQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NWCRequestQueue.swift; sourceTree = "<group>"; };
-		1F84840429C1A84B00AF129A /* NoteMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteMenuView.swift; sourceTree = "<group>"; };
 		1F8848FF29B4EF6000145340 /* ZapValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZapValidator.swift; sourceTree = "<group>"; };
 		1F88490229B537B400145340 /* HighlightingTextEditor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HighlightingTextEditor.swift; sourceTree = "<group>"; };
 		1F88490429B537B400145340 /* URL.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = URL.swift; sourceTree = "<group>"; };
@@ -705,7 +699,6 @@
 				1FB6E6EF29E30909008BE8A6 /* LinkPreviewView.swift */,
 				1F4C1C272A07AB090010573F /* NEventView.swift */,
 				1FB130B229C0E5A4004AC98D /* NoteHeaderView.swift */,
-				1F84840429C1A84B00AF129A /* NoteMenuView.swift */,
 				1FB130B029C0DB07004AC98D /* NoteRow.swift */,
 				1F4C1C292A07B21F0010573F /* NProfileView.swift */,
 				1FB130BC29C1930A004AC98D /* PostDetailView.swift */,
@@ -714,8 +707,6 @@
 				1FB130BE29C1A314004AC98D /* QuotedNoteFragmentView.swift */,
 				1FB130B429C0E8D8004AC98D /* ReplyingToFragmentView.swift */,
 				1FF8BD1129D41BBD00C8C96A /* SingleMediaViewer.swift */,
-				1F2F54EB2A028C6B00B6D7E4 /* SubscriptionManager.swift */,
-				1F533E3229D35FD300748438 /* TextRenderer.swift */,
 				1FC0A9562A10E44500F9ABF6 /* ReadMoreButton.swift */,
 				1F77D1EB2A1FB3CA00895DB4 /* ThreadReplies.swift */,
 			);
@@ -1515,7 +1506,6 @@
 				1F927C6F297DB34A0024F665 /* Queue.swift in Sources */,
 				1FC78F6929CA28940009C1C7 /* NKeys.swift in Sources */,
 				1F84189D2A2BDE45001EFE7A /* NWCRequestQueue.swift in Sources */,
-				1F84840529C1A84B00AF129A /* NoteMenuView.swift in Sources */,
 				1F00337529BF0A44007CE040 /* BookmarksAndPrivateNotes.swift in Sources */,
 				1FC7A49B29F95AD400645FEF /* ProfileByPubkey.swift in Sources */,
 				1F6B445029D5D1F700AD3191 /* PostOrThread.swift in Sources */,
@@ -1644,7 +1634,6 @@
 				1F7265C229B2148200E4F9D4 /* Exporter.swift in Sources */,
 				1F30FAA929705EBD008439C8 /* NosturCloud.xcdatamodeld in Sources */,
 				1FCFDDBA2A284A7B0096CD84 /* FollowerNotifier.swift in Sources */,
-				1F2F54EC2A028C6B00B6D7E4 /* SubscriptionManager.swift in Sources */,
 				1F71037D296BD9DE006245CC /* Nostr.swift in Sources */,
 				1FF283D229DB491F0063B799 /* PostPreview.swift in Sources */,
 				1F8B135A297B36DB002EB8CF /* String+Conversion.swift in Sources */,
@@ -1682,7 +1671,6 @@
 				1F69854F29F2B63E006F813F /* Bolt11.swift in Sources */,
 				1F7521192986D44E00C43DF0 /* MessageParser.swift in Sources */,
 				1FC38BA0297316AA004769F8 /* DummyEvents.swift in Sources */,
-				1F533E3329D35FD300748438 /* TextRenderer.swift in Sources */,
 				1F716C752A14D4F300B202CA /* ProfileTabs.swift in Sources */,
 				1FFF997D29CF4AF100ADAE23 /* ProfilePicFullScreenSheet.swift in Sources */,
 				1F2F54E72A02364900B6D7E4 /* GIFImage.swift in Sources */,

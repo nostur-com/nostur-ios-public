@@ -1,10 +1,3 @@
-//
-//  PostOrThread.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 30/03/2023.
-//
-
 import SwiftUI
 
 struct PostOrThread: View {

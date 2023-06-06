@@ -1,10 +1,3 @@
-//
-//  Highlight.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 11/05/2023.
-//
-
 import SwiftUI
 
 // Hightlight note
@@ -50,7 +43,6 @@ struct Highlight: View {
                 }
                 if missingReplyTo {
                     ReplyingToFragmentView(nrPost: nrPost)
-//                            .padding(.bottom, 3)
                         .contentShape(Rectangle())
                         .onTapGesture { navigateTo(nrPost) }
                 }

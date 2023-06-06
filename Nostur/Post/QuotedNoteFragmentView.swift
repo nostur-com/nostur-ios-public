@@ -1,17 +1,3 @@
-//
-//  QuotedNote.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 04/02/2023.
-//
-
-//
-//  MessageView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 05/01/2023.
-//
-
 import SwiftUI
 
 struct QuotedNoteFragmentView: View {
@@ -35,19 +21,19 @@ struct QuotedNoteFragmentView: View {
                             NameAndNip(contact: contact)
                         }
                         else {
-                            Text("Anon")
+                            Text(verbatim:"Anon")
                                 .font(.system(size: 14))
                                 .foregroundColor(.primary)
                                 .fontWeight(.bold)
                                 .lineLimit(1).redacted(reason: .placeholder)
-                            Text("@Anon") //
+                            Text(verbatim:"@Anon") //
                                 .font(.system(size: 14))
                                 .foregroundColor(.secondary)
                                 .redacted(reason: .placeholder)
                         }
                         
                         Group {
-                            Text(" ·") //
+                            Text(verbatim: " ·") //
                             Ago(nrPost.createdAt)
                         }
                             .font(.system(size: 14))
@@ -59,8 +45,6 @@ struct QuotedNoteFragmentView: View {
                 Spacer()
             }.frame(height: 40)
             VStack(alignment: .leading) {
-//                RowContentRenderer(nrPost: nrPost)
-//                DetailContentRenderer(event: nrPost.event)
                 NoteTextRenderView(nrPost: nrPost)
                 if nrPost.imageUrls.first != nil {
                     Color.clear.frame(height: 0)
@@ -114,9 +98,6 @@ struct QuotedNoteFragmentView: View {
                     .foregroundColor(Color("AccentColor"))
                     .layoutPriority(3)
             }
-//            Text("@\(contact.anyUsername)") //
-//                .font(.system(size: 14))
-//                .foregroundColor(.secondary)
         }
     }
 }

@@ -1,10 +1,3 @@
-//
-//  ArticleFormatting.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 28/03/2023.
-//
-
 import SwiftUI
 import Nuke
 import NukeUI
@@ -44,7 +37,7 @@ struct ContentRenderer: View { // VIEW things
                             .padding(.horizontal, fullWidth ? 10 : 0)
                     }
                     else {
-                        let _ = print("🔴🔴🔴🔴 Problem converting \(noteId) to hex")
+                        let _ = L.og.error("🔴🔴🔴🔴 Problem converting \(noteId) to hex")
                         EmptyView()
                     }
                 case .noteHex(let hex):
@@ -52,16 +45,8 @@ struct ContentRenderer: View { // VIEW things
                         .padding(.vertical, 5)
                         .padding(.horizontal, fullWidth ? 10 : 0)
                 case .text(let attributedStringWithPs):
-                    // BROKEN SHIT
-                    //                            Text(string)
-                    //                            .fixedSize(horizontal: false, vertical: true)
-                    //                            .overlay(MarkdownText(string))
                     NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs)
                         .padding(.horizontal, fullWidth ? 10 : 0)
-                    //                            .padding(0)
-                    //                            .frame(maxWidth: .infinity)
-                    //                            .padding(.vertical, 5)
-                    //                                                    .frame(maxWidth: .infinity, alignment: .leading)
                 case .lnbc(let text):
                     LightningInvoice(invoice: text, nrPost:nrPost)
                         .padding(.horizontal, fullWidth ? 10 : 0)
@@ -117,10 +102,7 @@ struct QuoteById: View {
                     Color.clear
                         .frame(height: 150)
                         .task {
-                            //                        let followingKeys = NosturState.shared.followingPublicKeys
-                            //                        DataProvider.shared().container.performBackgroundTask { context in
                             DataProvider.shared().bg.perform {
-                                //                            let transformer = VPostTransformer.bg
                                 if let eventBG = event.toBG() {
                                     let nrPost = NRPost(event: eventBG)
                                     
@@ -136,8 +118,8 @@ struct QuoteById: View {
                 ProgressView()
                     .hCentered()
                     .onAppear {
-                        print("🟢 Fetching for QuotedNoteFragmentView \(id)")
-                        SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEventAndReferences(id: id)))
+                        L.og.info("🟢 Fetching for QuotedNoteFragmentView \(id)")
+                        req(RM.getEventAndReferences(id: id))
                     }
             }
         }
@@ -167,7 +149,7 @@ struct Kind1ById: View {
     var body: some View {
         if let firstEvent = events.first {
             let nrPost = NRPost(event: firstEvent) // TODO: ????
-            let _ = print("☠️☠️☠️☠️ NRPost() Kind1ById")
+            let _ = L.og.info("☠️☠️☠️☠️ NRPost() Kind1ById")
             if fullWidth {
                 Kind1(nrPost: nrPost, hideFooter:hideFooter)
             }
@@ -179,9 +161,8 @@ struct Kind1ById: View {
             ProgressView()
                 .hCentered()
                 .onAppear {
-                    print("🟢 Fetching for Kind1ById \(id)")
-                    SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEvent(id: id)))
-                    //                    SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEventAndReferences(id: id)))
+                    L.og.info("🟢 Fetching for Kind1ById \(id)")
+                    req(RM.getEvent(id: id))
                 }
         }
     }

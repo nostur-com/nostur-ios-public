@@ -1,10 +1,3 @@
-//
-//  NEventView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 07/05/2023.
-//
-
 import SwiftUI
 
 struct NEventView: View {
@@ -46,7 +39,6 @@ struct NEventView: View {
                         .frame(height: 250)
                         .task {
                             DataProvider.shared().bg.perform {
-//                                let transformer = VPostTransformer.bg
                                 let bgEvent = DataProvider.shared().bg.object(with: event.objectID) as! Event
                                 let nrPost = NRPost(event: bgEvent)
                                 DispatchQueue.main.async {
@@ -60,10 +52,10 @@ struct NEventView: View {
                         .frame(height: 250)
                         .onAppear {
                             guard let eventId = identifier.eventId else {
-                                print("\(identifier.bech32string) has no eventId")
+                                L.og.info("\(identifier.bech32string) has no eventId")
                                 return
                             }
-                            print("🟢 Fetching for NEventView \(eventId) / \(identifier.bech32string)")
+                            L.og.info("🟢 Fetching for NEventView \(eventId) / \(identifier.bech32string)")
                             req(RM.getEvent(id: eventId))
                             
                             if identifier.relays.count > 0 {

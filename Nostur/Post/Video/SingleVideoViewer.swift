@@ -1,10 +1,3 @@
-//
-//  SingleVideoViewer.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 02/05/2023.
-//
-
 import SwiftUI
 import NukeUI
 import Nuke
@@ -13,8 +6,6 @@ import AVFoundation
 
 @MainActor
 struct SingleVideoViewer: View {
-    
-    @EnvironmentObject var ns:NosturState // Only needed for `imagesShown`
     let url:URL
     let pubkey:String
     var height:CGFloat?
@@ -35,8 +26,8 @@ struct SingleVideoViewer: View {
         VStack {
             if url.absoluteString.prefix(7) == "http://" && !loadNonHttpsAnyway {
                 VStack {
-                    Text("non-https media blocked")
-                    Button("Show anyway") {
+                    Text("non-https media blocked", comment: "Displayed when an image in a post is blocked")
+                    Button(String(localized: "Show anyway", comment: "Button to show the blocked content anyway")) {
                         loadNonHttpsAnyway = true
                         videoShown = true
                         autoplay = true
@@ -126,7 +117,7 @@ struct SingleVideoViewer: View {
                 }
             }
             else if videoState == .initial {
-                Text("Tap to load video")
+                Text("Tap to load video", comment:"Button to load a video in a post")
                     .centered()
                     .frame(height: fullWidth ? 600 : 250)
                     .background(Color("LightGray").opacity(0.2))

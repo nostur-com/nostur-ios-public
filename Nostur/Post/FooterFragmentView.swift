@@ -1,10 +1,3 @@
-//
-//  FooterFragmentView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 15/03/2023.
-//
-
 import SwiftUI
 
 struct FooterFragmentView: View {
@@ -131,7 +124,7 @@ struct FooterFragmentView: View {
                 
             }
             if (nrPost.pubkey == ns.activeAccountPublicKey) {
-                Text("Sent to \(nrPost.relays.split(separator: " ").count) relays")
+                Text("Sent to \(nrPost.relays.split(separator: " ").count) relays", comment:"Message shown in footer of sent post")
                     .padding(.bottom, 5)
             }
         }
@@ -195,7 +188,7 @@ struct PreviewFooterFragmentView: View {
 struct FooterFragmentView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
-
+            
             PreviewFooterFragmentView()
             
             if let p = PreviewFetcher.fetchNRPost("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0") {

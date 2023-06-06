@@ -1,13 +1,6 @@
-//
-//  Kind1Default.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 11/05/2023.
-//
-
 import SwiftUI
 
-// Note 1 default
+// Note 1 default (not full-width)
 struct Kind1Default: View {
     @EnvironmentObject var dim:DIMENSIONS
     @ObservedObject var nrPost:NRPost
@@ -80,7 +73,7 @@ struct Kind1Default: View {
                 }
                 else {
                     if (nrPost.kind != 1) && (nrPost.kind != 6) {
-                        Label("kind \(Double(nrPost.kind).clean) type not (yet) supported", systemImage: "exclamationmark.triangle.fill")
+                        Label(String(localized:"kind \(Double(nrPost.kind).clean) type not (yet) supported", comment: "Message shown when a 'kind X' post is not yet supported"), systemImage: "exclamationmark.triangle.fill")
                             .hCentered()
                             .frame(maxWidth: .infinity)
                             .background(Color("LightGray").opacity(0.2))

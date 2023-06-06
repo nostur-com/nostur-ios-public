@@ -1,10 +1,3 @@
-//
-//  PostDetailView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 14/02/2023.
-//
-
 import SwiftUI
 import CoreData
 
@@ -48,11 +41,11 @@ struct NoteById: View {
                     }
             }
             else {
-                Text("Trying to fetch...").onAppear {
-                    // .REQ
-                    print("🟢 NoteById.onAppear no event so REQ.1: \(id)")
-                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEventAndReferences(id: id)))
-                }
+                Text("Trying to fetch...", comment: "Message shown when trying to fetch a post")
+                    .onAppear {
+                        L.og.info("🟢 NoteById.onAppear no event so REQ.1: \(id)")
+                        req(RM.getEventAndReferences(id: id))
+                    }
             }
         }
     }
@@ -79,7 +72,7 @@ struct PostDetailView: View {
                             // TODO: FIX: THIS DOESNT WORK IF PARENTS ARE STILL LOADING
                             proxy.scrollTo(nrPost.id, anchor: .top)
                         }
-                        .navigationTitle(nrPost.replyToId != nil ? "Thread" : "Post")
+                        .navigationTitle(nrPost.replyToId != nil ? String(localized:"Thread", comment:"Navigation title when viewing a Thread") : String(localized:"Post", comment: "Navigation title when viewing a Post"))
                         .navigationBarTitleDisplayMode(.inline)
                         .navigationBarHidden(navTitleHidden)
                 }
@@ -95,7 +88,6 @@ struct PostDetailView: View {
 struct PostAndParent: View {
     var sp:SocketPool = .shared
     @ObservedObject var nrPost:NRPost
-//    @ObservedObject var event:Event
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var dim:DIMENSIONS
@@ -113,7 +105,6 @@ struct PostAndParent: View {
     
     init(nrPost: NRPost, isParent:Bool = false, geoHeight:CGFloat = CGFloat.zero, navTitleHidden:Bool = false, connect:ThreadConnectDirection? = nil) {
         self.nrPost = nrPost
-//        self.event = nrPost.event
         self.isParent = isParent
         self.geoHeight = geoHeight
         self.navTitleHidden = navTitleHidden
@@ -145,7 +136,7 @@ struct PostAndParent: View {
                         }
                 }
                 else {
-                    Text("_Post deleted by author_")
+                    Text("_Post deleted by author_", comment: "Message shown when a post is deleted")
                         .hCentered()
                 }
             }
@@ -160,7 +151,6 @@ struct PostAndParent: View {
                         }
                         EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.001")
                         QueuedFetcher.shared.enqueue(id: replyToId)
-//                        req(RM.getEvent(id: replyToId))
                     }
                     .onDisappear {
                         timerTask?.cancel()
@@ -189,48 +179,43 @@ struct PostAndParent: View {
                             }
                             .padding(.trailing, 10)
                             if isParent {
-//                                ReplyingToFragmentView(nrPost: nrPost)
-//                                    .padding(.vertical, 3)
                                 switch nrPost.kind {
-                                    case 9802: // highlight
-                                        HighlightRenderer(nrPost: nrPost)
+                                case 9802: // highlight
+                                    HighlightRenderer(nrPost: nrPost)
                                         .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                                    case 1,6,9734: // text, repost, zap request
-                                        ContentRenderer(nrPost: nrPost, isDetail: true, availableWidth: dim.availablePostDetailRowImageWidth())
-                                            .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                                            .contentShape(Rectangle())
-                                            .onTapGesture {
-                                                navigateTo(nrPost)
-                                            }
-                                    case 1063: // File Metadata
-                                        NoteTextRenderView(nrPost: nrPost)
-                                    default:
-                                        Label("kind \(Double(nrPost.kind).clean) type not (yet) supported", systemImage: "exclamationmark.triangle.fill")
-                                            .centered()
-                                            .frame(maxWidth: .infinity)
-                                            .background(Color("LightGray").opacity(0.2))
-                                        ContentRenderer(nrPost: nrPost, isDetail: true, availableWidth: dim.availablePostDetailRowImageWidth())
-                                            .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                                            .contentShape(Rectangle())
-                                            .onTapGesture {
-                                                navigateTo(nrPost)
-                                            }
+                                case 1,6,9734: // text, repost, zap request
+                                    ContentRenderer(nrPost: nrPost, isDetail: true, availableWidth: dim.availablePostDetailRowImageWidth())
+                                        .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                                        .contentShape(Rectangle())
+                                        .onTapGesture {
+                                            navigateTo(nrPost)
+                                        }
+                                case 1063: // File Metadata
+                                    NoteTextRenderView(nrPost: nrPost)
+                                default:
+                                    Label(String(localized:"kind \(Double(nrPost.kind).clean) type not (yet) supported", comment: "Message shown when a post kind (X) is not yet supported"), systemImage: "exclamationmark.triangle.fill")
+                                        .centered()
+                                        .frame(maxWidth: .infinity)
+                                        .background(Color("LightGray").opacity(0.2))
+                                    ContentRenderer(nrPost: nrPost, isDetail: true, availableWidth: dim.availablePostDetailRowImageWidth())
+                                        .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                                        .contentShape(Rectangle())
+                                        .onTapGesture {
+                                            navigateTo(nrPost)
+                                        }
                                 }
                             }
                         }
                     }
-
+                    
                     if !isParent {
-//                        ReplyingToFragmentView(nrPost: nrPost)
-//                            .padding(.bottom, 3)
-//                            .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
                         switch nrPost.kind {
-                            case 9802:
-                                HighlightRenderer(nrPost: nrPost)
+                        case 9802:
+                            HighlightRenderer(nrPost: nrPost)
                                 .padding(.top, 3)
                                 .padding(.bottom, 10)
                                 .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                            case 1,6,9734:
+                        case 1,6,9734:
                             if nrPost.plainTextOnly {
                                 NoteMinimalContentView(nrPost: nrPost, lineLimit: 350)
                             }
@@ -239,29 +224,21 @@ struct PostAndParent: View {
                                     .padding(.top, 3)
                                     .padding(.bottom, 10)
                                     .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-//                                    .contentShape(Rectangle())
-//                                    .onTapGesture {
-//                                        navigateTo(nrPost)
-//                                    }
                             }
-                            case 1063:
-                                if let fileMetadata = nrPost.fileMetadata {
-                                    Kind1063(nrPost, fileMetadata: fileMetadata, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
+                        case 1063:
+                            if let fileMetadata = nrPost.fileMetadata {
+                                Kind1063(nrPost, fileMetadata: fileMetadata, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
                                     .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                                }
-                            default:
-                                Label("kind \(Double(nrPost.kind).clean) type not (yet) supported", systemImage: "exclamationmark.triangle.fill")
-                                    .centered()
-                                    .frame(maxWidth: .infinity)
-                                    .background(Color("LightGray").opacity(0.2))
-                                ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
-                                    .padding(.top, 3)
-                                    .padding(.bottom, 10)
-                                    .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-//                                    .contentShape(Rectangle())
-//                                    .onTapGesture {
-//                                        navigateTo(nrPost)
-//                                    }
+                            }
+                        default:
+                            Label(String(localized:"kind \(Double(nrPost.kind).clean) type not (yet) supported", comment: "Message shown when a post kind (X) is not yet supported"), systemImage: "exclamationmark.triangle.fill")
+                                .centered()
+                                .frame(maxWidth: .infinity)
+                                .background(Color("LightGray").opacity(0.2))
+                            ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
+                                .padding(.top, 3)
+                                .padding(.bottom, 10)
+                                .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                         }
                     }
                     
@@ -281,11 +258,11 @@ struct PostAndParent: View {
                         FooterFragmentView(nrPost: nrPost)
                             .padding(.vertical, 5)
                             .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
-//                        Divider()
+                        //                        Divider()
                     }
                 }
                 else {
-                    Text("_Post deleted by \(nrPost.anyName)_")
+                    Text("_Post deleted by \(nrPost.anyName)_", comment: "Message shown when a post is deleted by (name)")
                         .hCentered()
                 }
                 
@@ -362,17 +339,17 @@ struct DetailFooterFragment: View {
                 HStack(spacing:5) {
                     AnimatedNumber(number: nrPost.likesCount)
                         .fontWeight(.bold)
-                    Text("reactions")
+                    Text("reactions", comment: "Label for reactions count, example: (7) reactions")
                 }
             }
             NavigationLink(value: ViewPath.NoteZaps(id: nrPost.id)) {
                 HStack(spacing:5) {
                     AnimatedNumber(number: nrPost.zapsCount)
                         .fontWeight(.bold)
-                    Text("zaps")
+                    Text("zaps", comment: "Label for zaps count, example: (4) zaps")
                 }
             }
-        
+            
             Spacer()
         }
         .foregroundColor(.gray)
@@ -428,12 +405,12 @@ struct ReplyAndParentView_Previews: PreviewProvider {
 
 struct ReplyAndParentView2_Previews: PreviewProvider {
     static var previews: some View {
-
+        
         NavigationStack {
             if let yt2 = PreviewFetcher.fetchNRPost("0000014de66e08882bd36b6b7b551a774f85fe752a18070dc8658d7776db7e69") {
                 PostDetailView(nrPost: yt2)
             }
-
+            
         }
         .withPreviewEnvironment({ pe in
             pe.loadContacts()
@@ -445,16 +422,16 @@ struct ReplyAndParentView2_Previews: PreviewProvider {
 
 struct ReplyAndParentView3_Previews: PreviewProvider {
     static var previews: some View {
-
+        
         NavigationStack {
-
+            
             
             if let yt = PreviewFetcher.fetchNRPost("c7b4ef377ee4f6d71f6f59bc6bad607acb9c7c3675e3c0b2ca0ad2442b133e49") {
                 ScrollView {
                     PostDetailView(nrPost: yt)
                 }
             }
-   
+            
         }
         .withPreviewEnvironment({ pe in
             pe.loadContacts()
@@ -466,14 +443,14 @@ struct ReplyAndParentView3_Previews: PreviewProvider {
 
 struct ReplyAndParentView4_Previews: PreviewProvider {
     static var previews: some View {
-
+        
         NavigationStack {
-  
+            
             
             if let v = PreviewFetcher.fetchNRPost("bb15e6165180d31c36b6c3e0baf082eeb949aa473c59e37eaa8e2bb29dc46422") {
                 PostDetailView(nrPost: v)
             }
- 
+            
         }
         .withPreviewEnvironment({ pe in
             pe.loadContacts()
@@ -484,14 +461,14 @@ struct ReplyAndParentView4_Previews: PreviewProvider {
 
 struct ReplyAndParentView5_Previews: PreviewProvider {
     static var previews: some View {
-
+        
         NavigationStack {
-     
+            
             
             if let lastReply = PreviewFetcher.fetchNRPost("2026c6b0f0d887aa76cc60f0b3050fe940c8eca9eb479391acb493bb40e4d964") {
                 PostDetailView(nrPost: lastReply)
             }
-
+            
         }
         .withPreviewEnvironment({ pe in
             pe.loadContacts()
@@ -502,7 +479,7 @@ struct ReplyAndParentView5_Previews: PreviewProvider {
 
 struct ReplyAndParentView6_Previews: PreviewProvider {
     static var previews: some View {
-
+        
         NavigationStack {
             if let rootWithReplies = PreviewFetcher.fetchNRPost("6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81") {
                 PostDetailView(nrPost: rootWithReplies)
@@ -517,7 +494,7 @@ struct ReplyAndParentView6_Previews: PreviewProvider {
 
 struct ReplyAndParentView7_Previews: PreviewProvider {
     static var previews: some View {
-
+        
         NavigationStack {
             if let v = PreviewFetcher.fetchNRPost("c0d76c3c968775a62ca1dea28a73e1fc86d121e8e5e17f2e35aaad1436075f51") {
                 PostDetailView(nrPost: v)
@@ -532,7 +509,7 @@ struct ReplyAndParentView7_Previews: PreviewProvider {
 
 struct BetterReplies_Previews: PreviewProvider {
     static var previews: some View {
-
+        
         NavigationStack {
             if let matt = PreviewFetcher.fetchNRPost("e593fc759291a691cd0127643a0b9fac9d92613952845e207eb24332937c59d9") {
                 
