@@ -53,9 +53,15 @@ class NRContentElementBuilder {
                         result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString)))
                     }
                 }
+                else if matchString.matchingStrings(regex: Self.npubPattern).count > 0 {
+                    let match = matchString.replacingOccurrences(of: "\n", with: "")
+                                            .replacingOccurrences(of: "@", with: "")
+                    result.append(ContentElement.npub1(match))
+                }
                 else if matchString.matchingStrings(regex: Self.notePattern).count > 0 {
-                    let note1String = String(matchString.dropFirst(6)) // drop nostr:
-                    result.append(ContentElement.note1(note1String))
+                    let match = matchString.replacingOccurrences(of: "nostr:", with: "")
+                                            .replacingOccurrences(of: "@", with: "")
+                    result.append(ContentElement.note1(match))
                 }
                 else if matchString.matchingStrings(regex: Self.previewImagePlaceholder).count > 0 {
                     let m = matchString.matchingStrings(regex: Self.previewImagePlaceholder)
@@ -66,25 +72,27 @@ class NRContentElementBuilder {
                     }
                 }
                 else if matchString.matchingStrings(regex: Self.neventPattern).count > 0 {
-                    let nevent1String = String(matchString.dropFirst(6)) // drop "nostr:"
                     do {
-                        let identifier = try ShareableIdentifier(nevent1String)
+                        let match = matchString.replacingOccurrences(of: "nostr:", with: "")
+                                                .replacingOccurrences(of: "@", with: "")
+                        let identifier = try ShareableIdentifier(match)
                         result.append(ContentElement.nevent1(identifier))
                         
                     }
                     catch {
-                        L.og.notice("problem decoding nevent in event.id: \(event.id) - \(nevent1String)")
+                        L.og.notice("problem decoding nevent in event.id: \(event.id) - \(matchString)")
                         result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString)))
                     }
                 }
                 else if matchString.matchingStrings(regex: Self.nprofilePattern).count > 0 {
-                    let nprofile1String = String(matchString.dropFirst(6)) // drop "nostr:"
                     do {
-                        let identifier = try ShareableIdentifier(nprofile1String)
+                        let match = matchString.replacingOccurrences(of: "\n", with: "")
+                                                .replacingOccurrences(of: "@", with: "")
+                        let identifier = try ShareableIdentifier(match)
                         result.append(ContentElement.nprofile1(identifier))
                     }
                     catch {
-                        L.og.notice("problem decoding nevent in profile.pubkey: \(event.id) - \(nprofile1String)")
+                        L.og.notice("problem decoding nevent in profile.pubkey: \(event.id) - \(matchString)")
                         result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString)))
                     }
                 }
@@ -111,11 +119,18 @@ class NRContentElementBuilder {
     static let previewImagePlaceholder = ###"--@!\^@(\d+)@\^!@--"###
     static let videoUrlPattern = ###"(?i)https?:\/\/\S+?\.(?:mp4|mov)(\?\S+){0,1}\b"###
     static let lightningInvoicePattern = ###"(?i)lnbc\S+"###
-    static let notePattern = ###"nostr:note1[023456789acdefghjklmnpqrstuvwxyz]{58}"###
-    static let neventPattern = ###"nostr:nevent1[023456789acdefghjklmnpqrstuvwxyz]+\b"###
-    static let nprofilePattern = ###"nostr:nprofile1[023456789acdefghjklmnpqrstuvwxyz]+\b"###
+    static let notePattern = ###"(nostr:|@?)(note1[023456789acdefghjklmnpqrstuvwxyz]{58})"###
+    static let neventPattern = ###"(nostr:@?)(nevent1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###
+    
+    
+    // These become cards so
+    // no nostr: here, because we do that in TextParser (inline)
+    // only if there is a newline before, else we also do that in TextParser (inline)
+    static let nprofilePattern = ###"(?:\n@?)(nprofile1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###
+    static let npubPattern = ###"(?:\n@?)(npub1[023456789acdefghjklmnpqrstuvwxyz]{58})"### // no nostr: here, because we do that in TextParser
+    
     static let otherUrlsPattern = ###"(?i)(https\:\/\/)[a-zA-Z0-9\-\.]+(?:\.[a-zA-Z]{2,999}+)+([\/\?\=\&\#\%\+\.]\@?[\S]+)*\/?[^\s\)]"### 
-    static let pattern = "\(previewImagePlaceholder)|\(imageUrlPattern)|\(lightningInvoicePattern)|\(notePattern)|\(nprofilePattern)|\(neventPattern)|\(videoUrlPattern)|\(otherUrlsPattern)"
+    static let pattern = "\(previewImagePlaceholder)|\(imageUrlPattern)|\(lightningInvoicePattern)|\(npubPattern)|\(notePattern)|\(nprofilePattern)|\(neventPattern)|\(videoUrlPattern)|\(otherUrlsPattern)"
     static let regex = try! NSRegularExpression(pattern: pattern)
 }
 
@@ -125,6 +140,7 @@ enum ContentElement: Hashable {
 //    case rendered(String)
 //    case plain(String)
     case text(AttributedStringWithPs)
+    case npub1(String)
     case note1(String)
     case noteHex(String)
     case lnbc(String)

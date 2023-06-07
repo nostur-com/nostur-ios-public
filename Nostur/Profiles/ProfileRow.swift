@@ -1,5 +1,36 @@
 import SwiftUI
 
+struct ProfileCardByPubkey: View {
+    let pubkey:String
+    
+    @FetchRequest
+    var contacts:FetchedResults<Contact>
+    
+    init(pubkey:String) {
+        self.pubkey = pubkey
+        _contacts = FetchRequest(
+            sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
+            predicate: NSPredicate(format: "pubkey == %@", pubkey)
+        )
+    }
+    
+    var body: some View {
+        if let contact = contacts.first {
+            ProfileRow(contact: contact)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 15)
+                        .stroke(.regularMaterial, lineWidth: 1)
+                )
+        }
+        else {
+            ProgressView().onAppear {
+                L.og.info("🟢 ProfileByPubkey.onAppear no contact so REQ.0: \(pubkey)")
+                req(RM.getUserMetadata(pubkey: pubkey))
+            }
+        }
+    }
+}
+
 struct ProfileRow: View {
     @EnvironmentObject var ns:NosturState
     @ObservedObject var fg:FollowingGuardian = .shared

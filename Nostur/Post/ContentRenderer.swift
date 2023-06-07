@@ -28,6 +28,12 @@ struct ContentRenderer: View { // VIEW things
                 switch contentElements[index] {
                 case .nevent1(let identifier):
                     NEventView(identifier: identifier)
+                case .npub1(let npub):
+                    if let pubkey = hex(npub) {
+                        ProfileCardByPubkey(pubkey: pubkey)
+                            .padding(.vertical, 5)
+                            .padding(.horizontal, fullWidth ? 10 : 0)
+                    }
                 case .nprofile1(let identifier):
                     NProfileView(identifier: identifier)
                 case .note1(let noteId):
