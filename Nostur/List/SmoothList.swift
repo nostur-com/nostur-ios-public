@@ -212,7 +212,7 @@ struct SmoothList: UIViewControllerRepresentable {
                     DataProvider.shared().bg.perform {
                         EventRelationsQueue.shared.addAwaitingEvent(item.event, debugInfo: "SmoothList.001 - missingPs: \(item.missingPs.count)")
                         QueuedFetcher.shared.enqueue(pTags: item.missingPs)
-                        L.fetching.info("🟠🟠 Prefetcher: \(item.missingPs.count) missing contacts (event.pubkey or event.pTags)")
+                        L.fetching.info("🟠🟠 Prefetcher: \(item.missingPs.count) missing contacts (event.pubkey or event.pTags) for: \(item.id)")
                     }
                 }
                 

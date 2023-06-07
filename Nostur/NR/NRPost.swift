@@ -205,11 +205,17 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             }
             return nil
         }) + [event.pubkey]
-        event.fastPs.prefix(SPAM_LIMIT_P).forEach { (tag, pubkey, hint) in
-            if !eventContactPs.contains(pubkey) {
-                missingPs.insert(pubkey)
+        
+        // Some clients put P in kind 6. Ignore that because the contacts are in the reposted post, not in the kind 6.
+        // TODO: Should only fetch if the Ps are going to be on screen. Could be just for notifications.
+        if kind != 6 {
+            event.fastPs.prefix(SPAM_LIMIT_P).forEach { (tag, pubkey, hint) in
+                if !eventContactPs.contains(pubkey) {
+                    missingPs.insert(pubkey)
+                }
             }
         }
+        
         self.missingPs = missingPs
         if !isAwaiting && self.missingPs.count > 0 {
             EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.002 - missingPs: \(missingPs.count)"); isAwaiting = true
