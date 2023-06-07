@@ -1,10 +1,3 @@
-//
-//  PreviewHelper.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 24/01/2023.
-//
-
 import SwiftUI
 import CoreData
 
@@ -18,7 +11,6 @@ public class PreviewEnvironment {
     let tm:DetailTabsModel = .shared
     let dim:DIMENSIONS = .shared
     let ss:SettingsStore = .shared
-//    let nm:NotificationsManager = .shared
     let sm = SideBarModel()
     
     static let shared = PreviewEnvironment()
@@ -374,8 +366,6 @@ extension PreviewEnvironment {
             messages.append(contentsOf: testKind1063())
             print("21 \(messages.count)")
             
-                
-
             print ("☢️☢️☢️ LOADED (SHOULD ONLY APPEAR ONCE) ☢️☢️☢️")
         }
     }

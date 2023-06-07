@@ -73,11 +73,6 @@ struct FullImageViewer: View {
             ZStack {
                 VStack {
                     if ([".mp4",".mov"].contains(fullImageURL.absoluteString.suffix(4))) {
-                        //                        AVP(videoURL: fullImageURL)
-//                        AVP(videoURL: fullImageURL, width: geo.size.width, height: geo.size.height, contentMode: .scaleAspectFit, isPlaying: $isPlaying)
-//                            .onTapGesture {
-//                                isPlaying.toggle()
-//                            }
                         VideoPlayerViewer(videoURL: fullImageURL, width: geo.size.width, height: geo.size.height)
                     }
                     else {

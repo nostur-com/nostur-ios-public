@@ -1,19 +1,10 @@
-//
-//  ImageProcessing.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 08/03/2023.
-//
-
 import Foundation
 import Nuke
-
 
 class ImageProcessing {
     static public var shared = ImageProcessing()
     
     var pfp:ImagePipeline
-//    var pfpNotFollowing:ImagePipeline
     var banner:ImagePipeline
     var content:ImagePipeline
     var badges:ImagePipeline
@@ -40,24 +31,6 @@ class ImageProcessing {
 //            $0.dataCachePolicy = .storeEncodedImages
             $0.dataCachePolicy = .storeAll
         }
-        
-//        pfpNotFollowing = ImagePipeline {
-////            $0.isUsingPrepareForDisplay = true
-//            $0.isProgressiveDecodingEnabled = true
-//            $0.dataLoader = DataLoader(configuration: {
-//                // Disable disk caching built into URLSession
-//                let conf = DataLoader.defaultConfiguration
-//                conf.urlCache = nil
-//                return conf
-//            }())
-//
-//            let dataCache = try! DataCache(name: "com.nostur.image.pfp") // use same folder for now... isFollowing is messed up when using multiple accounts
-//            dataCache.sizeLimit = 1024 * 1024 * 500
-//
-//            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 50)
-//            $0.dataCache = dataCache
-//            $0.dataCachePolicy = .storeAll
-//        }
         
         banner = ImagePipeline {
 //            $0.isUsingPrepareForDisplay = true

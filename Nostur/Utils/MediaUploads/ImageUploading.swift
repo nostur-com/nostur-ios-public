@@ -1,10 +1,3 @@
-//
-//  ImageUploading.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 19/04/2023.
-//
-
 import Foundation
 import SwiftUI
 import Combine

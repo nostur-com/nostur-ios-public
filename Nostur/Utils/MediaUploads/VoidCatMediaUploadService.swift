@@ -1,10 +1,3 @@
-//
-//  VoidCatMediaUploadService.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 19/04/2023.
-//
-
 import Foundation
 
 // Same as IMGUR but no Client ID needed
@@ -26,10 +19,10 @@ func getVoidCatService() -> MediaUploadService {
               responseString.contains("http")
         else {
 //            let httpResponse = response as? HTTPURLResponse
-//            print(httpResponse?.statusCode)
-//            print(httpResponse?.allHeaderFields)
+//            L.og.debug(httpResponse?.statusCode)
+//            L.og.debug(httpResponse?.allHeaderFields)
 //            let responseText = String(data: data, encoding: .utf8)
-//            print(responseText?.description)
+//            L.og.debug(responseText?.description)
             throw ImageUploadError.uploadFailure
         }
         return responseString.replacingOccurrences(of: "http://", with: "https://") + ".jpg"

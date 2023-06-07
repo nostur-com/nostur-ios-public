@@ -1,10 +1,3 @@
-//
-//  Maintenance.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 01/02/2023.
-//
-
 import Foundation
 import CoreData
 
@@ -12,9 +5,9 @@ struct Maintenance {
 
     static let BOOTSTRAP_RELAYS = ["wss://relay.nostr.band", "wss://nos.lol", "wss://nostr.wine", "wss://nostr.mutinywallet.com", "wss://purplepag.es"]
     
-    // wss://relay.damus.io // shows only cameri bug
-    // time out... "wss://nostr.fmt.wiz.biz"
-    // too many subscriptions "wss://relay.snort.social"
+    // Removed: wss://relay.damus.io // shows only cameri bug
+    // Removed: time out... "wss://nostr.fmt.wiz.biz"
+    // Removed: too many subscriptions "wss://relay.snort.social"
     
     
     static func ensureBootstrapRelaysExist(context:NSManagedObjectContext) {

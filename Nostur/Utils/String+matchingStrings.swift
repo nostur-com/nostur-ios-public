@@ -1,11 +1,6 @@
-//
-//  String+matchingStrings.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 25/01/2023.
-//
-
 import Foundation
+
+extension String: Error {}
 
 extension String {
     
@@ -29,14 +24,8 @@ extension String {
         "^(nostr:)(npub1|note1)([023456789acdefghjklmnpqrstuvwxyz]{58})$": try! NSRegularExpression(pattern: "^(nostr:)(npub1|note1)([023456789acdefghjklmnpqrstuvwxyz]{58})$", options: []),
         "^(nostur:)(p:|e:)([0-9a-z]{64})$": try! NSRegularExpression(pattern: "^(nostur:)(p:|e:)([0-9a-z]{64})$", options: []),
         "^(nostr:)(p:|e:)([0-9a-z]{64})$": try! NSRegularExpression(pattern: "^(nostr:)(p:|e:)([0-9a-z]{64})$", options: []),
-        "^(nostur:t:)(\\S+)$": try! NSRegularExpression(pattern: "^(nostur:t:)(\\S+)$", options: []),
-//        VPostTransformer.imageUrlPattern: try! NSRegularExpression(pattern: VPostTransformer.imageUrlPattern, options: []),
-//        VPostTransformer.imageUrlPattern: try! NSRegularExpression(pattern: VPostTransformer.imageUrlPattern, options: []),
+        "^(nostur:t:)(\\S+)$": try! NSRegularExpression(pattern: "^(nostur:t:)(\\S+)$", options: [])
     ]
-    
-    
-    
-    
     
     func matchingStrings(regex: String) -> [[String]] {
         let regex = (String.regexCache[regex]) ?? (try! NSRegularExpression(pattern: regex, options: []))

@@ -4,6 +4,8 @@ import Nuke
 import NukeVideo
 import AVFoundation
 
+// TODO: Fix full screen VideoPlayerView in FullImageViewer is not used anymore??
+
 @MainActor
 struct SingleVideoViewer: View {
     let url:URL

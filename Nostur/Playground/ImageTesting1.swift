@@ -1,10 +1,3 @@
-//
-//  ImageTesting1.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 22/05/2023.
-//
-
 import SwiftUI
 import NukeUI
 

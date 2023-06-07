@@ -1,14 +1,4 @@
-//
-//  TimeAgo.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 22/04/2023.
-//
-
 import Foundation
-
-
-// Yay, we don't need slow SwiftCompactor anymore
 
 extension Date {
     
@@ -23,19 +13,19 @@ extension Date {
         
         if timeInterval >= secondsInYear {
             let years = Int(timeInterval / secondsInYear)
-            return "\(years)y"
+            return String(localized:"\(years)y", comment: "Shorthand for years (1y)")
         } else if timeInterval >= secondsInDay {
             let days = Int(timeInterval / secondsInDay)
-            return "\(days)d"
+            return String(localized:"\(days)d", comment: "Shorthand for days (1d)")
         } else if timeInterval >= secondsInHour {
             let hours = Int(timeInterval / secondsInHour)
-            return "\(hours)h"
+            return String(localized:"\(hours)h", comment: "Shorthand for hours (1h)")
         } else if timeInterval >= secondsInMinute {
             let minutes = Int(timeInterval / secondsInMinute)
-            return "\(minutes)m"
+            return String(localized:"\(minutes)m", comment: "Shorthand for minutes (1m)")
         } else {
             let seconds = Int(timeInterval)
-            return "\(seconds)s"
+            return String(localized:"\(seconds)s", comment: "Shorthand for seconds (1s)")
         }
     }
 }

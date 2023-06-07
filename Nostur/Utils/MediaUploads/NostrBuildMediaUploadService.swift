@@ -1,12 +1,6 @@
-//
-//  NostrBuildMediaUploadService.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 19/04/2023.
-//
-
 import Foundation
 
+// Something wrong with the response, can't find api. Disabled for now
 func getNostrBuildService() -> MediaUploadService {
     return MediaUploadService(name: "nostr.build", request: { imageData in
         let url = URL(string: "https://nostr.build/upload.php")!
@@ -35,10 +29,7 @@ func getNostrBuildService() -> MediaUploadService {
               responseString.contains("https://")
         else {
 //            let httpResponse = response as? HTTPURLResponse
-//            print(httpResponse?.statusCode)
-//            print(httpResponse?.allHeaderFields)
 //            let responseText = String(data: data, encoding: .utf8)
-//            print(responseText?.description)
             throw ImageUploadError.uploadFailure
         }
         

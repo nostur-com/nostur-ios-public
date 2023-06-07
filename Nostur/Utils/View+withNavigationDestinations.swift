@@ -1,10 +1,3 @@
-//
-//  View+withNavigationDestinations.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 02/02/2023.
-//
-
 import Foundation
 import SwiftUI
 
@@ -52,9 +45,6 @@ extension View {
             .navigationDestination(for: ContactPath.self) { path in
                 ProfileByPubkey(pubkey: path.key)
             }
-//            .navigationDestination(for: HashtagPath.self) { path in
-//                Search(hashtag: path.hashTag)
-//            }
             .navigationDestination(for: Contact.self) { contact in
                 ProfileView(contact: contact)
             }

@@ -4,8 +4,12 @@
 <dict>
 	<key>TENOR_API_KEY</key>
 	<string>$(TENOR_API_KEY)</string>
-	<key>TENOR_CLIENT_KEY</key>
-	<string>$(TENOR_CLIENT_KEY)</string>
+    <key>TENOR_CLIENT_KEY</key>
+    <string>$(TENOR_CLIENT_KEY)</string>
+    <key>IMGUR_CLIENT_ID</key>
+    <string>$(IMGUR_CLIENT_ID)</string>
+    <key>NOSTRCHECK_PUBLIC_API_KEY</key>
+	<string>$(NOSTRCHECK_PUBLIC_API_KEY)</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

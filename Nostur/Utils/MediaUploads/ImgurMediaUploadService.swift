@@ -1,14 +1,7 @@
-//
-//  ImgurMediaUploadService.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 19/04/2023.
-//
-
 import Foundation
 
 // needs registered Client ID
-let IMGUR_CLIENT_ID = "1145d64320a5242"
+let IMGUR_CLIENT_ID = Bundle.main.infoDictionary?["IMGUR_CLIENT_ID"] as? String ?? ""
 
 func getImgurService() -> MediaUploadService {
     return MediaUploadService(name: "imgur.com", request: { imageData in
@@ -38,11 +31,11 @@ func getImgurService() -> MediaUploadService {
               let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
               let link = json["data"] as? [String: Any],
               let url = link["link"] as? String else {
-//            let httpResponse = response as? HTTPURLResponse
-//            print(httpResponse?.statusCode)
-//            print(httpResponse?.allHeaderFields)
+            let httpResponse = response as? HTTPURLResponse
+//            L.og.debug(httpResponse?.statusCode)
+//            L.og.debug(httpResponse?.allHeaderFields)
 //            let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
-//            print(json?.description)
+//            L.og.debug(json?.description)
             throw ImageUploadError.uploadFailure
         }
         return url
