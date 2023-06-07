@@ -92,7 +92,7 @@ class NRTextParser { // TEXT things
 
     // NIP-27 handle nostr:npub or nostr:nprofile
     private func parseUserMentions(event:Event, text:String, plainText:Bool = false) -> TextWithPs {
-        let pattern = "nostr:npub1[023456789acdefghjklmnpqrstuvwxyz]{58}|nostr:nprofile1[023456789acdefghjklmnpqrstuvwxyz]{30,999}"
+        let pattern = "(?:nostr:)?npub1[023456789acdefghjklmnpqrstuvwxyz]{58}|(?:nostr:)?nprofile1[023456789acdefghjklmnpqrstuvwxyz]{30,999}"
 
         var replacedString = text
         var range = text.startIndex..<text.endIndex
@@ -104,9 +104,14 @@ class NRTextParser { // TEXT things
             sanityIndex += 1
             let match = replacedString[matchRange]
             var replacement = match
-            switch match.prefix(11) {
-                case "nostr:npub1":
-                    let npub = String(match.dropFirst(6))
+            
+            let pub1OrProfile1 = match.prefix(11) == "nostr:npub1" || match.prefix(5) == "npub1" ? "npub1" : "nprofile1"
+            
+            //let identifier = try ShareableIdentifier(match)
+            
+            switch pub1OrProfile1 {
+                case "npub1":
+                    let npub = match.replacingOccurrences(of: "nostr:", with: "")
                     do {
                         let pubkey = try toPubkey(npub)
                         pTags.append(pubkey)
@@ -120,8 +125,8 @@ class NRTextParser { // TEXT things
                     catch {
                         print("problem decoding npub")
                     }
-                case "nostr:nprof":
-                    let nprofile = String(match.dropFirst(6))
+                case "nprofile1":
+                let nprofile = match.replacingOccurrences(of: "nostr:", with: "")
                     do {
                         let identifier = try ShareableIdentifier(nprofile)
                         if let pubkey = identifier.pubkey {
