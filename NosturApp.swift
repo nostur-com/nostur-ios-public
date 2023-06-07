@@ -28,7 +28,6 @@ struct NosturApp: App {
             switch newScenePhase {
             case .active:
                 L.og.notice("scenePhase active")
-//                EventRelationsQueue.shared.removeAll() // TODO: Why actually have this here?? forgot
                 SocketPool.shared.connectAll()
                 lvmManager.restoreSubscriptions()
             case .background:
