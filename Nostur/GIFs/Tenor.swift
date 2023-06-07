@@ -8,8 +8,8 @@
 import Foundation
 
 // TODO: remove before open source 
-let apikey = "AIzaSyCF_4cPv7n0t_dxsVx_SbNPwf9Y1DNi9_0"
-let clientkey = "nostur_app"
+let apikey = Bundle.main.infoDictionary?["TENOR_API_KEY"] as? String ?? ""
+let clientkey = Bundle.main.infoDictionary?["TENOR_CLIENT_KEY"] as? String ?? ""
 
 /**
  Async URL requesting function.
