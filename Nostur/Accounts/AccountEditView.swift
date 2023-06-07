@@ -53,7 +53,7 @@ struct AccountEditView: View {
                                     .disabled(shouldDisable)
                             }
                             
-                            Section(header: Text("Nostr username (NIP-05)", comment: "Label for entering a NIP-05 username on Edit Profile screen") ) {
+                            Section(header: Text("Nostr address (NIP-05)", comment: "Label for entering a NIP-05 username on Edit Profile screen") ) {
                                 TextField("", text: $account.nip05).keyboardType(.emailAddress).disabled(shouldDisable)
                                     .keyboardType(.URL)
                                     .disableAutocorrection(true)
