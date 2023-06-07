@@ -16,7 +16,7 @@ struct SingleVideoViewer: View {
     @State var videoShown = false
     @State var isPlaying = false
     @State var asset:AVAsset? = nil
-    @State var videoSize:CGSize? = nil
+    @State var scaledDimensions:CGSize? = nil
     @State var task:AsyncImageTask? = nil
     @State var percent = 0
     @State var autoplay = false
@@ -41,10 +41,7 @@ struct SingleVideoViewer: View {
                    .background(Color("LightGray").opacity(0.2))
             }
             else if videoShown {
-                if let asset, let videoSize {
-                    
-                    let scaledDimensions = getScaledVideoDimensions(videoSize: videoSize, availableWidth: videoWidth, maxHeight: 600)
-                    
+                if let asset, let scaledDimensions {
                     UIVideoViewer(asset: asset, isPlaying: $isPlaying)
                         .highPriorityGesture(
                             TapGesture().onEnded { _ in
@@ -162,7 +159,7 @@ struct SingleVideoViewer: View {
                 videoState = .ready
                 Task {
                     if let videoSize = await getVideoDimensions(asset: asset) {
-                        self.videoSize = videoSize
+                        self.scaledDimensions = getScaledVideoDimensions(videoSize: videoSize, availableWidth: videoWidth, maxHeight: 600)
                     }
                     else {
                         videoState = .error

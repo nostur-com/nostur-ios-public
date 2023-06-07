@@ -22,12 +22,7 @@ func getVideoDimensions(asset: AVAsset) async -> CGSize? {
     return correctedSize
 }
 
-struct ScaledDimensions {
-    let width:CGFloat
-    let height:CGFloat
-}
-
-func getScaledVideoDimensions(videoSize:CGSize, availableWidth:CGFloat, maxHeight:CGFloat = 600) -> ScaledDimensions {
+func getScaledVideoDimensions(videoSize:CGSize, availableWidth:CGFloat, maxHeight:CGFloat = 600) -> CGSize {
 
     let videoAspect = videoSize.width / videoSize.height
     
@@ -37,14 +32,14 @@ func getScaledVideoDimensions(videoSize:CGSize, availableWidth:CGFloat, maxHeigh
     if scaleH <= 1 && scaleW <= 1 { // w and h both fit on screen
         // return without scaling
         L.og.info("getScaledVideoDimensions: availableWidth:\(availableWidth) - maxHeight: \(maxHeight) videoSize:\(videoSize.width)x\(videoSize.height) no scaling needed ")
-        return ScaledDimensions(width: videoSize.width, height: videoSize.height)
+        return CGSize(width: videoSize.width, height: videoSize.height)
     }
     
     if scaleW > scaleH { // Width too big, scale down:
         let scaledWidth = videoSize.width / scaleW
         let scaledHeight = scaledWidth / videoAspect
         L.og.info("getScaledVideoDimensions: availableWidth:\(availableWidth) - maxHeight: \(maxHeight) videoSize:\(videoSize.width)x\(videoSize.height) --scaled--> \(scaledWidth)x\(scaledHeight) ")
-        return ScaledDimensions(width: scaledWidth, height: scaledHeight)
+        return CGSize(width: scaledWidth, height: scaledHeight)
     }
     
     // else it means height is too big, scale down:
@@ -52,5 +47,5 @@ func getScaledVideoDimensions(videoSize:CGSize, availableWidth:CGFloat, maxHeigh
     let scaledWidth = scaledHeight * videoAspect
     
     L.og.info("getScaledVideoDimensions: availableWidth:\(availableWidth) - maxHeight: \(maxHeight) videoSize:\(videoSize.width)x\(videoSize.height) --scaled--> \(scaledWidth)x\(scaledHeight) ")
-    return ScaledDimensions(width: scaledWidth, height: scaledHeight)
+    return CGSize(width: scaledWidth, height: scaledHeight)
 }
