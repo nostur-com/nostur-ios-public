@@ -1,10 +1,3 @@
-//
-//  NWCZapQueue.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 02/06/2023.
-//
-
 import Foundation
 
 // Instant zaps
@@ -29,7 +22,6 @@ class NWCZapQueue {
     
     init() {
         cleanUpTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true, block: { [unowned self] timer in
-//            L.og.debug("NWCZapQueue.cleanUpTimer fired")
             let now = Date()
             
             DataProvider.shared().bg.perform { [weak self] in
@@ -145,12 +137,12 @@ class Zap {
             DataProvider.shared().bg.perform { [weak self] in
                 guard let self = self else { return }
                 if let eventId = self.eventId {
-                    let message = "Zap failed for [post](nostur:e:\(eventId)).\n\(self.error ?? "")"
+                    let message = String(localized: "Zap failed for [post](nostur:e:\(eventId)).\n\(self.error ?? "")", comment: "Error message. Only translate the 'Zap failed for' part, don't change between brackets")
                     _ = PersistentNotification.createFailedNWCZap(pubkey: NosturState.shared.activeAccountPublicKey, message: message, context: DataProvider.shared().bg)
                     L.og.info("⚡️ Created notification: Zap failed for [post](nostur:e:\(eventId)). \(self.error ?? "")")
                 }
                 else {
-                    let message = "Zap failed for [contact](nostur:p:\(self.contactPubkey)).\n\(self.error ?? "")"
+                    let message = String(localized:"Zap failed for [contact](nostur:p:\(self.contactPubkey)).\n\(self.error ?? "")", comment: "Error message. Only translate the 'Zap failed for' part, don't change between brackets")
                     _ = PersistentNotification.createFailedNWCZap(pubkey: NosturState.shared.activeAccountPublicKey, message: message, context: DataProvider.shared().bg)
                     L.og.info("⚡️ Created notification: Zap failed for [contact](nostur:p:\(self.contactPubkey)). \(self.error ?? "")")
                 }
@@ -175,13 +167,13 @@ class Zap {
                     self.state = .CALLBACK_RECEIVED
                 }
                 else {
-                    self.error = "Could not fetch invoice"
+                    self.error = String(localized:"Could not fetch invoice", comment: "Error message")
                     self.state = .ERROR
                 }
             }
             catch {
                 L.og.error("🔴🔴🔴🔴 problem in lnurlp \(error)")
-                self.error = "Could not fetch invoice"
+                self.error = String(localized:"Could not fetch invoice", comment: "Error message")
                 self.state = .ERROR
             }
         }
@@ -208,7 +200,7 @@ class Zap {
                             }
                             else {
                                 L.fetching.notice("problem fetching ln invoice / or signing zap request note. callback: \(self.callbackUrl ?? "")")
-                                self.error = "Could not fetch invoice"
+                                self.error = String(localized:"Could not fetch invoice", comment: "Error message")
                                 self.state = .ERROR
                             }
                         }
@@ -216,7 +208,7 @@ class Zap {
                 }
                 else {
                     L.fetching.notice("problem fetching ln invoice / or signing zap request note. callback: \(self.callbackUrl ?? "")")
-                    self.error = "Could not fetch invoice"
+                    self.error = String(localized:"Could not fetch invoice", comment: "Error message")
                     self.state = .ERROR
                 }
             }
@@ -234,7 +226,7 @@ class Zap {
                 }
                 catch {
                     L.fetching.notice("problem fetching ln invoice. callback:\(self.callbackUrl ?? "") \(error)")
-                    self.error = "Could not fetch invoice"
+                    self.error = String(localized:"Could not fetch invoice", comment: "Error message")
                     self.state = .ERROR
                 }
             }
@@ -250,7 +242,7 @@ class Zap {
                 self.state = .NWC_PAY_REQUEST_SENT
             }
             else {
-                self.error = "Could not send NWC request"
+                self.error = String(localized:"Could not NWC request", comment: "Error message")
                 state = .ERROR
             }
         }

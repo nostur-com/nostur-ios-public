@@ -1,10 +1,3 @@
-//
-//  LightningEffect.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 03/06/2023.
-//
-
 import SwiftUI
 
 struct LightningStrikeShape: Shape {
@@ -50,9 +43,9 @@ struct LightingEffectTester: View {
         GeometryReader { geo in
             VStack(alignment: .trailing) {
                 Spacer()
-                Text("Example view - text Example view  1 ")
-                Text("Example view - text 2 ")
-                Text("Example view - text 3 ")
+                Text(verbatim:"Example view - text Example view  1 ")
+                Text(verbatim:"Example view - text 2 ")
+                Text(verbatim:"Example view - text 3 ")
                 Image("BoltIcon")
                     .foregroundColor(activeColor)
                     .padding(.horizontal, 10)
@@ -69,9 +62,9 @@ struct LightingEffectTester: View {
                         }
                     )
                 
-                Text("Example view - text 4 ")
-                Text("Example view - text 5 ")
-                Text("Example view - text 6 ")
+                Text(verbatim:"Example view - text 4 ")
+                Text(verbatim:"Example view - text 5 ")
+                Text(verbatim:"Example view - text 6 ")
                 Spacer()
             }
         }

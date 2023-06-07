@@ -1,23 +1,4 @@
-//
-//  LUD16.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 13/02/2023.
-//
-
 import Foundation
-
-// LUD16 response
-//{
-//    "status": "OK",
-//    "tag": "payRequest",
-//    "minSendable": 1,
-//    "maxSendable": 10000000000,
-//    "callback": "https://sendsats.lol/@jb55",
-//    "metadata": "[[\"text/plain\",\"jb55's lightning address\"],[\"text/identifier\",\"jb55@sendsats.lol\"]]",
-//    "allowsNostr": true,
-//    "nostrPubkey": "9630f464cca6a5147aa8a35f0bcdd3ce485324e732fd39e09233b1d848238f31"
-//}
 
 struct LUD16response: Codable {
     let status:String?
@@ -38,9 +19,7 @@ struct LNUrlResponse: Codable {
 class LUD16 {
 
     static func getCallbackUrl(lud06:String) async throws -> LUD16response {
-//        print(lud06)
         guard let lud06url = try? Bech32.decode(lnurl: lud06) else { throw "cant decode lnurl" }
-//        print(lud06url.absoluteURL)
         
         let request = URLRequest(url: lud06url)
         
@@ -90,7 +69,6 @@ class LUD16 {
         let urlSession = URLSession.shared
         
         do {
-            ThreadWarning.which("getInvoice 3")
             let (data, _) = try await urlSession.data(from: callbackUrl)
         
             let response = try JSONDecoder().decode(LNUrlResponse.self, from: data)

@@ -63,7 +63,7 @@ struct AlbyNWCConnectSheet: View {
                 }
             }
             else {
-                Button("Connect Alby wallet") { startNWC() }
+                Button(String(localized:"Connect Alby wallet", comment:"Button to connect to Alby wallet")) { startNWC() }
                     .buttonStyle(.borderedProminent)
             }
             

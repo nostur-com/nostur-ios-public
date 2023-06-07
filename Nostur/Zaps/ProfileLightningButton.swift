@@ -1,17 +1,9 @@
-//
-//  ProfileLightningButton.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 25/02/2023.
-//
-
 import SwiftUI
 
 struct ProfileLightningButton: View {
     var sp:SocketPool = .shared
     let er:ExchangeRateModel = .shared
     @EnvironmentObject var ns:NosturState
-//    let ns:NosturState = .shared // else preview is broken..
     
     var contact:Contact?
     

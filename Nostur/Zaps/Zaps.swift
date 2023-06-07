@@ -1,10 +1,3 @@
-//
-//  Zaps.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 13/02/2023.
-//
-
 import Foundation
 
 
@@ -28,7 +21,7 @@ func zapRequest(forPubkey pubkey: String, andEvent eventId: String? = nil, withM
 
 
 extension Event {
-    // Homegrown bolt11 amount decoder because LightningDevKit is sloooooooow
+    // Homegrown bolt11 amount decoder because LightningDevKit is slow and don't know why
     // Also Homegrown parsing of serializedTags because EventTags.init slow...
     var naiveSats:Double {
         guard let bolt11 = naiveBolt11() else { return 0.0 }

@@ -1,10 +1,3 @@
-//
-//  LightningButton.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 13/02/2023.
-//
-
 import SwiftUI
 
 struct LightningButton: View {
@@ -125,8 +118,7 @@ extension LightningButton {
                     }
                 }
                 catch {
-                    print("🔴🔴🔴🔴 problem in lnurlp")
-                    print(error)
+                    L.og.error("🔴🔴🔴🔴 problem in lnurlp \(error)")
                 }
             }
         }

@@ -1,10 +1,3 @@
-//
-//  NewNoteButton.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 24/02/2023.
-//
-
 import SwiftUI
 
 struct NewNoteButton: View {
@@ -22,7 +15,7 @@ struct NewNoteButton: View {
                 .background(Circle().foregroundColor(Color.white))
                 .frame(width: 45, height: 45)
         }
-        .accessibilityLabel("New post")
+        .accessibilityLabel(String(localized:"New post", comment: "Button to create a new post"))
     }
 }
 

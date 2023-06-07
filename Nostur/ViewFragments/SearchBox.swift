@@ -1,10 +1,3 @@
-//
-//  SearchBox.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 06/05/2023.
-//
-
 import SwiftUI
 
 struct SearchBox: View {
@@ -45,11 +38,6 @@ struct SearchBox: View {
                 debounceObject.text = newText
             }
         }
-//        .onAppear {
-//            if text != debounceObject.text {
-//                debounceObject.text = text
-//            }
-//        }
         .onChange(of: debounceObject.debouncedText) { searchString in
             if searchString != text {
                 text = searchString

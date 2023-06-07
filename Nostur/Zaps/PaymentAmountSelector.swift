@@ -1,10 +1,3 @@
-//
-//  PaymentAmountSelector.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 13/02/2023.
-//
-
 import SwiftUI
 
 struct PaymentAmountSelector: View {
@@ -60,7 +53,7 @@ struct PaymentAmountSelector: View {
                                 dismiss()
                             }
                             else {
-                                errorMessage = "There was a problem, could not send sats"
+                                errorMessage = String(localized:"There was a problem, could not send sats", comment: "Error message")
                             }
                         }
                         else {
@@ -89,7 +82,7 @@ struct PaymentAmountSelector: View {
                                 dismiss()
                             }
                             else {
-                                errorMessage = "There was a problem, could not send sats"
+                                errorMessage = String(localized:"There was a problem, could not send sats", comment: "Error message")
                             }
                         }
                         else {
@@ -111,9 +104,9 @@ struct PaymentAmountSelector: View {
         NavigationStack {
             VStack {
                 HStack {
-                    Text("Send sats:").font(.title2)
+                    Text("Send sats:", comment: "Send how many sats label").font(.title2)
                     Text(ceil(Double(amountS)).clean).font(.title2)
-                    Text("sats").font(.title2)
+                    Text("sats", comment: "Shorthand for satoshis").font(.title2)
                     if (fiatPrice != "($0.00)") {
                         Text("\(fiatPrice)").font(.title2)
                     }
