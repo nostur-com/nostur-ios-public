@@ -496,10 +496,14 @@ extension Event {
                     request.entity = Event.entity()
                     request.predicate = NSPredicate(format: "id == %@", lastEtag)
                     request.fetchLimit = 1
-                    //TODO: Can use EventRelationsQueue here probably for speed up
-                    if let reactingToEvent = try context.fetch(request).first {
-                        //                    print("updating .likes for .id = \(String(describing: reactingToEvent.id))")
-//                        reactingToEvent.objectWillChange.send()
+                    
+                    if let reactingToEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: lastEtag) {
+                        reactingToEvent.likesCount = reactingToEvent.likesCount + 1
+                        reactingToEvent.likesDidChange.send(reactingToEvent.likesCount)
+                        event.reactionTo = reactingToEvent
+                        event.reactionToId = reactingToEvent.id
+                    }
+                    else if let reactingToEvent = try context.fetch(request).first {
                         reactingToEvent.likesCount = reactingToEvent.likesCount + 1
                         reactingToEvent.likesDidChange.send(reactingToEvent.likesCount)
                         event.reactionTo = reactingToEvent
