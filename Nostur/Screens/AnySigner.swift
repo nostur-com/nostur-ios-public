@@ -1,10 +1,3 @@
-//
-//  AnySigner.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 05/06/2023.
-//
-
 import SwiftUI
 import secp256k1
 
@@ -23,8 +16,14 @@ struct AnySigner: View {
 
     var body: some View {
         Form {
-            TextField("Enter JSON", text: $input, prompt: Text("{ \"some\": [\"json\"] }"), axis: .vertical)
-                .lineLimit(20, reservesSpace: true)
+            TextField(String(localized:"Enter JSON", comment:"Label for field to enter a nostr json event"), text: $input, prompt: Text(verbatim: "{ \"some\": [\"json\"] }"), axis: .vertical)
+                .lineLimit(16, reservesSpace: true)
+            if let account = NosturState.shared.account, account.privateKey != nil {
+            HStack {
+                Text("Signing as")
+                PFP(pubkey: account.publicKey, account: account, size: 30)
+            }
+            }
             if let error {
                 Text(error)
                     .fontWeight(.bold)
@@ -37,7 +36,7 @@ struct AnySigner: View {
             }
 
         }
-        .navigationTitle("Sign any nostr event")
+        .navigationTitle(String(localized:"Sign any nostr event", comment:"Navigation title for screen to sign any nostr event"))
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel") { dismiss() }
@@ -46,34 +45,34 @@ struct AnySigner: View {
                 Button { UIPasteboard.general.string = input } label: { Image(systemName: "doc.on.clipboard.fill") }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Publish") { publish() }
+                Button(String(localized:"Publish", comment:"Button to publish")) { publish() }
                     .disabled(signedNEvent == nil)
             }
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Sign event") {
+                Button(String(localized:"Sign event", comment:"Button to sign a nostr JSON event")) {
                     let decoder = JSONDecoder()
                     
                     guard let inputData = input.data(using: .utf8) else {
-                        error = "Could not convert data"; return
+                        error = String(localized:"Could not convert data", comment: "Error message"); return
                     }
                     
                     guard var nEvent = try? decoder.decode(AnyNEvent.self, from: inputData) else {
-                        error = "Could not parse JSON"; return
+                        error = String(localized:"Could not parse JSON", comment: "Error message"); return
                     }
                     
                     guard let pk = NosturState.shared.account?.privateKey else {
-                        error = "Account has no private key"; return
+                        error = String(localized:"Account has no private key", comment: "Error message"); return
                     }
                     
                     guard let keys = try? NKeys(privateKeyHex: pk), let signedNEvent = try? nEvent.sign(keys), let verified = try? signedNEvent.verified(), verified else {
-                        error = "Could not sign event"; return
+                        error = String(localized:"Could not sign event", comment: "Error message"); return
                     }
 
 
                     input = signedNEvent.eventJson(.prettyPrinted)
                     self.signedNEvent = signedNEvent
-//                    self.signedNEvent = signedNEvent
                 }
+                .disabled(NosturState.shared.account?.privateKey == nil)
             }
         }
     }

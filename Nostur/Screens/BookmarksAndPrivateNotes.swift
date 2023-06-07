@@ -1,9 +1,3 @@
-//
-//  BookmarksAndPrivateNotes.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 13/03/2023.
-//
 import SwiftUI
 
 struct BookmarksAndPrivateNotes: View {

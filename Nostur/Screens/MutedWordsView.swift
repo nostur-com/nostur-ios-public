@@ -1,10 +1,3 @@
-//
-//  MutedWords.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 12/04/2023.
-//
-
 import SwiftUI
 
 struct MutedWordsView: View {
@@ -58,15 +51,15 @@ struct MutedWordsView: View {
         var body: some View {
             NavigationStack {
                 Form {
-                    Section(header: Text("Specific word or sentence"), footer: Text("Posts containing this will be filtered from your feed")) {
-                        TextField("Specific word or sentence", text: $text, prompt: Text("nft"))
+                    Section(header: Text("Specific word or sentence", comment: "Heading for entering a word or sentence to mute"), footer: Text("Posts containing this will be filtered from your feed")) {
+                        TextField("Specific word or sentence", text: $text, prompt: Text(verbatim: "nft"))
                         
                         Toggle(isOn: $mutedWords.enabled) {
-                            Text("Activate this filter")
+                            Text("Activate this filter", comment: "Toggle to activate filter")
                         }
                     }
                 }
-                .navigationTitle("Edit muted word")
+                .navigationTitle(String(localized:"Edit muted word", comment: "Navigation title for screen to edit muted word"))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {

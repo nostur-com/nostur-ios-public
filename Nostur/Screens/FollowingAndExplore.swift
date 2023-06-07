@@ -1,10 +1,3 @@
-//
-//  FollowingAndGlobal.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 27/02/2023.
-//
-
 import SwiftUI
 import Combine
 
@@ -46,132 +39,132 @@ struct FollowingAndExplore: View { //, Equatable {
     @StateObject private var exploreVM:LVM = LVMManager.shared.exploreLVM()
     
     var body: some View {
-//        let _ = Self._printChanges()
-            VStack(spacing:0) {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing:0) {
+        //        let _ = Self._printChanges()
+        VStack(spacing:0) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing:0) {
+                    TabButton(
+                        action: { selectedSubTab = "Following" },
+                        title: String(localized:"Following", comment:"Tab title for feed of people you follow"),
+                        selected: selectedSubTab == "Following")
+                    .contextMenu {
+                        Button {
+                            followingVM.hideReplies.toggle()
+                        } label: {
+                            if followingVM.hideReplies {
+                                Label(String(localized: "Show replies", comment: "Setting in context menu to show replies in the feed"), systemImage: "bubble.left.and.bubble.right.fill")
+                            }
+                            else {
+                                Label(String(localized: "Hide replies", comment: "Setting in context menu to hide replies from the feed"), systemImage: "bubble.left.and.bubble.right.fill")
+                            }
+                        }
+                    }
+                    Spacer()
+                    ForEach(lists) { list in
                         TabButton(
-                            action: { selectedSubTab = "Following" },
-                            title: "Following",
-                            selected: selectedSubTab == "Following")
+                            action: {
+                                selectedSubTab = "List"
+                                selectedList = list
+                                selectedListId = list.subscriptionId
+                            },
+                            title: list.name_,
+                            selected: selectedSubTab == "List" && selectedList == list )
                         .contextMenu {
+                            NavigationLink(value: list) { Text("Edit List", comment: "In context menu, to take the user to edit list screen") }
                             Button {
-                                followingVM.hideReplies.toggle()
+                                list.hideReplies.toggle()
+                                LVMManager.shared.listLVM(forList: list).hideReplies = list.hideReplies
                             } label: {
-                                    if followingVM.hideReplies {
-                                        Label(String(localized: "Show replies", comment: "Setting in context menu to show replies in the feed"), systemImage: "bubble.left.and.bubble.right.fill")
-                                    }
-                                    else {
-                                        Label(String(localized: "Hide replies", comment: "Setting in context menu to hide replies from the feed"), systemImage: "bubble.left.and.bubble.right.fill")
-                                    }
+                                if list.hideReplies {
+                                    Label(String(localized: "Show replies", comment: "Setting in context menu to show replies in the feed"), systemImage: "bubble.left.and.bubble.right.fill")
+                                }
+                                else {
+                                    Label(String(localized: "Hide replies", comment: "Setting in context menu to hide replies from the feed"), systemImage: "bubble.left.and.bubble.right.fill")
+                                }
                             }
                         }
                         Spacer()
-                        ForEach(lists) { list in
-                            TabButton(
-                                action: {
-                                    selectedSubTab = "List"
-                                    selectedList = list
-                                    selectedListId = list.subscriptionId
-                                },
-                                title: list.name_,
-                                selected: selectedSubTab == "List" && selectedList == list )
-                            .contextMenu {
-                                NavigationLink(value: list) { Text("Edit List", comment: "In context menu, to take the user to edit list screen") }
-                                Button {
-                                    list.hideReplies.toggle()
-                                    LVMManager.shared.listLVM(forList: list).hideReplies = list.hideReplies
-                                } label: {
-                                        if list.hideReplies {
-                                            Label(String(localized: "Show replies", comment: "Setting in context menu to show replies in the feed"), systemImage: "bubble.left.and.bubble.right.fill")
-                                        }
-                                        else {
-                                            Label(String(localized: "Hide replies", comment: "Setting in context menu to hide replies from the feed"), systemImage: "bubble.left.and.bubble.right.fill")
-                                        }
-                                }
+                    }
+                    TabButton(
+                        action: { selectedSubTab = "Explore"},
+                        title: String(localized:"Explore", comment:"Tab title for the Explore feed"),
+                        selected: selectedSubTab == "Explore")
+                    .contextMenu {
+                        Button {
+                            exploreVM.hideReplies.toggle()
+                        } label: {
+                            if exploreVM.hideReplies {
+                                Label(String(localized: "Show replies", comment: "Setting in context menu to show replies in the feed"), systemImage: "bubble.left.and.bubble.right.fill")
                             }
-                            Spacer()
-                        }
-                        TabButton(
-                            action: { selectedSubTab = "Explore"},
-                            title: "Explore",
-                            selected: selectedSubTab == "Explore")
-                        .contextMenu {
-                            Button {
-                                exploreVM.hideReplies.toggle()
-                            } label: {
-                                if exploreVM.hideReplies {
-                                        Label(String(localized: "Show replies", comment: "Setting in context menu to show replies in the feed"), systemImage: "bubble.left.and.bubble.right.fill")
-                                    }
-                                    else {
-                                        Label(String(localized: "Hide replies", comment: "Setting in context menu to hide replies from the feed"), systemImage: "bubble.left.and.bubble.right.fill")
-                                    }
+                            else {
+                                Label(String(localized: "Hide replies", comment: "Setting in context menu to hide replies from the feed"), systemImage: "bubble.left.and.bubble.right.fill")
                             }
                         }
                     }
-                    .frame(width: dim.listWidth)
+                }
+                .frame(width: dim.listWidth)
+            }
+            
+            ZStack {
+                // FOLLOWING
+                if (followingVM.activeVM == nil || account.followingPublicKeys.count <= 1) {
+                    VStack {
+                        Spacer()
+                        Text("You are not following anyone yet, visit the explore tab and follow some people")
+                            .multilineTextAlignment(.center)
+                            .padding(.all, 30.0)
+                        
+                        Button {
+                            selectedSubTab = "Explore"
+                        } label: {
+                            Text("Explore", comment: "Button to go to the Explore tab")
+                        }.buttonStyle(.borderedProminent)
+                        Spacer()
+                    }
+                }
+                else {
+                    if let vm = followingVM.activeVM {
+                        ListViewContainer(vm: vm)
+                            .opacity(selectedSubTab == "Following" ? 1 : 0)
+                    }
                 }
                 
-                ZStack {
-                    // FOLLOWING
-                    if (followingVM.activeVM == nil || account.followingPublicKeys.count <= 1) {
-                        VStack {
-                            Spacer()
-                            Text("You are not following anyone yet, visit the explore tab and follow some people")
-                                .multilineTextAlignment(.center)
-                                .padding(.all, 30.0)
-                            
-                            Button {
-                                selectedSubTab = "Explore"
-                            } label: {
-                                Text("Explore")
-                            }.buttonStyle(.borderedProminent)
-                            Spacer()
-                        }
-                    }
-                    else {
-                        if let vm = followingVM.activeVM {
-                            ListViewContainer(vm: vm)
-                                .opacity(selectedSubTab == "Following" ? 1 : 0)
-                        }
-                    }
-                    
-                    // LISTS
-                    ForEach(lists) { list in
-                        ListViewContainer(vm: LVMManager.shared.listLVM(forList: list))
-                            .id(list.subscriptionId)
-                            .opacity(selectedSubTab == "List" && list == selectedList ? 1 : 0)
-                    }
-
-                    // EXPLORE
-                    ListViewContainer(vm: exploreVM)
-                        .opacity(selectedSubTab == "Explore" ? 1 : 0)
+                // LISTS
+                ForEach(lists) { list in
+                    ListViewContainer(vm: LVMManager.shared.listLVM(forList: list))
+                        .id(list.subscriptionId)
+                        .opacity(selectedSubTab == "List" && list == selectedList ? 1 : 0)
                 }
                 
+                // EXPLORE
+                ListViewContainer(vm: exploreVM)
+                    .opacity(selectedSubTab == "Explore" ? 1 : 0)
             }
-            .onAppear {
-                if selectedSubTab == "List" {
-                    if let list = lists.first(where: { $0.subscriptionId == selectedListId }) {
-                        selectedList = list
-                    }
-                    else {
-                        selectedList = lists.first
-                    }
+            
+        }
+        .onAppear {
+            if selectedSubTab == "List" {
+                if let list = lists.first(where: { $0.subscriptionId == selectedListId }) {
+                    selectedList = list
                 }
-                followingVM.account = account
+                else {
+                    selectedList = lists.first
+                }
             }
-            .onChange(of: account, perform: { newAccount in
-                guard account != newAccount else { return }
-                L.og.info("Account changed from: \(account.name)/\(account.publicKey) to \(newAccount.name)/\(newAccount.publicKey)")
-                LVMManager.shared.listVMs.filter { $0.pubkey == account.publicKey }
-                    .forEach { lvm in
-                        lvm.cleanUp()
-                    }
-                LVMManager.shared.listVMs.removeAll(where: { $0.pubkey == account.publicKey })
-                self.followingVM.account = newAccount
-            })
-            .navigationTitle(selectedSubTab == "List" ? (selectedList?.name_ ?? "List") : selectedSubTab)
-            .navigationBarTitleDisplayMode(.inline)
+            followingVM.account = account
+        }
+        .onChange(of: account, perform: { newAccount in
+            guard account != newAccount else { return }
+            L.og.info("Account changed from: \(account.name)/\(account.publicKey) to \(newAccount.name)/\(newAccount.publicKey)")
+            LVMManager.shared.listVMs.filter { $0.pubkey == account.publicKey }
+                .forEach { lvm in
+                    lvm.cleanUp()
+                }
+            LVMManager.shared.listVMs.removeAll(where: { $0.pubkey == account.publicKey })
+            self.followingVM.account = newAccount
+        })
+        .navigationTitle(selectedSubTab == "List" ? (selectedList?.name_ ?? "List") : selectedSubTab)
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

@@ -1,10 +1,3 @@
-//
-//  NosturRootMenu.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 31/01/2023.
-//
-
 import SwiftUI
 import Nuke
 import AVFoundation
@@ -52,11 +45,6 @@ struct NosturRootMenu: View {
     
     func handleUrl(_ url:URL) {
         L.og.info("handleUrl: \(url.absoluteString)")
-//        L.og.info("handleUrl: \(url.query(percentEncoded: false) ?? "-")")
-        // handleUrl: nostrwalletconnect://69effe7b49a6dd5cf525bd0905917a5005ffe480b58eeb8e861418cf3ae760d9?relay=wss://relay.getalby.com/v1&secret=fd13a09410350ef329a95f63fba2694c8ff81b0590454ffa97eee732fef4acfb&lud16=weathereddarkness25@getalby.com
-        
-        
-        
         
         // CALLBACK FROM NWC
         if let _ = url.absoluteString.firstMatch(of: /^nostur:\/\/nwc_callback$/) {
@@ -197,62 +185,61 @@ struct SideBar: View {
             List {
                 VStack(alignment: .leading) {
                     Text("\(account.name)").font(.headline)
-//                    Text("@\(account.name)").font(.subheadline)
-                    Text(try! AttributedString(markdown: "**\(account.follows?.count ?? 0)**  Following")).font(.caption)
+                    Text("**\(account.follows?.count ?? 0)**  Following", comment: "Number of people following").font(.caption)
                 }
 
                 Button {
                     navigateTo(ContactPath(key: account.publicKey))
                     sm.showSidebar = false
                 } label: {
-                    Label("Profile", systemImage: "person")
+                    Label(String(localized:"Profile", comment:"Side bar navigation button"), systemImage: "person")
                 }
                 Button {
                     if selectedTab != "Main" { selectedTab = "Main" }
                     navigateToOnMain(ViewPath.Lists)
                     sm.showSidebar = false
                 } label: {
-                    Label("Lists", systemImage: "person.2.crop.square.stack.fill")
+                    Label(String(localized:"Lists", comment:"Side bar navigation button"), systemImage: "person.2.crop.square.stack.fill")
                 }
                 Button {
                     selectedTab = "Bookmarks"
                     sm.showSidebar = false
                 } label: {
-                    Label("Bookmarks", systemImage: "bookmark")
+                    Label(String(localized:"Bookmarks", comment:"Side bar navigation button"), systemImage: "bookmark")
                 }
                 Button {
                     if selectedTab != "Main" { selectedTab = "Main" }
                     navigateToOnMain(ViewPath.Badges)
                     sm.showSidebar = false
                 } label: {
-                    Label("Badges", systemImage: "medal")
+                    Label(String(localized:"Badges", comment:"Side bar navigation button"), systemImage: "medal")
                 }
                 Button {
                     if selectedTab != "Main" { selectedTab = "Main" }
                     navigateToOnMain(ViewPath.Settings)
                     sm.showSidebar = false
                 } label: {
-                    Label("Settings", systemImage: "gearshape")
+                    Label(String(localized:"Settings", comment:"Side bar navigation button"), systemImage: "gearshape")
                 }
                 Button {
                     if selectedTab != "Main" { selectedTab = "Main" }
                     navigateToOnMain(ViewPath.Blocklist)
                     sm.showSidebar = false
                 } label: {
-                    Label("Block list", systemImage: "person.badge.minus")
+                    Label(String(localized:"Block list", comment:"Side bar navigation button"), systemImage: "person.badge.minus")
                 }
                 Button {
                     showAnySigner = true
                 } label: {
-                    Label("Signer", systemImage: "signature")
+                    Label(String(localized:"Signer", comment:"Side bar navigation button"), systemImage: "signature")
                 }
 //                Button {} label: {
-//                    Label("About", systemImage: "info")
+//                    Label(String(localized:About", comment:"Side bar navigation button"), systemImage: "info")
 //                }
                 Button {
                     logoutAccount = account
                 } label: {
-                    Label("Log out", systemImage: "rectangle.portrait.and.arrow.right")
+                    Label(String(localized:"Log out", comment:"Side bar navigation button"), systemImage: "rectangle.portrait.and.arrow.right")
                 }
             }
             .zIndex(20)
@@ -282,29 +269,29 @@ struct SideBar: View {
         }
         .actionSheet(item: $logoutAccount) { account in
                     ActionSheet(
-                        title: Text("Confirm log out"),
+                        title: Text("Confirm log out", comment: "Action sheet title"),
                         message: account.privateKey != nil
                         ? Text("""
                                  Make sure you have a back-up of your private key (nsec)
                                  Nostur cannot recover your account without it
-                                 """)
+                                 """, comment: "informational message")
                         : Text("""
                                  Account: @\(account.name) / \(account.display_name)
-                                 """)
+                                 """, comment: "informational message showing account name(s)")
                         ,
                         buttons: account.privateKey != nil ? [
-                            .destructive(Text("Log out"), action: {
+                            .destructive(Text("Log out", comment: "Log out button"), action: {
                                 ns.logout(account)
                                 sm.showSidebar = false
                             }),
-                            .default(Text("Copy private key (nsec) to clipboard"), action: {
+                            .default(Text("Copy private key (nsec) to clipboard", comment: "Button to copy private key to clipboard"), action: {
                                 if let pk = account.privateKey {
                                     UIPasteboard.general.string = nsec(pk)
                                 }
                             }),
                             .cancel(Text("Cancel"))
                         ] : [
-                            .destructive(Text("Log out"), action: {
+                            .destructive(Text("Log out", comment:"Log out button"), action: {
                                 ns.logout(account)
                                 sm.showSidebar = false
                             }),

@@ -1,11 +1,3 @@
-//
-////
-////  Search.swift
-////  Nostur
-////
-////  Created by Fabian Lachman on 07/02/2023.
-////
-//
 import SwiftUI
 import Combine
 
@@ -75,7 +67,7 @@ struct Search: View {
                 }
             }
             .withNavigationDestinations()
-            .navigationTitle("Search")
+            .navigationTitle(String(localized:"Search", comment: "Navigation title for Search screen"))
             .navigationBarTitleDisplayMode(.inline)
             .onChange(of: searchText) { searchString in
                 nrPosts = []

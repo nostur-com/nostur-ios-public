@@ -1,10 +1,3 @@
-//
-//  TermsAndConditions.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 12/04/2023.
-//
-
 import SwiftUI
 
 struct TermsAndConditions: View {
@@ -14,10 +7,10 @@ struct TermsAndConditions: View {
         VStack {
             ScrollView {
                 VStack(alignment:.leading) {
-                    Text("**Terms and Conditions**\n")
+                    Text("**Terms and Conditions**\n", comment: "Terms and conditions heading")
                         .hCentered()
 
-                    Text(#"Please read these Terms and Conditions ("Terms", "Terms and Conditions") carefully before using Nostur (the "App") operated by the independent developer ("Developer")."#)
+                    Text(#"Please read these Terms and Conditions ("Terms", "Terms and Conditions") carefully before using Nostur (the "App") operated by the independent developer ("Developer")."#, comment:"Terms and conditions paragraph")
                     
                     Text("""
 Last updated: May 27th, 2023
@@ -55,12 +48,12 @@ Tenor: for inluding animated GIFs in your posts
 Image upload services: For including images in your posts. You can opt out to using these services by not including images or GIFs in your posts and not uploading a profile picture or banner in the app.
 
 For any questions, please contact feedback@nostur.com.
-""")
+""", comment: "Terms and conditions")
                 }
                 .padding()
         }
             
-            Button("Accept") {
+            Button(String(localized:"Accept", comment: "Button to accept terms and conditions")) {
                 didAcceptTerms = true
                 if !NosturState.shared.activeAccountPublicKey.isEmpty {
                     NosturState.shared.onBoardingIsShown = false

@@ -1,10 +1,3 @@
-//
-//  Settings.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 23/02/2023.
-//
-
 import SwiftUI
 import Combine
 import CoreData
@@ -48,67 +41,67 @@ struct Settings: View {
     @State var sliderValue = 0.0
     @State var deleteAccountIsShown = false
     
-    @State var pfpSize = "Calculating..."
-    @State var contentSize = "Calculating..."
-    @State var bannerSize = "Calculating..."
-    @State var badgesSize = "Calculating..."
+    @State var pfpSize = String(localized:"Calculating...", comment: "Shown when calculating disk space")
+    @State var contentSize = String(localized:"Calculating...", comment: "Shown when calculating disk space")
+    @State var bannerSize = String(localized:"Calculating...", comment: "Shown when calculating disk space")
+    @State var badgesSize = String(localized:"Calculating...", comment: "Shown when calculating disk space")
 
     var body: some View {
 
         Form {
-            Section(header: Text("Message verification")) {
+            Section(header: Text("Message verification", comment: "Setting heading on settings screen")) {
                 Toggle(isOn: $settings.isSignatureVerificationEnabled) {
-                    Text("Verify message signatures")
-                    Text("Turn off to save battery life and trust the relays for the authenticity of messages")
+                    Text("Verify message signatures", comment: "Setting on settings screen")
+                    Text("Turn off to save battery life and trust the relays for the authenticity of messages", comment:"Setting on settings screen")
                 }
             }
             
-            Section(header: Text("Display")) {
+            Section(header: Text("Display", comment:"Setting heading on settings screen")) {
                 Toggle(isOn: $settings.hideBadges) {
-                    Text("We Don't Need No Stinkin' Badges")
-                    Text("Hides badges from profiles and feeds")
+                    Text("We Don't Need No Stinkin' Badges", comment:"Setting on settings screen")
+                    Text("Hides badges from profiles and feeds", comment: "Setting on settings screen")
                 }
                 Toggle(isOn: $settings.hideEmojisInNames) {
-                    Text("Hide emojis in names")
+                    Text("Hide emojis in names", comment:"Setting on settings screen")
                 }
                 Toggle(isOn: $settings.restrictAutoDownload) {
-                    Text("Restrict images to following")
-                    Text("Only auto-download images in new posts from people you follow\nToggle off to download from all")
+                    Text("Restrict images to following", comment:"Setting on settings screen")
+                    Text("Only auto-download images in new posts from people you follow\nToggle off to download from all", comment:"Setting on settings screen")
                 }
                 Toggle(isOn: $settings.fullWidthImages) {
-                    Text("Enable full width pictures")
+                    Text("Enable full width pictures", comment:"Setting on settings screen")
                 }
                 Toggle(isOn: $settings.animatedPFPenabled) {
-                    Text("Enable animated profile pics")
-                    Text("Disable to improve scrolling performance")
+                    Text("Enable animated profile pics", comment:"Setting on settings screen")
+                    Text("Disable to improve scrolling performance", comment:"Setting on settings screen")
                 }
                 Toggle(isOn: $settings.rowFooterEnabled) {
-                    Text("Show post stats on timeline")
-                    Text("Counters for replies, likes, zaps etc.")
+                    Text("Show post stats on timeline", comment:"Setting on settings screen")
+                    Text("Counters for replies, likes, zaps etc.", comment:"Setting on settings screen")
                 }
                 Toggle(isOn: $settings.autoScroll) {
-                    Text("Auto scroll to new posts")
-                    Text("When at top, auto scroll if there are new posts")
+                    Text("Auto scroll to new posts", comment:"Setting on settings screen")
+                    Text("When at top, auto scroll if there are new posts", comment:"Setting on settings screen")
                 }
                 Toggle(isOn: $settings.statusBubble) {
-                    Text("Loading indicator")
-                    Text("Shows when items are being processed")
+                    Text("Loading indicator", comment:"Setting on settings screen")
+                    Text("Shows when items are being processed", comment:"Setting on settings screen")
                 }
             }
             
-            Section(header: Text("Image uploading")) {
+            Section(header: Text("Image uploading", comment:"Setting heading on settings screen")) {
                 VStack {
                     Picker(selection: $settings.defaultMediaUploadService) {
                         ForEach(SettingsStore.mediaUploadServiceOptions) {
                             Text($0.name).tag($0)
                         }
                     } label: {
-                        Text("Media upload service")
+                        Text("Media upload service", comment:"Setting on settings screen")
                     }
                 }
             }
             
-            Section(header: Text("Zapping")) {
+            Section(header: Text("Zapping", comment:"Setting heading on settings screen")) {
                 
                 VStack {
                     Picker(selection: $settings.defaultLightningWallet) {
@@ -116,7 +109,7 @@ struct Settings: View {
                             Text($0.name).tag($0)
                         }
                     } label: {
-                        Text("Lightning wallet")
+                        Text("Lightning wallet", comment:"Setting on settings screen")
                     }
                     
                     Slider(value: $sliderValue, in: SLIDER_MIN...SLIDER_MAX) {
@@ -126,7 +119,7 @@ struct Settings: View {
                     } maximumValueLabel: {
                         Text("\(SLIDER_MAX.clean)")
                     }
-                    Text("Zap \(settings.defaultZapAmount.satsFormatted) sats by default (\(fiatPrice))")
+                    Text("Zap \(settings.defaultZapAmount.satsFormatted) sats by default (\(fiatPrice))", comment: "Describes how much sats will be zapped by default, first variable is sats, second is dollar price")
                 }
                 .onChange(of: settings.defaultLightningWallet) { newWallet in
                     if newWallet.scheme == "nostur:nwc:alby:" {
@@ -145,7 +138,7 @@ struct Settings: View {
             
             Section(header: Text("Data export")) {
                 Button("Save to file...") {
-                    guard ns.account != nil else { print("cannot export, no account"); return }
+                    guard ns.account != nil else { L.og.error("Cannot export, no account"); return }
                     showExporter.toggle()
                 }
                 if (showExporter) {
@@ -153,7 +146,7 @@ struct Settings: View {
                         .fileExporter(isPresented: $showExporter, document: EventsArchive(pubkey: ns.account!.publicKey), contentType: .events, defaultFilename: "Exported Nostur Events - \(String(ns.account!.npub.prefix(11)))") { result in
                             switch result {
                                 case .success(let url):
-                                    print("Saved to \(url)")
+                                L.og.info("Saved to \(url)")
                                 case .failure(let error):
                                     print(error.localizedDescription)
                             }
@@ -161,7 +154,7 @@ struct Settings: View {
                 }
             }
             
-            Section(header: Text("Relays")) {
+            Section(header: Text("Relays", comment: "Relay settings heading")) {
                 RelaysView()
                 Button {
                     createRelayPresented = true
@@ -181,23 +174,22 @@ struct Settings: View {
                                 _ = sp.addSocket(relayId: relay.objectID.uriRepresentation().absoluteString, url: relay.url!, read: relay.read, write: relay.write)
                             }
                         } catch {
-                            let nsError = error as NSError
-                            fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+                            L.og.error("Unresolved error \(error)")
                         }
                     }
                 }
             }
             
-            Section(header: Text("Caches")) {
+            Section(header: Text("Caches", comment: "Settings heading")) {
                 HStack {
-                    Text("Profile pictures: \(pfpSize)")
+                    Text("Profile pictures: \(pfpSize)", comment: "Message showing size of Profile pictures cache")
                         .task(priority: .medium) {
                             let cache = ImageProcessing.shared.pfp.configuration.dataCache as! DataCache
                             pfpSize = "\((cache.totalSize / 1024 / 1024)) MB"
                         }
                     Spacer()
-                    Button("Clear") {
-                        pfpSize = "Clearing..."
+                    Button(String(localized:"Clear", comment:"Button to clear cache")) {
+                        pfpSize = String(localized: "Clearing...", comment:"Message shown when clearing cache")
                         Task.detached(priority: .userInitiated) {
                             let cache = ImageProcessing.shared.pfp.configuration.dataCache as! DataCache
                             cache.removeAll()
@@ -210,14 +202,14 @@ struct Settings: View {
                     }
                 }
                 HStack {
-                    Text("Post content: \(contentSize)")
+                    Text("Post content: \(contentSize)", comment: "Message showing size of Post content cache")
                         .task(priority: .medium) {
                             let cache = ImageProcessing.shared.content.configuration.dataCache as! DataCache
                             contentSize = "\((cache.totalSize / 1024 / 1024)) MB"
                         }
                     Spacer()
-                    Button("Clear") {
-                        contentSize = "Clearing..."
+                    Button(String(localized:"Clear", comment:"Button to clear cache")) {
+                        contentSize = String(localized: "Clearing...", comment:"Message shown when clearing cache")
                         Task.detached(priority: .userInitiated) {
                             let cache = ImageProcessing.shared.content.configuration.dataCache as! DataCache
                             cache.removeAll()
@@ -230,14 +222,14 @@ struct Settings: View {
                     }
                 }
                 HStack {
-                    Text("Profile banners: \(bannerSize)")
+                    Text("Profile banners: \(bannerSize)", comment: "Message showing size of Profile banners cache")
                         .task(priority: .medium) {
                             let cache = ImageProcessing.shared.banner.configuration.dataCache as! DataCache
                             bannerSize = "\((cache.totalSize / 1024 / 1024)) MB"
                         }
                     Spacer()
-                    Button("Clear") {
-                        bannerSize = "Clearing..."
+                    Button(String(localized:"Clear", comment:"Button to clear cache")) {
+                        bannerSize = String(localized: "Clearing...", comment:"Message shown when clearing cache")
                         Task.detached(priority: .userInitiated) {
                             let cache = ImageProcessing.shared.banner.configuration.dataCache as! DataCache
                             cache.removeAll()
@@ -250,14 +242,14 @@ struct Settings: View {
                     }
                 }
                 HStack {
-                    Text("Badges: \(badgesSize)")
+                    Text("Badges: \(badgesSize)", comment: "Message showing size of badges cache")
                         .task(priority: .medium) {
                             let cache = ImageProcessing.shared.badges.configuration.dataCache as! DataCache
                             badgesSize = "\((cache.totalSize / 1024 / 1024)) MB"
                         }
                     Spacer()
-                    Button("Clear") {
-                        badgesSize = "Clearing..."
+                    Button(String(localized:"Clear", comment:"Button to clear cache")) {
+                        badgesSize = String(localized: "Clearing...", comment:"Message shown when clearing cache")
                         Task.detached(priority: .userInitiated) {
                             let cache = ImageProcessing.shared.badges.configuration.dataCache as! DataCache
                             cache.removeAll()
@@ -347,11 +339,11 @@ struct Settings: View {
 //                    }
 //                }
             if ns.account?.privateKey != nil {
-                Section(header: Text("Account")) {
+                Section(header: Text("Account", comment: "Heading for section to delete account")) {
                     Button(role: .destructive) {
                         deleteAccountIsShown = true
                     } label: {
-                        Label("Delete account", systemImage: "trash")
+                        Label(String(localized:"Delete account", comment: "Button to delete account"), systemImage: "trash")
                     }                    
                 }
             }

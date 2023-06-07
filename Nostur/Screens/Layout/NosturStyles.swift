@@ -39,12 +39,24 @@ struct FollowButton: View {
     var isFollowing: Bool = false
     var isPrivateFollowing:Bool = false
     
+    var buttonText:String {
+        if (isFollowing && isPrivateFollowing) {
+            return String(localized:"🤫 Following", comment:"Follow/Unfollow button when the state is 'Following silent'")
+        }
+        else if isFollowing {
+            return String(localized:"Following", comment:"Follow/Unfollow button when the state is 'Following'")
+        }
+        else {
+            return String(localized:"Follow", comment:"Button to follow someone")
+        }
+    }
+    
     var body: some View {
         
         let whiteColor = colorScheme == .light ? Color.white : Color.black
         let blackColor = colorScheme == .light ? Color.black : Color.white
         
-        Text((isFollowing && isPrivateFollowing) ? ("🤫 Following") : (isFollowing ? "Following" : "Follow"))
+        Text(buttonText)
             .lineLimit(1)
             .frame(width: 105, height: 30)
 //            .padding(.horizontal, 25)

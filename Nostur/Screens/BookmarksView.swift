@@ -1,17 +1,8 @@
-
-//
-//  BookmarksView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 25/01/2023.
-//
-
 import SwiftUI
 
 struct BookmarksContainer: View {
     @EnvironmentObject var ns:NosturState
-     
-    
+
     var body: some View {
         let _ = Self._printChanges()
         VStack(spacing:0) {
@@ -19,7 +10,7 @@ struct BookmarksContainer: View {
                 BookmarksView(account: ns.account!)
             }
             else {
-                Text("Select account account first")
+                Text("Select account first")
             }
         }
     }
@@ -86,7 +77,7 @@ struct BookmarksView: View {
                 self.loadBookmarks()
             }
         }
-        .navigationTitle("Bookmarks")
+        .navigationTitle(String(localized:"Bookmarks", comment:"Navigation title for Bookmarks screen"))
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarHidden(true)
         .onChange(of: selectedAccount) { account in

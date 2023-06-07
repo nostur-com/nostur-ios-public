@@ -1,10 +1,3 @@
-//
-//  AccountState.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 16/01/2023.
-//
-
 import SwiftUI
 import Foundation
 import CoreData
@@ -211,7 +204,7 @@ final class NosturState : ObservableObject {
     
     func publishNewContactList() {
         guard let clEvent = try? AccountManager.createContactListEvent(account: account!) else {
-            print("🔴🔴 Could not create new clEvent")
+            L.og.error("🔴🔴 Could not create new clEvent")
             return
         }
         _ = Unpublisher.shared.publishLast(clEvent, ofType: .contactList)
@@ -236,7 +229,7 @@ final class NosturState : ObservableObject {
                 try viewContext.save()
             }
             catch {
-                print("Could not add bookmark: \(error)")
+                L.og.error("Could not add bookmark: \(error)")
             }
         }
     }
@@ -266,8 +259,8 @@ final class NosturState : ObservableObject {
     
     func signEvent(_ event:NEvent) throws -> NEvent {
         guard account != nil, account?.privateKey != nil else {
-            if (account == nil) { print("🔴🔴🔴🔴🔴 Acccount missing, could not sign 🔴🔴🔴🔴🔴") }
-            if (account?.privateKey == nil) { print("🔴🔴🔴🔴🔴 private key missing, could not sign 🔴🔴🔴🔴🔴") }
+            if (account == nil) { L.og.error("🔴🔴🔴🔴🔴 Acccount missing, could not sign 🔴🔴🔴🔴🔴") }
+            if (account?.privateKey == nil) { L.og.error("🔴🔴🔴🔴🔴 private key missing, could not sign 🔴🔴🔴🔴🔴") }
             throw "account or keys missing, could not sign"
         }
         
@@ -278,7 +271,7 @@ final class NosturState : ObservableObject {
             return signedEvent
         }
         catch {
-            print("🔴🔴🔴🔴🔴 Could not sign event 🔴🔴🔴🔴🔴")
+            L.og.error("🔴🔴🔴🔴🔴 Could not sign event 🔴🔴🔴🔴🔴")
             throw "Could not sign event"
         }
     }
@@ -315,22 +308,22 @@ final class NosturState : ObservableObject {
         guard let account = account else { return }
         if let replyToRootId = nrPost.replyToRootId {
             account.mutedRootIds_ = account.mutedRootIds_ + [replyToRootId, nrPost.id]
-            print("Muting \(replyToRootId)")
+            L.og.info("Muting \(replyToRootId)")
         }
         else if let replyToId = nrPost.replyToId {
             account.mutedRootIds_ = account.mutedRootIds_ + [replyToId, nrPost.id]
-            print("Muting \(replyToId)")
+            L.og.info("Muting \(replyToId)")
         }
         else {
             account.mutedRootIds_ = account.mutedRootIds_ + [nrPost.id]
-            print("Muting \(nrPost.id)")
+            L.og.info("Muting \(nrPost.id)")
         }
         do {
             try viewContext.save()
             sendNotification(.muteListUpdated)
         }
         catch {
-            print("Could not save after muting thread \(error)")
+            L.og.error("Could not save after muting thread \(error)")
         }
     }
     
@@ -339,13 +332,12 @@ final class NosturState : ObservableObject {
         guard account != nil else { return nil }
         let impactMed = UIImpactFeedbackGenerator(style: .medium)
         impactMed.impactOccurred()
-        print("💖💖💖💖💖💖💖💖💖💖💖💖💖💖")
         
 //      1. create kind 7 event based on kind 1 event:
         let likeEvent = EventMessageBuilder.makeReactionEvent(reactingTo: event)
 //      2. sign that event with account keys
         guard let signedEvent = try? signEvent(likeEvent) else {
-            print("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
+            L.og.error("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
             return nil
         }
         event.likesCount += 1
@@ -359,7 +351,7 @@ final class NosturState : ObservableObject {
 //            sendNotification(.viewNeedsUpdate)
         }
         catch {
-            print("Could save after unlike \(error)")
+            L.og.error("Could not save after unlike \(error)")
         }
     }
     
@@ -388,7 +380,7 @@ final class NosturState : ObservableObject {
         let report = EventMessageBuilder.makeReportEvent(pubkey: event.pubkey, eventId: event.id, type: reportType, note: note, includeProfile: includeProfile)
 
         guard let signedEvent = try? signEvent(report) else {
-            print("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
+            L.og.error("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
             return nil
         }
         return signedEvent
@@ -400,7 +392,7 @@ final class NosturState : ObservableObject {
         let report = EventMessageBuilder.makeReportContact(pubkey: pubkey, type: reportType, note: note)
 
         guard let signedEvent = try? signEvent(report) else {
-            print("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
+            L.og.error("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
             return nil
         }
         return signedEvent
@@ -412,7 +404,7 @@ final class NosturState : ObservableObject {
         let deletion = EventMessageBuilder.makeDeleteEvent(eventId: eventId)
 
         guard let signedEvent = try? signEvent(deletion) else {
-            print("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
+            L.og.error("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
             return nil
         }
         return signedEvent
