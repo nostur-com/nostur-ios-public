@@ -298,44 +298,6 @@ extension Event {
     @NSManaged public var reactionTo: Event?
 }
 
-
-// MARK: HELPERS FOR KIND 9735 (ZAPS)
-extension Event {
-    
-    
-    //    // THE ZAP REQUEST (CREATED BY SENDER OF SATS)
-    //    var zapReq:Event? { // TODO: Fix somewhere, this cant be nil or zap is invalid, put where to properly fix this so we never have to "if zapReq != nil..."
-    //        get {
-    //            tags_.first(where: { $0.type == "description" })?.event
-    //        }
-    //    }
-    //
-    //    // THE NOTE THAT RECEIVED THE ZAP
-    //    // NIP-57: It MUST have either 0 or 1 e-tag
-    //    var zappedEvent:Event? {
-    //        tags_.filter { $0.type == "e" }.first?.event
-    //    }
-    //
-    //    // For when we dont have the zappedEvent yet, we should at least have the id
-    //    var zappedEventId:String? {
-    //        tags_.filter { $0.type == "e" }.first?.index1
-    //    }
-    //
-    //    // THE PERSON THAT RECEIVED THE ZAP
-    //    // NIP-57: It MUST have at least one p-tag
-    //    var zappedContact:Contact? {
-    //        get {
-    //            tags_.filter { $0.type == "p" }.first?.contact
-    //        }
-    //    }
-    //
-    //    // For when we dont have the zappedContact yet, we should at least have the id
-    //    var zappedContactId:String? {
-    //        tags_.filter { $0.type == "p" }.first?.index1
-    //    }
-    
-}
-
 extension Event {
     
     var plainText:String {
@@ -542,7 +504,6 @@ extension Event {
                         reactingToEvent.likesDidChange.send(reactingToEvent.likesCount)
                         event.reactionTo = reactingToEvent
                         event.reactionToId = reactingToEvent.id
-                        //                                            try reactingToEvent.managedObjectContext?.save()
                     }
                 }
             case "-":
@@ -1050,7 +1011,7 @@ extension Event {
         }
         
         // handle REPOST with normal mentions in .kind 1
-        // todo handle first nostr:nevent or not?
+        // TODO: handle first nostr:nevent or not?
         var alreadyCounted = false
         if event.kind == .textNote, let firstE = event.firstMentionETag(), let replyToId = savedEvent.replyToId, firstE.id != replyToId { // also fQ not the same as replyToId
             savedEvent.firstQuoteId = firstE.id

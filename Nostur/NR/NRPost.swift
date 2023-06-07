@@ -304,8 +304,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     private func isZapped() -> Bool {
         if let account = NosturState.shared.bgAccount {
             let fr = Event.fetchRequest()
-            // TODO: refactor code/db, change zapFromRequest.pubkey to zapSenderPubkey so no join needed
-            // TODO: OR.. we get zapReq when its included in zap, so we can check that
             fr.predicate = NSPredicate(format: "created_at >= %i AND kind == 9734 AND pubkey == %@ AND tagsSerialized CONTAINS %@", created_at, account.publicKey, serializedE(self.id))
             fr.fetchLimit = 1
             fr.resultType = .countResultType

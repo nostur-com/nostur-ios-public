@@ -228,7 +228,7 @@ class LVM: NSObject, ObservableObject {
             }
             
             let added = newNRPostLeafs
-//                .filter(notMuted) // TODO ADD BACK NOT MUtED IN RIGHT CONTEXT / THREAD
+//                .filter(notMuted) // TODO ADD BACK NOT MUTED IN RIGHT CONTEXT / THREAD
 
             guard transformedObjectIds.count > 0 else { return }
             L.lvm.notice("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") Transformed \(transformedObjectIds.count) posts - \(taskId)")

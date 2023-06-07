@@ -65,9 +65,6 @@ class FollowingGuardian: ObservableObject {
                 let pubkeysOwn = Set(account.follows?.filter { !$0.privateFollow } .map({ c in c.pubkey }) ?? [])
                 let pubkeysRelay = Set(nEvent.pTags())
                 
-                //                print("🫂🫂 \(pubkeysOwn.joined(separator: ","))")
-                //                print("🫂🫂 \(pubkeysRelay.joined(separator: ","))")
-                
                 let removed = pubkeysOwn.subtracting(pubkeysRelay)
                 let added = pubkeysRelay.subtracting(pubkeysOwn)
                 L.og.info("receiveNotification(.newFollowingListFromRelay): added: \(added)")

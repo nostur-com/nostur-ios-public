@@ -278,7 +278,7 @@ struct DMConversationView: View {
             .padding(.bottom, 20)
             .navigationTitle("\(contact?.authorName ?? String(localized:"DM", comment:"Navigation title for a DM conversation screen (Direct Message)"))")
             .task {
-                // TODO: CHANGE TO DM SUBSCRIPTION
+                // TODO: CHANGE TO REALTIME DM SUBSCRIPTION
                 guard let theirPubkey = self.theirPubkey else {
                     L.og.error("🔴🔴 Could not find contact pubkey (theirPubkey)")
                     return

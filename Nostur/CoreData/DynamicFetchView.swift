@@ -105,11 +105,6 @@ func fetchEvents(pubkeysString:String, amount:Int? = 5000, since:Int64? = nil, s
 }
 
 func fetchStuffForLastAddedNotes(ids:[String]) {
-    //TODO: Fixen
-    // Prepare #e filter
-    // Get all events that reference our event.id's on screen
-    // To update likes etc.
-//    SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getEventReferences(ids: ids)))
     req(RM.getEventReferences(ids: ids, subscriptionId: "VIEWING-"+UUID().uuidString))
 }
 

@@ -187,10 +187,10 @@ class DataProvider: ObservableObject {
                 if self.container.viewContext.hasChanges {
                     do {
                         try self.container.viewContext.save() // TODO: SHOULD MOVE THIS TO viewContext.perform? or .performAndWait ???
-                        print("🟢🟢 viewContext saved")
+                        L.og.info("🟢🟢 viewContext saved")
                     }
                     catch {
-                        print("🔴🔴 Could not save viewContext")
+                        L.og.error("🔴🔴 Could not save viewContext")
                     }
                 }
             }
