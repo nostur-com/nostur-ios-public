@@ -17,6 +17,7 @@ struct SingleVideoViewer: View {
     @State var videoState:VideoLoadingState = .initial
     @State var videoShown = false
     @State var isPlaying = false
+    @State var isMuted = false
     @State var asset:AVAsset? = nil
     @State var scaledDimensions:CGSize? = nil
     @State var task:AsyncImageTask? = nil
@@ -44,7 +45,7 @@ struct SingleVideoViewer: View {
             }
             else if videoShown {
                 if let asset, let scaledDimensions {
-                    UIVideoViewer(asset: asset, isPlaying: $isPlaying)
+                    UIVideoViewer(asset: asset, isPlaying: $isPlaying, isMuted: $isMuted)
                         .highPriorityGesture(
                             TapGesture().onEnded { _ in
                                 isPlaying.toggle()

@@ -15,7 +15,7 @@ struct VideoPlayerViewer: View {
     var videoURL: URL
     var width:CGFloat
     var height:CGFloat
-    // var videoTitle: String
+    
     @State private var player: AVPlayer?
     @State private var playerController = AVPlayerViewController()
     @State private var isPlaying = false
@@ -24,7 +24,6 @@ struct VideoPlayerViewer: View {
         VStack {
             AVPlayerViewControllerRepresentable(controller: self.playerController)
                 .frame(width: width, height: height)
-            // Text(videoTitle)
         }
         .onAppear {
             self.player = AVPlayer(url: self.videoURL)
