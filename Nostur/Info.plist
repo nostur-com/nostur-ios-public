@@ -2,14 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>TENOR_API_KEY</key>
-	<string>$(TENOR_API_KEY)</string>
-    <key>TENOR_CLIENT_KEY</key>
-    <string>$(TENOR_CLIENT_KEY)</string>
-    <key>IMGUR_CLIENT_ID</key>
-    <string>$(IMGUR_CLIENT_ID)</string>
-    <key>NOSTRCHECK_PUBLIC_API_KEY</key>
-	<string>$(NOSTRCHECK_PUBLIC_API_KEY)</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -33,15 +25,23 @@
 			</array>
 		</dict>
 	</array>
+	<key>IMGUR_CLIENT_ID</key>
+	<string>$(IMGUR_CLIENT_ID)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSMinimumSystemVersion</key>
 	<string>13.2.0</string>
+	<key>NOSTRCHECK_PUBLIC_API_KEY</key>
+	<string>$(NOSTRCHECK_PUBLIC_API_KEY)</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>TENOR_API_KEY</key>
+	<string>$(TENOR_API_KEY)</string>
+	<key>TENOR_CLIENT_KEY</key>
+	<string>$(TENOR_CLIENT_KEY)</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
