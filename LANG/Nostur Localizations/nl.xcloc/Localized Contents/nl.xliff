@@ -1841,7 +1841,7 @@ Button to skip adding account and use the guest account instead</note>
       </trans-unit>
       <trans-unit id="When you bookmark a post it will show up here." xml:space="preserve">
         <source>When you bookmark a post it will show up here.</source>
-        <target>Als een een bladwijzer bij een bericht aan zet zal deze hier verschijnen</target>
+        <target>Je bladwijzers zullen hier verschijnen</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="You are not following anyone yet, visit the explore tab and follow some people" xml:space="preserve">

@@ -12,7 +12,9 @@ struct TryGuestAccountSheet: View {
     var body: some View {
         let _ = Self._printChanges()
         VStack(alignment: .center) {
-            Text("Try Nostur as guest", comment:"Heading for message").font(.largeTitle)
+            Text("Try Nostur as guest", comment:"Heading for message")
+                .multilineTextAlignment(.center)
+                .font(.largeTitle)
             
             Text("The guest account is already following some people. You can read posts and view profiles, but you cannot post or like things until you create a new account yourself", comment: "Message during onboarding about the Guest Account").multilineTextAlignment(.center)
                 .padding()

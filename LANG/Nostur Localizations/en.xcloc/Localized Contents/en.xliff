@@ -1304,12 +1304,12 @@ Toggle off to download from all</target>
       </trans-unit>
       <trans-unit id="Post.noun" xml:space="preserve">
         <source>Post.noun</source>
-        <target>Post.noun</target>
+        <target>Post</target>
         <note>Navigation title when viewing a Post</note>
       </trans-unit>
       <trans-unit id="Post.verb" xml:space="preserve">
         <source>Post.verb</source>
-        <target>Post.verb</target>
+        <target>Post</target>
         <note>Button to post (publish) a new post
 Button to post (publish) a new reply
 Button to post a highlight</note>
@@ -1546,7 +1546,7 @@ Tab to switch to private notes</note>
       </trans-unit>
       <trans-unit id="Report.verb" xml:space="preserve">
         <source>Report.verb</source>
-        <target>Report.verb</target>
+        <target>Report</target>
         <note>Post context menu action to Report a post or user
 Button to publish report</note>
       </trans-unit>
