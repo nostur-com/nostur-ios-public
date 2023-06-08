@@ -25,7 +25,7 @@ struct PostPreview: View {
                     dim.listWidth = size.width
                 }
             AnyStatus()
-            PostRowDeletable(nrPost: nrPost)
+            PostRowDeletable(nrPost: nrPost, isDetail: true)
                 .boxShadow()
                 .disabled(true)
                 .environmentObject(dim)
