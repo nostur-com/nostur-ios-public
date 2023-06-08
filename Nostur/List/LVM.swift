@@ -953,7 +953,7 @@ extension LVM {
                 guard let lastAppeareadIndex = self.lastAppearedIndex else { return }
                 guard self.nrPostLeafs.count > 0 else { return }
                 
-                if lastAppeareadIndex > (self.nrPostLeafs.count-7) {
+                if lastAppeareadIndex > (self.nrPostLeafs.count-15) {
                     L.lvm.info("📖 Appeared: \(lastAppeareadIndex)/\(self.nrPostLeafs.count) - loading more from local")
                     self.performLocalOlderFetch()
                 }
