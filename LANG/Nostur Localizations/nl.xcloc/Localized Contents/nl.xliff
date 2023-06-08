@@ -750,6 +750,11 @@ Navigation title for Edit Profile screen</note>
         <target>Voer je naam in</target>
         <note>Placeholder on input field on Edit Profile screen</note>
       </trans-unit>
+      <trans-unit id="Enter your reply" xml:space="preserve">
+        <source>Enter your reply</source>
+        <target>Typ je antwoord</target>
+        <note>Placeholder when typing a reply</note>
+      </trans-unit>
       <trans-unit id="Error: 00" xml:space="preserve">
         <source>Error: 00</source>
         <target/>
@@ -803,7 +808,6 @@ Navigation title for Edit Profile screen</note>
       </trans-unit>
       <trans-unit id="Feed" xml:space="preserve">
         <source>Feed</source>
-        <target>Feed</target>
         <note>Tab title for a feed</note>
       </trans-unit>
       <trans-unit id="Filter contacts" xml:space="preserve">
@@ -1005,6 +1009,10 @@ For any questions, please contact feedback@nostur.com.</source>
         <source>Likes</source>
         <target>Vind-ik-leuks</target>
         <note>Tab title</note>
+      </trans-unit>
+      <trans-unit id="List" xml:space="preserve">
+        <source>List</source>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Lists" xml:space="preserve">
         <source>Lists</source>
@@ -1218,12 +1226,12 @@ Toggle off to download from all</source>
         <note>Navigation title for Post Preview screen</note>
       </trans-unit>
       <trans-unit id="Post.noun" xml:space="preserve">
-        <source>Post.noun</source>
+        <source>Post</source>
         <target>Bericht</target>
         <note>Navigation title when viewing a Post</note>
       </trans-unit>
       <trans-unit id="Post.verb" xml:space="preserve">
-        <source>Post.verb</source>
+        <source>Post</source>
         <target>Stuur</target>
         <note>Button to post (publish) a new post
 Button to post (publish) a new reply
@@ -1458,7 +1466,7 @@ Tab to switch to private notes</note>
         <note>Navigation title</note>
       </trans-unit>
       <trans-unit id="Report.verb" xml:space="preserve">
-        <source>Report.verb</source>
+        <source>Report</source>
         <target>Melding maken</target>
         <note>Post context menu action to Report a post or user
 Button to publish report</note>
@@ -1841,7 +1849,7 @@ Button to skip adding account and use the guest account instead</note>
       </trans-unit>
       <trans-unit id="When you bookmark a post it will show up here." xml:space="preserve">
         <source>When you bookmark a post it will show up here.</source>
-        <target>Je bladwijzers zullen hier verschijnen</target>
+        <target>Als een een bladwijzer bij een bericht aan zet zal deze hier verschijnen</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="You are not following anyone yet, visit the explore tab and follow some people" xml:space="preserve">

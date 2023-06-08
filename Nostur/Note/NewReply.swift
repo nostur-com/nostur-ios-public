@@ -2,7 +2,7 @@ import SwiftUI
 import Combine
 
 struct NewReply: View {
-    let PLACEHOLDER = "Enter your reply"
+    let PLACEHOLDER = String(localized:"Enter your reply", comment: "Placeholder when typing a reply")
     
     var replyTo:Event
     @Namespace var textfield

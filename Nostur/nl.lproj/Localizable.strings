@@ -11,7 +11,7 @@
 "_Post deleted by author_" = "_Bericht verwijderd door verzender_";
 
 /* Heading for reposted post: '(Name) reposted' */
-"**%@ reposted**" = "**%@ heeft opnieuw gepost";
+"**%@ reposted**" = "**%@** heeft opnieuw gepost";
 
 /* Message when (name) and X others are now following yoru */
 "**%@** and %lld others are now following you" = "**%@** en %lld anderen volgen je nu";
@@ -368,6 +368,9 @@ Navigation title for Edit Profile screen */
 
 /* Placeholder on input field on Edit Profile screen */
 "Enter your name" = "Voer je naam in";
+
+/* Placeholder when typing a reply */
+"Enter your reply" = "Typ je antwoord";
 
 /* No comment provided by engineer. */
 "Error: 00" = "";
@@ -743,6 +746,9 @@ Tab to switch to private notes */
 /* Menu action */
 "Report %@" = "Melden maken voor %@";
 
+/* Label for choice of what to report */
+"Report for" = "Melding voor";
+
 /* Heading when entering Report details */
 "Report Information" = "Melding-gegevens";
 
@@ -751,6 +757,10 @@ Tab to switch to private notes */
 
 /* Navigation title */
 "Report post" = "Bericht melden";
+
+/* Post context menu action to Report a post or user
+Button to publish report */
+"Report.verb" = "Melding maken";
 
 /* Button to Repost a post */
 "Repost" = "Herplaatsen";

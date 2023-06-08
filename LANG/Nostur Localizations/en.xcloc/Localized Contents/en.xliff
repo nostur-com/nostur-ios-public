@@ -787,6 +787,11 @@ Navigation title for Edit Profile screen</note>
         <target>Enter your name</target>
         <note>Placeholder on input field on Edit Profile screen</note>
       </trans-unit>
+      <trans-unit id="Enter your reply" xml:space="preserve">
+        <source>Enter your reply</source>
+        <target>Enter your reply</target>
+        <note>Placeholder when typing a reply</note>
+      </trans-unit>
       <trans-unit id="Error: 00" xml:space="preserve">
         <source>Error: 00</source>
         <target>Error: 00</target>
@@ -1084,6 +1089,11 @@ For any questions, please contact feedback@nostur.com.</target>
         <target>Likes</target>
         <note>Tab title</note>
       </trans-unit>
+      <trans-unit id="List" xml:space="preserve">
+        <source>List</source>
+        <target>List</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Lists" xml:space="preserve">
         <source>Lists</source>
         <target>Lists</target>
@@ -1303,12 +1313,12 @@ Toggle off to download from all</target>
         <note>Navigation title for Post Preview screen</note>
       </trans-unit>
       <trans-unit id="Post.noun" xml:space="preserve">
-        <source>Post.noun</source>
+        <source>Post</source>
         <target>Post</target>
         <note>Navigation title when viewing a Post</note>
       </trans-unit>
       <trans-unit id="Post.verb" xml:space="preserve">
-        <source>Post.verb</source>
+        <source>Post</source>
         <target>Post</target>
         <note>Button to post (publish) a new post
 Button to post (publish) a new reply
@@ -1545,7 +1555,7 @@ Tab to switch to private notes</note>
         <note>Navigation title</note>
       </trans-unit>
       <trans-unit id="Report.verb" xml:space="preserve">
-        <source>Report.verb</source>
+        <source>Report</source>
         <target>Report</target>
         <note>Post context menu action to Report a post or user
 Button to publish report</note>
