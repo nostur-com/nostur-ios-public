@@ -8,7 +8,7 @@ struct DirectMessagesContainer: View {
             DirectMessages(pubkey: account.publicKey, blockedPubkeys: account.blockedPubkeys_)
         }
         else {
-            Text("No account")
+            EmptyView()
         }
     }
 }

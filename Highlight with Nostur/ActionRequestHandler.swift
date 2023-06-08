@@ -1,10 +1,3 @@
-//
-//  ActionRequestHandler.swift
-//  Highlight with Nostur
-//
-//  Created by Fabian Lachman on 27/04/2023.
-//
-
 import UIKit
 import MobileCoreServices
 import UniformTypeIdentifiers

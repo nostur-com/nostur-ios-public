@@ -1,10 +1,3 @@
-//
-//  EditList.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 08/04/2023.
-//
-
 import SwiftUI
 
 struct EditNosturList: View {
@@ -70,7 +63,7 @@ struct EditNosturList: View {
                     sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: list.subscriptionId, pubkeys: Set(list.contacts_.map { $0.pubkey })))
                 })
                 .equatable()
-                .navigationTitle("Add contacts")
+                .navigationTitle(String(localized:"Add contacts", comment:"Navigation title of sheet to add contacts to list"))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
