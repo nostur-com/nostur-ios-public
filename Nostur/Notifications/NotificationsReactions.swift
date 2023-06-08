@@ -127,7 +127,7 @@ struct NotificationsReactions: View {
                 DataProvider.shared().bg.perform {
                     let transformed = myNotesReactedTo
                         .compactMap { $0.toBG() }
-                        .map { NRPost(event: $0, plainText:true) }
+                        .map { NRPost(event: $0) }
                     
                     DispatchQueue.main.async {
                         self.myNotesReactedToAsNRPosts = transformed
