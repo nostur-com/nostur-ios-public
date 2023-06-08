@@ -24,7 +24,6 @@ class LVM: NSObject, ObservableObject {
             // Don't prefetch again unless the last post on screen has changed (this happens when a page is added during infinite scroll):
             // Don't prefetch again if the posts on screen are less than before (posts get removed from bottom, when new ones are added to top):
             if let oldLastId = oldValue.last?.id, let currentLastId = nrPostLeafs.last?.id, oldLastId != currentLastId {
-                performingLocalOlderFetch = false
                 L.lvm.info("📖 \(self.nrPostLeafs.count) posts loaded. prefetching next page")
                 self.throttledCommand.send {
                     self.fetchNextPage()
@@ -230,7 +229,7 @@ class LVM: NSObject, ObservableObject {
             let added = newNRPostLeafs
 //                .filter(notMuted) // TODO ADD BACK NOT MUTED IN RIGHT CONTEXT / THREAD
 
-            guard transformedObjectIds.count > 0 else { return }
+            guard transformedObjectIds.count > 0 else { performingLocalOlderFetch = false; return }
             L.lvm.notice("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") Transformed \(transformedObjectIds.count) posts - \(taskId)")
 
             if currentNRPostLeafs.count == 0 {
@@ -267,6 +266,7 @@ class LVM: NSObject, ObservableObject {
         
         if older {
             // ADD TO THE END (OLDER POSTS, NEXT PAGE)
+            performingLocalOlderFetch = false
             self.nrPostLeafs = self.nrPostLeafs + onlyNew
         }
         else {
