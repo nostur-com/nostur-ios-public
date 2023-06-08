@@ -362,6 +362,7 @@
 		1F0F35652A31A13D00AA9C41 /* NosturVideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturVideoPlayerView.swift; sourceTree = "<group>"; };
 		1F0F35682A31C76900AA9C41 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1F0F356B2A31C76900AA9C41 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/Localizable.strings; sourceTree = "<group>"; };
+		1F0F356D2A31DFB700AA9C41 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		1F1242292A1CB0BC003AC591 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		1F1472DD29A71F6C00197393 /* NoteHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteHeader.swift; sourceTree = "<group>"; };
 		1F14BA6D29854B8E00EACCD5 /* ContactList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactList.swift; sourceTree = "<group>"; };
@@ -1753,6 +1754,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				1F0F356B2A31C76900AA9C41 /* nl */,
+				1F0F356D2A31DFB700AA9C41 /* en */,
 			);
 			name = Localizable.strings;
 			path = Nostur;

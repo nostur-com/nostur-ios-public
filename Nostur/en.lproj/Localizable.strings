@@ -1,0 +1,12 @@
+/* Navigation title when viewing a Post */
+"Post.noun" = "Post";
+
+/* Button to post (publish) a new post
+Button to post (publish) a new reply
+Button to post a highlight */
+"Post.verb" = "Post";
+
+/* Post context menu action to Report a post or user
+Button to publish report */
+"Report.verb" = "Report";
+
