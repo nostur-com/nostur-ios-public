@@ -4,14 +4,21 @@ import AVFoundation
 func getVideoDimensions(asset: AVAsset) async -> CGSize? {
     // Get the video track
     guard let videoTrack = try? await asset.loadTracks(withMediaType: .video).first else {
+        L.og.debug("getVideoDimensions: Unable to get video track")
         return nil
     }
 
     // Get the natural size of the video track
-    guard let naturalSize = try? await videoTrack.load(.naturalSize) else { return nil }
+    guard let naturalSize = try? await videoTrack.load(.naturalSize) else {
+        L.og.debug("getVideoDimensions: Unable to get naturalSize of video track")
+        return nil
+    }
 
     // Get the preferred transform to handle any video orientation
-    guard let preferredTransform = try? await videoTrack.load(.preferredTransform) else { return nil }
+    guard let preferredTransform = try? await videoTrack.load(.preferredTransform) else {
+        L.og.debug("getVideoDimensions: Unable to get preferredTransform of video track")
+        return nil
+    }
 
     // Calculate the corrected video dimensions considering the orientation
     let correctedSize = CGSize(
