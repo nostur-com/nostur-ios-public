@@ -82,7 +82,7 @@ struct HighlightComposer: View {
                         else {
                             Button(String(localized:"Include author", comment: "Button to include author in Highlight")) { isAuthorSelectionShown = true }
                         }
-                        Button(String(localized:"Post", comment: "Button to post a highlight")) { send() }
+                        Button(String(localized:"Post.verb", comment: "Button to post a highlight")) { send() }
                             .buttonStyle(.borderedProminent)
                     }
                 }

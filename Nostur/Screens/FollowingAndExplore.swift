@@ -38,6 +38,19 @@ struct FollowingAndExplore: View { //, Equatable {
     @StateObject private var followingVM:FollowingViewModel = .main
     @StateObject private var exploreVM:LVM = LVMManager.shared.exploreLVM()
     
+    var navigationTitle:String {
+        if selectedSubTab == "List" {
+            return (selectedList?.name_ ?? String(localized:"List"))
+        }
+        if selectedSubTab == "Following" {
+            return String(localized:"Following", comment:"Tab title for feed of people you follow")
+        }
+        if selectedSubTab == "Explore" {
+            return String(localized:"Explore", comment:"Tab title for the Explore feed")
+        }
+        return String(localized:"Feed", comment:"Tab title for a feed")
+    }
+    
     var body: some View {
         //        let _ = Self._printChanges()
         VStack(spacing:0) {
@@ -163,7 +176,7 @@ struct FollowingAndExplore: View { //, Equatable {
             LVMManager.shared.listVMs.removeAll(where: { $0.pubkey == account.publicKey })
             self.followingVM.account = newAccount
         })
-        .navigationTitle(selectedSubTab == "List" ? (selectedList?.name_ ?? "List") : selectedSubTab)
+        .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
     }
 }

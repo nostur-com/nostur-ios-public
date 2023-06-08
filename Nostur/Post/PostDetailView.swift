@@ -72,7 +72,7 @@ struct PostDetailView: View {
                             // TODO: FIX: THIS DOESNT WORK IF PARENTS ARE STILL LOADING
                             proxy.scrollTo(nrPost.id, anchor: .top)
                         }
-                        .navigationTitle(nrPost.replyToId != nil ? String(localized:"Thread", comment:"Navigation title when viewing a Thread") : String(localized:"Post", comment: "Navigation title when viewing a Post"))
+                        .navigationTitle(nrPost.replyToId != nil ? String(localized:"Thread", comment:"Navigation title when viewing a Thread") : String(localized:"Post.noun", comment: "Navigation title when viewing a Post"))
                         .navigationBarTitleDisplayMode(.inline)
                         .navigationBarHidden(navTitleHidden)
                 }

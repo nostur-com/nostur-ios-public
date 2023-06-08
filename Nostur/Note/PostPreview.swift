@@ -46,7 +46,7 @@ struct PostPreview: View {
                         ProgressView()
                     }
                     else {
-                        Text("Post", comment: "Button to post (publish) a new post")
+                        Text("Post.verb", comment: "Button to post (publish) a new post")
                     }
                 }
                 .buttonStyle(.borderedProminent)

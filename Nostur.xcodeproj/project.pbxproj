@@ -23,6 +23,8 @@
 		1F065A9D29A3E9E0003421D3 /* DynamicFetchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F065A9C29A3E9E0003421D3 /* DynamicFetchView.swift */; };
 		1F0A3C252A0C113700B30D7E /* Kind1063.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0A3C242A0C113700B30D7E /* Kind1063.swift */; };
 		1F0F35662A31A13D00AA9C41 /* NosturVideoPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0F35652A31A13D00AA9C41 /* NosturVideoPlayerView.swift */; };
+		1F0F35692A31C76900AA9C41 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1F0F35672A31C76900AA9C41 /* InfoPlist.strings */; };
+		1F0F356C2A31C76900AA9C41 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1F0F356A2A31C76900AA9C41 /* Localizable.strings */; };
 		1F12422A2A1CB0BC003AC591 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1242292A1CB0BC003AC591 /* Logger.swift */; };
 		1F1472DE29A71F6C00197393 /* NoteHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1472DD29A71F6C00197393 /* NoteHeader.swift */; };
 		1F14BA6E29854B8E00EACCD5 /* ContactList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F14BA6D29854B8E00EACCD5 /* ContactList.swift */; };
@@ -358,6 +360,8 @@
 		1F065A9C29A3E9E0003421D3 /* DynamicFetchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicFetchView.swift; sourceTree = "<group>"; };
 		1F0A3C242A0C113700B30D7E /* Kind1063.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Kind1063.swift; sourceTree = "<group>"; };
 		1F0F35652A31A13D00AA9C41 /* NosturVideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturVideoPlayerView.swift; sourceTree = "<group>"; };
+		1F0F35682A31C76900AA9C41 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		1F0F356B2A31C76900AA9C41 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/Localizable.strings; sourceTree = "<group>"; };
 		1F1242292A1CB0BC003AC591 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		1F1472DD29A71F6C00197393 /* NoteHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteHeader.swift; sourceTree = "<group>"; };
 		1F14BA6D29854B8E00EACCD5 /* ContactList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactList.swift; sourceTree = "<group>"; };
@@ -1071,6 +1075,7 @@
 				1F3D4BB62A25CC140084F939 /* AppView.swift */,
 				1FB448BD2965F3D000038671 /* NosturApp.swift */,
 				1F313DED296980D8004C7366 /* Info.plist */,
+				1F0F356A2A31C76900AA9C41 /* Localizable.strings */,
 				1F9D69D82A3077F400628460 /* Config.xcconfig */,
 				1FB448C82965F3D200038671 /* Nostur.entitlements */,
 				1FB448C62965F3D200038671 /* Assets.xcassets */,
@@ -1208,6 +1213,7 @@
 				1FC7A54929FA46F000645FEF /* ActionRequestHandler.swift */,
 				1FC7A54B29FA46F000645FEF /* Action.js */,
 				1FC7A54D29FA46F000645FEF /* Info.plist */,
+				1F0F35672A31C76900AA9C41 /* InfoPlist.strings */,
 			);
 			path = "Highlight with Nostur";
 			sourceTree = "<group>";
@@ -1380,6 +1386,7 @@
 			knownRegions = (
 				en,
 				Base,
+				nl,
 			);
 			mainGroup = 1FB448B12965F3D000038671;
 			packageReferences = (
@@ -1408,6 +1415,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1FAC67AE29F5523200798661 /* Assets.xcassets in Resources */,
+				1F0F356C2A31C76900AA9C41 /* Localizable.strings in Resources */,
 				1FB448CB2965F3D200038671 /* Preview Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1417,6 +1425,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1FC7A54C29FA46F000645FEF /* Action.js in Resources */,
+				1F0F35692A31C76900AA9C41 /* InfoPlist.strings in Resources */,
 				1FC7A54829FA46F000645FEF /* Media.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1730,6 +1739,26 @@
 			targetProxy = 1FCFDDCC29FCC735005320B8 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		1F0F35672A31C76900AA9C41 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1F0F35682A31C76900AA9C41 /* nl */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		1F0F356A2A31C76900AA9C41 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1F0F356B2A31C76900AA9C41 /* nl */,
+			);
+			name = Localizable.strings;
+			path = Nostur;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		1FB448CC2965F3D200038671 /* Debug */ = {

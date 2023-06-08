@@ -40,7 +40,7 @@ struct ReportContactSheet: View {
                 }
             }
             ToolbarItem(placement: .primaryAction) {
-                Button(String(localized: "Report", comment: "Button to publish report")) {
+                Button(String(localized: "Report.verb", comment: "Button to publish report")) {
                     guard let signedReport = NosturState.shared.reportContact(pubkey: contact.pubkey, reportType: reason, note: comment) else {
                         return
                     }

@@ -242,7 +242,7 @@ class Zap {
                 self.state = .NWC_PAY_REQUEST_SENT
             }
             else {
-                self.error = String(localized:"Could not NWC request", comment: "Error message")
+                self.error = String(localized:"Could not send NWC request", comment: "Error message")
                 state = .ERROR
             }
         }

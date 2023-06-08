@@ -194,7 +194,7 @@ struct NewQuoteRepost: View {
                                 ProgressView()
                             }
                             else {
-                                Text("Post", comment: "Button to post (publish) a new reply")
+                                Text("Post.verb", comment: "Button to post (publish) a new reply")
                             }
                         }
                         .buttonStyle(.borderedProminent)

@@ -7,7 +7,7 @@ class NRReplyingToBuilder {
     func replyingToUsernamesMarkDownString(_ event:Event) -> String? {
         guard event.replyToId != nil || event.replyTo != nil else { return nil }
         let tags = event.fastTags
-        guard tags.count < 50 else { return "Replying to \(tags.count) people" }
+        guard tags.count < 50 else { return String(localized:"Replying to \(tags.count) people", comment: "Shown in a post, Replying to (X) people ") }
 
         let pTags = Set(tags.filter { $0.0 == "p" }.map { $0.1 })
         if (pTags.count > 6) {
@@ -16,7 +16,7 @@ class NRReplyingToBuilder {
                     .escapeMD()
                 return "[@\(username)](nostur:p:\(pubkey))"
             }
-            return "Replying to: " + pTagsAsStrings.joined(separator: ", ") + " and \(pTags.count-4) others"
+            return String(localized:"Replying to: \(pTagsAsStrings.joined(separator: ", ")) and \(pTags.count-4) others", comment: "Shown in a post, Replying: (names) and (x) others")
         }
         else if (pTags.count > 0) {
             let pTagsAsStrings = pTags.map { pubkey in
@@ -24,7 +24,7 @@ class NRReplyingToBuilder {
                     .escapeMD()
                 return "[@\(username)](nostur:p:\(pubkey))"
             }
-            return "Replying to: " + pTagsAsStrings.joined(separator: ", ")
+            return String(localized:"Replying to: \(pTagsAsStrings.formatted(.list(type: .and)))", comment:"Shown in a post, Replying to (names)")
         }
         return nil
     }

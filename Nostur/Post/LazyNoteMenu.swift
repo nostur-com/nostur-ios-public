@@ -172,7 +172,7 @@ struct LazyNoteMenuSheet: View {
                         sendNotification(.reportPost, nrPost)
                     }
                 } label: {
-                    Label(String(localized:"Report", comment:"Post context menu action to Report a post or user"), systemImage: "flag")
+                    Label(String(localized:"Report.verb", comment:"Post context menu action to Report a post or user"), systemImage: "flag")
                 }
                 
                 if (NosturState.shared.activeAccountPublicKey == nrPost.pubkey) {

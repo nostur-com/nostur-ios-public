@@ -39,7 +39,7 @@ struct ReportPostSheet: View {
                         Text("Illegal content", comment: "Menu item in choice list").tag(ReportType.illegal)
                     }
                     
-                    Picker(selection: $reportWhat, label: Text("Report", comment: "Label for choice of what to report")) {
+                    Picker(selection: $reportWhat, label: Text("Report for", comment: "Label for choice of what to report")) {
                         Text("This post", comment: "Menu choice").tag("Post")
                         Text("This post & user", comment: "Menu choice").tag("Profile+Profile")
                     }
@@ -59,7 +59,7 @@ struct ReportPostSheet: View {
                 }
             }
             ToolbarItem(placement: .primaryAction) {
-                Button(String(localized: "Report", comment: "Button to publish report")) {
+                Button(String(localized: "Report.verb", comment: "Button to publish report")) {
                     guard let signedReport = NosturState.shared.report(nrPost.mainEvent, reportType: reason, note: comment, includeProfile: reportWhat == "Profile+Profile" ) else {
                         return
                     }
