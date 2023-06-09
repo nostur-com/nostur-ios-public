@@ -13,7 +13,7 @@ struct MainView: View {
     @ObservedObject var settings:SettingsStore = .shared
     
     var body: some View {
-        let _ = Self._printChanges()
+//        let _ = Self._printChanges()
         NavigationStack(path: $navPath) {
             if let account {
                 FollowingAndExplore(account: account)

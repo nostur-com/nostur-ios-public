@@ -112,7 +112,7 @@ struct PostAndParent: View {
     }
     
     var body: some View {
-        let _ = Self._printChanges()
+//        let _ = Self._printChanges()
         VStack {
             // MARK: PARENT NOTE
             // We have the event: replyTo_ = already .replyTo or lazy fetched with .replyToId

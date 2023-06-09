@@ -34,7 +34,7 @@ struct BadgesIssuedView: View {
     }
     
     var body: some View {
-        let _ = Self._printChanges()
+//        let _ = Self._printChanges()
         VStack {
             List(badges) { badge in
                 NavigationLink(value: Badge(badge)) {

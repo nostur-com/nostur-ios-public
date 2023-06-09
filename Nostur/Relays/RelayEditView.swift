@@ -23,7 +23,7 @@ struct RelayEditView: View {
     }
     
     var body: some View {
-        let _ = Self._printChanges()
+//        let _ = Self._printChanges()
         VStack {
             Form {
                 Section(header: Text("Relay URL", comment: "Relay URL header") ) {

@@ -10,7 +10,7 @@ struct TryGuestAccountSheet: View {
     @State var didCreate = false
     
     var body: some View {
-        let _ = Self._printChanges()
+//        let _ = Self._printChanges()
         VStack(alignment: .center) {
             Text("Try Nostur as guest", comment:"Heading for message")
                 .multilineTextAlignment(.center)

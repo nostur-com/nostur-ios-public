@@ -12,7 +12,7 @@ struct ProfileLightningButton: View {
     @State var paymentInfo:PaymentInfo?
     
     var body: some View {
-        let _ = Self._printChanges()
+//        let _ = Self._printChanges()
         Button {
             buttonTapped()
         } label: {

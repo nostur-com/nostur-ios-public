@@ -9,7 +9,7 @@ struct NotificationsContainer: View {
     @State var navPath = NavigationPath()
     
     var body: some View {
-        let _ = Self._printChanges()
+//        let _ = Self._printChanges()
         NavigationStack(path: $navPath) {
             VStack {
                 if let account = ns.account {
@@ -44,7 +44,7 @@ struct NotificationsView: View {
     @State var markAsReadDelayer:Timer?
     
     var body: some View {
-        let _ = Self._printChanges()
+//        let _ = Self._printChanges()
         VStack {
             HStack {
                 TabButton(action: {

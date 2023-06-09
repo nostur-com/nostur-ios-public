@@ -5,7 +5,7 @@ struct PrivateNotesContainer: View {
     @EnvironmentObject var ns:NosturState
 
     var body: some View {
-        let _ = Self._printChanges()
+//        let _ = Self._printChanges()
         VStack(spacing:0) {
             if (ns.account != nil) {
                 PrivateNotesView(account: ns.account!)
@@ -37,7 +37,7 @@ struct PrivateNotesView: View {
     }
     
     var body: some View {
-        let _ = Self._printChanges()
+//        let _ = Self._printChanges()
         ScrollView {
             if privateNotes.count > 0 {
                 LazyVStack {

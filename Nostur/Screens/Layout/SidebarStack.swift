@@ -34,7 +34,7 @@ struct SideBarStack<SidebarContent: View, Content: View>: View {
     }
     
     var body: some View {
-        let _ = Self._printChanges()
+//        let _ = Self._printChanges()
         ZStack(alignment: .leading) {
             sidebarContent
                 .frame(width: sidebarWidth, alignment: .center)

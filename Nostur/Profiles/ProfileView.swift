@@ -44,7 +44,7 @@ struct ProfileView: View {
     let PFP_SIZE = 75.0
     
     var body: some View {
-        let _ = Self._printChanges()
+//        let _ = Self._printChanges()
         ScrollView {
             Color.clear.background( // GeometryReader in .background so it does not mess up layout
                 GeometryReader { toolbarGEO in

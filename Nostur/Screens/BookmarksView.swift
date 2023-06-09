@@ -4,7 +4,7 @@ struct BookmarksContainer: View {
     @EnvironmentObject var ns:NosturState
 
     var body: some View {
-        let _ = Self._printChanges()
+//        let _ = Self._printChanges()
         VStack(spacing:0) {
             if (ns.account != nil) {
                 BookmarksView(account: ns.account!)
@@ -37,7 +37,7 @@ struct BookmarksView: View {
     }
 
     var body: some View {
-        let _ = Self._printChanges()
+//        let _ = Self._printChanges()
         ScrollView {
             if vBookmarks.count > 0 {
                 LazyVStack {

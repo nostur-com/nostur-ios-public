@@ -26,7 +26,7 @@ struct ProfileBadgesContainer: View {
     }
     
     var body: some View {
-        let _ = Self._printChanges()
+//        let _ = Self._printChanges()
         if let first = profileBadgesSorted.first  {
             ProfileBadgesView(verifiedBadges:first.verifiedBadges)
                 .task {
@@ -104,7 +104,7 @@ struct ProfileBadgesView: View {
     @State var refreshHack = false
     
     var body: some View {
-        let _ = Self._printChanges()
+//        let _ = Self._printChanges()
         HStack {
             ForEach(Array(verifiedBadges.prefix(3))) { profileBadge in
                 BadgeIcon(badge: profileBadge.badge)

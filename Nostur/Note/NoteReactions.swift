@@ -16,7 +16,7 @@ struct NoteReactions: View {
     }
     
     var body: some View {
-        let _ = Self._printChanges()
+//        let _ = Self._printChanges()
         ScrollView {
             ForEach(reactions_) { reaction in
                 ReactionRow(reaction: reaction)

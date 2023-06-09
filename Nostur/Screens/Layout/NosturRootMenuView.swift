@@ -10,7 +10,7 @@ struct NosturRootMenu: View {
     @AppStorage("selected_tab") var selectedTab = "Main"
     
     var body: some View {
-        let _ = Self._printChanges()
+//        let _ = Self._printChanges()
         SideBarStack(sidebarWidth: NOSTUR_SIDEBAR_WIDTH) {
             SideBar(account: account)
         } content: {
@@ -152,7 +152,7 @@ struct SideBar: View {
     @State var showAnySigner = false
     
     var body: some View {
-        let _ = Self._printChanges()
+//        let _ = Self._printChanges()
         VStack(alignment: .leading) {
             ProfileBanner(banner: account.banner, width: NOSTUR_SIDEBAR_WIDTH, offset: 0)
                 .overlay(alignment: .bottomLeading, content: {
