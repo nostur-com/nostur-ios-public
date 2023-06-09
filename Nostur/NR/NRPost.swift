@@ -456,6 +456,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 guard let self = self else { return }
                 self.objectWillChange.send()
                 self.likesCount = likes
+                
+                // Also update own like (or slow? disbaled)
+//                if !self.liked && isLiked() { // nope. main bg thread mismatch
+//                    self.liked = true
+//                }
             }
             .store(in: &subscriptions)
     }

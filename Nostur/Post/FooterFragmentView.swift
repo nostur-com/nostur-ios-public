@@ -3,13 +3,9 @@ import SwiftUI
 struct FooterFragmentView: View {
     
     static let grey = Color.init(red: 113/255, green: 118/255, blue: 123/255)
-    
-    @EnvironmentObject var ns:NosturState
-    let up:Unpublisher = .shared
-    
+
     @ObservedObject var nrPost:NRPost
     @State var unpublishLikeId:UUID? = nil
-    
     
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
@@ -70,8 +66,8 @@ struct FooterFragmentView: View {
                     .padding(5)
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        if unpublishLikeId != nil && up.cancel(unpublishLikeId!) {
-                            ns.unlikePost(nrPost.mainEvent)
+                        if unpublishLikeId != nil && Unpublisher.shared.cancel(unpublishLikeId!) {
+                            NosturState.shared.unlikePost(nrPost.mainEvent)
                             unpublishLikeId = nil
                             nrPost.unlike()
                         }
@@ -87,12 +83,12 @@ struct FooterFragmentView: View {
                     .padding(5)
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        guard ns.account?.privateKey != nil else {
-                            ns.readOnlyAccountSheetShown = true
+                        guard NosturState.shared.account?.privateKey != nil else {
+                            NosturState.shared.readOnlyAccountSheetShown = true
                             return
                         }
-                        if let signedEvent = ns.likePost(nrPost.mainEvent) {
-                            unpublishLikeId = up.publish(signedEvent)
+                        if let signedEvent = NosturState.shared.likePost(nrPost.mainEvent) {
+                            unpublishLikeId = Unpublisher.shared.publish(signedEvent)
                             nrPost.like()
                         }
                     }
@@ -113,7 +109,7 @@ struct FooterFragmentView: View {
                         .contentShape(Rectangle())
                     //                        .padding(.leading, 10)
                         .onTapGesture {
-                            ns.removeBookmark(nrPost.mainEvent)
+                            NosturState.shared.removeBookmark(nrPost.mainEvent)
                         }
                 }
                 else {
@@ -124,12 +120,12 @@ struct FooterFragmentView: View {
                         .onTapGesture {
                             let impactMed = UIImpactFeedbackGenerator(style: .medium)
                             impactMed.impactOccurred()
-                            ns.addBookmark(nrPost.mainEvent)
+                            NosturState.shared.addBookmark(nrPost.mainEvent)
                         }
                 }
                 
             }
-            if (nrPost.pubkey == ns.activeAccountPublicKey) {
+            if (nrPost.pubkey == NosturState.shared.activeAccountPublicKey) {
                 Text("Sent to \(nrPost.relays.split(separator: " ").count) relays", comment:"Message shown in footer of sent post")
                     .padding(.bottom, 5)
             }

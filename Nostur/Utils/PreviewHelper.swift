@@ -29,7 +29,10 @@ public class PreviewEnvironment {
     
     init() { }
     
+    var didParseMessages = false
     public func parseMessages(_ messages:[String]) {
+        guard !didParseMessages else { return }
+        didParseMessages = true
         // TODO: Should reuse Importer.shared
         context.performAndWait {
             for text in messages {
@@ -67,9 +70,7 @@ public class PreviewEnvironment {
 extension PreviewEnvironment {
     
     func loadAccount() -> Bool {
-        guard !didLoad else {
-            return false
-        }
+        guard !didLoad else { return false }
         didLoad = true
         context.performAndWait {
             let account = Account(context: self.context)

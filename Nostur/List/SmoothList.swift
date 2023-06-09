@@ -251,7 +251,7 @@ struct SmoothList: UIViewControllerRepresentable {
                         do {
                             let tags = try result.get()
                             LinkPreviewCache.shared.setObject(for: url, value: tags)
-                            print("✓✓ Loaded link preview meta tags from \(url)")
+                            L.og.info("✓✓ Loaded link preview meta tags from \(url)")
                             if let image = tags["image"], image.prefix(7) != "http://" {
                                 imageRequests.append(ImageRequest(url: URL(string:image),
                                                                   processors: [.resize(height: DIMENSIONS.PREVIEW_HEIGHT, upscale: true)],
