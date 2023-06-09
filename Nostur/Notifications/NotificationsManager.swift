@@ -54,7 +54,8 @@ class NotificationsManager: ObservableObject {
         unreadDMsAccepted &+ unreadDMRequests
     }
     
-    let viewContext = DataProvider.shared().viewContext
+//    let viewContext = DataProvider.shared().viewContext
+    let context = DataProvider.shared().bg
     let ns:NosturState = .shared
     
     var subscriptions = Set<AnyCancellable>()
@@ -86,9 +87,7 @@ class NotificationsManager: ObservableObject {
         }
     }
     
-    func relayCheckNewestNotifications() {
-        guard ns.account != nil else { return }
-        guard ns.activeAccountPublicKey != "" else { return }
+    private func relayCheckNewestNotifications() {
         let calendar = Calendar.current
         let ago = calendar.date(byAdding: .minute, value: -1, to: Date())!
         let sinceNTimestamp = NTimestamp(date: ago)
@@ -111,58 +110,51 @@ class NotificationsManager: ObservableObject {
         req(RM.getMentions(pubkeys: [ns.activeAccountPublicKey], subscriptionId: "Notifications-CATCHUP-\(ago)", since: sinceNTimestamp))
     }
     
-    func checkForNewPosts() {
-        guard let account = ns.account else { return }
+    private func checkForNewPosts() {
+        guard let account = ns.bgAccount else { return }
         let mutedRootIds = account.mutedRootIds_
         let pubkey = account.publicKey
         let blockedPubkeys = account.blockedPubkeys_
+        let lastSeenPostCreatedAt = account.lastSeenPostCreatedAt
+
+        let r2 = Event.fetchRequest()
+        r2.predicate = NSPredicate(format:
+                                    "created_at > %i " +
+                                    "AND NOT pubkey IN %@ " +
+                                    "AND kind IN {1,9802} " +
+                                    "AND tagsSerialized CONTAINS %@ " +
+                                    "AND NOT id IN %@ " +
+                                    "AND (replyToRootId == nil OR NOT replyToRootId IN %@) " + // mutedRootIds
+                                    "AND (replyToId == nil OR NOT replyToId IN %@) ", // mutedRootIds
+                                    lastSeenPostCreatedAt,
+                                    blockedPubkeys + [pubkey],
+                                    serializedP(pubkey),
+                                    mutedRootIds,
+                                    mutedRootIds,
+                                    mutedRootIds)
         
-        let context = DataProvider.shared().bg
-        context.perform { [unowned self] in
-            let lastSeenPostCreatedAt = account.toBG()?.lastSeenPostCreatedAt ?? 0
-            
-            // Same query as in NotificationsPosts.init. should be kept in sync, refactor to 1 function source someday
-            // except oldestCreatedAt = lastSeenPostInstertedAt
-    //        print("🟣🟣🟣🟣  \(account.lastSeenPostCreatedAt)")
-            let r2 = Event.fetchRequest()
-            r2.predicate = NSPredicate(format:
-                                        "created_at > %i " +
-                                        "AND NOT pubkey IN %@ " +
-                                        "AND kind IN {1,9802} " +
-                                        "AND tagsSerialized CONTAINS %@ " +
-                                        "AND NOT id IN %@ " +
-                                        "AND (replyToRootId == nil OR NOT replyToRootId IN %@) " + // mutedRootIds
-                                        "AND (replyToId == nil OR NOT replyToId IN %@) ", // mutedRootIds
-                                        lastSeenPostCreatedAt,
-                                        blockedPubkeys + [pubkey],
-                                        serializedP(pubkey),
-                                        mutedRootIds,
-                                        mutedRootIds,
-                                        mutedRootIds)
-            
-            r2.fetchLimit = self.FETCH_LIMIT
-            r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-            r2.resultType = .countResultType
-            
-            let r3 = PersistentNotification.fetchRequest()
-            r3.predicate = NSPredicate(format: "readAt == nil AND type_ == %@", PNType.newFollowers.rawValue)
-            r3.fetchLimit = self.FETCH_LIMIT
-            r3.sortDescriptors = [NSSortDescriptor(keyPath:\PersistentNotification.createdAt, ascending: false)]
-            r3.resultType = .countResultType
-             
-            var unreadMentions = (try? context.count(for: r2)) ?? 0
-            let unreadNewFollowers = (try? context.count(for: r3)) ?? 0
-            unreadMentions = unreadMentions + unreadNewFollowers
-            DispatchQueue.main.async {
-                if unreadMentions != self.unreadMentions {
-                    self.unreadMentions = min(unreadMentions,9999)
-                }
+        r2.fetchLimit = self.FETCH_LIMIT
+        r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+        r2.resultType = .countResultType
+        
+        let r3 = PersistentNotification.fetchRequest()
+        r3.predicate = NSPredicate(format: "readAt == nil AND type_ == %@", PNType.newFollowers.rawValue)
+        r3.fetchLimit = self.FETCH_LIMIT
+        r3.sortDescriptors = [NSSortDescriptor(keyPath:\PersistentNotification.createdAt, ascending: false)]
+        r3.resultType = .countResultType
+         
+        var unreadMentions = (try? context.count(for: r2)) ?? 0
+        let unreadNewFollowers = (try? context.count(for: r3)) ?? 0
+        unreadMentions = unreadMentions + unreadNewFollowers
+        DispatchQueue.main.async {
+            if unreadMentions != self.unreadMentions {
+                self.unreadMentions = min(unreadMentions,9999)
             }
         }
     }
     
-    func checkForNewReactions() {
-        guard let account = ns.account else { return }
+    private func checkForNewReactions() {
+        guard let account = ns.bgAccount else { return }
         let pubkey = account.publicKey
         let blockedPubkeys = account.blockedPubkeys_
         
@@ -182,35 +174,19 @@ class NotificationsManager: ObservableObject {
         r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         r2.resultType = .countResultType
         
-        
-        let context = DataProvider.shared().bg
-        context.perform {
-            let unreadReactions = (try? context.count(for: r2)) ?? 0
-            DispatchQueue.main.async {
-                if unreadReactions != self.unreadReactions {
-                    self.unreadReactions = min(unreadReactions,9999)
-                }
+        let unreadReactions = (try? context.count(for: r2)) ?? 0
+        DispatchQueue.main.async {
+            if unreadReactions != self.unreadReactions {
+                self.unreadReactions = min(unreadReactions,9999)
             }
         }
-        
-//        let unreadReactions = (try? DataProvider.shared().viewContext.count(for: r2)) ?? 0
-//        if unreadReactions != self.unreadReactions {
-//            self.unreadReactions = min(unreadReactions,9999)
-//        }
     }
     
-    func checkForNewZaps() {
-        guard let account = ns.account else { return }
+    private func checkForNewZaps() {
+        guard let account = ns.bgAccount else { return }
         let pubkey = account.publicKey
         let blockedPubkeys = account.blockedPubkeys_
-        
-//        let regex = ".*(" + blockedPubkeys.map {
-//            NSRegularExpression.escapedPattern(for: $0)
-//        }.joined(separator: "|") + ").*"
-        
-        // Same query as in NotificationsPosts.init. should be kept in sync, refactor to 1 function source someday
-        // except oldestCreatedAt = lastSeenPostInstertedAt
-//        print("🟣🟣🟣  \(account.lastSeenZapCreatedAt)")
+
         let r2 = Event.fetchRequest()
         r2.predicate = NSPredicate(format:
                                     "created_at > %i " + // AFTER LAST SEEN
@@ -231,42 +207,37 @@ class NotificationsManager: ObservableObject {
         r3.resultType = .countResultType
         
         
-        let context = DataProvider.shared().bg
-        context.perform {
-            var unreadZaps = (try? context.count(for: r2)) ?? 0
-            let unreadZapNotifications = (try? context.count(for: r3)) ?? 0
-            unreadZaps = unreadZaps + unreadZapNotifications
-            DispatchQueue.main.async {
-                if unreadZaps != self.unreadZaps {
-                    self.unreadZaps = min(unreadZaps,9999)
-                }
+        var unreadZaps = (try? context.count(for: r2)) ?? 0
+        let unreadZapNotifications = (try? context.count(for: r3)) ?? 0
+        unreadZaps = unreadZaps + unreadZapNotifications
+        DispatchQueue.main.async {
+            if unreadZaps != self.unreadZaps {
+                self.unreadZaps = min(unreadZaps,9999)
             }
         }
-        
-//        let unreadZaps = (try? DataProvider.shared().viewContext.count(for: r2)) ?? 0
-//        if unreadZaps != self.unreadZaps {
-//            self.unreadZaps = min(unreadZaps,9999)
-//        }
-
     }
     
     func checkForEverything() {
         guard ns.account != nil else { return }
-        let isImporting = DataProvider.shared().bg.performAndWait {
-            return Importer.shared.isImporting
+        guard ns.activeAccountPublicKey != "" else { return }
+        
+        DataProvider.shared().bg.perform { [weak self] in
+            guard let self = self else { return }
+            guard !Importer.shared.isImporting else {
+                L.og.info("⏳ Still importing, new fetch skipped."); return
+            }
+
+            self.relayCheckNewestNotifications() // or wait 3 seconds?
+            
+            self.checkForNewPosts()
+            self.checkForNewReactions()
+            self.checkForNewZaps()
+            self.checkForDMs()
         }
-        guard !isImporting else { print("⏳ Still importing, new fetch skipped."); return }
-        
-        relayCheckNewestNotifications() // or wait 3 seconds?
-        
-        checkForNewPosts()
-        checkForNewReactions()
-        checkForNewZaps()
-        checkForDMs()
     }
     
-    func checkForDMs() {
-        guard let account = ns.account else { return }
+    private func checkForDMs() {
+        guard let account = ns.bgAccount else { return }
         let pubkey = account.publicKey
         let blockedPubkeys = account.blockedPubkeys_
         
@@ -284,40 +255,36 @@ class NotificationsManager: ObservableObject {
         
         let lastSeenDMRequestCreatedAt = account.lastSeenDMRequestCreatedAt
         
-        let ctx = DataProvider.shared().bg
-        ctx.perform {
-         
-            do {
-                let received = try ctx.fetch(receivedFR)
+        do {
+            let received = try context.fetch(receivedFR)
+            
+            let sentFR = Event.fetchRequest()
+            sentFR.predicate = NSPredicate(
+                format: "kind == 4 AND pubkey == %@", pubkey)
+            sentFR.fetchLimit = 999
+            sentFR.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+            let sent = try context.fetch(sentFR)
+            
+            let onlyMostRecentAll = computeOnlyMostRecentAll(sent: sent, received: received, pubkey: pubkey)
+            let onlyMostRecentAccepted = computeOnlyMostRecentAccepted(onlyMostRecentAll)
+            let onlyMostRecentRequests = computeOnlyMostRecentRequests(onlyMostRecentAll)
+            let newUnreadDMsAccepted = computeOnlyMostRecentAcceptedTotalUnread(onlyMostRecentAccepted)
+            let newUnreadDMRequests = computeRequestTotalUnread(onlyMostRecentRequests, lastSeenDMRequestCreatedAt:lastSeenDMRequestCreatedAt)
+            
+            
+            DispatchQueue.main.async {
+                // Only set if changed. (else rerender because _nm changed.)
+                if newUnreadDMsAccepted != self.unreadDMsAccepted {
+                    self.unreadDMsAccepted = min(newUnreadDMsAccepted,9999)
+                }
                 
-                let sentFR = Event.fetchRequest()
-                sentFR.predicate = NSPredicate(
-                    format: "kind == 4 AND pubkey == %@", pubkey)
-                sentFR.fetchLimit = 999
-                sentFR.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-                let sent = try ctx.fetch(sentFR)
-                
-                let onlyMostRecentAll = computeOnlyMostRecentAll(sent: sent, received: received, pubkey: pubkey)
-                let onlyMostRecentAccepted = computeOnlyMostRecentAccepted(onlyMostRecentAll)
-                let onlyMostRecentRequests = computeOnlyMostRecentRequests(onlyMostRecentAll)
-                let newUnreadDMsAccepted = computeOnlyMostRecentAcceptedTotalUnread(onlyMostRecentAccepted)
-                let newUnreadDMRequests = computeRequestTotalUnread(onlyMostRecentRequests, lastSeenDMRequestCreatedAt:lastSeenDMRequestCreatedAt)
-                
-                
-                DispatchQueue.main.async {
-                    // Only set if changed. (else rerender because _nm changed.)
-                    if newUnreadDMsAccepted != self.unreadDMsAccepted {
-                        self.unreadDMsAccepted = min(newUnreadDMsAccepted,9999)
-                    }
-                    
-                    if newUnreadDMRequests != self.unreadDMRequests {
-                        self.unreadDMRequests = min(newUnreadDMRequests,9999)
-                    }
+                if newUnreadDMRequests != self.unreadDMRequests {
+                    self.unreadDMRequests = min(newUnreadDMRequests,9999)
                 }
             }
-            catch {
-                print("🔴🔴 problem checking DM notifications")
-            }
+        }
+        catch {
+            L.og.error("🔴🔴 problem checking DM notifications")
         }
     }
     
@@ -360,15 +327,17 @@ class NotificationsManager: ObservableObject {
         r3.resultType = .updatedObjectIDsResultType
 
         
-        let ctx = DataProvider.shared().bg
-        ctx.perform {
-            if let mostRecent = try? ctx.fetch(r2).first {
-                account.toBG()?.lastSeenPostCreatedAt = mostRecent.created_at
+        
+        context.perform { [weak self] in
+            guard let self = self else { return }
+            guard let account = ns.bgAccount else { return }
+            if let mostRecent = try? self.context.fetch(r2).first {
+                account.lastSeenPostCreatedAt = mostRecent.created_at
             }
             else {
-                account.toBG()?.lastSeenPostCreatedAt = Int64(Date.now.timeIntervalSince1970)
+                account.lastSeenPostCreatedAt = Int64(Date.now.timeIntervalSince1970)
             }
-            let _ = try? ctx.execute(r3) as? NSBatchUpdateResult
+            let _ = try? self.context.execute(r3) as? NSBatchUpdateResult
             DataProvider.shared().bgSave()
         }
     }
@@ -388,13 +357,15 @@ class NotificationsManager: ObservableObject {
         r2.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         r2.fetchLimit = 1
         
-        let ctx = DataProvider.shared().bg
-        ctx.perform {
-            if let mostRecent = try? ctx.fetch(r2).first {
-                account.toBG()?.lastSeenReactionCreatedAt = mostRecent.created_at
+        context.perform { [weak self] in
+            guard let self = self else { return }
+            guard let account = ns.bgAccount else { return }
+            
+            if let mostRecent = try? context.fetch(r2).first {
+                account.lastSeenReactionCreatedAt = mostRecent.created_at
             }
             else {
-                account.toBG()?.lastSeenReactionCreatedAt = Int64(Date.now.timeIntervalSince1970)
+                account.lastSeenReactionCreatedAt = Int64(Date.now.timeIntervalSince1970)
             }
             DataProvider.shared().bgSave()
         }
@@ -421,15 +392,16 @@ class NotificationsManager: ObservableObject {
         r3.predicate = NSPredicate(format: "readAt == nil && type_ IN %@", [PNType.failedLightningInvoice.rawValue,PNType.failedZap.rawValue,PNType.failedZaps.rawValue,PNType.failedZapsTimeout.rawValue])
         r3.resultType = .updatedObjectIDsResultType
         
-        let ctx = DataProvider.shared().bg
-        ctx.perform {
-            if let mostRecent = try? ctx.fetch(r2).first {
-                account.toBG()?.lastSeenZapCreatedAt = mostRecent.created_at
+        context.perform { [weak self] in
+            guard let self = self else { return }
+            guard let account = ns.bgAccount else { return }
+            if let mostRecent = try? context.fetch(r2).first {
+                account.lastSeenZapCreatedAt = mostRecent.created_at
             }
             else {
-                account.toBG()?.lastSeenZapCreatedAt = Int64(Date.now.timeIntervalSince1970)
+                account.lastSeenZapCreatedAt = Int64(Date.now.timeIntervalSince1970)
             }
-            let _ = try? ctx.execute(r3) as? NSBatchUpdateResult
+            let _ = try? context.execute(r3) as? NSBatchUpdateResult
             DataProvider.shared().bgSave()
         }
     }
