@@ -2,8 +2,6 @@ import SwiftUI
 import Combine
 
 struct Search: View {
-    var sp:SocketPool = .shared
-
     @State var nrPosts:[NRPost] = []
 
     @FetchRequest(
@@ -159,7 +157,7 @@ struct Search: View {
                         let key = try NIP19(displayString: searchTrimmed)
                         contacts.nsPredicate = NSPredicate(format: "pubkey = %@", key.hexString)
                         nrPosts = []
-                        sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: key.hexString)))
+                        req(RM.getUserMetadata(pubkey: key.hexString))
                     }
                     catch {
                         print("npub1 search fail \(error)")
@@ -178,6 +176,7 @@ struct Search: View {
                     contacts.nsPredicate = NSPredicate(value: false)
                     
                     let fr = Event.fetchRequest()
+                    fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
                     fr.predicate = NSPredicate(format: "kind == 1 && tagsSerialized CONTAINS %@", serializedT(String(searchTrimmed.dropFirst(1))))
                     fr.fetchLimit = 150
                     DataProvider.shared().bg.perform {
@@ -260,8 +259,7 @@ struct Search: View {
                 else if (searchTrimmed.count == 64) {
                     searching = true
                     contacts.nsPredicate = NSPredicate(format: "pubkey = %@", searchTrimmed)
-                    sp.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkey: searchTrimmed)))
-                    
+                    req(RM.getUserMetadata(pubkey: searchTrimmed))
                     
                     let fr = Event.fetchRequest()
                     fr.predicate = NSPredicate(format: "id = %@", searchTrimmed)
