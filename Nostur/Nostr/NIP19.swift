@@ -66,6 +66,7 @@ class ShareableIdentifier: Hashable {
         hasher.combine(bech32string)
     }
     
+    var id:String { bech32string }
     let bech32string:String
     let prefix:String
     
