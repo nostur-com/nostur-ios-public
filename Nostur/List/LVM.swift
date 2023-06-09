@@ -1167,8 +1167,8 @@ extension LVM {
     
     
     func performLocalOlderFetch() {
-        guard !performingLocalOlderFetch else { return }
-        guard let oldestEvent = self.nrPostLeafs.last?.event else { return }
+        guard !performingLocalOlderFetch else { L.og.debug("Already performingLocalOlderFetch, cancelled"); return }
+        guard let oldestEvent = self.nrPostLeafs.last?.event else { L.og.debug("Empty screen, cancelled") ;return }
         let ctx = DataProvider.shared().bg
         performingLocalOlderFetch = true
         ctx.perform { [weak self] in
