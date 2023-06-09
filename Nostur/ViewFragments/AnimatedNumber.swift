@@ -1,6 +1,11 @@
 import SwiftUI
 
-struct AnimatedNumber: View {
+struct AnimatedNumber: View, Equatable {
+    
+    static func == (lhs: AnimatedNumber, rhs: AnimatedNumber) -> Bool {
+        lhs.number == rhs.number
+    }
+    
     
     let numberHeight = 18.0
     let number:Int

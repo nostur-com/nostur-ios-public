@@ -41,6 +41,7 @@ struct PlaceholderPostHeaderEvent: View {
                 
                 if (singleLine) {
                     Ago(event.date)
+                        .equatable()
                         .layoutPriority(2)
                         .foregroundColor(.secondary)
                         .lineLimit(1)
@@ -49,6 +50,7 @@ struct PlaceholderPostHeaderEvent: View {
         }
         if (!singleLine) {
             Ago(event.date)
+                .equatable()
                 .layoutPriority(2)
                 .foregroundColor(.secondary)
                 .lineLimit(1)
@@ -78,6 +80,7 @@ struct PostHeaderEvent: View {
                 
                 if (singleLine) {
                     Ago(event.date)
+                        .equatable()
                         .layoutPriority(2)
                         .foregroundColor(.secondary)
                         .lineLimit(1)
@@ -97,6 +100,7 @@ struct PostHeaderEvent: View {
         }
         if (!singleLine) {
             Ago(event.date)
+                .equatable()
                 .layoutPriority(2)
                 .foregroundColor(.secondary)
                 .lineLimit(1)

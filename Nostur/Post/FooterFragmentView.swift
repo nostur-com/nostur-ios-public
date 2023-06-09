@@ -17,7 +17,9 @@ struct FooterFragmentView: View {
                 HStack {
                     Image(nrPost.replied ? "ReplyIconActive" : "ReplyIcon")
                         .foregroundColor(nrPost.replied ? Color("AccentColor") : Self.grey)
-                    AnimatedNumber(number: nrPost.repliesCount).opacity(nrPost.repliesCount == 0 ? 0 : 1)
+                    AnimatedNumber(number: nrPost.repliesCount)
+                        .equatable()
+                        .opacity(nrPost.repliesCount == 0 ? 0 : 1)
                 }
                 .padding([.vertical, .trailing], 5)
                 .contentShape(Rectangle())
@@ -60,7 +62,9 @@ struct FooterFragmentView: View {
                     HStack {
                         Image("LikeIconActive")
                             .foregroundColor(.red)
-                        AnimatedNumber(number: nrPost.likesCount).opacity(nrPost.likesCount == 0 ? 0 : 1)
+                        AnimatedNumber(number: nrPost.likesCount)
+                            .equatable()
+                            .opacity(nrPost.likesCount == 0 ? 0 : 1)
                     }
                     .foregroundColor(.red)
                     .padding(5)
@@ -76,7 +80,9 @@ struct FooterFragmentView: View {
                 else {
                     HStack {
                         Image("LikeIcon")
-                        AnimatedNumber(number: nrPost.likesCount).opacity(nrPost.likesCount == 0 ? 0 : 1)
+                        AnimatedNumber(number: nrPost.likesCount)
+                            .equatable()
+                            .opacity(nrPost.likesCount == 0 ? 0 : 1)
                     }
                     .padding(5)
                     .contentShape(Rectangle())

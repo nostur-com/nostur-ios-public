@@ -38,7 +38,9 @@ struct NoteHeader: View {
                     }
                     
                     if (singleLine) {
-                        Ago(event.date).layoutPriority(1)
+                        Ago(event.date)
+                            .equatable()
+                            .layoutPriority(1)
                             .foregroundColor(.secondary)
                             .lineLimit(1)
                     }

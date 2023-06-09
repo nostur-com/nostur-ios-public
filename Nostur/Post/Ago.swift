@@ -1,6 +1,10 @@
 import SwiftUI
 
-struct Ago: View {
+struct Ago: View, Equatable {
+    
+    static func == (lhs: Ago, rhs: Ago) -> Bool {
+        (lhs.agoText ?? lhs.date.agoString) == (rhs.agoText ?? rhs.date.agoString)
+    }
     
     let date:Date
     
