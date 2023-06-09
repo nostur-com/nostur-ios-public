@@ -741,7 +741,7 @@ Tab to switch to private notes */
 "Replying to: %@" = "Antwoord op: %@";
 
 /* Shown in a post, Replying: (names) and (x) others */
-"Replying to: %@ and %lld others" = "Antwoord op: %@ en %lld others";
+"Replying to: %@ and %lld others" = "Antwoord op: %@ en %lld anderen";
 
 /* Menu action */
 "Report %@" = "Melden maken voor %@";
