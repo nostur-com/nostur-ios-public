@@ -92,7 +92,7 @@ class NRTextParser { // TEXT things
 
     // NIP-27 handle nostr:npub or nostr:nprofile
     private func parseUserMentions(event:Event, text:String, plainText:Bool = false) -> TextWithPs {
-        let pattern = "(?:nostr:)?npub1[023456789acdefghjklmnpqrstuvwxyz]{58}|(?:nostr:)?nprofile1[023456789acdefghjklmnpqrstuvwxyz]{30,999}"
+        let pattern = "(?:nostr:)?npub1[023456789acdefghjklmnpqrstuvwxyz]{58}|(?:nostr:)?(nprofile1[023456789acdefghjklmnpqrstuvwxyz]+)\\b"
 
         var replacedString = text
         var range = text.startIndex..<text.endIndex
