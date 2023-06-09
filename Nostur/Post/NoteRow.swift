@@ -31,7 +31,7 @@ struct NoteRow: View {
                     Image(systemName: "arrow.2.squarepath")
                         .fontWeight(.bold)
                         .scaleEffect(0.6)
-                    Text("**\(nrPost.contact?.anyName ?? "...") reposted**", comment: "Heading for reposted post: '(Name) reposted'").font(.subheadline)
+                    Text(nrPost.repostedHeader).font(.subheadline)
                         .onTapGesture {
                             navigateTo(ContactPath(key: nrPost.pubkey))
                         }

@@ -72,6 +72,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var groupedReplies = [NRPost]()
     
     let isRepost:Bool
+    var repostedHeader:AttributedString = ""
     var threadPostsCount:Int
     var isTruncated:Bool = false
     
@@ -284,6 +285,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             self.subject = String(subject.prefix(255)) // 255 SPAM LIMIT
         }
         
+        // Moved from .body to here because String interpolation is expensive (https://developer.apple.com/wwdc23/10160)
+        self.repostedHeader = try! AttributedString(markdown: String(localized:"**\(contact?.anyName ?? "...") reposted**", comment: "Heading for reposted post: '(Name) reposted'"))
         setupSubscriptions()
     }
     
