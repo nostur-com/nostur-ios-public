@@ -7,6 +7,7 @@ struct ListViewContainer: View {
     
     var body: some View {
         ZStack {
+//            SnapshotTest(lvm: vm)
             SmoothList(lvm: vm, dim: dim)
                 .overlay(alignment: .topTrailing) {
                     ListUnreadCounter(vm: vm)

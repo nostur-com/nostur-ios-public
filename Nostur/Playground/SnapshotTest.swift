@@ -11,31 +11,39 @@ import Combine
 
 struct SnapshotTest: View {
     
-    @State var vm = ViewModel()
+    let lvm:LVM
+//    @State var vm = ViewModel()
     
     var body: some View {
         VStack {
-            Button("Add to top") {
-                vm.data.insert(UUID().uuidString, at: 0)
-            }
-            Button("Add to bottom") {
-                vm.data.append(UUID().uuidString)
-            }
-            MyCollectionView(vm: vm)
+//            Button("Add to top") {
+//                vm.data.insert(UUID().uuidString, at: 0)
+//            }
+//            Button("Add to bottom") {
+//                vm.data.append(UUID().uuidString)
+//            }
+            MyCollectionView(lvm: lvm)
 //                .frame(width: 300, height: 500)
 //                .fixedSize()
         }
     }
 }
 
-class ViewModel: ObservableObject {
-    @Published var data = ["1","2","3"]
-}
+//class ViewModel: ObservableObject {
+//    @Published var data = ["1","2","3"]
+//}
 
 struct SnapshotTest_Previews: PreviewProvider {
     static var previews: some View {
-        SnapshotTest()
-            .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
+        NavigationStack {
+            if let p1 = PreviewFetcher.fetchNRPost(), let p2 = PreviewFetcher.fetchNRPost(), let p3 = PreviewFetcher.fetchNRPost() {
+                let lvm = LVM(pubkeys: Set<String>(), listId: "Test")
+                let _ = lvm.nrPostLeafs = [p1, p2, p3]
+                SnapshotTest(lvm: lvm)
+            }
+        }
+        .withPreviewEnvironment({ pe in pe.loadPosts() })
+//            .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
     }
 }
 
@@ -47,13 +55,22 @@ public typealias NRID = String
 
 struct MyCollectionView: UIViewControllerRepresentable {
     
-    private var vm:ViewModel
+//    private var vm:ViewModel
+//
+//    init(vm: ViewModel) {
+//        self.vm = vm
+//    }
+
+        private var lvm:LVM
     
-    init(vm: ViewModel) {
-        self.vm = vm
-    }
+        init(lvm: LVM) {
+            self.lvm = lvm
+        }
+    
     
     func makeUIViewController(context: Context) -> UICollectionViewController {
+        
+        // Set up collection view layout
         let layout = UICollectionViewCompositionalLayout { _, layoutEnvironment in
             var config = UICollectionLayoutListConfiguration(appearance: .plain)
             config.showsSeparators = false
@@ -63,37 +80,42 @@ struct MyCollectionView: UIViewControllerRepresentable {
         }
         layout.configuration.scrollDirection = .vertical
                 
+        // Setup collection view controller, set Coordinator as delegate
         let controller = UICollectionViewController(collectionViewLayout: layout)
         controller.collectionView.delegate = context.coordinator
-        context.coordinator.collectionView = controller.collectionView
         
+ 
+        // Create data source, connect with CollectionView, store on Coordinator
         let dataSource = UICollectionViewDiffableDataSource<SingleSectionT, NRID>(collectionView: controller.collectionView) { collectionView, indexPath, itemIdentifier in
             print(indexPath.row)
             print(itemIdentifier)
             print(context.coordinator.data.count)
             return collectionView.dequeueConfiguredReusableCell(using: CellRegistration, for: indexPath, item: context.coordinator.data[indexPath.row])
         }
-        
-        context.coordinator.dataSource = dataSource
-        
-        
+    
+        // Load first data
         var snapshot = NSDiffableDataSourceSnapshot<SingleSectionT, NRID>()
         snapshot.appendSections([SingleSectionT.main])
-        snapshot.appendItems(context.coordinator.data, toSection: .main)
+        snapshot.appendItems(context.coordinator.ids, toSection: .main)
         dataSource.apply(snapshot)
-        print("ddede")
         
+        
+        // Srote collectionView and dataSource on Coordinator
+        context.coordinator.collectionView = controller.collectionView
         context.coordinator.dataSource = dataSource
+        
+        // Listen for data updates
         context.coordinator.listen()
         
         return controller
     }
     
-    private var CellRegistration: UICollectionView.CellRegistration<UICollectionViewListCell, String> = {
+    private var CellRegistration: UICollectionView.CellRegistration<UICollectionViewListCell, NRPost> = {
         .init { cell, indexPath, item in
             cell.contentConfiguration = UIHostingConfiguration {
-                Text(item)
-                    .hCentered()
+                PostOrThread(nrPost: item)
+//                    .background(Color.random)
+//                    .hCentered()
             }
             .background(Color("ListBackground")) // Between and around every PostOrThread (NoteRows)
             .margins(.all, 0)
@@ -109,33 +131,40 @@ struct MyCollectionView: UIViewControllerRepresentable {
         return Coordinator(parent: self)
     }
     
-    class Coordinator: NSObject, UICollectionViewDelegate {
+    class Coordinator: NSObject, UICollectionViewDelegate, UIScrollViewDelegate {
 
         var dataSource:UICollectionViewDiffableDataSource<SingleSectionT, NRID>?
         var collectionView:UICollectionView?
-        var vm:ViewModel
-        var data:[NRID] = []
+        var lvm:LVM
+        var data:[NRPost] = []
+        var ids:[NRID] {
+            data.map { $0.id }
+        }
         var subscriptions = Set<AnyCancellable>()
         
         init(parent: MyCollectionView) {
-            self.vm = parent.vm
+            self.lvm = parent.lvm
         }
         
         func listen() {
             // create data source
-            vm.$data
+            lvm.$nrPostLeafs
                 .sink { [weak self] data in
                     guard let self = self else { return }
                     self.data = data
                     var snapshot = NSDiffableDataSourceSnapshot<SingleSectionT, NRID>()
                     snapshot.appendSections([SingleSectionT.main])
-                    snapshot.appendItems(data, toSection: .main)
-                    print(data)
+                    snapshot.appendItems(ids, toSection: .main)
                     self.dataSource?.apply(snapshot)
                 }
                 .store(in: &subscriptions)
         }
         
+        func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+            if let lastAppearedId = data[safe: indexPath.row]?.id {
+                lvm.lastAppearedIdSubject.send(lastAppearedId)
+            }
+        }
         
     }
 
