@@ -24,8 +24,8 @@ struct ContentRenderer: View { // VIEW things
     
     var body: some View {
         VStack(alignment:.leading, spacing:0) {
-            ForEach(contentElements.indices, id:\.self) { index in
-                switch contentElements[index] {
+            ForEach(contentElements) { contentElement in
+                switch contentElement {
                 case .nevent1(let identifier):
                     NEventView(identifier: identifier)
                 case .npub1(let npub):

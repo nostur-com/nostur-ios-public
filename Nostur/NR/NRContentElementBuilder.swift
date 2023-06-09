@@ -122,7 +122,6 @@ class NRContentElementBuilder {
     static let notePattern = ###"(nostr:|@?)(note1[023456789acdefghjklmnpqrstuvwxyz]{58})"###
     static let neventPattern = ###"(nostr:@?)(nevent1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###
     
-    
     // These become cards so
     // no nostr: here, because we do that in TextParser (inline)
     // only if there is a newline before, else we also do that in TextParser (inline)
@@ -136,9 +135,8 @@ class NRContentElementBuilder {
 
 public typealias Ptag = String
 
-enum ContentElement: Hashable {
-//    case rendered(String)
-//    case plain(String)
+enum ContentElement: Hashable, Identifiable {
+    var id:Self { self }
     case text(AttributedStringWithPs)
     case npub1(String)
     case note1(String)
@@ -154,6 +152,11 @@ enum ContentElement: Hashable {
 }
 
 struct AttributedStringWithPs: Hashable {
+    let id = UUID()
+    func hash(into hasher: inout Hasher) {
+        return hasher.combine(id)
+    }
+    
     var input:String
     var output:AttributedString
     var pTags:[Ptag]

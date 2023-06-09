@@ -8,11 +8,11 @@ struct PostOrThread: View {
 
     var body: some View {
         VStack(spacing:0) {
-            ForEach(nrPost.parentPosts.indices, id:\.self) { index in
-                PostRowDeletable(nrPost: nrPost.parentPosts[index],
-                                 missingReplyTo: nrPost.parentPosts[index].replyToId != rootId && nrPost.parentPosts[index].replyToId != nil && index == 0,
-                                 connect: nrPost.parentPosts[index].replyToId != nil || index > 0 ? .both : .bottom, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
-                    .id(nrPost.parentPosts[index].id)
+            ForEach(nrPost.parentPosts) { nrParent in
+                PostRowDeletable(nrPost: nrParent,
+                                 missingReplyTo: nrParent.replyToId != rootId && nrParent.replyToId != nil && nrParent.id == nrPost.parentPosts.first?.id,
+                                 connect: nrParent.replyToId != nil || nrPost.parentPosts.first?.id != nrParent.id ? .both : .bottom, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
+                    .id(nrParent.id)
             }
             PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && nrPost.parentPosts.count == 0, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
                 .id(nrPost.id)
