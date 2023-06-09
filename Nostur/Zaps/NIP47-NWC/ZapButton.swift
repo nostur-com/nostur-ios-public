@@ -41,6 +41,10 @@ struct ZapButton: View {
                         GeometryReader { geo in
                             Color.white.opacity(0.001)
                                 .onTapGesture {
+                                    guard NosturState.shared.account?.privateKey != nil else {
+                                        NosturState.shared.readOnlyAccountSheetShown = true
+                                        return
+                                    }
                                     let impactMed = UIImpactFeedbackGenerator(style: .medium)
                                     impactMed.impactOccurred()
                                     sendNotification(.lightningStrike, LightningStrike(location:geo.frame(in: .global).origin, amount:ss.defaultZapAmount))
