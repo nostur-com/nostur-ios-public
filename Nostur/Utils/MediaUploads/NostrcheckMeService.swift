@@ -42,7 +42,7 @@ func getNostrCheckMeService() -> MediaUploadService {
               let status = json["status"] as? Bool,
               status == true,
               let url = json["URL"] as? String else {
-            let httpResponse = response as? HTTPURLResponse
+//            let httpResponse = response as? HTTPURLResponse
 //            L.og.debug(httpResponse?.statusCode ?? "")
 //            L.og.debug(httpResponse?.allHeaderFields ?? "")
 //            let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]

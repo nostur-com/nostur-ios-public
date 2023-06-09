@@ -28,7 +28,7 @@ func getNostrimgService() -> MediaUploadService {
               let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
               let link = json["data"] as? [String: Any],
               let url = link["link"] as? String else {
-            let httpResponse = response as? HTTPURLResponse
+//            let httpResponse = response as? HTTPURLResponse
 //            L.og.debug(httpResponse?.statusCode)
 //            L.og.debug(httpResponse?.allHeaderFields)
 //            let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]

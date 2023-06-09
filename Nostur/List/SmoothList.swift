@@ -398,7 +398,7 @@ struct SmoothList: UIViewControllerRepresentable {
                 if let firstIndex = indexPaths.min(by: { $0.row < $1.row }) {
                     if firstIndex.row < 1 { // not sure why just index 0 doesn't work 1% of the time
 //                        print("COUNTER E: \(lvm.lvmCounter.count)")
-                        lvm.lvmCounter.count = 0
+                        lvm.lvmCounter.count = 0 // Publishing changes from within view updates is not allowed, this will cause undefined behavior.
 //                        print("COUNTER EE: \(lvm.lvmCounter.count)")
                     }
                     
