@@ -1,6 +1,6 @@
 import Foundation
 
-// Message ready to sent, with envelope  EVENT/REQ/CLOSE
+// Message ready to be sent, with envelope  EVENT/REQ/CLOSE
 struct ClientMessage {
     enum type {
         case EVENT
