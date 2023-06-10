@@ -88,34 +88,39 @@ This will **wipe** your:
         <source>%@ %@ %@</source>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="%@ reposted" xml:space="preserve">
+        <source>%@ reposted</source>
+        <target>%@ heeft opnieuw gepost</target>
+        <note>Heading for reposted post: '(Name) reposted'</note>
+      </trans-unit>
       <trans-unit id="%lld" xml:space="preserve">
         <source>%lld</source>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="%lldd" xml:space="preserve">
         <source>%lldd</source>
+        <target>%lldd</target>
         <note>Shorthand for days (1d)</note>
       </trans-unit>
       <trans-unit id="%lldh" xml:space="preserve">
         <source>%lldh</source>
+        <target>%lldu</target>
         <note>Shorthand for hours (1h)</note>
       </trans-unit>
       <trans-unit id="%lldm" xml:space="preserve">
         <source>%lldm</source>
+        <target>%lldm</target>
         <note>Shorthand for minutes (1m)</note>
       </trans-unit>
       <trans-unit id="%llds" xml:space="preserve">
         <source>%llds</source>
+        <target>%llds</target>
         <note>Shorthand for seconds (1s)</note>
       </trans-unit>
       <trans-unit id="%lldy" xml:space="preserve">
         <source>%lldy</source>
+        <target>%lldj</target>
         <note>Shorthand for years (1y)</note>
-      </trans-unit>
-      <trans-unit id="**%@ reposted**" xml:space="preserve">
-        <source>**%@ reposted**</source>
-        <target>**%@ heeft opnieuw gepost</target>
-        <note>Heading for reposted post: '(Name) reposted'</note>
       </trans-unit>
       <trans-unit id="**%@** and %lld others are now following you" xml:space="preserve">
         <source>**%@** and %lld others are now following you</source>
@@ -305,15 +310,6 @@ Navigation title for Add Existing Account screen</note>
         <source>Add relay</source>
         <target>Voeg relay toe</target>
         <note>Navigation title for Add relay screen</note>
-      </trans-unit>
-      <trans-unit id="Add to bottom" xml:space="preserve">
-        <source>Add to bottom</source>
-        <target/>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
-      <trans-unit id="Add to top" xml:space="preserve">
-        <source>Add to top</source>
-        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Add/Remove %@ from lists" xml:space="preserve">
         <source>Add/Remove %@ from lists</source>
@@ -571,6 +567,7 @@ Menu action</note>
       </trans-unit>
       <trans-unit id="Could not send NWC request" xml:space="preserve">
         <source>Could not send NWC request</source>
+        <target>Kon NWC verzoek niet verzenden</target>
         <note>Error message</note>
       </trans-unit>
       <trans-unit id="Could not sign event" xml:space="preserve">
@@ -858,10 +855,6 @@ Label shown when someone follows you</note>
         <source>Found and will discard a quake missing a valid code, magnitude, place, or time.</source>
         <note>No comment provided by engineer.</note>
       </trans-unit>
-      <trans-unit id="Hello, World!" xml:space="preserve">
-        <source>Hello, World!</source>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
       <trans-unit id="Hide emojis in names" xml:space="preserve">
         <source>Hide emojis in names</source>
         <target>Verberg emojis in namen</target>
@@ -1012,6 +1005,7 @@ For any questions, please contact feedback@nostur.com.</source>
       </trans-unit>
       <trans-unit id="List" xml:space="preserve">
         <source>List</source>
+        <target>Lijst</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Lists" xml:space="preserve">
@@ -1056,6 +1050,7 @@ informational message</note>
       </trans-unit>
       <trans-unit id="Media" xml:space="preserve">
         <source>Media</source>
+        <target>Media</target>
         <note>Tab title</note>
       </trans-unit>
       <trans-unit id="Media upload service" xml:space="preserve">
@@ -1437,7 +1432,7 @@ Tab to switch to private notes</note>
       </trans-unit>
       <trans-unit id="Replying to: %@ and %lld others" xml:space="preserve">
         <source>Replying to: %@ and %lld others</source>
-        <target>Antwoord op: %@ en %lld others</target>
+        <target>Antwoord op: %@ en %lld anderen</target>
         <note>Shown in a post, Replying: (names) and (x) others</note>
       </trans-unit>
       <trans-unit id="Report %@" xml:space="preserve">
@@ -1741,6 +1736,7 @@ Button to skip adding account and use the guest account instead</note>
       </trans-unit>
       <trans-unit id="This post has %lld more items" xml:space="preserve">
         <source>This post has %lld more items</source>
+        <target>Dit bericht heeft nog %lld items</target>
         <note>Message shown when there are more items in a post</note>
       </trans-unit>
       <trans-unit id="This post has 1 more item" xml:space="preserve">

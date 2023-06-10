@@ -10,9 +10,6 @@
 /* Message shown when a post is deleted */
 "_Post deleted by author_" = "_Bericht verwijderd door verzender_";
 
-/* Heading for reposted post: '(Name) reposted' */
-"**%@ reposted**" = "**%@** heeft opnieuw gepost";
-
 /* Message when (name) and X others are now following yoru */
 "**%@** and %lld others are now following you" = "**%@** en %lld anderen volgen je nu";
 
@@ -51,6 +48,24 @@
 
 /* Terms and conditions heading */
 "**Terms and Conditions**\n" = "**Voorwaarden**";
+
+/* Heading for reposted post: '(Name) reposted' */
+"%@ reposted" = "%@ heeft opnieuw gepost";
+
+/* Shorthand for days (1d) */
+"%lldd" = "%lldd";
+
+/* Shorthand for hours (1h) */
+"%lldh" = "%lldu";
+
+/* Shorthand for minutes (1m) */
+"%lldm" = "%lldm";
+
+/* Shorthand for seconds (1s) */
+"%llds" = "%llds";
+
+/* Shorthand for years (1y) */
+"%lldy" = "%lldj";
 
 /* Follow/Unfollow button when the state is 'Following silent' */
 "🤫 Following" = "🤫 Volgend";
@@ -106,9 +121,6 @@ Navigation title for Add Existing Account screen */
 
 /* Navigation title for Add relay screen */
 "Add relay" = "Voeg relay toe";
-
-/* No comment provided by engineer. */
-"Add to bottom" = "";
 
 /* Post context menu button */
 "Add/Remove %@ from lists" = "Voeg toe/Verwijder %@ van lijsten";
@@ -259,6 +271,9 @@ Menu action */
 
 /* Error message during NWC setup */
 "Could not parse secret from NWC connection URI" = "Kon geheim niet verwerken in NWC connection URI";
+
+/* Error message */
+"Could not send NWC request" = "Kon NWC verzoek niet verzenden";
 
 /* Error message */
 "Could not sign event" = "Kon bericht niet ondertekenen";
@@ -494,6 +509,9 @@ Message shown when a post kind (X) is not yet supported */
 /* Tab title */
 "Likes" = "Vind-ik-leuks";
 
+/* No comment provided by engineer. */
+"List" = "Lijst";
+
 /* Side bar navigation button
 Navigation title for Lists screen */
 "Lists" = "Lijsten";
@@ -517,6 +535,9 @@ informational message */
 
 /* Menu action to mark all messages as read */
 "Mark all as read" = "Markeer alles als gezelen";
+
+/* Tab title */
+"Media" = "Media";
 
 /* Setting on settings screen */
 "Media upload service" = "Media upload dienst";
@@ -921,6 +942,9 @@ Button to skip adding account and use the guest account instead */
 
 /* Menu choice */
 "This post & user" = "Dit bericht en persoon";
+
+/* Message shown when there are more items in a post */
+"This post has %lld more items" = "Dit bericht heeft nog %lld items";
 
 /* Message shown when a post has 1 more item */
 "This post has 1 more item" = "Dit bericht heeft nog een item";

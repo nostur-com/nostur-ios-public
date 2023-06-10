@@ -103,6 +103,11 @@ This will **wipe** your:
         <target>%@ %@ %@</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="%@ reposted" xml:space="preserve">
+        <source>%@ reposted</source>
+        <target>%@ reposted</target>
+        <note>Heading for reposted post: '(Name) reposted'</note>
+      </trans-unit>
       <trans-unit id="%lld" xml:space="preserve">
         <source>%lld</source>
         <target>%lld</target>
@@ -132,11 +137,6 @@ This will **wipe** your:
         <source>%lldy</source>
         <target>%lldy</target>
         <note>Shorthand for years (1y)</note>
-      </trans-unit>
-      <trans-unit id="**%@ reposted**" xml:space="preserve">
-        <source>**%@ reposted**</source>
-        <target>**%@ reposted**</target>
-        <note>Heading for reposted post: '(Name) reposted'</note>
       </trans-unit>
       <trans-unit id="**%@** and %lld others are now following you" xml:space="preserve">
         <source>**%@** and %lld others are now following you</source>
@@ -336,16 +336,6 @@ Navigation title for Add Existing Account screen</note>
         <source>Add relay</source>
         <target>Add relay</target>
         <note>Navigation title for Add relay screen</note>
-      </trans-unit>
-      <trans-unit id="Add to bottom" xml:space="preserve">
-        <source>Add to bottom</source>
-        <target>Add to bottom</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
-      <trans-unit id="Add to top" xml:space="preserve">
-        <source>Add to top</source>
-        <target>Add to top</target>
-        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Add/Remove %@ from lists" xml:space="preserve">
         <source>Add/Remove %@ from lists</source>
@@ -899,11 +889,6 @@ Label shown when someone follows you</note>
       <trans-unit id="Found and will discard a quake missing a valid code, magnitude, place, or time." xml:space="preserve">
         <source>Found and will discard a quake missing a valid code, magnitude, place, or time.</source>
         <target>Found and will discard a quake missing a valid code, magnitude, place, or time.</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
-      <trans-unit id="Hello, World!" xml:space="preserve">
-        <source>Hello, World!</source>
-        <target>Hello, World!</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Hide emojis in names" xml:space="preserve">
