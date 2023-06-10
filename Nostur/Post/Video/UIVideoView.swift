@@ -10,8 +10,6 @@ struct UIVideoViewer: UIViewRepresentable {
     @Binding var isMuted:Bool
     
     init(asset: AVAsset, isPlaying:Binding<Bool>, isMuted:Binding<Bool>) {
-        do { try AVAudioSession.sharedInstance().setActive(true) }
-        catch { }
         self.videoPlayerView = NosturVideoPlayerView()
         self.asset = asset
         _isPlaying = isPlaying
@@ -22,6 +20,8 @@ struct UIVideoViewer: UIViewRepresentable {
         videoPlayerView.asset = asset
         //        videoPlayerView.playerLayer.player?.
         if (isPlaying) {
+            do { try AVAudioSession.sharedInstance().setActive(true) }
+            catch { }
             videoPlayerView.play()
             videoPlayerView.playerLayer.player?.isMuted = isMuted
         }
@@ -33,6 +33,8 @@ struct UIVideoViewer: UIViewRepresentable {
     
     func updateUIView(_ uiView: UIView, context: Context) {
         if (isPlaying) {
+            do { try AVAudioSession.sharedInstance().setActive(true) }
+            catch { }
             if let currentTime = videoPlayerView.playerLayer.player?.currentTime(), currentTime.seconds > 0 {
                 videoPlayerView.playerLayer.player?.play()
             }
