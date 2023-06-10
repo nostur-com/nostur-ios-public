@@ -34,7 +34,9 @@ class MessageParser {
                         L.og.debug("🔌🔌 EOSE received. Sending CLOSE to \(client.url) for \(subscriptionId)")
                         client.sendMessage(ClientMessage.close(subscriptionId: subscriptionId))
                     }
-                    L.og.debug("🔌🔌 EOSE received. keeping OPEN. \(client.url) for \(subscriptionId)")
+                    else {
+                        L.og.debug("🔌🔌 EOSE received. keeping OPEN. \(client.url) for \(subscriptionId)")
+                    }
                 default:
                     if (message.type == .EVENT) {
                         guard let nEvent = message.event else { L.og.info("🔴🔴 uhh, where is nEvent "); return }
