@@ -86,9 +86,9 @@ struct Kind1Default: View {
                     ContentRenderer(nrPost: nrPost, fullWidth: false, availableWidth: imageWidth)
                         .frame(maxWidth: .infinity, alignment:.leading)
                         .contentShape(Rectangle())
-                        .onTapGesture {
-                            navigateTo(nrPost)
-                        }
+//                        .onTapGesture {
+//                            navigateTo(nrPost)
+//                        }
                     if (nrPost.previewWeights?.moreItems ?? false) {
                         ReadMoreButton(nrPost: nrPost)
                             .padding(.vertical, 5)

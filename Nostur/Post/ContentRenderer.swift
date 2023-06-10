@@ -53,11 +53,15 @@ struct ContentRenderer: View { // VIEW things
                 case .text(let attributedStringWithPs):
                     NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs)
                         .padding(.horizontal, fullWidth ? 10 : 0)
+                        .onTapGesture {
+                            navigateTo(nrPost)
+                        }
                 case .lnbc(let text):
                     LightningInvoice(invoice: text, nrPost:nrPost)
                         .padding(.horizontal, fullWidth ? 10 : 0)
                 case .video(let url):
-                    SingleVideoViewer(url: url, pubkey: nrPost.pubkey, videoWidth: availableWidth - 10, isFollowing:nrPost.following)
+                    XSingleVideoViewer(url: url, pubkey: nrPost.pubkey, videoWidth: availableWidth - 10, isFollowing:nrPost.following)
+//                    SingleVideoViewer(url: url, pubkey: nrPost.pubkey, videoWidth: availableWidth - 10, isFollowing:nrPost.following)
                         .padding(.vertical, 5)
                 case .image(let url):
                     SingleMediaViewer(url: url, pubkey: nrPost.pubkey, imageWidth: availableWidth, isFollowing: nrPost.following, fullWidth: fullWidth)
