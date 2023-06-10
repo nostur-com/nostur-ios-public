@@ -72,7 +72,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var groupedReplies = [NRPost]()
     
     let isRepost:Bool
-    var repostedHeader:AttributedString = ""
+    var repostedHeader = ""
     var threadPostsCount:Int
     var isTruncated:Bool = false
     
@@ -286,7 +286,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         }
         
         // Moved from .body to here because String interpolation is expensive (https://developer.apple.com/wwdc23/10160)
-        self.repostedHeader = try! AttributedString(markdown: String(localized:"**\(contact?.anyName ?? "...") reposted**", comment: "Heading for reposted post: '(Name) reposted'"))
+        self.repostedHeader = String(localized:"\(contact?.anyName ?? "...") reposted", comment: "Heading for reposted post: '(Name) reposted'")
         setupSubscriptions()
     }
     
