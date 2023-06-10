@@ -1175,7 +1175,7 @@ extension LVM {
             guard let self = self else { return }
             L.lvm.info("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") performLocalOlderFetch LVM.id (\(self.uuid)")
             let fr = Event.postsByPubkeys(self.pubkeys, until: oldestEvent, hideReplies: self.hideReplies)
-            guard let posts = try? ctx.fetch(fr) else { return }
+            guard let posts = try? ctx.fetch(fr) else { performingLocalOlderFetch = false; return }
             self.setOlderEvents(events: self.filterMutedWords(posts))
         }
     }
@@ -1248,7 +1248,9 @@ extension LVM {
         let newCount = newEventIds.subtracting(leafsAndParentIdsOnScreen).count
         if newCount > 0 {
             self.startRenderingOlderSubject.send(newUnrenderedEvents)
-            
+        }
+        else {
+            performingLocalOlderFetch = false
         }
     }
         
