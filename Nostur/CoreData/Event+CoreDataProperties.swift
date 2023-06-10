@@ -1123,13 +1123,13 @@ extension Event {
     
     // Lets hope Event (Core Data) to nEvent will always keep correct id/sig and not lose integrity due to different storage
     func toNEvent() -> NEvent {
-        var nEvent = NEvent(content: content!)
+        var nEvent = NEvent(content: content ?? "")
         nEvent.id = id
         nEvent.publicKey = pubkey
         nEvent.createdAt = NTimestamp(timestamp: Int(created_at))
         nEvent.kind = NEventKind(id: Int(kind))
         nEvent.tags = tags()
-        nEvent.signature = sig!
+        nEvent.signature = sig ?? ""
         return nEvent
     }
     
