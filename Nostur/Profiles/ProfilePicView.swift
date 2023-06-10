@@ -9,7 +9,7 @@ struct PFP: View {
     var contact:Contact?
     var nrContact:NRContact?
     var account:Account?
-    var size:CGFloat? = 50
+    var size:CGFloat? = 50.0
 
     var body: some View {
         if let contact {
@@ -58,7 +58,7 @@ struct AccountPFP: View {
     @ObservedObject var account:Account
     var pubkey:String { account.publicKey }
     var pictureUrl:String? { account.picture }
-    var size:CGFloat? = 50
+    var size:CGFloat? = 50.0
     var color:Color { randomColor(seed: account.publicKey) }
     
     var body: some View {
@@ -70,7 +70,7 @@ struct InnerPFP: View {
     
     var pubkey:String
     var pictureUrl:String?
-    var size:CGFloat = 50
+    var size:CGFloat = 50.0
     var color:Color
     var isFollowing = false // will use later to put non following in seperate cache
     @ObservedObject var settings:SettingsStore = .shared
@@ -106,7 +106,7 @@ struct InnerPFP: View {
                 .cornerRadius(.greatestFiniteMagnitude)
             }
             else if (pictureUrl.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
-                LazyImage(url: URL(string: pictureUrl), transaction: .init(animation: .none)) { state in
+                LazyImage(url: URL(string: pictureUrl)) { state in
                     if let container = state.imageContainer {
                         if container.type == .gif, let gifData = container.data {
                             ZStack {

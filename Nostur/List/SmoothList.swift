@@ -194,9 +194,6 @@ struct SmoothList: UIViewControllerRepresentable {
             
             self.prefetcherPFP = ImagePrefetcher(pipeline: ImageProcessing.shared.pfp)
             self.prefetcherPFP.priority = .high
-            
-            //            self.prefetcherPFPnotFollowing = ImagePrefetcher(pipeline: ImageProcessing.shared.pfpNotFollowing)
-            //            self.prefetcherPFPnotFollowing.priority = .normal
         }
         
         func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
@@ -544,7 +541,7 @@ final class CViewHolder {
 //    }
 //}
 
-let thumbOptions = ImageRequest.ThumbnailOptions(size: CGSize(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: DIMENSIONS.POST_ROW_PFP_HEIGHT))
+//let thumbOptions = ImageRequest.ThumbnailOptions(size: CGSize(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: DIMENSIONS.POST_ROW_PFP_HEIGHT))
 
 func pfpImageRequestFor(_ picture:String) -> ImageRequest {
     
