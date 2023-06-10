@@ -87,7 +87,7 @@ struct XSingleVideoViewer: View {
                                 Image(systemName: isPlaying ? "pause.circle" : "play.circle")
                                     .resizable()
                                     .scaledToFit()
-                                    .frame(width: 75, height: 75)
+                                    .frame(width: 80, height: 80)
 //                                                        .padding(80)
                             }.opacity(didTap ? 0 : 1)
                         )
@@ -194,17 +194,7 @@ struct XSingleVideoViewer: View {
     }
 }
 
-func getVideoLength(asset:AVAsset) async -> String? {
-    guard let duration = try? await asset.load(.duration) else {
-        L.og.debug("getVideoLength: Unable to load udration")
-        return nil
-    }
-    
-    let seconds = CMTimeGetSeconds(duration)
-    let secondsText = String(format: "%02d", Int(seconds) % 60)
-    let minutesText = String(format: "%02d", Int(seconds) / 60)
-    return "\(minutesText):\(secondsText)"
-}
+
 
 enum XVideoLoadingState {
     case initial
@@ -245,6 +235,8 @@ struct UIV: UIViewControllerRepresentable {
     @Binding var isMuted:Bool
 
     func makeUIViewController(context: Context) -> AVPlayerViewController {
+        do { try AVAudioSession.sharedInstance().setActive(true) }
+        catch { }
         let avpc = AVPlayerViewController()
 
         let playerItem = AVPlayerItem(asset: asset)
@@ -267,6 +259,8 @@ struct UIV: UIViewControllerRepresentable {
 
     func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {
         if isPlaying {
+            do { try AVAudioSession.sharedInstance().setActive(true) }
+            catch { }
             uiViewController.entersFullScreenWhenPlaybackBegins = true
             uiViewController.player?.play()
         }

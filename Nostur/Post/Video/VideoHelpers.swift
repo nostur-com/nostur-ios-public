@@ -56,3 +56,15 @@ func getScaledVideoDimensions(videoSize:CGSize, availableWidth:CGFloat, maxHeigh
     L.og.info("getScaledVideoDimensions: availableWidth:\(availableWidth) - maxHeight: \(maxHeight) videoSize:\(videoSize.width)x\(videoSize.height) --scaled--> \(scaledWidth)x\(scaledHeight) ")
     return CGSize(width: scaledWidth, height: scaledHeight)
 }
+
+func getVideoLength(asset:AVAsset) async -> String? {
+    guard let duration = try? await asset.load(.duration) else {
+        L.og.debug("getVideoLength: Unable to load udration")
+        return nil
+    }
+    
+    let seconds = CMTimeGetSeconds(duration)
+    let secondsText = String(format: "%02d", Int(seconds) % 60)
+    let minutesText = String(format: "%02d", Int(seconds) / 60)
+    return "\(minutesText):\(secondsText)"
+}
