@@ -135,7 +135,7 @@ struct NosturRootMenu: View {
     
     func configureAudioSession() {
         do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
         } catch {
             L.og.error("Failed to configure audio session: \(error.localizedDescription)")
         }

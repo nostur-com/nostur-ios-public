@@ -32,7 +32,7 @@ struct XSingleVideoViewer: View {
     @State var videoLength:String? = nil
     @State var task:AsyncImageTask? = nil
     @State var percent = 0
-    @State var autoplay = false
+//    @State var autoplay = false
     @State var loadNonHttpsAnyway = false
     @State var didTap = false
     
@@ -44,7 +44,7 @@ struct XSingleVideoViewer: View {
                     Button(String(localized: "Show anyway", comment: "Button to show the blocked content anyway")) {
                         loadNonHttpsAnyway = true
                         videoShown = true
-                        autoplay = true
+//                        autoplay = true
                         Task {
                             await loadVideo()
                         }
@@ -99,9 +99,9 @@ struct XSingleVideoViewer: View {
                             }
                         }
                         .onAppear {
-                            if autoplay { // Appear after loading = start auto playing because user tapped to load (play)..
-                                isPlaying = true
-                            }
+//                            if autoplay { // Appear after loading = start auto playing because user tapped to load (play)..
+//                                isPlaying = true
+//                            }
                         }
                 }
                 else if videoState == .loading {
@@ -142,7 +142,7 @@ struct XSingleVideoViewer: View {
                         TapGesture()
                             .onEnded { _ in
                                 videoShown = true
-                                autoplay = true
+//                                autoplay = true
                                 Task {
                                     await loadVideo()
                                 }
@@ -235,16 +235,15 @@ struct UIV: UIViewControllerRepresentable {
     @Binding var isMuted:Bool
 
     func makeUIViewController(context: Context) -> AVPlayerViewController {
-        do { try AVAudioSession.sharedInstance().setActive(true) }
-        catch { }
+//        do { try AVAudioSession.sharedInstance().setActive(true) }
+//        catch { }
         let avpc = AVPlayerViewController()
 
         let playerItem = AVPlayerItem(asset: asset)
         let player = AVQueuePlayer(playerItem: playerItem)
-        player.isMuted = false
+        player.isMuted = true
         player.preventsDisplaySleepDuringVideoPlayback = false
         player.actionAtItemEnd = .pause
-        
         
         avpc.player = player
         avpc.exitsFullScreenWhenPlaybackEnds = false
@@ -261,11 +260,15 @@ struct UIV: UIViewControllerRepresentable {
         if isPlaying {
             do { try AVAudioSession.sharedInstance().setActive(true) }
             catch { }
+            uiViewController.player?.isMuted = false
             uiViewController.entersFullScreenWhenPlaybackBegins = true
             uiViewController.player?.play()
         }
         else {
-            uiViewController.player?.pause()
+            uiViewController.player?.isMuted = true
+//            if let currentTime = uiViewController.player?.currentTime(), currentTime > CMTime.zero {
+                uiViewController.player?.pause()
+//            }
         }
     }
 
