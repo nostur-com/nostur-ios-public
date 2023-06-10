@@ -966,6 +966,7 @@ extension Event {
                 }
                 if let replyToRoot = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToRootEtag.id) {
                     savedEvent.replyToRoot = replyToRoot
+                    replyToRoot.replyToRootUpdated.send(savedEvent)
                     if (savedEvent.replyToId == savedEvent.replyToRootId) {
                         savedEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
                         replyToRoot.addToReplies(savedEvent)
@@ -979,7 +980,7 @@ extension Event {
                 }
                 else if let replyToRoot = try? Event.fetchEvent(id: replyToRootEtag.id, context: context) {
                     savedEvent.replyToRoot = replyToRoot
-                    
+                    replyToRoot.replyToRootUpdated.send(savedEvent)
                     if (savedEvent.replyToId == savedEvent.replyToRootId) {
                         savedEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
                         replyToRoot.addToReplies(savedEvent)
