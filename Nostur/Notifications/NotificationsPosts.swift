@@ -107,6 +107,7 @@ struct NotificationsPosts: View {
             }
         }
         .onReceive(receiveNotification(.activeAccountChanged)) { _ in
+            fl.nrPosts = []
             backlog.clear()
             load()
         }

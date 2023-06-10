@@ -152,6 +152,7 @@ struct NotificationsZaps: View {
             }
         }
         .onReceive(receiveNotification(.activeAccountChanged)) { _ in
+            fl.events = []
             backlog.clear()
             load()
         }
