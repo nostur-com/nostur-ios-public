@@ -2,6 +2,7 @@ import SwiftUI
 
 // Zap button uses NWC if available, else just falls back to the old LightningButton
 struct ZapButton: View {
+    let er:ExchangeRateModel = .shared // Not Observed for performance
     var tally:Int64 // SATS (1000 SATS ~= 20 cent)
     @ObservedObject var nrPost:NRPost
     @ObservedObject var ss:SettingsStore = .shared
@@ -9,58 +10,75 @@ struct ZapButton: View {
     @State var activeColor = Self.grey
     static let grey = Color.init(red: 113/255, green: 118/255, blue: 123/255)
     
+    var tallyString:String {
+        if (er.bitcoinPrice != 0.0) {
+            let fiatPrice = String(format: "$%.02f",(Double(tally) / 100000000 * Double(er.bitcoinPrice)))
+            return fiatPrice
+        }
+        return String(tally.formatNumber)
+    }
+    
     var body: some View {
         if ss.defaultLightningWallet.scheme.contains(":nwc:") && !ss.activeNWCconnectionId.isEmpty, let contact = nrPost.contact?.contact {
             if let cancellationId {
-                Button {
-                    _ = Unpublisher.shared.cancel(cancellationId)
-                    NWCRequestQueue.shared.removeRequest(byCancellationId: cancellationId)
-                    NWCZapQueue.shared.removeZap(byCancellationId: cancellationId)
-                    self.cancellationId = nil
-                    nrPost.zapState = .cancelled
-                    activeColor = Self.grey
-                    L.og.info("⚡️ Zap cancelled")
-                } label: {
-                    Image("BoltIconActive").foregroundColor(activeColor)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
+                HStack {
+                    Button {
+                        _ = Unpublisher.shared.cancel(cancellationId)
+                        NWCRequestQueue.shared.removeRequest(byCancellationId: cancellationId)
+                        NWCZapQueue.shared.removeZap(byCancellationId: cancellationId)
+                        self.cancellationId = nil
+                        nrPost.zapState = .cancelled
+                        activeColor = Self.grey
+                        L.og.info("⚡️ Zap cancelled")
+                    } label: {
+                        Image("BoltIconActive").foregroundColor(activeColor)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                    }
+                    AnimatedNumberString(number: tallyString).opacity(tally == 0 ? 0 : 1)
                 }
             }
             // TODO elsif zap .failed .overlay error !
             else if [.initiated,.nwcConfirmed,.zapReceiptConfirmed].contains(nrPost.zapState) {
-                Image("BoltIconActive").foregroundColor(.yellow)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
+                HStack {
+                    Image("BoltIconActive").foregroundColor(.yellow)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                    AnimatedNumberString(number: tallyString).opacity(tally == 0 ? 0 : 1)
+                }
             }
             else {
-                Image("BoltIcon")
-                    .foregroundColor(activeColor)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .overlay(
-                        GeometryReader { geo in
-                            Color.white.opacity(0.001)
-                                .onTapGesture {
-                                    guard NosturState.shared.account?.privateKey != nil else {
-                                        NosturState.shared.readOnlyAccountSheetShown = true
-                                        return
+                HStack {
+                    Image("BoltIcon")
+                        .foregroundColor(activeColor)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .overlay(
+                            GeometryReader { geo in
+                                Color.white.opacity(0.001)
+                                    .onTapGesture {
+                                        guard NosturState.shared.account?.privateKey != nil else {
+                                            NosturState.shared.readOnlyAccountSheetShown = true
+                                            return
+                                        }
+                                        let impactMed = UIImpactFeedbackGenerator(style: .medium)
+                                        impactMed.impactOccurred()
+                                        sendNotification(.lightningStrike, LightningStrike(location:geo.frame(in: .global).origin, amount:ss.defaultZapAmount))
+                                        withAnimation(.easeIn(duration: 0.25).delay(0.25)) {// wait 0.25 for the strike
+                                            activeColor = .yellow
+                                        }
+                                        cancellationId = UUID()
+                                        nrPost.zapState = .initiated
+                                        DataProvider.shared().bg.perform {
+                                            let zap = Zap(amount: Int64(ss.defaultZapAmount), contact: contact, eventId: nrPost.id, cancellationId: cancellationId!)
+                                            NWCZapQueue.shared.sendZap(zap)
+                                            nrPost.event.zapState = .initiated
+                                        }
                                     }
-                                    let impactMed = UIImpactFeedbackGenerator(style: .medium)
-                                    impactMed.impactOccurred()
-                                    sendNotification(.lightningStrike, LightningStrike(location:geo.frame(in: .global).origin, amount:ss.defaultZapAmount))
-                                    withAnimation(.easeIn(duration: 0.25).delay(0.25)) {// wait 0.25 for the strike
-                                        activeColor = .yellow
-                                    }
-                                    cancellationId = UUID()
-                                    nrPost.zapState = .initiated
-                                    DataProvider.shared().bg.perform {
-                                        let zap = Zap(amount: Int64(ss.defaultZapAmount), contact: contact, eventId: nrPost.id, cancellationId: cancellationId!)
-                                        NWCZapQueue.shared.sendZap(zap)
-                                        nrPost.event.zapState = .initiated
-                                    }
-                                }
-                        }
-                    )
+                            }
+                        )
+                    AnimatedNumberString(number: tallyString).opacity(tally == 0 ? 0 : 1)
+                }
             }
         }
         else {
