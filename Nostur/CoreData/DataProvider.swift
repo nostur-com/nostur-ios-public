@@ -138,32 +138,6 @@ class DataProvider: ObservableObject {
         logger.info("Successfully deleted data.")
     }
     
-    func removeOldEvents() {
-        
-        let fiveDaysAgo = Date.now.addingTimeInterval(-(5 * 86400))
-        
-        let fr = NSFetchRequest<Event>(entityName: "Event")
-        fr.predicate =
-        NSPredicate(format: "created_at < %i AND (kind == 0 OR kind == 1 OR kind == 3 OR kind == 7)", Int64(fiveDaysAgo.timeIntervalSince1970))
-        //        fr.resultType = .managedObjectIDResultType
-        
-        do {
-            let events = try container.viewContext.fetch(fr)
-            
-            print("found \(events.count) to delete")
-            
-            for event in events {
-                container.viewContext.delete(event)
-            }
-            
-            try container.viewContext.save()
-        }
-        catch {
-            print(error)
-        }
-        
-    }
-    
     /// Creates and configures a private queue context.
     public func newTaskContext() -> NSManagedObjectContext {
         // Create a private queue context.

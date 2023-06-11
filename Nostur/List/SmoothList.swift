@@ -179,7 +179,6 @@ struct SmoothList: UIViewControllerRepresentable {
         var scrollTimer: Timer?
         var prefetcher:ImagePrefetcher
         var prefetcherPFP:ImagePrefetcher
-        //        var prefetcherPFPnotFollowing:ImagePrefetcher
         
         private var lastCalledTimestamp: TimeInterval = 0
         private let debounceInterval: TimeInterval = 0.3 // Adjust this value to control the throttling
@@ -454,7 +453,7 @@ func debounce(delay: TimeInterval, action: @escaping (() -> Void)) -> () -> Void
 
 final class CViewHolder {
     let collectionView: UICollectionView
-    typealias DataSourceType = DataSourcy<SingleSection, String>
+    typealias DataSourceType = UICollectionViewDiffableDataSource<SingleSection, String>
     var dataSource: DataSourceType?
     private let coordinator: SmoothList.Coordinator?
     private var layoutListConfiguration = UICollectionLayoutListConfiguration(appearance: .plain)
@@ -487,22 +486,10 @@ final class CViewHolder {
         collectionView.selfSizingInvalidation = .enabledIncludingConstraints
         onInitialized(collectionView)
     }
-    
-    final class DataSourcy<
-        SectionType: Hashable,
-        ItemType: Hashable
-    >: UICollectionViewDiffableDataSource<SectionType, ItemType> {
-        override func indexTitles(for collectionView: UICollectionView) -> [String]? {
-            snapshot().sectionIdentifiers
-                .compactMap {
-                    ($0 as? CustomStringConvertible)?.description
-                }
-        }
-    }
-    
+
     func createDataSource(coordinator: SmoothList.Coordinator) -> DataSourceType {
         L.sl.debug("⭐️ SmoothList \(coordinator.lvm.id) \(coordinator.lvm.pubkey?.short ?? "-"): CViewHolder.createDataSource")
-        return DataSourcy<SingleSection, String>(
+        return UICollectionViewDiffableDataSource<SingleSection, String>(
             collectionView: collectionView,
             cellProvider: { collectionView, indexPath, identifier -> UICollectionViewCell? in
                 guard let nrPost = coordinator.data.first(where: { $0.id == identifier }) else {
@@ -513,35 +500,6 @@ final class CViewHolder {
         )
     }
 }
-
-
-//struct SmoothList_PReviews: PreviewProvider {
-//    @State static var dim:DIMENSIONS = .shared
-//    @State static var needsRefresh = false
-//    @State static var needsScrollToTop = false
-//    @State static var initialIndex:Int = 0
-//    @State static var autoScroll = true
-//    @State static var nrPosts = PreviewFetcher
-//        .fetchEvents(NosturState.shared.followingPublicKeys, kind: 1)
-//        .map {
-//            $0.parentEvents = Event.getParentEvents($0)
-//            return $0
-//        }
-//        .filter(onlyRootOrReplyingToFollower)
-//        .compactMap { NRPost(event: $0) }
-//
-//    static var previews: some View {
-//        VStack(spacing:0) {
-//            SmoothList(needsRefresh: $needsRefresh, needsScrollToTop: $needsScrollToTop, initialIndex: $initialIndex, data: $nrPosts, autoScroll: $autoScroll, dim: dim)
-//                .onAppear {
-//                    needsRefresh = true
-//                }
-//        }
-//        .withPreviewEnvironment()
-//    }
-//}
-
-//let thumbOptions = ImageRequest.ThumbnailOptions(size: CGSize(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: DIMENSIONS.POST_ROW_PFP_HEIGHT))
 
 func pfpImageRequestFor(_ picture:String) -> ImageRequest {
     

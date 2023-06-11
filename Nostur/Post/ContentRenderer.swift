@@ -19,7 +19,7 @@ struct ContentRenderer: View { // VIEW things
         self.contentElements = isDetail ? nrPost.contentElementsDetail : nrPost.contentElements
     }
     
-    @State var f:FullScreenItem?
+//    @State var f:FullScreenItem?
     @State private var viewSize: CGSize = .zero
     
     var body: some View {

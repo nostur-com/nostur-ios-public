@@ -103,7 +103,7 @@ class NotificationsManager: ObservableObject {
         guard let since = NosturState.shared.lastNotificationReceivedAt else { return }
     
         let sinceNTimestamp = NTimestamp(date: since)
-        print("checking notifications since: \(since.description(with: .current))")
+        L.og.info("checking notifications since: \(since.description(with: .current))")
         
         let ago = since.agoString
         

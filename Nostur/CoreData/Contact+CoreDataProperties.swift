@@ -370,7 +370,7 @@ extension Contact : Identifiable {
                     zappedEvent.zapTally = zappedEvent.zapTally + Int64(zap.naiveSats)
                     zappedEvent.zapsCount = zappedEvent.zapsCount + 1
                     zappedEvent.zapsDidChange.send((zappedEvent.zapsCount, zappedEvent.zapTally))
-                    print("⚡️👍 zap \(zap.id) verified after fetching contact \(contact.pubkey)")
+                    L.og.info("⚡️👍 zap \(zap.id) verified after fetching contact \(contact.pubkey)")
                 }
             }
         }

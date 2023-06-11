@@ -62,7 +62,7 @@ extension PrivateNote : Identifiable {
             return privateNote
         }
         catch {
-            print("Problem saving new private note \(error)")
+            L.og.error("Problem saving new private note \(error)")
             return nil
         }
     }
@@ -79,7 +79,7 @@ extension PrivateNote : Identifiable {
             return privateNote
         }
         catch {
-            print("Problem saving new private note \(error)")
+            L.og.error("Problem saving new private note \(error)")
             return nil
         }
     }

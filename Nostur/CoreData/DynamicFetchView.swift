@@ -38,7 +38,7 @@ struct DynamicFetchView<T: NSManagedObject, Content: View>: View {
 func fetchProfiles(pubkeys:Set<String>, subscriptionId:String? = nil) {
     let since = NosturState.shared.lastProfileReceivedAt ?? nil
     let sinceNTimestamp = since != nil ? NTimestamp(date: since!) : nil
-    print("checking profiles since: \(since?.description ?? "")")
+    L.fetching.info("checking profiles since: \(since?.description ?? "")")
     
     SocketPool.shared
         .sendMessage(ClientMessage(
