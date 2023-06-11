@@ -45,6 +45,18 @@ struct BoxShadow: ViewModifier {
     }
 }
 
+struct RoundedBoxShadow: ViewModifier {
+    static let shadowColor = Color.gray.opacity(0.25)
+    func body(content: Content) -> some View {
+        content
+            .background(
+                RoundedRectangle(cornerRadius: 10.0)
+                    .foregroundColor(Color.systemBackground)
+                    .shadow(color: Self.shadowColor, radius: 5)
+            )
+    }
+}
+
 extension View {
     func centered() -> some View {
         modifier(CenteredView())
@@ -58,5 +70,9 @@ extension View {
     
     func boxShadow() -> some View {
         modifier(BoxShadow())
+    }
+    
+    func roundedBoxShadow() -> some View {
+        modifier(RoundedBoxShadow())
     }
 }

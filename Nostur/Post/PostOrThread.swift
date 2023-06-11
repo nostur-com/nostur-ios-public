@@ -17,7 +17,7 @@ struct PostOrThread: View {
             PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && nrPost.parentPosts.count == 0, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
                 .id(nrPost.id)
         }
-        .boxShadow()
+        .roundedBoxShadow()
         .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
         .padding(.vertical, 10)
     }

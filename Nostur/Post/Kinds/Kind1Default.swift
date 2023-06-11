@@ -124,8 +124,9 @@ struct Kind1Default: View {
         }
         .padding(.trailing, DIMENSIONS.KIND1_TRAILING)
         .background(alignment: .topLeading) {
-            Color.systemBackground.frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH+(DIMENSIONS.POST_ROW_PFP_HPADDING))
+            Color.clear.frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH+(DIMENSIONS.POST_ROW_PFP_HPADDING))
                 .padding(.top, DIMENSIONS.POST_ROW_PFP_HEIGHT)
+                .contentShape(Rectangle())
                 .onTapGesture {
                     navigateTo(nrPost)
                 }

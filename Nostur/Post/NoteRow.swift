@@ -66,7 +66,7 @@ struct NoteRow: View {
         }
         .padding(.top, 20)
 //            .background(Color.random) // NOTEROW BOX BACKGROUND
-        .background(Color.systemBackground) // NOTEROW BOX BACKGROUND
+//        .background(Color.systemBackground) // NOTEROW BOX BACKGROUND
     }
 }
 
