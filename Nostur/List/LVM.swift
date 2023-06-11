@@ -1167,7 +1167,15 @@ extension LVM {
     
     
     func performLocalOlderFetch() {
-        guard !performingLocalOlderFetch else { L.og.debug("Already performingLocalOlderFetch, cancelled"); return }
+        guard !performingLocalOlderFetch else { // Data race in Nostur.LVM.performingLocalOlderFetch.setter : Swift.Bool at 0x114481300
+            L.og.debug("Already performingLocalOlderFetch, cancelled")
+            // reset in 2 seconds just in case
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                if self.performingLocalOlderFetch {
+                    self.performingLocalOlderFetch = false
+                }
+            }
+            return }
         guard let oldestEvent = self.nrPostLeafs.last?.event else { L.og.debug("Empty screen, cancelled") ;return }
         let ctx = DataProvider.shared().bg
         performingLocalOlderFetch = true
