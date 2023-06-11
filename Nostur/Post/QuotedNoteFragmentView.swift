@@ -3,7 +3,7 @@ import SwiftUI
 struct QuotedNoteFragmentView: View {
     @EnvironmentObject var accountState:NosturState
     @State var viewSize:CGSize = .zero
-     
+    
     @ObservedObject var nrPost:NRPost
     
     var body: some View {
@@ -16,7 +16,7 @@ struct QuotedNoteFragmentView: View {
                             .onTapGesture {
                                 navigateTo(ContactPath(key: nrPost.pubkey))
                             }
-                            
+                        
                         if let contact = nrPost.contact {
                             NameAndNip(contact: contact)
                         }
@@ -36,8 +36,8 @@ struct QuotedNoteFragmentView: View {
                             Text(verbatim: " ·") //
                             Ago(nrPost.createdAt)
                         }
-                            .font(.system(size: 14))
-                            .foregroundColor(.secondary)
+                        .font(.system(size: 14))
+                        .foregroundColor(.secondary)
                     }
                     ReplyingToFragmentView(nrPost: nrPost)
                 }
@@ -46,16 +46,20 @@ struct QuotedNoteFragmentView: View {
             }.frame(height: 40)
             VStack(alignment: .leading) {
                 NoteTextRenderView(nrPost: nrPost)
+                //                    .contentShape(Rectangle())
+                //                    .onTapGesture {
+                //                        navigateTo(nrPost)
+                //                    }
                 if nrPost.imageUrls.first != nil {
                     Color.clear.frame(height: 0)
-                       .modifier(SizeModifier())
-                       .onPreferenceChange(SizePreferenceKey.self) { size in
-                           guard size.width > 0 else { return }
-                           viewSize = size
-                       }
+                        .modifier(SizeModifier())
+                        .onPreferenceChange(SizePreferenceKey.self) { size in
+                            guard size.width > 0 else { return }
+                            viewSize = size
+                        }
                 }
                 if let firstMediaUrl = nrPost.imageUrls.first, firstMediaUrl.absoluteString.matchingStrings(regex: NRContentElementBuilder.videoUrlPattern).count > 0, viewSize.width > 0 {
-                    XSingleVideoViewer(url: firstMediaUrl, pubkey: nrPost.pubkey, videoWidth: viewSize.width - 20, isFollowing:nrPost.following)
+                    NosturVideoViewur(url: firstMediaUrl, pubkey: nrPost.pubkey, videoWidth: viewSize.width - 20, isFollowing:nrPost.following)
                 }
                 else if let firstMediaUrl = nrPost.imageUrls.first, viewSize.width > 0 {
                     SingleMediaViewer(url: firstMediaUrl, pubkey: nrPost.pubkey, imageWidth: viewSize.width, isFollowing: nrPost.following)
@@ -63,9 +67,12 @@ struct QuotedNoteFragmentView: View {
             }
         }
         .contentShape(Rectangle())
-        .onTapGesture {
-            navigateTo(nrPost)
-        }
+        .highPriorityGesture(
+            TapGesture()
+                .onEnded { _ in
+                    navigateTo(nrPost) // TODO: move this one to specific parts, else cant tap video..
+                }
+        )
         .padding(10)
         .overlay(
             RoundedRectangle(cornerRadius: 15)
@@ -120,14 +127,14 @@ struct QuotedNoteFragmentView_Previews: PreviewProvider {
         
         // reply to known  contact
         // f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e
-    
+        
         
         VStack {
             // Mention at #[5]
             if let event0 = PreviewFetcher.fetchNRPost("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe") {
                 PostRowDeletable(nrPost: event0)
             }
-        
+            
             
             if let event1 = PreviewFetcher.fetchNRPost("dec5a86ad780edd26fb8a1b85f919ddace9cb2b2b5d3a68d5124802fc2da4ed3") {
                 QuotedNoteFragmentView(nrPost: event1)

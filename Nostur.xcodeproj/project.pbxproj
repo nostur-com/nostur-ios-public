@@ -17,6 +17,8 @@
 		1F00E8C329C2FE7800797B78 /* LVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F00E8C229C2FE7800797B78 /* LVM.swift */; };
 		1F02EA5C299F94F200FC89EB /* Onboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F02EA5B299F94F200FC89EB /* Onboarding.swift */; };
 		1F055A53296EE2A2009EF792 /* secp256k1 in Frameworks */ = {isa = PBXBuildFile; productRef = 1F055A52296EE2A2009EF792 /* secp256k1 */; };
+		1F05FA0A2A35FDEF00DAB8E8 /* NosturVideoViewur.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F05FA092A35FDEF00DAB8E8 /* NosturVideoViewur.swift */; };
+		1F05FA0C2A35FFA400DAB8E8 /* VideoViewerRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F05FA0B2A35FFA400DAB8E8 /* VideoViewerRepresentable.swift */; };
 		1F05FE7A2A1DFCDA0005A254 /* InstantFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F05FE792A1DFCDA0005A254 /* InstantFeed.swift */; };
 		1F065A9929A37A47003421D3 /* NoteZaps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F065A9829A37A47003421D3 /* NoteZaps.swift */; };
 		1F065A9B29A3E67F003421D3 /* NotificationsReactions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F065A9A29A3E67F003421D3 /* NotificationsReactions.swift */; };
@@ -196,7 +198,7 @@
 		1F96792D29BF611800E78173 /* EditPrivateNoteSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F96792C29BF611800E78173 /* EditPrivateNoteSheet.swift */; };
 		1F96792F29BF613C00E78173 /* NewPrivateNoteSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F96792E29BF613C00E78173 /* NewPrivateNoteSheet.swift */; };
 		1F987EB329805F33001E352E /* String+matchingStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F987EB229805F33001E352E /* String+matchingStrings.swift */; };
-		1F9D69DB2A30E3D600628460 /* UIV.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9D69DA2A30E3D600628460 /* UIV.swift */; };
+		1F9D69DB2A30E3D600628460 /* VideoViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9D69DA2A30E3D600628460 /* VideoViewer.swift */; };
 		1F9DC3A82A28E35900119D73 /* NewFollowersNotificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9DC3A72A28E35900119D73 /* NewFollowersNotificationView.swift */; };
 		1F9FFD8B2A11F41E002E319C /* NoteHeaderViewEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9FFD8A2A11F41E002E319C /* NoteHeaderViewEvent.swift */; };
 		1FA51FF62978441200FE60EF /* Relay+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */; };
@@ -354,6 +356,8 @@
 		1F0088EA29D735080016F111 /* ContentRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentRenderer.swift; sourceTree = "<group>"; };
 		1F00E8C229C2FE7800797B78 /* LVM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LVM.swift; sourceTree = "<group>"; };
 		1F02EA5B299F94F200FC89EB /* Onboarding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Onboarding.swift; sourceTree = "<group>"; };
+		1F05FA092A35FDEF00DAB8E8 /* NosturVideoViewur.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturVideoViewur.swift; sourceTree = "<group>"; };
+		1F05FA0B2A35FFA400DAB8E8 /* VideoViewerRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoViewerRepresentable.swift; sourceTree = "<group>"; };
 		1F05FE792A1DFCDA0005A254 /* InstantFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstantFeed.swift; sourceTree = "<group>"; };
 		1F065A9829A37A47003421D3 /* NoteZaps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteZaps.swift; sourceTree = "<group>"; };
 		1F065A9A29A3E67F003421D3 /* NotificationsReactions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsReactions.swift; sourceTree = "<group>"; };
@@ -528,7 +532,7 @@
 		1F96792E29BF613C00E78173 /* NewPrivateNoteSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewPrivateNoteSheet.swift; sourceTree = "<group>"; };
 		1F987EB229805F33001E352E /* String+matchingStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+matchingStrings.swift"; sourceTree = "<group>"; };
 		1F9D69D82A3077F400628460 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = SOURCE_ROOT; };
-		1F9D69DA2A30E3D600628460 /* UIV.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIV.swift; sourceTree = "<group>"; };
+		1F9D69DA2A30E3D600628460 /* VideoViewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoViewer.swift; sourceTree = "<group>"; };
 		1F9DC3A72A28E35900119D73 /* NewFollowersNotificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewFollowersNotificationView.swift; sourceTree = "<group>"; };
 		1F9FFD8A2A11F41E002E319C /* NoteHeaderViewEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteHeaderViewEvent.swift; sourceTree = "<group>"; };
 		1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Relay+CoreDataClass.swift"; sourceTree = "<group>"; };
@@ -809,7 +813,9 @@
 				1FB3FBA42A01673F0018CBD7 /* SingleVideoViewer.swift */,
 				1F38AFEE2A27156C0035641E /* UIVideoView.swift */,
 				1F38AFF02A27166C0035641E /* VideoHelpers.swift */,
-				1F9D69DA2A30E3D600628460 /* UIV.swift */,
+				1F9D69DA2A30E3D600628460 /* VideoViewer.swift */,
+				1F05FA0B2A35FFA400DAB8E8 /* VideoViewerRepresentable.swift */,
+				1F05FA092A35FDEF00DAB8E8 /* NosturVideoViewur.swift */,
 				1F0F35652A31A13D00AA9C41 /* NosturVideoPlayerView.swift */,
 			);
 			path = Video;
@@ -1561,7 +1567,7 @@
 				1F7521172986736400C43DF0 /* Messages.swift in Sources */,
 				1F14BA762985984100EACCD5 /* ProfileRelaysView.swift in Sources */,
 				1F69856329F40409006F813F /* Data+agoString.swift in Sources */,
-				1F9D69DB2A30E3D600628460 /* UIV.swift in Sources */,
+				1F9D69DB2A30E3D600628460 /* VideoViewer.swift in Sources */,
 				1FC268C729A2CC4F00A2B577 /* NoteReactions.swift in Sources */,
 				1FCA273E299A6A1A00298881 /* LightningButton.swift in Sources */,
 				1FB448C52965F3D000038671 /* NosturTabsView.swift in Sources */,
@@ -1596,6 +1602,7 @@
 				1F210B0629F853BB00159814 /* ProfileMediaView.swift in Sources */,
 				1FCC2F292A19275200202EFA /* NIP05Verifier.swift in Sources */,
 				1F8B134B297B3551002EB8CF /* NIP19.swift in Sources */,
+				1F05FA0A2A35FDEF00DAB8E8 /* NosturVideoViewur.swift in Sources */,
 				1F14BA7029854DFC00EACCD5 /* ProfileRow.swift in Sources */,
 				1F6E448429CC51600037D947 /* VideoPlayerView.swift in Sources */,
 				1F2F54F02A02942B00B6D7E4 /* NotificationsPosts.swift in Sources */,
@@ -1621,6 +1628,7 @@
 				1F740DA129AF381F00EFCCA7 /* CreateNewBadgeSheet.swift in Sources */,
 				1F83497F29DD6F980032E52B /* LRUCache2.swift in Sources */,
 				1FD3DE0329BE325B007E1E6E /* PrivateNoteToggle.swift in Sources */,
+				1F05FA0C2A35FFA400DAB8E8 /* VideoViewerRepresentable.swift in Sources */,
 				1F7E40EA29BD9AD6003F9F71 /* PrivateNote+CoreDataClass.swift in Sources */,
 				1FDF0EDD29ED732500B56AC4 /* AnyStatus.swift in Sources */,
 				1FBE8222299A6F3D00FB41CE /* LUD16.swift in Sources */,
