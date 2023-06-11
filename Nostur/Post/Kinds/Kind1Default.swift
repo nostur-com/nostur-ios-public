@@ -58,6 +58,7 @@ struct Kind1Default: View {
             VStack(alignment:.leading, spacing: 3) {// Post container
                 HStack { // name + reply + context menu
                     NoteHeaderView(nrPost: nrPost)
+                        .fixedSize(horizontal: false, vertical: true)
                     Spacer()
                     LazyNoteMenuButton(nrPost: nrPost)
                 }
@@ -98,6 +99,7 @@ struct Kind1Default: View {
                 if (!hideFooter && settings.rowFooterEnabled) {
                     FooterFragmentView(nrPost: nrPost)
                         .padding(.top, 10)
+                        .fixedSize(horizontal: false, vertical: true)
                         .contentShape(Rectangle())
                         .onTapGesture {
                             navigateTo(nrPost)

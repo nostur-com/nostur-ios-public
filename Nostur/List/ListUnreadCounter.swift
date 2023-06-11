@@ -21,7 +21,7 @@ struct ListUnreadCounter: View {
         if (vmCounter.count > 0) {
             // TODO: Add mini profile icons
             HStack {
-                Text("\(vmCounter.count)")
+                Text(String(vmCounter.count))
                 Image(systemName: "arrow.up")
             }
             .frame(minWidth: 30)

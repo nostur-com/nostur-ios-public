@@ -3,7 +3,7 @@ import SwiftUI
 struct Ago: View, Equatable {
     
     static func == (lhs: Ago, rhs: Ago) -> Bool {
-        (lhs.agoText ?? lhs.date.agoString) == (rhs.agoText ?? rhs.date.agoString)
+        lhs.date == rhs.date
     }
     
     let date:Date
