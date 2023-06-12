@@ -65,8 +65,11 @@ class NWCRequestQueue {
                     if req.value.zap?.error != nil { // Received error from NWC
                         failedZaps.append(req.value.zap!)
                     }
-                    else { // Timeout
-                        timeoutZaps.append(req.value.zap!)
+                    else if let zap = req.value.zap { // Timeout
+                        timeoutZaps.append(zap)
+                    }
+                    else {
+                        L.og.info("⚡️ timeout for req: \(req.value.request.id) .. but has no .zap")
                     }
                 }
                 self.waitingRequests = self.waitingRequests.filter { now.timeIntervalSince($0.value.queuedAt) < 25 }
