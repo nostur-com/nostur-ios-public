@@ -1,5 +1,4 @@
 import SwiftUI
-import CoreData
 
 struct NosturTabsView: View {
     @StateObject private var dim = DIMENSIONS()

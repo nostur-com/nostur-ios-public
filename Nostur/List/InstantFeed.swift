@@ -4,7 +4,6 @@ import Combine
 class InstantFeed {
     typealias CompletionHandler = ([Event]) -> ()
     var backlog = Backlog(auto: true)
-    var viewContext = DataProvider.shared().viewContext
     var bg = DataProvider.shared().bg
     var pongReceiver:AnyCancellable?
     var pubkey:Pubkey?
