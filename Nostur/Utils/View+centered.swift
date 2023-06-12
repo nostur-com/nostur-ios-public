@@ -46,7 +46,7 @@ struct BoxShadow: ViewModifier {
 }
 
 struct RoundedBoxShadow: ViewModifier {
-    static let shadowColor = Color.gray.opacity(0.25)
+    static let shadowColor = Color("ShadowColor").opacity(0.25)
     func body(content: Content) -> some View {
         content
             .background(
