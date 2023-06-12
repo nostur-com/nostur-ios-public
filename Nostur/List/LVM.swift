@@ -144,7 +144,7 @@ class LVM: NSObject, ObservableObject {
     var startRenderingSubject = PassthroughSubject<[Event], Never>()
     var startRenderingOlderSubject = PassthroughSubject<[Event], Never>()
     var didCatchup = false
-    var backlog = Backlog()
+    var backlog = Backlog(auto: true)
     
     private func getAllObjectIds(_ nrPosts:[NRPost]) -> Set<NRPostID> {
         return nrPosts.reduce(Set<NRPostID>()) { partialResult, nrPost in
@@ -234,11 +234,17 @@ class LVM: NSObject, ObservableObject {
 
             if currentNRPostLeafs.count == 0 {
                 let leafThreads = self.renderLeafs(added, onScreenSeen:self.onScreenSeen) // Transforms seperate posts into threads, .id for each thread is leaf.id
+                
+                let (danglers, newLeafThreads) = extractDanglingReplies(leafThreads)
+                if danglers.count > 0 {
+                    L.og.info("🟪🟠🟠 processPostsInBackground: \(danglers.count) replies without replyTo. Fetching...")
+                    fetchParents(danglers, older:older)
+                }
                                 
                 DispatchQueue.main.async {
-                    self.initialIndex = self.getRestoreScrollIndex(leafThreads, lastAppearedId: self.restoreScrollToId) ?? 0
+                    self.initialIndex = self.getRestoreScrollIndex(newLeafThreads, lastAppearedId: self.restoreScrollToId) ?? 0
                     L.sl.info("⭐️ LVM.initialIndex: \(self.name) \(self.initialIndex) - \(taskId)")
-                    self.nrPostLeafs = leafThreads
+                    self.nrPostLeafs = newLeafThreads
 //                    print("COUNTER B: \(self.lvmCounter.count)")
 //                    self.lvmCounter.count = self.itemsAfterLastRead < 5 ? 0 : self.itemsAfterLastRead
 //                    print("COUNTER BB: \(self.lvmCounter.count)")
@@ -249,8 +255,8 @@ class LVM: NSObject, ObservableObject {
                 
                 let (danglers, newLeafThreads) = extractDanglingReplies(newLeafThreadsWithMissingParents)
 //                self.needsReplyTo.append(contentsOf: danglers)
-//                print("🟠🟠 danglers: \(danglers.count)")
                 if danglers.count > 0 {
+                    L.og.info("🟠🟠 processPostsInBackground: \(danglers.count) replies without replyTo. Fetching...")
                     fetchParents(danglers, older:older)
                 }
                 putNewThreadsOnScreen(newLeafThreads, leafIdsOnScreen:leafIdsOnScreen, currentNRPostLeafs: currentNRPostLeafs, older:older)
@@ -339,15 +345,15 @@ class LVM: NSObject, ObservableObject {
         let danglingFetchTask = ReqTask(
             reqCommand: { [weak self] (taskId) in
                 guard let self = self else { return }
-                L.lvm.info("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") - \(taskId) 🟠🟠 danglingFetchTask.fetch() - \(danglers.count)")
+                L.lvm.info("😈😈 reqCommand: \(self.id) \(self.name)/\(self.pubkey?.short ?? "") - \(taskId) - dng: \(danglers.count)")
                 let danglerIds = danglers.compactMap { $0.replyToId }
                 if danglerIds.count > 0 {
                     req(RM.getEvents(ids: danglerIds, subscriptionId: taskId))
                 }
             },
             processResponseCommand: { [weak self] (taskId) in
-//                print("\(taskId) 🟠🟠🟠 processResponseCommand")
-                guard let self = self else { print("\(taskId) 🟠🟠🟠 processResponseCommand RETURN!"); return }
+                guard let self = self else { return }
+                L.lvm.info("😈😈 processResponseCommand: \(self.id) \(self.name)/\(self.pubkey?.short ?? "") - \(taskId) dng: \(danglers.count)")
                 let lastCreatedAt = self.nrPostLeafs.last?.created_at ?? 0 // SHOULD CHECK ONLY LEAFS BECAUSE ROOTS CAN BE VERY OLD
                 DataProvider.shared().bg.perform { [weak self] in
                     guard let self = self else { return }
@@ -362,7 +368,7 @@ class LVM: NSObject, ObservableObject {
             },
             timeoutCommand: { [weak self] (taskId) in
                 guard let self = self else { return }
-//                print("🟠🟠 timeout.. should just render whatever \(danglers.compactMap { $0.event.replyTo_ == nil }.count)")
+                L.lvm.info("😈😈 timeoutCommand: \(self.id) \(self.name)/\(self.pubkey?.short ?? "") - \(taskId) dng: \(danglers.count)")
 
                 let leafIdsOnScreen = leafIdsOnScreen
                 let currentNRPostLeafs = self.nrPostLeafs // viewContext. First (0) is newest
@@ -733,8 +739,6 @@ extension LVM {
         showOwnNewPostsImmediately()
         trackPubkeysChanged()
         renderFromLocalIfWeHaveNothingNewAndScreenIsEmpty()
-//        performLocalFetchAfterImport()
-        processIncomingParents()
         trackTabVisibility()
         loadMoreWhenNearBottom()
         throttledCommands()
@@ -763,22 +767,6 @@ extension LVM {
                 .compactMap { _ in UserDefaults.standard.string(forKey: "selected_listId") }
                 .assign(to: \.selectedListId, on: self)
                 .store(in: &subscriptions)
-    }
-    
-    func processIncomingParents() {
-        receiveNotification(.importedMessagesFromSubscriptionIds)
-            .sink { [weak self] notification in
-                guard let self = self else { return }
-                let importedNotification = notification.object as! ImportedNotification
-//                print("🟠🟠 notif \(importedNotification.subscriptionIds.joined(separator: ",")) ")
-//                print("🟠🟠 backlog tasks: \(self.backlog.tasks.count) - \(self.subscriptionId)")
-                let reqTasks = self.backlog.tasks(with: importedNotification.subscriptionIds)
-//                print("🟠🟠 reqTasks to process: \(reqTasks.count)")
-                reqTasks.forEach { task in
-                    task.process()
-                }
-            }
-            .store(in: &subscriptions)
     }
     
     func performLocalFetchAfterImport() {
@@ -1211,7 +1199,8 @@ extension LVM {
                 newUnrenderedEvents = events.filter(onlyRootOrReplyingToFollower)
                     .prefix(LVM_MAX_VISIBLE)
                     .map {
-                        $0.parentEvents = hideReplies ? [] : Event.getParentEvents($0)
+                        $0.parentEvents = hideReplies ? [] : Event.getParentEvents($0, fixRelations: true)
+                        _ = $0.replyTo__
                         return $0
                     }
                 let newEventIds = getAllEventIds(newUnrenderedEvents)
@@ -1225,7 +1214,8 @@ extension LVM {
                     .filter { $0.created_at > lastCreatedAt } // skip all older than first on screen (check LEAFS only)
                     .filter(onlyRootOrReplyingToFollower)
                     .map {
-                        $0.parentEvents = hideReplies ? [] : Event.getParentEvents($0)
+                        $0.parentEvents = hideReplies ? [] : Event.getParentEvents($0, fixRelations: true)
+                        _ = $0.replyTo__
                         return $0
                     }
 
@@ -1248,7 +1238,7 @@ extension LVM {
         newUnrenderedEvents = events
             .filter(onlyRootOrReplyingToFollower)
             .map {
-                $0.parentEvents = Event.getParentEvents($0)
+                $0.parentEvents = Event.getParentEvents($0, fixRelations: true)
                 return $0
             }
 
