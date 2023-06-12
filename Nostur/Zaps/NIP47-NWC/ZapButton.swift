@@ -89,19 +89,20 @@ struct ZapButton: View {
 
 struct ZapButton_Previews: PreviewProvider {
     static var previews: some View {
-        VStack {
-            if let nrPost = PreviewFetcher.fetchNRPost("49635b590782cb1ab1580bd7e9d85ba586e6e99e48664bacf65e71821ae79df1") {
-                ZapButton(tally:nrPost.zapTally, nrPost: nrPost)
-            }
-            
-            
-            Image("BoltIconActive").foregroundColor(.yellow)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-        }
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadZaps()
-        })
+        }) {
+            VStack {
+                if let nrPost = PreviewFetcher.fetchNRPost("49635b590782cb1ab1580bd7e9d85ba586e6e99e48664bacf65e71821ae79df1") {
+                    ZapButton(tally:nrPost.zapTally, nrPost: nrPost)
+                }
+                
+                
+                Image("BoltIconActive").foregroundColor(.yellow)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+            }
+        }
     }
 }

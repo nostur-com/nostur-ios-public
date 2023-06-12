@@ -36,32 +36,33 @@ struct TabButton: View {
 
 struct TabButton_Previews: PreviewProvider {
     static var previews: some View {
-        HStack(spacing: 4) {
-            TabButton(action: {
-                print("dede")
-            }, title: "testing!")
-            
-            TabButton(action: {
-                print("dede")
-            }, title: "testing!")
-            
-            TabButton(action: {
-                print("dede")
-            }, title: "testing!", unread:3)
-            
-            TabButton(action: {
-                print("dede")
-            }, title: "testing!")
-            
-            TabButton(action: {
-                print("dede")
-            }, title: "testing!")
-            
-            TabButton(action: {
-                print("dede")
-            }, title: "testing!", selected: true)
-                      
+        PreviewContainer {
+            HStack(spacing: 4) {
+                TabButton(action: {
+                    print("dede")
+                }, title: "testing!")
+                
+                TabButton(action: {
+                    print("dede")
+                }, title: "testing!")
+                
+                TabButton(action: {
+                    print("dede")
+                }, title: "testing!", unread:3)
+                
+                TabButton(action: {
+                    print("dede")
+                }, title: "testing!")
+                
+                TabButton(action: {
+                    print("dede")
+                }, title: "testing!")
+                
+                TabButton(action: {
+                    print("dede")
+                }, title: "testing!", selected: true)
+                          
+            }
         }
-            .withPreviewEnvironment()
     }
 }

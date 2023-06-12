@@ -70,9 +70,10 @@ public class PreviewEnvironment {
 extension PreviewEnvironment {
     
     func loadAccount() -> Bool {
-        guard !didLoad else { return false }
-        didLoad = true
+//        guard !didLoad else { return false }
+//        didLoad = true
         context.performAndWait {
+            print("💄💄LOADING ACCOUNT")
             let account = Account(context: self.context)
             account.createdAt = Date()
             account.id = UUID()
@@ -375,38 +376,45 @@ extension PreviewEnvironment {
 
 public typealias PreviewSetup = (_ pe:PreviewEnvironment) -> ()
 
-public extension View {
-    func withPreviewEnvironment(_ setup:PreviewSetup? = nil, previewDevice:PreviewDevice = PreviewDevice(rawValue: "iPhone 14")) -> some View {
-        modifier(WithPreviewEnvironment(setup, previewDevice: previewDevice))
-    }
-}
-
-private struct WithPreviewEnvironment: ViewModifier {
-    
-    var pe = PreviewEnvironment.shared
-//    @State var setup:PreviewSetup? = nil
+struct PreviewContainer<Content: View>: View {
+    let pe = PreviewEnvironment.shared
+    var setup:PreviewSetup? = nil
     let previewDevice:PreviewDevice
+    var content: () -> Content
+    @State var didSetup = false
     
-    init(_ setup:PreviewSetup? = nil, previewDevice:PreviewDevice) {
-        self.previewDevice = previewDevice
-        if pe.loadAccount() {
-            if let setup {
-                setup(pe)
+    init(_ setup:PreviewSetup? = nil, previewDevice:PreviewDevice? = nil, @ViewBuilder content: @escaping () -> Content) {
+        self.setup = setup
+        self.previewDevice = previewDevice ?? PreviewDevice(rawValue: "iPhone 14")
+        self.content = content
+    }
+    
+    var body: some View {
+        VStack(spacing:0) {
+            if didSetup {
+                content()
+                    .environment(\.managedObjectContext, pe.context)
+                    .environmentObject(NosturState.shared)
+                    .environmentObject(pe.sp)
+                    .environmentObject(pe.er)
+                    .environmentObject(pe.ss)
+                    .environmentObject(pe.sm)
+                    .environmentObject(pe.tm)
+                    .environmentObject(pe.dim)
+            }
+            else {
+                EmptyView()
             }
         }
-    }
-    
-    func body(content: Content) -> some View {
-        content
-            .environment(\.managedObjectContext, pe.context)
-            .environmentObject(NosturState.shared)
-            .environmentObject(pe.sp)
-            .environmentObject(pe.er)
-            .environmentObject(pe.ss)
-            .environmentObject(pe.sm)
-            .environmentObject(pe.tm)
-            .environmentObject(pe.dim)
-            .previewDevice(previewDevice)
+        .onAppear {
+            if pe.loadAccount() {
+                if let setup {
+                    setup(pe)
+                }
+            }
+            didSetup = true
+        }
+        .previewDevice(previewDevice)
     }
 }
 

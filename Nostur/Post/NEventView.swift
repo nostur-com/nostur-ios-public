@@ -87,15 +87,15 @@ struct NEventView: View {
 
 struct NEventView_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationStack {
-            if let identifier = try? ShareableIdentifier("nevent1qqspg0h7quunckc8a7lxag0uvmpeewv9hx8cs3r9pmwsp77tqsfz3gcens7um") {
-                NEventView(identifier: identifier)
-            }
-        }
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
-        })
-        
+        }) {
+            NavigationStack {
+                if let identifier = try? ShareableIdentifier("nevent1qqspg0h7quunckc8a7lxag0uvmpeewv9hx8cs3r9pmwsp77tqsfz3gcens7um") {
+                    NEventView(identifier: identifier)
+                }
+            }
+        }
     }
 }

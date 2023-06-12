@@ -110,11 +110,12 @@ struct Kind1: View {
 
 struct Kind1_Previews: PreviewProvider {
     static var previews: some View {
-        VStack {
-            if let nrPost = PreviewFetcher.fetchNRPost() {
-                Kind1(nrPost: nrPost)
+        PreviewContainer {
+            VStack {
+                if let nrPost = PreviewFetcher.fetchNRPost() {
+                    Kind1(nrPost: nrPost)
+                }
             }
         }
-        .withPreviewEnvironment()
     }
 }

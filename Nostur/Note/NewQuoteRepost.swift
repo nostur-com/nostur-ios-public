@@ -317,14 +317,15 @@ struct NewQuoteRepost: View {
 struct NewQuoteRepost_Previews: PreviewProvider {
     @State static var noteCancellationId:UUID?
     static var previews: some View {
-        NavigationStack {
-            if let event = PreviewFetcher.fetchEvent() {
-                NewQuoteRepost(quotingEvent: event)
+        PreviewContainer({ pe in
+            pe.loadPosts()
+        }) {
+            NavigationStack {
+                if let event = PreviewFetcher.fetchEvent() {
+                    NewQuoteRepost(quotingEvent: event)
+                }
             }
         }
-        .withPreviewEnvironment({ pe in
-            pe.loadPosts()
-        })
     }
 }
 

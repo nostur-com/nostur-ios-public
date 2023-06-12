@@ -162,7 +162,8 @@ struct AddExistingAccountSheet: View {
 
 struct AddExistingAccountSheet_Previews: PreviewProvider {
     static var previews: some View {
-        AddExistingAccountSheet()
-            .withPreviewEnvironment()
+        PreviewContainer {
+            AddExistingAccountSheet()
+        }
     }
 }

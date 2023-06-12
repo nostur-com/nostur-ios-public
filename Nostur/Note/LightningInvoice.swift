@@ -152,27 +152,28 @@ func fetchBitcoinPrice() async -> Double? {
 struct LightningInvoice_Previews: PreviewProvider {
     static var previews: some View {
         
-        VStack {
-            let invoice = "lnbc469970n1p373e49pp5ey9mxfcy9k62clpjvqwsrju64p0378cll0mzehtccj2ulqnamkzqdqvw3jhxarfdenscqzpgxqyz5vqsp5m8zsyfs936f2vfkshvdfhntmr596079hwryr2r8dpr8ahy6hu6hq9qyyssqlcvvw6gmq09hwzw2kxfe03enc25plxzfmupxwx4xr8hddn972nzq7m0jf9sxenw23qg6nv55678nrnnr4fe3wkwm6pczmaxs0r7yftgqd6lgya"
-            
-            VStack {
-                if let nrPost = { () -> NRPost? in
-                    if let event = PreviewFetcher.fetchEvent() {
-                        event.content = invoice
-                        return NRPost(event: event)
-                    }
-                    return nil
-                }() {
-                    PostRowDeletable(nrPost: nrPost)
-                }
-            }
-            .padding(20)
-        }
-        .withLightningEffect()
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
-        })
+        }) {
+            VStack {
+                let invoice = "lnbc469970n1p373e49pp5ey9mxfcy9k62clpjvqwsrju64p0378cll0mzehtccj2ulqnamkzqdqvw3jhxarfdenscqzpgxqyz5vqsp5m8zsyfs936f2vfkshvdfhntmr596079hwryr2r8dpr8ahy6hu6hq9qyyssqlcvvw6gmq09hwzw2kxfe03enc25plxzfmupxwx4xr8hddn972nzq7m0jf9sxenw23qg6nv55678nrnnr4fe3wkwm6pczmaxs0r7yftgqd6lgya"
+                
+                VStack {
+                    if let nrPost = { () -> NRPost? in
+                        if let event = PreviewFetcher.fetchEvent() {
+                            event.content = invoice
+                            return NRPost(event: event)
+                        }
+                        return nil
+                    }() {
+                        PostRowDeletable(nrPost: nrPost)
+                    }
+                }
+                .padding(20)
+            }
+            .withLightningEffect()
+        }
     }
     
 }

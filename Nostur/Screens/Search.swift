@@ -381,9 +381,10 @@ public final class DebounceObject: ObservableObject {
 
 struct Search_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationStack {
-            Search()
+        PreviewContainer {
+            NavigationStack {
+                Search()
+            }
         }
-        .withPreviewEnvironment()
     }
 }

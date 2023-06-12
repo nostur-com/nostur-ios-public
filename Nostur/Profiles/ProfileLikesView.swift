@@ -94,14 +94,14 @@ struct ProfileLikesView_Previews: PreviewProvider {
     static var previews: some View {
         let pubkey = "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240"
         
-        ScrollView {
-            ProfileLikesView(pubkey: pubkey)
-        }
-        .withPreviewEnvironment({ pe in
-            // TODO: FIX PREVIEW
+        PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
             pe.loadRepliesAndReactions()
-        })
+        }) {
+            ScrollView {
+                ProfileLikesView(pubkey: pubkey)
+            }
+        }
     }
 }

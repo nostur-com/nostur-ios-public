@@ -88,7 +88,8 @@ struct SideTabs:View {
 
 struct MacListsView_Previews: PreviewProvider {
     static var previews: some View {
-        MacListsView()
-            .withPreviewEnvironment(previewDevice:PreviewDevice(rawValue: "My Mac (Mac Catalyst)"))
+        PreviewContainer(previewDevice:PreviewDevice(rawValue: "My Mac (Mac Catalyst)")) {
+            MacListsView()
+        }
     }
 }

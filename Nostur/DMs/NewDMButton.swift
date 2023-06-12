@@ -35,9 +35,10 @@ struct NewDMButton: View {
 struct NewDMButton_Previews: PreviewProvider {
     @State static var showingNewDM = false
     static var previews: some View {
-        NavigationStack {
-            NewDMButton(showingNewDM: $showingNewDM)
+        PreviewContainer {
+            NavigationStack {
+                NewDMButton(showingNewDM: $showingNewDM)
+            }
         }
-        .withPreviewEnvironment()
     }
 }

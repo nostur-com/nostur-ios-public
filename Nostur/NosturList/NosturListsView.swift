@@ -73,13 +73,14 @@ struct ListRow: View {
 
 struct NosturListsView_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationStack {
-            NosturListsView()
-                .withNavigationDestinations()
-        }
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadNosturLists()
-        })
+        }) {
+            NavigationStack {
+                NosturListsView()
+                    .withNavigationDestinations()
+            }
+        }
     }
 }

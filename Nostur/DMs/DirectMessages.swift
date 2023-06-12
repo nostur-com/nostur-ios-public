@@ -311,9 +311,10 @@ struct DMRow: View {
 
 struct DirectMessages_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationStack {
-            DirectMessages(pubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", blockedPubkeys: [])
+        PreviewContainer({ pe in pe.loadDMs() }) {
+            NavigationStack {
+                DirectMessages(pubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", blockedPubkeys: [])
+            }
         }
-        .withPreviewEnvironment({ pe in pe.loadDMs() })
     }
 }

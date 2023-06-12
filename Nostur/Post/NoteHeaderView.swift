@@ -195,18 +195,17 @@ struct NameAndNip: View {
 struct NoteHeaderView_Previews: PreviewProvider {
     static var previews: some View {
         
-        VStack {
-            PreviewHeaderView(authorName: "Fabian", username: "fabian")
-            
-            if let p = PreviewFetcher.fetchNRPost("953dbf6a952f43f70dbb4d6432593ba5b7f149a786d1750e4aa4cef40522c0a0") {
-                NoteHeaderView(nrPost: p)
-                    .withPreviewEnvironment()
-            }
-        }
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
-        })
-        
+        }) {
+            VStack {
+                PreviewHeaderView(authorName: "Fabian", username: "fabian")
+                
+                if let p = PreviewFetcher.fetchNRPost("953dbf6a952f43f70dbb4d6432593ba5b7f149a786d1750e4aa4cef40522c0a0") {
+                    NoteHeaderView(nrPost: p)
+                }
+            }
+        }
     }
 }

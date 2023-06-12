@@ -395,8 +395,9 @@ struct Settings: View {
 
 struct Settings_Previews: PreviewProvider {
     static var previews: some View {
-        Settings()
-            .withPreviewEnvironment()
+        PreviewContainer {
+            Settings()
+        }
     }
 }
 

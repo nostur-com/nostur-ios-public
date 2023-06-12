@@ -42,11 +42,12 @@ struct KindResolver: View {
 
 struct KindResolver_Previews: PreviewProvider {
     static var previews: some View {
-        VStack {
-            if let nrPost = PreviewFetcher.fetchNRPost() {
-                KindResolver(nrPost: nrPost)
+        PreviewContainer {
+            VStack {
+                if let nrPost = PreviewFetcher.fetchNRPost() {
+                    KindResolver(nrPost: nrPost)
+                }
             }
         }
-        .withPreviewEnvironment()
     }
 }

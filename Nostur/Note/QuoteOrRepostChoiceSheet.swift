@@ -56,16 +56,17 @@ struct QuoteOrRepostChoiceSheet_Previews: PreviewProvider {
     
     static var previews: some View {
         
-        VStack {
-            let event = PreviewFetcher.fetchEvent()
-            
-            if let event {
-                QuoteOrRepostChoiceSheet(originalEvent: event, quotePostEvent: $quotePostEvent)
-            }
-        }
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
-        })
+        }) {
+            VStack {
+                let event = PreviewFetcher.fetchEvent()
+                
+                if let event {
+                    QuoteOrRepostChoiceSheet(originalEvent: event, quotePostEvent: $quotePostEvent)
+                }
+            }
+        }
     }
 }

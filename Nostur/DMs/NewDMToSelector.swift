@@ -62,12 +62,13 @@ struct NewDMToSelector_Previews: PreviewProvider {
     @State static var toContact:Contact?
     
     static var previews: some View {
-        NavigationStack {
-            NewDMToSelector(toPubkey: $toPubkey, toContact: $toContact)
-        }
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadDMs()
-        })
+        }) {
+            NavigationStack {
+                NewDMToSelector(toPubkey: $toPubkey, toContact: $toContact)
+            }
+        }
     }
 }

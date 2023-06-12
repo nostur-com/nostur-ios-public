@@ -78,12 +78,14 @@ struct NProfileView: View {
 
 struct NProfileView_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationStack {
-            if let identifier = try? ShareableIdentifier("nprofile1qqs80w7ryyy8jpwe372phkw5e3xjs4hacre0pqln4ct8238p5weeaygm0c3wt") {
-                NProfileView(identifier: identifier)
+        PreviewContainer({ pe in
+            pe.loadContacts()
+        }) {
+            NavigationStack {
+                if let identifier = try? ShareableIdentifier("nprofile1qqs80w7ryyy8jpwe372phkw5e3xjs4hacre0pqln4ct8238p5weeaygm0c3wt") {
+                    NProfileView(identifier: identifier)
+                }
             }
-        }
-        .withPreviewEnvironment({ pe in pe.loadContacts() })
-        
+        }        
     }
 }

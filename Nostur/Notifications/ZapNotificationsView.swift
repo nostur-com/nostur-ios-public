@@ -73,19 +73,20 @@ struct ZapNotificationView: View {
 
 struct ZapNotificationView_Previews: PreviewProvider {
     static var previews: some View {
-        VStack {
-            if let pNotification = PreviewFetcher.fetchPersistentNotification() {
-                ZapNotificationView(notification: pNotification)
-                    .padding(10)
-                    .background(Color.systemBackground)
-                    .boxShadow()
-                    .padding(.vertical, 10)
-                    .padding(.horizontal, 10)
+        PreviewContainer({ pe in
+            pe.loadContacts()
+            pe.loadZapsNotifications()
+        }) {
+            VStack {
+                if let pNotification = PreviewFetcher.fetchPersistentNotification() {
+                    ZapNotificationView(notification: pNotification)
+                        .padding(10)
+                        .background(Color.systemBackground)
+                        .boxShadow()
+                        .padding(.vertical, 10)
+                        .padding(.horizontal, 10)
+                }
             }
         }
-            .withPreviewEnvironment({ pe in
-                pe.loadContacts()
-                pe.loadZapsNotifications()
-            })
     }
 }

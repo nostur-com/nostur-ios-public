@@ -41,23 +41,18 @@ struct SnapshotTest_Previews: PreviewProvider {
         // Use ImageDecoderRegistory to add the decoder to the
         let _ = ImageDecoderRegistry.shared.register(ImageDecoders.Video.init)
         
-        NavigationStack {
-            if let p1 = PreviewFetcher.fetchNRPost("5cae40612bdec6e77cf762dc817fe5535e4a3f7e1fc0597bddedc28bee0a7ffc") {
-                let lvm = LVM(pubkeys: Set<String>(), listId: "Test")
-                let _ = lvm.nrPostLeafs = [p1]
-                SnapshotTest(lvm: lvm)
-            }
-        }
-        .withPreviewEnvironment({ pe in
-//            pe.loadPosts()
-            
-            
-            
+        PreviewContainer({ pe in
             pe.parseMessages([
                 ###"["EVENT","3bca337a-8db2-45ca-af4b-c7ba34d04acc",{"content":"Without posting the website link anywhere but on Nostr, https://nostur.com/test1.mp4  it’s already received thousands of unique visits.","created_at":1682708743,"id":"5cae40612bdec6e77cf762dc817fe5535e4a3f7e1fc0597bddedc28bee0a7ffc","kind":1,"pubkey":"fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52","sig":"2a46c838114fb888a00c98649737b785f718206f55db0494564af51ab1b071c954dc4498fe59d04cc1024a2857610dc925615c3fe70bc685e3c8001696f48b7e","tags":[["p","c48e29f04b482cc01ca1f9ef8c86ef8318c059e0e9353235162f080f26e14c11"]]}]"###])
-            
-        })
-//            .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
+        }) {
+            NavigationStack {
+                if let p1 = PreviewFetcher.fetchNRPost("5cae40612bdec6e77cf762dc817fe5535e4a3f7e1fc0597bddedc28bee0a7ffc") {
+                    let lvm = LVM(pubkeys: Set<String>(), listId: "Test")
+                    let _ = lvm.nrPostLeafs = [p1]
+                    SnapshotTest(lvm: lvm)
+                }
+            }
+        }
     }
 }
 

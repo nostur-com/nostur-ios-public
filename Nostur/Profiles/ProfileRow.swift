@@ -99,23 +99,25 @@ struct ProfileRow: View {
 
 struct ProfileRow_Previews: PreviewProvider {
     static var previews: some View {
-        ScrollView {
-//            let pubkey = "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240"
-            
-            if let contact = PreviewFetcher.fetchContact() {
+        PreviewContainer({ pe in
+            pe.loadContacts()
+        }) {
+            ScrollView {
+    //            let pubkey = "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240"
                 
-                LazyVStack {
-                    ProfileRow(contact: contact)
+                if let contact = PreviewFetcher.fetchContact() {
                     
-                    ProfileRow(contact: contact)
-                    
-                    ProfileRow(contact: contact)
-                    
-                    Spacer()
+                    LazyVStack {
+                        ProfileRow(contact: contact)
+                        
+                        ProfileRow(contact: contact)
+                        
+                        ProfileRow(contact: contact)
+                        
+                        Spacer()
+                    }
                 }
             }
         }
-        .withPreviewEnvironment({ pe in pe.loadContacts() })
-        
     }
 }

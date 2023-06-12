@@ -60,38 +60,39 @@ struct NoteHeader: View {
 
 struct NoteHeader_Previews: PreviewProvider {
     static var previews: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            
-            if let event = PreviewFetcher.fetchEvent() {
-                NoteHeader(event: event, singleLine: true)
-            }
-            
-            if let event = PreviewFetcher.fetchEvent() {
-                NoteHeader(event: event, singleLine: true)
-            }
-            
-            if let event = PreviewFetcher.fetchEvent() {
-                NoteHeader(event: event, singleLine: true)
-            }
-            
-            Divider()
-            
-            if let event = PreviewFetcher.fetchEvent() {
-                NoteHeader(event: event, singleLine: false)
-            }
-            
-            if let event = PreviewFetcher.fetchEvent() {
-                NoteHeader(event: event, singleLine: false)
-            }
-            
-            if let event = PreviewFetcher.fetchEvent() {
-                NoteHeader(event: event, singleLine: false)
-            }
-        }
-        .padding()
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
-        })
+        }) {
+            VStack(alignment: .leading, spacing: 10) {
+                
+                if let event = PreviewFetcher.fetchEvent() {
+                    NoteHeader(event: event, singleLine: true)
+                }
+                
+                if let event = PreviewFetcher.fetchEvent() {
+                    NoteHeader(event: event, singleLine: true)
+                }
+                
+                if let event = PreviewFetcher.fetchEvent() {
+                    NoteHeader(event: event, singleLine: true)
+                }
+                
+                Divider()
+                
+                if let event = PreviewFetcher.fetchEvent() {
+                    NoteHeader(event: event, singleLine: false)
+                }
+                
+                if let event = PreviewFetcher.fetchEvent() {
+                    NoteHeader(event: event, singleLine: false)
+                }
+                
+                if let event = PreviewFetcher.fetchEvent() {
+                    NoteHeader(event: event, singleLine: false)
+                }
+            }
+            .padding()
+        }
     }
 }

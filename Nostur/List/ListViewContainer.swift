@@ -36,7 +36,8 @@ struct What: View {
 
 struct Previews_ListViewContainer_Previews: PreviewProvider {
     static var previews: some View {
-        What()
-            .withPreviewEnvironment()
+        PreviewContainer {
+            What()
+        }
     }
 }

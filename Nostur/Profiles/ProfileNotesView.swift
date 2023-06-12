@@ -90,14 +90,15 @@ struct ProfileNotesView_Previews: PreviewProvider {
 //        let pubkey = "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240"
 //        let pubkey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
         
-        ScrollView {
-            LazyVStack {
-                ProfileNotesView(pubkey: pubkey)
-            }
-        }
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
-        })
+        }) {
+            ScrollView {
+                LazyVStack {
+                    ProfileNotesView(pubkey: pubkey)
+                }
+            }
+        }
     }
 }

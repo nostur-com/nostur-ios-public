@@ -330,20 +330,15 @@ struct AccountView_Previews: PreviewProvider {
         
         let fab = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
         
-        NavigationStack {
-            if let account = PreviewFetcher.fetchAccount(fab, context: DataProvider.shared().container.viewContext) {
-                AccountEditView(account: account)
+        PreviewContainer {
+            NavigationStack {
+                if let account = PreviewFetcher.fetchAccount(fab, context: DataProvider.shared().container.viewContext) {
+                    AccountEditView(account: account)
+                }     
             }
-            
         }
-        .withPreviewEnvironment()
     }
 }
-
-
-
-
-
 
 
 

@@ -54,13 +54,14 @@ struct ReportContactSheet: View {
 
 struct ReportContactSheet_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationStack {
-            if let contact = PreviewFetcher.fetchContact() {
-                ReportContactSheet(contact: contact)
+        PreviewContainer({ pe in
+            pe.loadContacts()
+        }) {
+            NavigationStack {
+                if let contact = PreviewFetcher.fetchContact() {
+                    ReportContactSheet(contact: contact)
+                }
             }
         }
-        .withPreviewEnvironment({ pe in
-            pe.loadContacts()
-        })
     }
 }

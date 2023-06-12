@@ -25,10 +25,11 @@ struct NewNoteButton_Previews: PreviewProvider {
     @State static var noteCancellationId:UUID?
     
     static var previews: some View {
-        NewNoteButton(showingNewNote: $showingNewNote)
-            .sheet(isPresented: $showingNewNote) {
-                NewNote(noteCancellationId: $noteCancellationId)
-            }
-            .withPreviewEnvironment()
+        PreviewContainer {
+            NewNoteButton(showingNewNote: $showingNewNote)
+                .sheet(isPresented: $showingNewNote) {
+                    NewNote(noteCancellationId: $noteCancellationId)
+                }
+        }
     }
 }

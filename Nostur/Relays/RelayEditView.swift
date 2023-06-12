@@ -170,8 +170,9 @@ struct RelayEditView_Previews: PreviewProvider {
         }
         
         return NavigationStack {
-            RelayEditView(relay: relay, socket: socketForRelay(relay: relay))
-                .withPreviewEnvironment()
+            PreviewContainer {
+                RelayEditView(relay: relay, socket: socketForRelay(relay: relay))
+            }
         }
     }
 }

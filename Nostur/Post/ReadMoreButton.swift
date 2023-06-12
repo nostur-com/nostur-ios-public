@@ -29,11 +29,14 @@ struct ReadMoreButton: View {
 
 struct ReadMoreButton_Previews: PreviewProvider {
     static var previews: some View {
-        VStack {
-            if let nostrReport = PreviewFetcher.fetchNRPost("da3f7863d634b2020f84f38bd3dac5980794715702e85c3f164e49ebe5dc98cc") {
-                ReadMoreButton(nrPost: nostrReport)
+        PreviewContainer({ pe in
+            pe.loadPosts()
+        }) {
+            VStack {
+                if let nostrReport = PreviewFetcher.fetchNRPost("da3f7863d634b2020f84f38bd3dac5980794715702e85c3f164e49ebe5dc98cc") {
+                    ReadMoreButton(nrPost: nostrReport)
+                }
             }
         }
-        .withPreviewEnvironment({ pe in pe.loadPosts() })
     }
 }

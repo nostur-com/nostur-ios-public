@@ -140,7 +140,8 @@ struct AccountRow: View {
 
 struct AccountSheet_Previews: PreviewProvider {
     static var previews: some View {
-        AccountsSheet()
-            .withPreviewEnvironment()
+        PreviewContainer {
+            AccountsSheet()
+        }
     }
 }

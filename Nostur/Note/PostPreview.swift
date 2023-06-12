@@ -130,14 +130,15 @@ func createPreviewEvent(_ event:NEvent) -> Event {
 struct PostPreview_Previews: PreviewProvider {
     @State static var uploading = false
     static var previews: some View {
-        NavigationStack {
-            if let nrPost = PreviewFetcher.fetchNRPost() {
-                PostPreview(nrPost: nrPost, sendNow: { print("send!") }, uploading: $uploading)
-            }
-        }
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadZaps()
-        })
+        }) {
+            NavigationStack {
+                if let nrPost = PreviewFetcher.fetchNRPost() {
+                    PostPreview(nrPost: nrPost, sendNow: { print("send!") }, uploading: $uploading)
+                }
+            }
+        }
     }
 }

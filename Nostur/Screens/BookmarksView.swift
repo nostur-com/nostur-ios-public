@@ -108,12 +108,13 @@ struct BookmarksView: View {
 
 struct BookmarksView_Previews: PreviewProvider {
     static var previews: some View {
-        VStack {
-            BookmarksContainer()
-        }
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadPosts()
             pe.loadBookmarks()
-        })
+        }) {
+            VStack {
+                BookmarksContainer()
+            }
+        }
     }
 }

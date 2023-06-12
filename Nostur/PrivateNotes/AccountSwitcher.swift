@@ -51,12 +51,13 @@ struct AccountSwitcher_Previews: PreviewProvider {
     @State static var selectedAccount:Account? = nil
     
     static var previews: some View {
-        VStack {
-            let accounts = NosturState.shared.accounts
-            AccountSwitcher(accounts: accounts, selectedAccount: $selectedAccount)
-        }
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadAccounts()
-        })
+        }) {
+            VStack {
+                let accounts = NosturState.shared.accounts
+                AccountSwitcher(accounts: accounts, selectedAccount: $selectedAccount)
+            }
+        }
     }
 }

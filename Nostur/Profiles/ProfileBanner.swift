@@ -100,13 +100,14 @@ struct ProfileBanner: View {
 
 struct ProfileBanner_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationStack {
-            if let contact = PreviewFetcher.fetchContact("9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e") {
-                ProfileBanner(banner:contact.banner, width: UIScreen.main.bounds.width, offset: 0)
+        PreviewContainer({ pe in
+            pe.loadContacts()
+        }) {
+            NavigationStack {
+                if let contact = PreviewFetcher.fetchContact("9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e") {
+                    ProfileBanner(banner:contact.banner, width: UIScreen.main.bounds.width, offset: 0)
+                }
             }
         }
-        .withPreviewEnvironment({ pe in
-            pe.loadContacts()
-        })
     }
 }

@@ -93,7 +93,8 @@ struct NewAccountSheet: View {
 
 struct NewAccountSheet_Previews: PreviewProvider {
     static var previews: some View {
-        NewAccountSheet()
-            .withPreviewEnvironment()
+        PreviewContainer {
+            NewAccountSheet()
+        }
     }
 }

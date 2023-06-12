@@ -261,16 +261,17 @@ struct ProfileView_Previews: PreviewProvider {
         let testtransparentpfp = "7fa56f5d6962ab1e3cd424e758c3002b8665f7b0d8dcee9fe9e288d7751ac194"
         
         
-        NavigationStack {
-            if let contact = PreviewFetcher.fetchContact(testtransparentpfp) {
-                VStack {
-                    ProfileView(contact: contact)
+        PreviewContainer({ pe in
+            pe.loadContacts()
+        }) {
+            NavigationStack {
+                if let contact = PreviewFetcher.fetchContact(testtransparentpfp) {
+                    VStack {
+                        ProfileView(contact: contact)
+                    }
                 }
             }
         }
-        .withPreviewEnvironment({ pe in
-            pe.loadContacts()
-        })
     }
 }
 

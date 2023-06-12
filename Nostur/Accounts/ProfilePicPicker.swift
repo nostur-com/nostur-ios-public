@@ -180,9 +180,10 @@ struct MediaPicker_Previews: PreviewProvider {
     @State static var picture = "https://nostur.com/fabian/profile.jpg"
     @State static var newPicture:UIImage?
     static var previews: some View {
-        ProfilePicPicker($picture, newPicture:$newPicture)
-            .hCentered()
-            .listRowBackground(Color(.systemGroupedBackground))
-            .withPreviewEnvironment()
+        PreviewContainer {
+            ProfilePicPicker($picture, newPicture:$newPicture)
+                .hCentered()
+                .listRowBackground(Color(.systemGroupedBackground))
+        }
     }
 }

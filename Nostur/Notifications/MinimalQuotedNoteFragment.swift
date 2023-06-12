@@ -93,31 +93,32 @@ struct MinimalQuotedNote_Previews: PreviewProvider {
         // f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e
     
         
-        VStack {
-            // Mention at #[5]
-            let event0 = PreviewFetcher.fetchNRPost("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe")
-        
-            
-            let event1 = PreviewFetcher.fetchNRPost("dec5a86ad780edd26fb8a1b85f919ddace9cb2b2b5d3a68d5124802fc2da4ed3")
-            
-            let event2 = PreviewFetcher.fetchNRPost("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e")
-            
-            Spacer()
-            if (event0 != nil) {
-                NoteMinimalContentView(nrPost: event0!)
-            }
-            
-            if (event1 != nil) {
-                MinimalQuotedNoteFragment(nrPost: event1!)
-            }
-            if (event2 != nil) {
-                MinimalQuotedNoteFragment(nrPost: event2!)
-            }
-            Spacer()
-        }
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
-        })
+        }) {
+            VStack {
+                // Mention at #[5]
+                let event0 = PreviewFetcher.fetchNRPost("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe")
+            
+                
+                let event1 = PreviewFetcher.fetchNRPost("dec5a86ad780edd26fb8a1b85f919ddace9cb2b2b5d3a68d5124802fc2da4ed3")
+                
+                let event2 = PreviewFetcher.fetchNRPost("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e")
+                
+                Spacer()
+                if (event0 != nil) {
+                    NoteMinimalContentView(nrPost: event0!)
+                }
+                
+                if (event1 != nil) {
+                    MinimalQuotedNoteFragment(nrPost: event1!)
+                }
+                if (event2 != nil) {
+                    MinimalQuotedNoteFragment(nrPost: event2!)
+                }
+                Spacer()
+            }
+        }
     }
 }

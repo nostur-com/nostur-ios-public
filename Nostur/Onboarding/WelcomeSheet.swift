@@ -45,7 +45,8 @@ struct WelcomeSheet: View {
 
 struct WelcomeSheet_Previews: PreviewProvider {
     static var previews: some View {
-        WelcomeSheet(offerTryOut: true)
-            .withPreviewEnvironment()
+        PreviewContainer {
+            WelcomeSheet(offerTryOut: true)
+        }
     }
 }

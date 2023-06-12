@@ -413,61 +413,64 @@ struct DetailFooterFragment: View {
 
 struct Kind1063detail_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationStack {
-            if let kind1063 = PreviewFetcher.fetchNRPost("ac0c2960db29828ee4a818337ea56df990d9ddd9278341b96c9fb530b4c4dce8") {
-                PostDetailView(nrPost:kind1063)
-            }
-        }
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadKind1063()
-        })
+        }) {
+            NavigationStack {
+                if let kind1063 = PreviewFetcher.fetchNRPost("ac0c2960db29828ee4a818337ea56df990d9ddd9278341b96c9fb530b4c4dce8") {
+                    PostDetailView(nrPost:kind1063)
+                }
+            }
+        }
     }
 }
 
 struct Kind1063detailQuoted_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationStack {
-            if let kind1063q = PreviewFetcher.fetchNRPost("71a965d8e8546f8927cea23ad865a429dbec0215f36c5e0edad2323eb00f4851") {
-                PostDetailView(nrPost:kind1063q)
+        PreviewContainer({ pe in
+            pe.loadContacts()
+            pe.loadPosts()
+            pe.loadKind1063()
+        }) {
+            NavigationStack {
+                if let kind1063q = PreviewFetcher.fetchNRPost("71a965d8e8546f8927cea23ad865a429dbec0215f36c5e0edad2323eb00f4851") {
+                    PostDetailView(nrPost:kind1063q)
+                }
             }
         }
-        .withPreviewEnvironment({ pe in
-            pe.loadContacts()
-            pe.loadKind1063()
-            pe.loadPosts()
-        })
     }
 }
 
 struct ReplyAndParentView_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationStack {
-            if let xx = PreviewFetcher.fetchNRPost("a4508aa658b12d51a56613c51da096d7791eb207d3b11407089c633ff73f668d") {
-                PostDetailView(nrPost: xx)
-            }
-        }
-        .withPreviewEnvironment({ pe in
-            // TOOD: FIND NEW IDS
+        PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
-        })
+        }) {
+            NavigationStack {
+                if let xx = PreviewFetcher.fetchNRPost("a4508aa658b12d51a56613c51da096d7791eb207d3b11407089c633ff73f668d") {
+                    PostDetailView(nrPost: xx)
+                }
+            }
+        }
     }
 }
 
 struct ReplyAndParentView2_Previews: PreviewProvider {
     static var previews: some View {
         
-        NavigationStack {
-            if let yt2 = PreviewFetcher.fetchNRPost("0000014de66e08882bd36b6b7b551a774f85fe752a18070dc8658d7776db7e69") {
-                PostDetailView(nrPost: yt2)
-            }
-            
-        }
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
-        })
+        }) {
+            NavigationStack {
+                if let yt2 = PreviewFetcher.fetchNRPost("0000014de66e08882bd36b6b7b551a774f85fe752a18070dc8658d7776db7e69") {
+                    PostDetailView(nrPost: yt2)
+                }
+                
+            }
+        }
     }
 }
 
@@ -475,20 +478,19 @@ struct ReplyAndParentView2_Previews: PreviewProvider {
 struct ReplyAndParentView3_Previews: PreviewProvider {
     static var previews: some View {
         
-        NavigationStack {
-            
-            
-            if let yt = PreviewFetcher.fetchNRPost("c7b4ef377ee4f6d71f6f59bc6bad607acb9c7c3675e3c0b2ca0ad2442b133e49") {
-                ScrollView {
-                    PostDetailView(nrPost: yt)
-                }
-            }
-            
-        }
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
-        })
+        }) {
+            NavigationStack {
+                if let yt = PreviewFetcher.fetchNRPost("c7b4ef377ee4f6d71f6f59bc6bad607acb9c7c3675e3c0b2ca0ad2442b133e49") {
+                    ScrollView {
+                        PostDetailView(nrPost: yt)
+                    }
+                }
+                
+            }
+        }
     }
 }
 
@@ -496,81 +498,82 @@ struct ReplyAndParentView3_Previews: PreviewProvider {
 struct ReplyAndParentView4_Previews: PreviewProvider {
     static var previews: some View {
         
-        NavigationStack {
-            
-            
-            if let v = PreviewFetcher.fetchNRPost("bb15e6165180d31c36b6c3e0baf082eeb949aa473c59e37eaa8e2bb29dc46422") {
-                PostDetailView(nrPost: v)
-            }
-            
-        }
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
-        })
+        }) {
+            NavigationStack {
+                if let v = PreviewFetcher.fetchNRPost("bb15e6165180d31c36b6c3e0baf082eeb949aa473c59e37eaa8e2bb29dc46422") {
+                    PostDetailView(nrPost: v)
+                }
+                
+            }
+        }
     }
 }
 
 struct ReplyAndParentView5_Previews: PreviewProvider {
     static var previews: some View {
         
-        NavigationStack {
-            
-            
-            if let lastReply = PreviewFetcher.fetchNRPost("2026c6b0f0d887aa76cc60f0b3050fe940c8eca9eb479391acb493bb40e4d964") {
-                PostDetailView(nrPost: lastReply)
-            }
-            
-        }
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
-        })
+        }) {
+            NavigationStack {
+                if let lastReply = PreviewFetcher.fetchNRPost("2026c6b0f0d887aa76cc60f0b3050fe940c8eca9eb479391acb493bb40e4d964") {
+                    PostDetailView(nrPost: lastReply)
+                }
+                
+            }
+        }
     }
 }
 
 struct ReplyAndParentView6_Previews: PreviewProvider {
     static var previews: some View {
         
-        NavigationStack {
-            if let rootWithReplies = PreviewFetcher.fetchNRPost("6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81") {
-                PostDetailView(nrPost: rootWithReplies)
-            }
-        }
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
-        })
+        }) {
+            NavigationStack {
+                if let rootWithReplies = PreviewFetcher.fetchNRPost("6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81") {
+                    PostDetailView(nrPost: rootWithReplies)
+                }
+            }
+        }
     }
 }
 
 struct ReplyAndParentView7_Previews: PreviewProvider {
     static var previews: some View {
         
-        NavigationStack {
-            if let v = PreviewFetcher.fetchNRPost("c0d76c3c968775a62ca1dea28a73e1fc86d121e8e5e17f2e35aaad1436075f51") {
-                PostDetailView(nrPost: v)
-            }
-        }
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
-        })
+        }) {
+            NavigationStack {
+                if let v = PreviewFetcher.fetchNRPost("c0d76c3c968775a62ca1dea28a73e1fc86d121e8e5e17f2e35aaad1436075f51") {
+                    PostDetailView(nrPost: v)
+                }
+            }
+        }
     }
 }
 
 struct BetterReplies_Previews: PreviewProvider {
     static var previews: some View {
         
-        NavigationStack {
-            if let matt = PreviewFetcher.fetchNRPost("e593fc759291a691cd0127643a0b9fac9d92613952845e207eb24332937c59d9") {
-                
-                PostDetailView(nrPost: matt)
-            }
-        }
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
-        })
+        }) {
+            NavigationStack {
+                if let matt = PreviewFetcher.fetchNRPost("e593fc759291a691cd0127643a0b9fac9d92613952845e207eb24332937c59d9") {
+                    
+                    PostDetailView(nrPost: matt)
+                }
+            }
+        }
     }
 }

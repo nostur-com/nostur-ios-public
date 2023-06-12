@@ -49,13 +49,14 @@ struct HighlightRenderer: View {
 
 struct HighlightRenderer_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationStack {
-            if let nrPost = PreviewFetcher.fetchNRPost() {
-                HighlightRenderer(nrPost: nrPost)
+        PreviewContainer({ pe in
+            pe.loadPosts()
+        }) {
+            NavigationStack {
+                if let nrPost = PreviewFetcher.fetchNRPost() {
+                    HighlightRenderer(nrPost: nrPost)
+                }
             }
         }
-        .withPreviewEnvironment({ pe in
-            pe.loadPosts()
-        })
     }
 }

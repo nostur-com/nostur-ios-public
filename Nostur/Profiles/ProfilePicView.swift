@@ -241,7 +241,10 @@ struct ProfilePicViewWrapper: View {
 
 struct ProfilePicView_Previews: PreviewProvider {
     static var previews: some View {
-        ProfilePicViewWrapper()
-            .withPreviewEnvironment({ pe in pe.loadContacts() })
+        PreviewContainer({ pe in
+            pe.loadContacts()
+        }) {
+            ProfilePicViewWrapper()
+        }
     }
 }

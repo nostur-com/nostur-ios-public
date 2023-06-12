@@ -53,12 +53,13 @@ struct NewListSheet: View {
 
 struct NewListSheet_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationStack {
-            NewListSheet()
-        }
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadNosturLists()
-        })
+        }) {
+            NavigationStack {
+                NewListSheet()
+            }
+        }
     }
 }

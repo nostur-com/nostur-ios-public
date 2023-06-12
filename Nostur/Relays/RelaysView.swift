@@ -91,10 +91,13 @@ struct RelaysView: View {
 
 struct RelaysView_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationStack {
-            RelaysView()
-                .padding()
+        PreviewContainer({ pe in
+            pe.loadRelay()
+        }) {
+            NavigationStack {
+                RelaysView()
+                    .padding()
+            }
         }
-        .withPreviewEnvironment({ pe in pe.loadRelay() })
     }
 }

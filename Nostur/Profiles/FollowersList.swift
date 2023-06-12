@@ -85,16 +85,16 @@ struct FollowersList: View {
 struct FollowersList_Previews: PreviewProvider {
   
     static var previews: some View {
-        VStack {
-            
-            let pubkey = "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240"
-            
-            FollowersList(pubkey: pubkey)
-                .withPreviewEnvironment({ pe in
-                    pe.loadContacts()
-                    pe.loadContactLists()
-                })
-            
+        PreviewContainer({ pe in
+            pe.loadContacts()
+            pe.loadContactLists()
+        }) {
+            VStack {
+                
+                let pubkey = "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240"
+                
+                FollowersList(pubkey: pubkey)
+            }
         }
     }
 }

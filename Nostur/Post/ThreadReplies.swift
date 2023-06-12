@@ -40,17 +40,18 @@ struct ThreadReplies2_Previews: PreviewProvider {
         
         let exampleId = "2e7119c8135375060ab0f3e40646869f7337ab86de32574ab1bf57dcd2a93754"
         
-        NavigationStack {
-            if let example = PreviewFetcher.fetchEvent(exampleId) {
-                let nrPost = NRPost(event: example, withReplyTo: false, withParents: false, withReplies: true, plainText: false)
-                ScrollView {
-                    ThreadReplies(nrPost: nrPost)
+        PreviewContainer({ pe in
+            pe.loadContacts()
+            pe.loadPosts()
+        }) {
+            NavigationStack {
+                if let example = PreviewFetcher.fetchEvent(exampleId) {
+                    let nrPost = NRPost(event: example, withReplyTo: false, withParents: false, withReplies: true, plainText: false)
+                    ScrollView {
+                        ThreadReplies(nrPost: nrPost)
+                    }
                 }
             }
         }
-        .withPreviewEnvironment({ pe in
-            pe.loadContacts()
-            pe.loadPosts()
-        })
     }
 }

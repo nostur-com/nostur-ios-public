@@ -148,12 +148,13 @@ struct ContactsSearch_Previews: PreviewProvider {
     
     @State static var selectedContacts:Set<Contact> = []
     static var previews: some View {
-        NavigationStack {
-            ContactsSearch(followingPubkeys: NosturState.shared.followingPublicKeys,
-                           prompt: "Search")
-        }
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadContacts()
-        })
+        }) {
+            NavigationStack {
+                ContactsSearch(followingPubkeys: NosturState.shared.followingPublicKeys,
+                               prompt: "Search")
+            }
+        }
     }
 }

@@ -97,9 +97,10 @@ struct DeleteAccountSheet: View {
 
 struct DeleteAccountSheet_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationStack {
-            DeleteAccountSheet()
+        PreviewContainer {
+            NavigationStack {
+                DeleteAccountSheet()
+            }
         }
-        .withPreviewEnvironment()
     }
 }

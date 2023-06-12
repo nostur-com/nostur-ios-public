@@ -79,9 +79,10 @@ struct NewDMComposer_Previews: PreviewProvider {
     @State static var tab = "Accepted"
     
     static var previews: some View {
-        NavigationStack {
-            NewDMComposer(toPubkey: $toPubkey, toContact: $toContact, message: $message, showingNewDM: $showingNewDM, tab: $tab)
+        PreviewContainer {
+            NavigationStack {
+                NewDMComposer(toPubkey: $toPubkey, toContact: $toContact, message: $message, showingNewDM: $showingNewDM, tab: $tab)
+            }
         }
-        .withPreviewEnvironment()
     }
 }

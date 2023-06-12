@@ -29,7 +29,8 @@ struct BadgesView: View {
 
 struct BadgesView_Previews: PreviewProvider {
     static var previews: some View {
-        BadgesView()
-            .withPreviewEnvironment({ pe in pe.loadBadges() })
+        PreviewContainer({ pe in pe.loadBadges() }) {
+            BadgesView()
+        }
     }
 }

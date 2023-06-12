@@ -74,7 +74,8 @@ struct TryGuestAccountSheet: View {
 
 struct TryGuestAccountSheet_Previews: PreviewProvider {
     static var previews: some View {
-        TryGuestAccountSheet()
-            .withPreviewEnvironment()
+        PreviewContainer {
+            TryGuestAccountSheet()
+        }
     }
 }

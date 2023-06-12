@@ -121,13 +121,14 @@ struct PrivateNotesView: View {
 
 struct PrivateNotesView_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationStack {
-            PrivateNotesContainer()
-        }
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
             pe.loadPrivateNotes()
-        })
+        }) {
+            NavigationStack {
+                PrivateNotesContainer()
+            }
+        }
     }
 }

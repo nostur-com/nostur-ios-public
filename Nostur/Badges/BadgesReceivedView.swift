@@ -193,9 +193,10 @@ struct BadgeReceivedRow: View {
 
 struct BadgesReceivedView_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationStack {
-            BadgesReceivedContainer()
-                .withPreviewEnvironment({ pe in pe.loadBadges() })
+        PreviewContainer({ pe in pe.loadBadges() }) {
+            NavigationStack {
+                BadgesReceivedContainer()
+            }
         }
     }
 }

@@ -98,25 +98,20 @@ struct NoteZapRow: View {
 
 struct NoteZaps_Previews: PreviewProvider {
     static var previews: some View {
-        // Some fake and real Zaps
-        
-        let dunno1 = PreviewFetcher.fetchEvent("81b2dba2a3d2c92eedab1f966119bda65555d926b97bb41a14c07187472f6159")
-        
-        let dunno = PreviewFetcher.fetchEvent("7682031bb0b06d7b9c417dae30141357a74b4f089ebd46226990d418e2def565")
-        
-        VStack {
-            
-            if let dunno {
-                NoteZaps(id: dunno.id)
-            }
-            
-            if let dunno1 {
-                NoteZaps(id: dunno1.id)
-            }
-        }
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadZaps()
-        })
+        }) {
+            VStack {
+                
+                if let dunno1 = PreviewFetcher.fetchEvent("81b2dba2a3d2c92eedab1f966119bda65555d926b97bb41a14c07187472f6159") {
+                    NoteZaps(id: dunno1.id)
+                }
+                
+                if let dunno = PreviewFetcher.fetchEvent("7682031bb0b06d7b9c417dae30141357a74b4f089ebd46226990d418e2def565") {
+                    NoteZaps(id: dunno.id)
+                }
+            }
+        }
     }
 }

@@ -81,14 +81,15 @@ struct AddRemoveToListsheet: View {
 struct AddRemoveToListsheet_Previews: PreviewProvider {
     static var previews: some View {
         
-        NavigationStack {
-            if let contact = PreviewFetcher.fetchContact() {
-                AddRemoveToListsheet(contact: contact)
-            }
-        }
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadNosturLists()
-        })
+        }) {
+            NavigationStack {
+                if let contact = PreviewFetcher.fetchContact() {
+                    AddRemoveToListsheet(contact: contact)
+                }
+            }
+        }
     }
 }

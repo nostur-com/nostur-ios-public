@@ -121,11 +121,12 @@ struct Highlight: View {
 
 struct Highlight_Previews: PreviewProvider {
     static var previews: some View {
-        VStack {
-            if let nrPost = PreviewFetcher.fetchNRPost("6e00b687cdb567eda5093d54e6f73577ecae928f00a85c3b09dddbf2da52adc1") {
-                Highlight(nrPost: nrPost)
+        PreviewContainer {
+            VStack {
+                if let nrPost = PreviewFetcher.fetchNRPost("6e00b687cdb567eda5093d54e6f73577ecae928f00a85c3b09dddbf2da52adc1") {
+                    Highlight(nrPost: nrPost)
+                }
             }
         }
-        .withPreviewEnvironment()
     }
 }

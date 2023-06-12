@@ -518,26 +518,29 @@ extension NSMutableAttributedString {
 
 struct HashtagRenderer_Previews: PreviewProvider {
     static var previews: some View {
-        VStack {
-            if let event = PreviewFetcher.fetchEvent("9b34fd9a53398fb51493d68ecfd0d64ff922d0cdf5ffd8f0ffab46c9a3cf54e3") {
-                let renderer = NewTextRenderer(event: event)
-                let toMarkdown = renderer.convertToMarkdown(event, text: event.noteText)
-                
-                ScrollView {
-                    VStack {
-                        Text("Test")
-                        MarkdownText("This __is__ #bitcoin **and** #nostur [doesnt work](https://nostur.com) #nostr and #zaps hey #Zapped or #lightning")
-                            .fixedSize(horizontal: false, vertical: true)
-                        Spacer()
-    //                        .frame(maxWidth: .infinity)
-                        MarkdownText(toMarkdown)
-                            .fixedSize(horizontal: false, vertical: true)
-                        Spacer()
+        PreviewContainer({ pe in
+            pe.loadMedia()
+        }) {
+            VStack {
+                if let event = PreviewFetcher.fetchEvent("9b34fd9a53398fb51493d68ecfd0d64ff922d0cdf5ffd8f0ffab46c9a3cf54e3") {
+                    let renderer = NewTextRenderer(event: event)
+                    let toMarkdown = renderer.convertToMarkdown(event, text: event.noteText)
+                    
+                    ScrollView {
+                        VStack {
+                            Text("Test")
+                            MarkdownText("This __is__ #bitcoin **and** #nostur [doesnt work](https://nostur.com) #nostr and #zaps hey #Zapped or #lightning")
+                                .fixedSize(horizontal: false, vertical: true)
+                            Spacer()
+        //                        .frame(maxWidth: .infinity)
+                            MarkdownText(toMarkdown)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Spacer()
+                        }
                     }
                 }
             }
         }
-        .withPreviewEnvironment({ pe in pe.loadMedia() })
     }
 }
 

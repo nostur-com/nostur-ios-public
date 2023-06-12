@@ -73,14 +73,15 @@ struct ReportPostSheet: View {
 
 struct ReportPostSheet_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationStack {
-            if let nrPost = PreviewFetcher.fetchNRPost() {
-                ReportPostSheet(nrPost: nrPost)
-            }
-        }
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
-        })
+        }) {
+            NavigationStack {
+                if let nrPost = PreviewFetcher.fetchNRPost() {
+                    ReportPostSheet(nrPost: nrPost)
+                }
+            }
+        }
     }
 }

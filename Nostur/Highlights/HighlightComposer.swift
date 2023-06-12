@@ -131,9 +131,10 @@ struct HighlightComposer_Previews: PreviewProvider {
     static var previews: some View {
         let example = NewHighlight(url: "https://nostur.com", selectedText: "This is amazing, this is some text that is being highlighted by Nostur highlightur", title:"Nostur - a nostr client for iOS/macOS")
         
-        NavigationStack {
-            HighlightComposer(highlight: example)
+        PreviewContainer {
+            NavigationStack {
+                HighlightComposer(highlight: example)
+            }
         }
-        .withPreviewEnvironment()
     }
 }

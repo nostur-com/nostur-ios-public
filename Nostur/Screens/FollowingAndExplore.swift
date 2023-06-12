@@ -183,11 +183,12 @@ struct FollowingAndExplore: View { //, Equatable {
 
 struct FollowingAndExplore_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationStack {
-            if let account = NosturState.shared.account {
-                FollowingAndExplore(account: account)
+        PreviewContainer {
+            NavigationStack {
+                if let account = NosturState.shared.account {
+                    FollowingAndExplore(account: account)
+                }
             }
         }
-        .withPreviewEnvironment()
     }
 }

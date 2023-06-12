@@ -105,13 +105,14 @@ struct ProfileTabs: View {
 struct ProfileTabs_Previews: PreviewProvider {
     static var previews: some View {
         let f = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
-        ScrollView {
-            if let contact = PreviewFetcher.fetchContact(f) {
-                ProfileTabs(contact: contact, selectedSubTab: .constant("Posts"))
+        PreviewContainer({ pe in
+            pe.loadContacts()
+        }) {
+            ScrollView {
+                if let contact = PreviewFetcher.fetchContact(f) {
+                    ProfileTabs(contact: contact, selectedSubTab: .constant("Posts"))
+                }
             }
         }
-        .withPreviewEnvironment({ pe in
-            pe.loadContacts()
-        })
     }
 }

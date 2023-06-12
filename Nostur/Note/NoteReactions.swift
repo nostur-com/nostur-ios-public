@@ -68,19 +68,15 @@ struct ReactionRow: View {
 
 struct Reactions_Previews: PreviewProvider {
     static var previews: some View {
-        
-        let noteWithReactions = PreviewFetcher.fetchEvent("6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81")
-        
-        VStack {
-            if (noteWithReactions != nil) {
-                NoteReactions(id: noteWithReactions!.id)
+
+        PreviewContainer({ pe in
+            pe.loadRepliesAndReactions()
+        }) {
+            VStack {
+                if let noteWithReactions = PreviewFetcher.fetchEvent("6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81") {
+                    NoteReactions(id: noteWithReactions.id)
+                }
             }
         }
-        .withPreviewEnvironment({ pe in
-//            pe.loadContacts()
-//            pe.loadPosts()
-            pe.loadRepliesAndReactions()
-        })
-        
     }
 }

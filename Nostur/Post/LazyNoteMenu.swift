@@ -231,27 +231,27 @@ struct LazyNoteMenuSheet: View {
 
 struct LazyNoteMenuSheet_Previews: PreviewProvider {
     static var previews: some View {
-        VStack {
-            if let nrPost = PreviewFetcher.fetchNRPost() {
-                LazyNoteMenuSheet(nrPost:nrPost)
+        PreviewContainer({ pe in pe.loadPosts() }) {
+            VStack {
+                if let nrPost = PreviewFetcher.fetchNRPost() {
+                    LazyNoteMenuSheet(nrPost:nrPost)
+                }
             }
         }
-        .withPreviewEnvironment({ pe in
-            pe.loadPosts()
-        })
     }
 }
 
 struct LazyNoteMenu_Previews: PreviewProvider {
     static var previews: some View {
-        VStack {
-            if let nrPost = PreviewFetcher.fetchNRPost() {
-                LazyNoteMenuButton(nrPost:nrPost)
-            }
-            Color.clear.withSheets()
-        }
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadPosts()
-        })
+        }) {
+            VStack {
+                if let nrPost = PreviewFetcher.fetchNRPost() {
+                    LazyNoteMenuButton(nrPost:nrPost)
+                }
+                Color.clear.withSheets()
+            }
+        }
     }
 }

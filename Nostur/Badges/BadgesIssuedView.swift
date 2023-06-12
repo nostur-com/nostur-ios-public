@@ -140,9 +140,10 @@ struct BadgeIssuedRow: View {
 
 struct BadgesIssuedView_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationStack {
-            BadgesIssuedContainer()
-                .withPreviewEnvironment({ pe in pe.loadBadges() })
+        PreviewContainer({ pe in pe.loadBadges() }) {
+            NavigationStack {
+                BadgesIssuedContainer()
+            }
         }
     }
 }

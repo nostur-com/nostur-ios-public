@@ -415,12 +415,13 @@ struct NewNote: View {
 struct NewNote_Previews: PreviewProvider {
     @State static var noteCancellationId:UUID?
     static var previews: some View {
-        NavigationStack {
-            NewNote(noteCancellationId: $noteCancellationId)
-        }
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadPosts()
-        })
+        }) {
+            NavigationStack {
+                NewNote(noteCancellationId: $noteCancellationId)
+            }
+        }
     }
 }
 

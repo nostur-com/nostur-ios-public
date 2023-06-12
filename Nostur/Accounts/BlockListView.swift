@@ -139,9 +139,10 @@ struct MutedConversations: View {
 
 struct BlockListView_Previews: PreviewProvider {
     static var previews: some View {
-        VStack {
-            BlockListView()
+        PreviewContainer {
+            VStack {
+                BlockListView()
+            }
         }
-        .withPreviewEnvironment()
     }
 }

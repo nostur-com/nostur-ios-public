@@ -88,13 +88,12 @@ struct MainView: View {
 
 struct MainView_Previews: PreviewProvider {
     static var previews: some View {
-        MainView()
-            .withPreviewEnvironment({ pe in
-                pe.loadContacts()
-                pe.loadPosts()
-                pe.loadFollowers()
-                
-                // TODO FIX TIMEOUT FOR PREVIEW
-            })
+        PreviewContainer({ pe in
+            pe.loadContacts()
+            pe.loadPosts()
+            pe.loadFollowers()
+        }) {
+            MainView()
+        }
     }
 }

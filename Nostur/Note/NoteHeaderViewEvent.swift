@@ -129,38 +129,38 @@ struct NameAndNipContact: View {
 struct NoteHeaderViewEvent_Previews: PreviewProvider {
     static var previews: some View {
         
-        VStack(spacing: 10) {
-            if let event = PreviewFetcher.fetchEvent("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0") {
-                NoteHeaderViewEvent(event: event, singleLine: false)
-            }
-            
-            if let event = PreviewFetcher.fetchEvent() {
-                NoteHeaderViewEvent(event: event, singleLine: false)
-            }
-            
-            if let event = PreviewFetcher.fetchEvent() {
-                NoteHeaderViewEvent(event: event, singleLine: false)
-            }
-            
-            Divider()
-            
-            if let event = PreviewFetcher.fetchEvent() {
-                NoteHeaderViewEvent(event: event, singleLine: true)
-            }
-            
-            if let event = PreviewFetcher.fetchEvent() {
-                NoteHeaderViewEvent(event: event, singleLine: true)
-            }
-            
-            if let event = PreviewFetcher.fetchEvent() {
-                NoteHeaderViewEvent(event: event, singleLine: true)
-            }
-        }
-        .padding()
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadPosts()
-        })
-        
+        }) {
+            VStack(spacing: 10) {
+                if let event = PreviewFetcher.fetchEvent("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0") {
+                    NoteHeaderViewEvent(event: event, singleLine: false)
+                }
+                
+                if let event = PreviewFetcher.fetchEvent() {
+                    NoteHeaderViewEvent(event: event, singleLine: false)
+                }
+                
+                if let event = PreviewFetcher.fetchEvent() {
+                    NoteHeaderViewEvent(event: event, singleLine: false)
+                }
+                
+                Divider()
+                
+                if let event = PreviewFetcher.fetchEvent() {
+                    NoteHeaderViewEvent(event: event, singleLine: true)
+                }
+                
+                if let event = PreviewFetcher.fetchEvent() {
+                    NoteHeaderViewEvent(event: event, singleLine: true)
+                }
+                
+                if let event = PreviewFetcher.fetchEvent() {
+                    NoteHeaderViewEvent(event: event, singleLine: true)
+                }
+            }
+            .padding()
+        }
     }
 }

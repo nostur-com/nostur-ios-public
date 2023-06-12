@@ -189,17 +189,18 @@ struct PreviewFooterFragmentView: View {
 
 struct FooterFragmentView_Previews: PreviewProvider {
     static var previews: some View {
-        VStack {
-            
-            PreviewFooterFragmentView()
-            
-            if let p = PreviewFetcher.fetchNRPost("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0") {
-                FooterFragmentView(nrPost: p)
-            }
-        }
-        .padding(.horizontal, 20)
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadPosts()
-        })
+        }) {
+            VStack {
+                
+                PreviewFooterFragmentView()
+                
+                if let p = PreviewFetcher.fetchNRPost("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0") {
+                    FooterFragmentView(nrPost: p)
+                }
+            }
+            .padding(.horizontal, 20)
+        }
     }
 }

@@ -134,11 +134,13 @@ struct BadgeDetailView_Previews: PreviewProvider {
         
         let id = "6215b9fee3834ff25da4962dfb0d72e3dd648a454491dc213da5bdf735d7ddd9"
         
-        NavigationStack {
-            if let badge = PreviewFetcher.fetchEvent(id) {
-                BadgeDetailView(badge: badge)
+        PreviewContainer({ pe in pe.loadBadges() }) {
+            NavigationStack {
+                if let badge = PreviewFetcher.fetchEvent(id) {
+                    BadgeDetailView(badge: badge)
+                }
             }
         }
-        .withPreviewEnvironment({ pe in pe.loadBadges() })
+        
     }
 }

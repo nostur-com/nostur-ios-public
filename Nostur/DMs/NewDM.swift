@@ -38,9 +38,10 @@ struct NewDM_Previews: PreviewProvider {
     @State static var showingNewDM = true
     @State static var tab = "Accepted"
     static var previews: some View {
-        NavigationStack {
-            NewDM(showingNewDM: $showingNewDM, tab: $tab)
+        PreviewContainer({ pe in pe.loadDMs() }) {
+            NavigationStack {
+                NewDM(showingNewDM: $showingNewDM, tab: $tab)
+            }
         }
-        .withPreviewEnvironment({ pe in pe.loadDMs() })
     }
 }

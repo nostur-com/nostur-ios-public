@@ -120,13 +120,13 @@ struct NotificationsView: View {
 
 struct NotificationsView_Previews: PreviewProvider {
     static var previews: some View {
-        NotificationsContainer()
-            .withPreviewEnvironment({ pe in
-                // TODO: doesn't work:
-//                pe.loadContacts()
-//                pe.loadPosts()
-//                pe.loadRepliesAndReactions()
-//                pe.loadZaps()
-            })
+        PreviewContainer({ pe in
+            pe.loadContacts()
+            pe.loadPosts()
+            pe.loadRepliesAndReactions()
+            pe.loadZaps()
+        }) {
+            NotificationsContainer()
+        }
     }
 }

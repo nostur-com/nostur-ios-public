@@ -314,24 +314,26 @@ struct TabbedDetailContainer: View {
 struct TabbedDetailContainer_Previews: PreviewProvider {
     
     static var previews: some View {
-        TabbedDetailContainer()
-            .onAppear {
-                if let event0 = PreviewFetcher.fetchNRPost() {
-                    navigateTo(event0)
+        PreviewContainer({ pe in
+            pe.loadPosts()
+        }, previewDevice: PreviewDevice(rawValue: "iPad Air (5th generation)")) {
+            TabbedDetailContainer()
+                .onAppear {
+
+                    if let event0 = PreviewFetcher.fetchNRPost() {
+                        navigateTo(event0)
+                    }
+
+                    if let event1 = PreviewFetcher.fetchNRPost() {
+                        navigateTo(event1)
+                    }
+
+                    if let event1 = PreviewFetcher.fetchNRPost() {
+                        navigateTo(event1)
+                    }
+                    
                 }
-                
-                if let event1 = PreviewFetcher.fetchNRPost() {
-                    navigateTo(event1)
-                }
-                
-                if let event1 = PreviewFetcher.fetchNRPost() {
-                    navigateTo(event1)
-                }
-                
-            }
-            .withPreviewEnvironment({ pe in
-                pe.loadPosts()
-            }, previewDevice: PreviewDevice(rawValue: "iPad Air (5th generation)"))
+        }
     }
 }
 

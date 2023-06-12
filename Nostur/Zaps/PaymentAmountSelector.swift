@@ -196,8 +196,9 @@ struct PaymentAmountSelector: View {
 struct PaymentAmountSelector_Previews: PreviewProvider {
     static var previews: some View {
         let paymentInfo = PaymentInfo(min: 21, max: 1000000, callback: "", supportsZap: true)
-        PaymentAmountSelector(paymentInfo: paymentInfo)
-            .withPreviewEnvironment()
+        PreviewContainer {
+            PaymentAmountSelector(paymentInfo: paymentInfo)
+        }
     }
 }
 

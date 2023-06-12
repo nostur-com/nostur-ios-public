@@ -162,22 +162,23 @@ struct SingleMediaViewer_Previews: PreviewProvider {
 struct Gif_Previews: PreviewProvider {
     
     static var previews: some View {
-        ScrollView {
-            LazyVStack {
-                if let nrPost = PreviewFetcher.fetchNRPost("8d49bc0204aad2c0e8bb292b9c99b7dc1bdd6c520a877d908724c27eb5ab8ce8") {
-                    PostRowDeletable(nrPost: nrPost)
-                        .boxShadow()
-                }
-                if let nrPost = PreviewFetcher.fetchNRPost("1c0ba51ba48e5228e763f72c5c936d610088959fe44535f9c861627287fe8f6d") {
-                    PostRowDeletable(nrPost: nrPost)
-                        .boxShadow()
+        PreviewContainer({ pe in
+            pe.loadMedia()
+        }) {
+            ScrollView {
+                LazyVStack {
+                    if let nrPost = PreviewFetcher.fetchNRPost("8d49bc0204aad2c0e8bb292b9c99b7dc1bdd6c520a877d908724c27eb5ab8ce8") {
+                        PostRowDeletable(nrPost: nrPost)
+                            .boxShadow()
+                    }
+                    if let nrPost = PreviewFetcher.fetchNRPost("1c0ba51ba48e5228e763f72c5c936d610088959fe44535f9c861627287fe8f6d") {
+                        PostRowDeletable(nrPost: nrPost)
+                            .boxShadow()
+                    }
                 }
             }
+            .background(Color("ListBackground"))
         }
-        .background(Color("ListBackground"))
-        .withPreviewEnvironment({ pe in
-            pe.loadMedia()
-        })
     }
 }
 

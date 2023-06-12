@@ -218,15 +218,14 @@ struct NotificationsPosts: View {
 struct NotificationsNotes_Previews: PreviewProvider {
     static var previews: some View {
         let pubkey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
-        VStack {
-            NotificationsPosts(pubkey: pubkey, mutedRootIds: [], blockedPubkeys: [])
-        }
-        .withPreviewEnvironment({ pe in
+        PreviewContainer({ pe in
             pe.loadContacts()
-//            pe.loadPosts()
-//            pe.loadNotifications()
             pe.loadNewFollowersNotification()
-        })
+        }) {
+            VStack {
+                NotificationsPosts(pubkey: pubkey, mutedRootIds: [], blockedPubkeys: [])
+            }
+        }
     }
 }
 
