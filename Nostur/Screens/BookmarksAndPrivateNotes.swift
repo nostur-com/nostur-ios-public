@@ -8,7 +8,7 @@ struct BookmarksAndPrivateNotes: View {
     
     var body: some View {
         NavigationStack(path: $navPath) {
-            VStack {
+            VStack(spacing: 0) {
                 HStack {
                     TabButton(action: {
                         selectedSubTab = "Bookmarks"

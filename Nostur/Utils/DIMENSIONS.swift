@@ -5,9 +5,9 @@ class DIMENSIONS: ObservableObject {
     
     static let shared = DIMENSIONS()
     
-    // 428    - 10        - (10 + 50 + 10 ) -         (10) - 10
+    // 428    - 5        - (10 + 50 + 10 ) -         (10) - 5
     // Screen - Box-left  - (10 + PFP+ 10 ) - (text-right) - Box-right
-    static public let POST_ROW_HPADDING = 10.0
+    static public let POST_ROW_HPADDING = 5.0
     static public let POST_ROW_PFP_WIDTH = 50.0
     static public let POST_ROW_PFP_HEIGHT = 50.0
     static public let POST_ROW_PFP_HPADDING = 10.0

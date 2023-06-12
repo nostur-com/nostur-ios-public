@@ -29,10 +29,10 @@ public class PreviewEnvironment {
     
     init() { }
     
-    var didParseMessages = false
+//    var didParseMessages = false
     public func parseMessages(_ messages:[String]) {
-        guard !didParseMessages else { return }
-        didParseMessages = true
+//        guard !didParseMessages else { return }
+//        didParseMessages = true
         // TODO: Should reuse Importer.shared
         context.performAndWait {
             for text in messages {
@@ -404,7 +404,6 @@ private struct WithPreviewEnvironment: ViewModifier {
             .environmentObject(pe.er)
             .environmentObject(pe.ss)
             .environmentObject(pe.sm)
-    //                    .environmentObject(pe.nm)
             .environmentObject(pe.tm)
             .environmentObject(pe.dim)
             .previewDevice(previewDevice)
@@ -479,6 +478,7 @@ struct PreviewFetcher {
         let request = Contact.fetchRequest()
         if let pubkey {
             request.predicate = NSPredicate(format: "pubkey == %@", pubkey)
+            request.fetchLimit = 1
         }
         return (try? (context ?? PreviewFetcher.viewContext).fetch(request))?.randomElement()
     }

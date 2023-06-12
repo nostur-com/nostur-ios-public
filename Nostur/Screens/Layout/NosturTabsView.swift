@@ -49,6 +49,7 @@ struct NosturTabsView: View {
                 TabbedDetailContainer()
             }
         }
+        .background(Color("ListBackground"))
         .withLightningEffect()
         .onChange(of: selectedTab) { newValue in
             if newValue == "Notifications" {

@@ -65,7 +65,7 @@ struct PostDetailView: View {
         GeometryReader{ geometry in
             ScrollViewReader { proxy in
                 ScrollView {
-                    PostAndParent(nrPost: nrPost, geoHeight: geometry.size.height, navTitleHidden:navTitleHidden)
+                    PostAndParent(nrPost: nrPost,  navTitleHidden:navTitleHidden)
                         .onAppear {
                             guard !didLoad else { return }
                             didLoad = true
@@ -113,7 +113,7 @@ struct PostAndParent: View {
     
     var body: some View {
 //        let _ = Self._printChanges()
-        VStack {
+        VStack(spacing:0) {
             // MARK: PARENT NOTE
             // We have the event: replyTo_ = already .replyTo or lazy fetched with .replyToId
             if let replyTo = nrPost.replyTo {
@@ -121,10 +121,13 @@ struct PostAndParent: View {
                     let connect:ThreadConnectDirection? = replyTo.replyToId != nil ? .both : .bottom
                     PostAndParent(nrPost: replyTo, isParent: true, connect: connect)
                         .background(alignment: .leading) {
-                            Color("LightGray")
-                                .frame(width: 2)
-                                .offset(x: THREAD_LINE_OFFSET, y: 62)
-                                .opacity(connect == .bottom || connect == .both ? 1 : 0)
+                            ZStack(alignment: .leading) {
+                                Color.systemBackground
+                                Color("LightGray")
+                                    .frame(width: 2)
+                                    .offset(x: THREAD_LINE_OFFSET, y: 62)
+                                    .opacity(connect == .bottom || connect == .both ? 1 : 0)
+                            }
                         }
                         .background(alignment:.topLeading) {
                             Color.systemBackground
@@ -152,6 +155,7 @@ struct PostAndParent: View {
                         EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.001")
                         QueuedFetcher.shared.enqueue(id: replyToId)
                     }
+                    .background(Color.systemBackground)
                     .onDisappear {
                         timerTask?.cancel()
                         timerTask = nil
@@ -161,104 +165,13 @@ struct PostAndParent: View {
             // MARK: DETAIL NOTE
             VStack(alignment: .leading, spacing: 0) {
                 if nrPost.deletedById == nil {
-                    
-                    HStack(alignment:.top, spacing:0) {
-                        PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 50)
-                            .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: 50)
-                            .padding(.horizontal, DIMENSIONS.POST_ROW_PFP_HPADDING)
-                            .onTapGesture {
-                                navigateTo(ContactPath(key: nrPost.pubkey))
-                            }
-                        
-                        VStack(alignment:.leading, spacing:0) {
-                            HStack {
-                                NoteHeaderView(nrPost: nrPost, singleLine: isParent)
-                                Spacer()
-                                EventPrivateNoteToggle(nrPost: nrPost)
-                                LazyNoteMenuButton(nrPost: nrPost)
-                            }
-                            .padding(.trailing, 10)
-                            if isParent {
-                                switch nrPost.kind {
-                                case 9802: // highlight
-                                    HighlightRenderer(nrPost: nrPost)
-                                        .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                                case 1,6,9734: // text, repost, zap request
-                                    ContentRenderer(nrPost: nrPost, isDetail: true, availableWidth: dim.availablePostDetailRowImageWidth())
-                                        .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                                        .contentShape(Rectangle())
-                                        .onTapGesture {
-                                            navigateTo(nrPost)
-                                        }
-                                case 1063: // File Metadata
-                                    NoteTextRenderView(nrPost: nrPost)
-                                default:
-                                    Label(String(localized:"kind \(Double(nrPost.kind).clean) type not (yet) supported", comment: "Message shown when a post kind (X) is not yet supported"), systemImage: "exclamationmark.triangle.fill")
-                                        .centered()
-                                        .frame(maxWidth: .infinity)
-                                        .background(Color("LightGray").opacity(0.2))
-                                    ContentRenderer(nrPost: nrPost, isDetail: true, availableWidth: dim.availablePostDetailRowImageWidth())
-                                        .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                                        .contentShape(Rectangle())
-                                        .onTapGesture {
-                                            navigateTo(nrPost)
-                                        }
-                                }
-                            }
-                        }
+                    if isParent {
+                        ParentPost(nrPost: nrPost)
+//                            .background(Color.systemBackground)
                     }
-                    
-                    if !isParent {
-                        switch nrPost.kind {
-                        case 9802:
-                            HighlightRenderer(nrPost: nrPost)
-                                .padding(.top, 3)
-                                .padding(.bottom, 10)
-                                .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                        case 1,6,9734:
-                            if nrPost.plainTextOnly {
-                                NoteMinimalContentView(nrPost: nrPost, lineLimit: 350)
-                            }
-                            else {
-                                ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
-                                    .padding(.top, 3)
-                                    .padding(.bottom, 10)
-                                    .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                            }
-                        case 1063:
-                            if let fileMetadata = nrPost.fileMetadata {
-                                Kind1063(nrPost, fileMetadata: fileMetadata, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
-                                    .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                            }
-                        default:
-                            Label(String(localized:"kind \(Double(nrPost.kind).clean) type not (yet) supported", comment: "Message shown when a post kind (X) is not yet supported"), systemImage: "exclamationmark.triangle.fill")
-                                .centered()
-                                .frame(maxWidth: .infinity)
-                                .background(Color("LightGray").opacity(0.2))
-                            ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
-                                .padding(.top, 3)
-                                .padding(.bottom, 10)
-                                .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
-                        }
-                    }
-                    
-                    if (isParent && settings.rowFooterEnabled) {
-                        FooterFragmentView(nrPost: nrPost)
-                            .padding(.leading, INDENT)
-                            .padding(.vertical, 5)
-                            .padding(.trailing, 10)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                navigateTo(nrPost)
-                            }
-                    }
-                    else if (!isParent) {
-                        DetailFooterFragment(nrPost: nrPost)
-                            .padding(.leading, isParent ? INDENT : DIMENSIONS.POST_ROW_HPADDING)
-                        FooterFragmentView(nrPost: nrPost)
-                            .padding(.vertical, 5)
-                            .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
-                        //                        Divider()
+                    else {
+                        DetailPost(nrPost: nrPost)
+                            .background(Color.systemBackground)
                     }
                 }
                 else {
@@ -283,7 +196,6 @@ struct PostAndParent: View {
                 
             }
             .id(nrPost.id)
-            .padding(.vertical, 10)
             .onAppear {
                 guard !nrPost.plainTextOnly else { L.og.info("plaintext enabled, probably spam") ; return }
                 guard !didLoad else { return }
@@ -324,14 +236,154 @@ struct PostAndParent: View {
                     }
                 }
             }
+//            .frame(width: 400)
         }
     }
 }
 
+struct ParentPost: View {
+    @ObservedObject var nrPost:NRPost
+    @ObservedObject var settings:SettingsStore = .shared
+    @EnvironmentObject var dim:DIMENSIONS
+    let INDENT = DIMENSIONS.POST_ROW_PFP_WIDTH + (DIMENSIONS.POST_ROW_PFP_HPADDING*2)
+    
+    var body: some View {
+        HStack(alignment:.top, spacing:0) {
+            PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 50)
+                .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: 50)
+                .padding(.horizontal, DIMENSIONS.POST_ROW_PFP_HPADDING)
+                .padding(.top, 10)
+                .onTapGesture {
+                    navigateTo(ContactPath(key: nrPost.pubkey))
+                }
+            
+            VStack(alignment:.leading, spacing:0) {
+                HStack {
+                    NoteHeaderView(nrPost: nrPost, singleLine: true)
+                    Spacer()
+                    EventPrivateNoteToggle(nrPost: nrPost)
+                    LazyNoteMenuButton(nrPost: nrPost)
+                }
+                .padding(.trailing, 10)
+                .padding(.top, 10)
+                switch nrPost.kind {
+                case 9802: // highlight
+                    HighlightRenderer(nrPost: nrPost)
+                        .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                case 1,6,9734: // text, repost, zap request
+                    ContentRenderer(nrPost: nrPost, isDetail: true, availableWidth: dim.availablePostDetailRowImageWidth())
+                        .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            navigateTo(nrPost)
+                        }
+                case 1063: // File Metadata
+                    NoteTextRenderView(nrPost: nrPost)
+                default:
+                    Label(String(localized:"kind \(Double(nrPost.kind).clean) type not (yet) supported", comment: "Message shown when a post kind (X) is not yet supported"), systemImage: "exclamationmark.triangle.fill")
+                        .centered()
+                        .frame(maxWidth: .infinity)
+                        .background(Color("LightGray").opacity(0.2))
+                    ContentRenderer(nrPost: nrPost, isDetail: true, availableWidth: dim.availablePostDetailRowImageWidth())
+                        .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            navigateTo(nrPost)
+                        }
+                }
+            }
+        }
+        if (settings.rowFooterEnabled) {
+            FooterFragmentView(nrPost: nrPost)
+                .padding(.leading, INDENT)
+                .padding(.vertical, 5)
+                .padding(.trailing, 10)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    navigateTo(nrPost)
+                }
+        }
+    }
+}
+
+struct DetailPost: View {
+    @ObservedObject var nrPost:NRPost
+    @ObservedObject var settings:SettingsStore = .shared
+    @EnvironmentObject var dim:DIMENSIONS
+    
+    var body: some View {
+        HStack(alignment:.top, spacing:0) {
+            PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 50)
+                .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: 50)
+                .padding(.horizontal, DIMENSIONS.POST_ROW_PFP_HPADDING)
+                .padding(.top, nrPost.replyToId != nil ? 0 : 10)
+                .onTapGesture {
+                    navigateTo(ContactPath(key: nrPost.pubkey))
+                }
+            
+            VStack(alignment:.leading, spacing:0) {
+                HStack {
+                    NoteHeaderView(nrPost: nrPost, singleLine: false)
+                    Spacer()
+                    EventPrivateNoteToggle(nrPost: nrPost)
+                    LazyNoteMenuButton(nrPost: nrPost)
+                }
+                .padding(.trailing, 10)
+                .padding(.top, 10)
+            }
+        }
+    
+        switch nrPost.kind {
+        case 9802:
+            HighlightRenderer(nrPost: nrPost)
+                .padding(.top, 3)
+                .padding(.bottom, 10)
+                .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+        case 1,6,9734:
+            if nrPost.plainTextOnly {
+                NoteMinimalContentView(nrPost: nrPost, lineLimit: 350)
+            }
+            else {
+                ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
+                    .padding(.top, 3)
+                    .padding(.bottom, 10)
+                    .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+            }
+        case 1063:
+            if let fileMetadata = nrPost.fileMetadata {
+                Kind1063(nrPost, fileMetadata: fileMetadata, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
+                    .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+            }
+        default:
+            Label(String(localized:"kind \(Double(nrPost.kind).clean) type not (yet) supported", comment: "Message shown when a post kind (X) is not yet supported"), systemImage: "exclamationmark.triangle.fill")
+                .centered()
+                .frame(maxWidth: .infinity)
+                .background(Color("LightGray").opacity(0.2))
+            ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
+                .padding(.top, 3)
+                .padding(.bottom, 10)
+                .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+        }
+        
+        DetailFooterFragment(nrPost: nrPost)
+            .padding(.leading, DIMENSIONS.POST_ROW_HPADDING)
+            .background(Color.systemBackground)
+        FooterFragmentView(nrPost: nrPost)
+            .padding(.top, 5)
+            .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
+            .padding(.bottom, 5)
+            .background(Color.systemBackground)
+            .roundedCorner(10, corners: [.bottomLeft, .bottomRight])
+            .background(Color("ListBackground"))
+        
+        
+    }
+}
+
+
 struct DetailFooterFragment: View {
     @ObservedObject var nrPost:NRPost
-    
-    
+
     var body: some View {
         Divider()
         HStack(spacing: 20) {

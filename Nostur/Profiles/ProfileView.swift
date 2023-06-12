@@ -3,14 +3,11 @@ import Nuke
 import NukeUI
 
 struct ProfileView: View {
-    @Environment(\.managedObjectContext) var viewContext
-    let sp:SocketPool = .shared
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var dim:DIMENSIONS
     @ObservedObject var settings:SettingsStore = .shared
-     
     @ObservedObject var contact:Contact
-    var pubkey:String    
+    let pubkey:String
     
     @FetchRequest
     var relayEvents:FetchedResults<Event>
@@ -27,8 +24,6 @@ struct ProfileView: View {
         self.contact = contact
         self.pubkey = contact.pubkey
         
-        
-        
         let rl = Event.fetchRequest()
         rl.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         rl.predicate = NSPredicate(format: "pubkey == %@ AND kind == 10002", pubkey)
@@ -44,34 +39,34 @@ struct ProfileView: View {
     let PFP_SIZE = 75.0
     
     var body: some View {
-//        let _ = Self._printChanges()
+        //        let _ = Self._printChanges()
         ScrollView {
             Color.clear.background( // GeometryReader in .background so it does not mess up layout
                 GeometryReader { toolbarGEO in
                     Color.clear
                         .toolbar {
-                        ToolbarItem(placement: .navigationBarLeading) {
-                            VStack {
-                                HStack(spacing:2) {
-                                    PFP(pubkey: contact.pubkey, contact: contact, size: 25)
-                                    .overlay(
-                                        Circle()
-                                            .strokeBorder(Color.systemBackground, lineWidth: 1)
-                                    )
-                                    Text("\(contact.authorName) ").font(.headline)
-                                }
-                                .offset(y: 160 + (max(-160,toolbarGEO.frame(in:.global).minY)))
-                            }.frame(height: 40).clipped()
+                            ToolbarItem(placement: .navigationBarLeading) {
+                                VStack {
+                                    HStack(spacing:2) {
+                                        PFP(pubkey: contact.pubkey, contact: contact, size: 25)
+                                            .overlay(
+                                                Circle()
+                                                    .strokeBorder(Color.systemBackground, lineWidth: 1)
+                                            )
+                                        Text("\(contact.authorName) ").font(.headline)
+                                    }
+                                    .offset(y: 160 + (max(-160,toolbarGEO.frame(in:.global).minY)))
+                                }.frame(height: 40).clipped()
+                            }
+                            
+                            ToolbarItem(placement: .navigationBarTrailing) {
+                                VStack {
+                                    ProfileFollowButton(contact: contact)
+                                        .offset(y: 123 + (max(-123,toolbarGEO.frame(in:.global).minY)))
+                                }.frame(height: 40).clipped()
+                                    .layoutPriority(2)
+                            }
                         }
-                        
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            VStack {
-                                ProfileFollowButton(contact: contact)
-                                    .offset(y: 123 + (max(-123,toolbarGEO.frame(in:.global).minY)))
-                            }.frame(height: 40).clipped()
-                                .layoutPriority(2)
-                        }
-                    }
                 }
             )
             
@@ -124,7 +119,7 @@ struct ProfileView: View {
                             }
                             
                             HStack {
-//                                Text("@\(contact.username)").foregroundColor(.secondary)
+                                //                                Text("@\(contact.username)").foregroundColor(.secondary)
                                 ContactPrivateNoteToggle(contact: contact)
                                 Menu {
                                     Button {
@@ -257,18 +252,25 @@ struct ProfileView: View {
 
 struct ProfileView_Previews: PreviewProvider {
     static var previews: some View {
-//        let pubkey = "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240"
-                let f = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
-//        let snowden = PreviewFetcher.fetchContact(pubkey)
+        //        let pubkey = "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240"
+        //                let f = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
+        //        let snowden = PreviewFetcher.fetchContact(pubkey)
         
-//        let testgif = "32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245"
-
+        //        let testgif = "32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245"
+        
+        let testtransparentpfp = "7fa56f5d6962ab1e3cd424e758c3002b8665f7b0d8dcee9fe9e288d7751ac194"
+        
+        
         NavigationStack {
-            if let contact = PreviewFetcher.fetchContact(f) {
-                ProfileView(contact: contact)
+            if let contact = PreviewFetcher.fetchContact(testtransparentpfp) {
+                VStack {
+                    ProfileView(contact: contact)
+                }
             }
         }
-        .withPreviewEnvironment({ pe in pe.loadContacts() })
+        .withPreviewEnvironment({ pe in
+            pe.loadContacts()
+        })
     }
 }
 

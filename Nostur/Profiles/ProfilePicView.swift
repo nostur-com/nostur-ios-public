@@ -97,13 +97,20 @@ struct InnerPFP: View {
                                 .resizable() // BUG: Still .gif gets wrong dimensions, so need .resizable()
                                 .aspectRatio(contentMode: .fill)
                         }
-                        else { image.interpolation(.none) }
+                        else {
+                            image.interpolation(.none)
+                        }
                     }
                     else { color }
                 }
                 .pipeline(ImageProcessing.shared.pfp)
                 .frame(width: size, height: size)
                 .cornerRadius(.greatestFiniteMagnitude)
+                .background(
+                    Circle()
+                        .strokeBorder(.regularMaterial, lineWidth: 5)
+                        .background(Circle().fill(Color.systemBackground))
+                )
             }
             else if (pictureUrl.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)
                 LazyImage(url: URL(string: pictureUrl)) { state in
@@ -115,16 +122,20 @@ struct InnerPFP: View {
                                         .interpolation(.none)
                                         .resizable()
                                         .aspectRatio(contentMode: .fill)
-                                        .frame(width: size, height: size)
-                                        .cornerRadius(.greatestFiniteMagnitude)
+                                        
                                 }
                                 
                                 GIFImage(data: gifData)
                                     .resizable()
                                     .scaledToFit()
-                                    .frame(width: size, height: size)
-                                    .cornerRadius(.greatestFiniteMagnitude)
                             }
+                            .frame(width: size, height: size)
+                            .cornerRadius(.greatestFiniteMagnitude)
+                            .background(
+                                Circle()
+                                    .strokeBorder(.regularMaterial, lineWidth: 5)
+                                    .background(Circle().fill(Color.systemBackground))
+                            )
                         }
                         else if let image = state.image {
                             image
@@ -133,15 +144,30 @@ struct InnerPFP: View {
                                 .aspectRatio(contentMode: .fill)
                                 .frame(width: size, height: size)
                                 .cornerRadius(.greatestFiniteMagnitude)
+                                .background(
+                                    Circle()
+                                        .strokeBorder(.regularMaterial, lineWidth: 5)
+                                        .background(Circle().fill(Color.systemBackground))
+                                )
                         }
                         else {
-                            Circle().foregroundColor(color).frame(width: size, height: size)
+                            Circle().foregroundColor(color)
                                 .frame(width: size, height: size)
+                                .background(
+                                    Circle()
+                                        .strokeBorder(.black, lineWidth: 5)
+                                        .background(Circle().fill(Color.systemBackground))
+                                )
                         }
                     }
                     else {
-                        Circle().foregroundColor(color).frame(width: size, height: size)
+                        Circle().foregroundColor(color)
                             .frame(width: size, height: size)
+                            .background(
+                                Circle()
+                                    .strokeBorder(.regularMaterial, lineWidth: 5)
+                                    .background(Circle().fill(Color.systemBackground))
+                            )
                     }
                 }
                 .priority(.low) // lower prio for animated gif, saves bandwidth?
@@ -151,6 +177,11 @@ struct InnerPFP: View {
         else {
             Circle().foregroundColor(color)
                 .frame(width: size, height: size)
+                .background(
+                    Circle()
+                        .strokeBorder(.regularMaterial, lineWidth: 5)
+                        .background(Circle().fill(Color.systemBackground))
+                )
         }
     }
 }
@@ -164,6 +195,8 @@ struct ProfilePicViewWrapper: View {
     var body: some View {
         //        EmptyView()
         VStack {
+            PFP(pubkey: "gfhfghfgg")
+            
             
             if let gladstein = PreviewFetcher.fetchContact("58c741aa630c2da35a56a77c1d05381908bd10504fdd2d8b43f725efa6d23196") {
                 PFP(pubkey: gladstein.pubkey, contact: gladstein)
@@ -176,13 +209,31 @@ struct ProfilePicViewWrapper: View {
                 PFP(pubkey: gladstein.pubkey, nrContact: gladstein, size: 150)
             }
             
-            if let pfp = PreviewFetcher.fetchNRContact("9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e") {
-                PFP(pubkey: pfp.pubkey, nrContact: pfp)
+            HStack {
+                if let pfp = PreviewFetcher.fetchNRContact("9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e") {
+                    PFP(pubkey: pfp.pubkey, nrContact: pfp)
+                }
+                
+                if let pfp = PreviewFetcher.fetchNRContact("9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e") {
+                    PFP(pubkey: pfp.pubkey, nrContact: pfp, size: 150)
+                        .background(.green)
+                }
+            }
+            if let pfp = PreviewFetcher.fetchNRContact("7fa56f5d6962ab1e3cd424e758c3002b8665f7b0d8dcee9fe9e288d7751ac194") {
+                PFP(pubkey: pfp.pubkey, nrContact: pfp, size: 150)
+                    .background(.black)
+            }
+            if let pfp = PreviewFetcher.fetchNRContact("7fa56f5d6962ab1e3cd424e758c3002b8665f7b0d8dcee9fe9e288d7751ac194") {
+                PFP(pubkey: pfp.pubkey, nrContact: pfp, size: 150)
+                    .background(.white)
             }
             
-            if let pfp = PreviewFetcher.fetchNRContact("9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e") {
-                PFP(pubkey: pfp.pubkey, nrContact: pfp, size: 150)
-                    .background(.green)
+            HStack {
+                PFP(pubkey: "fgfdggf", size: 150)
+                    .background(.white)
+                
+                PFP(pubkey:"hghfghfgh", size: 150)
+                    .background(.black)
             }
         }
     }

@@ -83,7 +83,7 @@ struct NosturTabButton: View {
         .padding(.trailing, 23)
         .padding(.vertical, 10)
         .padding(.leading, 5)
-        .background(isSelected ? Color.accentColor.opacity(0.25) : .clear)
+        .background(isSelected ? Color.systemBackground : .clear)
         .contentShape(Rectangle())
         .onHover { over in
             isHoveringTab = over
@@ -91,20 +91,31 @@ struct NosturTabButton: View {
         .onTapGesture {
             self.onSelect()
         }
+        .roundedCorner(10, corners: [.topLeft, .topRight])
     }
 }
+
+import UIKit
 
 struct TabContainer: View {
     @State var navPath = NavigationPath()
     let tm:DetailTabsModel = .shared
     let tab:DetailTabsModel.Tab
-//    @State var nrPost:NRPost? = nil
     
     var body: some View {
         NavigationStack(path: $navPath) {
             if let nrPost = tab.nrPost {
-                PostDetailView(nrPost: nrPost, navTitleHidden: true)
-                    .padding(.top, 10)
+                ZStack {
+                    Color("ListBackground")
+                        .ignoresSafeArea()
+                    PostDetailView(nrPost: nrPost, navTitleHidden: true)
+                }
+////                    .padding()
+////                              .background(Color.orange)
+////                    .roundedCorner(10, corners: [.topLeft, .topRight])
+////                    .padding(30)
+////                    .background(.green)
+////                    .padding(.top, 10)
                     .withNavigationDestinations()
             }
             else if let contact = tab.contact {
@@ -153,6 +164,10 @@ struct TabbedDetailContainer: View {
             return contact.anyName
         }
         return "＿"
+    }
+    
+    init() {
+        UIScrollView.appearance().bounces = false
     }
     
     var body: some View {
@@ -206,7 +221,7 @@ struct TabbedDetailContainer: View {
                         Spacer()
                     }
                 }
-                .onChange(of: tm.tabs) {newTabs in
+                .onChange(of: tm.tabs) { newTabs in
 //                    if (newTabs.count > oldTabs.count) {
                         if let lastTab = newTabs.last {
                             proxy.scrollTo(lastTab.id)
@@ -214,15 +229,25 @@ struct TabbedDetailContainer: View {
 //                    } 
                 }
             }
-            Divider().opacity(tm.tabs.count > 0 ? 1 : 0)
+//            Divider().opacity(tm.tabs.count > 0 ? 1 : 0)
             ZStack {
+                ForEach(tm.tabs) { tab in
+                    TabContainer(tab:tab)
+//                        .padding(.vertical, 10)
+//                        .background(Color.systemBackground)
+                        .roundedCorner(10, corners: [.topLeft, .topRight])
+//                        .padding(.horizontal, 0)
+                        .opacity(tm.selected == tab ? 1 : 0)
+                        .id(tab.id)
+                        .padding(.horizontal, 10)
+                }
                 VStack {
                     Spacer()
                     HStack {
                         Spacer()
                         Image("NosturLogoFull")
                             .resizable()
-                            .opacity(0.3)
+                            .opacity(tm.tabs.count > 0 ? 0 : 0.3)
                             .frame(width: 400, height: 400)
                             .offset(x:offsetX, y:50)
                             .onAppear {
@@ -232,12 +257,6 @@ struct TabbedDetailContainer: View {
                             }
                     }
                 }
-                ForEach(tm.tabs) { tab in
-                    TabContainer(tab:tab)
-                        .padding(.horizontal, 0)
-                        .opacity(tm.selected == tab ? 1 : 0)
-                        .id(tab.id)
-                }
             }
             .environmentObject(dim)
 //            Spacer()
@@ -245,6 +264,7 @@ struct TabbedDetailContainer: View {
         .navigationBarTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .padding(0)
+        .background(Color("ListBackground"))
         .onReceive(receiveNotification(.navigateTo)) { notification in
             let destination = notification.object as! NavigationDestination
             if type(of: destination.destination) == NRPost.self {
@@ -296,15 +316,39 @@ struct TabbedDetailContainer_Previews: PreviewProvider {
     static var previews: some View {
         TabbedDetailContainer()
             .onAppear {
-                if let event0 = PreviewFetcher.fetchEvent("21a1b8e4083c11eab8f280dc0c0bddf3837949df75662e181ad117bd0bd5fdf3") {
+                if let event0 = PreviewFetcher.fetchNRPost() {
                     navigateTo(event0)
                 }
                 
-                if let event1 = PreviewFetcher.fetchEvent("1b2a98e1d653592a93398c0f93a2931b6399c6ec8332700c79cbefbd814eefd0") {
+                if let event1 = PreviewFetcher.fetchNRPost() {
+                    navigateTo(event1)
+                }
+                
+                if let event1 = PreviewFetcher.fetchNRPost() {
                     navigateTo(event1)
                 }
                 
             }
-            .withPreviewEnvironment()
+            .withPreviewEnvironment({ pe in
+                pe.loadPosts()
+            }, previewDevice: PreviewDevice(rawValue: "iPad Air (5th generation)"))
+    }
+}
+
+
+
+struct RoundedCorner: Shape {
+    var radius: CGFloat = .infinity
+    var corners: UIRectCorner = .allCorners
+    
+    func path(in rect: CGRect) -> Path {
+        let path = UIBezierPath(roundedRect: rect, byRoundingCorners: corners, cornerRadii: CGSize(width: radius, height: radius))
+        return Path(path.cgPath)
+    }
+}
+
+extension View {
+    func roundedCorner(_ radius: CGFloat, corners: UIRectCorner) -> some View {
+        clipShape(RoundedCorner(radius: radius, corners: corners) )
     }
 }

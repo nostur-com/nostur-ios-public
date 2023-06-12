@@ -11,13 +11,11 @@ struct ProfileLikesView: View {
     @State var backlog = Backlog()
     
     var body: some View {
-        LazyVStack(spacing: 0) {
+        LazyVStack {
             ForEach(fl.nrPosts) { nrPost in
-                PostRowDeletable(nrPost: nrPost)
-                    .background(Color.systemBackground)
-                    .boxShadow()
-                    .padding(.vertical, 10)
-                    .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
+                PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages)
+                    .roundedBoxShadow()
+                    .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                     .id(nrPost.id)
             }
             if fl.nrPosts.count > 0 {
@@ -42,6 +40,7 @@ struct ProfileLikesView: View {
             Spacer()
                 .frame(minHeight: 800)
         }
+        .padding(.top, 5)
         .background(Color("ListBackground"))
         .onAppear {
             guard !didLoad else { return }

@@ -43,10 +43,9 @@ struct BookmarksView: View {
                 LazyVStack {
                     ForEach(vBookmarks) { vBookmark in
                         PostRowDeletable(nrPost: vBookmark)
-                            .background(Color.systemBackground)
-                            .boxShadow()
-                            .padding(.vertical, 10)
-                            .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
+//                            .background(Color.systemBackground)
+                            .roundedBoxShadow()
+                            .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                             .id(vBookmark.id)
                             .onDelete {
                                 vBookmark.mainEvent.bookmarkedBy = []

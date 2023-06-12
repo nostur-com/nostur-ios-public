@@ -66,7 +66,7 @@ struct PrivateNotesView: View {
         .navigationTitle(String(localized:"Private Notes", comment:"Navigation title for Private Notes screen"))
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarHidden(true)
-        .padding()
+//        .padding()
         .onReceive(receiveNotification(.postAction)) { notification in
             let action = notification.object as! PostActionNotification
             if (action.type == .privateNote  && !action.hasPrivateNote) {

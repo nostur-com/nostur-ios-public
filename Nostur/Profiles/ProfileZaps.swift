@@ -69,13 +69,11 @@ struct ProfileZaps: View {
                     .foregroundColor(.gray)
                     .font(.system(size: 20))
             }
-            LazyVStack(spacing: 0) {
+            LazyVStack {
                 ForEach(nrPosts) { nrPost in
-                    PostRowDeletable(nrPost: nrPost)
-                        .background(Color.systemBackground)
-                        .boxShadow()
-                        .padding(.vertical, 10)
-                        .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
+                    PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages)
+                        .roundedBoxShadow()
+                        .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                         .id(nrPost.id)
                 }
                 if nrPosts.count == 0 {
@@ -85,6 +83,7 @@ struct ProfileZaps: View {
             }
         }
         .frame(minHeight: 800)
+        .padding(.top, 5)
         .background(Color("ListBackground"))
         .task {
             guard !didLoad else { return }
