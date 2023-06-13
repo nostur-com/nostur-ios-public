@@ -12,7 +12,9 @@ struct ReportContactSheet: View {
                 .padding()
                 .disabled(true)
                 .opacity(0.8)
-                .boxShadow()
+                .roundedBoxShadow()
+                .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
+                .padding(.vertical, 10)
             
             Form {
                 Section(header: Text("Report Information", comment: "Heading when entering Report details"), footer: VStack {

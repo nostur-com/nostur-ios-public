@@ -26,7 +26,9 @@ struct PostPreview: View {
                 }
             AnyStatus()
             PostRowDeletable(nrPost: nrPost, isDetail: true)
-                .boxShadow()
+                .roundedBoxShadow()
+                .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
+                .padding(.vertical, 10)
                 .disabled(true)
                 .environmentObject(dim)
             Spacer()

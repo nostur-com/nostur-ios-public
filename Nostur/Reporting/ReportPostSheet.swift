@@ -12,8 +12,9 @@ struct ReportPostSheet: View {
             ScrollView {
                 PostRowDeletable(nrPost: nrPost, hideFooter: true)
                     .disabled(true)
-                    .background(Color.systemBackground)
-                    .boxShadow()
+                    .roundedBoxShadow()
+                    .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
+                    .padding(.vertical, 10)
                     .overlay(
                         Rectangle().opacity(0.02)
                             .onTapGesture {
