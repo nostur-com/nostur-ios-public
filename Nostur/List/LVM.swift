@@ -141,6 +141,7 @@ class LVM: NSObject, ObservableObject {
         self.subscriptions.removeAll()
     }
     
+    var fetchCounts = PassthroughSubject<[NRPostID], Never>()
     var startRenderingSubject = PassthroughSubject<[Event], Never>()
     var startRenderingOlderSubject = PassthroughSubject<[Event], Never>()
     var didCatchup = false
@@ -221,7 +222,7 @@ class LVM: NSObject, ObservableObject {
                     continue
                 } // Skip if the post is already on screen
 
-                let newNRPostLeaf = NRPost(event: event, withParents: hideReplies ? false : true)
+                let newNRPostLeaf = NRPost(event: event, withParents: hideReplies ? false : true, withRepliesCount: true)
                 transformedObjectIds.insert(newNRPostLeaf.id)
                 newNRPostLeafs.append(newNRPostLeaf)
             }
@@ -742,6 +743,36 @@ extension LVM {
         trackTabVisibility()
         loadMoreWhenNearBottom()
         throttledCommands()
+        fetchCountsForVisibleIndexPaths()
+    }
+    
+    func fetchCountsForVisibleIndexPaths() {
+        fetchCounts
+            .throttle(for: .seconds(0.5), scheduler: RunLoop.main, latest: true)
+            .sink { [weak self] nrPostIds in
+                guard let self = self else { return }
+                
+                let events = self.nrPostLeafs
+                    .filter { nrPostIds.contains($0.id) }
+                    .compactMap {
+                        if $0.isRepost {
+                            return $0.firstQuote?.event
+                        }
+                        return $0.event
+                    }
+                
+                DataProvider.shared().bg.perform {
+                    for event in events {
+                        EventRelationsQueue.shared.addAwaitingEvent(event)
+                    }
+                    let eventIds = events.map { $0.id }
+                    L.fetching.info("🔢 Fetching counts for \(eventIds.count) posts")
+                    fetchStuffForLastAddedNotes(ids: eventIds)
+                }
+                
+            
+            }
+            .store(in: &subscriptions)
     }
     
     func throttledCommands() {
@@ -844,7 +875,7 @@ extension LVM {
                     guard let self = self else { return }
 //                    let transformer = VPostTransformer.bg
                     
-                    let newNRPostLeaf = NRPost(event: event, withParents: true)
+                    let newNRPostLeaf = NRPost(event: event, withParents: true, withRepliesCount: true)
                     DispatchQueue.main.async {
                         self.nrPostLeafs.insert(newNRPostLeaf, at: 0)
 //                        print("COUNTER D: \(self.lvmCounter.count)")
@@ -1064,13 +1095,13 @@ extension LVM {
 //            .store(in: &subscriptions)
     }
     
-    func requestForJustAppeared(_ nrPosts:[NRPost]) {
-        guard self.viewIsVisible else { return }
-        let events = nrPosts.map { $0.event }
-        let ids = ids(events)
-        
-        fetchStuffForLastAddedNotes(ids: ids)
-    }
+//    func requestForJustAppeared(_ nrPosts:[NRPost]) {
+//        guard self.viewIsVisible else { return }
+//        let events = nrPosts.map { $0.event }
+//        let ids = ids(events)
+//        
+//        fetchStuffForLastAddedNotes(ids: ids)
+//    }
 }
 
 extension LVM {

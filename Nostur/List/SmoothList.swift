@@ -403,11 +403,16 @@ struct SmoothList: UIViewControllerRepresentable {
                     }
                 }
                 
+                
 //                if (!SettingsStore.shared.autoScroll) && (scrollView.contentOffset.y < SMOOTHLIST_AUTOSCROLL_OFFSET) {
 //                    // if really at top, push back a little, so new items inserted at top don't push all down
 //                    //                    scrollView.layoutIfNeeded();
 //                    scrollView.setContentOffset(CGPoint(x: scrollView.contentOffset.x, y: SMOOTHLIST_AUTOSCROLL_OFFSET), animated: true)
 //                }
+            }
+            
+            if SettingsStore.shared.fetchCounts {
+                lvm.fetchCounts.send(indexPaths.compactMap { data[safe: $0.row]?.id })
             }
         }
         

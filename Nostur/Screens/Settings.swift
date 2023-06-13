@@ -49,13 +49,7 @@ struct Settings: View {
     var body: some View {
 
         Form {
-            Section(header: Text("Message verification", comment: "Setting heading on settings screen")) {
-                Toggle(isOn: $settings.isSignatureVerificationEnabled) {
-                    Text("Verify message signatures", comment: "Setting on settings screen")
-                    Text("Turn off to save battery life and trust the relays for the authenticity of messages", comment:"Setting on settings screen")
-                }
-            }
-            
+
             Section(header: Text("Display", comment:"Setting heading on settings screen")) {
                 Toggle(isOn: $settings.hideBadges) {
                     Text("We Don't Need No Stinkin' Badges", comment:"Setting on settings screen")
@@ -78,6 +72,10 @@ struct Settings: View {
                 Toggle(isOn: $settings.rowFooterEnabled) {
                     Text("Show post stats on timeline", comment:"Setting on settings screen")
                     Text("Counters for replies, likes, zaps etc.", comment:"Setting on settings screen")
+                }
+                Toggle(isOn: $settings.fetchCounts) {
+                    Text("Fetch counts on timeline", comment:"Setting on settings screen")
+                    Text("Fetches like/zaps/replies counts as posts appear", comment:"Setting on settings screen")
                 }
                 Toggle(isOn: $settings.autoScroll) {
                     Text("Auto scroll to new posts", comment:"Setting on settings screen")
@@ -260,6 +258,13 @@ struct Settings: View {
                             }
                         }
                     }
+                }
+            }
+            
+            Section(header: Text("Message verification", comment: "Setting heading on settings screen")) {
+                Toggle(isOn: $settings.isSignatureVerificationEnabled) {
+                    Text("Verify message signatures", comment: "Setting on settings screen")
+                    Text("Turn off to save battery life and trust the relays for the authenticity of messages", comment:"Setting on settings screen")
                 }
             }
             

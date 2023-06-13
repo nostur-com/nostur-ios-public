@@ -140,12 +140,13 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
     private var withReplyTo = false
     private var withGroupedReplies = false
-    private var withReplies = false
+    private var withReplies = false // Will listen for replies from import save, and process for rendering in bg
+    private var withRepliesCount = false // Will listen for replies but only for counter, no processing for rendering
     private var withParents = false
     
     private var groupRepliesToRoot = PassthroughSubject<[NRPost], Never>()
     
-    init(event: Event, withReplyTo:Bool = false, withParents:Bool = false, withReplies:Bool = false, plainText:Bool = false) {
+    init(event: Event, withReplyTo:Bool = false, withParents:Bool = false, withReplies:Bool = false, plainText:Bool = false, withRepliesCount:Bool = false) {
         self.event = event // Only touch this in BG context!!!
         self.id = event.id
         self.pubkey = event.pubkey
@@ -170,6 +171,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         self.withParents = withParents
         self.withReplies = withReplies
         self.withReplyTo = withReplyTo
+        self.withRepliesCount = withRepliesCount
         self.plainTextOnly = plainText
         
         if !plainText { // plainText is actually plainTextOnly, for rendering in muted spam stuff
@@ -240,10 +242,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         
         self.firstQuoteId = event.firstQuoteId
         if let firstQuote = event.firstQuote {
-            self.firstQuote = NRPost(event: firstQuote)
+            self.firstQuote = NRPost(event: firstQuote, withRepliesCount: withRepliesCount)
         } // why event.firstQuote_ doesn't work??
         else if let firstQuoteId = event.firstQuoteId,  let firstQuote = try? Event.fetchEvent(id: firstQuoteId, context: DataProvider.shared().bg) {
-            self.firstQuote = NRPost(event: firstQuote)
+            self.firstQuote = NRPost(event: firstQuote, withRepliesCount: withRepliesCount)
         }
         else if !isAwaiting && event.firstQuoteId != nil {
             EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.005"); isAwaiting = true
@@ -397,6 +399,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
 
         if withReplies {
             repliesListener()
+        }
+        else if withRepliesCount {
+            repliesCountListener()
         }
         
         if withReplyTo {
@@ -687,6 +692,18 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                         }
                     }
                 }
+            }
+            .store(in: &subscriptions)
+    }
+    
+    // Same as repliesListener but only for counts
+    private func repliesCountListener() {
+        guard !withReplies else { return } // Skip if we already have repliesListener, which makes repliesCountListener not needed
+        self.event.repliesUpdated
+            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
+            .sink { replies in
+                self.objectWillChange.send()
+                self.repliesCount = Int64(replies.count)
             }
             .store(in: &subscriptions)
     }

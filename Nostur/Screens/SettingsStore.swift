@@ -24,6 +24,7 @@ final class SettingsStore: ObservableObject {
         static let fullWidthImages = "full_width_images"
         static let defaultMediaUploadService = "media_upload_service"
         static let activeNWCconnectionId = "active_nwc_connection_id"
+        static let fetchCounts = "fetch_counts"
     }
 
 //    private let cancellable: Cancellable
@@ -79,6 +80,7 @@ final class SettingsStore: ObservableObject {
             Keys.defaultMediaUploadService: "nostrcheck.me",
             Keys.statusBubble: false,
             Keys.activeNWCconnectionId: "",
+            Keys.fetchCounts: false
         ])
 
         // Don't use this anymore because re-renders too much, like when moving window on macOS
@@ -121,7 +123,13 @@ final class SettingsStore: ObservableObject {
     }
     
     var rowFooterEnabled: Bool {
-        set { defaults.set(newValue, forKey: Keys.rowFooterEnabled); objectWillChange.send() }
+        set {
+            objectWillChange.send()
+            defaults.set(newValue, forKey: Keys.rowFooterEnabled);
+            if !newValue {
+                defaults.set(false, forKey: Keys.fetchCounts);
+            }
+        }
         get { defaults.bool(forKey: Keys.rowFooterEnabled) }
     }
     
@@ -133,6 +141,18 @@ final class SettingsStore: ObservableObject {
     var autoScroll: Bool {
         set { defaults.set(newValue, forKey: Keys.autoScroll); objectWillChange.send() }
         get { defaults.bool(forKey: Keys.autoScroll) }
+    }
+    
+    var fetchCounts: Bool {
+        set {
+            objectWillChange.send();
+            defaults.set(newValue, forKey: Keys.fetchCounts);
+            if newValue {
+                defaults.set(true, forKey: Keys.rowFooterEnabled);
+            }
+            
+        }
+        get { defaults.bool(forKey: Keys.fetchCounts) }
     }
     
     var fullWidthImages: Bool {
