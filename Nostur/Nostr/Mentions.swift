@@ -1,7 +1,7 @@
 import Foundation
 
 func replaceMentionsWithNpubs(_ text:String, selected:[Contact] = []) -> String {
-    let blocked = NosturState.shared.account?.blockedPubkeys_ ?? []
+    let blocked:[String] = NosturState.shared.account?.blockedPubkeys_ ?? []
     let mentions = text.matches(of: /(?:^|\s)((@(\x{2063}\x{2064}[^\x{2063}\x{2064}]+\x{2064}\x{2063}|\w+)))/)
     var newText = text
     let mentionsByLongest = mentions.sorted(by: { $0.output.3.count > $1.output.3.count })

@@ -6,10 +6,10 @@ public typealias NRPostID = String
 // NRPost SHOULD BE CREATED IN BACKGROUND THREAD
 class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
-    let SPAM_LIMIT_P = 50
     
     private var nrPostQueue = DispatchQueue(label: "com.nostur.nrPostQueue", attributes: .concurrent)
-    
+    let SPAM_LIMIT_P:Int = 50
+ 
     static func == (lhs: NRPost, rhs: NRPost) -> Bool {
         lhs.id == rhs.id
     }

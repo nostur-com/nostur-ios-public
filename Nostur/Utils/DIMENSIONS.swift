@@ -7,16 +7,16 @@ class DIMENSIONS: ObservableObject {
     
     // 428    - 5        - (10 + 50 + 10 ) -         (10) - 5
     // Screen - Box-left  - (10 + PFP+ 10 ) - (text-right) - Box-right
-    static public let POST_ROW_HPADDING = 5.0
-    static public let POST_ROW_PFP_WIDTH = 50.0
-    static public let POST_ROW_PFP_HEIGHT = 50.0
-    static public let POST_ROW_PFP_HPADDING = 10.0
-    static public let KIND1_TRAILING = 10.0
+    static public let POST_ROW_HPADDING:CGFloat = 5.0
+    static public let POST_ROW_PFP_WIDTH:CGFloat = 50.0
+    static public let POST_ROW_PFP_HEIGHT:CGFloat = 50.0
+    static public let POST_ROW_PFP_HPADDING:CGFloat = 10.0
+    static public let KIND1_TRAILING:CGFloat = 10.0
     static public var ROW_PFP_SPACE:CGFloat { get { Self.POST_ROW_PFP_WIDTH + (2 * Self.POST_ROW_PFP_HPADDING) }}
     
-    static public let PREVIEW_HEIGHT = 70.0
+    static public let PREVIEW_HEIGHT:CGFloat = 70.0
     
-    @Published var listWidth = UIScreen.main.bounds.width // Should override for IS_IPAD / macOS
+    @Published var listWidth:CGFloat = UIScreen.main.bounds.width // Should override for IS_IPAD / macOS
     
     /// Substracts profile pic space from list width
     func availableNoteRowImageWidth() -> CGFloat {

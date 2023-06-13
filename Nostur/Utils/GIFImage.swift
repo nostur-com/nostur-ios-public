@@ -7,7 +7,7 @@ import Gifu
 
 public struct GIFImage: View {
      private let source: GIFSource
-     private var loopCount = 0
+    private var loopCount:Int = 0
      private var isResizable = false
 
      /// Initializes the view with the given GIF image data.

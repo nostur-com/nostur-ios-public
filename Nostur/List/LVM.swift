@@ -9,7 +9,7 @@ import Foundation
 import CoreData
 import Combine
 
-let LVM_MAX_VISIBLE = 20 // Will only be ignored if last appeared is older
+let LVM_MAX_VISIBLE:Int = 20 // Will only be ignored if last appeared is older
 
 class LVM: NSObject, ObservableObject {
         

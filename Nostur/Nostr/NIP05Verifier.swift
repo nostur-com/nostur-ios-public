@@ -6,8 +6,8 @@ import Combine
 // Caches failed request so we don't keep retrying
 class NIP05Verifier {
     static let shared = NIP05Verifier()
-    private let maxConcurrentRequests = 2
-    private let bufferSize = 50
+    private let maxConcurrentRequests:Int = 2
+    private let bufferSize:Int = 50
     private var verifySubject = PassthroughSubject<Contact, Never>()
     
     private var cancellables = Set<AnyCancellable>()

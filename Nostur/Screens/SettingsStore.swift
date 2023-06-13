@@ -7,24 +7,24 @@ final class SettingsStore: ObservableObject {
     public static let shared = SettingsStore()
     
     public enum Keys {
-        static let lastMaintenanceTimestamp = "last_maintenance_timestamp"
+        static let lastMaintenanceTimestamp:String = "last_maintenance_timestamp"
         
-        static let isSignatureVerificationEnabled = "signature_verification_enabled"
-        static let replaceNsecWithHunter2 = "replace_nsec_with_hunter2"
+        static let isSignatureVerificationEnabled:String = "signature_verification_enabled"
+        static let replaceNsecWithHunter2:String = "replace_nsec_with_hunter2"
         
-        static let defaultZapAmount = "default_zap_amount"
-        static let defaultLightningWallet = "default_lightning_wallet"
-        static let hideEmojisInNames = "hide_emojis_in_names"
-        static let hideBadges = "hide_badges"
-        static let restrictAutoDownload = "restrict_autodownload"
-        static let animatedPFPenabled = "animated_pfp_enabled"
-        static let rowFooterEnabled = "row_footer_enabled"
-        static let autoScroll = "autoscroll"
-        static let statusBubble = "statusBubble"
-        static let fullWidthImages = "full_width_images"
-        static let defaultMediaUploadService = "media_upload_service"
-        static let activeNWCconnectionId = "active_nwc_connection_id"
-        static let fetchCounts = "fetch_counts"
+        static let defaultZapAmount:String = "default_zap_amount"
+        static let defaultLightningWallet:String = "default_lightning_wallet"
+        static let hideEmojisInNames:String = "hide_emojis_in_names"
+        static let hideBadges:String = "hide_badges"
+        static let restrictAutoDownload:String = "restrict_autodownload"
+        static let animatedPFPenabled:String = "animated_pfp_enabled"
+        static let rowFooterEnabled:String = "row_footer_enabled"
+        static let autoScroll:String = "autoscroll"
+        static let statusBubble:String = "statusBubble"
+        static let fullWidthImages:String = "full_width_images"
+        static let defaultMediaUploadService:String = "media_upload_service"
+        static let activeNWCconnectionId:String = "active_nwc_connection_id"
+        static let fetchCounts:String = "fetch_counts"
     }
 
 //    private let cancellable: Cancellable
@@ -32,7 +32,7 @@ final class SettingsStore: ObservableObject {
 
     let objectWillChange = PassthroughSubject<Void, Never>()
 
-    public static let walletOptions = [
+    public static let walletOptions:[LightningWallet] = [
         LightningWallet(name: "none", scheme: "lightning:"),
         LightningWallet(name: "Zebedee", scheme: "zebedee:lightning:"), // https://documentation.zebedee.io/docs/zbd-app-uri-schemes/
         LightningWallet(name: "Wallet of Satoshi", scheme: "walletofsatoshi:lightning:"), // guessed. must check if works
@@ -45,7 +45,7 @@ final class SettingsStore: ObservableObject {
         LightningWallet(name: "Custom Nostr Wallet Connect...", scheme: "nostur:nwc:custom:") // CUSTOM NWC
     ]
     
-    public static let mediaUploadServiceOptions = [
+    public static let mediaUploadServiceOptions:[MediaUploadService] = [
         // same as imgur
         getNostrimgService(),
 

@@ -19,8 +19,8 @@ class FastLoader: ObservableObject {
     private var subscriptions = Set<AnyCancellable>()
     
     public var subscriptionId = UUID().uuidString
-    public var offset = 0
-    public var limit = 10
+    public var offset:Int = 0
+    public var limit:Int = 10
     public var nrPostTransform = true
     
     @Published var nrPosts:[NRPost] = []

@@ -23,7 +23,7 @@ class Unpublisher {
         case contactList
     }
     
-    let PUBLISH_DELAY = 9.0 // SECONDS
+    let PUBLISH_DELAY:Double = 9.0 // SECONDS
     var timer:Timer?
     var viewContext:NSManagedObjectContext
     var queue:[Unpublished] = []
