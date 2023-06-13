@@ -140,6 +140,16 @@ class Zap {
                     let message = String(localized: "Zap failed for [post](nostur:e:\(eventId)).\n\(self.error ?? "")", comment: "Error message. Only translate the 'Zap failed for' part, don't change between brackets")
                     _ = PersistentNotification.createFailedNWCZap(pubkey: NosturState.shared.activeAccountPublicKey, message: message, context: DataProvider.shared().bg)
                     L.og.info("⚡️ Created notification: Zap failed for [post](nostur:e:\(eventId)). \(self.error ?? "")")
+                    
+                    // Revert zap state
+                    if let event = EventRelationsQueue.shared.getAwaitingBgEvent(byId: eventId) {
+                        L.og.info("Revert from queue")
+                        event.zapStateChanged.send(.none)
+                    }
+                    else if let event = try? Event.fetchEvent(id: eventId, context: DataProvider.shared().bg) {
+                        L.og.info("Revert from DB")
+                        event.zapStateChanged.send(.none)
+                    }
                 }
                 else {
                     let message = String(localized:"Zap failed for [contact](nostur:p:\(self.contactPubkey)).\n\(self.error ?? "")", comment: "Error message. Only translate the 'Zap failed for' part, don't change between brackets")
