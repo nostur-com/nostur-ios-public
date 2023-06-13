@@ -1,5 +1,7 @@
 import SwiftUI
 
+// TODO: For performance replace all Xxx(nrPosts: nrPost) with specific attributes
+// TODO: For performance, create seperate Views per state dependency
 // Note 1 default (not full-width)
 struct Kind1Default: View {
     @EnvironmentObject var dim:DIMENSIONS
@@ -41,6 +43,7 @@ struct Kind1Default: View {
     }
     
     var body: some View {
+//        let _ = Self._printChanges()
         HStack(alignment: .top, spacing:0) {
             PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact)
                 .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: DIMENSIONS.POST_ROW_PFP_HEIGHT)
@@ -58,7 +61,6 @@ struct Kind1Default: View {
             VStack(alignment:.leading, spacing: 3) {// Post container
                 HStack { // name + reply + context menu
                     NoteHeaderView(nrPost: nrPost)
-//                        .fixedSize(horizontal: false, vertical: true)
                     Spacer()
                     LazyNoteMenuButton(nrPost: nrPost)
                 }
