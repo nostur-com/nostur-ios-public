@@ -26,16 +26,20 @@ struct Search: View {
                 if (contacts.count == 0 && nrPosts.count == 0 && searching) {
                     ProgressView()
                 }
-                LazyVStack {
+                LazyVStack(spacing: 0) {
                     Section {
                         ForEach(contacts.prefix(150)) { contact in
                             ProfileRow(contact: contact)
-                                .boxShadow()
+                                .roundedBoxShadow()
+                                .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                                .padding(.vertical, 10)
                         }
 
                         ForEach(nrPosts) { nrPost in
                             PostRowDeletable(nrPost: nrPost)
-                                .boxShadow()
+                                .roundedBoxShadow()
+                                .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                                .padding(.vertical, 10)
                         }
                     }
                 }
@@ -56,6 +60,7 @@ struct Search: View {
                             .padding(10)
                     }
                 }
+                .toolbarBackground(Visibility.visible, for: .navigationBar)
             }
             .overlay(alignment: .bottom) {
                 if settings.statusBubble {
@@ -64,6 +69,7 @@ struct Search: View {
                         .padding(.bottom, 10)
                 }
             }
+            .background(Color("ListBackground"))
             .withNavigationDestinations()
             .navigationTitle(String(localized:"Search", comment: "Navigation title for Search screen"))
             .navigationBarTitleDisplayMode(.inline)

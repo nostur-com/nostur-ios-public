@@ -47,18 +47,15 @@ struct NotificationsPosts: View {
                     switch pNotification.type {
                     case .NOTIFICATION:
                         NewFollowersNotificationView(notification: pNotification.notification!)
-                            .padding(10)
-                            .background(Color.systemBackground)
-                            .boxShadow()
+                            .roundedBoxShadow()
+                            .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                             .padding(.vertical, 10)
-                            .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
                             .id(pNotification.id)
                     case .POST:
                         PostRowDeletable(nrPost: pNotification.post!, missingReplyTo: true)
-                            .background(Color.systemBackground)
-                            .boxShadow()
+                            .roundedBoxShadow()
+                            .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                             .padding(.vertical, 10)
-                            .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
                             .id(pNotification.id)
                     }
                 }

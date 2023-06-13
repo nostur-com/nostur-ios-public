@@ -42,6 +42,7 @@ struct NewFollowersNotificationView: View {
             Ago(notification.createdAt).layoutPriority(2)
                 .foregroundColor(.gray)
         }
+        .padding(10)
     }
 }
 
@@ -54,11 +55,9 @@ struct NewFollowersNotificationView_Previews: PreviewProvider {
             VStack {
                 if let pNotification = PreviewFetcher.fetchPersistentNotification() {
                     NewFollowersNotificationView(notification: pNotification)
-                        .padding(10)
-                        .background(Color.systemBackground)
-                        .boxShadow()
+                        .roundedBoxShadow()
+                        .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
                         .padding(.vertical, 10)
-                        .padding(.horizontal, 10)
                 }
             }
         }

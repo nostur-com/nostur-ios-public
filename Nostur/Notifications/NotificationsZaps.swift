@@ -66,10 +66,9 @@ struct NotificationsZaps: View {
                     case .NOTIFICATION:
                         ZapNotificationView(notification: pNotification.notification!)
                             .padding(10)
-                            .background(Color.systemBackground)
-                            .boxShadow()
+                            .roundedBoxShadow()
+                            .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                             .padding(.vertical, 10)
-                            .padding(.horizontal, settings.fullWidthImages ? 0 : 10)
                             .id(pNotification.id)
                     case .ZAP:
                         VStack {
@@ -83,9 +82,9 @@ struct NotificationsZaps: View {
                             }
                         }
                         .padding(10)
-                        .background(Color.systemBackground)
-                        .boxShadow()
-                        .padding(10)
+                        .roundedBoxShadow()
+                        .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                        .padding(.vertical, 10)
                         .id(pNotification.id)
                     }
                 }

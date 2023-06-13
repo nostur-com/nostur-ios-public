@@ -45,7 +45,7 @@ struct NotificationsView: View {
     
     var body: some View {
 //        let _ = Self._printChanges()
-        VStack {
+        VStack(spacing:0) {
             HStack {
                 TabButton(action: {
                     withAnimation {

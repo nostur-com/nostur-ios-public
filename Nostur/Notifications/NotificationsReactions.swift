@@ -46,9 +46,9 @@ struct NotificationsReactions: View {
                         NoteMinimalContentView(nrPost: nrPost)
                     }
                     .padding(10)
-                    .background(Color.systemBackground)
-                    .boxShadow()
-                    .padding(10)
+                    .roundedBoxShadow()
+                    .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
+                    .padding(.vertical, 10)
                     .onTapGesture {
                         navigateTo(nrPost)
                     }
