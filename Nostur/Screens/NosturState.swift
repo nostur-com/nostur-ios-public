@@ -6,6 +6,7 @@ import Combine
 final class NosturState : ObservableObject {
     
     public static let shared = NosturState()
+    public var nrPostQueue = DispatchQueue(label: "com.nostur.nrPostQueue", attributes: .concurrent)
     
     let agoTimer = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
     

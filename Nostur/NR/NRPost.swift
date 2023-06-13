@@ -6,8 +6,6 @@ public typealias NRPostID = String
 // NRPost SHOULD BE CREATED IN BACKGROUND THREAD
 class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
-    
-    private var nrPostQueue = DispatchQueue(label: "com.nostur.nrPostQueue", attributes: .concurrent)
     let SPAM_LIMIT_P:Int = 50
  
     static func == (lhs: NRPost, rhs: NRPost) -> Bool {
@@ -37,23 +35,23 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
     var _contact:NRContact?
     var contact:NRContact?  {
-        get { nrPostQueue.sync { _contact } }
-        set { nrPostQueue.async(flags: .barrier) { self._contact = newValue } }
+        get { NosturState.shared.nrPostQueue.sync { _contact } }
+        set { NosturState.shared.nrPostQueue.async(flags: .barrier) { self._contact = newValue } }
     }
     
     var referencedContacts:[NRContact] = []
     
     private var _parentPosts:[NRPost] = []
     var parentPosts: [NRPost] {
-        get { nrPostQueue.sync { _parentPosts } }
-        set { nrPostQueue.async(flags: .barrier) { self._parentPosts = newValue } }
+        get { NosturState.shared.nrPostQueue.sync { _parentPosts } }
+        set { NosturState.shared.nrPostQueue.async(flags: .barrier) { self._parentPosts = newValue } }
     }
     
     private var _replies: [NRPost] = []
 
     var replies: [NRPost] {
-        get { nrPostQueue.sync { _replies } }
-        set { nrPostQueue.async(flags: .barrier) { self._replies = newValue } }
+        get { NosturState.shared.nrPostQueue.sync { _replies } }
+        set { NosturState.shared.nrPostQueue.async(flags: .barrier) { self._replies = newValue } }
     }
     
     
@@ -66,8 +64,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     }
 
     var repliesToRoot: [NRPost] {
-        get { nrPostQueue.sync { _repliesToRoot } }
-        set { nrPostQueue.async(flags: .barrier) { self._repliesToRoot = newValue } }
+        get { NosturState.shared.nrPostQueue.sync { _repliesToRoot } }
+        set { NosturState.shared.nrPostQueue.async(flags: .barrier) { self._repliesToRoot = newValue } }
     }
     var groupedReplies = [NRPost]()
     
@@ -86,18 +84,18 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var _firstQuote:NRPost?
     
     var replyTo:NRPost?  {
-        get { nrPostQueue.sync { _replyTo } }
-        set { nrPostQueue.async(flags: .barrier) { self._replyTo = newValue } }
+        get { NosturState.shared.nrPostQueue.sync { _replyTo } }
+        set { NosturState.shared.nrPostQueue.async(flags: .barrier) { self._replyTo = newValue } }
     }
     
     var replyToRoot:NRPost? {
-        get { nrPostQueue.sync { _replyToRoot } }
-        set { nrPostQueue.async(flags: .barrier) { self._replyToRoot = newValue } }
+        get { NosturState.shared.nrPostQueue.sync { _replyToRoot } }
+        set { NosturState.shared.nrPostQueue.async(flags: .barrier) { self._replyToRoot = newValue } }
     }
     
     var firstQuote:NRPost? {
-        get { nrPostQueue.sync { _firstQuote } }
-        set { nrPostQueue.async(flags: .barrier) { self._firstQuote = newValue } }
+        get { NosturState.shared.nrPostQueue.sync { _firstQuote } }
+        set { NosturState.shared.nrPostQueue.async(flags: .barrier) { self._firstQuote = newValue } }
     }
   
     var firstE:String? // Needed for muting
