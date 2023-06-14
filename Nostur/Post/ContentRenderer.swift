@@ -54,7 +54,7 @@ struct ContentRenderer: View { // VIEW things
                     NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs)
                         .padding(.horizontal, fullWidth ? 10 : 0)
                         .onTapGesture {
-                            guard !isDetail else { return }
+//                            guard !isDetail else { return }
                             navigateTo(nrPost)
                         }
                 case .lnbc(let text):

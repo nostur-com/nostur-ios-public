@@ -81,6 +81,7 @@ struct PostDetailView: View {
     }
 }
 
+let THREAD_LINE_OFFSET = 34.0
 
 // Renders reply, and parent
 // the parent is another PostAndParent
@@ -98,7 +99,7 @@ struct PostAndParent: View {
     var connect:ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
     var geoHeight:CGFloat
     let INDENT = DIMENSIONS.POST_ROW_PFP_WIDTH + (DIMENSIONS.POST_ROW_PFP_HPADDING*2)
-    let THREAD_LINE_OFFSET = 34.0
+    
     @ObservedObject var settings:SettingsStore = .shared
     @State private var timerTask: Task<Void, Never>?
     @State var didLoad = false
@@ -130,7 +131,7 @@ struct PostAndParent: View {
                             }
                         }
                         .background(alignment:.topLeading) {
-                            Color.systemBackground
+                            Color.red
                                 .frame(width: DIMENSIONS.ROW_PFP_SPACE - 10)
                                 .padding(.top, DIMENSIONS.POST_ROW_PFP_HEIGHT + 20)
                                 .onTapGesture {
@@ -166,7 +167,7 @@ struct PostAndParent: View {
             VStack(alignment: .leading, spacing: 0) {
                 if nrPost.deletedById == nil {
                     if isParent {
-                        ParentPost(nrPost: nrPost)
+                        ParentPost(nrPost: nrPost, connect:connect)
 //                            .background(Color.systemBackground)
                     }
                     else {
@@ -236,6 +237,8 @@ struct PostAndParent: View {
                     }
                 }
             }
+            .padding(.top, nrPost.replyTo == nil ? 10.0 : 0)
+            .background(Color.systemBackground)
 //            .frame(width: 400)
         }
     }
@@ -246,13 +249,16 @@ struct ParentPost: View {
     @ObservedObject var settings:SettingsStore = .shared
     @EnvironmentObject var dim:DIMENSIONS
     let INDENT = DIMENSIONS.POST_ROW_PFP_WIDTH + (DIMENSIONS.POST_ROW_PFP_HPADDING*2)
+    var connect:ThreadConnectDirection? = nil
     
     var body: some View {
         HStack(alignment:.top, spacing:0) {
             PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 50)
                 .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: 50)
                 .padding(.horizontal, DIMENSIONS.POST_ROW_PFP_HPADDING)
-                .padding(.top, 10)
+//                .padding(.top, 10)
+            
+            
                 .onTapGesture {
                     navigateTo(ContactPath(key: nrPost.pubkey))
                 }
@@ -293,6 +299,25 @@ struct ParentPost: View {
                 }
             }
         }
+        .background(alignment:.leading) {
+            ZStack(alignment: .leading) {
+                Color.systemBackground
+                Color("LightGray")
+                    .frame(width: 2)
+                    .offset(x: THREAD_LINE_OFFSET, y: 50)
+                    .opacity(connect == .bottom || connect == .both ? 1 : 0)
+            }
+            .onTapGesture {
+                navigateTo(nrPost)
+            }
+            
+//            Color.systemBackground
+//                .frame(width: INDENT)
+//                .onTapGesture {
+//                    navigateTo(nrPost)
+//                }
+        }
+    
         if (settings.rowFooterEnabled) {
             FooterFragmentView(nrPost: nrPost)
                 .padding(.leading, INDENT)
