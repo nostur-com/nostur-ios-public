@@ -23,7 +23,7 @@ class LVM: NSObject, ObservableObject {
             // Pre-fetch next page.
             // Don't prefetch again unless the last post on screen has changed (this happens when a page is added during infinite scroll):
             // Don't prefetch again if the posts on screen are less than before (posts get removed from bottom, when new ones are added to top):
-            if let oldLastId = oldValue.last?.id, let currentLastId = nrPostLeafs.last?.id, oldLastId != currentLastId {
+            if oldValue.count < nrPostLeafs.count, let oldLastId = oldValue.last?.id, let currentLastId = nrPostLeafs.last?.id, oldLastId != currentLastId {
                 L.lvm.info("📖 \(self.nrPostLeafs.count) posts loaded. prefetching next page")
                 self.throttledCommand.send {
                     self.fetchNextPage()
@@ -370,6 +370,9 @@ class LVM: NSObject, ObservableObject {
             timeoutCommand: { [weak self] (taskId) in
                 guard let self = self else { return }
                 L.lvm.info("😈😈 timeoutCommand: \(self.id) \(self.name)/\(self.pubkey?.short ?? "") - \(taskId) dng: \(danglers.count)")
+                for d in danglers {
+                    L.lvm.info("😈😈 timeoutCommand dng id: \(d.id)")
+                }
 
                 let leafIdsOnScreen = leafIdsOnScreen
                 let currentNRPostLeafs = self.nrPostLeafs // viewContext. First (0) is newest
@@ -760,6 +763,8 @@ extension LVM {
                         }
                         return $0.event
                     }
+                
+                guard events.count > 0 else { return }
                 
                 DataProvider.shared().bg.perform {
                     for event in events {
