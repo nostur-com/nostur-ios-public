@@ -147,6 +147,7 @@ class Importer {
                                 L.og.info("⚡️ Zap success \(result.preimage ?? "-") - \(decrypted)")
                                 NWCZapQueue.shared.removeZap(byId: awaitingZap.id)
                                 NWCRequestQueue.shared.removeRequest(byId: awaitingRequest.request.id)
+                                continue
                             }
                         }
                         else {
@@ -165,6 +166,7 @@ class Importer {
                             if let result = nwcResponse.result {
                                 L.og.info("⚡️ Lighting Invoice Payment (Not Zap) success \(result.preimage ?? "-") - \(decrypted)")
                                 NWCRequestQueue.shared.removeRequest(byId: awaitingRequest.request.id)
+                                continue
                             }
                         }
                         L.og.info("⚡️ NWC response not handled: \(event.eventJson()) ")
