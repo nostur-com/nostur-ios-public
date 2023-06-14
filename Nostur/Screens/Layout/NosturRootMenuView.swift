@@ -47,8 +47,8 @@ struct NosturRootMenu: View {
         L.og.info("handleUrl: \(url.absoluteString)")
         
         // CALLBACK FROM NWC
-        if let _ = url.absoluteString.firstMatch(of: /^nostur:\/\/nwc_callback$/) {
-            sendNotification(.nwcCallbackReceived)
+        if let _ = url.absoluteString.firstMatch(of: /^nostur:\/\/nwc_callback(.*)/) {
+            sendNotification(.nwcCallbackReceived, AlbyCallback(url:url))
             return
         }
         
