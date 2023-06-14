@@ -197,3 +197,37 @@ class AccountManager {
         return nil
     }
 }
+
+
+func publishMetadataEvent(_ account:Account) throws {
+    guard let pk = account.privateKey else {
+        throw "Account has no private key"
+    }
+    
+    // create nostr .setMetadata event
+    var setMetadataContent = NSetMetadata(name: account.name, about: account.about, picture: account.picture)
+    if account.nip05 != "" { setMetadataContent.nip05 = account.nip05 }
+    if account.lud16 != "" { setMetadataContent.lud16 = account.lud16 }
+    if account.lud06 != "" { setMetadataContent.lud06 = account.lud06 }
+    if account.banner != "" { setMetadataContent.banner = account.banner }
+    //        if account.display_name != "" { setMetadataContent.display_name = account.display_name }
+    
+    do {
+        let keys = try NKeys(privateKeyHex: pk)
+        
+        var newKind0Event = NEvent(content: setMetadataContent)
+        
+        let newKind0EventSigned = try newKind0Event.sign(keys)
+        
+        L.og.debug("Going to publish \(newKind0EventSigned.wrappedEventJson())")
+        
+        _ = Event.saveEventFromMain(event: newKind0EventSigned)
+        Contact.saveOrUpdateContact(event: newKind0EventSigned)
+        DataProvider.shared().bgSave()
+        // broadcast to relays
+        Unpublisher.shared.publishNow(newKind0EventSigned)
+    }
+    catch {
+        L.og.error("🔴🔴🔴🔴 Could not sign/save/broadcast event 🔴🔴🔴🔴")
+    }
+}
