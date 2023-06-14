@@ -29,6 +29,8 @@ final class SocketPool: ObservableObject {
     
     @Published var sockets:[String : NewManagedClient] = [:]
     
+    var stayConnectedTimer:Timer?
+    
     func setup(_ activeNWCconnectionId:String) {
         DataProvider.shared().viewContext.performAndWait {
             do {
@@ -54,6 +56,26 @@ final class SocketPool: ObservableObject {
         for socket in sockets {
             guard socket.value.read else { continue }
             if !socket.value.isConnecting && !socket.value.isConnected {
+                socket.value.connect()
+            }
+        }
+        stayConnectedTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true, block: { _ in
+            self.stayConnectedPing()
+        })
+    }
+    
+    private func stayConnectedPing() {
+        for socket in sockets {
+            guard socket.value.read else { continue }
+            guard !socket.value.isNWC else { continue }
+            if let lastReceivedMessageAt = socket.value.lastMessageReceivedAt {
+                if Date.now.timeIntervalSince(lastReceivedMessageAt) >= 45 {
+                    L.sockets.info("\(socket.value.url) Last message older that 45 seconds, sending ping")
+                    socket.value.client.ping()
+                }
+            }
+            else {
+                L.sockets.info("\(socket.value.url) Last message = nil. (re)connecting..")
                 socket.value.connect()
             }
         }
@@ -402,6 +424,20 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     private var connectionQueue = DispatchQueue(label: "com.nostur.connection")
     private var _isConnecting = false
     private var _activeSubscriptions:[String] = []
+    private var _lastMessageReceivedAt:Date? = nil
+    
+    var lastMessageReceivedAt: Date? {
+        get {
+            return connectionQueue.sync {
+                _lastMessageReceivedAt
+            }
+        }
+        set {
+            connectionQueue.async(flags: .barrier) {
+                self._lastMessageReceivedAt = newValue
+            }
+        }
+    }
     
     var skipped: Int {
         get {
@@ -455,6 +491,10 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
         self.isNWC = isNWC
     }
     
+    func didReceivePong() {
+        self.lastMessageReceivedAt = .now
+    }
+    
     func connect(_ forceConnectionAttempt:Bool = false) {
         guard self.exponentialReconnectBackOff == 1 || forceConnectionAttempt || self.skipped == self.exponentialReconnectBackOff else { // Should be 0 == 0 to continue, or 2 == 2 etc..
             self.skipped = skipped + 1
@@ -474,6 +514,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
             self.isConnected = false
         }
         self.client.disconnect()
+        self.lastMessageReceivedAt = nil
     }
     
     func didDisconnect() {
@@ -483,6 +524,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
             self.isConnected = false
         }
         self.activeSubscriptions = []
+        self.lastMessageReceivedAt = nil
         L.sockets.info("🏎️🏎️🔌 DISCONNECTED \(self.url)")
         DispatchQueue.main.async {
             sendNotification(.socketNotification, "Disconnected: \(self.url)")
@@ -498,6 +540,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
             sendNotification(.socketNotification, "Error: \(shortURL) \(error.localizedDescription)")
         }
         self.activeSubscriptions = []
+        self.lastMessageReceivedAt = nil
         self.exponentialReconnectBackOff = max(1, self.exponentialReconnectBackOff * 2)
         L.sockets.info("🏎️🏎️🔌🔴 DISCONNECTED WITH ERROR \(self.url): \(error.localizedDescription)")
         DispatchQueue.main.async {
@@ -507,10 +550,12 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     
     func didReceiveMessage(_ text:String) {
         L.sockets.info("🟠🟠🏎️🔌 RECEIVED: \(self.url): \(text)")
+        self.lastMessageReceivedAt = .now
         MessageParser.shared.socketReceivedMessage(text: text, relayUrl: self.url, client:client)
     }
     
     func didReceiveData(_ data:Data) {
+        self.lastMessageReceivedAt = .now
         L.sockets.info("🔌 RECEIVED DATA \(self.url): \(data.count)")
     }
     
@@ -524,6 +569,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
         self.exponentialReconnectBackOff = 0
         self.skipped = 0
         L.sockets.info("🏎️🏎️🔌 CONNECTED \(self.url)")
+        self.lastMessageReceivedAt = .now
         DispatchQueue.main.async {
             sendNotification(.socketConnected, "Connected: \(self.url)")
         }
@@ -540,6 +586,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
         self.activeSubscriptions = []
         self.exponentialReconnectBackOff = 0
         self.skipped = 0
+        self.lastMessageReceivedAt = nil
         DispatchQueue.main.async {
             sendNotification(.socketNotification, "Disconnected: \(self.url)")
         }
@@ -556,6 +603,8 @@ protocol NewWebSocketDelegate: URLSessionWebSocketDelegate {
     func didDisconnect()
     
     func didDisconnectWithError(_ error:Error)
+    
+    func didReceivePong()
 }
 
 
@@ -662,10 +711,11 @@ class NewWebSocket {
                     switch completion {
                     case .failure(let error):
                         // Handle the failure case
-                        L.sockets.info("Failure: \(error)")
+                        L.sockets.info("\(self.url) Ping Failure: \(error)")
                     case .finished:
                         // The ping completed successfully
-                        L.sockets.info("Ping succeeded")
+                        L.sockets.info("\(self.url) Ping succeeded")
+                        self.delegate?.didReceivePong()
                         sendNotification(.pong)
                     }
                 }, receiveValue: { _ in
@@ -810,6 +860,10 @@ class NewEphemeralClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDel
     init(url: String, client:NewWebSocket) {
         self.url = url.lowercased()
         self.client = client
+    }
+    
+    func didReceivePong() {
+        
     }
     
     func connect() {
