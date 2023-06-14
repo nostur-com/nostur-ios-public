@@ -4,7 +4,6 @@ import Combine
 
 public final class NewPostModel: ObservableObject {
     
-    @Environment(\.dismiss) var dismiss
     @Published var mentioning = false
     @Published var text: String = ""
     @Published var pastedImages:[UIImage] = []
@@ -47,7 +46,7 @@ public final class NewPostModel: ObservableObject {
             .store(in: &bag)
     }
     
-    public func sendNow(replyTo:Event? = nil, quotingEvent:Event? = nil) {
+    public func sendNow(replyTo:Event? = nil, quotingEvent:Event? = nil, dismiss:DismissAction) {
         guard NosturState.shared.account?.privateKey != nil else { NosturState.shared.readOnlyAccountSheetShown = true; return }
         var nEvent = nEvent ?? NEvent(content: "")
         nEvent.createdAt = NTimestamp.init(date: Date())
@@ -96,7 +95,7 @@ public final class NewPostModel: ObservableObject {
                                 sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: quotingEvent.id))
                             }
                             
-                            self.dismiss()
+                            dismiss()
                         }
                     }
                 })

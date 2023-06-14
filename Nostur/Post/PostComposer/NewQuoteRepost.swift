@@ -125,7 +125,7 @@ struct NewQuoteRepost: View {
                     }
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button {
-                            vm.sendNow(quotingEvent: quotingEvent)
+                            vm.sendNow(quotingEvent: quotingEvent, dismiss:dismiss)
                         } label: {
                             if (vm.uploading) {
                                 ProgressView()
@@ -141,7 +141,7 @@ struct NewQuoteRepost: View {
                 }
                 .sheet(item: $vm.previewNRPost) { nrPost in
                     NavigationStack {
-                        PostPreview(nrPost: nrPost, sendNow: { vm.sendNow(quotingEvent: quotingEvent) }, uploading: $vm.uploading)
+                        PostPreview(nrPost: nrPost, sendNow: { vm.sendNow(quotingEvent: quotingEvent, dismiss:dismiss) }, uploading: $vm.uploading)
                     }
                 }
                 

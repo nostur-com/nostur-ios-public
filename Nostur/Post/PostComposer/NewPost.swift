@@ -102,7 +102,7 @@ struct NewPost: View {
                     }
                     
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        Button { vm.sendNow() } label: {
+                        Button { vm.sendNow(dismiss:dismiss) } label: {
                             if (vm.uploading) {
                                 ProgressView()
                             }
@@ -118,7 +118,7 @@ struct NewPost: View {
                 }
                 .sheet(item: $vm.previewNRPost) { nrPost in
                     NavigationStack {
-                        PostPreview(nrPost: nrPost, sendNow: { vm.sendNow() }, uploading: $vm.uploading)
+                        PostPreview(nrPost: nrPost, sendNow: { vm.sendNow(dismiss:dismiss) }, uploading: $vm.uploading)
                     }
                 }
 
