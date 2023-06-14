@@ -32,7 +32,7 @@ struct MainView: View {
                     }
                     .sheet(isPresented: $showingNewNote) {
                         NavigationStack {
-                            NewNote(noteCancellationId: $noteCancellationId)
+                            NewPost(noteCancellationId: $noteCancellationId)
                         }
                     }
                     .toolbar {

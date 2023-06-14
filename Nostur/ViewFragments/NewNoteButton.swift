@@ -28,7 +28,7 @@ struct NewNoteButton_Previews: PreviewProvider {
         PreviewContainer {
             NewNoteButton(showingNewNote: $showingNewNote)
                 .sheet(isPresented: $showingNewNote) {
-                    NewNote(noteCancellationId: $noteCancellationId)
+                    NewPost(noteCancellationId: $noteCancellationId)
                 }
         }
     }
