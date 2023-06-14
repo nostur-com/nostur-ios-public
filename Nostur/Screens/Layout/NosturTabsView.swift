@@ -28,8 +28,7 @@ struct NosturTabsView: View {
                     
                     Search()
                         .tabItem { Image(systemName: "magnifyingglass") }
-                        .tag("Search")
-                    
+                        .tag("Search")  
                     
                     BookmarksAndPrivateNotes()
                         .tabItem { Image(systemName: "bookmark") }

@@ -311,6 +311,7 @@
 		1FF9BF1629DC966700D16EE7 /* ReportContactSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF9BF1529DC966700D16EE7 /* ReportContactSheet.swift */; };
 		1FFED7FF2A3970A800A0B1E8 /* PhotosPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFED7FE2A3970A800A0B1E8 /* PhotosPicker.swift */; };
 		1FFED8012A39718F00A0B1E8 /* NewPostModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFED8002A39718F00A0B1E8 /* NewPostModel.swift */; };
+		1FFED8032A39C86F00A0B1E8 /* MacListState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFED8022A39C86F00A0B1E8 /* MacListState.swift */; };
 		1FFF997B29CEE15000ADAE23 /* About.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFF997A29CEE15000ADAE23 /* About.swift */; };
 		1FFF997D29CF4AF100ADAE23 /* ProfilePicFullScreenSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFF997C29CF4AF100ADAE23 /* ProfilePicFullScreenSheet.swift */; };
 /* End PBXBuildFile section */
@@ -652,6 +653,7 @@
 		1FF9BF1529DC966700D16EE7 /* ReportContactSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportContactSheet.swift; sourceTree = "<group>"; };
 		1FFED7FE2A3970A800A0B1E8 /* PhotosPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotosPicker.swift; sourceTree = "<group>"; };
 		1FFED8002A39718F00A0B1E8 /* NewPostModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewPostModel.swift; sourceTree = "<group>"; };
+		1FFED8022A39C86F00A0B1E8 /* MacListState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacListState.swift; sourceTree = "<group>"; };
 		1FFF997A29CEE15000ADAE23 /* About.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = About.swift; sourceTree = "<group>"; };
 		1FFF997C29CF4AF100ADAE23 /* ProfilePicFullScreenSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePicFullScreenSheet.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -838,6 +840,7 @@
 			isa = PBXGroup;
 			children = (
 				1F38AFF32A2789C70035641E /* MacListsView.swift */,
+				1FFED8022A39C86F00A0B1E8 /* MacListState.swift */,
 			);
 			path = Mac;
 			sourceTree = "<group>";
@@ -1607,6 +1610,7 @@
 				1F49C80829B8FB73005C960D /* QuoteOrRepostChoiceSheet.swift in Sources */,
 				1F14CC43299D1D7E00131B8D /* NosturStyles.swift in Sources */,
 				1F75211B2986D45D00C43DF0 /* Importer.swift in Sources */,
+				1FFED8032A39C86F00A0B1E8 /* MacListState.swift in Sources */,
 				1F210B0629F853BB00159814 /* ProfileMediaView.swift in Sources */,
 				1FCC2F292A19275200202EFA /* NIP05Verifier.swift in Sources */,
 				1F8B134B297B3551002EB8CF /* NIP19.swift in Sources */,

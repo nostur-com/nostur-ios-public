@@ -422,5 +422,5 @@ final class ExchangeRateModel: ObservableObject {
 
 let IS_IPAD = UIDevice.current.userInterfaceIdiom == .pad
 let IS_CATALYST = ProcessInfo.processInfo.isMacCatalystApp
-let IS_MAC = ProcessInfo.processInfo.isiOSAppOnMac
+//let IS_MAC = ProcessInfo.processInfo.isiOSAppOnMac
 

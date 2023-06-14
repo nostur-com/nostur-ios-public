@@ -22,7 +22,7 @@ struct NosturRootMenu: View {
                     }
             }
             else {
-                if 1 == 2 && IS_MAC {
+                if 1 == 2 && IS_CATALYST {
                     MacListsView()
                         .onOpenURL { url in
                             self.handleUrl(url)
