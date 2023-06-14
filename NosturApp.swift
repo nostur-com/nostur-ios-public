@@ -31,7 +31,7 @@ struct NosturApp: App {
                 SocketPool.shared.connectAll()
                 lvmManager.restoreSubscriptions()
             case .background:
-                if !IS_MAC {
+                if !IS_CATALYST {
                     SocketPool.shared.disconnectAll()
                 }
                 saveState()

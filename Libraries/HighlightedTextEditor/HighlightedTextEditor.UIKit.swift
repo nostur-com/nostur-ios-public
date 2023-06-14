@@ -133,6 +133,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
       
 
         textView.inputAccessoryView = doneToolbar
+        textView.keyboardType = .twitter
         
         updateTextViewModifiers(textView)
         if (shouldBecomeFirstResponder) {
