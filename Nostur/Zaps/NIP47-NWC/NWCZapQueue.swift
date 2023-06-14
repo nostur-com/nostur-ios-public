@@ -2,16 +2,16 @@ import Foundation
 
 // Instant zaps
 // 1. Update UI as if Zap already happened
-// 2. Add Zap to ZapQueue
-// 3. Zap fetches callback from ln pay end point
-// 4. Zap fetches invoice from callback [we include zap request here]
-// 5. Zap triggers sending NWC request in NWCRequestQueue
-// 6. Make sure NWC subscription is active
+// 2. Make sure NWC subscription is active (can be slow, waiting for pong, so do this in the beginning)
+// 3. Add Zap to ZapQueue
+// 4. Zap fetches callback from ln pay end point
+// 5. Zap fetches invoice from callback [we include zap request here]
+// 6. Zap triggers sending NWC request in NWCRequestQueue
 // 7. Send payment request (23194)
 // 8. Wait for payment response (23195) (In Importer)
-// 8a. If ok, remove from queue
-// 8b. If error, show notification on Zaps screen
-// 8c. If time out, show notification on Zaps screen
+// 9a. If ok, remove from queue
+// 9b. If error, show notification on Zaps screen
+// 9c. If time out, show notification on Zaps screen
 
 class NWCZapQueue {
     static let shared = NWCZapQueue()
@@ -27,12 +27,12 @@ class NWCZapQueue {
             DataProvider.shared().bg.perform { [weak self] in
                 guard let self = self else { return }
                 var failedZaps = [Zap]()
-                for zap in self.waitingZaps.filter({ now.timeIntervalSince($0.value.queuedAt) >= 25 }) {
+                for zap in self.waitingZaps.filter({ now.timeIntervalSince($0.value.queuedAt) >= 35 }) {
                     if zap.value.error != nil {
                         failedZaps.append(zap.value)
                     }
                 }
-                self.waitingZaps = self.waitingZaps.filter { now.timeIntervalSince($0.value.queuedAt) < 25 }
+                self.waitingZaps = self.waitingZaps.filter { now.timeIntervalSince($0.value.queuedAt) < 35 }
                 
                 if failedZaps.count > 0, let jsonData = try? self.encoder.encode(failedZaps.map { FailedZap(contactPubkey: $0.contactPubkey, eventId: $0.eventId, error: $0.error!) }) {
                     
