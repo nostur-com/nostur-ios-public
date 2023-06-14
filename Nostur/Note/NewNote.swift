@@ -258,7 +258,8 @@ struct NewNote: View {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button(String(localized:"Preview", comment:"Preview button when creating a new post")) {
                             guard let account = ns.account else { return }
-                            guard var nEvent = vm.nEvent else { return }
+                            var nEvent = vm.nEvent ?? NEvent(content: "")
+                            
                             nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected:selectedMentions)
                             nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
                             nEvent = putHashtagsInTags(nEvent)
@@ -345,18 +346,9 @@ struct NewNote: View {
         }
     }
     
-//    func updateEventWithNewText() {
-//        return
-//        if (vm.nEvent == nil) {
-//            vm.nEvent = NEvent(content: replaceMentionsWithHandles(vm.text, selected:selectedMentions))
-//        } else {
-//            vm.nEvent!.content = replaceMentionsWithHandles(vm.text, selected:selectedMentions)
-//        }
-//    }
-    
     func sendNow() {
         guard ns.account?.privateKey != nil else { ns.readOnlyAccountSheetShown = true; return }
-        guard var nEvent = vm.nEvent else { return }
+        var nEvent = vm.nEvent ?? NEvent(content: "")
         nEvent.createdAt = NTimestamp.init(date: Date())
         if (vm.pastedImages.count > 0) {
             uploading = true
