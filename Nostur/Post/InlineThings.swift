@@ -4,7 +4,7 @@ import CoreData
 import UIKit
 
 // So close to getting the hashtags working. Disabled/not used until completely fixed.
-// Forgot what the issue I ran into when I disabled this code 2 months ago, maybe something with not linking the right hashtag, or hight/scrolling size issue.
+// Forgot what issue I ran into when I disabled this code 2 months ago, maybe something with not linking the right hashtag, or hight/scrolling size issue.
 
 // renderer
 // string -> md links -> string -> hashtags -> NSAttributedString

@@ -1,5 +1,6 @@
 import Foundation
 
+// TODO: Create settings toggle on/off and selection from usd/euro/fiat/etc
 struct KrakenApiResponse: Codable {
     
     //    https://api.kraken.com/0/public/Ticker?pair=XXBTZUSD

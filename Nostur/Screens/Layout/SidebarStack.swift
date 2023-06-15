@@ -1,10 +1,3 @@
-//
-//  SidebarStack.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 31/01/2023.
-//
-
 import SwiftUI
 
 final class SideBarModel: ObservableObject {
@@ -16,11 +9,9 @@ struct SideBarStack<SidebarContent: View, Content: View>: View {
     let sidebarContent: SidebarContent
     let mainContent: Content
     let sidebarWidth: CGFloat
-//     
      
     @EnvironmentObject var sm:SideBarModel
 
-//    @Binding var showSidebar: Bool
     @State var sidebarOffsetX = -310.0
     @State var mainContentOffsetX = 0.0
     

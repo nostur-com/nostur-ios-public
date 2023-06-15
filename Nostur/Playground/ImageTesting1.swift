@@ -10,8 +10,7 @@ var TTToptions = {
 }()
 
 struct ImageTesting1: View {
-//    let testUrl = "https://nostur.com/nostur.png"
-    let testUrl = "https://tonygiorgio.com/content/images/2023/02/tony-giorgio-1.jpeg"
+    let testUrl = "https://nostur.com/nostur.png"
     @State var image:Image? = nil
     
 //    var options = ImageRequest.ThumbnailOptions(size: CGSize(width: 50, height: 50), contentMode: .aspectFill)

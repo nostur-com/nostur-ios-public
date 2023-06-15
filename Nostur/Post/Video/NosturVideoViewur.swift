@@ -1,10 +1,3 @@
-//
-//  UIV.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 07/06/2023.
-//
-
 import SwiftUI
 import NukeUI
 import Nuke

@@ -1,10 +1,3 @@
-//
-//  MacListState.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 14/06/2023.
-//
-
 import Foundation
 import SwiftUI
 

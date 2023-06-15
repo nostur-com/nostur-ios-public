@@ -1,6 +1,6 @@
 import Foundation
 
-func sendNotification(_ name:Notification.Name, _ object: Any? = nil) {
+func sendNotification(_ name: Notification.Name, _ object: Any? = nil) {
     NotificationCenter.default.post(Notification(name: name, object: object))
 }
 func receiveNotification(_ name: Notification.Name) -> NotificationCenter.Publisher {

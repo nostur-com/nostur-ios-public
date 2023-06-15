@@ -71,73 +71,66 @@ struct FullImageViewer: View {
         
         GeometryReader { geo in
             ZStack {
-                VStack {
-                    if ([".mp4",".mov"].contains(fullImageURL.absoluteString.suffix(4))) {
-                        VideoPlayerViewer(videoURL: fullImageURL, width: geo.size.width, height: geo.size.height)
+                LazyImage(request: ImageRequest(url: fullImageURL)) { state in
+                    if state.error != nil {
+                        Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
+                            .centered()
+                            .background(Color("LightGray").opacity(0.2))
+                            .onAppear {
+                                print("Failed to load image: \(state.error?.localizedDescription ?? "")")
+                            }
+                    }
+                    else if let container = state.imageContainer, container.type ==  .gif, let data = container.data {
+                        GIFImage(data: data)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: geo.size.width, height: geo.size.height)
+                            .scaleEffect(scale)
+                            .offset(position)
+                            .gesture(magnifyAndDragGesture)
+                            .onTapGesture {
+                                withAnimation {
+                                    scale = 1.0
+                                }
+                            }
+                            .onAppear {
+                                sharableGif = data
+                            }
+                    }
+                    else if let image = state.image {
+                        image
+                            .resizable()
+                            .resizable()
+                            .scaledToFit()
+                            .scaleEffect(scale)
+                            .offset(position)
+                            .gesture(magnifyAndDragGesture)
+                            .onTapGesture {
+                                withAnimation {
+                                    scale = 1.0
+                                }
+                            }
+                            .onAppear {
+                                if let image = state.imageContainer?.image {
+                                    sharableImage = image
+                                }
+                            }
+                    }
+                    else if state.isLoading { // does this conflict with showing preview images??
+                        HStack(spacing: 5) {
+                            ImageProgressView(progress: state.progress)
+                            Image(systemName: "multiply.circle.fill")
+                                .padding(10)
+                        }
+                        .centered()
+                        .background(Color("LightGray"))
                     }
                     else {
-                        LazyImage(request: ImageRequest(url: fullImageURL)) { state in
-                            if state.error != nil {
-                                Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
-                                    .centered()
-                                    .background(Color("LightGray").opacity(0.2))
-                                    .onAppear {
-                                        print("Failed to load image: \(state.error?.localizedDescription ?? "")")
-                                    }
-                            }
-                            else if let container = state.imageContainer, container.type ==  .gif, let data = container.data {
-                                GIFImage(data: data)
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
-                                    .frame(width: geo.size.width, height: geo.size.height)
-                                    .scaleEffect(scale)
-                                    .offset(position)
-                                    .gesture(magnifyAndDragGesture)
-                                    .onTapGesture {
-                                        withAnimation {
-                                            scale = 1.0
-                                        }
-                                    }
-                                    .onAppear {
-                                        sharableGif = data
-                                    }
-                            }
-                            else if let image = state.image {
-                                image
-                                    .resizable()
-                                    .resizable()
-                                    .scaledToFit()
-                                    .scaleEffect(scale)
-                                    .offset(position)
-                                    .gesture(magnifyAndDragGesture)
-                                    .onTapGesture {
-                                        withAnimation {
-                                            scale = 1.0
-                                        }
-                                    }
-                                    .onAppear {
-                                        if let image = state.imageContainer?.image {
-                                            sharableImage = image
-                                        }
-                                    }
-                            }
-                            else if state.isLoading { // does this conflict with showing preview images??
-                                HStack(spacing: 5) {
-                                    ImageProgressView(progress: state.progress)
-                                    Image(systemName: "multiply.circle.fill")
-                                        .padding(10)
-                                }
-                                .centered()
-                                .background(Color("LightGray"))
-                            }
-                            else {
-                                Color("LightGray").opacity(0.2)
-                            }
-                        }
-                        .pipeline(ImageProcessing.shared.content)
-                        .priority(.high)
+                        Color("LightGray").opacity(0.2)
                     }
                 }
+                .pipeline(ImageProcessing.shared.content)
+                .priority(.high)
                 VStack {
                     HStack {
                         Spacer()

@@ -1,10 +1,3 @@
-//
-//  SnapshotTest.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 27/05/2023.
-//
-
 import SwiftUI
 import UIKit
 import Combine

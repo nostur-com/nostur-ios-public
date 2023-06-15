@@ -1,7 +1,7 @@
 import SwiftUI
 
 // TODO: For performance replace all Xxx(nrPosts: nrPost) with specific attributes
-// TODO: For performance, create seperate Views per state dependency
+// TODO: For performance, create separate Views per state dependency
 // Note 1 default (not full-width)
 struct Kind1Default: View {
     @EnvironmentObject var dim:DIMENSIONS

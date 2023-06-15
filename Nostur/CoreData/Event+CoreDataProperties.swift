@@ -1085,7 +1085,6 @@ extension Event {
                     waitingEvent.firstQuote = savedEvent
                     waitingEvent.firstQuoteUpdated.send(savedEvent)
                 }
-                EventRelationsQueue.shared.removeAwaitingEvent(waitingEvent)
             }
         }
         

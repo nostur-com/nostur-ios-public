@@ -298,7 +298,6 @@ extension Contact : Identifiable {
                     waitingEvent.contactsUpdated.send(waitingEvent.contacts_)
                 }
             }
-            EventRelationsQueue.shared.removeAwaitingEvent(waitingEvent)
         }
         
         let awaitingZaps = ZapperPubkeyVerificationQueue.shared.getQueuedZaps()

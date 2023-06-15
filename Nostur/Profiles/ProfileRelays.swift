@@ -1,9 +1,3 @@
-////
-////  ProfileRelays.swift
-////  Nostur
-////
-////  Created by Fabian Lachman on 06/04/2023.
-////
 //
 //import SwiftUI
 //import SwiftyJSON
