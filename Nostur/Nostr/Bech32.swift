@@ -1,8 +1,7 @@
 import Foundation
 import Algorithms
 
-// This Bech32 class is a mess of several Bech32 implementations mixed together
-// Need to clean up one day.
+// Need to clean up this mix of Bech32 implementations.
 public class Bech32 {
     private static let alphabet = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
     
@@ -22,52 +21,7 @@ public class Bech32 {
          -1, 29, -1, 24, 13, 25,  9,  8, 23, -1, 18, 22, 31, 27, 19, -1,
          1,  0,  3, 16, 11, 28, 12, 14,  6,  4,  2, -1, -1, -1, -1, -1
     ]
-    
-    /// Find the polynomial with value coefficients mod the generator as 30-bit.
-    /// This one is CPU intensive
-    //    private func ORIGINALpolymod(_ values: Data) -> UInt32 {
-    //        var chk: UInt32 = 1
-    //        for v in values {
-    //            let top = (chk >> 25)
-    //            chk = (chk & 0x1ffffff) << 5 ^ UInt32(v)
-    //            for i: UInt8 in 0..<5 {
-    //                chk ^= ((top >> i) & 1) == 0 ? 0 : gen[Int(i)]
-    //            }
-    //        }
-    //        return chk
-    //    }
-    
-    // Optimized by ChatGTP 3.5, seems much better
-    //    private func polymodGTP35(_ values: Data) -> UInt32 {
-    //        let chk: UInt32 = 1
-    //        return values.reduce(into: chk) { chk, v in
-    //            let top = (chk >> 25)
-    //            let newChk = (chk & 0x1ffffff) << 5 ^ UInt32(v)
-    //            chk = (0..<5).reduce(newChk) { chk, i in
-    //                chk ^ ((top >> i) & 1) == 0 ? 0 : gen[Int(i)]
-    //            }
-    //        }
-    //    }
-    
-    // By GPT-4, asked again and gave input from its own 3.5 output
-    //    private func polymodBROKEN(_ values: Data) -> UInt32 {
-    //        let gen: [UInt32] = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3]
-    //        let chk: UInt32 = 1
-    //
-    //        var precomputedTop: [UInt32] = Array(repeating: 0, count: 32)
-    //        for i in 0..<32 {
-    //            // swiftlint:disable:next identifier_name
-    //            precomputedTop[i] = gen[0] &* (i & 1) ^ gen[1] &* (i >> 1 & 1) ^ gen[2] &* (i >> 2 & 1) ^ gen[3] &* (i >> 3 & 1) ^ gen[4] &* (i >> 4 & 1)
-    //        }
-    //
-    //        return values.reduce(into: chk) { chk, v in
-    //            let top = (chk >> 25)
-    //            let newChk = (chk & 0x1ffffff) << 5 ^ UInt32(v)
-    //            chk = newChk ^ precomputedTop[Int(top)]
-    //        }
-    //    }
-    
-    // Asked GPT4 to fix it:
+
     private func polymod(_ values: Data) -> UInt32 {
         //        let gen: [UInt32] = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3]
         let chk: UInt32 = 1
@@ -88,76 +42,6 @@ public class Bech32 {
             let newChk = (chk & 0x1ffffff) << 5 ^ UInt32(v)
             chk = newChk ^ precomputedTop[Int(top)]
         }
-    }
-    
-    
-    
-    // Suggestion by ChatGPT 4, should try
-    //    private func polymodDOESNTWORK(_ values: Data) -> UInt32 {
-    ////        let gen: [UInt32] = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3]
-    //        var chk: UInt32 = 1
-    //        var precomputedTop: [UInt32] = Array(repeating: 0, count: 32)
-    //
-    //        for i in 0..<32 {
-    //            precomputedTop[i] = gen[0] &* (i & 1) ^ gen[1] &* (i >> 1 & 1) ^ gen[2] &* (i >> 2 & 1) ^ gen[3] &* (i >> 3 & 1) ^ gen[4] &* (i >> 4 & 1)
-    //        }
-    //
-    //        for v in values {
-    //            let top = (chk >> 25)
-    //            chk = (chk & 0x1ffffff) << 5 ^ UInt32(v)
-    //            chk ^= precomputedTop[Int(top)]
-    //        }
-    //
-    //        return chk
-    //    }
-    
-    
-    private func TryAlsooopolymod(_ values: Data) -> UInt32 {
-        var chk: UInt32 = 1
-        _ = values.map { v in
-            let top = (chk >> 25)
-            chk = (chk & 0x1ffffff) << 5 ^ UInt32(v)
-            for i: UInt8 in 0..<5 {
-                chk ^= ((top >> i) & 1) == 0 ? 0 : gen[Int(i)]
-            }
-        }
-        return chk
-    }
-    
-    private func TryAlsopolymod(_ values: Data) -> UInt32 {
-        var chk: UInt32 = 1
-        let count = values.count
-        var index = 0
-        while index < count {
-            let top = (chk >> 25)
-            chk = (chk & 0x1ffffff) << 5 ^ UInt32(values[index])
-            for i: UInt8 in 0..<4 {
-                index += 1
-                chk ^= ((top >> i) & 1) == 0 ? 0 : gen[Int(i)]
-                let v = index < count ? values[index] : 0
-                chk ^= ((top >> 4) & 1) == 0 ? 0 : gen[4 + Int(i)]
-                chk ^= ((top >> (5 + i)) & 1) == 0 ? 0 : gen[8 + Int(i)]
-                chk ^= ((top >> 9) & 1) == 0 ? 0 : gen[12]
-                chk ^= UInt32(v) << 8
-            }
-            index += 1
-            chk ^= ((top >> 4) & 1) == 0 ? 0 : gen[4]
-        }
-        return chk
-    }
-    
-    private static func expandHumanReadablePart(_ humanReadablePart: String) -> Data {
-        guard let stringBytes = humanReadablePart.data(using: .utf8) else { return Data() }
-        var data = Data()
-        
-        for character in stringBytes {
-            data.append(UInt8(UInt32(character) >> 5))
-        }
-        data.append(0)
-        for character in stringBytes {
-            data.append(UInt8(UInt32(character) & 31))
-        }
-        return data
     }
     
     /// Expand a HRP for use in checksum computation.
@@ -252,8 +136,6 @@ public class Bech32 {
         return (humanReadablePart, Data(data[..<(data.count - 6)]))
     }
     
-    
-    /// Decode Bech32 string
     public func decode(_ str: String, skipLimit:Bool = false) throws -> (hrp: String, checksum: Data) {
         guard let strBytes = str.data(using: .utf8) else {
             throw DecodingError.nonUTF8String
@@ -306,31 +188,7 @@ public class Bech32 {
         }
         return (hrp, Data(values[..<(vSize-6)]))
     }
-    
-    public func convertBits(from: Int, to: Int, pad: Bool, idata: Data) throws -> Data {
-        var acc: Int = 0
-        var bits: Int = 0
-        let maxv: Int = (1 << to) - 1
-        let maxAcc: Int = (1 << (from + to - 1)) - 1
-        var odata = Data()
-        for ibyte in idata {
-            acc = ((acc << from) | Int(ibyte)) & maxAcc
-            bits += from
-            while bits >= to {
-                bits -= to
-                odata.append(UInt8((acc >> bits) & maxv))
-            }
-        }
-        if pad {
-            if bits != 0 {
-                odata.append(UInt8((acc << (to - bits)) & maxv))
-            }
-        } else if (bits >= from || ((acc << (to - bits)) & maxv) != 0) {
-            throw DecodingError.bitsConversionFailed
-        }
-        return odata
-    }
-    
+
     static func decode(lnurl: String) throws -> URL {
         let bech32 = Bech32()
         guard let (hrp, decodedData) = bech32.decode(lnurl, limit: false) else {
@@ -361,18 +219,36 @@ public class Bech32 {
         guard let (hrp, decodedData) = try? bech32.decode(other, skipLimit: true) else {
             throw "LNURLAuthError.invalidLNURL"
         }
-        
-        
+
         guard let data = decodedData.convertBits(fromBits: 5, toBits: 8, pad: false) else {
             throw "LNURLAuthError.invalidLNURL"
         }
         
         return (hrp, data)
-        
-        //        guard let string = String(data: data, encoding: .utf8) else {
-        //            throw "LNURLAuthError.invalidLNURL"
-        //        }
-        
+    }
+    
+    public func convertBits(from: Int, to: Int, pad: Bool, idata: Data) throws -> Data {
+        var acc: Int = 0
+        var bits: Int = 0
+        let maxv: Int = (1 << to) - 1
+        let maxAcc: Int = (1 << (from + to - 1)) - 1
+        var odata = Data()
+        for ibyte in idata {
+            acc = ((acc << from) | Int(ibyte)) & maxAcc
+            bits += from
+            while bits >= to {
+                bits -= to
+                odata.append(UInt8((acc >> bits) & maxv))
+            }
+        }
+        if pad {
+            if bits != 0 {
+                odata.append(UInt8((acc << (to - bits)) & maxv))
+            }
+        } else if (bits >= from || ((acc << (to - bits)) & maxv) != 0) {
+            throw DecodingError.bitsConversionFailed
+        }
+        return odata
     }
 }
 
@@ -455,9 +331,6 @@ extension Data {
 
 
 public extension String {
-    //    func sha256() -> String {
-    //        return data(using: .utf8)?.sha256.hexadecimalString ?? ""
-    //    }
     
     func indexDistance(of character: Character) -> Int? {
         guard let index = firstIndex(of: character) else { return nil }

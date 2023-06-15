@@ -1,11 +1,3 @@
-//
-//  Event+CoreDataClass.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 15/01/2023.
-//
-//
-
 import Foundation
 import CoreData
 import UIKit
@@ -24,9 +16,7 @@ public class Event: NSManagedObject, Identifiable {
     var contactsUpdated = PassthroughSubject<[Contact], Never>()
     var relaysUpdated = PassthroughSubject<String, Never>()
     var zapStateChanged = PassthroughSubject<ZapState?, Never>()
-    
-    //    private var eventsQueue = DispatchQueue(label: "com.nostur.events")
-    
+        
     enum ZapState:String {
         case initiated = "INITIATED"
         case nwcConfirmed = "NWC_CONFIRMED"
@@ -41,19 +31,6 @@ public class Event: NSManagedObject, Identifiable {
         }
     }
     var parentEvents: [Event] = []
-    
-    //    var parentEvents: [Event] {
-    //        get {
-    //            return eventsQueue.sync {
-    //                _parentEvents
-    //            }
-    //        }
-    //        set {
-    //            eventsQueue.async(flags: .barrier) {
-    //                self._parentEvents = newValue
-    //            }
-    //        }
-    //    }
     
     var isPreview:Bool = false
     var previewImages:[UIImage] = []

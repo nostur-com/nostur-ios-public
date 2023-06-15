@@ -1,14 +1,5 @@
-//
-//  Account+CoreDataProperties.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 13/01/2023.
-//
-//
-
 import Foundation
 import CoreData
-
 
 extension Account {
 
@@ -48,21 +39,11 @@ extension Account {
     
     static func fetchAccount(publicKey:String, context:NSManagedObjectContext) throws -> Account? {
         let request = NSFetchRequest<Account>(entityName: "Account")
-//        request.entity = Account.entity() <-- WTF MET DIT WERKT HET NIET!
         request.predicate = NSPredicate(format: "publicKey == %@", publicKey)
         request.fetchLimit = 1
         request.fetchBatchSize = 1
         return try context.fetch(request).first
     }
-    
-//    static func fetchAccount(publicKey:String, context:NSManagedObjectContext) throws -> Account? {
-//        let request = NSFetchRequest<Account>(entityName: "Account")
-//        request.entity = Account.entity()
-//        request.predicate = NSPredicate(format: "publicKey == %@", publicKey)
-//        request.fetchLimit = 1
-//        request.fetchBatchSize = 1
-//        return try context.fetch(request).first
-//    }
 }
 
 // MARK: Generated accessors for follows
@@ -217,34 +198,6 @@ extension Account : Identifiable {
             }
         }
     }
-    
-//    // For when adding read only accounts, prefill with kind.0 info from relays (NEW EVENT FROM IMPORTER)
-//    static func preFillReadOnlyAccountFollowing(event:NEvent, context:NSManagedObjectContext, forceOverwrite:Bool = false) {
-//        
-//        let fr = Account.fetchRequest()
-//        fr.predicate = NSPredicate(format: "publicKey == %@", event.publicKey)
-//        if let account = try? context.fetch(fr).first {
-//            
-//            let contacts = Contact.ensureContactsCreated(event: event, context: context, limit: 999)
-//
-//            if (forceOverwrite || account.privateKey == nil && contacts.count > 0) {
-//                
-//                // Also prefetch all metadata
-//                let pubkeys = contacts.map { $0.pubkey }
-//                SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: RequestMessage.getUserMetadata(pubkeys: pubkeys)))
-////                account.objectWillChange.send()
-////                NosturState.shared.objectWillChange.send()
-//                for contact in contacts {
-//                    account.addToFollows(contact)
-//                }
-////                print(account.follows?.count ?? 0)
-//                let followingPublicKeys = account.followingPublicKeys
-//                DispatchQueue.main.async {
-//                    sendNotification(.followersChanged, followingPublicKeys)
-//                }
-//            }
-//        }
-//    }
     
     var mutedRootIds_:[String] {
         get {

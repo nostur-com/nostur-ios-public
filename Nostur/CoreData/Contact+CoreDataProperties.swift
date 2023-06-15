@@ -1,11 +1,3 @@
-//
-//  Contact+CoreDataProperties.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 14/01/2023.
-//
-//
-
 import Foundation
 import CoreData
 
@@ -13,24 +5,12 @@ typealias ContactPubkey = String
 
 extension Contact {
 
-//    @nonobjc public class func fetchRequest() -> NSFetchRequest<Contact> {
-//        let request: NSFetchRequest<Contact> = Contact.fetchRequest()
-//        let sortDescriptor = NSSortDescriptor(key: "updated_at", ascending: false)
-//        return request
-//        return NSFetchRequest<Contact>(entityName: "Contact")
-//    }
     @nonobjc public class func fetchRequest() -> NSFetchRequest<Contact> {
         let fr = NSFetchRequest<Contact>(entityName: "Contact")
         fr.sortDescriptors = []
         return fr
     }
     
-//    @nonobjc public class func fetchRequest2() -> NSFetchRequest<Contact> { // SOMEHOW THIS FIXES PREVIEW CANVAS BUG JEEZ
-//        let fr = NSFetchRequest<Contact>(entityName: "Contact")
-//        fr.sortDescriptors = []
-//        return fr
-//    }
-
     @NSManaged public var about: String?
     @NSManaged public var lud16: String?
     @NSManaged public var lud06: String?
@@ -137,21 +117,6 @@ extension Contact : Identifiable {
         return nameOrNil ?? displayNameOrNil ?? npub
     }
     
-//    var username:String {
-//        guard let username = name else { return authorKey }
-//        if (SettingsStore.shared.hideEmojisInNames) {
-//            return username.unicodeScalars.filter {
-//
-//                !($0.value >= 0x13000 && $0.value <= 0x1342E) && // EGYPTIAN HIEROGLYPHS
-//                !$0.properties.isEmoji  // EMOJIS
-//
-//            }.reduce("") { $0 + String($1) }
-//        }
-//        else {
-//            return username
-//        }
-//    }
-    
     // Display name, with fallbacks: (User)name, pubkey (prefix), or "?:?"
     var authorName: String { anyName }
     var anyName: String {
@@ -181,24 +146,6 @@ extension Contact : Identifiable {
         guard !name.isEmpty else { return nil }
         return String(name)
     }
-    
-//    var displayName: String? {
-//        guard let displayName = display_name else { return nil }
-//
-//        if (SettingsStore.shared.hideEmojisInNames) {
-//            return (displayName.unicodeScalars.filter {
-//
-//                !($0.value >= 0x13000 && $0.value <= 0x1342E) && // EGYPTIAN HIEROGLYPHS
-//                !$0.properties.isEmoji  // EMOJIS
-//
-//            }.reduce("") { $0 + String($1) })
-//        }
-//        else {
-//            return displayName
-//        }
-//    }
-    
-
     
     var nip05veried:Bool {
         get {
@@ -259,9 +206,6 @@ extension Contact : Identifiable {
     }
 
     static func saveOrUpdateContact(event:NEvent) {
-//        if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
-//            print("☠️☠️☠️☠️ saveOrUpdateContact")
-//        }
         let context = DataProvider.shared().bg
                 
         context.perform {
@@ -405,53 +349,11 @@ extension Contact : Identifiable {
         return await context.perform {
             let r = NSFetchRequest<Contact>(entityName: "Contact")
             r.entity = Contact.entity()
-    //        r.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)]
             let allContacts = try! r.execute()
-    //        print(allContacts)
+
             return allContacts.map { $0.pubkey }
         }
     }
-//    
-//    static func handleContactListEvent(event:NEvent, context:NSManagedObjectContext) async -> ([String], [String]) {
-//        // DONT NEED THIS ENTIRE FUNC ACTUALLY
-//        print("how to handle?? \(event.eventJson())")
-//        
-//        let newPubkeys = await context.perform {
-//            
-//            // check existing to prevent duplicates (because iCloud database doesn't support unique id contraints)
-//            let r = NSFetchRequest<Contact>()
-//            r.entity = Contact.entity()
-//            r.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)]
-//            let allContacts = try! r.execute()
-//            print(allContacts)
-//            let allContactPubkeys = allContacts.map { $0.pubkey }
-//            var newPubkeys = [String]()
-//            var eventPubkeys = [String]()
-//            
-//            // create contacts from "p" tags
-//            for tag in event.tags {
-//                if tag.id == "p" {
-//                    let pubkey = tag.otherInformation[0]
-//                    eventPubkeys.append(pubkey)
-//            
-//                    if allContactPubkeys.contains(where: { $0 == pubkey }) {
-//                        print("Already have \(pubkey) in contacts. Skipped")
-//                        continue
-//                    }
-//                    print("🩸🩸🩸 new contact tag.id \(tag.id), tag.otherinf \(tag.otherInformation[0]), pubkey \(pubkey)")
-//                    let newContact = Contact(context: context)
-//                    newContact.pubkey = pubkey
-//                    newContact.updated_at = 0
-//                    newPubkeys.append(pubkey)
-//                    try! context.save()
-//                }
-//            }
-//            
-//            // return all new pubkeys
-//            return (newPubkeys, eventPubkeys)
-//        }
-//        return newPubkeys
-//    }
     
     static func contactBy(pubkey:String, context:NSManagedObjectContext) -> Contact? {
         

@@ -22,7 +22,7 @@
 		1F05FE7A2A1DFCDA0005A254 /* InstantFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F05FE792A1DFCDA0005A254 /* InstantFeed.swift */; };
 		1F065A9929A37A47003421D3 /* NoteZaps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F065A9829A37A47003421D3 /* NoteZaps.swift */; };
 		1F065A9B29A3E67F003421D3 /* NotificationsReactions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F065A9A29A3E67F003421D3 /* NotificationsReactions.swift */; };
-		1F065A9D29A3E9E0003421D3 /* DynamicFetchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F065A9C29A3E9E0003421D3 /* DynamicFetchView.swift */; };
+		1F065A9D29A3E9E0003421D3 /* FetchThings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F065A9C29A3E9E0003421D3 /* FetchThings.swift */; };
 		1F0A3C252A0C113700B30D7E /* Kind1063.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0A3C242A0C113700B30D7E /* Kind1063.swift */; };
 		1F0F35662A31A13D00AA9C41 /* NosturVideoPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0F35652A31A13D00AA9C41 /* NosturVideoPlayerView.swift */; };
 		1F0F35692A31C76900AA9C41 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1F0F35672A31C76900AA9C41 /* InfoPlist.strings */; };
@@ -97,9 +97,9 @@
 		1F558B3C29FE4DA0002938A3 /* EventRelationsQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F558B3B29FE4DA0002938A3 /* EventRelationsQueue.swift */; };
 		1F57C54B299285B300DFE063 /* Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F57C54A299285B300DFE063 /* Search.swift */; };
 		1F5BA91429A8C27200002652 /* NewNoteButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5BA91329A8C27200002652 /* NewNoteButton.swift */; };
-		1F5BBE40297BC7E600F4AF03 /* EventsError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5BBE3F297BC7E600F4AF03 /* EventsError.swift */; };
 		1F5F5A5C29838F1D00DED8F4 /* DataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5F5A5B29838F1D00DED8F4 /* DataProvider.swift */; };
 		1F62F4C62A2C572700783892 /* KrakenApiResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F62F4C52A2C572700783892 /* KrakenApiResponse.swift */; };
+		1F63191B2A3B35EA004F6B0E /* GossipTesting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F63191A2A3B35EA004F6B0E /* GossipTesting.swift */; };
 		1F65002C29A759FB00B79AEF /* ProfileRowMissing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F65002B29A759FB00B79AEF /* ProfileRowMissing.swift */; };
 		1F65121B29C75AC9009FD4AE /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F65121A29C75AC9009FD4AE /* ProfileView.swift */; };
 		1F685B522A0D18D2009EEC9B /* NRContact.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F685B512A0D18D2009EEC9B /* NRContact.swift */; };
@@ -364,7 +364,7 @@
 		1F05FE792A1DFCDA0005A254 /* InstantFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstantFeed.swift; sourceTree = "<group>"; };
 		1F065A9829A37A47003421D3 /* NoteZaps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteZaps.swift; sourceTree = "<group>"; };
 		1F065A9A29A3E67F003421D3 /* NotificationsReactions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsReactions.swift; sourceTree = "<group>"; };
-		1F065A9C29A3E9E0003421D3 /* DynamicFetchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicFetchView.swift; sourceTree = "<group>"; };
+		1F065A9C29A3E9E0003421D3 /* FetchThings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchThings.swift; sourceTree = "<group>"; };
 		1F0A3C242A0C113700B30D7E /* Kind1063.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Kind1063.swift; sourceTree = "<group>"; };
 		1F0F35652A31A13D00AA9C41 /* NosturVideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturVideoPlayerView.swift; sourceTree = "<group>"; };
 		1F0F35682A31C76900AA9C41 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -439,9 +439,9 @@
 		1F558B3B29FE4DA0002938A3 /* EventRelationsQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventRelationsQueue.swift; sourceTree = "<group>"; };
 		1F57C54A299285B300DFE063 /* Search.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Search.swift; sourceTree = "<group>"; };
 		1F5BA91329A8C27200002652 /* NewNoteButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewNoteButton.swift; sourceTree = "<group>"; };
-		1F5BBE3F297BC7E600F4AF03 /* EventsError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsError.swift; sourceTree = "<group>"; };
 		1F5F5A5B29838F1D00DED8F4 /* DataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataProvider.swift; sourceTree = "<group>"; };
 		1F62F4C52A2C572700783892 /* KrakenApiResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KrakenApiResponse.swift; sourceTree = "<group>"; };
+		1F63191A2A3B35EA004F6B0E /* GossipTesting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GossipTesting.swift; sourceTree = "<group>"; };
 		1F65002B29A759FB00B79AEF /* ProfileRowMissing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileRowMissing.swift; sourceTree = "<group>"; };
 		1F65121A29C75AC9009FD4AE /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		1F685B512A0D18D2009EEC9B /* NRContact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRContact.swift; sourceTree = "<group>"; };
@@ -774,11 +774,9 @@
 				1FC38B9B2972DD5A004769F8 /* Contact+CoreDataClass.swift */,
 				1FC38B9C2972DD5A004769F8 /* Contact+CoreDataProperties.swift */,
 				1F5F5A5B29838F1D00DED8F4 /* DataProvider.swift */,
-				1F065A9C29A3E9E0003421D3 /* DynamicFetchView.swift */,
 				1F4AFC4529733E2400CC1F90 /* Event+CoreDataClass.swift */,
 				1F4AFC4629733E2400CC1F90 /* Event+CoreDataProperties.swift */,
 				1F558B3B29FE4DA0002938A3 /* EventRelationsQueue.swift */,
-				1F5BBE3F297BC7E600F4AF03 /* EventsError.swift */,
 				1FBDE8BE29B74EE800F4DFD0 /* ListState+CoreDataClass.swift */,
 				1FBDE8BF29B74EE800F4DFD0 /* ListState+CoreDataProperties.swift */,
 				1F810B3129E670AB006B1614 /* MutedWords+CoreDataClass.swift */,
@@ -948,6 +946,8 @@
 				1F37571429672AB6007D210A /* DummyData */,
 				1F8B1348297B34D7002EB8CF /* Bech32.swift */,
 				1F2F54ED2A02904E00B6D7E4 /* FastLoader.swift */,
+				1F065A9C29A3E9E0003421D3 /* FetchThings.swift */,
+				1F63191A2A3B35EA004F6B0E /* GossipTesting.swift */,
 				1F75211A2986D45D00C43DF0 /* Importer.swift */,
 				1FC82F3129AE0C0700B81CE5 /* Mentions.swift */,
 				1F7521182986D44E00C43DF0 /* MessageParser.swift */,
@@ -1481,7 +1481,6 @@
 				1F45C7EA29EF930F00F58772 /* ImageUploading.swift in Sources */,
 				1FD78EF52A0CBE18003E7B3E /* KindResolver.swift in Sources */,
 				1FE69EB62A2CE95000FE73B4 /* ZapNotificationsView.swift in Sources */,
-				1F5BBE40297BC7E600F4AF03 /* EventsError.swift in Sources */,
 				1F3E135929C8B11F00D076EA /* Event+PrivateNotes.swift in Sources */,
 				1F8B1360297B36DB002EB8CF /* String+HexBytes.swift in Sources */,
 				1FB4FCD629B87D3D0034D03A /* ImageProcessing.swift in Sources */,
@@ -1528,6 +1527,7 @@
 				1F91D8FB2A18E31600C419A3 /* ZapperPubkeyVerificationQueue.swift in Sources */,
 				1FC78F7629CB4A920009C1C7 /* ChatInputField.swift in Sources */,
 				1F9499CB299F715800F628B4 /* TryGuestAccountSheet.swift in Sources */,
+				1F63191B2A3B35EA004F6B0E /* GossipTesting.swift in Sources */,
 				1F927C6F297DB34A0024F665 /* ThreadWarning.swift in Sources */,
 				1FC78F6929CA28940009C1C7 /* NKeys.swift in Sources */,
 				1F84189D2A2BDE45001EFE7A /* NWCRequestQueue.swift in Sources */,
@@ -1548,7 +1548,7 @@
 				1FB130B129C0DB07004AC98D /* NoteRow.swift in Sources */,
 				1F00337729BF0BF0007CE040 /* PrivateNotesView.swift in Sources */,
 				1F33098C298AEE5D00D4D8CF /* View+withNavigationDestinations.swift in Sources */,
-				1F065A9D29A3E9E0003421D3 /* DynamicFetchView.swift in Sources */,
+				1F065A9D29A3E9E0003421D3 /* FetchThings.swift in Sources */,
 				1F4C1C282A07AB090010573F /* NEventView.swift in Sources */,
 				1F65002C29A759FB00B79AEF /* ProfileRowMissing.swift in Sources */,
 				1F33096529895D1600D4D8CF /* SidebarStack.swift in Sources */,

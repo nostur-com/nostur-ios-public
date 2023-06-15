@@ -1,11 +1,3 @@
-//
-//  Relay+CoreDataClass.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 18/01/2023.
-//
-//
-
 import Foundation
 import CoreData
 

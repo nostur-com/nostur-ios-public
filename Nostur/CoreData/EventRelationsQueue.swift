@@ -1,10 +1,3 @@
-//
-//  EventRelationsQueue.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 30/04/2023.
-//
-
 // When posts have related events that need to be fetched
 // we queue them here so we don't have to query the entire
 // database of 50000+ events
@@ -95,11 +88,6 @@ class EventRelationsQueue {
             }
         }
     }
-
-    public func removeAwaitingEvent(_ event:Event) {
-        // Don't remove immediatly, give a few extra seconds, maybe needs to fetch more than 1 relation
-//        self.delayedRemove(event, after: 5)
-    }
     
     /// Returns events that are waiting for relations to be updated, like .contact, .contacts, .replyTo etc
     /// - Returns: Events, these are background context (.bg)
@@ -137,20 +125,7 @@ class EventRelationsQueue {
             }
         }
     }
-    
-//    private func delayedContactRemove(_ contact:Contact, after:Int = 15) {
-//        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(after)) {
-//            self.ctx.perform {
-//                self.waitingContacts.remove(contact)
-//            }
-//        }
-//    }
-    
-    public func removeAwaitingContact(_ contact:Contact) {
-        // Don't remove immediatly, give a few extra seconds, maybe needs to fetch more than 1 relation
-//        self.delayedContactRemove(contact, after: 10)
-    }
-    
+
     /// Returns contacts that are waiting for info to be updated
     /// - Returns: Contacts, these are background context (.bg)
     public func getAwaitingBgContacts() -> [Contact] {

@@ -1,39 +1,4 @@
-//
-//  DynamicFetchView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 21/02/2023.
-//
-
-import SwiftUI
-import CoreData
-
-struct DynamicFetchView<T: NSManagedObject, Content: View>: View {
-    let fetchRequest: FetchRequest<T>
-    let content: (FetchedResults<T>) -> Content
-
-    var body: some View {
-        self.content(fetchRequest.wrappedValue)
-    }
-
-    init(predicate: NSPredicate?, fetchLimit:Int = 5, sortDescriptors: [NSSortDescriptor], @ViewBuilder content: @escaping (FetchedResults<T>) -> Content) {
-//        guard let entityName = T.entity().name else { print("Unknown entity"); fatalError("Unknown entity") }
-
-        let request = T.fetchRequest() as! NSFetchRequest<T>
-        request.fetchLimit = fetchLimit
-        request.sortDescriptors = sortDescriptors
-        request.predicate = predicate
-
-        self.init(fetchRequest: request, content: content)
-    }
-
-    init(fetchRequest: NSFetchRequest<T>, @ViewBuilder content: @escaping (FetchedResults<T>) -> Content) {
-        self.fetchRequest = FetchRequest<T>(fetchRequest: fetchRequest)
-        self.content = content
-    }
-}
-
-// TEMP ALWAYS FUNCTIONS
+import Foundation
 
 func fetchProfiles(pubkeys:Set<String>, subscriptionId:String? = nil) {
     let since = NosturState.shared.lastProfileReceivedAt ?? nil

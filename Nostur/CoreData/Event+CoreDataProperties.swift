@@ -1,21 +1,7 @@
-//
-//  Even+CoreDataProperties.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 15/01/2023.
-//
-//
-
 import Foundation
 import CoreData
 
 extension Event {
-    
-    //    @nonobjc public class func fetchRequest() -> NSFetchRequest<Event> {
-    //        let fr = NSFetchRequest<Event>(entityName: "Event")
-    //        fr.sortDescriptors = []
-    //        return fr
-    //    }
     
     @nonobjc public class func fetchRequest() -> NSFetchRequest<Event> {
         let fr = NSFetchRequest<Event>(entityName: "Event")
@@ -158,22 +144,9 @@ extension Event {
         }
         return nil
     }
-    
-    
-    //    // helper
-    //    var replies_: Set<Event> {
-    //        get { (replies as? Set<Event>) ?? [] }
-    //        set { replies = newValue as NSSet }
-    //    }
-    
-    // helper
-//    var replies_: [Event] { replies?.sorted(by: { $0.created_at < $1.created_at } ) ?? [] }
-    
+
     var replies_: [Event] { Array(replies ?? []) }
-    
-//    var username: String { contact?.username ?? authorKey }
-//    var name: String { contact?.authorName ?? authorKey }
-    
+
     // Gets all parents. If until(id) is set, it will stop and wont traverse further, to prevent rendering duplicates
     static func getParentEvents(_ event:Event, fixRelations:Bool = false, until:String? = nil) -> [Event] {
         let RECURSION_LIMIT = 35 // PREVENT SPAM THREADS
@@ -353,7 +326,6 @@ extension Event {
     }
     
     var npub:String { try! NIP19(prefix: "npub", hexString: pubkey).displayString }
-    
     
     static func textNotes(byAuthorPubkey:String? = nil) -> NSFetchRequest<Event> {
         
@@ -693,7 +665,6 @@ extension Event {
     
     static func fetchReplacableEvent(_ kind:Int64, pubkey:String, definition:String, context:NSManagedObjectContext) throws -> Event? {
         let request = NSFetchRequest<Event>(entityName: "Event")
-        //        request.entity = Event.entity()
         request.predicate = NSPredicate(format: "kind == %d AND pubkey == %@ AND tagsSerialized CONTAINS %@", kind, pubkey, ###"[["d","###)
         request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         let matches = try context.fetch(request).filter({ event in
@@ -715,7 +686,7 @@ extension Event {
     }
     
     static func fetchProfileBadgesByATag(_ badgeA:String, context:NSManagedObjectContext) -> [Event] {
-        // find and notify all kind 30008 where serialized tags contains
+        // find all kind 30008 where serialized tags contains
         // ["a","30009:aa77d356ac5a59dbedc78f0da17c6bdd3ae315778b5c78c40a718b5251391da6:test_badge"]
         // notify any related profile badge
         let fr = Event.fetchRequest()
@@ -1046,7 +1017,7 @@ extension Event {
             }
         }
         
-        // kind6 sigh
+        // kind6
         if event.kind == .repost, let firstE = event.firstE() {
             savedEvent.firstQuoteId = firstE
             
@@ -1121,7 +1092,6 @@ extension Event {
         return savedEvent
     }
     
-    // Lets hope Event (Core Data) to nEvent will always keep correct id/sig and not lose integrity due to different storage
     func toNEvent() -> NEvent {
         var nEvent = NEvent(content: content ?? "")
         nEvent.id = id

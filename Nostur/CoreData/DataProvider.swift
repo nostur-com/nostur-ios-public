@@ -1,22 +1,8 @@
-//
-//  DataProvider.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 27/01/2023.
-//
-
 import CoreData
-import OSLog
 
 class DataProvider: ObservableObject {
     
     private var bgStored:NSManagedObjectContext? // IMPORTING, PREPARING, TRANSFORMING FOR VIEW
-//    private var prioStored:NSManagedObjectContext? // FOR POST DETAIL AND "NOW" THINGS
-    
-    // MARK: Logging
-    let logger = Logger(subsystem: "com.nostur.Events", category: "persistence")
-    
-    // MARK: Core Data
     
     /// A shared data provider for use within the main app bundle.
     static let live = DataProvider()
@@ -36,9 +22,6 @@ class DataProvider: ObservableObject {
     
     var databaseProblem = false
     var databaseProblemDescription:String = ""
-    
-    /// A peristent history token used for fetching transactions from the store.
-    private var lastToken: NSPersistentHistoryToken?
     
     /// A persistent container to set up the Core Data stack.
     lazy var container: NSPersistentContainer = {
@@ -73,7 +56,7 @@ class DataProvider: ObservableObject {
             description.url = URL(fileURLWithPath: "/dev/null")
             container.loadPersistentStores { storeDescription, error in
                 if let error = error as NSError? {
-                    fatalError("Unresolved error \(error), \(error.userInfo)")
+                    L.og.error("Unresolved error \(error), \(error.userInfo)")
                 }
             }
         }
@@ -102,41 +85,9 @@ class DataProvider: ObservableObject {
         }
     }()
     
-//    lazy var prio: NSManagedObjectContext = {
-//        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
-//            return container.viewContext
-//        }
-//        else {
-//            if let prioStored {
-//                return prioStored
-//            }
-//            let newPrio = container.newBackgroundContext()
-//            newPrio.automaticallyMergesChangesFromParent = true
-//            newPrio.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
-//            newPrio.undoManager = nil
-//            self.prioStored = newPrio
-//            return newPrio
-//        }
-//    }()
-    
     lazy var viewContext: NSManagedObjectContext = {
         return container.viewContext
     }()
-    
-    /// Synchronously deletes given records in the Core Data store with the specified object IDs.
-    func deleteEvents(identifiedBy objectIDs: [NSManagedObjectID]) {
-        let viewContext = container.viewContext
-        logger.info("Start deleting data from the store...")
-        
-        viewContext.perform {
-            objectIDs.forEach { objectID in
-                let event = viewContext.object(with: objectID)
-                viewContext.delete(event)
-            }
-        }
-        
-        logger.info("Successfully deleted data.")
-    }
     
     /// Creates and configures a private queue context.
     public func newTaskContext() -> NSManagedObjectContext {
@@ -179,7 +130,7 @@ class DataProvider: ObservableObject {
                     try self.bg.save()
                 }
                 catch {
-                    print("🔴🔴 Could not save bgContext")
+                    L.og.error("🔴🔴 Could not save bgContext")
                 }
             }
         }
