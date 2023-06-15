@@ -25,7 +25,7 @@ struct VideoViewurReprestable: UIViewRepresentable {
         player.actionAtItemEnd = .pause
         avpc.player = player
         avpc.exitsFullScreenWhenPlaybackEnds = false
-        avpc.videoGravity = .resizeAspectFill
+        avpc.videoGravity = .resizeAspect
         avpc.allowsPictureInPicturePlayback = true
         avpc.delegate = context.coordinator
         avpc.showsPlaybackControls = true
