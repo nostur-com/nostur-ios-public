@@ -62,7 +62,7 @@ struct PostDetailView: View {
     }
     
     var body: some View {
-        GeometryReader{ geometry in
+        GeometryReader { geometry in
             ScrollViewReader { proxy in
                 ScrollView {
                     PostAndParent(nrPost: nrPost,  navTitleHidden:navTitleHidden)
