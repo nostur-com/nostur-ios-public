@@ -1,142 +1,7 @@
 import SwiftUI
-
-final class DetailTabsModel: ObservableObject {
-    
-    static public let shared = DetailTabsModel()
-    
-    @Published var tabs:[Tab] = []
-    @Published var selected:Tab? = nil
-    
-    struct Tab: Identifiable, Equatable {
-        var id:UUID
-        var notePath:NotePath?
-        var contactPath:ContactPath?
-        var event:Event?
-        var nrPost:NRPost?
-        var contact:Contact?
-        
-        init(notePath:NotePath? = nil, contactPath:ContactPath? = nil, event:Event? = nil, contact:Contact? = nil, nrPost:NRPost? = nil) {
-            self.id = UUID()
-            self.notePath = notePath
-            self.contactPath = contactPath
-            self.event = event
-            self.contact = contact
-            self.nrPost = nrPost
-            
-            if (contactPath != nil) {
-                if let contactFromCache = Contact.fetchByPubkey(contactPath!.key, context: DataProvider.shared().container.viewContext) {
-                    self.contact = contactFromCache
-                }
-            }
-        }
-        
-        static func == (lhs: Self, rhs: Self) -> Bool {
-            return lhs.id == rhs.id
-        }
-    }
-}
-
-struct NosturTabButton: View {
-    
-    var isSelected:Bool = false
-    var onSelect:() -> Void
-    var onClose:() -> Void
-    var label:String = "?"
-    
-    @State var isHoveringCloseButton = false
-    @State var isHoveringTab = false
-    
-    var body: some View {
-        HStack(spacing:5) {
-            if IS_CATALYST {
-                Image(systemName: "xmark")
-                    .foregroundColor(isHoveringTab ? .gray : .clear)
-                    .padding(4)
-                    .contentShape(Rectangle())
-                    .background(isHoveringCloseButton ? .gray.opacity(0.1) : .clear)
-                    .onHover { over in
-                        isHoveringCloseButton = over
-                    }
-                    .onTapGesture {
-                        self.onClose()
-                    }
-            }
-            else {
-                Image(systemName: "xmark").foregroundColor(.gray)
-                    .padding(4)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        self.onClose()
-                    }
-            }
-            Text(label)
-                .lineLimit(1)
-                .frame(maxWidth: 150)
-        }
-        .padding(.trailing, 23)
-        .padding(.vertical, 10)
-        .padding(.leading, 5)
-        .background(isSelected ? Color.systemBackground : .clear)
-        .contentShape(Rectangle())
-        .onHover { over in
-            isHoveringTab = over
-        }
-        .onTapGesture {
-            self.onSelect()
-        }
-        .roundedCorner(10, corners: [.topLeft, .topRight])
-    }
-}
-
 import UIKit
 
-struct TabContainer: View {
-    @State var navPath = NavigationPath()
-    let tm:DetailTabsModel = .shared
-    let tab:DetailTabsModel.Tab
-    
-    var body: some View {
-        NavigationStack(path: $navPath) {
-            if let nrPost = tab.nrPost {
-                ZStack {
-                    Color("ListBackground")
-                        .ignoresSafeArea()
-                    PostDetailView(nrPost: nrPost, navTitleHidden: true)
-                }
-////                    .padding()
-////                              .background(Color.orange)
-////                    .roundedCorner(10, corners: [.topLeft, .topRight])
-////                    .padding(30)
-////                    .background(.green)
-////                    .padding(.top, 10)
-                    .withNavigationDestinations()
-            }
-            else if let contact = tab.contact {
-                VStack {
-                    ProfileView(contact:contact)
-                }
-                    
-            }
-            else if let notePathId = tab.notePath?.id {
-                NoteById(id: notePathId)//.opacity(tm.selected == tab ? 1 : 0)
-            }
-            else if let contacPubkey = tab.contactPath?.key {
-                ProfileByPubkey(pubkey: contacPubkey)//.opacity(tm.selected == tab ? 1 : 0)
-            }
-            else {
-                EmptyView()
-            }
-        }
-        .onReceive(receiveNotification(.navigateTo)) { notification in
-            guard tm.selected == tab else { return }
-            let destination = notification.object as! NavigationDestination
-            guard type(of: destination.destination) != HashtagPath.self else  { return }
-            navPath.append(destination.destination)
-        }
-    }
-}
-
-struct TabbedDetailContainer: View {
+struct DetailPane: View {
     @StateObject private var dim = DIMENSIONS()
     @StateObject var tm = DetailTabsModel()
     @State var offsetX = 200.0
@@ -225,7 +90,7 @@ struct TabbedDetailContainer: View {
 //            Divider().opacity(tm.tabs.count > 0 ? 1 : 0)
             ZStack {
                 ForEach(tm.tabs) { tab in
-                    TabContainer(tab:tab)
+                    DetailTab(tab:tab)
 //                        .padding(.vertical, 10)
 //                        .background(Color.systemBackground)
                         .roundedCorner(10, corners: [.topLeft, .topRight])
@@ -304,13 +169,13 @@ struct TabbedDetailContainer: View {
     }
 }
 
-struct TabbedDetailContainer_Previews: PreviewProvider {
+struct DetailPane_Previews: PreviewProvider {
     
     static var previews: some View {
         PreviewContainer({ pe in
             pe.loadPosts()
         }, previewDevice: PreviewDevice(rawValue: "iPad Air (5th generation)")) {
-            TabbedDetailContainer()
+            DetailPane()
                 .onAppear {
 
                     if let event0 = PreviewFetcher.fetchNRPost() {
@@ -327,23 +192,5 @@ struct TabbedDetailContainer_Previews: PreviewProvider {
                     
                 }
         }
-    }
-}
-
-
-
-struct RoundedCorner: Shape {
-    var radius: CGFloat = .infinity
-    var corners: UIRectCorner = .allCorners
-    
-    func path(in rect: CGRect) -> Path {
-        let path = UIBezierPath(roundedRect: rect, byRoundingCorners: corners, cornerRadii: CGSize(width: radius, height: radius))
-        return Path(path.cgPath)
-    }
-}
-
-extension View {
-    func roundedCorner(_ radius: CGFloat, corners: UIRectCorner) -> some View {
-        clipShape(RoundedCorner(radius: radius, corners: corners) )
     }
 }

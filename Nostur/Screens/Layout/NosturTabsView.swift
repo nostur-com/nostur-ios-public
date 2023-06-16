@@ -45,7 +45,7 @@ struct NosturTabsView: View {
             .environmentObject(dim)
             .edgesIgnoringSafeArea(.all)
             if UIDevice.current.userInterfaceIdiom == .pad {
-                TabbedDetailContainer()
+                DetailPane()
             }
         }
         .background(Color("ListBackground"))
