@@ -253,7 +253,9 @@ class Backlog {
             self.tasks.forEach { task in
                 if task.createdAt.timeIntervalSinceNow < -self.timeout {
                     task.onTimeout()
-                    self.tasks.remove(task)
+                    DispatchQueue.main.async {
+                        self.tasks.remove(task)
+                    }
                 }
             }
         }
