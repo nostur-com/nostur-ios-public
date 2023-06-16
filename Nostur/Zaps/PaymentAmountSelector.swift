@@ -8,7 +8,7 @@ struct PaymentAmountSelector: View {
     let sp:SocketPool = .shared
     let paymentInfo:PaymentInfo
     
-    let SLIDER_MIN = 21.0
+    let SLIDER_MIN = 3.0
     let SLIDER_MAX = 2000000.0
     
     @State var sliderValue:Float = 0.0 // SATS (1000 SATS ~= 20 cent)
