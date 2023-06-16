@@ -163,8 +163,16 @@ struct SideBar: View {
                         )
                         .offset(x: 10, y:37)
                         .onTapGesture {
-                            navigateTo(ContactPath(key: account.publicKey))
-                            sm.showSidebar = false
+                            if IS_IPAD {
+                                sm.showSidebar = false
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                    navigateTo(ContactPath(key: account.publicKey))
+                                }
+                            }
+                            else {
+                                navigateTo(ContactPath(key: account.publicKey))
+                                sm.showSidebar = false
+                            }
                         }
                 })
                 .overlay(alignment:.bottomTrailing) {
@@ -189,8 +197,16 @@ struct SideBar: View {
                 }
 
                 Button {
-                    navigateTo(ContactPath(key: account.publicKey))
-                    sm.showSidebar = false
+                    if IS_IPAD {
+                        sm.showSidebar = false
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                            navigateTo(ContactPath(key: account.publicKey))
+                        }
+                    }
+                    else {
+                        navigateTo(ContactPath(key: account.publicKey))
+                        sm.showSidebar = false
+                    }
                 } label: {
                     Label(String(localized:"Profile", comment:"Side bar navigation button"), systemImage: "person")
                 }
