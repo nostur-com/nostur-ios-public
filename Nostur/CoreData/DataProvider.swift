@@ -37,13 +37,15 @@ class DataProvider: ObservableObject {
         description.url = defaultDirectoryURL.appendingPathComponent("Nostur.sqlite") // ("Nostur-iCloud.sqlite")
         description.configuration = "Default"
         
-        L.og.info("🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀 \(description.url?.absoluteString ?? "")")
-        
         if inMemory {
             description.url = URL(fileURLWithPath: "/dev/null")
         }
+        else {
+            L.og.info("🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀 \(description.url?.absoluteString ?? "")")
+            description.setOption(FileProtectionType.completeUntilFirstUserAuthentication as NSObject, forKey: NSPersistentStoreFileProtectionKey)
+        }
         
-        description.setOption(FileProtectionType.completeUntilFirstUserAuthentication as NSObject, forKey: NSPersistentStoreFileProtectionKey)
+        
         
         var newError:NSError?
         container.loadPersistentStores { storeDescription, error in

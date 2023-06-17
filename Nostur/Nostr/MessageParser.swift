@@ -16,30 +16,30 @@ class MessageParser {
                 
                 switch message.type {
                 case .AUTH:
-                    L.og.info("🟢🟢 \(relayUrl): \(message.message)")
+                    L.sockets.info("🟢🟢 \(relayUrl): \(message.message)")
                 case .OK:
-                    print("\(relayUrl): \(message.message)")
+                    L.sockets.debug("\(relayUrl): \(message.message)")
                     if message.success ?? false {
                         if let id = message.id {
                             Event.updateRelays(id, relay: message.relay)
                         }
                     }
                 case .NOTICE:
-                    L.og.notice("\(relayUrl): \(message.message)")
+                    L.sockets.notice("\(relayUrl): \(message.message)")
                 case .EOSE:
                     // Keep these subscriptions open.
                     guard let subscriptionId = message.subscriptionId else { return }
                     if !["Following","Explore","Notifications","REALTIME-DETAIL","NWC"].contains(subscriptionId) && String(subscriptionId.prefix(5)) != "List-" {
                         // Send close message to this specific socket, not all.
-                        L.og.debug("🔌🔌 EOSE received. Sending CLOSE to \(client.url) for \(subscriptionId)")
+                        L.sockets.debug("🔌🔌 EOSE received. Sending CLOSE to \(client.url) for \(subscriptionId)")
                         client.sendMessage(ClientMessage.close(subscriptionId: subscriptionId))
                     }
                     else {
-                        L.og.debug("🔌🔌 EOSE received. keeping OPEN. \(client.url) for \(subscriptionId)")
+                        L.sockets.debug("🔌🔌 EOSE received. keeping OPEN. \(client.url) for \(subscriptionId)")
                     }
                 default:
                     if (message.type == .EVENT) {
-                        guard let nEvent = message.event else { L.og.info("🔴🔴 uhh, where is nEvent "); return }
+                        guard let nEvent = message.event else { L.sockets.info("🔴🔴 uhh, where is nEvent "); return }
                         
                         let sameMessageInQueue = self.messageBucket.contains(where: {
                              nEvent.id == $0.event?.id && $0.type == .EVENT
@@ -55,16 +55,16 @@ class MessageParser {
                 }
             }
             catch RelayMessage.error.UNKNOWN_MESSAGE_TYPE {
-                L.og.notice("🟠 \(relayUrl) Unknown message type: \(text)")
+                L.sockets.notice("🟠 \(relayUrl) Unknown message type: \(text)")
             }
             catch RelayMessage.error.FAILED_TO_PARSE {
-                L.og.notice("🟠 \(relayUrl) Could not parse text received: \(text)")
+                L.sockets.notice("🟠 \(relayUrl) Could not parse text received: \(text)")
             }
             catch RelayMessage.error.FAILED_TO_PARSE_EVENT {
-                L.og.notice("🟠 \(relayUrl) Could not parse EVENT: \(text)")
+                L.sockets.notice("🟠 \(relayUrl) Could not parse EVENT: \(text)")
             }
             catch {
-                L.og.error("🔴🔴 \(relayUrl) \(error)")
+                L.sockets.error("🔴🔴 \(relayUrl) \(error)")
             }
         }
     }
