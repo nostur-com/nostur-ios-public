@@ -83,6 +83,9 @@ struct NewAccountSheet: View {
 //            up.publishNow(newKind0EventSigned) // TODO: Publish later? its probably empty now, will fill with follow
             ns.setAccount(account: newAccount)
             ns.onBoardingIsShown = false
+            
+            // It's a new account so treat as if we received contact list to enable Follow button
+            FollowingGuardian.shared.didReceiveContactListThisSession = true
         }
         catch {
             print("🔴🔴 could not ns.setAccount")
