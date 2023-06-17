@@ -373,11 +373,9 @@ class LVM: NSObject, ObservableObject {
                 for d in danglers {
                     L.lvm.info("😈😈 timeoutCommand dng id: \(d.id)")
                 }
-
-                let leafIdsOnScreen = leafIdsOnScreen
-                let currentNRPostLeafs = self.nrPostLeafs // viewContext. First (0) is newest
+                
                 DispatchQueue.main.async {
-                    self.putNewThreadsOnScreen(danglers, leafIdsOnScreen: leafIdsOnScreen, currentNRPostLeafs: currentNRPostLeafs, older: older)
+                    self.putNewThreadsOnScreen(danglers, leafIdsOnScreen: self.leafIdsOnScreen, currentNRPostLeafs: self.nrPostLeafs, older: older)
                 }
             })
 
