@@ -278,7 +278,7 @@ informational message showing account name(s)</note>
       <trans-unit id="Add comment" xml:space="preserve">
         <source>Add comment</source>
         <target>Jouw reactie</target>
-        <note>Placholder when typing a new reply</note>
+        <note>Placeholder when typing a new reply</note>
       </trans-unit>
       <trans-unit id="Add contacts" xml:space="preserve">
         <source>Add contacts</source>
@@ -445,6 +445,11 @@ Tab to switch to bookmarks</note>
         <target>Geannuleerd</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="Choose content for this column" xml:space="preserve">
+        <source>Choose content for this column</source>
+        <target>Kies inhoud voor kolom</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Clear" xml:space="preserve">
         <source>Clear</source>
         <target>Wissen</target>
@@ -541,10 +546,6 @@ Menu action</note>
         <target>Kon data niet converteren</target>
         <note>Error message</note>
       </trans-unit>
-      <trans-unit id="Could not digest the fetched data. (error.localizedDescription)" xml:space="preserve">
-        <source>Could not digest the fetched data. (error.localizedDescription)</source>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
       <trans-unit id="Could not fetch NWC info event from %@" xml:space="preserve">
         <source>Could not fetch NWC info event from %@</source>
         <target>Kon NWC info event niet binnenhalen van %@</target>
@@ -606,6 +607,11 @@ Button to create a new badge</note>
       <trans-unit id="Create test keys" xml:space="preserve">
         <source>Create test keys</source>
         <target>Nieuwe test sleutels</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Custom List" xml:space="preserve">
+        <source>Custom List</source>
+        <target>Lijst</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="DM" xml:space="preserve">
@@ -777,22 +783,6 @@ Navigation title for Edit Profile screen</note>
         <target>Extra infromatie</target>
         <note>Label for report field to give extra information</note>
       </trans-unit>
-      <trans-unit id="Failed to create a new Quake object." xml:space="preserve">
-        <source>Failed to create a new Quake object.</source>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
-      <trans-unit id="Failed to execute a batch delete request." xml:space="preserve">
-        <source>Failed to execute a batch delete request.</source>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
-      <trans-unit id="Failed to execute a batch insert request." xml:space="preserve">
-        <source>Failed to execute a batch insert request.</source>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
-      <trans-unit id="Failed to execute a persistent history change request." xml:space="preserve">
-        <source>Failed to execute a persistent history change request.</source>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
       <trans-unit id="Failed to load image" xml:space="preserve">
         <source>Failed to load image</source>
         <target>Kon afbeelding niet laden</target>
@@ -805,7 +795,18 @@ Navigation title for Edit Profile screen</note>
       </trans-unit>
       <trans-unit id="Feed" xml:space="preserve">
         <source>Feed</source>
+        <target>Feed</target>
         <note>Tab title for a feed</note>
+      </trans-unit>
+      <trans-unit id="Fetch counts on timeline" xml:space="preserve">
+        <source>Fetch counts on timeline</source>
+        <target>Tellers op tijdlijn</target>
+        <note>Setting on settings screen</note>
+      </trans-unit>
+      <trans-unit id="Fetches like/zaps/replies counts as posts appear" xml:space="preserve">
+        <source>Fetches like/zaps/replies counts as posts appear</source>
+        <target>Update tellers op tijdlijn tijdens scrollen</target>
+        <note>Setting on settings screen</note>
       </trans-unit>
       <trans-unit id="Filter contacts" xml:space="preserve">
         <source>Filter contacts</source>
@@ -851,8 +852,13 @@ Menu choice to filter by Following</note>
         <note>Label that shows if someone is following you
 Label shown when someone follows you</note>
       </trans-unit>
-      <trans-unit id="Found and will discard a quake missing a valid code, magnitude, place, or time." xml:space="preserve">
-        <source>Found and will discard a quake missing a valid code, magnitude, place, or time.</source>
+      <trans-unit id="Hashtag" xml:space="preserve">
+        <source>Hashtag</source>
+        <target>Hashtag</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Hello, World!" xml:space="preserve">
+        <source>Hello, World!</source>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Hide emojis in names" xml:space="preserve">
@@ -1161,6 +1167,11 @@ Label for input field for badge name on Badge creation screen</note>
         <target>Notitie: Je kan ook iemand anders publieke sleutel gebruiken om Nostur te proberen vanuit zijn/haar perspectief.</target>
         <note>Informational message on Add Existing Account screen</note>
       </trans-unit>
+      <trans-unit id="Notifications" xml:space="preserve">
+        <source>Notifications</source>
+        <target>Notificaties</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Nudity" xml:space="preserve">
         <source>Nudity</source>
         <target>Naaktheid</target>
@@ -1264,6 +1275,11 @@ Tab to switch to private notes</note>
         <source>Private note</source>
         <target>Privé notitie</target>
         <note>Label for private note edit field</note>
+      </trans-unit>
+      <trans-unit id="Private notes" xml:space="preserve">
+        <source>Private notes</source>
+        <target>Privé notities</target>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Problem parsing NWC connection URI" xml:space="preserve">
         <source>Problem parsing NWC connection URI</source>
@@ -1380,10 +1396,6 @@ Tab to switch to private notes</note>
         <source>Received from:</source>
         <target>Ontvangen vanuit:</target>
         <note>Heading for list of relays received from</note>
-      </trans-unit>
-      <trans-unit id="Received unexpected error. (error.localizedDescription)" xml:space="preserve">
-        <source>Received unexpected error. (error.localizedDescription)</source>
-        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Relay URL" xml:space="preserve">
         <source>Relay URL</source>
@@ -1870,6 +1882,11 @@ Schakel naar een ander account of voeg de privé sleutel toe aan dit account om 
       <trans-unit id="Your **Alby** wallet is now connected with **Nostur**, you can now enjoy a seamless zapping experience!" xml:space="preserve">
         <source>Your **Alby** wallet is now connected with **Nostur**, you can now enjoy a seamless zapping experience!</source>
         <target>Je **Alby** portemonnee is nu verbonden met **Nostur**, je kan nu zappen met gemak!</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Your address for receiving zaps has been set to: %@" xml:space="preserve">
+        <source>Your address for receiving zaps has been set to: %@</source>
+        <target>Je adres om zaps te ontvangen is ingesteld op: %@</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Your name" xml:space="preserve">

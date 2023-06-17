@@ -100,7 +100,7 @@
 /* No comment provided by engineer. */
 "Add +1" = "";
 
-/* Placholder when typing a new reply */
+/* Placeholder when typing a new reply */
 "Add comment" = "Jouw reactie";
 
 /* Navigation title of sheet to add contacts to list */
@@ -201,6 +201,9 @@ Tab to switch to bookmarks */
 /* No comment provided by engineer. */
 "Cancelled" = "Geannuleerd";
 
+/* No comment provided by engineer. */
+"Choose content for this column" = "Kies inhoud voor kolom";
+
 /* Button to clear cache */
 "Clear" = "Wissen";
 
@@ -298,6 +301,9 @@ Button to create a new badge */
 
 /* No comment provided by engineer. */
 "Create test keys" = "Nieuwe test sleutels";
+
+/* No comment provided by engineer. */
+"Custom List" = "Lijst";
 
 /* No comment provided by engineer. */
 "Data export" = "Data exporteren";
@@ -408,6 +414,15 @@ Navigation title for Edit Profile screen */
 /* No comment provided by engineer. */
 "Failed to load video" = "Kon video niet laden";
 
+/* Tab title for a feed */
+"Feed" = "Feed";
+
+/* Setting on settings screen */
+"Fetch counts on timeline" = "Tellers op tijdlijn";
+
+/* Setting on settings screen */
+"Fetches like/zaps/replies counts as posts appear" = "Update tellers op tijdlijn tijdens scrollen";
+
 /* Label to filter contacts */
 "Filter contacts" = "Contacten filteren";
 
@@ -435,6 +450,9 @@ Menu choice to filter by Following */
 /* Label that shows if someone is following you
 Label shown when someone follows you */
 "Follows you" = "Volgt jou";
+
+/* No comment provided by engineer. */
+"Hashtag" = "Hashtag";
 
 /* Short label for the word 'hexadecimal' */
 "hex" = "hex";
@@ -600,6 +618,9 @@ Label for input field for badge name on Badge creation screen */
 /* Informational message on Add Existing Account screen */
 "Note: You can also add someone elses public key to try out Nostur from their perspective." = "Notitie: Je kan ook iemand anders publieke sleutel gebruiken om Nostur te proberen vanuit zijn/haar perspectief.";
 
+/* No comment provided by engineer. */
+"Notifications" = "Notificaties";
+
 /* Menu item in choice list */
 "Nudity" = "Naaktheid";
 
@@ -657,6 +678,9 @@ Preview button when creating a new reply */
 
 /* Label for private note edit field */
 "Private note" = "Privé notitie";
+
+/* No comment provided by engineer. */
+"Private notes" = "Privé notities";
 
 /* Navigation title for Private Notes screen
 Tab to switch to private notes */
@@ -1020,6 +1044,9 @@ Button to skip adding account and use the guest account instead */
 
 /* No comment provided by engineer. */
 "Your **Alby** wallet is now connected with **Nostur**, you can now enjoy a seamless zapping experience!" = "Je **Alby** portemonnee is nu verbonden met **Nostur**, je kan nu zappen met gemak!";
+
+/* No comment provided by engineer. */
+"Your address for receiving zaps has been set to: %@" = "Je adres om zaps te ontvangen is ingesteld op: %@";
 
 /* Label for entering your name on Edit Profile screen */
 "Your name" = "Je naam";
