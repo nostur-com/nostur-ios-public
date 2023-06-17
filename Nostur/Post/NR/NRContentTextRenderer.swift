@@ -18,7 +18,7 @@ struct NRContentTextRenderer: View {
                     })
                     .filter({ pubkey in
                         guard !attributedStringWithPs.input.isEmpty else { return false }
-                        guard attributedStringWithPs.pTags.count > 0 else { return false }
+                        guard !attributedStringWithPs.pTags.isEmpty else { return false }
                         return self.attributedStringWithPs.pTags.contains(pubkey)
                     })
                     .debounce(for: .seconds(0.05), scheduler: RunLoop.main)

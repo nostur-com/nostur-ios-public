@@ -49,7 +49,7 @@ struct ContactsSearch: View, Equatable {
             }
             .padding(.horizontal)
             ScrollView {
-                if (filteredContacts.count == 0 && searching) {
+                if (filteredContacts.isEmpty && searching) {
                     ProgressView()
                 }
                 LazyVStack {
@@ -123,7 +123,7 @@ struct ContactsSearch: View, Equatable {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 if onSelectContacts != nil {
-                    if selectedContacts.count > 0 {
+                    if !selectedContacts.isEmpty {
                         Button(String(localized:"Add (\(selectedContacts.count))", comment: "Button to 'Add (amount)' contacts")) {
                             guard let onSelectContacts = onSelectContacts else { return }
                             onSelectContacts(selectedContacts)

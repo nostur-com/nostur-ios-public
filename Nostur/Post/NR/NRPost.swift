@@ -218,7 +218,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         }
         
         self.missingPs = missingPs
-        if !isAwaiting && self.missingPs.count > 0 {
+        if !isAwaiting && !self.missingPs.isEmpty {
             EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.002 - missingPs: \(missingPs.count)"); isAwaiting = true
         }
         
@@ -383,7 +383,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     private func setupSubscriptions() {
         // Don't listen if there is no need to listen (performance?)
         
-        if missingPs.count > 0 {
+        if !missingPs.isEmpty {
             contactSavedListener()
         }
         
@@ -888,7 +888,7 @@ extension NRPost { // Helpers for grouped replies
                 return
             }
             
-            let replies = (newReplies.count == 0 ? self.replies : newReplies)
+            let replies = (newReplies.isEmpty ? self.replies : newReplies)
             // Load parents/replyTo
             let groupedThreads = (replies + (self.replyToRootId != nil ? self.repliesToLeaf : self.repliesToRoot))
                 .uniqued(on: { $0.id })

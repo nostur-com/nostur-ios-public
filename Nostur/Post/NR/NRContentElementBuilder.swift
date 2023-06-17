@@ -28,7 +28,7 @@ class NRContentElementBuilder {
                 
                 result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:nonMatch)))
                 
-                if matchString.matchingStrings(regex: Self.imageUrlPattern).count > 0 {
+                if !matchString.matchingStrings(regex: Self.imageUrlPattern).isEmpty {
                     if let url = URL(string: matchString) {
                         result.append(ContentElement.image(url))
                     }
@@ -36,7 +36,7 @@ class NRContentElementBuilder {
                         result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString)))
                     }
                 }
-                else if matchString.matchingStrings(regex: Self.videoUrlPattern).count > 0 {
+                else if !matchString.matchingStrings(regex: Self.videoUrlPattern).isEmpty {
                     if let url = URL(string: matchString) {
                         result.append(ContentElement.video(url))
                     }
@@ -44,7 +44,7 @@ class NRContentElementBuilder {
                         result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString)))
                     }
                 }
-                else if matchString.matchingStrings(regex: Self.otherUrlsPattern).count > 0 {
+                else if !matchString.matchingStrings(regex: Self.otherUrlsPattern).isEmpty {
                     if let url = URL(string: matchString) {
                         result.append(ContentElement.linkPreview(url))
                         linkPreviewUrls.append(url)
@@ -53,17 +53,17 @@ class NRContentElementBuilder {
                         result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString)))
                     }
                 }
-                else if matchString.matchingStrings(regex: Self.npubPattern).count > 0 {
+                else if !matchString.matchingStrings(regex: Self.npubPattern).isEmpty {
                     let match = matchString.replacingOccurrences(of: "\n", with: "")
                                             .replacingOccurrences(of: "@", with: "")
                     result.append(ContentElement.npub1(match))
                 }
-                else if matchString.matchingStrings(regex: Self.notePattern).count > 0 {
+                else if !matchString.matchingStrings(regex: Self.notePattern).isEmpty {
                     let match = matchString.replacingOccurrences(of: "nostr:", with: "")
                                             .replacingOccurrences(of: "@", with: "")
                     result.append(ContentElement.note1(match))
                 }
-                else if matchString.matchingStrings(regex: Self.previewImagePlaceholder).count > 0 {
+                else if !matchString.matchingStrings(regex: Self.previewImagePlaceholder).isEmpty {
                     let m = matchString.matchingStrings(regex: Self.previewImagePlaceholder)
                     if let index = Int(m[0][1]) {
                         if let p = event.previewImages[safe: index] {
@@ -71,7 +71,7 @@ class NRContentElementBuilder {
                         }
                     }
                 }
-                else if matchString.matchingStrings(regex: Self.neventPattern).count > 0 {
+                else if !matchString.matchingStrings(regex: Self.neventPattern).isEmpty {
                     do {
                         let match = matchString.replacingOccurrences(of: "nostr:", with: "")
                                                 .replacingOccurrences(of: "@", with: "")
@@ -84,7 +84,7 @@ class NRContentElementBuilder {
                         result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString)))
                     }
                 }
-                else if matchString.matchingStrings(regex: Self.nprofilePattern).count > 0 {
+                else if !matchString.matchingStrings(regex: Self.nprofilePattern).isEmpty {
                     do {
                         let match = matchString.replacingOccurrences(of: "\n", with: "")
                                                 .replacingOccurrences(of: "@", with: "")
@@ -96,7 +96,7 @@ class NRContentElementBuilder {
                         result.append(ContentElement.text(NRTextParser.shared.parseText(event, text:matchString)))
                     }
                 }
-                else if matchString.matchingStrings(regex: Self.lightningInvoicePattern).count > 0 {
+                else if !matchString.matchingStrings(regex: Self.lightningInvoicePattern).isEmpty {
                     result.append(ContentElement.lnbc(matchString))
                 }
                 else {

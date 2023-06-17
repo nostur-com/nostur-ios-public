@@ -57,7 +57,7 @@ class NRTextParser { // TEXT things
 
     // NIP-08 (deprecated in favor of NIP-27)
     private func parseTagIndexedMentions(event:Event, text:String, plainText:Bool = false) -> TextWithPs {
-        guard tags.count > 0 else { return TextWithPs(text: text, pTags: []) }
+        guard !tags.isEmpty else { return TextWithPs(text: text, pTags: []) }
 
         var pTags = [Ptag]()
         var newText = text

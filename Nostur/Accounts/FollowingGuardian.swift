@@ -71,7 +71,7 @@ class FollowingGuardian: ObservableObject {
                 
                 self.followNewContacts(added: added, account: account)
                 
-                if removed.count > 0 {
+                if !removed.isEmpty {
                     sendNotification(.requestConfirmationChangedFollows, removed)
                     L.og.info("receiveNotification(.newFollowingListFromRelay): removed: \(removed)")
                 }
@@ -80,7 +80,7 @@ class FollowingGuardian: ObservableObject {
     }
     
     func followNewContacts(added:Set<String>, account:Account) {
-        guard added.count > 0 else { return }
+        guard !added.isEmpty else { return }
         account.objectWillChange.send()
         
         let context = DataProvider.shared().viewContext

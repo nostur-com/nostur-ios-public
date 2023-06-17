@@ -195,7 +195,7 @@ struct NewReply: View {
                     }
                 }
                 
-                if vm.mentioning && vm.contactSearchResults.count > 0 {
+                if vm.mentioning && !vm.contactSearchResults.isEmpty {
                     ScrollView {
                         LazyVStack {
                             ForEach(vm.contactSearchResults) { contact in

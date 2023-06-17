@@ -262,7 +262,7 @@ class NewOnboardingTracker {
             do {
                 let decoder = JSONDecoder()
                 let relays = try decoder.decode(Kind3Relays.self, from: contentData)
-                if relays.relays.count > 0 {
+                if !relays.relays.isEmpty {
                     L.onboarding.info("✈️✈️✈️ found \(relays.relays.count) existing relays")
                 }
                 relays.relays.forEach { relay in

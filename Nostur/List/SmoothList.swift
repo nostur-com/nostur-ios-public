@@ -58,7 +58,7 @@ struct SmoothList: UIViewControllerRepresentable {
         receiveNotification(.shouldScrollToTop)
             .sink { _ in
                 guard context.coordinator.lvm.viewIsVisible else { return }
-                if context.coordinator.lvm.nrPostLeafs.count > 0 {
+                if !context.coordinator.lvm.nrPostLeafs.isEmpty {
                     cvh.collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .top, animated: true)
                 }
             }
@@ -204,7 +204,7 @@ struct SmoothList: UIViewControllerRepresentable {
             for indexPath in indexPaths {
                 guard let item = data[safe: indexPath.row] else { continue }
                 
-                if item.missingPs.count > 0 {
+                if !item.missingPs.isEmpty {
                     DataProvider.shared().bg.perform {
                         EventRelationsQueue.shared.addAwaitingEvent(item.event, debugInfo: "SmoothList.001 - missingPs: \(item.missingPs.count)")
                         QueuedFetcher.shared.enqueue(pTags: item.missingPs)
@@ -258,10 +258,10 @@ struct SmoothList: UIViewControllerRepresentable {
                     }
                 }
             }
-            if imageRequests.count > 0 {
+            if !imageRequests.isEmpty {
                 prefetcher.startPrefetching(with: imageRequests)
             }
-            if imageRequestsPFP.count > 0 {
+            if !imageRequestsPFP.isEmpty {
                 prefetcherPFP.startPrefetching(with: imageRequestsPFP)
             }
         }
@@ -274,7 +274,7 @@ struct SmoothList: UIViewControllerRepresentable {
             for indexPath in indexPaths {
                 guard let item = data[safe: indexPath.row] else { continue }
                 
-                if item.missingPs.count > 0 {
+                if !item.missingPs.isEmpty {
                     QueuedFetcher.shared.dequeue(pTags: item.missingPs)
                 }
                 
@@ -317,10 +317,10 @@ struct SmoothList: UIViewControllerRepresentable {
                     }
                 }
             }
-            if (imageRequests.count > 0) {
+            if (!imageRequests.isEmpty) {
                 prefetcher.stopPrefetching(with: imageRequests)
             }
-            if imageRequestsPFP.count > 0 {
+            if !imageRequestsPFP.isEmpty {
                 prefetcherPFP.stopPrefetching(with: imageRequestsPFP)
             }
         }

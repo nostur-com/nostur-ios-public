@@ -34,7 +34,7 @@ class NWCZapQueue {
                 }
                 self.waitingZaps = self.waitingZaps.filter { now.timeIntervalSince($0.value.queuedAt) < 35 }
                 
-                if failedZaps.count > 0, let jsonData = try? self.encoder.encode(failedZaps.map { FailedZap(contactPubkey: $0.contactPubkey, eventId: $0.eventId, error: $0.error!) }) {
+                if !failedZaps.isEmpty, let jsonData = try? self.encoder.encode(failedZaps.map { FailedZap(contactPubkey: $0.contactPubkey, eventId: $0.eventId, error: $0.error!) }) {
                     
                     if let serializedFails = String(data: jsonData, encoding: .utf8) {
                         L.og.info("⚡️ Creating notification for \(failedZaps.count) failed zaps")

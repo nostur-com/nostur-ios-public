@@ -23,7 +23,7 @@ struct Search: View {
 //        let _ = Self._printChanges()
         NavigationStack(path: $navPath) {
             ScrollView {
-                if (contacts.count == 0 && nrPosts.count == 0 && searching) {
+                if (contacts.isEmpty && nrPosts.isEmpty && searching) {
                     ProgressView()
                 }
                 LazyVStack(spacing: 0) {
@@ -86,7 +86,7 @@ struct Search: View {
                         nrPosts = []
                         req(RM.getUserMetadata(pubkey: pubkey))
 
-                        if identifier.relays.count > 0 {
+                        if !identifier.relays.isEmpty {
                             searchTask = Task {
                                 try? await Task.sleep(for: .seconds(3))
                                 let ctx = DataProvider.shared().bg
@@ -140,7 +140,7 @@ struct Search: View {
                         backlog.add(searchTask1)
                         searchTask1.fetch()
 
-                        if identifier.relays.count > 0 {
+                        if !identifier.relays.isEmpty {
                             searchTask = Task {
                                 try? await Task.sleep(for: .seconds(3))
                                 let ctx = DataProvider.shared().bg

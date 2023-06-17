@@ -48,7 +48,7 @@ extension Data {
         for _ in 0...1024 {
             var data = Data(repeating: 0, count: length)
             let result = data.withUnsafeMutableBytes { (body: UnsafeMutableRawBufferPointer) -> Int32? in
-                if let bodyAddress = body.baseAddress, body.count > 0 {
+                if let bodyAddress = body.baseAddress, !body.isEmpty {
                     let pointer = bodyAddress.assumingMemoryBound(to: UInt8.self)
                     return SecRandomCopyBytes(kSecRandomDefault, 32, pointer)
                 } else {

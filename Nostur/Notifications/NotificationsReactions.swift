@@ -55,7 +55,7 @@ struct NotificationsReactions: View {
                     .id(nrPost.id)
                 }
                 VStack {
-                    if myNotesReactedToAsNRPosts.count > 0 {
+                    if !myNotesReactedToAsNRPosts.isEmpty {
                         Button("Show more") {
                             fl.predicate = NSPredicate(
                                 format: "NOT pubkey IN %@ AND kind == 7 AND reactionTo.pubkey == %@",
@@ -270,7 +270,7 @@ struct ReactionsForThisNote: View {
             .filter { $0.metadata_created_at == 0 }
             .map { $0.pubkey }
         
-        guard (missingPubkeys + emptyContactPubkeys).count > 0 else { return }
+        guard !(missingPubkeys + emptyContactPubkeys).isEmpty else { return }
         print("Fetching  \((missingPubkeys + emptyContactPubkeys).count) missing or empty contacts")
         QueuedFetcher.shared.enqueue(pTags:  missingPubkeys + emptyContactPubkeys)
     }

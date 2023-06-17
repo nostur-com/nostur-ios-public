@@ -308,7 +308,7 @@ extension Event {
     
     var noteTextPrepared: String {
         let tags = fastTags
-        guard tags.count > 0 else { return content ?? "" }
+        guard !tags.isEmpty else { return content ?? "" }
         
         var newText = content ?? ""
         for index in tags.indices {
@@ -965,7 +965,7 @@ extension Event {
                 }
             }
             
-            if (event.content == "#[0]" && event.tags.count > 0 && event.tags[0].type == "e") {
+            if (event.content == "#[0]" && !event.tags.isEmpty && event.tags[0].type == "e") {
                 savedEvent.isRepost = true
                 savedEvent.repostForId = event.tags[0].id // repost
             }
@@ -1165,13 +1165,13 @@ extension NEvent {
     
     // E TAGS
     func replyToEtag() -> NostrTag? {
-        if threadETags.count == 0 {
+        if threadETags.isEmpty {
             return nil
         }
         // PREFERRED NEW METHOD
         // NIP-10: Those marked with "reply" denote the id of the reply event being responded to.
         let replyEtags = threadETags.filter { $0.tag.count == 4 && $0.tag[safe: 3] == "reply" }
-        if (replyEtags.count != 0) {
+        if (!replyEtags.isEmpty) {
             return replyEtags.first
         }
         
@@ -1191,7 +1191,7 @@ extension NEvent {
     }
     
     func replyToRootEtag() -> NostrTag? {
-        if threadETags.count == 0 {
+        if threadETags.isEmpty {
             return nil
         }
         let rootEtag = threadETags.filter { $0.tag.count == 4 && $0.tag[safe: 3] == "root" }.first
@@ -1213,7 +1213,7 @@ extension NEvent {
     }
     
     func firstMentionETag() -> NostrTag? {
-        if mentionOnlyTags.count == 0 {
+        if mentionOnlyTags.isEmpty {
             return nil
         }
         return mentionOnlyTags.first

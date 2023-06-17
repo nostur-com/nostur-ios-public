@@ -52,7 +52,7 @@ struct BadgesReceivedView: View {
                 publishSelection(Array(selection))
             } label: { Text("Publish selected badges on profile") }
                 .buttonStyle(.borderedProminent)
-                .disabled(selection.count == 0)
+                .disabled(selection.isEmpty)
             
             Spacer()
         }

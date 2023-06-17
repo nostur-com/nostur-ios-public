@@ -29,7 +29,7 @@ struct ProfileZaps: View {
     
     var body: some View {
         VStack {
-            if nrPosts.count != 0 {
+            if !nrPosts.isEmpty {
                 Grid {
                     GridRow {
                         Text("Zaps received recently", comment: "Heading")
@@ -76,7 +76,7 @@ struct ProfileZaps: View {
                         .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                         .id(nrPost.id)
                 }
-                if nrPosts.count == 0 {
+                if nrPosts.isEmpty {
                     ProgressView()
                         .centered()
                 }

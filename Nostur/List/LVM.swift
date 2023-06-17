@@ -230,14 +230,14 @@ class LVM: NSObject, ObservableObject {
             let added = newNRPostLeafs
 //                .filter(notMuted) // TODO ADD BACK NOT MUTED IN RIGHT CONTEXT / THREAD
 
-            guard transformedObjectIds.count > 0 else { performingLocalOlderFetch = false; return }
+            guard !transformedObjectIds.isEmpty else { performingLocalOlderFetch = false; return }
             L.lvm.notice("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") Transformed \(transformedObjectIds.count) posts - \(taskId)")
 
-            if currentNRPostLeafs.count == 0 {
+            if currentNRPostLeafs.isEmpty {
                 let leafThreads = self.renderLeafs(added, onScreenSeen:self.onScreenSeen) // Transforms seperate posts into threads, .id for each thread is leaf.id
                 
                 let (danglers, newLeafThreads) = extractDanglingReplies(leafThreads)
-                if danglers.count > 0 {
+                if !danglers.isEmpty {
                     L.og.info("🟪🟠🟠 processPostsInBackground: \(danglers.count) replies without replyTo. Fetching...")
                     fetchParents(danglers, older:older)
                 }
@@ -256,7 +256,7 @@ class LVM: NSObject, ObservableObject {
                 
                 let (danglers, newLeafThreads) = extractDanglingReplies(newLeafThreadsWithMissingParents)
 //                self.needsReplyTo.append(contentsOf: danglers)
-                if danglers.count > 0 {
+                if !danglers.isEmpty {
                     L.og.info("🟠🟠 processPostsInBackground: \(danglers.count) replies without replyTo. Fetching...")
                     fetchParents(danglers, older:older)
                 }
@@ -290,7 +290,7 @@ class LVM: NSObject, ObservableObject {
                 L.lvm.info("\(self.id) \(self.name) safeInsert() dropped \(dropCount) from end ");
             }
             else {
-                if Set(nrPostLeafsWithNew.map{ $0.id }).subtracting(Set(self.nrPostLeafs.map { $0.id })).count > 0 {
+                if !Set(nrPostLeafsWithNew.map{ $0.id }).subtracting(Set(self.nrPostLeafs.map { $0.id })).isEmpty {
                     self.nrPostLeafs = nrPostLeafsWithNew
                 }
                 else {
@@ -348,7 +348,7 @@ class LVM: NSObject, ObservableObject {
                 guard let self = self else { return }
                 L.lvm.info("😈😈 reqCommand: \(self.id) \(self.name)/\(self.pubkey?.short ?? "") - \(taskId) - dng: \(danglers.count)")
                 let danglerIds = danglers.compactMap { $0.replyToId }
-                if danglerIds.count > 0 {
+                if !danglerIds.isEmpty {
                     req(RM.getEvents(ids: danglerIds, subscriptionId: taskId))
                 }
             },
@@ -387,7 +387,7 @@ class LVM: NSObject, ObservableObject {
         var danglers:[NRPost] = []
         var threads:[NRPost] = []
         newLeafThreads.forEach { nrPost in
-            if nrPost.replyToId != nil && nrPost.parentPosts.count == 0 {
+            if nrPost.replyToId != nil && nrPost.parentPosts.isEmpty {
                 danglers.append(nrPost)
             }
             else {
@@ -434,7 +434,7 @@ class LVM: NSObject, ObservableObject {
                 continue
             }
             
-            guard post.parentPosts.count > 0 else {
+            guard !post.parentPosts.isEmpty else {
                 // Render a root post, that has no parents
                 renderedIds.append(post.id)
                 renderedPosts.append(post)
@@ -584,7 +584,7 @@ class LVM: NSObject, ObservableObject {
                 L.og.notice("🟪 instantFinished")
                 // if nothing on screen, fetch from local
                 DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
-                    if self.nrPostLeafs.count == 0 {
+                    if self.nrPostLeafs.isEmpty {
                         self.performLocalFetch()
                     }
                 }
@@ -615,7 +615,7 @@ class LVM: NSObject, ObservableObject {
     
     // FETCHES NOTHING, BUT AFTER THAT IS REALTIME FOR NEW EVENTS
     private func fetchRealtimeSinceNow(subscriptionId:String) {
-        guard pubkeys.count > 0 else { return }
+        guard !pubkeys.isEmpty else { return }
         guard self.pubkeysPrefixString != "" else { return }
         let now = NTimestamp(date: Date.now)
         req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: subscriptionId, since: now), activeSubscriptionId: subscriptionId)
@@ -624,19 +624,19 @@ class LVM: NSObject, ObservableObject {
     // FETCHES ALL NEW, UNTIL NOW
     private func fetchNewestUntilNow(subscriptionId:String) {
         let now = NTimestamp(date: Date.now)
-        guard pubkeys.count > 0 else { return }
+        guard !pubkeys.isEmpty else { return }
         guard self.pubkeysPrefixString != "" else { return }
         req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: "CATCHUP-" + subscriptionId, until: now))
     }
     
     private func fetchNewerSince(subscriptionId:String, since: NTimestamp) {
-        guard pubkeys.count > 0 else { return }
+        guard !pubkeys.isEmpty else { return }
         guard self.pubkeysPrefixString != "" else { return }
         req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: "RESUME-" + subscriptionId, since: since))
     }
     
     private func fetchNextPage() {
-        guard pubkeys.count > 0 else { return }
+        guard !pubkeys.isEmpty else { return }
         guard self.pubkeysPrefixString != "" else { return }
         guard let last = self.nrPostLeafs.last else { return }
         let until = NTimestamp(date: last.createdAt)
@@ -665,7 +665,7 @@ class LVM: NSObject, ObservableObject {
         
         fetchRealtimeSinceNow(subscriptionId: self.id) // Subscription should stay active
         
-        if nrPostLeafs.count == 0 { // Nothing on screen
+        if nrPostLeafs.isEmpty { // Nothing on screen
             // Dont need anymore because InstantFeed()?:
 //            fetchNewestUntilNow(subscriptionId: self.id) // This one closes after EOSE
 //            fetchProfiles(pubkeys: self.pubkeys, subscriptionId: "Profiles")
@@ -762,7 +762,7 @@ extension LVM {
                         return $0.event
                     }
                 
-                guard events.count > 0 else { return }
+                guard !events.isEmpty else { return }
                 
                 DataProvider.shared().bg.perform {
                     for event in events {
@@ -821,7 +821,7 @@ extension LVM {
             .sink { [weak self] _ in
                 guard let self = self else { return }
                 guard self.viewIsVisible else { return }
-                guard self.nrPostLeafs.count == 0 else { return }
+                guard self.nrPostLeafs.isEmpty else { return }
                 L.lvm.info("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") renderFromLocalIfWeHaveNothingNew")
                 self.performLocalFetch()
             }
@@ -939,7 +939,7 @@ extension LVM {
             .sink { [weak self] eventId in
                 guard let self = self else { return }
                 guard self.lastAppearedIndex != nil else { return }
-                guard self.nrPostLeafs.count > 0 else { return }
+                guard !self.nrPostLeafs.isEmpty else { return }
                 
 //                print("COUNTER . new lastAppearedId. Index is: \(self.lastAppearedIndex) ")
 
@@ -973,7 +973,7 @@ extension LVM {
             .sink { [weak self] eventId in
                 guard let self = self else { return }
                 guard let lastAppeareadIndex = self.lastAppearedIndex else { return }
-                guard self.nrPostLeafs.count > 0 else { return }
+                guard !self.nrPostLeafs.isEmpty else { return }
                 
                 if lastAppeareadIndex > (self.nrPostLeafs.count-15) {
                     L.lvm.info("📖 Appeared: \(lastAppeareadIndex)/\(self.nrPostLeafs.count) - loading more from local")
@@ -1216,7 +1216,7 @@ extension LVM {
     }
     
     func filterMutedWords(_ events:[Event]) -> [Event] {
-        guard NosturState.shared.mutedWords.count > 0 else { return events }
+        guard !NosturState.shared.mutedWords.isEmpty else { return events }
         return events
             .filter {
                 notMutedWords(in: $0.noteText, mutedWords: NosturState.shared.mutedWords)

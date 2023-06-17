@@ -89,7 +89,7 @@ struct NotificationsZaps: View {
                     }
                 }
                 VStack {
-                    if zapsForMeDeduplicated.count > 0 {
+                    if !zapsForMeDeduplicated.isEmpty {
                         Button("Show more") {
                             fl.predicate = NSPredicate(
                                 format: "zappedContactPubkey == %@" + // ONLY TO ME

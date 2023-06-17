@@ -74,14 +74,14 @@ class NWCRequestQueue {
                 }
                 self.waitingRequests = self.waitingRequests.filter { now.timeIntervalSince($0.value.queuedAt) < 35 }
                 
-                if failedZaps.count > 0, let jsonData = try? self.encoder.encode(failedZaps.map { FailedZap(contactPubkey: $0.contactPubkey, eventId: $0.eventId, error: $0.error!) }) {
+                if !failedZaps.isEmpty, let jsonData = try? self.encoder.encode(failedZaps.map { FailedZap(contactPubkey: $0.contactPubkey, eventId: $0.eventId, error: $0.error!) }) {
                     
                     if let serializedFails = String(data: jsonData, encoding: .utf8) {
                         L.og.info("⚡️ Creating notification for \(failedZaps.count) failed zaps")
                         _ = PersistentNotification.createFailedNWCZaps(pubkey: NosturState.shared.activeAccountPublicKey, message: serializedFails, context: DataProvider.shared().bg)
                     }
                 }
-                if timeoutZaps.count > 0, let jsonData = try? self.encoder.encode(timeoutZaps.map { FailedZap(contactPubkey: $0.contactPubkey, eventId: $0.eventId, error: "Timeout") }) {
+                if !timeoutZaps.isEmpty, let jsonData = try? self.encoder.encode(timeoutZaps.map { FailedZap(contactPubkey: $0.contactPubkey, eventId: $0.eventId, error: "Timeout") }) {
                     
                     if let serializedFails = String(data: jsonData, encoding: .utf8) {
                         L.og.info("⚡️ Creating notification for \(timeoutZaps.count) failed zaps by timeout")

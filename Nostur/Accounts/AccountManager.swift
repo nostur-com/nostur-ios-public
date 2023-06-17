@@ -111,7 +111,7 @@ class AccountManager {
             
             // delete account
             let accounts = NosturState.shared.accounts
-            if (accounts.count < 1) {
+            if (accounts.isEmpty) {
                 NosturState.shared.onBoardingIsShown = true
                 sendNotification(.clearNavigation)
                 LVMManager.shared.listVMs.removeAll()

@@ -39,7 +39,7 @@ struct BookmarksView: View {
     var body: some View {
 //        let _ = Self._printChanges()
         ScrollView {
-            if vBookmarks.count > 0 {
+            if !vBookmarks.isEmpty {
                 LazyVStack {
                     ForEach(vBookmarks) { vBookmark in
                         PostRowDeletable(nrPost: vBookmark)

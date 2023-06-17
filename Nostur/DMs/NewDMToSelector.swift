@@ -14,7 +14,7 @@ struct NewDMToSelector: View {
     
     var body: some View {
         ScrollView {
-            if isValidNPub(debounceObject.debouncedText) && contacts.count == 0 {
+            if isValidNPub(debounceObject.debouncedText) && contacts.isEmpty {
                 Button("Send to: \(debounceObject.debouncedText)") {
                     toPubkey = try! NIP19(displayString: debounceObject.debouncedText).hexString
                 }

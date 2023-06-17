@@ -45,13 +45,13 @@ class QueuedFetcher {
         fetchSubject
             .debounce(for: .seconds(0.15), scheduler: RunLoop.main)
             .sink { [unowned self] _ in
-                guard self.pQueue.count > 0 || self.idQueue.count > 0 else { return }
+                guard !self.pQueue.isEmpty || !self.idQueue.isEmpty else { return }
                 
-                if self.idQueue.count == 0 {
+                if self.idQueue.isEmpty {
                     req(RM.getUserMetadata(pubkeys: Array(self.pQueue)))
                     self.pQueue.removeAll()
                 }
-                else if self.pQueue.count == 0 {
+                else if self.pQueue.isEmpty {
                     req(RM.getEvents(ids: Array(self.idQueue)))
                     self.idQueue.removeAll()
                 }
@@ -72,7 +72,7 @@ class QueuedFetcher {
     }
     
     public func enqueue(pTags: [String]) {
-        guard pTags.count > 0 else { return }
+        guard !pTags.isEmpty else { return }
         pTags.forEach { pTag in
             enqueuePsubject.send(pTag)
         }
@@ -80,7 +80,7 @@ class QueuedFetcher {
     }
     
     public func enqueue(pTags: Set<String>) {
-        guard pTags.count > 0 else { return }
+        guard !pTags.isEmpty else { return }
         pTags.forEach { pTag in
             enqueuePsubject.send(pTag)
         }
@@ -109,7 +109,7 @@ class QueuedFetcher {
     }
     
     public func enqueue(ids: [String]) {
-        guard ids.count > 0 else { return }
+        guard !ids.isEmpty else { return }
         ids.forEach { id in
             enqueuePsubject.send(id)
         }

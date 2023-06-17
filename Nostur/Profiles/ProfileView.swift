@@ -175,7 +175,7 @@ struct ProfileView: View {
                             Text("\(String(contact.about ?? "(No information)"))\n")
                             
                             HStack(alignment: .center, spacing:0) {
-                                if contact.followingPubkeys.count == 0 {
+                                if contact.followingPubkeys.isEmpty {
                                     ProgressView()
                                         .padding(.horizontal, 7)
                                 }

@@ -198,7 +198,7 @@ extension Contact : Identifiable {
     // [Contact] <-- NEvent.tags (clNEvent.tags) <-- Event (.clEvent)
     var followingContacts:[Contact] {
         get {
-            guard self.followingPubkeys.count != 0 else { return [] }
+            guard !self.followingPubkeys.isEmpty else { return [] }
             let fr = Contact.fetchRequest()
             fr.predicate = NSPredicate(format: "pubkey IN %@", self.followingPubkeys)
             return (try? self.managedObjectContext?.fetch(fr)) ?? []

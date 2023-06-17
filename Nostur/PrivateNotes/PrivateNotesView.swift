@@ -39,7 +39,7 @@ struct PrivateNotesView: View {
     var body: some View {
 //        let _ = Self._printChanges()
         ScrollView {
-            if privateNotes.count > 0 {
+            if !privateNotes.isEmpty {
                 LazyVStack {
                     ForEach(privateNotes) { pnInfo in
                         PrivateNoteRow(note: pnInfo.note, nrPost: pnInfo.nrPost)

@@ -26,7 +26,7 @@ extension Array where Element == Byte {
         // Remove leading zero bytes
         let bytes = self.trimLeadingZeros()
         
-        if bytes.count > 0 {
+        if !bytes.isEmpty {
             // If there is one leading zero (4 bit) left, this one removes it
             str += String(bytes[0], radix: 16)
             

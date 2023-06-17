@@ -65,7 +65,7 @@ class InstantFeed {
         Task.detached {
             self.bg.perform { [weak self] in
                 guard let self = self else { return }
-                if let account = try? Account.fetchAccount(publicKey: pubkey, context: bg), account.follows_.count > 0 {
+                if let account = try? Account.fetchAccount(publicKey: pubkey, context: bg), !account.follows_.isEmpty {
                     L.og.notice("🟪 Using account.follows")
                     self.pubkeys = Set(account.follows_.map { $0.pubkey } + [account.publicKey])
                 }

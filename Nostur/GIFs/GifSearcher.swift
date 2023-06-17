@@ -24,7 +24,7 @@ struct GifSearcher: View {
     var body: some View {
         VStack {
             SearchBox(prompt: String(localized:"Search GIF", comment:"Placeholder in GIF search field"), text: $searchTerm)
-            if autocompleteResults.count > 0 {
+            if !autocompleteResults.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     LazyHStack {
                         ForEach(bothResults.indices, id:\.self) { index in
@@ -63,7 +63,7 @@ struct GifSearcher: View {
                             }
                         }
                     }
-                    if searchResults.count == 0 {
+                    if searchResults.isEmpty {
                         ForEach(topResults) { gifResult in
                             VStack {
                                 if let gif = gifResult.media_formats["nanogif"], let url = URL(string: gif.url) {

@@ -110,7 +110,7 @@ func toHex(_ bech:String) -> String? {
 
 // Takes original tags, adds or inserts new mentioned tags the correct order (NIP-10)
 func nip10OrderedTags(oldTags:[NostrTag], mentionedTags:[NostrTag]) -> [NostrTag] {
-    if oldTags.count == 0 {
+    if oldTags.isEmpty {
         return mentionedTags
     }
     var newTags:[NostrTag] = []

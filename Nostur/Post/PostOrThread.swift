@@ -14,7 +14,7 @@ struct PostOrThread: View {
                                  connect: nrParent.replyToId != nil || nrPost.parentPosts.first?.id != nrParent.id ? .both : .bottom, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
                     .id(nrParent.id)
             }
-            PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && nrPost.parentPosts.count == 0, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
+            PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && nrPost.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
                 .id(nrPost.id)
         }
         .roundedBoxShadow()

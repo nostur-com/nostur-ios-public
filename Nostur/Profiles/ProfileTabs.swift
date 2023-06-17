@@ -27,7 +27,7 @@ struct ProfileTabs: View {
                         ProfileNotesView(pubkey: pubkey)
                     case "Following":
                         LazyVStack {
-                            if clEvents.count != 0, let pubkeys = clEvents.first!.contactPubkeys() {
+                            if !clEvents.isEmpty, let pubkeys = clEvents.first!.contactPubkeys() {
                                 
                                 let silentFollows = clEvents.first!.pubkey == NosturState.shared.pubkey ? NosturState.shared.account?.follows_.filter { $0.privateFollow }.map { $0.pubkey } : []
                                 

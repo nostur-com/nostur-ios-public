@@ -19,7 +19,7 @@ struct ProfileNotesView: View {
                     .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                     .id(nrPost.id)
             }
-            if fl.nrPosts.count > 0 {
+            if !fl.nrPosts.isEmpty {
                 Button(String(localized:"Show more", comment: "Button to show more items")) {
                     fl.predicate = NSPredicate(format: "pubkey == %@ AND kind IN {1,6,9802}", pubkey)
                     fl.loadMore(50)

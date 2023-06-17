@@ -137,7 +137,7 @@ struct DirectMessages: View {
                         }
                         switch (tab) {
                         case "Accepted":
-                            if onlyMostRecentAccepted.count > 0 {
+                            if !onlyMostRecentAccepted.isEmpty {
                                 List(onlyMostRecentAcceptedFiltered, id:\.0) { (dm, unread) in
                                     NavigationLink(value: dm) {
                                         DMRow(recentDM: dm, pubkey: pubkey, unread: unread)
@@ -153,7 +153,7 @@ struct DirectMessages: View {
                                     .centered()
                             }
                         case "Requests":
-                            if onlyMostRecentRequests.count > 0 {
+                            if !onlyMostRecentRequests.isEmpty {
                                 List(onlyMostRecentRequests, id:\.0) { (dm, rootDMcreatedAt) in
                                     NavigationLink(value: dm) {
                                         DMRow(recentDM: dm, pubkey: pubkey)

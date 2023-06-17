@@ -108,7 +108,7 @@ struct BadgeDetailView: View {
                 ContactsSearch(followingPubkeys: NosturState.shared.followingPublicKeys, prompt: "Search contacts", onSelectContacts: { selectedContacts in
                     
                     awardToPeopleIsShown = false
-                    guard selectedContacts.count > 0 else { return }
+                    guard !selectedContacts.isEmpty else { return }
                     let newBadgeAwards = createBadgeAward(ns.account!.publicKey,
                                                           badgeCode: nBadge.badgeCode!.definition,
                                                           pubkeys: selectedContacts.map { $0.pubkey })

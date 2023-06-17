@@ -59,7 +59,7 @@ struct DMConversationView: View {
     
     var isAccepted:Bool {
         // if possible infer accepted by checking if we responded (mine)
-        rootDM?.dmAccepted ?? false || (mine.count > 0)
+        rootDM?.dmAccepted ?? false || (!mine.isEmpty)
     }
     
     var allMessagesSorted:[Event] {
@@ -95,7 +95,7 @@ struct DMConversationView: View {
         if theirPubkey != nil {
             ScrollViewReader { proxy in
                 ScrollView {
-                    if messagesByDay.keys.count > 0 {
+                    if !messagesByDay.keys.isEmpty {
                         LazyVStack(pinnedViews: [.sectionFooters]) {
                             Section {
                                 ForEach(messagesByDay.keys.sorted(by: { $0 < $1 }), id:\.self) { date in

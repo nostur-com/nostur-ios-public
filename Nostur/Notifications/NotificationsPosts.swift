@@ -60,7 +60,7 @@ struct NotificationsPosts: View {
                     }
                 }
                 VStack {
-                    if fl.nrPosts.count > 0 {
+                    if !fl.nrPosts.isEmpty {
                         Button("Show more") {
                             loadMore()
                         }
@@ -116,7 +116,7 @@ struct NotificationsPosts: View {
     
     func load() {
         didLoad = true
-        if (fl.nrPosts.count == 0) {
+        if (fl.nrPosts.isEmpty) {
             req(RM.getMentions(
                 pubkeys: [pubkey],
                 kinds: [1],

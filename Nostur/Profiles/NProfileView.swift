@@ -45,7 +45,7 @@ struct NProfileView: View {
                             L.og.info("🟢 Fetching for NEventView \(pubkey) / \(identifier.bech32string)")
                             req(RM.getUserMetadata(pubkey: pubkey))
                             
-                            if identifier.relays.count > 0 {
+                            if !identifier.relays.isEmpty {
                                 fetchTask = Task {
                                     try? await Task.sleep(for: .seconds(3))
                                     let ctx = DataProvider.shared().bg

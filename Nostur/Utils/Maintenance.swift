@@ -295,7 +295,7 @@ struct Maintenance {
             //            }
             
             do {
-                if forDeletion.count > 0 {
+                if !forDeletion.isEmpty {
                     L.maintenance.info("🧹🧹 Deleted \(forDeletion.count) kind 3 events")
                 }
                 try context.save()

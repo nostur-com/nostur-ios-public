@@ -191,7 +191,7 @@ extension Account : Identifiable {
         let contacts = Contact.ensureContactsCreated(event: kind3.toNEvent(), context: context, limit:999)
         
         // if read only account, import follows. Or pendingFirstContactsFetch
-        if (contacts.count > 0) {
+        if (!contacts.isEmpty) {
 //            account.objectWillChange.send()
             for contact in contacts {
                 account.addToFollows(contact)

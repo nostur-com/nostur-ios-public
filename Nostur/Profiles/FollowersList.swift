@@ -62,7 +62,7 @@ struct FollowersList: View {
         }
         .onAppear {
             let missing = clEventsFollowingPubkeyMissingContact.map { $0.pubkey }
-            guard missing.count != 0 else { return }
+            guard !missing.isEmpty else { return }
             L.og.info("Fetching \(missing.count) missing contacts")
             QueuedFetcher.shared.enqueue(pTags: missing)
             
@@ -75,7 +75,7 @@ struct FollowersList: View {
         }
         .onDisappear {
             let missing = clEventsFollowingPubkeyMissingContact.map { $0.pubkey }
-            guard missing.count != 0 else { return }
+            guard !missing.isEmpty else { return }
             QueuedFetcher.shared.dequeue(pTags: missing)
         }
     }

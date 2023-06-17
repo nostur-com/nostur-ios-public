@@ -87,7 +87,7 @@ class NewTextRenderer { // TEXT things
             }
             return "Replying to: " + pTagsAsStrings.joined(separator: ", ") + " and \(pTags.count-4) others"
         }
-        else if (pTags.count > 0) {
+        else if (!pTags.isEmpty) {
             let pTagsAsStrings = pTags.map { pubkey in
                 let username = contactUsername(fromPubkey: pubkey, event: event)
                     .escapeMD()
@@ -112,7 +112,7 @@ class NewTextRenderer { // TEXT things
     
     // NIP-08 (deprecated in favor of NIP-27)
     func parseTagIndexedMentions(event:Event, text:String, plainText:Bool = false) -> String {
-        guard tags.count > 0 else { return text }
+        guard !tags.isEmpty else { return text }
         
         var newText = text
         let matches = text.matches(of: /#\[(\d+)\]/)

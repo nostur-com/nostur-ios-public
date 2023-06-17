@@ -100,7 +100,7 @@ class FollowerNotifier {
                 guard nEvent.kind == .contactList else { return }
                 guard nEvent.pTags().contains(NosturState.shared.activeAccountPublicKey) else { return }
                 guard let account = NosturState.shared.account else { return }
-                guard self.currentFollowerPubkeys.count > 0 else { return }
+                guard !self.currentFollowerPubkeys.isEmpty else { return }
                 guard account.privateKey != nil else { return }
                 
                 if !self.currentFollowerPubkeys.contains(nEvent.publicKey) {
@@ -114,7 +114,7 @@ class FollowerNotifier {
     private func _generateNewFollowersNotification(_ pubkey:String) {
         ctx.perform { [weak self] in
             guard let self = self else { return }
-            guard self.newFollowerPubkeys.count > 0 else { return }
+            guard !self.newFollowerPubkeys.isEmpty else { return }
             _ = PersistentNotification.create(
                 pubkey: pubkey,
                 followers: Array(self.newFollowerPubkeys),

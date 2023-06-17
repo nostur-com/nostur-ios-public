@@ -58,7 +58,7 @@ struct QuotedNoteFragmentView: View {
                             viewSize = size
                         }
                 }
-                if let firstMediaUrl = nrPost.imageUrls.first, firstMediaUrl.absoluteString.matchingStrings(regex: NRContentElementBuilder.videoUrlPattern).count > 0, viewSize.width > 0 {
+                if let firstMediaUrl = nrPost.imageUrls.first, !firstMediaUrl.absoluteString.matchingStrings(regex: NRContentElementBuilder.videoUrlPattern).isEmpty, viewSize.width > 0 {
                     NosturVideoViewur(url: firstMediaUrl, pubkey: nrPost.pubkey, videoWidth: viewSize.width - 20, isFollowing:nrPost.following)
                 }
                 else if let firstMediaUrl = nrPost.imageUrls.first, viewSize.width > 0 {

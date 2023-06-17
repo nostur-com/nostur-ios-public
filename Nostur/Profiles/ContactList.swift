@@ -51,12 +51,12 @@ struct ContactList: View {
             
         }
         .onAppear {
-            guard missing.count != 0 else { return }
+            guard !missing.isEmpty else { return }
             L.og.info("Fetching \(missing.count) missing contacts")
             QueuedFetcher.shared.enqueue(pTags: missing)
         }
         .onDisappear {
-            guard missing.count != 0 else { return }
+            guard !missing.isEmpty else { return }
             QueuedFetcher.shared.dequeue(pTags: missing)
         }
     }

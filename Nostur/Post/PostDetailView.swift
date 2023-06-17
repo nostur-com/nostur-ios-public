@@ -205,7 +205,7 @@ struct PostAndParent: View {
                 
                 DataProvider.shared().bg.perform {
                     EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.003")
-                    if (nrPost.missingPs.count > 0) {
+                    if (!nrPost.missingPs.isEmpty) {
                         QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
                     }
                     
@@ -232,7 +232,7 @@ struct PostAndParent: View {
             }
             .onDisappear {
                 DataProvider.shared().bg.perform {
-                    if (nrPost.missingPs.count > 0) {
+                    if (!nrPost.missingPs.isEmpty) {
                         QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
                     }
                 }

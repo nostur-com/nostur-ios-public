@@ -64,7 +64,7 @@ class Unpublisher {
     }
     
     @objc func onNextTick(notification: NSNotification) {
-        guard queue.count != 0 else { return }
+        guard !queue.isEmpty else { return }
         
         queue
             .filter { $0.createdAt < Date.now.addingTimeInterval(-(PUBLISH_DELAY)) }
@@ -77,7 +77,7 @@ class Unpublisher {
     }
     
     @objc func appMovedToBackground(notification: NSNotification) {
-        guard queue.count != 0 else { return }
+        guard !queue.isEmpty else { return }
         queue.forEach({ sendToRelays($0.nEvent) })
         queue.removeAll()
         

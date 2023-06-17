@@ -41,7 +41,7 @@ struct AppView: View {
                 .padding()
                 
             }
-            else if !didAcceptTerms || isOnboarding || ns.accounts.count == 0 || ns.activeAccountPublicKey.isEmpty {
+            else if !didAcceptTerms || isOnboarding || ns.accounts.isEmpty || ns.activeAccountPublicKey.isEmpty {
                 Onboarding()
                     .environmentObject(ns)
                     .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
@@ -118,7 +118,7 @@ struct AppView: View {
                 }
             }
         }
-        if (ns.rawExplorePubkeys.count == 0) {
+        if (ns.rawExplorePubkeys.isEmpty) {
             // Fetch updated contactlist for Explore feed
             
             // First get from cache

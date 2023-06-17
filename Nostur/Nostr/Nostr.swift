@@ -164,7 +164,7 @@ public struct NostrTag: Codable {
         let container = try decoder.singleValueContainer()
         tag = try container.decode([String].self)
 
-        guard tag.count > 0 else {
+        guard !tag.isEmpty else {
             throw DecodingError.dataCorrupted(.init(codingPath: .init(), debugDescription: "missing tag"))
         }
     }
@@ -381,7 +381,7 @@ struct TagsHelpers {
     }
 
     func noEtags() -> Bool {
-        return eTags().count == 0
+        return eTags().isEmpty
     }
 
     func oneEtag() -> Bool {
@@ -405,7 +405,7 @@ struct TagsHelpers {
         // PREFERRED NEW METHOD
         // NIP-10: Those marked with "reply" denote the id of the reply event being responded to.
         let replyEtags = tags.filter { $0.type == "e" && $0.tag.count == 4 && $0.tag[3] == "reply" }
-        if (replyEtags.count != 0) {
+        if (!replyEtags.isEmpty) {
             return replyEtags.first
         }
 
@@ -452,7 +452,7 @@ struct TagsHelpers {
         }
         // PREFERRED NEW METHOD
         let mentionEtags = tags.filter { $0.type == "e" && $0.tag.count == 4 && $0.tag[3] == "mention" }
-        if mentionEtags.count > 0 {
+        if !mentionEtags.isEmpty {
             return mentionEtags
         }
 
@@ -469,7 +469,7 @@ struct TagsHelpers {
         }
         // PREFERRED NEW METHOD
         let mentionEtags = tags.filter { $0.type == "e" && $0.tag.count == 4 && $0.tag[3] == "mention" }
-        if mentionEtags.count > 0 {
+        if !mentionEtags.isEmpty {
             return mentionEtags
         }
         return nil

@@ -24,7 +24,7 @@ struct KindResolver: View {
             }
         }
         .onAppear {
-            if nrPost.missingPs.count > 0 {
+            if !nrPost.missingPs.isEmpty {
                 DataProvider.shared().bg.perform {
                     EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "KindResolver.001")
                     QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
@@ -32,7 +32,7 @@ struct KindResolver: View {
             }
         }
         .onDisappear {
-            if nrPost.missingPs.count > 0 {
+            if !nrPost.missingPs.isEmpty {
                 QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
             }
         }

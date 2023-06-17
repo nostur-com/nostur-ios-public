@@ -50,7 +50,7 @@ public final class NewPostModel: ObservableObject {
         guard NosturState.shared.account?.privateKey != nil else { NosturState.shared.readOnlyAccountSheetShown = true; return }
         var nEvent = nEvent ?? NEvent(content: "")
         nEvent.createdAt = NTimestamp.init(date: Date())
-        if (pastedImages.count > 0) {
+        if (!pastedImages.isEmpty) {
             uploading = true
             
             uploadImages(images: pastedImages)
@@ -152,7 +152,7 @@ public final class NewPostModel: ObservableObject {
         
         DataProvider.shared().bg.perform {
             let previewEvent = createPreviewEvent(nEvent)
-            if (self.pastedImages.count > 0) {
+            if (!self.pastedImages.isEmpty) {
                 previewEvent.previewImages = self.pastedImages
             }
             let nrPost = NRPost(event: previewEvent)

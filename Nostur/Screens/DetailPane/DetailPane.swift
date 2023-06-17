@@ -111,7 +111,7 @@ struct DetailPane: View {
                         Spacer()
                         Image("NosturLogoFull")
                             .resizable()
-                            .opacity(tm.tabs.count > 0 ? 0 : 0.3)
+                            .opacity(!tm.tabs.isEmpty ? 0 : 0.3)
                             .frame(width: 400, height: 400)
                             .offset(x:offsetX, y:50)
                             .onAppear {

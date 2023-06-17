@@ -18,7 +18,7 @@ class NRReplyingToBuilder {
             }
             return String(localized:"Replying to: \(pTagsAsStrings.joined(separator: ", ")) and \(pTags.count-4) others", comment: "Shown in a post, Replying: (names) and (x) others")
         }
-        else if (pTags.count > 0) {
+        else if (!pTags.isEmpty) {
             let pTagsAsStrings = pTags.map { pubkey in
                 let username = contactUsername(fromPubkey: pubkey, event: event)
                     .escapeMD()

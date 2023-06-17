@@ -251,17 +251,17 @@ public struct RequestMessage {
         let authors = tags.filter { $0.type == "p" }.map { $0.pubkey }
         
         // TODO: UGH clean up this if then mess
-        if (ids.count > 0 && authors.count > 0) {
+        if (!ids.isEmpty && !authors.isEmpty) {
             return """
     ["REQ", "\(subscriptionId ?? ("RELATED-"+UUID().uuidString))", {"ids": \(JSON.shared.toString(ids))}, {"authors": \(JSON.shared.toString(authors)), "kinds": [0], "limit": \(limit)}]
     """
         }
-        else if (ids.count > 0) {
+        else if (!ids.isEmpty) {
             return """
     ["REQ", "\(subscriptionId ?? ("RELATED-"+UUID().uuidString))", {"ids": \(JSON.shared.toString(ids))}]
     """
         }
-        else if (authors.count > 0) {
+        else if (!authors.isEmpty) {
             return """
     ["REQ", "\(subscriptionId ?? ("RELATED-"+UUID().uuidString))", {"authors": \(JSON.shared.toString(authors)), "kinds": [0], "limit": \(limit)}]
     """
@@ -276,17 +276,17 @@ public struct RequestMessage {
         let authors = tags.filter { $0.0 == "p" }.map { $0.1 }
         
         // TODO: UGH clean up this if then mess
-        if (ids.count > 0 && authors.count > 0) {
+        if (!ids.isEmpty && !authors.isEmpty) {
             return """
     ["REQ", "\(subscriptionId ?? ("RELATED-"+UUID().uuidString))", {"ids": \(JSON.shared.toString(ids))}, {"authors": \(JSON.shared.toString(authors)), "kinds": [0], "limit": \(limit)}]
     """
         }
-        else if (ids.count > 0) {
+        else if (!ids.isEmpty) {
             return """
     ["REQ", "\(subscriptionId ?? ("RELATED-"+UUID().uuidString))", {"ids": \(JSON.shared.toString(ids))}]
     """
         }
-        else if (authors.count > 0) {
+        else if (!authors.isEmpty) {
             return """
     ["REQ", "\(subscriptionId ?? ("RELATED-"+UUID().uuidString))", {"authors": \(JSON.shared.toString(authors)), "kinds": [0], "limit": \(limit)}]
     """

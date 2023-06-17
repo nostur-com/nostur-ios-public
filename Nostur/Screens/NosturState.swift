@@ -302,7 +302,7 @@ final class NosturState : ObservableObject {
     func followsYou(_ contact:Contact) -> Bool {
         guard let clEvent = contact.clEvent else { return false }
         guard let account = account else { return false }
-        return clEvent.fastTags.filter { $0.0 == "p" && $0.1 == account.publicKey }.count > 0
+        return !clEvent.fastTags.filter { $0.0 == "p" && $0.1 == account.publicKey }.isEmpty
     }
     
     func muteConversation(_ nrPost:NRPost) {
@@ -360,7 +360,7 @@ final class NosturState : ObservableObject {
         if (account.privateKey != nil) {
             AccountManager.shared.deletePrivateKey(forPublicKeyHex: account.publicKey)
         }
-        if (accounts.count < 1) {
+        if (accounts.isEmpty) {
             onBoardingIsShown = true
             sendNotification(.clearNavigation)
             setAccount(account: nil)
