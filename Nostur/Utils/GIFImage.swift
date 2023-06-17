@@ -4,10 +4,11 @@
 
 import SwiftUI
 import Gifu
+import Combine
 
 public struct GIFImage: View {
      private let source: GIFSource
-    private var loopCount:Int = 0
+     private var loopCount:Int = 0
      private var isResizable = false
 
      /// Initializes the view with the given GIF image data.
@@ -49,6 +50,7 @@ public struct GIFImage: View {
      let source: GIFSource
      let loopCount: Int
      let isResizable: Bool
+     var subscriptions = Set<AnyCancellable>()
 
      func makeUIView(context: Context) -> GIFImageView {
          let imageView = GIFImageView()
@@ -56,6 +58,18 @@ public struct GIFImage: View {
              imageView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
              imageView.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
          }
+         receiveNotification(.scenePhaseBackground)
+             .receive(on: RunLoop.main)
+             .sink { _ in
+                 imageView.stopAnimatingGIF()
+             }
+             .store(in: &context.coordinator.subscriptions)
+         receiveNotification(.scenePhaseActive)
+             .receive(on: RunLoop.main)
+             .sink { _ in
+                 imageView.startAnimatingGIF()
+             }
+             .store(in: &context.coordinator.subscriptions)
          return imageView
      }
 
@@ -72,6 +86,14 @@ public struct GIFImage: View {
 
      static func dismantleUIView(_ imageView: GIFImageView, coordinator: ()) {
          imageView.prepareForReuse()
+     }
+     
+     class Coordinator: NSObject {
+         var subscriptions = Set<AnyCancellable>()
+     }
+     
+     func makeCoordinator() -> Coordinator {
+         Coordinator()
      }
  }
 

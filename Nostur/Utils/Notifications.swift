@@ -279,4 +279,11 @@ extension Notification.Name {
     static var lightningStrike: Notification.Name {
         return Notification.Name("lightningStrike")
     }
+    
+    static var scenePhaseActive: Notification.Name {
+        return Notification.Name("scenePhaseActive")
+    }
+    static var scenePhaseBackground: Notification.Name {
+        return Notification.Name("scenePhaseBackground")
+    }
 }
