@@ -103,6 +103,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     }
     
     public func makeUIView(context: Context) -> UITextView {
+        textView.smartInsertDeleteType = .no
         textView.isScrollEnabled = true
         textView.backgroundColor = UIColor.clear
         textView.delegate = context.coordinator
