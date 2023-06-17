@@ -30,9 +30,9 @@ struct NotificationsPosts: View {
     var notifications:[PostOrNotification] {
         // combine nrPosts and PersistentNotifications in the list
         return (pNotifications.map { pNot in
-            PostOrNotification(type: .NOTIFICATION, notification: pNot)
+            PostOrNotification(id: "NOTIF-" + pNot.id.uuidString , type: .NOTIFICATION, notification: pNot)
         } + fl.nrPosts.map({ nrPost in
-            PostOrNotification(type: .POST, post: nrPost)
+            PostOrNotification(id: nrPost.id, type: .POST, post: nrPost)
         }))
         .sorted(by: { p1, p2 in
             p1.createdAt > p2.createdAt
@@ -229,13 +229,10 @@ struct NotificationsNotes_Previews: PreviewProvider {
 
 
 struct PostOrNotification: Identifiable {
+    let id:String
     let type:PostOrNotificationType
     var post:NRPost?
     var notification:PersistentNotification?
-    
-    var id:String {
-        type.hashValue.description + (type == .POST ? post!.id : notification!.id.uuidString)
-    }
     
     var createdAt:Date {
         (type == .POST ? post!.createdAt : notification!.createdAt)

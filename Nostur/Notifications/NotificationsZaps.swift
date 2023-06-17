@@ -48,9 +48,9 @@ struct NotificationsZaps: View {
     var notifications:[ZapOrNotification] {
         // combine nrPosts and PersistentNotifications in the list
         return (pNotifications.map { pNot in
-            ZapOrNotification(type: .NOTIFICATION, notification: pNot)
+            ZapOrNotification(id: "NOTIF-" + pNot.id.uuidString, type: .NOTIFICATION, notification: pNot)
         } + zapsForMeDeduplicated.map({ zapInfo in
-            ZapOrNotification(type: .ZAP, zapInfo: zapInfo)
+            ZapOrNotification(id: zapInfo.id, type: .ZAP, zapInfo: zapInfo)
         }))
         .sorted(by: { p1, p2 in
             p1.createdAt > p2.createdAt
@@ -409,13 +409,10 @@ struct NotificationsZaps_Previews: PreviewProvider {
 
 
 struct ZapOrNotification: Identifiable {
+    let id:String
     let type:ZapOrNotificationType
     var zapInfo:ZapInfo?
     var notification:PersistentNotification?
-    
-    var id:String {
-        type.hashValue.description + (type == .ZAP ? zapInfo!.id : notification!.id.uuidString)
-    }
     
     var createdAt:Date {
         (type == .ZAP ? zapInfo!.zap.date : notification!.createdAt)
