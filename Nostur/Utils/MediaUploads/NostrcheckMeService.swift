@@ -4,6 +4,14 @@ import Foundation
 // different JSON response as others
 // max 5 public uploads per day?
 // api key in in form data instead of header
+
+
+// CURL EXAMPLE
+//curl --location 'https://nostrcheck.me/api/media.php' \
+//--form 'publicgallery=@"testupload.png"' \
+//--form 'apikey="26d075787d261660682fb9d20dbffa538c708b1eda921d0efa2be95fbef4910a"' \
+//--form 'type="media"'
+
 func getNostrCheckMeService() -> MediaUploadService {
     
     let NOSTRCHECK_PUBLIC_API_KEY = Bundle.main.infoDictionary?["NOSTRCHECK_PUBLIC_API_KEY"] as? String ?? ""

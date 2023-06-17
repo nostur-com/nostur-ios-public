@@ -1,6 +1,9 @@
 import Foundation
 
 // Same as IMGUR but no Client ID needed
+
+// CURL EXAMPLE
+// curl -X POST -H "Content-Type: multipart/form-data" -F "image=@testupload.png" https://nostrimg.com/api/upload | jq
 func getNostrimgService() -> MediaUploadService {
     return MediaUploadService(name: "nostrimg.com", request: { imageData in
         let url = URL(string: "https://nostrimg.com/api/upload")!

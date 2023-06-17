@@ -2,6 +2,13 @@ import Foundation
 
 // Same as IMGUR but no Client ID needed
 // link will be just the image url but need to replace http with https
+
+//  CURL EXAMPLE
+// curl -X POST 'https://void.cat/upload?cli=true' \
+// -H 'accept: */*' \
+// -H 'V-Content-Type: image/png' \
+// --data-binary "@testupload.png"
+
 func getVoidCatService() -> MediaUploadService {
     return MediaUploadService(name: "void.cat", request: { imageData in
         let url = URL(string: "https://void.cat/upload?cli=true")!

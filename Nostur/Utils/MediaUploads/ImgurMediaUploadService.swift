@@ -3,6 +3,9 @@ import Foundation
 // needs registered Client ID
 let IMGUR_CLIENT_ID = Bundle.main.infoDictionary?["IMGUR_CLIENT_ID"] as? String ?? ""
 
+// CURL EXAMPLE
+// curl -X POST -H "Authorization: Client-ID id_here" -H "Content-Type: multipart/form-data" -F "image=@testupload.png" https://api.imgur.com/3/upload | jq
+
 func getImgurService() -> MediaUploadService {
     return MediaUploadService(name: "imgur.com", request: { imageData in
         let url = URL(string: "https://api.imgur.com/3/upload")!
