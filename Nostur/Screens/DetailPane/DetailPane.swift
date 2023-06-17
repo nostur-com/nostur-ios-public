@@ -55,9 +55,15 @@ struct DetailPane: View {
                                     if (tm.selected == tm.tabs[safe: index]) {
                                         if (index != 0) {
                                             tm.selected = tm.tabs[safe: (index - 1)]
+                                            if let id = tm.selected?.id {
+                                                proxy.scrollTo(id)
+                                            }
                                         }
                                         else if (tm.tabs.count > 1) {
                                             tm.selected = tm.tabs[1]
+                                            if let id = tm.selected?.id {
+                                                proxy.scrollTo(id)
+                                            }
                                         }
                                         if let nrPost = tm.selected?.nrPost {
                                             EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NosturTabButton.onClose")
