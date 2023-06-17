@@ -61,7 +61,7 @@ class NWCRequestQueue {
                 guard let self = self else { return }
                 var failedZaps = [Zap]()
                 var timeoutZaps = [Zap]()
-                for req in self.waitingRequests.filter({ now.timeIntervalSince($0.value.queuedAt) >= 35 }) {
+                for req in self.waitingRequests.filter({ now.timeIntervalSince($0.value.queuedAt) >= 55 }) {
                     if req.value.zap?.error != nil { // Received error from NWC
                         failedZaps.append(req.value.zap!)
                     }
@@ -72,7 +72,7 @@ class NWCRequestQueue {
                         L.og.info("⚡️ timeout for req: \(req.value.request.id) .. but has no .zap")
                     }
                 }
-                self.waitingRequests = self.waitingRequests.filter { now.timeIntervalSince($0.value.queuedAt) < 35 }
+                self.waitingRequests = self.waitingRequests.filter { now.timeIntervalSince($0.value.queuedAt) < 55 }
                 
                 if !failedZaps.isEmpty, let jsonData = try? self.encoder.encode(failedZaps.map { FailedZap(contactPubkey: $0.contactPubkey, eventId: $0.eventId, error: $0.error!) }) {
                     

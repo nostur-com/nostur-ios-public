@@ -36,7 +36,7 @@ struct ZapNotificationView: View {
             switch notification.type {
             case .failedZaps:
                 if let parsed = try? JSONDecoder().decode(FailedZaps.self, from: notification.content.data(using: .utf8)!) {
-                    let forRendering = String(localized:"Zaps failed on: \(createErrorLinks(parsed)).", comment: "Message for failed zaps on: (post 1, post 2, post 3...)")
+                    let forRendering = String(localized:"Zaps may have failed on: \(createErrorLinks(parsed)).", comment: "Message for possibly failed zaps on: (post 1, post 2, post 3...)")
                     if let rendered = try? AttributedString(markdown: forRendering, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace)) {
                         Text(rendered)
                     }

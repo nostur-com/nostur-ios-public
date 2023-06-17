@@ -27,12 +27,12 @@ class NWCZapQueue {
             DataProvider.shared().bg.perform { [weak self] in
                 guard let self = self else { return }
                 var failedZaps = [Zap]()
-                for zap in self.waitingZaps.filter({ now.timeIntervalSince($0.value.queuedAt) >= 35 }) {
+                for zap in self.waitingZaps.filter({ now.timeIntervalSince($0.value.queuedAt) >= 55 }) {
                     if zap.value.error != nil {
                         failedZaps.append(zap.value)
                     }
                 }
-                self.waitingZaps = self.waitingZaps.filter { now.timeIntervalSince($0.value.queuedAt) < 35 }
+                self.waitingZaps = self.waitingZaps.filter { now.timeIntervalSince($0.value.queuedAt) < 55 }
                 
                 if !failedZaps.isEmpty, let jsonData = try? self.encoder.encode(failedZaps.map { FailedZap(contactPubkey: $0.contactPubkey, eventId: $0.eventId, error: $0.error!) }) {
                     
