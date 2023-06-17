@@ -56,7 +56,10 @@ final class SettingsStore: ObservableObject {
         getImgurService(),
         
         // needs registered Client ID
-        getNostrCheckMeService()
+        getNostrCheckMeService(),
+        
+        // url in json response but need to replace http with https
+        getNostrFilesDevService(),
     
         // no api, parse media link from response
 //        getNostrBuildService(),
