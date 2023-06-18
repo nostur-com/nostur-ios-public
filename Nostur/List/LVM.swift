@@ -876,14 +876,11 @@ extension LVM {
                 let context = DataProvider.shared().bg
                 context.perform { [weak self] in
                     guard let self = self else { return }
-//                    let transformer = VPostTransformer.bg
-                    
+                    EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "LVM.showOwnNewPostsImmediately")
                     let newNRPostLeaf = NRPost(event: event, withParents: true, withRepliesCount: true)
                     DispatchQueue.main.async {
                         self.nrPostLeafs.insert(newNRPostLeaf, at: 0)
-//                        print("COUNTER D: \(self.lvmCounter.count)")
                         self.lvmCounter.count = self.isAtTop && SettingsStore.shared.autoScroll ? 0 : (self.lvmCounter.count + 1)
-//                        print("COUNTER DD: \(self.lvmCounter.count)")
                     }
                 }
             }

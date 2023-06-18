@@ -2040,10 +2040,10 @@ Heading</note>
         <target>Zaps failed on: %@ (Timeout).</target>
         <note>Message for failed zaps on: (contact #1, contact #2, contact #3...) because time out.</note>
       </trans-unit>
-      <trans-unit id="Zaps failed on: %@." xml:space="preserve">
-        <source>Zaps failed on: %@.</source>
-        <target>Zaps failed on: %@.</target>
-        <note>Message for failed zaps on: (post 1, post 2, post 3...)</note>
+      <trans-unit id="Zaps may have failed on: %@." xml:space="preserve">
+        <source>Zaps may have failed on: %@.</source>
+        <target>Zaps may have failed on: %@.</target>
+        <note>Message for possibly failed zaps on: (post 1, post 2, post 3...)</note>
       </trans-unit>
       <trans-unit id="Zaps received recently" xml:space="preserve">
         <source>Zaps received recently</source>
