@@ -362,6 +362,11 @@ Navigation title for Add Existing Account screen</note>
         <target>All accounts</target>
         <note>Menu item to select All accounts</note>
       </trans-unit>
+      <trans-unit id="Allows posts from your follows only (strict), or also your follows follows (normal)" xml:space="preserve">
+        <source>Allows posts from your follows only (strict), or also your follows follows (normal)</source>
+        <target>Allows posts from your follows only (strict), or also your follows follows (normal)</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Anon" xml:space="preserve">
         <source>Anon</source>
         <target>Anon</target>
@@ -1756,6 +1761,11 @@ Button to skip adding account and use the guest account instead</note>
         <target>Spam</target>
         <note>Menu item in choice list</note>
       </trans-unit>
+      <trans-unit id="Spam filtering" xml:space="preserve">
+        <source>Spam filtering</source>
+        <target>Spam filtering</target>
+        <note>Setting heading on settings screen</note>
+      </trans-unit>
       <trans-unit id="Specific word or sentence" xml:space="preserve">
         <source>Specific word or sentence</source>
         <target>Specific word or sentence</target>
@@ -1908,6 +1918,11 @@ Button to skip adding account and use the guest account instead</note>
       <trans-unit id="We Don't Need No Stinkin' Badges" xml:space="preserve">
         <source>We Don't Need No Stinkin' Badges</source>
         <target>We Don't Need No Stinkin' Badges</target>
+        <note>Setting on settings screen</note>
+      </trans-unit>
+      <trans-unit id="Web of Trust" xml:space="preserve">
+        <source>Web of Trust</source>
+        <target>Web of Trust</target>
         <note>Setting on settings screen</note>
       </trans-unit>
       <trans-unit id="Welcome to **Nostur**" xml:space="preserve">

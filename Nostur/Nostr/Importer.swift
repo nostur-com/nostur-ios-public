@@ -247,9 +247,13 @@ class Importer {
                             }
                         }
 
-                        let n = event
-                        DispatchQueue.main.async {
-                            sendNotification(.newFollowingListFromRelay, n)
+                        
+                        // Send new following list notification, but skip if it is for building the Web of Trust
+                        if let subId = message.subscriptionId, subId.prefix(7) != "WoTFol-" {
+                            let n = event
+                            DispatchQueue.main.async {
+                                sendNotification(.newFollowingListFromRelay, n)
+                            }
                         }
                     }
                     

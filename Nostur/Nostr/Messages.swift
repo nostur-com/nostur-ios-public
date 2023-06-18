@@ -301,6 +301,12 @@ public struct RequestMessage {
 """
     }
     
+    static func getAuthorContactsLists(pubkeys:[String], limit:Int = 999, subscriptionId:String? = nil) -> String {
+        return """
+["REQ", "\(subscriptionId ?? "ACLS-" + UUID().uuidString)", {"authors": \(fasterShort(pubkeys)), "kinds": [3], "limit": \(limit)}]
+"""
+    }
+    
     static func getFollowers(pubkey:String, since:NTimestamp? = nil, subscriptionId:String? = nil) -> String {
         if let since {
             return """

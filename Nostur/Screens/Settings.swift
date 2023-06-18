@@ -51,20 +51,14 @@ struct Settings: View {
         Form {
 
             Section(header: Text("Display", comment:"Setting heading on settings screen")) {
-                Toggle(isOn: $settings.hideBadges) {
-                    Text("We Don't Need No Stinkin' Badges", comment:"Setting on settings screen")
-                    Text("Hides badges from profiles and feeds", comment: "Setting on settings screen")
-                }
-                Toggle(isOn: $settings.hideEmojisInNames) {
-                    Text("Hide emojis in names", comment:"Setting on settings screen")
+                Toggle(isOn: $settings.fullWidthImages) {
+                    Text("Enable full width pictures", comment:"Setting on settings screen")
                 }
                 Toggle(isOn: $settings.restrictAutoDownload) {
                     Text("Restrict images to following", comment:"Setting on settings screen")
                     Text("Only auto-download images in new posts from people you follow\nToggle off to download from all", comment:"Setting on settings screen")
                 }
-                Toggle(isOn: $settings.fullWidthImages) {
-                    Text("Enable full width pictures", comment:"Setting on settings screen")
-                }
+                
                 Toggle(isOn: $settings.animatedPFPenabled) {
                     Text("Enable animated profile pics", comment:"Setting on settings screen")
                     Text("Disable to improve scrolling performance", comment:"Setting on settings screen")
@@ -85,180 +79,228 @@ struct Settings: View {
                     Text("Loading indicator", comment:"Setting on settings screen")
                     Text("Shows when items are being processed", comment:"Setting on settings screen")
                 }
-            }
-            
-            Section(header: Text("Image uploading", comment:"Setting heading on settings screen")) {
-                VStack {
-                    Picker(selection: $settings.defaultMediaUploadService) {
-                        ForEach(SettingsStore.mediaUploadServiceOptions) {
-                            Text($0.name).tag($0)
-                        }
-                    } label: {
-                        Text("Media upload service", comment:"Setting on settings screen")
-                    }
+                Toggle(isOn: $settings.hideBadges) {
+                    Text("We Don't Need No Stinkin' Badges", comment:"Setting on settings screen")
+                    Text("Hides badges from profiles and feeds", comment: "Setting on settings screen")
+                }
+                Toggle(isOn: $settings.hideEmojisInNames) {
+                    Text("Hide emojis in names", comment:"Setting on settings screen")
                 }
             }
             
-            Section(header: Text("Zapping", comment:"Setting heading on settings screen")) {
-                
-                VStack {
-                    Picker(selection: $settings.defaultLightningWallet) {
-                        ForEach(SettingsStore.walletOptions) {
-                            Text($0.name).tag($0)
+            Group {
+                Section(header: Text("Spam filtering", comment:"Setting heading on settings screen")) {
+                    VStack {
+                        Picker(selection: $settings.webOfTrustLevel) {
+                            ForEach(SettingsStore.WebOfTrustLevel.allCases, id:\.self) {
+                                Text($0.localized).tag($0.rawValue)
+                            }
+                        } label: {
+                            Text("Web of Trust filter", comment:"Setting on settings screen")
                         }
-                    } label: {
-                        Text("Lightning wallet", comment:"Setting on settings screen")
+                        .onChange(of: settings.webOfTrustLevel) { newValue in
+                            if newValue == SettingsStore.WebOfTrustLevel.normal.rawValue {
+                                NosturState.shared.wot?.loadNormal()
+                            }
+                        }
                     }
+                    Text("Filter by your follows only (strict), or also your follows follows (normal)").font(.caption).foregroundColor(.gray)
                     
-                    Slider(value: $sliderValue, in: SLIDER_MIN...SLIDER_MAX) {
+                    HStack {
+                        Text("Last updated: \(NosturState.shared.wot?.lastUpdated?.formatted() ?? "Never")", comment: "Last updated date of WoT in Settings")
+                            .task(priority: .medium) {
+                                NosturState.shared.wot?.loadLastUpdatedDate()
+                            }
+                        if settings.webOfTrustLevel == SettingsStore.WebOfTrustLevel.off.rawValue {
+                            Text("Allowed: Everyone")
+                        }
+                        else if let count = NosturState.shared.wot?.allowedKeysCount {
+                            Text("Allowed: \(count) contacts")
+                        }
                         
-                    } minimumValueLabel: {
-                        Text("\(SLIDER_MIN.clean)")
-                    } maximumValueLabel: {
-                        Text("\(SLIDER_MAX.clean)")
+                        Spacer()
+                        Button(String(localized:"Update", comment:"Button to update WoT")) {
+                            NosturState.shared.wot?.loadNormal()
+                        }
                     }
-                    Text("Zap \(settings.defaultZapAmount.satsFormatted) sats by default (\(fiatPrice))", comment: "Describes how much sats will be zapped by default, first variable is sats, second is dollar price")
                 }
-                .onChange(of: settings.defaultLightningWallet) { newWallet in
-                    if newWallet.scheme == "nostur:nwc:alby:" {
-                        // trigger alby setup
-                        albyNWCsheetShown = true
-                    }
-                    else if newWallet.scheme == "nostur:nwc:custom:" {
-                        // trigger custom NWC setup
-                        customNWCsheetShown = true
-                    }
-                    else {
-                        settings.activeNWCconnectionId = ""
+                
+                Section(header: Text("Image uploading", comment:"Setting heading on settings screen")) {
+                    VStack {
+                        Picker(selection: $settings.defaultMediaUploadService) {
+                            ForEach(SettingsStore.mediaUploadServiceOptions) {
+                                Text($0.name).tag($0)
+                            }
+                        } label: {
+                            Text("Media upload service", comment:"Setting on settings screen")
+                        }
                     }
                 }
             }
             
-            Section(header: Text("Data export")) {
-                Button("Save to file...") {
-                    guard ns.account != nil else { L.og.error("Cannot export, no account"); return }
-                    showExporter.toggle()
+            Group {
+                Section(header: Text("Zapping", comment:"Setting heading on settings screen")) {
+                    
+                    VStack {
+                        Picker(selection: $settings.defaultLightningWallet) {
+                            ForEach(SettingsStore.walletOptions) {
+                                Text($0.name).tag($0)
+                            }
+                        } label: {
+                            Text("Lightning wallet", comment:"Setting on settings screen")
+                        }
+                        
+                        Slider(value: $sliderValue, in: SLIDER_MIN...SLIDER_MAX) {
+                            
+                        } minimumValueLabel: {
+                            Text("\(SLIDER_MIN.clean)")
+                        } maximumValueLabel: {
+                            Text("\(SLIDER_MAX.clean)")
+                        }
+                        Text("Zap \(settings.defaultZapAmount.satsFormatted) sats by default (\(fiatPrice))", comment: "Describes how much sats will be zapped by default, first variable is sats, second is dollar price")
+                    }
+                    .onChange(of: settings.defaultLightningWallet) { newWallet in
+                        if newWallet.scheme == "nostur:nwc:alby:" {
+                            // trigger alby setup
+                            albyNWCsheetShown = true
+                        }
+                        else if newWallet.scheme == "nostur:nwc:custom:" {
+                            // trigger custom NWC setup
+                            customNWCsheetShown = true
+                        }
+                        else {
+                            settings.activeNWCconnectionId = ""
+                        }
+                    }
                 }
-                if (showExporter) {
-                    Color.clear
-                        .fileExporter(isPresented: $showExporter, document: EventsArchive(pubkey: ns.account!.publicKey), contentType: .events, defaultFilename: "Exported Nostur Events - \(String(ns.account!.npub.prefix(11)))") { result in
-                            switch result {
+                
+                Section(header: Text("Data export")) {
+                    Button("Save to file...") {
+                        guard ns.account != nil else { L.og.error("Cannot export, no account"); return }
+                        showExporter.toggle()
+                    }
+                    if (showExporter) {
+                        Color.clear
+                            .fileExporter(isPresented: $showExporter, document: EventsArchive(pubkey: ns.account!.publicKey), contentType: .events, defaultFilename: "Exported Nostur Events - \(String(ns.account!.npub.prefix(11)))") { result in
+                                switch result {
                                 case .success(let url):
-                                L.og.info("Saved to \(url)")
+                                    L.og.info("Saved to \(url)")
                                 case .failure(let error):
                                     print(error.localizedDescription)
+                                }
                             }
-                        }
+                    }
                 }
-            }
-            
-            Section(header: Text("Relays", comment: "Relay settings heading")) {
-                RelaysView()
-                Button {
-                    createRelayPresented = true
-                } label: {
-                    Label("Add relay", systemImage: "plus")
-                }
-                .sheet(isPresented: $createRelayPresented) {
-                    NewRelayView { url in
-                        let relay = Relay(context: viewContext)
-                        relay.id = UUID()
-                        relay.createdAt = Date()
-                        relay.url = url
-
-                        do {
-                            try viewContext.save()
-                            if (relay.read || relay.write) {
-                                _ = sp.addSocket(relayId: relay.objectID.uriRepresentation().absoluteString, url: relay.url!, read: relay.read, write: relay.write)
+                
+                Section(header: Text("Relays", comment: "Relay settings heading")) {
+                    RelaysView()
+                    Button {
+                        createRelayPresented = true
+                    } label: {
+                        Label("Add relay", systemImage: "plus")
+                    }
+                    .sheet(isPresented: $createRelayPresented) {
+                        NewRelayView { url in
+                            let relay = Relay(context: viewContext)
+                            relay.id = UUID()
+                            relay.createdAt = Date()
+                            relay.url = url
+                            
+                            do {
+                                try viewContext.save()
+                                if (relay.read || relay.write) {
+                                    _ = sp.addSocket(relayId: relay.objectID.uriRepresentation().absoluteString, url: relay.url!, read: relay.read, write: relay.write)
+                                }
+                            } catch {
+                                L.og.error("Unresolved error \(error)")
                             }
-                        } catch {
-                            L.og.error("Unresolved error \(error)")
                         }
                     }
                 }
-            }
-            
-            Section(header: Text("Caches", comment: "Settings heading")) {
-                HStack {
-                    Text("Profile pictures: \(pfpSize)", comment: "Message showing size of Profile pictures cache")
-                        .task(priority: .medium) {
-                            let cache = ImageProcessing.shared.pfp.configuration.dataCache as! DataCache
-                            pfpSize = "\((cache.totalSize / 1024 / 1024)) MB"
-                        }
-                    Spacer()
-                    Button(String(localized:"Clear", comment:"Button to clear cache")) {
-                        pfpSize = String(localized: "Clearing...", comment:"Message shown when clearing cache")
-                        Task.detached(priority: .userInitiated) {
-                            let cache = ImageProcessing.shared.pfp.configuration.dataCache as! DataCache
-                            cache.removeAll()
-                            cache.flush()
-                            Task { @MainActor in
+                
+                Section(header: Text("Caches", comment: "Settings heading")) {
+                    HStack {
+                        Text("Profile pictures: \(pfpSize)", comment: "Message showing size of Profile pictures cache")
+                            .task(priority: .medium) {
+                                let cache = ImageProcessing.shared.pfp.configuration.dataCache as! DataCache
                                 pfpSize = "\((cache.totalSize / 1024 / 1024)) MB"
-                                settings.objectWillChange.send()
+                            }
+                        Spacer()
+                        Button(String(localized:"Clear", comment:"Button to clear cache")) {
+                            pfpSize = String(localized: "Clearing...", comment:"Message shown when clearing cache")
+                            Task.detached(priority: .userInitiated) {
+                                let cache = ImageProcessing.shared.pfp.configuration.dataCache as! DataCache
+                                cache.removeAll()
+                                cache.flush()
+                                Task { @MainActor in
+                                    pfpSize = "\((cache.totalSize / 1024 / 1024)) MB"
+                                    settings.objectWillChange.send()
+                                }
                             }
                         }
                     }
-                }
-                HStack {
-                    Text("Post content: \(contentSize)", comment: "Message showing size of Post content cache")
-                        .task(priority: .medium) {
-                            let cache = ImageProcessing.shared.content.configuration.dataCache as! DataCache
-                            contentSize = "\((cache.totalSize / 1024 / 1024)) MB"
-                        }
-                    Spacer()
-                    Button(String(localized:"Clear", comment:"Button to clear cache")) {
-                        contentSize = String(localized: "Clearing...", comment:"Message shown when clearing cache")
-                        Task.detached(priority: .userInitiated) {
-                            let cache = ImageProcessing.shared.content.configuration.dataCache as! DataCache
-                            cache.removeAll()
-                            cache.flush()
-                            Task { @MainActor in
+                    HStack {
+                        Text("Post content: \(contentSize)", comment: "Message showing size of Post content cache")
+                            .task(priority: .medium) {
+                                let cache = ImageProcessing.shared.content.configuration.dataCache as! DataCache
                                 contentSize = "\((cache.totalSize / 1024 / 1024)) MB"
-                                settings.objectWillChange.send()
+                            }
+                        Spacer()
+                        Button(String(localized:"Clear", comment:"Button to clear cache")) {
+                            contentSize = String(localized: "Clearing...", comment:"Message shown when clearing cache")
+                            Task.detached(priority: .userInitiated) {
+                                let cache = ImageProcessing.shared.content.configuration.dataCache as! DataCache
+                                cache.removeAll()
+                                cache.flush()
+                                Task { @MainActor in
+                                    contentSize = "\((cache.totalSize / 1024 / 1024)) MB"
+                                    settings.objectWillChange.send()
+                                }
                             }
                         }
                     }
-                }
-                HStack {
-                    Text("Profile banners: \(bannerSize)", comment: "Message showing size of Profile banners cache")
-                        .task(priority: .medium) {
-                            let cache = ImageProcessing.shared.banner.configuration.dataCache as! DataCache
-                            bannerSize = "\((cache.totalSize / 1024 / 1024)) MB"
-                        }
-                    Spacer()
-                    Button(String(localized:"Clear", comment:"Button to clear cache")) {
-                        bannerSize = String(localized: "Clearing...", comment:"Message shown when clearing cache")
-                        Task.detached(priority: .userInitiated) {
-                            let cache = ImageProcessing.shared.banner.configuration.dataCache as! DataCache
-                            cache.removeAll()
-                            cache.flush()
-                            Task { @MainActor in
+                    HStack {
+                        Text("Profile banners: \(bannerSize)", comment: "Message showing size of Profile banners cache")
+                            .task(priority: .medium) {
+                                let cache = ImageProcessing.shared.banner.configuration.dataCache as! DataCache
                                 bannerSize = "\((cache.totalSize / 1024 / 1024)) MB"
-                                settings.objectWillChange.send()
+                            }
+                        Spacer()
+                        Button(String(localized:"Clear", comment:"Button to clear cache")) {
+                            bannerSize = String(localized: "Clearing...", comment:"Message shown when clearing cache")
+                            Task.detached(priority: .userInitiated) {
+                                let cache = ImageProcessing.shared.banner.configuration.dataCache as! DataCache
+                                cache.removeAll()
+                                cache.flush()
+                                Task { @MainActor in
+                                    bannerSize = "\((cache.totalSize / 1024 / 1024)) MB"
+                                    settings.objectWillChange.send()
+                                }
                             }
                         }
                     }
-                }
-                HStack {
-                    Text("Badges: \(badgesSize)", comment: "Message showing size of badges cache")
-                        .task(priority: .medium) {
-                            let cache = ImageProcessing.shared.badges.configuration.dataCache as! DataCache
-                            badgesSize = "\((cache.totalSize / 1024 / 1024)) MB"
-                        }
-                    Spacer()
-                    Button(String(localized:"Clear", comment:"Button to clear cache")) {
-                        badgesSize = String(localized: "Clearing...", comment:"Message shown when clearing cache")
-                        Task.detached(priority: .userInitiated) {
-                            let cache = ImageProcessing.shared.badges.configuration.dataCache as! DataCache
-                            cache.removeAll()
-                            cache.flush()
-                            Task { @MainActor in
+                    HStack {
+                        Text("Badges: \(badgesSize)", comment: "Message showing size of badges cache")
+                            .task(priority: .medium) {
+                                let cache = ImageProcessing.shared.badges.configuration.dataCache as! DataCache
                                 badgesSize = "\((cache.totalSize / 1024 / 1024)) MB"
-                                settings.objectWillChange.send()
+                            }
+                        Spacer()
+                        Button(String(localized:"Clear", comment:"Button to clear cache")) {
+                            badgesSize = String(localized: "Clearing...", comment:"Message shown when clearing cache")
+                            Task.detached(priority: .userInitiated) {
+                                let cache = ImageProcessing.shared.badges.configuration.dataCache as! DataCache
+                                cache.removeAll()
+                                cache.flush()
+                                Task { @MainActor in
+                                    badgesSize = "\((cache.totalSize / 1024 / 1024)) MB"
+                                    settings.objectWillChange.send()
+                                }
                             }
                         }
                     }
                 }
+                
             }
             
             Section(header: Text("Message verification", comment: "Setting heading on settings screen")) {
@@ -1081,5 +1123,15 @@ class ViewPrint: ObservableObject {
                 self.throttleText = text
             }
             .store(in: &subscriptions)
+    }
+}
+
+
+
+protocol Localizable: RawRepresentable where RawValue: StringProtocol {}
+
+extension Localizable {
+    var localized: String {
+        NSLocalizedString(String(rawValue), comment: "")
     }
 }

@@ -336,6 +336,10 @@ Navigation title for Add Existing Account screen</note>
         <target>Alle accounts</target>
         <note>Menu item to select All accounts</note>
       </trans-unit>
+      <trans-unit id="Allows posts from your follows only (strict), or also your follows follows (normal)" xml:space="preserve">
+        <source>Allows posts from your follows only (strict), or also your follows follows (normal)</source>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Anon" xml:space="preserve">
         <source>Anon</source>
         <note>No comment provided by engineer.</note>
@@ -1684,6 +1688,10 @@ Button to skip adding account and use the guest account instead</note>
         <target>Spam</target>
         <note>Menu item in choice list</note>
       </trans-unit>
+      <trans-unit id="Spam filtering" xml:space="preserve">
+        <source>Spam filtering</source>
+        <note>Setting heading on settings screen</note>
+      </trans-unit>
       <trans-unit id="Specific word or sentence" xml:space="preserve">
         <source>Specific word or sentence</source>
         <target>Specifiek woord of zin</target>
@@ -1833,6 +1841,10 @@ Button to skip adding account and use the guest account instead</note>
       <trans-unit id="We Don't Need No Stinkin' Badges" xml:space="preserve">
         <source>We Don't Need No Stinkin' Badges</source>
         <target>"Weg Met Medailles!"</target>
+        <note>Setting on settings screen</note>
+      </trans-unit>
+      <trans-unit id="Web of Trust" xml:space="preserve">
+        <source>Web of Trust</source>
         <note>Setting on settings screen</note>
       </trans-unit>
       <trans-unit id="Welcome to **Nostur**" xml:space="preserve">

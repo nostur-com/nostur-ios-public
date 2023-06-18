@@ -144,6 +144,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
     private var groupRepliesToRoot = PassthroughSubject<[NRPost], Never>()
     
+    let inWoT:Bool // This is just one of the inputs to determine spam or not, should have more inputs.
+    let isSpam:Bool // Should use this in all views to hide or not
+    
     init(event: Event, withReplyTo:Bool = false, withParents:Bool = false, withReplies:Bool = false, plainText:Bool = false, withRepliesCount:Bool = false) {
         self.event = event // Only touch this in BG context!!!
         self.id = event.id
@@ -171,6 +174,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         self.withReplyTo = withReplyTo
         self.withRepliesCount = withRepliesCount
         self.plainTextOnly = plainText
+        self.inWoT = event.inWoT
+        self.isSpam = event.isSpam
         
         if !plainText { // plainText is actually plainTextOnly, for rendering in muted spam stuff
             let (contentElementsDetail, linkPreviewURLs) = NRContentElementBuilder.shared.buildElements(event)
@@ -791,8 +796,30 @@ extension NRPost { // Helpers for grouped replies
     
     // To make repliesSorted work we need repliesToRoot first (.loadRepliesToRoot())
     var groupedRepliesSorted:[NRPost] { // Read from bottom to top.
-        groupedReplies
-            // 4. Everything else last, newest at bottom
+        if SettingsStore.shared.webOfTrustLevel == SettingsStore.WebOfTrustLevel.off.rawValue {
+            return groupedReplies
+                // 4. Everything else last, newest at bottom
+                .sorted(by: { $0.created_at < $1.created_at })
+                // 3. People you follow third
+                .sorted(by: { $0.following && !$1.following })
+                // 2. Replies replied by author second
+                .sorted(by: {
+                    ($0.pubkey == self.pubkey) &&
+                    ($1.pubkey != self.pubkey)
+                })
+                // 1. Own direct replies first
+                .sorted(by: {
+                    ($0.pubkey == self.pubkey && $0.replyToId == self.id) &&
+                    ($1.pubkey != self.pubkey || $1.replyToId != self.id)
+                })
+        }
+        
+        // With WoT enabeled with add filter nr 5.
+        return groupedReplies
+            // 5. People outside WoT last
+            .filter { $0.inWoT }
+        
+            // 4. Everything else in WoT last, newest at bottom
             .sorted(by: { $0.created_at < $1.created_at })
             // 3. People you follow third
             .sorted(by: { $0.following && !$1.following })
@@ -806,6 +833,12 @@ extension NRPost { // Helpers for grouped replies
                 ($0.pubkey == self.pubkey && $0.replyToId == self.id) &&
                 ($1.pubkey != self.pubkey || $1.replyToId != self.id)
             })
+    }
+    
+    var groupedRepliesNotWoT:[NRPost] { // Read from bottom to top.
+        return groupedReplies
+            .filter { !$0.inWoT }
+            .sorted(by: { $0.created_at < $1.created_at })
     }
     
     public func loadGroupedReplies() {

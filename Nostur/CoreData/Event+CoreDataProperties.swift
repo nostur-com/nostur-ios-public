@@ -273,6 +273,42 @@ extension Event {
 
 extension Event {
     
+    var isSpam:Bool {
+        // combine all the checks here
+        
+        if kind == 9735, let zapReq = zapFromRequest, zapReq.naiveSats >= 250 { // TODO: Make configurable
+            // Never consider zaps of more than 250 sats as spam
+            return false
+        }
+        
+        // Flood check
+        // TODO: Add flood check here
+        
+        // Block list
+        // TODO: Move block list check here
+        
+        // Mute list
+        // TODO: Move mute list check here
+        
+        
+        // TODO: Think of more checks
+        
+        // Web of Trust filter
+        if WOT_FILTER_ENABLED() {
+            if inWoT { return false }
+            return true
+        }
+        
+        return false
+    }
+    
+    var inWoT:Bool {
+        if kind == 9735, let zapReq = zapFromRequest {
+            return NosturState.shared.wot?.isAllowed(zapReq.pubkey) ?? false
+        }
+        return NosturState.shared.wot?.isAllowed(pubkey) ?? false
+    }
+    
     var plainText:String {
         return NRTextParser.shared.copyPasteText(self, text: self.content ?? "").text
     }

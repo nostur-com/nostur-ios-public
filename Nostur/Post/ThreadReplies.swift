@@ -4,6 +4,7 @@ struct ThreadReplies: View {
     @ObservedObject var nrPost:NRPost
     @EnvironmentObject var ns:NosturState
     @State var timer:Timer? = nil
+    @State var showNotWoT = false
     
     var body: some View {
         LazyVStack {
@@ -11,6 +12,20 @@ struct ThreadReplies: View {
                 PostOrThread(nrPost: reply, grouped:true, rootId: nrPost.id)
             }
             .animation(Animation.spring(), value: nrPost.groupedRepliesSorted)
+            if !nrPost.groupedRepliesNotWoT.isEmpty {
+                Divider()
+                if !showNotWoT {
+                    Button("Show more") {
+                        showNotWoT = true
+                    }
+                }
+                if showNotWoT {
+                    ForEach(nrPost.groupedRepliesNotWoT) { reply in
+                        PostOrThread(nrPost: reply, grouped:true, rootId: nrPost.id)
+                    }
+                    .animation(Animation.spring(), value: nrPost.groupedRepliesNotWoT)
+                }
+            }
             Spacer()
         }
         .background(Color("ListBackground"))

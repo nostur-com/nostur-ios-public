@@ -25,12 +25,24 @@ final class SettingsStore: ObservableObject {
         static let defaultMediaUploadService:String = "media_upload_service"
         static let activeNWCconnectionId:String = "active_nwc_connection_id"
         static let fetchCounts:String = "fetch_counts"
+        
+        static let webOfTrustLevel:String = "web_of_trust_level"
     }
 
 //    private let cancellable: Cancellable
     private let defaults: UserDefaults
 
     let objectWillChange = PassthroughSubject<Void, Never>()
+    
+    enum WebOfTrustLevel:String, CaseIterable, Localizable, Identifiable {
+        case off = "WOT_OFF"
+        case normal = "WOT_NORMAL"
+        case strict = "WOT_STRICT"
+        
+        var id:String {
+            String(self.rawValue)
+        }
+    }
 
     public static let walletOptions:[LightningWallet] = [
         LightningWallet(name: "none", scheme: "lightning:"),
@@ -83,7 +95,8 @@ final class SettingsStore: ObservableObject {
             Keys.defaultMediaUploadService: "nostrcheck.me",
             Keys.statusBubble: false,
             Keys.activeNWCconnectionId: "",
-            Keys.fetchCounts: false
+            Keys.fetchCounts: false,
+            Keys.webOfTrustLevel: WebOfTrustLevel.normal.rawValue,
         ])
 
         // Don't use this anymore because re-renders too much, like when moving window on macOS
@@ -191,6 +204,11 @@ final class SettingsStore: ObservableObject {
     var activeNWCconnectionId: String {
         set { objectWillChange.send(); defaults.set(newValue, forKey: Keys.activeNWCconnectionId)  }
         get { defaults.string(forKey: Keys.activeNWCconnectionId) ?? "" }
+    }
+    
+    var webOfTrustLevel: String {
+        set { objectWillChange.send(); defaults.set(newValue, forKey: Keys.webOfTrustLevel)  }
+        get { defaults.string(forKey: Keys.webOfTrustLevel) ?? WebOfTrustLevel.normal.rawValue }
     }
 
     var defaultLightningWallet: LightningWallet {

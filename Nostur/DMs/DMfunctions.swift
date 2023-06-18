@@ -60,7 +60,9 @@ func computeOnlyMostRecentAccepted(_ onlyMostRecentAll:[String: ([Event], Bool, 
 }
 
 func computeOnlyMostRecentRequests(_ onlyMostRecentAll:[String: ([Event], Bool, Int, Int64, Event)]) -> [(Event, Int64)] {
+    // dict: [pubkey: [dm], isAccepted, unreadCount, rootDM.createdAt, rootDM]
     onlyMostRecentAll
+        .filter { !$0.value.4.isSpam }
         .filter { $0.value.1 == false }
         .compactMap {
             if let first = $0.value.0.sorted(by: { $0.created_at > $1.created_at }).first {

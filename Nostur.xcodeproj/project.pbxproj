@@ -24,6 +24,7 @@
 		1F065A9B29A3E67F003421D3 /* NotificationsReactions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F065A9A29A3E67F003421D3 /* NotificationsReactions.swift */; };
 		1F065A9D29A3E9E0003421D3 /* FetchThings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F065A9C29A3E9E0003421D3 /* FetchThings.swift */; };
 		1F0A25542A3E0E6E00178A5C /* NostrFilesDevMediaUploadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0A25532A3E0E6E00178A5C /* NostrFilesDevMediaUploadService.swift */; };
+		1F0A25562A3E139E00178A5C /* WebOfTrust.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0A25552A3E139E00178A5C /* WebOfTrust.swift */; };
 		1F0A3C252A0C113700B30D7E /* Kind1063.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0A3C242A0C113700B30D7E /* Kind1063.swift */; };
 		1F0F35692A31C76900AA9C41 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1F0F35672A31C76900AA9C41 /* InfoPlist.strings */; };
 		1F0F356C2A31C76900AA9C41 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1F0F356A2A31C76900AA9C41 /* Localizable.strings */; };
@@ -365,6 +366,7 @@
 		1F065A9A29A3E67F003421D3 /* NotificationsReactions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsReactions.swift; sourceTree = "<group>"; };
 		1F065A9C29A3E9E0003421D3 /* FetchThings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchThings.swift; sourceTree = "<group>"; };
 		1F0A25532A3E0E6E00178A5C /* NostrFilesDevMediaUploadService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostrFilesDevMediaUploadService.swift; sourceTree = "<group>"; };
+		1F0A25552A3E139E00178A5C /* WebOfTrust.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebOfTrust.swift; sourceTree = "<group>"; };
 		1F0A3C242A0C113700B30D7E /* Kind1063.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Kind1063.swift; sourceTree = "<group>"; };
 		1F0F35682A31C76900AA9C41 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1F0F356B2A31C76900AA9C41 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -955,6 +957,7 @@
 				1F71037C296BD9DE006245CC /* Nostr.swift */,
 				1F77D2E129D238520028DC95 /* ShareableIdentifierTest.swift */,
 				1F75257D2996A1A900477AF2 /* Unpublisher.swift */,
+				1F0A25552A3E139E00178A5C /* WebOfTrust.swift */,
 			);
 			path = Nostr;
 			sourceTree = "<group>";
@@ -1523,6 +1526,7 @@
 				1FD78EF32A0CB878003E7B3E /* Highlight.swift in Sources */,
 				1F91D8FB2A18E31600C419A3 /* ZapperPubkeyVerificationQueue.swift in Sources */,
 				1FC78F7629CB4A920009C1C7 /* ChatInputField.swift in Sources */,
+				1F0A25562A3E139E00178A5C /* WebOfTrust.swift in Sources */,
 				1F9499CB299F715800F628B4 /* TryGuestAccountSheet.swift in Sources */,
 				1F63191B2A3B35EA004F6B0E /* GossipTesting.swift in Sources */,
 				1F927C6F297DB34A0024F665 /* ThreadWarning.swift in Sources */,

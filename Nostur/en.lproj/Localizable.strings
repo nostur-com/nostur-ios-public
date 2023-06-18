@@ -10,3 +10,6 @@ Button to post a highlight */
 Button to publish report */
 "Report.verb" = "Report";
 
+"WOT_OFF" = "Off";
+"WOT_NORMAL" = "Normal";
+"WOT_STRICT" = "Strict";

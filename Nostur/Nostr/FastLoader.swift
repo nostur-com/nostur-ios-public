@@ -94,7 +94,10 @@ class FastLoader: ObservableObject {
                 let onlyUnrendered = dbEventIds.filter { item in
                     !currentNRPostIds.contains(item.id)
                 }
-                let nextItems = onlyUnrendered.compactMap { self.transformer($0) }
+                let nextItems = onlyUnrendered
+                    .filter { !$0.isSpam }
+                    .compactMap { self.transformer($0) }
+                
                 DispatchQueue.main.async {
                     self.nrPosts = self.nrPosts + nextItems
                 }
@@ -110,6 +113,7 @@ class FastLoader: ObservableObject {
                 !currentEventIds.contains(item.id)
             }
             let nextItems = onlyUnrendered
+                .filter { !$0.isSpam }
             
             events = events + nextItems
         }
@@ -130,14 +134,17 @@ class FastLoader: ObservableObject {
         next.fetchOffset = 0
         bgContext.perform { [weak self] in
             guard let self = self else { return }
-            let dbEventIds = (try? self.bgContext.fetch(next)) ?? []
+            let dbEvents = (try? self.bgContext.fetch(next)) ?? []
             let currentNRPostIds = Set(self.nrPosts.map { item in
                 item.id
             })
-            let onlyUnrendered = dbEventIds.filter { item in
+            let onlyUnrendered = dbEvents.filter { item in
                 !currentNRPostIds.contains(item.id)
             }
-            let nextItems = onlyUnrendered.compactMap { self.transformer($0) }
+            let nextItems = onlyUnrendered
+                .filter { !$0.isSpam }
+                .compactMap { self.transformer($0) }
+            
             DispatchQueue.main.async {
                 L.og.debug("\(taskId) 🟠🟠🟠🟠🟠 self.nrPosts = nextItems (\(nextItems.count)) + self.nrPosts ")
                 self.nrPosts = nextItems + self.nrPosts
@@ -159,13 +166,15 @@ class FastLoader: ObservableObject {
         next.sortDescriptors = sortDescriptors
         next.fetchLimit = limit ?? 1000
         next.fetchOffset = 0
-        let dbEventIds = (try? self.viewContext.fetch(next)) ?? []
+        let dbEvents = (try? self.viewContext.fetch(next)) ?? []
         let currentEventIds = Set(self.events.map { item in
             item.id
         })
-        let nextItems = dbEventIds.filter { item in
-            !currentEventIds.contains(item.id)
-        }
+        let nextItems = dbEvents
+            .filter { !$0.isSpam }
+            .filter { item in
+                !currentEventIds.contains(item.id)
+            }
         Task { @MainActor in
             L.og.debug("\(taskId) 🟠🟠🟠🟠🟠 self.events = nextItems (\(nextItems.count)) + self.events ")
             self.events = nextItems + self.events
@@ -186,13 +195,15 @@ class FastLoader: ObservableObject {
         next.sortDescriptors = sortDescriptors
         next.fetchLimit = limit ?? 1000
         next.fetchOffset = max(0, self.events.count - 1)
-        let dbEventIds = (try? self.viewContext.fetch(next)) ?? []
+        let dbEvents = (try? self.viewContext.fetch(next)) ?? []
         let currentEventIds = Set(self.events.map { item in
             item.id
         })
-        let nextItems = dbEventIds.filter { item in
-            !currentEventIds.contains(item.id)
-        }
+        let nextItems = dbEvents
+            .filter { !$0.isSpam }
+            .filter { item in
+                !currentEventIds.contains(item.id)
+            }
         Task { @MainActor in
             L.og.debug("\(taskId) 🟠🟠🟠🟠🟠 self.events = self.events + nextItems (\(nextItems.count)) ")
             self.events = self.events + nextItems

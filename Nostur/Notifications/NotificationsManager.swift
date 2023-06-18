@@ -135,7 +135,6 @@ class NotificationsManager: ObservableObject {
         
         r2.fetchLimit = self.FETCH_LIMIT
         r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        r2.resultType = .countResultType
         
         let r3 = PersistentNotification.fetchRequest()
         r3.predicate = NSPredicate(format: "readAt == nil AND type_ == %@", PNType.newFollowers.rawValue)
@@ -143,7 +142,10 @@ class NotificationsManager: ObservableObject {
         r3.sortDescriptors = [NSSortDescriptor(keyPath:\PersistentNotification.createdAt, ascending: false)]
         r3.resultType = .countResultType
          
-        var unreadMentions = (try? context.count(for: r2)) ?? 0
+        var unreadMentions = ((try? context.fetch(r2)) ?? [])
+            .filter { !$0.isSpam }
+            .count
+        
         let unreadNewFollowers = (try? context.count(for: r3)) ?? 0
         unreadMentions = unreadMentions + unreadNewFollowers
         DispatchQueue.main.async {
@@ -172,9 +174,12 @@ class NotificationsManager: ObservableObject {
                                     pubkey)
         r2.fetchLimit = FETCH_LIMIT
         r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        r2.resultType = .countResultType
         
-        let unreadReactions = (try? context.count(for: r2)) ?? 0
+        
+        let unreadReactions = ((try? context.fetch(r2)) ?? [])
+            .filter { !$0.isSpam }
+            .count
+        
         DispatchQueue.main.async {
             if unreadReactions != self.unreadReactions {
                 self.unreadReactions = min(unreadReactions,9999)
@@ -198,7 +203,6 @@ class NotificationsManager: ObservableObject {
                                     blockedPubkeys)
         r2.fetchLimit = FETCH_LIMIT
         r2.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        r2.resultType = .countResultType
         
         let r3 = PersistentNotification.fetchRequest()
         r3.predicate = NSPredicate(format: "readAt == nil AND type_ IN %@", [PNType.failedLightningInvoice.rawValue,PNType.failedZap.rawValue,PNType.failedZaps.rawValue,PNType.failedZapsTimeout.rawValue])
@@ -207,7 +211,10 @@ class NotificationsManager: ObservableObject {
         r3.resultType = .countResultType
         
         
-        var unreadZaps = (try? context.count(for: r2)) ?? 0
+        var unreadZaps = ((try? context.fetch(r2)) ?? [])
+            .filter { !$0.isSpam }
+            .count
+        
         let unreadZapNotifications = (try? context.count(for: r3)) ?? 0
         unreadZaps = unreadZaps + unreadZapNotifications
         DispatchQueue.main.async {
