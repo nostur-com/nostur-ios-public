@@ -4,7 +4,7 @@ import Combine
 // The follower notififier tracks if you have new followers
 // To get your followers the filter "#p": [your pubkey], "kinds": [3]  is used
 // We get the full list and store the most recent .created_at
-// If we find a newer .created_at from a our .pubkey we generate a notification in the app
+// If we find a newer .created_at from someone with our pubkey in p's we generate a notification in the app
 
 class FollowerNotifier {
     
@@ -128,6 +128,7 @@ class FollowerNotifier {
             L.og.info("New followers (\(self.newFollowerPubkeys.count)) notification, for \(pubkey)")
             L.og.debug("Prefetching kind 0 for first 10 new followers")
             req(RM.getUserMetadata(pubkeys: Array(self.newFollowerPubkeys.prefix(10))))
+            self.newFollowerPubkeys.removeAll()
             DataProvider.shared().bgSave()
         }
     }
