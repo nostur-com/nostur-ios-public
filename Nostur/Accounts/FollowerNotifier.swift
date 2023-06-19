@@ -115,6 +115,17 @@ class FollowerNotifier {
         ctx.perform { [weak self] in
             guard let self = self else { return }
             guard !self.newFollowerPubkeys.isEmpty else { return }
+                        
+            // Check WoT if enabled
+            if WOT_FILTER_ENABLED() {
+                self.newFollowerPubkeys = self.newFollowerPubkeys.filter {
+                    return NosturState.shared.wot?.isAllowed($0) ?? false
+                }
+            }
+            
+            // Don't continue if newFollowerPubkeys is empty after WoT check
+            guard !self.newFollowerPubkeys.isEmpty else { return }
+            
             _ = PersistentNotification.create(
                 pubkey: pubkey,
                 followers: Array(self.newFollowerPubkeys),
