@@ -108,6 +108,11 @@ struct NotificationsPosts: View {
             backlog.clear()
             load()
         }
+        .onChange(of: settings.webOfTrustLevel) { _ in
+            fl.nrPosts = []
+            backlog.clear()
+            load()
+        }
         .onReceive(receiveNotification(.blockListUpdated)) { notification in
             let blockedPubkeys = notification.object as! [String]
             fl.nrPosts = fl.nrPosts.filter { !blockedPubkeys.contains($0.id)  }

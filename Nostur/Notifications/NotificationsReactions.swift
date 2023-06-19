@@ -11,6 +11,7 @@ struct NotificationsReactions: View {
     @State var didLoad = false
     @State var backlog = Backlog()
     @EnvironmentObject var ns:NosturState
+    @ObservedObject var settings:SettingsStore = .shared
     
     func myNotesReactedTo(_ events:[Event]) -> [Event] {
         
@@ -113,6 +114,11 @@ struct NotificationsReactions: View {
         }
         .onReceive(receiveNotification(.activeAccountChanged)) { _ in
             fl.events = []
+            backlog.clear()
+            load()
+        }
+        .onChange(of: settings.webOfTrustLevel) { _ in
+            fl.nrPosts = []
             backlog.clear()
             load()
         }

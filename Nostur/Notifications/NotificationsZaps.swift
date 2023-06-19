@@ -155,6 +155,11 @@ struct NotificationsZaps: View {
             backlog.clear()
             load()
         }
+        .onChange(of: settings.webOfTrustLevel) { _ in
+            fl.nrPosts = []
+            backlog.clear()
+            load()
+        }
     }
     
     @State var subscriptions = Set<AnyCancellable>()
