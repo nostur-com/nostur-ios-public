@@ -14,7 +14,7 @@ struct ThreadReplies: View {
             .animation(Animation.spring(), value: nrPost.groupedRepliesSorted)
             if !nrPost.groupedRepliesNotWoT.isEmpty {
                 Divider()
-                if !showNotWoT {
+                if WOT_FILTER_ENABLED() && !showNotWoT {
                     Button("Show more") {
                         showNotWoT = true
                     }

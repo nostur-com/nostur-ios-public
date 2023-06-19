@@ -28,6 +28,8 @@ import UIKit
 
 class WebOfTrust: ObservableObject {
  
+    let ENABLE_THRESHOLD = 200 // To not degrade onboarding/new user experience, we should have more contacts in WoT than this threshold before the filter is enabled
+    
     @Published var lastUpdated:Date? = nil
     
     // Keep seperate lists for faster filtering
@@ -53,6 +55,8 @@ class WebOfTrust: ObservableObject {
     // TODO: Listen for follow changes
     
     public func isAllowed(_ pubkey:String) -> Bool {
+        if allowedKeysCount < ENABLE_THRESHOLD { return true }
+        
         // Maybe check small set first, faster?
         if followingPubkeys.contains(pubkey) { return true }
         

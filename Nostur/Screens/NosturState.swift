@@ -110,7 +110,9 @@ final class NosturState : ObservableObject {
             SocketPool.shared.removeActiveAccountSubscriptions()
             
             // Load web of trust
-            self.loadWoT(account)
+            if !NewOnboardingTracker.shared.isOnboarding {
+                self.loadWoT(account)
+            }
             
             if sendActiveAccountChangedNotification {
                 FollowingGuardian.shared.didReceiveContactListThisSession = false
@@ -119,7 +121,8 @@ final class NosturState : ObservableObject {
         }
     }
     
-    private func loadWoT(_ account:Account) {
+    public func loadWoT(_ account:Account? = nil) {
+        guard let account = account ?? self.account else { L.og.error("🕸️🕸️ WebOfTrust: loadWoT. account = nil"); return }
         guard SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue else { return }
         
         wot = WebOfTrust(pubkey: account.publicKey, followingPubkeys: account.followingPublicKeys)

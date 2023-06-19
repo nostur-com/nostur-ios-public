@@ -85,6 +85,7 @@ class NewOnboardingTracker {
             self.bg.perform { [weak self] in
                 self?.cancel()
             }
+            NosturState.shared.loadWoT()
         }
     }
     
