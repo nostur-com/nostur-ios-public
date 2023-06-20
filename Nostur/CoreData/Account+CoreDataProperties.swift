@@ -37,6 +37,10 @@ extension Account {
         }
     }
     
+    var silentFollows:Set<String> {
+        Set(follows_.filter { $0.privateFollow }.map { $0.pubkey })
+    }
+    
     static func fetchAccount(publicKey:String, context:NSManagedObjectContext) throws -> Account? {
         let request = NSFetchRequest<Account>(entityName: "Account")
         request.predicate = NSPredicate(format: "publicKey == %@", publicKey)

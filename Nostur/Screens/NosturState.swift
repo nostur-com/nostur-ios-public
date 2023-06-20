@@ -125,7 +125,9 @@ final class NosturState : ObservableObject {
         guard let account = account ?? self.account else { L.og.error("🕸️🕸️ WebOfTrust: loadWoT. account = nil"); return }
         guard SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue else { return }
         
-        wot = WebOfTrust(pubkey: account.publicKey, followingPubkeys: account.followingPublicKeys)
+        let wotFollowingPubkeys = account.followingPublicKeys.subtracting(account.silentFollows) // We don't include silent follows in WoT
+        
+        wot = WebOfTrust(pubkey: account.publicKey, followingPubkeys: wotFollowingPubkeys)
         switch SettingsStore.shared.webOfTrustLevel {
         case SettingsStore.WebOfTrustLevel.off.rawValue:
             L.og.info("🕸️🕸️ WebOfTrust: Disabled")
