@@ -143,6 +143,7 @@
 		1F7525842997B21D00477AF2 /* NotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7525832997B21D00477AF2 /* NotificationsView.swift */; };
 		1F756531296AE4260078474E /* RelaysView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F756530296AE4260078474E /* RelaysView.swift */; };
 		1F756533296AE7910078474E /* NewRelayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F756532296AE7910078474E /* NewRelayView.swift */; };
+		1F77AD082A40B96500585E12 /* ArticleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F77AD072A40B96500585E12 /* ArticleView.swift */; };
 		1F77D1EC2A1FB3CA00895DB4 /* ThreadReplies.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F77D1EB2A1FB3CA00895DB4 /* ThreadReplies.swift */; };
 		1F77D2E229D238520028DC95 /* ShareableIdentifierTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F77D2E129D238520028DC95 /* ShareableIdentifierTest.swift */; };
 		1F7C65AD29A0A530009FF3EA /* ReadOnlyAccountInformationSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7C65AC29A0A530009FF3EA /* ReadOnlyAccountInformationSheet.swift */; };
@@ -480,6 +481,7 @@
 		1F7525832997B21D00477AF2 /* NotificationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsView.swift; sourceTree = "<group>"; };
 		1F756530296AE4260078474E /* RelaysView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelaysView.swift; sourceTree = "<group>"; };
 		1F756532296AE7910078474E /* NewRelayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewRelayView.swift; sourceTree = "<group>"; };
+		1F77AD072A40B96500585E12 /* ArticleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArticleView.swift; sourceTree = "<group>"; };
 		1F77D1EB2A1FB3CA00895DB4 /* ThreadReplies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadReplies.swift; sourceTree = "<group>"; };
 		1F77D2E129D238520028DC95 /* ShareableIdentifierTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareableIdentifierTest.swift; sourceTree = "<group>"; };
 		1F7C65AC29A0A530009FF3EA /* ReadOnlyAccountInformationSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadOnlyAccountInformationSheet.swift; sourceTree = "<group>"; };
@@ -955,7 +957,6 @@
 				1F8B134A297B3551002EB8CF /* NIP19.swift */,
 				1FC78F6829CA28940009C1C7 /* NKeys.swift */,
 				1F71037C296BD9DE006245CC /* Nostr.swift */,
-				1F77D2E129D238520028DC95 /* ShareableIdentifierTest.swift */,
 				1F75257D2996A1A900477AF2 /* Unpublisher.swift */,
 				1F0A25552A3E139E00178A5C /* WebOfTrust.swift */,
 			);
@@ -1093,6 +1094,8 @@
 				1F210B0329F7ED2D00159814 /* ImageTest.swift */,
 				1FCC2F2C2A1B2CD100202EFA /* ImageTesting1.swift */,
 				1F2BD4A32A22206500F006AC /* SnapshotTest.swift */,
+				1F77D2E129D238520028DC95 /* ShareableIdentifierTest.swift */,
+				1F77AD072A40B96500585E12 /* ArticleView.swift */,
 			);
 			path = Playground;
 			sourceTree = "<group>";
@@ -1671,6 +1674,7 @@
 				1F9A55262A3C7FD300F67627 /* DetailTab.swift in Sources */,
 				1F45C7ED29EF997200F58772 /* ImgurMediaUploadService.swift in Sources */,
 				1F2E760529F6DF6C00E67CE7 /* EditListTitleSheet.swift in Sources */,
+				1F77AD082A40B96500585E12 /* ArticleView.swift in Sources */,
 				1FD78EF72A0CC365003E7B3E /* PostRowDeletable.swift in Sources */,
 				1F84189B2A2BDD1A001EFE7A /* NIP47TesterView.swift in Sources */,
 				1F7525802997854200477AF2 /* NewPost.swift in Sources */,

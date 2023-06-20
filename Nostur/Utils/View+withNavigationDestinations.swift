@@ -39,6 +39,9 @@ extension View {
             .navigationDestination(for: NRPost.self) { nrPost in
                 PostDetailView(nrPost: nrPost)
             }
+            .navigationDestination(for: ArticleCommentsPath.self) { articleCommentsPath in
+                ArticleCommentsView(article: articleCommentsPath.article)
+            }
             .navigationDestination(for: NotePath.self) { path in
                 NoteById(id: path.id)
             }

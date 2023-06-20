@@ -104,7 +104,8 @@ class ShareableIdentifier: Hashable {
                         case "nrelay":
                             relayUrl = String(data: value, encoding: .utf8)
                         case "naddr":
-                            eventId = value.hexEncodedString() // or: String(data: value, encoding: .utf8) ??
+                            eventId = String(data: value, encoding: .utf8)
+//                            eventId = value.hexEncodedString() // or: String(data: value, encoding: .utf8) ??
                         default:
                             throw "EncodingError.invalidPrefix.0"
                     }

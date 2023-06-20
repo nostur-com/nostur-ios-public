@@ -9,6 +9,7 @@ struct SingleMediaViewer: View {
     let imageWidth:CGFloat
     let isFollowing:Bool
     var fullWidth:Bool = false
+    var forceShow = false
     @State var imagesShown = false
     @State var loadNonHttpsAnyway = false
 
@@ -26,7 +27,7 @@ struct SingleMediaViewer: View {
                    .frame(height: fullWidth ? 600 : 250)
                    .background(Color("LightGray").opacity(0.2))
             }
-            else if imagesShown {
+            else if imagesShown || forceShow {
                 LazyImage(request: ImageRequest(url: url,
                                                 processors: [.resize(width: imageWidth, upscale: true)],
                                                 userInfo: [.scaleKey: UIScreen.main.scale]), transaction: .init(animation: .none)) { state in

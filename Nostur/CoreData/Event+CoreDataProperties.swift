@@ -296,6 +296,7 @@ extension Event {
         // Web of Trust filter
         if WOT_FILTER_ENABLED() {
             if inWoT { return false }
+            L.og.debug("🕸️🕸️ WebOfTrust: Filtered by WoT: kind: \(self.kind) id: \(self.id): \(self.content ?? "")")
             return true
         }
         

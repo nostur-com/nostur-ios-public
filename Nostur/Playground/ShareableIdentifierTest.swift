@@ -4,11 +4,14 @@ struct ShareableIdentifierTest: View {
     
     var s:ShareableIdentifier?
     var ss:ShareableIdentifier?
+    var sss:ShareableIdentifier?
     var error:String = ""
     var lnurl:String?
     
     init() {
         do {
+            sss = try ShareableIdentifier("naddr1qqxnzd3cxyerxd3h8qerwwfcqgsgydql3q4ka27d9wnlrmus4tvkrnc8ftc4h8h5fgyln54gl0a7dgsrqsqqqa28qy28wumn8ghj7un9d3shjtnyv9kh2uewd9hszrthwden5te0dehhxtnvdakqvtl0f3")
+            
             ss = try ShareableIdentifier("nprofile1qqsrjerj9rhamu30sjnuudk3zxeh3njl852mssqng7z4up9jfj8yupqpzamhxue69uhhyetvv9ujumn0wd68ytnfdenx7tcpz4mhxue69uhkummnw3ezummcw3ezuer9wchszxmhwden5te0dehhxarj9ekkj6m9v35kcem9wghxxmmd9uq3xamnwvaz7tm0venxx6rpd9hzuur4vghsz8nhwden5te0dehhxarj94c82c3wwajkcmr0wfjx2u3wdejhgtcsfx2xk")
 
             s = try ShareableIdentifier("nevent1qqsfgf8u2nx94dqh7sja4mzyy7ve00dwkhja8u6pcecca6t300alphgprdmhxue69uhhyetvv9ujummjv9hxwetsd9kxctnyv4mz7q3qr0rs5q2gk0e3dk3nlc7gnu378ec6cnlenqp8a3cjhyzu6f8k5sgsxpqqqqqqzm9c2j8")
@@ -22,14 +25,22 @@ struct ShareableIdentifierTest: View {
     }
     
     var body: some View {
-        if let s {
-            Text("\(Event.entity().name ?? "test")")
+        if let s = sss {
+//            Text("\(Event.entity().name ?? "test")")
 //            Text(s.bech32string)
-            Text(npub("9be0be0fc079548233231614e4e1efc9f28b0db398011efeecf05fe570e5dd33"))
+//            Text(npub("9be0be0fc079548233231614e4e1efc9f28b0db398011efeecf05fe570e5dd33"))
 //            Text(lnurl ?? "")
-            Text(s.prefix)
-            Text(s.pubkey ?? "")
-            Text(s.eventId ?? "")
+            Text("prefix: \(s.prefix)")
+            Divider()
+            Text("pubkey: \(s.pubkey ?? "")")
+            Divider()
+            Text("eventId: \(s.eventId ?? "")")
+            Divider()
+            if let kind = s.kind {
+            Text("kind: \(String(format: "%d", kind))")
+            Divider()
+            }
+            Text("Relays:")
             ForEach(s.relays, id:\.self) { r in
                 Text(r)
             }
@@ -46,6 +57,7 @@ struct ShareableIdentifierTest_Previews: PreviewProvider {
         VStack {
             ShareableIdentifierTest()
         }
+        .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
     }
 }
 
