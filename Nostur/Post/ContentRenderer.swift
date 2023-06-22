@@ -50,9 +50,16 @@ struct ContentRenderer: View { // VIEW things
                     QuoteById(id: hex)
                         .padding(.vertical, 5)
                         .padding(.horizontal, fullWidth ? 10 : 0)
-                case .text(let attributedStringWithPs):
+                case .text(let attributedStringWithPs): // For text notes
                     NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs)
                         .padding(.horizontal, fullWidth ? 10 : 0)
+                        .onTapGesture {
+//                            guard !isDetail else { return }
+                            navigateTo(nrPost)
+                        }
+                case .md(let markdownContentWithPs): // For long form articles
+                    NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs)
+                        .padding(.horizontal, fullWidth ? 20 : 0)
                         .onTapGesture {
 //                            guard !isDetail else { return }
                             navigateTo(nrPost)

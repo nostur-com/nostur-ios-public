@@ -1,5 +1,5 @@
 import Foundation
-
+import MarkdownUI
 // Renders links for the text parts of post contents (in TEXT)
 // Handles profile links
 // Tag links
@@ -31,6 +31,7 @@ class NRTextParser { // TEXT things
         do {
 //            newText = Self.replaceURLsWithMarkdownLinks(in: newText)
             newerTextWithPs.text = Self.replaceHashtagsWithMarkdownLinks(in: newerTextWithPs.text)
+            newerTextWithPs.text = Self.replaceNaddrWithMarkdownLinks(in: newerTextWithPs.text)
             let finalText = try AttributedString(markdown: newerTextWithPs.text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
             
             let a = AttributedStringWithPs(input:text, output: finalText, pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
@@ -42,6 +43,36 @@ class NRTextParser { // TEXT things
             let a = AttributedStringWithPs(input:text, output: finalText, pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
             return a
         }
+    }
+    
+    func parseMD(_ event:Event, text: String) -> MarkdownContentWithPs {
+        self.tags = event.fastTags
+        
+        print(text)
+
+        // Remove image links
+        // because they get rendered as embeds in PostDetail.
+        // and NoteRow shows them in ImageViewer
+        let newText = removeImageLinks(event: event, text: text)
+
+        // NIP-08, handle #[0] #[1] etc
+        let textWithPs = parseTagIndexedMentions(event: event, text: newText)
+
+        // NIP-28 handle nostr:npub1, nostr:nprofile ...
+        var newerTextWithPs = parseUserMentions(event: event, text: textWithPs.text)
+        if newerTextWithPs.text.suffix(1) == "\n" {
+            newerTextWithPs.text = String(newerTextWithPs.text.dropLast(1))
+        }
+
+        newerTextWithPs.text = Self.replaceHashtagsWithMarkdownLinks(in: newerTextWithPs.text)
+        newerTextWithPs.text = Self.replaceNaddrWithMarkdownLinks(in: newerTextWithPs.text)
+//        print(newerTextWithPs.text)
+        let finalText = MarkdownContent(newerTextWithPs.text)
+        
+//        print(finalText)
+        
+        let a = MarkdownContentWithPs(input:text, output: finalText, pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
+        return a
     }
 
     func copyPasteText(_ event:Event, text: String) -> TextWithPs {
@@ -167,6 +198,13 @@ class NRTextParser { // TEXT things
             .replacingOccurrences(of: #"(?!.*\.\.)(?<!\S)([\w+]+\:\/\/)?[a-zA-Z0-9\-\.]+(?:\.[a-zA-Z]{2,999}+)+([\/\?\=\&\#\%\+\.]\@?[\S]+)*\/?"#,
                                   with: "[$0]($0)",
                                   options: .regularExpression) // REPLACE THE REMAINING URLS THAT HAVE PROTOCOL, BUT IGNORE ALREADY MARKDOWNED LINKS
+    }
+    
+    static func replaceNaddrWithMarkdownLinks(in string: String) -> String {
+        return string
+            .replacingOccurrences(of: ###"(?:nostr:)?(naddr1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###,
+                                  with: "[link](nostur:nostr:$1)",
+                                  options: .regularExpression)
     }
 
     static func replaceHashtagsWithMarkdownLinks(in string: String) -> String {

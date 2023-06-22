@@ -121,7 +121,7 @@ class NotificationsManager: ObservableObject {
         r2.predicate = NSPredicate(format:
                                     "created_at > %i " +
                                     "AND NOT pubkey IN %@ " +
-                                    "AND kind IN {1,9802} " +
+                                    "AND kind IN {1,9802,30023} " +
                                     "AND tagsSerialized CONTAINS %@ " +
                                     "AND NOT id IN %@ " +
                                     "AND (replyToRootId == nil OR NOT replyToRootId IN %@) " + // mutedRootIds
@@ -314,7 +314,7 @@ class NotificationsManager: ObservableObject {
         let r2 = Event.fetchRequest()
         r2.predicate = NSPredicate(format:
                                     "NOT pubkey IN %@ " +
-                                    "AND kind IN {1,9802} " +
+                                    "AND kind IN {1,9802,30023} " +
                                     "AND tagsSerialized CONTAINS %@ " +
                                     "AND NOT id IN %@ " +
                                     "AND (replyToRootId == nil OR NOT replyToRootId IN %@) " + // mutedRootIds

@@ -475,7 +475,7 @@ extension Settings {
         let bg = DataProvider.shared().newTaskContext()
         bg.performAndWait {
             let r = NSFetchRequest<Event>(entityName: "Event")
-            r.predicate = NSPredicate(format: "kind IN {1,9735,6,9802}") // Also 9735 to fix .tags on Zaps
+            r.predicate = NSPredicate(format: "kind IN {1,9735,6,9802,30023}") // Also 9735 to fix .tags on Zaps
             r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
             let kind1 = try! bg.fetch(r)
             
@@ -615,7 +615,7 @@ extension Settings {
                     
                     let tr = NSFetchRequest<Event>(entityName: "Event")
                     // ONLY {1,4} because .contacts only needed for replytousernames and text replacements?
-                    tr.predicate = NSPredicate(format: "kind IN {1,4,9802} AND tagsSerialized CONTAINS %@", serializedP(contact.pubkey)) // OPTIMIZATION HACK
+                    tr.predicate = NSPredicate(format: "kind IN {1,4,9802,30023} AND tagsSerialized CONTAINS %@", serializedP(contact.pubkey)) // OPTIMIZATION HACK
                     if let events = try? bg.fetch(tr) {
                         for event in events {
                             event.addToContacts(contact)
@@ -963,10 +963,10 @@ extension Settings {
             // TODO: MAybe dont need for all events??? just kind:1 is enough?
             let er = NSFetchRequest<Event>(entityName: "Event")
             er.sortDescriptors = []
-            er.predicate = NSPredicate(format: "kind IN {1,6,7,9735,9802}")
+            er.predicate = NSPredicate(format: "kind IN {1,6,7,9735,9802,30023}")
             let allKind1 = Array(try! bg.fetch(er))
             
-            print("FIRSTPASS - fixReplyToEventRelations for \(allKind1.count) items {1,6,7,9735,9802}")
+            print("FIRSTPASS - fixReplyToEventRelations for \(allKind1.count) items {1,6,7,9735,9802,30023}")
             var progress = 0
             for event in allKind1 {
                 progress += 1
@@ -1004,10 +1004,10 @@ extension Settings {
             // TODO: MAybe dont need for all events??? just kind:1 is enough?
             let er = NSFetchRequest<Event>(entityName: "Event")
             er.sortDescriptors = []
-            er.predicate = NSPredicate(format: "kind IN {1,6,7,9735,9802}")
+            er.predicate = NSPredicate(format: "kind IN {1,6,7,9735,9802,30023}")
             let allKind1 = Array(try! bg.fetch(er))
             
-            print("SECOND PASS - fixReplyToEventRelations for \(allKind1.count) items {1,6,7,9735,9802}")
+            print("SECOND PASS - fixReplyToEventRelations for \(allKind1.count) items {1,6,7,9735,9802,30023}")
             var progress = 0
             for event in allKind1 {
                 progress += 1

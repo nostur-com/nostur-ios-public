@@ -177,7 +177,7 @@ class Importer {
                         continue
                     }
                     
-                    if message.subscriptionId == "Notifications" && event.pTags().contains(NosturState.shared.activeAccountPublicKey) && [1,9802,7,9735,4].contains(event.kind.id) {
+                    if message.subscriptionId == "Notifications" && event.pTags().contains(NosturState.shared.activeAccountPublicKey) && [1,9802,30023,7,9735,4].contains(event.kind.id) {
                         NosturState.shared.lastNotificationReceivedAt = Date.now
                     }
                     

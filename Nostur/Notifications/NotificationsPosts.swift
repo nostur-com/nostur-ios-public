@@ -84,7 +84,7 @@ struct NotificationsPosts: View {
             let currentNewestCreatedAt = fl.nrPosts.first?.created_at ?? 0
             fl.predicate = NSPredicate(
                 format:
-                    "created_at >= %i AND NOT pubkey IN %@ AND kind IN {1,9802} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) ",
+                    "created_at >= %i AND NOT pubkey IN %@ AND kind IN {1,9802,30023} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) ",
                     currentNewestCreatedAt,
                     blockedPubkeys + [pubkey],
                     serializedP(pubkey),
@@ -131,7 +131,7 @@ struct NotificationsPosts: View {
         }
         fl.reset()
         fl.predicate = NSPredicate(
-            format: "NOT pubkey IN %@ AND kind IN {1,9802} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@)",
+            format: "NOT pubkey IN %@ AND kind IN {1,9802,30023} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@)",
                     (blockedPubkeys + [pubkey]),
                     serializedP(pubkey),
                     mutedRootIds,
@@ -168,7 +168,7 @@ struct NotificationsPosts: View {
                 let currentNewestCreatedAt = fl.nrPosts.first?.created_at ?? 0
                 fl.predicate = NSPredicate(
                     format:
-                        "created_at >= %i AND NOT pubkey IN %@ AND kind IN {1,9802} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) ",
+                        "created_at >= %i AND NOT pubkey IN %@ AND kind IN {1,9802,30023} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) ",
                         currentNewestCreatedAt,
                         (blockedPubkeys + [pubkey]),
                         serializedP(pubkey),

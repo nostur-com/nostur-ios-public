@@ -107,7 +107,7 @@ class Unpublisher {
                 }
                 Importer.shared.existingIds.insert(savedEvent.id)
                 DataProvider.shared().bgSave()
-                if ([1,6,9802].contains(savedEvent.kind)) {
+                if ([1,6,9802,30023].contains(savedEvent.kind)) {
                     DispatchQueue.main.async {
                         sendNotification(.newPostSaved, savedEvent)
                     }

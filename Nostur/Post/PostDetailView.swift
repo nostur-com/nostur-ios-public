@@ -119,25 +119,31 @@ struct PostAndParent: View {
             // We have the event: replyTo_ = already .replyTo or lazy fetched with .replyToId
             if let replyTo = nrPost.replyTo {
                 if replyTo.deletedById == nil {
-                    let connect:ThreadConnectDirection? = replyTo.replyToId != nil ? .both : .bottom
-                    PostAndParent(nrPost: replyTo, isParent: true, connect: connect)
-                        .background(alignment: .leading) {
-                            ZStack(alignment: .leading) {
-                                Color.systemBackground
-                                Color("LightGray")
-                                    .frame(width: 2)
-                                    .offset(x: THREAD_LINE_OFFSET, y: 62)
-                                    .opacity(connect == .bottom || connect == .both ? 1 : 0)
-                            }
-                        }
-                        .background(alignment:.topLeading) {
-                            Color.red
-                                .frame(width: DIMENSIONS.ROW_PFP_SPACE - 10)
-                                .padding(.top, DIMENSIONS.POST_ROW_PFP_HEIGHT + 20)
-                                .onTapGesture {
-                                    navigateTo(replyTo)
+                    
+                    if replyTo.kind == 30023 {
+                        ArticleView(replyTo, isDetail: true, fullWidth: true)
+                    }
+                    else {
+                        let connect:ThreadConnectDirection? = replyTo.replyToId != nil ? .both : .bottom
+                        PostAndParent(nrPost: replyTo, isParent: true, connect: connect)
+                            .background(alignment: .leading) {
+                                ZStack(alignment: .leading) {
+                                    Color.systemBackground
+                                    Color("LightGray")
+                                        .frame(width: 2)
+                                        .offset(x: THREAD_LINE_OFFSET, y: 62)
+                                        .opacity(connect == .bottom || connect == .both ? 1 : 0)
                                 }
-                        }
+                            }
+                            .background(alignment:.topLeading) {
+                                Color.red
+                                    .frame(width: DIMENSIONS.ROW_PFP_SPACE - 10)
+                                    .padding(.top, DIMENSIONS.POST_ROW_PFP_HEIGHT + 20)
+                                    .onTapGesture {
+                                        navigateTo(replyTo)
+                                    }
+                            }
+                    }
                 }
                 else {
                     Text("_Post deleted by author_", comment: "Message shown when a post is deleted")
@@ -173,6 +179,10 @@ struct PostAndParent: View {
                     else {
                         DetailPost(nrPost: nrPost)
                             .background(Color.systemBackground)
+                            .preference(key: TabTitlePreferenceKey.self, value: nrPost.anyName)
+                            .onAppear {
+                                L.og.info("💄💄 This should be setting tab title to: \(nrPost.anyName)")
+                            }
                     }
                 }
                 else {
@@ -355,6 +365,7 @@ struct DetailPost: View {
                 }
                 .padding(.trailing, 10)
                 .padding(.top, 10)
+                .padding(.bottom, 20)
             }
         }
     
@@ -406,35 +417,7 @@ struct DetailPost: View {
 }
 
 
-struct DetailFooterFragment: View {
-    @ObservedObject var nrPost:NRPost
 
-    var body: some View {
-        Divider()
-        HStack(spacing: 20) {
-            NavigationLink(value: ViewPath.NoteReactions(id: nrPost.id)) {
-                HStack(spacing:5) {
-                    AnimatedNumber(number: nrPost.likesCount)
-                        .fontWeight(.bold)
-                    Text("reactions", comment: "Label for reactions count, example: (7) reactions")
-                }
-            }
-            NavigationLink(value: ViewPath.NoteZaps(id: nrPost.id)) {
-                HStack(spacing:5) {
-                    AnimatedNumber(number: nrPost.zapsCount)
-                        .fontWeight(.bold)
-                    Text("zaps", comment: "Label for zaps count, example: (4) zaps")
-                }
-            }
-            
-            Spacer()
-        }
-        .foregroundColor(.gray)
-        .padding(5)
-        .font(.system(size: 14))
-        Divider()
-    }
-}
 
 struct Kind1063detail_Previews: PreviewProvider {
     static var previews: some View {

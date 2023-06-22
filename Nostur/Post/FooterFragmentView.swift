@@ -5,6 +5,7 @@ struct FooterFragmentView: View {
     static let grey = Color.init(red: 113/255, green: 118/255, blue: 123/255)
 
     @ObservedObject var nrPost:NRPost
+    var isDetail = false
     @State var unpublishLikeId:UUID? = nil
     
     var body: some View {

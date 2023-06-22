@@ -164,7 +164,7 @@ struct Maintenance {
             let mergedIds = Set(ownAccountBookmarkIds).union(Set(ownAccountPrivateNoteEventIds)).union(postsIdToKeep)
             
             let fr16 = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
-            fr16.predicate = NSPredicate(format: "created_at < %i AND kind IN {1,6,9802} AND NOT id IN %@ AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), mergedIds, ownAccountPubkeys, regex)
+            fr16.predicate = NSPredicate(format: "created_at < %i AND kind IN {1,6,9802,30023} AND NOT id IN %@ AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), mergedIds, ownAccountPubkeys, regex)
             
             let fr16batchDelete = NSBatchDeleteRequest(fetchRequest: fr16)
             fr16batchDelete.resultType = .resultTypeCount
@@ -172,10 +172,10 @@ struct Maintenance {
             do {
                 let result = try context.execute(fr16batchDelete) as! NSBatchDeleteResult
                 if ((result.result as? Int ?? 0) > 0) {
-                    L.maintenance.info("🧹🧹 Deleted \(result.result.debugDescription) kind {1,6,1,6,9802} events")
+                    L.maintenance.info("🧹🧹 Deleted \(result.result.debugDescription) kind {1,6,1,6,9802,30023} events")
                 }
             } catch {
-                L.maintenance.info("🔴🔴 Failed to delete {1,6,1,9802} data")
+                L.maintenance.info("🔴🔴 Failed to delete {1,6,1,9802,30023} data")
             }
             
             

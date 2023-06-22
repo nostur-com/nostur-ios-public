@@ -1085,7 +1085,7 @@ extension Event {
             let eventIdsToDelete = event.eTags()
             
             let eventIdsToDeleteReq = NSFetchRequest<Event>(entityName: "Event")
-            eventIdsToDeleteReq.predicate = NSPredicate(format: "kind IN {1,6,9802} AND id IN %@", eventIdsToDelete)
+            eventIdsToDeleteReq.predicate = NSPredicate(format: "kind IN {1,6,9802,30023} AND id IN %@", eventIdsToDelete)
             eventIdsToDeleteReq.sortDescriptors = []
             if let eventsToDelete = try? context.fetch(eventIdsToDeleteReq) {
                 for d in eventsToDelete {

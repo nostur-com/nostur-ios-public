@@ -56,7 +56,7 @@ struct SingleMediaViewer: View {
                                 .aspectRatio(contentMode: .fit)
                                 .frame(height: 250)
                                 .hCentered()
-                                .background(Color("LightGray").opacity(0.2))
+                                .background(Color(.secondarySystemBackground))
                                 .onTapGesture {
                                     sendNotification(.fullScreenView, FullScreenItem(url: url))
                                 }
@@ -78,7 +78,7 @@ struct SingleMediaViewer: View {
                                     .scaledToFit()
                                     .frame(height: 250)
                                     .hCentered()
-                                    .background(Color("LightGray").opacity(0.2))
+                                    .background(Color(.secondarySystemBackground))
                                     .onTapGesture {
                                         sendNotification(.fullScreenView, FullScreenItem(url: url))
                                     }
@@ -90,7 +90,7 @@ struct SingleMediaViewer: View {
                                     ImageProgressView(progress: state.progress)
                                     Text("Loading...")
                                 }
-                                .background(Color("LightGray").opacity(0.5))
+                                .background(Color(.secondarySystemBackground))
                             }
                         }
                     }
@@ -106,10 +106,10 @@ struct SingleMediaViewer: View {
                         }
                         .centered()
                         .frame(height: fullWidth ? 600 : 250)
-                        .background(Color("LightGray"))
+                        .background(Color(.secondarySystemBackground))
                     }
                     else {
-                        Color("LightGray").opacity(0.2)
+                        Color(.secondarySystemBackground)
                     }
                 }
                 .pipeline(ImageProcessing.shared.content)
@@ -118,7 +118,7 @@ struct SingleMediaViewer: View {
                 Text("Tap to load media", comment: "An image placeholder the user can tap to load media (usually an image or gif)")
                    .centered()
                    .frame(height: fullWidth ? 600 : 250)
-                   .background(Color("LightGray").opacity(0.2))
+                   .background(Color(.secondarySystemBackground))
                    .highPriorityGesture(
                        TapGesture()
                            .onEnded { _ in

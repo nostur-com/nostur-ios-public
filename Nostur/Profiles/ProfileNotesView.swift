@@ -21,7 +21,7 @@ struct ProfileNotesView: View {
             }
             if !fl.nrPosts.isEmpty {
                 Button(String(localized:"Show more", comment: "Button to show more items")) {
-                    fl.predicate = NSPredicate(format: "pubkey == %@ AND kind IN {1,6,9802}", pubkey)
+                    fl.predicate = NSPredicate(format: "pubkey == %@ AND kind IN {1,6,9802,30023}", pubkey)
                     fl.loadMore(50)
                     if let until = fl.nrPosts.last?.created_at {
                         req(RM.getAuthorNotesUntil(pubkey: pubkey, until: NTimestamp(timestamp: Int(until)), limit:250))
@@ -45,7 +45,7 @@ struct ProfileNotesView: View {
         .onAppear {
             guard !didLoad else { return }
             didLoad = true
-            fl.predicate = NSPredicate(format: "pubkey == %@ AND kind IN {1,6,9802} ", pubkey)
+            fl.predicate = NSPredicate(format: "pubkey == %@ AND kind IN {1,6,9802,30023} ", pubkey)
             fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
             
             fl.loadMore(50)
@@ -64,7 +64,7 @@ struct ProfileNotesView: View {
                         format:
                             "created_at >= %i " +
                             "AND pubkey == %@ " + // blockedPubkeys + [pubkey]
-                            "AND kind IN {1,6,9802} ",
+                            "AND kind IN {1,6,9802,30023} ",
                             currentNewestCreatedAt,
                             pubkey
                     )

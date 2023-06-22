@@ -147,6 +147,13 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     let inWoT:Bool // This is just one of the inputs to determine spam or not, should have more inputs.
     let isSpam:Bool // Should use this in all views to hide or not
     
+    // article stuff
+    var articleId:String?
+    var articleTitle:String?
+    var articleSummary:String?
+    var articlePublishedAt:Date?
+    var articleImageURL:URL?
+    
     init(event: Event, withReplyTo:Bool = false, withParents:Bool = false, withReplies:Bool = false, plainText:Bool = false, withRepliesCount:Bool = false) {
         self.event = event // Only touch this in BG context!!!
         self.id = event.id
@@ -177,8 +184,19 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         self.inWoT = event.inWoT
         self.isSpam = event.isSpam
         
+        // article?
+        if kind == 30023 {
+            articleId = event.articleId
+            articleTitle = event.articleTitle
+            articleSummary = event.articleSummary
+            articlePublishedAt = event.articlePublishedAt
+            if let articleImage = event.articleImage, let url = URL(string: articleImage) {
+                articleImageURL = url
+            }
+        }
+        
         if !plainText { // plainText is actually plainTextOnly, for rendering in muted spam stuff
-            let (contentElementsDetail, linkPreviewURLs) = NRContentElementBuilder.shared.buildElements(event)
+            let (contentElementsDetail, linkPreviewURLs) = kind == 30023 ? NRContentElementBuilder.shared.buildArticleElements(event) : NRContentElementBuilder.shared.buildElements(event)
             self.linkPreviewURLs = linkPreviewURLs
             
             self.contentElementsDetail = contentElementsDetail
