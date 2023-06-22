@@ -18,7 +18,7 @@ class QueuedFetcher {
     private var dequeuePsubject = PassthroughSubject<String, Never>()
     private var enqueueIDsubject = PassthroughSubject<String, Never>()
     private var dequeueIDsubject = PassthroughSubject<String, Never>()
-    
+    private var bg = DataProvider.shared().bg
     
     
     init() {
@@ -45,84 +45,106 @@ class QueuedFetcher {
         fetchSubject
             .debounce(for: .seconds(0.15), scheduler: RunLoop.main)
             .sink { [unowned self] _ in
-                guard !self.pQueue.isEmpty || !self.idQueue.isEmpty else { return }
-                
-                if self.idQueue.isEmpty {
-                    req(RM.getUserMetadata(pubkeys: Array(self.pQueue)))
-                    self.pQueue.removeAll()
-                }
-                else if self.pQueue.isEmpty {
-                    req(RM.getEvents(ids: Array(self.idQueue)))
-                    self.idQueue.removeAll()
-                }
-                else {
-                    // TODO COMBINE IN SINGLE REQUEST:
-                    req(RM.getUserMetadata(pubkeys: Array(self.pQueue)))
-                    req(RM.getEvents(ids: Array(self.idQueue)))
-                    self.pQueue.removeAll()
-                    self.idQueue.removeAll()
+                bg.perform {
+                    guard !self.pQueue.isEmpty || !self.idQueue.isEmpty else { return }
+                    
+                    if self.idQueue.isEmpty {
+                        req(RM.getUserMetadata(pubkeys: Array(self.pQueue)))
+                        self.pQueue.removeAll()
+                    }
+                    else if self.pQueue.isEmpty {
+                        req(RM.getEvents(ids: Array(self.idQueue)))
+                        self.idQueue.removeAll()
+                    }
+                    else {
+                        // TODO COMBINE IN SINGLE REQUEST:
+                        req(RM.getUserMetadata(pubkeys: Array(self.pQueue)))
+                        req(RM.getEvents(ids: Array(self.idQueue)))
+                        self.pQueue.removeAll()
+                        self.idQueue.removeAll()
+                    }
                 }
         }
         .store(in: &subscriptions)
     }
     
     public func enqueue(pTag: String) {
-        enqueuePsubject.send(pTag)
-        self.fetch()
+        bg.perform { [unowned self] in
+            self.enqueuePsubject.send(pTag)
+            self.fetch()
+        }
     }
     
     public func enqueue(pTags: [String]) {
-        guard !pTags.isEmpty else { return }
-        pTags.forEach { pTag in
-            enqueuePsubject.send(pTag)
+        bg.perform { [unowned self] in
+            guard !pTags.isEmpty else { return }
+            pTags.forEach { pTag in
+                self.enqueuePsubject.send(pTag)
+            }
+            self.fetch()
         }
-        self.fetch()
     }
     
     public func enqueue(pTags: Set<String>) {
         guard !pTags.isEmpty else { return }
-        pTags.forEach { pTag in
-            enqueuePsubject.send(pTag)
+        bg.perform { [unowned self] in
+            pTags.forEach { pTag in
+                self.enqueuePsubject.send(pTag)
+            }
+            self.fetch()
         }
-        self.fetch()
     }
     
     public func dequeue(pTag: String) {
-        dequeuePsubject.send(pTag)
+        bg.perform { [unowned self] in
+            self.dequeuePsubject.send(pTag)
+        }
     }
     
     public func dequeue(pTags: [String]) {
-        pTags.forEach { pTag in
-            dequeuePsubject.send(pTag)
+        bg.perform { [unowned self] in
+            pTags.forEach { pTag in
+                self.dequeuePsubject.send(pTag)
+            }
         }
     }
     
     public func dequeue(pTags: Set<String>) {
-        pTags.forEach { pTag in
-            dequeuePsubject.send(pTag)
+        bg.perform { [unowned self] in
+            pTags.forEach { pTag in
+                self.dequeuePsubject.send(pTag)
+            }
         }
     }
     
     public func enqueue(id: String) {
-        enqueueIDsubject.send(id)
-        self.fetch()
+        bg.perform { [unowned self] in
+            self.enqueueIDsubject.send(id)
+            self.fetch()
+        }
     }
     
     public func enqueue(ids: [String]) {
         guard !ids.isEmpty else { return }
-        ids.forEach { id in
-            enqueuePsubject.send(id)
+        bg.perform { [unowned self] in
+            ids.forEach { id in
+                self.enqueuePsubject.send(id)
+            }
+            self.fetch()
         }
-        self.fetch()
     }
     
     public func dequeue(id: String) {
-        dequeueIDsubject.send(id)
+        bg.perform { [unowned self] in
+            self.dequeueIDsubject.send(id)
+        }
     }
     
     public func dequeue(ids: [String]) {
-        ids.forEach { id in
-            dequeueIDsubject.send(id)
+        bg.perform { [unowned self] in
+            ids.forEach { id in
+                self.dequeueIDsubject.send(id)
+            }
         }
     }
     
