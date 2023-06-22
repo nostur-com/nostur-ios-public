@@ -80,12 +80,26 @@ class NWCRequestQueue {
                         L.og.info("⚡️ Creating notification for \(failedZaps.count) failed zaps")
                         _ = PersistentNotification.createFailedNWCZaps(pubkey: NosturState.shared.activeAccountPublicKey, message: serializedFails, context: DataProvider.shared().bg)
                     }
+                    
+                    for f in failedZaps  {
+                        if let event = f.event {
+                            event.zapState = .none
+                            event.zapStateChanged.send(.none)
+                        }
+                    }
                 }
                 if !timeoutZaps.isEmpty, let jsonData = try? self.encoder.encode(timeoutZaps.map { FailedZap(contactPubkey: $0.contactPubkey, eventId: $0.eventId, error: "Timeout") }) {
                     
                     if let serializedFails = String(data: jsonData, encoding: .utf8) {
                         L.og.info("⚡️ Creating notification for \(timeoutZaps.count) failed zaps by timeout")
                         _ = PersistentNotification.createTimeoutNWCZaps(pubkey: NosturState.shared.activeAccountPublicKey, message: serializedFails, context: DataProvider.shared().bg)
+                    }
+                    
+                    for t in timeoutZaps  {
+                        if let event = t.event {
+                            event.zapState = .none
+                            event.zapStateChanged.send(.none)
+                        }
                     }
                 }
             }

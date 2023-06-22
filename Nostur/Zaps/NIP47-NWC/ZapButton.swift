@@ -72,7 +72,7 @@ struct ZapButton: View {
                                         
                                         DataProvider.shared().bg.perform {
                                             NWCRequestQueue.shared.ensureNWCconnection()
-                                            let zap = Zap(amount: Int64(ss.defaultZapAmount), contact: contact, eventId: nrPost.id, cancellationId: cancellationId!)
+                                            let zap = Zap(amount: Int64(ss.defaultZapAmount), contact: contact, eventId: nrPost.id, event: nrPost.event, cancellationId: cancellationId!)
                                             NWCZapQueue.shared.sendZap(zap)
                                             nrPost.event.zapState = .initiated
                                         }

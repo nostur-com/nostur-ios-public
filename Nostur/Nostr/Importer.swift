@@ -129,6 +129,10 @@ class Importer {
                                     let message = "Zap may have failed for [post](nostur:e:\(eventId)).\n\(error.message)"
                                     _ = PersistentNotification.createFailedNWCZap(pubkey: NosturState.shared.activeAccountPublicKey, message: message, context: context)
                                     L.og.info("⚡️ Created notification: Zap failed for [post](nostur:e:\(eventId)). \(error.message)")
+                                    if let ev = try? Event.fetchEvent(id: eventId, context: DataProvider.shared().bg) {
+                                        ev.zapState = .none
+                                        ev.zapStateChanged.send(.none)
+                                    }
                                 }
                                 else {
                                     let message = "Zap may have failed for [contact](nostur:p:\(awaitingZap.contact.pubkey)).\n\(error.message)"

@@ -90,6 +90,7 @@ class Zap {
     var lud06:String?
     var amount:Int64
     var eventId:String?
+    var event:Event?
     let contact:Contact
     let cancellationId:UUID
     let contactPubkey:String
@@ -99,13 +100,14 @@ class Zap {
     var callbackUrl:String? = nil
     var pr:String? = nil // payment request (invoice)
     
-    init(amount:Int64, contact:Contact, eventId:String? = nil, cancellationId:UUID) {
+    init(amount:Int64, contact:Contact, eventId:String? = nil, event:Event? = nil, cancellationId:UUID) {
         self.queuedAt = .now
         self.amount = amount
         self.contact = contact
         self.cancellationId = cancellationId
         self.contactPubkey = contact.pubkey
         self.eventId = eventId
+        self.event = event
         self.lud16 = contact.lud16
         self.lud06 = contact.lud06
         next()
