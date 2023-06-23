@@ -68,6 +68,14 @@ struct NosturRootMenu: View {
             }
         }
         
+        // NADDR ARTICLE
+        let nostrAddr = url.absoluteString.matchingStrings(regex: "^(nostr:|nostur:nostr:)(naddr1)([023456789acdefghjklmnpqrstuvwxyz]+\\b)$")
+        if nostrAddr.count == 1 && nostrAddr[0].count == 4 {
+            L.og.info("nostr: naddr: \(nostrAddr[0][2])\(nostrAddr[0][3])")
+            navigateTo(Naddr1Path(naddr1: "\(nostrAddr[0][2])\(nostrAddr[0][3])"))
+            return
+        }
+        
         // (NEW) LINKS FROM ANYWHERE (NEVENT1/NPROFILE1)
         let nostrSharable = url.absoluteString.matchingStrings(regex: "^(nostr:|nostur:nostr:)(nevent1|nprofile1)([023456789acdefghjklmnpqrstuvwxyz]+\\b)$")
         if nostrSharable.count == 1 && nostrSharable[0].count == 4 {

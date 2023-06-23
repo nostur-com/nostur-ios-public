@@ -55,14 +55,14 @@ struct ContentRenderer: View { // VIEW things
                     NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs)
 //                        .padding(.horizontal, fullWidth ? 10 : 0)
                         .onTapGesture {
-//                            guard !isDetail else { return }
+                            guard !isDetail else { return }
                             navigateTo(nrPost)
                         }
                 case .md(let markdownContentWithPs): // For long form articles
                     NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs)
 //                        .padding(.horizontal, fullWidth ? 20 : 0)
                         .onTapGesture {
-//                            guard !isDetail else { return }
+                            guard !isDetail else { return }
                             navigateTo(nrPost)
                         }
                 case .lnbc(let text):

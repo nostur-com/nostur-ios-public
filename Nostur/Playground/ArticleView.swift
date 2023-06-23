@@ -337,10 +337,7 @@ struct ArticleView_Previews: PreviewProvider {
                                                              context: DataProvider.shared().viewContext)
             {
                 NavigationStack {
-                    VStack {
-                        Text("kind: \(kind.description)")
-                        ArticleView(NRPost(event: article), isDetail: true)
-                    }
+                    ArticleView(NRPost(event: article), isDetail: true)
                 }
             }
             
