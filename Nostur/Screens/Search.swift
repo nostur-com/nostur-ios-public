@@ -24,7 +24,7 @@ struct Search: View {
         NavigationStack(path: $navPath) {
             ScrollView {
                 if (contacts.isEmpty && nrPosts.isEmpty && searching) {
-                    ProgressView()
+                    CenteredProgressView()
                 }
                 LazyVStack(spacing: 0) {
                     Section {
@@ -98,6 +98,79 @@ struct Search: View {
                                         }
                                     }
                                 }
+                            }
+                        }
+                    }
+                }
+                
+                else if (searchTrimmed.prefix(6) == "naddr1") {
+
+                    if let naddr = try? ShareableIdentifier(searchTrimmed),
+                       let kind = naddr.kind,
+                       let pubkey = naddr.pubkey,
+                       let definition = naddr.eventId { // .eventId is already hex
+                        searching = true
+                        contacts.nsPredicate = NSPredicate(value: false)
+                        
+                        DataProvider.shared().bg.perform {
+                            if let article = try? Event.fetchReplacableEvent(kind,
+                                                                             pubkey: pubkey,
+                                                                             definition: definition,
+                                                                             context: DataProvider.shared().bg) {
+                                let article = NRPost(event: article)
+                                DispatchQueue.main.async {
+                                    self.nrPosts = [article]
+                                }
+                            }
+                            else {
+                                let reqTask = ReqTask(
+                                    prefix: "ARTICLESEARCH-",
+                                    reqCommand: { taskId in
+                                        req(RM.getArticle(pubkey: pubkey, kind:Int(kind), definition:definition, subscriptionId: taskId))
+                                    },
+                                    processResponseCommand: { taskId in
+                                        DataProvider.shared().bg.perform {
+                                            if let article = try? Event.fetchReplacableEvent(kind,
+                                                                                             pubkey: pubkey,
+                                                                                             definition: definition,
+                                                                                             context: DataProvider.shared().bg) {
+                                                let article = NRPost(event: article)
+                                                DispatchQueue.main.async {
+                                                    self.nrPosts = [article]
+                                                }
+                                                backlog.clear()
+                                            }
+                                        }
+                                    },
+                                    timeoutCommand: { taskId in
+                                        if !naddr.relays.isEmpty {
+                                            searchTask = Task {
+                                                try? await Task.sleep(for: .seconds(3))
+                                                let ctx = DataProvider.shared().bg
+                                                await ctx.perform {
+                                                    // If we don't have the event after X seconds, fetch from relay hint
+                                                    if (try? Event.fetchReplacableEvent(kind, pubkey: pubkey, definition: definition, context: DataProvider.shared().bg)) == nil {
+                                                        if let relay = naddr.relays.first {
+                                                            EphemeralSocketPool
+                                                                .shared
+                                                                .sendMessage(
+                                                                    RM.getArticle(
+                                                                        pubkey: pubkey,
+                                                                        kind: Int(kind),
+                                                                        definition: definition,
+                                                                        subscriptionId: taskId
+                                                                    ),
+                                                                    relay: relay
+                                                                )
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    })
+                                
+                                backlog.add(reqTask)
+                                reqTask.fetch()
                             }
                         }
                     }
