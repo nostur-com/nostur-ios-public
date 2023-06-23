@@ -100,34 +100,35 @@ struct ArticleView: View {
                         .padding(.vertical, 10)
     //                ArticleCommentsPreview(article: article)
                     
-                    ThreadReplies(nrPost: article)
-                        .padding(.vertical, 10)
-                        .onAppear {
-                            DataProvider.shared().bg.perform {
-                                EventRelationsQueue.shared.addAwaitingEvent(article.event, debugInfo: "ArticleView.003")
-                                if (!article.missingPs.isEmpty) {
-                                    QueuedFetcher.shared.enqueue(pTags: article.missingPs)
-                                }
-                                
-                                // Fetch all related (e and p.kind=0)
-                                // (the events and contacts mentioned in this DETAIL NOTE.
-                                if let message = RM.getFastTags(article.fastTags) {
-                                    SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: message))
-                                }
-                                
-                                // Fetch all that reference this detail note (Replies, zaps, reactions)
-                                req(RM.getEventReferences(ids: [article.id], subscriptionId: "A-DETAIL-"+UUID().uuidString))
-                                // REAL TIME UPDATES FOR POST DETAIL
-                                req(RM.getEventReferences(ids: [article.id], subscriptionId: "REALTIME-DETAIL", since: NTimestamp(date: Date.now)))
-                            }
-                        }
-                        .onDisappear {
-                            DataProvider.shared().bg.perform {
-                                if (!article.missingPs.isEmpty) {
-                                    QueuedFetcher.shared.dequeue(pTags: article.missingPs)
-                                }
-                            }
-                        }
+                    // Disable comments for now because should not be on id but on naddr
+//                    ThreadReplies(nrPost: article)
+//                        .padding(.vertical, 10)
+//                        .onAppear {
+//                            DataProvider.shared().bg.perform {
+//                                EventRelationsQueue.shared.addAwaitingEvent(article.event, debugInfo: "ArticleView.003")
+//                                if (!article.missingPs.isEmpty) {
+//                                    QueuedFetcher.shared.enqueue(pTags: article.missingPs)
+//                                }
+//                                
+//                                // Fetch all related (e and p.kind=0)
+//                                // (the events and contacts mentioned in this DETAIL NOTE.
+//                                if let message = RM.getFastTags(article.fastTags) {
+//                                    SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: message))
+//                                }
+//                                
+//                                // Fetch all that reference this detail note (Replies, zaps, reactions)
+//                                req(RM.getEventReferences(ids: [article.id], subscriptionId: "A-DETAIL-"+UUID().uuidString))
+//                                // REAL TIME UPDATES FOR POST DETAIL
+//                                req(RM.getEventReferences(ids: [article.id], subscriptionId: "REALTIME-DETAIL", since: NTimestamp(date: Date.now)))
+//                            }
+//                        }
+//                        .onDisappear {
+//                            DataProvider.shared().bg.perform {
+//                                if (!article.missingPs.isEmpty) {
+//                                    QueuedFetcher.shared.dequeue(pTags: article.missingPs)
+//                                }
+//                            }
+//                        }
                 }
                 .padding(20)
             }
@@ -417,7 +418,12 @@ struct ArticleByNaddr: View {
                 Text(error)
             }
             else if let article {
-                ArticleView(article, isDetail: true)
+                if article.kind == 30023 {
+                    ArticleView(article, isDetail: true)
+                }
+                else {
+                    PostDetailView(nrPost: article)
+                }
 //                    .background(.red)
 //                    .background(Color(.secondarySystemBackground))
             }

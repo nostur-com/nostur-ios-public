@@ -203,7 +203,7 @@ class NRTextParser { // TEXT things
     static func replaceNaddrWithMarkdownLinks(in string: String) -> String {
         return string
             .replacingOccurrences(of: ###"(?:nostr:)?(naddr1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###,
-                                  with: "[link](nostur:nostr:$1)",
+                                  with: "[naddr1...](nostur:nostr:$1)",
                                   options: .regularExpression)
     }
 
