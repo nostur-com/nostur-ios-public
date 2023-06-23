@@ -3,22 +3,37 @@ import SwiftUI
 
 struct NotePath: Hashable {
     var id:String
+    var navigationTitle:String? = nil
 }
 
 struct ContactPath: Hashable {
     var key:String
+    var navigationTitle:String? = nil
 }
 
 struct HashtagPath: Hashable {
     var hashTag:String
+    var navigationTitle:String? = nil
 }
 
 struct Nevent1Path: Hashable {
     var nevent1:String
+    var navigationTitle:String? = nil
+}
+
+struct Naddr1Path: Hashable {
+    var naddr1:String
+    var navigationTitle:String? = nil
+}
+
+struct ArticlePath: Hashable {
+    var id:String
+    var navigationTitle:String? = nil
 }
 
 struct Nprofile1Path: Hashable {
     var nprofile1:String
+    var navigationTitle:String? = nil
 }
 
 enum ViewPath: Hashable {
@@ -38,6 +53,12 @@ extension View {
         return self
             .navigationDestination(for: NRPost.self) { nrPost in
                 PostDetailView(nrPost: nrPost)
+            }
+            .navigationDestination(for: Naddr1Path.self) { path in
+                ArticleByNaddr(naddr1: path.naddr1, navigationTitle:path.navigationTitle)
+            }
+            .navigationDestination(for: ArticlePath.self) { path in
+                ArticleById(id: path.id, navigationTitle:path.navigationTitle)
             }
             .navigationDestination(for: ArticleCommentsPath.self) { articleCommentsPath in
                 ArticleCommentsView(article: articleCommentsPath.article)

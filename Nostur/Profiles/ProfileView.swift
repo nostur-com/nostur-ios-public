@@ -198,6 +198,7 @@ struct ProfileView: View {
                 ProfileTabs(contact: contact, selectedSubTab: $selectedSubTab)
             }
         }
+        .preference(key: TabTitlePreferenceKey.self, value: contact.anyName)
         .onReceive(receiveNotification(.newFollowingListFromRelay)) { notification in
             let nEvent = notification.object as! NEvent
             if nEvent.publicKey == contact.pubkey {

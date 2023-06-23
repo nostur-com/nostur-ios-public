@@ -5,7 +5,8 @@ struct NosturTabButton: View {
     var isSelected:Bool = false
     var onSelect:() -> Void
     var onClose:() -> Void
-    var label:String = "?"
+    @ObservedObject var tab:TabModel
+    var isArticle:Bool { tab.isArticle }
     
     @State var isHoveringCloseButton = false
     @State var isHoveringTab = false
@@ -33,14 +34,14 @@ struct NosturTabButton: View {
                         self.onClose()
                     }
             }
-            Text(label)
+            Text(tab.navigationTitle)
                 .lineLimit(1)
                 .frame(maxWidth: 150)
         }
         .padding(.trailing, 23)
         .padding(.vertical, 10)
         .padding(.leading, 5)
-        .background(isSelected ? Color.systemBackground : .clear)
+        .background(isSelected ? (isArticle ? Color(.secondarySystemBackground) : Color.systemBackground) : .clear)
         .contentShape(Rectangle())
         .onHover { over in
             isHoveringTab = over

@@ -3,7 +3,7 @@ import SwiftUI
 struct DetailTab: View {
     @State var navPath = NavigationPath()
     let tm:DetailTabsModel = .shared
-    let tab:DetailTabsModel.Tab
+    @ObservedObject var tab:TabModel
     
     var body: some View {
         NavigationStack(path: $navPath) {
@@ -28,6 +28,24 @@ struct DetailTab: View {
                     Color("ListBackground")
                         .ignoresSafeArea()
                     NoteById(id: notePathId)//.opacity(tm.selected == tab ? 1 : 0)
+                        .withNavigationDestinations()
+                }
+                
+            }
+            else if let naddr1 = tab.naddr1?.naddr1 {
+                ZStack {
+                    Color("ListBackground")
+                        .ignoresSafeArea()
+                    ArticleByNaddr(naddr1: naddr1)
+                        .withNavigationDestinations()
+                }
+                
+            }
+            else if let articleId = tab.articlePath?.id {
+                ZStack {
+                    Color("ListBackground")
+                        .ignoresSafeArea()
+                    ArticleById(id: articleId)
                         .withNavigationDestinations()
                 }
                 
@@ -58,7 +76,7 @@ struct DetailTab_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer({ pe in pe.loadPosts() }, previewDevice: PreviewDevice(rawValue: "iPad Air (5th generation)")) {
             if let post = PreviewFetcher.fetchNRPost() {
-                DetailTab(tab: DetailTabsModel.Tab(nrPost: post))
+                DetailTab(tab: TabModel(nrPost: post))
             }
         }
     }

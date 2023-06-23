@@ -5,25 +5,7 @@ struct DetailPane: View {
     @StateObject private var dim = DIMENSIONS()
     @StateObject var tm = DetailTabsModel()
     @State var offsetX = 200.0
-    
-    func tabName(tab:DetailTabsModel.Tab) -> String {
-        if let nrPost = tab.nrPost {
-            return nrPost.anyName
-        }
-        if let event = tab.event {
-            if let anyName = event.contact?.anyName {
-                return anyName
-            }
-            else {
-                return String(event.pubkey.suffix(11))
-            }
-        }
-        if let contact = tab.contact {
-            return contact.anyName
-        }
-        return "＿"
-    }
-    
+
     init() {
         UIScrollView.appearance().bounces = false
     }
@@ -43,18 +25,19 @@ struct DetailPane: View {
                     HStack(spacing:0) {
                         ForEach(tm.tabs.indices, id:\.self) { index in
                             NosturTabButton(
-                                isSelected: tm.selected == tm.tabs[safe: index],
+                                isSelected: tm.selected == tm.tabs[index],
                                 onSelect: {
-                                    guard let t = tm.tabs[safe: index] else { return }
+                                    let t = tm.tabs[index]
                                     tm.selected = t
                                     if let nrPost = tm.selected?.nrPost {
                                         EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NosturTabButton.onSelect")
                                         req(RM.getEventReferences(ids: [nrPost.id], subscriptionId: "REALTIME-DETAIL"))
                                     }
-                                }, onClose: {
-                                    if (tm.selected == tm.tabs[safe: index]) {
+                                },
+                                onClose: {
+                                    if (tm.selected == tm.tabs[index]) {
                                         if (index != 0) {
-                                            tm.selected = tm.tabs[safe: (index - 1)]
+                                            tm.selected = tm.tabs[(index - 1)]
                                             if let id = tm.selected?.id {
                                                 proxy.scrollTo(id)
                                             }
@@ -77,9 +60,11 @@ struct DetailPane: View {
                                     }
                                     // TODO make tabs identifiable, and make animation
                                     tm.tabs.remove(at: index)
-                                }, label: tm.tabs[safe: index] != nil ? "\(tabName(tab: tm.tabs[safe: index]!))" : "?")
+                                },
+                                tab: tm.tabs[index]
+                            )
                             .padding(.leading, index == 0 ? 30 : 0)
-                            .id(tm.tabs[safe: index]?.id ?? UUID())
+                            .id(tm.tabs[index].id)
                             Divider().frame(height: 30).opacity(index == tm.tabs.count-1 ? 0 : 1)
                         }
                         Spacer()
@@ -104,6 +89,11 @@ struct DetailPane: View {
                         .opacity(tm.selected == tab ? 1 : 0)
                         .id(tab.id)
                         .padding(.horizontal, 10)
+                        .onPreferenceChange(TabTitlePreferenceKey.self) { title in
+                            guard !title.isEmpty else { return }
+                            tm.selected?.navigationTitle = title
+                            L.og.info("💄💄 onPreferenceChange: \(title)")
+                        }
                 }
                 VStack {
                     Spacer()
@@ -133,35 +123,49 @@ struct DetailPane: View {
             let destination = notification.object as! NavigationDestination
             if type(of: destination.destination) == NRPost.self {
                 let p = destination.destination as! NRPost
-                let tab = DetailTabsModel.Tab(nrPost: p)
+                let tab = TabModel(nrPost: p)
                 tm.tabs.append(tab)
                 tm.selected = tab
                 return
             }
             else if type(of: destination.destination) == Event.self {
                 let p = destination.destination as! Event
-                let tab = DetailTabsModel.Tab(event: p)
+                let tab = TabModel(event: p)
+                tm.tabs.append(tab)
+                tm.selected = tab
+                return
+            }
+            else if type(of: destination.destination) == Naddr1Path.self {
+                let p = destination.destination as! Naddr1Path
+                let tab = TabModel(naddr1: p)
+                tm.tabs.append(tab)
+                tm.selected = tab
+                return
+            }
+            else if type(of: destination.destination) == ArticlePath.self {
+                let p = destination.destination as! ArticlePath
+                let tab = TabModel(articlePath: p)
                 tm.tabs.append(tab)
                 tm.selected = tab
                 return
             }
             else if type(of: destination.destination) == NotePath.self {
                 let p = destination.destination as! NotePath
-                let tab = DetailTabsModel.Tab(notePath: p)
+                let tab = TabModel(notePath: p)
                 tm.tabs.append(tab)
                 tm.selected = tab
                 return
             }
             else if type(of: destination.destination) == ContactPath.self {
                 let c = destination.destination as! ContactPath
-                let tab = DetailTabsModel.Tab(contactPath: c)
+                let tab = TabModel(contactPath: c)
                 tm.tabs.append(tab)
                 tm.selected = tab
                 return
             }
             else if type(of: destination.destination) == Contact.self {
                 let c = destination.destination as! Contact
-                let tab = DetailTabsModel.Tab(contact: c)
+                let tab = TabModel(contact: c)
                 tm.tabs.append(tab)
                 tm.selected = tab
                 return
