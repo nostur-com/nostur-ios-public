@@ -127,7 +127,6 @@ class NRContentElementBuilder {
         var result: [ContentElement] = []
         var linkPreviewUrls: [URL] = []
         var lastMatchEnd = 0
-        
         Self.articleRegex.enumerateMatches(in: input, options: [], range: range) { match, _, _ in
             if let match = match {
                 let matchRange = match.range

@@ -53,10 +53,10 @@ class NRTextParser { // TEXT things
         // Remove image links
         // because they get rendered as embeds in PostDetail.
         // and NoteRow shows them in ImageViewer
-        let newText = removeImageLinks(event: event, text: text)
+//        let newText = removeImageLinks(event: event, text: text)
 
         // NIP-08, handle #[0] #[1] etc
-        let textWithPs = parseTagIndexedMentions(event: event, text: newText)
+        let textWithPs = parseTagIndexedMentions(event: event, text: text)
 
         // NIP-28 handle nostr:npub1, nostr:nprofile ...
         var newerTextWithPs = parseUserMentions(event: event, text: textWithPs.text)

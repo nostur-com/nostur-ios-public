@@ -2,7 +2,7 @@ import SwiftUI
 import UIKit
 
 struct DetailPane: View {
-    @StateObject private var dim = DIMENSIONS()
+    @StateObject private var dim = DIMENSIONS.shared
     @StateObject var tm = DetailTabsModel()
     @State var offsetX = 200.0
 

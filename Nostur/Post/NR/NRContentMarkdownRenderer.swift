@@ -11,31 +11,16 @@ struct NRContentMarkdownRenderer: View {
     var body: some View {
         Markdown(text ?? markdownContentWithPs.output)
             .markdownTextStyle() {
-//                FontSize(.em(1.85))
-                
-                
-//              FontFamily(.custom("Charter-Black"))
                 FontFamily(.custom("Charter"))
-//                FontSize(.rem(3.0))
-//              FontFamily(.custom("Georgia"))
-//              FontWeight(.bold)
-                
-                
                 ForegroundColor(Color.primary)
                 BackgroundColor(Color(.secondarySystemBackground))
-//                BackgroundColor(Color.systemBackground)
-                
                 FontSize(22)
             }
             .markdownTextStyle(\.link) {
-                ForegroundColor(Color.accentColor)
-                UnderlineStyle(.single)
+                ForegroundColor(Color("AccentColor"))
             }
-//            .foregroundColor(Color.red)
-//            .font(Font.custom("Charter-Black", size: 20))
-//            .font(Font.custom("Georgia", size: 20))
-//            .font(.custom("Charter", size: 28))
-//            .lineSpacing(15)
+            .markdownImageProvider(.nukeImage)
+            .markdownInlineImageProvider(.nukeImage)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, fullWidth ? 10 : 0)
             .onReceive(
@@ -62,4 +47,46 @@ struct NRContentMarkdownRenderer: View {
                 }
             }
     }
+}
+
+
+struct NukeImageProvider: ImageProvider {
+  func makeImage(url: URL?) -> some View {
+      if let url = url {
+          SingleMediaViewer(url: url, pubkey: "", imageWidth: DIMENSIONS.shared.listWidth, isFollowing: true, fullWidth: true, contentPadding: 20)
+      }
+      else {
+          EmptyView()
+      }
+  }
+}
+
+extension ImageProvider where Self == NukeImageProvider {
+  static var nukeImage: Self {
+    .init()
+  }
+}
+
+import NukeUI
+
+class NukeInlineImageProvider: InlineImageProvider {
+    func image(with url: URL, label: String) async throws -> Image {
+        let imageWidth = DIMENSIONS.shared.listWidth
+        
+        let imageRequest = await ImageRequest(url: url,
+                                          processors: [.resize(width: imageWidth, upscale: true)],
+                                          userInfo: [.scaleKey: UIScreen.main.scale])
+        
+        let task = ImageProcessing.shared.content.imageTask(with: imageRequest)
+        
+        let response = try await task.response
+        
+        return Image(uiImage: response.image)
+    }
+}
+
+extension InlineImageProvider where Self == NukeInlineImageProvider {
+  static var nukeImage: Self {
+    .init()
+  }
 }

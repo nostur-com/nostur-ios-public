@@ -176,7 +176,11 @@ extension PreviewEnvironment {
         }
     }
     
-    
+    func loadArticles() {
+        context.performAndWait {
+            self.parseMessages(testArticles())
+        }
+    }
     
     func loadFollowers() {
         guard let account = NosturState.shared.account else { L.og.debug("Preview.loadFollowers - missing Account"); return }

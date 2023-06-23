@@ -70,8 +70,8 @@ struct SingleMediaViewer: View {
 //                                Text("ddd")
                                 image
                                     .interpolation(.none)
-//                                    .resizable()
-//                                    .scaledToFit()
+                                    .resizable()
+                                    .scaledToFit()
                                     .padding(.horizontal, -contentPadding)
                                     .onTapGesture {
                                         sendNotification(.fullScreenView, FullScreenItem(url: url))
