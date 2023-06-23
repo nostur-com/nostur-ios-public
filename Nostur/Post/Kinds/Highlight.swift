@@ -107,7 +107,7 @@ struct Highlight: View {
                 .offset(x: THREAD_LINE_OFFSET, y: 18)
                 .opacity(connect == .bottom || connect == .both ? 1 : 0)
         }
-        .padding(.trailing, DIMENSIONS.KIND1_TRAILING)
+//        .padding(.trailing, DIMENSIONS.KIND1_TRAILING)
         .background(alignment: .leading) {
             Color.systemBackground.frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH+(DIMENSIONS.POST_ROW_PFP_HPADDING))
                 .padding(.top, DIMENSIONS.POST_ROW_PFP_HEIGHT)

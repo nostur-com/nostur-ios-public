@@ -382,6 +382,7 @@ struct DetailPost: View {
             else {
                 ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
                     .padding(.top, 3)
+                    .padding(.horizontal, 10)
                     .padding(.bottom, 10)
                     .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
             }

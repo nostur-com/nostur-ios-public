@@ -7,7 +7,7 @@ class DIMENSIONS: ObservableObject {
     
     // 428    - 5        - (10 + 50 + 10 ) -         (10) - 5
     // Screen - Box-left  - (10 + PFP+ 10 ) - (text-right) - Box-right
-    static public let POST_ROW_HPADDING:CGFloat = 5.0
+    static public let POST_ROW_HPADDING:CGFloat = 10.0
     static public let POST_ROW_PFP_WIDTH:CGFloat = 50.0
     static public let POST_ROW_PFP_HEIGHT:CGFloat = 50.0
     static public let POST_ROW_PFP_HPADDING:CGFloat = 10.0
@@ -21,7 +21,13 @@ class DIMENSIONS: ObservableObject {
     /// Substracts profile pic space from list width
     func availableNoteRowImageWidth() -> CGFloat {
         // 10 + ( 10+50+10 ) (availableWidth) + 10 + 10
-        return (listWidth - (Self.POST_ROW_HPADDING * 2) - (Self.POST_ROW_PFP_WIDTH) - (Self.POST_ROW_PFP_HPADDING * 2) - Self.KIND1_TRAILING)
+        return (listWidth - (Self.POST_ROW_HPADDING * 2) - (Self.POST_ROW_PFP_WIDTH) - (Self.POST_ROW_PFP_HPADDING * 2))
+    }
+    
+    // NoteRow but without the profile pic on the side
+    func articleRowImageWidth() -> CGFloat {
+        // 10 + ( 10+50+10 ) (availableWidth) + 10 + 10
+        return (listWidth - (Self.POST_ROW_HPADDING * 2))
     }
     
     /// No profile pic,  no shadow box padding, only Detail ContentRenderer padding
@@ -32,7 +38,7 @@ class DIMENSIONS: ObservableObject {
     /// Substracts profile pic space from list width
     func availablePostDetailRowImageWidth() -> CGFloat {
         //( 10+50+10 ) (availableWidth) + 10
-        return (listWidth - (Self.POST_ROW_PFP_WIDTH) - (Self.POST_ROW_PFP_HPADDING * 2) - Self.KIND1_TRAILING)
+        return (listWidth - (Self.POST_ROW_PFP_WIDTH) - (Self.POST_ROW_PFP_HPADDING * 2))
     }
 }
 

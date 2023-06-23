@@ -12,6 +12,7 @@ struct NosturVideoViewur: View {
     let videoWidth:CGFloat
     let isFollowing:Bool
     var fullWidth:Bool = false
+    var contentPadding:CGFloat = 10.0
     @State var videoState:VideoLoadingState = .initial
     @State var videoShown = true
     @State var asset:AVAsset? = nil
@@ -46,6 +47,7 @@ struct NosturVideoViewur: View {
                     ZStack {
                         VideoViewurReprestable(asset: asset, isPlaying: $isPlaying, isMuted: $isMuted)
                             .frame(width: scaledDimensions.width, height: scaledDimensions.height)
+                            .padding(.horizontal, -contentPadding)
                             .overlay(alignment:.bottomLeading) {
                                 if !didStart {
                                     Text(videoLength)

@@ -67,12 +67,11 @@ struct Kind1: View {
             VStack(alignment:.leading, spacing: 3) {// Post container
                 if missingReplyTo {
                     ReplyingToFragmentView(nrPost: nrPost)
-                        .padding(.horizontal, 10)
                         .contentShape(Rectangle())
                         .onTapGesture { navigateTo(nrPost) }
                 }
                 if let fileMetadata = nrPost.fileMetadata {
-                    Kind1063(nrPost, fileMetadata:fileMetadata, availableWidth: imageWidth)
+                    Kind1063(nrPost, fileMetadata:fileMetadata, availableWidth: imageWidth, fullWidth: true)
                 }
                 else {
                     if (nrPost.kind != 1) && (nrPost.kind != 6) {
@@ -98,12 +97,13 @@ struct Kind1: View {
                 }
                 if (!hideFooter && settings.rowFooterEnabled) {
                     FooterFragmentView(nrPost: nrPost)
-                        .padding(10)
+                        .padding(.vertical, 10)
                         .onTapGesture {
                             navigateTo(nrPost)
                         }
                 }
             }
+            .padding(.horizontal, 10)
         }
     }
 }

@@ -7,12 +7,14 @@ struct Kind1063: View {
     @ObservedObject var nrPost:NRPost
     let url:String
     let availableWidth:CGFloat
+    let fullWidth:Bool
     var height:CGFloat? = nil
     
-    init(_ nrPost:NRPost, fileMetadata:KindFileMetadata, availableWidth:CGFloat = .zero) {
+    init(_ nrPost:NRPost, fileMetadata:KindFileMetadata, availableWidth:CGFloat = .zero, fullWidth:Bool = false) {
         self.nrPost = nrPost
         self.url = fileMetadata.url
         self.availableWidth = availableWidth
+        self.fullWidth = fullWidth
         if let dim = fileMetadata.dim {
             let dims = dim.split(separator: "x", maxSplits: 2)
             if dims.count == 2 {
@@ -26,7 +28,12 @@ struct Kind1063: View {
                 
                 let newHeight = (widthPoints / scale / ratio)
                 
-                self.height = min(MAX_HEIGHT, newHeight) // Use maximum height of 250 points
+                if fullWidth {
+                    self.height = newHeight
+                }
+                else {
+                    self.height = min(MAX_HEIGHT, newHeight) // Use maximum height of 250 points
+                }
             }
             else {
                 self.height = MAX_HEIGHT
@@ -38,7 +45,7 @@ struct Kind1063: View {
     }
     
     var body: some View {
-        VStack {
+        VStack(alignment: .leading) {
             if let subject = nrPost.subject {
                 Text(subject)
                     .fontWeight(.bold)
@@ -46,8 +53,9 @@ struct Kind1063: View {
                     
             }
             if let height {
-                SingleMediaViewer(url: URL(string: url)!, pubkey: nrPost.pubkey, imageWidth: availableWidth, isFollowing: nrPost.following)
-                    .frame(width: availableWidth, height: height)
+                SingleMediaViewer(url: URL(string: url)!, pubkey: nrPost.pubkey, imageWidth: availableWidth, isFollowing: nrPost.following, fullWidth: fullWidth)
+                    .frame(height: height)
+//                    .background(.red)
             }
         }
     }
@@ -55,7 +63,7 @@ struct Kind1063: View {
 
 struct Kind1063_Previews: PreviewProvider {
     static var previews: some View {
-        PreviewContainer {
+        PreviewContainer({ pe in pe.loadKind1063() }) {
             NavigationStack {
                 if let nrPost = PreviewFetcher.fetchNRPost("ac0c2960db29828ee4a818337ea56df990d9ddd9278341b96c9fb530b4c4dce8") , let fileMetadata = nrPost.fileMetadata {
                     Kind1063(nrPost, fileMetadata: fileMetadata, availableWidth: UIScreen.main.bounds.width)

@@ -10,6 +10,7 @@ struct SingleMediaViewer: View {
     let isFollowing:Bool
     var fullWidth:Bool = false
     var forceShow = false
+    var contentPadding:CGFloat = 10.0
     @State var imagesShown = false
     @State var loadNonHttpsAnyway = false
 
@@ -49,36 +50,46 @@ struct SingleMediaViewer: View {
                                 .onTapGesture {
                                     sendNotification(.fullScreenView, FullScreenItem(url: url))
                                 }
+                                .padding(.horizontal, -contentPadding)
                         }
                         else {
                             GIFImage(data: data)
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
                                 .frame(height: 250)
-                                .hCentered()
-                                .background(Color(.secondarySystemBackground))
+//                                .hCentered()
+//                                .background(Color(.secondarySystemBackground))
                                 .onTapGesture {
                                     sendNotification(.fullScreenView, FullScreenItem(url: url))
                                 }
                         }
                     }
                     else if let image = state.image {
-                        VStack(spacing:0) {
+                        VStack(alignment: .center, spacing:0) {
                             if fullWidth {
+//                                Text("ddd")
                                 image
                                     .interpolation(.none)
+//                                    .resizable()
+//                                    .scaledToFit()
+                                    .padding(.horizontal, -contentPadding)
                                     .onTapGesture {
                                         sendNotification(.fullScreenView, FullScreenItem(url: url))
                                     }
                             }
                             else {
+//                                Text("hey?")
+//                                Color.green
                                 image
                                     .interpolation(.none)
                                     .resizable()
                                     .scaledToFit()
+//                                    .background(.green)
                                     .frame(height: 250)
+//                                    .background(.red)
                                     .hCentered()
-                                    .background(Color(.secondarySystemBackground))
+//                                    .hCentered()
+//                                    .background(Color(.secondarySystemBackground))
                                     .onTapGesture {
                                         sendNotification(.fullScreenView, FullScreenItem(url: url))
                                     }
@@ -90,7 +101,7 @@ struct SingleMediaViewer: View {
                                     ImageProgressView(progress: state.progress)
                                     Text("Loading...")
                                 }
-                                .background(Color(.secondarySystemBackground))
+//                                .background(Color(.secondarySystemBackground))
                             }
                         }
                     }
@@ -106,7 +117,7 @@ struct SingleMediaViewer: View {
                         }
                         .centered()
                         .frame(height: fullWidth ? 600 : 250)
-                        .background(Color(.secondarySystemBackground))
+//                        .background(Color(.secondarySystemBackground))
                     }
                     else {
                         Color(.secondarySystemBackground)
@@ -118,7 +129,7 @@ struct SingleMediaViewer: View {
                 Text("Tap to load media", comment: "An image placeholder the user can tap to load media (usually an image or gif)")
                    .centered()
                    .frame(height: fullWidth ? 600 : 250)
-                   .background(Color(.secondarySystemBackground))
+//                   .background(Color(.secondarySystemBackground))
                    .highPriorityGesture(
                        TapGesture()
                            .onEnded { _ in

@@ -74,6 +74,10 @@ struct QuotedNoteFragmentView: View {
                 }
         )
         .padding(10)
+        .background(
+            Color.systemBackground
+                .cornerRadius(15)
+        )
         .overlay(
             RoundedRectangle(cornerRadius: 15)
                 .stroke(.regularMaterial, lineWidth: 1)

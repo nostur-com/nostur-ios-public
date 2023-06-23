@@ -28,19 +28,20 @@ struct ContentRenderer: View { // VIEW things
                 switch contentElement {
                 case .nevent1(let identifier):
                     NEventView(identifier: identifier)
+                        .padding(.vertical, 10)
                 case .npub1(let npub):
                     if let pubkey = hex(npub) {
                         ProfileCardByPubkey(pubkey: pubkey)
-                            .padding(.vertical, 5)
-                            .padding(.horizontal, fullWidth ? 10 : 0)
+                            .padding(.vertical, 10)
+//                            .padding(.horizontal, fullWidth ? 10 : 0)
                     }
                 case .nprofile1(let identifier):
                     NProfileView(identifier: identifier)
                 case .note1(let noteId):
                     if let noteHex = hex(noteId) {
                         QuoteById(id: noteHex)
-                            .padding(.vertical, 5)
-                            .padding(.horizontal, fullWidth ? 10 : 0)
+                            .padding(.vertical, 10)
+//                            .padding(.horizontal, fullWidth ? 10 : 0)
                     }
                     else {
                         let _ = L.og.error("🔴🔴🔴🔴 Problem converting \(noteId) to hex")
@@ -48,36 +49,37 @@ struct ContentRenderer: View { // VIEW things
                     }
                 case .noteHex(let hex):
                     QuoteById(id: hex)
-                        .padding(.vertical, 5)
-                        .padding(.horizontal, fullWidth ? 10 : 0)
+                        .padding(.vertical, 10)
+//                        .padding(.horizontal, fullWidth ? 10 : 0)
                 case .text(let attributedStringWithPs): // For text notes
                     NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs)
-                        .padding(.horizontal, fullWidth ? 10 : 0)
+//                        .padding(.horizontal, fullWidth ? 10 : 0)
                         .onTapGesture {
 //                            guard !isDetail else { return }
                             navigateTo(nrPost)
                         }
                 case .md(let markdownContentWithPs): // For long form articles
                     NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs)
-                        .padding(.horizontal, fullWidth ? 20 : 0)
+//                        .padding(.horizontal, fullWidth ? 20 : 0)
                         .onTapGesture {
 //                            guard !isDetail else { return }
                             navigateTo(nrPost)
                         }
                 case .lnbc(let text):
                     LightningInvoice(invoice: text, nrPost:nrPost)
-                        .padding(.horizontal, fullWidth ? 10 : 0)
+                        .padding(.vertical, 10)
+//                        .padding(.horizontal, fullWidth ? 10 : 0)
                 case .video(let url):
-                    NosturVideoViewur(url: url, pubkey: nrPost.pubkey, videoWidth: availableWidth - 10, isFollowing:nrPost.following)
-                        .padding(.vertical, 5)
+                    NosturVideoViewur(url: url, pubkey: nrPost.pubkey, videoWidth: availableWidth, isFollowing:nrPost.following, contentPadding: nrPost.kind == 30023 ? 20 : 10)
+                        .padding(.vertical, 10)
                 case .image(let url):
-                    SingleMediaViewer(url: url, pubkey: nrPost.pubkey, imageWidth: availableWidth, isFollowing: nrPost.following, fullWidth: fullWidth)
-                        .padding(.vertical, 5)
+                    SingleMediaViewer(url: url, pubkey: nrPost.pubkey, imageWidth: availableWidth, isFollowing: nrPost.following, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 20 : 10)
+                        .padding(.vertical, 10)
                 case .linkPreview(let url):
                     // TODO: do no link preview if restrictAutoDownload...
                     LinkPreviewView(url: url)
-                        .padding(.horizontal, fullWidth ? 10 : 0)
-                        .padding(.vertical, 5)
+//                        .padding(.horizontal, fullWidth ? 10 : 0)
+                        .padding(.vertical, 10)
                 case .postPreviewImage(let uiImage):
                     Image(uiImage: uiImage)
                         .resizable()

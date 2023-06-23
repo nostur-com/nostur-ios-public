@@ -10,7 +10,7 @@ struct NRContentTextRenderer: View {
         Text(text ?? attributedStringWithPs.output)
             .lineSpacing(3)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, fullWidth ? 10 : 0)
+//            .padding(.horizontal, fullWidth ? 10 : 0)
             .onReceive(
                 receiveNotification(.contactSaved)
                     .map({ notification in

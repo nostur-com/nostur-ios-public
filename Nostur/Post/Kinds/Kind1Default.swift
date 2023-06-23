@@ -86,8 +86,15 @@ struct Kind1Default: View {
                             .lineLimit(3)
                             
                     }
+//                    Text("availableWidth: \(imageWidth.description)")
                     ContentRenderer(nrPost: nrPost, fullWidth: false, availableWidth: imageWidth)
                         .frame(maxWidth: .infinity, alignment:.leading)
+                        .background(
+                            Color.systemBackground
+                                .onTapGesture {
+                                    navigateTo(nrPost)
+                                }
+                        )
                         .contentShape(Rectangle())
 //                        .onTapGesture {
 //                            navigateTo(nrPost)
