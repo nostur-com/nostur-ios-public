@@ -707,14 +707,18 @@ class NewWebSocket {
             return
         }
         pinger = webSocket.ping()
-            .sink(receiveCompletion: { completion in
+            .sink(receiveCompletion: { [weak self] completion in
+                guard let self = self else { return }
                     switch completion {
                     case .failure(let error):
                         // Handle the failure case
-                        L.sockets.info("\(self.url) Ping Failure: \(error)")
+                        let _url = self.url
+                        let _error = error
+                        L.sockets.info("\(_url) Ping Failure: \(_error)")
                     case .finished:
                         // The ping completed successfully
-                        L.sockets.info("\(self.url) Ping succeeded")
+                        let _url = self.url
+                        L.sockets.info("\(_url) Ping succeeded")
                         self.delegate?.didReceivePong()
                         sendNotification(.pong)
                     }
