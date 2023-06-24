@@ -108,9 +108,19 @@ This will **wipe** your:
         <target>%@ reposted</target>
         <note>Heading for reposted post: '(Name) reposted'</note>
       </trans-unit>
+      <trans-unit id="%@ · %@" xml:space="preserve">
+        <source>%@ · %@</source>
+        <target>%@ · %@</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="%lld" xml:space="preserve">
         <source>%lld</source>
         <target>%lld</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="%lld min read" xml:space="preserve">
+        <source>%lld min read</source>
+        <target>%lld min read</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="%lldd" xml:space="preserve">
@@ -362,9 +372,14 @@ Navigation title for Add Existing Account screen</note>
         <target>All accounts</target>
         <note>Menu item to select All accounts</note>
       </trans-unit>
-      <trans-unit id="Allows posts from your follows only (strict), or also your follows follows (normal)" xml:space="preserve">
-        <source>Allows posts from your follows only (strict), or also your follows follows (normal)</source>
-        <target>Allows posts from your follows only (strict), or also your follows follows (normal)</target>
+      <trans-unit id="Allowed: %lld contacts" xml:space="preserve">
+        <source>Allowed: %lld contacts</source>
+        <target>Allowed: %lld contacts</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Allowed: Everyone" xml:space="preserve">
+        <source>Allowed: Everyone</source>
+        <target>Allowed: Everyone</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Anon" xml:space="preserve">
@@ -842,6 +857,11 @@ Navigation title for Edit Profile screen</note>
         <target>Fetches like/zaps/replies counts as posts appear</target>
         <note>Setting on settings screen</note>
       </trans-unit>
+      <trans-unit id="Filter by your follows only (strict), or also your follows follows (normal)" xml:space="preserve">
+        <source>Filter by your follows only (strict), or also your follows follows (normal)</source>
+        <target>Filter by your follows only (strict), or also your follows follows (normal)</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Filter contacts" xml:space="preserve">
         <source>Filter contacts</source>
         <target>Filter contacts</target>
@@ -916,6 +936,11 @@ Label shown when someone follows you</note>
         <target>ID</target>
         <note>Label for post identifier (ID)</note>
       </trans-unit>
+      <trans-unit id="Ignore" xml:space="preserve">
+        <source>Ignore</source>
+        <target>Ignore</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Illegal content" xml:space="preserve">
         <source>Illegal content</source>
         <target>Illegal content</target>
@@ -980,6 +1005,11 @@ Label shown when someone follows you</note>
         <source>Keys are stored on your device in iOS keychain</source>
         <target>Keys are stored on your device in iOS keychain</target>
         <note>Informational message about key storage on Add Existing Account screen</note>
+      </trans-unit>
+      <trans-unit id="Last updated: %@" xml:space="preserve">
+        <source>Last updated: %@</source>
+        <target>Last updated: %@</target>
+        <note>Last updated date of WoT in Settings</note>
       </trans-unit>
       <trans-unit id="Last updated: May 27th, 2023&#10;    &#10;Your access to and use of the App is conditioned upon your acceptance of and compliance with these Terms. These Terms apply to all users of the App.&#10;&#10;By accessing or using the App, you agree to be bound by these Terms. If you disagree with any part of the terms, then you do not have permission to access the App.&#10;&#10;Accounts&#10;When you create an account with the App, you are responsible for maintaining the confidentiality of your account keys, as well as restricting access to your device. You agree to accept responsibility for any and all activities or actions that occur under your account.&#10;&#10;Content&#10;The App allows you to access, read, and post content through connecting to relays. You are responsible for the content that you post or access through the App, including its legality, reliability, and appropriateness.&#10;&#10;By posting content through the App, you represent and warrant that the content is yours (you own it) and/or you have the right to use it, and that the posting of your content through the App does not violate the privacy rights, publicity rights, copyrights, contract rights, or any other rights of any person or entity.&#10;&#10;Prohibited Activities&#10;You agree not to use the App for any illegal, harmful, or offensive activities, including but not limited to:&#10;&#10;Engaging in harassment, bullying, or any form of intimidation&#10;Distributing or promoting sexually explicit or pornographic material&#10;Promoting hate speech, racism, or discrimination of any kind&#10;Infringing upon the intellectual property rights of others&#10;Engaging in any form of fraud, phishing, or unauthorized data collection&#10;Intellectual Property&#10;The App and its original content (excluding Content provided by users), features, and functionality are and will remain the exclusive property of the Developer. The App is protected by copyright, trademark, and other laws of the United States and foreign countries. Any trademarks and trade dress may not be used in connection with any product or service without the prior written consent of the Developer.&#10;&#10;Limitation of Liability&#10;In no event shall the Developer be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from (i) your access to or use of or inability to access or use the App; (ii) any conduct or content of any third party on the App; (iii) any content obtained from the App; and (iv) unauthorized access, use, or alteration of your transmissions or content, whether based on warranty, contract, tort (including negligence), or any other legal theory, whether or not the Developer has been informed of the possibility of such damage, and even if a remedy set forth herein is found to have failed of its essential purpose.&#10;&#10;Privacy Policy&#10;Nostur does not collect information about you. The app stores information that you provide about your nostr profile, which can be anything you choose to share or not. The posts and content you share from Nostur are sent out to public relays so anyone can view those and Nostur stores this on your device so you can always view it yourself.&#10;The app uses the following external services:&#10;Tenor: for inluding animated GIFs in your posts&#10;Image upload services: For including images in your posts. You can opt out to using these services by not including images or GIFs in your posts and not uploading a profile picture or banner in the app.&#10;&#10;For any questions, please contact feedback@nostur.com." xml:space="preserve">
         <source>Last updated: May 27th, 2023
@@ -1267,6 +1297,11 @@ Toggle off to download from all</target>
         <target>P</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="PFP's here (max 10)" xml:space="preserve">
+        <source>PFP's here (max 10)</source>
+        <target>PFP's here (max 10)</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Pay" xml:space="preserve">
         <source>Pay</source>
         <target>Pay</target>
@@ -1489,9 +1524,19 @@ Tab to switch to private notes</note>
         <target>Relays</target>
         <note>Relay settings heading</note>
       </trans-unit>
+      <trans-unit id="Relays:" xml:space="preserve">
+        <source>Relays:</source>
+        <target>Relays:</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Remove" xml:space="preserve">
         <source>Remove</source>
         <target>Remove</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Remove %lld contacts" xml:space="preserve">
+        <source>Remove %lld contacts</source>
+        <target>Remove %lld contacts</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Remove author" xml:space="preserve">
@@ -1905,6 +1950,11 @@ Button to skip adding account and use the guest account instead</note>
         <target>Unable to decode lightning invoice</target>
         <note>Error message</note>
       </trans-unit>
+      <trans-unit id="Update" xml:space="preserve">
+        <source>Update</source>
+        <target>Update</target>
+        <note>Button to update WoT</note>
+      </trans-unit>
       <trans-unit id="Use existing account" xml:space="preserve">
         <source>Use existing account</source>
         <target>Use existing account</target>
@@ -1915,14 +1965,29 @@ Button to skip adding account and use the guest account instead</note>
         <target>Verify message signatures</target>
         <note>Setting on settings screen</note>
       </trans-unit>
+      <trans-unit id="WOT_NORMAL" xml:space="preserve">
+        <source>Normal</source>
+        <target>Normal</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="WOT_OFF" xml:space="preserve">
+        <source>Off</source>
+        <target>Off</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="WOT_STRICT" xml:space="preserve">
+        <source>Strict</source>
+        <target>Strict</target>
+        <note/>
+      </trans-unit>
       <trans-unit id="We Don't Need No Stinkin' Badges" xml:space="preserve">
         <source>We Don't Need No Stinkin' Badges</source>
         <target>We Don't Need No Stinkin' Badges</target>
         <note>Setting on settings screen</note>
       </trans-unit>
-      <trans-unit id="Web of Trust" xml:space="preserve">
-        <source>Web of Trust</source>
-        <target>Web of Trust</target>
+      <trans-unit id="Web of Trust filter" xml:space="preserve">
+        <source>Web of Trust filter</source>
+        <target>Web of Trust filter</target>
         <note>Setting on settings screen</note>
       </trans-unit>
       <trans-unit id="Welcome to **Nostur**" xml:space="preserve">
@@ -2075,6 +2140,11 @@ Heading</note>
         <target>decode test</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="eventId: %@" xml:space="preserve">
+        <source>eventId: %@</source>
+        <target>eventId: %@</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="gmmm broken %@" xml:space="preserve">
         <source>gmmm broken %@</source>
         <target>gmmm broken %@</target>
@@ -2091,6 +2161,11 @@ Heading</note>
         <note>Message shown when a 'kind X' post is not yet supported
 Message shown when a post kind (X) is not yet supported</note>
       </trans-unit>
+      <trans-unit id="kind: %@" xml:space="preserve">
+        <source>kind: %@</source>
+        <target>kind: %@</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="non-https media blocked" xml:space="preserve">
         <source>non-https media blocked</source>
         <target>non-https media blocked</target>
@@ -2100,6 +2175,16 @@ Message shown when a post kind (X) is not yet supported</note>
         <source>post</source>
         <target>post</target>
         <note>The word "post" when used as post #1, post #2 and post #3.</note>
+      </trans-unit>
+      <trans-unit id="prefix: %@" xml:space="preserve">
+        <source>prefix: %@</source>
+        <target>prefix: %@</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="pubkey: %@" xml:space="preserve">
+        <source>pubkey: %@</source>
+        <target>pubkey: %@</target>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="reactions" xml:space="preserve">
         <source>reactions</source>
@@ -2135,6 +2220,11 @@ Message shown when a post kind (X) is not yet supported</note>
         <source>zaps</source>
         <target>zaps</target>
         <note>Label for zaps count, example: (4) zaps</note>
+      </trans-unit>
+      <trans-unit id="·" xml:space="preserve">
+        <source>·</source>
+        <target>·</target>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="⚡️" xml:space="preserve">
         <source>⚡️</source>

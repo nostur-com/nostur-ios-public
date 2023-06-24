@@ -137,6 +137,12 @@ Navigation title for Add Existing Account screen */
 /* Menu item to select All accounts */
 "All accounts" = "Alle accounts";
 
+/* No comment provided by engineer. */
+"Allowed: %lld contacts" = "Toegestaan: %lld contacten";
+
+/* No comment provided by engineer. */
+"Allowed: Everyone" = "Toegestaan: iedereen";
+
 /* Confirmation text when you want to delete your account */
 "Are you sure you want to delete your account?\n" = "Weet je zeker dat je je account wilt verwijderen?";
 
@@ -423,6 +429,9 @@ Navigation title for Edit Profile screen */
 /* Setting on settings screen */
 "Fetches like/zaps/replies counts as posts appear" = "Update tellers op tijdlijn tijdens scrollen";
 
+/* No comment provided by engineer. */
+"Filter by your follows only (strict), or also your follows follows (normal)" = "Filter volgend (strict), of ook volgend van volgend (normaal)";
+
 /* Label to filter contacts */
 "Filter contacts" = "Contacten filteren";
 
@@ -469,6 +478,9 @@ Label shown when someone follows you */
 /* Label for post identifier (ID) */
 "ID" = "ID";
 
+/* No comment provided by engineer. */
+"Ignore" = "Negeer";
+
 /* Menu item in choice list */
 "Illegal content" = "Illegale inhoud";
 
@@ -511,6 +523,9 @@ Label shown when someone follows you */
 /* Message shown when a 'kind X' post is not yet supported
 Message shown when a post kind (X) is not yet supported */
 "kind %@ type not (yet) supported" = "kind %@ type (nog) niet ondersteund";
+
+/* Last updated date of WoT in Settings */
+"Last updated: %@" = "Laatst bijgewerkt: %@";
 
 /* Button to start using Nostur, during onboarding */
 "Let's go!" = "Laten we beginnen!";
@@ -770,6 +785,9 @@ Tab to switch to private notes */
 /* No comment provided by engineer. */
 "Remove" = "Verwijder";
 
+/* No comment provided by engineer. */
+"Remove %lld contacts" = "Verwijder %lld contacten";
+
 /* Button to Remove author from Highlight */
 "Remove author" = "Verwijder auteur";
 
@@ -937,6 +955,9 @@ Button to skip adding account and use the guest account instead */
 /* Menu item in choice list */
 "Spam" = "Spam";
 
+/* Setting heading on settings screen */
+"Spam filtering" = "Spamfilter";
+
 /* Heading for entering a word or sentence to mute */
 "Specific word or sentence" = "Specifiek woord of zin";
 
@@ -1009,6 +1030,9 @@ Button to skip adding account and use the guest account instead */
 /* Error message */
 "Unable to decode lightning invoice" = "Kon lightning factuur niet verwerken";
 
+/* Button to update WoT */
+"Update" = "Bijwerken";
+
 /* Button to start using an existing account */
 "Use existing account" = "Gebruik bestaand account";
 
@@ -1017,6 +1041,9 @@ Button to skip adding account and use the guest account instead */
 
 /* Setting on settings screen */
 "We Don't Need No Stinkin' Badges" = "\"Weg Met Medailles!\"";
+
+/* Setting on settings screen */
+"Web of Trust filter" = "Web-of-Trust filter";
 
 /* Welcoming the user to the app */
 "Welcome to **Nostur**" = "Welkom bij **Nostur**";
@@ -1032,6 +1059,15 @@ Button to skip adding account and use the guest account instead */
 
 /* No comment provided by engineer. */
 "When you bookmark a post it will show up here." = "Als een een bladwijzer bij een bericht aan zet zal deze hier verschijnen";
+
+/* (No Comment) */
+"WOT_NORMAL" = "Normaal";
+
+/* (No Comment) */
+"WOT_OFF" = "Uit";
+
+/* (No Comment) */
+"WOT_STRICT" = "Strict";
 
 /* No comment provided by engineer. */
 "You are not following anyone yet, visit the explore tab and follow some people" = "Je volgt nog niemand, bekijk de Ontdek tab en volg een aantal mensen";
@@ -1086,8 +1122,8 @@ Heading */
 /* Message for failed zaps on: (contact #1, contact #2, contact #3...) because time out. */
 "Zaps failed on: %@ (Timeout)." = "Zaps niet gelukt bij: %@ (Timeout).";
 
-/* Message for failed zaps on: (post 1, post 2, post 3...) */
-"Zaps failed on: %@." = "Zaps niet gelukt bij: %@.";
+/* Message for possibly failed zaps on: (post 1, post 2, post 3...) */
+"Zaps may have failed on: %@." = "Zaps mogelijk mislukt bij: %@";
 
 /* Heading */
 "Zaps received recently" = "Zaps recent onvangen";
