@@ -103,12 +103,15 @@ private struct WithSheets: ViewModifier {
                 self.restoreContactSheet = true
             }
             .confirmationDialog("It looks like \(removed?.pubkeys.count ?? 0) contacts were removed from your following list, perhaps from another nostr app", isPresented: $restoreContactSheet, titleVisibility: .visible,  actions: {
-                Button("OK", role: .destructive) {
+                Button("Remove \(removed?.pubkeys.count ?? 0) contacts", role: .destructive) {
                     guard let removed = self.removed else { return }
                     FollowingGuardian.shared.removeFollowing(removed.pubkeys)
                 }
-                Button("Restore \(removed?.pubkeys.count ?? 0) contacts", role: .cancel) {
+                Button("Restore \(removed?.pubkeys.count ?? 0) contacts") {
                     FollowingGuardian.shared.restoreFollowing(removed:removed?.pubkeys ?? [])
+                }
+                Button("Ignore", role: .cancel) {
+                    FollowingGuardian.shared.restoreFollowing(removed:removed?.pubkeys ?? [], republish: false)
                 }
                 .keyboardShortcut(.defaultAction)
             })
@@ -236,4 +239,22 @@ struct NewHighlight: Identifiable {
     let url:String
     let selectedText:String
     var title:String? = nil
+}
+
+struct Previews_View_withSheets_Previews: PreviewProvider {
+    static var previews: some View {
+        PreviewContainer({ pe in
+            pe.loadPosts()
+        }) {
+            VStack {
+                Button("Test") {
+                    sendNotification(
+                        .requestConfirmationChangedFollows,
+                        Set(["dede","dededed"])
+                    )
+                }
+                Color.clear.withSheets()
+            }
+        }
+    }
 }

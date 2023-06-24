@@ -101,7 +101,7 @@ class FollowingGuardian: ObservableObject {
         DataProvider.shared().save()
     }
     
-    func restoreFollowing(removed:Set<String>) {
+    func restoreFollowing(removed:Set<String>, republish:Bool = true) {
         guard let account = NosturState.shared.account else { return }
         let context = DataProvider.shared().viewContext
         for pubkey in removed {
@@ -118,6 +118,7 @@ class FollowingGuardian: ObservableObject {
             }
         }
         
+        guard republish else { return }
         guard let clEvent = try? AccountManager.createContactListEvent(account: account) else {
             L.og.error("🔴🔴 Could not create new clEvent")
             return
