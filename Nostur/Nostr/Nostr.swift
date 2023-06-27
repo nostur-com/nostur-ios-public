@@ -67,7 +67,7 @@ public struct NTimestamp: Codable {
 public enum NEventKind: Codable, Equatable {
     case setMetadata
     case textNote
-    case recommentServer
+    case recommendServer
     case contactList
     case directMessage
     case delete
@@ -91,7 +91,7 @@ public enum NEventKind: Codable, Equatable {
         switch id {
         case     0: self = .setMetadata
         case     1: self = .textNote
-        case     2: self = .recommentServer
+        case     2: self = .recommendServer
         case     3: self = .contactList
         case     4: self = .directMessage
         case     5: self = .delete
@@ -117,7 +117,7 @@ public enum NEventKind: Codable, Equatable {
         switch self {
         case .setMetadata:          return 0
         case .textNote:             return 1
-        case .recommentServer:      return 2
+        case .recommendServer:      return 2
         case .contactList:          return 3
         case .directMessage:        return 4
         case .delete:               return 5
