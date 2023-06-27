@@ -18,11 +18,9 @@ struct ProfileMediaView: View {
         GridItem(.flexible())
     ]
     
-    var squareSize:CGFloat { CGFloat(Int((dim.listWidth-26)/3)) }
+    var squareSize:CGFloat { CGFloat(Int((dim.listWidth-42)/3)) }
     
-    var imageUrls:[URL] {
-        fl.events.flatMap { getImgUrlsFromContent($0.content!) }
-    }
+    @State var imageUrls:[URL] = []
     
     var body: some View {
         VStack {
@@ -40,6 +38,16 @@ struct ProfileMediaView: View {
                 fl.predicate = NSPredicate(format: "pubkey == %@ AND kind == 1", pubkey)
                 fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
                 fl.loadMore(1000)
+            }
+            .onChange(of: fl.events) { events in
+                // Process fl.events to imageUrls:[URL] here, fixes microhang
+                let contentArray = events.compactMap { $0.content }
+                DispatchQueue.global(qos: .userInitiated).async {
+                    let urls = contentArray.flatMap { getImgUrlsFromContent($0) }
+                    DispatchQueue.main.async {
+                        self.imageUrls = urls
+                    }
+                }
             }
         }
         .frame(minHeight: 800)
