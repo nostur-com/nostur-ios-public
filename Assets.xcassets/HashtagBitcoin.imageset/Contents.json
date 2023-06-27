@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "Bitcoin_evergreen.png",
+      "filename" : "HashtagBitcoin.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "Bitcoin_evergreen 1.png",
+      "filename" : "HashtagBitcoin@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "Bitcoin_evergreen 2.png",
+      "filename" : "HashtagBitcoin@3x.png",
       "idiom" : "universal",
       "scale" : "3x"
     }
