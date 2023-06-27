@@ -314,12 +314,12 @@ class ReqTask: Identifiable, Hashable {
     // Use full subscriptionId instead of prefix to have multiple listeners for a task
     // eg. Onboarding + InstantFeed, both having a task with exact subscriptionId: "pubkey-3"
     // So both can listen for "pubkey-3" notifications. 
-    init(prefix:String? = nil, reqCommand: @escaping (_: String) -> Void, processResponseCommand: @escaping (_: String) -> Void, timeoutCommand: ( (_: String) -> Void)? = nil) {
+    init(debounceTime:Double = 0.1, prefix:String? = nil, reqCommand: @escaping (_: String) -> Void, processResponseCommand: @escaping (_: String) -> Void, timeoutCommand: ( (_: String) -> Void)? = nil) {
         self.prefix = prefix
         self.reqCommand = reqCommand
         self.timeoutCommand = timeoutCommand
         processSubject
-            .debounce(for: 0.1, scheduler: RunLoop.main)
+            .debounce(for: RunLoop.SchedulerTimeType.Stride(debounceTime), scheduler: RunLoop.main)
             .sink { [weak self] _ in
                 guard let self = self else { return }
                 processResponseCommand(self.subscriptionId)
