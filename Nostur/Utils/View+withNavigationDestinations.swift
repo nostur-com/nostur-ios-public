@@ -36,6 +36,11 @@ struct Nprofile1Path: Hashable {
     var navigationTitle:String? = nil
 }
 
+struct ArticleCommentsPath: Identifiable, Hashable {
+    var id:String { article.id }
+    let article:NRPost
+}
+
 enum ViewPath: Hashable {
     case Post(nrPost:NRPost)
     case Blocklist

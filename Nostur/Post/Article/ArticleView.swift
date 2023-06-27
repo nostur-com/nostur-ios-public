@@ -1,10 +1,3 @@
-//
-//  ArticleView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 19/06/2023.
-//
-
 import SwiftUI
 import MarkdownUI
 
@@ -287,14 +280,6 @@ struct ArticleView: View {
     }
 }
 
-struct TabTitlePreferenceKey: PreferenceKey {
-    static var defaultValue: String = ""
-
-    static func reduce(value: inout String, nextValue: () -> String) {
-        value = nextValue()
-    }
-}
-
 struct ArticleCommentsPreview: View {
     let article:NRPost
     var body: some View {
@@ -312,18 +297,13 @@ struct ArticleCommentsView: View {
     }
 }
 
-struct ArticleCommentsPath: Identifiable, Hashable {
-    var id:String { article.id }
-    let article:NRPost
-}
-
 struct ArticleView_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer({ pe in
             pe.loadArticles()
         }) {
-            let test0 = "naddr1qqyxvepkv33nxdmrqgsrhuxx8l9ex335q7he0f09aej04zpazpl0ne2cgukyawd24mayt8grqsqqqa28qjqkz8"
-            let test1 = "naddr1qqxnzd3cxyerxd3h8qerwwfcqgsgydql3q4ka27d9wnlrmus4tvkrnc8ftc4h8h5fgyln54gl0a7dgsrqsqqqa28qy28wumn8ghj7un9d3shjtnyv9kh2uewd9hszrthwden5te0dehhxtnvdakqvtl0f3"
+//            let test0 = "naddr1qqyxvepkv33nxdmrqgsrhuxx8l9ex335q7he0f09aej04zpazpl0ne2cgukyawd24mayt8grqsqqqa28qjqkz8"
+//            let test1 = "naddr1qqxnzd3cxyerxd3h8qerwwfcqgsgydql3q4ka27d9wnlrmus4tvkrnc8ftc4h8h5fgyln54gl0a7dgsrqsqqqa28qy28wumn8ghj7un9d3shjtnyv9kh2uewd9hszrthwden5te0dehhxtnvdakqvtl0f3"
             
             // Welcome to Nostr
             let test2 = "naddr1qqxnzd3cxy6rjv3hx5cnyde5qy88wumn8ghj7mn0wvhxcmmv9uq3uamnwvaz7tmwdaehgu3dwp6kytnhv4kxcmmjv3jhytnwv46z7qg3waehxw309ahx7um5wgh8w6twv5hszymhwden5te0danxvcmgv95kutnsw43z7qglwaehxw309ahx7um5wgkhyetvv9ujumn0ddhhgctjduhxxmmd9upzql6u9d8y3g8flm9x8frtz0xmsfyf7spq8xxkpgs8p2tge25p346aqvzqqqr4gukz494x"
@@ -405,141 +385,6 @@ extension Event {
 }
 
 
-struct ArticleByNaddr: View {
-    let naddr1:String
-    var navigationTitle:String? = nil
-    @State var article:NRPost? = nil
-    @State var backlog = Backlog(timeout: 15, auto: true)
-    @State var error:String? = nil
-    
-    var body: some View {
-        VStack {
-            if let error  {
-                Text(error)
-            }
-            else if let article {
-                if article.kind == 30023 {
-                    ArticleView(article, isDetail: true)
-                }
-                else {
-                    PostDetailView(nrPost: article)
-                }
-//                    .background(.red)
-//                    .background(Color(.secondarySystemBackground))
-            }
-            else {
-                ProgressView()
-                    .onAppear {
-                        DataProvider.shared().bg.perform {
-                            if let naddr = try? ShareableIdentifier(naddr1),
-                               let kind = naddr.kind,
-                               let pubkey = naddr.pubkey,
-                               let definition = naddr.eventId
-                            {
-                                if let article = try? Event.fetchReplacableEvent(kind,
-                                                                                 pubkey: pubkey,
-                                                                                 definition: definition,
-                                                                                 context: DataProvider.shared().bg) {
-                                    let article = NRPost(event: article)
-                                    DispatchQueue.main.async {
-                                        self.article = article
-                                    }
-                                }
-                                else {
-                                    let reqTask = ReqTask(
-                                        prefix: "ARTICLE-",
-                                        reqCommand: { taskId in
-                                            req(RM.getArticle(pubkey: pubkey, kind:Int(kind), definition:definition, subscriptionId: taskId))
-                                        },
-                                        processResponseCommand: { taskId in
-                                            DataProvider.shared().bg.perform {
-                                                if let article = try? Event.fetchReplacableEvent(kind,
-                                                                                                 pubkey: pubkey,
-                                                                                                 definition: definition,
-                                                                                                 context: DataProvider.shared().bg) {
-                                                    let article = NRPost(event: article)
-                                                    DispatchQueue.main.async {
-                                                        self.article = article
-                                                    }
-                                                    backlog.clear()
-                                                }
-                                            }
-                                        },
-                                        timeoutCommand: { taskId in
-                                            DispatchQueue.main.async {
-                                                self.error = "Could not find article"
-                                            }
-                                        })
-                                    
-                                    backlog.add(reqTask)
-                                    reqTask.fetch()
-                                }
-                            }
-                            else {
-                                L.og.error("Could not decode all details from naddr1: \(naddr1)")
-                            }
-                        }
-                    }
-            }
-        }
-    }
-}
 
-struct ArticleById: View {
-    let id:String
-    var navigationTitle:String? = nil
-    @State var article:NRPost? = nil
-    @State var backlog = Backlog(timeout: 15, auto: true)
-    @State var error:String? = nil
-    
-    var body: some View {
-        VStack {
-            if let error  {
-                Text(error)
-            }
-            else if let article {
-                ArticleView(article, isDetail: true)
-//                    .background(Color(.secondarySystemBackground))
-            }
-            else {
-                ProgressView()
-                    .onAppear {
-                        DataProvider.shared().bg.perform {
-                            if let article = try? Event.fetchEvent(id: id, context: DataProvider.shared().bg) {
-                                let article = NRPost(event: article)
-                                DispatchQueue.main.async {
-                                    self.article = article
-                                }
-                            }
-                            else {
-                                let reqTask = ReqTask(
-                                    prefix: "ARTICLE-",
-                                    reqCommand: { taskId in
-                                        req(RM.getEvent(id: id, subscriptionId: taskId))
-                                    },
-                                    processResponseCommand: { taskId in
-                                        DataProvider.shared().bg.perform {
-                                            if let article = try? Event.fetchEvent(id: id, context: DataProvider.shared().bg) {
-                                                let article = NRPost(event: article)
-                                                DispatchQueue.main.async {
-                                                    self.article = article
-                                                }
-                                                backlog.clear()
-                                            }
-                                        }
-                                    },
-                                    timeoutCommand: { taskId in
-                                        DispatchQueue.main.async {
-                                            self.error = "Could not find article"
-                                        }
-                                    })
-                                
-                                backlog.add(reqTask)
-                                reqTask.fetch()
-                            }
-                        }
-                    }
-            }
-        }
-    }
-}
+
+

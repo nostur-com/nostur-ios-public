@@ -1,17 +1,5 @@
-//
-//  PaddingsTesting.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 23/06/2023.
-//
-
 import SwiftUI
 
-struct PaddingsTesting: View {
-    var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
-    }
-}
 // Need to test
 // 1: Image in POST
 // 2: Image in PostDetail
@@ -30,7 +18,7 @@ struct PaddingsTesting: View {
 // 3: Image in Aritcle detail - content image
 // 3: Image in Article detail comment row
 
-// In iPhone 14 and tabbeb detail container
+// In iPhone 14 and tabbed detail container
 
 struct PaddingsTesting_Previews: PreviewProvider {
     static var previews: some View {

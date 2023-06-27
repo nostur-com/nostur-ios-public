@@ -1,15 +1,8 @@
-//
-//  WebOfTrust.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 17/06/2023.
-//
-
-// Where can we get spam?
+// Where should we handle spam?
 // Nostur does not have global, so that is not a problem
 // Posts are loaded from people you follow, unfollow if they spam
 // Replies are shown from all, here we need to stop spam
-// Notifications (#p) can come from spam
+// Notifications (#p) can come have spam
 // DM's can have spam (new requests)
 // So basically just 3 places to filter
 
@@ -28,7 +21,7 @@ import UIKit
 
 class WebOfTrust: ObservableObject {
  
-    let ENABLE_THRESHOLD = 200 // To not degrade onboarding/new user experience, we should have more contacts in WoT than this threshold before the filter is enabled
+    let ENABLE_THRESHOLD = 200 // To not degrade onboarding/new user experience, we should have more contacts in WoT than this threshold before the filter is active
     
     @Published var lastUpdated:Date? = nil
     
