@@ -38,6 +38,8 @@ struct FollowingAndExplore: View { //, Equatable {
     @StateObject private var followingVM:FollowingViewModel = .main
     @StateObject private var exploreVM:LVM = LVMManager.shared.exploreLVM()
     
+    @State var tabsOffsetY:CGFloat = 0.0
+    
     var navigationTitle:String {
         if selectedSubTab == "List" {
             return (selectedList?.name_ ?? String(localized:"List"))
@@ -115,7 +117,21 @@ struct FollowingAndExplore: View { //, Equatable {
                         }
                     }
                 }
-                .frame(width: dim.listWidth)
+                .frame(width: dim.listWidth, height: 50.0 + tabsOffsetY)
+                .offset(y: tabsOffsetY)
+                .onReceive(receiveNotification(.scrollingUp)) { _ in
+                    guard !IS_CATALYST else { return }
+                    withAnimation {
+                        tabsOffsetY = 0.0
+                    }
+                }
+                .onReceive(receiveNotification(.scrollingDown)) { _ in
+                    guard !IS_CATALYST else { return }
+                    withAnimation {
+                        tabsOffsetY = -50.0
+                    }
+                }
+                .toolbar(IS_CATALYST || tabsOffsetY == 0.0 ? .visible : .hidden)
             }
             
             ZStack {

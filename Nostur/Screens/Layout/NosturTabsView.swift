@@ -53,6 +53,11 @@ struct NosturTabsView: View {
         .background(Color("ListBackground"))
         .withLightningEffect()
         .onChange(of: selectedTab) { newValue in
+            if !IS_CATALYST {
+                if newValue == "Main" {
+                    sendNotification(.scrollingUp) // To show the navigation/toolbar
+                }
+            }
             if newValue == "Notifications" {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     sendNotification(.notificationsTabAppeared) // use for resetting unread count

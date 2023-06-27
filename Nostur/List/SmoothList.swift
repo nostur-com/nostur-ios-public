@@ -372,12 +372,25 @@ struct SmoothList: UIViewControllerRepresentable {
         }
         
         func scrollViewDidScroll(_ scrollView: UIScrollView) {
+            guard !IS_CATALYST else { return }
+            if !scrollDirectionDetermined {
+                let translation = scrollView.panGestureRecognizer.translation(in: scrollView)
+                if translation.y > 0 {
+                    sendNotification(.scrollingUp)
+                    scrollDirectionDetermined = true
+                }
+                else if translation.y < 0 {
+                    sendNotification(.scrollingDown)
+                    scrollDirectionDetermined = true
+                }
+            }
+            
             scrollTimer?.invalidate()
             scrollTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { [weak self] _ in
                 self?.processScrollViewDidScroll(scrollView)
             }
         }
-        
+
         func processScrollViewDidScroll(_ scrollView: UIScrollView) {
             guard let indexPaths = collectionViewHolder?.collectionView.indexPathsForVisibleItems else {
                 return
@@ -393,22 +406,13 @@ struct SmoothList: UIViewControllerRepresentable {
                 }
                 if let firstIndex = indexPaths.min(by: { $0.row < $1.row }) {
                     if firstIndex.row < 1 { // not sure why just index 0 doesn't work 1% of the time
-//                        print("COUNTER E: \(lvm.lvmCounter.count)")
                         lvm.lvmCounter.count = 0 // Publishing changes from within view updates is not allowed, this will cause undefined behavior.
-//                        print("COUNTER EE: \(lvm.lvmCounter.count)")
                     }
                     
                     if let lastAppearedId = data[safe: firstIndex.row]?.id {
                         lvm.lastAppearedIdSubject.send(lastAppearedId)
                     }
                 }
-                
-                
-//                if (!SettingsStore.shared.autoScroll) && (scrollView.contentOffset.y < SMOOTHLIST_AUTOSCROLL_OFFSET) {
-//                    // if really at top, push back a little, so new items inserted at top don't push all down
-//                    //                    scrollView.layoutIfNeeded();
-//                    scrollView.setContentOffset(CGPoint(x: scrollView.contentOffset.x, y: SMOOTHLIST_AUTOSCROLL_OFFSET), animated: true)
-//                }
             }
             
             if SettingsStore.shared.fetchCounts {
@@ -416,6 +420,24 @@ struct SmoothList: UIViewControllerRepresentable {
             }
         }
         
+        private var scrollDirectionDetermined = false
+
+        func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+            scrollDirectionDetermined = false
+        }
+
+        func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+            scrollDirectionDetermined = false
+        }
+        
+//        func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+//            if scrollView.panGestureRecognizer.translation(in: scrollView).y < 0 {
+//               print("Dragging up")
+//
+//            } else {
+//                print("Dragging down")
+//            }
+//        }
         
         public var PostOrThreadCellRegistration: UICollectionView.CellRegistration<UICollectionViewListCell, NRPost> = {
             .init { cell, indexPath, nrPost in

@@ -286,4 +286,12 @@ extension Notification.Name {
     static var scenePhaseBackground: Notification.Name {
         return Notification.Name("scenePhaseBackground")
     }
+    
+    static var scrollingUp: Notification.Name {
+        return Notification.Name("scrollingUp")
+    }
+    
+    static var scrollingDown: Notification.Name {
+        return Notification.Name("scrollingDown")
+    }
 }
