@@ -117,7 +117,7 @@ struct FollowingAndExplore: View { //, Equatable {
                         }
                     }
                 }
-                .frame(width: dim.listWidth, height: max(37.0 + tabsOffsetY,0))
+                .frame(width: dim.listWidth, height: max(36.0 + tabsOffsetY,0))
                 .offset(y: tabsOffsetY)
                 .onReceive(receiveNotification(.scrollingUp)) { _ in
                     guard !IS_CATALYST else { return }
@@ -128,7 +128,7 @@ struct FollowingAndExplore: View { //, Equatable {
                 .onReceive(receiveNotification(.scrollingDown)) { _ in
                     guard !IS_CATALYST else { return }
                     withAnimation {
-                        tabsOffsetY = -37.0
+                        tabsOffsetY = -36.0
                     }
                 }
                 .toolbar(IS_CATALYST || tabsOffsetY == 0.0 ? .visible : .hidden)
