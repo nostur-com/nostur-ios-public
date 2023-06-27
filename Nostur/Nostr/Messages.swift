@@ -400,7 +400,9 @@ public struct RequestMessage {
 """
     }
     
+    static func getRelays(pubkeys:[String], subscriptionId:String? = nil) -> String {
         return """
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(fasterShort(pubkeys)), "kinds": [3,10002] }]
 """
     }
     

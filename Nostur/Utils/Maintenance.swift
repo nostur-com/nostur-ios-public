@@ -41,6 +41,8 @@ struct Maintenance {
     // Keeps own events
     // Keeps contacts/posts with private notes
     
+    // hmm should also keep kind 3 + 10002 of follows
+    
     //TODO: Find out which tags can be deleted..
     static func maintenance(context:NSManagedObjectContext) {
         
@@ -271,10 +273,19 @@ struct Maintenance {
             //                L.maintenance.info("maintenance error on save(): \(error)")
             //            }
             //
-            // DELETE OLDER KIND 3 EVENTS
+            // DELETE OLDER KIND 3 + 10002 EVENTS
+            // BUT NOT OUR OWN OR THOSE WE ARE FOLLOWING
+            
+            var followingPubkeys = Set(ownAccountPubkeys)
+            for account in allAccounts {
+                if account.privateKey != nil {
+                    followingPubkeys = followingPubkeys.union(Set(account.follows_.map { $0.pubkey }))
+                }
+            }
+            
             //            context.perform {
             let r = NSFetchRequest<Event>(entityName: "Event")
-            r.predicate = NSPredicate(format: "kind == 3")
+            r.predicate = NSPredicate(format: "kind IN {3,10002} AND pubkey NOT IN %@", followingPubkeys)
             r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
             let kind3 = try! context.fetch(r)
             
