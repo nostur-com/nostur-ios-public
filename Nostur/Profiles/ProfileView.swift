@@ -198,6 +198,7 @@ struct ProfileView: View {
                 ProfileTabs(contact: contact, selectedSubTab: $selectedSubTab)
             }
         }
+        .background(Color.systemBackground)
         .preference(key: TabTitlePreferenceKey.self, value: contact.anyName)
         .onReceive(receiveNotification(.newFollowingListFromRelay)) { notification in
             let nEvent = notification.object as! NEvent

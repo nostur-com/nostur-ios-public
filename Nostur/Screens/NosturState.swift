@@ -27,7 +27,7 @@ final class NosturState : ObservableObject {
         }
     }
 
-    var _followingPublicKeys:Set<String> {
+    var _followingPublicKeys:Set<String> { // computed and needs (account MoC) self + following - blocked
         get {
             guard let account = account else { return Set<String>()}
             
@@ -38,7 +38,7 @@ final class NosturState : ObservableObject {
         }
     }
     
-    var followingPublicKeys:Set<String> = [] {
+    var followingPublicKeys:Set<String> = [] { // does not mess with MoC
         didSet {
             self.bgFollowingPublicKeys = followingPublicKeys
         }

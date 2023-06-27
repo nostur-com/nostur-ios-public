@@ -400,20 +400,7 @@ public struct RequestMessage {
 """
     }
     
-    static func getAuthorsEvents(pubkeys:[String], limit:Int = 200, subscriptionId:String? = nil, since:NTimestamp? = nil, until:NTimestamp? = nil) -> String {
-        
-        if let since {
-            return """
-    ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(fasterShort(pubkeys)), "since": \(since.timestamp)}]
-    """
-        }
-        else if let until {
-            return """
-    ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(fasterShort(pubkeys)), "until": \(until.timestamp)}]
-    """
-        }
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(fasterShort(pubkeys)), "limit": \(limit)}]
 """
     }
     

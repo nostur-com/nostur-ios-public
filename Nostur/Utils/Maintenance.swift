@@ -153,9 +153,9 @@ struct Maintenance {
             
             
             // KIND 1,6
-            // OUDER DAN X DAGEN
-            // IS GEEN BOOKMARK
-            // IS GEEN EIGEN EVENT
+            // OLDER THAN X DAYS
+            // IS NOT BOOKMARKED
+            // IS NOT OWN EVENT
             // DOES NOT HAVE OUR PUBKEY IN P (Notifications)
             // DONT DELETE MUTED BLOCKED, SO OUR BLOCK LIST STILL FUNCTIONS....
             // TODO: DONT EXPORT MUTED / BLOCKED. KEEP HERE SO WE DONT HAVE TO KEEP ..REPARSING
@@ -188,7 +188,7 @@ struct Maintenance {
             //
             
             // KIND 9734,7,8
-            // OUDER DAN X DAGEN
+            // OLDER THAN X DAYS
             // PUBKEY NOT IN OWN ACCOUNTS
             // OR PUBKEY OF OWN ACCOUNTS NOT IN SERIALIZED TAGS
             //            context.perform {
@@ -217,7 +217,7 @@ struct Maintenance {
             //            }
             
             // KIND 9735
-            // OUDER DAN X DAGEN
+            // OLDER THAN X DAYS
             // zappedContactPubkey NOT IN OWN ACCOUNTS
             //            context.perform {
             let fr9735 = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
@@ -245,8 +245,8 @@ struct Maintenance {
             
             
             // KIND 0
-            // ALLES WEG WANT IEDERE KIND 0 HEEFT EEN CONTACT
-            // EIGEN KIND 0 NIET WEG
+            // REMOVE ALL BECAUSE EVERY KIND 0 HAS A CONTACT
+            // DONT REMOVE OWN KIND 0
             //            context.perform {
             let fr0 = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
             fr0.predicate = NSPredicate(format: "(kind == 0) AND NOT pubkey IN %@", ownAccountPubkeys)

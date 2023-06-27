@@ -34,6 +34,8 @@ struct NosturTabsView: View {
                         .tabItem { Image(systemName: "bookmark") }
                         .tag("Bookmarks")
                     
+//                    RelayIntelTest()
+                    
                     DirectMessagesContainer()
                         .tabItem { Image(systemName: "envelope.fill") }
                         .tag("Messages")

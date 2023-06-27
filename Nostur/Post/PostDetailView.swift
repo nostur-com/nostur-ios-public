@@ -136,7 +136,7 @@ struct PostAndParent: View {
                                 }
                             }
                             .background(alignment:.topLeading) {
-                                Color.red
+                                Color.systemBackground
                                     .frame(width: DIMENSIONS.ROW_PFP_SPACE - 10)
                                     .padding(.top, DIMENSIONS.POST_ROW_PFP_HEIGHT + 20)
                                     .onTapGesture {
