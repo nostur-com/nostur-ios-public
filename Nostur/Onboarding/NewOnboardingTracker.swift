@@ -178,6 +178,10 @@ class NewOnboardingTracker {
                 }
             }
             self.fetchedFollowersTask = true
+            
+            self.createRelaysFromKind3Content(kind3.content ?? "")
+            L.onboarding.info("✈️✈️ created relays from kind 3")
+            
             L.onboarding.info("✈️✈️ processed kind 3")
             self.fetchProfilesOfFollowers(pTags)
         }
@@ -189,8 +193,6 @@ class NewOnboardingTracker {
     private func processKind0() {
         guard let pubkey = self.pubkey else { return }
         if let kind0 = Event.fetchReplacableEvent(0, pubkey: pubkey, context: self.bg) {
-            self.createRelaysFromKind0Content(kind0.content ?? "")
-            L.onboarding.info("✈️✈️ created relays from kind 0")
             
             self.preloadAccountInfo(kind0)
             
@@ -256,7 +258,7 @@ class NewOnboardingTracker {
         return existingAndCreatedContacts
     }
     
-    private func createRelaysFromKind0Content(_ content:String) {
+    private func createRelaysFromKind3Content(_ content:String) {
         guard let pubkey = self.pubkey else { return }
         // Load existing relays if found in .content
         if !content.isEmpty, let contentData = content.data(using: .utf8), AccountManager.shared.hasPrivateKey(pubkey: pubkey) {
