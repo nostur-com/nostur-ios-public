@@ -141,15 +141,18 @@ struct Settings: View {
             Group {
                 Section(header: Text("Zapping", comment:"Setting heading on settings screen")) {
                     
-                    VStack {
+                    VStack(alignment: .leading) {
                         Picker(selection: $settings.defaultLightningWallet) {
                             ForEach(SettingsStore.walletOptions) {
                                 Text($0.name).tag($0)
                             }
                         } label: {
                             Text("Lightning wallet", comment:"Setting on settings screen")
+                            Text("Choose which wallet to use for zapping", comment:"Setting on settings screen")
                         }
                         
+                        Divider()
+                        Text("Default zap amount:")
                         Slider(value: $sliderValue, in: SLIDER_MIN...SLIDER_MAX) {
                             
                         } minimumValueLabel: {
