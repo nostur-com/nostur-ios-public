@@ -28,6 +28,8 @@ struct Settings: View {
     @ObservedObject var vm = ViewPrint()
     @State var createRelayPresented = false
     
+    @State var UpdatingWoT = false // to prevent double tapping
+    
     var fiatPrice:String {
         String(format: "$%.02f", (ceil(Double(settings.defaultZapAmount)) / 100000000 * er.bitcoinPrice))
     }
@@ -107,19 +109,22 @@ struct Settings: View {
                     Text("Filter by your follows only (strict), or also your follows follows (normal)").font(.caption).foregroundColor(.gray)
                     
                     HStack {
-                        Text("Last updated: \(NosturState.shared.wot?.lastUpdated?.formatted() ?? "Never")", comment: "Last updated date of WoT in Settings")
-                            .task(priority: .medium) {
-                                NosturState.shared.wot?.loadLastUpdatedDate()
+                        VStack(alignment: .leading) {
+                            Text("Updated: \(NosturState.shared.wot?.lastUpdated?.formatted() ?? "Never")", comment: "Last updated date of WoT in Settings")
+                                .task(priority: .medium) {
+                                    NosturState.shared.wot?.loadLastUpdatedDate()
+                                }
+                            if settings.webOfTrustLevel == SettingsStore.WebOfTrustLevel.off.rawValue {
+                                Text("Allowed: Everyone")
                             }
-                        if settings.webOfTrustLevel == SettingsStore.WebOfTrustLevel.off.rawValue {
-                            Text("Allowed: Everyone")
+                            else if let count = NosturState.shared.wot?.allowedKeysCount {
+                                Text("Allowed: \(count) contacts")
+                            }
                         }
-                        else if let count = NosturState.shared.wot?.allowedKeysCount {
-                            Text("Allowed: \(count) contacts")
-                        }
-                        
                         Spacer()
                         Button(String(localized:"Update", comment:"Button to update WoT")) {
+                            guard UpdatingWoT == false else { return }
+                            UpdatingWoT = true
                             NosturState.shared.wot?.loadNormal()
                         }
                     }
