@@ -285,7 +285,7 @@ struct Maintenance {
             
             //            context.perform {
             let r = NSFetchRequest<Event>(entityName: "Event")
-            r.predicate = NSPredicate(format: "kind IN {3,10002} AND pubkey NOT IN %@", followingPubkeys)
+            r.predicate = NSPredicate(format: "kind IN {3,10002} AND NOT pubkey IN %@", followingPubkeys)
             r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
             let kind3 = try! context.fetch(r)
             
