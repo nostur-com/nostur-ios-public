@@ -1181,10 +1181,10 @@ extension DataProvider {
 
 // FIX ALL REPLY MENTION ROOT DETECTION ETC
 extension NEvent {
-    
+    static let indexedMentionRegex = /#\[(\d+)\]/
     
     var mentionOnlyTags:[NostrTag] {
-        let matches = content.matches(of: /#\[(\d+)\]/)
+        let matches = content.matches(of: NEvent.indexedMentionRegex) // TODO: hmmm performance hit measured with Instruments here...
         let matchIndexes = matches.compactMap { Int($0.output.1) }
         let t = tags.enumerated().filter { matchIndexes.contains($0.offset) }.map { $0.element }
         let noRootOrReply = t.filter {
