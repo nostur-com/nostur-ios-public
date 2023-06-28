@@ -141,7 +141,7 @@ class LVM: NSObject, ObservableObject {
         self.subscriptions.removeAll()
     }
     
-    var fetchCounts = PassthroughSubject<[NRPostID], Never>()
+    var postsAppearedSubject = PassthroughSubject<[NRPostID], Never>()
     var startRenderingSubject = PassthroughSubject<[Event], Never>()
     var startRenderingOlderSubject = PassthroughSubject<[Event], Never>()
     var didCatchup = false
@@ -745,13 +745,45 @@ extension LVM {
         loadMoreWhenNearBottom()
         throttledCommands()
         fetchCountsForVisibleIndexPaths()
+        fetchNIP05ForVisibleIndexPaths()
     }
     
-    func fetchCountsForVisibleIndexPaths() {
-        fetchCounts
+    func fetchNIP05ForVisibleIndexPaths() {
+        postsAppearedSubject
             .throttle(for: .seconds(0.5), scheduler: RunLoop.main, latest: true)
             .sink { [weak self] nrPostIds in
                 guard let self = self else { return }
+                
+                DataProvider.shared().bg.perform { [weak self] in
+                    guard let self = self else { return }
+                    let contacts = self.nrPostLeafs
+                        .filter { nrPostIds.contains($0.id) }
+                        .compactMap {
+                            if $0.isRepost {
+                                return $0.firstQuote?.event.contact
+                            }
+                            return $0.event.contact
+                        }
+                        .filter { $0.nip05 != nil && !$0.nip05veried }
+                    
+                    guard !contacts.isEmpty else { return }
+                    
+                    L.fetching.info("☑️ Checking nip05 for \(contacts.count) contacts")
+                    for contact in contacts {
+                        EventRelationsQueue.shared.addAwaitingContact(contact)
+                        NIP05Verifier.shared.verify(contact)
+                    }
+                }
+            }
+            .store(in: &subscriptions)
+    }
+    
+    func fetchCountsForVisibleIndexPaths() {
+        postsAppearedSubject
+            .throttle(for: .seconds(0.5), scheduler: RunLoop.main, latest: true)
+            .sink { [weak self] nrPostIds in
+                guard let self = self else { return }
+                guard SettingsStore.shared.fetchCounts else { return }
                 
                 let events = self.nrPostLeafs
                     .filter { nrPostIds.contains($0.id) }

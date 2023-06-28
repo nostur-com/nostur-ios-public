@@ -80,7 +80,7 @@ if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
         
         DataProvider.shared().bg.perform { [unowned self] in
             if let privateContact = DataProvider.shared().bg.object(with: contact.objectID) as? Contact {
-                print("nip05: going to verify \(privateContact.nip05 ?? "") for \(privateContact.pubkey)")
+                L.fetching.info("  nip05: going to verify \(privateContact.nip05 ?? "") for \(privateContact.pubkey)")
                 self.verifySubject.send(privateContact)
             }
         }

@@ -372,6 +372,11 @@ struct SmoothList: UIViewControllerRepresentable {
         }
         
         func scrollViewDidScroll(_ scrollView: UIScrollView) {
+            scrollTimer?.invalidate()
+            scrollTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { [weak self] _ in
+                self?.processScrollViewDidScroll(scrollView)
+            }
+            
             guard !IS_CATALYST else { return }
             if !scrollDirectionDetermined {
                 let translation = scrollView.panGestureRecognizer.translation(in: scrollView)
@@ -383,11 +388,6 @@ struct SmoothList: UIViewControllerRepresentable {
                     sendNotification(.scrollingDown)
                     scrollDirectionDetermined = true
                 }
-            }
-            
-            scrollTimer?.invalidate()
-            scrollTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { [weak self] _ in
-                self?.processScrollViewDidScroll(scrollView)
             }
         }
 
@@ -415,9 +415,7 @@ struct SmoothList: UIViewControllerRepresentable {
                 }
             }
             
-            if SettingsStore.shared.fetchCounts {
-                lvm.fetchCounts.send(indexPaths.compactMap { data[safe: $0.row]?.id })
-            }
+            lvm.postsAppearedSubject.send(indexPaths.compactMap { data[safe: $0.row]?.id })
         }
         
         private var scrollDirectionDetermined = false
