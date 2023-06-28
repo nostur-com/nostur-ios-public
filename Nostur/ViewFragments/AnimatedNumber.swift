@@ -23,34 +23,32 @@ struct AnimatedNumber: View, Equatable {
     }
     
     var body: some View {
-        VStack {
-            Text(String(currentNumber))
-                .overlay(alignment:.bottom) {
-                    Text(String(nextNumber))
-                        .offset(y:numberHeight)
-                }
-                .offset(y:offset)
-        }
-        .frame(height: numberHeight)
-        .clipped()
-        .onAppear {
-            currentNumber = number
-        }
-        .onChange(of: number) { newNumber in
-            guard currentNumber != newNumber else { return }
-            nextNumber = newNumber
-            
-            timer?.invalidate()
-            timer = Timer(timeInterval: 0.35, repeats: false, block: { timer in
-                currentNumber = nextNumber
-                offset = 0.0
-            })
-            timer?.fire()
-            
-            withAnimation(.linear(duration: 0.3)) {
-                offset -= numberHeight
+        Text(verbatim: String(currentNumber))
+            .overlay(alignment:.bottom) {
+                Text(verbatim: String(nextNumber))
+                    .offset(y:numberHeight)
             }
-        }
+            .offset(y:offset)
+            .frame(height: numberHeight)
+            .clipped()
+            .onAppear {
+                currentNumber = number
+            }
+            .onChange(of: number) { newNumber in
+                guard currentNumber != newNumber else { return }
+                nextNumber = newNumber
+                
+                timer?.invalidate()
+                timer = Timer(timeInterval: 0.35, repeats: false, block: { timer in
+                    currentNumber = nextNumber
+                    offset = 0.0
+                })
+                timer?.fire()
+                
+                withAnimation(.linear(duration: 0.3)) {
+                    offset -= numberHeight
+                }
+            }
     }
 }
 
@@ -64,34 +62,32 @@ struct AnimatedNumberString: View {
     @State var timer:Timer?
     
     var body: some View {
-        VStack {
-            Text(currentNumber)
-                .overlay(alignment:.bottom) {
-                    Text(nextNumber)
-                        .offset(y:numberHeight)
-                }
-                .offset(y:offset)
-        }
-        .frame(height: numberHeight)
-        .clipped()
-        .onAppear {
-            currentNumber = number
-        }
-        .onChange(of: number) { newNumber in
-            guard currentNumber != newNumber else { return }
-            nextNumber = newNumber
-            
-            timer?.invalidate()
-            timer = Timer(timeInterval: 0.35, repeats: false, block: { timer in
-                currentNumber = nextNumber
-                offset = 0.0
-            })
-            timer?.fire()
-            
-            withAnimation(.linear(duration: 0.3)) {
-                offset -= numberHeight
+        Text(verbatim: currentNumber)
+            .overlay(alignment:.bottom) {
+                Text(verbatim: nextNumber)
+                    .offset(y:numberHeight)
             }
-        }
+            .offset(y:offset)
+            .frame(height: numberHeight)
+            .clipped()
+            .onAppear {
+                currentNumber = number
+            }
+            .onChange(of: number) { newNumber in
+                guard currentNumber != newNumber else { return }
+                nextNumber = newNumber
+                
+                timer?.invalidate()
+                timer = Timer(timeInterval: 0.35, repeats: false, block: { timer in
+                    currentNumber = nextNumber
+                    offset = 0.0
+                })
+                timer?.fire()
+                
+                withAnimation(.linear(duration: 0.3)) {
+                    offset -= numberHeight
+                }
+            }
     }
 }
 

@@ -6,18 +6,17 @@ struct ListViewContainer: View {
     @ObservedObject var vm:LVM
     
     var body: some View {
-        ZStack {
-//            SnapshotTest(lvm: vm)
-            SmoothList(lvm: vm, dim: dim)
-                .overlay(alignment: .topTrailing) {
-                    ListUnreadCounter(vm: vm)
-                        .padding(.trailing, 10)
-                        .padding(.top, 5)
-                }
-            if vm.state == .INIT {
-                CenteredProgressView()
+        SmoothList(lvm: vm, dim: dim)
+            .overlay(alignment: .topTrailing) {
+                ListUnreadCounter(vm: vm)
+                    .padding(.trailing, 10)
+                    .padding(.top, 5)
             }
-        }
+            .overlay {
+                if vm.state == .INIT {
+                    CenteredProgressView()
+                }
+            }
     }
 }
 

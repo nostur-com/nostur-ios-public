@@ -44,7 +44,7 @@ struct Kind1Default: View {
     
     var body: some View {
 //        let _ = Self._printChanges()
-        HStack(alignment: .top, spacing:0) {
+        HStack(alignment: .top, spacing: 0) {
             PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact)
                 .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: DIMENSIONS.POST_ROW_PFP_HEIGHT)
                 .background(alignment: .top) {
@@ -58,12 +58,18 @@ struct Kind1Default: View {
                 }
                 .padding(.horizontal, DIMENSIONS.POST_ROW_PFP_HPADDING)
 
-            VStack(alignment:.leading, spacing: 3) {// Post container
+            VStack(alignment:.leading, spacing: 3) { // Post container
                 HStack { // name + reply + context menu
                     NoteHeaderView(nrPost: nrPost)
                     Spacer()
                     LazyNoteMenuButton(nrPost: nrPost)
                 }
+                .frame(idealHeight: 22.0)
+                .fixedSize(horizontal: false, vertical: true)
+//                     Make sure we get the correct size (is now 20.5 or 21.5 because nip05 icon?)
+//                .readSize { newSize in
+//                    print("NoteHeader size: \(newSize)")
+//                }
                 if missingReplyTo {
                     ReplyingToFragmentView(nrPost: nrPost)
 //                            .padding(.bottom, 3)
@@ -95,7 +101,7 @@ struct Kind1Default: View {
                                     navigateTo(nrPost)
                                 }
                         )
-                        .contentShape(Rectangle())
+//                        .contentShape(Rectangle())
 //                        .onTapGesture {
 //                            navigateTo(nrPost)
 //                        }
@@ -108,7 +114,12 @@ struct Kind1Default: View {
                 if (!hideFooter && settings.rowFooterEnabled) {
                     FooterFragmentView(nrPost: nrPost)
                         .padding(.top, 10)
-//                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(idealHeight: 38.0)
+                        .fixedSize(horizontal: false, vertical: true)
+//                     Make sure we get the correct size (is now 28.0 + 10.0)
+//                        .readSize { newSize in
+//                            print("Final Footer size: \(newSize)")
+//                        }
                         .contentShape(Rectangle())
                         .onTapGesture {
                             navigateTo(nrPost)

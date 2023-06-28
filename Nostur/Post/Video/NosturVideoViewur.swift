@@ -44,46 +44,44 @@ struct NosturVideoViewur: View {
             }
             else if videoShown {
                 if let asset, let scaledDimensions, let videoLength = videoLength {
-                    ZStack {
-                        VideoViewurReprestable(asset: asset, isPlaying: $isPlaying, isMuted: $isMuted)
-                            .frame(width: scaledDimensions.width, height: scaledDimensions.height)
-                            .padding(.horizontal, -contentPadding)
-                            .overlay(alignment:.bottomLeading) {
-                                if !didStart {
-                                    Text(videoLength)
-                                        .foregroundColor(.white)
-                                        .fontWeight(.bold)
-                                        .padding(3)
-                                        .background(.black)
-                                        .padding(5)
+                    VideoViewurReprestable(asset: asset, isPlaying: $isPlaying, isMuted: $isMuted)
+                        .frame(width: scaledDimensions.width, height: scaledDimensions.height)
+                        .padding(.horizontal, -contentPadding)
+                        .overlay(alignment:.bottomLeading) {
+                            if !didStart {
+                                Text(videoLength)
+                                    .foregroundColor(.white)
+                                    .fontWeight(.bold)
+                                    .padding(3)
+                                    .background(.black)
+                                    .padding(5)
+                            }
+                        }
+                        .overlay {
+                            if !didStart {
+                                Button(action: {
+                                    isPlaying = true
+                                    didStart = true
+                                    sendNotification(.startPlayingVideo, url.absoluteString)
+                                }) {
+                                    Image(systemName:"play.circle")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 80, height: 80)
+                                        .centered()
+                                        .contentShape(Rectangle())
                                 }
                             }
-                            .overlay {
-                                if !didStart {
-                                    Button(action: {
-                                        isPlaying = true
-                                        didStart = true
-                                        sendNotification(.startPlayingVideo, url.absoluteString)
-                                    }) {
-                                        Image(systemName:"play.circle")
-                                            .resizable()
-                                            .scaledToFit()
-                                            .frame(width: 80, height: 80)
-                                            .centered()
-                                            .contentShape(Rectangle())
-                                    }
-                                }
-                            }
-                            .onReceive(receiveNotification(.startPlayingVideo)) { notification in
-                                let otherUrl = notification.object as! String
-                                if url.absoluteString != otherUrl {
-                                    isPlaying = false
-                                }
-                            }
-                            .onDisappear {
+                        }
+                        .onReceive(receiveNotification(.startPlayingVideo)) { notification in
+                            let otherUrl = notification.object as! String
+                            if url.absoluteString != otherUrl {
                                 isPlaying = false
                             }
-                    }
+                        }
+                        .onDisappear {
+                            isPlaying = false
+                        }
                 }
                 else if videoState == .loading {
                     HStack(spacing: 5) {

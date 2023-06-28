@@ -97,7 +97,14 @@ struct Kind1: View {
                 }
                 if (!hideFooter && settings.rowFooterEnabled) {
                     FooterFragmentView(nrPost: nrPost)
-                        .padding(.vertical, 10)
+                        .padding(.top, 10)
+//                        .frame(idealHeight: 38.0)
+//                        .fixedSize(horizontal: false, vertical: true)
+//                     Make sure we get the correct size (is now 28.0 + 10.0)
+//                        .readSize { newSize in
+//                            print("Final Footer size: \(newSize)")
+//                        }
+                        .contentShape(Rectangle())
                         .onTapGesture {
                             navigateTo(nrPost)
                         }

@@ -132,9 +132,7 @@ struct FooterFragmentView: View {
             }
         }
         .foregroundColor(Self.grey)
-        .font(.system(size: 14))
-        
-        
+        .font(.system(size: 14))        
     }
 }
 

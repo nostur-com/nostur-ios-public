@@ -78,6 +78,6 @@ struct SizeModifier: ViewModifier {
     }
 
     func body(content: Content) -> some View {
-        content.background(sizeView)
+        content.overlay(sizeView) // .background does not always work (gives 0,0), but overlay does work??)
     }
 }
