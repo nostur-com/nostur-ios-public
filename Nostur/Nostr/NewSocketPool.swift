@@ -28,6 +28,8 @@ final class SocketPool: ObservableObject {
     static let shared = SocketPool()
     
     @Published var sockets:[String : NewManagedClient] = [:]
+    public var connectionQueue = DispatchQueue(label: "com.nostur.connection", qos: .utility, attributes: .concurrent)
+    public var websocketQueue = DispatchQueue(label: "com.nostur.websocket", qos: .utility, attributes: .concurrent)
     
     var stayConnectedTimer:Timer?
     
@@ -418,22 +420,23 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     var url:String
     var isNWC:Bool
     var client:NewWebSocket
-    var exponentialReconnectBackOff = 0
-    var _skipped = 0
     
-    private var connectionQueue = DispatchQueue(label: "com.nostur.connection")
+    var _skipped = 0
+    var _exponentialReconnectBackOff = 0
+    
+    
     private var _isConnecting = false
     private var _activeSubscriptions:[String] = []
     private var _lastMessageReceivedAt:Date? = nil
     
     var lastMessageReceivedAt: Date? {
         get {
-            return connectionQueue.sync {
+            return SocketPool.shared.connectionQueue.sync {
                 _lastMessageReceivedAt
             }
         }
         set {
-            connectionQueue.async(flags: .barrier) {
+            SocketPool.shared.connectionQueue.async(flags: .barrier) {
                 self._lastMessageReceivedAt = newValue
             }
         }
@@ -441,25 +444,38 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     
     var skipped: Int {
         get {
-            return connectionQueue.sync {
+            return SocketPool.shared.connectionQueue.sync {
                 _skipped
             }
         }
         set {
-            connectionQueue.async(flags: .barrier) {
+            SocketPool.shared.connectionQueue.async(flags: .barrier) {
                 self._skipped = newValue
+            }
+        }
+    }
+    
+    var exponentialReconnectBackOff: Int {
+        get {
+            return SocketPool.shared.connectionQueue.sync {
+                _exponentialReconnectBackOff
+            }
+        }
+        set {
+            SocketPool.shared.connectionQueue.async(flags: .barrier) {
+                self._exponentialReconnectBackOff = newValue
             }
         }
     }
     
     var isConnecting: Bool {
         get {
-            return connectionQueue.sync {
+            return SocketPool.shared.connectionQueue.sync {
                 _isConnecting
             }
         }
         set {
-            connectionQueue.async(flags: .barrier) {
+            SocketPool.shared.connectionQueue.async(flags: .barrier) {
                 self._isConnecting = newValue
             }
         }
@@ -471,12 +487,12 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     
     var activeSubscriptions:[String] {
         get {
-            return connectionQueue.sync {
+            return SocketPool.shared.connectionQueue.sync {
                 _activeSubscriptions
             }
         }
         set {
-            connectionQueue.async(flags: .barrier) {
+            SocketPool.shared.connectionQueue.async(flags: .barrier) {
                 self._activeSubscriptions = newValue
             }
         }
@@ -611,7 +627,7 @@ protocol NewWebSocketDelegate: URLSessionWebSocketDelegate {
 class NewWebSocket {
     let url:String
     var socketQueue = OperationQueue()
-    private var websocketQueue = DispatchQueue(label: "com.nostur.websocket")
+    
     var webSocket_:WebSocket?
     var connection_:AnyCancellable?
     var pinger:AnyCancellable?
@@ -621,12 +637,12 @@ class NewWebSocket {
     
     var senderAfterPing:AnyCancellable? {
         get {
-            websocketQueue.sync {
+            SocketPool.shared.websocketQueue.sync {
                 self.senderAfterPing_
             }
         }
         set {
-            websocketQueue.async(flags: .barrier) {
+            SocketPool.shared.websocketQueue.async(flags: .barrier) {
                 self.senderAfterPing_ = newValue
             }
         }
@@ -634,12 +650,12 @@ class NewWebSocket {
     
     var connection:AnyCancellable? {
         get {
-            websocketQueue.sync {
+            SocketPool.shared.websocketQueue.sync {
                 self.connection_
             }
         }
         set {
-            websocketQueue.async(flags: .barrier) {
+            SocketPool.shared.websocketQueue.async(flags: .barrier) {
                 self.connection_ = newValue
             }
         }
@@ -648,12 +664,12 @@ class NewWebSocket {
     
     var webSocket:WebSocket? {
         get {
-            websocketQueue.sync {
+            SocketPool.shared.websocketQueue.sync {
                 self.webSocket_
             }
         }
         set {
-            websocketQueue.async(flags: .barrier) {
+            SocketPool.shared.websocketQueue.async(flags: .barrier) {
                 self.webSocket_ = newValue
             }
         }
@@ -661,9 +677,6 @@ class NewWebSocket {
     
     init(url:String) {
         self.url = url
-        self.socketQueue.name = "nostur.socketqueue"
-        self.socketQueue.qualityOfService = .utility
-        self.socketQueue.maxConcurrentOperationCount = 1
         //        connect()
         //        startPinger()
     }
