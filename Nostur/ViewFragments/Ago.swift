@@ -3,7 +3,7 @@ import SwiftUI
 struct Ago: View, Equatable {
     
     static func == (lhs: Ago, rhs: Ago) -> Bool {
-        lhs.date == rhs.date
+        lhs.agoText == rhs.agoText
     }
     
     let date:Date
@@ -20,7 +20,7 @@ struct Ago: View, Equatable {
     @State var agoText:String? = nil
     
     var body: some View {
-        Text(agoText ?? date.agoString)
+        Text(verbatim: (agoText ?? date.agoString))
             .onReceive(NosturState.shared.agoTimer) { _ in
                 if date.agoString != agoText {
                     agoText = date.agoString

@@ -266,9 +266,6 @@ struct ParentPost: View {
             PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 50)
                 .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: 50)
                 .padding(.horizontal, DIMENSIONS.POST_ROW_PFP_HPADDING)
-//                .padding(.top, 10)
-            
-            
                 .onTapGesture {
                     navigateTo(ContactPath(key: nrPost.pubkey))
                 }
@@ -281,7 +278,7 @@ struct ParentPost: View {
                     LazyNoteMenuButton(nrPost: nrPost)
                 }
                 .padding(.trailing, 10)
-                .padding(.top, 10)
+                
                 switch nrPost.kind {
                 case 9802: // highlight
                     HighlightRenderer(nrPost: nrPost)
@@ -351,7 +348,7 @@ struct DetailPost: View {
             PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 50)
                 .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: 50)
                 .padding(.horizontal, DIMENSIONS.POST_ROW_PFP_HPADDING)
-                .padding(.top, nrPost.replyToId != nil ? 0 : 10)
+//                .padding(.top, nrPost.replyToId != nil ? 0 : 10)
                 .onTapGesture {
                     navigateTo(ContactPath(key: nrPost.pubkey))
                 }
@@ -364,8 +361,6 @@ struct DetailPost: View {
                     LazyNoteMenuButton(nrPost: nrPost)
                 }
                 .padding(.trailing, 10)
-                .padding(.top, 10)
-                .padding(.bottom, 20)
             }
         }
     
@@ -380,11 +375,10 @@ struct DetailPost: View {
                 NoteMinimalContentView(nrPost: nrPost, lineLimit: 350)
             }
             else {
-                ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : (dim.availablePostDetailImageWidth() - (40))) // 40 = (padding DetailTab, padding ContentRenderer)
-                    .padding(.top, 3)
+                ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : (dim.availablePostDetailImageWidth() - (20)))
+                    .padding(.top, 10)
                     .padding(.horizontal, 10)
                     .padding(.bottom, 10)
-                    .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
             }
         case 1063:
             if let fileMetadata = nrPost.fileMetadata {

@@ -80,7 +80,7 @@ struct PostHeader: View {
     let singleLine:Bool
     
     var body: some View {
-        HStack(spacing:5) {
+        HStack(alignment: .top, spacing: 5) {
             Group {
                 Text(contact.anyName)
                     .foregroundColor(.primary)
