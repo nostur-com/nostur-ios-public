@@ -2,17 +2,18 @@ import SwiftUI
 
 struct LazyNoteMenuButton: View {
     var nrPost:NRPost
+    static let color = Color(red: 113/255, green: 118/255, blue: 123/255)
+    
     var body: some View {
-        Button {
-            sendNotification(.showNoteMenu, nrPost)
-        } label: {
-            Image(systemName: "ellipsis")
-                .fontWeight(.bold)
-                .foregroundColor(Color.init(red: 113/255, green: 118/255, blue: 123/255))
-                .padding(.top, 7)
-                .padding(.bottom, 6)
-                .padding(.leading, 10)
-        }
+        Image(systemName: "ellipsis")
+            .fontWeight(.bold)
+            .foregroundColor(Self.color)
+            .padding(.top, 7)
+            .padding(.bottom, 6)
+            .padding(.leading, 10)
+            .onTapGesture {
+                sendNotification(.showNoteMenu, nrPost)
+            }
     }
 }
 

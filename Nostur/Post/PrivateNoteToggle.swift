@@ -25,20 +25,18 @@ struct EventPrivateNoteToggle: View {
     @ObservedObject var nrPost:NRPost
     
     var body: some View {
-        HStack {
-            Button {
+        Image(systemName: "note.text")
+            .padding(.horizontal, 5)
+            .contentShape(Rectangle())
+            .opacity(nrPost.mainEvent.privateNote != nil ? 1 : 0.2)
+            .onTapGesture {
                 if let pn = nrPost.mainEvent.privateNote {
                     sendNotification(.editingPrivateNote, pn)
                 }
                 else {
                     sendNotification(.newPrivateNoteOnPost, nrPost.id)
                 }
-            } label: {
-                Image(systemName: "note.text")
-                    .padding(5)
             }
-            .opacity(nrPost.mainEvent.privateNote != nil ? 1 : 0.2)
-        }
     }
 }
 

@@ -22,19 +22,18 @@ struct ZapButton: View {
         if ss.defaultLightningWallet.scheme.contains(":nwc:") && !ss.activeNWCconnectionId.isEmpty, let contact = nrPost.contact?.contact {
             if let cancellationId {
                 HStack {
-                    Button {
-                        _ = Unpublisher.shared.cancel(cancellationId)
-                        NWCRequestQueue.shared.removeRequest(byCancellationId: cancellationId)
-                        NWCZapQueue.shared.removeZap(byCancellationId: cancellationId)
-                        self.cancellationId = nil
-                        nrPost.zapState = .cancelled
-                        activeColor = Self.grey
-                        L.og.info("⚡️ Zap cancelled")
-                    } label: {
-                        Image("BoltIconActive").foregroundColor(activeColor)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 5)
-                    }
+                    Image("BoltIconActive").foregroundColor(activeColor)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .onTapGesture {
+                            _ = Unpublisher.shared.cancel(cancellationId)
+                            NWCRequestQueue.shared.removeRequest(byCancellationId: cancellationId)
+                            NWCZapQueue.shared.removeZap(byCancellationId: cancellationId)
+                            self.cancellationId = nil
+                            nrPost.zapState = .cancelled
+                            activeColor = Self.grey
+                            L.og.info("⚡️ Zap cancelled")
+                        }
                     AnimatedNumberString(number: tallyString).opacity(tally == 0 ? 0 : 1)
                 }
             }
