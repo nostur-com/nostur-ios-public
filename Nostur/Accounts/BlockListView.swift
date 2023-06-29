@@ -50,7 +50,7 @@ struct BlockedAccounts:View {
                 LazyVStack {
                     ForEach(blockedContacts.sorted(by: { $0.authorName < $1.authorName })) { contact in
                         ProfileRow(withoutFollowButton: true, contact: contact)
-                            .onSwipe(tint: .green, label: "Unblock", icon: "") {
+                            .onSwipe(tint: .green, label: "Unblock", icon: "figure.2.arms.open") {
                                 ns.objectWillChange.send()
                                 account.blockedPubkeys_.removeAll(where: { $0 == contact.pubkey })
                                 DataProvider.shared().save()
@@ -103,7 +103,7 @@ struct MutedConversations: View {
                         }
                         .padding(10)
                         .id(nrPost.id)
-                        .onSwipe(tint: Color.green, label: "Unmute", icon: "") {
+                        .onSwipe(tint: Color.green, label: "Unmute", icon: "speaker.wave.1") {
                             ns.objectWillChange.send()
                             account.mutedRootIds_.removeAll(where: { $0 == nrPost.id })
                             fl.nrPosts = fl.nrPosts.filter { $0.id != nrPost.id }
