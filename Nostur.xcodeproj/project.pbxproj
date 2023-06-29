@@ -2164,8 +2164,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/luizmb/CombineWebSocket";
 			requirement = {
-				branch = master;
-				kind = branch;
+				kind = revision;
+				revision = 7ade1417198ad7b196858dd0d0601818adae5725;
 			};
 		};
 		1F2F54E82A0236E400B6D7E4 /* XCRemoteSwiftPackageReference "Gifu" */ = {
