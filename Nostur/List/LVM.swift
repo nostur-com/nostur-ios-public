@@ -1224,7 +1224,13 @@ extension LVM {
                 }
             }
             return }
-        guard let oldestEvent = self.nrPostLeafs.last?.event else { L.og.debug("Empty screen, cancelled") ;return }
+//        guard let oldestEvent = self.nrPostLeafs.last?.event else { L.og.debug("Empty screen, cancelled") ;return } // bug: sometimes last is not oldest (delayed receive?, slow relay?), so don't take last but actual oldest on screen:
+        
+        // Actual oldestt:
+        guard let oldestEvent = self.nrPostLeafs.max(by: { $0.createdAt > $1.createdAt })?.event else {
+            L.og.debug("Empty screen, cancelled") ;return
+        }
+
         let ctx = DataProvider.shared().bg
         performingLocalOlderFetch = true
         ctx.perform { [weak self] in
