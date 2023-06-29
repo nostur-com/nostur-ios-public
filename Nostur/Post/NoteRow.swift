@@ -9,6 +9,7 @@ struct NoteRow: View {
     let isReply:Bool // is reply on PostDetail (needs 2*10 less box width)
     let isDetail:Bool
     let grouped:Bool
+    @EnvironmentObject var dim:DIMENSIONS
     
     private let sp:SocketPool = .shared
     
@@ -22,7 +23,7 @@ struct NoteRow: View {
         self.isDetail = isDetail
         self.grouped = grouped
     }
-    
+        
     var body: some View {
 //        let _ = Self._printChanges()
         VStack (alignment: .leading) {
@@ -43,6 +44,12 @@ struct NoteRow: View {
                     navigateTo(ContactPath(key: nrPost.pubkey))
                 }
                 .padding(.leading, 40)
+                .frame(idealHeight: 20.0)
+                .fixedSize(horizontal: false, vertical: true)
+                // Fixed size for scrolling performance, use to confirm correct size:
+//                .readSize { newSize in
+//                    print("Repost header size: \(newSize)")
+//                }
                 
                 if let firstQuote = nrPost.firstQuote {
                     // CASE - WE REPOSTED POST ALREADY
@@ -65,9 +72,25 @@ struct NoteRow: View {
             }
         }
         .padding(.top, 20)
-//            .background(Color.random) // NOTEROW BOX BACKGROUND
+        // Performance testing
+//        .background(Color.random) // NOTEROW BOX BACKGROUND
+//        .readSize { size in
+//            print("NoteRow size: \(size)")
+//        }
 //        .background(Color.systemBackground) // NOTEROW BOX BACKGROUND
     }
+}
+
+extension View {
+  func readSize(onChange: @escaping (CGSize) -> Void) -> some View {
+    overlay(
+      GeometryReader { geometryProxy in
+        Color.clear
+          .preference(key: SizePreferenceKey.self, value: geometryProxy.size)
+      }
+    )
+    .onPreferenceChange(SizePreferenceKey.self, perform: onChange)
+  }
 }
 
 enum ThreadConnectDirection {

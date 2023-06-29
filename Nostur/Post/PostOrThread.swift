@@ -5,6 +5,7 @@ struct PostOrThread: View {
     var grouped = false
     var rootId:String? = nil
     @ObservedObject var settings:SettingsStore = .shared
+    @EnvironmentObject var dim:DIMENSIONS
 
     var body: some View {
         VStack(spacing:0) {
@@ -20,6 +21,14 @@ struct PostOrThread: View {
         .roundedBoxShadow()
         .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
         .padding(.vertical, 10)
+        .frame(idealWidth: dim.listWidth)
+        .fixedSize(horizontal: true, vertical: false)
+//         Performance testing:
+//        .background(Color.random)
+//        .readSize { size in
+//            print("PostOrThread size: \(size)")
+//            print("PostOrThread dim size: \(dim.listWidth)")
+//        }
     }
 }
 //
