@@ -101,7 +101,7 @@ struct RelayMessage {
 /// REQ messages for requesting with filters
 ///
 /// This struct has gotten out of hand, was supposed to be temporary to just try things
-/// a few messages, now its still used for every message..
+/// with a few messages, now its still used for every message..
 public struct RequestMessage {
     // TODO: make proper request filter class
     

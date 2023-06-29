@@ -9,7 +9,7 @@ import Foundation
 import CoreData
 import Combine
 
-let LVM_MAX_VISIBLE:Int = 20 // Will only be ignored if last appeared is older
+let LVM_MAX_VISIBLE:Int = 20
 
 class LVM: NSObject, ObservableObject {
         
@@ -103,7 +103,7 @@ class LVM: NSObject, ObservableObject {
         self.restoreSubscription()
         
         
-        // TODO: Provide a setting to enable this again, instead of InstantFeed()...
+        // TODO: Provide a setting to enable this again, instead of InstantFeed()... maybe for Lists only
 //        if nrPostLeafs.count == 0 {
 //            if (self.restoreLeafs != nil) {
 //                self.performLocalRestoreFetch()
@@ -201,7 +201,7 @@ class LVM: NSObject, ObservableObject {
     private func processPostsInBackground(_ events:[Event], older:Bool = false) { // events are from viewContext
         let taskId = UUID().uuidString
         L.lvm.notice("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") Start transforming \(events.count) events - \(taskId)")
-        let context = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" ? DataProvider.shared().viewContext : DataProvider.shared().bg // Should be use shared().bg instead??
+        let context = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" ? DataProvider.shared().viewContext : DataProvider.shared().bg
         
         // onScreenIds includes leafs and parents, so all posts.
         let leafsAndParentIdsOnScreen = leafsAndParentIdsOnScreen
@@ -228,7 +228,7 @@ class LVM: NSObject, ObservableObject {
             }
             
             let added = newNRPostLeafs
-//                .filter(notMuted) // TODO ADD BACK NOT MUTED IN RIGHT CONTEXT / THREAD
+//                .filter(notMuted) // TODO: ADD BACK NOT MUTED IN RIGHT CONTEXT / THREAD
 
             guard !transformedObjectIds.isEmpty else { performingLocalOlderFetch = false; return }
             L.lvm.notice("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") Transformed \(transformedObjectIds.count) posts - \(taskId)")
@@ -246,9 +246,6 @@ class LVM: NSObject, ObservableObject {
                     self.initialIndex = self.getRestoreScrollIndex(newLeafThreads, lastAppearedId: self.restoreScrollToId) ?? 0
                     L.sl.info("⭐️ LVM.initialIndex: \(self.name) \(self.initialIndex) - \(taskId)")
                     self.nrPostLeafs = newLeafThreads
-//                    print("COUNTER B: \(self.lvmCounter.count)")
-//                    self.lvmCounter.count = self.itemsAfterLastRead < 5 ? 0 : self.itemsAfterLastRead
-//                    print("COUNTER BB: \(self.lvmCounter.count)")
                 }
             }
             else {

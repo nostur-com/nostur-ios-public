@@ -278,7 +278,7 @@
 		1FCC2F292A19275200202EFA /* NIP05Verifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCC2F282A19275200202EFA /* NIP05Verifier.swift */; };
 		1FCC2F2D2A1B2CD100202EFA /* ImageTesting1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCC2F2C2A1B2CD100202EFA /* ImageTesting1.swift */; };
 		1FCDDEBC2A480AA2002EDEEC /* SettingsDevTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCDDEBB2A480A84002EDEEC /* SettingsDevTools.swift */; };
-		1FCDDEBE2A4810F6002EDEEC /* RelayIntelTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCDDEBD2A4810F6002EDEEC /* RelayIntelTest.swift */; };
+		1FCDDEBE2A4810F6002EDEEC /* RelayCensorshipResistorTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCDDEBD2A4810F6002EDEEC /* RelayCensorshipResistorTest.swift */; };
 		1FCEA0B72999413C00A309DC /* Double+clean.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCEA0B62999413C00A309DC /* Double+clean.swift */; };
 		1FCFDDBA2A284A7B0096CD84 /* FollowerNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCFDDB92A284A7B0096CD84 /* FollowerNotifier.swift */; };
 		1FCFDDBD2A2881250096CD84 /* PNotification+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCFDDBB2A2881250096CD84 /* PNotification+CoreDataClass.swift */; };
@@ -627,7 +627,7 @@
 		1FCC2F282A19275200202EFA /* NIP05Verifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP05Verifier.swift; sourceTree = "<group>"; };
 		1FCC2F2C2A1B2CD100202EFA /* ImageTesting1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageTesting1.swift; sourceTree = "<group>"; };
 		1FCDDEBB2A480A84002EDEEC /* SettingsDevTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsDevTools.swift; sourceTree = "<group>"; };
-		1FCDDEBD2A4810F6002EDEEC /* RelayIntelTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayIntelTest.swift; sourceTree = "<group>"; };
+		1FCDDEBD2A4810F6002EDEEC /* RelayCensorshipResistorTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayCensorshipResistorTest.swift; sourceTree = "<group>"; };
 		1FCEA0B62999413C00A309DC /* Double+clean.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Double+clean.swift"; sourceTree = "<group>"; };
 		1FCFDDB92A284A7B0096CD84 /* FollowerNotifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowerNotifier.swift; sourceTree = "<group>"; };
 		1FCFDDBB2A2881250096CD84 /* PNotification+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PNotification+CoreDataClass.swift"; sourceTree = "<group>"; };
@@ -1116,7 +1116,7 @@
 				1F2BD4A32A22206500F006AC /* SnapshotTest.swift */,
 				1F77D2E129D238520028DC95 /* ShareableIdentifierTest.swift */,
 				1FF78BB72A45421500CA3DDA /* PaddingsTesting.swift */,
-				1FCDDEBD2A4810F6002EDEEC /* RelayIntelTest.swift */,
+				1FCDDEBD2A4810F6002EDEEC /* RelayCensorshipResistorTest.swift */,
 			);
 			path = Playground;
 			sourceTree = "<group>";
@@ -1639,7 +1639,7 @@
 				1FF2C6C629EAD7D00096AC4A /* NosturListsView.swift in Sources */,
 				1F7150D029ABC6CE00AAB1C3 /* TabButton.swift in Sources */,
 				1F2F54E52A02242900B6D7E4 /* HighlightRenderer.swift in Sources */,
-				1FCDDEBE2A4810F6002EDEEC /* RelayIntelTest.swift in Sources */,
+				1FCDDEBE2A4810F6002EDEEC /* RelayCensorshipResistorTest.swift in Sources */,
 				1FFF997B29CEE15000ADAE23 /* About.swift in Sources */,
 				1FBDE8C129B74EE800F4DFD0 /* ListState+CoreDataProperties.swift in Sources */,
 				1F065A9929A37A47003421D3 /* NoteZaps.swift in Sources */,
