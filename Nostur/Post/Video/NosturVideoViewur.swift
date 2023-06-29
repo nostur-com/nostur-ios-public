@@ -46,7 +46,7 @@ struct NosturVideoViewur: View {
                 if let asset, let scaledDimensions, let videoLength = videoLength {
                     VideoViewurReprestable(asset: asset, isPlaying: $isPlaying, isMuted: $isMuted)
                         .frame(width: scaledDimensions.width, height: scaledDimensions.height)
-                        .padding(.horizontal, -contentPadding)
+                        .padding(.horizontal, fullWidth ? -contentPadding : 0)
                         .overlay(alignment:.bottomLeading) {
                             if !didStart {
                                 Text(videoLength)

@@ -380,7 +380,7 @@ struct DetailPost: View {
                 NoteMinimalContentView(nrPost: nrPost, lineLimit: 350)
             }
             else {
-                ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : dim.availablePostDetailImageWidth())
+                ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: settings.fullWidthImages ? dim.listWidth : (dim.availablePostDetailImageWidth() - (40))) // 40 = (padding DetailTab, padding ContentRenderer)
                     .padding(.top, 3)
                     .padding(.horizontal, 10)
                     .padding(.bottom, 10)
