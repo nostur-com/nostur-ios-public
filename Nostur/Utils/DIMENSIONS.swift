@@ -5,6 +5,8 @@ class DIMENSIONS: ObservableObject {
     
     static let shared = DIMENSIONS()
     
+    static public let POST_MAX_ROW_HEIGHT:CGFloat = 800.0
+    
     // 428    - 5        - (10 + 50 + 10 ) -         (10) - 5
     // Screen - Box-left  - (10 + PFP+ 10 ) - (text-right) - Box-right
     static public let POST_ROW_HPADDING:CGFloat = 10.0

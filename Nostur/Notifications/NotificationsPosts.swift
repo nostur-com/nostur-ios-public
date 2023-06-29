@@ -53,6 +53,7 @@ struct NotificationsPosts: View {
                             .id(pNotification.id)
                     case .POST:
                         PostRowDeletable(nrPost: pNotification.post!, missingReplyTo: true)
+                            .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
                             .roundedBoxShadow()
                             .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                             .padding(.vertical, 10)

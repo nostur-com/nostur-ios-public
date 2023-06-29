@@ -13,9 +13,11 @@ struct PostOrThread: View {
                 PostRowDeletable(nrPost: nrParent,
                                  missingReplyTo: nrParent.replyToId != rootId && nrParent.replyToId != nil && nrParent.id == nrPost.parentPosts.first?.id,
                                  connect: nrParent.replyToId != nil || nrPost.parentPosts.first?.id != nrParent.id ? .both : .bottom, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
+                    .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
                     .id(nrParent.id)
             }
             PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && nrPost.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
+                .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
                 .id(nrPost.id)
         }
         .roundedBoxShadow()
