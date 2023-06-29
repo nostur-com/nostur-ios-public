@@ -412,6 +412,7 @@ struct DetailPost: View {
             .background(Color.systemBackground)
             .roundedCorner(10, corners: [.bottomLeft, .bottomRight])
             .background(Color("ListBackground"))
+            .preference(key: TabTitlePreferenceKey.self, value: nrPost.anyName)
         
         
     }
