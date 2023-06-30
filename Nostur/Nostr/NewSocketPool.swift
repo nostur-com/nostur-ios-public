@@ -660,22 +660,36 @@ class NewWebSocket {
     var webSocket_:WebSocket?
     var connection_:AnyCancellable?
     var pinger:AnyCancellable?
-    var senderAfterPing_:AnyCancellable?
+//    var senderAfterPing_:AnyCancellable?
 
     var delegate:NewWebSocketDelegate?
     
-    var senderAfterPing:AnyCancellable? {
+    var subscriptions_ = Set<AnyCancellable>()
+    var subscriptions:Set<AnyCancellable> {
         get {
             SocketPool.shared.websocketQueue.sync {
-                self.senderAfterPing_
+                self.subscriptions_
             }
         }
         set {
             SocketPool.shared.websocketQueue.async(flags: .barrier) {
-                self.senderAfterPing_ = newValue
+                self.subscriptions_ = newValue
             }
         }
     }
+    
+//    var senderAfterPing:AnyCancellable? {
+//        get {
+//            SocketPool.shared.websocketQueue.sync {
+//                self.senderAfterPing_
+//            }
+//        }
+//        set {
+//            SocketPool.shared.websocketQueue.async(flags: .barrier) {
+//                self.senderAfterPing_ = newValue
+//            }
+//        }
+//    }
     
     var connection:AnyCancellable? {
         get {
@@ -716,7 +730,7 @@ class NewWebSocket {
             L.sockets.info("🟪🔴🔴 Not connected.  \(self.url)")
             return
         }
-        senderAfterPing = webSocket.ping()
+        webSocket.ping()
             .sink(receiveCompletion: { completion in
                     switch completion {
                     case .failure(let error):
@@ -740,6 +754,7 @@ class NewWebSocket {
                     // Handle the received value (optional, based on your requirements)
 //                    L.sockets.info("Received value during ping")
                 })
+            .store(in: &subscriptions) // TODO: Swift access race in Nostur.NewWebSocket.subscriptions.modify : Swift.Set<Combine.AnyCancellable> at 0x1482d6a40
     }
     
     func ping() {
@@ -748,7 +763,7 @@ class NewWebSocket {
             L.sockets.info("🔴🔴 Not connected. ????? \(self.url)")
             return
         }
-        pinger = webSocket.ping()
+        webSocket.ping()
             .sink(receiveCompletion: { [weak self] completion in
                 guard let self = self else { return }
                     switch completion {
@@ -768,6 +783,7 @@ class NewWebSocket {
                     // Handle the received value (optional, based on your requirements)
 //                    L.sockets.info("Received value during ping")
                 })
+            .store(in: &subscriptions)
     }
     
     func sendMessage(_ text:String) {
