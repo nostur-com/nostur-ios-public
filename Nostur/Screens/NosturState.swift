@@ -8,6 +8,7 @@ final class NosturState : ObservableObject {
     public static let shared = NosturState()
     
     public var wot:WebOfTrust?
+    public var nsecBunker:NSecBunkerManager?
     
     public var nrPostQueue = DispatchQueue(label: "com.nostur.nrPostQueue", attributes: .concurrent)
     
@@ -105,6 +106,8 @@ final class NosturState : ObservableObject {
             followingPublicKeys = _followingPublicKeys
             lastNotificationReceivedAt = account.lastNotificationReceivedAt
             lastProfileReceivedAt = account.lastProfileReceivedAt
+            
+            self.nsecBunker = account.isNC ? NSecBunkerManager(account) : nil
             
             // Remove currectly active "Following" subscriptions from connected sockets
             SocketPool.shared.removeActiveAccountSubscriptions()
@@ -236,7 +239,15 @@ final class NosturState : ObservableObject {
             L.og.error("🔴🔴 Could not create new clEvent")
             return
         }
-        _ = Unpublisher.shared.publishLast(clEvent, ofType: .contactList)
+        guard let account = account else { return }
+        if account.isNC {
+            nsecBunker?.requestSignature(forEvent: clEvent, whenSigned: { signedEvent in
+                _ = Unpublisher.shared.publishLast(signedEvent, ofType: .contactList)
+            })
+        }
+        else {
+            _ = Unpublisher.shared.publishLast(clEvent, ofType: .contactList)
+        }
     }
     
     func isFollowing(_ pubkey:String) -> Bool {
@@ -357,14 +368,21 @@ final class NosturState : ObservableObject {
     }
     
     func likePost(_ event:Event) -> NEvent? {
-        guard account?.privateKey != nil else { readOnlyAccountSheetShown = true; return nil }
-        guard account != nil else { return nil }
+        guard let account = account else { return nil }
+        guard account.privateKey != nil else { readOnlyAccountSheetShown = true; return nil }
         let impactMed = UIImpactFeedbackGenerator(style: .medium)
         impactMed.impactOccurred()
         
 //      1. create kind 7 event based on kind 1 event:
         let likeEvent = EventMessageBuilder.makeReactionEvent(reactingTo: event)
 //      2. sign that event with account keys
+        
+        if account.isNC {
+            NosturState.shared.nsecBunker?.requestSignature(forEvent: likeEvent, whenSigned: { signedEvent in
+                Unpublisher.shared.publishNow(signedEvent)
+            })
+        }
+        
         guard let signedEvent = try? signEvent(likeEvent) else {
             L.og.error("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
             return nil
@@ -386,7 +404,12 @@ final class NosturState : ObservableObject {
     
     func logout(_ account:Account) {
         if (account.privateKey != nil) {
-            AccountManager.shared.deletePrivateKey(forPublicKeyHex: account.publicKey)
+            if account.isNC {
+                NIP46SecretManager.shared.deleteSecret(account: account)
+            }
+            else {
+                AccountManager.shared.deletePrivateKey(forPublicKeyHex: account.publicKey)
+            }
         }
         if (accounts.isEmpty) {
             onBoardingIsShown = true

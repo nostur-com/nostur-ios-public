@@ -9,6 +9,7 @@ struct ClientMessage {
     }
     
     var onlyForNWCRelay:Bool = false
+    var onlyForNCRelay:Bool = false
     var type:ClientMessage.type = .EVENT
     var message:String
     
@@ -388,6 +389,17 @@ public struct RequestMessage {
 """
     }
     
+    static func getNCResponses(pubkey:String, bunkerPubkey:String, limit:Int? = nil, subscriptionId:String? = nil) -> String {
+        if let limit {
+            return """
+    ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(bunkerPubkey)"], "#p": ["\(pubkey)"], "kinds": [24133], "limit": \(limit)}]
+    """
+        }
+        return """
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(bunkerPubkey)"], "#p": ["\(pubkey)"], "kinds": [24133]}]
+"""
+    }
+    
     static func getAuthorDMs(pubkey:String, limit:Int = 1000, subscriptionId:String? = nil) -> String {
         return """
 ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"#p": ["\(pubkey)"], "kinds": [4], "limit": \(limit)}, {"authors": ["\(pubkey)"], "kinds": [4], "limit": \(limit)}]
@@ -546,14 +558,14 @@ func fasterShort(_ pubkeys:[String], prefixLength:Int = 10) -> String {
 //    ))
 func req(_ rm:String, activeSubscriptionId:String? = nil) {
     SocketPool.shared.sendMessage(
-        ClientMessage(onlyForNWCRelay: activeSubscriptionId == "NWC", type: .REQ, message: rm),
+        ClientMessage(onlyForNWCRelay: activeSubscriptionId == "NWC", onlyForNCRelay: activeSubscriptionId == "NC", type: .REQ, message: rm),
         subscriptionId: activeSubscriptionId
     )
 }
 
 func reqP(_ rm:String, activeSubscriptionId:String? = nil) {
     SocketPool.shared.sendMessageAfterPing(
-        ClientMessage(onlyForNWCRelay: activeSubscriptionId == "NWC", type: .REQ, message: rm),
+        ClientMessage(onlyForNWCRelay: activeSubscriptionId == "NWC", onlyForNCRelay: activeSubscriptionId == "NC", type: .REQ, message: rm),
         subscriptionId: activeSubscriptionId
     )
 }

@@ -29,37 +29,66 @@ struct PaymentAmountSelector: View {
     }
     
     func amountSelected(amount:Float, zapMessage:String) {
+        guard let account = NosturState.shared.account else { return }
         guard let anyLud = paymentInfo.contact?.anyLud, anyLud == true else { return }
         let pubkey = paymentInfo.contact!.pubkey
         let eventId = paymentInfo.nrPost?.id ?? nil
         let relays = sp.sockets.values
             .filter { $0.write }
             .map { $0.url }
+        let isNC = account.isNC
         
         if (paymentInfo.supportsZap) {
             Task {
                 do {
-                    
                     let zapRequestNote = zapRequest(forPubkey: pubkey, andEvent: eventId, withMessage: zapMessage, relays: relays)
                     
-                    let signedZapRequestNote = try ns.signEvent(zapRequestNote)
-                    
-                    let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount:UInt64(amount * 1000), zapRequestNote: signedZapRequestNote)
-                    
-                    if response.pr != nil {
-                        if ss.defaultLightningWallet.scheme.contains(":nwc:") && !ss.activeNWCconnectionId.isEmpty {
-                            // NWC WALLET INSTANT ZAPS
-                            if nwcSendPayInvoiceRequest(response.pr!) {
-                                dismiss()
+                    if isNC {
+                        NosturState.shared.nsecBunker?.requestSignature(forEvent: zapRequestNote, whenSigned: { signedZapRequestNote in
+                            Task {
+                                let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount:UInt64(amount * 1000), zapRequestNote: signedZapRequestNote)
+                                
+                                if response.pr != nil {
+                                    if ss.defaultLightningWallet.scheme.contains(":nwc:") && !ss.activeNWCconnectionId.isEmpty {
+                                        // NWC WALLET INSTANT ZAPS
+                                        if nwcSendPayInvoiceRequest(response.pr!) {
+                                            dismiss()
+                                        }
+                                        else {
+                                            errorMessage = String(localized:"There was a problem, could not send sats", comment: "Error message")
+                                        }
+                                    }
+                                    else {
+                                        // OLD STYLE WALLET
+                                        await MainActor.run {
+                                            openURL(URL(string: "\(ss.defaultLightningWallet.scheme)\(response.pr!)")!)
+                                        }
+                                    }
+                                }
+                            }
+                            
+                        })
+                    }
+                    else {
+                        let signedZapRequestNote = try ns.signEvent(zapRequestNote)
+                        
+                        let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount:UInt64(amount * 1000), zapRequestNote: signedZapRequestNote)
+                        
+                        if response.pr != nil {
+                            if ss.defaultLightningWallet.scheme.contains(":nwc:") && !ss.activeNWCconnectionId.isEmpty {
+                                // NWC WALLET INSTANT ZAPS
+                                if nwcSendPayInvoiceRequest(response.pr!) {
+                                    dismiss()
+                                }
+                                else {
+                                    errorMessage = String(localized:"There was a problem, could not send sats", comment: "Error message")
+                                }
                             }
                             else {
-                                errorMessage = String(localized:"There was a problem, could not send sats", comment: "Error message")
-                            }
-                        }
-                        else {
-                         // OLD STYLE WALLET
-                            await MainActor.run {
-                                openURL(URL(string: "\(ss.defaultLightningWallet.scheme)\(response.pr!)")!)
+                             // OLD STYLE WALLET
+                                await MainActor.run {
+                                    openURL(URL(string: "\(ss.defaultLightningWallet.scheme)\(response.pr!)")!)
+                                }
                             }
                         }
                     }

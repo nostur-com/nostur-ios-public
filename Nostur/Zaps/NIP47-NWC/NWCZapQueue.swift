@@ -88,6 +88,7 @@ class Zap {
     }
     var lud16:String?
     var lud06:String?
+    var isNC = false
     var amount:Int64
     var eventId:String?
     var event:Event?
@@ -100,7 +101,8 @@ class Zap {
     var callbackUrl:String? = nil
     var pr:String? = nil // payment request (invoice)
     
-    init(amount:Int64, contact:Contact, eventId:String? = nil, event:Event? = nil, cancellationId:UUID) {
+    init(isNC:Bool = false, amount:Int64, contact:Contact, eventId:String? = nil, event:Event? = nil, cancellationId:UUID) {
+        self.isNC = isNC
         self.queuedAt = .now
         self.amount = amount
         self.contact = contact
@@ -200,28 +202,48 @@ class Zap {
         if (self.supportsZap) {
             DataProvider.shared().bg.perform { [weak self] in
                 guard let self = self else { return }
-                let zapRequestNote = zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, relays: relays)
-                if let signedZapRequestNote = try? NosturState.shared.signEventBg(zapRequestNote) {
-                    
-                    Task {
-                        if let response = try? await LUD16.getInvoice(url:callbackUrl, amount:UInt64(self.amount * 1000), zapRequestNote: signedZapRequestNote) {
-                            
-                            if let pr = response.pr {
-                                self.pr = pr
-                                self.state = .INVOICE_FETCHED
+                if isNC {
+                    let zapRequestNote = zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, relays: relays)
+                    NosturState.shared.nsecBunker?.requestSignature(forEvent: zapRequestNote, whenSigned: { signedEvent in
+                        Task {
+                            if let response = try? await LUD16.getInvoice(url:callbackUrl, amount:UInt64(self.amount * 1000), zapRequestNote: signedEvent) {
+                                
+                                if let pr = response.pr {
+                                    self.pr = pr
+                                    self.state = .INVOICE_FETCHED
+                                }
+                                else {
+                                    L.fetching.notice("problem fetching ln invoice / or signing zap request note. callback: \(self.callbackUrl ?? "")")
+                                    self.error = String(localized:"Could not fetch invoice", comment: "Error message")
+                                    self.state = .ERROR
+                                }
                             }
-                            else {
-                                L.fetching.notice("problem fetching ln invoice / or signing zap request note. callback: \(self.callbackUrl ?? "")")
-                                self.error = String(localized:"Could not fetch invoice", comment: "Error message")
-                                self.state = .ERROR
+                        }
+                    })
+                }
+                else {
+                    let zapRequestNote = zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, relays: relays)
+                    if let signedZapRequestNote = try? NosturState.shared.signEventBg(zapRequestNote) {
+                        Task {
+                            if let response = try? await LUD16.getInvoice(url:callbackUrl, amount:UInt64(self.amount * 1000), zapRequestNote: signedZapRequestNote) {
+                                
+                                if let pr = response.pr {
+                                    self.pr = pr
+                                    self.state = .INVOICE_FETCHED
+                                }
+                                else {
+                                    L.fetching.notice("problem fetching ln invoice / or signing zap request note. callback: \(self.callbackUrl ?? "")")
+                                    self.error = String(localized:"Could not fetch invoice", comment: "Error message")
+                                    self.state = .ERROR
+                                }
                             }
                         }
                     }
-                }
-                else {
-                    L.fetching.notice("problem fetching ln invoice / or signing zap request note. callback: \(self.callbackUrl ?? "")")
-                    self.error = String(localized:"Could not fetch invoice", comment: "Error message")
-                    self.state = .ERROR
+                    else {
+                        L.fetching.notice("problem fetching ln invoice / or signing zap request note. callback: \(self.callbackUrl ?? "")")
+                        self.error = String(localized:"Could not fetch invoice", comment: "Error message")
+                        self.state = .ERROR
+                    }
                 }
             }
         }

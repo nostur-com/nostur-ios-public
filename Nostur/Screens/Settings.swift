@@ -393,7 +393,7 @@ struct Settings: View {
 //                        Text("Replaces any \"nsec1...\" in new posts with \"hunter2\" ")
 //                    }
 //                }
-            if ns.account?.privateKey != nil {
+            if ns.account?.privateKey != nil && !(ns.account?.isNC ?? false) {
                 Section(header: Text("Account", comment: "Heading for section to delete account")) {
                     Button(role: .destructive) {
                         deleteAccountIsShown = true

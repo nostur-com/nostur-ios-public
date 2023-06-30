@@ -61,10 +61,19 @@ struct ReportPostSheet: View {
             }
             ToolbarItem(placement: .primaryAction) {
                 Button(String(localized: "Report.verb", comment: "Button to publish report")) {
-                    guard let signedReport = NosturState.shared.report(nrPost.mainEvent, reportType: reason, note: comment, includeProfile: reportWhat == "Profile+Profile" ) else {
-                        return
+                    guard let account = NosturState.shared.account else { return }
+                    if account.isNC {
+                        let report = EventMessageBuilder.makeReportEvent(pubkey: nrPost.pubkey, eventId: nrPost.id, type: reason, note: comment, includeProfile: reportWhat == "Profile+Profile")
+                        NosturState.shared.nsecBunker?.requestSignature(forEvent: report, whenSigned: { signedEvent in
+                            Unpublisher.shared.publishNow(signedEvent)
+                        })
                     }
-                    Unpublisher.shared.publishNow(signedReport)
+                    else {
+                        guard let signedReport = NosturState.shared.report(nrPost.mainEvent, reportType: reason, note: comment, includeProfile: reportWhat == "Profile+Profile" ) else {
+                            return
+                        }
+                        Unpublisher.shared.publishNow(signedReport)
+                    }
                     dismiss()
                 }
             }

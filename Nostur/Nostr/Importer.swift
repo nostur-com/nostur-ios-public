@@ -106,6 +106,14 @@ class Importer {
                         continue
                     }
                     
+                    if event.kind == .ncMessage {
+                        // Don't save to database, just handle response directly
+                        DispatchQueue.main.async {
+                            sendNotification(.receivedMessage, message)
+                        }
+                        continue
+                    }
+                    
                     if event.kind == .nwcResponse {
                         guard let nwcConnection = self.nwcConnection else { L.og.error("⚡️ NWC response but nwcConnection missing \(event.eventJson())"); continue }
                         guard let pk = nwcConnection.privateKey else { L.og.error("⚡️ NWC response but private key missing \(event.eventJson())"); continue }

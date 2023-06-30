@@ -29,6 +29,8 @@ extension Account {
     @NSManaged public var lastNotificationReceivedAt: Date?
     @NSManaged public var lastProfileReceivedAt: Date?
     
+    @NSManaged public var isNC: Bool
+    
     var followingPublicKeys:Set<String> {
         get {
             let withSelfIncluded = Set([publicKey] + (follows ?? Set<Contact>()).map { $0.pubkey })
@@ -113,6 +115,9 @@ extension Account : Identifiable {
     
     var privateKey:String? {
         get {
+            if isNC {
+                return NIP46SecretManager.shared.getSecret(account: self)
+            }
             return AccountManager.shared.getPrivateKeyHex(pubkey: self.publicKey)
         }
         set(privateKeyHex) {

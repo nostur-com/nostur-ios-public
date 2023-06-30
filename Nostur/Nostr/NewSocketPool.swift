@@ -70,6 +70,7 @@ final class SocketPool: ObservableObject {
         for socket in sockets {
             guard socket.value.read else { continue }
             guard !socket.value.isNWC else { continue }
+            guard !socket.value.isNC else { continue }
             if let lastReceivedMessageAt = socket.value.lastMessageReceivedAt {
                 if Date.now.timeIntervalSince(lastReceivedMessageAt) >= 45 {
                     L.sockets.info("\(socket.value.url) Last message older that 45 seconds, sending ping")
@@ -147,6 +148,30 @@ final class SocketPool: ObservableObject {
         }
     }
     
+    func addNCSocket(sessionPublicKey:String, url:String) -> NewManagedClient {
+        if (!sockets.keys.contains(sessionPublicKey)) {
+            let urlURL:URL = URL(string: url) ?? URL(string:"wss://localhost:123456/invalid_relay_url")!
+            var request = URLRequest(url: urlURL)
+            //             request.setValue(["wamp"].joined(separator: ","), forHTTPHeaderField: "Sec-WebSocket-Protocol")
+            
+            request.timeoutInterval = 15
+            
+            let client = NewWebSocket(url: url)
+            
+            let managedClient = NewManagedClient(relayId: sessionPublicKey, url: url, client:client, read: true, write: true, isNC: true)
+            
+            client.delegate = managedClient
+            
+            managedClient.connect()
+            
+            sockets[sessionPublicKey] = managedClient
+            return managedClient
+        }
+        else {
+            return sockets[sessionPublicKey]!
+        }
+    }
+    
     func socketByUrl(_ url:String) -> NewManagedClient? {
         let managedClient = sockets.filter { relayId, managedClient in
             managedClient.url == url.lowercased()
@@ -188,13 +213,14 @@ final class SocketPool: ObservableObject {
         
         Task(priority: .utility) { [unowned self] in
             for (_, managedClient) in self.sockets {
-                if managedClient.isNWC { // Logic for NWC relay is a bit different, no read/write difference
-                    if !message.onlyForNWCRelay { continue }
+                if managedClient.isNWC || managedClient.isNC { // Logic for N(W)C relay is a bit different, no read/write difference
+                    if managedClient.isNWC && !message.onlyForNWCRelay { continue }
+                    if managedClient.isNC && !message.onlyForNCRelay { continue }
                     
                     if message.type == .REQ {
                         if (!managedClient.isConnected) {
                             if (!managedClient.isConnecting) {
-                                L.og.info("⚡️ sendMessage: not connected yet, connecting to NWC relay \(managedClient.url)")
+                                L.og.info("⚡️ sendMessage: not connected yet, connecting to N(W)C relay \(managedClient.url)")
                                 managedClient.connect()
                             }
                         }
@@ -219,7 +245,7 @@ final class SocketPool: ObservableObject {
                 }
                 
                 else {
-                    if message.onlyForNWCRelay { continue }
+                    if message.onlyForNWCRelay || message.onlyForNCRelay { continue }
                     
                     guard managedClient.read || managedClient.write else {
                         // Skip if relay is not selected for reading or writing events
@@ -239,7 +265,7 @@ final class SocketPool: ObservableObject {
                         if (subscriptionId != nil) {
                             DispatchQueue.main.async {
                                 managedClient.activeSubscriptions.append(subscriptionId!)
-                                L.sockets.info("⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count) onlyForNWCRelay: \(message.onlyForNWCRelay) managedClient.isNWC: \(managedClient.isNWC)")
+                                L.sockets.info("⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count) onlyForNWC: \(message.onlyForNWCRelay) .isNWC: \(managedClient.isNWC) - onlyForNC: \(message.onlyForNCRelay) .isNC: \(managedClient.isNC)")
                             }
                         }
                         L.sockets.debug("⬇️⬇️ REQUESTING: \(message.message)")
@@ -283,12 +309,13 @@ final class SocketPool: ObservableObject {
                     // Skip if relay is not selected for reading or writing events
                     continue
                 }
-                if managedClient.isNWC { // Logic for NWC relay is a bit different, no read/write difference
-                    if !message.onlyForNWCRelay { continue }
+                if managedClient.isNWC || managedClient.isNC { // Logic for N(W)C relay is a bit different, no read/write difference
+                    if managedClient.isNWC && !message.onlyForNWCRelay { continue }
+                    if managedClient.isNC && !message.onlyForNCRelay { continue }
                     if message.type == .REQ {
                         if (!managedClient.isConnected) {
                             if (!managedClient.isConnecting) {
-                                L.og.info("⚡️ sendMessage: not connected yet, connecting to NWC relay \(managedClient.url)")
+                                L.og.info("⚡️ sendMessage: not connected yet, connecting to N(W)C relay \(managedClient.url)")
                                 managedClient.connect()
                             }
                         }
@@ -297,7 +324,7 @@ final class SocketPool: ObservableObject {
                         if (subscriptionId != nil) {
                             DispatchQueue.main.async {
                                 managedClient.activeSubscriptions.append(subscriptionId!)
-                                L.sockets.info("⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count) onlyForNWCRelay: \(message.onlyForNWCRelay) managedClient.isNWC: \(managedClient.isNWC)")
+                                L.sockets.info("⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count) onlyForNWC: \(message.onlyForNWCRelay) .isNWC: \(managedClient.isNWC) -- onlyForNC: \(message.onlyForNCRelay) .isNC: \(managedClient.isNC)")
                             }
                         }
                         L.sockets.debug("⬇️⬇️ REQUESTING: \(message.message)")
@@ -319,7 +346,7 @@ final class SocketPool: ObservableObject {
                     }
                 }
                 else {
-                    if message.onlyForNWCRelay { continue }
+                    if message.onlyForNWCRelay || message.onlyForNCRelay { continue }
                     
                     if message.type == .REQ && managedClient.read { // REQ FOR ALL READ RELAYS
                         if (!managedClient.isConnected) {
@@ -334,7 +361,7 @@ final class SocketPool: ObservableObject {
                         if (subscriptionId != nil) {
                             DispatchQueue.main.async {
                                 managedClient.activeSubscriptions.append(subscriptionId!)
-                                L.sockets.info("⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count) onlyForNWCRelay: \(message.onlyForNWCRelay) managedClient.isNWC: \(managedClient.isNWC)")
+                                L.sockets.info("⬇️⬇️ ADDED SUBSCRIPTION  \(managedClient.url): \(subscriptionId!) - total subs: \(managedClient.activeSubscriptions.count) onlyForNWC: \(message.onlyForNWCRelay) .isNWC: \(managedClient.isNWC) -- onlyForNWC: \(message.onlyForNCRelay) .isNWC: \(managedClient.isNC)")
                             }
                         }
                         L.sockets.debug("⬇️⬇️ REQUESTING: \(String(message.message))")
@@ -419,6 +446,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     var relayId:String
     var url:String
     var isNWC:Bool
+    var isNC:Bool
     var client:NewWebSocket
     
     var _skipped = 0
@@ -498,13 +526,14 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
         }
     }
     
-    init(relayId: String, url: String, client:NewWebSocket, read: Bool = true, write: Bool = false, isNWC:Bool = false) {
+    init(relayId: String, url: String, client:NewWebSocket, read: Bool = true, write: Bool = false, isNWC:Bool = false, isNC:Bool = false) {
         self.relayId = relayId
         self.url = url.lowercased()
         self.read = read
         self.write = write
         self.client = client
         self.isNWC = isNWC
+        self.isNC = isNC
     }
     
     func didReceivePong() {

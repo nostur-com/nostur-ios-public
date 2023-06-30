@@ -29,7 +29,7 @@ class MessageParser {
                 case .EOSE:
                     // Keep these subscriptions open.
                     guard let subscriptionId = message.subscriptionId else { return }
-                    if !["Following","Explore","Notifications","REALTIME-DETAIL","NWC"].contains(subscriptionId) && String(subscriptionId.prefix(5)) != "List-" {
+                    if !["Following","Explore","Notifications","REALTIME-DETAIL","NWC", "NC"].contains(subscriptionId) && String(subscriptionId.prefix(5)) != "List-" {
                         // Send close message to this specific socket, not all.
                         L.sockets.debug("🔌🔌 EOSE received. Sending CLOSE to \(client.url) for \(subscriptionId)")
                         client.sendMessage(ClientMessage.close(subscriptionId: subscriptionId))
@@ -41,7 +41,7 @@ class MessageParser {
                     if (message.type == .EVENT) {
                         guard let nEvent = message.event else { L.sockets.info("🔴🔴 uhh, where is nEvent "); return }
                         
-                        let sameMessageInQueue = self.messageBucket.contains(where: {
+                        let sameMessageInQueue = self.messageBucket.contains(where: { // TODO: Instruments: slow here...
                              nEvent.id == $0.event?.id && $0.type == .EVENT
                         })
                         if (sameMessageInQueue) {

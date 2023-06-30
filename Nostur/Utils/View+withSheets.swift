@@ -123,11 +123,21 @@ private struct WithSheets: ViewModifier {
             }
             .confirmationDialog("It's up to relays and other apps to honor your request", isPresented: $deletePostSheet, titleVisibility: .visible,  actions: {
                 Button("Request delete", role: .destructive) {
+                    guard let account = NosturState.shared.account else { return }
                     guard let deletePost = self.deletePost else { return }
-                    guard let signedDeletion = NosturState.shared.deletePost(deletePost.eventId) else {
-                        return
+                    
+                    if account.isNC {
+                        let deletion = EventMessageBuilder.makeDeleteEvent(eventId: deletePost.eventId)
+                        NosturState.shared.nsecBunker?.requestSignature(forEvent: deletion, whenSigned: { signedEvent in
+                            Unpublisher.shared.publishNow(signedEvent)
+                        })
                     }
-                    Unpublisher.shared.publishNow(signedDeletion)
+                    else {
+                        guard let signedDeletion = NosturState.shared.deletePost(deletePost.eventId) else {
+                            return
+                        }
+                        Unpublisher.shared.publishNow(signedDeletion)
+                    }
                 }
             })
         

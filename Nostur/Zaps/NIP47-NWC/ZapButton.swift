@@ -56,10 +56,12 @@ struct ZapButton: View {
                             GeometryReader { geo in
                                 Color.white.opacity(0.001)
                                     .onTapGesture {
+                                        guard let account = NosturState.shared.account else { return }
                                         guard NosturState.shared.account?.privateKey != nil else {
                                             NosturState.shared.readOnlyAccountSheetShown = true
                                             return
                                         }
+                                        let isNC = account.isNC
                                         let impactMed = UIImpactFeedbackGenerator(style: .medium)
                                         impactMed.impactOccurred()
                                         sendNotification(.lightningStrike, LightningStrike(location:geo.frame(in: .global).origin, amount:ss.defaultZapAmount))
@@ -71,7 +73,7 @@ struct ZapButton: View {
                                         
                                         DataProvider.shared().bg.perform {
                                             NWCRequestQueue.shared.ensureNWCconnection()
-                                            let zap = Zap(amount: Int64(ss.defaultZapAmount), contact: contact, eventId: nrPost.id, event: nrPost.event, cancellationId: cancellationId!)
+                                            let zap = Zap(isNC:isNC, amount: Int64(ss.defaultZapAmount), contact: contact, eventId: nrPost.id, event: nrPost.event, cancellationId: cancellationId!)
                                             NWCZapQueue.shared.sendZap(zap)
                                             nrPost.event.zapState = .initiated
                                         }

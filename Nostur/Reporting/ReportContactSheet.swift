@@ -43,10 +43,19 @@ struct ReportContactSheet: View {
             }
             ToolbarItem(placement: .primaryAction) {
                 Button(String(localized: "Report.verb", comment: "Button to publish report")) {
-                    guard let signedReport = NosturState.shared.reportContact(pubkey: contact.pubkey, reportType: reason, note: comment) else {
-                        return
+                    guard let account = NosturState.shared.account else { return }
+                    if account.isNC {
+                        let report = EventMessageBuilder.makeReportContact(pubkey: contact.pubkey, type: reason, note: comment)
+                        NosturState.shared.nsecBunker?.requestSignature(forEvent: report, whenSigned: { signedEvent in
+                            Unpublisher.shared.publishNow(signedEvent)
+                        })
                     }
-                    Unpublisher.shared.publishNow(signedReport)
+                    else {
+                        guard let signedReport = NosturState.shared.reportContact(pubkey: contact.pubkey, reportType: reason, note: comment) else {
+                            return
+                        }
+                        Unpublisher.shared.publishNow(signedReport)
+                    }
                     dismiss()
                 }
             }

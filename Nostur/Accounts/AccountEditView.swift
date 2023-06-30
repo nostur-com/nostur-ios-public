@@ -112,7 +112,7 @@ struct AccountEditView: View {
                                     }
                             }
                             
-                            if (!shouldDisable && account.nsec != nil) {
+                            if (!shouldDisable && account.nsec != nil) && !account.isNC {
                                 HStack {
                                     Text("**PRIVATE KEY:** \(String(account.nsec!.prefix(7)))∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗∗", comment: "Field that shows a partial private key").lineLimit(1)
                                     Spacer()

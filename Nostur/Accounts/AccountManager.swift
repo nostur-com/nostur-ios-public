@@ -217,15 +217,28 @@ func publishMetadataEvent(_ account:Account) throws {
         
         var newKind0Event = NEvent(content: setMetadataContent)
         
-        let newKind0EventSigned = try newKind0Event.sign(keys)
-        
-        L.og.debug("Going to publish \(newKind0EventSigned.wrappedEventJson())")
-        
-        _ = Event.saveEventFromMain(event: newKind0EventSigned)
-        Contact.saveOrUpdateContact(event: newKind0EventSigned)
-        DataProvider.shared().bgSave()
-        // broadcast to relays
-        Unpublisher.shared.publishNow(newKind0EventSigned)
+        if account.isNC {
+            NosturState.shared.nsecBunker?.requestSignature(forEvent: newKind0Event, whenSigned: { signedEvent in
+                L.og.debug("Going to publish \(signedEvent.wrappedEventJson())")
+                _ = Event.saveEventFromMain(event: signedEvent)
+                Contact.saveOrUpdateContact(event: signedEvent)
+                DataProvider.shared().bgSave()
+                // broadcast to relays
+                Unpublisher.shared.publishNow(signedEvent)
+            })
+        }
+        else {
+            guard let signedEvent = try? newKind0Event.sign(keys) else {
+                L.og.error("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
+                return
+            }
+            L.og.debug("Going to publish \(signedEvent.wrappedEventJson())")
+            _ = Event.saveEventFromMain(event: signedEvent)
+            Contact.saveOrUpdateContact(event: signedEvent)
+            DataProvider.shared().bgSave()
+            // broadcast to relays
+            Unpublisher.shared.publishNow(signedEvent)
+        }
     }
     catch {
         L.og.error("🔴🔴🔴🔴 Could not sign/save/broadcast event 🔴🔴🔴🔴")

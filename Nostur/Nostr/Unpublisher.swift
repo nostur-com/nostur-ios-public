@@ -91,6 +91,12 @@ class Unpublisher {
             sp.sendMessage(ClientMessage(onlyForNWCRelay: true, message: nEvent.wrappedEventJson()))
             return
         }
+//        Disabled: Don't go through Unpublisher, not needed for NC messages
+//        if nEvent.kind == .ncMessage {
+//            L.og.info("⚡️ Sending .ncMessage to NC relay")
+//            sp.sendMessage(ClientMessage(onlyForNCRelay: true, message: nEvent.wrappedEventJson()))
+//            return
+//        }
         // Always save event first
         if try! Event.fetchEvent(id: nEvent.id, context: viewContext) == nil {
             let bgContext = DataProvider.shared().bg

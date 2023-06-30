@@ -81,6 +81,7 @@ public enum NEventKind: Codable, Equatable {
     case nwcInfo
     case nwcRequest
     case nwcResponse
+    case ncMessage
     case badgeDefinition
     case badgeAward
     case profileBadges
@@ -105,6 +106,7 @@ public enum NEventKind: Codable, Equatable {
         case 13194: self = .nwcInfo
         case 23194: self = .nwcRequest
         case 23195: self = .nwcResponse
+        case 24133: self = .ncMessage
         case 30009: self = .badgeDefinition
         case     8: self = .badgeAward
         case 30008: self = .profileBadges
@@ -131,6 +133,7 @@ public enum NEventKind: Codable, Equatable {
         case .nwcInfo:              return 13194
         case .nwcRequest:           return 23194
         case .nwcResponse:          return 23195
+        case .ncMessage:            return 24133
         case .badgeDefinition:      return 30009
         case .badgeAward:           return 8
         case .profileBadges:        return 30008
@@ -241,6 +244,20 @@ struct NEvent: Codable {
         self.tags = []
         self.publicKey = ""
         self.signature = ""
+    }
+    
+    mutating func withId() -> NEvent {
+
+        let serializableEvent = NSerializableEvent(publicKey: self.publicKey, createdAt: self.createdAt, kind:self.kind, tags: self.tags, content: self.content)
+
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .withoutEscapingSlashes
+        let serializedEvent = try! encoder.encode(serializableEvent)
+        let sha256Serialized = SHA256.hash(data: serializedEvent)
+
+        self.id = String(bytes:sha256Serialized.bytes)
+        
+        return self
     }
 
     mutating func sign(_ keys:NKeys) throws -> NEvent {

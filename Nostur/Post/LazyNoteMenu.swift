@@ -179,7 +179,9 @@ struct LazyNoteMenuSheet: View {
                 if (NosturState.shared.activeAccountPublicKey == nrPost.pubkey) {
                     Button {
                         dismiss()
-                        sendNotification(.requestDeletePost, nrPost.id)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
+                            sendNotification(.requestDeletePost, nrPost.id)
+                        }
                     } label: {
                         Label(String(localized:"Delete", comment:"Post context menu action to Delete a post"), systemImage: "trash")
                     }

@@ -231,12 +231,14 @@ struct SideBar: View {
                 } label: {
                     Label(String(localized:"Bookmarks", comment:"Side bar navigation button"), systemImage: "bookmark")
                 }
-                Button {
-                    if selectedTab != "Main" { selectedTab = "Main" }
-                    navigateToOnMain(ViewPath.Badges)
-                    sm.showSidebar = false
-                } label: {
-                    Label(String(localized:"Badges", comment:"Side bar navigation button"), systemImage: "medal")
+                if !account.isNC {
+                    Button {
+                        if selectedTab != "Main" { selectedTab = "Main" }
+                        navigateToOnMain(ViewPath.Badges)
+                        sm.showSidebar = false
+                    } label: {
+                        Label(String(localized:"Badges", comment:"Side bar navigation button"), systemImage: "medal")
+                    }
                 }
                 Button {
                     if selectedTab != "Main" { selectedTab = "Main" }
@@ -252,10 +254,12 @@ struct SideBar: View {
                 } label: {
                     Label(String(localized:"Block list", comment:"Side bar navigation button"), systemImage: "person.badge.minus")
                 }
-                Button {
-                    showAnySigner = true
-                } label: {
-                    Label(String(localized:"Signer", comment:"Side bar navigation button"), systemImage: "signature")
+                if !account.isNC {
+                    Button {
+                        showAnySigner = true
+                    } label: {
+                        Label(String(localized:"Signer", comment:"Side bar navigation button"), systemImage: "signature")
+                    }
                 }
 //                Button {} label: {
 //                    Label(String(localized:About", comment:"Side bar navigation button"), systemImage: "info")
@@ -294,7 +298,7 @@ struct SideBar: View {
         .actionSheet(item: $logoutAccount) { account in
                     ActionSheet(
                         title: Text("Confirm log out", comment: "Action sheet title"),
-                        message: account.privateKey != nil
+                        message: !account.isNC && account.privateKey != nil
                         ? Text("""
                                  Make sure you have a back-up of your private key (nsec)
                                  Nostur cannot recover your account without it
@@ -303,7 +307,7 @@ struct SideBar: View {
                                  Account: @\(account.name) / \(account.display_name)
                                  """, comment: "informational message showing account name(s)")
                         ,
-                        buttons: account.privateKey != nil ? [
+                        buttons: !account.isNC && account.privateKey != nil ? [
                             .destructive(Text("Log out", comment: "Log out button"), action: {
                                 ns.logout(account)
                                 sm.showSidebar = false

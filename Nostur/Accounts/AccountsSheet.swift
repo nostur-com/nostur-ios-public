@@ -62,7 +62,7 @@ struct AccountsSheet: View {
             .actionSheet(item: $logoutAccount) { account in
                 ActionSheet(
                     title: Text("Confirm log out", comment: "Title of sheet that asks the user to confirm logout action"),
-                    message: account.privateKey != nil
+                    message: !account.isNC && account.privateKey != nil
                     ? Text("""
                                      Make sure you have a back-up of your private key (nsec)
                                      Nostur cannot recover your account without it
@@ -71,7 +71,7 @@ struct AccountsSheet: View {
                                      Account: @\(account.name) / \(account.display_name)
                                      """, comment: "Informational text during logout action, showing Account name/handle")
                     ,
-                    buttons: account.privateKey != nil
+                    buttons: !account.isNC && account.privateKey != nil
                     ? [
                         .destructive(Text("Log out", comment: "Button to log out"), action: {
                             ns.logout(account)
@@ -119,6 +119,13 @@ struct AccountRow: View {
                             Text("Read only", comment: "Label to indicate this a Read Only account").font(.system(size: 12.0))
                                 .padding(.horizontal, 8)
                                 .background(.blue)
+                                .foregroundColor(.white)
+                                .cornerRadius(8)
+                        }
+                        if (account.isNC) {
+                            Text(verbatim: "nsecBunker").font(.system(size: 12.0))
+                                .padding(.horizontal, 8)
+                                .background(.indigo)
                                 .foregroundColor(.white)
                                 .cornerRadius(8)
                         }

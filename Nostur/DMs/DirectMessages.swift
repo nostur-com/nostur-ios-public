@@ -5,7 +5,13 @@ struct DirectMessagesContainer: View {
     
     var body: some View {
         if let account = ns.account {
-            DirectMessages(pubkey: account.publicKey, blockedPubkeys: account.blockedPubkeys_)
+            if account.isNC {
+                Text("Direct Messages using a nsecBunker login are not available yet")
+                    .centered()
+            }
+            else {
+                DirectMessages(pubkey: account.publicKey, blockedPubkeys: account.blockedPubkeys_)
+            }
         }
         else {
             EmptyView()

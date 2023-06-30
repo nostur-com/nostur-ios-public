@@ -47,7 +47,8 @@ public final class NewPostModel: ObservableObject {
     }
     
     public func sendNow(replyTo:Event? = nil, quotingEvent:Event? = nil, dismiss:DismissAction) {
-        guard NosturState.shared.account?.privateKey != nil else { NosturState.shared.readOnlyAccountSheetShown = true; return }
+        guard let account = NosturState.shared.account else { return }
+        guard account.privateKey != nil else { NosturState.shared.readOnlyAccountSheetShown = true; return }
         var nEvent = nEvent ?? NEvent(content: "")
         nEvent.createdAt = NTimestamp.init(date: Date())
         if (!pastedImages.isEmpty) {
@@ -85,18 +86,24 @@ public final class NewPostModel: ObservableObject {
                         if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
                             nEvent.content = replaceNsecWithHunter2(nEvent.content)
                         }
-                        if let signedEvent = try? NosturState.shared.signEvent(nEvent) {
-                            Unpublisher.shared.publishNow(signedEvent)
-                            
-                            if let replyTo {
-                                sendNotification(.postAction, PostActionNotification(type: .replied, eventId: replyTo.id))
-                            }
-                            if let quotingEvent {
-                                sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: quotingEvent.id))
-                            }
-                            
-                            dismiss()
+                        
+                        if account.isNC {
+                            NosturState.shared.nsecBunker?.requestSignature(forEvent: nEvent, whenSigned: { signedEvent in
+                                Unpublisher.shared.publishNow(signedEvent)
+                            })
                         }
+                        else if let signedEvent = try? NosturState.shared.signEvent(nEvent) {
+                            Unpublisher.shared.publishNow(signedEvent)
+                        }
+                        
+                        if let replyTo {
+                            sendNotification(.postAction, PostActionNotification(type: .replied, eventId: replyTo.id))
+                        }
+                        if let quotingEvent {
+                            sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: quotingEvent.id))
+                        }
+                        
+                        dismiss()
                     }
                 })
                 .store(in: &subscriptions)
@@ -116,16 +123,21 @@ public final class NewPostModel: ObservableObject {
             if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
                 nEvent.content = replaceNsecWithHunter2(nEvent.content)
             }
-            if let signedEvent = try? NosturState.shared.signEvent(nEvent) {
-                Unpublisher.shared.publishNow(signedEvent)
-                if let replyTo {
-                    sendNotification(.postAction, PostActionNotification(type: .replied, eventId: replyTo.id))
-                }
-                if let quotingEvent {
-                    sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: quotingEvent.id))
-                }
-                dismiss()
+            if account.isNC {
+                NosturState.shared.nsecBunker?.requestSignature(forEvent: nEvent, whenSigned: { signedEvent in
+                    Unpublisher.shared.publishNow(signedEvent)
+                })
             }
+            else if let signedEvent = try? NosturState.shared.signEvent(nEvent) {
+                Unpublisher.shared.publishNow(signedEvent)
+            }
+            if let replyTo {
+                sendNotification(.postAction, PostActionNotification(type: .replied, eventId: replyTo.id))
+            }
+            if let quotingEvent {
+                sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: quotingEvent.id))
+            }
+            dismiss()
         }
     }
     

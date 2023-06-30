@@ -88,10 +88,29 @@ struct FooterFragmentView: View {
                             NosturState.shared.readOnlyAccountSheetShown = true
                             return
                         }
-                        if let signedEvent = NosturState.shared.likePost(nrPost.mainEvent) {
-                            unpublishLikeId = Unpublisher.shared.publish(signedEvent)
-                            nrPost.like()
+                        
+                        guard let account = NosturState.shared.account else { return }
+                        let impactMed = UIImpactFeedbackGenerator(style: .medium)
+                        impactMed.impactOccurred()
+                        
+                //      1. create kind 7 event based on kind 1 event:
+                        let likeEvent = EventMessageBuilder.makeReactionEvent(reactingTo: nrPost.mainEvent)
+                //      2. sign that event with account keys
+                        nrPost.mainEvent.likesCount += 1
+                        
+                        if account.isNC {
+                            NosturState.shared.nsecBunker?.requestSignature(forEvent: likeEvent, whenSigned: { signedEvent in
+                                unpublishLikeId = Unpublisher.shared.publish(signedEvent)
+                            })
                         }
+                        else {
+                            guard let signedEvent = try? NosturState.shared.signEvent(likeEvent) else {
+                                L.og.error("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
+                                return
+                            }
+                            unpublishLikeId = Unpublisher.shared.publish(signedEvent)
+                        }
+                        nrPost.like()                        
                     }
                 }
                 Spacer()

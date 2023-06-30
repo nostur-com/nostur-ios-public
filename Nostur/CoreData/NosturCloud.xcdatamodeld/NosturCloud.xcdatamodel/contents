@@ -7,6 +7,7 @@
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="display_name" attributeType="String" defaultValueString=""/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isNC" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="lastFollowerCreatedAt" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="lastNotificationReceivedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="lastProfileReceivedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
