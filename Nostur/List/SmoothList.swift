@@ -397,7 +397,7 @@ struct SmoothList: UIViewControllerRepresentable {
             }
             if scrollView.contentOffset.y > 150 {
                 DataProvider.shared().bg.perform { [weak self] in
-                    self?.lvm.isAtTop = false
+                    self?.lvm.isAtTop = false // TODO: Data race in Nostur.LVM.isAtTop.setter : Swift.Bool at 0x112b87480 (Thread 448)
                 }
             }
             else {

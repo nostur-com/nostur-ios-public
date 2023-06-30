@@ -281,7 +281,7 @@ class LVM: NSObject, ObservableObject {
             // IF AT TOP, TRUNCATE:
             
             let dropCount = max(0, nrPostLeafsWithNew.count - LVM_MAX_VISIBLE) // Drop any above LVM_MAX_VISIBLE
-            if self.isAtTop && dropCount > 5 { // No need to drop all the time, do in batches of 5, or 10?
+            if self.isAtTop && dropCount > 5 { // No need to drop all the time, do in batches of 5, or 10? // Data race in Nostur.LVM.isAtTop.setter : Swift.Bool at 0x112b87480 (Thread 1)
                 let nrPostLeafsWithNewTruncated = nrPostLeafsWithNew.dropLast(dropCount)
                 self.nrPostLeafs = Array(nrPostLeafsWithNewTruncated)
                 L.lvm.info("\(self.id) \(self.name) safeInsert() dropped \(dropCount) from end ");

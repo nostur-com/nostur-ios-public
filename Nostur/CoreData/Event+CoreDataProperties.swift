@@ -296,7 +296,7 @@ extension Event {
         // Web of Trust filter
         if WOT_FILTER_ENABLED() {
             if inWoT { return false }
-            L.og.debug("🕸️🕸️ WebOfTrust: Filtered by WoT: kind: \(self.kind) id: \(self.id): \(self.content ?? "")")
+//            L.og.debug("🕸️🕸️ WebOfTrust: Filtered by WoT: kind: \(self.kind) id: \(self.id): \(self.content ?? "")")
             return true
         }
         
@@ -613,6 +613,10 @@ extension Event {
     
     var fastPs:[(String, String, String?)] {
         fastTags.filter { $0.0 == "p" }
+    }
+    
+    var fastEs:[(String, String, String?)] {
+        fastTags.filter { $0.0 == "e" }
     }
     
     
