@@ -134,12 +134,12 @@ struct AccountEditView: View {
                             .opacity(0.85)
                     }
                 }
-                Button {
-                    loadFromRelays()
-                } label: {
-                    Text("Load info and contacts from relays")
-                        .foregroundColor(Color.primary)
-                }
+//                Button {
+//                    loadFromRelays()
+//                } label: {
+//                    Text("Load info and contacts from relays")
+//                        .foregroundColor(Color.primary)
+//                }
             }
         }
         .background(Color(.systemGroupedBackground))
