@@ -96,7 +96,7 @@ class RelayCensorshipResistor {
                               prefix: "3-10002",
                               reqCommand: { taskId in
             req(RM.getRelays(pubkeys: Array(pubkeys), subscriptionId: taskId))
-        }, processResponseCommand: {  [weak self] taskId in
+        }, processResponseCommand: {  [weak self] taskId, _ in
             guard let self = self else { return }
             L.og.info("📡 processResponseCommand")
             self.getKind3or10002s()

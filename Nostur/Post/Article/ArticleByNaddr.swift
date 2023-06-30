@@ -44,7 +44,7 @@ struct ArticleByNaddr: View {
                                         reqCommand: { taskId in
                                             req(RM.getArticle(pubkey: pubkey, kind:Int(kind), definition:definition, subscriptionId: taskId))
                                         },
-                                        processResponseCommand: { taskId in
+                                        processResponseCommand: { taskId, _ in
                                             DataProvider.shared().bg.perform {
                                                 if let article = try? Event.fetchReplacableEvent(kind,
                                                                                                  pubkey: pubkey,

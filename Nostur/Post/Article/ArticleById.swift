@@ -32,7 +32,7 @@ struct ArticleById: View {
                                     reqCommand: { taskId in
                                         req(RM.getEvent(id: id, subscriptionId: taskId))
                                     },
-                                    processResponseCommand: { taskId in
+                                    processResponseCommand: { taskId, _ in
                                         DataProvider.shared().bg.perform {
                                             if let article = try? Event.fetchEvent(id: id, context: DataProvider.shared().bg) {
                                                 let article = NRPost(event: article)

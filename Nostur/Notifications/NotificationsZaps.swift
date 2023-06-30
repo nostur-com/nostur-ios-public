@@ -225,7 +225,7 @@ struct NotificationsZaps: View {
                     since: NTimestamp(timestamp: Int(fl.events.first?.created_at ?? 0))
                 ))
             },
-            processResponseCommand: { (taskId) in
+            processResponseCommand: { (taskId, _) in
                 L.og.debug("🟠🟠🟠 processResponseCommand \(taskId)")
                 let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
                 fl.predicate = NSPredicate(

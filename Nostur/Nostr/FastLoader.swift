@@ -250,10 +250,24 @@ class Backlog {
                     guard let self = self else { return }
                     let importedNotification = notification.object as! ImportedNotification
                     let reqTasks = self.tasks(with: importedNotification.subscriptionIds)
-                    reqTasks.forEach { task in
+                    for task in reqTasks {
                         task.process()
+//                        self.remove(task)
                     }
                 })
+                .store(in: &subscriptions)
+            
+            receiveNotification(.receivedMessage)
+                .sink { [weak self] notification in
+                    guard let self = self else { return }
+                    let receivedMessage = notification.object as! RelayMessage
+                    guard let subscriptionId = receivedMessage.subscriptionId else { return }
+                    let reqTasks = self.tasks(with: [subscriptionId])
+                    for task in reqTasks {
+                        task.process(receivedMessage)
+//                        self.remove(task)
+                    }
+                }
                 .store(in: &subscriptions)
         }
     }
@@ -312,15 +326,15 @@ class ReqTask: Identifiable, Hashable {
     // Use full subscriptionId instead of prefix to have multiple listeners for a task
     // eg. Onboarding + InstantFeed, both having a task with exact subscriptionId: "pubkey-3"
     // So both can listen for "pubkey-3" notifications. 
-    init(debounceTime:Double = 0.1, prefix:String? = nil, reqCommand: @escaping (_: String) -> Void, processResponseCommand: @escaping (_: String) -> Void, timeoutCommand: ( (_: String) -> Void)? = nil) {
+    init(debounceTime:Double = 0.1, prefix:String? = nil, reqCommand: @escaping (_: String) -> Void, processResponseCommand: @escaping (_: String, _:RelayMessage?) -> Void, timeoutCommand: ( (_: String) -> Void)? = nil) {
         self.prefix = prefix
         self.reqCommand = reqCommand
         self.timeoutCommand = timeoutCommand
         processSubject
             .debounce(for: RunLoop.SchedulerTimeType.Stride(debounceTime), scheduler: RunLoop.main)
-            .sink { [weak self] _ in
+            .sink { [weak self] message in
                 guard let self = self else { return }
-                processResponseCommand(self.subscriptionId)
+                processResponseCommand(self.subscriptionId, message)
             }
             .store(in: &subscriptions)
     }
@@ -330,10 +344,10 @@ class ReqTask: Identifiable, Hashable {
     }
     
     var subscriptions = Set<AnyCancellable>()
-    var processSubject = PassthroughSubject<Void, Never>()
+    var processSubject = PassthroughSubject<RelayMessage?, Never>()
     
-    public func process() {
-        self.processSubject.send()
+    public func process(_ message:RelayMessage? = nil) {
+        self.processSubject.send(message)
     }
     
     public func onTimeout() {

@@ -136,7 +136,7 @@ class NewOnboardingTracker {
                 Importer.shared.existingIds.removeAll() // Because else we dont fetch new info... if we just fetched it before, maybe during onboarding
                 req(RM.getUserMetadataAndContactList(pubkey: pubkey, subscriptionId: taskId))
             },
-            processResponseCommand: { [weak self] (taskId) in
+            processResponseCommand: { [weak self] (taskId, _) in
                 guard let self = self else { return }
                 L.onboarding.info("\(taskId) ✈️✈️ fetchProfileAndFollowersTask.processResponseCommand()")
                 self.bg.perform { [weak self] in
@@ -230,7 +230,7 @@ class NewOnboardingTracker {
                 L.onboarding.info("\(taskId) ✈️✈️ fetchProfilesOfFollowersTask.reqCommand()")
                 req(RM.getUserMetadata(pubkeys: pTags, subscriptionId: taskId))
             },
-            processResponseCommand: { [weak self] (taskId) in
+            processResponseCommand: { [weak self] (taskId, _) in
                 guard let self = self else { return }
                 L.onboarding.info("\(taskId) ✈️✈️ fetchProfilesOfFollowersTask.processResponseCommand()")
                 self.fetchedProfilesOfFollowersTask = true

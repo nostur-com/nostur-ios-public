@@ -82,7 +82,7 @@ class InstantFeed {
                     let getContactListTask = ReqTask(prefix: "CLT-") { taskId in
                         L.og.notice("🟪 Fetching clEvent from relays")
                         reqP(RM.getAuthorContactsList(pubkey: pubkey, subscriptionId: taskId))
-                    } processResponseCommand: { taskId in
+                    } processResponseCommand: { taskId, _ in
                         self.bg.perform { [weak self] in
                             guard let self = self else { return }
                             L.og.notice("🟪 Processing clEvent response from relays")
@@ -122,7 +122,7 @@ class InstantFeed {
                 let getFollowingEventsTask = ReqTask(prefix: "GFET-") { taskId in
                     L.og.notice("🟪 Fetching posts from relays using \(pubkeys.count) pubkeys")
                     reqP(RM.getFollowingEvents(pubkeys: Array(pubkeys), limit: 200, subscriptionId: taskId))
-                } processResponseCommand: { taskId in
+                } processResponseCommand: { taskId, _ in
                     self.bg.perform { [weak self] in
                         guard let self = self else { return }
                         let fr = Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: 0)

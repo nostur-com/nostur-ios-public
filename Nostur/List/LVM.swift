@@ -349,7 +349,7 @@ class LVM: NSObject, ObservableObject {
                     req(RM.getEvents(ids: danglerIds, subscriptionId: taskId))
                 }
             },
-            processResponseCommand: { [weak self] (taskId) in
+            processResponseCommand: { [weak self] (taskId, _) in
                 guard let self = self else { return }
                 L.lvm.info("😈😈 processResponseCommand: \(self.id) \(self.name)/\(self.pubkey?.short ?? "") - \(taskId) dng: \(danglers.count)")
                 let lastCreatedAt = self.nrPostLeafs.last?.created_at ?? 0 // SHOULD CHECK ONLY LEAFS BECAUSE ROOTS CAN BE VERY OLD

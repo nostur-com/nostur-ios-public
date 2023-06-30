@@ -129,7 +129,7 @@ struct Search: View {
                                     reqCommand: { taskId in
                                         req(RM.getArticle(pubkey: pubkey, kind:Int(kind), definition:definition, subscriptionId: taskId))
                                     },
-                                    processResponseCommand: { taskId in
+                                    processResponseCommand: { taskId, _ in
                                         DataProvider.shared().bg.perform {
                                             if let article = try? Event.fetchReplacableEvent(kind,
                                                                                              pubkey: pubkey,
@@ -198,7 +198,7 @@ struct Search: View {
                         
                         let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
                             req(RM.getEvent(id: noteHex, subscriptionId: taskId))
-                        }, processResponseCommand: { taskId in
+                        }, processResponseCommand: { taskId, _ in
                             let fr = Event.fetchRequest()
                             fr.predicate = NSPredicate(format: "id = %@", noteHex)
                             fr.fetchLimit = 1
@@ -273,7 +273,7 @@ struct Search: View {
                             hashtag: String(searchTrimmed.dropFirst(1)),
                             subscriptionId: taskId
                         ))
-                    }, processResponseCommand: { taskId in
+                    }, processResponseCommand: { taskId, _ in
                         let fr = Event.fetchRequest()
                         fr.predicate = NSPredicate(format: "kind == 1 && tagsSerialized CONTAINS %@", serializedT(String(searchTrimmed.dropFirst(1))))
                         fr.fetchLimit = 150
@@ -312,7 +312,7 @@ struct Search: View {
                         
                         let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
                             req(RM.getEvent(id: key.hexString, subscriptionId: taskId))
-                        }, processResponseCommand: { taskId in
+                        }, processResponseCommand: { taskId, _ in
                             let fr = Event.fetchRequest()
                             fr.predicate = NSPredicate(format: "id = %@", key.hexString)
                             fr.fetchLimit = 1
@@ -355,7 +355,7 @@ struct Search: View {
                     
                     let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
                         req(RM.getEvent(id: searchTrimmed, subscriptionId: taskId))
-                    }, processResponseCommand: { taskId in
+                    }, processResponseCommand: { taskId, _ in
                         let fr = Event.fetchRequest()
                         fr.predicate = NSPredicate(format: "id = %@", searchTrimmed)
                         fr.fetchLimit = 1

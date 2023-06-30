@@ -86,7 +86,7 @@ class WebOfTrust: ObservableObject {
                 L.sockets.info("🕸️🕸️ WebOfTrust: Fetching contact lists for \(pubkeys.count) contacts")
                 req(RM.getAuthorContactsLists(pubkeys: Array(pubkeys), subscriptionId: taskId))
             },
-            processResponseCommand: { [weak self] (taskId) in
+            processResponseCommand: { [weak self] (taskId, _) in
                 guard let self = self else { return }
                 L.sockets.debug("🕸️🕸️ WebOfTrust: Received contact list(s)")
                 self.generateWoT()

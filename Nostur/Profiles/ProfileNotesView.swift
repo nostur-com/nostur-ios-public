@@ -57,7 +57,7 @@ struct ProfileNotesView: View {
                     // Just get max 250 most recent events:
                     req(RM.getAuthorNotes(pubkey: pubkey, limit:fetchNewerLimit, subscriptionId: taskId))
                 },
-                processResponseCommand: { (taskId) in
+                processResponseCommand: { (taskId, _) in
                     L.og.debug("\(taskId) 🟠🟠🟠 processResponseCommand")
                     let currentNewestCreatedAt = fl.nrPosts.first?.created_at ?? 0
                     fl.predicate = NSPredicate(
