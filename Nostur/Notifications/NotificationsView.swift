@@ -71,11 +71,11 @@ struct NotificationsView: View {
             
             switch (tab) {
                 case "Posts":
-                    NotificationsPosts(pubkey: account.publicKey, mutedRootIds: account.mutedRootIds_, blockedPubkeys: account.blockedPubkeys_)
+                    NotificationsPosts(pubkey: account.publicKey)
                 case "Reactions":
-                    NotificationsReactions(pubkey: account.publicKey, blockedPubkeys: account.blockedPubkeys_)
+                    NotificationsReactions()
                 case "Zaps":
-                    NotificationsZaps(pubkey: account.publicKey, blockedPubkeys: account.blockedPubkeys_)
+                    NotificationsZaps(pubkey: account.publicKey)
                 default:
                     EmptyView()
             }

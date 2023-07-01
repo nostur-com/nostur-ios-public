@@ -3,9 +3,6 @@ import CoreData
 import Combine
 
 struct NotificationsReactions: View {
-
-    let pubkey:String
-    let blockedPubkeys:[String]
     
     @StateObject var fl = FastLoader()
     @State var didLoad = false
@@ -58,22 +55,23 @@ struct NotificationsReactions: View {
                 VStack {
                     if !myNotesReactedToAsNRPosts.isEmpty {
                         Button("Show more") {
+                            guard let account = NosturState.shared.account else { return }
                             fl.predicate = NSPredicate(
                                 format: "NOT pubkey IN %@ AND kind == 7 AND reactionTo.pubkey == %@",
-                                    blockedPubkeys,
-                                    pubkey)
+                                account.blockedPubkeys_,
+                                account.publicKey)
         //                    fl.offset = (fl.events.count - 1)
                             fl.loadMore(500)
                             if let until = fl.events.last?.created_at {
                                 req(RM.getMentions(
-                                    pubkeys: [pubkey],
+                                    pubkeys: [account.publicKey],
                                     kinds: [7],
                                     limit: 500,
                                     until: NTimestamp(timestamp: Int(until))
                                 ))
                             }
                             else {
-                                req(RM.getMentions(pubkeys: [pubkey], kinds: [7], limit:500))
+                                req(RM.getMentions(pubkeys: [account.publicKey], kinds: [7], limit:500))
                             }
                         }
                         .padding(.bottom, 40)
@@ -93,13 +91,14 @@ struct NotificationsReactions: View {
             load()
         }
         .onReceive(receiveNotification(.newReactions)) { _ in
+            guard let account = NosturState.shared.account else { return }
             let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
             fl.predicate = NSPredicate(
                 format:
                     "created_at >= %i AND NOT pubkey IN %@ AND kind == 7 AND reactionTo.pubkey == %@",
                     currentNewestCreatedAt,
-                    blockedPubkeys,
-                    pubkey
+                account.blockedPubkeys_,
+                account.publicKey
             )
             fl.loadNewerEvents(5000, taskId:"newReactions")
         }
@@ -127,6 +126,7 @@ struct NotificationsReactions: View {
     @State var subscriptions = Set<AnyCancellable>()
     
     func load() {
+        guard let account = NosturState.shared.account else { return }
         didLoad = true
         fl.$events
             .sink { events in
@@ -147,8 +147,8 @@ struct NotificationsReactions: View {
         fl.nrPostTransform = false
         fl.predicate = NSPredicate(
             format: "NOT pubkey IN %@ AND kind == 7 AND reactionTo.pubkey == %@",
-                blockedPubkeys,
-                pubkey
+            account.blockedPubkeys_,
+            account.publicKey
             )
         fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         
@@ -168,7 +168,7 @@ struct NotificationsReactions: View {
         let fetchNewerTask = ReqTask(
             reqCommand: { (taskId) in
                 req(RM.getMentions(
-                    pubkeys: [pubkey],
+                    pubkeys: [account.publicKey],
                     kinds: [7],
                     limit: 5000,
                     subscriptionId: taskId,
@@ -181,8 +181,8 @@ struct NotificationsReactions: View {
                 fl.predicate = NSPredicate(
                     format: "created_at >= %i AND NOT pubkey IN %@ AND kind == 7 AND reactionTo.pubkey == %@",
                         currentNewestCreatedAt,
-                        blockedPubkeys,
-                        pubkey
+                    account.blockedPubkeys_,
+                    account.publicKey
                   )
                 fl.loadNewerEvents(5000, taskId: taskId)
             })
@@ -194,9 +194,10 @@ struct NotificationsReactions: View {
     }
     
     func fixReactionsWithMissingRelation() {
+        guard let account = NosturState.shared.account else { return }
         let mr = Event.fetchRequest()
         mr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        mr.predicate = NSPredicate(format: "kind == 7 AND tagsSerialized CONTAINS %@ AND reactionTo == nil", serializedP(pubkey))
+        mr.predicate = NSPredicate(format: "kind == 7 AND tagsSerialized CONTAINS %@ AND reactionTo == nil", serializedP(account.publicKey))
 
         Task.detached(priority: .medium) {
             let ctx = DataProvider.shared().bg
@@ -290,7 +291,7 @@ struct NotificationsV_Previews: PreviewProvider {
             pe.loadRepliesAndReactions()
         }) {
             VStack {
-                NotificationsReactions(pubkey: pubkey, blockedPubkeys: [])
+                NotificationsReactions()
             }
         }
     }

@@ -12,8 +12,6 @@ struct ZapInfo: Identifiable {
 struct NotificationsZaps: View {
 
     let er:ExchangeRateModel = .shared // Not Observed for performance
-    let pubkey:String
-    let blockedPubkeys:[String]
 
     @ObservedObject var settings:SettingsStore = .shared
     @StateObject var fl = FastLoader()
@@ -35,10 +33,7 @@ struct NotificationsZaps: View {
         }
     }
     
-    init(pubkey:String, blockedPubkeys:[String]) {
-        self.pubkey = pubkey
-        self.blockedPubkeys = blockedPubkeys
-        
+    init(pubkey:String) {
         let fr = PersistentNotification.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \PersistentNotification.createdAt, ascending: false)]
         fr.predicate = NSPredicate(format: "pubkey == %@ AND type_ IN %@", pubkey, [PNType.failedZap.rawValue,PNType.failedZaps.rawValue,PNType.failedZapsTimeout.rawValue,PNType.failedLightningInvoice.rawValue])
@@ -91,24 +86,25 @@ struct NotificationsZaps: View {
                 VStack {
                     if !zapsForMeDeduplicated.isEmpty {
                         Button("Show more") {
+                            guard let account = NosturState.shared.account else { return }
                             fl.predicate = NSPredicate(
                                 format: "zappedContactPubkey == %@" + // ONLY TO ME
                                 "AND kind == 9735 " +
                                 "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS)
-                                pubkey,
-                                blockedPubkeys)
+                                account.publicKey,
+                                account.blockedPubkeys_)
         //                    fl.offset = (fl.events.count - 1)
                             fl.loadMore(500)
                             if let until = fl.events.last?.created_at {
                                 req(RM.getMentions(
-                                    pubkeys: [pubkey],
+                                    pubkeys: [account.publicKey],
                                     kinds: [9735],
                                     limit: 500,
                                     until: NTimestamp(timestamp: Int(until))
                                 ))
                             }
                             else {
-                                req(RM.getMentions(pubkeys: [pubkey], kinds: [9735], limit:500))
+                                req(RM.getMentions(pubkeys: [account.publicKey], kinds: [9735], limit:500))
                             }
                         }
                         .padding(.bottom, 40)
@@ -128,6 +124,7 @@ struct NotificationsZaps: View {
             load()
         }
         .onReceive(receiveNotification(.newZaps)) { _ in
+            guard let account = NosturState.shared.account else { return }
             let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
             fl.predicate = NSPredicate(
                 format:
@@ -136,8 +133,8 @@ struct NotificationsZaps: View {
                     "AND kind == 9735 " +
                     "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS)
                     currentNewestCreatedAt,
-                    pubkey,
-                    blockedPubkeys
+                account.publicKey,
+                account.blockedPubkeys_
             )
             fl.loadNewerEvents(5000, taskId:"newZaps")
         }
@@ -165,6 +162,7 @@ struct NotificationsZaps: View {
     @State var subscriptions = Set<AnyCancellable>()
     
     func load() {
+        guard let account = NosturState.shared.account else { return }
         didLoad = true
         fl.$events
             .sink(receiveValue: { events in
@@ -172,7 +170,7 @@ struct NotificationsZaps: View {
                     .uniqued(on: { $0.zappedEventId }) // Deplicated
                     .filter {
                         // Only for me
-                        $0.zappedContactPubkey != nil && $0.zappedContactPubkey == pubkey
+                        $0.zappedContactPubkey != nil && $0.zappedContactPubkey == account.publicKey
                     }
                 
                 let p = zapsForMeDeduplicated.map {
@@ -198,8 +196,8 @@ struct NotificationsZaps: View {
         fl.predicate = NSPredicate(
             format:
                 "zappedContactPubkey == %@ AND kind == 9735 AND NOT zapFromRequest.pubkey IN %@",
-                pubkey,
-                blockedPubkeys
+            account.publicKey,
+            account.blockedPubkeys_
             )
         fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         
@@ -218,7 +216,7 @@ struct NotificationsZaps: View {
         let fetchNewerTask = ReqTask(
             reqCommand: { (taskId) in
                 req(RM.getMentions(
-                    pubkeys: [pubkey],
+                    pubkeys: [account.publicKey],
                     kinds: [9735],
                     limit: 5000,
                     subscriptionId: taskId,
@@ -232,8 +230,8 @@ struct NotificationsZaps: View {
                     format:
                         "created_at >= %i AND zappedContactPubkey == %@ AND kind == 9735 AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS)
                         currentNewestCreatedAt,
-                        pubkey,
-                        blockedPubkeys
+                    account.publicKey,
+                    account.blockedPubkeys_
                   )
                 fl.loadNewerEvents(5000, taskId: taskId)
             })
@@ -407,7 +405,7 @@ struct NotificationsZaps_Previews: PreviewProvider {
     static var previews: some View {
         let pubkey = "32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245"
         PreviewContainer {
-            NotificationsZaps(pubkey: pubkey, blockedPubkeys:[])
+            NotificationsZaps(pubkey: pubkey)
         }
     }
 }
