@@ -105,7 +105,7 @@ struct InnerPFP: View {
                 }
                 .pipeline(ImageProcessing.shared.pfp)
                 .frame(width: size, height: size)
-                .cornerRadius(.greatestFiniteMagnitude)
+                .cornerRadius(size/2)
                 .background(
                     Circle()
                         .strokeBorder(.regularMaterial, lineWidth: 5)
@@ -130,7 +130,7 @@ struct InnerPFP: View {
                                     .scaledToFit()
                             }
                             .frame(width: size, height: size)
-                            .cornerRadius(.greatestFiniteMagnitude)
+                            .cornerRadius(size/2)
                             .background(
                                 Circle()
                                     .strokeBorder(.regularMaterial, lineWidth: 5)
@@ -143,7 +143,7 @@ struct InnerPFP: View {
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
                                 .frame(width: size, height: size)
-                                .cornerRadius(.greatestFiniteMagnitude)
+                                .cornerRadius(size/2)
                                 .background(
                                     Circle()
                                         .strokeBorder(.regularMaterial, lineWidth: 5)

@@ -38,11 +38,11 @@ struct MainView: View {
                     .toolbar {
                         if let account = self.account, !sm.showSidebar {
                             ToolbarItem(placement: .navigationBarLeading) {
-                                Button { sm.showSidebar.toggle() } label: {
-                                    PFP(pubkey: account.publicKey, account: account, size:30)
-                                }
-                                .accessibilityLabel("Account menu")
-                            
+                                PFP(pubkey: account.publicKey, account: account, size:30)
+                                    .onTapGesture {
+                                        sm.showSidebar.toggle()
+                                    }
+                                    .accessibilityLabel("Account menu")
                             }
                         }
                         ToolbarItem(placement: .principal) {
