@@ -42,7 +42,7 @@ struct NIP46TesterView: View {
                     print(message)
                     return
                 }
-                guard let result = ncResponse.result else {
+                guard let _ = ncResponse.result else {
                     print("Unknown or missing result \(decrypted)")
                     return
                 }
@@ -218,7 +218,7 @@ struct NIP46TesterView: View {
             
             Button("get_public_key") {
                 let nsecBunkerPubkey = "f3498f465b27ae48bd63850e3acda48a90eff80af829514034d11728d9a3a027"
-                let token = ""
+                _ = ""
                 if let keys = try? NKeys(privateKeyHex: TEST_PK) {
                     
                     let request = NCRequest(id: "get_public_key-1", method: "get_public_key", params: [])
@@ -257,7 +257,7 @@ struct NIP46TesterView: View {
             
             Button("describe") {
                 let nsecBunkerPubkey = "f3498f465b27ae48bd63850e3acda48a90eff80af829514034d11728d9a3a027"
-                let token = ""
+                _ = ""
                 if let keys = try? NKeys(privateKeyHex: TEST_PK) {
                     
                     let request = NCRequest(id: "describe-1", method: "describe", params: [])
@@ -296,7 +296,7 @@ struct NIP46TesterView: View {
             
             Button("sign_event") {
                 let nsecBunkerPubkey = "f3498f465b27ae48bd63850e3acda48a90eff80af829514034d11728d9a3a027"
-                let token = ""
+                _ = ""
                 if let keys = try? NKeys(privateKeyHex: TEST_PK) {
                     
                     var ncReq = NEvent(content: "ho ho ho")

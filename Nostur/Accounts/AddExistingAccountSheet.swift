@@ -24,8 +24,8 @@ struct AddExistingAccountSheet: View {
                         .cornerRadius(5.0)
                         .padding(.bottom, 20)
                     
-                    Text("Keys are stored on your device in iOS keychain", comment:"Informational message about key storage on Add Existing Account screen").foregroundColor(.gray)
-                        .font(.caption2)
+//                    Text("Keys are stored on your device in iOS keychain", comment:"Informational message about key storage on Add Existing Account screen").foregroundColor(.gray)
+//                        .font(.caption2)
                     
                     Button {
                         if isNsecbunkerKey {
