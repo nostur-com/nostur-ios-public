@@ -5,7 +5,6 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/luizmb/CombineWebSocket",
       "state" : {
-        "branch" : "master",
         "revision" : "7ade1417198ad7b196858dd0d0601818adae5725"
       }
     },
@@ -23,7 +22,6 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/kishikawakatsumi/KeychainAccess",
       "state" : {
-        "branch" : "master",
         "revision" : "ecb18d8ce4d88277cc4fb103973352d91e18c535"
       }
     },
@@ -32,8 +30,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/kean/Nuke",
       "state" : {
-        "revision" : "f4d9b95788679d0654c032961f73e7e9c16ca6b4",
-        "version" : "12.1.0"
+        "revision" : "f67266f176af4add9f7a7020486826d82d562473",
+        "version" : "12.1.2"
       }
     },
     {

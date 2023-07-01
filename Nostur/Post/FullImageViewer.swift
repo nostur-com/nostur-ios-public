@@ -209,7 +209,7 @@ struct ActivityView: UIViewControllerRepresentable {
 func getImgUrlsFromContent(_ content:String) -> [URL] {
     var urls:[URL] =  []
     let range = NSRange(content.startIndex..<content.endIndex, in: content)
-    let matches = mediaRegex.matches(in: content, range: range) // TODO: Instruments 1.23sec hang from ProfileMediaView
+    let matches = mediaRegex.matches(in: content, range: range)
     for match in matches {
         let url = (content as NSString).substring(with: match.range)
         if let urlURL = URL(string: url) {

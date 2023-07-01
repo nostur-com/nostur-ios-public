@@ -731,7 +731,6 @@ extension LVM {
     
     func addSubscriptions() {
         keepListStateSaved()
-        requestFooterCounters()
         trackLastAppeared()
         processNewEventsInBg()
         keepFilteringMuted()
@@ -1074,63 +1073,6 @@ extension LVM {
             }
         }
     }
-    
-    func requestFooterCounters() {
-        // TODO: REDO THIS WITH SMOOTHSCROLL LIST
-        return
-        // AFTER 1 SEC OF STOP SCROLLING, WE WANT TO FETCH #E AND P (HERE)
-        //        $lastAppeared
-//        lastAppearedSubject
-//            .filter({ _ in
-//                self.nrPostLeafs.count > 0 // Don't do anything if there is nothing on screen yet!
-//            })
-//            .debounce(for: .seconds(1), scheduler: RunLoop.main)
-//            .throttle(for: .seconds(5), scheduler: RunLoop.main, latest: true)
-//        //            .debounce(for: .seconds(1), scheduler: DispatchQueue.global())
-//        //            .throttle(for: .seconds(5), scheduler: DispatchQueue.global(), latest: true)
-//        //            .receive(on: DispatchQueue.global())
-//            .sink { [weak self] event in
-//                guard let self = self else { return }
-//                guard let event = event else { return }
-//                // get 5 posts before or after
-//                let fp = self.flattenedPostsOnScreen
-//                if event.created_at > (self.lastAppeared?.created_at ?? 0) {
-//                    // get before
-//                    if let indexOfPost = fp.firstIndex(where: { $0.id == event.id }) {
-//                        let five = [
-//                            fp[safe: indexOfPost],
-//                            fp[safe: indexOfPost - 1],
-//                            fp[safe: indexOfPost - 2],
-//                            fp[safe: indexOfPost - 3],
-//                            fp[safe: indexOfPost - 4]
-//                        ]
-//                        self.requestForJustAppeared(five.compactMap { $0 })
-//                    }
-//                }
-//                else {
-//                    // get after
-//                    if let indexOfPost = fp.firstIndex(where: { $0.id == event.id }) {
-//                        let five = [
-//                            fp[safe: indexOfPost],
-//                            fp[safe: indexOfPost + 1],
-//                            fp[safe: indexOfPost + 2],
-//                            fp[safe: indexOfPost + 3],
-//                            fp[safe: indexOfPost + 4]
-//                        ]
-//                        self.requestForJustAppeared(five.compactMap { $0 })
-//                    }
-//                }
-//            }
-//            .store(in: &subscriptions)
-    }
-    
-//    func requestForJustAppeared(_ nrPosts:[NRPost]) {
-//        guard self.viewIsVisible else { return }
-//        let events = nrPosts.map { $0.event }
-//        let ids = ids(events)
-//        
-//        fetchStuffForLastAddedNotes(ids: ids)
-//    }
 }
 
 extension LVM {

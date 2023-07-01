@@ -678,19 +678,6 @@ class NewWebSocket {
         }
     }
     
-//    var senderAfterPing:AnyCancellable? {
-//        get {
-//            SocketPool.shared.websocketQueue.sync {
-//                self.senderAfterPing_
-//            }
-//        }
-//        set {
-//            SocketPool.shared.websocketQueue.async(flags: .barrier) {
-//                self.senderAfterPing_ = newValue
-//            }
-//        }
-//    }
-    
     var connection:AnyCancellable? {
         get {
             SocketPool.shared.websocketQueue.sync {
@@ -754,7 +741,7 @@ class NewWebSocket {
                     // Handle the received value (optional, based on your requirements)
 //                    L.sockets.info("Received value during ping")
                 })
-            .store(in: &subscriptions) // TODO: Swift access race in Nostur.NewWebSocket.subscriptions.modify : Swift.Set<Combine.AnyCancellable> at 0x1482d6a40
+            .store(in: &subscriptions)
     }
     
     func ping() {

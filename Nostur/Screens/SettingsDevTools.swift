@@ -220,7 +220,7 @@ extension Settings {
                         print(error)
                     }
                 }
-                event.repliesCount = 0 // TODO: This all can become @aggregate ?? @count ofzo?
+                event.repliesCount = 0 // TODO: This all can become @aggregate ?? @count maybe?
                 event.mentionsCount = 0
                 event.likesCount = 0
                 event.zapTally = 0
