@@ -2,30 +2,24 @@ import Foundation
 
 extension Date {
     
+    static let secondsInMinute = 60.0
+    static let secondsInHour = secondsInMinute * 60.0
+    static let secondsInDay = secondsInHour * 24.0
+    static let secondsInYear = secondsInDay * 365.0
+    
     var agoString: String {
-        let now = Date()
-        let timeInterval = now.timeIntervalSince(self)
+        let timeInterval = Date().timeIntervalSince(self)
         
-        let secondsInMinute = 60.0
-        let secondsInHour = secondsInMinute * 60.0
-        let secondsInDay = secondsInHour * 24.0
-        let secondsInYear = secondsInDay * 365.0
-        
-        if timeInterval >= secondsInYear {
-            let years = Int(timeInterval / secondsInYear)
-            return String(localized:"\(years)y", comment: "Shorthand for years (1y)")
-        } else if timeInterval >= secondsInDay {
-            let days = Int(timeInterval / secondsInDay)
-            return String(localized:"\(days)d", comment: "Shorthand for days (1d)")
-        } else if timeInterval >= secondsInHour {
-            let hours = Int(timeInterval / secondsInHour)
-            return String(localized:"\(hours)h", comment: "Shorthand for hours (1h)")
-        } else if timeInterval >= secondsInMinute {
-            let minutes = Int(timeInterval / secondsInMinute)
-            return String(localized:"\(minutes)m", comment: "Shorthand for minutes (1m)")
+        if timeInterval >= Self.secondsInYear {
+            return String.localizedStringWithFormat("%dy", Int(timeInterval / Self.secondsInYear))
+        } else if timeInterval >= Self.secondsInDay {
+            return String.localizedStringWithFormat("%dd", Int(timeInterval / Self.secondsInDay))
+        } else if timeInterval >= Self.secondsInHour {
+            return String.localizedStringWithFormat("%dh", Int(timeInterval / Self.secondsInHour))
+        } else if timeInterval >= Self.secondsInMinute {
+            return String.localizedStringWithFormat("%dm", Int(timeInterval / Self.secondsInMinute))
         } else {
-            let seconds = Int(timeInterval)
-            return String(localized:"\(seconds)s", comment: "Shorthand for seconds (1s)")
+            return String(localized:"now", comment: "Showing time ago when it is 'now' or 'just now'")
         }
     }
 }
