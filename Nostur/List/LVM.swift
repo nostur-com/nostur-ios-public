@@ -230,7 +230,12 @@ class LVM: NSObject, ObservableObject {
             let added = newNRPostLeafs
 //                .filter(notMuted) // TODO: ADD BACK NOT MUTED IN RIGHT CONTEXT / THREAD
 
-            guard !transformedObjectIds.isEmpty else { performingLocalOlderFetch = false; return }
+            guard !transformedObjectIds.isEmpty else {
+                DispatchQueue.main.async {
+                    self.performingLocalOlderFetch = false
+                }
+                return
+            }
             L.lvm.notice("\(self.id) \(self.name)/\(self.pubkey?.short ?? "") Transformed \(transformedObjectIds.count) posts - \(taskId)")
 
             if currentNRPostLeafs.isEmpty {
@@ -1165,21 +1170,27 @@ extension LVM {
                     self.performingLocalOlderFetch = false
                 }
             }
-            return }
+            return
+        }
 //        guard let oldestEvent = self.nrPostLeafs.last?.event else { L.og.debug("Empty screen, cancelled") ;return } // bug: sometimes last is not oldest (delayed receive?, slow relay?), so don't take last but actual oldest on screen:
         
         // Actual oldestt:
         guard let oldestEvent = self.nrPostLeafs.max(by: { $0.createdAt > $1.createdAt })?.event else {
             L.og.debug("Empty screen, cancelled") ;return
         }
-
-        let ctx = DataProvider.shared().bg
+        
         performingLocalOlderFetch = true
+        let ctx = DataProvider.shared().bg
         ctx.perform { [weak self] in
             guard let self = self else { return }
             L.lvm.info("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") performLocalOlderFetch LVM.id (\(self.uuid)")
             let fr = Event.postsByPubkeys(self.pubkeys, until: oldestEvent, hideReplies: self.hideReplies)
-            guard let posts = try? ctx.fetch(fr) else { performingLocalOlderFetch = false; return }
+            guard let posts = try? ctx.fetch(fr) else {
+                DispatchQueue.main.async {
+                    self.performingLocalOlderFetch = false
+                }
+                return
+            }
             self.setOlderEvents(events: self.filterMutedWords(posts))
         }
     }
@@ -1256,7 +1267,9 @@ extension LVM {
             self.startRenderingOlderSubject.send(newUnrenderedEvents)
         }
         else {
-            performingLocalOlderFetch = false
+            DispatchQueue.main.async {
+                self.performingLocalOlderFetch = false
+            }
         }
     }
         
