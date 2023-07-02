@@ -111,7 +111,7 @@
 
 /* Button to add an existing account
 Navigation title for Add Existing Account screen */
-"Add existing account" = "Voeg bestand account toe";
+"Add existing account" = "Voeg bestaand account toe";
 
 /* Post context menu button */
 "Add private note" = "Voeg privé notitie toe";
