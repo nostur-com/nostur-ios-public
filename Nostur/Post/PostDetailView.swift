@@ -279,6 +279,12 @@ struct ParentPost: View {
                 }
                 .padding(.trailing, 10)
                 
+                // We don't show "Replying to.." unless we can't fetch the parent
+                if nrPost.replyTo == nil && nrPost.replyToId != nil {
+                    ReplyingToFragmentView(nrPost: nrPost)
+                        .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                }
+                
                 switch nrPost.kind {
                 case 9802: // highlight
                     HighlightRenderer(nrPost: nrPost)
@@ -362,6 +368,12 @@ struct DetailPost: View {
                 }
                 .padding(.trailing, 10)
             }
+        }
+        
+        // We don't show "Replying to.." unless we can't fetch the parent
+        if nrPost.replyTo == nil && nrPost.replyToId != nil {
+            ReplyingToFragmentView(nrPost: nrPost)
+                .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
         }
     
         switch nrPost.kind {
