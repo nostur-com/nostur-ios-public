@@ -42,7 +42,7 @@ struct BookmarksView: View {
             if !vBookmarks.isEmpty {
                 LazyVStack {
                     ForEach(vBookmarks) { vBookmark in
-                        PostRowDeletable(nrPost: vBookmark)
+                        PostRowDeletable(nrPost: vBookmark, missingReplyTo: true)
                             .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
                             .roundedBoxShadow()
                             .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
