@@ -52,20 +52,8 @@
 /* Heading for reposted post: '(Name) reposted' */
 "%@ reposted" = "%@ heeft opnieuw gepost";
 
-/* Shorthand for days (1d) */
-"%lldd" = "%lldd";
-
-/* Shorthand for hours (1h) */
-"%lldh" = "%lldu";
-
-/* Shorthand for minutes (1m) */
-"%lldm" = "%lldm";
-
-/* Shorthand for seconds (1s) */
-"%llds" = "%llds";
-
-/* Shorthand for years (1y) */
-"%lldy" = "%lldj";
+/* No comment provided by engineer. */
+"%lld min read" = "%lld min leestijd";
 
 /* Follow/Unfollow button when the state is 'Following silent' */
 "🤫 Following" = "🤫 Volgend";
@@ -96,6 +84,9 @@
 
 /* Button to 'Add (amount)' contacts */
 "Add (%lld)" = "Voeg toe (%lld)";
+
+/* No comment provided by engineer. */
+"Add (nsecBunker)" = "Voeg toe (nsecBunker)";
 
 /* No comment provided by engineer. */
 "Add +1" = "";
@@ -209,6 +200,9 @@ Tab to switch to bookmarks */
 
 /* No comment provided by engineer. */
 "Choose content for this column" = "Kies inhoud voor kolom";
+
+/* Setting on settings screen */
+"Choose which wallet to use for zapping" = "Kies welke app om te zappen";
 
 /* Button to clear cache */
 "Clear" = "Wissen";
@@ -333,6 +327,9 @@ Navigation title of Delete account screen */
 
 /* Label for input field for badge description on Badge creation screen */
 "Description" = "Omschrijving";
+
+/* No comment provided by engineer. */
+"Direct Messages using a nsecBunker login are not available yet" = "Privéberichten met een nsecBunker login zijn nog niet beschikbaar";
 
 /* Setting on settings screen */
 "Disable to improve scrolling performance" = "Zet uit voor soepeler scrollen";
@@ -499,6 +496,9 @@ Label shown when someone follows you */
 /* Button to include author in Highlight */
 "Include author" = "Voeg auteur toe";
 
+/* Setting on settings screen */
+"Include Nostur caption when sharing posts" = "Nostur voetnoot bijsluiten bij delen bericht";
+
 /* Message shown when user has entered an invalid key */
 "Invalid key" = "Ongeldige sleutel";
 
@@ -517,15 +517,9 @@ Label shown when someone follows you */
 /* No comment provided by engineer. */
 "Keys" = "Sleutels";
 
-/* Informational message about key storage on Add Existing Account screen */
-"Keys are stored on your device in iOS keychain" = "Sleutels worden in je iOS sleutelhanger opgeslagen";
-
 /* Message shown when a 'kind X' post is not yet supported
 Message shown when a post kind (X) is not yet supported */
 "kind %@ type not (yet) supported" = "kind %@ type (nog) niet ondersteund";
-
-/* Last updated date of WoT in Settings */
-"Last updated: %@" = "Laatst bijgewerkt: %@";
 
 /* Button to start using Nostur, during onboarding */
 "Let's go!" = "Laten we beginnen!";
@@ -548,9 +542,6 @@ Message shown when a post kind (X) is not yet supported */
 /* Side bar navigation button
 Navigation title for Lists screen */
 "Lists" = "Lijsten";
-
-/* No comment provided by engineer. */
-"Load info and contacts from relays" = "Haal info en contacten op van relays";
 
 /* Setting on settings screen */
 "Loading indicator" = "Laadindicator";
@@ -635,6 +626,9 @@ Label for input field for badge name on Badge creation screen */
 
 /* No comment provided by engineer. */
 "Notifications" = "Notificaties";
+
+/* Showing time ago when it is 'now' or 'just now' */
+"now" = "nu";
 
 /* Menu item in choice list */
 "Nudity" = "Naaktheid";
@@ -903,6 +897,12 @@ Button to publish report */
 /* Navigation title for screen to Share a Highlighted Text */
 "Share highlight" = "Markering delen";
 
+/* Post context menu button */
+"Share post" = "Deel bericht";
+
+/* No comment provided by engineer. */
+"Shared from **Nostur**" = "Gedeeld vanuit **Nostur**";
+
 /* Button to show more items in a post */
 "Show" = "Toon";
 
@@ -917,6 +917,9 @@ Button to publish report */
 
 /* Setting in context menu to show replies in the feed */
 "Show replies" = "Toon reacties";
+
+/* Setting on settings screen */
+"Shows 'Shared from Nostur' caption when sharing post screenshots" = "Toon 'Gedeeld vanuit Nostur' bij delen bericht";
 
 /* Setting on settings screen */
 "Shows when items are being processed" = "Toon wanneer dingen geladen worden op de achtergrond";
@@ -1032,6 +1035,9 @@ Button to skip adding account and use the guest account instead */
 
 /* Button to update WoT */
 "Update" = "Bijwerken";
+
+/* Last updated date of WoT in Settings */
+"Updated: %@" = "Bijgewerkt: %@";
 
 /* Button to start using an existing account */
 "Use existing account" = "Gebruik bestaand account";
