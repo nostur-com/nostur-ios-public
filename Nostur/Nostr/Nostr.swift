@@ -86,6 +86,7 @@ public enum NEventKind: Codable, Equatable {
     case badgeAward
     case profileBadges
     case article
+    case community
     case custom(Int)
 
     init(id: Int) {
@@ -111,6 +112,7 @@ public enum NEventKind: Codable, Equatable {
         case     8: self = .badgeAward
         case 30008: self = .profileBadges
         case 30023: self = .article
+        case 34550: self = .community
         default   : self = .custom(id)
         }
     }
@@ -138,6 +140,7 @@ public enum NEventKind: Codable, Equatable {
         case .badgeAward:           return 8
         case .profileBadges:        return 30008
         case .article:              return 30023
+        case .community:            return 34550
         case .custom(let customId): return customId
         }
     }

@@ -9,7 +9,7 @@ class NRTextParser { // TEXT things
     static let shared = NRTextParser()
     private let context = DataProvider.shared().bg
     
-    private var tags:[(String, String, String?)] = [] // Faster tags, and only decode once at init
+    private var tags:[(String, String, String?, String?)] = [] // Faster tags, and only decode once at init
 
     func parseText(_ event:Event, text: String) -> AttributedStringWithPs {
         self.tags = event.fastTags

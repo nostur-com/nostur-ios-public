@@ -598,7 +598,7 @@ extension Event {
         return true
     }
     
-    var fastTags:[(String, String, String?)] {
+    var fastTags:[(String, String, String?, String?)] {
         guard let tagsSerialized = tagsSerialized else { return [] }
         guard let jsonData = tagsSerialized.data(using: .utf8) else { return [] }
         
@@ -608,14 +608,14 @@ extension Event {
         
         return jsonArray
         //            .filter { $0.count >= 2 }
-            .map { ($0[safe: 0] ?? "WTF", $0[safe: 1] ?? "WTF", $0[safe: 2]) }
+            .map { ($0[safe: 0] ?? "WTF", $0[safe: 1] ?? "WTF", $0[safe: 2], $0[safe: 3]) }
     }
     
-    var fastPs:[(String, String, String?)] {
+    var fastPs:[(String, String, String?, String?)] {
         fastTags.filter { $0.0 == "p" }
     }
     
-    var fastEs:[(String, String, String?)] {
+    var fastEs:[(String, String, String?, String?)] {
         fastTags.filter { $0.0 == "e" }
     }
     

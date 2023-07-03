@@ -956,7 +956,7 @@ class NewEphemeralClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDel
 
 
 
-func fetchEventFromRelayHint(_ eventId:String, fastTags:[(String, String, String?)]) {
+func fetchEventFromRelayHint(_ eventId:String, fastTags:[(String, String, String?, String?)]) {
     // EventRelationsQueue.shared.addAwaitingEvent(event) <-- not needed, should already be awaiting
 //    [
 //      "e",
