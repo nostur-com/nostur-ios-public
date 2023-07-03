@@ -172,7 +172,8 @@ struct ProfileView: View {
                                 }
                             }
                             
-                            Text("\(String(contact.about ?? "(No information)"))\n")
+                            Text("\(String(contact.about ?? ""))\n")
+                                .lineLimit(20)
                             
                             HStack(alignment: .center, spacing:0) {
                                 if contact.followingPubkeys.isEmpty {

@@ -11,6 +11,7 @@ struct LazyNoteMenuButton: View {
             .padding(.top, 7)
             .padding(.bottom, 6)
             .padding(.leading, 10)
+            .contentShape(Rectangle())
             .onTapGesture {
                 sendNotification(.showNoteMenu, nrPost)
             }
