@@ -6,11 +6,13 @@ struct ArticleView: View {
     @ObservedObject var article:NRPost
     var isDetail:Bool = false
     var fullWidth:Bool = false
+    var hideFooter:Bool = false
     
-    init(_ article:NRPost, isDetail:Bool = false, fullWidth:Bool = false) {
+    init(_ article:NRPost, isDetail:Bool = false, fullWidth:Bool = false, hideFooter:Bool = false) {
         self.article = article
         self.isDetail = isDetail
         self.fullWidth = fullWidth
+        self.hideFooter = hideFooter
     }
     
     let WORDS_PER_MINUTE:Double = 200.0
@@ -89,8 +91,10 @@ struct ArticleView: View {
                     ContentRenderer(nrPost: article, isDetail: true, fullWidth: true, availableWidth: dim.listWidth)
                         .padding(.vertical, 10)
                  
-                    FooterFragmentView(nrPost: article)
-                        .padding(.vertical, 10)
+                    if !hideFooter {
+                        FooterFragmentView(nrPost: article)
+                            .padding(.vertical, 10)
+                    }
     //                ArticleCommentsPreview(article: article)
                     
                     // Disable comments for now because should not be on id but on naddr
@@ -272,7 +276,9 @@ struct ArticleView: View {
                 .onTapGesture {
                     navigateTo(ArticlePath(id: article.id, navigationTitle: article.articleTitle ?? "Article"))
                 }
-                FooterFragmentView(nrPost: article)
+                if !hideFooter {
+                    FooterFragmentView(nrPost: article)
+                }
             }
             .padding(.bottom, 10)
             .padding(.horizontal, 10)
