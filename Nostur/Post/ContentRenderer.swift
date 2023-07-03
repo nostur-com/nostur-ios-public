@@ -73,7 +73,7 @@ struct ContentRenderer: View { // VIEW things
                     NosturVideoViewur(url: url, pubkey: nrPost.pubkey, videoWidth: availableWidth, isFollowing:nrPost.following, contentPadding: nrPost.kind == 30023 ? 20 : 10)
                         .padding(.vertical, 10)
                 case .image(let url):
-                    SingleMediaViewer(url: url, pubkey: nrPost.pubkey, imageWidth: availableWidth, isFollowing: nrPost.following, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 20 : 10)
+                    SingleMediaViewer(url: url, pubkey: nrPost.pubkey, imageWidth: availableWidth, isFollowing: nrPost.following, fullWidth: fullWidth, forceShow: nrPost.following, contentPadding: nrPost.kind == 30023 ? 20 : 10)
                         .padding(.vertical, 10)
                 case .linkPreview(let url):
                     // TODO: do no link preview if restrictAutoDownload...

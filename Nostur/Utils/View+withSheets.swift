@@ -1,5 +1,7 @@
 import SwiftUI
 import CoreData
+import UIKit
+import Combine
 
 public extension View {
     func withSheets() -> some View {
@@ -11,6 +13,8 @@ private struct WithSheets: ViewModifier {
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var ns:NosturState
     @EnvironmentObject var dim:DIMENSIONS
+    @Environment(\.colorScheme) private var colorScheme
+
     
     // Sheet contents (item based)
     @State var privateNote:PrivateNote? = nil
@@ -40,6 +44,11 @@ private struct WithSheets: ViewModifier {
     @State var newHighlight:NewHighlight? = nil
     
     @State var contextMenuNrPost:NRPost? = nil
+    
+    // Share post screenshot
+    @State private var sharablePostImage:ShareablePostImage? = nil
+    @State private var screenshotRenderer:AnyCancellable? = nil
+//    @State private var renderer:ImageRenderer<AnyView>? = nil
     
     func body(content: Content) -> some View {
         content
@@ -219,9 +228,67 @@ private struct WithSheets: ViewModifier {
                     .environmentObject(ns)
                     .presentationDetents([.medium])
             }
+        
+            // Share post screenshot
+            .onReceive(receiveNotification(.sharePostScreenshot)) { notification in
+                let nrPost = notification.object as! NRPost
+                nrPost.following = true // Force load image for screenshot...
+                
+                let renderer = ImageRenderer(content:
+                    VStack(spacing:0) {
+                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: false, isDetail: false)
+                        Group {
+                            if SettingsStore.shared.includeSharedFrom {
+                                Text("Shared from **Nostur**")
+                                Text("A nostr client for iOS & macOS - nostur.com")
+                                    .padding(.bottom, 5)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .padding(.trailing, 10)
+                        .font(.caption)
+                        .multilineTextAlignment(.trailing)
+                        .foregroundColor(Color.secondary)
+                    }
+                    .frame(width: 600)
+                    .roundedBoxShadow()
+                    .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
+                    .padding(.vertical, 10)
+                    .environmentObject(dim)
+                    .environmentObject(ns)
+                    .environment(\.managedObjectContext, DataProvider.shared().viewContext)
+                    .environment(\.colorScheme, colorScheme)
+                )
+
+                
+                renderer.scale = 2.0
+                guard let uiImage = renderer.uiImage else { return }
+                screenshotRenderer = renderer.objectWillChange
+                    .debounce(for: 0.35, scheduler: RunLoop.main)
+                    .sink {
+                        guard let uiImage = renderer.uiImage else { return }
+                        guard let pngData = uiImage.pngData() else { return }
+                        
+                        // create screenshot
+                        self.sharablePostImage = ShareablePostImage(pngData: pngData)
+                        screenshotRenderer = nil
+                    }
+                
+            }
+            .sheet(item: $sharablePostImage) { sharablePostImage in
+                let item = NSItemProvider(item: sharablePostImage.pngData as NSData, typeIdentifier: "public.png")
+//                let item = NSItemProvider(item: sharablePostImage.pngData, typeIdentifier: "nostur-post.png")
+                ActivityView(activityItems: [item])
+            }
     }
 }
 
+struct ShareablePostImage: Identifiable {
+    let id = UUID()
+//    let uiImage:UIImage
+//    let nsData:NSData
+    let pngData:Data
+}
 
 struct RemovedPubkeys: Identifiable {
     let pubkeys:Set<String>

@@ -25,6 +25,7 @@ final class SettingsStore: ObservableObject {
         static let defaultMediaUploadService:String = "media_upload_service"
         static let activeNWCconnectionId:String = "active_nwc_connection_id"
         static let fetchCounts:String = "fetch_counts"
+        static let includeSharedFrom:String = "include_shared_from"
         
         static let webOfTrustLevel:String = "web_of_trust_level"
     }
@@ -97,6 +98,7 @@ final class SettingsStore: ObservableObject {
             Keys.activeNWCconnectionId: "",
             Keys.fetchCounts: false,
             Keys.webOfTrustLevel: WebOfTrustLevel.normal.rawValue,
+            Keys.includeSharedFrom: true,
         ])
 
         // Don't use this anymore because re-renders too much, like when moving window on macOS
@@ -131,6 +133,11 @@ final class SettingsStore: ObservableObject {
     var hideBadges: Bool {
         set { defaults.set(newValue, forKey: Keys.hideBadges); objectWillChange.send() }
         get { defaults.bool(forKey: Keys.hideBadges) }
+    }
+    
+    var includeSharedFrom: Bool {
+        set { defaults.set(newValue, forKey: Keys.includeSharedFrom); objectWillChange.send() }
+        get { defaults.bool(forKey: Keys.includeSharedFrom) }
     }
     
     var animatedPFPenabled: Bool {

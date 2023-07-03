@@ -30,6 +30,14 @@ struct LazyNoteMenuSheet: View {
                 Group {
                     Button {
                         dismiss()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
+                            sendNotification(.sharePostScreenshot, nrPost)
+                        }
+                    } label: {
+                        Label(String(localized:"Share post", comment: "Post context menu button"), systemImage: "square.and.arrow.up")
+                    }
+                    Button {
+                        dismiss()
                         guard let contact = nrPost.mainEvent.contact else { return }
                         DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
                             sendNotification(.addRemoveToListsheet, contact)

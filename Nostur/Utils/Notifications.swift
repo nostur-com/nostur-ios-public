@@ -298,4 +298,8 @@ extension Notification.Name {
     static var scrollingDown: Notification.Name {
         return Notification.Name("scrollingDown")
     }
+    
+    static var sharePostScreenshot: Notification.Name {
+        return Notification.Name("sharePostScreenshot")
+    }
 }
