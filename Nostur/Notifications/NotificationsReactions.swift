@@ -285,7 +285,6 @@ struct ReactionsForThisNote: View {
 
 struct NotificationsV_Previews: PreviewProvider {
     static var previews: some View {
-        let pubkey = "04c915daefee38317fa734444acee390a8269fe5810b2241e5e6dd343dfbecc9"
         PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadRepliesAndReactions()
