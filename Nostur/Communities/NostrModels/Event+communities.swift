@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CoreData
 
 
 // NIP-172
@@ -39,7 +40,16 @@ typealias ModeratorPTag = (String, String, String?, String?)
 typealias CommunityRelay = (String, String, String?)
 
 
-
+extension Event {
+    
+    static func fetchCommunities(context:NSManagedObjectContext) -> [Event] {
+        let fr = Event.fetchRequest()
+        fr.predicate = NSPredicate(format: "kind == 34550 AND mostRecentId == nil")
+        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        
+        return (try? context.fetch(fr)) ?? []
+    }
+}
 
 //{
 //  "id": "<32-bytes lowercase hex-encoded SHA-256 of the the serialized event data>",

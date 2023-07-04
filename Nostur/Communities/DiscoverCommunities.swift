@@ -10,11 +10,20 @@ import CoreGraphics
 import UIKit
 
 struct DiscoverCommunities: View {
+    @StateObject var vm = Communities()
+    
     var body: some View {
         ZStack(alignment: .topLeading) {
             Color.systemBackground
             VStack {
                 Text("Discover Communities", comment: "Heading above list of communities")
+                
+                ForEach(vm.communities) { community in
+                    Text(community.title)
+                }
+            }
+            .onAppear {
+                vm.fetchCommunities()
             }
         }
         .navigationTitle(String(localized:"Communities", comment: "Navigation title for Communities view"))

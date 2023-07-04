@@ -16,6 +16,18 @@ import Foundation
 
 extension RequestMessage {
     
+    static func getCommunities(pubkeys:[String]? = nil, subscriptionId:String? = nil, since:NTimestamp = NTimestamp(timestamp: 0)) -> String {
+        if let pubkeys {
+            return """
+["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", {"authors": \(JSON.shared.toString(pubkeys)),  "kinds": [34550], "since": \(since.timestamp) }]
+"""
+        }
+        
+        return """
+["REQ", "\(subscriptionId ?? ("M-"+UUID().uuidString))", { "kinds": [34550], "since": \(since.timestamp) }]
+"""
+    }
+    
     static func getCommunityApprovedPosts(communityAuthorPubkey pubkey:String, communityId:String, moderatorPubkeys pubkeys:[String], kinds:[Int] = [4550], limit:Int = 500, subscriptionId:String? = nil, since:NTimestamp? = nil, until:NTimestamp? = nil) -> String {
         if let since {
             return """

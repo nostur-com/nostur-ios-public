@@ -2,7 +2,7 @@ import Foundation
 
 class Community: Identifiable, Equatable {
     
-    let id:String
+    let id:String // maybe use 'a'?
     var title:String
     var image:String?
     var moderators:[NRContact]
