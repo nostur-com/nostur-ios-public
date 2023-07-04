@@ -46,6 +46,21 @@ extension Event {
     @NSManaged public var contacts: Set<Contact>?
     
     @NSManaged public var deletedById: String?
+    @NSManaged public var dTag: String
+    
+    var aTag:String { String(kind) + ":" + pubkey  + ":" + dTag }
+    
+    // For events with multiple versions (like NIP-33)
+    // Most recent version should be nil
+    // All older versions have a pointer to the most recent id
+    // This makes it easy to query for the most recent event (mostRecentId = nil)
+    @NSManaged public var mostRecentId: String?
+    
+    
+    // Can be used for anything
+    // Now we use it for:
+    // - "is_update": to not show same article over and over in feed when it gets updates
+    @NSManaged public var flags: String
     
     var contacts_:[Contact] {
         get { Array(contacts ?? [])  }
@@ -706,16 +721,21 @@ extension Event {
     
     static func fetchReplacableEvent(_ kind:Int64, pubkey:String, definition:String, context:NSManagedObjectContext) throws -> Event? {
         let request = NSFetchRequest<Event>(entityName: "Event")
-        request.predicate = NSPredicate(format: "kind == %d AND pubkey == %@ AND tagsSerialized CONTAINS %@", kind, pubkey, ###"[["d","###)
+        request.predicate = NSPredicate(format: "kind == %d AND pubkey == %@ AND dTag == %@ AND mostRecentId == nil", kind, pubkey, definition)
         request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        let matches = try context.fetch(request).filter({ event in
-            if let firstD = event.firstD() {
-                return firstD == definition
-            }
-            return false
-        })
+        request.fetchLimit = 1
         
-        return matches.sorted(by: { $0.created_at > $1.created_at }).first
+        return try? context.fetch(request).first
+        
+        // old:
+//        let matches = try context.fetch(request).filter({ event in
+//            if let firstD = event.firstD() {
+//                return firstD == definition
+//            }
+//            return false
+//        })
+//
+//        return matches.sorted(by: { $0.created_at > $1.created_at }).first
     }
     
     static func fetchReplacableEvent(_ kind:Int64, pubkey:String, context:NSManagedObjectContext) -> Event? {
@@ -895,6 +915,10 @@ extension Event {
                 pb.objectWillChange.send()
             }
             //            sendNotification(.badgeDefinitionFetched)
+        }
+        
+        if event.kind == .community {
+            saveCommunityDefinition(savedEvent: savedEvent, nEvent: event)
         }
         
         if event.kind == .zapNote {
@@ -1127,6 +1151,26 @@ extension Event {
                     waitingEvent.firstQuoteUpdated.send(savedEvent)
                 }
             }
+        }
+        
+        // Handle replacable event (NIP-33)
+        if (event.kind.id >= 30000 && event.kind.id < 40000) {
+            savedEvent.dTag = event.tags.first(where: { $0.type == "d" })?.value ?? ""
+            // update older events:
+            // 1. set pointer to most recent (this one)
+            // 2. set "is_update" flag on this one so it doesn't show up as new in feed
+            let r = Event.fetchRequest()
+            r.predicate = NSPredicate(format: "dTag == %@ AND kind == %d AND pubkey == %@ AND created_at < %d", savedEvent.dTag, savedEvent.kind, event.publicKey, savedEvent.created_at)
+            
+            if let olderEvents = try? context.fetch(r) {
+                for olderEvent in olderEvents {
+                    olderEvent.mostRecentId = savedEvent.id
+                }
+                
+                if olderEvents.count > 0 {
+                    savedEvent.flags = "is_update"
+                }
+            }            
         }
         
         return savedEvent
