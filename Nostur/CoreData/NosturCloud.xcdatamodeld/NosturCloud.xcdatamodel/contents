@@ -57,6 +57,7 @@
         <attribute name="created_at" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="deletedById" optional="YES" attributeType="String"/>
         <attribute name="dmAccepted" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="dTag" attributeType="String" defaultValueString=""/>
         <attribute name="firstQuoteId" optional="YES" attributeType="String"/>
         <attribute name="id" attributeType="String"/>
         <attribute name="insertedAt" attributeType="Date" defaultDateTimeInterval="-978332400" usesScalarValueType="NO"/>

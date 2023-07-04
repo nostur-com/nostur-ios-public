@@ -21,6 +21,10 @@ struct NosturTabsView: View {
                         .tabItem { Image(systemName: "house") }
                         .tag("Main")
                     
+//                    DiscoverCommunities()
+//                        .tabItem { Image(systemName: "person.3.fill")}
+//                        .tag("Communities")
+                    
                     NotificationsContainer()
                         .tabItem { Image(systemName: "bell.fill") }
                         .tag("Notifications")
