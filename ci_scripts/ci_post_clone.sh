@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/zsh
 
 #  ci_post_clone.sh
 #  Nostur
