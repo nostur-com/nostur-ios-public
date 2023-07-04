@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21754" systemVersion="22F66" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21754" systemVersion="22F82" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="Account" representedClassName=".Account" syncable="YES">
         <attribute name="about" attributeType="String" defaultValueString=""/>
         <attribute name="banner" attributeType="String" defaultValueString=""/>
@@ -116,6 +116,9 @@
         <attribute name="mostRecentAppearedId" optional="YES" attributeType="String"/>
         <attribute name="pubkey" optional="YES" attributeType="String"/>
         <attribute name="updatedAt" attributeType="Date" defaultDateTimeInterval="-978332400" usesScalarValueType="NO"/>
+    </entity>
+    <entity name="Migration" representedClassName="Migration" syncable="YES">
+        <attribute name="migrationCode" attributeType="String" defaultValueString=""/>
     </entity>
     <entity name="MutedWords" representedClassName="MutedWords" syncable="YES">
         <attribute name="enabled" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>

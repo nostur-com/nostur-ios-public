@@ -9,7 +9,6 @@ struct Maintenance {
     // Removed: time out... "wss://nostr.fmt.wiz.biz"
     // Removed: too many subscriptions "wss://relay.snort.social"
     
-    
     static func ensureBootstrapRelaysExist(context:NSManagedObjectContext) {
         context.performAndWait {
             let r = Relay.fetchRequest()
@@ -46,15 +45,21 @@ struct Maintenance {
     //TODO: Find out which tags can be deleted..
     static func maintenance(context:NSManagedObjectContext) {
         
+        // Version based migrations
+        L.maintenance.info("Starting version based maintenance")
+        context.perform {
+            Self.runDeleteEventsWithoutId(context: context)
+            Self.runUseDtagForReplacableEvents(context: context)
+        }
+        // Time based migrations
     
         let lastMaintenanceTimestamp = Date(timeIntervalSince1970: TimeInterval(SettingsStore.shared.lastMaintenanceTimestamp))
         let hoursAgo = Date(timeIntervalSinceNow: (-24 * 60 * 60))
         guard lastMaintenanceTimestamp < hoursAgo else { L.maintenance.info("Skipping maintenance"); return } // don't do maintenance more than once every 24 hours
         SettingsStore.shared.lastMaintenanceTimestamp = Int(Date.now.timeIntervalSince1970)
-        L.maintenance.info("Starting maintenance")
+        L.maintenance.info("Starting time based maintenance")
         
         context.perform {
-            
             let frA = Account.fetchRequest()
             let allAccounts = Array(try! context.fetch(frA))
             let ownAccountPubkeys = allAccounts.reduce([String]()) { partialResult, account in
@@ -377,5 +382,106 @@ struct Maintenance {
         //                L.maintenance.info("😢😢😢 XX \(error)")
         //            }
         //        }
+    }
+    
+    
+    // Check if a migration has already been executed
+    static func didRun(migrationCode:migrationCode, context:NSManagedObjectContext) -> Bool {
+        let fr = Migration.fetchRequest()
+        fr.predicate = NSPredicate(format: "migrationCode == %@", migrationCode.rawValue)
+        fr.fetchLimit = 1
+        fr.resultType = .countResultType
+        return ((try? context.count(for: fr)) ?? 0) > 0
+    }
+    
+    
+    // Run once to fill dTag and delete old replacable events
+    static func runUseDtagForReplacableEvents(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.useDtagForReplacableEvents, context: context) else { return }
+        
+        // 1. For each replacable event, save the dtag
+        let fr = Event.fetchRequest()
+        fr.predicate = NSPredicate(format: "kind >= 30000 AND kind < 40000")
+        
+        guard let replacableEvents = try? context.fetch(fr) else {
+            L.maintenance.error("runUseDtagForReplacableEvents: Could not fetch replacable events")
+            return
+        }
+        
+        L.maintenance.debug("runUseDtagForReplacableEvents: Found \(replacableEvents.count) replacable events")
+        
+        for event in replacableEvents {
+            event.dTag = event.fastTags.first(where: { $0.0 == "d" })?.1 ?? ""
+            if event.dTag != "" {
+                L.maintenance.debug("runUseDtagForReplacableEvents: dTag set to: \(event.dTag) for \(event.id)")
+            }
+        }
+        
+        // 2. For each replacable event, find same author + dtag, keep most recent, delete older
+        for event in replacableEvents {
+            let matches = replacableEvents.filter { $0.pubkey == event.pubkey && $0.dTag == event.dTag }
+            if matches.count <= 1 { continue } // if we have just 1 match, no need to delete older
+            
+            // only keep the most recent
+            guard let keep = matches.sorted(by: { $0.created_at > $1.created_at }).first else { continue }
+            for match in matches {
+                if match != keep {
+                    match.mostRecentId = keep.id
+                }
+            }
+        }
+        
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.useDtagForReplacableEvents.rawValue
+        
+        do {
+            try context.save()
+        }
+        catch {
+            L.maintenance.error("🧹🧹 🔴🔴 runUseDtagForReplacableEvents error on save(): \(error)")
+        }
+        
+    }
+    
+    // Run once to delete events without id (old bug)
+    static func runDeleteEventsWithoutId(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.deleteEventsWithoutId, context: context) else { return }
+        
+        let fr = Event.fetchRequest()
+        fr.predicate = NSPredicate(format: "id == \"\"")
+        
+        guard let eventsWithoutId = try? context.fetch(fr) else {
+            L.maintenance.error("runDeleteEventsWithoutId: Could not fetch eventsWithoutId")
+            return
+        }
+        
+        L.maintenance.debug("eventsWithoutId: Found \(eventsWithoutId.count) eventsWithoutId")
+        
+        for event in eventsWithoutId {
+            context.delete(event)
+        }
+        
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.deleteEventsWithoutId.rawValue
+        
+        do {
+            try context.save()
+        }
+        catch {
+            L.maintenance.error("🧹🧹 🔴🔴 runDeleteEventsWithoutId error on save(): \(error)")
+        }
+        
+    }
+    
+    // All available migrations
+    enum migrationCode:String {
+        
+        // Run once to delete events without id (old bug)
+        case deleteEventsWithoutId = "deleteEventsWithoutId"
+        
+        // Run once to fill dTag and delete old replacable events
+        case useDtagForReplacableEvents = "useDtagForReplacableEvents"
+        
+        
     }
 }
