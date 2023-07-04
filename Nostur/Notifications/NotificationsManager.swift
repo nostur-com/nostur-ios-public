@@ -125,7 +125,8 @@ class NotificationsManager: ObservableObject {
                                     "AND tagsSerialized CONTAINS %@ " +
                                     "AND NOT id IN %@ " +
                                     "AND (replyToRootId == nil OR NOT replyToRootId IN %@) " + // mutedRootIds
-                                    "AND (replyToId == nil OR NOT replyToId IN %@) ", // mutedRootIds
+                                    "AND (replyToId == nil OR NOT replyToId IN %@) " + // mutedRootIds
+                                    "AND flags != \"is_update\" ", // mutedRootIds
                                     lastSeenPostCreatedAt,
                                     blockedPubkeys + [pubkey],
                                     serializedP(pubkey),
@@ -318,7 +319,8 @@ class NotificationsManager: ObservableObject {
                                     "AND tagsSerialized CONTAINS %@ " +
                                     "AND NOT id IN %@ " +
                                     "AND (replyToRootId == nil OR NOT replyToRootId IN %@) " + // mutedRootIds
-                                    "AND (replyToId == nil OR NOT replyToId IN %@) ", // mutedRootIds
+                                    "AND (replyToId == nil OR NOT replyToId IN %@) " + // mutedRootIds
+                                    "AND flags != \"is_update\" ", // mutedRootIds
                                    blockedPubkeys + [pubkey],
                                    serializedP(pubkey),
                                    mutedRootIds,

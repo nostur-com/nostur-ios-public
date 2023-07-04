@@ -34,6 +34,13 @@ struct ArticleView: View {
                     }
                     .padding(.vertical, 10)
                     
+                    if let mostRecentId = article.mostRecentId {
+                        OpenLatestUpdateMessage {
+                            navigateTo(ArticlePath(id: mostRecentId, navigationTitle: article.articleTitle ?? "Article"))
+                        }
+                        .padding(.vertical, 10)
+                    }
+                    
                     HStack {
                         PFP(pubkey: article.pubkey, nrContact: article.contact, size: 50)
                         VStack(alignment: .leading) {

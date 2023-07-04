@@ -153,6 +153,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var articleSummary:String?
     var articlePublishedAt:Date?
     var articleImageURL:URL?
+    var mostRecentId:String?
     
     init(event: Event, withReplyTo:Bool = false, withParents:Bool = false, withReplies:Bool = false, plainText:Bool = false, withRepliesCount:Bool = false) {
         self.event = event // Only touch this in BG context!!!
@@ -193,6 +194,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             if let articleImage = event.articleImage, let url = URL(string: articleImage) {
                 articleImageURL = url
             }
+            mostRecentId = event.mostRecentId
         }
         
         if !plainText { // plainText is actually plainTextOnly, for rendering in muted spam stuff
