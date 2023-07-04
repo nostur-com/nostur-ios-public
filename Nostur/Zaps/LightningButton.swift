@@ -6,6 +6,7 @@ struct LightningButton: View {
     var tally:Int64 // SATS (1000 SATS ~= 20 cent)
     var nrPost:NRPost?
     @State var isLoading = false
+    @State var customZapId:UUID? = nil
     
     var tallyString:String {
         if (er.bitcoinPrice != 0.0) {
@@ -83,8 +84,15 @@ extension LightningButton {
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
                                 nrPost!.contact!.zapperPubkey = response.nostrPubkey!
                             }
+                            // Old zap sheet
                             let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrPost:nrPost!, contact: nrPost!.contact!.mainContact)
                             sendNotification(.showZapSheet, paymentInfo)
+                            
+//                            // Trigger custom zap
+//                            customZapId = UUID()
+//                            if let customZapId {
+//                                sendNotification(.showZapCustomizerSheet, ZapCustomizerSheetInfo(nrPost: nrPost!, customZapId: customZapId))
+//                            }
                             isLoading = false
                         }
                     }

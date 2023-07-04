@@ -67,7 +67,7 @@ struct ZapButton: View {
                                                    // Trigger custom zap
                                                    customZapId = UUID()
                                                    if let customZapId {
-                                                       sendNotification(.showZapCustomizerSheet, ZapCustomizerSheetInfo(nrPost: nrPost, customZapId: customZapId))
+                                                       sendNotification(.showZapCustomizerSheet, ZapCustomizerSheetInfo(name: nrPost.anyName, customZapId: customZapId))
                                                    }
                                                }
                                        )
@@ -81,7 +81,6 @@ struct ZapButton: View {
                                            // Complete custom zap
                                            let customZap = notification.object as! CustomZap
                                            guard customZap.customZapId == customZapId else { return }
-                                           guard customZap.nrPostId == nrPost.id else { return }
                                            self.triggerZap(strikeLocation: geo.frame(in: .global).origin, contact:contact, zapMessage:customZap.publicNote, amount: customZap.amount)
                                        }
                             }

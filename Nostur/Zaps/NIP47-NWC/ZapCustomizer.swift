@@ -1,23 +1,5 @@
 import SwiftUI
 
-struct ZapCustomizerButton: View {
-    var nrPost:NRPost
-    static let color = Color(red: 113/255, green: 118/255, blue: 123/255)
-    
-    var body: some View {
-        Image(systemName: "bolt.circle.fill")
-            .fontWeight(.bold)
-            .foregroundColor(Self.color)
-            .padding(.top, 7)
-            .padding(.bottom, 6)
-            .padding(.leading, 10)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                sendNotification(.showZapCustomizerSheet, nrPost)
-            }
-    }
-}
-
 struct ZapAmountButton: View {
     let er:ExchangeRateModel = .shared
     let amount:Double
@@ -64,8 +46,11 @@ struct ZapAmountButton: View {
 }
 
 struct ZapCustomizerSheet: View {
-    let nrPost:NRPost
-    let customZapId:UUID
+    let name:String
+    var customZapId:UUID?
+    var supportsZap = false
+    var sendAction:((CustomZap) -> Void)?
+    
     @Environment(\.dismiss) var dismiss
     
     @AppStorage("last_custom_zap_amount") var lastCustomZapAmount:Double = 0.0
@@ -143,25 +128,41 @@ struct ZapCustomizerSheet: View {
                         }
                     }
                 }
+                .padding(.bottom, 10)
                 
-                HStack(alignment: .center) {
-                    TextField("Add public note (optional)", text: $zapMessage)
-                        .multilineTextAlignment(.leading)
-                        .lineLimit(5, reservesSpace: true)
-                        .textFieldStyle(.roundedBorder)
-                        .padding(20)
-                        .frame(height: 100)
-                    
+                if supportsZap {
+                    HStack(alignment: .center) {
+                        TextField("Add public note (optional)", text: $zapMessage)
+                            .multilineTextAlignment(.leading)
+                            .lineLimit(5, reservesSpace: true)
+                            .textFieldStyle(.roundedBorder)
+                            .padding(20)
+                            .frame(height: 100)
+                    }
                 }
                 
                 Button {
-                    sendNotification(.sendCustomZap, CustomZap(nrPostId: nrPost.id, publicNote: zapMessage, customZapId: customZapId, amount: selectedAmount))
+                    if sendAction != nil {
+                        sendAction?(CustomZap(
+                            publicNote: zapMessage,
+                            customZapId: customZapId,
+                            amount: selectedAmount
+                        ))
+                    }
+                    else {
+                        sendNotification(.sendCustomZap,
+                                         CustomZap(
+                                            publicNote: zapMessage,
+                                            customZapId: customZapId,
+                                            amount: selectedAmount
+                                         ))
+                    }
                     if setAmountAsDefault {
                         SettingsStore.shared.defaultZapAmount = selectedAmount
                     }
                     dismiss()
                 } label: {
-                    Text("Send \(selectedAmount.clean) sats to \(nrPost.anyName)")
+                    Text("Send \(selectedAmount.clean) sats to \(name)")
                         .lineLimit(1)
                         .foregroundColor(Color.white)
                         .fontWeight(.bold)
@@ -204,16 +205,15 @@ struct ZapCustomizerSheet: View {
 }
 
 struct ZapCustomizerSheetInfo: Identifiable {
-    let nrPost:NRPost
-    let customZapId:UUID
-    var id:UUID { customZapId }
+    let name:String
+    var customZapId:UUID?
+    var id:UUID { customZapId ?? UUID() }
 }
 
 struct CustomZap: Identifiable {
-    var id:UUID { customZapId }
-    let nrPostId:String
+    var id:UUID { customZapId ?? UUID() }
     var publicNote = ""
-    let customZapId:UUID
+    var customZapId:UUID?
     let amount:Double
 }
 
@@ -282,23 +282,8 @@ struct ZapCustomizerSheet_Previews: PreviewProvider {
         PreviewContainer({ pe in pe.loadPosts() }) {
             VStack {
                 if let nrPost = PreviewFetcher.fetchNRPost() {
-                    ZapCustomizerSheet(nrPost:nrPost, customZapId: UUID())
+                    ZapCustomizerSheet(name:nrPost.anyName, customZapId: UUID())
                 }
-            }
-        }
-    }
-}
-
-struct ZapCustomizerButton_Previews: PreviewProvider {
-    static var previews: some View {
-        PreviewContainer({ pe in
-            pe.loadPosts()
-        }) {
-            VStack {
-                if let nrPost = PreviewFetcher.fetchNRPost() {
-                    ZapCustomizerButton(nrPost:nrPost)
-                }
-                Color.clear.withSheets()
             }
         }
     }

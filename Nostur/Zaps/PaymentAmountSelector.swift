@@ -8,27 +8,14 @@ struct PaymentAmountSelector: View {
     let sp:SocketPool = .shared
     let paymentInfo:PaymentInfo
     
-    let SLIDER_MIN = 3.0
-    let SLIDER_MAX = 2000000.0
-    
-    @State var sliderValue:Float = 0.0 // SATS (1000 SATS ~= 20 cent)
-//    @State var amount:Float = 0.0 // SATS (1000 SATS ~= 20 cent)
-    @State var exchangeRate:Double? = 0.0 // BTC 23167
-    @State var fiatPrice = "" // $0.00
-    @State var zapMessage = ""
     @Environment(\.dismiss) private var dismiss
     @State var errorMessage:String? = nil
     
-    var amountS:Float {
-        mapLinearToExponential(value: sliderValue, min: Float(SLIDER_MIN), max: Float(SLIDER_MAX), exponent: 7)
-    }
-    
     init(paymentInfo:PaymentInfo) {
         self.paymentInfo = paymentInfo
-//        self.amount = Float(ss.defaultZapAmount) // SATS (1000 SATS ~= 20 cent)
     }
     
-    func amountSelected(amount:Float, zapMessage:String) {
+    func amountSelected(amount:Double, zapMessage:String) {
         guard let account = NosturState.shared.account else { return }
         guard let anyLud = paymentInfo.contact?.anyLud, anyLud == true else { return }
         let pubkey = paymentInfo.contact!.pubkey
@@ -101,7 +88,7 @@ struct PaymentAmountSelector: View {
         else {
             Task {
                 do {
-                    let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount:UInt64(amountS * 1000))
+                    let response = try await LUD16.getInvoice(url:paymentInfo.callback, amount:UInt64(amount * 1000))
                     
                     if response.pr != nil {
                         
@@ -130,92 +117,12 @@ struct PaymentAmountSelector: View {
     }
     
     var body: some View {
-        NavigationStack {
-            VStack {
-                HStack {
-                    Text("Send sats:", comment: "Send how many sats label").font(.title2)
-                    Text(ceil(Double(amountS)).clean).font(.title2)
-                    Text("sats", comment: "Shorthand for satoshis").font(.title2)
-                    if (fiatPrice != "($0.00)") {
-                        Text("\(fiatPrice)").font(.title2)
-                    }
-                }
-                Slider(value: $sliderValue, in: Float(SLIDER_MIN)...Float(SLIDER_MAX)) {
-                    
-                } minimumValueLabel: {
-                    Text("\(SLIDER_MIN.clean)")
-                } maximumValueLabel: {
-                    Text("\(SLIDER_MAX.clean)")
-                }
-                .padding()
-                if (paymentInfo.supportsZap) {
-                    HStack(alignment: .center) {
-                        TextField("Add public note (optional)", text: $zapMessage)
-                            .multilineTextAlignment(.leading)
-                            .lineLimit(5, reservesSpace: true)
-                            .textFieldStyle(.roundedBorder)
-                            .padding(20)
-                            .frame(height: 100)
-                            
-                    }
-                }
-                Button {
-                    amountSelected(amount:ceil(amountS), zapMessage:zapMessage)
-                } label: {
-                    Text("Pay").padding(10)
-                        .foregroundColor(.white)
-                        .frame(minWidth: 200)
-                        .disabled(errorMessage != nil)
-                }.buttonStyle(.borderedProminent)
-                
-                if let errorMessage {
-                    Text(errorMessage).fontWeight(.bold).foregroundColor(.red)
-                }
+        VStack {
+            if let errorMessage {
+                Text(errorMessage).fontWeight(.bold).foregroundColor(.red)
             }
-            .onAppear {
-                sliderValue = mapExponentialToLinear(value: Float(ss.defaultZapAmount) , min: Float(SLIDER_MIN), max: Float(SLIDER_MAX), exponent: 7)
-                if (exchangeRate != nil) {
-                    fiatPrice = String(format: "($%.02f)", (ceil(Double(amountS)) / 100000000 * exchangeRate!))
-                }
-            }
-            .task {
-                guard let url = URL(string: "https://api.kraken.com/0/public/Ticker?pair=XXBTZUSD") else { return }
-                let request = URLRequest(url: url)
-                
-                do {
-                    // Fetch the remote data.
-                    let (data, _) = try await URLSession.shared.data(for: request)
-                    
-                    // Decode data to a CatFact object.
-                    let response = try JSONDecoder().decode(KrakenApiResponse.self, from: data)
-                    
-                    // Return the fact string value.
-                    
-                    exchangeRate = Double(response.result.XXBTZUSD.c[0])
-                    if (exchangeRate != nil) {
-                        fiatPrice = String(format: "($%.02f)", (ceil(Double(amountS)) / 100000000000 * exchangeRate!))
-                    }
-                    else {
-                        fiatPrice = ""
-                    }
-       
-                }
-                catch {
-                    L.og.info("could not get price from kraken")
-                }
-                
-            }
-            .onChange(of: amountS) { newAmountS in
-                if (exchangeRate != nil) {
-                    fiatPrice = String(format: "($%.02f)", (ceil(Double(newAmountS)) / 100000000 * exchangeRate!))
-                }
-            }
-            .navigationTitle("Zap")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar(content: {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Close") { dismiss() }
-                }
+            ZapCustomizerSheet(name: (paymentInfo.nrPost?.anyName ?? paymentInfo.contact?.anyName) ?? "", supportsZap: paymentInfo.supportsZap, sendAction: { customZap in
+                amountSelected(amount:customZap.amount, zapMessage:customZap.publicNote)
             })
         }
     }
