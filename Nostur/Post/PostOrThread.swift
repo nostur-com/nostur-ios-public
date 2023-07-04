@@ -12,12 +12,12 @@ struct PostOrThread: View {
                 PostRowDeletable(nrPost: nrParent,
                                  missingReplyTo: nrParent.replyToId != rootId && nrParent.replyToId != nil && nrParent.id == nrPost.parentPosts.first?.id,
                                  connect: nrParent.replyToId != nil || nrPost.parentPosts.first?.id != nrParent.id ? .both : .bottom, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
-                    .frame(minHeight: .zero, maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
+                    .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
                     .fixedSize(horizontal: false, vertical: true)
                     .id(nrParent.id)
             }
             PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && nrPost.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped)
-                .frame(minHeight: .zero, maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
+                .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
                 .fixedSize(horizontal: false, vertical: true)
                 .id(nrPost.id)
         }

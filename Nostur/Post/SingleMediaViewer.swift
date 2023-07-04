@@ -121,6 +121,7 @@ struct SingleMediaViewer: View {
                     }
                     else {
                         Color(.secondarySystemBackground)
+                            .frame(height: fullWidth ? 600 : 250)
                     }
                 }
                 .pipeline(ImageProcessing.shared.content)
