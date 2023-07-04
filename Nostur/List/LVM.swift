@@ -381,7 +381,9 @@ class LVM: NSObject, ObservableObject {
                 }
             })
 
-        backlog.add(danglingFetchTask)
+        DispatchQueue.main.async {
+            self.backlog.add(danglingFetchTask)
+        }
         danglingFetchTask.fetch()
     }
     
