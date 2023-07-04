@@ -27,6 +27,7 @@ class AccountManager {
     
     func getPrivateKeyHex(pubkey:String) -> String? {
         let keychain = Keychain(service: "nostur.com.Nostur")
+            .synchronizable(true)
         do {
             let privateKeyHex = try keychain
                 .get(pubkey)
@@ -39,6 +40,7 @@ class AccountManager {
     
     func hasPrivateKey(pubkey:String) -> Bool {
         let keychain = Keychain(service: "nostur.com.Nostur")
+            .synchronizable(true)
         do {
             let privateKeyHex = try keychain
                 .get(pubkey)
@@ -50,6 +52,7 @@ class AccountManager {
     
     func storeKeys(_ keys:NKeys) {
         let keychain = Keychain(service: "nostur.com.Nostur")
+            .synchronizable(true)
         do {
             try keychain
                 .accessibility(.whenUnlocked)
@@ -61,6 +64,7 @@ class AccountManager {
     
     func storePrivateKey(privateKeyHex: String, forPublicKeyHex:String) {
         let keychain = Keychain(service: "nostur.com.Nostur")
+            .synchronizable(true)
         do {
             try keychain
                 .accessibility(.whenUnlocked)
@@ -72,6 +76,7 @@ class AccountManager {
     
     func deletePrivateKey(forPublicKeyHex: String) {
         let keychain = Keychain(service: "nostur.com.Nostur")
+            .synchronizable(true)
         do {
             try keychain.remove(forPublicKeyHex)
         } catch {

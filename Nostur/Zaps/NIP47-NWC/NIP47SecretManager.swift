@@ -19,6 +19,7 @@ class NIP47SecretManager {
     
     func getSecret(connectionId:String) -> String? {
         let keychain = Keychain(service: SERVICE)
+            .synchronizable(true)
         do {
             let privateKeyHex = try keychain
                 .get(connectionId)
@@ -31,6 +32,7 @@ class NIP47SecretManager {
     
     func hasSecret(connectionId:String) -> Bool {
         let keychain = Keychain(service: SERVICE)
+            .synchronizable(true)
         do {
             let privateKeyHex = try keychain
                 .get(connectionId)
@@ -42,6 +44,7 @@ class NIP47SecretManager {
     
     func storeSecret(_ keys:NKeys, connectionId:String) {
         let keychain = Keychain(service: SERVICE)
+            .synchronizable(true)
         do {
             try keychain
                 .accessibility(.whenUnlocked)
@@ -54,6 +57,7 @@ class NIP47SecretManager {
     
     func deleteSecret(connectionId: String) {
         let keychain = Keychain(service: SERVICE)
+            .synchronizable(true)
         do {
             try keychain.remove(connectionId)
         } catch {
