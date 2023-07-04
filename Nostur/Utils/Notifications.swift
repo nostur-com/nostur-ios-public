@@ -302,4 +302,12 @@ extension Notification.Name {
     static var sharePostScreenshot: Notification.Name {
         return Notification.Name("sharePostScreenshot")
     }
+    
+    static var showZapCustomizerSheet: Notification.Name {
+        return Notification.Name("showZapCustomizerSheet")
+    }
+    
+    static var sendCustomZap: Notification.Name {
+        return Notification.Name("sendCustomZap")
+    }
 }

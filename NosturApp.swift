@@ -7,6 +7,7 @@ struct NosturApp: App {
     @StateObject private var tm:DetailTabsModel = .shared
     
     // These singletons always exists during the apps lifetime
+    private var er:ExchangeRateModel = .shared
     private var dataProvider = DataProvider.shared()
     private var eventRelationsQueue:EventRelationsQueue = .shared
     private var lvmManager:LVMManager = .shared

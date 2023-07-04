@@ -22,6 +22,7 @@ struct Settings: View {
     @State var showDeleteAllEventsConfirmation = false
     @State var albyNWCsheetShown = false
     @State var customNWCsheetShown = false
+    @State var showDefaultZapAmountSheet = false
     
 //    @State var showDocPicker = false
     @State var showExporter = false
@@ -161,15 +162,16 @@ struct Settings: View {
                         }
                         
                         Divider()
-                        Text("Default zap amount:")
-                        Slider(value: $sliderValue, in: SLIDER_MIN...SLIDER_MAX) {
-                            
-                        } minimumValueLabel: {
-                            Text("\(SLIDER_MIN.clean)")
-                        } maximumValueLabel: {
-                            Text("\(SLIDER_MAX.clean)")
+                        
+                        HStack {
+                            Text("Default zap amount:")
+                            Spacer()
+                            Text("\(SettingsStore.shared.defaultZapAmount.clean) sats \(Image(systemName: "chevron.right"))")
                         }
-                        Text("Zap \(settings.defaultZapAmount.satsFormatted) sats by default (\(fiatPrice))", comment: "Describes how much sats will be zapped by default, first variable is sats, second is dollar price")
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            showDefaultZapAmountSheet = true
+                        }
                     }
                     .onChange(of: settings.defaultLightningWallet) { newWallet in
                         if newWallet.scheme == "nostur:nwc:alby:" {
@@ -406,6 +408,9 @@ struct Settings: View {
                     }                    
                 }
             }
+        }
+        .sheet(isPresented: $showDefaultZapAmountSheet) {
+            SettingsDefaultZapAmount()
         }
         .onAppear {
             sliderValue = Double(mapExponentialToLinear(value: Float(settings.defaultZapAmount) , min: Float(SLIDER_MIN), max: Float(SLIDER_MAX), exponent: 7))

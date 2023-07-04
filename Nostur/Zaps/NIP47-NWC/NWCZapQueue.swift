@@ -88,6 +88,7 @@ class Zap {
     }
     var lud16:String?
     var lud06:String?
+    var zapMessage:String = ""
     var isNC = false
     var amount:Int64
     var eventId:String?
@@ -101,7 +102,7 @@ class Zap {
     var callbackUrl:String? = nil
     var pr:String? = nil // payment request (invoice)
     
-    init(isNC:Bool = false, amount:Int64, contact:Contact, eventId:String? = nil, event:Event? = nil, cancellationId:UUID) {
+    init(isNC:Bool = false, amount:Int64, contact:Contact, eventId:String? = nil, event:Event? = nil, cancellationId:UUID, zapMessage:String = "") {
         self.isNC = isNC
         self.queuedAt = .now
         self.amount = amount
@@ -112,6 +113,7 @@ class Zap {
         self.event = event
         self.lud16 = contact.lud16
         self.lud06 = contact.lud06
+        self.zapMessage = zapMessage
         next()
     }
     
@@ -203,7 +205,7 @@ class Zap {
             DataProvider.shared().bg.perform { [weak self] in
                 guard let self = self else { return }
                 if isNC {
-                    let zapRequestNote = zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, relays: relays)
+                    let zapRequestNote = zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, withMessage: zapMessage, relays: relays)
                     NosturState.shared.nsecBunker?.requestSignature(forEvent: zapRequestNote, whenSigned: { signedEvent in
                         Task {
                             if let response = try? await LUD16.getInvoice(url:callbackUrl, amount:UInt64(self.amount * 1000), zapRequestNote: signedEvent) {
@@ -222,7 +224,7 @@ class Zap {
                     })
                 }
                 else {
-                    let zapRequestNote = zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, relays: relays)
+                    let zapRequestNote = zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, withMessage: zapMessage, relays: relays)
                     if let signedZapRequestNote = try? NosturState.shared.signEventBg(zapRequestNote) {
                         Task {
                             if let response = try? await LUD16.getInvoice(url:callbackUrl, amount:UInt64(self.amount * 1000), zapRequestNote: signedZapRequestNote) {

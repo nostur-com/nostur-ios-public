@@ -2,7 +2,8 @@ import Foundation
 
 extension Double {
     var clean: String {
-       return self.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", self) : String(self)
+        String(format: "%.0f", self)
+//       return self.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", self) : String(self)
     }
     
     var satsFormatted: String {
@@ -15,13 +16,13 @@ extension Double {
         case 0..<thousand:
             return String(format: "%.0f", self)
         case thousand..<million:
-            return String(format: "%.1fK", self / thousand)
+            return self.truncatingRemainder(dividingBy: thousand) == 0 ? String(format: "%.0fK", self / thousand) : String(format: "%.1fK", self / thousand)
         case million..<billion:
-            return String(format: "%.1fM", self / million)
+            return self.truncatingRemainder(dividingBy: million) == 0 ? String(format: "%.0fM", self / million) : String(format: "%.1fM", self / million)
         case billion..<trillion:
-            return String(format: "%.1fB", self / billion)
+            return self.truncatingRemainder(dividingBy: billion) == 0 ? String(format: "%.0fB", self / billion) : String(format: "%.1fB", self / billion)
         default:
-            return String(format: "%.1fT", self / trillion)
+            return self.truncatingRemainder(dividingBy: trillion) == 0 ? String(format: "%.0fT", self / trillion) : String(format: "%.1fT", self / trillion)
         }
     }
 }

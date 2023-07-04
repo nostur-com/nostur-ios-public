@@ -44,6 +44,7 @@ private struct WithSheets: ViewModifier {
     @State var newHighlight:NewHighlight? = nil
     
     @State var contextMenuNrPost:NRPost? = nil
+    @State var zapCustomizerSheetInfo:ZapCustomizerSheetInfo? = nil
     
     // Share post screenshot
     @State private var sharablePostImage:ShareablePostImage? = nil
@@ -229,6 +230,17 @@ private struct WithSheets: ViewModifier {
                     .presentationDetents([.medium])
             }
         
+            // Zap customizer sheet
+            .onReceive(receiveNotification(.showZapCustomizerSheet)) { notification in
+                let zapCustomizerSheetInfo = notification.object as! ZapCustomizerSheetInfo
+                self.zapCustomizerSheetInfo = zapCustomizerSheetInfo
+            }
+            .sheet(item: $zapCustomizerSheetInfo) { zapCustomizerSheetInfo in
+                ZapCustomizerSheet(nrPost: zapCustomizerSheetInfo.nrPost, customZapId: zapCustomizerSheetInfo.customZapId)
+                    .environmentObject(ns)
+                    .presentationDetents([.large])
+            }
+        
             // Share post screenshot
             .onReceive(receiveNotification(.sharePostScreenshot)) { notification in
                 let nrPost = notification.object as! NRPost
@@ -262,14 +274,18 @@ private struct WithSheets: ViewModifier {
 
                 
                 renderer.scale = 2.0
-                guard let uiImage = renderer.uiImage else { return }
+                
+                // First render:
+                guard renderer.uiImage != nil else { return }
+                
+                // We need another render after any async stuff is loaded (inline quotes, images...)
                 screenshotRenderer = renderer.objectWillChange
                     .debounce(for: 0.35, scheduler: RunLoop.main)
                     .sink {
                         guard let uiImage = renderer.uiImage else { return }
                         guard let pngData = uiImage.pngData() else { return }
                         
-                        // create screenshot
+                        // Trigger the share sheet
                         self.sharablePostImage = ShareablePostImage(pngData: pngData)
                         screenshotRenderer = nil
                     }
@@ -277,7 +293,6 @@ private struct WithSheets: ViewModifier {
             }
             .sheet(item: $sharablePostImage) { sharablePostImage in
                 let item = NSItemProvider(item: sharablePostImage.pngData as NSData, typeIdentifier: "public.png")
-//                let item = NSItemProvider(item: sharablePostImage.pngData, typeIdentifier: "nostur-post.png")
                 ActivityView(activityItems: [item])
             }
     }
@@ -285,8 +300,6 @@ private struct WithSheets: ViewModifier {
 
 struct ShareablePostImage: Identifiable {
     let id = UUID()
-//    let uiImage:UIImage
-//    let nsData:NSData
     let pngData:Data
 }
 

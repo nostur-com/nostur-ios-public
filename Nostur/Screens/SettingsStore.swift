@@ -204,7 +204,7 @@ final class SettingsStore: ObservableObject {
     }
 
     var defaultZapAmount: Double {
-        set { defaults.set(newValue, forKey: Keys.defaultZapAmount) }
+        set {  objectWillChange.send(); defaults.set(newValue, forKey: Keys.defaultZapAmount) }
         get { defaults.double(forKey: Keys.defaultZapAmount) }
     }
     
