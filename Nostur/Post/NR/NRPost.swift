@@ -128,6 +128,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var linkPreviewURLs:[URL] = []
     var previewWeights:PreviewWeights?
     var plainTextOnly = false
+    var flags:String = ""
     
     var anyName:String {
         if let contact = contact {
@@ -184,6 +185,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         self.plainTextOnly = plainText
         self.inWoT = event.inWoT
         self.isSpam = event.isSpam
+        self.flags = event.flags
         
         // article?
         if kind == 30023 {

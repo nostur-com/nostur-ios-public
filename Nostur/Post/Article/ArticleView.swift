@@ -40,6 +40,11 @@ struct ArticleView: View {
                         }
                         .padding(.vertical, 10)
                     }
+                    else if article.flags == "is_update" {
+                        Text("Last updated: \(article.createdAt.formatted())")
+                            .italic()
+                            .padding(.vertical, 10)
+                    }
                     
                     HStack {
                         PFP(pubkey: article.pubkey, nrContact: article.contact, size: 50)
