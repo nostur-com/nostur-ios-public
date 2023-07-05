@@ -194,7 +194,7 @@ class NRContentElementBuilder {
     static let videoUrlPattern = ###"(?i)https?:\/\/\S+?\.(?:mp4|mov)(\?\S+){0,1}\b"###
     static let lightningInvoicePattern = ###"(?i)lnbc\S+"###
     static let notePattern = ###"(nostr:|@?)(note1[023456789acdefghjklmnpqrstuvwxyz]{58})"###
-    static let neventPattern = ###"(nostr:@?)(nevent1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###
+    static let neventPattern = ###"(nostr:|@?)(nevent1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###
     
     // These become cards so
     // no nostr: here, because we do that in TextParser (inline)
