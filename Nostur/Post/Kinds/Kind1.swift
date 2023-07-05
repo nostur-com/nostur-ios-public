@@ -86,12 +86,12 @@ struct Kind1: View {
                             .lineLimit(3)
                             
                     }
-                    ContentRenderer(nrPost: nrPost, fullWidth: true, availableWidth: imageWidth)
+                    ContentRenderer(nrPost: nrPost, isDetail:isDetail, fullWidth: true, availableWidth: imageWidth)
                         .contentShape(Rectangle())
                         .onTapGesture {
                             navigateTo(nrPost)
                         }
-                    if (nrPost.previewWeights?.moreItems ?? false) {
+                    if !isDetail && (nrPost.previewWeights?.moreItems ?? false) {
                         ReadMoreButton(nrPost: nrPost)
                     }
                 }

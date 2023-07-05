@@ -93,7 +93,7 @@ struct Kind1Default: View {
                             
                     }
 //                    Text("availableWidth: \(imageWidth.description)")
-                    ContentRenderer(nrPost: nrPost, fullWidth: false, availableWidth: imageWidth)
+                    ContentRenderer(nrPost: nrPost, isDetail:isDetail, fullWidth: false, availableWidth: imageWidth)
                         .frame(maxWidth: .infinity, alignment:.leading)
                         .background(
                             Color.systemBackground
@@ -105,7 +105,7 @@ struct Kind1Default: View {
 //                        .onTapGesture {
 //                            navigateTo(nrPost)
 //                        }
-                    if (nrPost.previewWeights?.moreItems ?? false) {
+                    if !isDetail && (nrPost.previewWeights?.moreItems ?? false) {
                         ReadMoreButton(nrPost: nrPost)
                             .padding(.vertical, 5)
                             .hCentered()

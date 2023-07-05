@@ -25,7 +25,7 @@ struct PostPreview: View {
                     dim.listWidth = size.width
                 }
             AnyStatus()
-            PostRowDeletable(nrPost: nrPost, isDetail: true)
+            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, isDetail: true)
                 .roundedBoxShadow()
                 .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
                 .padding(.vertical, 10)
