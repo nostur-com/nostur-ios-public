@@ -131,16 +131,23 @@ final class NosturState : ObservableObject {
         
         let wotFollowingPubkeys = account.followingPublicKeys.subtracting(account.silentFollows) // We don't include silent follows in WoT
         
-        wot = WebOfTrust(pubkey: account.publicKey, followingPubkeys: wotFollowingPubkeys)
+        let publicKey = account.publicKey
+        DataProvider.shared().bg.perform { [weak self] in
+            guard let self = self else { return }
+            self.wot = WebOfTrust(pubkey: publicKey, followingPubkeys: wotFollowingPubkeys)
+        }
         switch SettingsStore.shared.webOfTrustLevel {
-        case SettingsStore.WebOfTrustLevel.off.rawValue:
-            L.og.info("🕸️🕸️ WebOfTrust: Disabled")
-        case SettingsStore.WebOfTrustLevel.normal.rawValue:
-            wot?.loadNormal()
-        case SettingsStore.WebOfTrustLevel.strict.rawValue:
-            L.og.info("🕸️🕸️ WebOfTrust: Strict")
-        default:
-            L.og.info("🕸️🕸️ WebOfTrust: Disabled")
+            case SettingsStore.WebOfTrustLevel.off.rawValue:
+                L.og.info("🕸️🕸️ WebOfTrust: Disabled")
+            case SettingsStore.WebOfTrustLevel.normal.rawValue:
+                DataProvider.shared().bg.perform { [weak self] in
+                    guard let self = self else { return }
+                    self.wot?.loadNormal()
+                }
+            case SettingsStore.WebOfTrustLevel.strict.rawValue:
+                L.og.info("🕸️🕸️ WebOfTrust: Strict")
+            default:
+                L.og.info("🕸️🕸️ WebOfTrust: Disabled")
         }
     }
     

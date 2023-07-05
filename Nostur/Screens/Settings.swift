@@ -29,7 +29,7 @@ struct Settings: View {
     @ObservedObject var vm = ViewPrint()
     @State var createRelayPresented = false
     
-    @State var UpdatingWoT = false // to prevent double tapping
+    @State var updatingWoT = false // to prevent double tapping
     
     var fiatPrice:String {
         String(format: "$%.02f", (ceil(Double(settings.defaultZapAmount)) / 100000000 * er.bitcoinPrice))
@@ -107,7 +107,9 @@ struct Settings: View {
                         }
                         .onChange(of: settings.webOfTrustLevel) { newValue in
                             if newValue == SettingsStore.WebOfTrustLevel.normal.rawValue {
-                                NosturState.shared.wot?.loadNormal()
+                                DataProvider.shared().bg.perform {
+                                    NosturState.shared.wot?.loadNormal()
+                                }
                             }
                         }
                     }
@@ -116,8 +118,10 @@ struct Settings: View {
                     HStack {
                         VStack(alignment: .leading) {
                             Text("Updated: \(NosturState.shared.wot?.lastUpdated?.formatted() ?? "Never")", comment: "Last updated date of WoT in Settings")
-                                .task(priority: .medium) {
-                                    NosturState.shared.wot?.loadLastUpdatedDate()
+                                .onAppear {
+                                    DataProvider.shared().bg.perform {
+                                        NosturState.shared.wot?.loadLastUpdatedDate()
+                                    }
                                 }
                             if settings.webOfTrustLevel == SettingsStore.WebOfTrustLevel.off.rawValue {
                                 Text("Allowed: Everyone")
@@ -128,9 +132,11 @@ struct Settings: View {
                         }
                         Spacer()
                         Button(String(localized:"Update", comment:"Button to update WoT")) {
-                            guard UpdatingWoT == false else { return }
-                            UpdatingWoT = true
-                            NosturState.shared.wot?.loadNormal()
+                            guard updatingWoT == false else { return }
+                            updatingWoT = true
+                            DataProvider.shared().bg.perform {
+                                NosturState.shared.wot?.loadNormal()
+                            }
                         }
                     }
                 }

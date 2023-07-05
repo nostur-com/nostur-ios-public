@@ -23,22 +23,39 @@ class WebOfTrust: ObservableObject {
  
     let ENABLE_THRESHOLD = 200 // To not degrade onboarding/new user experience, we should have more contacts in WoT than this threshold before the filter is active
     
+    // For views
     @Published var lastUpdated:Date? = nil
+    @Published var allowedKeysCount:Int = 0
     
+    // Only accessed from bg thread
     // Keep seperate lists for faster filtering
-    @Published var followingFollowingPubkeys = Set<String>() // follows of follows (NORMAL)
-    @Published var followingPubkeys:Set<String> // Only follows (STRICT)
     
-    var allowedKeysCount:Int {
-        if SettingsStore.shared.webOfTrustLevel == SettingsStore.WebOfTrustLevel.strict.rawValue {
-            return followingPubkeys.count
-        }
-        else {
-            return followingPubkeys.count + followingFollowingPubkeys.count
+    // follows of follows (NORMAL)
+    private var followingFollowingPubkeys = Set<String>() {
+        didSet {
+            self.updateViewData()
         }
     }
     
-    var backlog = Backlog(timeout: 90, auto: true)
+    // Only follows (STRICT)
+    private var followingPubkeys:Set<String> {
+        didSet {
+            self.updateViewData()
+        }
+    }
+
+    private func updateViewData() {
+        DispatchQueue.main.async {
+            if SettingsStore.shared.webOfTrustLevel == SettingsStore.WebOfTrustLevel.strict.rawValue {
+                self.allowedKeysCount = self.followingPubkeys.count
+            }
+            else {
+                self.allowedKeysCount = self.followingPubkeys.count + self.followingFollowingPubkeys.count
+            }
+        }
+    }
+    
+    private var backlog = Backlog(timeout: 90, auto: true)
     
     init(pubkey:String, followingPubkeys:Set<String>) {
         self.pubkey = pubkey
