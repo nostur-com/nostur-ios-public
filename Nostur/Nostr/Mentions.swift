@@ -82,7 +82,7 @@ func applyMentionsNip08(_ event:NEvent, bumpIndex:Bool = false) -> NEvent {
 // Returns all mentions as tags
 func getMentionsAsTags(_ text:String) -> [NostrTag] {
     var mentionsAsTags:[NostrTag] = []
-    let notesAndNpubs = text.matches(of: /@(npub1|note)([023456789acdefghjklmnpqrstuvwxyz]{58})/)
+    let notesAndNpubs = text.matches(of: /@(npub1|note1)([023456789acdefghjklmnpqrstuvwxyz]{58})/)
 //    print(text)
 //    print("notesAndNpubs: \(notesAndNpubs.count)")
     for match in notesAndNpubs {
