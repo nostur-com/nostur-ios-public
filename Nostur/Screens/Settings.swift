@@ -35,13 +35,6 @@ struct Settings: View {
         String(format: "$%.02f", (ceil(Double(settings.defaultZapAmount)) / 100000000 * er.bitcoinPrice))
     }
     
-    var amountS:Float {
-        mapLinearToExponential(value: Float(sliderValue), min: Float(SLIDER_MIN), max: Float(SLIDER_MAX), exponent: 7)
-    }
-    let SLIDER_MIN = 3.0
-    let SLIDER_MAX = 2000000.0
-    
-    @State var sliderValue = 0.0
     @State var deleteAccountIsShown = false
     
     @State var pfpSize = String(localized:"Calculating...", comment: "Shown when calculating disk space")
@@ -419,8 +412,6 @@ struct Settings: View {
             SettingsDefaultZapAmount()
         }
         .onAppear {
-            sliderValue = Double(mapExponentialToLinear(value: Float(settings.defaultZapAmount) , min: Float(SLIDER_MIN), max: Float(SLIDER_MAX), exponent: 7))
-            
             let bg = DataProvider.shared().container.newBackgroundContext()
             bg.perform {
                 let r = Event.fetchRequest()
@@ -438,9 +429,6 @@ struct Settings: View {
             }
             
         }
-        .onChange(of: amountS, perform: { newValue in
-            settings.defaultZapAmount = Double(newValue)
-        })
         .navigationTitle("Settings")
         .sheet(isPresented: $deleteAccountIsShown) {
             NavigationStack {
