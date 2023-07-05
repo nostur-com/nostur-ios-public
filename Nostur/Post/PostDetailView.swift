@@ -202,7 +202,7 @@ struct PostAndParent: View {
                             .foregroundColor(Color("ListBackground"))
                     }
                     
-                    Spacer()
+//                    Spacer()
                 }
                 
             }
