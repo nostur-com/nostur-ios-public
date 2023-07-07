@@ -401,9 +401,9 @@ struct SmoothList: UIViewControllerRepresentable {
                 }
             }
             else {
-                DataProvider.shared().bg.perform { [weak self] in
-                    self?.lvm.isAtTop = true
-                }
+                
+                lvm.isAtTop = true
+                
                 if let firstIndex = indexPaths.min(by: { $0.row < $1.row }) {
                     if firstIndex.row < 1 { // not sure why just index 0 doesn't work 1% of the time
                         lvm.lvmCounter.count = 0 // Publishing changes from within view updates is not allowed, this will cause undefined behavior.
