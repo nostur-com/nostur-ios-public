@@ -10,7 +10,7 @@ struct ReportPostSheet: View {
     var body: some View {
         VStack {
             ScrollView {
-                PostRowDeletable(nrPost: nrPost, hideFooter: true)
+                PostRowDeletable(nrPost: nrPost, hideFooter: true, missingReplyTo: true)
                     .disabled(true)
                     .roundedBoxShadow()
                     .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
