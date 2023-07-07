@@ -2,12 +2,10 @@ import SwiftUI
 
 struct NoteTextRenderView: View {
     @ObservedObject var nrPost:NRPost
-    var useLinelimit = true
     @State var viewSize:CGSize = .zero
     
-    init(nrPost: NRPost, useLinelimit:Bool = true) {
+    init(nrPost: NRPost) {
         self.nrPost = nrPost
-        self.useLinelimit = useLinelimit
     }
     
     var body: some View {
@@ -48,28 +46,18 @@ struct NoteTextRenderView: View {
                     }
                 }
             }
-            else if (useLinelimit) {
-                Text(nrPost.renderedText)//.border(.cyan)
-                    .lineLimit(10, reservesSpace: false)
-//                    .textSelection(.enabled)
-                    .multilineTextAlignment(TextAlignment.leading)
-                    .foregroundColor(.primary)
-                    .accentColor(Color("AccentColor"))
-                    .tint(Color("AccentColor"))
-                    .lineSpacing(3)
-                    .padding(.vertical, 5)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
             else {
-                Text(nrPost.renderedText)//.border(.pink)
-//                    .textSelection(.enabled)
-                    .multilineTextAlignment(TextAlignment.leading)
-                    .foregroundColor(.primary)
-                    .accentColor(Color("AccentColor"))
-                    .tint(Color("AccentColor"))
-                    .lineSpacing(3)
-                    .padding(.vertical, 5)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                VStack {
+                    if viewSize.width > 0 {
+                        ContentRenderer(nrPost: nrPost, isDetail: false, availableWidth: viewSize.width)
+                    }
+                    Color.clear.frame(height: 0)
+                       .modifier(SizeModifier())
+                       .onPreferenceChange(SizePreferenceKey.self) { size in
+                           guard size.width > 0 else { return }
+                           viewSize = size
+                       }
+                }
             }
             Spacer()
         }

@@ -31,7 +31,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     var replyingToUsernamesMarkDown:AttributedString?
     var contentElements:[ContentElement] = [] // NoteRow.Kind1
     var contentElementsDetail:[ContentElement] = [] // PostDetail.Kind1
-    var renderedText:AttributedString = ""
     
     var _contact:NRContact?
     var contact:NRContact?  {
@@ -292,8 +291,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         if let replyingToMarkdown = NRReplyingToBuilder.shared.replyingToUsernamesMarkDownString(event) {
             self.replyingToUsernamesMarkDown = try? AttributedString(markdown: replyingToMarkdown)
         }
-        
-        self.renderedText = NRTextParser.shared.parseText(event, text: event.noteTextPrepared).output
         
         if isZapped() {
             self.zapState = .zapReceiptConfirmed
