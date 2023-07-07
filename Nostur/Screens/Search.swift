@@ -36,7 +36,7 @@ struct Search: View {
                         }
 
                         ForEach(nrPosts) { nrPost in
-                            PostRowDeletable(nrPost: nrPost)
+                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true)
                                 .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
                                 .roundedBoxShadow()
                                 .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
