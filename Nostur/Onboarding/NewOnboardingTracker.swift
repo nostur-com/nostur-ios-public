@@ -154,7 +154,10 @@ class NewOnboardingTracker {
                 }
             })
 
-        guard self.fetchedOwnProfileTask == false && self.fetchedFollowersTask == false else { return }
+        guard self.fetchedOwnProfileTask == false && self.fetchedFollowersTask == false else {
+            self.account = nil
+            return
+        }
         backlog.add(fetchProfileAndFollowersTask)
         fetchProfileAndFollowersTask.fetch()
     }
