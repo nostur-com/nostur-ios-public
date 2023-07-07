@@ -175,7 +175,8 @@ struct ShareMediaButton: View {
     var body: some View {
         Button { showShareSheet = true } label: { Image(systemName: "square.and.arrow.up") }
             .sheet(isPresented: $showShareSheet) {
-                ActivityView(activityItems: [sharableImage])
+                let item = NSItemProvider(item: sharableImage.pngData()! as NSData, typeIdentifier: "public.png")
+                ActivityView(activityItems: [item])
             }
                         
     }
@@ -190,7 +191,8 @@ struct ShareGifButton: View {
     var body: some View {
         Button { showShareSheet = true } label: { Image(systemName: "square.and.arrow.up") }
             .sheet(isPresented: $showShareSheet) {
-                ActivityView(activityItems: [sharableGif])
+                let item = NSItemProvider(item: sharableGif as NSData, typeIdentifier: "com.compuserve.gif")
+                ActivityView(activityItems: [item])
             }
                         
     }
