@@ -11,7 +11,7 @@ struct AddExistingAccountSheet: View {
     var offerTryOut = false
     var accentColor: Color = Color("AccentColor")
     var grayBackground: Color = Color.gray.opacity(0.2)
-    var isNsecbunkerKey:Bool { key.prefix(5) == "npub1" && (key.contains("#")) && key.split(separator: "#")[1].count == 64 }
+    var isNsecbunkerKey:Bool { key.prefix(5) == "npub1" && (key.contains("#")) && key.split(separator: "#").count == 2 && key.split(separator: "#")[1].count == 64 }
     
     @StateObject var bunkerManager = NSecBunkerManager()
     
@@ -71,7 +71,24 @@ struct AddExistingAccountSheet: View {
                     }
                     .frame(maxWidth: 300)
                     .buttonStyle(.borderedProminent)
-                    .disabled(bunkerManager.state == .connecting)
+                    .disabled(bunkerManager.state == .connecting || (bunkerManager.isSelfHostedNsecBunker && bunkerManager.invalidSelfHostedAddress))
+                    
+                    if isNsecbunkerKey {
+                        
+                        Toggle(isOn: $bunkerManager.isSelfHostedNsecBunker) {
+                            Text("Self-hosted nsecBunker")
+                        }.padding()
+                        if bunkerManager.isSelfHostedNsecBunker {
+                            TextField(text: $bunkerManager.ncRelay) {
+                                Text("Enter nsecBunker relay address")
+                            }
+                            .keyboardType(.URL)
+                            .padding()
+                            .background(grayBackground)
+                            .cornerRadius(5.0)
+                            .padding(.bottom, 10)
+                        }
+                    }
                     
                     if (offerTryOut) {
                         NavigationLink {
@@ -102,6 +119,9 @@ struct AddExistingAccountSheet: View {
             .onChange(of: bunkerManager.state) { bunkerState in
                 if bunkerState == .connected {
                     guard let account = bunkerManager.account else { return }
+                    if bunkerManager.isSelfHostedNsecBunker {
+                        account.ncRelay = bunkerManager.ncRelay
+                    }
                     // Continue onboarding..
                     
                     // Remove existing metadata events, so can proper parse again from Importers. Else get filtered by duplicate filter

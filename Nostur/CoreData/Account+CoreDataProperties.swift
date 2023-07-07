@@ -30,6 +30,7 @@ extension Account {
     @NSManaged public var lastProfileReceivedAt: Date?
     
     @NSManaged public var isNC: Bool
+    @NSManaged public var ncRelay: String
     
     var followingPublicKeys:Set<String> {
         get {

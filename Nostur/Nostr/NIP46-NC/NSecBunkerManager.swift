@@ -11,6 +11,16 @@ import Combine
 class NSecBunkerManager: ObservableObject {
     @Published var state:STATE = .disconnected
     @Published var error = ""
+    @Published var isSelfHostedNsecBunker = false
+    @Published var ncRelay = ""
+    
+    var invalidSelfHostedAddress:Bool {
+        if let url = URL(string: ncRelay) {
+            if url.absoluteString.lowercased().prefix(6) == "wss://" { return false }
+            if url.absoluteString.lowercased().prefix(4) == "ws://" { return false }
+        }
+        return true
+    }
     
     var backlog = Backlog(timeout: 15, auto: true)
     let decoder = JSONDecoder()
@@ -22,11 +32,16 @@ class NSecBunkerManager: ObservableObject {
     
     init(_ account:Account? = nil) {
         self.account = account
-        if account != nil {
-            guard let sessionPrivateKey = account?.privateKey else { return }
+        if let account {
+            guard let sessionPrivateKey = account.privateKey else { return }
             guard let keys = try? NKeys(privateKeyHex: sessionPrivateKey) else { return }
             // connect to NC relay, the session public key is used as id
-            self.connectToHardcodedNsecbunker(sessionPublicKey: keys.publicKeyHex())
+            if account.ncRelay != "" {
+                self.connectToSelfHostedNsecbunker(sessionPublicKey: keys.publicKeyHex(), relay: account.ncRelay)
+            }
+            else {
+                self.connectToHardcodedNsecbunker(sessionPublicKey: keys.publicKeyHex())
+            }
         }
         listenForNCMessages()
     }
@@ -107,6 +122,10 @@ class NSecBunkerManager: ObservableObject {
             .store(in: &subscriptions)
     }
     
+    private func connectToSelfHostedNsecbunker(sessionPublicKey: String, relay:String) {
+        _ = SocketPool.shared.addNCSocket(sessionPublicKey: sessionPublicKey, url: relay)
+    }
+    
     private func connectToHardcodedNsecbunker(sessionPublicKey: String) {
         _ = SocketPool.shared.addNCSocket(sessionPublicKey: sessionPublicKey, url: "wss://relay.nsecbunker.com")
     }
@@ -127,7 +146,12 @@ class NSecBunkerManager: ObservableObject {
         guard let keys = try? NKeys(privateKeyHex: sessionPrivateKey) else { state = .error; return }
         
         // connect to NC relay, the session public key is used as id
-        self.connectToHardcodedNsecbunker(sessionPublicKey: keys.publicKeyHex())
+        if isSelfHostedNsecBunker {
+            self.connectToSelfHostedNsecbunker(sessionPublicKey: keys.publicKeyHex(), relay: self.ncRelay)
+        }
+        else {
+            self.connectToHardcodedNsecbunker(sessionPublicKey: keys.publicKeyHex())
+        }
         
         // the connect request, params are our session public key and the bunker provided redemption token
         let request = NCRequest(id: "connect-\(UUID().uuidString)", method: "connect", params: [keys.publicKeyHex(), token])

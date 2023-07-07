@@ -19,6 +19,7 @@
         <attribute name="lud16" attributeType="String" defaultValueString=""/>
         <attribute name="mutedRootIds" optional="YES" attributeType="String" customClassName="[String]"/>
         <attribute name="name" attributeType="String" defaultValueString=""/>
+        <attribute name="ncRelay" attributeType="String" defaultValueString=""/>
         <attribute name="nip05" attributeType="String" defaultValueString=""/>
         <attribute name="picture" attributeType="String" defaultValueString=""/>
         <attribute name="publicKey" attributeType="String"/>
