@@ -1,10 +1,3 @@
-//
-//  CommunityFilters.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 01/07/2023.
-//
-
 import Foundation
 
 

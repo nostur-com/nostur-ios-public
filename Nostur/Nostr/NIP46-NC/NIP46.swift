@@ -1,10 +1,3 @@
-//
-//  NIP46.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 29/06/2023.
-//
-
 import Foundation
 
 // https://github.com/nostr-protocol/nips/blob/master/46.md

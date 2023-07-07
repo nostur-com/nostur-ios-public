@@ -1,10 +1,3 @@
-//
-//  DummyEvents.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 14/01/2023.
-//
-
 import Foundation
 
 func test1() -> [String] {

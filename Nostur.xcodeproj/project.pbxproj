@@ -390,6 +390,7 @@
 		1F065A9829A37A47003421D3 /* NoteZaps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteZaps.swift; sourceTree = "<group>"; };
 		1F065A9A29A3E67F003421D3 /* NotificationsReactions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsReactions.swift; sourceTree = "<group>"; };
 		1F065A9C29A3E9E0003421D3 /* FetchThings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchThings.swift; sourceTree = "<group>"; };
+		1F06D2D92A584318007B9373 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		1F08CA032A5063E3004A3494 /* Community.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Community.swift; sourceTree = "<group>"; };
 		1F08CA062A506414004A3494 /* Event+communities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Event+communities.swift"; sourceTree = "<group>"; };
 		1F08CA092A5067C2004A3494 /* CommunityFilters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunityFilters.swift; sourceTree = "<group>"; };
@@ -845,7 +846,6 @@
 				1FF21E7D29ACC02E00203623 /* FollowingAndExplore.swift */,
 				1FB6E6FA29E3B827008BE8A6 /* MainView.swift */,
 				1F810B2F29E67017006B1614 /* MutedWordsView.swift */,
-				1F3C3F9529755D4C00E813FD /* NosturState.swift */,
 				1F57C54A299285B300DFE063 /* Search.swift */,
 				1F21442B29A797930090E78E /* Settings.swift */,
 				1FCDDEBB2A480A84002EDEEC /* SettingsDevTools.swift */,
@@ -1222,6 +1222,8 @@
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1F3D4BB62A25CC140084F939 /* AppView.swift */,
 				1FB448BD2965F3D000038671 /* NosturApp.swift */,
+				1F3C3F9529755D4C00E813FD /* NosturState.swift */,
+				1F06D2D92A584318007B9373 /* README.md */,
 				1F313DED296980D8004C7366 /* Info.plist */,
 				1F0F356A2A31C76900AA9C41 /* Localizable.strings */,
 				1F9D69D82A3077F400628460 /* Config.xcconfig */,

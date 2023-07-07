@@ -1,0 +1,7 @@
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+TENOR_API_KEY = __ENTER_HERE__
+TENOR_CLIENT_KEY = __ENTER_HERE__
+IMGUR_CLIENT_ID = __ENTER_HERE__
+NOSTRCHECK_PUBLIC_API_KEY = __ENTER_HERE__

@@ -2,14 +2,6 @@ import Foundation
 import CoreData
 import Combine
 
-// Usage
-
-//    let fl = FastLoader()
-//    fl.predicate = NSPredicate()
-//    fl.fetch()
-//    results = await fl.first()
-//    results = await fl.full()
-
 class FastLoader: ObservableObject {
     private var viewContext:NSManagedObjectContext
     private var bgContext:NSManagedObjectContext

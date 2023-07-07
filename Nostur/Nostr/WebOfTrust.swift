@@ -17,7 +17,6 @@
 import SwiftUI
 import FileProvider
 import Foundation
-import UIKit
 
 class WebOfTrust: ObservableObject {
  
