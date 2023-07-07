@@ -52,7 +52,7 @@ func parseMetaTags(html: String) -> [String: String] {
     }
     
     // fallback title
-    if let titleMatch = html.firstMatch(of: /<title(?:.*)>([^<]*)<\/title>/.ignoresCase())?.output {
+    if metaTags["title"] == nil, let titleMatch = html.firstMatch(of: /<title(?:.*)>([^<]*)<\/title>/.ignoresCase())?.output {
         metaTags["fallback_title"] = String(titleMatch.1).htmlUnescape()
     }
     
