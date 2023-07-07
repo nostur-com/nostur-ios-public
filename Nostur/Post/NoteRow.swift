@@ -113,6 +113,18 @@ struct NoteRow_Previews: PreviewProvider {
                 LazyVStack {
                     Group {
                         
+                        if let p = PreviewFetcher.fetchNRPost("347c5332d508c99d57b25dcaad7ee91f4922088b3d9395c447055953d02084e7") {
+                            // A POST WITH CODE
+                            PostRowDeletable(nrPost: p, fullWidth: true)
+                                .roundedBoxShadow()
+                                .padding(.horizontal, 0) // FULL WIDTH
+                                .padding(.vertical, 10)
+                            
+                            PostRowDeletable(nrPost: p)
+                                .roundedBoxShadow()
+                                .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING) // NORMAL
+                                .padding(.vertical, 10)
+                        }
                         if let p = PreviewFetcher.fetchNRPost("115eab2976aee4ca562d83ea6b1d805c6d4e0acf54fe2e6a4e1a62f73c2850cc") {
                             // A POST A @MENTION
                             PostRowDeletable(nrPost: p, fullWidth: true)

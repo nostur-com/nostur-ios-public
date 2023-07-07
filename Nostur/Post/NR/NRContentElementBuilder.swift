@@ -71,6 +71,12 @@ class NRContentElementBuilder {
                         }
                     }
                 }
+                else if !matchString.matchingStrings(regex: Self.codePattern).isEmpty {
+                    let m = matchString.matchingStrings(regex: Self.codePattern)
+                    if let code = m[0][safe: 1] {
+                        result.append(ContentElement.code(code))
+                    }
+                }
                 else if !matchString.matchingStrings(regex: Self.neventPattern).isEmpty {
                     do {
                         let match = matchString.replacingOccurrences(of: "nostr:", with: "")
@@ -173,6 +179,12 @@ class NRContentElementBuilder {
                 else if !matchString.matchingStrings(regex: Self.lightningInvoicePattern).isEmpty {
                     result.append(ContentElement.lnbc(matchString))
                 }
+                else if !matchString.matchingStrings(regex: Self.codePattern).isEmpty {
+                    let m = matchString.matchingStrings(regex: Self.codePattern)
+                    if let code = m[0][safe: 1] {
+                        result.append(ContentElement.code(code))
+                    }
+                }
                 else {
                     result.append(ContentElement.md(NRTextParser.shared.parseMD(event, text:matchString)))
                 }
@@ -195,6 +207,7 @@ class NRContentElementBuilder {
     static let lightningInvoicePattern = ###"(?i)lnbc\S+"###
     static let notePattern = ###"(nostr:|@?)(note1[023456789acdefghjklmnpqrstuvwxyz]{58})"###
     static let neventPattern = ###"(nostr:|@?)(nevent1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###
+    static let codePattern = ###"```([\s\S]*?)```"###
     
     // These become cards so
     // no nostr: here, because we do that in TextParser (inline)
@@ -205,11 +218,11 @@ class NRContentElementBuilder {
     static let otherUrlsPattern = ###"(?i)(https\:\/\/)[a-zA-Z0-9\-\.]+(?:\.[a-zA-Z]{2,999}+)+([\/\?\=\&\#\%\+\.]\@?[\S]+)*\/?[^\s\)]"###
     
     // For kind 1 or similar text notes
-    static let pattern = "\(previewImagePlaceholder)|\(imageUrlPattern)|\(lightningInvoicePattern)|\(npubPattern)|\(notePattern)|\(nprofilePattern)|\(neventPattern)|\(videoUrlPattern)|\(otherUrlsPattern)"
+    static let pattern = "\(previewImagePlaceholder)|\(imageUrlPattern)|\(lightningInvoicePattern)|\(npubPattern)|\(notePattern)|\(nprofilePattern)|\(neventPattern)|\(videoUrlPattern)|\(otherUrlsPattern)|\(codePattern)"
     static let regex = try! NSRegularExpression(pattern: pattern)
     
     // For long form articles (kind 30023), no image urls, video urls, other urls, as these are handled by markdown
-    static let articlePattern = "\(previewImagePlaceholder)|\(lightningInvoicePattern)|\(npubPattern)|\(notePattern)|\(nprofilePattern)|\(neventPattern)"
+    static let articlePattern = "\(previewImagePlaceholder)|\(lightningInvoicePattern)|\(npubPattern)|\(notePattern)|\(nprofilePattern)|\(neventPattern)|\(codePattern)"
     static let articleRegex = try! NSRegularExpression(pattern: articlePattern)
 }
 
@@ -217,6 +230,7 @@ public typealias Ptag = String
 
 enum ContentElement: Hashable, Identifiable {
     var id:Self { self }
+    case code(String) // dont parse anything here
     case text(AttributedStringWithPs) // text notes
     case md(MarkdownContentWithPs) // long form articles
     case npub1(String)

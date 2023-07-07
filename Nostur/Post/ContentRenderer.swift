@@ -51,6 +51,14 @@ struct ContentRenderer: View { // VIEW things
                     QuoteById(id: hex)
                         .padding(.vertical, 10)
 //                        .padding(.horizontal, fullWidth ? 10 : 0)
+                case .code(let code): // For text notes
+                    Text(verbatim: code)
+                        .font(.system(.body, design: .monospaced))
+//                        .padding(.horizontal, fullWidth ? 10 : 0)
+                        .onTapGesture {
+                            guard !isDetail else { return }
+                            navigateTo(nrPost)
+                        }
                 case .text(let attributedStringWithPs): // For text notes
                     NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs)
 //                        .padding(.horizontal, fullWidth ? 10 : 0)
