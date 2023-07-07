@@ -11,7 +11,7 @@ class Communities: ObservableObject {
     @AppStorage("communities_most_recent_created_at") var mostRecentCreatedAt:Int = 0
     @Published var communities:[Community] = []
     
-    private var backlog = Backlog(timeout: 10.0, auto: true)
+    private var backlog = Backlog(timeout: 0.2, auto: true)
     private var bg = DataProvider.shared().bg
     
     public func fetchCommunities() {
@@ -31,11 +31,15 @@ class Communities: ObservableObject {
                         .map {
                             Community(id: $0.aTag, title: $0.communityName, image: $0.communityImage, moderators: [])
                         }
+                        .sorted {
+                            ($0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending)
+                        }
                     
                     if let mostRecent = events.max(by: { $0.created_at > $1.created_at }) {
+                        let mostRecentCreatedAt = Int(mostRecent.created_at)
                         DispatchQueue.main.async {
                             self.communities = communities
-                            self.mostRecentCreatedAt = Int(mostRecent.created_at)
+                            self.mostRecentCreatedAt = mostRecentCreatedAt
                         }
                     }
                 }
@@ -50,6 +54,10 @@ class Communities: ObservableObject {
                             .map {
                                 Community(id: $0.aTag, title: $0.communityName, image: $0.communityImage, moderators: [])
                             }
+                            .sorted {
+                                ($0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending)
+                            }
+                        
                         DispatchQueue.main.async {
                             self.communities = communities
                         }

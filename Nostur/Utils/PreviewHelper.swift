@@ -299,6 +299,12 @@ extension PreviewEnvironment {
         }
     }
     
+    func loadCommunities() {
+        context.performAndWait {
+            self.parseMessages(testCommunities())
+        }
+    }
+    
     // Needs account, some kind = 1 events, and some contacts first
     func loadBlockedAndMuted() {
         guard let account = NosturState.shared.account else { L.og.debug("Preview.loadBlockedAndMuted - missing Account"); return }

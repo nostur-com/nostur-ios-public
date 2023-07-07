@@ -7,6 +7,7 @@ class ImageProcessing {
     var pfp:ImagePipeline
     var banner:ImagePipeline
     var content:ImagePipeline
+    var communities:ImagePipeline
     var badges:ImagePipeline
     var video:ImagePipeline
     
@@ -60,6 +61,24 @@ class ImageProcessing {
             }())
             
             let dataCache = try! DataCache(name: "com.nostur.image.content")
+            dataCache.sizeLimit = 1024 * 1024 * 500
+            
+            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 100, countLimit: 1000)
+            $0.dataCache = dataCache
+            $0.dataCachePolicy = .storeAll
+        }
+        
+        communities = ImagePipeline {
+//            $0.isUsingPrepareForDisplay = true
+            $0.isProgressiveDecodingEnabled = true
+            $0.dataLoader = DataLoader(configuration: {
+                // Disable disk caching built into URLSession
+                let conf = DataLoader.defaultConfiguration
+                conf.urlCache = nil
+                return conf
+            }())
+            
+            let dataCache = try! DataCache(name: "com.nostur.image.communities")
             dataCache.sizeLimit = 1024 * 1024 * 500
             
             $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 100, countLimit: 1000)
