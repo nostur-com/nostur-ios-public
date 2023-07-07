@@ -28,7 +28,7 @@ struct EventPrivateNoteToggle: View {
         Image(systemName: "note.text")
             .padding(.horizontal, 5)
             .contentShape(Rectangle())
-            .opacity(nrPost.mainEvent.privateNote != nil ? 1 : 0.2)
+            .opacity(nrPost.hasPrivateNote ? 1 : 0.2)
             .onTapGesture {
                 if let pn = nrPost.mainEvent.privateNote {
                     sendNotification(.editingPrivateNote, pn)
