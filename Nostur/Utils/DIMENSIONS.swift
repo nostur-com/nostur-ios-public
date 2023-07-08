@@ -18,6 +18,8 @@ class DIMENSIONS: ObservableObject {
     
     static public let PREVIEW_HEIGHT:CGFloat = 70.0
     
+    static public let PFP_BIG:CGFloat = 75.0 // Bigger PFP on Profile View and Profile Cards
+    
     @Published var listWidth:CGFloat = UIScreen.main.bounds.width // Should override for IS_IPAD / macOS
     
     /// Substracts profile pic space from list width

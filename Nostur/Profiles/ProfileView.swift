@@ -36,8 +36,6 @@ struct ProfileView: View {
         _kind0Events = FetchRequest(fetchRequest: kind0)
     }
     
-    let PFP_SIZE = 75.0
-    
     var body: some View {
         //        let _ = Self._printChanges()
         ScrollView {
@@ -76,7 +74,7 @@ struct ProfileView: View {
                         GeometryReader { geoBanner in
                             ProfileBanner(banner: contact.banner, width: dim.listWidth, offset: geoBanner.frame(in:.global).minY)
                                 .overlay(alignment: .bottomLeading, content: {
-                                    PFP(pubkey: contact.pubkey, contact: contact, size: PFP_SIZE)
+                                    PFP(pubkey: contact.pubkey, contact: contact, size: DIMENSIONS.PFP_BIG)
                                         .overlay(
                                             Circle()
                                                 .strokeBorder(Color.systemBackground, lineWidth: 3)
@@ -87,7 +85,7 @@ struct ProfileView: View {
                                             }
                                         }
                                         .scaleEffect(min(1,max(0.5,geoBanner.frame(in:.global).minY / 70 + 1.3)), anchor:.bottom)
-                                        .offset(x: 10, y: PFP_SIZE/2)
+                                        .offset(x: 10, y: DIMENSIONS.PFP_BIG/2)
                                 })
                             
                         }
