@@ -6,12 +6,15 @@ class Community: Identifiable, Equatable {
     var title:String
     var image:String?
     var moderators:[NRContact]
+    var pubkey:String
+    var admin:NRContact?
     
-    init(id:String, title: String, image: String? = nil, moderators: [NRContact] = []) {
-        self.id = id
-        self.title = title
-        self.image = image
-        self.moderators = moderators
+    init(event: Event) {
+        self.pubkey = event.pubkey
+        self.id = event.aTag
+        self.title = event.communityName
+        self.image = event.communityImage
+        self.moderators = []
     }
     
     static func == (lhs: Community, rhs: Community) -> Bool {

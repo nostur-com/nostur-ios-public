@@ -1,22 +1,17 @@
-//
-//  Communities.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 04/07/2023.
-//
-
 import SwiftUI
 
 class Communities: ObservableObject {
     @AppStorage("communities_most_recent_created_at") var mostRecentCreatedAt:Int = 0
     @Published var communities:[Community] = []
+    @Published var newCommunities:[Community] = []
+    @Published var showNewCommunities = false
     
     private var backlog = Backlog(timeout: 0.2, auto: true)
     private var bg = DataProvider.shared().bg
     
     public func fetchCommunities() {
         let reqTask = ReqTask(
-            debounceTime: 1.0,
+            debounceTime: 5.0,
             prefix: "FC-",
             reqCommand: { [weak self] taskId in
                 guard let self = self else { return }
@@ -29,7 +24,7 @@ class Communities: ObservableObject {
                     let events = Event.fetchCommunities(context: self.bg)
                     let communities = events
                         .map {
-                            Community(id: $0.aTag, title: $0.communityName, image: $0.communityImage, moderators: [])
+                            Community(event: $0)
                         }
                         .sorted {
                             ($0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending)
@@ -38,7 +33,12 @@ class Communities: ObservableObject {
                     if let mostRecent = events.max(by: { $0.created_at > $1.created_at }) {
                         let mostRecentCreatedAt = Int(mostRecent.created_at)
                         DispatchQueue.main.async {
-                            self.communities = communities
+                            if self.communities.isEmpty {
+                                self.communities = communities
+                            }
+                            else {
+                                self.newCommunities = communities
+                            }
                             self.mostRecentCreatedAt = mostRecentCreatedAt
                         }
                     }
@@ -52,7 +52,7 @@ class Communities: ObservableObject {
                         let events = Event.fetchCommunities(context: self.bg)
                         let communities = events
                             .map {
-                                Community(id: $0.aTag, title: $0.communityName, image: $0.communityImage, moderators: [])
+                                Community(event: $0)
                             }
                             .sorted {
                                 ($0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending)
@@ -67,5 +67,27 @@ class Communities: ObservableObject {
         
         backlog.add(reqTask)
         reqTask.fetch()
+    }
+    
+    public func loadCommunities() {
+        bg.perform { [weak self] in
+            guard let self = self else { return }
+            let events = Event.fetchCommunities(context: self.bg)
+            let communities = events
+                .map {
+                    Community(event: $0)
+                }
+                .sorted {
+                    ($0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending)
+                }
+            
+            if let mostRecent = events.max(by: { $0.created_at > $1.created_at }) {
+                let mostRecentCreatedAt = Int(mostRecent.created_at)
+                DispatchQueue.main.async {
+                    self.communities = communities
+                    self.mostRecentCreatedAt = mostRecentCreatedAt
+                }
+            }
+        }
     }
 }

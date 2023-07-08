@@ -14,12 +14,37 @@ struct DiscoverCommunities: View {
                 Text("Discover Communities", comment: "Heading above list of communities")
                     .font(.title)
                 
+                if !vm.newCommunities.isEmpty && !vm.showNewCommunities {
+                    HStack {
+                        Text("There are \(vm.newCommunities.count) new communities")
+                        Button("Show") {
+                            vm.showNewCommunities = true
+                        }
+                    }
+                }
+                
+                if vm.showNewCommunities {
+                    ScrollView {
+                        LazyVStack(alignment: .leading) {
+                            ForEach(vm.newCommunities) { community in
+                                HStack(alignment: .top) {
+                                    CommunityImage(pictureUrl: community.image, size: 75.0)
+                                    Text(community.title)
+                                    Text(community.pubkey)
+                                }
+                                .background(Color.random)
+                            }
+                        }
+                    }
+                }
+                
                 ScrollView {
                     LazyVStack(alignment: .leading) {
                         ForEach(vm.communities) { community in
                             HStack(alignment: .top) {
                                 CommunityImage(pictureUrl: community.image, size: 75.0)
                                 Text(community.title)
+                                Text(community.pubkey.prefix(11))
                             }
                             .background(Color.random)
                         }
@@ -27,7 +52,8 @@ struct DiscoverCommunities: View {
                 }
             }
             .onAppear {
-                vm.fetchCommunities()
+                vm.loadCommunities() // local
+                vm.fetchCommunities() // check for new.
             }
         }
         .navigationTitle(String(localized:"Communities", comment: "Navigation title for Communities view"))
