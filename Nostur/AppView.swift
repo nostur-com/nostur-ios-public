@@ -68,6 +68,9 @@ struct AppView: View {
                             }
                         }
                 }
+                else {
+                    ProgressView()
+                }
             }
         }
         .onAppear  { startNosturing(); self.isViewDisplayed = true }
