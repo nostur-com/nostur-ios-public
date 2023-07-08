@@ -50,20 +50,6 @@ struct QuotedNoteFragmentView: View {
                 //                    .onTapGesture {
                 //                        navigateTo(nrPost)
                 //                    }
-                if nrPost.imageUrls.first != nil {
-                    Color.clear.frame(height: 0)
-                        .modifier(SizeModifier())
-                        .onPreferenceChange(SizePreferenceKey.self) { size in
-                            guard size.width > 0 else { return }
-                            viewSize = size
-                        }
-                }
-                if let firstMediaUrl = nrPost.imageUrls.first, !firstMediaUrl.absoluteString.matchingStrings(regex: NRContentElementBuilder.videoUrlPattern).isEmpty, viewSize.width > 0 {
-                    NosturVideoViewur(url: firstMediaUrl, pubkey: nrPost.pubkey, videoWidth: viewSize.width - 20, isFollowing:nrPost.following)
-                }
-                else if let firstMediaUrl = nrPost.imageUrls.first, viewSize.width > 0 {
-                    SingleMediaViewer(url: firstMediaUrl, pubkey: nrPost.pubkey, imageWidth: viewSize.width, isFollowing: nrPost.following)
-                }
             }
         }
         .contentShape(Rectangle())
