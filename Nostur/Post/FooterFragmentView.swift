@@ -115,10 +115,12 @@ struct FooterFragmentView: View {
                 }
                 Spacer()
                 
-                ZapButton(tally: nrPost.zapTally, nrPost: nrPost)
-                    .opacity(nrPost.contact?.anyLud ?? false ? 1 : 0.3)
-                    .disabled(!(nrPost.contact?.anyLud ?? false))
-                Spacer()
+                if !IS_APPLE_TYRANNY {
+                    ZapButton(tally: nrPost.zapTally, nrPost: nrPost)
+                        .opacity(nrPost.contact?.anyLud ?? false ? 1 : 0.3)
+                        .disabled(!(nrPost.contact?.anyLud ?? false))
+                    Spacer()
+                }
                 
                 
                 // BOOKMARK
