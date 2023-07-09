@@ -7,6 +7,7 @@ struct ProfileByPubkey: View {
      
     
     var pubkey:String
+    var tab:String?
     
     @FetchRequest
     var contacts:FetchedResults<Contact>
@@ -15,8 +16,9 @@ struct ProfileByPubkey: View {
     
     @State var editingAccount:Account?
     
-    init(pubkey:String) {
+    init(pubkey:String, tab:String? = nil) {
         self.pubkey = pubkey
+        self.tab = tab
         
         _contacts = FetchRequest(
             sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
@@ -26,7 +28,7 @@ struct ProfileByPubkey: View {
     
     var body: some View {
         if let contact = contacts.first {
-            ProfileView(contact: contact)
+            ProfileView(contact: contact, tab:tab)
         }
         else {
             ProgressView().onAppear {

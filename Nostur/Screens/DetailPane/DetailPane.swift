@@ -158,7 +158,7 @@ struct DetailPane: View {
             }
             else if type(of: destination.destination) == ContactPath.self {
                 let c = destination.destination as! ContactPath
-                let tab = TabModel(contactPath: c)
+                let tab = TabModel(contactPath: c, profileTab:c.tab)
                 tm.tabs.append(tab)
                 tm.selected = tab
                 return

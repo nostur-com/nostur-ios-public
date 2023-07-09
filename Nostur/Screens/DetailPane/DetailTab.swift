@@ -19,7 +19,7 @@ struct DetailTab: View {
                 ZStack {
                     Color("ListBackground")
                         .ignoresSafeArea()
-                    ProfileView(contact:contact)
+                    ProfileView(contact:contact, tab: tab.profileTab)
                         .withNavigationDestinations()
                 }
             }
@@ -50,11 +50,11 @@ struct DetailTab: View {
                 }
                 
             }
-            else if let contacPubkey = tab.contactPath?.key {
+            else if let contactPubkey = tab.contactPath?.key {
                 ZStack {
                     Color("ListBackground")
                         .ignoresSafeArea()
-                    ProfileByPubkey(pubkey: contacPubkey)//.opacity(tm.selected == tab ? 1 : 0)
+                    ProfileByPubkey(pubkey: contactPubkey, tab: tab.contactPath?.tab)//.opacity(tm.selected == tab ? 1 : 0)
                         .withNavigationDestinations()
                 }
                 

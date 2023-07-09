@@ -10,6 +10,7 @@ class TabModel: ObservableObject, Identifiable, Equatable {
     var contact:Contact?
     var naddr1:Naddr1Path?
     var articlePath:ArticlePath?
+    var profileTab:String?
     var isArticle:Bool {
         naddr1 != nil || articlePath != nil
     }
@@ -19,7 +20,7 @@ class TabModel: ObservableObject, Identifiable, Equatable {
         }
     }
     
-    init(notePath:NotePath? = nil, contactPath:ContactPath? = nil, event:Event? = nil, contact:Contact? = nil, nrPost:NRPost? = nil, naddr1:Naddr1Path? = nil, articlePath:ArticlePath? = nil) {
+    init(notePath:NotePath? = nil, contactPath:ContactPath? = nil, event:Event? = nil, contact:Contact? = nil, nrPost:NRPost? = nil, naddr1:Naddr1Path? = nil, articlePath:ArticlePath? = nil, profileTab:String? = nil) {
         self.id = UUID()
         self.notePath = notePath
         self.contactPath = contactPath
@@ -28,6 +29,7 @@ class TabModel: ObservableObject, Identifiable, Equatable {
         self.nrPost = nrPost
         self.naddr1 = naddr1
         self.articlePath = articlePath
+        self.profileTab = profileTab
         
         if (contactPath != nil) {
             if let contactFromCache = Contact.fetchByPubkey(contactPath!.key, context: DataProvider.shared().container.viewContext) {

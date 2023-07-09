@@ -8,6 +8,7 @@ struct ProfileView: View {
     @ObservedObject var settings:SettingsStore = .shared
     @ObservedObject var contact:Contact
     let pubkey:String
+    var tab:String?
     
     @FetchRequest
     var relayEvents:FetchedResults<Event>
@@ -20,9 +21,11 @@ struct ProfileView: View {
     @State var tabOffset = 0.0
     @State var selectedSubTab = "Posts"
     
-    init(contact:Contact) {
+    init(contact:Contact, tab:String? = nil) {
         self.contact = contact
         self.pubkey = contact.pubkey
+        self.tab = tab
+        
         
         let rl = Event.fetchRequest()
         rl.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
@@ -203,6 +206,11 @@ struct ProfileView: View {
             let nEvent = notification.object as! NEvent
             if nEvent.publicKey == contact.pubkey {
                 contact.objectWillChange.send()
+            }
+        }
+        .onAppear {
+            if let tab = tab {
+                selectedSubTab = tab
             }
         }
         .task {

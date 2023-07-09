@@ -9,6 +9,7 @@ struct NotePath: Hashable {
 struct ContactPath: Hashable {
     var key:String
     var navigationTitle:String? = nil
+    var tab:String? = nil
 }
 
 struct HashtagPath: Hashable {
@@ -72,7 +73,7 @@ extension View {
                 NoteById(id: path.id)
             }
             .navigationDestination(for: ContactPath.self) { path in
-                ProfileByPubkey(pubkey: path.key)
+                ProfileByPubkey(pubkey: path.key, tab:path.tab)
             }
             .navigationDestination(for: Contact.self) { contact in
                 ProfileView(contact: contact)
