@@ -455,8 +455,8 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     
     private var _isConnecting = false
     private var _activeSubscriptions:[String] = []
-    private var _lastMessageReceivedAt:Date? = nil
     
+    private var _lastMessageReceivedAt:Date? = nil
     var lastMessageReceivedAt: Date? {
         get {
             return SocketPool.shared.connectionQueue.sync {
@@ -655,14 +655,21 @@ protocol NewWebSocketDelegate: URLSessionWebSocketDelegate {
 
 class NewWebSocket {
     let url:String
-    var socketQueue = OperationQueue()
+    var socketQueue = OperationQueue() // TODO: Or should we use SocketPool.shared.websocketQueue? dunno
     
-    var webSocket_:WebSocket?
-    var connection_:AnyCancellable?
-    var pinger:AnyCancellable?
-//    var senderAfterPing_:AnyCancellable?
-
-    var delegate:NewWebSocketDelegate?
+    var delegate_:NewWebSocketDelegate?
+    var delegate:NewWebSocketDelegate? {
+        get {
+            SocketPool.shared.websocketQueue.sync {
+                self.delegate_
+            }
+        }
+        set {
+            SocketPool.shared.websocketQueue.async(flags: .barrier) {
+                self.delegate_ = newValue
+            }
+        }
+    }
     
     var subscriptions_ = Set<AnyCancellable>()
     var subscriptions:Set<AnyCancellable> {
@@ -678,6 +685,7 @@ class NewWebSocket {
         }
     }
     
+    var connection_:AnyCancellable?
     var connection:AnyCancellable? {
         get {
             SocketPool.shared.websocketQueue.sync {
@@ -691,7 +699,21 @@ class NewWebSocket {
         }
     }
     
+    var pinger_:AnyCancellable?
+    var pinger:AnyCancellable? {
+        get {
+            SocketPool.shared.websocketQueue.sync {
+                self.pinger_
+            }
+        }
+        set {
+            SocketPool.shared.websocketQueue.async(flags: .barrier) {
+                self.pinger_ = newValue
+            }
+        }
+    }
     
+    var webSocket_:WebSocket?
     var webSocket:WebSocket? {
         get {
             SocketPool.shared.websocketQueue.sync {
