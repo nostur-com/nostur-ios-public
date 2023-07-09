@@ -15,16 +15,34 @@ struct NoteZaps: View {
     
     var body: some View {
         ScrollView {
-            ForEach(zapsSorted) { zap in
-                if let zapFrom = zap.zapFromRequest {
-                    NoteZapRow(zap: zap, zapFrom:zapFrom)
+            
+            LazyVStack(alignment: .leading) {
+                ForEach(zapsSorted.filter { $0.flags == "zpk_verified" } ) { zap in
+                    if let zapFrom = zap.zapFromRequest {
+                        NoteZapRow(zap: zap, zapFrom:zapFrom)
+                    }
+                }
+                
+                Text("Unverified zaps", comment: "List of unverified zaps")
+                    .fontWeight(.bold)
+                    .padding(10)
+                
+                ForEach(zapsSorted.filter { $0.flags != "zpk_verified" } ) { zap in
+                    if let zapFrom = zap.zapFromRequest {
+                        NoteZapRow(zap: zap, zapFrom:zapFrom)
+                    }
                 }
             }
+            
+            
             Spacer()
         }
         .task {
             // Fix zaps afterwards??
-            let tally = zaps.reduce((0, 0)) { partialResult, zap in
+            // (0, 0) = (tally, count)
+            let tally = zaps
+                .filter { $0.flags == "zpk_verified" }
+                .reduce((0, 0)) { partialResult, zap in
                 return (partialResult.0 + Int64(zap.naiveSats), partialResult.1 + Int64(1))
             }
             if let event = try? DataProvider.shared().fetchEvent(id: id) {
@@ -85,6 +103,7 @@ struct NoteZapRow: View {
                 NoteHeaderViewEvent(event: zapFrom)
                 Text("Zapped \(zap.naiveSats.satsFormatted) sats \(fiatPrice)")
                 Text(zapFrom.content ?? "")
+//                Text(zap.flags)
             }
         }
         .padding()

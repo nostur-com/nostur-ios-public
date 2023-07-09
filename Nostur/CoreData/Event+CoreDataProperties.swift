@@ -576,12 +576,27 @@ extension Event {
             return false
         }
         
+        // Check if contact matches the zapped event contact
+        if let zappedContactPubkey = zap.zappedContactPubkey, let zappedEvent = zap.zappedEvent {
+            guard zappedContactPubkey == zappedEvent.pubkey else {
+                L.og.info("⚡️🔴 zapped contact pubkey is not the same as zapped event pubkey. zap: \(zap.id)")
+                zap.flags = "zpk_mismatch_event"
+                return false
+            }
+        }
+        
         // Check if zapper pubkey matches contacts published zapper pubkey
         if let zappedContact = zap.zappedContact, let zapperPubkey = zappedContact.zapperPubkey {
             guard zap.pubkey == zapperPubkey else {
                 L.og.info("⚡️🔴 zapper pubkey does not match contacts published zapper pubkey. zap: \(zap.id)")
+                zap.flags = "zpk_mismatch"
                 return false
             }
+            zap.flags = "zpk_verified" // zapper pubkey is correct
+        }
+        else {
+            zap.flags = "zpk_unverified" // missing contact
+            return false
         }
                 
         if let zappedEvent = zap.zappedEvent {
