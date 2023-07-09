@@ -113,6 +113,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
     var zapState:Event.ZapState?
     var following = false
+    @Published var blocked = false
     var replied = false
     var liked = false
     var reposted = false
@@ -304,6 +305,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         self.replied = isReplied()
         self.reposted = isReposted()
         self.hasPrivateNote = _hasPrivateNote()
+        self.blocked = isBlocked()
         
         self.subject = fastTags.first(where: { $0.0 == "subject" })?.1
         if let subject {
@@ -349,6 +351,13 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             fr.resultType = .countResultType
             let count = (try? DataProvider.shared().bg.count(for: fr)) ?? 0
             return count > 0
+        }
+        return false
+    }
+    
+    private func isBlocked() -> Bool {
+        if let account = NosturState.shared.bgAccount {
+            return account.blockedPubkeys_.contains(self.pubkey)
         }
         return false
     }

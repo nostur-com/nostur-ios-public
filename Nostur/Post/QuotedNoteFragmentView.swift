@@ -7,77 +7,91 @@ struct QuotedNoteFragmentView: View {
     @ObservedObject var nrPost:NRPost
     
     var body: some View {
-        VStack(alignment:.leading) {
-            HStack { // name + reply + context menu
-                VStack(alignment: .leading) { // Name + menu "replying to"
-                    HStack(spacing:2) {
-                        // profile image
-                        PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 20)
-                            .onTapGesture {
-                                navigateTo(ContactPath(key: nrPost.pubkey))
+        if nrPost.blocked {
+            HStack {
+                Text("_Post from blocked account hidden_", comment: "Message shown when a post is from a blocked account")
+                Button(String(localized: "Reveal", comment: "Button to reveal a blocked a post")) { nrPost.blocked = false }
+                    .buttonStyle(.bordered)
+            }
+            .padding(.leading, 8)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+            )
+        }
+        else {
+            VStack(alignment:.leading) {
+                HStack { // name + reply + context menu
+                    VStack(alignment: .leading) { // Name + menu "replying to"
+                        HStack(spacing:2) {
+                            // profile image
+                            PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 20)
+                                .onTapGesture {
+                                    navigateTo(ContactPath(key: nrPost.pubkey))
+                                }
+                            
+                            if let contact = nrPost.contact {
+                                NameAndNip(contact: contact)
                             }
-                        
-                        if let contact = nrPost.contact {
-                            NameAndNip(contact: contact)
+                            else {
+                                Text(verbatim:"Anon")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.primary)
+                                    .fontWeight(.bold)
+                                    .lineLimit(1).redacted(reason: .placeholder)
+                                Text(verbatim:"@Anon") //
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.secondary)
+                                    .redacted(reason: .placeholder)
+                            }
+                            
+                            Group {
+                                Text(verbatim: " ·") //
+                                Ago(nrPost.createdAt)
+                            }
+                            .font(.system(size: 14))
+                            .foregroundColor(.secondary)
                         }
-                        else {
-                            Text(verbatim:"Anon")
-                                .font(.system(size: 14))
-                                .foregroundColor(.primary)
-                                .fontWeight(.bold)
-                                .lineLimit(1).redacted(reason: .placeholder)
-                            Text(verbatim:"@Anon") //
-                                .font(.system(size: 14))
-                                .foregroundColor(.secondary)
-                                .redacted(reason: .placeholder)
-                        }
-                        
-                        Group {
-                            Text(verbatim: " ·") //
-                            Ago(nrPost.createdAt)
-                        }
-                        .font(.system(size: 14))
-                        .foregroundColor(.secondary)
+                        ReplyingToFragmentView(nrPost: nrPost)
                     }
-                    ReplyingToFragmentView(nrPost: nrPost)
+                    
+                    Spacer()
+                }.frame(height: 40)
+                VStack(alignment: .leading) {
+                    NoteTextRenderView(nrPost: nrPost)
+                    //                    .contentShape(Rectangle())
+                    //                    .onTapGesture {
+                    //                        navigateTo(nrPost)
+                    //                    }
                 }
-                
-                Spacer()
-            }.frame(height: 40)
-            VStack(alignment: .leading) {
-                NoteTextRenderView(nrPost: nrPost)
-                //                    .contentShape(Rectangle())
-                //                    .onTapGesture {
-                //                        navigateTo(nrPost)
-                //                    }
             }
-        }
-        .contentShape(Rectangle())
-        .highPriorityGesture(
-            TapGesture()
-                .onEnded { _ in
-                    navigateTo(nrPost) // TODO: move this one to specific parts, else cant tap video..
+            .contentShape(Rectangle())
+            .highPriorityGesture(
+                TapGesture()
+                    .onEnded { _ in
+                        navigateTo(nrPost) // TODO: move this one to specific parts, else cant tap video..
+                    }
+            )
+            .padding(10)
+            .background(
+                Color.systemBackground
+                    .cornerRadius(15)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 15)
+                    .stroke(.regularMaterial, lineWidth: 1)
+            )
+            .onAppear {
+                if (nrPost.contact == nil) || (nrPost.contact?.metadata_created_at == 0) {
+                    L.og.info("🟢 NoteRow.onAppear event.contact == nil so: REQ.0:\(nrPost.pubkey)")
+                    EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NoteRow.onAppear")
+                    QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
                 }
-        )
-        .padding(10)
-        .background(
-            Color.systemBackground
-                .cornerRadius(15)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 15)
-                .stroke(.regularMaterial, lineWidth: 1)
-        )
-        .onAppear {
-            if (nrPost.contact == nil) || (nrPost.contact?.metadata_created_at == 0) {
-                L.og.info("🟢 NoteRow.onAppear event.contact == nil so: REQ.0:\(nrPost.pubkey)")
-                EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NoteRow.onAppear")
-                QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
             }
-        }
-        .onDisappear {
-            if (nrPost.contact == nil) || (nrPost.contact?.metadata_created_at == 0) {
-                QueuedFetcher.shared.dequeue(pTag: nrPost.pubkey)
+            .onDisappear {
+                if (nrPost.contact == nil) || (nrPost.contact?.metadata_created_at == 0) {
+                    QueuedFetcher.shared.dequeue(pTag: nrPost.pubkey)
+                }
             }
         }
     }

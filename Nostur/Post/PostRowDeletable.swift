@@ -22,7 +22,19 @@ struct PostRowDeletable: View {
     }
     
     var body: some View {
-        if nrPost.deletedById == nil {
+        if nrPost.blocked {
+            HStack {
+                Text("_Post from blocked account hidden_", comment: "Message shown when a post is from a blocked account")
+                Button(String(localized: "Reveal", comment: "Button to reveal a blocked a post")) { nrPost.blocked = false }
+                    .buttonStyle(.bordered)
+            }
+            .padding(.leading, 8)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+            )
+        }
+        else if nrPost.deletedById == nil {
             NoteRow(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, fullWidth: fullWidth, isReply: isReply, isDetail: isDetail, grouped:grouped)
         }
         else {

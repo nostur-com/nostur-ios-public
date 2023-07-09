@@ -31,7 +31,19 @@ struct NEventView: View {
         
         var body: some View {
             VStack {
-                if let nrPost = nrPost {
+                if let nrPost = nrPost, nrPost.blocked {
+                    HStack {
+                        Text("_Post from blocked account hidden_", comment: "Message shown when a post is from a blocked account")
+                        Button(String(localized: "Reveal", comment: "Button to reveal a blocked a post")) { nrPost.blocked = false }
+                            .buttonStyle(.bordered)
+                    }
+                    .padding(.leading, 8)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                    )
+                }
+                else if let nrPost = nrPost {
                     if nrPost.kind == 30023 {
                         ArticleView(nrPost, hideFooter: true)
 //                            .background(
