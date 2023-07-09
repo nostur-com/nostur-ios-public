@@ -268,6 +268,11 @@ extension Contact : Identifiable {
                 contact.lud06 = metaData.lud06
                 contact.metadata_created_at = Int64(event.createdAt.timestamp) // by author kind 0
                 contact.updated_at = Int64(Date.now.timeIntervalSince1970) // by Nostur
+                
+                if contact.anyName != contact.authorKey { // For showing "Previously known as"
+                    contact.fixedName = contact.anyName
+                }
+                
                 EventRelationsQueue.shared.addAwaitingContact(contact)
                 updateRelatedEvents(contact)
             }

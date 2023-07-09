@@ -57,6 +57,16 @@ struct ProfileRow: View {
                                     .foregroundColor(Color("AccentColor"))
                             }
                         }
+                        if let fixedName = contact.fixedName, fixedName != contact.anyName {
+                            HStack {
+                                Text("Previously known as: \(fixedName)").font(.caption).foregroundColor(.primary)
+                                    .lineLimit(1)
+                                Image(systemName: "multiply.circle.fill")
+                                    .onTapGesture {
+                                        contact.fixedName = contact.anyName
+                                    }
+                            }
+                        }
                     }.multilineTextAlignment(.leading)
                     Spacer()
                     if (!withoutFollowButton) {

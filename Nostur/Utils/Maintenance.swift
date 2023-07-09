@@ -479,8 +479,7 @@ struct Maintenance {
         guard !Self.didRun(migrationCode: migrationCode.insertFixedNames, context: context) else { return }
         
         let fr = Contact.fetchRequest()
-        fr.predicate = NSPredicate(value: true)
-//        fr.predicate = NSPredicate(format: "fixedName == nil")
+        fr.predicate = NSPredicate(format: "fixedName == nil")
         
         guard let contacts = try? context.fetch(fr) else {
             L.maintenance.error("runInsertFixedNames: Could not fetch")
@@ -492,9 +491,6 @@ struct Maintenance {
         for contact in contacts {
             if contact.anyName != contact.authorKey {
                 contact.fixedName = contact.anyName
-            }
-            else {
-                contact.fixedName = nil
             }
         }
         
