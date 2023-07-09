@@ -85,6 +85,7 @@ struct ProfileOverlayCard: View {
                 ZappablePFP(pubkey: contact.pubkey, contact: contact, size: DIMENSIONS.PFP_BIG, zapEtag: zapEtag)
                     .onTapGesture {
                         navigateTo(ContactPath(key: contact.pubkey))
+                        sendNotification(.dismissMiniProfile)
                     }
     
                 Spacer()
@@ -150,6 +151,7 @@ struct ProfileOverlayCard: View {
             .contentShape(Rectangle())
             .onTapGesture {
                 navigateTo(ContactPath(key: contact.pubkey))
+                sendNotification(.dismissMiniProfile)
             }
             .padding(.bottom, 10)
             
