@@ -22,6 +22,8 @@ struct ArticleView: View {
         return Int(ceil(Double(wordCount) / WORDS_PER_MINUTE))
     }
     
+    @State var showMiniProfile = false
+    
     var body: some View {
         if isDetail {
             ScrollView {
@@ -47,7 +49,41 @@ struct ArticleView: View {
                     }
                     
                     HStack {
-                        PFP(pubkey: article.pubkey, nrContact: article.contact, size: 50)
+                        ZappablePFP(pubkey: article.pubkey, contact: article.contact?.mainContact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: article.id)
+                            .onTapGesture {
+                                if !IS_APPLE_TYRANNY {
+                                    navigateTo(ContactPath(key: article.pubkey))
+                                }
+                                else {
+                                    withAnimation {
+                                        showMiniProfile = true
+                                    }
+                                }
+                            }
+                            .overlay(alignment: .topLeading) {
+                                if (showMiniProfile) {
+                                    GeometryReader { geo in
+                                        Color.clear
+                                            .onAppear {
+                                                sendNotification(.showMiniProfile,
+                                                                 MiniProfileSheetInfo(
+                                                                    pubkey: article.pubkey,
+                                                                    contact: article.contact?.mainContact,
+                                                                    zapEtag: article.id,
+                                                                    location: geo.frame(in: .global).origin
+                                                                 )
+                                                )
+                                                showMiniProfile = false
+                                            }
+                                    }
+                                    .frame(width: 10)
+                                    .zIndex(100)
+                                    .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
+                                    .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
+                                        showMiniProfile = false
+                                    }
+                                }
+                            }
                         VStack(alignment: .leading) {
                             if let contact = article.contact {
                                 HStack {
@@ -94,50 +130,50 @@ struct ArticleView: View {
                     .padding(.vertical, 10)
                     
                     if let image = article.articleImageURL {
-//                        Text("imageWidth: \(dim.listWidth.description)")
+                        //                        Text("imageWidth: \(dim.listWidth.description)")
                         SingleMediaViewer(url: image, pubkey: article.pubkey, imageWidth: dim.listWidth, isFollowing: true, fullWidth: true, forceShow: true, contentPadding: 20)
                             .padding(.vertical, 10)
-//                            .padding(.horizontal, -20)
+                        //                            .padding(.horizontal, -20)
                     }
-
+                    
                     ContentRenderer(nrPost: article, isDetail: true, fullWidth: true, availableWidth: dim.listWidth)
                         .padding(.vertical, 10)
-                 
+                    
                     if !hideFooter {
                         FooterFragmentView(nrPost: article)
                             .padding(.vertical, 10)
                     }
-    //                ArticleCommentsPreview(article: article)
+                    //                ArticleCommentsPreview(article: article)
                     
                     // Disable comments for now because should not be on id but on naddr
-//                    ThreadReplies(nrPost: article)
-//                        .padding(.vertical, 10)
-//                        .onAppear {
-//                            DataProvider.shared().bg.perform {
-//                                EventRelationsQueue.shared.addAwaitingEvent(article.event, debugInfo: "ArticleView.003")
-//                                if (!article.missingPs.isEmpty) {
-//                                    QueuedFetcher.shared.enqueue(pTags: article.missingPs)
-//                                }
-//                                
-//                                // Fetch all related (e and p.kind=0)
-//                                // (the events and contacts mentioned in this DETAIL NOTE.
-//                                if let message = RM.getFastTags(article.fastTags) {
-//                                    SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: message))
-//                                }
-//                                
-//                                // Fetch all that reference this detail note (Replies, zaps, reactions)
-//                                req(RM.getEventReferences(ids: [article.id], subscriptionId: "A-DETAIL-"+UUID().uuidString))
-//                                // REAL TIME UPDATES FOR POST DETAIL
-//                                req(RM.getEventReferences(ids: [article.id], subscriptionId: "REALTIME-DETAIL", since: NTimestamp(date: Date.now)))
-//                            }
-//                        }
-//                        .onDisappear {
-//                            DataProvider.shared().bg.perform {
-//                                if (!article.missingPs.isEmpty) {
-//                                    QueuedFetcher.shared.dequeue(pTags: article.missingPs)
-//                                }
-//                            }
-//                        }
+                    //                    ThreadReplies(nrPost: article)
+                    //                        .padding(.vertical, 10)
+                    //                        .onAppear {
+                    //                            DataProvider.shared().bg.perform {
+                    //                                EventRelationsQueue.shared.addAwaitingEvent(article.event, debugInfo: "ArticleView.003")
+                    //                                if (!article.missingPs.isEmpty) {
+                    //                                    QueuedFetcher.shared.enqueue(pTags: article.missingPs)
+                    //                                }
+                    //
+                    //                                // Fetch all related (e and p.kind=0)
+                    //                                // (the events and contacts mentioned in this DETAIL NOTE.
+                    //                                if let message = RM.getFastTags(article.fastTags) {
+                    //                                    SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: message))
+                    //                                }
+                    //
+                    //                                // Fetch all that reference this detail note (Replies, zaps, reactions)
+                    //                                req(RM.getEventReferences(ids: [article.id], subscriptionId: "A-DETAIL-"+UUID().uuidString))
+                    //                                // REAL TIME UPDATES FOR POST DETAIL
+                    //                                req(RM.getEventReferences(ids: [article.id], subscriptionId: "REALTIME-DETAIL", since: NTimestamp(date: Date.now)))
+                    //                            }
+                    //                        }
+                    //                        .onDisappear {
+                    //                            DataProvider.shared().bg.perform {
+                    //                                if (!article.missingPs.isEmpty) {
+                    //                                    QueuedFetcher.shared.dequeue(pTags: article.missingPs)
+                    //                                }
+                    //                            }
+                    //                        }
                 }
                 .padding(20)
             }
@@ -154,22 +190,22 @@ struct ArticleView: View {
                         LazyNoteMenuButton(nrPost: article)
                     }
                     .padding(.bottom, 10)
-//                    .padding(.horizontal, fullWidth ? 10 : 0)
+                    //                    .padding(.horizontal, fullWidth ? 10 : 0)
                     
                     if let image = article.articleImageURL {
                         SingleMediaViewer(url: image, pubkey: article.pubkey, imageWidth: fullWidth ? dim.listWidth : dim.articleRowImageWidth(), isFollowing: article.following, fullWidth: true)
-//                            .padding(.horizontal, 0)
+                        //                            .padding(.horizontal, 0)
                             .padding(.vertical, 10)
                     }
                     
                     if let summary = article.articleSummary, !summary.isEmpty {
                         Markdown(String(summary.prefix(600)))
-
-//                        Text(summary)
-//                            .lineLimit(15)
+                        
+                        //                        Text(summary)
+                        //                            .lineLimit(15)
                             .font(.custom("Charter", size: 18))
                             .frame(maxWidth: .infinity, alignment: .leading)
-//                            .clipped()
+                        //                            .clipped()
                             .padding(.vertical, 10)
                     }
                     else if let content = article.content, !content.isEmpty {
@@ -177,13 +213,13 @@ struct ArticleView: View {
                             .lineLimit(15)
                             .font(.custom("Charter", size: 18))
                             .frame(maxWidth: .infinity, alignment: .leading)
-//                            .clipped()
+                        //                            .clipped()
                             .padding(.vertical, 10)
-//                        Text(content)
-//                            .lineLimit(15)
-//                            .font(.custom("Charter", size: 18))
-//                            .frame(maxWidth: .infinity, alignment: .leading)
-//                            .padding(.vertical, 10)
+                        //                        Text(content)
+                        //                            .lineLimit(15)
+                        //                            .font(.custom("Charter", size: 18))
+                        //                            .frame(maxWidth: .infinity, alignment: .leading)
+                        //                            .padding(.vertical, 10)
                     }
                     else {
                         Text("")
@@ -194,7 +230,41 @@ struct ArticleView: View {
                     ViewThatFits {
                         HStack {
                             Spacer()
-                            PFP(pubkey: article.pubkey, nrContact: article.contact, size: 25)
+                            ZappablePFP(pubkey: article.pubkey, contact: article.contact?.mainContact, size: 25.0, zapEtag: article.id)
+                                .onTapGesture {
+                                    if !IS_APPLE_TYRANNY {
+                                        navigateTo(ContactPath(key: article.pubkey))
+                                    }
+                                    else {
+                                        withAnimation {
+                                            showMiniProfile = true
+                                        }
+                                    }
+                                }
+                                .overlay(alignment: .topLeading) {
+                                    if (showMiniProfile) {
+                                        GeometryReader { geo in
+                                            Color.clear
+                                                .onAppear {
+                                                    sendNotification(.showMiniProfile,
+                                                                     MiniProfileSheetInfo(
+                                                                        pubkey: article.pubkey,
+                                                                        contact: article.contact?.mainContact,
+                                                                        zapEtag: article.id,
+                                                                        location: geo.frame(in: .global).origin
+                                                                     )
+                                                    )
+                                                    showMiniProfile = false
+                                                }
+                                        }
+                                        .frame(width: 10)
+                                        .zIndex(100)
+                                        .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
+                                        .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
+                                            showMiniProfile = false
+                                        }
+                                    }
+                                }
                             if let contact = article.contact {
                                 Text(contact.anyName)
                                     .foregroundColor(.primary)
@@ -231,7 +301,7 @@ struct ArticleView: View {
                         }
                         .font(.custom("Charter", size: 18))
                         .padding(.vertical, 10)
-    //                    .padding(.horizontal, fullWidth ? 10 : 0)
+                        //                    .padding(.horizontal, fullWidth ? 10 : 0)
                         .lineLimit(1)
                         .foregroundColor(Color.secondary)
                         
@@ -279,7 +349,7 @@ struct ArticleView: View {
                         }
                         .font(.custom("Charter", size: 18))
                         .padding(.vertical, 10)
-    //                    .padding(.horizontal, fullWidth ? 10 : 0)
+                        //                    .padding(.horizontal, fullWidth ? 10 : 0)
                         .lineLimit(1)
                         .foregroundColor(Color.secondary)
                     }
@@ -320,8 +390,8 @@ struct ArticleView_Previews: PreviewProvider {
         PreviewContainer({ pe in
             pe.loadArticles()
         }) {
-//            let test0 = "naddr1qqyxvepkv33nxdmrqgsrhuxx8l9ex335q7he0f09aej04zpazpl0ne2cgukyawd24mayt8grqsqqqa28qjqkz8"
-//            let test1 = "naddr1qqxnzd3cxyerxd3h8qerwwfcqgsgydql3q4ka27d9wnlrmus4tvkrnc8ftc4h8h5fgyln54gl0a7dgsrqsqqqa28qy28wumn8ghj7un9d3shjtnyv9kh2uewd9hszrthwden5te0dehhxtnvdakqvtl0f3"
+            //            let test0 = "naddr1qqyxvepkv33nxdmrqgsrhuxx8l9ex335q7he0f09aej04zpazpl0ne2cgukyawd24mayt8grqsqqqa28qjqkz8"
+            //            let test1 = "naddr1qqxnzd3cxyerxd3h8qerwwfcqgsgydql3q4ka27d9wnlrmus4tvkrnc8ftc4h8h5fgyln54gl0a7dgsrqsqqqa28qy28wumn8ghj7un9d3shjtnyv9kh2uewd9hszrthwden5te0dehhxtnvdakqvtl0f3"
             
             // Welcome to Nostr
             let test2 = "naddr1qqxnzd3cxy6rjv3hx5cnyde5qy88wumn8ghj7mn0wvhxcmmv9uq3uamnwvaz7tmwdaehgu3dwp6kytnhv4kxcmmjv3jhytnwv46z7qg3waehxw309ahx7um5wgh8w6twv5hszymhwden5te0danxvcmgv95kutnsw43z7qglwaehxw309ahx7um5wgkhyetvv9ujumn0ddhhgctjduhxxmmd9upzql6u9d8y3g8flm9x8frtz0xmsfyf7spq8xxkpgs8p2tge25p346aqvzqqqr4gukz494x"
@@ -341,13 +411,13 @@ struct ArticleView_Previews: PreviewProvider {
             }
             
             // Article with images (preview + inline, gifs)
-//            if let p = try? PreviewFetcher.fetchNRPost("b5637dfb45cf71e4f84bed9235cf7c57dd839c75459432b0d2394ed850f4301a")
-//            {
-//                NavigationStack {
-//                    ArticleView(p, isDetail: true)
-//                }
-//            }
-                    
+            //            if let p = try? PreviewFetcher.fetchNRPost("b5637dfb45cf71e4f84bed9235cf7c57dd839c75459432b0d2394ed850f4301a")
+            //            {
+            //                NavigationStack {
+            //                    ArticleView(p, isDetail: true)
+            //                }
+            //            }
+            
         }
     }
 }
@@ -370,7 +440,7 @@ struct Articles_Previews: PreviewProvider {
                         .padding(.vertical, 10)
                 }
             }
-
+            
         }
     }
 }

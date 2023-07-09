@@ -51,6 +51,9 @@ private struct WithSheets: ViewModifier {
     @State private var screenshotRenderer:AnyCancellable? = nil
 //    @State private var renderer:ImageRenderer<AnyView>? = nil
     
+    @State var miniProfileSheetInfo:MiniProfileSheetInfo? = nil
+    @State var miniProfileAnimateIn = false
+    
     func body(content: Content) -> some View {
         content
             .onReceive(receiveNotification(.fullScreenView)) { notification in
@@ -295,6 +298,54 @@ private struct WithSheets: ViewModifier {
                 let item = NSItemProvider(item: sharablePostImage.pngData as NSData, typeIdentifier: "public.png")
                 ActivityView(activityItems: [item])
             }
+            
+        
+        
+            .onReceive(receiveNotification(.showMiniProfile)) { notification in
+                let miniProfileSheetInfo = notification.object as! MiniProfileSheetInfo
+                self.miniProfileSheetInfo = miniProfileSheetInfo
+            }
+        
+            .overlay(alignment:.topLeading) {
+                if let m = miniProfileSheetInfo {
+                    ZStack {
+                        Color.black.opacity(0.65)
+                            .zIndex(50)
+                            .onTapGesture {
+                                miniProfileSheetInfo = nil
+                            }
+                            .onAppear {
+                                miniProfileAnimateIn = true
+                            }
+                        ProfileOverlayCardContainer(pubkey: m.pubkey, contact: m.contact, zapEtag: m.zapEtag)
+                            .scaleEffect(miniProfileAnimateIn ? 1.0 : 0.25, anchor: .leading)
+                            .opacity(miniProfileAnimateIn ? 1.0 : 0.15)
+                            .animation(.easeInOut(duration: 0.15), value: miniProfileAnimateIn)
+                            .position(y: m.location.y - 6)
+                            .offset(x: ceil(dim.listWidth / 2))
+//                            .position(y: m.location.y)
+                            .zIndex(50)
+                    }
+                    .onDisappear {
+                        miniProfileAnimateIn = false
+                    }
+                    .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
+                        miniProfileSheetInfo = nil
+                    }
+                }
+            }
+    }
+}
+
+struct MiniProfileSheetInfo: Identifiable, Equatable {
+    let id = UUID()
+    let pubkey: String
+    var contact: Contact?
+    let zapEtag: String
+    let location: CGPoint
+    
+    static func == (lhs: MiniProfileSheetInfo, rhs: MiniProfileSheetInfo) -> Bool {
+        lhs.id == rhs.id
     }
 }
 

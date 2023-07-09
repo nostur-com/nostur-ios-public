@@ -10,7 +10,7 @@ struct Kind1: View {
     let isReply:Bool // is reply of PostDetail
     let isDetail:Bool
     let grouped:Bool
-     
+    
     let sp:SocketPool = .shared
     let up:Unpublisher = .shared
     @ObservedObject var settings:SettingsStore = .shared
@@ -40,14 +40,48 @@ struct Kind1: View {
         return dim.availablePostDetailRowImageWidth()
     }
     
+    @State var showMiniProfile = false
+    
     var body: some View {
         
         VStack(spacing: 3) {
             HStack(alignment: .top, spacing:0) {
-                PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact)
+                ZappablePFP(pubkey: nrPost.pubkey, contact: nrPost.contact?.mainContact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id)
+                //                PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact)
                     .frame(width: 50, height: 50)
                     .onTapGesture {
-                        navigateTo(ContactPath(key: nrPost.pubkey))
+                        if !IS_APPLE_TYRANNY {
+                            navigateTo(ContactPath(key: nrPost.pubkey))
+                        }
+                        else {
+                            withAnimation {
+                                showMiniProfile = true
+                            }
+                        }
+                    }
+                    .overlay(alignment: .topLeading) {
+                        if (showMiniProfile) {
+                            GeometryReader { geo in
+                                Color.clear
+                                    .onAppear {
+                                        sendNotification(.showMiniProfile,
+                                                         MiniProfileSheetInfo(
+                                                            pubkey: nrPost.pubkey,
+                                                            contact: nrPost.contact?.mainContact,
+                                                            zapEtag: nrPost.id,
+                                                            location: geo.frame(in: .global).origin
+                                                         )
+                                        )
+                                        showMiniProfile = false
+                                    }
+                            }
+                            .frame(width: 10)
+                            .zIndex(100)
+                            .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
+                            .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
+                                showMiniProfile = false
+                            }
+                        }
                     }
                     .padding(.horizontal, 10)
                 NoteHeaderView(nrPost: nrPost, singleLine: false)
@@ -84,7 +118,7 @@ struct Kind1: View {
                         Text(subject)
                             .fontWeight(.bold)
                             .lineLimit(3)
-                            
+                        
                     }
                     ContentRenderer(nrPost: nrPost, isDetail:isDetail, fullWidth: true, availableWidth: imageWidth)
                         .contentShape(Rectangle())
@@ -98,12 +132,12 @@ struct Kind1: View {
                 if (!hideFooter && settings.rowFooterEnabled) {
                     FooterFragmentView(nrPost: nrPost)
                         .padding(.top, 10)
-//                        .frame(idealHeight: 38.0)
-//                        .fixedSize(horizontal: false, vertical: true)
-//                     Make sure we get the correct size (is now 28.0 + 10.0)
-//                        .readSize { newSize in
-//                            print("Final Footer size: \(newSize)")
-//                        }
+                    //                        .frame(idealHeight: 38.0)
+                    //                        .fixedSize(horizontal: false, vertical: true)
+                    //                     Make sure we get the correct size (is now 28.0 + 10.0)
+                    //                        .readSize { newSize in
+                    //                            print("Final Footer size: \(newSize)")
+                    //                        }
                         .contentShape(Rectangle())
                         .onTapGesture {
                             navigateTo(nrPost)

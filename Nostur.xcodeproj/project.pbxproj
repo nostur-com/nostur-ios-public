@@ -314,6 +314,9 @@
 		1FDF0EDD29ED732500B56AC4 /* AnyStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FDF0EDC29ED732500B56AC4 /* AnyStatus.swift */; };
 		1FE0C71329FAE82C00381586 /* ProfileFollowButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE0C71229FAE82C00381586 /* ProfileFollowButton.swift */; };
 		1FE0C71529FAEA9F00381586 /* ProfileBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE0C71429FAEA9F00381586 /* ProfileBanner.swift */; };
+		1FE31EE12A587F60008A4A6F /* ProfileOverlayCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE31EE02A587D78008A4A6F /* ProfileOverlayCard.swift */; };
+		1FE31EE42A58889A008A4A6F /* ProfileZapButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE31EE32A58889A008A4A6F /* ProfileZapButton.swift */; };
+		1FE31EE72A588AC8008A4A6F /* ZappablePFP.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE31EE62A588AC8008A4A6F /* ZappablePFP.swift */; };
 		1FE4D91B2A53D50F0064F649 /* ZapCustomizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4D91A2A53D50F0064F649 /* ZapCustomizer.swift */; };
 		1FE4D91D2A5442450064F649 /* SettingsDefaultZapAmount.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4D91C2A5442450064F649 /* SettingsDefaultZapAmount.swift */; };
 		1FE5068E29B391CF006A16D8 /* FastAccountSwitcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE5068D29B391CF006A16D8 /* FastAccountSwitcher.swift */; };
@@ -678,6 +681,9 @@
 		1FDF0EDC29ED732500B56AC4 /* AnyStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnyStatus.swift; sourceTree = "<group>"; };
 		1FE0C71229FAE82C00381586 /* ProfileFollowButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileFollowButton.swift; sourceTree = "<group>"; };
 		1FE0C71429FAEA9F00381586 /* ProfileBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileBanner.swift; sourceTree = "<group>"; };
+		1FE31EE02A587D78008A4A6F /* ProfileOverlayCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileOverlayCard.swift; sourceTree = "<group>"; };
+		1FE31EE32A58889A008A4A6F /* ProfileZapButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ProfileZapButton.swift; path = Nostur/Zaps/ProfileZapButton.swift; sourceTree = "<group>"; };
+		1FE31EE62A588AC8008A4A6F /* ZappablePFP.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ZappablePFP.swift; path = Nostur/Profiles/ZappablePFP.swift; sourceTree = "<group>"; };
 		1FE4D91A2A53D50F0064F649 /* ZapCustomizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZapCustomizer.swift; sourceTree = "<group>"; };
 		1FE4D91C2A5442450064F649 /* SettingsDefaultZapAmount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SettingsDefaultZapAmount.swift; path = Nostur/Screens/SettingsDefaultZapAmount.swift; sourceTree = SOURCE_ROOT; };
 		1FE5068D29B391CF006A16D8 /* FastAccountSwitcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastAccountSwitcher.swift; sourceTree = "<group>"; };
@@ -1218,6 +1224,8 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
+				1FE31EE62A588AC8008A4A6F /* ZappablePFP.swift */,
+				1FE31EE32A58889A008A4A6F /* ProfileZapButton.swift */,
 				1F0F356E2A31E52800AA9C41 /* ci_scripts */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1F3D4BB62A25CC140084F939 /* AppView.swift */,
@@ -1409,6 +1417,7 @@
 				1F33096029891C4800D4D8CF /* ProfileLikesView.swift */,
 				1F210B0529F853BB00159814 /* ProfileMediaView.swift */,
 				1F1D99412A03AACF0024055B /* ProfileNotesView.swift */,
+				1FE31EE02A587D78008A4A6F /* ProfileOverlayCard.swift */,
 				1FFF997C29CF4AF100ADAE23 /* ProfilePicFullScreenSheet.swift */,
 				1FEA785729799FE6007CC8E7 /* ProfilePicView.swift */,
 				1F83498029DE28290032E52B /* ProfileRelays.swift */,
@@ -1593,6 +1602,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1FE31EE12A587F60008A4A6F /* ProfileOverlayCard.swift in Sources */,
 				1FC82F3229AE0C0700B81CE5 /* Mentions.swift in Sources */,
 				1FD78EF12A0CB813003E7B3E /* Kind1.swift in Sources */,
 				1F0592DC2A505531003B4B3C /* DiscoverCommunities.swift in Sources */,
@@ -1618,6 +1628,7 @@
 				1F8B1360297B36DB002EB8CF /* String+HexBytes.swift in Sources */,
 				1FB4FCD629B87D3D0034D03A /* ImageProcessing.swift in Sources */,
 				1F995EF52A4DE349002227B3 /* NIP46TesterView.swift in Sources */,
+				1FE31EE72A588AC8008A4A6F /* ZappablePFP.swift in Sources */,
 				1F00337129BEF141007CE040 /* View+withSheets.swift in Sources */,
 				1F0A25542A3E0E6E00178A5C /* NostrFilesDevMediaUploadService.swift in Sources */,
 				1F21442C29A797930090E78E /* Settings.swift in Sources */,
@@ -1743,6 +1754,7 @@
 				1F88491529B537B400145340 /* NSRegularExpression.swift in Sources */,
 				1FF2C6C629EAD7D00096AC4A /* NosturListsView.swift in Sources */,
 				1F7150D029ABC6CE00AAB1C3 /* TabButton.swift in Sources */,
+				1FE31EE42A58889A008A4A6F /* ProfileZapButton.swift in Sources */,
 				1F2F54E52A02242900B6D7E4 /* HighlightRenderer.swift in Sources */,
 				1FCDDEBE2A4810F6002EDEEC /* RelayCensorshipResistorTest.swift in Sources */,
 				1FFF997B29CEE15000ADAE23 /* About.swift in Sources */,

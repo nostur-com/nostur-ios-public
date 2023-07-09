@@ -310,4 +310,12 @@ extension Notification.Name {
     static var sendCustomZap: Notification.Name {
         return Notification.Name("sendCustomZap")
     }
+    
+    static var showMiniProfile: Notification.Name {
+        return Notification.Name("showMiniProfile")
+    }
+    
+    static var dismissMiniProfile: Notification.Name {
+        return Notification.Name("dismissMiniProfile")
+    }
 }

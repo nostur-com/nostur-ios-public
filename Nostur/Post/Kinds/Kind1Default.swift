@@ -42,10 +42,13 @@ struct Kind1Default: View {
         return dim.availablePostDetailRowImageWidth()
     }
     
+    @State var showMiniProfile = false
+    
     var body: some View {
 //        let _ = Self._printChanges()
         HStack(alignment: .top, spacing: 0) {
-            PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact)
+            ZappablePFP(pubkey: nrPost.pubkey, contact: nrPost.contact?.mainContact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id)
+//            PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact)
                 .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: DIMENSIONS.POST_ROW_PFP_HEIGHT)
                 .background(alignment: .top) {
                     Color("LightGray")
@@ -54,7 +57,38 @@ struct Kind1Default: View {
                         .opacity(connect == .top || connect == .both ? 1 : 0)
                 }
                 .onTapGesture {
-                    navigateTo(ContactPath(key: nrPost.pubkey))
+                    if !IS_APPLE_TYRANNY {
+                        navigateTo(ContactPath(key: nrPost.pubkey))
+                    }
+                    else {
+                        withAnimation {
+                            showMiniProfile = true
+                        }
+                    }
+                }
+                .overlay(alignment: .topLeading) {
+                    if (showMiniProfile) {
+                        GeometryReader { geo in
+                            Color.clear
+                                .onAppear {
+                                    sendNotification(.showMiniProfile,
+                                                     MiniProfileSheetInfo(
+                                                        pubkey: nrPost.pubkey,
+                                                        contact: nrPost.contact?.mainContact,
+                                                        zapEtag: nrPost.id,
+                                                        location: geo.frame(in: .global).origin
+                                                     )
+                                    )
+                                    showMiniProfile = false
+                                }
+                        }
+                          .frame(width: 10)
+                          .zIndex(100)
+                          .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
+                          .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
+                              showMiniProfile = false
+                          }
+                    }
                 }
                 .padding(.horizontal, DIMENSIONS.POST_ROW_PFP_HPADDING)
 
@@ -157,7 +191,10 @@ struct Kind1Default: View {
 
 struct Kind1Default_Previews: PreviewProvider {
     static var previews: some View {
-        PreviewContainer {
+        PreviewContainer({ pe in
+            pe.loadContacts()
+            pe.loadPosts()
+        }) {
             VStack {
                 if let nrPost = PreviewFetcher.fetchNRPost("da3f7863d634b2020f84f38bd3dac5980794715702e85c3f164e49ebe5dc98cc") {
                     Kind1Default(nrPost: nrPost)
@@ -167,6 +204,7 @@ struct Kind1Default_Previews: PreviewProvider {
                     Kind1Default(nrPost: nrPost)
                 }
             }
+            .withSheets()
         }
     }
 }

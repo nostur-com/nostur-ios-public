@@ -19,10 +19,12 @@ struct Highlight: View {
     
     let THREAD_LINE_OFFSET = 34.0
     
+    @State var showMiniProfile = false
+    
     var body: some View {
         
         HStack(alignment: .top, spacing:0) {
-            PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact)
+            ZappablePFP(pubkey: nrPost.pubkey, contact: nrPost.contact?.mainContact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id)
                 .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: DIMENSIONS.POST_ROW_PFP_HEIGHT)
                 .background(alignment: .top, content: {
                     Color("LightGray")
@@ -31,10 +33,41 @@ struct Highlight: View {
                         .opacity(connect == .top || connect == .both ? 1 : 0)
                 })
                 .onTapGesture {
-                    navigateTo(ContactPath(key: nrPost.pubkey)) 
+                    if !IS_APPLE_TYRANNY {
+                        navigateTo(ContactPath(key: nrPost.pubkey))
+                    }
+                    else {
+                        withAnimation {
+                            showMiniProfile = true
+                        }
+                    }
+                }
+                .overlay(alignment: .topLeading) {
+                    if (showMiniProfile) {
+                        GeometryReader { geo in
+                            Color.clear
+                                .onAppear {
+                                    sendNotification(.showMiniProfile,
+                                                     MiniProfileSheetInfo(
+                                                        pubkey: nrPost.pubkey,
+                                                        contact: nrPost.contact?.mainContact,
+                                                        zapEtag: nrPost.id,
+                                                        location: geo.frame(in: .global).origin
+                                                     )
+                                    )
+                                    showMiniProfile = false
+                                }
+                        }
+                        .frame(width: 10)
+                        .zIndex(100)
+                        .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
+                        .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
+                            showMiniProfile = false
+                        }
+                    }
                 }
                 .padding(.horizontal, DIMENSIONS.POST_ROW_PFP_HPADDING)
-
+            
             VStack(alignment:.leading, spacing: 3) {// Post container
                 HStack { // name + reply + context menu
                     NoteHeaderView(nrPost: nrPost)
@@ -107,7 +140,7 @@ struct Highlight: View {
                 .offset(x: THREAD_LINE_OFFSET, y: 18)
                 .opacity(connect == .bottom || connect == .both ? 1 : 0)
         }
-//        .padding(.trailing, DIMENSIONS.KIND1_TRAILING)
+        //        .padding(.trailing, DIMENSIONS.KIND1_TRAILING)
         .background(alignment: .leading) {
             Color.systemBackground.frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH+(DIMENSIONS.POST_ROW_PFP_HPADDING))
                 .padding(.top, DIMENSIONS.POST_ROW_PFP_HEIGHT)
