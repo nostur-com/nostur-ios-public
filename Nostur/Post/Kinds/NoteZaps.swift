@@ -8,6 +8,10 @@ struct NoteZaps: View {
     var zaps:FetchedResults<Event>
     var zapsSorted:[Event] { zaps.sorted(by: { $0.naiveSats > $1.naiveSats }).uniqued(on: { $0.id }) }
     
+    var unverifiedZaps:[Event] {
+        zapsSorted.filter { $0.flags != "zpk_verified" }
+    }
+    
     init(id:String) {
         self.id = id
         _zaps = FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)], predicate: NSPredicate(format: "zappedEventId == %@ AND kind == 9735", id))
@@ -23,13 +27,15 @@ struct NoteZaps: View {
                     }
                 }
                 
-                Text("Unverified zaps", comment: "List of unverified zaps")
-                    .fontWeight(.bold)
-                    .padding(10)
-                
-                ForEach(zapsSorted.filter { $0.flags != "zpk_verified" } ) { zap in
-                    if let zapFrom = zap.zapFromRequest {
-                        NoteZapRow(zap: zap, zapFrom:zapFrom)
+                if !unverifiedZaps.isEmpty {
+                    Text("Unverified zaps", comment: "List of unverified zaps")
+                        .fontWeight(.bold)
+                        .padding(10)
+                    
+                    ForEach(unverifiedZaps) { zap in
+                        if let zapFrom = zap.zapFromRequest {
+                            NoteZapRow(zap: zap, zapFrom:zapFrom)
+                        }
                     }
                 }
             }
