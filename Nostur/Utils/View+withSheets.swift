@@ -308,8 +308,10 @@ private struct WithSheets: ViewModifier {
         
             .overlay(alignment:.topLeading) {
                 if let m = miniProfileSheetInfo {
-                    ZStack {
-                        Color.black.opacity(0.65)
+                    ZStack(alignment:.topLeading) {
+                        Rectangle()
+                            .fill(.ultraThinMaterial)
+                            .opacity(0.5)
                             .zIndex(50)
                             .onTapGesture {
                                 miniProfileSheetInfo = nil
@@ -321,8 +323,8 @@ private struct WithSheets: ViewModifier {
                             .scaleEffect(miniProfileAnimateIn ? 1.0 : 0.25, anchor: .leading)
                             .opacity(miniProfileAnimateIn ? 1.0 : 0.15)
                             .animation(.easeInOut(duration: 0.15), value: miniProfileAnimateIn)
-                            .position(y: m.location.y - 6)
-                            .offset(x: ceil(dim.listWidth / 2))
+//                            .position(y: max(m.location.y - 6,50))
+                            .offset(x: 0.0, y: min(max(m.location.y - 60,50), UIScreen.main.bounds.height - 200))
 //                            .position(y: m.location.y)
                             .zIndex(50)
                     }
