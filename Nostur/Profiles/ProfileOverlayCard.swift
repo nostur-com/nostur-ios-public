@@ -83,6 +83,9 @@ struct ProfileOverlayCard: View {
         VStack(alignment: .leading) {
             HStack(alignment: .top) {
                 ZappablePFP(pubkey: contact.pubkey, contact: contact, size: DIMENSIONS.PFP_BIG, zapEtag: zapEtag)
+                    .onTapGesture {
+                        navigateTo(ContactPath(key: contact.pubkey))
+                    }
     
                 Spacer()
                 

@@ -21,7 +21,7 @@ struct ProfileLikesView: View {
             if !fl.nrPosts.isEmpty {
                 Button(String(localized:"Show more", comment: "Button to show more items")) {
                     fl.predicate = NSPredicate(format: "pubkey == %@ AND kind == 7", pubkey)
-                    fl.loadMore(50)
+                    fl.loadMore(50, includeSpam: true)
                     if let until = fl.nrPosts.last?.created_at {
                         req(RM.getAuthorReactions(pubkey: pubkey, limit:250, until: NTimestamp(timestamp: Int(until))))
                     }
@@ -54,7 +54,7 @@ struct ProfileLikesView: View {
             fl.predicate = NSPredicate(format: "pubkey == %@ AND kind == 7", pubkey)
             fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
             
-            fl.loadMore(50)
+            fl.loadMore(50, includeSpam: true)
             
             let fetchNewerLimit = 1000
             let fetchNewerTask = ReqTask(
@@ -74,7 +74,7 @@ struct ProfileLikesView: View {
                             currentNewestCreatedAt,
                             pubkey
                     )
-                    fl.loadNewer(fetchNewerLimit, taskId:taskId)
+                    fl.loadNewer(fetchNewerLimit, taskId:taskId, includeSpam:true)
                 })
 
             backlog.add(fetchNewerTask)

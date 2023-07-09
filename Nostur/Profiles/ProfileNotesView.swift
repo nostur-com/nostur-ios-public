@@ -22,7 +22,7 @@ struct ProfileNotesView: View {
             if !fl.nrPosts.isEmpty {
                 Button(String(localized:"Show more", comment: "Button to show more items")) {
                     fl.predicate = NSPredicate(format: "pubkey == %@ AND kind IN {1,6,9802,30023}", pubkey)
-                    fl.loadMore(50)
+                    fl.loadMore(50, includeSpam: true)
                     if let until = fl.nrPosts.last?.created_at {
                         req(RM.getAuthorNotesUntil(pubkey: pubkey, until: NTimestamp(timestamp: Int(until)), limit:250))
                     }
@@ -48,7 +48,7 @@ struct ProfileNotesView: View {
             fl.predicate = NSPredicate(format: "pubkey == %@ AND kind IN {1,6,9802,30023} ", pubkey)
             fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
             
-            fl.loadMore(50)
+            fl.loadMore(50, includeSpam: true)
             
             let fetchNewerLimit = 1000
             let fetchNewerTask = ReqTask(
@@ -68,7 +68,7 @@ struct ProfileNotesView: View {
                             currentNewestCreatedAt,
                             pubkey
                     )
-                    fl.loadNewer(fetchNewerLimit, taskId:taskId)
+                    fl.loadNewer(fetchNewerLimit, taskId:taskId, includeSpam: true)
                 })
 
             backlog.add(fetchNewerTask)

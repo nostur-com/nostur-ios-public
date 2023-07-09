@@ -117,7 +117,7 @@ struct MutedConversations: View {
                 .onChange(of: account.mutedRootIds_) { newValue in
                     fl.reset()
                     fl.predicate = NSPredicate(format: "id IN %@", newValue)
-                    fl.loadMore(1000)
+                    fl.loadMore(1000, includeSpam: true)
                 }
             }
         }
@@ -130,7 +130,7 @@ struct MutedConversations: View {
             fl.transformer = { event in
                 NRPost(event: event, withReplyTo: false, withParents: false, withReplies: false, plainText: true)
             }
-            fl.loadMore(1000)
+            fl.loadMore(1000, includeSpam: true)
             
         }
         

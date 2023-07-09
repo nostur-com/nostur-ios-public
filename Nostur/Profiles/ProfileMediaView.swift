@@ -37,7 +37,7 @@ struct ProfileMediaView: View {
                 fl.nrPostTransform = false
                 fl.predicate = NSPredicate(format: "pubkey == %@ AND kind == 1", pubkey)
                 fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-                fl.loadMore(1000)
+                fl.loadMore(1000, includeSpam: true)
             }
             .onChange(of: fl.events) { events in
                 // Process fl.events to imageUrls:[URL] here, fixes microhang

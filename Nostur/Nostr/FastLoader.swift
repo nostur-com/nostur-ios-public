@@ -5,9 +5,9 @@ import Combine
 class FastLoader: ObservableObject {
     private var viewContext:NSManagedObjectContext
     private var bgContext:NSManagedObjectContext
-    private var loadNewerSubject = PassthroughSubject<(Int?, String), Never>()
-    private var loadNewerEventsSubject = PassthroughSubject<(Int?, String), Never>()
-    private var loadOlderEventsSubject = PassthroughSubject<(Int?, String), Never>()
+    private var loadNewerSubject = PassthroughSubject<(Int?, String, Bool), Never>()
+    private var loadNewerEventsSubject = PassthroughSubject<(Int?, String, Bool), Never>()
+    private var loadOlderEventsSubject = PassthroughSubject<(Int?, String, Bool), Never>()
     private var subscriptions = Set<AnyCancellable>()
     
     public var subscriptionId = UUID().uuidString
@@ -25,8 +25,8 @@ class FastLoader: ObservableObject {
             .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
             .sink { [weak self] parameters in
                 guard let self = self else { return }
-                let (limit, taskId) = parameters
-                self._loadNewer(limit, taskId: taskId)
+                let (limit, taskId, includeSpam) = parameters
+                self._loadNewer(limit, taskId: taskId, includeSpam: includeSpam)
             }
             .store(in: &subscriptions)
         
@@ -34,8 +34,8 @@ class FastLoader: ObservableObject {
             .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
             .sink { [weak self] parameters in
                 guard let self = self else { return }
-                let (limit, taskId) = parameters
-                self._loadNewerEvents(limit, taskId: taskId)
+                let (limit, taskId, includeSpam) = parameters
+                self._loadNewerEvents(limit, taskId: taskId, includeSpam: includeSpam)
             }
             .store(in: &subscriptions)
         
@@ -43,8 +43,8 @@ class FastLoader: ObservableObject {
             .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
             .sink { [weak self] parameters in
                 guard let self = self else { return }
-                let (limit, taskId) = parameters
-                self._loadOlderEvents(limit, taskId: taskId)
+                let (limit, taskId, includeSpam) = parameters
+                self._loadOlderEvents(limit, taskId: taskId, includeSpam: includeSpam)
             }
             .store(in: &subscriptions)
     }
@@ -68,7 +68,7 @@ class FastLoader: ObservableObject {
     
     // load first set of [limit] posts
     // loads from local, transforms on main, not not fetch from relays
-    public func loadMore(_ limit:Int? = nil) {
+    public func loadMore(_ limit:Int? = nil, includeSpam:Bool = false) {
         let next = Event.fetchRequest()
         next.predicate = predicate
         next.sortDescriptors = sortDescriptors
@@ -87,7 +87,7 @@ class FastLoader: ObservableObject {
                     !currentNRPostIds.contains(item.id)
                 }
                 let nextItems = onlyUnrendered
-                    .filter { !$0.isSpam }
+                    .filter { includeSpam || !$0.isSpam }
                     .compactMap { self.transformer($0) }
                 
                 DispatchQueue.main.async {
@@ -105,19 +105,19 @@ class FastLoader: ObservableObject {
                 !currentEventIds.contains(item.id)
             }
             let nextItems = onlyUnrendered
-                .filter { !$0.isSpam }
+                .filter { includeSpam || !$0.isSpam }
             
             events = events + nextItems
         }
     }
     
     // Only for .nrPosts, not .events
-    public func loadNewer(_ limit:Int? = nil, taskId:String) {
-        self.loadNewerSubject.send((limit, taskId))
+    public func loadNewer(_ limit:Int? = nil, taskId:String, includeSpam:Bool = false) {
+        self.loadNewerSubject.send((limit, taskId, includeSpam))
     }
     
     // Only for .nrPosts, not .events
-    private func _loadNewer(_ limit:Int? = nil, taskId:String) {
+    private func _loadNewer(_ limit:Int? = nil, taskId:String, includeSpam:Bool = false) {
         L.og.debug("\(taskId) 🟠🟠🟠🟠 _loadNewer()")
         let next = Event.fetchRequest()
         next.predicate = predicate
@@ -134,7 +134,7 @@ class FastLoader: ObservableObject {
                 !currentNRPostIds.contains(item.id)
             }
             let nextItems = onlyUnrendered
-                .filter { !$0.isSpam }
+                .filter { includeSpam || !$0.isSpam }
                 .compactMap { self.transformer($0) }
             
             DispatchQueue.main.async {
@@ -146,12 +146,12 @@ class FastLoader: ObservableObject {
     
     
     // Only for .events, not .nrPosts, on main
-    public func loadNewerEvents(_ limit:Int? = nil, taskId:String) {
-        self.loadNewerEventsSubject.send((limit, taskId))
+    public func loadNewerEvents(_ limit:Int? = nil, taskId:String, includeSpam:Bool = false) {
+        self.loadNewerEventsSubject.send((limit, taskId, includeSpam))
     }
     
     // Only for .events, not .nrPosts, on main
-    private func _loadNewerEvents(_ limit:Int? = nil, taskId:String) {
+    private func _loadNewerEvents(_ limit:Int? = nil, taskId:String, includeSpam:Bool = false) {
         L.og.debug("\(taskId) 🟠🟠🟠🟠 _loadNewerEvents()")
         let next = Event.fetchRequest()
         next.predicate = predicate
@@ -163,7 +163,7 @@ class FastLoader: ObservableObject {
             item.id
         })
         let nextItems = dbEvents
-            .filter { !$0.isSpam }
+            .filter { includeSpam || !$0.isSpam }
             .filter { item in
                 !currentEventIds.contains(item.id)
             }
@@ -175,12 +175,12 @@ class FastLoader: ObservableObject {
     
 
     // Only for .events, not .nrPosts, on main
-    public func loadOlderEvents(_ limit:Int? = nil, taskId:String) {
-        self.loadOlderEventsSubject.send((limit, taskId))
+    public func loadOlderEvents(_ limit:Int? = nil, taskId:String, includeSpam:Bool = false) {
+        self.loadOlderEventsSubject.send((limit, taskId, includeSpam))
     }
     
     // Only for .events, not .nrPosts, on main
-    private func _loadOlderEvents(_ limit:Int? = nil, taskId:String) {
+    private func _loadOlderEvents(_ limit:Int? = nil, taskId:String, includeSpam:Bool = false) {
         L.og.debug("\(taskId) 🟠🟠🟠🟠 _loadOlderEvents()")
         let next = Event.fetchRequest()
         next.predicate = predicate
@@ -192,7 +192,7 @@ class FastLoader: ObservableObject {
             item.id
         })
         let nextItems = dbEvents
-            .filter { !$0.isSpam }
+            .filter { includeSpam || !$0.isSpam }
             .filter { item in
                 !currentEventIds.contains(item.id)
             }
