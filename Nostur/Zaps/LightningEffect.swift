@@ -36,6 +36,34 @@ struct LightningStrikeShape: Shape {
     }
 }
 
+struct SideStrikeShape: Shape {
+    let lineWidth: CGFloat
+    let amplitude: CGFloat
+    
+    func path(in rect: CGRect) -> Path {
+        let endLocation = CGPoint(x: rect.width, y: rect.height/2)
+        let _ = print(rect)
+        var path = Path()
+        let startX = 0.0
+        let startY = rect.height
+        let segments = Int(endLocation.x / 40) // number of segments in the lightning strike
+        let segmentWidth = (endLocation.x - startX) / CGFloat(segments)
+        let segmentHeight = (endLocation.y - startY) / CGFloat(segments) // height of each segmentY
+        
+        path.move(to: CGPoint(x: startX, y: startY))
+        
+        // straight line
+        for i in 0..<segments {
+            let segmentX = startX + CGFloat(i) * segmentWidth
+            let segmentY = (i % 2 == 0 ? startY + amplitude : startY - amplitude) + CGFloat(i) * segmentHeight
+            path.addLine(to: CGPoint(x: segmentX, y: segmentY))
+        }
+        path.addLine(to: CGPoint(x: endLocation.x, y: endLocation.y))
+        
+        return path.strokedPath(.init(lineWidth: lineWidth, lineCap: .round, lineJoin: .round))
+    }
+}
+
 struct LightingEffectTester: View {
     @State var activeColor = Color.gray
     
@@ -54,7 +82,7 @@ struct LightingEffectTester: View {
                         GeometryReader { geo in
                             Color.white.opacity(0.001)
                                 .onTapGesture {
-                                    sendNotification(.lightningStrike, LightningStrike(location:geo.frame(in: .global).origin, amount:Double.random(in: 1000...119000)))
+                                    sendNotification(.lightningStrike, LightningStrike(location:geo.frame(in: .global).origin, amount:Double.random(in: 1000...119000), sideStrikeWidth: 200.0))
                                     withAnimation(.easeIn(duration: 0.25).delay(0.25)) {// wait 0.25 for the strike
                                         activeColor = .yellow
                                     }
@@ -84,6 +112,8 @@ struct LightningStrike: Identifiable {
     let id = UUID()
     let location:CGPoint
     let amount:Double
+    
+    var sideStrikeWidth:CGFloat?
 }
 
 
@@ -125,6 +155,9 @@ private struct WithLightningEffect: ViewModifier {
     @State var boltOpacity = 0.0
     @State var amount:Double = 0.0
     
+    @State var sideStrikeWidth:CGFloat? = nil
+    
+    
     func body(content: Content) -> some View {
         content
             .overlay(alignment: .topLeading) {
@@ -142,6 +175,17 @@ private struct WithLightningEffect: ViewModifier {
                         .scaleEffect(boltScale)
                         .offset(x: endLocation.x + 12 - 40, y: endLocation.y - 44)
                         .opacity(boltOpacity)
+                    
+                    if sideStrikeWidth != nil {
+                        SideStrikeShape(lineWidth: boltWidth, amplitude: 5)
+                            .stroke(Color.yellow, lineWidth: boltWidth)
+                            .opacity(bolt != .awaiting ? 1 : 0)
+
+                            .frame(width: endLocation.x - 50, height: 50.0)
+                            .offset(x: 60.0, y: endLocation.y - 57)
+                    }
+                    
+                    
                 }.opacity(bolt == .awaiting ? 1.0 : 1.0)
             }
             .onReceive(receiveNotification(.lightningStrike)) { notification in
@@ -150,6 +194,9 @@ private struct WithLightningEffect: ViewModifier {
                 bolt = .awaiting
                 amount = strike.amount
                 startX = CGFloat.random(in: UIScreen.main.bounds.minX...UIScreen.main.bounds.maxX)
+                
+                sideStrikeWidth = strike.sideStrikeWidth
+                
                 zap()
             }
     }
@@ -181,6 +228,7 @@ private struct WithLightningEffect: ViewModifier {
             boltColorEnd = Color.yellow.opacity(0.2)
             boltScale = 1.0
             boltOpacity = 0.0
+            sideStrikeWidth = nil
         }
     }
 }
