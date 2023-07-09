@@ -32,6 +32,7 @@
         <attribute name="about" optional="YES" attributeType="String"/>
         <attribute name="banner" optional="YES" attributeType="String"/>
         <attribute name="display_name" optional="YES" attributeType="String"/>
+        <attribute name="fixedName" optional="YES" attributeType="String"/>
         <attribute name="lud06" optional="YES" attributeType="String"/>
         <attribute name="lud16" optional="YES" attributeType="String"/>
         <attribute name="metadata_created_at" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>

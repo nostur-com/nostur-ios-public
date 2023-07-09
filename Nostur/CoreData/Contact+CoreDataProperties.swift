@@ -15,6 +15,7 @@ extension Contact {
     @NSManaged public var lud16: String?
     @NSManaged public var lud06: String?
     @NSManaged public var name: String?
+    @NSManaged public var fixedName: String? // When someone renames / deletes account, you can see find out who it was
     @NSManaged public var display_name: String?
     @NSManaged public var nip05: String?
     @NSManaged public var nip05verifiedAt: Date?

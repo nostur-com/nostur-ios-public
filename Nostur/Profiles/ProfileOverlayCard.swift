@@ -112,24 +112,36 @@ struct ProfileOverlayCard: View {
                 }
             }
             
-            HStack(spacing:3) {
-                Text(contact.anyName).font(.title).foregroundColor(.primary)
-                    .lineLimit(1)
-                
-                if (contact.nip05veried) {
-                    Image(systemName: "checkmark.seal.fill")
-                        .font(.title)
-                        .foregroundColor(Color("AccentColor"))
+            VStack(alignment: .leading) {
+                HStack(spacing:3) {
+                    Text(contact.anyName).font(.title).foregroundColor(.primary)
+                        .lineLimit(1)
+                    
+                    if (contact.nip05veried) {
+                        Image(systemName: "checkmark.seal.fill")
+                            .font(.title)
+                            .foregroundColor(Color("AccentColor"))
+                    }
+                    
+                    if (NosturState.shared.followsYou(contact)) {
+                        Text("Follows you", comment: "Label shown when someone follows you").font(.system(size: 12))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 7)
+                            .padding(.vertical, 2)
+                            .background(Color.secondary)
+                            .opacity(0.7)
+                            .cornerRadius(13)
+                    }
                 }
-                
-                if (NosturState.shared.followsYou(contact)) {
-                    Text("Follows you", comment: "Label shown when someone follows you").font(.system(size: 12))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 7)
-                        .padding(.vertical, 2)
-                        .background(Color.secondary)
-                        .opacity(0.7)
-                        .cornerRadius(13)
+                if let fixedName = contact.fixedName, fixedName != contact.anyName {
+                    HStack {
+                        Text("Previously known as: \(fixedName)").font(.caption).foregroundColor(.primary)
+                            .lineLimit(1)
+                        Image(systemName: "multiply.circle.fill")
+                            .onTapGesture {
+                                contact.fixedName = contact.anyName
+                            }
+                    }
                 }
             }
             .contentShape(Rectangle())

@@ -50,6 +50,7 @@ struct Maintenance {
         context.perform {
             Self.runDeleteEventsWithoutId(context: context)
             Self.runUseDtagForReplacableEvents(context: context)
+            Self.runInsertFixedNames(context: context)
         }
         // Time based migrations
     
@@ -473,6 +474,42 @@ struct Maintenance {
         
     }
     
+    // Run once to put .anyName in fixedName
+    static func runInsertFixedNames(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.insertFixedNames, context: context) else { return }
+        
+        let fr = Contact.fetchRequest()
+        fr.predicate = NSPredicate(value: true)
+//        fr.predicate = NSPredicate(format: "fixedName == nil")
+        
+        guard let contacts = try? context.fetch(fr) else {
+            L.maintenance.error("runInsertFixedNames: Could not fetch")
+            return
+        }
+        
+        L.maintenance.debug("runInsertFixedNames: Found \(contacts.count) contacts")
+        
+        for contact in contacts {
+            if contact.anyName != contact.authorKey {
+                contact.fixedName = contact.anyName
+            }
+            else {
+                contact.fixedName = nil
+            }
+        }
+        
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.insertFixedNames.rawValue
+        
+        do {
+            try context.save()
+        }
+        catch {
+            L.maintenance.error("🧹🧹 🔴🔴 runInsertFixedNames error on save(): \(error)")
+        }
+        
+    }
+    
     // All available migrations
     enum migrationCode:String {
         
@@ -481,6 +518,8 @@ struct Maintenance {
         
         // Run once to fill dTag and delete old replacable events
         case useDtagForReplacableEvents = "useDtagForReplacableEvents"
+        
+        case insertFixedNames = "insertFixedNames"
         
         
     }
