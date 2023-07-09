@@ -399,7 +399,7 @@ struct DetailPost: View {
     
     var body: some View {
         HStack(alignment:.top, spacing:0) {
-            PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 50)
+            ZappablePFP(pubkey: nrPost.pubkey, contact: nrPost.contact?.mainContact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id)
                 .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: 50)
                 .padding(.horizontal, DIMENSIONS.POST_ROW_PFP_HPADDING)
 //                .padding(.top, nrPost.replyToId != nil ? 0 : 10)

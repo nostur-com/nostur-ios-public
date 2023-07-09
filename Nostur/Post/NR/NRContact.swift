@@ -30,11 +30,12 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     var lud16:String?
     
     var following:Bool = false
+    var privateFollow:Bool = false
     var zapperPubkey: String?
     
     let contact:Contact // Only touch this in BG context!!!
 
-    init(contact: Contact) {
+    init(contact: Contact, following:Bool? = nil) {
         self.contact = contact
         self.pubkey = contact.pubkey
         self.anyName = contact.anyName
@@ -53,7 +54,8 @@ class NRContact: ObservableObject, Identifiable, Hashable {
         self.lud16 = contact.lud16
         self.zapperPubkey = contact.zapperPubkey
         
-        // self.following = // todo
+        self.following = following ?? false
+        self.privateFollow = contact.privateFollow
         listenForChanges()
         isFollowingListener()
         listenForNip05()
