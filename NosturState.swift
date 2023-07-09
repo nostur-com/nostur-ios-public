@@ -481,5 +481,6 @@ final class ExchangeRateModel: ObservableObject {
 
 let IS_IPAD = UIDevice.current.userInterfaceIdiom == .pad
 let IS_CATALYST = ProcessInfo.processInfo.isMacCatalystApp
+let IS_APPLE_TYRANNY = ((Bundle.main.infoDictionary?["NOSTUR_IS_DESKTOP"] as? String) ?? "NO") == "NO"
 //let IS_MAC = ProcessInfo.processInfo.isiOSAppOnMac
 

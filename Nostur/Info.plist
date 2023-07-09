@@ -61,6 +61,8 @@
 		<key>UIImageName</key>
 		<string>LaunchScreen</string>
 	</dict>
+	<key>NOSTUR_IS_DESKTOP</key>
+    <string>$(NOSTUR_IS_DESKTOP)</string>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>
