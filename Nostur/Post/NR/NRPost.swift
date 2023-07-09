@@ -208,9 +208,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
             self.previewWeights = previewWeights
         }
         
+        self.following = NosturState.shared.bgFollowingPublicKeys.contains(event.pubkey)
+        
         var isAwaiting = false
         if let contact = event.contact_ {
-            self._contact = NRContact(contact: contact)
+            self._contact = NRContact(contact: contact, following: self.following)
         }
         else {
             EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.001"); isAwaiting = true
@@ -297,7 +299,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         } else {
             self.zapState = event.zapState
         }
-        self.following = NosturState.shared.bgFollowingPublicKeys.contains(event.pubkey)
         self.bookmarked = isBookmarked()
         self.liked = isLiked()
         self.replied = isReplied()
