@@ -260,15 +260,47 @@ struct ParentPost: View {
     @EnvironmentObject var dim:DIMENSIONS
     let INDENT = DIMENSIONS.POST_ROW_PFP_WIDTH + (DIMENSIONS.POST_ROW_PFP_HPADDING*2)
     var connect:ThreadConnectDirection? = nil
+    @State var showMiniProfile = false
     
     var body: some View {
         HStack(alignment:.top, spacing:0) {
-            PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 50)
+            ZappablePFP(pubkey: nrPost.pubkey, contact: nrPost.contact?.mainContact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id)
                 .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: 50)
-                .padding(.horizontal, DIMENSIONS.POST_ROW_PFP_HPADDING)
                 .onTapGesture {
-                    navigateTo(ContactPath(key: nrPost.pubkey))
+                    if !IS_APPLE_TYRANNY {
+                        navigateTo(ContactPath(key: nrPost.pubkey))
+                    }
+                    else {
+                        withAnimation {
+                            showMiniProfile = true
+                        }
+                    }
                 }
+                .overlay(alignment: .topLeading) {
+                    if (showMiniProfile) {
+                        GeometryReader { geo in
+                            Color.clear
+                                .onAppear {
+                                    sendNotification(.showMiniProfile,
+                                                     MiniProfileSheetInfo(
+                                                        pubkey: nrPost.pubkey,
+                                                        contact: nrPost.contact?.mainContact,
+                                                        zapEtag: nrPost.id,
+                                                        location: geo.frame(in: .global).origin
+                                                     )
+                                    )
+                                    showMiniProfile = false
+                                }
+                        }
+                          .frame(width: 10)
+                          .zIndex(100)
+                          .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
+                          .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
+                              showMiniProfile = false
+                          }
+                    }
+                }
+                .padding(.horizontal, DIMENSIONS.POST_ROW_PFP_HPADDING)
             
             VStack(alignment:.leading, spacing:0) {
                 HStack {
@@ -348,6 +380,7 @@ struct DetailPost: View {
     @ObservedObject var nrPost:NRPost
     @ObservedObject var settings:SettingsStore = .shared
     @EnvironmentObject var dim:DIMENSIONS
+    @State var showMiniProfile = false
     
     var body: some View {
         HStack(alignment:.top, spacing:0) {
@@ -356,7 +389,38 @@ struct DetailPost: View {
                 .padding(.horizontal, DIMENSIONS.POST_ROW_PFP_HPADDING)
 //                .padding(.top, nrPost.replyToId != nil ? 0 : 10)
                 .onTapGesture {
-                    navigateTo(ContactPath(key: nrPost.pubkey))
+                    if !IS_APPLE_TYRANNY {
+                        navigateTo(ContactPath(key: nrPost.pubkey))
+                    }
+                    else {
+                        withAnimation {
+                            showMiniProfile = true
+                        }
+                    }
+                }
+                .overlay(alignment: .topLeading) {
+                    if (showMiniProfile) {
+                        GeometryReader { geo in
+                            Color.clear
+                                .onAppear {
+                                    sendNotification(.showMiniProfile,
+                                                     MiniProfileSheetInfo(
+                                                        pubkey: nrPost.pubkey,
+                                                        contact: nrPost.contact?.mainContact,
+                                                        zapEtag: nrPost.id,
+                                                        location: geo.frame(in: .global).origin
+                                                     )
+                                    )
+                                    showMiniProfile = false
+                                }
+                        }
+                          .frame(width: 10)
+                          .zIndex(100)
+                          .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
+                          .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
+                              showMiniProfile = false
+                          }
+                    }
                 }
             
             VStack(alignment:.leading, spacing:0) {
