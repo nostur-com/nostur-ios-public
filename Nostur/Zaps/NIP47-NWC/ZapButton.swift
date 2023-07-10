@@ -103,13 +103,14 @@ struct ZapButton: View {
         let isNC = account.isNC
         let impactMed = UIImpactFeedbackGenerator(style: .medium)
         impactMed.impactOccurred()
-        sendNotification(.lightningStrike, LightningStrike(location:strikeLocation, amount:ss.defaultZapAmount))
+        let selectedAmount = amount ?? ss.defaultZapAmount
+        sendNotification(.lightningStrike, LightningStrike(location:strikeLocation, amount: selectedAmount))
         withAnimation(.easeIn(duration: 0.25).delay(0.25)) {// wait 0.25 for the strike
             activeColor = .yellow
         }
         cancellationId = UUID()
         nrPost.zapState = .initiated
-        let selectedAmount = amount ?? ss.defaultZapAmount
+        
 
         DataProvider.shared().bg.perform {
             NWCRequestQueue.shared.ensureNWCconnection()

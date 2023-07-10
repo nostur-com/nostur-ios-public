@@ -125,14 +125,14 @@ struct ProfileZapButton: View {
         let isNC = account.isNC
         let impactMed = UIImpactFeedbackGenerator(style: .medium)
         impactMed.impactOccurred()
-        sendNotification(.lightningStrike, LightningStrike(location:strikeLocation, amount:ss.defaultZapAmount, sideStrikeWidth: (dim.listWidth - (DIMENSIONS.PFP_BIG + 20.0))))
+        let selectedAmount = amount ?? ss.defaultZapAmount
+        sendNotification(.lightningStrike, LightningStrike(location:strikeLocation, amount:selectedAmount, sideStrikeWidth: (dim.listWidth - (DIMENSIONS.PFP_BIG + 20.0))))
         withAnimation(.easeIn(duration: 0.25).delay(0.25)) {// wait 0.25 for the strike
             activeColor = .yellow
         }
         cancellationId = UUID()
         contact.zapState = .initiated
         contact.zapStateChanged.send((.initiated, zapEtag))
-        let selectedAmount = amount ?? ss.defaultZapAmount
 
         DataProvider.shared().bg.perform {
             guard let bgContact = DataProvider.shared().bg.object(with: contact.objectID) as? Contact else { return }
