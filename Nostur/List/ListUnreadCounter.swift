@@ -34,10 +34,7 @@ struct ListUnreadCounter: View {
                     .opacity(0.85)
                     .shadow(color: Color.gray.opacity(0.5), radius: 5)
             )
-            .onTapGesture(count: 2) {
-                sendNotification(.shouldScrollToTop)
-            }
-            .onTapGesture(count: 1) {
+            .onTapGesture {
                 sendNotification(.shouldScrollToFirstUnread)
             }
         }

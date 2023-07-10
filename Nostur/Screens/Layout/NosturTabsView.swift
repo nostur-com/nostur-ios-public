@@ -16,7 +16,7 @@ struct NosturTabsView: View {
                         guard size.width > 0 else { return }
                         dim.listWidth = size.width
                     }
-                TabView(selection: $selectedTab) {
+                TabView(selection: $selectedTab.onUpdate { tabTapped(selectedTab) }) {
                     MainView()
                         .tabItem { Image(systemName: "house") }
                         .tag("Main")
@@ -74,5 +74,24 @@ struct NosturTabsView: View {
         .onReceive(receiveNotification(.updateDMsCount)) { notification in
             unreadDMs = (notification.object as! Int)
         }
+    }
+
+    private func tabTapped(_ tabName:String) {
+        if tabName == "Main" {
+            sendNotification(.shouldScrollToFirstUnread)
+            // TODO: FIX DOUBLE TAP TO SCROLL TO TOP
+        }
+    }
+}
+
+
+extension Binding {
+    func onUpdate(_ closure: @escaping () -> Void) -> Binding<Value> {
+        Binding(get: {
+            wrappedValue
+        }, set: { newValue in
+            wrappedValue = newValue
+            closure()
+        })
     }
 }
