@@ -42,7 +42,9 @@ struct DetailFooterFragment: View {
                 guard let contact = nrPost.contact?.mainContact else { return }
                 guard contact.anyLud else { return }
                 guard contact.zapperPubkey == nil else {
-                    reverifyZaps(eventId: nrPost.id, expectedZpk: contact.zapperPubkey!)
+                    if let zpk = nrPost.contact?.mainContact.zapperPubkey {
+                        reverifyZaps(eventId: nrPost.id, expectedZpk: zpk)
+                    }
                     return
                 }
                 do {

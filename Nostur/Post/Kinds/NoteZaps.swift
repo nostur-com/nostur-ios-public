@@ -110,6 +110,7 @@ struct NoteZapRow: View {
                 Text("Zapped \(zap.naiveSats.satsFormatted) sats \(fiatPrice)")
                 Text(zapFrom.content ?? "")
 //                Text(zap.flags)
+//                Text("expected zpk: \(zap.zappedContact?.zapperPubkey ?? "?") - zap.pubkey: \(zap.pubkey)")
             }
         }
         .padding()
