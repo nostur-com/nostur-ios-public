@@ -682,8 +682,8 @@
 		1FE0C71229FAE82C00381586 /* ProfileFollowButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileFollowButton.swift; sourceTree = "<group>"; };
 		1FE0C71429FAEA9F00381586 /* ProfileBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileBanner.swift; sourceTree = "<group>"; };
 		1FE31EE02A587D78008A4A6F /* ProfileOverlayCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileOverlayCard.swift; sourceTree = "<group>"; };
-		1FE31EE32A58889A008A4A6F /* ProfileZapButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ProfileZapButton.swift; path = Nostur/Zaps/ProfileZapButton.swift; sourceTree = "<group>"; };
-		1FE31EE62A588AC8008A4A6F /* ZappablePFP.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ZappablePFP.swift; path = Nostur/Profiles/ZappablePFP.swift; sourceTree = "<group>"; };
+		1FE31EE32A58889A008A4A6F /* ProfileZapButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileZapButton.swift; sourceTree = "<group>"; };
+		1FE31EE62A588AC8008A4A6F /* ZappablePFP.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZappablePFP.swift; sourceTree = "<group>"; };
 		1FE4D91A2A53D50F0064F649 /* ZapCustomizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZapCustomizer.swift; sourceTree = "<group>"; };
 		1FE4D91C2A5442450064F649 /* SettingsDefaultZapAmount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SettingsDefaultZapAmount.swift; path = Nostur/Screens/SettingsDefaultZapAmount.swift; sourceTree = SOURCE_ROOT; };
 		1FE5068D29B391CF006A16D8 /* FastAccountSwitcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastAccountSwitcher.swift; sourceTree = "<group>"; };
@@ -1224,8 +1224,6 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
-				1FE31EE62A588AC8008A4A6F /* ZappablePFP.swift */,
-				1FE31EE32A58889A008A4A6F /* ProfileZapButton.swift */,
 				1F0F356E2A31E52800AA9C41 /* ci_scripts */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1F3D4BB62A25CC140084F939 /* AppView.swift */,
@@ -1388,9 +1386,11 @@
 				1FBE8221299A6F3D00FB41CE /* LUD16.swift */,
 				1FBE8223299A745600FB41CE /* PaymentAmountSelector.swift */,
 				1FC2DFF329A9330600C8A9DA /* ProfileLightningButton.swift */,
+				1FE31EE32A58889A008A4A6F /* ProfileZapButton.swift */,
+				1FE4D91C2A5442450064F649 /* SettingsDefaultZapAmount.swift */,
+				1FE31EE62A588AC8008A4A6F /* ZappablePFP.swift */,
 				1F91D8FA2A18E31600C419A3 /* ZapperPubkeyVerificationQueue.swift */,
 				1F7C65BE29A14BA3009FF3EA /* Zaps.swift */,
-				1FE4D91C2A5442450064F649 /* SettingsDefaultZapAmount.swift */,
 			);
 			path = Zaps;
 			sourceTree = "<group>";
