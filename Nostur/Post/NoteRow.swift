@@ -46,7 +46,7 @@ struct NoteRow: View {
                 .padding(.leading, 40)
                 .frame(idealHeight: 20.0)
                 .fixedSize(horizontal: false, vertical: true)
-                // Fixed size for scrolling performance, use to confirm correct size:
+                // Fixed size for scrolling performance maybe, use to confirm correct size:
 //                .readSize { newSize in
 //                    print("Repost header size: \(newSize)")
 //                }

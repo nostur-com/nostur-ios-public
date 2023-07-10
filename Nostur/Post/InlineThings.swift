@@ -3,8 +3,9 @@ import Foundation
 import CoreData
 import UIKit
 
-// So close to getting the hashtags working. Disabled/not used until completely fixed.
-// Forgot what issue I ran into when I disabled this code 2 months ago, maybe something with not linking the right hashtag, or hight/scrolling size issue.
+// TODO: Hashtags icons in text. Almost got them working, but stuck on a problem. Disabled/not used until completely fixed.
+// TODO: 2 months later clean up: Forgot what the problem was, maybe something with wrong heights because of UIViewRepresentable, or replacing hashtags in hashtags, cant remember. need to look into it again later
+
 
 // renderer
 // string -> md links -> string -> hashtags -> NSAttributedString

@@ -1,10 +1,3 @@
-//
-//  ProfileOverlayCard.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 08/07/2023.
-//
-
 import SwiftUI
 import Combine
 
@@ -66,11 +59,10 @@ struct ProfileOverlayCard: View {
     @EnvironmentObject private var dim:DIMENSIONS
     @ObservedObject private var fg:FollowingGuardian = .shared
     private let sp:SocketPool = .shared
-     
+    
     // Following/Unfollowing tap is slow so update UI and do in background:
     @State private var isFollowing = false
-
-//    @State var subscriptions = Set<AnyCancellable>()
+    
     var withoutFollowButton = false
     
     @State var cancellationId:UUID? = nil
@@ -87,13 +79,13 @@ struct ProfileOverlayCard: View {
                         navigateTo(ContactPath(key: contact.pubkey))
                         sendNotification(.dismissMiniProfile)
                     }
-    
+                
                 Spacer()
                 
                 if contact.anyLud {
                     ProfileZapButton(contact: contact, zapEtag: zapEtag)
                 }
-
+                
                 if (!withoutFollowButton) {
                     Button {
                         if (isFollowing && !contact.privateFollow) {
@@ -176,18 +168,16 @@ struct ProfileOverlayCard: View {
                     sendNotification(.dismissMiniProfile)
                 }
                 Spacer()
-//                    Button(String(localized:"Likes", comment:"Tab title")) {
-//                navigateTo(ContactPath(key: contact.pubkey, tab:"Likes"))
-//                sendNotification(.dismissMiniProfile)
-//                    }
-//                    Spacer()
+                Button(String(localized:"Likes", comment:"Tab title")) {
+                    navigateTo(ContactPath(key: contact.pubkey, tab:"Likes"))
+                    sendNotification(.dismissMiniProfile)
+                }
+                Spacer()
                 Button(String(localized:"Zaps", comment:"Tab title")) {
                     navigateTo(ContactPath(key: contact.pubkey, tab:"Zaps"))
                     sendNotification(.dismissMiniProfile)
                 }
             }
-//            .frame(width: dim.listWidth)
-//            .padding(.horizontal, -20)
             .padding(.top, 10)
             .background(Color.systemBackground)
         }
@@ -195,24 +185,10 @@ struct ProfileOverlayCard: View {
         .padding(20)
         .roundedBoxShadow()
         .padding(10)
-//        .contentShape(Rectangle())
-//        .onTapGesture {
-//            navigateTo(ContactPath(key: contact.pubkey))
-//        }
         .onAppear {
             if (ns.isFollowing(contact)) {
                 isFollowing = true
             }
-//            contact.zapStateChanged
-//                .sink { zapState in
-//                    if let zapState = zapState, [.initiated,.nwcConfirmed,.zapReceiptConfirmed].contains(zapState) {
-//                        isZapped = true
-//                    }
-//                    else {
-//                        isZapped = false
-//                    }
-//            }
-//            .store(in: &subscriptions)
         }
         .onDisappear {
             contact.zapState = .none

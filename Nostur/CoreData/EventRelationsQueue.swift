@@ -1,13 +1,13 @@
 // When posts have related events that need to be fetched
 // we queue them here so we don't have to query the entire
-// database of 50000+ events
+// local database of possibly 50000+ events
 
 // Typically the flow will be:
 // 1. We have some post, with a replyToRootId or replyToId, but not the reply or root itself
 // 2. We queue this post here
 // 3. We ask relays for the reply/root
 // 4. Reply/Root comes in through socket didReceive -> MessageParser -> Importer
-// 5. Reply/Root is saved in DB (BEFORE, OLD METHOD: this was were we updated the relation, but very slow since we need to query for any posts that have a matching replyToRootId or replyToId)
+// 5. Reply/Root is saved in DB (BEFORE: OLD METHOD: this was were we updated the relation, but very slow since we need to query for any posts that have a matching replyToRootId or replyToId)
 // 6. (NEW METHOD:) We check if there are any posts waiting for relations in EventRelationsQueue (Fast)
 // 7. Update and save relation, send objectWillChange
 

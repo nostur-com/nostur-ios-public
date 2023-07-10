@@ -284,6 +284,7 @@ class NewOnboardingTracker {
                         newRelay.url = relay.url.lowercased()
                         newRelay.read = relay.readWrite.read ?? false
                         newRelay.write = relay.readWrite.write ?? false
+                        newRelay.createdAt = Date()
                     }
                 }
             } catch {

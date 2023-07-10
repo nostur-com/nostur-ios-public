@@ -17,6 +17,8 @@
 		1F00E8C329C2FE7800797B78 /* LVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F00E8C229C2FE7800797B78 /* LVM.swift */; };
 		1F02EA5C299F94F200FC89EB /* Onboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F02EA5B299F94F200FC89EB /* Onboarding.swift */; };
 		1F055A53296EE2A2009EF792 /* secp256k1 in Frameworks */ = {isa = PBXBuildFile; productRef = 1F055A52296EE2A2009EF792 /* secp256k1 */; };
+		1F056FA62A5C2E7900578B35 /* ZapAmountButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F056FA52A5C2E7900578B35 /* ZapAmountButton.swift */; };
+		1F056FA82A5C2F3B00578B35 /* CustomZapAmountEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F056FA72A5C2F3B00578B35 /* CustomZapAmountEntry.swift */; };
 		1F0592DC2A505531003B4B3C /* DiscoverCommunities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0592DB2A505531003B4B3C /* DiscoverCommunities.swift */; };
 		1F05FA0A2A35FDEF00DAB8E8 /* NosturVideoViewur.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F05FA092A35FDEF00DAB8E8 /* NosturVideoViewur.swift */; };
 		1F05FA0C2A35FFA400DAB8E8 /* VideoViewurReprestable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F05FA0B2A35FFA400DAB8E8 /* VideoViewurReprestable.swift */; };
@@ -386,6 +388,8 @@
 		1F0088EA29D735080016F111 /* ContentRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentRenderer.swift; sourceTree = "<group>"; };
 		1F00E8C229C2FE7800797B78 /* LVM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LVM.swift; sourceTree = "<group>"; };
 		1F02EA5B299F94F200FC89EB /* Onboarding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Onboarding.swift; sourceTree = "<group>"; };
+		1F056FA52A5C2E7900578B35 /* ZapAmountButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZapAmountButton.swift; sourceTree = "<group>"; };
+		1F056FA72A5C2F3B00578B35 /* CustomZapAmountEntry.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CustomZapAmountEntry.swift; sourceTree = "<group>"; };
 		1F0592DB2A505531003B4B3C /* DiscoverCommunities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverCommunities.swift; sourceTree = "<group>"; };
 		1F05FA092A35FDEF00DAB8E8 /* NosturVideoViewur.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturVideoViewur.swift; sourceTree = "<group>"; };
 		1F05FA0B2A35FFA400DAB8E8 /* VideoViewurReprestable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoViewurReprestable.swift; sourceTree = "<group>"; };
@@ -795,6 +799,16 @@
 			path = Onboarding;
 			sourceTree = "<group>";
 		};
+		1F056FA42A5C2E4F00578B35 /* ZapCustomizer */ = {
+			isa = PBXGroup;
+			children = (
+				1F056FA72A5C2F3B00578B35 /* CustomZapAmountEntry.swift */,
+				1F056FA52A5C2E7900578B35 /* ZapAmountButton.swift */,
+				1FE4D91A2A53D50F0064F649 /* ZapCustomizer.swift */,
+			);
+			path = ZapCustomizer;
+			sourceTree = "<group>";
+		};
 		1F0592DA2A5054FD003B4B3C /* Communities */ = {
 			isa = PBXGroup;
 			children = (
@@ -905,7 +919,6 @@
 				1F72FB352A2BA30E001370A1 /* NWCURI.swift */,
 				1F6943B42A2A45C000064DBA /* NWCZapQueue.swift */,
 				1F6943B22A2A44A800064DBA /* ZapButton.swift */,
-				1FE4D91A2A53D50F0064F649 /* ZapCustomizer.swift */,
 			);
 			path = "NIP47-NWC";
 			sourceTree = "<group>";
@@ -1378,6 +1391,7 @@
 		1FCA273A299A4F2100298881 /* Zaps */ = {
 			isa = PBXGroup;
 			children = (
+				1F056FA42A5C2E4F00578B35 /* ZapCustomizer */,
 				1F2DD4272A29C0AA0028A062 /* NIP47-NWC */,
 				1F69854E29F2B63E006F813F /* Bolt11.swift */,
 				1F62F4C52A2C572700783892 /* KrakenApiResponse.swift */,
@@ -1659,6 +1673,7 @@
 				1F1B55B329BD07CC006E1930 /* NotificationsManager.swift in Sources */,
 				1FB6E6F929E3B16A008BE8A6 /* NewListSheet.swift in Sources */,
 				1F96792D29BF611800E78173 /* EditPrivateNoteSheet.swift in Sources */,
+				1F056FA82A5C2F3B00578B35 /* CustomZapAmountEntry.swift in Sources */,
 				1F539DAD299D52E200F3B8CA /* AddExistingAccountSheet.swift in Sources */,
 				1FFED7FF2A3970A800A0B1E8 /* PhotosPicker.swift in Sources */,
 				1FC4D4082997E126004E88CD /* AccountManager.swift in Sources */,
@@ -1803,6 +1818,7 @@
 				1F88491129B537B400145340 /* HighlightedTextEditor.AppKit.swift in Sources */,
 				1F77D1EC2A1FB3CA00895DB4 /* ThreadReplies.swift in Sources */,
 				1F2DD42D2A29EACA0028A062 /* NWCConnection+CoreDataClass.swift in Sources */,
+				1F056FA62A5C2E7900578B35 /* ZapAmountButton.swift in Sources */,
 				1F8B6A742A20C6510060EDB3 /* NRKinds.swift in Sources */,
 				1FAE9B442A2F0ADB00439A63 /* ProfileImagesHelpers.swift in Sources */,
 				1FA51FF72978441200FE60EF /* Relay+CoreDataProperties.swift in Sources */,

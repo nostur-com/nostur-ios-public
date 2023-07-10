@@ -1,6 +1,7 @@
 import Foundation
 import CoreData
 
+// TODO: This file is too long, needs big refactor
 extension Event {
     
     @nonobjc public class func fetchRequest() -> NSFetchRequest<Event> {

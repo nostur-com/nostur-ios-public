@@ -4,6 +4,14 @@ import Combine
 
 let LVM_MAX_VISIBLE:Int = 20
 
+// LVM handles the main feed and other lists
+// Posts are loaded from local database andprocessed in background,
+// turning any Event (from database) into a NRPost (for view)
+// The posts are in .nrPostLeafs and any update to .nrPostLeafs is reflected in SmoothList
+// Uses InstantFeed() to go from start-up to posts on screen as fast as possible
+
+// 
+
 class LVM: NSObject, ObservableObject {
         
     @Published var state:LVM.LIST_STATE = .INIT

@@ -1,5 +1,6 @@
 // TODO: Should enable undo, similar to likes or zaps
 // TODO: Should add drafts and auto-save
+// TODO: Need to create better solution for typing @mentions
 
 import SwiftUI
 import Combine

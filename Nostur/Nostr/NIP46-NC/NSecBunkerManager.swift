@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 
+// TODO: The happy paths works fine, but need to handle errors, timeouts, etc and notify user instead of silent fail.
 class NSecBunkerManager: ObservableObject {
     @Published var state:STATE = .disconnected
     @Published var error = ""
@@ -189,6 +190,7 @@ class NSecBunkerManager: ObservableObject {
         }
     }
     
+    // Ask nsecBunker for signature for given event, runs whenSigned(..) callback with signed event after
     public func requestSignature(forEvent event: NEvent, whenSigned: ((NEvent) -> Void)? = nil) {
         guard let account = Thread.isMainThread ? account : account?.toBG() else { return }
         
@@ -230,7 +232,7 @@ class NSecBunkerManager: ObservableObject {
         // Make sure "NC" subscription is active
         reqP(RM.getNCResponses(pubkey: keys.publicKeyHex(), bunkerPubkey: account.publicKey, subscriptionId: "NC"), activeSubscriptionId: "NC")
         
-        // Send connection request
+        // Send message to nsecBunker, ping first for reliability
         SocketPool.shared.sendMessageAfterPing(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson()))
     }
     

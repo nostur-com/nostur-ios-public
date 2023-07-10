@@ -40,9 +40,7 @@ struct Maintenance {
     // Keeps own events
     // Keeps contacts/posts with private notes
     
-    // hmm should also keep kind 3 + 10002 of follows
-    
-    //TODO: Find out which tags can be deleted..
+    // TODO: hmm should also keep kind 3 + 10002 of follows for WoT spam filter
     static func maintenance(context:NSManagedObjectContext) {
         
         // Version based migrations
@@ -270,15 +268,8 @@ struct Maintenance {
             } catch {
                 L.maintenance.info("🔴🔴 Failed to delete kind=0 data")
             }
-            //            }
+
             
-            //            do {
-            //                try context.save()
-            //            }
-            //            catch {
-            //                L.maintenance.info("maintenance error on save(): \(error)")
-            //            }
-            //
             // DELETE OLDER KIND 3 + 10002 EVENTS
             // BUT NOT OUR OWN OR THOSE WE ARE FOLLOWING
             
@@ -289,7 +280,6 @@ struct Maintenance {
                 }
             }
             
-            //            context.perform {
             let r = NSFetchRequest<Event>(entityName: "Event")
             r.predicate = NSPredicate(format: "kind IN {3,10002} AND NOT pubkey IN %@", followingPubkeys)
             r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
@@ -309,7 +299,6 @@ struct Maintenance {
             for toDelete in forDeletion {
                 context.delete(toDelete)
             }
-            //            }
             
             do {
                 if !forDeletion.isEmpty {
@@ -515,6 +504,7 @@ struct Maintenance {
         // Run once to fill dTag and delete old replacable events
         case useDtagForReplacableEvents = "useDtagForReplacableEvents"
         
+        // Run once to put .anyName in fixedName
         case insertFixedNames = "insertFixedNames"
         
         

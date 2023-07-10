@@ -1,50 +1,5 @@
 import SwiftUI
 
-struct ZapAmountButton: View {
-    let er:ExchangeRateModel = .shared
-    let amount:Double
-    let isSelected:Bool
-    
-    init(_ amount:Double, isSelected:Bool) {
-        self.amount = amount
-        self.isSelected = isSelected
-    }
-    
-    var fiatPrice:String? {
-        guard er.bitcoinPrice > 0 else { return nil }
-        return String(format: "$%.02f",(amount / 100000000 * er.bitcoinPrice))
-    }
-    
-    var body: some View {
-        Circle()
-            .strokeBorder(isSelected ? .orange : .systemBackground, lineWidth: 5)
-            .background(Circle().fill(.orange))
-            .frame(width: 75, height: 75)
-            .overlay(alignment: .center) {
-                VStack {
-                    if amount == 0.0 {
-                        Text("Custom")
-                            .font(.caption)
-                            .foregroundColor(Color.white)
-                            .fontWeight(.bold)
-                    }
-                    else {
-                        Text(amount.satsFormatted)
-                            .foregroundColor(Color.white)
-                            .fontWeight(.bold)
-                        if let fiatPrice {
-                            Text(fiatPrice)
-                                .font(.caption)
-                                .foregroundColor(Color.white.opacity(0.75))
-                        }
-                    }
-                }
-                .frame(width: 65, height: 65)
-            }
-            .opacity(isSelected ? 1.0 : 0.75 )
-    }
-}
-
 struct ZapCustomizerSheet: View {
     let name:String
     var customZapId:UUID?
@@ -175,7 +130,6 @@ struct ZapCustomizerSheet: View {
                 
                 Toggle(isOn: $setAmountAsDefault) {
                     Text("Remember this amount for all zaps", comment:"Toggle on zap screen to set selected amount as default for all zaps")
-//                    Text("Disable to improve scrolling performance", comment:"Setting on settings screen")
                 }
                 .padding(10)
                 .padding(.horizontal, 20)
@@ -215,66 +169,6 @@ struct CustomZap: Identifiable {
     var publicNote = ""
     var customZapId:UUID?
     let amount:Double
-}
-
-struct CustomZapAmountEntry: View {
-    @Environment(\.dismiss) var dismiss
-    @Binding var customAmount:Double
-    @State var enteredAmount = ""
-    @FocusState private var focusedField: FocusedField?
-    enum FocusedField {
-        case amount
-    }
-    
-    let er:ExchangeRateModel = .shared
-    
-    var fiatPrice:String? {
-        guard er.bitcoinPrice > 0 else { return nil }
-        guard let d = Double(enteredAmount), d > 0 else { return nil }
-        return String(format: "$%.02f",(d / 100000000 * er.bitcoinPrice))
-    }
-    
-    var isValidAmount:Bool {
-        if let d = Double(enteredAmount), d > 0 {
-            return true
-        }
-        return false
-    }
-    
-    var body: some View {
-        Form {
-                Section(header: Text("Amount (satoshis)")) {
-                    TextField("Zap custom amount", text: $enteredAmount, prompt: Text("0"))
-                        .keyboardType(.numberPad)
-                        .focused($focusedField, equals: .amount)
-                    if let d = Double(enteredAmount), d > 0, let fiatPrice = fiatPrice {
-                        Text(fiatPrice)
-                            .foregroundColor(.secondary)
-                    }
-                }
-        }
-        .formStyle(.grouped)
-        .onAppear {
-            customAmount = 0
-            focusedField = .amount
-        }
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") {
-                    dismiss()
-                }
-            }
-            ToolbarItem(placement: .primaryAction) {
-                Button("Done") {
-                    if let d = Double(enteredAmount), d > 0 {
-                        customAmount = Double(d)
-                        dismiss()
-                    }
-                }
-                .disabled(!isValidAmount)
-            }
-        }
-    }
 }
 
 struct ZapCustomizerSheet_Previews: PreviewProvider {

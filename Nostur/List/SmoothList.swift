@@ -6,6 +6,12 @@ enum SingleSection: CaseIterable {
     case main
 }
 
+// The main feed
+// It's a UICollectionView in a UIViewControllerRepresentable because
+// plain SwiftUI ScrollView/LazyVStacks doesn't give smooth scrolling
+// and is lacking features to load new posts at top while maintaining
+// scroll position
+
 struct SmoothList: UIViewControllerRepresentable {
     typealias UIViewControllerType = UIViewController
     typealias CollectionViewHolderType = CViewHolder

@@ -1,13 +1,7 @@
-//
-//  SwiftUIView.swift
-//  Nostur
-//
-//  Created by Fabian Lachman on 08/07/2023.
-//
-
 import SwiftUI
 import Combine
 
+// PFP with anmation when zapped
 struct ZappablePFP: View {
     let pubkey:String
     var contact:Contact?

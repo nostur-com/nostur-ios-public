@@ -101,7 +101,7 @@ struct RelayMessage {
 
 /// REQ messages for requesting with filters
 ///
-/// This struct has gotten out of hand, was supposed to be temporary to just try things
+/// TODO: This struct has gotten out of hand, was supposed to be temporary to just try things
 /// with a few messages, now its still used for every message..
 public struct RequestMessage {
     // TODO: make proper request filter class
@@ -219,22 +219,6 @@ public struct RequestMessage {
 ["REQ", "\(sub)", {"authors": \(pubkeysString), "kinds": [1,5,6,9802,30023], "limit": \(limit)}]
 """
     }
-    
-    
-    // For fetching events posted by people you follow
-    // or reactions by others reacting to the people you follow
-    // HMMM #P FILTER NIET HANDIG HIER....
-//    static func getFollowingEvents(pubkeys:[String?], limit:Int = 500, subscriptionId:String? = nil, since:NTimestamp? = nil) -> String {
-//
-//        if since != nil {
-//            return """
-//    ["REQ", "\(subscriptionId ?? ("TL-"+UUID().uuidString))", {"authors": \(JSON(pubkeys).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]"), "limit": \(limit), "since": \(since!.timestamp)}, {"#p": \(JSON(pubkeys).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]"), "kinds": [0,1,6,7,9735], "limit": \(limit), "since": \(since!.timestamp)}]
-//    """
-//        }
-//        return """
-//["REQ", "\(subscriptionId ?? ("TL-"+UUID().uuidString))", {"authors": \(JSON(pubkeys).rawString(.utf8, options: .init(rawValue: 0)) ?? "[]"), "kinds": [0,1,6,7,9735], "limit": \(limit)}]
-//"""
-//    }
     
     // Fetch anything that references given event ids in tags (1=REPLIES, 6=REPOSTS, 7=REACTIONS, 9735=ZAPS)
     // For when you have event(s) and you want to count replies, reposts, reactions, zaps.
