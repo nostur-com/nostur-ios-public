@@ -180,9 +180,6 @@ struct PostAndParent: View {
                         DetailPost(nrPost: nrPost)
                             .background(Color.systemBackground)
                             .preference(key: TabTitlePreferenceKey.self, value: nrPost.anyName)
-                            .onAppear {
-                                L.og.info("💄💄 This should be setting tab title to: \(nrPost.anyName)")
-                            }
                     }
                 }
                 else {
