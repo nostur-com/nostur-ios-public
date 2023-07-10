@@ -668,10 +668,11 @@ extension Event {
     func naiveBolt11() -> String? {
         let prefix = ###"["bolt11",""###
         let suffix = ###""]"###
+        guard let tagsSerialized = tagsSerialized else { return nil }
         
-        if let rangeStart = tagsSerialized!.range(of: prefix)?.upperBound,
-           let rangeEnd = tagsSerialized!.range(of: suffix, range: rangeStart..<tagsSerialized!.endIndex)?.lowerBound {
-            let extractedString = String(tagsSerialized![rangeStart..<rangeEnd])
+        if let rangeStart = tagsSerialized.range(of: prefix)?.upperBound,
+           let rangeEnd = tagsSerialized.range(of: suffix, range: rangeStart..<tagsSerialized.endIndex)?.lowerBound {
+            let extractedString = String(tagsSerialized[rangeStart..<rangeEnd])
             
             return extractedString
         }
