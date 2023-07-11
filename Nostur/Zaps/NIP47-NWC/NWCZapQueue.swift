@@ -143,7 +143,7 @@ class Zap {
             DataProvider.shared().bg.perform { [weak self] in
                 guard let self = self else { return }
                 if let eventId = self.eventId {
-                    let message = String(localized: "Zap failed for [post](nostur:e:\(eventId)).\n\(self.error ?? "")", comment: "Error message. Only translate the 'Zap failed for' part, don't change between brackets")
+                    let message = String(localized: "[Zap](nostur:e:\(eventId)) failed.\n\(self.error ?? "")", comment: "Error message. don't translate the (nostur:e:...) part")
                     _ = PersistentNotification.createFailedNWCZap(pubkey: NosturState.shared.activeAccountPublicKey, message: message, context: DataProvider.shared().bg)
                     L.og.info("⚡️ Created notification: Zap failed for [post](nostur:e:\(eventId)). \(self.error ?? "")")
                     

@@ -134,7 +134,7 @@ class Importer {
                             if let error = nwcResponse.error {
                                 L.og.info("⚡️ NWC response with error: \(error.code) - \(error.message)")
                                 if let eventId = awaitingZap.eventId {
-                                    let message = "Zap may have failed for [post](nostur:e:\(eventId)).\n\(error.message)"
+                                    let message = "[Zap](nostur:e:\(eventId)) may have failed.\n\(error.message)"
                                     _ = PersistentNotification.createFailedNWCZap(pubkey: NosturState.shared.activeAccountPublicKey, message: message, context: context)
                                     L.og.info("⚡️ Created notification: Zap failed for [post](nostur:e:\(eventId)). \(error.message)")
                                     if let ev = try? Event.fetchEvent(id: eventId, context: DataProvider.shared().bg) {
