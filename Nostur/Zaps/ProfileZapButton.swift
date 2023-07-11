@@ -18,7 +18,7 @@ struct ProfileZapButton: View {
         if ss.defaultLightningWallet.scheme.contains(":nwc:") && !ss.activeNWCconnectionId.isEmpty {
             if let cancellationId {
                 HStack {
-                    Text("Zapped \(Image(systemName: "bolt.fill"))")
+                    Text("Zapped \(Image(systemName: "bolt.fill"))", comment: "Text in zap button after zapping")
                         .padding(.horizontal, 10)
                         .lineLimit(1)
                         .frame(width: 160, height: 30)
@@ -47,7 +47,7 @@ struct ProfileZapButton: View {
             // TODO elsif zap .failed .overlay error !
             else if [.initiated,.nwcConfirmed,.zapReceiptConfirmed].contains(contact.zapState) {
                 HStack {
-                    Text("Zapped \(Image(systemName: "bolt.fill"))")
+                    Text("Zapped \(Image(systemName: "bolt.fill"))", comment: "Text in zap button after zapping")
                         .padding(.horizontal, 10)
                         .lineLimit(1)
                         .frame(width: 160, height: 30)

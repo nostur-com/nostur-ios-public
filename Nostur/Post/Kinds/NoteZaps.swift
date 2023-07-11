@@ -107,7 +107,7 @@ struct NoteZapRow: View {
                 }
             VStack(alignment: .leading) {
                 NoteHeaderViewEvent(event: zapFrom)
-                Text("Zapped \(zap.naiveSats.satsFormatted) sats \(fiatPrice)")
+                Text("Zapped \(zap.naiveSats.satsFormatted) sats \(fiatPrice)", comment: "Text showing how many sats someone zapped, followed by fiat price")
                 Text(zapFrom.content ?? "")
 //                Text(zap.flags)
 //                Text("expected zpk: \(zap.zappedContact?.zapperPubkey ?? "?") - zap.pubkey: \(zap.pubkey)")

@@ -10,6 +10,9 @@
 /* Message shown when a post is deleted */
 "_Post deleted by author_" = "_Bericht verwijderd door verzender_";
 
+/* Message shown when a post is from a blocked account */
+"_Post from blocked account hidden_" = "_Geblokkeerd bericht verborgen_";
+
 /* Message when (name) and X others are now following yoru */
 "**%@** and %lld others are now following you" = "**%@** en %lld anderen volgen je nu";
 
@@ -133,6 +136,9 @@ Navigation title for Add Existing Account screen */
 
 /* No comment provided by engineer. */
 "Allowed: Everyone" = "Toegestaan: iedereen";
+
+/* No comment provided by engineer. */
+"Amount (satoshis)" = "Bedrag (in satoshis)";
 
 /* Confirmation text when you want to delete your account */
 "Are you sure you want to delete your account?\n" = "Weet je zeker dat je je account wilt verwijderen?";
@@ -303,6 +309,9 @@ Button to create a new badge */
 "Create test keys" = "Nieuwe test sleutels";
 
 /* No comment provided by engineer. */
+"Custom" = "Aangepast";
+
+/* No comment provided by engineer. */
 "Custom List" = "Lijst";
 
 /* No comment provided by engineer. */
@@ -377,6 +386,9 @@ Navigation title for Edit Profile screen */
 
 /* Label for field to enter a nostr json event */
 "Enter JSON" = "Voer JSON in";
+
+/* No comment provided by engineer. */
+"Enter nsecBunker relay address" = "nsecBunker relay adres";
 
 /* Placeholder for entering note about (name) */
 "Enter private note about %@ for yourself" = "Voer privé notitie in over %@ voor jezelf";
@@ -639,6 +651,9 @@ Label for input field for badge name on Badge creation screen */
 /* Setting on settings screen */
 "Only auto-download images in new posts from people you follow\nToggle off to download from all" = "Alleen afbeeldingen automatisch downloaden van personen die je volgt";
 
+/* Button go to latest version of article */
+"Open latest" = "Open nieuwste";
+
 /* No comment provided by engineer. */
 "Pay" = "Betalen";
 
@@ -681,6 +696,9 @@ Title of tab */
 /* Preview button when creating a new post
 Preview button when creating a new reply */
 "Preview" = "Voorbeeld";
+
+/* No comment provided by engineer. */
+"Previously known as: %@" = "Voorheen: %@";
 
 /* Notifiation shown after user tapped to copy */
 "Private key copied to clipboard" = "Privé sleutel gekopieerd naar klembord";
@@ -776,6 +794,9 @@ Tab to switch to private notes */
 /* Relay settings heading */
 "Relays" = "Relays";
 
+/* Toggle on zap screen to set selected amount as default for all zaps */
+"Remember this amount for all zaps" = "Onthoud dit bedrag voor alle zaps";
+
 /* No comment provided by engineer. */
 "Remove" = "Verwijder";
 
@@ -834,8 +855,8 @@ Button to publish report */
 /* Setting on settings screen */
 "Restrict images to following" = "Limiteer afbeeldingen tot volgend";
 
-/* Shorthand for satoshis */
-"sats" = "sats";
+/* Button to reveal a blocked a post */
+"Reveal" = "Toon";
 
 /* Heading (short for Satoshis) */
 "Sats" = "Sats";
@@ -870,14 +891,23 @@ Button to publish report */
 /* No comment provided by engineer. */
 "Select account first" = "Kies eerst een account";
 
+/* No comment provided by engineer. */
+"Self-hosted nsecBunker" = "Zelfgehoste nsecBunker";
+
+/* No comment provided by engineer. */
+"Send %@ sats %@" = "Stuur %@ sats %@";
+
+/* No comment provided by engineer. */
+"Send %@ sats to %@" = "Stuur %@ sats naar %@";
+
 /* Navigation title for screen to select a contact to send a Direct Message to */
 "Send DM to" = "Stuur PB naar";
 
 /* No comment provided by engineer. */
 "Send payment test" = "Stuur betaling test";
 
-/* Send how many sats label */
-"Send sats:" = "Stuur sats:";
+/* Title of sheet showing zap options when sending sats (satoshis) */
+"Send sats" = "Stuur sats";
 
 /* No comment provided by engineer. */
 "Send to: %@" = "Stuur naar: %@";
@@ -979,6 +1009,9 @@ Button to skip adding account and use the guest account instead */
 /* Message during onboarding about the Guest Account */
 "The guest account is already following some people. You can read posts and view profiles, but you cannot post or like things until you create a new account yourself" = "Het gast account volgt al een aantal mensen. Je kan berichten lezen en profielen bekijken maar je kan niks plaatsen totdat je zelf een account aanmaakt";
 
+/* No comment provided by engineer. */
+"There are %lld new communities" = "Er zijn %lld nieuwe communities";
+
 /* Error message */
 "There was a problem, could not send sats" = "Er was een probleem, sats konden niet verzonden worden";
 
@@ -1032,6 +1065,9 @@ Button to skip adding account and use the guest account instead */
 
 /* Error message */
 "Unable to decode lightning invoice" = "Kon lightning factuur niet verwerken";
+
+/* List of unverified zaps */
+"Unverified zaps" = "Niet-geverifiëerde zaps";
 
 /* Button to update WoT */
 "Update" = "Bijwerken";
@@ -1100,19 +1136,16 @@ Button to skip adding account and use the guest account instead */
 "Your wallet is now connected with **Nostur**, you can now enjoy a seamless zapping experience!" = "Je portemonnee is nu verbonden met **Nostur**, je kan nu zappen met gemak!";
 
 /* No comment provided by engineer. */
-"Zap" = "Zap";
-
-/* Describes how much sats will be zapped by default, first variable is sats, second is dollar price */
-"Zap %@ sats by default (%@)" = "Zap %@ sats als standaard (%@)";
+"Zap custom amount" = "Zap aangepast bedrag";
 
 /* Error message. Only translate the 'Zap failed for' part, don't change between brackets */
 "Zap failed for [contact](nostur:p:%@).\n%@" = "Zap niet gelukt voor [contact](nostur:p:%@).\n%@";
 
-/* Error message. Only translate the 'Zap failed for' part, don't change between brackets */
-"Zap failed for [post](nostur:e:%@).\n%@" = "Zap niet gelukt voor [post](nostur:e:%@).\n%@";
+/* Text in zap button after zapping */
+"Zapped %@" = "Gezapt %@";
 
-/* No comment provided by engineer. */
-"Zapped %@ sats %@" = "Zapped %@ sats %@";
+/* Text showing how many sats someone zapped, followed by fiat price */
+"Zapped %@ sats %@" = "Gezapt: %@ sats %@";
 
 /* Setting heading on settings screen */
 "Zapping" = "Zappen";

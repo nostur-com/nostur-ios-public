@@ -93,6 +93,10 @@ This will **wipe** your:
         <target>%@ heeft opnieuw gepost</target>
         <note>Heading for reposted post: '(Name) reposted'</note>
       </trans-unit>
+      <trans-unit id="%@ sats %@" xml:space="preserve">
+        <source>%@ sats %@</source>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="%@ · %@" xml:space="preserve">
         <source>%@ · %@</source>
         <note>No comment provided by engineer.</note>
@@ -337,6 +341,11 @@ Navigation title for Add Existing Account screen</note>
       <trans-unit id="Allowed: Everyone" xml:space="preserve">
         <source>Allowed: Everyone</source>
         <target>Toegestaan: iedereen</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Amount (satoshis)" xml:space="preserve">
+        <source>Amount (satoshis)</source>
+        <target>Bedrag (in satoshis)</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Anon" xml:space="preserve">
@@ -621,6 +630,11 @@ Button to create a new badge</note>
         <target>Nieuwe test sleutels</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="Custom" xml:space="preserve">
+        <source>Custom</source>
+        <target>Aangepast</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Custom List" xml:space="preserve">
         <source>Custom List</source>
         <target>Lijst</target>
@@ -634,6 +648,10 @@ Button to create a new badge</note>
       <trans-unit id="Data export" xml:space="preserve">
         <source>Data export</source>
         <target>Data exporteren</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Default zap amount" xml:space="preserve">
+        <source>Default zap amount</source>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Default zap amount:" xml:space="preserve">
@@ -752,6 +770,11 @@ Navigation title for Edit Profile screen</note>
         <source>Enter JSON</source>
         <target>Voer JSON in</target>
         <note>Label for field to enter a nostr json event</note>
+      </trans-unit>
+      <trans-unit id="Enter nsecBunker relay address" xml:space="preserve">
+        <source>Enter nsecBunker relay address</source>
+        <target>nsecBunker relay adres</target>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Enter private note about %@ for yourself" xml:space="preserve">
         <source>Enter private note about %@ for yourself</source>
@@ -975,6 +998,10 @@ Label shown when someone follows you</note>
       <trans-unit id="Keys" xml:space="preserve">
         <source>Keys</source>
         <target>Sleutels</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Last updated: %@" xml:space="preserve">
+        <source>Last updated: %@</source>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Last updated: May 27th, 2023&#10;    &#10;Your access to and use of the App is conditioned upon your acceptance of and compliance with these Terms. These Terms apply to all users of the App.&#10;&#10;By accessing or using the App, you agree to be bound by these Terms. If you disagree with any part of the terms, then you do not have permission to access the App.&#10;&#10;Accounts&#10;When you create an account with the App, you are responsible for maintaining the confidentiality of your account keys, as well as restricting access to your device. You agree to accept responsibility for any and all activities or actions that occur under your account.&#10;&#10;Content&#10;The App allows you to access, read, and post content through connecting to relays. You are responsible for the content that you post or access through the App, including its legality, reliability, and appropriateness.&#10;&#10;By posting content through the App, you represent and warrant that the content is yours (you own it) and/or you have the right to use it, and that the posting of your content through the App does not violate the privacy rights, publicity rights, copyrights, contract rights, or any other rights of any person or entity.&#10;&#10;Prohibited Activities&#10;You agree not to use the App for any illegal, harmful, or offensive activities, including but not limited to:&#10;&#10;Engaging in harassment, bullying, or any form of intimidation&#10;Distributing or promoting sexually explicit or pornographic material&#10;Promoting hate speech, racism, or discrimination of any kind&#10;Infringing upon the intellectual property rights of others&#10;Engaging in any form of fraud, phishing, or unauthorized data collection&#10;Intellectual Property&#10;The App and its original content (excluding Content provided by users), features, and functionality are and will remain the exclusive property of the Developer. The App is protected by copyright, trademark, and other laws of the United States and foreign countries. Any trademarks and trade dress may not be used in connection with any product or service without the prior written consent of the Developer.&#10;&#10;Limitation of Liability&#10;In no event shall the Developer be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from (i) your access to or use of or inability to access or use the App; (ii) any conduct or content of any third party on the App; (iii) any content obtained from the App; and (iv) unauthorized access, use, or alteration of your transmissions or content, whether based on warranty, contract, tort (including negligence), or any other legal theory, whether or not the Developer has been informed of the possibility of such damage, and even if a remedy set forth herein is found to have failed of its essential purpose.&#10;&#10;Privacy Policy&#10;Nostur does not collect information about you. The app stores information that you provide about your nostr profile, which can be anything you choose to share or not. The posts and content you share from Nostur are sent out to public relays so anyone can view those and Nostur stores this on your device so you can always view it yourself.&#10;The app uses the following external services:&#10;Tenor: for inluding animated GIFs in your posts&#10;Image upload services: For including images in your posts. You can opt out to using these services by not including images or GIFs in your posts and not uploading a profile picture or banner in the app.&#10;&#10;For any questions, please contact feedback@nostur.com." xml:space="preserve">
@@ -1214,6 +1241,11 @@ Toggle off to download from all</source>
         <target>Alleen afbeeldingen automatisch downloaden van personen die je volgt</target>
         <note>Setting on settings screen</note>
       </trans-unit>
+      <trans-unit id="Open latest" xml:space="preserve">
+        <source>Open latest</source>
+        <target>Open nieuwste</target>
+        <note>Button go to latest version of article</note>
+      </trans-unit>
       <trans-unit id="P" xml:space="preserve">
         <source>P</source>
         <note>No comment provided by engineer.</note>
@@ -1289,6 +1321,11 @@ Title of tab</note>
         <target>Voorbeeld</target>
         <note>Preview button when creating a new post
 Preview button when creating a new reply</note>
+      </trans-unit>
+      <trans-unit id="Previously known as: %@" xml:space="preserve">
+        <source>Previously known as: %@</source>
+        <target>Voorheen: %@</target>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Private Notes" xml:space="preserve">
         <source>Private Notes</source>
@@ -1446,6 +1483,11 @@ Tab to switch to private notes</note>
         <source>Relays:</source>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="Remember this amount for all zaps" xml:space="preserve">
+        <source>Remember this amount for all zaps</source>
+        <target>Onthoud dit bedrag voor alle zaps</target>
+        <note>Toggle on zap screen to set selected amount as default for all zaps</note>
+      </trans-unit>
       <trans-unit id="Remove" xml:space="preserve">
         <source>Remove</source>
         <target>Verwijder</target>
@@ -1542,6 +1584,11 @@ Button to publish report</note>
         <target>Limiteer afbeeldingen tot volgend</target>
         <note>Setting on settings screen</note>
       </trans-unit>
+      <trans-unit id="Reveal" xml:space="preserve">
+        <source>Reveal</source>
+        <target>Toon</target>
+        <note>Button to reveal a blocked a post</note>
+      </trans-unit>
       <trans-unit id="Sats" xml:space="preserve">
         <source>Sats</source>
         <target>Sats</target>
@@ -1597,6 +1644,21 @@ Button to publish report</note>
         <target>Kies eerst een account</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="Self-hosted nsecBunker" xml:space="preserve">
+        <source>Self-hosted nsecBunker</source>
+        <target>Zelfgehoste nsecBunker</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Send %@ sats %@" xml:space="preserve">
+        <source>Send %@ sats %@</source>
+        <target>Stuur %@ sats %@</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Send %@ sats to %@" xml:space="preserve">
+        <source>Send %@ sats to %@</source>
+        <target>Stuur %@ sats naar %@</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Send DM to" xml:space="preserve">
         <source>Send DM to</source>
         <target>Stuur PB naar</target>
@@ -1607,10 +1669,10 @@ Button to publish report</note>
         <target>Stuur betaling test</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
-      <trans-unit id="Send sats:" xml:space="preserve">
-        <source>Send sats:</source>
-        <target>Stuur sats:</target>
-        <note>Send how many sats label</note>
+      <trans-unit id="Send sats" xml:space="preserve">
+        <source>Send sats</source>
+        <target>Stuur sats</target>
+        <note>Title of sheet showing zap options when sending sats (satoshis)</note>
       </trans-unit>
       <trans-unit id="Send to: %@" xml:space="preserve">
         <source>Send to: %@</source>
@@ -1781,6 +1843,11 @@ Button to skip adding account and use the guest account instead</note>
         <target>Het gast account volgt al een aantal mensen. Je kan berichten lezen en profielen bekijken maar je kan niks plaatsen totdat je zelf een account aanmaakt</target>
         <note>Message during onboarding about the Guest Account</note>
       </trans-unit>
+      <trans-unit id="There are %lld new communities" xml:space="preserve">
+        <source>There are %lld new communities</source>
+        <target>Er zijn %lld nieuwe communities</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="There are 2 solutions:" xml:space="preserve">
         <source>There are 2 solutions:</source>
         <note>No comment provided by engineer.</note>
@@ -1794,6 +1861,10 @@ Button to skip adding account and use the guest account instead</note>
         <source>This NWC connection does not support payments</source>
         <target>Deze NWC verbinding ondersteund geen betalingen</target>
         <note>Error message during NWC setup</note>
+      </trans-unit>
+      <trans-unit id="This article has been updated" xml:space="preserve">
+        <source>This article has been updated</source>
+        <note>Message shown when there is a newer version available of an article</note>
       </trans-unit>
       <trans-unit id="This post" xml:space="preserve">
         <source>This post</source>
@@ -1878,6 +1949,11 @@ Button to skip adding account and use the guest account instead</note>
         <source>Unable to decode lightning invoice</source>
         <target>Kon lightning factuur niet verwerken</target>
         <note>Error message</note>
+      </trans-unit>
+      <trans-unit id="Unverified zaps" xml:space="preserve">
+        <source>Unverified zaps</source>
+        <target>Niet-geverifiëerde zaps</target>
+        <note>List of unverified zaps</note>
       </trans-unit>
       <trans-unit id="Update" xml:space="preserve">
         <source>Update</source>
@@ -1993,15 +2069,10 @@ Schakel naar een ander account of voeg de privé sleutel toe aan dit account om 
         <target>Je portemonnee is nu verbonden met **Nostur**, je kan nu zappen met gemak!</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
-      <trans-unit id="Zap" xml:space="preserve">
-        <source>Zap</source>
-        <target>Zap</target>
+      <trans-unit id="Zap custom amount" xml:space="preserve">
+        <source>Zap custom amount</source>
+        <target>Zap aangepast bedrag</target>
         <note>No comment provided by engineer.</note>
-      </trans-unit>
-      <trans-unit id="Zap %@ sats by default (%@)" xml:space="preserve">
-        <source>Zap %@ sats by default (%@)</source>
-        <target>Zap %@ sats als standaard (%@)</target>
-        <note>Describes how much sats will be zapped by default, first variable is sats, second is dollar price</note>
       </trans-unit>
       <trans-unit id="Zap failed for [contact](nostur:p:%@).&#10;%@" xml:space="preserve">
         <source>Zap failed for [contact](nostur:p:%@).
@@ -2010,16 +2081,14 @@ Schakel naar een ander account of voeg de privé sleutel toe aan dit account om 
 %@</target>
         <note>Error message. Only translate the 'Zap failed for' part, don't change between brackets</note>
       </trans-unit>
-      <trans-unit id="Zap failed for [post](nostur:e:%@).&#10;%@" xml:space="preserve">
-        <source>Zap failed for [post](nostur:e:%@).
-%@</source>
-        <target>Zap niet gelukt voor [post](nostur:e:%@).
-%@</target>
-        <note>Error message. Only translate the 'Zap failed for' part, don't change between brackets</note>
+      <trans-unit id="Zapped %@" xml:space="preserve">
+        <source>Zapped %@</source>
+        <target>Gezapt %@</target>
+        <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Zapped %@ sats %@" xml:space="preserve">
         <source>Zapped %@ sats %@</source>
-        <target>Zapped %@ sats %@</target>
+        <target>Gezapt: %@ sats %@</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Zapping" xml:space="preserve">
@@ -2053,6 +2122,11 @@ Heading</note>
         <source>[%@](%@)</source>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="[Zap](nostur:e:%@) failed.&#10;%@" xml:space="preserve">
+        <source>[Zap](nostur:e:%@) failed.
+%@</source>
+        <note>Error message. don't translate the (nostur:e:...) part</note>
+      </trans-unit>
       <trans-unit id="_Post deleted by %@_" xml:space="preserve">
         <source>_Post deleted by %@_</source>
         <target>_Bericht verwijderd door %@_</target>
@@ -2062,6 +2136,11 @@ Heading</note>
         <source>_Post deleted by author_</source>
         <target>_Bericht verwijderd door verzender_</target>
         <note>Message shown when a post is deleted</note>
+      </trans-unit>
+      <trans-unit id="_Post from blocked account hidden_" xml:space="preserve">
+        <source>_Post from blocked account hidden_</source>
+        <target>_Geblokkeerd bericht verborgen_</target>
+        <note>Message shown when a post is from a blocked account</note>
       </trans-unit>
       <trans-unit id="contact" xml:space="preserve">
         <source>contact</source>
@@ -2150,11 +2229,6 @@ Message shown when a post kind (X) is not yet supported</note>
         <source>reactions</source>
         <target>reacties</target>
         <note>Label for reactions count, example: (7) reactions</note>
-      </trans-unit>
-      <trans-unit id="sats" xml:space="preserve">
-        <source>sats</source>
-        <target>sats</target>
-        <note>Shorthand for satoshis</note>
       </trans-unit>
       <trans-unit id="sign_event" xml:space="preserve">
         <source>sign_event</source>
