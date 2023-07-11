@@ -471,6 +471,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
     private func isFollowingListener() {
         receiveNotification(.followersChanged)
+            .subscribe(on: DispatchQueue.global())
             .sink { [weak self] notification in
                 guard let self = self else { return }
                 let followingPubkeys = notification.object as! Set<String>
@@ -526,6 +527,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
     
     private func actionListener() {
         receiveNotification(.postAction)
+            .subscribe(on: DispatchQueue.global())
             .sink { [weak self] notification in
                 guard let self = self else { return }
                 let action = notification.object as! PostActionNotification
@@ -557,6 +559,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         // Rerender ReplyingToFragment when the new contact is saved (only if we replyToId is set)
         // Rerender content elements also for mentions in text
         receiveNotification(.contactSaved)
+            .subscribe(on: DispatchQueue.global())
             .map({ notification in
                 return notification.object as! Ptag
             })
@@ -576,6 +579,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
        
         // Remove from missingPs so we don't fetch again at any .onAppear
         receiveNotification(.contactSaved)
+            .subscribe(on: DispatchQueue.global())
             .map({ notification in
                 return notification.object as! Ptag
             })
@@ -593,6 +597,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
         
         // Create self.contact = nrContact
         receiveNotification(.contactSaved)
+            .subscribe(on: DispatchQueue.global())
             .map({ notification in
                 return notification.object as! Ptag
             })

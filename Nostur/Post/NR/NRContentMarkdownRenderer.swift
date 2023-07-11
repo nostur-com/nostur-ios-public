@@ -25,6 +25,7 @@ struct NRContentMarkdownRenderer: View {
             .padding(.horizontal, fullWidth ? 10 : 0)
             .onReceive(
                 receiveNotification(.contactSaved)
+                    .subscribe(on: DispatchQueue.global())
                     .map({ notification in
                         return notification.object as! String
                     })

@@ -63,6 +63,7 @@ class NRContact: ObservableObject, Identifiable, Hashable {
     
     private func isFollowingListener() {
         receiveNotification(.followersChanged)
+            .subscribe(on: DispatchQueue.global())
             .sink { [weak self] notification in
                 guard let self = self else { return }
                 let followingPubkeys = notification.object as! Set<String>
