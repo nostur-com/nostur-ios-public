@@ -123,7 +123,20 @@ struct QuoteById: View {
         VStack {
             if let event = events.first {
                 if let nrPost = nrPost {
-                    QuotedNoteFragmentView(nrPost: nrPost)
+                    if nrPost.kind == 30023 {
+                        ArticleView(nrPost, hideFooter: true)
+//                            .background(
+//                                Color.systemBackground
+//                                    .cornerRadius(15)
+//                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 15)
+                                    .stroke(.regularMaterial, lineWidth: 1)
+                            )
+                    }
+                    else {
+                        QuotedNoteFragmentView(nrPost: nrPost)
+                    }
                 }
                 else {
                     Color.clear
