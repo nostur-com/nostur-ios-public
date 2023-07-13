@@ -9,19 +9,21 @@ import Foundation
 //var key = try! NIP19(prefix: "nsec", hexString: "139d3d...")
 
 struct NIP19 {
-    let key: Bytes
+    let key: [UInt8]
     let displayString: String
-    var hexString:String { get { key.hexString() }}
+    let hexString:String
     
     public init(prefix:String, hexString: String) throws {
         self.key = hexString.hexToBytes()
+        self.hexString = key.hexString()
         let bech32 = Bech32()
         let grouped = try bech32.convertBits(from: 8, to: 5, pad: true, idata: Data(bytes: key, count: 32))
         self.displayString = bech32.encode(prefix, values: grouped)
     }
     
-    public init(prefix:String, key: Bytes) throws {
+    public init(prefix:String, key: [UInt8]) throws {
         self.key = key
+        self.hexString = key.hexString()
         let bech32 = Bech32()
         let grouped = try bech32.convertBits(from: 8, to: 5, pad: true, idata: Data(bytes: key, count: 32))
         self.displayString = bech32.encode(prefix, values: grouped)
@@ -32,6 +34,7 @@ struct NIP19 {
         let bech32 = Bech32()
         let (_, checksum) = try bech32.decode(displayString)
         self.key = try bech32.convertBits(from: 5, to: 8, pad: false, idata: checksum).makeBytes()
+        self.hexString = key.hexString()
     }
 }
 
@@ -136,3 +139,4 @@ class ShareableIdentifier: Hashable {
         }
     }
 }
+

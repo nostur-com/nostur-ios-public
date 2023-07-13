@@ -2,12 +2,12 @@ import SwiftUI
 import CoreData
 
 
-// how to deal with zaps (High profile accounts vs normal users)
+// How to deal with zaps? (High volume accounts vs normal users)
 // Get all zaps from last week (.since filter)
 // If low, get last month (.since)
 // If low, get all...?
 
-// Steps. fetch zaps from relay that have our serializedP
+// Steps: fetch zaps from relay that have our serializedP
 // foreach, fetch zappedEventId if we dont have it
 
 // Posts on user profile screen

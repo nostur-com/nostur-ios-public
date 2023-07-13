@@ -212,7 +212,7 @@ func signedImageProof(imageData:Data) -> (signature: String, message: String, pu
     
     // TODO: EVENTALLY REPLACE WITH NOSTR SCHNORR VERIFICATION WHEN THERE IS PROPER PHP SUPPORT SO WE DONT HAVE TO DERRIVE AN EXTRA KEY
     
-    guard let privateKeyData = Data(fromHexEncodedString: privateKeyHexString) else { return nil }
+    guard let privateKeyData:Data = try? privateKeyHexString.hexa() else { return nil }
     // Create a SymmetricKey from the Schnorr private key data
     let symmetricKey = SymmetricKey(data: privateKeyData)
 
@@ -225,7 +225,6 @@ func signedImageProof(imageData:Data) -> (signature: String, message: String, pu
     let derivedKey = HKDF<SHA256>.deriveKey(inputKeyMaterial: symmetricKey, salt: saltData, info: info, outputByteCount: 32)
 
     guard let privateKey = try? Curve25519.Signing.PrivateKey(rawRepresentation: derivedKey) else { return nil }
-//    guard let privateKey = try? Curve25519.Signing.PrivateKey(rawRepresentation: privateKeyData) else { return nil }
 
     let publicKey = privateKey.publicKey
     let publicKeyData = publicKey.rawRepresentation
@@ -255,7 +254,7 @@ func signedDeleteProof(pk privateKeyHexString:String, pubkey nostrPubkeyHex:Stri
     
     // TODO: EVENTALLY REPLACE WITH NOSTR SCHNORR VERIFICATION WHEN THERE IS PROPER PHP SUPPORT SO WE DONT HAVE TO DERRIVE AN EXTRA KEY
     
-    guard let privateKeyData = Data(fromHexEncodedString: privateKeyHexString) else { return nil }
+    guard let privateKeyData:Data = try? privateKeyHexString.hexa() else { return nil }
     // Create a SymmetricKey from the Schnorr private key data
     let symmetricKey = SymmetricKey(data: privateKeyData)
 

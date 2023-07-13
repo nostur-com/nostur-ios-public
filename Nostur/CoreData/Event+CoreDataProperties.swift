@@ -292,7 +292,7 @@ extension Event {
     var isSpam:Bool {
         // combine all the checks here
         
-        if kind == 9735, let zapReq = zapFromRequest, zapReq.naiveSats >= 250 { // TODO: Make configurable
+        if kind == 9735, let zapReq = zapFromRequest, zapReq.naiveSats >= 250 { // TODO: Make amount configurable
             // Never consider zaps of more than 250 sats as spam
             return false
         }
@@ -996,14 +996,12 @@ extension Event {
                     replyTo.addToReplies(savedEvent)
                     replyTo.repliesCount += 1
                     replyTo.repliesUpdated.send(replyTo.replies_)
-//                  savedEvent.replyToUpdated.send(replyTo) // TODO: This event can't have any updates, its brand new..??
                 }
                 else if let replyTo = try? Event.fetchEvent(id: replyToEtag.id, context: context) {
                     savedEvent.replyTo = replyTo
                     replyTo.addToReplies(savedEvent)
                     replyTo.repliesCount += 1
                     replyTo.repliesUpdated.send(replyTo.replies_)
-//                  savedEvent.replyToUpdated.send(replyTo) // TODO: This event can't have any updates, its brand new..??
                 }
             }
             
@@ -1025,7 +1023,7 @@ extension Event {
                         replyToRoot.addToReplies(savedEvent)
                         replyToRoot.repliesCount += 1
                         replyToRoot.repliesUpdated.send(replyToRoot.replies_)
-//                        savedEvent.replyToUpdated.send(replyToRoot) // TODO: This event can't have any updates, its brand new..??
+                        savedEvent.replyToUpdated.send(replyToRoot) // TODO: This event can't have any updates, its brand new..??
                     }
                     else {
 //                        savedEvent.replyToRootUpdated.send(replyToRoot) // TODO: This event can't have any updates, its brand new..??
