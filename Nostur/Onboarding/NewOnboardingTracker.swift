@@ -1,3 +1,10 @@
+//
+//  NewOnboardingTracker.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 10/05/2023.
+//
+
 import Foundation
 import Combine
 

@@ -1,3 +1,10 @@
+//
+//  NewAccountSheet.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 16/02/2023.
+//
+
 import SwiftUI
 import secp256k1
 import Foundation

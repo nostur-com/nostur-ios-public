@@ -1,3 +1,10 @@
+//
+//  Mentions.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 28/02/2023.
+//
+
 import Foundation
 
 func replaceMentionsWithNpubs(_ text:String, selected:[Contact] = []) -> String {

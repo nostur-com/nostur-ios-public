@@ -3,7 +3,7 @@
 //
 //  Created by Otto Suess on 09.07.18.
 //  Copyright © 2018 Zap. All rights reserved.
-//  Modified to just get the amount/expiry
+//  22/04/2023 Modified by Fabian Lachman to just get the amount/expiry
 
 import Foundation
 

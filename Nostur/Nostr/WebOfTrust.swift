@@ -1,3 +1,10 @@
+//
+//  WebOfTrust.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 17/06/2023.
+//
+
 // Where should we handle spam?
 // Nostur does not have global, so that is not a problem
 // Posts are loaded from people you follow, unfollow if they spam

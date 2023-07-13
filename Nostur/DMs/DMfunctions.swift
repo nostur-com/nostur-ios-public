@@ -1,3 +1,11 @@
+//
+//  DMfunctions.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 30/05/2023.
+//
+
+
 import Foundation
 
 func computeOnlyMostRecentAll(sent:[Event],received:[Event],pubkey:String) -> [String: ([Event], Bool, Int, Int64, Event)] {

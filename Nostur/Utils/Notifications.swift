@@ -1,3 +1,10 @@
+//
+//  Notifications.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 10/02/2023.
+//
+
 import Foundation
 
 func sendNotification(_ name: Notification.Name, _ object: Any? = nil) {

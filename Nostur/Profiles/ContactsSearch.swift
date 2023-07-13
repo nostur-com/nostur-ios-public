@@ -1,3 +1,10 @@
+//
+//  ContactsSearch.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 01/03/2023.
+//
+
 import SwiftUI
 import Combine
 

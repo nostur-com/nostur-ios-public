@@ -1,3 +1,10 @@
+//
+//  View+withNavigationDestinations.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 02/02/2023.
+//
+
 import Foundation
 import SwiftUI
 

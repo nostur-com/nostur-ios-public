@@ -1,3 +1,10 @@
+//
+//  TabModel.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 28/02/2023.
+//
+
 import SwiftUI
 
 class TabModel: ObservableObject, Identifiable, Equatable {

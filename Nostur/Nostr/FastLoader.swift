@@ -1,3 +1,10 @@
+//
+//  FastLoader.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 03/05/2023.
+//
+
 import Foundation
 import CoreData
 import Combine

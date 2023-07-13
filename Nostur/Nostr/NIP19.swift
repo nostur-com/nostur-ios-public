@@ -1,3 +1,10 @@
+//
+//  File.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 21/01/2023.
+//
+
 import Foundation
 
 //var key = try! NIP19(displayString: "npub")

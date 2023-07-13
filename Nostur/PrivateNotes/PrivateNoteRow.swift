@@ -1,3 +1,10 @@
+//
+//  PrivateNoteRow.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 14/05/2023.
+//
+
 import SwiftUI
 
 struct PrivateNoteRow: View {

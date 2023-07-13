@@ -1,3 +1,10 @@
+//
+//  NosturVideoViewur.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 02/05/2023.
+//
+
 import SwiftUI
 import NukeUI
 import Nuke

@@ -1,3 +1,10 @@
+//
+//  NRContentMarkdownRenderer.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 22/06/2023.
+//
+
 import SwiftUI
 import MarkdownUI
 

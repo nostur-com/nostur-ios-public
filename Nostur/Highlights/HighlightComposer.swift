@@ -1,9 +1,15 @@
+//
+//  HighlightComposer.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 29/04/2023.
+//
+
 import SwiftUI
 
 struct HighlightComposer: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var ns:NosturState
-    let up:Unpublisher = .shared
     var highlight:NewHighlight
     @State var selectedAuthor:Contact?
     @State var isAuthorSelectionShown = false
@@ -120,8 +126,7 @@ struct HighlightComposer: View {
         nEvent.tags.append(NostrTag(["r", highlight.url]))
         
         if let signedEvent = try? ns.signEvent(nEvent) {
-            up.publishNow(signedEvent)
-            //                        noteCancellationId = up.publish(signedEvent)
+            Unpublisher.shared.publishNow(signedEvent)
             dismiss()
         }
     }

@@ -1,8 +1,15 @@
+//
+//  ProfileZaps.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 13/05/2023.
+//
+
 import SwiftUI
 import CoreData
 
 
-// How to deal with zaps? (High volume accounts vs normal users)
+// How to deal with zaps overview? (High volume accounts vs normal users)
 // Get all zaps from last week (.since filter)
 // If low, get last month (.since)
 // If low, get all...?

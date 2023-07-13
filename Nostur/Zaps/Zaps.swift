@@ -1,5 +1,11 @@
-import Foundation
+//
+//  Zaps.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 13/02/2023.
+//
 
+import Foundation
 
 func zapRequest(forPubkey pubkey: String, andEvent eventId: String? = nil, withMessage message:String = "", relays:[String]) -> NEvent {
     var zapRequest = NEvent(content:message)

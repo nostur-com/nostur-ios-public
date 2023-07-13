@@ -1,3 +1,10 @@
+//
+//  FastAccountSwitcher.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 04/03/2023.
+//
+
 import SwiftUI
 
 struct FastAccountSwitcher: View {

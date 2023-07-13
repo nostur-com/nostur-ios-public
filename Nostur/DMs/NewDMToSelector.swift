@@ -1,3 +1,10 @@
+//
+//  NewDMToSelector.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 22/03/2023.
+//
+
 import SwiftUI
 
 struct NewDMToSelector: View {

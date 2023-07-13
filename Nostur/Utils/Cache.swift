@@ -1,3 +1,10 @@
+//
+//  Cache.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 26/01/2023.
+//
+
 import Foundation
 
 typealias EventId = String

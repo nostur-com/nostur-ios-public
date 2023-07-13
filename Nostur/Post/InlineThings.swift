@@ -1,3 +1,10 @@
+//
+//  InlineThings.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 14/04/2023.
+//
+
 import SwiftUI
 import Foundation
 import CoreData

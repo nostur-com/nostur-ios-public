@@ -1,3 +1,10 @@
+//
+//  HighlightRenderer.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 03/05/2023.
+//
+
 import SwiftUI
 
 struct HighlightRenderer: View {

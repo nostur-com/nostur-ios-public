@@ -1,6 +1,12 @@
+//
+//  NosturStyles.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 15/02/2023.
+//
+
 import Foundation
 import SwiftUI
-
 
 struct NosturButton: ButtonStyle {
     @Environment(\.colorScheme) var colorScheme

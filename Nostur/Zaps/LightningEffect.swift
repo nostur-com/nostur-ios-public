@@ -1,3 +1,10 @@
+//
+//  LightningEffect.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 03/06/2023.
+//
+
 import SwiftUI
 
 struct LightningStrikeShape: Shape {

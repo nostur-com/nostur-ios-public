@@ -1,3 +1,10 @@
+//
+//  NewFollowersNotificationView.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 01/06/2023.
+//
+
 import SwiftUI
 
 struct NewFollowersNotificationView: View {

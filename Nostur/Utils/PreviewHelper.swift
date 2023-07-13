@@ -1,3 +1,10 @@
+//
+//  PreviewHelper.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 24/01/2023.
+//
+
 import SwiftUI
 import CoreData
 

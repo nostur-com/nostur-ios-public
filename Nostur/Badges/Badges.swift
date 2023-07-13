@@ -1,3 +1,10 @@
+//
+//  Badges.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 01/03/2023.
+//
+
 // TODO: NIP-58: Badge definitions can be updated.
 // TODO: Badges could use a rewrite
 

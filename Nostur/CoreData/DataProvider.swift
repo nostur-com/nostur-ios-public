@@ -1,3 +1,10 @@
+//
+//  DataProvider.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 27/01/2023.
+//
+
 import CoreData
 
 class DataProvider: ObservableObject {

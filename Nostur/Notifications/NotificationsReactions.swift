@@ -1,3 +1,10 @@
+//
+//  Notifications.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 21/02/2023.
+//
+
 import SwiftUI
 import CoreData
 import Combine

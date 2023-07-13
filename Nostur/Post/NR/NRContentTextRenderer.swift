@@ -1,3 +1,10 @@
+//
+//  NRContentTextRenderer.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 12/05/2023.
+//
+
 import SwiftUI
 
 struct NRContentTextRenderer: View {

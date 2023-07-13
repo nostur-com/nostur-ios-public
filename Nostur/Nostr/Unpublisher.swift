@@ -1,3 +1,10 @@
+//
+//  Unpublisher.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 10/02/2023.
+//
+
 import Foundation
 import CoreData
 import UIKit

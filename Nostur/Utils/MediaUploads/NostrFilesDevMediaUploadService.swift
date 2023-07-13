@@ -1,3 +1,10 @@
+//
+//  NostrimgMediaUploadService.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 17/06/2023.
+//
+
 import Foundation
 
 // Same as IMGUR but no Client ID needed

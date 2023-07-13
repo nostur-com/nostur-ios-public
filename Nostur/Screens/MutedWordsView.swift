@@ -1,3 +1,10 @@
+//
+//  MutedWords.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 12/04/2023.
+//
+
 import SwiftUI
 
 struct MutedWordsView: View {

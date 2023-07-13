@@ -1,3 +1,10 @@
+//
+//  AnimatedNumber.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 20/05/2023.
+//
+
 import SwiftUI
 
 struct AnimatedNumber: View, Equatable {

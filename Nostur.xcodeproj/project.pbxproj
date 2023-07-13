@@ -444,7 +444,7 @@
 		1F38AFEB2A2642D00035641E /* DMfunctions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DMfunctions.swift; sourceTree = "<group>"; };
 		1F38AFF02A27166C0035641E /* VideoHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoHelpers.swift; sourceTree = "<group>"; };
 		1F38AFF32A2789C70035641E /* MacListsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacListsView.swift; sourceTree = "<group>"; };
-		1F3C3F9529755D4C00E813FD /* NosturState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturState.swift; sourceTree = "<group>"; };
+		1F3C3F9529755D4C00E813FD /* NosturState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NosturState.swift; path = Nostur/NosturState.swift; sourceTree = "<group>"; };
 		1F3D4BB62A25CC140084F939 /* AppView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppView.swift; path = Nostur/AppView.swift; sourceTree = "<group>"; };
 		1F3E135829C8B11F00D076EA /* Event+PrivateNotes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Event+PrivateNotes.swift"; sourceTree = "<group>"; };
 		1F3E135A29C8B21200D076EA /* Contact+PrivateNotes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Contact+PrivateNotes.swift"; sourceTree = "<group>"; };
@@ -579,7 +579,7 @@
 		1FB130BE29C1A314004AC98D /* QuotedNoteFragmentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuotedNoteFragmentView.swift; sourceTree = "<group>"; };
 		1FB38B6029E29CEC00B85156 /* ProfilePicPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePicPicker.swift; sourceTree = "<group>"; };
 		1FB448BA2965F3D000038671 /* Nostur.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Nostur.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		1FB448BD2965F3D000038671 /* NosturApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturApp.swift; sourceTree = "<group>"; };
+		1FB448BD2965F3D000038671 /* NosturApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NosturApp.swift; path = Nostur/NosturApp.swift; sourceTree = "<group>"; };
 		1FB448C42965F3D000038671 /* NosturTabsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturTabsView.swift; sourceTree = "<group>"; };
 		1FB448C62965F3D200038671 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1FB448C82965F3D200038671 /* Nostur.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = Nostur.entitlements; path = Nostur/Nostur.entitlements; sourceTree = "<group>"; };
@@ -740,18 +740,22 @@
 				1FFED7FD2A39706B00A0B1E8 /* PostComposer */,
 				1F38AFED2A2715250035641E /* Video */,
 				1F0088EA29D735080016F111 /* ContentRenderer.swift */,
+				1F20939E2A43FDCA0085E7D2 /* DetailFooterFragment.swift */,
+				1F5E8A882A5FFD55001F86B9 /* EditableReplyingTo.swift */,
 				1FB130BA29C0F9A6004AC98D /* FooterFragmentView.swift */,
 				1F33EC3629B613F800615FB9 /* FullImageViewer.swift */,
 				1F2F54E42A02242900B6D7E4 /* HighlightRenderer.swift */,
 				1FDF0ED829EC047C00B56AC4 /* ImagePreviews.swift */,
 				1FEA8D4A29E967B5004A83D3 /* InlineThings.swift */,
 				1FAE1FCD2A2361CC0044E141 /* LazyNoteMenu.swift */,
+				1F1DCB8C2999290E0085223E /* LightningInvoice.swift */,
 				1FB6E6ED29E308E2008BE8A6 /* LinkPreviewThings.swift */,
 				1FB6E6EF29E30909008BE8A6 /* LinkPreviewView.swift */,
 				1F4C1C272A07AB090010573F /* NEventView.swift */,
 				1F1472DD29A71F6C00197393 /* NoteHeader.swift */,
 				1FB130B229C0E5A4004AC98D /* NoteHeaderView.swift */,
 				1F9FFD8A2A11F41E002E319C /* NoteHeaderViewEvent.swift */,
+				1FC268C629A2CC4F00A2B577 /* NoteReactions.swift */,
 				1FB130B029C0DB07004AC98D /* NoteRow.swift */,
 				1FD49736298029600084F14E /* NoteTextRenderView.swift */,
 				1F4C1C292A07B21F0010573F /* NProfileView.swift */,
@@ -765,8 +769,6 @@
 				1FB130B429C0E8D8004AC98D /* ReplyingToFragmentView.swift */,
 				1FF8BD1129D41BBD00C8C96A /* SingleMediaViewer.swift */,
 				1F77D1EB2A1FB3CA00895DB4 /* ThreadReplies.swift */,
-				1F20939E2A43FDCA0085E7D2 /* DetailFooterFragment.swift */,
-				1F5E8A882A5FFD55001F86B9 /* EditableReplyingTo.swift */,
 			);
 			path = Post;
 			sourceTree = "<group>";
@@ -1151,13 +1153,13 @@
 		1F96793029BF748400E78173 /* PrivateNotes */ = {
 			isa = PBXGroup;
 			children = (
+				1FC0A9542A1094BD00F9ABF6 /* AccountSwitcher.swift */,
 				1F3E135A29C8B21200D076EA /* Contact+PrivateNotes.swift */,
 				1F96792C29BF611800E78173 /* EditPrivateNoteSheet.swift */,
 				1F3E135829C8B11F00D076EA /* Event+PrivateNotes.swift */,
 				1F96792E29BF613C00E78173 /* NewPrivateNoteSheet.swift */,
-				1F00337629BF0BF0007CE040 /* PrivateNotesView.swift */,
 				1FC0A9522A1094A100F9ABF6 /* PrivateNoteRow.swift */,
-				1FC0A9542A1094BD00F9ABF6 /* AccountSwitcher.swift */,
+				1F00337629BF0BF0007CE040 /* PrivateNotesView.swift */,
 			);
 			path = PrivateNotes;
 			sourceTree = "<group>";
@@ -1341,12 +1343,12 @@
 				1FC78F7529CB4A920009C1C7 /* ChatInputField.swift */,
 				1FC78F6A29CA2B000009C1C7 /* DirectMessages.swift */,
 				1FC78F6E29CAD3510009C1C7 /* DMConversationView.swift */,
+				1F38AFEB2A2642D00035641E /* DMfunctions.swift */,
 				1F006B0629D090370048C6DD /* Event+DMs.swift */,
 				1FC4556229CB71CF00DE3239 /* NewDM.swift */,
 				1FC4556029CB677E00DE3239 /* NewDMButton.swift */,
 				1FC4556429CB75EB00DE3239 /* NewDMComposer.swift */,
 				1FC4555E29CB673200DE3239 /* NewDMToSelector.swift */,
-				1F38AFEB2A2642D00035641E /* DMfunctions.swift */,
 			);
 			path = DMs;
 			sourceTree = "<group>";
@@ -1424,13 +1426,11 @@
 		1FD78EED2A0CB770003E7B3E /* Kinds */ = {
 			isa = PBXGroup;
 			children = (
-				1F1DCB8C2999290E0085223E /* LightningInvoice.swift */,
 				1F0A3C242A0C113700B30D7E /* Kind1063.swift */,
 				1FD78EEE2A0CB78B003E7B3E /* Kind1Default.swift */,
 				1FD78EF02A0CB813003E7B3E /* Kind1.swift */,
 				1FD78EF22A0CB878003E7B3E /* Highlight.swift */,
 				1FD78EF42A0CBE18003E7B3E /* KindResolver.swift */,
-				1FC268C629A2CC4F00A2B577 /* NoteReactions.swift */,
 				1F065A9829A37A47003421D3 /* NoteZaps.swift */,
 			);
 			path = Kinds;

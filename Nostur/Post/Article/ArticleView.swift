@@ -1,3 +1,10 @@
+//
+//  ArticleView.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 20/06/2023.
+//
+
 import SwiftUI
 import MarkdownUI
 

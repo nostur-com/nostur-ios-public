@@ -1,3 +1,10 @@
+//
+//  Messages.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 29/01/2023.
+//
+
 import Foundation
 
 // Message ready to be sent, with envelope  EVENT/REQ/CLOSE

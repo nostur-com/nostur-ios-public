@@ -1,3 +1,10 @@
+//
+//  ReportPostSheet.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 03/04/2023.
+//
+
 import SwiftUI
 
 struct ReportPostSheet: View {

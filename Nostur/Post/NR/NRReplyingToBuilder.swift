@@ -1,3 +1,10 @@
+//
+//  NRReplyingToBuilder.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 12/05/2023.
+//
+
 import CoreData
 
 class NRReplyingToBuilder {

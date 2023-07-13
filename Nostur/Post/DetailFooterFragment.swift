@@ -1,3 +1,10 @@
+//
+//  DetailFooterFragment.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 22/06/2023.
+//
+
 import SwiftUI
 
 struct DetailFooterFragment: View {

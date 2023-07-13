@@ -1,3 +1,10 @@
+//
+//  NRTextBuilder.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 12/05/2023.
+//
+
 import Foundation
 import MarkdownUI
 // Renders links for the text parts of post contents (in TEXT)

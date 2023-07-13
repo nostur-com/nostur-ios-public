@@ -1,3 +1,10 @@
+//
+//  EventRelationsQueue.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 30/04/2023.
+//
+
 // When posts have related events that need to be fetched
 // we queue them here so we don't have to query the entire
 // local database of possibly 50000+ events

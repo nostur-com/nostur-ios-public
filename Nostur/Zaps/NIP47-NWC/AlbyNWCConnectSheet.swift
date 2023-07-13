@@ -1,3 +1,10 @@
+//
+//  AlbyNWCConnectSheet.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 02/06/2023.
+//
+
 import SwiftUI
 
 struct AlbyNWCConnectSheet: View {

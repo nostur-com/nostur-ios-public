@@ -1,3 +1,10 @@
+//
+//  PostDetailView.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 14/02/2023.
+//
+
 import SwiftUI
 import CoreData
 

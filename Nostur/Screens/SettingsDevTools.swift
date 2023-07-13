@@ -1,3 +1,10 @@
+//
+//  SettingsDevTools.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 23/02/2023.
+//
+
 import SwiftUI
 import CoreData
 import Combine

@@ -1,3 +1,10 @@
+//
+//  AddExistingAccountSheet.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 16/02/2023.
+//
+
 import SwiftUI
 
 struct AddExistingAccountSheet: View {

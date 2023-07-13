@@ -1,3 +1,10 @@
+//
+//  ProfileBanner.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 28/04/2023.
+//
+
 import SwiftUI
 import NukeUI
 import Nuke

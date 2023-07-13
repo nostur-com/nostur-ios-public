@@ -1,3 +1,10 @@
+//
+//  FollowingAndExplore.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 27/02/2023.
+//
+
 import SwiftUI
 import Combine
 

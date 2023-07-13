@@ -1,3 +1,10 @@
+//
+//  MessageParser.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 29/01/2023.
+//
+
 import Foundation
 import Collections
 

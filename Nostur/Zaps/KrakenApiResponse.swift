@@ -1,3 +1,10 @@
+//
+//  KrakenApiResponse.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 04/06/2023.
+//
+
 import Foundation
 
 // TODO: Create settings toggle on/off and selection from usd/euro/fiat/etc

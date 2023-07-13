@@ -1,3 +1,10 @@
+//
+//  NostrBuildMediaUploadService.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 19/04/2023.
+//
+
 import Foundation
 
 // Something wrong with the response, can't find api. Disabled for now

@@ -1,3 +1,10 @@
+//
+//  BookmarksView.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 25/01/2023.
+//
+
 import SwiftUI
 
 struct BookmarksContainer: View {

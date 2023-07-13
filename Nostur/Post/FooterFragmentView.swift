@@ -1,3 +1,10 @@
+//
+//  FooterFragmentView.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 15/03/2023.
+//
+
 import SwiftUI
 
 struct FooterFragmentView: View {

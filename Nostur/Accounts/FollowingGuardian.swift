@@ -1,3 +1,10 @@
+//
+//  FollowingGuardian.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 02/04/2023.
+//
+
 import Foundation
 import Combine
 

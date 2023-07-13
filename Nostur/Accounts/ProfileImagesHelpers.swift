@@ -1,3 +1,10 @@
+//
+//  ProfileImagesHelpers.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 06/06/2023.
+//
+
 import Foundation
 import CryptoKit
 import SwiftUI

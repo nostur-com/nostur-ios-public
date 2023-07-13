@@ -1,3 +1,10 @@
+//
+//  MainView.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 10/04/2023.
+//
+
 import SwiftUI
 
 struct MainView: View {

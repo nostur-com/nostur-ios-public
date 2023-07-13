@@ -1,3 +1,10 @@
+//
+//  Reactions.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 20/02/2023.
+//
+
 import SwiftUI
 
 struct NoteReactions: View {

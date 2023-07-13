@@ -1,3 +1,10 @@
+//
+//  ImagePreviews.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 16/04/2023.
+//
+
 import SwiftUI
 import UIKit
 

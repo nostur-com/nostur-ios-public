@@ -1,3 +1,10 @@
+//
+//  ListViewModel.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 10/03/2023.
+//
+
 import Foundation
 import CoreData
 import Combine

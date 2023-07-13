@@ -1,3 +1,10 @@
+//
+//  SearchBox.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 06/05/2023.
+//
+
 import SwiftUI
 
 struct SearchBox: View {

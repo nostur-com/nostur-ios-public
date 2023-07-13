@@ -1,3 +1,10 @@
+//
+//  NostrcheckMeService.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 26/04/2023.
+//
+
 import Foundation
 
 // https://github.com/quentintaranpino/nostrcheck-api

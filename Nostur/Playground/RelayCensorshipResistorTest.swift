@@ -1,3 +1,10 @@
+//
+//  RelayCensorshipResistorTest.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 25/06/2023.
+//
+
 // Relay Censorship Resistor - WIP
 //1. Get all following pubkeys
 //2. For Each pubkey, get write relays (from kind 3 or 10002)

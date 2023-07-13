@@ -1,3 +1,10 @@
+//
+//  NIP47.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 02/06/2023.
+//
+
 import Foundation
 
 /// NIP-47 request: 23194

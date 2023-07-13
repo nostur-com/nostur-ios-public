@@ -1,3 +1,10 @@
+//
+//  ProfileZapButton.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 09/07/2023.
+//
+
 import SwiftUI
 
 // Zap button uses NWC if available, else just falls back to the old LightningButton

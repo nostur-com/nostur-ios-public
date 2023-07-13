@@ -1,3 +1,10 @@
+//
+//  QuoteOrRepostChoiceSheet.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 09/03/2023.
+//
+
 import SwiftUI
 
 struct QuoteOrRepostChoiceSheet: View {

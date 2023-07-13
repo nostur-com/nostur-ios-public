@@ -1,3 +1,10 @@
+//
+//  Search.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 07/02/2023.
+//
+
 import SwiftUI
 import Combine
 

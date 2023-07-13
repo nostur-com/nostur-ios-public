@@ -1,7 +1,12 @@
+//
+//  AppView.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 30/05/2023.
+//
+
 import SwiftUI
 import Combine
-
-
 
 /// The main app view
 ///

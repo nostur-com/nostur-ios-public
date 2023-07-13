@@ -1,3 +1,10 @@
+//
+//  PaymentAmountSelector.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 13/02/2023.
+//
+
 import SwiftUI
 
 struct PaymentAmountSelector: View {

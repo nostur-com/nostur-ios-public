@@ -1,3 +1,10 @@
+//
+//  Logger.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 23/05/2023.
+//
+
 import Foundation
 import os
 

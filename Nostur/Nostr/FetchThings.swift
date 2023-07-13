@@ -1,3 +1,10 @@
+//
+//  FetchThings.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 21/02/2023.
+//
+
 import Foundation
 
 func fetchProfiles(pubkeys:Set<String>, subscriptionId:String? = nil) {

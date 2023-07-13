@@ -1,3 +1,10 @@
+//
+//  NosturTabsView.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 05/01/2023.
+//
+
 import SwiftUI
 
 struct NosturTabsView: View {

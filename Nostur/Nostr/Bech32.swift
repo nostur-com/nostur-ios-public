@@ -11,7 +11,6 @@
 //  Modified for lnurl / nostr
 
 import Foundation
-//import Algorithms
 
 // Need to clean up this mix of Bech32 implementations.
 public class Bech32 {

@@ -1,3 +1,10 @@
+//
+//  Kind1Default.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 11/05/2023.
+//
+
 import SwiftUI
 
 // TODO: For performance replace all Xxx(nrPosts: nrPost) with specific attributes

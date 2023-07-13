@@ -1,3 +1,10 @@
+//
+//  ZapNotificationsView.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 04/06/2023.
+//
+
 import SwiftUI
 
 struct ZapNotificationView: View {

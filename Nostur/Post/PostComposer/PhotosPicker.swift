@@ -1,6 +1,12 @@
+//
+//  PhotosPicker.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 14/06/2023.
+//
+
 import SwiftUI
 import PhotosUI
-
 
 struct MediaImage: View {
     let imageState: ImagePickerModel.ImageState

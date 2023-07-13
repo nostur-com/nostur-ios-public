@@ -1,5 +1,12 @@
 import SwiftUI
 
+//
+//  ProfileByPubkey.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 26/04/2023.
+//
+
 struct ProfileByPubkey: View {
     
     let sp:SocketPool = .shared

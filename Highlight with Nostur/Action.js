@@ -1,3 +1,10 @@
+//
+//  Action.js
+//  Highlight with Nostur
+//
+//  Created by Fabian Lachman on 27/04/2023.
+//
+
 var Action = function() {};
 
 Action.prototype = {

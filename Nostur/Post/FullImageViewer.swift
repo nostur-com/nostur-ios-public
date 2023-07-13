@@ -1,3 +1,10 @@
+//
+//  FullImageViewer.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 06/06/2023.
+//
+
 import SwiftUI
 import Nuke
 import NukeUI

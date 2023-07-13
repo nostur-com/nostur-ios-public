@@ -1,3 +1,10 @@
+//
+//  ImgurMediaUploadService.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 19/04/2023.
+//
+
 import Foundation
 
 // needs registered Client ID

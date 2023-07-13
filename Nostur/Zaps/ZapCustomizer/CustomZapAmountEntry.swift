@@ -1,3 +1,10 @@
+//
+//  CustomZapAmountEntry.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 10/07/2023.
+//
+
 import SwiftUI
 
 struct CustomZapAmountEntry: View {

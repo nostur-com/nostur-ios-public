@@ -1,3 +1,10 @@
+//
+//  AnySigner.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 05/06/2023.
+//
+
 import SwiftUI
 import secp256k1
 

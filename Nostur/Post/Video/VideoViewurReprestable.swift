@@ -1,3 +1,10 @@
+//
+//  VideoViewurReprestable.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 11/06/2023.
+//
+
 import SwiftUI
 import AVKit
 

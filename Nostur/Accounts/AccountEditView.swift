@@ -1,3 +1,10 @@
+//
+//  AccountEditView.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 10/01/2023.
+//
+
 import SwiftUI
 import CoreData
 import Combine

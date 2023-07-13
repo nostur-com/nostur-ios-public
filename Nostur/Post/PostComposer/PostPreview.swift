@@ -1,3 +1,10 @@
+//
+//  PostPreview.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 04/04/2023.
+//
+
 import SwiftUI
 
 struct PostPreview: View {

@@ -1,3 +1,10 @@
+//
+//  LazyNoteMenu.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 28/05/2023.
+//
+
 import SwiftUI
 
 struct LazyNoteMenuButton: View {

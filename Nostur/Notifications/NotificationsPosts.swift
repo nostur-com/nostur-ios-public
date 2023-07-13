@@ -1,3 +1,10 @@
+//
+//  NotificationsPostsNew.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 03/05/2023.
+//
+
 import SwiftUI
 import CoreData
 

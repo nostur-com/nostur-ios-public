@@ -1,3 +1,10 @@
+//
+//  ProfilePicView.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 19/01/2023.
+//
+
 import SwiftUI
 import NukeUI
 import Nuke

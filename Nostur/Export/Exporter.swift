@@ -1,3 +1,10 @@
+//
+//  Exporter.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 03/03/2023.
+//
+
 import Foundation
 import SwiftUI
 import CoreData

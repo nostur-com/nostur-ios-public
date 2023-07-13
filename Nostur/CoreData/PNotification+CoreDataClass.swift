@@ -1,3 +1,11 @@
+//
+//  PersistentNotification+CoreDataClass.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 01/06/2023.
+//
+//
+
 import Foundation
 import CoreData
 

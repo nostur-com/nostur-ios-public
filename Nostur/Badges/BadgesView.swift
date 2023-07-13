@@ -1,3 +1,10 @@
+//
+//  BadgesView.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 01/03/2023.
+//
+
 import SwiftUI
 
 struct BadgesView: View {

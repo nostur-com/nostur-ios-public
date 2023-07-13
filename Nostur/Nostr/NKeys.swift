@@ -1,3 +1,10 @@
+//
+//  NKeys.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 22/03/2023.
+//
+
 import Foundation
 import secp256k1
 import CommonCrypto

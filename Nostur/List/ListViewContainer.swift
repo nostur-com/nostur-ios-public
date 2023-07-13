@@ -1,3 +1,10 @@
+//
+//  ListViewContainer.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 01/04/2023.
+//
+
 import SwiftUI
 
 struct ListViewContainer: View {
@@ -20,7 +27,7 @@ struct ListViewContainer: View {
     }
 }
 
-struct What: View {
+struct ListViewContainerTester: View {
     @EnvironmentObject var ns:NosturState
     
     var body: some View {
@@ -36,7 +43,7 @@ struct What: View {
 struct Previews_ListViewContainer_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer {
-            What()
+            ListViewContainerTester()
         }
     }
 }

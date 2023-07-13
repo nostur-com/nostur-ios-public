@@ -1,3 +1,10 @@
+//
+//  NewListSheet.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 10/04/2023.
+//
+
 import SwiftUI
 
 struct NewListSheet: View {

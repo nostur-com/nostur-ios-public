@@ -1,3 +1,10 @@
+//
+//  Tenor.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 17/05/2023.
+//
+
 import Foundation
  
 let apikey = Bundle.main.infoDictionary?["TENOR_API_KEY"] as? String ?? ""

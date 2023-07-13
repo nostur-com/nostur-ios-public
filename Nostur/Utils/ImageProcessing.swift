@@ -1,3 +1,10 @@
+//
+//  ImageProcessing.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 08/03/2023.
+//
+
 import Foundation
 import Nuke
 

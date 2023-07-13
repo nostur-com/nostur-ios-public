@@ -1,3 +1,10 @@
+//
+//  ProfilePicPicker.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 09/04/2023.
+//
+
 import SwiftUI
 import Nuke
 import NukeUI

@@ -1,3 +1,10 @@
+//
+//  ContentRenderer.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 28/03/2023.
+//
+
 import SwiftUI
 import Nuke
 import NukeUI

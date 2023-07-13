@@ -1,3 +1,10 @@
+//
+//  Nostr.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 09/01/2023.
+//
+
 import SwiftUI
 import Foundation
 import secp256k1

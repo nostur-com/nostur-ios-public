@@ -1,3 +1,10 @@
+//
+//  NewQuoteRepost.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 08/03/2023.
+//
+
 import SwiftUI
 import Combine
 

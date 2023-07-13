@@ -1,3 +1,10 @@
+//
+//  NosturState.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 16/01/2023.
+//
+
 import SwiftUI
 import Foundation
 import CoreData
