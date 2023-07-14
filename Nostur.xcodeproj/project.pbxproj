@@ -175,7 +175,6 @@
 		1F88490E29B537B400145340 /* HighlightingTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F88490229B537B400145340 /* HighlightingTextEditor.swift */; };
 		1F88490F29B537B400145340 /* URL.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F88490429B537B400145340 /* URL.swift */; };
 		1F88491029B537B400145340 /* Markdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F88490529B537B400145340 /* Markdown.swift */; };
-		1F88491129B537B400145340 /* HighlightedTextEditor.AppKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F88490629B537B400145340 /* HighlightedTextEditor.AppKit.swift */; };
 		1F88491229B537B400145340 /* HighlightedTextEditor.UIKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F88490729B537B400145340 /* HighlightedTextEditor.UIKit.swift */; };
 		1F88491329B537B400145340 /* NSFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F88490929B537B400145340 /* NSFont.swift */; };
 		1F88491429B537B400145340 /* TextFormattingRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F88490A29B537B400145340 /* TextFormattingRule.swift */; };
@@ -533,7 +532,6 @@
 		1F88490229B537B400145340 /* HighlightingTextEditor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HighlightingTextEditor.swift; sourceTree = "<group>"; };
 		1F88490429B537B400145340 /* URL.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = URL.swift; sourceTree = "<group>"; };
 		1F88490529B537B400145340 /* Markdown.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Markdown.swift; sourceTree = "<group>"; };
-		1F88490629B537B400145340 /* HighlightedTextEditor.AppKit.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HighlightedTextEditor.AppKit.swift; sourceTree = "<group>"; };
 		1F88490729B537B400145340 /* HighlightedTextEditor.UIKit.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HighlightedTextEditor.UIKit.swift; sourceTree = "<group>"; };
 		1F88490929B537B400145340 /* NSFont.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NSFont.swift; sourceTree = "<group>"; };
 		1F88490A29B537B400145340 /* TextFormattingRule.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextFormattingRule.swift; sourceTree = "<group>"; };
@@ -1100,7 +1098,6 @@
 		1F88490129B537A000145340 /* HighlightedTextEditor */ = {
 			isa = PBXGroup;
 			children = (
-				1F88490629B537B400145340 /* HighlightedTextEditor.AppKit.swift */,
 				1F88490729B537B400145340 /* HighlightedTextEditor.UIKit.swift */,
 				1F88490229B537B400145340 /* HighlightingTextEditor.swift */,
 				1F88490329B537B400145340 /* Presets */,
@@ -1785,7 +1782,6 @@
 				1F7E40EA29BD9AD6003F9F71 /* PrivateNote+CoreDataClass.swift in Sources */,
 				1FDF0EDD29ED732500B56AC4 /* AnyStatus.swift in Sources */,
 				1FBE8222299A6F3D00FB41CE /* LUD16.swift in Sources */,
-				1F88491129B537B400145340 /* HighlightedTextEditor.AppKit.swift in Sources */,
 				1F77D1EC2A1FB3CA00895DB4 /* ThreadReplies.swift in Sources */,
 				1F2DD42D2A29EACA0028A062 /* NWCConnection+CoreDataClass.swift in Sources */,
 				1F056FA62A5C2E7900578B35 /* ZapAmountButton.swift in Sources */,

@@ -1,11 +1,11 @@
-import SwiftUI
-
 //
 //  ProfileByPubkey.swift
 //  Nostur
 //
 //  Created by Fabian Lachman on 26/04/2023.
 //
+
+import SwiftUI
 
 struct ProfileByPubkey: View {
     

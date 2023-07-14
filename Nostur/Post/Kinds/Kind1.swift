@@ -1,5 +1,7 @@
 //
 //  Kind1.swift
+//  Same as Kind1Default.swift but for full width images
+//  TODO: Need to make just a flag on Kind1 and remove this
 //  Nostur
 //
 //  Created by Fabian Lachman on 11/05/2023.

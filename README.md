@@ -15,7 +15,7 @@
 
 1. Clone this repository
 2. Rename Config.xcconfig.dist to Config.xcconfig
-3. Enter API keys in Config.xcconfig
+3. Enter API keys in Config.xcconfig. To enable zaps on posts set: NOSTUR_IS_DESKTOP = YES
 4. Open Nostur.xcodeproj in Xcode
 5. Wait for Package Dependencies to finish downloading
 6. Run

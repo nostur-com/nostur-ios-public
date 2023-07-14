@@ -1,3 +1,11 @@
+//
+//  DiscoverCommunities.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 03/07/2023.
+//
+//
+
 import SwiftUI
 import CoreGraphics
 import UIKit

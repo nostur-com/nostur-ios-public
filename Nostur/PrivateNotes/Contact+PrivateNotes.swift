@@ -1,3 +1,4 @@
+//
 //  Contact+PrivateNotes.swift
 //  Nostur
 //

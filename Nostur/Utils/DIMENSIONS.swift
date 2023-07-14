@@ -1,3 +1,10 @@
+//
+//  DIMENSIONS.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 22/04/2023.
+//
+
 import SwiftUI
 
 /// Helpers for determining the width of images and video in content

@@ -1,3 +1,10 @@
+//
+//  ThreadWarning.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 07/06/2023.
+//
+
 import Foundation
 import SwiftUI
 
