@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  NIP19.swift
 //  Nostur
 //
 //  Created by Fabian Lachman on 21/01/2023.
