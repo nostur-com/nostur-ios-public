@@ -1,0 +1,206 @@
+//
+//  AlbyNWCConnectSheet.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 02/06/2023.
+//
+
+import SwiftUI
+
+struct AlbyNWCConnectSheet: View {
+    @Environment(\.openURL) var openURL
+    @Environment(\.dismiss) var dismiss
+    @State var nwcConnection:NWCConnection? = nil
+    @State var nwcConnectSuccess = false
+    @State var showDisconnect = false
+    @State var nwcErrorMessage = ""
+    @State var lud16:String? = nil
+    @ObservedObject var ss:SettingsStore = .shared
+    
+    var body: some View {
+        VStack {
+            Image("AlbyLogo")
+                .resizable()
+                .scaledToFit()
+                .frame(height: 50)
+            if (nwcConnectSuccess) {
+                Text("Your **Alby** wallet is now connected with **Nostur**, you can now enjoy a seamless zapping experience!")
+                    .multilineTextAlignment(.center)
+                    .padding(10)
+                if let lud16 = lud16 {
+                    Text("Your address for receiving zaps has been set to: \(lud16)")
+                }
+            }
+            else {
+                Text("Connect your **Alby** wallet with **Nostur** for a seamless zapping experience")
+                    .multilineTextAlignment(.center)
+            }
+            
+            if (nwcConnectSuccess) {
+                Image(systemName: "checkmark.circle.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .foregroundColor(.green)
+                    .frame(height: 75)
+                    .onTapGesture {
+                        dismiss()
+                    }
+                
+                if showDisconnect {
+                    Button((String(localized:"Disconnect", comment:"Button to disconnect NWC (Nostr Wallet Connection)")), role: .destructive) {
+                        let ctx = DataProvider.shared().bg
+                        ctx.perform {
+                            var removeKey:String?
+                            SocketPool.shared.sockets.values.forEach { managedClient in
+                                if managedClient.isNWC {
+                                    managedClient.disconnect()
+                                    removeKey = managedClient.relayId
+                                }
+                            }
+                            if let removeKey {
+                                DispatchQueue.main.async {
+                                    SocketPool.shared.removeSocket(removeKey)
+                                }
+                            }
+                            if !ss.activeNWCconnectionId.isEmpty {
+                                NWCConnection.delete(ss.activeNWCconnectionId, context: ctx)
+                            }
+                            DispatchQueue.main.async {
+                                ss.activeNWCconnectionId = ""
+                            }
+                            showDisconnect = false
+                            nwcConnectSuccess = false
+                        }
+                    }
+                }
+            }
+            else {
+                Button(String(localized:"Connect Alby wallet", comment:"Button to connect to Alby wallet")) { startNWC() }
+                    .buttonStyle(.borderedProminent)
+            }
+            
+            if !nwcErrorMessage.isEmpty {
+                Text(nwcErrorMessage).fontWeight(.bold).foregroundColor(.red)
+            }
+            
+            
+        }
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle((String(localized:"Nostr Wallet Connect", comment:"Navigation title for setting up Nostr Wallet Connect (NWC)")))
+        .toolbar {
+            if nwcConnectSuccess {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+            else {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+        .onAppear {
+            // Determine if we show "Connection success" or disconnect button
+            if !ss.activeNWCconnectionId.isEmpty {
+                nwcConnectSuccess = true
+                showDisconnect = true // Only show after opening again, because showing right after connecting is confusing
+            }
+        }
+        .onReceive(receiveNotification(.nwcCallbackReceived)) { notification in
+            guard let account = NosturState.shared.account else { return }
+            
+            // When we redirect back from Alby to app:
+            let albyCallback = notification.object as! AlbyCallback
+            
+            guard let queryItems = URLComponents(url: albyCallback.url, resolvingAgainstBaseURL: false)?.queryItems else {
+                L.og.error("Could not connect Alby wallet, problem parsing queryItems");
+                nwcErrorMessage = "Could not connect Alby wallet"
+                return
+            }
+            guard let nwcRelay = queryItems.first(where: { $0.name == "relay" })?.value else {
+                L.og.error("Could not connect Alby wallet, relay missing in queryItems");
+                nwcErrorMessage = "Could not connect Alby wallet"
+                return
+            }
+            guard let nwcPubkey = queryItems.first(where: { $0.name == "pubkey" })?.value else {
+                L.og.error("Could not connect Alby wallet, pubkey missing in queryItems");
+                nwcErrorMessage = "Could not connect Alby wallet"
+                return
+            }
+            
+            guard let nwcConnection = nwcConnection else {
+                L.og.error("Could not connect Alby wallet, nwcConnction = nil");
+                nwcErrorMessage = "Could not connect Alby wallet"
+                return
+            }
+            DataProvider.shared().bg.perform {
+                nwcConnection.walletPubkey = nwcPubkey
+                nwcConnection.relay = nwcRelay
+                nwcConnection.methods = "pay_invoice"
+                let connectionId = nwcConnection.connectionId
+                let relay = nwcConnection.relay
+                
+                L.og.info("⚡️ Adding NWC connection")
+                DispatchQueue.main.async {
+                    _ = SocketPool.shared.addNWCSocket(connectionId:connectionId, url: relay)
+                }
+                
+                NWCRequestQueue.shared.nwcConnection = nwcConnection
+                Importer.shared.nwcConnection = nwcConnection
+                
+                DispatchQueue.main.async {
+                    ss.activeNWCconnectionId = connectionId
+                    nwcConnectSuccess = true
+                }
+            }
+            
+            if account.lud06.isEmpty && account.lud16.isEmpty {
+                if let lud16 = queryItems.first(where: { $0.name == "lud16" })?.value {
+                    account.lud16 = lud16
+                    do {
+                        try publishMetadataEvent(account)
+                        self.lud16 = lud16
+                    }
+                    catch {
+                        L.og.error("Error publishing new account kind 0")
+                    }
+                }
+            }
+        }
+    }
+    
+    func startNWC() {
+        DataProvider.shared().bg.perform {
+            nwcConnection = NWCConnection.createAlbyConnection(context: DataProvider.shared().bg)
+            
+            if let nwcConnection = nwcConnection, let nwcUrl = URL(string:"https://nwc.getalby.com/apps/new?c=Nostur&pubkey=\(nwcConnection.pubkey)&return_to=nostur%3A%2F%2Fnwc_callback") {
+                DispatchQueue.main.async {
+                    openURL(nwcUrl)
+                }
+            }
+        }
+        
+        
+        //        if let nwcUrl = URL(string:"https://nwc.getalby.com/apps/new?c=Nostur") { // This one returns with 'nostrwalletconnect' scheme so not usable.
+        //            openURL(nwcUrl)
+        //        }
+    }
+}
+
+struct AlbyNWCConnectSheet_Previews: PreviewProvider {
+    static var previews: some View {
+        NavigationStack {
+            AlbyNWCConnectSheet()
+        }
+        .previewDevice("iPhone 14")
+    }
+}
+
+struct AlbyCallback: Identifiable {
+    let id = UUID()
+    let url:URL
+}

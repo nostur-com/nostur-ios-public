@@ -1,0 +1,240 @@
+//
+//  NRTextBuilder.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 12/05/2023.
+//
+
+import Foundation
+import MarkdownUI
+// Renders links for the text parts of post contents (in TEXT)
+// Handles profile links
+// Tag links
+// Other links
+// DOES NOT handle note links or image links, because those are embeds, handled by ContentRenderer
+class NRTextParser { // TEXT things
+    static let shared = NRTextParser()
+    private let context = DataProvider.shared().bg
+    
+    private var tags:[(String, String, String?, String?)] = [] // Faster tags, and only decode once at init
+
+    func parseText(_ event:Event, text: String) -> AttributedStringWithPs {
+        self.tags = event.fastTags
+
+        // Remove image links
+        // because they get rendered as embers in PostDetail.
+        // and NoteRow shows them in ImageViewer
+        let newText = removeImageLinks(event: event, text: text)
+
+        // NIP-08, handle #[0] #[1] etc
+        let textWithPs = parseTagIndexedMentions(event: event, text: newText)
+
+        // NIP-28 handle nostr:npub1, nostr:nprofile ...
+        var newerTextWithPs = parseUserMentions(event: event, text: textWithPs.text)
+        if newerTextWithPs.text.suffix(1) == "\n" {
+            newerTextWithPs.text = String(newerTextWithPs.text.dropLast(1))
+        }
+
+        do {
+//            newText = Self.replaceURLsWithMarkdownLinks(in: newText)
+            newerTextWithPs.text = Self.replaceHashtagsWithMarkdownLinks(in: newerTextWithPs.text)
+            newerTextWithPs.text = Self.replaceNaddrWithMarkdownLinks(in: newerTextWithPs.text)
+            let finalText = try AttributedString(markdown: newerTextWithPs.text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
+            
+            let a = AttributedStringWithPs(input:text, output: finalText, pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
+            return a
+        }
+        catch {
+            let finalText = AttributedString(newerTextWithPs.text)
+            print(error)
+            let a = AttributedStringWithPs(input:text, output: finalText, pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
+            return a
+        }
+    }
+    
+    func parseMD(_ event:Event, text: String) -> MarkdownContentWithPs {
+        self.tags = event.fastTags
+        
+        print(text)
+
+        // Remove image links
+        // because they get rendered as embeds in PostDetail.
+        // and NoteRow shows them in ImageViewer
+//        let newText = removeImageLinks(event: event, text: text)
+
+        // NIP-08, handle #[0] #[1] etc
+        let textWithPs = parseTagIndexedMentions(event: event, text: text)
+
+        // NIP-28 handle nostr:npub1, nostr:nprofile ...
+        var newerTextWithPs = parseUserMentions(event: event, text: textWithPs.text)
+        if newerTextWithPs.text.suffix(1) == "\n" {
+            newerTextWithPs.text = String(newerTextWithPs.text.dropLast(1))
+        }
+
+        newerTextWithPs.text = Self.replaceHashtagsWithMarkdownLinks(in: newerTextWithPs.text)
+        newerTextWithPs.text = Self.replaceNaddrWithMarkdownLinks(in: newerTextWithPs.text)
+//        print(newerTextWithPs.text)
+        let finalText = MarkdownContent(newerTextWithPs.text)
+        
+//        print(finalText)
+        
+        let a = MarkdownContentWithPs(input:text, output: finalText, pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
+        return a
+    }
+
+    func copyPasteText(_ event:Event, text: String) -> TextWithPs {
+        self.tags = event.fastTags
+        // NIP-08, handle #[0] #[1] etc
+        let textWithPs = parseTagIndexedMentions(event: event, text: text, plainText: true)
+
+        // NIP-28 handle nostr:npub1, nostr:nprofile ...
+        let newerTextWithPs = parseUserMentions(event: event, text: textWithPs.text, plainText: true)
+
+        return TextWithPs(text: newerTextWithPs.text, pTags: textWithPs.pTags + newerTextWithPs.pTags)
+    }
+
+    // NIP-08 (deprecated in favor of NIP-27)
+    private func parseTagIndexedMentions(event:Event, text:String, plainText:Bool = false) -> TextWithPs {
+        guard !tags.isEmpty else { return TextWithPs(text: text, pTags: []) }
+
+        var pTags = [Ptag]()
+        var newText = text
+        let matches = text.matches(of: /#\[(\d+)\]/)
+        for match in matches.prefix(100) { // 100 limit for sanity
+            guard let tagIndex = Int(match.output.1) else { continue }
+            guard tagIndex < tags.count else { continue }
+            let tag = tags[tagIndex]
+
+            if (tag.0 == "p") {
+                pTags.append(tag.1)
+                if !plainText {
+                    newText = newText.replacingOccurrences(of: match.output.0, with: "[@\(contactUsername(fromPubkey: tag.1, event:event).escapeMD())](nostur:p:\(tag.1))")
+                }
+                else {
+                    newText = newText.replacingOccurrences(of: match.output.0, with: "@\(contactUsername(fromPubkey: tag.1, event:event))")
+                }
+            }
+            else if (tag.0 == "e") {
+                if !plainText {
+                    let key = try! NIP19(prefix: "note1", hexString: tag.1)
+                    newText = newText.replacingOccurrences(of: match.output.0, with: "[@\(String(key.displayString).prefix(11))](nostur:e:\(tag.1))")
+                }
+                else {
+                    let key = try! NIP19(prefix: "note1", hexString: tag.1)
+                    newText = newText.replacingOccurrences(of: match.output.0, with: "@\(String(key.displayString).prefix(11))")
+                }
+            }
+        }
+        return TextWithPs(text: newText, pTags: pTags)
+    }
+
+    // NIP-27 handle nostr:npub or nostr:nprofile
+    private func parseUserMentions(event:Event, text:String, plainText:Bool = false) -> TextWithPs {
+        let pattern = "(?:nostr:)?npub1[023456789acdefghjklmnpqrstuvwxyz]{58}|(?:nostr:)?(nprofile1[023456789acdefghjklmnpqrstuvwxyz]+)\\b"
+
+        var replacedString = text
+        var range = text.startIndex..<text.endIndex
+        var pTags = [Ptag]()
+
+        var sanityIndex = 0
+        while let matchRange = replacedString.range(of: pattern, options: .regularExpression, range: range, locale: nil) {
+            if sanityIndex > 100 { break }
+            sanityIndex += 1
+            let match = replacedString[matchRange]
+            var replacement = match
+            
+            let pub1OrProfile1 = match.prefix(11) == "nostr:npub1" || match.prefix(5) == "npub1" ? "npub1" : "nprofile1"
+            
+            //let identifier = try ShareableIdentifier(match)
+            
+            switch pub1OrProfile1 {
+                case "npub1":
+                    let npub = match.replacingOccurrences(of: "nostr:", with: "")
+                    do {
+                        let pubkey = try toPubkey(npub)
+                        pTags.append(pubkey)
+                        if !plainText {
+                            replacement = "[@\(contactUsername(fromPubkey: pubkey, event: event).escapeMD())](nostur:p:\(pubkey))"
+                        }
+                        else {
+                            replacement = "" + contactUsername(fromPubkey: pubkey, event: event)
+                        }
+                    }
+                    catch {
+                        print("problem decoding npub")
+                    }
+                case "nprofile1":
+                let nprofile = match.replacingOccurrences(of: "nostr:", with: "")
+                    do {
+                        let identifier = try ShareableIdentifier(nprofile)
+                        if let pubkey = identifier.pubkey {
+                            pTags.append(pubkey)
+                            if !plainText {
+                                replacement = "[@\(contactUsername(fromPubkey: pubkey, event: event).escapeMD())](nostur:p:\(pubkey))"
+                            }
+                            else {
+                                replacement = "" + contactUsername(fromPubkey: pubkey, event: event)
+                            }
+                        }
+                    }
+                    catch {
+                        print("problem decoding nprofile")
+                    }
+                default:
+                    print("eeuh")
+            }
+
+            replacedString.replaceSubrange(matchRange, with: replacement)
+            range = replacedString.index(after: matchRange.lowerBound)..<replacedString.endIndex
+        }
+        return TextWithPs(text: replacedString, pTags: pTags)
+    }
+
+    private func removeImageLinks(event: Event, text:String) -> String {
+        text.replacingOccurrences(of: #"(?i)https?:\/\/\S+?\.(?:png|jpe?g|gif|webp|bmp)(\?\S+){0,1}\b"#,
+                                  with: "",
+                                  options: .regularExpression)
+    }
+
+    // Takes a string and replaces any link with a markdown link. Also handles subdomains
+    static func replaceURLsWithMarkdownLinks(in string: String) -> String {
+        return string
+            .replacingOccurrences(of: #"(?!.*\.\.)(?<!https?:\/\/)(?<!\S)[a-zA-Z0-9\-\.]+(?:\.[a-zA-Z]{2,999}+)+([\/\?\=\&\#\.]\@?[\w-]+)*\/?"#,
+                                  with: "[$0](https://$0)",
+                                  options: .regularExpression) // REPLACE ALL DOMAINS WITHOUT PROTOCOL, WITH MARKDOWN LINK AND ADD PROTOCOL
+            .replacingOccurrences(of: #"(?!.*\.\.)(?<!\S)([\w+]+\:\/\/)?[a-zA-Z0-9\-\.]+(?:\.[a-zA-Z]{2,999}+)+([\/\?\=\&\#\%\+\.]\@?[\S]+)*\/?"#,
+                                  with: "[$0]($0)",
+                                  options: .regularExpression) // REPLACE THE REMAINING URLS THAT HAVE PROTOCOL, BUT IGNORE ALREADY MARKDOWNED LINKS
+    }
+    
+    static func replaceNaddrWithMarkdownLinks(in string: String) -> String {
+        return string
+            .replacingOccurrences(of: ###"(?:nostr:)?(naddr1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###,
+                                  with: "[naddr1...](nostur:nostr:$1)",
+                                  options: .regularExpression)
+    }
+
+    static func replaceHashtagsWithMarkdownLinks(in string: String) -> String {
+        return string
+            .replacingOccurrences(of: ###"(?<![/\?]|\b)(\#)(\S{2,})\b"###,
+                                  with: "[$0](nostur:t:$2)",
+                                  options: .regularExpression)
+    }
+}
+
+struct TextWithPs: Hashable {
+    var text:String
+    var pTags:[Ptag]
+}
+
+extension String {
+    func escapeMD() -> String {
+        return self
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "**", with: "\\*\\*")
+            .replacingOccurrences(of: "[", with: "\\[")
+            .replacingOccurrences(of: "]", with: "\\]")
+            .replacingOccurrences(of: "/", with: "\\/")
+            .replacingOccurrences(of: "__", with: "\\_\\_")
+    }
+}

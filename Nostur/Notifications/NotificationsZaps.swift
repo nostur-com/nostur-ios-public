@@ -1,0 +1,435 @@
+//
+//  NotificationsZaps.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 25/02/2023.
+//
+
+import SwiftUI
+import CoreData
+import Combine
+
+struct ZapInfo: Identifiable {
+    var id:String { zap.id }
+    var zap:Event // Main context
+    var zappedEventNRPost:NRPost? // Created in BG context
+    var zappedEvent:Event? // needed to know if we create should NRPost in bg. because we cannot access zap.zappedEvent, so we set hasZappedEvent in the maincontext, which we can then use in bg.
+}
+
+struct NotificationsZaps: View {
+
+    let er:ExchangeRateModel = .shared // Not Observed for performance
+
+    @ObservedObject var settings:SettingsStore = .shared
+    @StateObject var fl = FastLoader()
+    @State var didLoad = false
+    @State var backlog = Backlog()
+    @EnvironmentObject var ns:NosturState
+    
+    @State var zapsForMeDeduplicated = [ZapInfo]()
+    
+    @FetchRequest
+    var pNotifications:FetchedResults<PersistentNotification>
+    
+    func zapsForNote(_ zap:Event, zapsForMe:[Event]) -> [Event] {
+        return zapsForMe.filter { zap in
+            if let zappedEventId = zap.zappedEventId {
+                return zap.id == zappedEventId
+            }
+            return false
+        }
+    }
+    
+    init(pubkey:String) {
+        let fr = PersistentNotification.fetchRequest()
+        fr.sortDescriptors = [NSSortDescriptor(keyPath: \PersistentNotification.createdAt, ascending: false)]
+        fr.predicate = NSPredicate(format: "pubkey == %@ AND type_ IN %@", pubkey, [PNType.failedZap.rawValue,PNType.failedZaps.rawValue,PNType.failedZapsTimeout.rawValue,PNType.failedLightningInvoice.rawValue])
+        _pNotifications = FetchRequest(fetchRequest: fr)
+    }
+    
+    var notifications:[ZapOrNotification] {
+        // combine nrPosts and PersistentNotifications in the list
+        return (pNotifications.map { pNot in
+            ZapOrNotification(id: "NOTIF-" + pNot.id.uuidString, type: .NOTIFICATION, notification: pNot)
+        } + zapsForMeDeduplicated.map({ zapInfo in
+            ZapOrNotification(id: zapInfo.id, type: .ZAP, zapInfo: zapInfo)
+        }))
+        .sorted(by: { p1, p2 in
+            p1.createdAt > p2.createdAt
+        })
+    }
+    
+    var body: some View {
+//        let _ = Self._printChanges()
+        ScrollView {
+            LazyVStack(alignment:.leading, spacing: 0) {
+                ForEach(notifications) { pNotification in
+                    switch pNotification.type {
+                    case .NOTIFICATION:
+                        ZapNotificationView(notification: pNotification.notification!)
+                            .padding(10)
+                            .roundedBoxShadow()
+                            .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                            .padding(.vertical, 10)
+                            .id(pNotification.id)
+                    case .ZAP:
+                        VStack {
+                            if let nrPost = pNotification.zapInfo!.zappedEventNRPost {
+                                PostZap(nrPost: nrPost, zaps:fl.events)
+                            }
+                            else {
+                                if let zapFrom = pNotification.zapInfo!.zap.zapFromRequest {
+                                    ProfileZap(zap: pNotification.zapInfo!.zap, zapFrom:zapFrom)
+                                }
+                            }
+                        }
+                        .padding(10)
+                        .roundedBoxShadow()
+                        .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
+                        .padding(.vertical, 10)
+                        .id(pNotification.id)
+                    }
+                }
+                VStack {
+                    if !zapsForMeDeduplicated.isEmpty {
+                        Button("Show more") {
+                            guard let account = NosturState.shared.account else { return }
+                            fl.predicate = NSPredicate(
+                                format: "zappedContactPubkey == %@" + // ONLY TO ME
+                                "AND kind == 9735 " +
+                                "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS)
+                                account.publicKey,
+                                account.blockedPubkeys_)
+        //                    fl.offset = (fl.events.count - 1)
+                            fl.loadMore(500)
+                            if let until = fl.events.last?.created_at {
+                                req(RM.getMentions(
+                                    pubkeys: [account.publicKey],
+                                    kinds: [9735],
+                                    limit: 500,
+                                    until: NTimestamp(timestamp: Int(until))
+                                ))
+                            }
+                            else {
+                                req(RM.getMentions(pubkeys: [account.publicKey], kinds: [9735], limit:500))
+                            }
+                        }
+                        .padding(.bottom, 40)
+                        .buttonStyle(.bordered)
+                        .tint(.accentColor)
+                    }
+                    else {
+                        ProgressView()
+                    }
+                }
+                .hCentered()
+            }
+        }
+        .background(Color("ListBackground"))
+        .onAppear {
+            guard !didLoad else { return }
+            load()
+        }
+        .onReceive(receiveNotification(.newZaps)) { _ in
+            guard let account = NosturState.shared.account else { return }
+            let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
+            fl.predicate = NSPredicate(
+                format:
+                    "created_at >= %i " +
+                    "AND zappedContactPubkey == %@" + // ONLY TO ME
+                    "AND kind == 9735 " +
+                    "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS)
+                    currentNewestCreatedAt,
+                account.publicKey,
+                account.blockedPubkeys_
+            )
+            fl.loadNewerEvents(5000, taskId:"newZaps")
+        }
+        .onReceive(receiveNotification(.importedMessagesFromSubscriptionIds)) { notification in
+            let importedSubIds = notification.object as! ImportedNotification
+            
+            let reqTasks = backlog.tasks(with: importedSubIds.subscriptionIds)
+            
+            reqTasks.forEach { task in
+                task.process()
+            }
+        }
+        .onReceive(receiveNotification(.activeAccountChanged)) { _ in
+            fl.events = []
+            backlog.clear()
+            load()
+        }
+        .onChange(of: settings.webOfTrustLevel) { _ in
+            fl.nrPosts = []
+            backlog.clear()
+            load()
+        }
+    }
+    
+    @State var subscriptions = Set<AnyCancellable>()
+    
+    func load() {
+        guard let account = NosturState.shared.account else { return }
+        didLoad = true
+        fl.$events
+            .sink(receiveValue: { events in
+                let zapsForMeDeduplicated = events
+                    .uniqued(on: { $0.zappedEventId }) // Deplicated
+                    .filter {
+                        // Only for me
+                        $0.zappedContactPubkey != nil && $0.zappedContactPubkey == account.publicKey
+                    }
+                
+                let p = zapsForMeDeduplicated.map {
+                    ZapInfo(zap: $0, zappedEvent: $0.zappedEvent)
+                }
+                                
+                DataProvider.shared().bg.perform {
+                    let transformed = p.map { zapInfo in
+                        return ZapInfo(
+                            zap: zapInfo.zap,
+                            zappedEventNRPost: zapInfo.zappedEvent != nil ? NRPost(event: zapInfo.zappedEvent!.toBG()!): nil,
+                            zappedEvent: zapInfo.zappedEvent)
+                    }
+                    DispatchQueue.main.async {
+                        self.zapsForMeDeduplicated = transformed
+                    }
+                }
+            })
+            .store(in: &subscriptions)
+        
+        fl.reset()
+        fl.nrPostTransform = false
+        fl.predicate = NSPredicate(
+            format:
+                "zappedContactPubkey == %@ AND kind == 9735 AND NOT zapFromRequest.pubkey IN %@",
+            account.publicKey,
+            account.blockedPubkeys_
+            )
+        fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+        
+        fl.loadMore(500)
+        
+        if let first = fl.events.first, let account = ns.account {
+            let firstCreatedAt = first.created_at
+            DataProvider.shared().bg.perform {
+                if let account = account.toBG() {
+                    account.lastSeenZapCreatedAt = firstCreatedAt
+                }
+                DataProvider.shared().bgSave()
+            }
+        }
+        
+        let fetchNewerTask = ReqTask(
+            reqCommand: { (taskId) in
+                req(RM.getMentions(
+                    pubkeys: [account.publicKey],
+                    kinds: [9735],
+                    limit: 5000,
+                    subscriptionId: taskId,
+                    since: NTimestamp(timestamp: Int(fl.events.first?.created_at ?? 0))
+                ))
+            },
+            processResponseCommand: { (taskId, _) in
+                L.og.debug("🟠🟠🟠 processResponseCommand \(taskId)")
+                let currentNewestCreatedAt = fl.events.first?.created_at ?? 0
+                fl.predicate = NSPredicate(
+                    format:
+                        "created_at >= %i AND zappedContactPubkey == %@ AND kind == 9735 AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS)
+                        currentNewestCreatedAt,
+                    account.publicKey,
+                    account.blockedPubkeys_
+                  )
+                fl.loadNewerEvents(5000, taskId: taskId)
+            })
+
+        backlog.add(fetchNewerTask)
+        fetchNewerTask.fetch()
+    }
+}
+
+struct PostZap: View {
+    let er:ExchangeRateModel = .shared // Not Observed for performance
+    @ObservedObject var nrPost:NRPost
+    var zaps:[Event]
+    
+    var body: some View {
+        HStack(alignment: .top) {
+            VStack {
+                Image(systemName: "bolt.fill")
+                    .foregroundColor(Color("AccentColor"))
+                Text(Double(nrPost.zapTally).satsFormatted)
+                    .font(.title2)
+                if (er.bitcoinPrice != 0.0) {
+                    let fiatPrice = String(format: "$%.02f",(Double(nrPost.zapTally) / 100000000 * Double(er.bitcoinPrice)))
+
+                    Text("\(fiatPrice)")
+                        .font(.caption)
+                        .opacity(nrPost.zapTally != 0 ? 0.5 : 0)
+                }
+            }
+            .frame(width:80)
+            VStack(alignment:.leading, spacing: 3) {
+                Group {
+                    ZapsForThisNote(
+                        zaps: zaps.filter {
+                            $0.zappedEventId == nrPost.id
+                        })
+                    NoteMinimalContentView(nrPost: nrPost, lineLimit: 3)
+                }
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            navigateTo(nrPost)
+        }
+    }
+}
+
+struct ProfileZap: View {
+    let er:ExchangeRateModel = .shared // Not Observed for performance
+    @EnvironmentObject var ns:NosturState
+    
+    var zap:Event
+    @ObservedObject var zapFrom:Event
+    
+    var body: some View {
+        HStack(alignment: .top) {
+            VStack {
+                Image(systemName: "bolt.fill")
+                    .foregroundColor(Color("AccentColor"))
+                Text(zap.naiveSats.satsFormatted)
+                    .font(.title2)
+                if (er.bitcoinPrice != 0.0) {
+                    let fiatPrice = String(format: "$%.02f",(Double(zap.naiveSats) / 100000000 * Double(er.bitcoinPrice)))
+
+                    Text("\(fiatPrice)")
+                        .font(.caption)
+                        .opacity(zap.naiveSats != 0 ? 0.5 : 0)
+                }
+            }
+            .frame(width:80)
+            VStack(alignment:.leading, spacing: 3) {
+                PFP(pubkey: zapFrom.pubkey, contact: zapFrom.contact)
+                Text("**\(zapFrom.contact?.authorName ?? "??")** zapped your profile", comment: "Message when someone zapped your profile")
+                Text(zapFrom.noteText)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .overlay(alignment: .topTrailing) {
+                Ago(zap.created_at).layoutPriority(2)
+                    .foregroundColor(.gray)
+            }
+            .onAppear {
+                if (zapFrom.contact_ == nil || zapFrom.contact_?.metadata_created_at == 0) {
+                    EventRelationsQueue.shared.addAwaitingEvent(zapFrom, debugInfo: "NoteZaps.002")
+                    QueuedFetcher.shared.enqueue(pTag: zapFrom.pubkey)
+                }
+            }
+            .onDisappear {
+                if (zapFrom.contact_ == nil || zapFrom.contact_?.metadata_created_at == 0) {
+                    QueuedFetcher.shared.dequeue(pTag: zapFrom.pubkey)
+                }
+            }
+            .onTapGesture {
+                navigateTo(ContactPath(key: zapFrom.pubkey))
+            }
+        }
+    }
+}
+
+struct ZapsForThisNote: View {
+    var zaps:[Event]
+    @EnvironmentObject var ns:NosturState
+    
+    var deduplicated:[String: (String, Contact?, Double, Date, String?)] { // [string: (pubkey, Contact?, amount, created_at)]
+        var d = [String: (String, Contact?, Double, Date, String?)]()
+        // show only 1 zap per pubkey, combine total amount, track most recent created_at
+        zaps
+            .map {
+                ($0.zapFromRequest, $0.date, $0.naiveSats, $0.zapFromRequest?.contact?.authorName)
+            }
+            .filter {
+                $0.0 != nil
+            }
+            .forEach { tuple in
+                guard tuple.0 != nil else { return }
+                let (req, createdAt, sats, authorName) = tuple
+                if d[req!.pubkey] != nil {
+                    // additional entry, add up sats, and only keep most recent date
+                    let current = d[req!.pubkey]!
+                    let mostRecentDate = current.3 > createdAt ? current.3 : createdAt
+                    d[req!.pubkey] = (current.0, current.1, current.2 + sats, mostRecentDate, current.4)
+                }
+                else {
+                    // first entry
+                    d[req!.pubkey] = (req!.pubkey, req!.contact, sats, createdAt, authorName)
+                }
+            }
+        return d.sorted { $0.value.2 > $1.value.2 }
+            .reduce(into: [String: (String, Contact?, Double, Date, String?)]()) { $0[$1.0] = $1.1 }
+
+    }
+    
+    
+    var body: some View {
+        VStack(alignment:.leading) {
+            ZStack(alignment:.leading) {
+                ForEach(Array(deduplicated.keys.enumerated().prefix(6)), id: \.1) { index, key in
+                    ZStack(alignment:.leading) {
+                        PFP(pubkey: deduplicated[key]!.0 , contact: deduplicated[key]!.1)
+                            .zIndex(-Double(index))
+                        
+                        Text("\(deduplicated[key]!.2.satsFormatted)")
+                            .font(.caption)
+                            .padding(3)
+                            .foregroundColor(.white)
+                            .background(.orange)
+                            .cornerRadius(8)
+                            .offset(x:5, y:+15)
+                            .zIndex(20)
+                    }
+                    .offset(x:Double(0 + (35*index)))
+                }
+            }
+            if (deduplicated.values.count > 1) {
+                Text("**\(deduplicated.values.first(where: { $0.4 != nil })?.4 ?? "???")** and \(deduplicated.values.count - 1) others zapped your post", comment: "Message when (name) and X others zapped your post")
+            }
+            else {
+                Text("**\(deduplicated.values.first(where: { $0.4 != nil })?.4 ?? "???")** zapped your post", comment: "Message when (name) zapped your post")
+            }
+        }
+        .frame(maxWidth:.infinity, alignment: .leading)
+        .overlay(alignment: .topTrailing) {
+            if let first = deduplicated.values.first {
+                Ago(first.3).layoutPriority(2)
+                    .foregroundColor(.gray)
+            }
+        }
+    }
+}
+
+struct NotificationsZaps_Previews: PreviewProvider {
+    static var previews: some View {
+        let pubkey = "32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245"
+        PreviewContainer {
+            NotificationsZaps(pubkey: pubkey)
+        }
+    }
+}
+
+
+struct ZapOrNotification: Identifiable {
+    let id:String
+    let type:ZapOrNotificationType
+    var zapInfo:ZapInfo?
+    var notification:PersistentNotification?
+    
+    var createdAt:Date {
+        (type == .ZAP ? zapInfo!.zap.date : notification!.createdAt)
+    }
+    
+    enum ZapOrNotificationType {
+        case ZAP
+        case NOTIFICATION
+    }
+}

@@ -1,0 +1,382 @@
+//
+//  Importer.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 29/01/2023.
+//
+
+import Foundation
+import OSLog
+import CoreData
+import Combine
+
+class Importer {
+    
+    var isImporting = false
+    var needsImport = false
+    var subscriptions = Set<AnyCancellable>()
+    var addedRelayMessage = PassthroughSubject<Void, Never>()
+
+    var settingsStore = SettingsStore.shared
+    
+    var existingIds:Set<String> = []
+    
+    static let shared = Importer()
+    
+    let decoder = JSONDecoder()
+    var nwcConnection:NWCConnection?
+    
+    init() {
+        self.preloadExistingIdsCache()
+        triggerImportWhenRelayMessagesAreAdded()
+    }
+    
+    func triggerImportWhenRelayMessagesAreAdded() {
+        addedRelayMessage
+            .debounce(for: .seconds(0.3), scheduler: DispatchQueue.global())
+            .throttle(for: 1.5, scheduler: DispatchQueue.global(), latest: true)
+            .sink { () in
+                L.importing.debug("🏎️🏎️ importEvents() after relay message received (throttle = 1.5 seconds), but sends first after debounce (0.3)")
+                self.importEvents()
+            }
+            .store(in: &subscriptions)
+    }
+    
+    func preloadExistingIdsCache() {
+        let fr = Event.fetchRequest()
+        fr.fetchLimit = 5000
+        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        fr.propertiesToFetch = ["id"]
+        DataProvider.shared().bg.perform { [unowned self] in
+            if let results = try? DataProvider.shared().bg.fetch(fr) {
+                self.existingIds = Set(results.map { $0.id })
+                L.og.debug("\(self.existingIds.count) existing ids added to cache")
+            }
+        }
+    }
+    
+    public func importEvents() {
+        let context = DataProvider.shared().bg
+        context.perform { [unowned self] in
+            if (self.isImporting) {
+                let itemsCount = MessageParser.shared.messageBucket.count
+                self.needsImport = true
+                if itemsCount > 0 {
+                    DispatchQueue.main.async {
+                        sendNotification(.listStatus, "Processing \(itemsCount) items...")
+                    }
+                }
+                return
+            }
+            self.isImporting = true
+            let forImportsCount = MessageParser.shared.messageBucket.count
+            guard forImportsCount != 0 else {
+                L.importing.debug("🏎️🏎️ importEvents() nothing to import.")
+                self.isImporting = false; return }
+            
+            DispatchQueue.main.async {
+                sendNotification(.listStatus, "Processing \(forImportsCount) items...")
+            }
+            
+            let isSignatureVerificationEnabled = self.settingsStore.isSignatureVerificationEnabled
+            do {
+                var count = 0
+                var alreadyInIdCacheSkipped = 0
+                var alreadyInDBskipped = 0
+                var saved = 0
+                
+                // We send a notification every .save with the saved subscriptionIds
+                // so other parts of the system can start fetching from local db
+                var subscriptionIds = Set<String>()
+                while let message = MessageParser.shared.messageBucket.popFirst() {
+                    count = count + 1
+                    guard var event = message.event else {
+                        L.importing.error("🔴🔴 message.event is nil \(message.message)")
+                        continue
+                    }
+                    
+                    if (isSignatureVerificationEnabled) {
+                        guard try event.verified() else {
+                            L.importing.info("😡😡 hey invalid sig yo 😡😡")
+                            continue
+                        }
+                    }
+                    
+                    if event.kind == .nwcInfo {
+                        guard let nwcConnection = self.nwcConnection else { continue }
+                        guard event.publicKey == nwcConnection.walletPubkey else { continue }
+                        L.og.info("⚡️ Received 13194 info event, saving methods: \(event.content)")
+                        nwcConnection.methods = event.content
+                        DispatchQueue.main.async {
+                            sendNotification(.nwcInfoReceived, NWCInfoNotification(methods: event.content))
+                        }
+                        continue
+                    }
+                    
+                    if event.kind == .ncMessage {
+                        // Don't save to database, just handle response directly
+                        DispatchQueue.main.async {
+                            sendNotification(.receivedMessage, message)
+                        }
+                        continue
+                    }
+                    
+                    if event.kind == .nwcResponse {
+                        guard let nwcConnection = self.nwcConnection else { L.og.error("⚡️ NWC response but nwcConnection missing \(event.eventJson())"); continue }
+                        guard let pk = nwcConnection.privateKey else { L.og.error("⚡️ NWC response but private key missing \(event.eventJson())"); continue }
+                        guard let decrypted = NKeys.decryptDirectMessageContent(withPrivateKey: pk, pubkey: event.publicKey, content: event.content) else {
+                            L.og.error("⚡️ Could not decrypt nwcResponse, \(event.eventJson())")
+                            continue
+                        }
+                        guard let nwcResponse = try? decoder.decode(NWCResponse.self, from: decrypted.data(using: .utf8)!) else {
+                            L.og.error("⚡️ Could not parse/decode nwcResponse, \(event.eventJson()) - \(decrypted)")
+                            continue
+                        }
+                        guard let firstE = event.eTags().first, let awaitingRequest = NWCRequestQueue.shared.getAwaitingRequest(byId: firstE) else {
+                            L.og.error("⚡️ No matching nwc request for response, or e-tag missing, \(event.eventJson()) - \(decrypted)")
+                            continue
+                        }
+                        if let awaitingZap = awaitingRequest.zap {
+                            // HANDLE ZAPS
+                            if let error = nwcResponse.error {
+                                L.og.info("⚡️ NWC response with error: \(error.code) - \(error.message)")
+                                if let eventId = awaitingZap.eventId {
+                                    let message = "[Zap](nostur:e:\(eventId)) may have failed.\n\(error.message)"
+                                    _ = PersistentNotification.createFailedNWCZap(pubkey: NosturState.shared.activeAccountPublicKey, message: message, context: context)
+                                    L.og.info("⚡️ Created notification: Zap failed for [post](nostur:e:\(eventId)). \(error.message)")
+                                    if let ev = try? Event.fetchEvent(id: eventId, context: DataProvider.shared().bg) {
+                                        ev.zapState = .none
+                                        ev.zapStateChanged.send(.none)
+                                    }
+                                }
+                                else {
+                                    let message = "Zap may have failed for [contact](nostur:p:\(awaitingZap.contact.pubkey)).\n\(error.message)"
+                                    _ = PersistentNotification.createFailedNWCZap(pubkey: NosturState.shared.activeAccountPublicKey, message: message, context: context)
+                                    L.og.info("⚡️ Created notification: Zap failed for [contact](nostur:p:\(awaitingZap.contact.pubkey)). \(error.message)")
+                                }
+                                NWCZapQueue.shared.removeZap(byId: awaitingZap.id)
+                                NWCRequestQueue.shared.removeRequest(byId: awaitingRequest.request.id)
+                                continue
+                            }
+                            guard let result_type = nwcResponse.result_type, result_type == "pay_invoice" else {
+                                L.og.error("⚡️ Unknown or missing result_type, \(nwcResponse.result_type ?? "") - \(decrypted)")
+                                continue
+                            }
+                            if let result = nwcResponse.result {
+                                L.og.info("⚡️ Zap success \(result.preimage ?? "-") - \(decrypted)")
+                                NWCZapQueue.shared.removeZap(byId: awaitingZap.id)
+                                NWCRequestQueue.shared.removeRequest(byId: awaitingRequest.request.id)
+                                continue
+                            }
+                        }
+                        else {
+                            // HANDLE OLD BOLT11 INVOICE PAYMENT
+                            if let error = nwcResponse.error {
+                                let message = "Failed to pay lightning invoice.\n\(error.message)"
+                                _ = PersistentNotification.createFailedLightningInvoice(pubkey: NosturState.shared.activeAccountPublicKey, message: message, context: context)
+                                L.og.error("⚡️ Failed to pay lightning invoice. \(error.message)")
+                                NWCRequestQueue.shared.removeRequest(byId: awaitingRequest.request.id)
+                                continue
+                            }
+                            guard let result_type = nwcResponse.result_type, result_type == "pay_invoice" else {
+                                L.og.error("⚡️ Unknown or missing result_type, \(nwcResponse.result_type ?? "") - \(decrypted)")
+                                continue
+                            }
+                            if let result = nwcResponse.result {
+                                L.og.info("⚡️ Lighting Invoice Payment (Not Zap) success \(result.preimage ?? "-") - \(decrypted)")
+                                NWCRequestQueue.shared.removeRequest(byId: awaitingRequest.request.id)
+                                continue
+                            }
+                        }
+                        L.og.info("⚡️ NWC response not handled: \(event.eventJson()) ")
+                        continue
+                    }
+                    
+                    if message.subscriptionId == "Notifications" && event.pTags().contains(NosturState.shared.activeAccountPublicKey) && [1,9802,30023,7,9735,4].contains(event.kind.id) {
+                        NosturState.shared.lastNotificationReceivedAt = Date.now
+                    }
+                    
+                    if message.subscriptionId == "Profiles" && event.kind == .setMetadata {
+                        NosturState.shared.lastProfileReceivedAt = Date.now
+                    }
+                    
+                    guard !self.existingIds.contains(event.id) else {
+                        alreadyInIdCacheSkipped = alreadyInIdCacheSkipped + 1
+                        if event.publicKey == NosturState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
+                            DispatchQueue.main.async {
+                                FollowingGuardian.shared.didReceiveContactListThisSession = true
+                            }
+                        }
+                        continue
+                    }
+                    
+                    guard Event.eventExists(id: event.id, context: context) == false else {
+                        alreadyInDBskipped = alreadyInDBskipped + 1
+                        if event.publicKey == NosturState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
+                            DispatchQueue.main.async {
+                                FollowingGuardian.shared.didReceiveContactListThisSession = true
+                            }
+                        }
+                        continue
+                    }
+                    // Skip if we already have a newer kind 3
+                    if  event.kind == .contactList,
+                        let existingKind3 = Event.fetchReplacableEvent(3, pubkey: event.publicKey, context: context),
+                        existingKind3.created_at > Int64(event.createdAt.timestamp)
+                    {
+                        if event.publicKey == NosturState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
+                            DispatchQueue.main.async {
+                                FollowingGuardian.shared.didReceiveContactListThisSession = true
+                            }
+                        }
+                        continue
+                    }
+                    
+                    // ANNOYING FIX FOR KIND 6 WITH JSON STRING OF ANOTHER EVENT IN EVENT.CONTENT. WTF
+                    var kind6firstQuote:Event?
+                    if event.kind == .repost && (event.content.prefix(2) == #"{""# || event.content == "") {
+                        if event.content == "" {
+                            if let firstE = event.firstE() {
+                                kind6firstQuote = try? Event.fetchEvent(id: firstE, context: context)
+                            }
+                        }
+                        else if let noteInNote = try? decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
+                            if !Event.eventExists(id: noteInNote.id, context: context) {
+                                _ = Event.saveEvent(event: noteInNote)
+                            }
+                            else {
+                                //                                print("🔴 noteInNote already in db")
+                            }
+                            event.content = "#[0]"
+                            event.tags.insert(NostrTag(["e", noteInNote.id, "", "mention"]), at: 0)
+                        }
+                    }
+                    
+                    if event.kind == .contactList {
+                        if event.publicKey == NosturState.EXPLORER_PUBKEY {
+                            // use guest account p's for "Explorer" feed
+                            let pTags = event.pTags()
+                            Task { @MainActor in
+                                NosturState.shared.rawExplorePubkeys = Set(pTags)
+                            }
+                        }
+                        if event.publicKey == NosturState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
+                            DispatchQueue.main.async {
+                                FollowingGuardian.shared.didReceiveContactListThisSession = true
+                            }
+                        }
+
+                        
+                        // Send new following list notification, but skip if it is for building the Web of Trust
+                        if let subId = message.subscriptionId, subId.prefix(7) != "WoTFol-" {
+                            let n = event
+                            DispatchQueue.main.async {
+                                sendNotification(.newFollowingListFromRelay, n)
+                            }
+                        }
+                    }
+                    
+                    let savedEvent = Event.saveEvent(event: event, relay: message.relay)
+                    saved = saved + 1
+                    if let subscriptionId = message.subscriptionId {
+                        subscriptionIds.insert(subscriptionId)
+                    }
+                    if (kind6firstQuote != nil) {
+                        savedEvent.firstQuote = kind6firstQuote
+                    }
+                    
+                    if event.kind == .setMetadata {
+                        Contact.saveOrUpdateContact(event: event)
+                    }
+                    
+                    // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
+                    if event.kind == .reaction {
+                        do { try _ = Event.updateLikeCountCache(savedEvent, content:event.content, context: context) } catch {
+                            L.importing.error("🦋🦋🔴🔴🔴 problem updating Like Count Cache .id \(event.id)")
+                        }
+                    }
+                    
+                    // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
+                    if event.kind == .zapNote {
+                        let _ = Event.updateZapTallyCache(savedEvent, context: context)
+                    }
+                    
+                    // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REPLIES, MENTIONS)
+                    if event.kind == .textNote || event.kind == .repost {
+                        // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
+                        do { try _ = Event.updateMentionsCountCache(event.tags, context: context) } catch {
+                            L.importing.error("🦋🦋🔴🔴🔴 problem updateMentionsCountCache .id \(event.id)")
+                        }
+                        
+                        // NIP-10: Those marked with "reply" denote the id of the reply event being responded to.
+                        // NIP-10: Those marked with "root" denote the root id of the reply thread being responded to.
+                        // DISABLED BECAUSE ALREADY DONE IN saveEvent.
+                        //                        do { try _ = Event.updateRepliesCountCache(event.tags, context: context) } catch {
+                        //                            print("🦋🦋🔴🔴🔴 problem updateRepliesCountCache .id \(event.id)")
+                        //                        }
+                    }
+                    
+                    self.existingIds.insert(event.id)
+                    
+                    // batch save every 100
+                    if count % 100 == 0 {
+                        if (context.hasChanges) {
+                            do {
+                                try context.save()
+                                L.importing.info("💾💾 Saved \(count)/\(forImportsCount)")
+                                let mainQueueCount = count
+                                let mainQueueForImportsCount = forImportsCount
+                                let importedNotification = ImportedNotification(subscriptionIds: subscriptionIds)
+                                DispatchQueue.main.async {
+                                    sendNotification(.importedMessagesFromSubscriptionIds, importedNotification)
+                                    sendNotification(.listStatus, "Processing \(mainQueueCount)/\(max(mainQueueCount,mainQueueForImportsCount)) items...")
+                                    sendNotification(.newEventsInDatabase)
+                                }
+                                subscriptionIds.removeAll()
+                            }
+                            catch {
+                                L.importing.error("🏎️🏎️ 🔴🔴🔴 Error on batch \(count)/\(forImportsCount): \(error)")
+                            }
+                        }
+                    }
+                }
+                if (context.hasChanges) {
+                    try context.save() // This is saving bg context to main, not to disk
+                    if (saved > 0) {
+                        L.importing.info("💾💾 Processed: \(forImportsCount), saved: \(saved), skipped (new cache): \(alreadyInIdCacheSkipped), skipped (db): \(alreadyInDBskipped)")
+                        let mainQueueCount = count
+                        let mainQueueForImportsCount = forImportsCount
+                        let importedNotification = ImportedNotification(subscriptionIds: subscriptionIds)
+                        DispatchQueue.main.async {
+                            sendNotification(.importedMessagesFromSubscriptionIds, importedNotification)
+                            sendNotification(.listStatus, "Processing \(mainQueueCount)/\(max(mainQueueCount,mainQueueForImportsCount)) items...")
+                            sendNotification(.newEventsInDatabase)
+                        }
+                        subscriptionIds.removeAll()
+                    }
+                    else {
+                        L.importing.info("💾   Finished, nothing saved. -- Processed: \(forImportsCount), saved: \(saved), skipped (new cache): \(alreadyInIdCacheSkipped), skipped (db): \(alreadyInDBskipped)")
+                    }
+                }
+                else {
+                    L.importing.debug("🏎️🏎️ Nothing imported, no changes in \(count) messages")
+                    if count > 50 {
+                        sendNotification(.noNewEventsInDatabase)
+                    }
+                }
+            }
+            catch {
+                L.importing.error("🏎️🏎️🔴🔴🔴🔴 Failed to import because: \(error)")
+            }
+            self.isImporting = false
+            if (self.needsImport) {
+                L.importing.debug("🏎️🏎️ Chaining next import ")
+                self.needsImport = false
+                self.importEvents()
+            }
+            else {
+                DataProvider.shared().save()
+            }
+        }
+    }
+}

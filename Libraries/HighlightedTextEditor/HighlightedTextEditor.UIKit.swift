@@ -1,0 +1,276 @@
+#if os(iOS)
+//
+//  HighlightedTextEditor.UIKit.swift
+//
+//
+//  Created by Kyle Nazario on 5/26/21.
+//  Modified by Fabian Lachman 2023
+
+import SwiftUI
+import UIKit
+
+public typealias PhotoPickerTappedCallback = () -> Void
+public typealias GifsTappedCallback = () -> Void
+
+protocol PastedImagesDelegate: UITextViewDelegate {
+    func didPasteImage(_ image:UIImage)
+    func photoPickerTapped()
+    func gifsTapped()
+}
+
+class NosturTextView: UITextView {
+    var pastedImageDelegate: PastedImagesDelegate?
+
+    override var delegate: UITextViewDelegate? {
+        get { pastedImageDelegate }
+        set { pastedImageDelegate = newValue as? PastedImagesDelegate }
+    }
+
+    // This gets called when user presses menu "Paste" option
+    override func paste(_ sender: Any?) {
+        if let image = UIPasteboard.general.image {
+            pastedImageDelegate?.didPasteImage(image)
+        } else {
+            // Call the normal paste action
+            super.paste(sender)
+        }
+    }
+    
+    override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
+        if action == #selector(paste(_:)) && UIPasteboard.general.image != nil {
+            return true
+        } else {
+            return super.canPerformAction(action, withSender: sender)
+        }
+    }
+    
+    @objc func photoPickerTapped() {
+        pastedImageDelegate?.photoPickerTapped()
+    }
+    
+    @objc func gifsTapped() {
+        pastedImageDelegate?.gifsTapped()
+    }
+    
+}
+
+public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor {
+    
+    public struct Internals {
+        public let textView: SystemTextView
+        public let scrollView: SystemScrollView?
+    }
+    
+    @Binding var text: String {
+        didSet {
+            onTextChange?(text)
+        }
+    }
+    
+    @Binding var pastedImages:[UIImage]
+    
+    var shouldBecomeFirstResponder: Bool
+    
+    let textView = NosturTextView()
+    let highlightRules: [HighlightRule]
+    var photoPickerTapped: PhotoPickerTappedCallback?
+    var gifsTapped: GifsTappedCallback?
+    
+    private(set) var onEditingChanged: OnEditingChangedCallback?
+    private(set) var onCommit: OnCommitCallback?
+    private(set) var onTextChange: OnTextChangeCallback?
+    private(set) var onSelectionChange: OnSelectionChangeCallback?
+    private(set) var introspect: IntrospectCallback?
+    
+    public init(
+        text: Binding<String>,
+        pastedImages: Binding<[UIImage]>,
+        shouldBecomeFirstResponder: Bool,
+        highlightRules: [HighlightRule],
+        photoPickerTapped: PhotoPickerTappedCallback? = nil,
+        gifsTapped: GifsTappedCallback? = nil
+    ) {
+        _text = text
+        _pastedImages = pastedImages
+        self.shouldBecomeFirstResponder = shouldBecomeFirstResponder
+        self.highlightRules = highlightRules
+        self.photoPickerTapped = photoPickerTapped
+        self.gifsTapped = gifsTapped
+    }
+    
+    public func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    public func makeUIView(context: Context) -> UITextView {
+        _ = textView.layoutManager // force an UITextView to fallback to Text Kit 1 - Maybe fixes crashes on iOS17 beta 
+        textView.smartInsertDeleteType = .no
+        textView.isScrollEnabled = true
+        textView.backgroundColor = UIColor.clear
+        textView.delegate = context.coordinator
+        textView.pastedImageDelegate = context.coordinator
+        
+        let doneToolbar: UIToolbar = UIToolbar(frame: CGRect.init(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 50))
+        doneToolbar.barStyle = .default
+                       
+        let photoButton = UIButton(type: .system)
+        photoButton.setImage(UIImage(systemName: "photo"), for: .normal)
+        photoButton.addTarget(self, action: #selector(textView.photoPickerTapped), for: .touchUpInside)
+        let photos = UIBarButtonItem(customView: photoButton)
+    
+        let gifButton = UIButton(type: .system)
+        gifButton.setImage(UIImage(named: "GifButton"), for: .normal)
+    
+        gifButton.imageView?.contentMode = .scaleAspectFit
+        gifButton.sizeToFit()
+        
+        gifButton.addTarget(self, action: #selector(textView.gifsTapped), for: .touchUpInside)
+        let gifs = UIBarButtonItem(customView: gifButton)
+
+        let flexibleSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+        
+        let toolbarItems: [UIBarButtonItem] = [photos, gifs, flexibleSpace]
+
+        doneToolbar.setItems(toolbarItems, animated: false)
+      
+
+        textView.inputAccessoryView = doneToolbar
+        textView.keyboardType = .twitter
+        
+        updateTextViewModifiers(textView)
+        if (shouldBecomeFirstResponder) {
+            textView.becomeFirstResponder()
+        }
+        return textView
+    }
+    
+    public func updateUIView(_ uiView: UITextView, context: Context) {
+        context.coordinator.updatingUIView = true
+        
+        uiView.backgroundColor = text.isEmpty ? UIColor.clear : UIColor.systemBackground
+        
+        let highlightedText = HighlightedTextEditor.getHighlightedText(
+            text: text,
+            highlightRules: highlightRules
+        )
+        
+        if let range = uiView.markedTextNSRange {
+            uiView.setAttributedMarkedText(highlightedText, selectedRange: range)
+        } else {
+            uiView.attributedText = highlightedText
+        }
+        updateTextViewModifiers(uiView)
+        runIntrospect(uiView)
+        uiView.selectedTextRange = context.coordinator.selectedTextRange
+        context.coordinator.updatingUIView = false
+    }
+    
+    private func runIntrospect(_ textView: UITextView) {
+        guard let introspect = introspect else { return }
+        let internals = Internals(textView: textView, scrollView: nil)
+        introspect(internals)
+    }
+    
+    private func updateTextViewModifiers(_ textView: UITextView) {
+        // BUGFIX #19: https://stackoverflow.com/questions/60537039/change-prompt-color-for-uitextfield-on-mac-catalyst
+        let textInputTraits = textView.value(forKey: "textInputTraits") as? NSObject
+        textInputTraits?.setValue(textView.tintColor, forKey: "insertionPointColor")
+    }
+    
+    public final class Coordinator: NSObject, UITextViewDelegate, PastedImagesDelegate {
+        
+        func didPasteImage(_ image: UIImage) {
+            self.parent.pastedImages.append(image)
+        }
+        
+        func photoPickerTapped() {
+            guard let tapped = self.parent.photoPickerTapped else { return }
+            tapped()
+        }
+        
+        func gifsTapped() {
+            guard let gifsTapped = self.parent.gifsTapped else { return }
+            gifsTapped()
+        }
+        
+        var parent: HighlightedTextEditor
+        var selectedTextRange: UITextRange?
+        var updatingUIView = false
+        
+        init(_ markdownEditorView: HighlightedTextEditor) {
+            self.parent = markdownEditorView
+        }
+        
+        
+        
+        public func textViewDidChange(_ textView: UITextView) {
+            // For Multistage Text Input
+            guard textView.markedTextRange == nil else { return }
+            
+            parent.text = textView.text
+            selectedTextRange = textView.selectedTextRange
+            
+//            let size = CGSize(width: textView.frame.size.width, height: .infinity)
+//            let estimatedSize = textView.sizeThatFits(size)
+//            guard textView.contentSize.height < 200.0 else { textView.isScrollEnabled = true; return }
+//            textView.isScrollEnabled = false
+//            textView.constraints.forEach { (constraint) in
+//                if constraint.firstAttribute == .height {
+//                    constraint.constant = estimatedSize.height
+//                }
+//            }
+        }
+        
+        public func textViewDidChangeSelection(_ textView: UITextView) {
+            guard let onSelectionChange = parent.onSelectionChange,
+                  !updatingUIView
+            else { return }
+            selectedTextRange = textView.selectedTextRange
+            onSelectionChange([textView.selectedRange])
+        }
+        
+        public func textViewDidBeginEditing(_ textView: UITextView) {
+            parent.onEditingChanged?()
+        }
+        
+        public func textViewDidEndEditing(_ textView: UITextView) {
+            parent.onCommit?()
+        }
+    }
+}
+
+public extension HighlightedTextEditor {
+    func introspect(callback: @escaping IntrospectCallback) -> Self {
+        var new = self
+        new.introspect = callback
+        return new
+    }
+    
+    func onSelectionChange(_ callback: @escaping (_ selectedRange: NSRange) -> Void) -> Self {
+        var new = self
+        new.onSelectionChange = { ranges in
+            guard let range = ranges.first else { return }
+            callback(range)
+        }
+        return new
+    }
+    
+    func onCommit(_ callback: @escaping OnCommitCallback) -> Self {
+        var new = self
+        new.onCommit = callback
+        return new
+    }
+    
+    func onEditingChanged(_ callback: @escaping OnEditingChangedCallback) -> Self {
+        var new = self
+        new.onEditingChanged = callback
+        return new
+    }
+    
+    func onTextChange(_ callback: @escaping OnTextChangeCallback) -> Self {
+        var new = self
+        new.onTextChange = callback
+        return new
+    }
+}
+#endif
