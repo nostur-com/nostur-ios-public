@@ -332,7 +332,6 @@
 		1FFED7FF2A3970A800A0B1E8 /* PhotosPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFED7FE2A3970A800A0B1E8 /* PhotosPicker.swift */; };
 		1FFED8012A39718F00A0B1E8 /* NewPostModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFED8002A39718F00A0B1E8 /* NewPostModel.swift */; };
 		1FFED8032A39C86F00A0B1E8 /* MacListState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFED8022A39C86F00A0B1E8 /* MacListState.swift */; };
-		1FFF997B29CEE15000ADAE23 /* About.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFF997A29CEE15000ADAE23 /* About.swift */; };
 		1FFF997D29CF4AF100ADAE23 /* ProfilePicFullScreenSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFF997C29CF4AF100ADAE23 /* ProfilePicFullScreenSheet.swift */; };
 /* End PBXBuildFile section */
 
@@ -1740,7 +1739,6 @@
 				1FE31EE42A58889A008A4A6F /* ProfileZapButton.swift in Sources */,
 				1F2F54E52A02242900B6D7E4 /* HighlightRenderer.swift in Sources */,
 				1FCDDEBE2A4810F6002EDEEC /* RelayCensorshipResistorTest.swift in Sources */,
-				1FFF997B29CEE15000ADAE23 /* About.swift in Sources */,
 				1FBDE8C129B74EE800F4DFD0 /* ListState+CoreDataProperties.swift in Sources */,
 				1F065A9929A37A47003421D3 /* NoteZaps.swift in Sources */,
 				1FB6E6F029E30909008BE8A6 /* LinkPreviewView.swift in Sources */,

@@ -213,11 +213,9 @@ func signedImageProof(imageData:Data) -> (signature: String, message: String, pu
     guard let privateKeyHexString = NosturState.shared.account?.privateKey else { return nil }
     guard let nostrPubkeyHex = NosturState.shared.account?.publicKey else { return nil }
     
-    // NO EASY WAY TO VERIFY SCHNORR SIG IN PHP, SO JUST USE CRYPTOGRAPHY THAT JUST WORKS OUT OF THE BOX:
-    // SECURITY SHOULD BE THE SAME, YOU CAN ONLY REPLACE THE PROFILE PIC IF YOU HAVE THE PRIVATE KEY
-    // DOESNT MATTER IF THE SIGNATURE IS SCHNORR OR Curve25519
-    
-    // TODO: EVENTALLY REPLACE WITH NOSTR SCHNORR VERIFICATION WHEN THERE IS PROPER PHP SUPPORT SO WE DONT HAVE TO DERRIVE AN EXTRA KEY
+    // Current profile/pic banner backend runs php, there is no easy way to verify schnorr signatures in
+    // php yet, so use Curve25519, works out of the box in both swift and php.
+    // TODO: Eventually replace with nostr schnorr verification when there is proper php support so we dont have to derive an extra key
     
     guard let privateKeyData:Data = try? privateKeyHexString.hexa() else { return nil }
     // Create a SymmetricKey from the Schnorr private key data
@@ -255,11 +253,9 @@ func signedImageProof(imageData:Data) -> (signature: String, message: String, pu
 // same as signedImageProof but without imageData, we just hash of the word DELETE
 func signedDeleteProof(pk privateKeyHexString:String, pubkey nostrPubkeyHex:String) -> (signature: String, message: String, publicKey: String)? {
     
-    // NO EASY WAY TO VERIFY SCHNORR SIG IN PHP, SO JUST USE CRYPTOGRAPHY THAT JUST WORKS OUT OF THE BOX:
-    // SECURITY SHOULD BE THE SAME, YOU CAN ONLY REPLACE THE PROFILE PIC IF YOU HAVE THE PRIVATE KEY
-    // DOESNT MATTER IF THE SIGNATURE IS SCHNORR OR Curve25519
-    
-    // TODO: EVENTALLY REPLACE WITH NOSTR SCHNORR VERIFICATION WHEN THERE IS PROPER PHP SUPPORT SO WE DONT HAVE TO DERRIVE AN EXTRA KEY
+    // Current profile/pic banner backend runs php, there is no easy way to verify schnorr signatures in
+    // php yet, so use Curve25519, works out of the box in both swift and php.
+    // TODO: Eventually replace with nostr schnorr verification when there is proper php support so we dont have to derive an extra key
     
     guard let privateKeyData:Data = try? privateKeyHexString.hexa() else { return nil }
     // Create a SymmetricKey from the Schnorr private key data
