@@ -662,7 +662,7 @@ protocol NewWebSocketDelegate: URLSessionWebSocketDelegate {
 
 class NewWebSocket {
     let url:String
-    var socketQueue = OperationQueue() // TODO: Or should we use SocketPool.shared.websocketQueue? dunno
+    var socketQueue = OperationQueue()
     
     var delegate_:NewWebSocketDelegate?
     var delegate:NewWebSocketDelegate? {
