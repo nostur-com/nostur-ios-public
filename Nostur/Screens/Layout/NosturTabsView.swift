@@ -84,6 +84,7 @@ struct NosturTabsView: View {
     }
 
     private func tabTapped(_ tabName:String) {
+        guard selectedTab == "Main" else { return } // Only trigger if we are already on "Main"
         if tabName == "Main" {
             sendNotification(.shouldScrollToFirstUnread)
             // TODO: FIX DOUBLE TAP TO SCROLL TO TOP
