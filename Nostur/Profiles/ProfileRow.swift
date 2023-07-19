@@ -48,6 +48,15 @@ struct ProfileRow: View {
     var withoutFollowButton = false
     @ObservedObject var contact:Contact
     
+    @State var similarPFP = false
+    
+    var couldBeImposter:Bool {
+        guard let account = NosturState.shared.account else { return false }
+        guard account.publicKey != contact.pubkey else { return false }
+        guard !ns.isFollowing(contact) else { return false }
+        return similarPFP
+    }
+    
     var body: some View {
         HStack(alignment: .top) {
             PFP(pubkey: contact.pubkey, contact: contact)
@@ -57,8 +66,16 @@ struct ProfileRow: View {
                         HStack(spacing:3) {
                             Text(contact.anyName).font(.headline).foregroundColor(.primary)
                                 .lineLimit(1)
-
-                            if (contact.nip05veried) {
+                            
+                            if couldBeImposter {
+                                Text(verbatim: "possible imposter").font(.system(size: 12.0))
+                                    .padding(.horizontal, 8)
+                                    .background(.red)
+                                    .foregroundColor(.white)
+                                    .cornerRadius(8)
+                                    .layoutPriority(2)
+                            }
+                            else if (contact.nip05veried) {
                                 Image(systemName: "checkmark.seal.fill")
                                     .font(.system(size: 14))
                                     .foregroundColor(Color("AccentColor"))
@@ -106,9 +123,18 @@ struct ProfileRow: View {
         .onTapGesture {
             navigateTo(ContactPath(key: contact.pubkey))
         }
-        .onAppear {
+        .task {
             if (ns.isFollowing(contact)) {
                 isFollowing = true
+            }
+            else {
+                guard !ns.isFollowing(contact.pubkey) else { return }
+                guard let account = ns.account else { return }
+                guard let similarContact = account.follows_.first(where: {
+                    $0.anyName == contact.anyName
+                }) else { return }
+                guard let cPic = contact.picture, let wotPic = similarContact.picture else { return }
+                similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
             }
         }
     }

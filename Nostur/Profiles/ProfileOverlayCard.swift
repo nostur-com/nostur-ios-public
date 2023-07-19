@@ -75,8 +75,16 @@ struct ProfileOverlayCard: View {
     @State var cancellationId:UUID? = nil
     @State var customZapId:UUID? = nil
     @State var activeColor = Self.grey
+    @State var similarPFP = false
     
     static let grey = Color.init(red: 113/255, green: 118/255, blue: 123/255)
+    
+    var couldBeImposter:Bool {
+        guard let account = NosturState.shared.account else { return false }
+        guard account.publicKey != contact.pubkey else { return false }
+        guard !NosturState.shared.isFollowing(contact) else { return false }
+        return similarPFP
+    }
     
     var body: some View {
         VStack(alignment: .leading) {
@@ -119,8 +127,15 @@ struct ProfileOverlayCard: View {
                 HStack(spacing:3) {
                     Text(contact.anyName).font(.title).foregroundColor(.primary)
                         .lineLimit(1)
-                    
-                    if (contact.nip05veried) {
+                    if couldBeImposter {
+                        Text(verbatim: "possible imposter").font(.system(size: 12.0))
+                            .padding(.horizontal, 8)
+                            .background(.red)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                            .layoutPriority(2)
+                    }
+                    else if (contact.nip05veried) {
                         Image(systemName: "checkmark.seal.fill")
                             .font(.title)
                             .foregroundColor(Color("AccentColor"))
@@ -192,9 +207,17 @@ struct ProfileOverlayCard: View {
         .padding(20)
         .roundedBoxShadow()
         .padding(10)
-        .onAppear {
+        .task {
             if (ns.isFollowing(contact)) {
                 isFollowing = true
+            }
+            else {
+                guard let account = NosturState.shared.account else { return }
+                guard let similarContact = account.follows_.first(where: {
+                    $0.anyName == contact.anyName
+                }) else { return }
+                guard let cPic = contact.picture, let wotPic = similarContact.picture else { return }
+                similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
             }
         }
         .onDisappear {
