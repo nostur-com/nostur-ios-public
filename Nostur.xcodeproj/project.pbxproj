@@ -496,6 +496,8 @@
 		1F740DA629AF61A700EFCCA7 /* ContactSearchResultRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactSearchResultRow.swift; sourceTree = "<group>"; };
 		1F740DAA29AF898400EFCCA7 /* BadgesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgesView.swift; sourceTree = "<group>"; };
 		1F740DAC29AF8A5200EFCCA7 /* BadgesReceivedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgesReceivedView.swift; sourceTree = "<group>"; };
+		1F7483562A67904900CA7026 /* CREDITS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CREDITS.md; sourceTree = "<group>"; };
+		1F7483572A6797F600CA7026 /* MISSION.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = MISSION.md; sourceTree = "<group>"; };
 		1F7521162986736400C43DF0 /* Messages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Messages.swift; sourceTree = "<group>"; };
 		1F7521182986D44E00C43DF0 /* MessageParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageParser.swift; sourceTree = "<group>"; };
 		1F75211A2986D45D00C43DF0 /* Importer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Importer.swift; sourceTree = "<group>"; };
@@ -690,7 +692,6 @@
 		1FFED7FE2A3970A800A0B1E8 /* PhotosPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotosPicker.swift; sourceTree = "<group>"; };
 		1FFED8002A39718F00A0B1E8 /* NewPostModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewPostModel.swift; sourceTree = "<group>"; };
 		1FFED8022A39C86F00A0B1E8 /* MacListState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacListState.swift; sourceTree = "<group>"; };
-		1FFF997A29CEE15000ADAE23 /* About.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = About.swift; sourceTree = "<group>"; };
 		1FFF997C29CF4AF100ADAE23 /* ProfilePicFullScreenSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePicFullScreenSheet.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -840,7 +841,6 @@
 			children = (
 				1F9A551E2A3C7E6F00F67627 /* DetailPane */,
 				1FAE9B452A304D9000439A63 /* Layout */,
-				1FFF997A29CEE15000ADAE23 /* About.swift */,
 				1F7E38ED2A2DDE7300ABAA85 /* AnySigner.swift */,
 				1F00337429BF0A44007CE040 /* BookmarksAndPrivateNotes.swift */,
 				1F1ABC482981718700D03FA9 /* BookmarksView.swift */,
@@ -1211,6 +1211,8 @@
 				1F0F356E2A31E52800AA9C41 /* ci_scripts */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1F3D4BB62A25CC140084F939 /* AppView.swift */,
+				1F7483562A67904900CA7026 /* CREDITS.md */,
+				1F7483572A6797F600CA7026 /* MISSION.md */,
 				1FB448BD2965F3D000038671 /* NosturApp.swift */,
 				1F3C3F9529755D4C00E813FD /* NosturState.swift */,
 				1F06D2D92A584318007B9373 /* README.md */,
@@ -1219,6 +1221,7 @@
 				1F9D69D82A3077F400628460 /* Config.xcconfig */,
 				1FB448C82965F3D200038671 /* Nostur.entitlements */,
 				1FB448C62965F3D200038671 /* Assets.xcassets */,
+				1FAC67AF29F5527800798661 /* DisabledAssets.xcassets */,
 				1FC7A54629FA46F000645FEF /* Highlight with Nostur */,
 				1FB448BB2965F3D000038671 /* Products */,
 				1F7C65B629A1466D009FF3EA /* Frameworks */,
@@ -1608,6 +1611,7 @@
 				1F9A55242A3C7EE400F67627 /* View+roundedCorner.swift in Sources */,
 				1F3E135929C8B11F00D076EA /* Event+PrivateNotes.swift in Sources */,
 				1FB4FCD629B87D3D0034D03A /* ImageProcessing.swift in Sources */,
+				1F995EF52A4DE349002227B3 /* NIP46TesterView.swift in Sources */,
 				1FE31EE72A588AC8008A4A6F /* ZappablePFP.swift in Sources */,
 				1F00337129BEF141007CE040 /* View+withSheets.swift in Sources */,
 				1F0A25542A3E0E6E00178A5C /* NostrFilesDevMediaUploadService.swift in Sources */,
@@ -1803,6 +1807,7 @@
 				1F2E760529F6DF6C00E67CE7 /* EditListTitleSheet.swift in Sources */,
 				1F77AD082A40B96500585E12 /* ArticleView.swift in Sources */,
 				1FD78EF72A0CC365003E7B3E /* PostRowDeletable.swift in Sources */,
+				1F84189B2A2BDD1A001EFE7A /* NIP47TesterView.swift in Sources */,
 				1FC0F5A72A4AEB62004E4DAA /* TabTitlePreferenceKey.swift in Sources */,
 				1F7525802997854200477AF2 /* NewPost.swift in Sources */,
 				1F740DAD29AF8A5200EFCCA7 /* BadgesReceivedView.swift in Sources */,
