@@ -46,6 +46,15 @@ struct ProfileView: View {
         _kind0Events = FetchRequest(fetchRequest: kind0)
     }
     
+    @State var similarPFP = false
+    
+    var couldBeImposter:Bool {
+        guard let account = NosturState.shared.account else { return false }
+        guard account.publicKey != contact.pubkey else { return false }
+        guard !ns.isFollowing(contact) else { return false }
+        return similarPFP
+    }
+    
     var body: some View {
         //        let _ = Self._printChanges()
         ScrollView {
@@ -118,7 +127,15 @@ struct ProfileView: View {
                             
                             HStack(spacing:0) {
                                 Text("\(contact.anyName) ").font(.system(size: 24, weight:.bold))
-                                if (contact.nip05veried) {
+                                if couldBeImposter {
+                                    Text(verbatim: "possible imposter").font(.system(size: 12.0))
+                                        .padding(.horizontal, 8)
+                                        .background(.red)
+                                        .foregroundColor(.white)
+                                        .cornerRadius(8)
+                                        .layoutPriority(2)
+                                }
+                                else if (contact.nip05veried) {
                                     Group {
                                         Image(systemName: "checkmark.seal.fill")
                                         Text(contact.nip05domain).font(.footnote)
@@ -273,25 +290,34 @@ struct ProfileView: View {
         .fullScreenCover(isPresented: $profilePicViewerIsShown) {
             ProfilePicFullScreenSheet(profilePicViewerIsShown: $profilePicViewerIsShown, pictureUrl:contact.picture!, isFollowing: ns.isFollowing(contact.pubkey))
         }
+        .task {
+            guard !ns.isFollowing(contact.pubkey) else { return }
+            guard let account = ns.account else { return }
+            guard let similarContact = account.follows_.first(where: {
+                $0.anyName == contact.anyName
+            }) else { return }
+            guard let cPic = contact.picture, let wotPic = similarContact.picture else { return }
+            similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
+        }
     }
 }
 
 struct ProfileView_Previews: PreviewProvider {
     static var previews: some View {
         //        let pubkey = "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240"
-        //                let f = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
+                        let f = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
         //        let snowden = PreviewFetcher.fetchContact(pubkey)
         
         //        let testgif = "32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245"
         
-        let testtransparentpfp = "7fa56f5d6962ab1e3cd424e758c3002b8665f7b0d8dcee9fe9e288d7751ac194"
+//        let testtransparentpfp = "7fa56f5d6962ab1e3cd424e758c3002b8665f7b0d8dcee9fe9e288d7751ac194"
         
         
         PreviewContainer({ pe in
             pe.loadContacts()
         }) {
             NavigationStack {
-                if let contact = PreviewFetcher.fetchContact(testtransparentpfp) {
+                if let contact = PreviewFetcher.fetchContact() {
                     VStack {
                         ProfileView(contact: contact)
                     }

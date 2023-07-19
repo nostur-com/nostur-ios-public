@@ -138,6 +138,7 @@
 		1F740DA729AF61A700EFCCA7 /* ContactSearchResultRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F740DA629AF61A700EFCCA7 /* ContactSearchResultRow.swift */; };
 		1F740DAB29AF898400EFCCA7 /* BadgesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F740DAA29AF898400EFCCA7 /* BadgesView.swift */; };
 		1F740DAD29AF8A5200EFCCA7 /* BadgesReceivedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F740DAC29AF8A5200EFCCA7 /* BadgesReceivedView.swift */; };
+		1F7483552A67823300CA7026 /* ImposterChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7483542A67823300CA7026 /* ImposterChecker.swift */; };
 		1F7521172986736400C43DF0 /* Messages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7521162986736400C43DF0 /* Messages.swift */; };
 		1F7521192986D44E00C43DF0 /* MessageParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7521182986D44E00C43DF0 /* MessageParser.swift */; };
 		1F75211B2986D45D00C43DF0 /* Importer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F75211A2986D45D00C43DF0 /* Importer.swift */; };
@@ -496,6 +497,7 @@
 		1F740DA629AF61A700EFCCA7 /* ContactSearchResultRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactSearchResultRow.swift; sourceTree = "<group>"; };
 		1F740DAA29AF898400EFCCA7 /* BadgesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgesView.swift; sourceTree = "<group>"; };
 		1F740DAC29AF8A5200EFCCA7 /* BadgesReceivedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgesReceivedView.swift; sourceTree = "<group>"; };
+		1F7483542A67823300CA7026 /* ImposterChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImposterChecker.swift; sourceTree = "<group>"; };
 		1F7483562A67904900CA7026 /* CREDITS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CREDITS.md; sourceTree = "<group>"; };
 		1F7483572A6797F600CA7026 /* MISSION.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = MISSION.md; sourceTree = "<group>"; };
 		1F7521162986736400C43DF0 /* Messages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Messages.swift; sourceTree = "<group>"; };
@@ -1398,6 +1400,7 @@
 				1F740DA629AF61A700EFCCA7 /* ContactSearchResultRow.swift */,
 				1F740DA429AF5F6900EFCCA7 /* ContactsSearch.swift */,
 				1FC4D40C2998ED0E004E88CD /* FollowersList.swift */,
+				1F7483542A67823300CA7026 /* ImposterChecker.swift */,
 				1FE0C71429FAEA9F00381586 /* ProfileBanner.swift */,
 				1FC7A49A29F95AD400645FEF /* ProfileByPubkey.swift */,
 				1FE0C71229FAE82C00381586 /* ProfileFollowButton.swift */,
@@ -1869,6 +1872,7 @@
 				1F30FAB029706E72008439C8 /* Account+CoreDataClass.swift in Sources */,
 				1F45C7F129EF9A2C00F58772 /* NostrimgMediaUploadService.swift in Sources */,
 				1FC2DFED29A90F6C00C8A9DA /* NoteMinimalContentView.swift in Sources */,
+				1F7483552A67823300CA7026 /* ImposterChecker.swift in Sources */,
 				1F33096129891C4800D4D8CF /* ProfileLikesView.swift in Sources */,
 				1F740DA729AF61A700EFCCA7 /* ContactSearchResultRow.swift in Sources */,
 				1FC4556529CB75EB00DE3239 /* NewDMComposer.swift in Sources */,
