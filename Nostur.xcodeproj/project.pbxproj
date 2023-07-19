@@ -498,6 +498,8 @@
 		1F740DA629AF61A700EFCCA7 /* ContactSearchResultRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactSearchResultRow.swift; sourceTree = "<group>"; };
 		1F740DAA29AF898400EFCCA7 /* BadgesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgesView.swift; sourceTree = "<group>"; };
 		1F740DAC29AF8A5200EFCCA7 /* BadgesReceivedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgesReceivedView.swift; sourceTree = "<group>"; };
+		1F7483562A67904900CA7026 /* CREDITS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CREDITS.md; sourceTree = "<group>"; };
+		1F7483572A6797F600CA7026 /* MISSION.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = MISSION.md; sourceTree = "<group>"; };
 		1F7521162986736400C43DF0 /* Messages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Messages.swift; sourceTree = "<group>"; };
 		1F7521182986D44E00C43DF0 /* MessageParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageParser.swift; sourceTree = "<group>"; };
 		1F75211A2986D45D00C43DF0 /* Importer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Importer.swift; sourceTree = "<group>"; };
@@ -1212,6 +1214,8 @@
 				1F0F356E2A31E52800AA9C41 /* ci_scripts */,
 				1FB448BC2965F3D000038671 /* Nostur */,
 				1F3D4BB62A25CC140084F939 /* AppView.swift */,
+				1F7483562A67904900CA7026 /* CREDITS.md */,
+				1F7483572A6797F600CA7026 /* MISSION.md */,
 				1FB448BD2965F3D000038671 /* NosturApp.swift */,
 				1F3C3F9529755D4C00E813FD /* NosturState.swift */,
 				1F06D2D92A584318007B9373 /* README.md */,
