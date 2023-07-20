@@ -946,6 +946,11 @@ Label shown when someone follows you</note>
         <target>Hashtag</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="Hello, World!" xml:space="preserve">
+        <source>Hello, World!</source>
+        <target>Hello, World!</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
       <trans-unit id="Hide emojis in names" xml:space="preserve">
         <source>Hide emojis in names</source>
         <target>Hide emojis in names</target>
@@ -2169,12 +2174,12 @@ Switch to another account or add the private key to fully use this account.</tar
       <trans-unit id="Zapped %@" xml:space="preserve">
         <source>Zapped %@</source>
         <target>Zapped %@</target>
-        <note>No comment provided by engineer.</note>
+        <note>Text in zap button after zapping</note>
       </trans-unit>
       <trans-unit id="Zapped %@ sats %@" xml:space="preserve">
         <source>Zapped %@ sats %@</source>
         <target>Zapped %@ sats %@</target>
-        <note>No comment provided by engineer.</note>
+        <note>Text showing how many sats someone zapped, followed by fiat price</note>
       </trans-unit>
       <trans-unit id="Zapping" xml:space="preserve">
         <source>Zapping</source>
@@ -2306,6 +2311,11 @@ Message shown when a post kind (X) is not yet supported</note>
         <target>now</target>
         <note>Showing time ago when it is 'now' or 'just now'</note>
       </trans-unit>
+      <trans-unit id="possible imposter" xml:space="preserve">
+        <source>possible imposter</source>
+        <target>possible imposter</target>
+        <note>Label shown on a profile</note>
+      </trans-unit>
       <trans-unit id="post" xml:space="preserve">
         <source>post</source>
         <target>post</target>
@@ -2344,6 +2354,11 @@ Message shown when a post kind (X) is not yet supported</note>
       <trans-unit id="test" xml:space="preserve">
         <source>test</source>
         <target>test</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="test1" xml:space="preserve">
+        <source>test1</source>
+        <target>test1</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="wss://nostr.relay.url.here" xml:space="preserve">
