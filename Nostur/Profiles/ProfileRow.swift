@@ -68,7 +68,7 @@ struct ProfileRow: View {
                                 .lineLimit(1)
                             
                             if couldBeImposter {
-                                Text(verbatim: "possible imposter").font(.system(size: 12.0))
+                                Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
                                     .padding(.horizontal, 8)
                                     .background(.red)
                                     .foregroundColor(.white)

@@ -128,7 +128,7 @@ struct ProfileView: View {
                             HStack(spacing:0) {
                                 Text("\(contact.anyName) ").font(.system(size: 24, weight:.bold))
                                 if couldBeImposter {
-                                    Text(verbatim: "possible imposter").font(.system(size: 12.0))
+                                    Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
                                         .padding(.horizontal, 8)
                                         .background(.red)
                                         .foregroundColor(.white)
