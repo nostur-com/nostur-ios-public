@@ -76,6 +76,8 @@ struct ProfileOverlayCard: View {
     @State var customZapId:UUID? = nil
     @State var activeColor = Self.grey
     @State var similarPFP = false
+    @State var backlog = Backlog(timeout: 2.0, auto: true)
+    @State var lastSeen:String? = nil
     
     static let grey = Color.init(red: 113/255, green: 118/255, blue: 123/255)
     
@@ -161,6 +163,11 @@ struct ProfileOverlayCard: View {
                             }
                     }
                 }
+                
+                Text(verbatim:lastSeen ?? "Last seen:")
+                    .font(.caption).foregroundColor(.primary)
+                        .lineLimit(1)
+                    .opacity(lastSeen != nil ? 1.0 : 0)
             }
             .contentShape(Rectangle())
             .onTapGesture {
@@ -219,6 +226,33 @@ struct ProfileOverlayCard: View {
                 guard let cPic = contact.picture, let wotPic = similarContact.picture else { return }
                 similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
             }
+        }
+        .task {
+            let contactPubkey = contact.pubkey
+            let reqTask = ReqTask(prefix: "SEEN-", reqCommand: { taskId in
+                req(RM.getLastSeen(pubkey: contactPubkey, subscriptionId: taskId))
+            }, processResponseCommand: { taskId, _ in
+                DataProvider.shared().bg.perform {
+                    if let last = Event.fetchLastSeen(pubkey: contactPubkey, context: DataProvider.shared().bg) {
+                        let agoString = last.date.agoString
+                        DispatchQueue.main.async {
+                            lastSeen = String(localized: "Last seen: \(agoString) ago", comment:"Label on profile showing when last seen, example: Last seen: 10m ago")
+                        }
+                    }
+                }
+            }, timeoutCommand: { taskId in
+                DataProvider.shared().bg.perform {
+                    if let last = Event.fetchLastSeen(pubkey: contactPubkey, context: DataProvider.shared().bg) {
+                        let agoString = last.date.agoString
+                        DispatchQueue.main.async {
+                            lastSeen = String(localized: "Last seen: \(agoString) ago", comment:"Label on profile showing when last seen, example: Last seen: 10m ago")
+                        }
+                    }
+                }
+            })
+            
+            backlog.add(reqTask)
+            reqTask.fetch()
         }
         .onDisappear {
             contact.zapState = .none

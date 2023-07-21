@@ -267,6 +267,13 @@ public struct RequestMessage {
         return nil
     }
     
+    
+    static func getLastSeen(pubkey:String, subscriptionId:String? = nil) -> String {
+        return """
+["REQ", "\(subscriptionId ?? "LAST-" + UUID().uuidString)", {"authors": ["\(pubkey)"], "limit": 1}]
+"""
+    }
+    
     // Fetch anything in the tags (only e -> "ids" and p -> "authors" kind=0  (for now))
     // For when you have 1 event, and want to fetch, reply to, mentions, contacts
     static func getFastTags(_ tags:[(String, String, String?, String?)], limit:Int = 500, subscriptionId:String? = nil) -> String? {

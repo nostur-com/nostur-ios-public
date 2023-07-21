@@ -27,6 +27,8 @@ struct ProfileView: View {
     @State var limit = 10
     @State var tabOffset = 0.0
     @State var selectedSubTab = "Posts"
+    @State var backlog = Backlog(timeout: 4.0, auto: true)
+    @State var lastSeen:String? = nil
     
     init(contact:Contact, tab:String? = nil) {
         self.contact = contact
@@ -152,6 +154,11 @@ struct ProfileView: View {
                                         }
                                 }
                             }
+                            
+                            Text(verbatim:lastSeen ?? "Last seen:")
+                                .font(.caption).foregroundColor(.primary)
+                                    .lineLimit(1)
+                                .opacity(lastSeen != nil ? 1.0 : 0)
                             
                             HStack {
                                 //                                Text("@\(contact.username)").foregroundColor(.secondary)
@@ -298,6 +305,33 @@ struct ProfileView: View {
             }) else { return }
             guard let cPic = contact.picture, let wotPic = similarContact.picture else { return }
             similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
+        }
+        .task {
+            let contactPubkey = pubkey
+            let reqTask = ReqTask(prefix: "SEEN-", reqCommand: { taskId in
+                req(RM.getLastSeen(pubkey: contactPubkey, subscriptionId: taskId))
+            }, processResponseCommand: { taskId, _ in
+                DataProvider.shared().bg.perform {
+                    if let last = Event.fetchLastSeen(pubkey: contactPubkey, context: DataProvider.shared().bg) {
+                        let agoString = last.date.agoString
+                        DispatchQueue.main.async {
+                            lastSeen = String(localized: "Last seen: \(agoString) ago", comment:"Label on profile showing when last seen, example: Last seen: 10m ago")
+                        }
+                    }
+                }
+            }, timeoutCommand: { taskId in
+                DataProvider.shared().bg.perform {
+                    if let last = Event.fetchLastSeen(pubkey: contactPubkey, context: DataProvider.shared().bg) {
+                        let agoString = last.date.agoString
+                        DispatchQueue.main.async {
+                            lastSeen = String(localized: "Last seen: \(agoString) ago", comment:"Label on profile showing when last seen, example: Last seen: 10m ago")
+                        }
+                    }
+                }
+            })
+            
+            backlog.add(reqTask)
+            reqTask.fetch()
         }
     }
 }
