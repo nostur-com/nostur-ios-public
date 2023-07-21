@@ -228,6 +228,46 @@ struct ProfileOverlayCard: View {
             }
         }
         .task {
+            if (NIP05Verifier.shouldVerify(contact)) {
+                NIP05Verifier.shared.verify(contact)
+            }
+        }
+        .task {
+            guard contact.anyLud else { return }
+            do {
+                if let lud16 = contact.lud16, lud16 != "" {
+                    let response = try await LUD16.getCallbackUrl(lud16: lud16)
+                    await MainActor.run {
+                        if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                            contact.zapperPubkey = response.nostrPubkey!
+                            L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
+                        }
+                    }
+                }
+                else if let lud06 = contact.lud06, lud06 != "" {
+                    let response = try await LUD16.getCallbackUrl(lud06: lud06)
+                    await MainActor.run {
+                        if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                            contact.zapperPubkey = response.nostrPubkey!
+                            L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
+                        }
+                    }
+                }
+            }
+            catch {
+                L.og.error("problem in lnurlp \(error)")
+            }
+        }
+        .onChange(of: contact.nip05) { nip05 in
+            if (NIP05Verifier.shouldVerify(contact)) {
+                NIP05Verifier.shared.verify(contact)
+            }
+        }
+        .task {
+            EventRelationsQueue.shared.addAwaitingContact(contact)
+            req(RM.getUserProfileKinds(pubkey: contact.pubkey, kinds: [0]))
+        }
+        .task {
             let contactPubkey = contact.pubkey
             let reqTask = ReqTask(prefix: "SEEN-", reqCommand: { taskId in
                 req(RM.getLastSeen(pubkey: contactPubkey, subscriptionId: taskId))
