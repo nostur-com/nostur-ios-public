@@ -26,7 +26,7 @@ extension Date {
         } else if timeInterval >= Self.secondsInMinute {
             return String.localizedStringWithFormat("%dm", Int(timeInterval / Self.secondsInMinute))
         } else {
-            return String(localized:"now", comment: "Showing time ago when it is 'now' or 'just now'")
+            return String.localizedStringWithFormat("%ds", Int(timeInterval))
         }
     }
 }

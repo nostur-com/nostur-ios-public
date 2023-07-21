@@ -735,6 +735,15 @@ extension Event {
         }
     }
     
+    static func fetchLastSeen(pubkey:String, context:NSManagedObjectContext) -> Event? {
+        let request = NSFetchRequest<Event>(entityName: "Event")
+        request.predicate = NSPredicate(format: "pubkey == %@", pubkey)
+        request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        request.fetchLimit = 1
+        request.fetchBatchSize = 1
+        return try? context.fetch(request).first
+    }
+    
     static func fetchEvent(id:String, context:NSManagedObjectContext) throws -> Event? {
         let request = NSFetchRequest<Event>(entityName: "Event")
         //        request.entity = Event.entity()
