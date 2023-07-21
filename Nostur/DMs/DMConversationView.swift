@@ -41,8 +41,12 @@ struct DMConversationView: View {
     var contact:Contact? {
         guard let rootDM = rootDM else { return nil }
         // contact is in .pubkey or in .firstP (depending on incoming/outgoing DM.
-        if rootDM.pubkey == self.pubkey, let firstP = rootDM.firstP() {
+        // if there are multiple P's, we try lastP if firstP is same as pubkey (edge case)
+        if rootDM.pubkey == self.pubkey, let firstP = rootDM.firstP(), firstP != self.pubkey  {
             return rootDM.contacts?.first(where: { $0.pubkey == firstP })
+        }
+        else if rootDM.pubkey == self.pubkey, let lastP = rootDM.lastP(), lastP != self.pubkey  {
+            return rootDM.contacts?.first(where: { $0.pubkey == lastP })
         }
         else {
             return rootDM.contact
@@ -52,8 +56,12 @@ struct DMConversationView: View {
     var contactPubkey:String? {
         guard let rootDM = rootDM else { return nil }
         // pubkey is .pubkey or .firstP (depending on incoming/outgoing DM.)
-        if rootDM.pubkey == self.pubkey, let firstP = rootDM.firstP() {
+        // if there are multiple P's, we try lastP if firstP is same as pubkey (edge case)
+        if rootDM.pubkey == self.pubkey, let firstP = rootDM.firstP(), firstP != self.pubkey {
             return firstP
+        }
+        else if rootDM.pubkey == self.pubkey, let lastP = rootDM.lastP(), lastP != self.pubkey {
+            return lastP
         }
         else {
             return rootDM.pubkey
