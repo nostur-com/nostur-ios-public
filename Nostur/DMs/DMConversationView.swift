@@ -9,6 +9,8 @@ import SwiftUI
 import Algorithms
 
 struct DMConversationView: View {
+    @Namespace var bottom
+    
     @EnvironmentObject var ns:NosturState
     let up:Unpublisher = .shared
     
@@ -127,6 +129,8 @@ struct DMConversationView: View {
                                         }
                                     }
                                 }
+                                Color.clear.frame(height: 55)
+                                    .id(bottom)
                             }
                         header: {
                             if let contactPubkey {
@@ -250,7 +254,9 @@ struct DMConversationView: View {
                             guard let lastDay = messagesByDay.keys.sorted(by: { $0 < $1 }).last else { return }
                             guard let lastMessage = messagesByDay[lastDay]?.sorted(by: { $0.created_at < $1.created_at }).last else { return }
                             
-                            proxy.scrollTo(lastMessage.id)
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                proxy.scrollTo(bottom)
+                            }
                         }
                         .onAppear {
                             if (contact == nil) {
