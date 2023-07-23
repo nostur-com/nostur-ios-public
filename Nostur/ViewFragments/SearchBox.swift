@@ -19,6 +19,7 @@ struct SearchBox: View {
         })
         .padding(5)
         .padding(.leading, 25)
+        .padding(.trailing, 25)
         .background {
             Color("ListBackground").opacity(0.5)
                 .overlay(alignment:.leading) {
@@ -68,5 +69,6 @@ struct SearchBox_Previews: PreviewProvider {
                 }
             }
         }
+        .previewDevice(PreviewDevice(rawValue: "iPhone 14"))
     }
 }
