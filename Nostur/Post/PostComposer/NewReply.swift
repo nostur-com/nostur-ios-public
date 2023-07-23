@@ -124,6 +124,18 @@ struct NewReply: View {
                         newReply.tags.append(newRootTag)
                     }
                     
+                    let rootA = replyTo.toNEvent().replyToRootAtag()
+                    
+                    if (rootA != nil) { // ADD EXISTING "ROOT" (aTag) FROM REPLYTO
+                        let newRootATag = NostrTag(["a", rootA!.tag[1], "", "root"]) // TODO RECOMMENDED RELAY HERE
+                        newReply.tags.append(newRootATag)
+                    }
+                    else if replyTo.kind == 30023 { // ADD ONLY "ROOT" (aTag) (DIRECT REPLY TO ARTICLE)
+                        let newRootTag = NostrTag(["a", replyTo.aTag, "", "root"]) // TODO RECOMMENDED RELAY HERE
+                        newReply.tags.append(newRootTag)
+                    }
+                    
+                    
                     // ADD ALL "P" TAGS
                     let existingPtags = TagsHelpers(replyTo.tags()).pTags()
                     newReply.tags.append(contentsOf: existingPtags)
