@@ -996,7 +996,6 @@ extension Event {
         }
         
         if (event.kind == .textNote) {
-            //TODO: FIX REMAINING STEPS FOR ARTICLE REFERENCES
             
             if (event.content == "#[0]" && !event.tags.isEmpty && event.tags[0].type == "e") {
                 savedEvent.isRepost = true
@@ -1012,6 +1011,10 @@ extension Event {
                 if let dbArticle = Event.fetchReplacableEvent(aTag: replyToAtag.value, context: context) {
                     savedEvent.replyToId = dbArticle.id
                     savedEvent.replyTo = dbArticle
+                    
+                    dbArticle.addToReplies(savedEvent)
+                    dbArticle.repliesCount += 1
+                    dbArticle.repliesUpdated.send(dbArticle.replies_)
                 }
                 else {
                     // we don't have the article yet, store aTag in replyToId
@@ -1030,71 +1033,77 @@ extension Event {
                 }
                 
                 // if there is no replyTo (e or a) then the replyToRoot is the replyTo
-                // but this will be fixed in .replyTo_ not here
+                // but check first if we maybe have replyTo from e tags
             }
              
-            else { // Original replyTo/replyToRoot handling, only run this if we don't have any aTag replyTo/replyToRoot.
+            // Original replyTo/replyToRoot handling, don't overwrite aTag handling
                 
-                // THIS EVENT REPLYING TO SOMETHING
-                // CACHE THE REPLY "E" IN replyToId
-                if let replyToEtag = event.replyToEtag() {
-                    savedEvent.replyToId = replyToEtag.id
-                    
-                    // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
-                    if let replyTo = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToEtag.id) {
-                        savedEvent.replyTo = replyTo
-                        replyTo.addToReplies(savedEvent)
-                        replyTo.repliesCount += 1
-                        replyTo.repliesUpdated.send(replyTo.replies_)
-                    }
-                    else if let replyTo = try? Event.fetchEvent(id: replyToEtag.id, context: context) {
-                        savedEvent.replyTo = replyTo
-                        replyTo.addToReplies(savedEvent)
-                        replyTo.repliesCount += 1
-                        replyTo.repliesUpdated.send(replyTo.replies_)
+            // THIS EVENT REPLYING TO SOMETHING
+            // CACHE THE REPLY "E" IN replyToId
+            if let replyToEtag = event.replyToEtag(), savedEvent.replyToId == nil {
+                savedEvent.replyToId = replyToEtag.id
+                
+                // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
+                if let replyTo = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToEtag.id) {
+                    savedEvent.replyTo = replyTo
+                    replyTo.addToReplies(savedEvent)
+                    replyTo.repliesCount += 1
+                    replyTo.repliesUpdated.send(replyTo.replies_)
+                }
+                else if let replyTo = try? Event.fetchEvent(id: replyToEtag.id, context: context) {
+                    savedEvent.replyTo = replyTo
+                    replyTo.addToReplies(savedEvent)
+                    replyTo.repliesCount += 1
+                    replyTo.repliesUpdated.send(replyTo.replies_)
+                }
+            }
+            
+            // IF THE THERE IS A ROOT, AND ITS NOT THE SAME AS THE REPLY TO. AND ROOT IS NOT ALREADY SET FROM ROOTATAG
+            // DO THE SAME AS WITH THE REPLY BEFORE
+            if let replyToRootEtag = event.replyToRootEtag(), savedEvent.replyToRootId == nil {
+                savedEvent.replyToRootId = replyToRootEtag.id
+                // Need to put it in queue to fix relations for replies to root / grouped replies
+                //                EventRelationsQueue.shared.addAwaitingEvent(savedEvent, debugInfo: "saveEvent.123")
+                
+                if (savedEvent.replyToId == nil) {
+                    savedEvent.replyToId = savedEvent.replyToRootId // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
+                }
+                if let replyToRoot = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToRootEtag.id) {
+                    savedEvent.replyToRoot = replyToRoot
+                    replyToRoot.replyToRootUpdated.send(savedEvent)
+                    if (savedEvent.replyToId == savedEvent.replyToRootId) {
+                        savedEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
+                        replyToRoot.addToReplies(savedEvent)
+                        replyToRoot.repliesCount += 1
+                        replyToRoot.repliesUpdated.send(replyToRoot.replies_)
+                        savedEvent.replyToUpdated.send(replyToRoot) // TODO: This event can't have any updates, its brand new..??
                     }
                 }
-                
-                // IF THE THERE IS A ROOT, AND ITS NOT THE SAME AS THE REPLY TO
-                // DO THE SAME AS WITH THE REPLY BEFORE
-                if let replyToRootEtag = event.replyToRootEtag() {
-                    savedEvent.replyToRootId = replyToRootEtag.id
-                    // Need to put it in queue to fix relations for replies to root / grouped replies
-                    //                EventRelationsQueue.shared.addAwaitingEvent(savedEvent, debugInfo: "saveEvent.123")
-                    
-                    if (savedEvent.replyToId == nil) {
-                        savedEvent.replyToId = savedEvent.replyToRootId // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
-                    }
-                    if let replyToRoot = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToRootEtag.id) {
-                        savedEvent.replyToRoot = replyToRoot
-                        replyToRoot.replyToRootUpdated.send(savedEvent)
-                        if (savedEvent.replyToId == savedEvent.replyToRootId) {
-                            savedEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
-                            replyToRoot.addToReplies(savedEvent)
-                            replyToRoot.repliesCount += 1
-                            replyToRoot.repliesUpdated.send(replyToRoot.replies_)
-                            savedEvent.replyToUpdated.send(replyToRoot) // TODO: This event can't have any updates, its brand new..??
-                        }
-                        else {
-                            //                        savedEvent.replyToRootUpdated.send(replyToRoot) // TODO: This event can't have any updates, its brand new..??
-                        }
-                    }
-                    else if let replyToRoot = try? Event.fetchEvent(id: replyToRootEtag.id, context: context) {
-                        savedEvent.replyToRoot = replyToRoot
-                        replyToRoot.replyToRootUpdated.send(savedEvent)
-                        if (savedEvent.replyToId == savedEvent.replyToRootId) {
-                            savedEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
-                            replyToRoot.addToReplies(savedEvent)
-                            replyToRoot.repliesCount += 1
-                            replyToRoot.repliesUpdated.send(replyToRoot.replies_)
-                            //                        savedEvent.replyToUpdated.send(replyToRoot) // TODO: This event can't have any updates, its brand new..??
-                        }
-                        else {
-                            //                        savedEvent.replyToRootUpdated.send(replyToRoot) // TODO: This event can't have any updates, its brand new..??
-                        }
+                else if let replyToRoot = try? Event.fetchEvent(id: replyToRootEtag.id, context: context) {
+                    savedEvent.replyToRoot = replyToRoot
+                    replyToRoot.replyToRootUpdated.send(savedEvent)
+                    if (savedEvent.replyToId == savedEvent.replyToRootId) {
+                        savedEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
+                        replyToRoot.addToReplies(savedEvent)
+                        replyToRoot.repliesCount += 1
+                        replyToRoot.repliesUpdated.send(replyToRoot.replies_)
                     }
                 }
             }
+            
+            // Finally, we have a reply to root set from aTag, but we still don't have a replyTo
+            else if savedEvent.replyToRootId != nil, savedEvent.replyToId == nil {
+                // so set replyToRoot (aTag) as replyTo
+                savedEvent.replyToId = savedEvent.replyToRootId
+                savedEvent.replyTo = savedEvent.replyToRoot
+                
+                if let replyTo = savedEvent.replyTo {
+                    replyTo.addToReplies(savedEvent)
+                    replyTo.repliesCount += 1
+                    replyTo.repliesUpdated.send(replyTo.replies_)
+                }
+            }
+            
         }
         
         if (event.kind == .directMessage) { // needed to fetch contact in DMS: so event.firstP is in event.contacts
