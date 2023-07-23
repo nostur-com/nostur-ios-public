@@ -128,7 +128,7 @@ struct PostAndParent: View {
                 if replyTo.deletedById == nil {
                     
                     if replyTo.kind == 30023 {
-                        ArticleView(replyTo, isDetail: true, fullWidth: true)
+                        ArticleView(replyTo, isParent:true, isDetail: true, fullWidth: true)
                     }
                     else {
                         let connect:ThreadConnectDirection? = replyTo.replyToId != nil ? .both : .bottom
@@ -336,6 +336,14 @@ struct ParentPost: View {
                     }
                     
                     switch nrPost.kind {
+                    case 30023:
+                        ArticleView(nrPost, isDetail: false, fullWidth: settings.fullWidthImages, hideFooter: false)
+                            .padding(.bottom, 10)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 15)
+                                    .stroke(.regularMaterial, lineWidth: 1)
+                            )
+                            .padding(.bottom, 10)
                     case 9802: // highlight
                         HighlightRenderer(nrPost: nrPost)
                             .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
@@ -460,6 +468,12 @@ struct DetailPost: View {
         }
     
         switch nrPost.kind {
+        case 30023:
+            ArticleView(nrPost, isDetail: true, fullWidth: settings.fullWidthImages, hideFooter: false)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 15)
+                        .stroke(.regularMaterial, lineWidth: 1)
+                )
         case 9802:
             HighlightRenderer(nrPost: nrPost)
                 .padding(.top, 3)
