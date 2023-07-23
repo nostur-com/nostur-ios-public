@@ -32,8 +32,8 @@ struct NewReply: View {
                         VStack {
                             PostRowDeletable(nrPost: replyToNRPost, hideFooter: true)
                             HStack(spacing:0) {
-                                ReplyingToFragmentView(nrPost: replyToNRPost)
-                                    .offset(x:70)
+//                                ReplyingToFragmentView(nrPost: replyToNRPost)
+//                                    .offset(x:70)
                                 NewReplyingToFragment(contact: replyTo.contact, pubkey: replyTo.pubkey)
                                     .offset(x:70)
                                 Spacer()
