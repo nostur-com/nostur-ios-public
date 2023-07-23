@@ -246,11 +246,11 @@ public struct RequestMessage {
         let kindsJsonArr = JSON.shared.toString(kinds ?? [1,6,7,9735])
         if let since {
             return """
-    ["REQ", "\(subscriptionId ?? ("REF-A-"+UUID().uuidString))", {"#a": "\(aTag)", "kinds":\(kindsJsonArr), "limit": \(limit), "since": \(since.timestamp)}]
+    ["REQ", "\(subscriptionId ?? ("REF-A-"+UUID().uuidString))", {"#a": ["\(aTag)"], "kinds":\(kindsJsonArr), "limit": \(limit), "since": \(since.timestamp)}]
     """
         }
         return """
-["REQ", "\(subscriptionId ?? ("REF-A-"+UUID().uuidString))", {"#a": "\(aTag)", "kinds":\(kindsJsonArr), "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? ("REF-A-"+UUID().uuidString))", {"#a": ["\(aTag)"], "kinds":\(kindsJsonArr), "limit": \(limit)}]
 """
     }
     
