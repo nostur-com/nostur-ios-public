@@ -13,6 +13,14 @@ class NRReplyingToBuilder {
 
     func replyingToUsernamesMarkDownString(_ event:Event) -> String? {
         guard event.replyToId != nil || event.replyTo != nil else { return nil }
+        
+        if let replyTo = event.replyTo, replyTo.kind == 30023 {
+            guard let articleTitle = replyTo.articleTitle else {
+                return "Replying to article"
+            }
+            return String(localized:"Replying to: \(articleTitle)", comment: "Shown when replying to an article (Replying to: (article title)")
+        }
+        
         let tags = event.fastTags
         guard tags.count < 50 else { return String(localized:"Replying to \(tags.count) people", comment: "Shown in a post, Replying to (X) people ") }
 
