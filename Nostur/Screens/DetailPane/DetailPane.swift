@@ -38,7 +38,12 @@ struct DetailPane: View {
                                     tm.selected = t
                                     if let nrPost = tm.selected?.nrPost {
                                         EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NosturTabButton.onSelect")
-                                        req(RM.getEventReferences(ids: [nrPost.id], subscriptionId: "REALTIME-DETAIL"))
+                                        if nrPost.kind == 30023 {
+                                            req(RM.getPREventReferences(aTag: nrPost.aTag, subscriptionId: "REALTIME-DETAIL"))
+                                        }
+                                        else {
+                                            req(RM.getEventReferences(ids: [nrPost.id], subscriptionId: "REALTIME-DETAIL"))
+                                        }
                                     }
                                 },
                                 onClose: {
@@ -57,7 +62,12 @@ struct DetailPane: View {
                                         }
                                         if let nrPost = tm.selected?.nrPost {
                                             EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NosturTabButton.onClose")
-                                            req(RM.getEventReferences(ids: [nrPost.id], subscriptionId: "REALTIME-DETAIL"))
+                                            if nrPost.kind == 30023 {
+                                                req(RM.getPREventReferences(aTag: nrPost.aTag, subscriptionId: "REALTIME-DETAIL"))
+                                            }
+                                            else {
+                                                req(RM.getEventReferences(ids: [nrPost.id], subscriptionId: "REALTIME-DETAIL"))
+                                            }
                                         }
                                         else {
                                             // Close REALTIME-DETAIL subscription if the new active tab is not a nrPost
