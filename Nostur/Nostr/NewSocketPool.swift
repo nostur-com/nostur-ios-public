@@ -78,15 +78,17 @@ final class SocketPool: ObservableObject {
             guard socket.value.read else { continue }
             guard !socket.value.isNWC else { continue }
             guard !socket.value.isNC else { continue }
-            if let lastReceivedMessageAt = socket.value.lastMessageReceivedAt {
-                if Date.now.timeIntervalSince(lastReceivedMessageAt) >= 45 {
-                    L.sockets.info("\(socket.value.url) Last message older that 45 seconds, sending ping")
-                    socket.value.client.ping()
+            DispatchQueue.main.async { // Maybe fixes deadlock?
+                if let lastReceivedMessageAt = socket.value.lastMessageReceivedAt {
+                    if Date.now.timeIntervalSince(lastReceivedMessageAt) >= 45 {
+                        L.sockets.info("\(socket.value.url) Last message older that 45 seconds, sending ping")
+                        socket.value.client.ping()
+                    }
                 }
-            }
-            else {
-                L.sockets.info("\(socket.value.url) Last message = nil. (re)connecting..")
-                socket.value.connect()
+                else {
+                    L.sockets.info("\(socket.value.url) Last message = nil. (re)connecting..")
+                    socket.value.connect()
+                }
             }
         }
     }
