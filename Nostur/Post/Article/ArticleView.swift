@@ -11,12 +11,14 @@ import MarkdownUI
 struct ArticleView: View {
     @EnvironmentObject var dim:DIMENSIONS
     @ObservedObject var article:NRPost
+    var isParent = false
     var isDetail:Bool = false
     var fullWidth:Bool = false
     var hideFooter:Bool = false
     
-    init(_ article:NRPost, isDetail:Bool = false, fullWidth:Bool = false, hideFooter:Bool = false) {
+    init(_ article:NRPost, isParent:Bool = false, isDetail:Bool = false, fullWidth:Bool = false, hideFooter:Bool = false) {
         self.article = article
+        self.isParent = isParent
         self.isDetail = isDetail
         self.fullWidth = fullWidth
         self.hideFooter = hideFooter
@@ -30,6 +32,7 @@ struct ArticleView: View {
     }
     
     @State var showMiniProfile = false
+    @State var didLoad = false
     
     var body: some View {
         if isDetail {
@@ -150,42 +153,51 @@ struct ArticleView: View {
                         FooterFragmentView(nrPost: article)
                             .padding(.vertical, 10)
                     }
-                    //                ArticleCommentsPreview(article: article)
-                    
-                    // Disable comments for now because should not be on id but on naddr
-                    //                    ThreadReplies(nrPost: article)
-                    //                        .padding(.vertical, 10)
-                    //                        .onAppear {
-                    //                            DataProvider.shared().bg.perform {
-                    //                                EventRelationsQueue.shared.addAwaitingEvent(article.event, debugInfo: "ArticleView.003")
-                    //                                if (!article.missingPs.isEmpty) {
-                    //                                    QueuedFetcher.shared.enqueue(pTags: article.missingPs)
-                    //                                }
-                    //
-                    //                                // Fetch all related (e and p.kind=0)
-                    //                                // (the events and contacts mentioned in this DETAIL NOTE.
-                    //                                if let message = RM.getFastTags(article.fastTags) {
-                    //                                    SocketPool.shared.sendMessage(ClientMessage(type: .REQ, message: message))
-                    //                                }
-                    //
-                    //                                // Fetch all that reference this detail note (Replies, zaps, reactions)
-                    //                                req(RM.getEventReferences(ids: [article.id], subscriptionId: "A-DETAIL-"+UUID().uuidString))
-                    //                                // REAL TIME UPDATES FOR POST DETAIL
-                    //                                req(RM.getEventReferences(ids: [article.id], subscriptionId: "REALTIME-DETAIL", since: NTimestamp(date: Date.now)))
-                    //                            }
-                    //                        }
-                    //                        .onDisappear {
-                    //                            DataProvider.shared().bg.perform {
-                    //                                if (!article.missingPs.isEmpty) {
-                    //                                    QueuedFetcher.shared.dequeue(pTags: article.missingPs)
-                    //                                }
-                    //                            }
-                    //                        }
                 }
                 .padding(20)
+                
+                if (!isParent) {
+                    ThreadReplies(nrPost: article)
+                }
             }
             .background(Color(.secondarySystemBackground))
             .preference(key: TabTitlePreferenceKey.self, value: article.articleTitle ?? "")
+            .onAppear {  // Similar to PostDetail/PostAndParent
+                guard !didLoad else { return }
+                didLoad = true
+                
+                DataProvider.shared().bg.perform {
+                    EventRelationsQueue.shared.addAwaitingEvent(article.event, debugInfo: "ArticleView - isDetail")
+                    if (!article.missingPs.isEmpty) {
+                        QueuedFetcher.shared.enqueue(pTags: article.missingPs)
+                    }
+                    
+                    // Fetch all related (e and p.kind=0)
+                    // (the events and contacts mentioned in this DETAIL NOTE.
+                    if let message = RequestMessage.getFastTags(article.fastTags) {
+                        req(message)
+                    }
+                    
+                    // Fetch all that reference this detail note (Replies, zaps, reactions) - E:
+                    req(RM.getEventReferences(ids: [article.id], subscriptionId: "DETAIL-"+UUID().uuidString))
+                    // Same but use the a-tag (proper) // TODO: when other clients handle replies to ParaReplaceEvents properly we can remove the old E fetching
+                    req(RM.getPREventReferences(aTag: article.event.aTag, subscriptionId: "ROOT-"+UUID().uuidString))
+                    
+                    
+                    // REAL TIME UPDATES FOR ARTICLE DETAIL
+                    req(RM.getEventReferences(ids: [article.id], subscriptionId: "REALTIME-DETAIL", since: NTimestamp(date: Date.now)))
+                    
+                    // Same but use the a-tag (proper) // TODO: when other clients handle replies to ParaReplaceEvents properly we can remove the old E fetching
+                    req(RM.getPREventReferences(aTag: article.event.aTag, subscriptionId: "REALTIME-DETAIL-A", since: NTimestamp(date: Date.now)))
+                }
+            }
+            .onDisappear {
+                DataProvider.shared().bg.perform {
+                    if (!article.missingPs.isEmpty) {
+                        QueuedFetcher.shared.dequeue(pTags: article.missingPs)
+                    }
+                }
+            }
         }
         else {
             VStack(alignment: .leading, spacing:0) {
