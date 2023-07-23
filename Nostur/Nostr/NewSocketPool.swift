@@ -751,7 +751,10 @@ class NewWebSocket {
                     switch completion {
                     case .failure(let error):
                         // Handle the failure case
-                        L.sockets.info("🟪 Failure: \(error)")
+                        let _url = self.url
+                        let _error = error
+                        L.sockets.info("🟪 \(_url) Ping Failure: \(_error), trying to reconnect")
+                        self.connect(andSend:text)
                     case .finished:
                         // The ping completed successfully
                         L.sockets.info("🟪 Ping succeeded on \(self.url). Sending \(text)")
@@ -787,7 +790,8 @@ class NewWebSocket {
                         // Handle the failure case
                         let _url = self.url
                         let _error = error
-                        L.sockets.info("\(_url) Ping Failure: \(_error)")
+                        L.sockets.info("\(_url) Ping Failure: \(_error), trying to reconnect")
+                        self.connect()
                     case .finished:
                         // The ping completed successfully
                         let _url = self.url
@@ -809,16 +813,14 @@ class NewWebSocket {
         }
         L.sockets.debug("🟠🟠🏎️🔌🔌 SEND \(self.url): \(text)")
         let _ = webSocket.send(text)
-            .sink(receiveCompletion: {
-                print($0)
-                L.sockets.info("? WHAT")
+            .sink(receiveCompletion: { _ in
+                L.sockets.info("sendMessage receiveCompletion")
             }, receiveValue: {
-                print($0)
-                L.sockets.info("? WHAT OK")
+                L.sockets.info("sendMessage receiveValue")
             } )
     }
     
-    func connect() {
+    func connect(andSend:String? = nil) {
         let session = URLSession(configuration: .default, delegate: delegate, delegateQueue: socketQueue)
         let urlRequest = URLRequest(url: URL(string: url) ?? URL(string: "wss://localhost:123456/invalid_relay_url")!)
         
@@ -851,6 +853,14 @@ class NewWebSocket {
                             print("dunno")
                     }
                 })
+            
+            guard let andSend = andSend else { return }
+            let _ = webSocket.send(andSend)
+                .sink(receiveCompletion: { _ in
+                    L.sockets.info("andSend completion")
+                }, receiveValue: {
+                    L.sockets.info("andSend receiveValue")
+                } )
         }
     }
     
