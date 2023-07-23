@@ -130,10 +130,18 @@ struct DetailPane: View {
             let destination = notification.object as! NavigationDestination
             if type(of: destination.destination) == NRPost.self {
                 let p = destination.destination as! NRPost
-                let tab = TabModel(nrPost: p)
-                tm.tabs.append(tab)
-                tm.selected = tab
-                return
+                if p.kind == 30023 {
+                    let tab = TabModel(articlePath: ArticlePath(id: p.id))
+                    tm.tabs.append(tab)
+                    tm.selected = tab
+                    return
+                }
+                else {
+                    let tab = TabModel(nrPost: p)
+                    tm.tabs.append(tab)
+                    tm.selected = tab
+                    return
+                }
             }
             else if type(of: destination.destination) == Event.self {
                 let p = destination.destination as! Event

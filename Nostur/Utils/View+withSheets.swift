@@ -258,7 +258,12 @@ private struct WithSheets: ViewModifier {
                 
                 let renderer = ImageRenderer(content:
                     VStack(spacing:0) {
-                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: false, isDetail: false)
+                        if nrPost.kind == 30023 {
+                            ArticleView(nrPost, isDetail: true, fullWidth: false, hideFooter: false)
+                        }
+                        else {
+                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: false, isDetail: true)
+                        }
                         Group {
                             if SettingsStore.shared.includeSharedFrom {
                                 Text("Shared from **Nostur**")

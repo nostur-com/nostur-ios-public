@@ -65,7 +65,12 @@ extension View {
     func withNavigationDestinations() -> some View {
         return self
             .navigationDestination(for: NRPost.self) { nrPost in
-                PostDetailView(nrPost: nrPost)
+                switch nrPost.kind {
+                case 30023:
+                    ArticleView(nrPost, isDetail: true, fullWidth: SettingsStore.shared.fullWidthImages, hideFooter: false)
+                default:
+                    PostDetailView(nrPost: nrPost)
+                }
             }
             .navigationDestination(for: Naddr1Path.self) { path in
                 ArticleByNaddr(naddr1: path.naddr1, navigationTitle:path.navigationTitle)
