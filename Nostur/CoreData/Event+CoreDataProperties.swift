@@ -753,13 +753,23 @@ extension Event {
         return try context.fetch(request).first
     }
     
-    static func fetchReplacableEvent(_ kind:Int64, pubkey:String, definition:String, context:NSManagedObjectContext) throws -> Event? {
+    static func fetchReplacableEvent(_ kind:Int64, pubkey:String, definition:String, context:NSManagedObjectContext) -> Event? {
         let request = NSFetchRequest<Event>(entityName: "Event")
         request.predicate = NSPredicate(format: "kind == %d AND pubkey == %@ AND dTag == %@ AND mostRecentId == nil", kind, pubkey, definition)
         request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         request.fetchLimit = 1
         
         return try? context.fetch(request).first
+    }
+    
+    static func fetchReplacableEvent(aTag:String, context:NSManagedObjectContext) -> Event? {
+        let elements = aTag.split(separator: ":")
+        guard elements.count >= 3 else { return nil }
+        guard let kindString = elements[safe: 0], let kind = Int64(kindString) else { return nil }
+        guard let pubkey = elements[safe: 1] else { return nil }
+        guard let definition = elements[safe: 2] else { return nil }
+        
+        return Self.fetchReplacableEvent(kind, pubkey: String(pubkey), definition: String(definition), context: context)
     }
     
     static func fetchReplacableEvent(_ kind:Int64, pubkey:String, context:NSManagedObjectContext) -> Event? {
@@ -986,65 +996,7 @@ extension Event {
         }
         
         if (event.kind == .textNote) {
-            // THIS EVENT REPLYING TO SOMETHING
-            // CACHE THE REPLY "E" IN replyToId
-            if let replyToEtag = event.replyToEtag() {
-                savedEvent.replyToId = replyToEtag.id
-                                
-                // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
-                if let replyTo = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToEtag.id) {
-                    savedEvent.replyTo = replyTo
-                    replyTo.addToReplies(savedEvent)
-                    replyTo.repliesCount += 1
-                    replyTo.repliesUpdated.send(replyTo.replies_)
-                }
-                else if let replyTo = try? Event.fetchEvent(id: replyToEtag.id, context: context) {
-                    savedEvent.replyTo = replyTo
-                    replyTo.addToReplies(savedEvent)
-                    replyTo.repliesCount += 1
-                    replyTo.repliesUpdated.send(replyTo.replies_)
-                }
-            }
-            
-            // IF THE THERE IS A ROOT, AND ITS NOT THE SAME AS THE REPLY TO
-            // DO THE SAME AS WITH THE REPLY BEFORE
-            if let replyToRootEtag = event.replyToRootEtag() {
-                savedEvent.replyToRootId = replyToRootEtag.id
-                // Need to put it in queue to fix relations for replies to root / grouped replies
-//                EventRelationsQueue.shared.addAwaitingEvent(savedEvent, debugInfo: "saveEvent.123")
-                
-                if (savedEvent.replyToId == nil) {
-                    savedEvent.replyToId = savedEvent.replyToRootId // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
-                }
-                if let replyToRoot = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToRootEtag.id) {
-                    savedEvent.replyToRoot = replyToRoot
-                    replyToRoot.replyToRootUpdated.send(savedEvent)
-                    if (savedEvent.replyToId == savedEvent.replyToRootId) {
-                        savedEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
-                        replyToRoot.addToReplies(savedEvent)
-                        replyToRoot.repliesCount += 1
-                        replyToRoot.repliesUpdated.send(replyToRoot.replies_)
-                        savedEvent.replyToUpdated.send(replyToRoot) // TODO: This event can't have any updates, its brand new..??
-                    }
-                    else {
-//                        savedEvent.replyToRootUpdated.send(replyToRoot) // TODO: This event can't have any updates, its brand new..??
-                    }
-                }
-                else if let replyToRoot = try? Event.fetchEvent(id: replyToRootEtag.id, context: context) {
-                    savedEvent.replyToRoot = replyToRoot
-                    replyToRoot.replyToRootUpdated.send(savedEvent)
-                    if (savedEvent.replyToId == savedEvent.replyToRootId) {
-                        savedEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
-                        replyToRoot.addToReplies(savedEvent)
-                        replyToRoot.repliesCount += 1
-                        replyToRoot.repliesUpdated.send(replyToRoot.replies_)
-//                        savedEvent.replyToUpdated.send(replyToRoot) // TODO: This event can't have any updates, its brand new..??
-                    }
-                    else {
-//                        savedEvent.replyToRootUpdated.send(replyToRoot) // TODO: This event can't have any updates, its brand new..??
-                    }
-                }
-            }
+            //TODO: FIX REMAINING STEPS FOR ARTICLE REFERENCES
             
             if (event.content == "#[0]" && !event.tags.isEmpty && event.tags[0].type == "e") {
                 savedEvent.isRepost = true
@@ -1055,6 +1007,94 @@ extension Event {
             // Maybe slow??
             let contacts = Contact.ensureContactsCreated(event: event, context: context)
             savedEvent.addToContacts(NSSet(array: contacts))
+            
+            if let replyToAtag = event.replyToAtag() { // Comment on article
+                if let dbArticle = Event.fetchReplacableEvent(aTag: replyToAtag.value, context: context) {
+                    savedEvent.replyToId = dbArticle.id
+                    savedEvent.replyTo = dbArticle
+                }
+                else {
+                    // we don't have the article yet, store aTag in replyToId
+                    savedEvent.replyToId = replyToAtag.value
+                }
+            }
+            else if let replyToRootAtag = event.replyToRootAtag() {
+                // Comment has article as root, but replying to other comment, not to article.
+                if let dbArticle = Event.fetchReplacableEvent(aTag: replyToRootAtag.value, context: context) {
+                    savedEvent.replyToRootId = dbArticle.id
+                    savedEvent.replyToRoot = dbArticle
+                }
+                else {
+                    // we don't have the article yet, store aTag in replyToRootId
+                    savedEvent.replyToRootId = replyToRootAtag.value
+                }
+                
+                // if there is no replyTo (e or a) then the replyToRoot is the replyTo
+                // but this will be fixed in .replyTo_ not here
+            }
+             
+            else { // Original replyTo/replyToRoot handling, only run this if we don't have any aTag replyTo/replyToRoot.
+                
+                // THIS EVENT REPLYING TO SOMETHING
+                // CACHE THE REPLY "E" IN replyToId
+                if let replyToEtag = event.replyToEtag() {
+                    savedEvent.replyToId = replyToEtag.id
+                    
+                    // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
+                    if let replyTo = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToEtag.id) {
+                        savedEvent.replyTo = replyTo
+                        replyTo.addToReplies(savedEvent)
+                        replyTo.repliesCount += 1
+                        replyTo.repliesUpdated.send(replyTo.replies_)
+                    }
+                    else if let replyTo = try? Event.fetchEvent(id: replyToEtag.id, context: context) {
+                        savedEvent.replyTo = replyTo
+                        replyTo.addToReplies(savedEvent)
+                        replyTo.repliesCount += 1
+                        replyTo.repliesUpdated.send(replyTo.replies_)
+                    }
+                }
+                
+                // IF THE THERE IS A ROOT, AND ITS NOT THE SAME AS THE REPLY TO
+                // DO THE SAME AS WITH THE REPLY BEFORE
+                if let replyToRootEtag = event.replyToRootEtag() {
+                    savedEvent.replyToRootId = replyToRootEtag.id
+                    // Need to put it in queue to fix relations for replies to root / grouped replies
+                    //                EventRelationsQueue.shared.addAwaitingEvent(savedEvent, debugInfo: "saveEvent.123")
+                    
+                    if (savedEvent.replyToId == nil) {
+                        savedEvent.replyToId = savedEvent.replyToRootId // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
+                    }
+                    if let replyToRoot = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToRootEtag.id) {
+                        savedEvent.replyToRoot = replyToRoot
+                        replyToRoot.replyToRootUpdated.send(savedEvent)
+                        if (savedEvent.replyToId == savedEvent.replyToRootId) {
+                            savedEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
+                            replyToRoot.addToReplies(savedEvent)
+                            replyToRoot.repliesCount += 1
+                            replyToRoot.repliesUpdated.send(replyToRoot.replies_)
+                            savedEvent.replyToUpdated.send(replyToRoot) // TODO: This event can't have any updates, its brand new..??
+                        }
+                        else {
+                            //                        savedEvent.replyToRootUpdated.send(replyToRoot) // TODO: This event can't have any updates, its brand new..??
+                        }
+                    }
+                    else if let replyToRoot = try? Event.fetchEvent(id: replyToRootEtag.id, context: context) {
+                        savedEvent.replyToRoot = replyToRoot
+                        replyToRoot.replyToRootUpdated.send(savedEvent)
+                        if (savedEvent.replyToId == savedEvent.replyToRootId) {
+                            savedEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
+                            replyToRoot.addToReplies(savedEvent)
+                            replyToRoot.repliesCount += 1
+                            replyToRoot.repliesUpdated.send(replyToRoot.replies_)
+                            //                        savedEvent.replyToUpdated.send(replyToRoot) // TODO: This event can't have any updates, its brand new..??
+                        }
+                        else {
+                            //                        savedEvent.replyToRootUpdated.send(replyToRoot) // TODO: This event can't have any updates, its brand new..??
+                        }
+                    }
+                }
+            }
         }
         
         if (event.kind == .directMessage) { // needed to fetch contact in DMS: so event.firstP is in event.contacts
@@ -1142,6 +1182,55 @@ extension Event {
             savedEvent.addToContacts(NSSet(array: contacts))
         }
         
+        // Handle replacable event (NIP-33)
+        if (event.kind.id >= 30000 && event.kind.id < 40000) {
+            savedEvent.dTag = event.tags.first(where: { $0.type == "d" })?.value ?? ""
+            // update older events:
+            // 1. set pointer to most recent (this one)
+            // 2. set "is_update" flag on this one so it doesn't show up as new in feed
+            let r = Event.fetchRequest()
+            r.predicate = NSPredicate(format: "dTag == %@ AND kind == %d AND pubkey == %@ AND created_at < %d", savedEvent.dTag, savedEvent.kind, event.publicKey, savedEvent.created_at)
+            
+            
+            var existingArticleIds = Set<String>() // need to repoint all replies to older articles to the newest id
+            
+            if let olderEvents = try? context.fetch(r) {
+                for olderEvent in olderEvents {
+                    olderEvent.mostRecentId = savedEvent.id
+                    existingArticleIds.insert(olderEvent.id)
+                }
+                
+                if olderEvents.count > 0 {
+                    savedEvent.flags = "is_update"
+                }
+            }
+            
+            // Find existing events referencing this event (can only be replyToRootId = "3XXXX:pubkey:dTag", or replyToRootId = "<older article ids>")
+            // or same but for replyToId
+            existingArticleIds.insert(savedEvent.aTag)
+            let fr = Event.fetchRequest()
+            fr.predicate = NSPredicate(format: "replyToRootId IN %@", existingArticleIds)
+            if let existingReplies = try? context.fetch(fr) {
+                for existingReply in existingReplies {
+                    existingReply.replyToRootId = savedEvent.id
+                    existingReply.replyToRoot = savedEvent
+                }
+            }
+            
+            let fr2 = Event.fetchRequest()
+            fr2.predicate = NSPredicate(format: "replyToId IN %@", existingArticleIds)
+            if let existingReplies = try? context.fetch(fr) {
+                for existingReply in existingReplies {
+                    existingReply.replyToId = savedEvent.id
+                    existingReply.replyTo = savedEvent
+                }
+            }
+            
+        }
+        
+        
+        
+        
         
         // Use new EventRelationsQueue to fix relations
         if (event.kind == .textNote) {
@@ -1164,25 +1253,6 @@ extension Event {
             }
         }
         
-        // Handle replacable event (NIP-33)
-        if (event.kind.id >= 30000 && event.kind.id < 40000) {
-            savedEvent.dTag = event.tags.first(where: { $0.type == "d" })?.value ?? ""
-            // update older events:
-            // 1. set pointer to most recent (this one)
-            // 2. set "is_update" flag on this one so it doesn't show up as new in feed
-            let r = Event.fetchRequest()
-            r.predicate = NSPredicate(format: "dTag == %@ AND kind == %d AND pubkey == %@ AND created_at < %d", savedEvent.dTag, savedEvent.kind, event.publicKey, savedEvent.created_at)
-            
-            if let olderEvents = try? context.fetch(r) {
-                for olderEvent in olderEvents {
-                    olderEvent.mostRecentId = savedEvent.id
-                }
-                
-                if olderEvents.count > 0 {
-                    savedEvent.flags = "is_update"
-                }
-            }            
-        }
         
         return savedEvent
     }
@@ -1313,5 +1383,19 @@ extension NEvent {
             return nil
         }
         return mentionOnlyTags.first
+    }
+    
+    
+    
+    // ARTICLE/PARAMETERIZED REPLACABLE EVENTS / NIP-33 reply / root
+
+    func replyToAtag() -> NostrTag? {
+        // NIP-10: Those marked with "reply" denote the id of the reply event being responded to.
+        // The spec is for "e" but we do the same for "a"
+        return tags.first(where: { $0.type == "a" && $0.tag[safe: 3] == "reply" })
+    }
+    
+    func replyToRootAtag() -> NostrTag? {
+        return tags.first(where: { $0.type == "a" && $0.tag[safe: 3] == "root" })
     }
 }
