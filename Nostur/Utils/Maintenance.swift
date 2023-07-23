@@ -56,6 +56,7 @@ struct Maintenance {
             Self.runDeleteEventsWithoutId(context: context)
             Self.runUseDtagForReplacableEvents(context: context)
             Self.runInsertFixedNames(context: context)
+            Self.runFixArticleReplies(context: context)
         }
         // Time based migrations
     
@@ -502,6 +503,65 @@ struct Maintenance {
         
     }
     
+    // Run once to fix replies to existing replacable events
+    static func runFixArticleReplies(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.fixArticleReplies, context: context) else { return }
+        
+        // Find all posts referencing an article
+        let fr = Event.fetchRequest()
+        fr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", "[\"a\",\"30023:")
+        
+        if let articleReplies = try? context.fetch(fr) {
+            L.maintenance.debug("runFixArticleReplies: Found \(articleReplies.count) article replies")
+            for reply in articleReplies {
+                let event = reply.toNEvent()
+                
+                // The following code is similar as in .saveEvent()
+                if let replyToAtag = event.replyToAtag() { // Comment on article
+                    if let dbArticle = Event.fetchReplacableEvent(aTag: replyToAtag.value, context: context) {
+                        reply.replyToId = dbArticle.id
+                        reply.replyTo = dbArticle
+                        L.maintenance.debug("runFixArticleReplies: Fixing reply (\(reply.id)) -> \(replyToAtag.value) (article already in DB)")
+                    }
+                    else {
+                        // we don't have the article yet, store aTag in replyToId
+                        reply.replyToId = replyToAtag.value
+                        L.maintenance.debug("runFixArticleReplies: Fixing reply (\(reply.id)) -> \(replyToAtag.value) (article not in DB)")
+                    }
+                }
+                else if let replyToRootAtag = event.replyToRootAtag() {
+                    // Comment has article as root, but replying to other comment, not to article.
+                    if let dbArticle = Event.fetchReplacableEvent(aTag: replyToRootAtag.value, context: context) {
+                        reply.replyToRootId = dbArticle.id
+                        reply.replyToRoot = dbArticle
+                        L.maintenance.debug("runFixArticleReplies: Fixing replyToRoot (\(reply.id)) -> \(replyToRootAtag.value) (article already in DB)")
+                    }
+                    else {
+                        // we don't have the article yet, store aTag in replyToRootId
+                        reply.replyToRootId = replyToRootAtag.value
+                        L.maintenance.debug("runFixArticleReplies: Fixing replyToRoot (\(reply.id)) -> \(replyToRootAtag.value) (article not in DB)")
+                    }
+                }
+                
+                if reply.replyToId == nil && reply.replyToRootId != nil { // If there is a replyToRoot but not a reply, set replyToRoot as replyTo
+                    reply.replyToId = reply.replyToRootId
+                    reply.replyTo = reply.replyToRoot
+                }
+            }
+        }
+                
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.fixArticleReplies.rawValue
+        
+        do {
+            try context.save()
+        }
+        catch {
+            L.maintenance.error("🧹🧹 🔴🔴 runFixArticleReplies error on save(): \(error)")
+        }
+        
+    }
+    
     // All available migrations
     enum migrationCode:String {
         
@@ -514,6 +574,8 @@ struct Maintenance {
         // Run once to put .anyName in fixedName
         case insertFixedNames = "insertFixedNames"
         
+        // Run once to fix replies to existing replacable events
+        case fixArticleReplies = "fixArticleReplies"
         
     }
 }
