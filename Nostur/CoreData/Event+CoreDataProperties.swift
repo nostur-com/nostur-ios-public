@@ -760,16 +760,6 @@ extension Event {
         request.fetchLimit = 1
         
         return try? context.fetch(request).first
-        
-        // old:
-//        let matches = try context.fetch(request).filter({ event in
-//            if let firstD = event.firstD() {
-//                return firstD == definition
-//            }
-//            return false
-//        })
-//
-//        return matches.sorted(by: { $0.created_at > $1.created_at }).first
     }
     
     static func fetchReplacableEvent(_ kind:Int64, pubkey:String, context:NSManagedObjectContext) -> Event? {
@@ -900,14 +890,8 @@ extension Event {
     }
     
     static func saveEvent(event:NEvent, relay:String? = nil) -> Event {
-        // maybe save event should always be in background..
-//        if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
-//            print("☠️☠️☠️☠️ saveEvent")
-//        }
-        
         let context = DataProvider.shared().bg
         
-//        return context.performAndWait { // .performAndWait makes import very very slow at catch up....
         let savedEvent = Event(context: context)
         savedEvent.insertedAt = Date.now
         savedEvent.id = event.id
@@ -1066,11 +1050,6 @@ extension Event {
                 savedEvent.isRepost = true
                 savedEvent.repostForId = event.tags[0].id // repost
             }
-            
-            //            if (event.content.suffix(4) == "#[0]" && event.tags.count > 0 && event.tags[0].type == "e") {
-            //                savedEvent.isRepost = true
-            //                savedEvent.repostForId = event.tags[0].id // quote repost
-            //            }
             
             // NEw: Save all p's in .contacts
             // Maybe slow??
