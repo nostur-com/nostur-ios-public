@@ -76,8 +76,12 @@ struct PostDetailView: View {
                         .onAppear {
                             guard !didLoad else { return }
                             didLoad = true
-                            // TODO: FIX: THIS DOESNT WORK IF PARENTS ARE STILL LOADING
-                            proxy.scrollTo(nrPost.id, anchor: .top)
+                        }
+                        .onReceive(receiveNotification(.scrollToDetail)) { notification in
+                            let detailId = notification.object as! String
+                            withAnimation {
+                                proxy.scrollTo(detailId, anchor: .top)
+                            }
                         }
                         .navigationTitle(nrPost.replyToId != nil ? String(localized:"Thread", comment:"Navigation title when viewing a Thread") : String(localized:"Post.noun", comment: "Navigation title when viewing a Post"))
                         .navigationBarTitleDisplayMode(.inline)
@@ -185,6 +189,7 @@ struct PostAndParent: View {
                     }
                     else {
                         DetailPost(nrPost: nrPost)
+                            .id(nrPost.id)
                             .background(Color.systemBackground)
                             .preference(key: TabTitlePreferenceKey.self, value: nrPost.anyName)
                     }
@@ -458,6 +463,11 @@ struct DetailPost: View {
                     LazyNoteMenuButton(nrPost: nrPost)
                 }
                 .padding(.trailing, 10)
+            }
+        }
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                sendNotification(.scrollToDetail, nrPost.id)
             }
         }
         

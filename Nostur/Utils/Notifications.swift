@@ -273,4 +273,8 @@ extension Notification.Name {
     static var dismissMiniProfile: Notification.Name {
         return Notification.Name("dismissMiniProfile")
     }
+    
+    static var scrollToDetail: Notification.Name {
+        return Notification.Name("scrollToDetail")
+    }
 }
