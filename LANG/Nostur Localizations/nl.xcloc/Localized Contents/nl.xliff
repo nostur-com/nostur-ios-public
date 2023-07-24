@@ -1004,6 +1004,11 @@ Label shown when someone follows you</note>
         <target>Sleutels</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="Last seen: %@ ago" xml:space="preserve">
+        <source>Last seen: %@ ago</source>
+        <target>Laatst gezien: %@ geleden</target>
+        <note>Label on profile showing when last seen, example: Last seen: 10m ago</note>
+      </trans-unit>
       <trans-unit id="Last updated: %@" xml:space="preserve">
         <source>Last updated: %@</source>
         <note>No comment provided by engineer.</note>
@@ -1213,6 +1218,11 @@ Label for input field for badge name on Badge creation screen</note>
       <trans-unit id="NosturTabsView()" xml:space="preserve">
         <source>NosturTabsView()</source>
         <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Note: The contents of DMs is encrypted but the metadata is not. Who you send a message to and when is public." xml:space="preserve">
+        <source>Note: The contents of DMs is encrypted but the metadata is not. Who you send a message to and when is public.</source>
+        <target>Info: De inhoud van PB's is versleuteld maar de metadata niet. Aan wie je een bericht verstuurd en wanneer is openbaar.</target>
+        <note>Informational message on the DM screen</note>
       </trans-unit>
       <trans-unit id="Note: The contents of DMs is encrypted but the metadata is not. Who you send a messages to and when is public." xml:space="preserve">
         <source>Note: The contents of DMs is encrypted but the metadata is not. Who you send a messages to and when is public.</source>
@@ -1525,7 +1535,8 @@ Tab to switch to private notes</note>
       <trans-unit id="Replying to: %@" xml:space="preserve">
         <source>Replying to: %@</source>
         <target>Antwoord op: %@</target>
-        <note>Shown in a post, Replying to (names)</note>
+        <note>Shown when replying to an article (Replying to: (article title)
+Shown in a post, Replying to (names)</note>
       </trans-unit>
       <trans-unit id="Replying to: %@ and %lld others" xml:space="preserve">
         <source>Replying to: %@ and %lld others</source>
@@ -1868,6 +1879,7 @@ Button to skip adding account and use the guest account instead</note>
       </trans-unit>
       <trans-unit id="This article has been updated" xml:space="preserve">
         <source>This article has been updated</source>
+        <target>Artikel is bijgewerkt</target>
         <note>Message shown when there is a newer version available of an article</note>
       </trans-unit>
       <trans-unit id="This post" xml:space="preserve">
@@ -2129,6 +2141,8 @@ Heading</note>
       <trans-unit id="[Zap](nostur:e:%@) failed.&#10;%@" xml:space="preserve">
         <source>[Zap](nostur:e:%@) failed.
 %@</source>
+        <target>[Zap](nostur:e:%@) mislukt.
+%@</target>
         <note>Error message. don't translate the (nostur:e:...) part</note>
       </trans-unit>
       <trans-unit id="_Post deleted by %@_" xml:space="preserve">
@@ -2207,14 +2221,9 @@ Message shown when a post kind (X) is not yet supported</note>
         <target>niet-https media geblokkeerd</target>
         <note>Displayed when an image in a post is blocked</note>
       </trans-unit>
-      <trans-unit id="now" xml:space="preserve">
-        <source>now</source>
-        <target>nu</target>
-        <note>Showing time ago when it is 'now' or 'just now'</note>
-      </trans-unit>
       <trans-unit id="possible imposter" xml:space="preserve">
         <source>possible imposter</source>
-        <target>mogelijke bedrieger</target>
+        <target>mogelijke oplichter</target>
         <note>Label shown on a profile</note>
       </trans-unit>
       <trans-unit id="post" xml:space="preserve">

@@ -188,7 +188,7 @@ struct DirectMessages: View {
                     }
                     NewDMButton(showingNewDM: $showingNewDM)
                 }
-                Text("Note: The contents of DMs is encrypted but the metadata is not. Who you send a messages to and when is public.", comment:"Informational message on the DM screen")
+                Text("Note: The contents of DMs is encrypted but the metadata is not. Who you send a message to and when is public.", comment:"Informational message on the DM screen")
                     .foregroundColor(.gray)
                     .padding(.horizontal, 20)
             }

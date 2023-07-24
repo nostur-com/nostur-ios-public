@@ -1041,6 +1041,11 @@ Label shown when someone follows you</note>
         <target>Keys</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
+      <trans-unit id="Last seen: %@ ago" xml:space="preserve">
+        <source>Last seen: %@ ago</source>
+        <target>Last seen: %@ ago</target>
+        <note>Label on profile showing when last seen, example: Last seen: 10m ago</note>
+      </trans-unit>
       <trans-unit id="Last updated: %@" xml:space="preserve">
         <source>Last updated: %@</source>
         <target>Last updated: %@</target>
@@ -1289,6 +1294,11 @@ Label for input field for badge name on Badge creation screen</note>
         <source>NosturTabsView()</source>
         <target>NosturTabsView()</target>
         <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Note: The contents of DMs is encrypted but the metadata is not. Who you send a message to and when is public." xml:space="preserve">
+        <source>Note: The contents of DMs is encrypted but the metadata is not. Who you send a message to and when is public.</source>
+        <target>Note: The contents of DMs is encrypted but the metadata is not. Who you send a message to and when is public.</target>
+        <note>Informational message on the DM screen</note>
       </trans-unit>
       <trans-unit id="Note: The contents of DMs is encrypted but the metadata is not. Who you send a messages to and when is public." xml:space="preserve">
         <source>Note: The contents of DMs is encrypted but the metadata is not. Who you send a messages to and when is public.</source>
@@ -1607,7 +1617,8 @@ Tab to switch to private notes</note>
       <trans-unit id="Replying to: %@" xml:space="preserve">
         <source>Replying to: %@</source>
         <target>Replying to: %@</target>
-        <note>Shown in a post, Replying to (names)</note>
+        <note>Shown when replying to an article (Replying to: (article title)
+Shown in a post, Replying to (names)</note>
       </trans-unit>
       <trans-unit id="Replying to: %@ and %lld others" xml:space="preserve">
         <source>Replying to: %@ and %lld others</source>
@@ -2305,11 +2316,6 @@ Message shown when a post kind (X) is not yet supported</note>
         <source>non-https media blocked</source>
         <target>non-https media blocked</target>
         <note>Displayed when an image in a post is blocked</note>
-      </trans-unit>
-      <trans-unit id="now" xml:space="preserve">
-        <source>now</source>
-        <target>now</target>
-        <note>Showing time ago when it is 'now' or 'just now'</note>
       </trans-unit>
       <trans-unit id="possible imposter" xml:space="preserve">
         <source>possible imposter</source>
