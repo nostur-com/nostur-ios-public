@@ -80,15 +80,14 @@ public final class NewPostModel: ObservableObject {
                             nEvent.content += "\n\(url)"
                         }
                         
+                        nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected:self.selectedMentions)
+                        nEvent = applyMentionsNip08(nEvent, bumpIndex: quotingEvent != nil)
+                        nEvent = putHashtagsInTags(nEvent)
                         
                         if let quotingEvent {
                             nEvent.content = nEvent.content + "\n#[0]"
                             nEvent.tags.insert(NostrTag(["e", quotingEvent.id, "", "mention"]), at: 0)
                         }
-                        
-                        nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected:self.selectedMentions)
-                        nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
-                        nEvent = putHashtagsInTags(nEvent)
                         
                         if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
                             nEvent.content = replaceNsecWithHunter2(nEvent.content)
@@ -118,15 +117,16 @@ public final class NewPostModel: ObservableObject {
             
         }
         else {
+
             nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected:selectedMentions)
-            nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
+            nEvent = applyMentionsNip08(nEvent, bumpIndex: quotingEvent != nil)
             nEvent = putHashtagsInTags(nEvent)
-            
+
             if let quotingEvent {
                 nEvent.content = nEvent.content + "\n#[0]"
                 nEvent.tags.insert(NostrTag(["e", quotingEvent.id, "", "mention"]), at: 0)
             }
-            
+
             if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
                 nEvent.content = replaceNsecWithHunter2(nEvent.content)
             }
@@ -153,7 +153,7 @@ public final class NewPostModel: ObservableObject {
         var nEvent = nEvent ?? NEvent(content: "")
         
         nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected:selectedMentions)
-        nEvent = applyMentionsNip08(nEvent, bumpIndex: false)
+        nEvent = applyMentionsNip08(nEvent, bumpIndex: quotingEvent != nil)
         nEvent = putHashtagsInTags(nEvent)
         nEvent.publicKey = account.publicKey
         
