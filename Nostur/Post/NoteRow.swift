@@ -59,8 +59,8 @@ struct NoteRow: View {
 //                }
                 
                 if let firstQuote = nrPost.firstQuote {
-                    // CASE - WE REPOSTED POST ALREADY
-                    KindResolver(nrPost: firstQuote, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: missingReplyTo, isReply: isReply, isDetail:isDetail, connect: connect, grouped: grouped)
+                    // CASE - WE HAVE REPOSTED POST ALREADY
+                    KindResolver(nrPost: firstQuote, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: true, isReply: isReply, isDetail:isDetail, connect: connect, grouped: grouped)
                 }
                 else if let firstQuoteId = nrPost.firstQuoteId {
                     CenteredProgressView()
