@@ -219,26 +219,36 @@ struct ArticleView: View {
                     
                     if let summary = article.articleSummary, !summary.isEmpty {
                         Markdown(String(summary.prefix(600)))
-                        
-                        //                        Text(summary)
-                        //                            .lineLimit(15)
-                            .font(.custom("Charter", size: 18))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        //                            .clipped()
+                            .lineLimit(15)
+                            .markdownTextStyle() {
+                                FontFamily(.custom("Charter"))
+                                ForegroundColor(Color.primary)
+                                FontSize(18)
+                            }
+                            .markdownTextStyle(\.link) {
+                                ForegroundColor(Color("AccentColor"))
+                            }
+                            .markdownImageProvider(.nukeImage)
+                            .markdownInlineImageProvider(.nukeImage)
+//                            .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.vertical, 10)
                     }
                     else if let content = article.content, !content.isEmpty {
                         Markdown(String(content.prefix(600)))
                             .lineLimit(15)
-                            .font(.custom("Charter", size: 18))
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .markdownTextStyle() {
+                                FontFamily(.custom("Charter"))
+                                ForegroundColor(Color.primary)
+                                FontSize(18)
+                            }
+                            .markdownTextStyle(\.link) {
+                                ForegroundColor(Color("AccentColor"))
+                            }
+                            .markdownImageProvider(.nukeImage)
+                            .markdownInlineImageProvider(.nukeImage)
+//                            .frame(maxWidth: .infinity, alignment: .leading)
                         //                            .clipped()
                             .padding(.vertical, 10)
-                        //                        Text(content)
-                        //                            .lineLimit(15)
-                        //                            .font(.custom("Charter", size: 18))
-                        //                            .frame(maxWidth: .infinity, alignment: .leading)
-                        //                            .padding(.vertical, 10)
                     }
                     else {
                         Text("")
