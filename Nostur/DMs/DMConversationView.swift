@@ -20,6 +20,7 @@ struct DMConversationView: View {
     let dateHeaderFormatter:DateFormatter
     
     @State var text:String = ""
+    @State var didLoad = false
     
     @FetchRequest
     var theirs:FetchedResults<Event>
@@ -115,146 +116,150 @@ struct DMConversationView: View {
                     if !messagesByDay.keys.isEmpty {
                         LazyVStack(pinnedViews: [.sectionFooters]) {
                             Section {
-                                ForEach(messagesByDay.keys.sorted(by: { $0 < $1 }), id:\.self) { date in
-                                    if let messages = messagesByDay[date] {
-                                        Text(dateHeaderFormatter.string(from: date))
-                                            .font(.caption).foregroundColor(.gray)
-                                            .padding(.top, 15)
-                                        LazyVStack {
-                                            ForEach(messages.sorted(by: { $0.created_at < $1.created_at })) { event in
-                                                BalloonView(message: event.noteText,
-                                                            isSentByCurrentUser: event.pubkey == pubkey)
-                                                .id(event.id)
-                                            }
-                                        }
-                                    }
-                                }
-                                Color.clear.frame(height: 55)
-                                    .id(bottom)
-                            }
-                        header: {
-                            if let contactPubkey {
                                 VStack {
-                                    PFP(pubkey: contactPubkey, contact: contact, size: 100)
-                                        .onTapGesture { navigateTo(ContactPath(key: contactPubkey)) }
-                                    //                        ProfileBadgesContainer(pubkey: contactPubkey)
-                                    
-                                    if let contact = contact {
-                                        HStack(spacing:1) {
-                                            Text("\(contact.anyName) ").font(.headline)
-                                            if (contact.nip05veried) {
-                                                Group {
-                                                    Image(systemName: "checkmark.seal.fill")
-                                                    Text(contact.nip05domain).font(.footnote)
-                                                }.foregroundColor(Color("AccentColor"))
+                                    ForEach(messagesByDay.keys.sorted(by: { $0 < $1 }), id:\.self) { date in
+                                        if let messages = messagesByDay[date] {
+                                            VStack {
+                                                Text(dateHeaderFormatter.string(from: date))
+                                                    .font(.caption).foregroundColor(.gray)
+                                                    .padding(.top, 15)
+                                                ForEach(messages.sorted(by: { $0.created_at < $1.created_at })) { event in
+                                                    BalloonView(message: event.noteText,
+                                                                isSentByCurrentUser: event.pubkey == pubkey)
+                                                    .id(event.id)
+                                                }
                                             }
-                                        }
-                                        if (ns.followsYou(contact)) {
-                                            Text("Follows you", comment: "Label that shows if someone is following you").font(.system(size: 12))
-                                                .foregroundColor(.white)
-                                                .padding(.horizontal, 7)
-                                                .padding(.vertical, 2)
-                                                .background(Color.secondary)
-                                                .opacity(0.7)
-                                                .cornerRadius(13)
-                                        }
-                                        
-                                        Text("\n**\(contact.followingPubkeys.count)** Following", comment: "Text that shows how many people this account follows")
-                                        
-                                        
-                                        HStack {
-                                            Menu {
-                                                Button {
-                                                    UIPasteboard.general.string = contactPubkey
-                                                } label: {
-                                                    Label(String(localized:"Copy public key hex", comment:"Menu action to copy to a contacts public key in hex format to clipboard"), systemImage: "doc.on.clipboard")
-                                                }
-                                                Button {
-                                                    UIPasteboard.general.string = Contact.npub(contactPubkey)
-                                                } label: {
-                                                    Label(String(localized:"Copy npub", comment:"Menu action to copy a contacts public key in npub format to clipboard"), systemImage: "doc.on.clipboard")
-                                                }
-                                            } label: {
-                                                Image(systemName: "person.badge.key.fill")
-                                            }
-                                            ContactPrivateNoteToggle(contact: contact)
-                                            ProfileLightningButton(contact: contact)
-                                        }
-                                        
-                                        Text("\n\(String(contact.about ?? ""))")
-                                            .padding(10)
-                                    }
-                                    else {
-                                        Text("@\(npub(contactPubkey))").foregroundColor(.secondary)
-                                        HStack {
-                                            Menu {
-                                                Button {
-                                                    UIPasteboard.general.string = contactPubkey
-                                                } label: {
-                                                    Label(String(localized:"Copy public key hex", comment:"Menu action to copy to a contacts public key in hex format to clipboard"), systemImage: "doc.on.clipboard")
-                                                }
-                                                Button {
-                                                    UIPasteboard.general.string = Contact.npub(contactPubkey)
-                                                } label: {
-                                                    Label(String(localized:"Copy npub", comment:"Menu action to copy a contacts public key in npub format to clipboard"), systemImage: "doc.on.clipboard")
-                                                }
-                                            } label: {
-                                                Image(systemName: "person.badge.key.fill")
-                                            }
+                                            .id(date)
                                         }
                                     }
-                                }
-                                .task {
-                                    req(RM.getUserMetadata(pubkey: contactPubkey))
+                                    Group {
+                                        if isAccepted {
+                                            ChatInputField(message: $text) {
+                                                // Create and send DM (via unpublisher?)
+                                                guard let pk = ns.account?.privateKey else { ns.readOnlyAccountSheetShown = true; return }
+                                                guard let theirPubkey = self.theirPubkey else { return }
+                                                var nEvent = NEvent(content: text)
+                                                if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
+                                                    nEvent.content = replaceNsecWithHunter2(nEvent.content)
+                                                }
+                                                nEvent.kind = .directMessage
+                                                guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: pk, pubkey: theirPubkey, content: nEvent.content) else {
+                                                    L.og.error("🔴🔴 Could encrypt content")
+                                                    return
+                                                }
+                                                
+                                                nEvent.content = encrypted
+                                                nEvent.tags.append(NostrTag(["p", theirPubkey]))
+                                                
+                                                
+                                                if let signedEvent = try? ns.signEvent(nEvent) {
+                                                    //                        print(signedEvent.wrappedEventJson())
+                                                    up.publishNow(signedEvent)
+                                                    //                        noteCancellationId = up.publish(signedEvent)
+                                                    text = ""
+                                                }
+                                            }
+                                        }
+                                        else if let rootDM {
+                                            Divider()
+                                            Button(String(localized:"Accept message request", comment:"Button to accept a Direct Message request")) {
+                                                rootDM.objectWillChange.send()
+                                                rootDM.dmAccepted = true
+                                            }
+                                            .buttonStyle(.borderedProminent)
+                                        }
+                                    }
+                                    .padding(.vertical, 10)
+                                    Color.clear.frame(height: 25)
+                                        .id(bottom)
                                 }
                             }
-                            else { EmptyView() }
-                        } footer: {
-                            Group {
-                                if isAccepted {
-                                    ChatInputField(message: $text) {
-                                        // Create and send DM (via unpublisher?)
-                                        guard let pk = ns.account?.privateKey else { ns.readOnlyAccountSheetShown = true; return }
-                                        guard let theirPubkey = self.theirPubkey else { return }
-                                        var nEvent = NEvent(content: text)
-                                        if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
-                                            nEvent.content = replaceNsecWithHunter2(nEvent.content)
+                            header: {
+                                if let contactPubkey {
+                                    VStack {
+                                        PFP(pubkey: contactPubkey, contact: contact, size: 100)
+                                            .onTapGesture { navigateTo(ContactPath(key: contactPubkey)) }
+                                        //                        ProfileBadgesContainer(pubkey: contactPubkey)
+                                        
+                                        if let contact = contact {
+                                            HStack(spacing:1) {
+                                                Text("\(contact.anyName) ").font(.headline)
+                                                if (contact.nip05veried) {
+                                                    Group {
+                                                        Image(systemName: "checkmark.seal.fill")
+                                                        Text(contact.nip05domain).font(.footnote)
+                                                    }.foregroundColor(Color("AccentColor"))
+                                                }
+                                            }
+                                            if (ns.followsYou(contact)) {
+                                                Text("Follows you", comment: "Label that shows if someone is following you").font(.system(size: 12))
+                                                    .foregroundColor(.white)
+                                                    .padding(.horizontal, 7)
+                                                    .padding(.vertical, 2)
+                                                    .background(Color.secondary)
+                                                    .opacity(0.7)
+                                                    .cornerRadius(13)
+                                            }
+                                            
+                                            Text("\n**\(contact.followingPubkeys.count)** Following", comment: "Text that shows how many people this account follows")
+                                            
+                                            
+                                            HStack {
+                                                Menu {
+                                                    Button {
+                                                        UIPasteboard.general.string = contactPubkey
+                                                    } label: {
+                                                        Label(String(localized:"Copy public key hex", comment:"Menu action to copy to a contacts public key in hex format to clipboard"), systemImage: "doc.on.clipboard")
+                                                    }
+                                                    Button {
+                                                        UIPasteboard.general.string = Contact.npub(contactPubkey)
+                                                    } label: {
+                                                        Label(String(localized:"Copy npub", comment:"Menu action to copy a contacts public key in npub format to clipboard"), systemImage: "doc.on.clipboard")
+                                                    }
+                                                } label: {
+                                                    Image(systemName: "person.badge.key.fill")
+                                                }
+                                                ContactPrivateNoteToggle(contact: contact)
+                                                ProfileLightningButton(contact: contact)
+                                            }
+                                            
+                                            Text("\n\(String(contact.about ?? ""))")
+                                                .padding(10)
                                         }
-                                        nEvent.kind = .directMessage
-                                        guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: pk, pubkey: theirPubkey, content: nEvent.content) else {
-                                            L.og.error("🔴🔴 Could encrypt content")
-                                            return
-                                        }
-                                        
-                                        nEvent.content = encrypted
-                                        nEvent.tags.append(NostrTag(["p", theirPubkey]))
-                                        
-                                        
-                                        if let signedEvent = try? ns.signEvent(nEvent) {
-                                            //                        print(signedEvent.wrappedEventJson())
-                                            up.publishNow(signedEvent)
-                                            //                        noteCancellationId = up.publish(signedEvent)
-                                            text = ""
+                                        else {
+                                            Text("@\(npub(contactPubkey))").foregroundColor(.secondary)
+                                            HStack {
+                                                Menu {
+                                                    Button {
+                                                        UIPasteboard.general.string = contactPubkey
+                                                    } label: {
+                                                        Label(String(localized:"Copy public key hex", comment:"Menu action to copy to a contacts public key in hex format to clipboard"), systemImage: "doc.on.clipboard")
+                                                    }
+                                                    Button {
+                                                        UIPasteboard.general.string = Contact.npub(contactPubkey)
+                                                    } label: {
+                                                        Label(String(localized:"Copy npub", comment:"Menu action to copy a contacts public key in npub format to clipboard"), systemImage: "doc.on.clipboard")
+                                                    }
+                                                } label: {
+                                                    Image(systemName: "person.badge.key.fill")
+                                                }
+                                            }
                                         }
                                     }
-                                }
-                                else if let rootDM {
-                                    Divider()
-                                    Button(String(localized:"Accept message request", comment:"Button to accept a Direct Message request")) {
-                                        rootDM.objectWillChange.send()
-                                        rootDM.dmAccepted = true
+                                    .task {
+                                        req(RM.getUserMetadata(pubkey: contactPubkey))
                                     }
-                                    .buttonStyle(.borderedProminent)
                                 }
+                                else { EmptyView() }
                             }
-                            .padding(.vertical, 10)
-                        }
                         }
                         .onAppear {
+                            guard !didLoad else { return }
+                            didLoad = true
                             guard let lastDay = messagesByDay.keys.sorted(by: { $0 < $1 }).last else { return }
                             guard let lastMessage = messagesByDay[lastDay]?.sorted(by: { $0.created_at < $1.created_at }).last else { return }
                             
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
                                 proxy.scrollTo(bottom)
                             }
                         }
@@ -296,7 +301,7 @@ struct DMConversationView: View {
                     }
                 }
             }
-            .padding(.bottom, 20)
+//            .padding(.bottom, 20)
             .navigationTitle("\(contact?.authorName ?? String(localized:"DM", comment:"Navigation title for a DM conversation screen (Direct Message)"))")
             .task {
                 // TODO: CHANGE TO REALTIME DM SUBSCRIPTION
