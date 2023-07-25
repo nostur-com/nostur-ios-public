@@ -62,6 +62,7 @@ struct PostDetailView: View {
     let nrPost:NRPost
     var navTitleHidden:Bool = false
     @State var didLoad = false
+    @State var didScroll = false
     
     init(nrPost: NRPost, navTitleHidden: Bool = false) {
         self.nrPost = nrPost
@@ -78,7 +79,9 @@ struct PostDetailView: View {
                             didLoad = true
                         }
                         .onReceive(receiveNotification(.scrollToDetail)) { notification in
+                            guard !didScroll else { return }
                             let detailId = notification.object as! String
+                            didScroll = true
                             withAnimation {
                                 proxy.scrollTo(detailId, anchor: .top)
                             }
