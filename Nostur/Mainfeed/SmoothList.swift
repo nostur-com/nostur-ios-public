@@ -261,11 +261,6 @@ struct SmoothList: UIViewControllerRepresentable {
                             let tags = try result.get()
                             LinkPreviewCache.shared.setObject(for: url, value: tags)
                             L.og.info("✓✓ Loaded link preview meta tags from \(url)")
-                            if let image = tags["image"], image.prefix(7) != "http://" {
-                                imageRequests.append(ImageRequest(url: URL(string:image),
-                                                                  processors: [.resize(height: DIMENSIONS.PREVIEW_HEIGHT, upscale: true)],
-                                                                  userInfo: [.scaleKey: UIScreen.main.scale]))
-                            }
                         }
                         catch { }
                     }
@@ -319,16 +314,6 @@ struct SmoothList: UIViewControllerRepresentable {
                                                 userInfo: [.scaleKey: UIScreen.main.scale]) }
                     })
                 )
-                
-                for url in item.linkPreviewURLs.filter({ $0.absoluteString.prefix(7) != "http://" }) {
-                    if let tags = LinkPreviewCache.shared.retrieveObject(at: url) {
-                        if let image = tags["image"], image.prefix(7) != "http://" {
-                            imageRequests.append(ImageRequest(url: URL(string:image),
-                                                              processors: [.resize(height: DIMENSIONS.PREVIEW_HEIGHT, upscale: true)],
-                                                              userInfo: [.scaleKey: UIScreen.main.scale]))
-                        }
-                    }
-                }
             }
             if (!imageRequests.isEmpty) {
                 prefetcher.stopPrefetching(with: imageRequests)
