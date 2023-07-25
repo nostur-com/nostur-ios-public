@@ -674,8 +674,9 @@ class NewWebSocket {
             }
         }
         set {
-            SocketPool.shared.websocketQueue.async(flags: .barrier) {
+            SocketPool.shared.websocketQueue.sync {
                 self.delegate_ = newValue
+                self.session = URLSession(configuration: .default, delegate: self.delegate_, delegateQueue: self.socketQueue)
             }
         }
     }
@@ -736,10 +737,10 @@ class NewWebSocket {
         }
     }
     
+    var session:URLSession?
+    
     init(url:String) {
         self.url = url
-        //        connect()
-        //        startPinger()
     }
     
     func sendMessageAfterPing(_ text:String) {
@@ -756,7 +757,9 @@ class NewWebSocket {
                         let _url = self.url
                         let _error = error
                         L.sockets.info("🟪 \(_url) Ping Failure: \(_error), trying to reconnect")
-                        self.connect(andSend:text)
+                        DispatchQueue.main.async {
+                            self.connect(andSend:text)
+                        }
                     case .finished:
                         // The ping completed successfully
                         L.sockets.info("🟪 Ping succeeded on \(self.url). Sending \(text)")
@@ -793,7 +796,9 @@ class NewWebSocket {
                         let _url = self.url
                         let _error = error
                         L.sockets.info("\(_url) Ping Failure: \(_error), trying to reconnect")
-                        self.connect()
+                        DispatchQueue.main.async {
+                            self.connect()
+                        }
                     case .finished:
                         // The ping completed successfully
                         let _url = self.url
@@ -823,7 +828,7 @@ class NewWebSocket {
     }
     
     func connect(andSend:String? = nil) {
-        let session = URLSession(configuration: .default, delegate: delegate, delegateQueue: socketQueue)
+        guard let session = session else { return }
         let urlRequest = URLRequest(url: URL(string: url) ?? URL(string: "wss://localhost:123456/invalid_relay_url")!)
         
         // Create the WebSocket instance. This is the entry-point for sending and receiving messages
