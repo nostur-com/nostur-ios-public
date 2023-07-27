@@ -31,6 +31,7 @@ struct NosturVideoViewur: View {
     @State var isPlaying = false
     @State var isMuted = false
     @State var didStart = false
+    @State var isStream = false
     
     var body: some View {
         VStack {
@@ -48,6 +49,51 @@ struct NosturVideoViewur: View {
                    .centered()
                    .frame(height: fullWidth ? 600 : 250)
                    .background(Color("LightGray").opacity(0.2))
+            }
+            else if isStream {
+                MusicStreamurRepresentable(url: url, isPlaying: $isPlaying, isMuted: $isMuted)
+                    .frame(height: 75.0)
+                    .padding(.horizontal, fullWidth ? -contentPadding : 0)
+                    .overlay {
+                        if !didStart {
+                            Color.black
+                                .overlay {
+                                    Button(action: {
+                                        isPlaying = true
+                                        didStart = true
+                                        sendNotification(.startPlayingVideo, url.absoluteString)
+                                    }) {
+                                        Image(systemName:"play.circle")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 45, height: 45)
+                                            .centered()
+                                            .contentShape(Rectangle())
+                                    }
+                                }
+                        }
+                    }
+                    .overlay(alignment:.topTrailing) {
+                        Image(systemName: "music.note")
+                            .foregroundColor(.white)
+                            .fontWeight(.bold)
+                            .padding(3)
+                            .background(.black)
+                            .padding(5)
+                    }
+                    .onAppear {
+                        isMuted = false
+                    }
+                    .onReceive(receiveNotification(.startPlayingVideo)) { notification in
+                        let otherUrl = notification.object as! String
+                        if url.absoluteString != otherUrl {
+                            isPlaying = false
+                        }
+                    }
+                    .onDisappear {
+                        isPlaying = false
+                        isMuted = true
+                    }
             }
             else if videoShown {
                 if let asset, let scaledDimensions, let videoLength = videoLength {
@@ -138,8 +184,13 @@ struct NosturVideoViewur: View {
         .onAppear {
             videoShown = !SettingsStore.shared.restrictAutoDownload || isFollowing
             if videoShown {
-                Task {
-                    await loadVideo()
+                if url.absoluteString.suffix(4) == "m3u8" {
+                    isStream = true
+                }
+                else {
+                    Task {
+                        await loadVideo()
+                    }
                 }
             }
         }
@@ -193,7 +244,8 @@ struct NosturVideoViewur_Previews: PreviewProvider {
         // Use ImageDecoderRegistory to add the decoder to the
         let _ = ImageDecoderRegistry.shared.register(ImageDecoders.Video.init)
         
-        let content1 = "one image: https://nostur.com/test1.mp4 dunno"
+        let content1 = "one image: https://cdn.stemstr.app/stream/87b5962ef9e37845c72ae0fa2748e8e5b1b257274e8e2e0a8cdd5d3b5e5ff596.m3u8 dunno"
+//        let content1 = "one image: https://nostur.com/test1.mp4 dunno"
         
         let urlsFromContent = getImgUrlsFromContent(content1)
         
