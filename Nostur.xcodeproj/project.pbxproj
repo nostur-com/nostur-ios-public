@@ -21,7 +21,7 @@
 		1F056FA82A5C2F3B00578B35 /* CustomZapAmountEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F056FA72A5C2F3B00578B35 /* CustomZapAmountEntry.swift */; };
 		1F0592DC2A505531003B4B3C /* DiscoverCommunities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0592DB2A505531003B4B3C /* DiscoverCommunities.swift */; };
 		1F05FA0A2A35FDEF00DAB8E8 /* NosturVideoViewur.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F05FA092A35FDEF00DAB8E8 /* NosturVideoViewur.swift */; };
-		1F05FA0C2A35FFA400DAB8E8 /* VideoViewurReprestable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F05FA0B2A35FFA400DAB8E8 /* VideoViewurReprestable.swift */; };
+		1F05FA0C2A35FFA400DAB8E8 /* VideoViewurRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F05FA0B2A35FFA400DAB8E8 /* VideoViewurRepresentable.swift */; };
 		1F05FE7A2A1DFCDA0005A254 /* InstantFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F05FE792A1DFCDA0005A254 /* InstantFeed.swift */; };
 		1F065A9929A37A47003421D3 /* NoteZaps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F065A9829A37A47003421D3 /* NoteZaps.swift */; };
 		1F065A9B29A3E67F003421D3 /* NotificationsReactions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F065A9A29A3E67F003421D3 /* NotificationsReactions.swift */; };
@@ -288,7 +288,7 @@
 		1FCFDDBA2A284A7B0096CD84 /* FollowerNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCFDDB92A284A7B0096CD84 /* FollowerNotifier.swift */; };
 		1FCFDDBD2A2881250096CD84 /* PNotification+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCFDDBB2A2881250096CD84 /* PNotification+CoreDataClass.swift */; };
 		1FCFDDBE2A2881250096CD84 /* PNotification+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCFDDBC2A2881250096CD84 /* PNotification+CoreDataProperties.swift */; };
-		1FCFDDCB29FCC735005320B8 /* Share highlight with Nostur.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1FC7A54429FA46F000645FEF /* Share highlight with Nostur.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		1FCFDDCB29FCC735005320B8 /* Share selected text with Nostur.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1FC7A54429FA46F000645FEF /* Share selected text with Nostur.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		1FCFDDD229FCEA91005320B8 /* HighlightComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCFDDD129FCEA91005320B8 /* HighlightComposer.swift */; };
 		1FD3DE0329BE325B007E1E6E /* PrivateNoteToggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD3DE0229BE325B007E1E6E /* PrivateNoteToggle.swift */; };
 		1FD49733297FCB5E0084F14E /* PreviewHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD49732297FCB5E0084F14E /* PreviewHelper.swift */; };
@@ -361,7 +361,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				1FCFDDCB29FCC735005320B8 /* Share highlight with Nostur.appex in Embed Foundation Extensions */,
+				1FCFDDCB29FCC735005320B8 /* Share selected text with Nostur.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -381,7 +381,7 @@
 		1F056FA72A5C2F3B00578B35 /* CustomZapAmountEntry.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CustomZapAmountEntry.swift; sourceTree = "<group>"; };
 		1F0592DB2A505531003B4B3C /* DiscoverCommunities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverCommunities.swift; sourceTree = "<group>"; };
 		1F05FA092A35FDEF00DAB8E8 /* NosturVideoViewur.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturVideoViewur.swift; sourceTree = "<group>"; };
-		1F05FA0B2A35FFA400DAB8E8 /* VideoViewurReprestable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoViewurReprestable.swift; sourceTree = "<group>"; };
+		1F05FA0B2A35FFA400DAB8E8 /* VideoViewurRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoViewurRepresentable.swift; sourceTree = "<group>"; };
 		1F05FE792A1DFCDA0005A254 /* InstantFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstantFeed.swift; sourceTree = "<group>"; };
 		1F065A9829A37A47003421D3 /* NoteZaps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteZaps.swift; sourceTree = "<group>"; };
 		1F065A9A29A3E67F003421D3 /* NotificationsReactions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsReactions.swift; sourceTree = "<group>"; };
@@ -628,7 +628,7 @@
 		1FC7A49829F9389100645FEF /* NostrcheckMeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostrcheckMeService.swift; sourceTree = "<group>"; };
 		1FC7A49A29F95AD400645FEF /* ProfileByPubkey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileByPubkey.swift; sourceTree = "<group>"; };
 		1FC7A4D929F99AB100645FEF /* UniformTypeIdentifiers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UniformTypeIdentifiers.framework; path = System/Library/Frameworks/UniformTypeIdentifiers.framework; sourceTree = SDKROOT; };
-		1FC7A54429FA46F000645FEF /* Share highlight with Nostur.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Share highlight with Nostur.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		1FC7A54429FA46F000645FEF /* Share selected text with Nostur.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Share selected text with Nostur.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1FC7A54729FA46F000645FEF /* Media.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Media.xcassets; sourceTree = "<group>"; };
 		1FC7A54929FA46F000645FEF /* ActionRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionRequestHandler.swift; sourceTree = "<group>"; };
 		1FC7A54B29FA46F000645FEF /* Action.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = Action.js; sourceTree = "<group>"; };
@@ -918,7 +918,7 @@
 			isa = PBXGroup;
 			children = (
 				1F38AFF02A27166C0035641E /* VideoHelpers.swift */,
-				1F05FA0B2A35FFA400DAB8E8 /* VideoViewurReprestable.swift */,
+				1F05FA0B2A35FFA400DAB8E8 /* VideoViewurRepresentable.swift */,
 				1F05FA092A35FDEF00DAB8E8 /* NosturVideoViewur.swift */,
 			);
 			path = Video;
@@ -1235,7 +1235,7 @@
 			isa = PBXGroup;
 			children = (
 				1FB448BA2965F3D000038671 /* Nostur.app */,
-				1FC7A54429FA46F000645FEF /* Share highlight with Nostur.appex */,
+				1FC7A54429FA46F000645FEF /* Share selected text with Nostur.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1497,9 +1497,9 @@
 			productReference = 1FB448BA2965F3D000038671 /* Nostur.app */;
 			productType = "com.apple.product-type.application";
 		};
-		1FC7A54329FA46F000645FEF /* Share highlight with Nostur */ = {
+		1FC7A54329FA46F000645FEF /* Share selected text with Nostur */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1FC7A55229FA46F000645FEF /* Build configuration list for PBXNativeTarget "Share highlight with Nostur" */;
+			buildConfigurationList = 1FC7A55229FA46F000645FEF /* Build configuration list for PBXNativeTarget "Share selected text with Nostur" */;
 			buildPhases = (
 				1FC7A54029FA46F000645FEF /* Sources */,
 				1FC7A54129FA46F000645FEF /* Frameworks */,
@@ -1509,9 +1509,9 @@
 			);
 			dependencies = (
 			);
-			name = "Share highlight with Nostur";
+			name = "Share selected text with Nostur";
 			productName = "Highlight with Nostur";
-			productReference = 1FC7A54429FA46F000645FEF /* Share highlight with Nostur.appex */;
+			productReference = 1FC7A54429FA46F000645FEF /* Share selected text with Nostur.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
@@ -1558,7 +1558,7 @@
 			projectRoot = "";
 			targets = (
 				1FB448B92965F3D000038671 /* Nostur */,
-				1FC7A54329FA46F000645FEF /* Share highlight with Nostur */,
+				1FC7A54329FA46F000645FEF /* Share selected text with Nostur */,
 			);
 		};
 /* End PBXProject section */
@@ -1778,7 +1778,7 @@
 				1F740DA129AF381F00EFCCA7 /* CreateNewBadgeSheet.swift in Sources */,
 				1F83497F29DD6F980032E52B /* LRUCache2.swift in Sources */,
 				1FD3DE0329BE325B007E1E6E /* PrivateNoteToggle.swift in Sources */,
-				1F05FA0C2A35FFA400DAB8E8 /* VideoViewurReprestable.swift in Sources */,
+				1F05FA0C2A35FFA400DAB8E8 /* VideoViewurRepresentable.swift in Sources */,
 				1F7E40EA29BD9AD6003F9F71 /* PrivateNote+CoreDataClass.swift in Sources */,
 				1FDF0EDD29ED732500B56AC4 /* AnyStatus.swift in Sources */,
 				1FBE8222299A6F3D00FB41CE /* LUD16.swift in Sources */,
@@ -1913,7 +1913,7 @@
 /* Begin PBXTargetDependency section */
 		1FCFDDCD29FCC735005320B8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 1FC7A54329FA46F000645FEF /* Share highlight with Nostur */;
+			target = 1FC7A54329FA46F000645FEF /* Share selected text with Nostur */;
 			targetProxy = 1FCFDDCC29FCC735005320B8 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -1995,10 +1995,13 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MACOSX_DEPLOYMENT_TARGET = 12.4;
 				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -2053,9 +2056,12 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MACOSX_DEPLOYMENT_TARGET = 12.4;
 				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 			};
@@ -2065,6 +2071,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 1F9D69D82A3077F400628460 /* Config.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Nostur/Nostur.entitlements;
@@ -2094,14 +2101,14 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 13.1;
+				MACOSX_DEPLOYMENT_TARGET = 12.4;
 				MARKETING_VERSION = 1.5.0;
 				PRODUCT_BUNDLE_IDENTIFIER = nostur.com.Nostur;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = YES;
-				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -2112,6 +2119,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 1F9D69D82A3077F400628460 /* Config.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Nostur/Nostur.entitlements;
@@ -2141,14 +2149,14 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 13.1;
+				MACOSX_DEPLOYMENT_TARGET = 12.4;
 				MARKETING_VERSION = 1.5.0;
 				PRODUCT_BUNDLE_IDENTIFIER = nostur.com.Nostur;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = YES;
-				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -2165,15 +2173,16 @@
 				DEVELOPMENT_TEAM = 5T4GDWX88Z;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Highlight with Nostur/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "Share highlight with Nostur";
+				INFOPLIST_KEY_CFBundleDisplayName = "Share selected text with Nostur";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				"IPHONEOS_DEPLOYMENT_TARGET[sdk=macosx*]" = 12.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.4.0;
+				MARKETING_VERSION = 1.5.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "nostur.com.Nostur.Share-highlight-with-Nostur";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -2195,15 +2204,16 @@
 				DEVELOPMENT_TEAM = 5T4GDWX88Z;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Highlight with Nostur/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "Share highlight with Nostur";
+				INFOPLIST_KEY_CFBundleDisplayName = "Share selected text with Nostur";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				"IPHONEOS_DEPLOYMENT_TARGET[sdk=macosx*]" = 12.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.4.0;
+				MARKETING_VERSION = 1.5.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "nostur.com.Nostur.Share-highlight-with-Nostur";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -2237,7 +2247,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		1FC7A55229FA46F000645FEF /* Build configuration list for PBXNativeTarget "Share highlight with Nostur" */ = {
+		1FC7A55229FA46F000645FEF /* Build configuration list for PBXNativeTarget "Share selected text with Nostur" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1FC7A55329FA46F000645FEF /* Debug */,

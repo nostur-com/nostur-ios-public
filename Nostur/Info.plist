@@ -30,7 +30,7 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSMinimumSystemVersion</key>
-	<string>13.2.0</string>
+	<string>12.4.0</string>
 	<key>NOSTRCHECK_PUBLIC_API_KEY</key>
 	<string>$(NOSTRCHECK_PUBLIC_API_KEY)</string>
 	<key>NSAppTransportSecurity</key>
@@ -62,7 +62,7 @@
 		<string>LaunchScreen</string>
 	</dict>
 	<key>NOSTUR_IS_DESKTOP</key>
-    <string>$(NOSTUR_IS_DESKTOP)</string>
+	<string>$(NOSTUR_IS_DESKTOP)</string>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>
