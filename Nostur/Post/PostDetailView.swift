@@ -356,7 +356,7 @@ struct ParentPost: View {
                         HighlightRenderer(nrPost: nrPost)
                             .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                     case 1,6,9734: // text, repost, zap request
-                        ContentRenderer(nrPost: nrPost, isDetail: true, availableWidth: dim.availablePostDetailRowImageWidth())
+                        ContentRenderer(nrPost: nrPost, isDetail: true, availableWidth: dim.availablePostDetailRowImageWidth() - 20)
                             .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                             .contentShape(Rectangle())
                             .onTapGesture {
@@ -369,7 +369,7 @@ struct ParentPost: View {
                             .centered()
                             .frame(maxWidth: .infinity)
                             .background(Color("LightGray").opacity(0.2))
-                        ContentRenderer(nrPost: nrPost, isDetail: true, availableWidth: dim.availablePostDetailRowImageWidth())
+                        ContentRenderer(nrPost: nrPost, isDetail: true, availableWidth: dim.availablePostDetailRowImageWidth() - 20 )
                             .padding(.trailing, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                             .contentShape(Rectangle())
                             .onTapGesture {
