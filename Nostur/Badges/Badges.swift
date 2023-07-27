@@ -160,7 +160,7 @@ extension Event {
         get {
             guard let aTag = tags().first(where: { $0.type == "a" }) else { return nil }
             let badgeATag = BadgeATag(aTag)
-            if let definitionEvent = try? Event.fetchReplacableEvent(badgeATag.kind, pubkey: badgeATag.pubkey, definition: badgeATag.badgeCode, context: managedObjectContext!) {
+            if let definitionEvent = Event.fetchReplacableEvent(badgeATag.kind, pubkey: badgeATag.pubkey, definition: badgeATag.badgeCode, context: managedObjectContext!) {
                 return definitionEvent
             }
             return nil
@@ -213,7 +213,7 @@ extension Event {
             for index in nTags.indices {
                 if nTags[index].type == "a" { //  ["a", "30009:alice:bravery"],
                     let aTag = BadgeATag(nTags[index])
-                    if let definitionEvent = try? Event.fetchReplacableEvent(aTag.kind, pubkey: aTag.pubkey, definition: aTag.badgeCode, context: managedObjectContext!) {
+                    if let definitionEvent = Event.fetchReplacableEvent(aTag.kind, pubkey: aTag.pubkey, definition: aTag.badgeCode, context: managedObjectContext!) {
                         badgeCollector = (definitionEvent, nTags[index], nil)
                     }
                     else {
