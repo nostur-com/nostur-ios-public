@@ -257,7 +257,7 @@ struct DMConversationView: View {
                             guard !didLoad else { return }
                             didLoad = true
                             guard let lastDay = messagesByDay.keys.sorted(by: { $0 < $1 }).last else { return }
-                            guard let lastMessage = messagesByDay[lastDay]?.sorted(by: { $0.created_at < $1.created_at }).last else { return }
+                            guard (messagesByDay[lastDay]?.sorted(by: { $0.created_at < $1.created_at }).last) != nil else { return }
                             
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
                                 proxy.scrollTo(bottom)
