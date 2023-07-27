@@ -121,7 +121,7 @@ struct Search: View {
                         contacts.nsPredicate = NSPredicate(value: false)
                         
                         DataProvider.shared().bg.perform {
-                            if let article = try? Event.fetchReplacableEvent(kind,
+                            if let article = Event.fetchReplacableEvent(kind,
                                                                              pubkey: pubkey,
                                                                              definition: definition,
                                                                              context: DataProvider.shared().bg) {
@@ -138,7 +138,7 @@ struct Search: View {
                                     },
                                     processResponseCommand: { taskId, _ in
                                         DataProvider.shared().bg.perform {
-                                            if let article = try? Event.fetchReplacableEvent(kind,
+                                            if let article = Event.fetchReplacableEvent(kind,
                                                                                              pubkey: pubkey,
                                                                                              definition: definition,
                                                                                              context: DataProvider.shared().bg) {
@@ -157,7 +157,7 @@ struct Search: View {
                                                 let ctx = DataProvider.shared().bg
                                                 await ctx.perform {
                                                     // If we don't have the event after X seconds, fetch from relay hint
-                                                    if (try? Event.fetchReplacableEvent(kind, pubkey: pubkey, definition: definition, context: DataProvider.shared().bg)) == nil {
+                                                    if (Event.fetchReplacableEvent(kind, pubkey: pubkey, definition: definition, context: DataProvider.shared().bg)) == nil {
                                                         if let relay = naddr.relays.first {
                                                             EphemeralSocketPool
                                                                 .shared

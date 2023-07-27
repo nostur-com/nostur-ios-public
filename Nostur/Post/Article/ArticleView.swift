@@ -429,7 +429,7 @@ struct ArticleView_Previews: PreviewProvider {
                let kind = naddr.kind,
                let pubkey = naddr.pubkey,
                let definition = naddr.eventId,
-               let article = try? Event.fetchReplacableEvent(kind,
+               let article = Event.fetchReplacableEvent(kind,
                                                              pubkey: pubkey,
                                                              definition: definition,
                                                              context: DataProvider.shared().viewContext)

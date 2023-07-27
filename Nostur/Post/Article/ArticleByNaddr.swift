@@ -36,7 +36,7 @@ struct ArticleByNaddr: View {
                                let pubkey = naddr.pubkey,
                                let definition = naddr.eventId
                             {
-                                if let article = try? Event.fetchReplacableEvent(kind,
+                                if let article = Event.fetchReplacableEvent(kind,
                                                                                  pubkey: pubkey,
                                                                                  definition: definition,
                                                                                  context: DataProvider.shared().bg) {
@@ -53,7 +53,7 @@ struct ArticleByNaddr: View {
                                         },
                                         processResponseCommand: { taskId, _ in
                                             DataProvider.shared().bg.perform {
-                                                if let article = try? Event.fetchReplacableEvent(kind,
+                                                if let article = Event.fetchReplacableEvent(kind,
                                                                                                  pubkey: pubkey,
                                                                                                  definition: definition,
                                                                                                  context: DataProvider.shared().bg) {
