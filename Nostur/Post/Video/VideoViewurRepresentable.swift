@@ -8,7 +8,7 @@
 import SwiftUI
 import AVKit
 
-struct VideoViewurReprestable: UIViewRepresentable {
+struct VideoViewurRepresentable: UIViewRepresentable {
     typealias UIViewType = UIView
     
     @State var asset:AVAsset
