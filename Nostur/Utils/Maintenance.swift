@@ -166,7 +166,7 @@ struct Maintenance {
             
             
             
-            // KIND 1,6
+            // KIND 1,4,6,9802,30023
             // OLDER THAN X DAYS
             // IS NOT BOOKMARKED
             // IS NOT OWN EVENT
@@ -178,7 +178,7 @@ struct Maintenance {
             let mergedIds = Set(ownAccountBookmarkIds).union(Set(ownAccountPrivateNoteEventIds)).union(postsIdToKeep)
             
             let fr16 = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
-            fr16.predicate = NSPredicate(format: "created_at < %i AND kind IN {1,6,9802,30023} AND NOT id IN %@ AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), mergedIds, ownAccountPubkeys, regex)
+            fr16.predicate = NSPredicate(format: "created_at < %i AND kind IN {1,4,6,9802,30023} AND NOT id IN %@ AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), mergedIds, ownAccountPubkeys, regex)
             
             let fr16batchDelete = NSBatchDeleteRequest(fetchRequest: fr16)
             fr16batchDelete.resultType = .resultTypeCount
@@ -186,10 +186,10 @@ struct Maintenance {
             do {
                 let result = try context.execute(fr16batchDelete) as! NSBatchDeleteResult
                 if ((result.result as? Int ?? 0) > 0) {
-                    L.maintenance.info("🧹🧹 Deleted \(result.result.debugDescription) kind {1,6,1,6,9802,30023} events")
+                    L.maintenance.info("🧹🧹 Deleted \(result.result.debugDescription) kind {1,4,6,9802,30023} events")
                 }
             } catch {
-                L.maintenance.info("🔴🔴 Failed to delete {1,6,1,9802,30023} data")
+                L.maintenance.info("🔴🔴 Failed to delete {1,4,6,9802,30023} data")
             }
             
             
@@ -219,7 +219,7 @@ struct Maintenance {
                     L.maintenance.info("🧹🧹 Deleted \(result.result.debugDescription) kind {9734,8,7} events")
                 }
             } catch {
-                L.maintenance.info("🔴🔴 Failed to delete 9734,7,8 data")
+                L.maintenance.info("🔴🔴 Failed to delete 9734,8,7 data")
             }
             //            }
             
@@ -246,7 +246,7 @@ struct Maintenance {
                     L.maintenance.info("🧹🧹 Deleted \(result.result.debugDescription) kind 9735 events")
                 }
             } catch {
-                L.maintenance.info("🔴🔴 Failed to delete 9734 data")
+                L.maintenance.info("🔴🔴 Failed to delete 9735 data")
             }
             //            }
             
@@ -310,7 +310,7 @@ struct Maintenance {
             
             do {
                 if !forDeletion.isEmpty {
-                    L.maintenance.info("🧹🧹 Deleted \(forDeletion.count) kind 3 events")
+                    L.maintenance.info("🧹🧹 Deleted \(forDeletion.count) kind 3,10002 events")
                 }
                 try context.save()
             }
