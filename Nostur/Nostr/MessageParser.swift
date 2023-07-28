@@ -28,7 +28,7 @@ class MessageParser {
                     L.sockets.debug("\(relayUrl): \(message.message)")
                     if message.success ?? false {
                         if let id = message.id {
-                            Event.updateRelays(id, relay: message.relay)
+                            Event.updateRelays(id, relays: message.relays)
                         }
                     }
                 case .NOTICE:
@@ -48,10 +48,13 @@ class MessageParser {
                     if (message.type == .EVENT) {
                         guard let nEvent = message.event else { L.sockets.info("🔴🔴 uhh, where is nEvent "); return }
                         
-                        let sameMessageInQueue = self.messageBucket.contains(where: { // TODO: Instruments: slow here...
+                        
+                        let sameMessageInQueue = self.messageBucket.first(where: { // TODO: Instruments: slow here...
                              nEvent.id == $0.event?.id && $0.type == .EVENT
                         })
-                        if (sameMessageInQueue) {
+                        
+                        if let sameMessageInQueue {
+                            sameMessageInQueue.relays = sameMessageInQueue.relays + " " + message.relays
                             return
                         }
                         else {

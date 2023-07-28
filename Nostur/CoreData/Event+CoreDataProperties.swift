@@ -865,7 +865,7 @@ extension Event {
         return zapRequest
     }
     
-    static func updateRelays(_ id:String, relay: String) {
+    static func updateRelays(_ id:String, relays: String) {
         let request = NSFetchRequest<Event>(entityName: "Event")
         request.entity = Event.entity()
         request.predicate = NSPredicate(format: "id == %@", id)
@@ -875,9 +875,10 @@ extension Event {
         let bg = DataProvider.shared().bg
         bg.perform { 
             if let event = try? bg.fetch(request).first {
-                var relays = event.relays.split(separator: " ").map { String($0) }
-                relays.append(relay)
-                let uniqueRelays = Set(relays)
+                var existingRelays = event.relays.split(separator: " ").map { String($0) }
+                let newRelays = relays.split(separator: " ").map { String($0) }
+                existingRelays.append(contentsOf: newRelays)
+                let uniqueRelays = Set(existingRelays)
                 event.relays = uniqueRelays.joined(separator: " ")
                 event.relaysUpdated.send(event.relays)
                 if bg.hasChanges {
@@ -892,14 +893,14 @@ extension Event {
         }
     }
     
-    static func saveEventFromMain(event:NEvent, relay:String? = nil) -> Event {
+    static func saveEventFromMain(event:NEvent, relays:String? = nil) -> Event {
         let context = DataProvider.shared().bg
         return context.performAndWait {
-            Event.saveEvent(event: event, relay: relay)
+            Event.saveEvent(event: event, relays: relays)
         }
     }
     
-    static func saveEvent(event:NEvent, relay:String? = nil) -> Event {
+    static func saveEvent(event:NEvent, relays:String? = nil) -> Event {
         let context = DataProvider.shared().bg
         
         let savedEvent = Event(context: context)
@@ -919,7 +920,11 @@ extension Event {
             savedEvent.contact = Contact.fetchByPubkey(event.publicKey, context: context)
         }
         savedEvent.tagsSerialized = TagSerializer.shared.encode(tags: event.tags)
-        savedEvent.relays = relay ?? ""
+        
+        if let relays = relays?.split(separator: " ").map({ String($0) }) {
+            let uniqueRelays = Set(relays)
+            savedEvent.relays = uniqueRelays.joined(separator: " ")
+        }
         
         if event.kind == .profileBadges {
             savedEvent.contact?.objectWillChange.send()

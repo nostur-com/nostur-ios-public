@@ -30,7 +30,7 @@ struct ClientMessage {
 }
 
 // Messages received from relay EVENT/EOSE/NOTICE
-struct RelayMessage {
+class RelayMessage {
     
     enum type:String {
         case EVENT
@@ -46,7 +46,7 @@ struct RelayMessage {
         case FAILED_TO_PARSE_EVENT // Could parse raw websocket but not event
     }
     
-    var relay:String
+    var relays:String // space seperated relays
     var type:RelayMessage.type?
     var message:String
     var subscriptionId:String?
@@ -54,6 +54,18 @@ struct RelayMessage {
     
     var id:String?
     var success:Bool?
+    
+    init(relays:String, type: RelayMessage.type? = nil, message: String, subscriptionId: String? = nil,
+         id:String? = nil, success:Bool? = nil, event:NEvent? = nil) {
+        self.relays = relays
+        self.type = type
+        self.message = message
+        self.subscriptionId = subscriptionId
+        self.event = event
+        
+        self.id = id
+        self.success = success
+    }
     
     static func parseRelayMessage(text:String, relay:String, skipValidation:Bool = false) throws -> RelayMessage {
         guard let dataFromString = text.data(using: .utf8, allowLossyConversion: false) else {
@@ -65,15 +77,15 @@ struct RelayMessage {
             guard let eose = try? decoder.decode(NMessage.self, from: dataFromString) else {
                 throw error.FAILED_TO_PARSE
             }
-            return RelayMessage(relay:relay, type: .EOSE, message: text, subscriptionId: eose.subscription)
+            return RelayMessage(relays:relay, type: .EOSE, message: text, subscriptionId: eose.subscription)
         }
         
         guard text.prefix(7) != ###"["AUTH""### else {
-            return RelayMessage(relay:relay, type: .AUTH, message: text)
+            return RelayMessage(relays:relay, type: .AUTH, message: text)
         }
         
         guard text.prefix(9) != ###"["NOTICE""### else {
-            return RelayMessage(relay:relay, type: .NOTICE, message: text)
+            return RelayMessage(relays:relay, type: .NOTICE, message: text)
         }
         
         guard text.prefix(5) != ###"["OK""### else {
@@ -81,7 +93,7 @@ struct RelayMessage {
             guard let result = try? decoder.decode(CommandResult.self, from: dataFromString) else {
                 throw error.FAILED_TO_PARSE
             }
-            return RelayMessage(relay:relay, type: .OK, message: text, id:result.id, success:result.success)
+            return RelayMessage(relays:relay, type: .OK, message: text, id:result.id, success:result.success)
         }
         
         guard text.prefix(8) == ###"["EVENT""### else {
@@ -102,7 +114,7 @@ struct RelayMessage {
             throw "🔴🔴🔴 NO VALID SIG 🔴🔴🔴 "
         }
         
-        return RelayMessage(relay:relay, type: .EVENT, message: text, subscriptionId: relayMessage.subscription, event: nEvent)
+        return RelayMessage(relays:relay, type: .EVENT, message: text, subscriptionId: relayMessage.subscription, event: nEvent)
     }
 }
 
