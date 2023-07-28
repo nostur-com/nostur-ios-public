@@ -207,6 +207,7 @@ class Importer {
                                 FollowingGuardian.shared.didReceiveContactListThisSession = true
                             }
                         }
+                        Event.updateRelays(event.id, relays: message.relays)
                         continue
                     }
                     
@@ -217,6 +218,7 @@ class Importer {
                                 FollowingGuardian.shared.didReceiveContactListThisSession = true
                             }
                         }
+                        Event.updateRelays(event.id, relays: message.relays)
                         continue
                     }
                     // Skip if we already have a newer kind 3
@@ -242,10 +244,10 @@ class Importer {
                         }
                         else if let noteInNote = try? decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
                             if !Event.eventExists(id: noteInNote.id, context: context) {
-                                _ = Event.saveEvent(event: noteInNote)
+                                _ = Event.saveEvent(event: noteInNote, relays: message.relays)
                             }
                             else {
-                                //                                print("🔴 noteInNote already in db")
+                                Event.updateRelays(noteInNote.id, relays: message.relays)
                             }
                             event.content = "#[0]"
                             event.tags.insert(NostrTag(["e", noteInNote.id, "", "mention"]), at: 0)
@@ -276,7 +278,7 @@ class Importer {
                         }
                     }
                     
-                    let savedEvent = Event.saveEvent(event: event, relay: message.relay)
+                    let savedEvent = Event.saveEvent(event: event, relays: message.relays)
                     saved = saved + 1
                     if let subscriptionId = message.subscriptionId {
                         subscriptionIds.insert(subscriptionId)
