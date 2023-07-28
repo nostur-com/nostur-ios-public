@@ -205,6 +205,7 @@
 		1F9AE7552A4E8BAC009D093E /* NSecBunkerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9AE7542A4E8BAB009D093E /* NSecBunkerManager.swift */; };
 		1F9DC3A82A28E35900119D73 /* NewFollowersNotificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9DC3A72A28E35900119D73 /* NewFollowersNotificationView.swift */; };
 		1F9FFD8B2A11F41E002E319C /* NoteHeaderViewEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9FFD8A2A11F41E002E319C /* NoteHeaderViewEvent.swift */; };
+		1FA0599D2A7414320039643C /* RelayMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA0599C2A7414320039643C /* RelayMessage.swift */; };
 		1FA3AB242A4E17070059F6B7 /* NIP46SecretManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA3AB232A4E17070059F6B7 /* NIP46SecretManager.swift */; };
 		1FA51FF62978441200FE60EF /* Relay+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */; };
 		1FA51FF72978441200FE60EF /* Relay+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA51FF52978441200FE60EF /* Relay+CoreDataProperties.swift */; };
@@ -565,6 +566,7 @@
 		1F9D69D82A3077F400628460 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = SOURCE_ROOT; };
 		1F9DC3A72A28E35900119D73 /* NewFollowersNotificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewFollowersNotificationView.swift; sourceTree = "<group>"; };
 		1F9FFD8A2A11F41E002E319C /* NoteHeaderViewEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteHeaderViewEvent.swift; sourceTree = "<group>"; };
+		1FA0599C2A7414320039643C /* RelayMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayMessage.swift; sourceTree = "<group>"; };
 		1FA3AB232A4E17070059F6B7 /* NIP46SecretManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP46SecretManager.swift; sourceTree = "<group>"; };
 		1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Relay+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1FA51FF52978441200FE60EF /* Relay+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Relay+CoreDataProperties.swift"; sourceTree = "<group>"; };
@@ -1043,6 +1045,7 @@
 				1F8B134A297B3551002EB8CF /* NIP19.swift */,
 				1FC78F6829CA28940009C1C7 /* NKeys.swift */,
 				1F71037C296BD9DE006245CC /* Nostr.swift */,
+				1FA0599C2A7414320039643C /* RelayMessage.swift */,
 				1F75257D2996A1A900477AF2 /* Unpublisher.swift */,
 				1F0A25552A3E139E00178A5C /* WebOfTrust.swift */,
 			);
@@ -1608,6 +1611,7 @@
 				1FF8BD1429D444D900C8C96A /* ProcessingStatus.swift in Sources */,
 				1F7C65BF29A14BA4009FF3EA /* Zaps.swift in Sources */,
 				1F3E135B29C8B21200D076EA /* Contact+PrivateNotes.swift in Sources */,
+				1FA0599D2A7414320039643C /* RelayMessage.swift in Sources */,
 				1F8B1365297B3BE8002EB8CF /* ContactProfile.swift in Sources */,
 				1F33EC3929B6849800615FB9 /* Centered.swift in Sources */,
 				1F810B2E29E65639006B1614 /* TermsAndConditions.swift in Sources */,
