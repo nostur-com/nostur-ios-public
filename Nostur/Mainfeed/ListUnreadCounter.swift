@@ -53,7 +53,7 @@ struct ListUnreadCounter: View {
 
 struct Previews_ListUnreadCounter_PreviewsWrapper: View {
     
-    @StateObject var lvm = LVM(pubkeys: [], listId: "Explore")
+    @StateObject var lvm = LVM(type: .pubkeys, pubkeys: [], listId: "Explore")
     
     var body: some View {
         VStack {

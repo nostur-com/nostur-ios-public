@@ -53,6 +53,16 @@ class LVM: NSObject, ObservableObject {
     var uuid = UUID().uuidString
     var name:String = "" // for debugging
     
+    enum ListType:String, Identifiable, Hashable {
+        case pubkeys = "pubkeys"
+        case relays = "relays"
+        
+        var id:String {
+            String(self.rawValue)
+        }
+    }
+    
+    let type:ListType
     var listStateObjectId:NSManagedObjectID?
     var pubkey:String?
     var pubkeys:Set<String> {
@@ -60,6 +70,11 @@ class LVM: NSObject, ObservableObject {
             L.lvm.info("\(self.id) \(self.name) - pubkeys.count \(oldValue.count) -> \(self.pubkeys.count)")
         }
     }
+    
+    // TODO: Switch entire SocketPool .sockets to bg context, so we don't have to deal with viewContext relays
+    var relays:Set<Relay> = []
+    var bgRelays:Set<Relay> = []
+    
     @Published var hideReplies = false {
         didSet {
             guard oldValue != hideReplies else { return }
@@ -89,6 +104,9 @@ class LVM: NSObject, ObservableObject {
             if oldValue != selectedSubTab && viewIsVisible {
                 self.didAppear()
             }
+            else if oldValue != selectedSubTab && !viewIsVisible {
+                self.didDisappear()
+            }
         }
     }
     var selectedListId = "" {
@@ -96,11 +114,21 @@ class LVM: NSObject, ObservableObject {
             if oldValue != selectedListId && viewIsVisible {
                 self.didAppear()
             }
+            else if oldValue != selectedListId && !viewIsVisible {
+                self.didDisappear()
+            }
         }
     }
     
     var restoreScrollToId:String? = nil
     var initialIndex:Int = 0 // derived from restoreScrollToId's index
+    
+    func didDisappear() {
+        if type == .relays {
+            L.lvm.info("\(self.id) \(self.name) - Closing subscriptions for .relays tab");
+            SocketPool.shared.closeSubscription(self.id)
+        }
+    }
     
     func didAppear() {
         guard instantFinished else {
@@ -505,15 +533,25 @@ class LVM: NSObject, ObservableObject {
     
     var instantFeed = InstantFeed()
     
-    init(pubkey:String? = nil, pubkeys:Set<String>, listId:String, name:String = "") {
+    init(type:ListType, pubkey:String? = nil, pubkeys:Set<String>, listId:String, name:String = "", relays:Set<Relay> = []) {
+        self.type = type
         self.name = name
         self.pubkey = pubkey
         self.pubkeys = pubkeys
+
         self.id = listId
         super.init()
-        
+
         let ctx = DataProvider.shared().viewContext
         let bg = DataProvider.shared().bg
+        if type == .relays {
+            self.relays = relays // viewContext relays
+            SocketPool.shared.connectFeedRelays(relays: relays)
+            bg.performAndWait {
+                let relays = relays.map { bg.object(with: $0.objectID) as! Relay }
+                self.bgRelays = Set(relays) // bgContext relays
+            }
+        }
         var ls:ListState?
         if let pubkey {
             ls = ListState.fetchListState(pubkey, listId: listId, context: ctx)
@@ -585,6 +623,9 @@ class LVM: NSObject, ObservableObject {
         if id == "Following", let pubkey {
             instantFeed.start(pubkey, onComplete: completeInstantFeed)
         }
+        else if type == .relays {
+            instantFeed.start(bgRelays, onComplete: completeInstantFeed)
+        }
         else {
             instantFeed.start(pubkeys, onComplete: completeInstantFeed)
         }
@@ -618,51 +659,10 @@ class LVM: NSObject, ObservableObject {
         L.lvm.info("⭐️ LVM.deinit \(self.id) \(self.name)/\(self.pubkey?.short ?? "")")
         self.fetchFeedTimer?.invalidate()
     }
-    
-//    // FETCHES NOTHING, BUT AFTER THAT IS REALTIME FOR NEW EVENTS
-//    private func wtfFetch(subscriptionId:String) {
-//        guard pubkeys.count > 0 else { return }
-//        let now = NTimestamp(date: Date.now)
-//        req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString, limit:10, subscriptionId: subscriptionId, until: now))
-//    }
-    
-    // FETCHES NOTHING, BUT AFTER THAT IS REALTIME FOR NEW EVENTS
-    private func fetchRealtimeSinceNow(subscriptionId:String) {
-        guard !pubkeys.isEmpty else { return }
-        guard self.pubkeysPrefixString != "" else { return }
-        let now = NTimestamp(date: Date.now)
-        req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: subscriptionId, since: now), activeSubscriptionId: subscriptionId)
-    }
-    
-    // FETCHES ALL NEW, UNTIL NOW
-    private func fetchNewestUntilNow(subscriptionId:String) {
-        let now = NTimestamp(date: Date.now)
-        guard !pubkeys.isEmpty else { return }
-        guard self.pubkeysPrefixString != "" else { return }
-        req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: "CATCHUP-" + subscriptionId, until: now))
-    }
-    
-    private func fetchNewerSince(subscriptionId:String, since: NTimestamp) {
-        guard !pubkeys.isEmpty else { return }
-        guard self.pubkeysPrefixString != "" else { return }
-        req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString, subscriptionId: "RESUME-" + subscriptionId, since: since))
-    }
-    
-    private func fetchNextPage() {
-        guard !pubkeys.isEmpty else { return }
-        guard self.pubkeysPrefixString != "" else { return }
-        guard let last = self.nrPostLeafs.last else { return }
-        let until = NTimestamp(date: last.createdAt)
-        req(RM.getFollowingEvents(pubkeysString: self.pubkeysPrefixString,
-                                  limit: 100,
-                                  subscriptionId: "PAGE-" + UUID().uuidString,
-                                  until: until))
-    }
-    
+        
     // MARK: STEP 0: FETCH FROM RELAYS
     func fetchFeedTimerNextTick() {
         guard self.viewIsVisible else {
-//            print("🏎️🏎️ NOT VISIBLE \(self.subscriptionId)")
             return
         }
         let isImporting = DataProvider.shared().bg.performAndWait {
@@ -676,7 +676,12 @@ class LVM: NSObject, ObservableObject {
             }
         }
         
-        fetchRealtimeSinceNow(subscriptionId: self.id) // Subscription should stay active
+        if type == .relays {
+            fetchRelaysRealtimeSinceNow(subscriptionId: self.id) // Subscription should stay active
+        }
+        else {
+            fetchRealtimeSinceNow(subscriptionId: self.id) // Subscription should stay active
+        }
         
         if nrPostLeafs.isEmpty { // Nothing on screen
             // Dont need anymore because InstantFeed()?:
@@ -696,8 +701,13 @@ class LVM: NSObject, ObservableObject {
                     // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
                     DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(8)) { [weak self] in
                         guard let self = self else { return }
-                        self.fetchNewerSince(subscriptionId: "\(self.id)-\(ago)", since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
-                        fetchProfiles(pubkeys: self.pubkeys, subscriptionId: "Profiles")
+                        if type == .relays {
+                            self.fetchRelaysNewerSince(subscriptionId: "\(self.id)-\(ago)", since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
+                        }
+                        else {
+                            self.fetchNewerSince(subscriptionId: "\(self.id)-\(ago)", since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
+                            fetchProfiles(pubkeys: self.pubkeys, subscriptionId: "Profiles")
+                        }
                     }
                     self.didCatchup = true
                 }
@@ -723,7 +733,12 @@ extension LVM {
         }
         
         L.lvm.info("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") restoreSubscription")
-        fetchRealtimeSinceNow(subscriptionId: self.id)
+        if type == .relays {
+            fetchRelaysRealtimeSinceNow(subscriptionId: self.id)
+        }
+        else {
+            fetchRealtimeSinceNow(subscriptionId: self.id)
+        }
         
         let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 4)  // 4 hours  ago
 
@@ -736,8 +751,13 @@ extension LVM {
                 // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
                 DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(8)) { [weak self] in
                     guard let self = self else { return }
-                    self.fetchNewerSince(subscriptionId: "\(self.id)-\(ago)", since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
+                    if self.type == .relays {
+                        self.fetchRelaysNewerSince(subscriptionId: "\(self.id)-\(ago)", since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
+                    }
+                    else {
+                        self.fetchNewerSince(subscriptionId: "\(self.id)-\(ago)", since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
                         fetchProfiles(pubkeys: self.pubkeys, subscriptionId: "Profiles")
+                    }
                     L.lvm.info("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") restoreSubscription + 8 seconds fetchNewerSince()")
                 }
                 self.didCatchup = true
@@ -751,7 +771,7 @@ extension LVM {
         processNewEventsInBg()
         keepFilteringMuted()
         showOwnNewPostsImmediately()
-        trackPubkeysChanged()
+        trackListSettingsChanged()
         renderFromLocalIfWeHaveNothingNewAndScreenIsEmpty()
         trackTabVisibility()
         loadMoreWhenNearBottom()
@@ -872,7 +892,7 @@ extension LVM {
             .store(in: &subscriptions)
     }
     
-    func trackPubkeysChanged() {
+    func trackListSettingsChanged() {
         receiveNotification(.followersChanged)
             .sink { [weak self] notification in
                 guard let self = self else { return }
@@ -901,6 +921,34 @@ extension LVM {
                 guard newPubkeyInfo.subscriptionId == self.id else { return }
                 L.og.info("LVM .listPubkeysChanged \(self.pubkeys.count) -> \(newPubkeyInfo.pubkeys.count)")
                 self.pubkeys = newPubkeyInfo.pubkeys
+                
+                lvmCounter.count = 0
+                instantFinished = false
+                nrPostLeafs = []
+                leafIdsOnScreen = []
+                leafsAndParentIdsOnScreen = []
+                startInstantFeed()
+            }
+            .store(in: &subscriptions)
+        
+        
+        receiveNotification(.listRelaysChanged)
+            .sink { [weak self] notification in
+                guard let self = self else { return }
+                let newRelaysInfo = notification.object as! NewRelaysForList
+                guard newRelaysInfo.subscriptionId == self.id else { return }
+                L.og.info("LVM .listRelaysChanged \(self.relays.count) -> \(newRelaysInfo.relays.count)")
+                
+                self.relays = newRelaysInfo.relays // viewContext relays
+                SocketPool.shared.closeSubscription(self.id)
+                SocketPool.shared.connectFeedRelays(relays: relays)
+                let bg = DataProvider.shared().bg
+                bg.performAndWait {
+                    let relays = newRelaysInfo.relays.map { bg.object(with: $0.objectID) as! Relay }
+                    self.bgRelays = Set(relays) // bgContext relays
+                }
+                
+                lvmCounter.count = 0
                 instantFinished = false
                 nrPostLeafs = []
                 leafIdsOnScreen = []
@@ -1108,7 +1156,9 @@ extension LVM {
             L.lvm.info("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") performLocalFetch LVM.id (\(self.uuid)")
             if let mostRecentEvent = mostRecentEvent {
                 //            print("🟢🟢🟢🟢🟢🟢 from mostRecent \(mostRecent.id)")
-                let fr = Event.postsByPubkeys(self.pubkeys, mostRecent: mostRecentEvent, hideReplies: self.hideReplies)
+                let fr = type == .relays
+                    ? Event.postsByRelays(self.bgRelays, mostRecent: mostRecentEvent, hideReplies: self.hideReplies)
+                    : Event.postsByPubkeys(self.pubkeys, mostRecent: mostRecentEvent, hideReplies: self.hideReplies)
                 
                 
                 guard let posts = try? ctx.fetch(fr) else { return }
@@ -1116,7 +1166,9 @@ extension LVM {
             }
             else {
 //                print("🟢🟢🟢🟢🟢🟢 from lastAppearedCreatedAt \(self.lastAppeared?.created_at ?? 0)")
-                let fr = Event.postsByPubkeys(self.pubkeys, lastAppearedCreatedAt: self.lastAppearedCreatedAt ?? 0, hideReplies: self.hideReplies)
+                let fr = type == .relays
+                    ? Event.postsByRelays(self.bgRelays, lastAppearedCreatedAt: self.lastAppearedCreatedAt ?? 0, hideReplies: self.hideReplies)
+                    : Event.postsByPubkeys(self.pubkeys, lastAppearedCreatedAt: self.lastAppearedCreatedAt ?? 0, hideReplies: self.hideReplies)
 
                 guard let posts = try? ctx.fetch(fr) else { return }
                 self.setUnorderedEvents(events: self.filterMutedWords(posts), lastCreatedAt:lastCreatedAt)
@@ -1195,7 +1247,9 @@ extension LVM {
         ctx.perform { [weak self] in
             guard let self = self else { return }
             L.lvm.info("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") performLocalOlderFetch LVM.id (\(self.uuid)")
-            let fr = Event.postsByPubkeys(self.pubkeys, until: oldestEvent, hideReplies: self.hideReplies)
+            let fr = type == .relays
+                ? Event.postsByRelays(self.bgRelays, until: oldestEvent, hideReplies: self.hideReplies)
+                : Event.postsByPubkeys(self.pubkeys, until: oldestEvent, hideReplies: self.hideReplies)
             guard let posts = try? ctx.fetch(fr) else {
                 DispatchQueue.main.async {
                     self.performingLocalOlderFetch = false
@@ -1305,77 +1359,7 @@ func notMuted(_ nrPost:NRPost) -> Bool {
     return !mutedRootIds.contains(nrPost.id) && !mutedRootIds.contains(nrPost.replyToRootId ?? "NIL")
 }
 
-extension Event {
-    
-    static func postsByPubkeys(_ pubkeys:Set<String>, mostRecent:Event, hideReplies:Bool = false) -> NSFetchRequest<Event> {
-        let cutOffPoint = mostRecent.created_at - (15 * 60)
-        
-        let fr = Event.fetchRequest()
-        fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        fr.fetchLimit = 15
-        if hideReplies {
-            fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN {1,6,9802,30023} AND replyToId == nil AND flags != \"is_update\"", cutOffPoint,  pubkeys)
-        }
-        else {
-            fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN {1,6,9802,30023} AND flags != \"is_update\"", cutOffPoint,  pubkeys)
-        }
-        return fr
-    }
-    
-    
-    static func postsByPubkeys(_ pubkeys:Set<String>, until:Event, hideReplies:Bool = false) -> NSFetchRequest<Event> {
-        let cutOffPoint = until.created_at + (1 * 60)
-        
-        let fr = Event.fetchRequest()
-        fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        fr.fetchLimit = 15
-        if hideReplies {
-            fr.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN {1,6,9802,30023} AND replyToId == nil AND flags != \"is_update\"", cutOffPoint,  pubkeys)
-        }
-        else {
-            fr.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN {1,6,9802,30023} AND flags != \"is_update\"", cutOffPoint,  pubkeys)
-        }
-        return fr
-    }
-    
-    static func postsByPubkeys(_ pubkeys:Set<String>, lastAppearedCreatedAt:Int64 = 0, hideReplies:Bool = false) -> NSFetchRequest<Event> {
-        
-        let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 8) // 8 hours ago
-        
-        // Take oldest timestamp: 8 hours ago OR lastAppearedCreatedAt
-        // if we don't have lastAppearedCreatedAt. Take 8 hours ago
-        let cutOffPoint = lastAppearedCreatedAt == 0 ? hoursAgo : min(lastAppearedCreatedAt, hoursAgo)
-        
-        // get 15 events before lastAppearedCreatedAt (or 8 hours ago, if we dont have it)
-        let frBefore = Event.fetchRequest()
-        frBefore.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        frBefore.fetchLimit = 15
-        if hideReplies {
-            frBefore.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN {1,6,9802,30023} AND replyToId == nil AND flags != \"is_update\"", cutOffPoint,  pubkeys)
-        }
-        else {
-            frBefore.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN {1,6,9802,30023} AND flags != \"is_update\"", cutOffPoint,  pubkeys)
-        }
-        
-        let ctx = DataProvider.shared().bg
-        let newFirstEvent = ctx.performAndWait {
-            return try? ctx.fetch(frBefore).last
-        }
-        
-        let newCutOffPoint = newFirstEvent != nil ? newFirstEvent!.created_at : cutOffPoint
-        
-        let fr = Event.fetchRequest()
-        fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        fr.fetchLimit = 15
-        if hideReplies {
-            fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN {1,6,9802,30023} AND replyToId == nil AND flags != \"is_update\"", newCutOffPoint,  pubkeys)
-        }
-        else {
-            fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN {1,6,9802,30023} AND flags != \"is_update\"", newCutOffPoint,  pubkeys)
-        }
-        return fr
-    }
-}
+
 
 func threadCount(_ nrPosts:[NRPost]) -> Int {
     nrPosts.reduce(0) { partialResult, nrPost in
@@ -1386,4 +1370,9 @@ func threadCount(_ nrPosts:[NRPost]) -> Int {
 struct NewPubkeysForList {
     var subscriptionId:String
     var pubkeys:Set<String>
+}
+
+struct NewRelaysForList {
+    var subscriptionId:String
+    var relays:Set<Relay>
 }

@@ -40,7 +40,7 @@ struct SnapshotTest_Previews: PreviewProvider {
         }) {
             NavigationStack {
                 if let p1 = PreviewFetcher.fetchNRPost("5cae40612bdec6e77cf762dc817fe5535e4a3f7e1fc0597bddedc28bee0a7ffc") {
-                    let lvm = LVM(pubkeys: Set<String>(), listId: "Test")
+                    let lvm = LVM(type: .pubkeys, pubkeys: Set<String>(), listId: "Test")
                     let _ = lvm.nrPostLeafs = [p1]
                     SnapshotTest(lvm: lvm)
                 }
