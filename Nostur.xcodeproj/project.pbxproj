@@ -206,6 +206,8 @@
 		1F9DC3A82A28E35900119D73 /* NewFollowersNotificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9DC3A72A28E35900119D73 /* NewFollowersNotificationView.swift */; };
 		1F9FFD8B2A11F41E002E319C /* NoteHeaderViewEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9FFD8A2A11F41E002E319C /* NoteHeaderViewEvent.swift */; };
 		1FA0599D2A7414320039643C /* RelayMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA0599C2A7414320039643C /* RelayMessage.swift */; };
+		1FA0599F2A74D9690039643C /* LVM+pubkeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA0599E2A74D9680039643C /* LVM+pubkeys.swift */; };
+		1FA059A12A74F87B0039643C /* LVM+relays.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA059A02A74F87B0039643C /* LVM+relays.swift */; };
 		1FA059A32A7554DC0039643C /* EditRelaysNosturList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA059A22A7554DC0039643C /* EditRelaysNosturList.swift */; };
 		1FA3AB242A4E17070059F6B7 /* NIP46SecretManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA3AB232A4E17070059F6B7 /* NIP46SecretManager.swift */; };
 		1FA51FF62978441200FE60EF /* Relay+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */; };
@@ -568,6 +570,8 @@
 		1F9DC3A72A28E35900119D73 /* NewFollowersNotificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewFollowersNotificationView.swift; sourceTree = "<group>"; };
 		1F9FFD8A2A11F41E002E319C /* NoteHeaderViewEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteHeaderViewEvent.swift; sourceTree = "<group>"; };
 		1FA0599C2A7414320039643C /* RelayMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayMessage.swift; sourceTree = "<group>"; };
+		1FA0599E2A74D9680039643C /* LVM+pubkeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LVM+pubkeys.swift"; sourceTree = "<group>"; };
+		1FA059A02A74F87B0039643C /* LVM+relays.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "LVM+relays.swift"; sourceTree = "<group>"; };
 		1FA059A22A7554DC0039643C /* EditRelaysNosturList.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditRelaysNosturList.swift; sourceTree = "<group>"; };
 		1FA3AB232A4E17070059F6B7 /* NIP46SecretManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP46SecretManager.swift; sourceTree = "<group>"; };
 		1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Relay+CoreDataClass.swift"; sourceTree = "<group>"; };
@@ -1285,6 +1289,8 @@
 				1FB4D3FE29BB3C7E004DB537 /* ListUnreadCounter.swift */,
 				1FD8AD7429D87D0B00693302 /* ListViewContainer.swift */,
 				1F00E8C229C2FE7800797B78 /* LVM.swift */,
+				1FA0599E2A74D9680039643C /* LVM+pubkeys.swift */,
+				1FA059A02A74F87B0039643C /* LVM+relays.swift */,
 				1FB6E6FC29E48109008BE8A6 /* LVMManager.swift */,
 				1FF8BD1329D444D900C8C96A /* ProcessingStatus.swift */,
 				1FB6E70229E52EF3008BE8A6 /* SmoothList.swift */,
@@ -1682,6 +1688,7 @@
 				1FC7A49B29F95AD400645FEF /* ProfileByPubkey.swift in Sources */,
 				1F6B445029D5D1F700AD3191 /* PostOrThread.swift in Sources */,
 				1F810B3329E670AB006B1614 /* MutedWords+CoreDataClass.swift in Sources */,
+				1FA0599F2A74D9690039643C /* LVM+pubkeys.swift in Sources */,
 				1F685B562A0D6E96009EEC9B /* NRReplyingToBuilder.swift in Sources */,
 				1F539DAB299D4B2A00F3B8CA /* NewAccountSheet.swift in Sources */,
 				1FCB52722A533027006D08DF /* Migration+CoreDataClass.swift in Sources */,
@@ -1768,6 +1775,7 @@
 				1F2F54F02A02942B00B6D7E4 /* NotificationsPosts.swift in Sources */,
 				1F4773A7296D4F5B0049454B /* AccountEditView.swift in Sources */,
 				1F685B582A0D7800009EEC9B /* QueuedFetcher.swift in Sources */,
+				1FA059A12A74F87B0039643C /* LVM+relays.swift in Sources */,
 				1F006B0729D090370048C6DD /* Event+DMs.swift in Sources */,
 				1FCEA0B72999413C00A309DC /* Double+clean.swift in Sources */,
 				1FB130BB29C0F9A6004AC98D /* FooterFragmentView.swift in Sources */,
