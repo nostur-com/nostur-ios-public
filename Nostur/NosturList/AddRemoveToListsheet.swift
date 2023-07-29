@@ -25,7 +25,7 @@ struct AddRemoveToListsheet: View {
         NavigationStack {
             ScrollView {
                 LazyVStack {
-                    ForEach(lists) { list in
+                    ForEach(lists.filter { $0.type != LVM.ListType.relays.rawValue }) { list in
                         HStack(spacing: 10) {
                             Button {
                                 if selectedLists.contains(list) {

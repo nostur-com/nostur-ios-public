@@ -206,6 +206,7 @@
 		1F9DC3A82A28E35900119D73 /* NewFollowersNotificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9DC3A72A28E35900119D73 /* NewFollowersNotificationView.swift */; };
 		1F9FFD8B2A11F41E002E319C /* NoteHeaderViewEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9FFD8A2A11F41E002E319C /* NoteHeaderViewEvent.swift */; };
 		1FA0599D2A7414320039643C /* RelayMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA0599C2A7414320039643C /* RelayMessage.swift */; };
+		1FA059A32A7554DC0039643C /* EditRelaysNosturList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA059A22A7554DC0039643C /* EditRelaysNosturList.swift */; };
 		1FA3AB242A4E17070059F6B7 /* NIP46SecretManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA3AB232A4E17070059F6B7 /* NIP46SecretManager.swift */; };
 		1FA51FF62978441200FE60EF /* Relay+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */; };
 		1FA51FF72978441200FE60EF /* Relay+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA51FF52978441200FE60EF /* Relay+CoreDataProperties.swift */; };
@@ -567,6 +568,7 @@
 		1F9DC3A72A28E35900119D73 /* NewFollowersNotificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewFollowersNotificationView.swift; sourceTree = "<group>"; };
 		1F9FFD8A2A11F41E002E319C /* NoteHeaderViewEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteHeaderViewEvent.swift; sourceTree = "<group>"; };
 		1FA0599C2A7414320039643C /* RelayMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayMessage.swift; sourceTree = "<group>"; };
+		1FA059A22A7554DC0039643C /* EditRelaysNosturList.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditRelaysNosturList.swift; sourceTree = "<group>"; };
 		1FA3AB232A4E17070059F6B7 /* NIP46SecretManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP46SecretManager.swift; sourceTree = "<group>"; };
 		1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Relay+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1FA51FF52978441200FE60EF /* Relay+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Relay+CoreDataProperties.swift"; sourceTree = "<group>"; };
@@ -1446,6 +1448,7 @@
 				1FC7A49629F8EFBA00645FEF /* AddRemoveToListsheet.swift */,
 				1F2E760429F6DF6C00E67CE7 /* EditListTitleSheet.swift */,
 				1F6EB73929E1C9B200B9DA83 /* EditNosturList.swift */,
+				1FA059A22A7554DC0039643C /* EditRelaysNosturList.swift */,
 				1FB6E6F829E3B16A008BE8A6 /* NewListSheet.swift */,
 				1FF2C6C529EAD7D00096AC4A /* NosturListsView.swift */,
 			);
@@ -1844,6 +1847,7 @@
 				1F69854F29F2B63E006F813F /* Bolt11.swift in Sources */,
 				1F7521192986D44E00C43DF0 /* MessageParser.swift in Sources */,
 				1FC38BA0297316AA004769F8 /* DummyEvents.swift in Sources */,
+				1FA059A32A7554DC0039643C /* EditRelaysNosturList.swift in Sources */,
 				1F9AE7552A4E8BAC009D093E /* NSecBunkerManager.swift in Sources */,
 				1F716C752A14D4F300B202CA /* ProfileTabs.swift in Sources */,
 				1FFF997D29CF4AF100ADAE23 /* ProfilePicFullScreenSheet.swift in Sources */,

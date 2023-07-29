@@ -94,7 +94,12 @@ extension View {
                 BadgeDetailView(badge: badge.badge)
             }
             .navigationDestination(for: NosturList.self) { list in
-                EditNosturList(list: list)
+                if list.type == LVM.ListType.relays.rawValue {
+                    EditRelaysNosturList(list: list)
+                }
+                else {
+                    EditNosturList(list: list)
+                }
             }
             .navigationDestination(for: ViewPath.self) { path in
                 switch (path) {
