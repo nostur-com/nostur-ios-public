@@ -73,6 +73,27 @@ final class SocketPool: ObservableObject {
         })
     }
     
+    // Connect to relays selected for globalish feed, reuse existing connections
+    func connectFeedRelays(relays:Set<Relay>) {
+        
+        for relay in relays {
+            guard let relayUrl = relay.url else { continue }
+            guard socketByUrl(relayUrl) == nil else { continue }
+        
+            // Add connection socket if we don't already have it from our normal connections
+            _ = SocketPool.shared.addSocket(relayId: relay.objectID.uriRepresentation().absoluteString, url: relayUrl, read:true, write: false)
+        }
+        
+        // .connect() to the given relays
+        let relayUrls = relays.compactMap { $0.url }
+        for socket in sockets {
+            guard relayUrls.contains(socket.value.client.url) else { continue }
+            if !socket.value.isConnecting && !socket.value.isConnected {
+                socket.value.connect()
+            }
+        }
+    }
+    
     private func stayConnectedPing() {
         for socket in sockets {
             guard socket.value.read else { continue }
@@ -210,15 +231,17 @@ final class SocketPool: ObservableObject {
         }
     }
     
-    func sendMessage(_ message:ClientMessage, subscriptionId:String? = nil) {
+    func sendMessage(_ message:ClientMessage, subscriptionId:String? = nil, relays:Set<Relay> = []) {
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
             print("Canvas.sendMessage: \(message.type) \(message.message)")
             return
         }
         if (message.type == .REQ) {
-            let read = sockets.values.filter { $0.read == true }.count
+            let read = !relays.isEmpty ? relays.count : sockets.values.filter { $0.read == true }.count
             if read > 0 && subscriptionId == nil { L.sockets.info("⬇️⬇️ REQ ON \(read) RELAYS: \(message.message)") }
         }
+        
+        let limitToRelayIds = relays.map({ $0.objectID.uriRepresentation().absoluteString })
         
         Task(priority: .utility) { [unowned self] in
             for (_, managedClient) in self.sockets {
@@ -255,6 +278,7 @@ final class SocketPool: ObservableObject {
                 
                 else {
                     if message.onlyForNWCRelay || message.onlyForNCRelay { continue }
+                    guard limitToRelayIds.isEmpty || limitToRelayIds.contains(managedClient.relayId) else { continue }
                     
                     guard managedClient.read || managedClient.write else {
                         // Skip if relay is not selected for reading or writing events
@@ -302,15 +326,17 @@ final class SocketPool: ObservableObject {
         }
     }
     
-    func sendMessageAfterPing(_ message:ClientMessage, subscriptionId:String? = nil) {
+    func sendMessageAfterPing(_ message:ClientMessage, subscriptionId:String? = nil, relays:Set<Relay> = []) {
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
             print("Canvas.sendMessage: \(message.type) \(message.message)")
             return
         }
         if (message.type == .REQ) {
-            let read = sockets.values.filter { $0.read == true }.count
+            let read = !relays.isEmpty ? relays.count : sockets.values.filter { $0.read == true }.count
             if read > 0 && subscriptionId == nil { L.sockets.info("⬇️⬇️🟪 REQ ON \(read) RELAYS: \(message.message)") }
         }
+        
+        let limitToRelayIds = relays.map({ $0.objectID.uriRepresentation().absoluteString })
         
         Task(priority: .utility) { [unowned self] in
             for (_, managedClient) in self.sockets {
@@ -356,6 +382,7 @@ final class SocketPool: ObservableObject {
                 }
                 else {
                     if message.onlyForNWCRelay || message.onlyForNCRelay { continue }
+                    guard limitToRelayIds.isEmpty || limitToRelayIds.contains(managedClient.relayId) else { continue }
                     
                     if message.type == .REQ && managedClient.read { // REQ FOR ALL READ RELAYS
                         if (!managedClient.isConnected) {
