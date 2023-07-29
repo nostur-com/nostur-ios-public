@@ -508,17 +508,19 @@ func fasterShort(_ pubkeys:[String], prefixLength:Int = 10) -> String {
 //        limit: 500,
 //        since: 0
 //    ))
-func req(_ rm:String, activeSubscriptionId:String? = nil) {
+func req(_ rm:String, activeSubscriptionId:String? = nil, relays:Set<Relay> = []) {
     SocketPool.shared.sendMessage(
         ClientMessage(onlyForNWCRelay: activeSubscriptionId == "NWC", onlyForNCRelay: activeSubscriptionId == "NC", type: .REQ, message: rm),
-        subscriptionId: activeSubscriptionId
+        subscriptionId: activeSubscriptionId,
+        relays: relays
     )
 }
 
-func reqP(_ rm:String, activeSubscriptionId:String? = nil) {
+func reqP(_ rm:String, activeSubscriptionId:String? = nil, relays:Set<Relay> = []) {
     SocketPool.shared.sendMessageAfterPing(
         ClientMessage(onlyForNWCRelay: activeSubscriptionId == "NWC", onlyForNCRelay: activeSubscriptionId == "NC", type: .REQ, message: rm),
-        subscriptionId: activeSubscriptionId
+        subscriptionId: activeSubscriptionId,
+        relays: relays
     )
 }
 
