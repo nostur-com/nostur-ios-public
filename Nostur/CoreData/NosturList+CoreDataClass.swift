@@ -20,6 +20,16 @@ public class NosturList: NSManagedObject {
         }
     }
     
+    static func generateRelayExamples(context: NSManagedObjectContext) {
+        
+        let relays = PreviewFetcher.fetchRelays()
+        
+        let list = NosturList(context: context)
+        list.name = "Globalish"
+        list.type = LVM.ListType.relays.rawValue
+        list.relays = Set(relays)
+    }
+    
     static func fetchLists(context:NSManagedObjectContext) -> [NosturList] {
         let request = NSFetchRequest<NosturList>(entityName: "NosturList")
         return (try? context.fetch(request)) ?? []
