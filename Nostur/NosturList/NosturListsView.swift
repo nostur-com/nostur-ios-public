@@ -35,14 +35,14 @@ struct NosturListsView: View {
         
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button(String(localized:"Create new list", comment: "Button to create a new List")) {
+                Button(String(localized:"Create new feed", comment: "Button to create a new feed")) {
                     newListSheet = true
                 }
             }
         }
-        .navigationTitle(String(localized:"Lists", comment: "Navigation title for Lists screen"))
+        .navigationTitle(String(localized:"Feeds", comment: "Navigation title for Feeds screen"))
         .navigationBarTitleDisplayMode(.inline)
-        .confirmationDialog("Delete list \(listToDelete?.name ?? "")", isPresented: $confirmDeleteShown, titleVisibility: .visible) {
+        .confirmationDialog("Delete feed \(listToDelete?.name ?? "")", isPresented: $confirmDeleteShown, titleVisibility: .visible) {
             Button("Delete", role: .destructive) {
                 guard let listToDelete = listToDelete else { return }
                 viewContext.delete(listToDelete)

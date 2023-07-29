@@ -87,7 +87,7 @@ struct SomeView: View {
                 
                 Group {
                     Button { } label: {
-                        Label("Custom List", systemImage: "person.3.fill")
+                        Label("Custom Feed", systemImage: "person.3.fill")
                     }
                     
                     Button { } label: {

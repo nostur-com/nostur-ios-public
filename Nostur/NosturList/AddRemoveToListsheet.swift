@@ -80,7 +80,7 @@ struct AddRemoveToListsheet: View {
                     }
                 }
             }
-            .navigationTitle(String(localized:"Add/Remove from list", comment: "Navigation title for screen to add or remove contacts to List"))
+            .navigationTitle(String(localized:"Add/Remove from feed", comment: "Navigation title for screen to add or remove contacts to a feed"))
             .navigationBarTitleDisplayMode(.inline)
         }
     }

@@ -26,7 +26,7 @@ struct NewListSheet: View {
                     .disableAutocorrection(true)
             }
         }
-        .navigationTitle(String(localized:"New list", comment:"Navigation title for screen to create a new List"))
+        .navigationTitle(String(localized:"New feed", comment:"Navigation title for screen to create a new feed"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbarRole(.navigationStack)
         .navigationDestination(isPresented: $contactSelectionVisible) {
@@ -39,7 +39,7 @@ struct NewListSheet: View {
                 dismiss()
             })
             .equatable()
-            .navigationTitle(String(localized:"Add contacts to list", comment:"Navigation title for screen where you can add contacts to a List"))
+            .navigationTitle(String(localized:"Add contacts to feed", comment:"Navigation title for screen where you can add contacts to a feed"))
         }
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {

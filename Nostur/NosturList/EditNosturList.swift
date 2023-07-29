@@ -37,12 +37,12 @@ struct EditNosturList: View {
                 }
         }
         .listStyle(.plain)
-        .navigationTitle("\(list.name ?? "list")")
+        .navigationTitle("\(list.name ?? "feed")")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
                 HStack {
-                    Text("\(list.name ?? "list")")
+                    Text(verbatim: "\(list.name ?? "feed")")
                     Button { editList = list } label: { Image(systemName: "square.and.pencil") }
                 }
             }
@@ -70,7 +70,7 @@ struct EditNosturList: View {
                     sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: list.subscriptionId, pubkeys: Set(list.contacts_.map { $0.pubkey })))
                 })
                 .equatable()
-                .navigationTitle(String(localized:"Add contacts", comment:"Navigation title of sheet to add contacts to list"))
+                .navigationTitle(String(localized:"Add contacts", comment:"Navigation title of sheet to add contacts to feed"))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
