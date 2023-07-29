@@ -15,7 +15,7 @@ public class NosturList: NSManagedObject {
         let contacts = PreviewFetcher.allContacts(context: context)
         for i in 0..<10 {
             let list = NosturList(context: context)
-            list.name = "Example List \(i)"
+            list.name = "Example Feed \(i)"
             list.addToContacts(NSSet(array: contacts.randomSample(count: 10)))
         }
     }

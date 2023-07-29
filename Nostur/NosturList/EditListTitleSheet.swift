@@ -17,12 +17,12 @@ struct EditListTitleSheet: View {
     var body: some View {
         VStack {
             Form {
-                Section(header: Text("Title", comment: "Header for entering title of a List")) {
-                    TextField(String(localized:"Title of your list", comment:"Placeholder for input field to enter title of a List"), text: $newTitle)
+                Section(header: Text("Title", comment: "Header for entering title of a feed")) {
+                    TextField(String(localized:"Title of your feed", comment:"Placeholder for input field to enter title of a feed"), text: $newTitle)
                         .textInputAutocapitalization(.never)
                         .disableAutocorrection(true)
                     
-                    Toggle(isOn: $showAsTab, label: { Text("Pin on tab bar", comment: "Toggle to pin/unpin a list on tab bar")})
+                    Toggle(isOn: $showAsTab, label: { Text("Pin on tab bar", comment: "Toggle to pin/unpin a feed on tab bar")})
                 }
             }
             Spacer()

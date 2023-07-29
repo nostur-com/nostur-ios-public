@@ -230,7 +230,7 @@ struct SideBar: View {
                     navigateToOnMain(ViewPath.Lists)
                     sm.showSidebar = false
                 } label: {
-                    Label(String(localized:"Lists", comment:"Side bar navigation button"), systemImage: "person.2.crop.square.stack.fill")
+                    Label(String(localized:"Feeds", comment:"Side bar navigation button"), systemImage: "list.bullet.rectangle")
                 }
                 Button {
                     selectedTab = "Bookmarks"
