@@ -15,16 +15,62 @@ struct NewListSheet: View {
     @State var addContactsSheetShown = false
     @State var selectedContacts:Set<Contact> = []
     @State var contactSelectionVisible = false
+    @State var feedType:LVM.ListType = .pubkeys
+    @State var selectedRelays:Set<Relay> = []
+
     var followingPubkeys = NosturState.shared.followingPublicKeys
     
+    @FetchRequest(
+        sortDescriptors: [SortDescriptor(\Relay.createdAt, order: .forward)],
+        animation: .default)
+    var relays: FetchedResults<Relay>
+    
+    var formIsValid:Bool {
+        guard !title.isEmpty else { return false }
+        if feedType == .relays && selectedRelays.isEmpty { return false }
+        return true
+    }
     
     var body: some View {
-        Form {
-            Section(header: Text("Title", comment: "Header for entering title of a List")) {
-                TextField(String(localized:"Title of your list", comment:"Placeholder for input field to enter title of a List"), text: $title)
+        List {
+            Section(header: Text("Title", comment: "Header for entering title of a feed")) {
+                TextField(String(localized:"Title of your feed", comment:"Placeholder for input field to enter title of a feed"), text: $title)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
             }
+            
+            Section(header: Text("Feed settings", comment: "Header for a feed setting")) {
+                Picker("Feed content", selection: $feedType) {
+                    Text("Posts from contacts")
+                        .tag(LVM.ListType.pubkeys)
+                    Text("Posts from relays")
+                        .tag(LVM.ListType.relays)
+                }
+                .pickerStyle(.navigationLink)
+            }
+            
+            if feedType == .relays {
+                Section(header: Text("Relay selection", comment: "Header for a feed setting")) {
+                    ForEach(relays, id:\.objectID) { relay in
+                            HStack {
+                                Image(systemName: selectedRelays.contains(relay) ? "checkmark.circle.fill" : "circle")
+                                    .foregroundColor(selectedRelays.contains(relay) ? Color.primary : Color.secondary)
+                                Text(relay.url ?? "(Missing relay address)")
+                            }
+                            .id(relay.objectID)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                if selectedRelays.contains(relay) {
+                                    selectedRelays.remove(relay)
+                                }
+                                else {
+                                    selectedRelays.insert(relay)
+                                }
+                            }
+                        }
+                }
+            }
+            
         }
         .navigationTitle(String(localized:"New feed", comment:"Navigation title for screen to create a new feed"))
         .navigationBarTitleDisplayMode(.inline)
@@ -50,9 +96,18 @@ struct NewListSheet: View {
                     newList = NosturList(context: DataProvider.shared().viewContext)
                     newList?.id = UUID()
                     newList?.name = title
-                    contactSelectionVisible = true
+                    
+                    if feedType == .relays {
+                        newList?.relays = selectedRelays
+                        newList?.type = feedType.rawValue
+                        DataProvider.shared().save()
+                        dismiss()
+                    }
+                    else {
+                        contactSelectionVisible = true
+                    }
                 }
-                .disabled(title.isEmpty)
+                .disabled(!formIsValid)
             }
         }
     }
@@ -63,6 +118,7 @@ struct NewListSheet_Previews: PreviewProvider {
         PreviewContainer({ pe in
             pe.loadContacts()
             pe.loadNosturLists()
+            pe.loadRelays()
         }) {
             NavigationStack {
                 NewListSheet()
