@@ -38,6 +38,7 @@ class InstantFeed {
             }
         }
     }
+    var relays:Set<Relay> = []
     
     public func start(_ pubkey:Pubkey, onComplete: @escaping CompletionHandler) {
         L.og.notice("🟪 InstantFeed.start(\(pubkey.short))")
@@ -54,6 +55,14 @@ class InstantFeed {
 //        SocketPool.shared.ping()
         self.pubkeys = pubkeys
         fetchPostsFromRelays()
+    }
+    
+    public func start(_ relays:Set<Relay>, onComplete: @escaping CompletionHandler) {
+        L.og.notice("🟪 InstantFeed.start(\(relays.count) relays)")
+
+        self.onComplete = onComplete
+        self.relays = relays
+        fetchPostsFromGlobalishRelays()
     }
     
 //    func checkConnection() {
@@ -128,7 +137,7 @@ class InstantFeed {
                 
                 let getFollowingEventsTask = ReqTask(prefix: "GFET-") { taskId in
                     L.og.notice("🟪 Fetching posts from relays using \(pubkeys.count) pubkeys")
-                    reqP(RM.getFollowingEvents(pubkeys: Array(pubkeys), limit: 200, subscriptionId: taskId))
+                    reqP(RM.getFollowingEvents(pubkeys: Array(pubkeys), limit: 400, subscriptionId: taskId))
                 } processResponseCommand: { taskId, _ in
                     self.bg.perform { [weak self] in
                         guard let self = self else { return }
@@ -137,7 +146,7 @@ class InstantFeed {
                             L.og.notice("🟪 \(taskId) Could not fetch posts from relays using \(pubkeys.count) pubkeys. Our pubkey: \(self.pubkey?.short ?? "-") ")
                             return
                         }
-                        guard events.count > 35 else {
+                        guard events.count > 20 else {
                             L.og.notice("🟪 \(taskId) Received only \(events.count) events, waiting for more. Our pubkey: \(self.pubkey?.short ?? "-") ")
                             return
                         }
@@ -153,6 +162,45 @@ class InstantFeed {
                 
                 self.backlog.add(getFollowingEventsTask)
                 getFollowingEventsTask.fetch()
+            }
+        }
+    }
+    
+    func fetchPostsFromGlobalishRelays() {
+        guard !relays.isEmpty else { return }
+        let relayCount = relays.count
+        
+        Task.detached {
+            self.bg.perform { [weak self] in
+                guard let self = self else { return }
+                
+                let getGlobalEventsTask = ReqTask(prefix: "GGET-") { taskId in
+                    L.og.notice("🟪 Fetching posts from globalish relays using \(relayCount) relays")
+                    reqP(RM.getGlobalFeedEvents(limit: 400, subscriptionId: taskId), relays: self.relays)
+                } processResponseCommand: { taskId, _ in
+                    self.bg.perform { [weak self] in
+                        guard let self = self else { return }
+                        let fr = Event.postsByRelays(self.relays, lastAppearedCreatedAt: 0)
+                        guard let events = try? self.bg.fetch(fr) else {
+                            L.og.notice("🟪 \(taskId) Could not fetch posts from globalish relays using \(relayCount) relays.")
+                            return
+                        }
+                        guard events.count > 20 else {
+                            L.og.notice("🟪 \(taskId) Received only \(events.count) events, waiting for more.")
+                            return
+                        }
+                        self.events = events
+                        L.og.notice("🟪 Received \(events.count) posts from relays (found in db)")
+                    }
+                } timeoutCommand: { taskId in
+                    if self.events == nil {
+                        L.og.notice("🟪 \(taskId) TIMEOUT: Could not fetch posts from globalish relays using \(relayCount) relays. ")
+                        self.events = []
+                    }
+                }
+                
+                self.backlog.add(getGlobalEventsTask)
+                getGlobalEventsTask.fetch()
             }
         }
     }
