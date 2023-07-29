@@ -415,7 +415,7 @@ struct PreviewContainer<Content: View>: View {
     
     init(_ setup:PreviewSetup? = nil, previewDevice:PreviewDevice? = nil, @ViewBuilder content: @escaping () -> Content) {
         self.setup = setup
-        self.previewDevice = previewDevice ?? PreviewDevice(rawValue: "iPhone SE (3rd generation)")
+        self.previewDevice = previewDevice ?? PreviewDevice(rawValue: "iPhone 14")
         self.content = content
     }
     

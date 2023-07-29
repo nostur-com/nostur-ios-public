@@ -46,7 +46,6 @@ struct NewListSheet: View {
                     Text("Posts from relays")
                         .tag(LVM.ListType.relays)
                 }
-                .pickerStyle(.navigationLink)
             }
             
             if feedType == .relays {

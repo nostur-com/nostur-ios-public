@@ -131,6 +131,10 @@ extension Notification.Name {
         return Notification.Name("listPubkeysChanged")
     }
     
+    static var listRelaysChanged: Notification.Name {
+        return Notification.Name("listRelaysChanged")
+    }
+    
     static var onBoardingIsShownChanged: Notification.Name {
         return Notification.Name("onBoardingIsShownChanged")
     }
