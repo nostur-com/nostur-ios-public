@@ -99,7 +99,7 @@ struct RelaysView: View {
 struct RelaysView_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer({ pe in
-            pe.loadRelay()
+            pe.loadRelays()
         }) {
             NavigationStack {
                 RelaysView()

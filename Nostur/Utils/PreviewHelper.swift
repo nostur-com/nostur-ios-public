@@ -271,7 +271,7 @@ extension PreviewEnvironment {
         }
     }
     
-    func loadRelay() {
+    func loadRelays() {
         context.performAndWait {
             let relay = Relay(context: context)
             relay.url = "ws://localhost:3000"
@@ -279,12 +279,25 @@ extension PreviewEnvironment {
             relay.id = UUID()
             relay.read = false
             relay.write = false
+            
+            let relay2 = Relay(context: context)
+            relay2.url = "ws://localhost:3001"
+            relay2.createdAt = Date()
+            relay2.id = UUID()
+            relay2.read = false
+            relay2.write = false
         }
     }
     
     func loadNosturLists() {
         context.performAndWait {
             NosturList.generateExamples(context: context)
+        }
+    }
+    
+    func loadRelayNosturLists() {
+        context.performAndWait {
+            NosturList.generateRelayExamples(context: context)
         }
     }
     
@@ -470,6 +483,12 @@ struct PreviewFetcher {
         
         request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         
+        return (try? (context ?? PreviewFetcher.viewContext).fetch(request)) ?? []
+    }
+    
+    static func fetchRelays(context:NSManagedObjectContext? = nil) -> [Relay] {
+        let request = Relay.fetchRequest()
+        request.predicate = NSPredicate(value: true)
         return (try? (context ?? PreviewFetcher.viewContext).fetch(request)) ?? []
     }
     
