@@ -18,7 +18,7 @@ class NSecBunkerManager: ObservableObject {
     var invalidSelfHostedAddress:Bool {
         if let url = URL(string: ncRelay) {
             if url.absoluteString.lowercased().prefix(6) == "wss://" { return false }
-            if url.absoluteString.lowercased().prefix(4) == "ws://" { return false }
+            if url.absoluteString.lowercased().prefix(5) == "ws://" { return false }
         }
         return true
     }
