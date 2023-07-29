@@ -180,7 +180,7 @@ struct ProfileView: View {
                                     Button {
                                         sendNotification(.addRemoveToListsheet, contact)
                                     } label: {
-                                        Label(String(localized:"Add/Remove from lists", comment:"Menu action"), systemImage: "person.2.crop.square.stack")
+                                        Label(String(localized:"Add/Remove from feeds", comment:"Menu action"), systemImage: "person.2.crop.square.stack")
                                     }
                                     
                                     
