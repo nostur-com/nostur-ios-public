@@ -13,6 +13,7 @@ struct EditRelaysNosturList: View {
     @Environment(\.dismiss) var dismiss
     
     @State var title = ""
+    @State var wotEnabled = true
     @State var selectedRelays:Set<Relay> = []
     
     @FetchRequest(
@@ -53,12 +54,20 @@ struct EditRelaysNosturList: View {
                         }
                     }
             }
+            
+            Section(header: Text("Spam filter", comment: "Header for a feed setting")) {
+                Toggle(isOn: $wotEnabled) {
+                    Text("Enable Web of Trust filter")
+                    Text("Only show content from your follows or follows-follows")
+                }
+            }
         }
         .navigationTitle("Edit relays feed")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             title = list.name ?? ""
             selectedRelays = list.relays_
+            wotEnabled = list.wotEnabled
         }
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
@@ -68,9 +77,10 @@ struct EditRelaysNosturList: View {
                 Button("Save") {
                     list.name = title
                     list.relays = selectedRelays
+                    list.wotEnabled = wotEnabled
                     DataProvider.shared().save()
                     dismiss()
-                    sendNotification(.listRelaysChanged, NewRelaysForList(subscriptionId: list.subscriptionId, relays: selectedRelays))
+                    sendNotification(.listRelaysChanged, NewRelaysForList(subscriptionId: list.subscriptionId, relays: selectedRelays, wotEnabled: wotEnabled))
                 }
                 .disabled(!formIsValid)
             }

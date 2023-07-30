@@ -74,6 +74,7 @@ class LVM: NSObject, ObservableObject {
     // TODO: Switch entire SocketPool .sockets to bg context, so we don't have to deal with viewContext relays
     var relays:Set<Relay> = []
     var bgRelays:Set<Relay> = []
+    var wotEnabled = true // for Relay feeds
     
     @Published var hideReplies = false {
         didSet {
@@ -246,10 +247,9 @@ class LVM: NSObject, ObservableObject {
         
         context.perform { [weak self] in
             guard let self = self else { return }
-
             var newNRPostLeafs:[NRPost] = []
             var transformedObjectIds = Set<NRPostID>()
-            for event in events {
+            for event in ((self.type == .relays && self.wotEnabled) ? events.filter { $0.inWoT } : events) {
 //                guard !danglingObjectIds.contains(event.objectID) else { continue } // Skip if the post is already on screen
                 guard !leafsAndParentIdsOnScreen.contains(event.id) else {
                     if let existingNRPost = currentNRPostLeafs.first(where: { $0.id == event.id }) {
@@ -533,11 +533,12 @@ class LVM: NSObject, ObservableObject {
     
     var instantFeed = InstantFeed()
     
-    init(type:ListType, pubkey:String? = nil, pubkeys:Set<String>, listId:String, name:String = "", relays:Set<Relay> = []) {
+    init(type:ListType, pubkey:String? = nil, pubkeys:Set<String>, listId:String, name:String = "", relays:Set<Relay> = [], wotEnabled:Bool = true) {
         self.type = type
         self.name = name
         self.pubkey = pubkey
         self.pubkeys = pubkeys
+        self.wotEnabled = wotEnabled
 
         self.id = listId
         super.init()
@@ -940,6 +941,8 @@ extension LVM {
                 L.og.info("LVM .listRelaysChanged \(self.relays.count) -> \(newRelaysInfo.relays.count)")
                 
                 self.relays = newRelaysInfo.relays // viewContext relays
+                self.wotEnabled = newRelaysInfo.wotEnabled
+                
                 SocketPool.shared.closeSubscription(self.id)
                 SocketPool.shared.connectFeedRelays(relays: relays)
                 let bg = DataProvider.shared().bg
@@ -1375,4 +1378,5 @@ struct NewPubkeysForList {
 struct NewRelaysForList {
     var subscriptionId:String
     var relays:Set<Relay>
+    var wotEnabled:Bool
 }

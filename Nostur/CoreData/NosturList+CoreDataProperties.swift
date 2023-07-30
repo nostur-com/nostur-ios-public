@@ -29,6 +29,7 @@ extension NosturList {
     @NSManaged public var relays: Set<Relay>?
     @NSManaged public var showAsTab: Bool
     @NSManaged public var hideReplies: Bool
+    @NSManaged public var wotEnabled: Bool
     
     var contacts_:[Contact] {
         get { contacts?.allObjects as! [Contact] }
