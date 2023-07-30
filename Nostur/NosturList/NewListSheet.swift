@@ -12,6 +12,7 @@ struct NewListSheet: View {
     @Environment(\.dismiss) var dismiss
     @State var newList:NosturList?
     @State var title = ""
+    @State var wotEnabled = true
     @State var addContactsSheetShown = false
     @State var selectedContacts:Set<Contact> = []
     @State var contactSelectionVisible = false
@@ -68,6 +69,13 @@ struct NewListSheet: View {
                             }
                         }
                 }
+                
+                Section(header: Text("Spam filter", comment: "Header for a feed setting")) {
+                    Toggle(isOn: $wotEnabled) {
+                        Text("Enable Web of Trust filter")
+                        Text("Only show content from your follows or follows-follows")
+                    }
+                }
             }
             
         }
@@ -99,6 +107,7 @@ struct NewListSheet: View {
                     if feedType == .relays {
                         newList?.relays = selectedRelays
                         newList?.type = feedType.rawValue
+                        newList?.wotEnabled = wotEnabled
                         DataProvider.shared().save()
                         dismiss()
                     }

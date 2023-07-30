@@ -137,6 +137,7 @@
         <attribute name="refreshedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="showAsTab" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
         <attribute name="type" optional="YES" attributeType="String"/>
+        <attribute name="wotEnabled" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
         <relationship name="contacts" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact" inverseName="lists" inverseEntity="Contact"/>
         <relationship name="relays" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Relay" inverseName="lists" inverseEntity="Relay"/>
     </entity>

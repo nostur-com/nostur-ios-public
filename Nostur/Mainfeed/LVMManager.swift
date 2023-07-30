@@ -49,7 +49,7 @@ class LVMManager {
             return lvm
         }
         let lvm = list.type == LVM.ListType.relays.rawValue
-            ? LVM(type: .relays, pubkeys: [], listId: list.subscriptionId, relays: list.relays_)
+            ? LVM(type: .relays, pubkeys: [], listId: list.subscriptionId, relays: list.relays_, wotEnabled: list.wotEnabled)
             : LVM(type: .pubkeys, pubkeys: Set(list.contacts_.map { $0.pubkey }), listId: list.subscriptionId)
         
         listVMs.append(lvm)
