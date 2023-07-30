@@ -110,7 +110,7 @@ extension Event {
         
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-        fr.fetchLimit = 15
+        fr.fetchLimit = 25
         if hideReplies {
             fr.predicate = NSPredicate(format: "created_at >= %i AND relays MATCHES %@ AND kind IN {1,6,9802,30023} AND replyToId == nil AND flags != \"is_update\"", newCutOffPoint, regex)
         }

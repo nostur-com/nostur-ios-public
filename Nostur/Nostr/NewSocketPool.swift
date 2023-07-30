@@ -280,12 +280,12 @@ final class SocketPool: ObservableObject {
                     if message.onlyForNWCRelay || message.onlyForNCRelay { continue }
                     guard limitToRelayIds.isEmpty || limitToRelayIds.contains(managedClient.relayId) else { continue }
                     
-                    guard managedClient.read || managedClient.write else {
+                    guard managedClient.read || managedClient.write || limitToRelayIds.contains(managedClient.relayId) else {
                         // Skip if relay is not selected for reading or writing events
                         continue
                     }
                     
-                    if message.type == .REQ && managedClient.read { // REQ FOR ALL READ RELAYS
+                    if message.type == .REQ && (managedClient.read || limitToRelayIds.contains(managedClient.relayId)) { // REQ FOR ALL READ RELAYS
                         if (!managedClient.isConnected) {
                             if (!managedClient.isConnecting) {
                                 managedClient.connect()
@@ -305,7 +305,7 @@ final class SocketPool: ObservableObject {
                         managedClient.client.sendMessage(message.message)
                     }
                     else if  message.type == .CLOSE { // CLOSE FOR ALL RELAYS
-                        if (!managedClient.read) { continue }
+                        if (!managedClient.read && !limitToRelayIds.contains(managedClient.relayId)) { continue }
                         if (!managedClient.isConnected) && (!managedClient.isConnecting) {
                             // Already closed? no need to connect and send CLOSE message
                             continue
@@ -340,7 +340,7 @@ final class SocketPool: ObservableObject {
         
         Task(priority: .utility) { [unowned self] in
             for (_, managedClient) in self.sockets {
-                guard managedClient.read || managedClient.write else {
+                guard managedClient.read || managedClient.write || limitToRelayIds.contains(managedClient.relayId) else {
                     // Skip if relay is not selected for reading or writing events
                     continue
                 }
@@ -384,7 +384,7 @@ final class SocketPool: ObservableObject {
                     if message.onlyForNWCRelay || message.onlyForNCRelay { continue }
                     guard limitToRelayIds.isEmpty || limitToRelayIds.contains(managedClient.relayId) else { continue }
                     
-                    if message.type == .REQ && managedClient.read { // REQ FOR ALL READ RELAYS
+                    if message.type == .REQ && (managedClient.read || limitToRelayIds.contains(managedClient.relayId)) { // REQ FOR ALL READ RELAYS
                         if (!managedClient.isConnected) {
                             if (!managedClient.isConnecting) {
                                 managedClient.connect()
@@ -404,7 +404,7 @@ final class SocketPool: ObservableObject {
                         managedClient.client.sendMessageAfterPing(message.message)
                     }
                     else if  message.type == .CLOSE { // CLOSE FOR ALL RELAYS
-                        if (!managedClient.read) { continue }
+                        if (!managedClient.read && !limitToRelayIds.contains(managedClient.relayId)) { continue }
                         if (!managedClient.isConnected) && (!managedClient.isConnecting) {
                             // Already closed? no need to connect and send CLOSE message
                             continue

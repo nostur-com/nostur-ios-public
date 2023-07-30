@@ -10,7 +10,7 @@ import Combine
 
 class InstantFeed {
     typealias CompletionHandler = ([Event]) -> ()
-    var backlog = Backlog(auto: true)
+    var backlog = Backlog(timeout: 30, auto: true)
     var bg = DataProvider.shared().bg
     var pongReceiver:AnyCancellable?
     var pubkey:Pubkey?
@@ -176,7 +176,7 @@ class InstantFeed {
                 
                 let getGlobalEventsTask = ReqTask(prefix: "GGET-") { taskId in
                     L.og.notice("🟪 Fetching posts from globalish relays using \(relayCount) relays")
-                    reqP(RM.getGlobalFeedEvents(limit: 400, subscriptionId: taskId), relays: self.relays)
+                    reqP(RM.getGlobalFeedEvents(limit: 200, subscriptionId: taskId), relays: self.relays)
                 } processResponseCommand: { taskId, _ in
                     self.bg.perform { [weak self] in
                         guard let self = self else { return }
@@ -185,7 +185,7 @@ class InstantFeed {
                             L.og.notice("🟪 \(taskId) Could not fetch posts from globalish relays using \(relayCount) relays.")
                             return
                         }
-                        guard events.count > 20 else {
+                        guard events.count > 15 else {
                             L.og.notice("🟪 \(taskId) Received only \(events.count) events, waiting for more.")
                             return
                         }
