@@ -60,6 +60,8 @@ struct FollowingAndExplore: View { //, Equatable {
         return String(localized:"Feed", comment:"Tab title for a feed")
     }
     
+    @State var showFeedSettings = false
+    
     var body: some View {
         //        let _ = Self._printChanges()
         VStack(spacing:0) {
@@ -178,6 +180,22 @@ struct FollowingAndExplore: View { //, Equatable {
             }
             
         }
+        .overlay(alignment: .top) {
+            if showFeedSettings {
+                switch selectedSubTab {
+                case "Following":
+                    FeedSettings(lvm: LVMManager.shared.followingLVM(forAccount: account), showFeedSettings: $showFeedSettings)
+                case "List":
+                    if let list = selectedList {
+                        FeedSettings(lvm: LVMManager.shared.listLVM(forList: list), showFeedSettings: $showFeedSettings, list:list)
+                    }
+                case "Explore":
+                    FeedSettings(lvm: exploreVM, showFeedSettings: $showFeedSettings)
+                default:
+                    EmptyView()
+                }
+            }
+        }
         .onAppear {
             if selectedSubTab == "List" {
                 if let list = lists.first(where: { $0.subscriptionId == selectedListId }) {
@@ -201,6 +219,9 @@ struct FollowingAndExplore: View { //, Equatable {
         })
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
+        .onReceive(receiveNotification(.showFeedToggles)) { _ in
+            showFeedSettings = true
+        }
     }
 }
 

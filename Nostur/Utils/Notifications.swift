@@ -281,6 +281,11 @@ extension Notification.Name {
     static var scrollToDetail: Notification.Name {
         return Notification.Name("scrollToDetail")
     }
+    
+    static var showFeedToggles: Notification.Name {
+        return Notification.Name("showFeedToggles")
+    }
+    
     static var didTapTab: Notification.Name {
         return Notification.Name("didTapTab")
     }

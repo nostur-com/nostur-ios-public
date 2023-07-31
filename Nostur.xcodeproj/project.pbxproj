@@ -54,6 +54,7 @@
 		1F21CE432A067EC10021E2C7 /* View+onDelete.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F21CE422A067EC10021E2C7 /* View+onDelete.swift */; };
 		1F21DDBE29F0174700C564EF /* NewSocketPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F21DDBD29F0174700C564EF /* NewSocketPool.swift */; };
 		1F21DDC129F01B3000C564EF /* CombineWebSocket in Frameworks */ = {isa = PBXBuildFile; productRef = 1F21DDC029F01B3000C564EF /* CombineWebSocket */; };
+		1F2884AA2A77D11D0006766E /* FeedSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2884A92A77D11D0006766E /* FeedSettings.swift */; };
 		1F2BD4A42A22206500F006AC /* SnapshotTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2BD4A32A22206500F006AC /* SnapshotTest.swift */; };
 		1F2DD4292A29C1170028A062 /* NIP47.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2DD4282A29C1170028A062 /* NIP47.swift */; };
 		1F2DD42D2A29EACA0028A062 /* NWCConnection+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2DD42B2A29EACA0028A062 /* NWCConnection+CoreDataClass.swift */; };
@@ -210,6 +211,7 @@
 		1FA059A12A74F87B0039643C /* LVM+relays.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA059A02A74F87B0039643C /* LVM+relays.swift */; };
 		1FA059A32A7554DC0039643C /* EditRelaysNosturList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA059A22A7554DC0039643C /* EditRelaysNosturList.swift */; };
 		1FA3AB242A4E17070059F6B7 /* NIP46SecretManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA3AB232A4E17070059F6B7 /* NIP46SecretManager.swift */; };
+		1FA477232A780C0E00A4CCD3 /* Binding+not.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA477222A780C0E00A4CCD3 /* Binding+not.swift */; };
 		1FA51FF62978441200FE60EF /* Relay+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */; };
 		1FA51FF72978441200FE60EF /* Relay+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA51FF52978441200FE60EF /* Relay+CoreDataProperties.swift */; };
 		1FAC67AE29F5523200798661 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1FB448C62965F3D200038671 /* Assets.xcassets */; };
@@ -421,6 +423,7 @@
 		1F21442D29A797B80090E78E /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
 		1F21CE422A067EC10021E2C7 /* View+onDelete.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+onDelete.swift"; sourceTree = "<group>"; };
 		1F21DDBD29F0174700C564EF /* NewSocketPool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewSocketPool.swift; sourceTree = "<group>"; };
+		1F2884A92A77D11D0006766E /* FeedSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedSettings.swift; sourceTree = "<group>"; };
 		1F2BD4A32A22206500F006AC /* SnapshotTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotTest.swift; sourceTree = "<group>"; };
 		1F2DD4282A29C1170028A062 /* NIP47.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP47.swift; sourceTree = "<group>"; };
 		1F2DD42B2A29EACA0028A062 /* NWCConnection+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NWCConnection+CoreDataClass.swift"; sourceTree = "<group>"; };
@@ -574,6 +577,7 @@
 		1FA059A02A74F87B0039643C /* LVM+relays.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "LVM+relays.swift"; sourceTree = "<group>"; };
 		1FA059A22A7554DC0039643C /* EditRelaysNosturList.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditRelaysNosturList.swift; sourceTree = "<group>"; };
 		1FA3AB232A4E17070059F6B7 /* NIP46SecretManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NIP46SecretManager.swift; sourceTree = "<group>"; };
+		1FA477222A780C0E00A4CCD3 /* Binding+not.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Binding+not.swift"; sourceTree = "<group>"; };
 		1FA51FF42978441200FE60EF /* Relay+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Relay+CoreDataClass.swift"; sourceTree = "<group>"; };
 		1FA51FF52978441200FE60EF /* Relay+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Relay+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		1FAE1FCD2A2361CC0044E141 /* LazyNoteMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyNoteMenu.swift; sourceTree = "<group>"; };
@@ -971,6 +975,7 @@
 				1F9A55232A3C7EE400F67627 /* View+roundedCorner.swift */,
 				1F33098B298AEE5D00D4D8CF /* View+withNavigationDestinations.swift */,
 				1F00337029BEF141007CE040 /* View+withSheets.swift */,
+				1FA477222A780C0E00A4CCD3 /* Binding+not.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -1294,6 +1299,7 @@
 				1FB6E6FC29E48109008BE8A6 /* LVMManager.swift */,
 				1FF8BD1329D444D900C8C96A /* ProcessingStatus.swift */,
 				1FB6E70229E52EF3008BE8A6 /* SmoothList.swift */,
+				1F2884A92A77D11D0006766E /* FeedSettings.swift */,
 			);
 			path = Mainfeed;
 			sourceTree = "<group>";
@@ -1660,6 +1666,7 @@
 				1F1D99422A03AACF0024055B /* ProfileNotesView.swift in Sources */,
 				1F4820F229A9F808000EDFDA /* NotificationsZaps.swift in Sources */,
 				1F1B55B329BD07CC006E1930 /* NotificationsManager.swift in Sources */,
+				1FA477232A780C0E00A4CCD3 /* Binding+not.swift in Sources */,
 				1FB6E6F929E3B16A008BE8A6 /* NewListSheet.swift in Sources */,
 				1F96792D29BF611800E78173 /* EditPrivateNoteSheet.swift in Sources */,
 				1F056FA82A5C2F3B00578B35 /* CustomZapAmountEntry.swift in Sources */,
@@ -1878,6 +1885,7 @@
 				1F88490F29B537B400145340 /* URL.swift in Sources */,
 				1FB130B529C0E8D8004AC98D /* ReplyingToFragmentView.swift in Sources */,
 				1F45C7E829EE8FF100F58772 /* BannerPicPicker.swift in Sources */,
+				1F2884AA2A77D11D0006766E /* FeedSettings.swift in Sources */,
 				1FC0F5A52A4AEB2E004E4DAA /* ArticleByNaddr.swift in Sources */,
 				1FD49733297FCB5E0084F14E /* PreviewHelper.swift in Sources */,
 				1F810B3529E67145006B1614 /* MutedWordsView.swift in Sources */,
