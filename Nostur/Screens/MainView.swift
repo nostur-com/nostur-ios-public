@@ -62,6 +62,12 @@ struct MainView: View {
                                     sendNotification(.shouldScrollToTop)
                                 }
                         }
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Image(systemName: "gearshape")
+                                .onTapGesture {
+                                    sendNotification(.showFeedToggles)
+                                }
+                        }
                     }
             }
         }
