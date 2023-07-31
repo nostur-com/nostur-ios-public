@@ -11,7 +11,7 @@ struct MacListsView: View {
     let SIDEBAR_WIDTH:CGFloat = 50.0
     @StateObject private var dim = DIMENSIONS()
     @StateObject private var vm:MacListState = .shared
-    @StateObject private var followingVM:FollowingViewModel = .main
+    @State var lvm:LVM? = nil
     
     var body: some View {
 //        let _ = Self._printChanges()
@@ -26,10 +26,10 @@ struct MacListsView: View {
                     TabView(selection: $vm.selectedTab) {
                         VStack(spacing:0) {
                             MacListHeader(title: String(localized:"Following"))
-                            if let vm = followingVM.activeVM {
-                                ListViewContainer(vm: vm)
+                            if let lvm = lvm {
+                                ListViewContainer(vm: lvm)
                                     .overlay(alignment: .topTrailing) {
-                                        ListUnreadCounter(vm: vm)
+                                        ListUnreadCounter(vm: lvm)
                                             .padding(.trailing, 10)
                                             .padding(.top, 5)
                                     }
@@ -66,7 +66,9 @@ struct MacListsView: View {
             }
         }
         .onAppear {
-            followingVM.account = NosturState.shared.account
+            if let account = NosturState.shared.account {
+                lvm = LVMManager.shared.followingLVM(forAccount: account)
+            }
         }
         .withSheets()
         .environmentObject(dim)
