@@ -74,7 +74,19 @@ class LVM: NSObject, ObservableObject {
     // TODO: Switch entire SocketPool .sockets to bg context, so we don't have to deal with viewContext relays
     var relays:Set<Relay> = []
     var bgRelays:Set<Relay> = []
-    var wotEnabled = true // for Relay feeds
+    
+    // for Relay feeds
+    @Published var wotEnabled = true {
+        didSet {
+            guard oldValue != wotEnabled else { return }
+            lvmCounter.count = 0
+            instantFinished = false
+            nrPostLeafs = []
+            leafIdsOnScreen = []
+            leafsAndParentIdsOnScreen = []
+            startInstantFeed()
+        }
+    }
     
     @Published var hideReplies = false {
         didSet {
@@ -956,7 +968,6 @@ extension LVM {
                 L.og.info("LVM .listRelaysChanged \(self.relays.count) -> \(newRelaysInfo.relays.count)")
                 
                 self.relays = newRelaysInfo.relays // viewContext relays
-                self.wotEnabled = newRelaysInfo.wotEnabled
                 
                 SocketPool.shared.closeSubscription(self.id)
                 SocketPool.shared.connectFeedRelays(relays: relays)
@@ -966,12 +977,18 @@ extension LVM {
                     self.bgRelays = Set(relays) // bgContext relays
                 }
                 
-                lvmCounter.count = 0
-                instantFinished = false
-                nrPostLeafs = []
-                leafIdsOnScreen = []
-                leafsAndParentIdsOnScreen = []
-                startInstantFeed()
+                if newRelaysInfo.wotEnabled == self.wotEnabled {
+                    // if WoT did not change, manual clear:
+                    lvmCounter.count = 0
+                    instantFinished = false
+                    nrPostLeafs = []
+                    leafIdsOnScreen = []
+                    leafsAndParentIdsOnScreen = []
+                    startInstantFeed()
+                }
+                else { // else LVM will clear from didSet on .wotEnabled
+                    self.wotEnabled = newRelaysInfo.wotEnabled
+                }
             }
             .store(in: &subscriptions)
         
