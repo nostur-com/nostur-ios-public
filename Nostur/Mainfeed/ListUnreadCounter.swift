@@ -44,6 +44,9 @@ struct ListUnreadCounter: View {
             .onTapGesture {
                 sendNotification(.shouldScrollToFirstUnread)
             }
+            .simultaneousGesture(LongPressGesture().onEnded { _ in
+                sendNotification(.shouldScrollToTop)
+            })
         }
         else {
             EmptyView()
