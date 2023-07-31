@@ -620,6 +620,17 @@ class LVM: NSObject, ObservableObject {
             }
 //            fetchFeedTimerNextTick()
             instantFinished = true
+            
+            if type == .relays {
+                DispatchQueue.main.async {
+                    self.fetchRelaysRealtimeSinceNow(subscriptionId: self.id) // Subscription should stay active
+                }
+            }
+            else {
+                DispatchQueue.main.async {
+                    self.fetchRealtimeSinceNow(subscriptionId: self.id) // Subscription should stay active
+                }
+            }
         }
         if id == "Following", let pubkey {
             instantFeed.start(pubkey, onComplete: completeInstantFeed)
@@ -723,7 +734,11 @@ extension LVM {
     func restoreSubscription() {
         guard instantFinished else {
             L.lvm.debug("🏎️🏎️ \(self.id) \(self.name)/\(self.pubkey?.short ?? "") instantFinished=false, not restoring subscription! \(self.selectedSubTab) and selectedListId: \(self.selectedListId)")
-            return } // TODO: maybe do instant thing again if too much time in between relaunch
+            if viewIsVisible {
+                startInstantFeed()
+            }
+            return
+        }
         self.didCatchup = false
         // Always try to restore timer
         self.configureTimer()
