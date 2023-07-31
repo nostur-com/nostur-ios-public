@@ -40,7 +40,7 @@ class LVMManager {
         if let lvm = listVMs.first(where: { $0.id == "Explore" }) {
             return lvm
         }
-        let lvm = LVM(type: .pubkeys, pubkeys: NosturState.shared.explorePubkeys, listId: "Explore")
+        let lvm = LVM(type: .pubkeys, pubkeys: NosturState.shared.explorePubkeys, listId: "Explore", name: "Explore")
         listVMs.append(lvm)
         return lvm
     }
@@ -49,8 +49,8 @@ class LVMManager {
             return lvm
         }
         let lvm = list.type == LVM.ListType.relays.rawValue
-            ? LVM(type: .relays, pubkeys: [], listId: list.subscriptionId, relays: list.relays_, wotEnabled: list.wotEnabled)
-            : LVM(type: .pubkeys, pubkeys: Set(list.contacts_.map { $0.pubkey }), listId: list.subscriptionId)
+            ? LVM(type: .relays, pubkeys: [], listId: list.subscriptionId, name: list.name_, relays: list.relays_, wotEnabled: list.wotEnabled)
+            : LVM(type: .pubkeys, pubkeys: Set(list.contacts_.map { $0.pubkey }), listId: list.subscriptionId, name: list.name_)
         
         listVMs.append(lvm)
         return lvm
