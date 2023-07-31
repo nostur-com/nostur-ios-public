@@ -65,6 +65,7 @@ final class SocketPool: ObservableObject {
         for socket in sockets {
             guard socket.value.read else { continue }
             if !socket.value.isConnecting && !socket.value.isConnected {
+                socket.value.activeSubscriptions = []
                 socket.value.connect()
             }
         }
@@ -89,6 +90,7 @@ final class SocketPool: ObservableObject {
         for socket in sockets {
             guard relayUrls.contains(socket.value.client.url) else { continue }
             if !socket.value.isConnecting && !socket.value.isConnected {
+                socket.value.activeSubscriptions = []
                 socket.value.connect()
             }
         }
@@ -108,6 +110,7 @@ final class SocketPool: ObservableObject {
                 }
                 else {
                     L.sockets.info("\(socket.value.url) Last message = nil. (re)connecting..")
+                    socket.value.activeSubscriptions = []
                     socket.value.connect()
                 }
             }
@@ -277,6 +280,7 @@ final class SocketPool: ObservableObject {
                 }
                 
                 else {
+                    L.og.debug("\(managedClient.url) - activeSubscriptions: \(managedClient.activeSubscriptions.joined(separator: " "))")
                     if message.onlyForNWCRelay || message.onlyForNCRelay { continue }
                     guard limitToRelayIds.isEmpty || limitToRelayIds.contains(managedClient.relayId) else { continue }
                     
@@ -304,7 +308,7 @@ final class SocketPool: ObservableObject {
                         L.sockets.debug("⬇️⬇️ REQUESTING: \(message.message)")
                         managedClient.client.sendMessage(message.message)
                     }
-                    else if  message.type == .CLOSE { // CLOSE FOR ALL RELAYS
+                    else if message.type == .CLOSE { // CLOSE FOR ALL RELAYS
                         if (!managedClient.read && !limitToRelayIds.contains(managedClient.relayId)) { continue }
                         if (!managedClient.isConnected) && (!managedClient.isConnecting) {
                             // Already closed? no need to connect and send CLOSE message
@@ -467,12 +471,16 @@ final class SocketPool: ObservableObject {
     
     func closeSubscription(_ subscriptionId:String) {
         for socket in sockets {
-            guard socket.value.isConnected && socket.value.read else { continue }
+            guard socket.value.isConnected else { continue }
+            
+            if socket.value.activeSubscriptions.contains(subscriptionId) {
+                let closeSubscription = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: subscriptionId))
+                socket.value.client.sendMessage(closeSubscription.message)
+            }
+            
             socket.value.activeSubscriptions.removeAll(where: { activeId in
                 activeId == subscriptionId
             })
-            let closeSubscription = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: subscriptionId))
-            socket.value.client.sendMessage(closeSubscription.message)
         }
     }
 }
@@ -577,7 +585,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
     }
     
     func connect(_ forceConnectionAttempt:Bool = false) {
-        guard self.exponentialReconnectBackOff == 1 || forceConnectionAttempt || self.skipped == self.exponentialReconnectBackOff else { // Should be 0 == 0 to continue, or 2 == 2 etc..
+        guard self.exponentialReconnectBackOff > 512 || self.exponentialReconnectBackOff == 1 || forceConnectionAttempt || self.skipped == self.exponentialReconnectBackOff else { // Should be 0 == 0 to continue, or 2 == 2 etc..
             self.skipped = skipped + 1
             L.sockets.info("🏎️🏎️🔌🔴 Skipping reconnect. \(self.url) EB: (\(self.exponentialReconnectBackOff)) skipped: \(self.skipped)")
             return
@@ -596,6 +604,7 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
             self.isConnected = false
         }
         self.client.disconnect()
+        self.activeSubscriptions = []
         self.lastMessageReceivedAt = nil
     }
     
