@@ -93,6 +93,15 @@ struct BookmarksView: View {
         .task {
             self.loadBookmarks()
         }
+        .simultaneousGesture(
+               DragGesture().onChanged({
+                   if 0 < $0.translation.height {
+                       sendNotification(.scrollingUp)
+                   }
+                   else if 0 > $0.translation.height {
+                       sendNotification(.scrollingDown)
+                   }
+               }))
     }
     
     func loadBookmarks(forAccount account: Account? = nil) {

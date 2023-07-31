@@ -120,6 +120,15 @@ struct NotificationsPosts: View {
             let blockedPubkeys = notification.object as! [String]
             fl.nrPosts = fl.nrPosts.filter { !blockedPubkeys.contains($0.id)  }
         }
+        .simultaneousGesture(
+               DragGesture().onChanged({
+                   if 0 < $0.translation.height {
+                       sendNotification(.scrollingUp)
+                   }
+                   else if 0 > $0.translation.height {
+                       sendNotification(.scrollingDown)
+                   }
+               }))
     }
     
     func load() {

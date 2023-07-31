@@ -164,6 +164,15 @@ struct NotificationsZaps: View {
             backlog.clear()
             load()
         }
+        .simultaneousGesture(
+               DragGesture().onChanged({
+                   if 0 < $0.translation.height {
+                       sendNotification(.scrollingUp)
+                   }
+                   else if 0 > $0.translation.height {
+                       sendNotification(.scrollingDown)
+                   }
+               }))
     }
     
     @State var subscriptions = Set<AnyCancellable>()
