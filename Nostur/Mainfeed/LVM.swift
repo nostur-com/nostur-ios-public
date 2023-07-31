@@ -278,7 +278,7 @@ class LVM: NSObject, ObservableObject {
                 let leafThreads = self.renderLeafs(added, onScreenSeen:self.onScreenSeen) // Transforms seperate posts into threads, .id for each thread is leaf.id
                 
                 let (danglers, newLeafThreads) = extractDanglingReplies(leafThreads)
-                if !danglers.isEmpty {
+                if !danglers.isEmpty && !self.hideReplies {
                     L.og.info("🟪🟠🟠 processPostsInBackground: \(danglers.count) replies without replyTo. Fetching...")
                     fetchParents(danglers, older:older)
                 }
@@ -294,7 +294,7 @@ class LVM: NSObject, ObservableObject {
                 
                 let (danglers, newLeafThreads) = extractDanglingReplies(newLeafThreadsWithMissingParents)
 //                self.needsReplyTo.append(contentsOf: danglers)
-                if !danglers.isEmpty {
+                if !danglers.isEmpty && !self.hideReplies {
                     L.og.info("🟠🟠 processPostsInBackground: \(danglers.count) replies without replyTo. Fetching...")
                     fetchParents(danglers, older:older)
                 }
@@ -427,7 +427,7 @@ class LVM: NSObject, ObservableObject {
         var danglers:[NRPost] = []
         var threads:[NRPost] = []
         newLeafThreads.forEach { nrPost in
-            if nrPost.replyToId != nil && nrPost.parentPosts.isEmpty {
+            if (nrPost.replyToRootId != nil || nrPost.replyToId != nil) && nrPost.parentPosts.isEmpty {
                 danglers.append(nrPost)
             }
             else {

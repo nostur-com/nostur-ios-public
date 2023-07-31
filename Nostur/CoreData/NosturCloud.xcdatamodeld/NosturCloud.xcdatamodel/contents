@@ -131,7 +131,6 @@
     </entity>
     <entity name="NosturList" representedClassName=".NosturList" syncable="YES">
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
-        <attribute name="hideReplies" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="refreshedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>

@@ -53,7 +53,7 @@ extension Event {
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         fr.fetchLimit = 25
         if hideReplies {
-            fr.predicate = NSPredicate(format: "created_at >= %i AND relays MATCHES %@ AND kind IN {1,6,9802,30023} AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, regex)
+            fr.predicate = NSPredicate(format: "created_at >= %i AND relays MATCHES %@ AND kind IN {1,6,9802,30023} AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, regex)
         }
         else {
             fr.predicate = NSPredicate(format: "created_at >= %i AND relays MATCHES %@ AND kind IN {1,6,9802,30023} AND flags != \"is_update\"", cutOffPoint, regex)
@@ -72,7 +72,7 @@ extension Event {
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         fr.fetchLimit = 25
         if hideReplies {
-            fr.predicate = NSPredicate(format: "created_at <= %i AND relays MATCHES %@ AND kind IN {1,6,9802,30023} AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, regex)
+            fr.predicate = NSPredicate(format: "created_at <= %i AND relays MATCHES %@ AND kind IN {1,6,9802,30023} AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, regex)
         }
         else {
             fr.predicate = NSPredicate(format: "created_at <= %i AND relays MATCHES %@ AND kind IN {1,6,9802,30023} AND flags != \"is_update\"", cutOffPoint, regex)
@@ -95,7 +95,7 @@ extension Event {
         frBefore.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         frBefore.fetchLimit = 25
         if hideReplies {
-            frBefore.predicate = NSPredicate(format: "created_at <= %i AND relays MATCHES %@ AND kind IN {1,6,9802,30023} AND replyToId == nil AND flags != \"is_update\"", cutOffPoint,  regex)
+            frBefore.predicate = NSPredicate(format: "created_at <= %i AND relays MATCHES %@ AND kind IN {1,6,9802,30023} AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint,  regex)
         }
         else {
             frBefore.predicate = NSPredicate(format: "created_at <= %i AND relays MATCHES %@ AND kind IN {1,6,9802,30023} AND flags != \"is_update\"", cutOffPoint, regex)
@@ -112,7 +112,7 @@ extension Event {
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         fr.fetchLimit = 25
         if hideReplies {
-            fr.predicate = NSPredicate(format: "created_at >= %i AND relays MATCHES %@ AND kind IN {1,6,9802,30023} AND replyToId == nil AND flags != \"is_update\"", newCutOffPoint, regex)
+            fr.predicate = NSPredicate(format: "created_at >= %i AND relays MATCHES %@ AND kind IN {1,6,9802,30023} AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", newCutOffPoint, regex)
         }
         else {
             fr.predicate = NSPredicate(format: "created_at >= %i AND relays MATCHES %@ AND kind IN {1,6,9802,30023} AND flags != \"is_update\"", newCutOffPoint, regex)
