@@ -62,7 +62,13 @@ struct SmoothList: UIViewControllerRepresentable {
         receiveNotification(.shouldScrollToFirstUnread)
             .sink { _ in
                 guard context.coordinator.lvm.viewIsVisible else { return }
-                guard context.coordinator.lvm.lvmCounter.count > 0 else { return }
+                guard context.coordinator.lvm.lvmCounter.count > 0 else {
+                    // if no unread, scroll to top
+                    if !context.coordinator.lvm.nrPostLeafs.isEmpty {
+                        cvh.collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .top, animated: true)
+                    }
+                    return
+                }
                 guard let row = context.coordinator.lvm.lastReadIdIndex else { return }
                 cvh.collectionView.scrollToItem(at: IndexPath(item: max(0,row-1), section: 0), at: .top, animated: true)
             }

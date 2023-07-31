@@ -87,8 +87,24 @@ struct MainView: View {
             let destination = notification.object as! NavigationDestination
             navPath.append(destination.destination)
         }
+        .onReceive(receiveNotification(.didTapTab)) { notification in
+            guard let tabName = notification.object as? String, tabName == "Main" else { return }
+            if navPath.count == 0 {
+                sendNotification(.shouldScrollToFirstUnread)
+            }
+        }
         .onReceive(receiveNotification(.clearNavigation)) { notification in
-            navPath.removeLast(navPath.count)
+            // No need to clear if we are already at root
+            guard navPath.count > 0 else { return }
+            
+            // if notification.object is not empty/nil
+            if let tab = notification.object as? String, tab == "Main" {
+                navPath.removeLast(navPath.count)
+            }
+            else if notification.object == nil {
+                // if empty/nil, we always clear
+                navPath.removeLast(navPath.count)
+            }
         }
     }
 }

@@ -281,4 +281,7 @@ extension Notification.Name {
     static var scrollToDetail: Notification.Name {
         return Notification.Name("scrollToDetail")
     }
+    static var didTapTab: Notification.Name {
+        return Notification.Name("didTapTab")
+    }
 }
