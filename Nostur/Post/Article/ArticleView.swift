@@ -212,8 +212,7 @@ struct ArticleView: View {
                     //                    .padding(.horizontal, fullWidth ? 10 : 0)
                     
                     if let image = article.articleImageURL {
-                        SingleMediaViewer(url: image, pubkey: article.pubkey, imageWidth: fullWidth ? dim.listWidth : dim.articleRowImageWidth(), isFollowing: article.following, fullWidth: true)
-                        //                            .padding(.horizontal, 0)
+                        SingleMediaViewer(url: image, pubkey: article.pubkey, imageWidth: dim.listWidth, isFollowing: article.following, fullWidth: true)
                             .padding(.vertical, 10)
                     }
                     
@@ -228,9 +227,8 @@ struct ArticleView: View {
                             .markdownTextStyle(\.link) {
                                 ForegroundColor(Color("AccentColor"))
                             }
-                            .markdownImageProvider(.nukeImage)
-                            .markdownInlineImageProvider(.nukeImage)
-//                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .markdownImageProvider(.noImage)
+                            .markdownInlineImageProvider(.noImage)
                             .padding(.vertical, 10)
                     }
                     else if let content = article.content, !content.isEmpty {
@@ -244,10 +242,8 @@ struct ArticleView: View {
                             .markdownTextStyle(\.link) {
                                 ForegroundColor(Color("AccentColor"))
                             }
-                            .markdownImageProvider(.nukeImage)
-                            .markdownInlineImageProvider(.nukeImage)
-//                            .frame(maxWidth: .infinity, alignment: .leading)
-                        //                            .clipped()
+                            .markdownImageProvider(.noImage)
+                            .markdownInlineImageProvider(.noImage)
                             .padding(.vertical, 10)
                     }
                     else {
@@ -330,7 +326,6 @@ struct ArticleView: View {
                         }
                         .font(.custom("Charter", size: 18))
                         .padding(.vertical, 10)
-                        //                    .padding(.horizontal, fullWidth ? 10 : 0)
                         .lineLimit(1)
                         .foregroundColor(Color.secondary)
                         
@@ -378,7 +373,6 @@ struct ArticleView: View {
                         }
                         .font(.custom("Charter", size: 18))
                         .padding(.vertical, 10)
-                        //                    .padding(.horizontal, fullWidth ? 10 : 0)
                         .lineLimit(1)
                         .foregroundColor(Color.secondary)
                     }
@@ -389,6 +383,9 @@ struct ArticleView: View {
                 }
                 if !hideFooter {
                     FooterFragmentView(nrPost: article)
+                        .padding(.bottom, 10)
+                        .frame(idealHeight: 38.0)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
             .padding(.bottom, 10)

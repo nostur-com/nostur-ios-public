@@ -51,6 +51,7 @@ struct BookmarksView: View {
                     ForEach(vBookmarks) { vBookmark in
                         PostRowDeletable(nrPost: vBookmark, missingReplyTo: true)
                             .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
+                            .fixedSize(horizontal: false, vertical: true)
                             .roundedBoxShadow()
                             .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                             .id(vBookmark.id)
