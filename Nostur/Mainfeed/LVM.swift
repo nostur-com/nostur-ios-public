@@ -141,6 +141,8 @@ class LVM: NSObject, ObservableObject {
             L.lvm.info("\(self.id) \(self.name) - Closing subscriptions for .relays tab");
             SocketPool.shared.closeSubscription(self.id)
         }
+        self.fetchFeedTimer?.invalidate()
+        self.fetchFeedTimer = nil
     }
     
     func didAppear() {
@@ -641,6 +643,23 @@ class LVM: NSObject, ObservableObject {
             else {
                 DispatchQueue.main.async {
                     self.fetchRealtimeSinceNow(subscriptionId: self.id) // Subscription should stay active
+                }
+            }
+            
+            let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 4)  // 4 hours  ago
+
+            // Continue from first (newest) on screen?
+            let since = (self.nrPostLeafs.first?.created_at ?? hoursAgo) - (60 * 5) // (take 5 minutes earlier to not mis out of sync posts)
+            let ago = Date(timeIntervalSince1970: Double(since)).agoString
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(2)) { [weak self] in
+                guard let self = self else { return }
+                if type == .relays {
+                    self.fetchRelaysNewerSince(subscriptionId: "\(self.id)-\(ago)", since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
+                }
+                else {
+                    self.fetchNewerSince(subscriptionId: "\(self.id)-\(ago)", since:NTimestamp(timestamp: Int(since))) // This one closes after EOSE
+                    fetchProfiles(pubkeys: self.pubkeys, subscriptionId: "Profiles")
                 }
             }
         }
