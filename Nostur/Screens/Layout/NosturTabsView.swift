@@ -12,6 +12,7 @@ struct NosturTabsView: View {
     @AppStorage("selected_tab") var selectedTab = "Main"
     @State var unread = 0
     @State var unreadDMs = 0
+    @State var showTabBar = true
     
     var body: some View {
 //        let _ = Self._printChanges()
@@ -27,6 +28,7 @@ struct NosturTabsView: View {
                     MainView()
                         .tabItem { Image(systemName: "house") }
                         .tag("Main")
+                        .toolbar(showTabBar ? .visible : .hidden, for: .tabBar)
                     
 //                    DiscoverCommunities()
 //                        .tabItem { Image(systemName: "person.3.fill")}
@@ -36,14 +38,17 @@ struct NosturTabsView: View {
                         .tabItem { Image(systemName: "bell.fill") }
                         .tag("Notifications")
                         .badge(unread)
+                        .toolbar(showTabBar ? .visible : .hidden, for: .tabBar)
                     
                     Search()
                         .tabItem { Image(systemName: "magnifyingglass") }
-                        .tag("Search")  
+                        .tag("Search")
+                        .toolbar(showTabBar ? .visible : .hidden, for: .tabBar)
                     
                     BookmarksAndPrivateNotes()
                         .tabItem { Image(systemName: "bookmark") }
                         .tag("Bookmarks")
+                        .toolbar(showTabBar ? .visible : .hidden, for: .tabBar)
                     
 //                    RelayIntelTest()
                     
@@ -81,14 +86,31 @@ struct NosturTabsView: View {
         .onReceive(receiveNotification(.updateDMsCount)) { notification in
             unreadDMs = (notification.object as! Int)
         }
+        .onReceive(receiveNotification(.scrollingUp)) { _ in
+            guard !IS_CATALYST else { return }
+            withAnimation {
+                showTabBar = true
+            }
+        }
+        .onReceive(receiveNotification(.scrollingDown)) { _ in
+            guard !IS_CATALYST else { return }
+            withAnimation {
+                showTabBar = false
+            }
+        }
     }
 
     private func tabTapped(_ tabName:String) {
-        guard selectedTab == "Main" else { return } // Only trigger if we are already on "Main"
-        if tabName == "Main" {
-            sendNotification(.shouldScrollToFirstUnread)
-            // TODO: FIX DOUBLE TAP TO SCROLL TO TOP
-        }
+        
+        // Only do something if we are already on same the tab
+        guard selectedTab == tabName else { return }
+
+        // For main, we scroll to first unread
+        // but depends on condition with values only known in FollowingAndExplore
+        sendNotification(.didTapTab, tabName)
+
+        // pop navigation stack back to root
+        sendNotification(.clearNavigation, tabName)
     }
 }
 

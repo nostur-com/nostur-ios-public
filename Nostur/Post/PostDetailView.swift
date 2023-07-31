@@ -90,6 +90,15 @@ struct PostDetailView: View {
                         .navigationBarTitleDisplayMode(.inline)
                         .navigationBarHidden(navTitleHidden)
                 }
+                .simultaneousGesture(
+                       DragGesture().onChanged({
+                           if 0 < $0.translation.height {
+                               sendNotification(.scrollingUp)
+                           }
+                           else if 0 > $0.translation.height {
+                               sendNotification(.scrollingDown)
+                           }
+                       }))
             }
         }
     }

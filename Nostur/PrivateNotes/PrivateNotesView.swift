@@ -92,6 +92,15 @@ struct PrivateNotesView: View {
         .task {
             loadPrivateNotes()
         }
+        .simultaneousGesture(
+               DragGesture().onChanged({
+                   if 0 < $0.translation.height {
+                       sendNotification(.scrollingUp)
+                   }
+                   else if 0 > $0.translation.height {
+                       sendNotification(.scrollingDown)
+                   }
+               }))
     }
     
     func loadPrivateNotes(forAccount account: Account? = nil) {
