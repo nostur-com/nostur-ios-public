@@ -7,6 +7,7 @@
 
 import SwiftUI
 import MarkdownUI
+import NukeUI
 
 // Same as NRContentTextRenderer, but with Markdown instead of AttributedString
 struct NRContentMarkdownRenderer: View {
@@ -75,8 +76,6 @@ extension ImageProvider where Self == NukeImageProvider {
   }
 }
 
-import NukeUI
-
 class NukeInlineImageProvider: InlineImageProvider {
     func image(with url: URL, label: String) async throws -> Image {
         let imageWidth = DIMENSIONS.shared.listWidth
@@ -98,3 +97,29 @@ extension InlineImageProvider where Self == NukeInlineImageProvider {
     .init()
   }
 }
+
+
+struct NoImageProvider: ImageProvider {
+  func makeImage(url: URL?) -> some View {
+      EmptyView()
+  }
+}
+
+extension ImageProvider where Self == NoImageProvider {
+  static var noImage: Self {
+    .init()
+  }
+}
+
+class NoInlineImageProvider: InlineImageProvider {
+    func image(with url: URL, label: String) async throws -> Image {
+        return Image(systemName: "photo")
+    }
+}
+
+extension InlineImageProvider where Self == NoInlineImageProvider {
+  static var noImage: Self {
+    .init()
+  }
+}
+
