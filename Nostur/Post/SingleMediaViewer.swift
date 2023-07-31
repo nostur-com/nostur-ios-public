@@ -74,7 +74,6 @@ struct SingleMediaViewer: View {
                     else if let image = state.image {
                         VStack(alignment: .center, spacing:0) {
                             if fullWidth {
-//                                Text("ddd")
                                 image
                                     .interpolation(.none)
                                     .resizable()
@@ -85,8 +84,6 @@ struct SingleMediaViewer: View {
                                     }
                             }
                             else {
-//                                Text("hey?")
-//                                Color.green
                                 image
                                     .interpolation(.none)
                                     .resizable()
@@ -108,7 +105,6 @@ struct SingleMediaViewer: View {
                                     ImageProgressView(progress: state.progress)
                                     Text("Loading...")
                                 }
-//                                .background(Color(.secondarySystemBackground))
                             }
                         }
                     }
@@ -124,7 +120,6 @@ struct SingleMediaViewer: View {
                         }
                         .centered()
                         .frame(height: fullWidth ? 600 : 250)
-//                        .background(Color(.secondarySystemBackground))
                     }
                     else {
                         Color(.secondarySystemBackground)
