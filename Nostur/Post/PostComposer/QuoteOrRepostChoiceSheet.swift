@@ -23,9 +23,9 @@ struct QuoteOrRepostChoiceSheet: View {
                 if (ns.account != nil) {
                     
                     // 1. create repost
-                    let repost = EventMessageBuilder.makeRepost(original: originalEvent)
+                    let repost = EventMessageBuilder.makeRepost(original: originalEvent, embedOriginal: true)
                     
-                    // 2. sign that event with account keys             Account
+                    // 2. sign that event with account keys
                     guard let signedRepost = try? ns.signEvent(repost) else {
                         L.og.error("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
                         return
