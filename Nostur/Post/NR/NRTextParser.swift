@@ -132,7 +132,7 @@ class NRTextParser { // TEXT things
 
     // NIP-27 handle nostr:npub or nostr:nprofile
     private func parseUserMentions(event:Event, text:String, plainText:Bool = false) -> TextWithPs {
-        let pattern = "(?:nostr:)?npub1[023456789acdefghjklmnpqrstuvwxyz]{58}|(?:nostr:)?(nprofile1[023456789acdefghjklmnpqrstuvwxyz]+)\\b"
+        let pattern = "(?:nostr:)?@?npub1[023456789acdefghjklmnpqrstuvwxyz]{58}|(?:nostr:)?(nprofile1[023456789acdefghjklmnpqrstuvwxyz]+)\\b"
 
         var replacedString = text
         var range = text.startIndex..<text.endIndex
@@ -142,10 +142,12 @@ class NRTextParser { // TEXT things
         while let matchRange = replacedString.range(of: pattern, options: .regularExpression, range: range, locale: nil) {
             if sanityIndex > 100 { break }
             sanityIndex += 1
-            let match = replacedString[matchRange]
+            let match = replacedString[matchRange].replacingOccurrences(of: "@", with: "")
             var replacement = match
             
-            let pub1OrProfile1 = match.prefix(11) == "nostr:npub1" || match.prefix(5) == "npub1" ? "npub1" : "nprofile1"
+            let pub1OrProfile1 = match.prefix(11) == "nostr:npub1" || match.prefix(5) == "npub1"
+                ? "npub1"
+                : "nprofile1"
             
             //let identifier = try ShareableIdentifier(match)
             
