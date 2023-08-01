@@ -54,21 +54,23 @@ struct Settings: View {
         Form {
 
             Section(header: Text("Display", comment:"Setting heading on settings screen")) {
-                Toggle(isOn: $settings.fullWidthImages) {
-                    Text("Enable full width pictures", comment:"Setting on settings screen")
-                }
-                Toggle(isOn: $settings.restrictAutoDownload) {
-                    Text("Restrict images to following", comment:"Setting on settings screen")
-                    Text("Only auto-download images in new posts from people you follow\nToggle off to download from all", comment:"Setting on settings screen")
-                }
-                
-                Toggle(isOn: $settings.animatedPFPenabled) {
-                    Text("Enable animated profile pics", comment:"Setting on settings screen")
-                    Text("Disable to improve scrolling performance", comment:"Setting on settings screen")
-                }
-                Toggle(isOn: $settings.rowFooterEnabled) {
-                    Text("Show post stats on timeline", comment:"Setting on settings screen")
-                    Text("Counters for replies, likes, zaps etc.", comment:"Setting on settings screen")
+                Group {
+                    Toggle(isOn: $settings.fullWidthImages) {
+                        Text("Enable full width pictures", comment:"Setting on settings screen")
+                    }
+                    Toggle(isOn: $settings.restrictAutoDownload) {
+                        Text("Restrict images to following", comment:"Setting on settings screen")
+                        Text("Only auto-download images in new posts from people you follow\nToggle off to download from all", comment:"Setting on settings screen")
+                    }
+                    
+                    Toggle(isOn: $settings.animatedPFPenabled) {
+                        Text("Enable animated profile pics", comment:"Setting on settings screen")
+                        Text("Disable to improve scrolling performance", comment:"Setting on settings screen")
+                    }
+                    Toggle(isOn: $settings.rowFooterEnabled) {
+                        Text("Show post stats on timeline", comment:"Setting on settings screen")
+                        Text("Counters for replies, likes, zaps etc.", comment:"Setting on settings screen")
+                    }
                 }
                 Toggle(isOn: $settings.fetchCounts) {
                     Text("Fetch counts on timeline", comment:"Setting on settings screen")
@@ -77,6 +79,10 @@ struct Settings: View {
                 Toggle(isOn: $settings.autoScroll) {
                     Text("Auto scroll to new posts", comment:"Setting on settings screen")
                     Text("When at top, auto scroll if there are new posts", comment:"Setting on settings screen")
+                }
+                Toggle(isOn: $settings.autoHideBars) {
+                    Text("Hide tab bars when scrolling", comment:"Setting on settings screen")
+                    Text("This gives more screen space when scrolling")
                 }
                 Toggle(isOn: $settings.statusBubble) {
                     Text("Loading indicator", comment:"Setting on settings screen")

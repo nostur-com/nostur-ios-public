@@ -13,6 +13,7 @@ struct NosturTabsView: View {
     @State var unread = 0
     @State var unreadDMs = 0
     @State var showTabBar = true
+    @ObservedObject var ss:SettingsStore = .shared
     
     var body: some View {
 //        let _ = Self._printChanges()
@@ -28,7 +29,7 @@ struct NosturTabsView: View {
                     MainView()
                         .tabItem { Image(systemName: "house") }
                         .tag("Main")
-                        .toolbar(showTabBar ? .visible : .hidden, for: .tabBar)
+                        .toolbar(!ss.autoHideBars || showTabBar ? .visible : .hidden, for: .tabBar)
                     
 //                    DiscoverCommunities()
 //                        .tabItem { Image(systemName: "person.3.fill")}
@@ -38,17 +39,17 @@ struct NosturTabsView: View {
                         .tabItem { Image(systemName: "bell.fill") }
                         .tag("Notifications")
                         .badge(unread)
-                        .toolbar(showTabBar ? .visible : .hidden, for: .tabBar)
+                        .toolbar(!ss.autoHideBars || showTabBar ? .visible : .hidden, for: .tabBar)
                     
                     Search()
                         .tabItem { Image(systemName: "magnifyingglass") }
                         .tag("Search")
-                        .toolbar(showTabBar ? .visible : .hidden, for: .tabBar)
+                        .toolbar(!ss.autoHideBars || showTabBar ? .visible : .hidden, for: .tabBar)
                     
                     BookmarksAndPrivateNotes()
                         .tabItem { Image(systemName: "bookmark") }
                         .tag("Bookmarks")
-                        .toolbar(showTabBar ? .visible : .hidden, for: .tabBar)
+                        .toolbar(!ss.autoHideBars || showTabBar ? .visible : .hidden, for: .tabBar)
                     
 //                    RelayIntelTest()
                     
@@ -87,13 +88,13 @@ struct NosturTabsView: View {
             unreadDMs = (notification.object as! Int)
         }
         .onReceive(receiveNotification(.scrollingUp)) { _ in
-            guard !IS_CATALYST else { return }
+            guard !IS_CATALYST && ss.autoHideBars else { return }
             withAnimation {
                 showTabBar = true
             }
         }
         .onReceive(receiveNotification(.scrollingDown)) { _ in
-            guard !IS_CATALYST else { return }
+            guard !IS_CATALYST && ss.autoHideBars else { return }
             withAnimation {
                 showTabBar = false
             }

@@ -11,6 +11,7 @@ import Combine
 struct FollowingAndExplore: View {
     @EnvironmentObject var dim:DIMENSIONS
     @ObservedObject var account:Account
+    @ObservedObject var ss:SettingsStore = .shared
     @AppStorage("selected_tab") var selectedTab = "Main"
     @AppStorage("selected_subtab") var selectedSubTab = "Following"
     @AppStorage("selected_listId") var selectedListId = ""
@@ -69,13 +70,13 @@ struct FollowingAndExplore: View {
                 .frame(width: dim.listWidth, height: max(36.0 + tabsOffsetY,0))
                 .offset(y: tabsOffsetY)
                 .onReceive(receiveNotification(.scrollingUp)) { _ in
-                    guard !IS_CATALYST else { return }
+                    guard !IS_CATALYST && ss.autoHideBars else { return }
                     withAnimation {
                         tabsOffsetY = 0.0
                     }
                 }
                 .onReceive(receiveNotification(.scrollingDown)) { _ in
-                    guard !IS_CATALYST else { return }
+                    guard !IS_CATALYST  && ss.autoHideBars else { return }
                     withAnimation {
                         tabsOffsetY = -36.0
                     }
