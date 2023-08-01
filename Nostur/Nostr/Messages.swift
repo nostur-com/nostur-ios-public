@@ -424,9 +424,19 @@ public struct RequestMessage {
 
 struct EventMessageBuilder {
     
-    static func makeRepost(original: Event) -> NEvent {
-        var repost = NEvent(content: "#[0]")
-        repost.tags.append(NostrTag(["e", original.id, "", "mention"]))
+    static func makeRepost(original: Event, embedOriginal:Bool = false) -> NEvent {
+        var repost = NEvent(content: embedOriginal ? original.toNEvent().eventJson() : "#[0]")
+        
+        let firstRelay = original.relays.components(separatedBy: " ").first ?? ""
+        
+        // first try to put just scheme+hostname as relay. because extra parameters in url can be irrelevant
+        if let url = URL(string: firstRelay), let scheme = url.scheme, let host = url.host {
+            let firstPart = scheme + "://" + host + "/"
+            repost.tags.append(NostrTag(["e", original.id, firstPart, "mention"]))
+        }
+        else {
+            repost.tags.append(NostrTag(["e", original.id, firstRelay, "mention"]))
+        }
         repost.tags.append(NostrTag(["p", original.pubkey]))
         repost.kind = .repost
         return repost
