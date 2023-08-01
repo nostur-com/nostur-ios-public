@@ -197,10 +197,10 @@ struct DetailPane: View {
             }
             
         }
-        .onReceive(receiveNotification(.clearNavigation)) { notification in
-            tm.selected = nil
-            tm.tabs.removeAll()
-        }
+//        .onReceive(receiveNotification(.clearNavigation)) { notification in
+//            tm.selected = nil
+//            tm.tabs.removeAll()
+//        }
     }
 }
 
