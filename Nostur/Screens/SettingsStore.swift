@@ -35,6 +35,7 @@ final class SettingsStore: ObservableObject {
         static let includeSharedFrom:String = "include_shared_from"
         
         static let webOfTrustLevel:String = "web_of_trust_level"
+        static let autoHideBars:String = "auto_hide_bars"
     }
 
 //    private let cancellable: Cancellable
@@ -106,6 +107,7 @@ final class SettingsStore: ObservableObject {
             Keys.fetchCounts: false,
             Keys.webOfTrustLevel: WebOfTrustLevel.normal.rawValue,
             Keys.includeSharedFrom: true,
+            Keys.autoHideBars: true
         ])
 
         // Don't use this anymore because re-renders too much, like when moving window on macOS
@@ -223,6 +225,11 @@ final class SettingsStore: ObservableObject {
     var webOfTrustLevel: String {
         set { objectWillChange.send(); defaults.set(newValue, forKey: Keys.webOfTrustLevel)  }
         get { defaults.string(forKey: Keys.webOfTrustLevel) ?? WebOfTrustLevel.normal.rawValue }
+    }
+    
+    var autoHideBars: Bool {
+        set { defaults.set(newValue, forKey: Keys.autoHideBars); objectWillChange.send() }
+        get { defaults.bool(forKey: Keys.autoHideBars) }
     }
 
     var defaultLightningWallet: LightningWallet {
