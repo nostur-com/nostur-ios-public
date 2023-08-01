@@ -22,10 +22,15 @@ class NRTextParser { // TEXT things
         self.tags = event.fastTags
 
         // Remove image links
-        // because they get rendered as embers in PostDetail.
+        // because they get rendered as embeds in PostDetail.
         // and NoteRow shows them in ImageViewer
-        let newText = removeImageLinks(event: event, text: text)
+        var newText = removeImageLinks(event: event, text: text)
 
+        // Handle #hashtags
+        newText = Self.replaceHashtagsWithMarkdownLinks(in: newText)
+        // Handle naddr1...
+        newText = Self.replaceNaddrWithMarkdownLinks(in: newText)
+        
         // NIP-08, handle #[0] #[1] etc
         let textWithPs = parseTagIndexedMentions(event: event, text: newText)
 
@@ -36,9 +41,6 @@ class NRTextParser { // TEXT things
         }
 
         do {
-//            newText = Self.replaceURLsWithMarkdownLinks(in: newText)
-            newerTextWithPs.text = Self.replaceHashtagsWithMarkdownLinks(in: newerTextWithPs.text)
-            newerTextWithPs.text = Self.replaceNaddrWithMarkdownLinks(in: newerTextWithPs.text)
             let finalText = try AttributedString(markdown: newerTextWithPs.text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
             
             let a = AttributedStringWithPs(input:text, output: finalText, pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
@@ -216,7 +218,7 @@ class NRTextParser { // TEXT things
 
     static func replaceHashtagsWithMarkdownLinks(in string: String) -> String {
         return string
-            .replacingOccurrences(of: ###"(?<![/\?]|\b)(\#)(\S{2,})\b"###,
+            .replacingOccurrences(of: ###"(?<![/\?]|\b)(\#)([^\]]\S{2,})\b"###,
                                   with: "[$0](nostur:t:$2)",
                                   options: .regularExpression)
     }
