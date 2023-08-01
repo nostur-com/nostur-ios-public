@@ -594,7 +594,12 @@ class NewManagedClient: NSObject, URLSessionWebSocketDelegate, NewWebSocketDeleg
             self.skipped = 0
             self.isConnecting = true
             self.client.connect()
-            self.exponentialReconnectBackOff = max(1, self.exponentialReconnectBackOff * 2)
+            if self.exponentialReconnectBackOff >= 512 {
+                self.exponentialReconnectBackOff = 512
+            }
+            else {
+                self.exponentialReconnectBackOff = max(1, self.exponentialReconnectBackOff * 2)
+            }
         }
     }
     
