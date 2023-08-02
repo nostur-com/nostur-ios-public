@@ -117,6 +117,10 @@ final class SocketPool: ObservableObject {
         }
     }
     
+    var anyConnected:Bool {
+        sockets.contains(where: { $0.value.isConnected })
+    }
+    
     func disconnectAll() {
         for socket in sockets {
             if socket.value.isConnecting || socket.value.isConnected {
