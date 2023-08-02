@@ -232,6 +232,36 @@ class NotificationsManager: ObservableObject {
         }
     }
     
+    private func checkForOfflinePosts(_ maxAgo:TimeInterval = 3600 * 24 * 3) {
+        guard SocketPool.shared.anyConnected else { return }
+        guard let account = ns.bgAccount else { return }
+        let pubkey = account.publicKey
+        let ago = Double(Date.now.timeIntervalSince1970) - (maxAgo)
+        
+        let r1 = Event.fetchRequest()
+        // X days ago, from our pubkey, only kinds that we can create+send
+        r1.predicate = NSPredicate(format:
+                                    "created_at > %i " +
+                                    "AND pubkey = %@ " +
+                                    "AND kind IN {0,1,3,4,5,6,7,9802} " +
+                                    "AND relays = \"\"",
+                                    ago,
+                                    pubkey)
+        r1.fetchLimit = 100 // sanity
+        r1.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+        
+        if let offlinePosts = try? context.fetch(r1) {
+            guard !offlinePosts.isEmpty else { return }
+            for offlinePost in offlinePosts {
+                L.og.debug("Publishing offline post: \(offlinePost.id)")
+                let nEvent = offlinePost.toNEvent()
+                DispatchQueue.main.async {
+                    Unpublisher.shared.publishNow(nEvent)
+                }
+            }
+        }
+    }
+    
     func checkForEverything() {
         guard ns.account != nil else { return }
         guard ns.activeAccountPublicKey != "" else { return }
@@ -244,6 +274,7 @@ class NotificationsManager: ObservableObject {
 
             self.relayCheckNewestNotifications() // or wait 3 seconds?
             
+            self.checkForOfflinePosts() // Not really part of notifications but easy to add here and reuse the same timer
             self.checkForNewPosts()
             self.checkForNewReactions()
             self.checkForNewZaps()
@@ -307,6 +338,7 @@ class NotificationsManager: ObservableObject {
         timer = Timer.scheduledTimer(withTimeInterval: 15.0, repeats: true) { [weak self] timer in
             self?.checkForEverything()
         }
+        timer?.tolerance = 5.0
     }
     
     func stopTimer() {
