@@ -128,9 +128,13 @@ final class NosturState : ObservableObject {
         }
     }
     
+    var didWoT = Set<String>()
+    
     public func loadWoT(_ account:Account? = nil) {
         guard let account = account ?? self.account else { L.og.error("🕸️🕸️ WebOfTrust: loadWoT. account = nil"); return }
         guard SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue else { return }
+        guard !didWoT.contains(account.publicKey) else { return }
+        didWoT.insert(account.publicKey)
         
         let wotFollowingPubkeys = account.followingPublicKeys.subtracting(account.silentFollows) // We don't include silent follows in WoT
         
