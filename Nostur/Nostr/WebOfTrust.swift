@@ -91,7 +91,7 @@ class WebOfTrust: ObservableObject {
     
     public func loadNormal() { // This is for "normal" mode (follows + follows of follows)
         if let lastUpdated = lastUpdatedDate(pubkey) {
-            L.og.info("🕸️🕸️ WebOfTrust: lastUpdatedDate: web-of-trust-\(self.pubkey).txt --> \(lastUpdated.description)")
+            L.og.debug("🕸️🕸️ WebOfTrust/WoTFol: lastUpdatedDate: web-of-trust-\(self.pubkey).txt --> \(lastUpdated.description)")
             DispatchQueue.main.async {
                 self.lastUpdated = lastUpdated
             }
@@ -143,7 +143,7 @@ class WebOfTrust: ObservableObject {
             
             DispatchQueue.main.async {
                 self.followingFollowingPubkeys = followFollows
-                L.sockets.debug("🕸️🕸️ WebOfTrust: allowList now has \(self.followingPubkeys.count) + \(self.followingFollowingPubkeys.count) pubkeys")
+                L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: allowList now has \(self.followingPubkeys.count) + \(self.followingFollowingPubkeys.count) pubkeys")
             }
             self.storeData(pubkeys: followFollows, pubkey: pubkey)
         }
@@ -157,14 +157,14 @@ class WebOfTrust: ObservableObject {
             try pubkeys.joined(separator: "\n").write(to: filename, atomically: true, encoding: String.Encoding.utf8)
             
             if let lastUpdated = lastUpdatedDate(pubkey) {
-                L.og.info("🕸️🕸️ WebOfTrust: lastUpdatedDate: web-of-trust-\(pubkey).txt --> \(lastUpdated.description)")
+                L.og.info("🕸️🕸️ WebOfTrust/WoTFol: lastUpdatedDate: web-of-trust-\(pubkey).txt --> \(lastUpdated.description)")
                 DispatchQueue.main.async {
                     self.lastUpdated = lastUpdated
                 }
             }
         }
         catch {
-            L.og.error("🕸️🕸️ WebOfTrust: Failed to write file: web-of-trust-\(pubkey).txt: \(error)")
+            L.og.error("🕸️🕸️ WebOfTrust/WoTFol: Failed to write file: web-of-trust-\(pubkey).txt: \(error)")
         }
     }
     
@@ -179,7 +179,7 @@ class WebOfTrust: ObservableObject {
             return pubkeys
         }
         catch {
-            L.og.error("🕸️🕸️ WebOfTrust: Failed to read file: web-of-trust-\(pubkey).txt: \(error)")
+            L.og.error("🕸️🕸️ WebOfTrust/WoTFol: Failed to read file: web-of-trust-\(pubkey).txt: \(error)")
             return Set<String>()
         }
     }
@@ -200,7 +200,7 @@ class WebOfTrust: ObservableObject {
             return date
         }
         catch {
-            L.og.info("🕸️🕸️ WebOfTrust: lastUpdatedDate? doesn't exist yet: web-of-trust-\(pubkey).txt")
+            L.og.debug("🕸️🕸️ WebOfTrust/WoTFol: lastUpdatedDate? doesn't exist yet: web-of-trust-\(pubkey).txt")
             return nil
         }
     }
