@@ -115,24 +115,22 @@ class WebOfTrust: ObservableObject {
         var pubkeys = followingPubkeys
         pubkeys.remove(pubkey)
         
-        // Fetch kind 3's
+        // Fetch kind 3s
         let task = ReqTask(
             prefix: "WoTFol-",
-            reqCommand: { (taskId) in
-                L.sockets.info("🕸️🕸️ WebOfTrust: Fetching contact lists for \(pubkeys.count) contacts")
+            reqCommand: { taskId in
+                L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: Fetching contact lists for \(pubkeys.count) contacts")
                 req(RM.getAuthorContactsLists(pubkeys: Array(pubkeys), subscriptionId: taskId))
             },
-            processResponseCommand: { [weak self] (taskId, _) in
-                guard let self = self else { return }
-                L.sockets.debug("🕸️🕸️ WebOfTrust: Received contact list(s)")
-                self.generateWoT()
+            processResponseCommand: { [weak self] taskId, _ in
+                L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: Received contact list(s)")
+                self?.generateWoT()
             },
-            timeoutCommand: { [weak self] (taskId) in
-                guard let self = self else { return }
-                L.sockets.info("🕸️🕸️ WebOfTrust: Time-out")
-                self.generateWoT()
+            timeoutCommand: { [weak self] taskId in
+                L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: Time-out")
+                self?.generateWoT()
             })
-        
+
         backlog.add(task)
         task.fetch()
     }
