@@ -121,11 +121,6 @@ final class NosturState : ObservableObject {
             // Remove currectly active "Following" subscriptions from connected sockets
             SocketPool.shared.removeActiveAccountSubscriptions()
             
-            // Load web of trust
-            if !NewOnboardingTracker.shared.isOnboarding {
-                self.loadWoT(account)
-            }
-            
             if sendActiveAccountChangedNotification {
                 FollowingGuardian.shared.didReceiveContactListThisSession = false
                 sendNotification(.activeAccountChanged, account)
@@ -141,21 +136,21 @@ final class NosturState : ObservableObject {
         
         let publicKey = account.publicKey
         DataProvider.shared().bg.perform { [weak self] in
-            guard let self = self else { return }
-            self.wot = WebOfTrust(pubkey: publicKey, followingPubkeys: wotFollowingPubkeys)
-        }
-        switch SettingsStore.shared.webOfTrustLevel {
-            case SettingsStore.WebOfTrustLevel.off.rawValue:
-                L.og.info("🕸️🕸️ WebOfTrust: Disabled")
-            case SettingsStore.WebOfTrustLevel.normal.rawValue:
-                DataProvider.shared().bg.perform { [weak self] in
-                    guard let self = self else { return }
-                    self.wot?.loadNormal()
-                }
-            case SettingsStore.WebOfTrustLevel.strict.rawValue:
-                L.og.info("🕸️🕸️ WebOfTrust: Strict")
-            default:
-                L.og.info("🕸️🕸️ WebOfTrust: Disabled")
+            self?.wot = WebOfTrust(pubkey: publicKey, followingPubkeys: wotFollowingPubkeys)
+            
+            switch SettingsStore.shared.webOfTrustLevel {
+                case SettingsStore.WebOfTrustLevel.off.rawValue:
+                    L.og.info("🕸️🕸️ WebOfTrust: Disabled")
+                case SettingsStore.WebOfTrustLevel.normal.rawValue:
+                    L.og.info("🕸️🕸️ WebOfTrust: Normal")
+                    DataProvider.shared().bg.perform { [weak self] in
+                        self?.wot?.loadNormal()
+                    }
+                case SettingsStore.WebOfTrustLevel.strict.rawValue:
+                    L.og.info("🕸️🕸️ WebOfTrust: Strict")
+                default:
+                    L.og.info("🕸️🕸️ WebOfTrust: Disabled")
+            }
         }
     }
     
