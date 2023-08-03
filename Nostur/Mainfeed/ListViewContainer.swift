@@ -20,7 +20,7 @@ struct ListViewContainer: View {
                     .padding(.top, 5)
             }
             .overlay {
-                if vm.state == .INIT {
+                if vm.state == .INIT || vm.nrPostLeafs.isEmpty {
                     CenteredProgressView()
                 }
             }
