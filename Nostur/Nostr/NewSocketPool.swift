@@ -55,6 +55,8 @@ final class SocketPool: ObservableObject {
                 if !activeNWCconnectionId.isEmpty, let nwc = NWCConnection.fetchConnection(activeNWCconnectionId, context: DataProvider.shared().viewContext) {
                     _ = sp.addNWCSocket(connectionId:nwc.connectionId, url: nwc.relay)
                 }
+                
+                self._afterConnect()
             } catch {
                 L.sockets.error("🔴🔴🔴 Fail in SocketPool.shared.setup(), \(error)")
             }
@@ -72,6 +74,29 @@ final class SocketPool: ObservableObject {
         stayConnectedTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true, block: { _ in
             self.stayConnectedPing()
         })
+        self._afterConnect()
+    }
+    
+    
+    // Called 2.5 seconds after trying to connect
+    public func afterConnect() {
+        guard let account = NosturState.shared.account else { return }
+        NosturState.shared.loadWoT(account)
+    }
+    
+    // Called 5.0 seconds after trying to connect
+    public func afterConnectLater() {
+        
+    }
+    
+    private func _afterConnect() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+            self.afterConnect()
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4.5) {
+            self.afterConnectLater()
+        }
     }
     
     // Connect to relays selected for globalish feed, reuse existing connections
