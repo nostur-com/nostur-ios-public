@@ -150,7 +150,7 @@ class LVM: NSObject, ObservableObject {
             startInstantFeed()
             return
         }
-        L.lvm.info("🟢🟢 \(self.id) \(self.pubkey?.short ?? "") didAppear")
+        L.lvm.info("🟢🟢 \(self.id) \(self.name) \(self.pubkey?.short ?? "") didAppear")
         self.restoreSubscription()
         
         
@@ -615,12 +615,6 @@ class LVM: NSObject, ObservableObject {
             selectedListId = (UserDefaults.standard.string(forKey: "selected_listId") ?? "Unknown")
         }
         addSubscriptions()
-//        fetchFeedTimerNextTick()
-     
-        
-        if viewIsVisible {
-            startInstantFeed()
-        }
     }
     
     func startInstantFeed() {
@@ -664,12 +658,15 @@ class LVM: NSObject, ObservableObject {
             }
         }
         if id == "Following", let pubkey {
+            L.og.notice("🟪 instantFeed.start \(self.name) \(self.id)")
             instantFeed.start(pubkey, onComplete: completeInstantFeed)
         }
         else if type == .relays {
+            L.og.notice("🟪 instantFeed.start \(self.name) \(self.id)")
             instantFeed.start(bgRelays, onComplete: completeInstantFeed)
         }
         else {
+            L.og.notice("🟪 instantFeed.start \(self.name) \(self.id)")
             instantFeed.start(pubkeys, onComplete: completeInstantFeed)
         }
     }
@@ -677,7 +674,7 @@ class LVM: NSObject, ObservableObject {
     var instantFinished = false {
         didSet {
             if instantFinished {
-                L.og.notice("🟪 instantFinished")
+                L.og.notice("🟪 \(self.name) instantFinished")
                 // if nothing on screen, fetch from local
                 DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
                     if self.nrPostLeafs.isEmpty {
