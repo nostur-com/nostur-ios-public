@@ -624,16 +624,16 @@ class LVM: NSObject, ObservableObject {
     }
     
     func startInstantFeed() {
-        guard !instantFinished else { return }
+        guard !instantFinished && !instantFeed.isRunning else { return }
         let completeInstantFeed = { [weak self] events in
             guard let self = self else { return }
             self.startRenderingSubject.send(events)
             
-            if (!instantFinished) {
+            if (!self.instantFinished) {
                 self.performLocalFetchAfterImport()
             }
 //            fetchFeedTimerNextTick()
-            instantFinished = true
+            self.instantFinished = true
             
             if type == .relays {
                 DispatchQueue.main.async {

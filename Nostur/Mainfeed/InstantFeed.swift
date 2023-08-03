@@ -15,14 +15,7 @@ class InstantFeed {
     var pongReceiver:AnyCancellable?
     var pubkey:Pubkey?
     var onComplete:CompletionHandler?
-//    var pongReceived = false {
-//        didSet {
-//            if pongReceived, oldValue == false, let pubkey {
-//                L.og.notice("🟪 First pong received. ")
-//                fetchContactListPubkeys(pubkey: pubkey)
-//            }
-//        }
-//    }
+
     var pubkeys:Set<Pubkey>? {
         didSet {
             if pubkeys != nil {
@@ -33,15 +26,18 @@ class InstantFeed {
     var events:[Event]? {
         didSet {
             if let events {
+                self.isRunning = false
                 self.onComplete?(events)
                 self.backlog.clear()
             }
         }
     }
     var relays:Set<Relay> = []
+    var isRunning = false
     
     public func start(_ pubkey:Pubkey, onComplete: @escaping CompletionHandler) {
         L.og.notice("🟪 InstantFeed.start(\(pubkey.short))")
+        self.isRunning = true
         self.pubkey = pubkey
         self.onComplete = onComplete
 //        SocketPool.shared.ping()
@@ -50,7 +46,7 @@ class InstantFeed {
     
     public func start(_ pubkeys:Set<Pubkey>, onComplete: @escaping CompletionHandler) {
         L.og.notice("🟪 InstantFeed.start(\(pubkeys.count) pubkeys)")
-
+        self.isRunning = true
         self.onComplete = onComplete
 //        SocketPool.shared.ping()
         self.pubkeys = pubkeys
@@ -59,7 +55,7 @@ class InstantFeed {
     
     public func start(_ relays:Set<Relay>, onComplete: @escaping CompletionHandler) {
         L.og.notice("🟪 InstantFeed.start(\(relays.count) relays)")
-
+        self.isRunning = true
         self.onComplete = onComplete
         self.relays = relays
         fetchPostsFromGlobalishRelays()

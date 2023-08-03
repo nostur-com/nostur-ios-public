@@ -17,9 +17,9 @@ class LVMManager {
     init() {
         restoreSubscriptionsSubject
             .debounce(for: .seconds(0.2), scheduler: RunLoop.main)
+            .throttle(for: .seconds(10.0), scheduler: RunLoop.main, latest: true)
             .sink { [weak self] _ in
                 guard let self = self else { return }
-                
                 self.listVMs.forEach { lvm in
                     lvm.restoreSubscription()
                 }
