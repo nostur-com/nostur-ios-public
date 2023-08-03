@@ -15,6 +15,7 @@ final class NosturState : ObservableObject {
     public static let shared = NosturState()
     
     public var wot:WebOfTrust?
+    public var backlog = Backlog(timeout: 12.5, auto: true)
     public var nsecBunker:NSecBunkerManager?
     
     public var nrPostQueue = DispatchQueue(label: "com.nostur.nrPostQueue", attributes: .concurrent)

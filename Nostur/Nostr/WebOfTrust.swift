@@ -62,7 +62,10 @@ class WebOfTrust: ObservableObject {
         }
     }
     
-    private var backlog = Backlog(timeout: 90, auto: true)
+    var backlog:Backlog {
+        get { NosturState.shared.backlog }
+        set { NosturState.shared.backlog = newValue }
+    }
     
     init(pubkey:String, followingPubkeys:Set<String>) {
         self.pubkey = pubkey
