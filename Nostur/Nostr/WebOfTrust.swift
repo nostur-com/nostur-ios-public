@@ -31,8 +31,16 @@ class WebOfTrust: ObservableObject {
     let ENABLE_THRESHOLD = 200 // To not degrade onboarding/new user experience, we should have more contacts in WoT than this threshold before the filter is active
     
     // For views
-    @Published var lastUpdated:Date? = nil
-    @Published var allowedKeysCount:Int = 0
+    @Published var lastUpdated:Date? = nil {
+        didSet {
+            SettingsStore.shared.objectWillChange.send() // update Settings screen
+        }
+    }
+    @Published var allowedKeysCount:Int = 0 {
+        didSet {
+            SettingsStore.shared.objectWillChange.send() // update Settings screen
+        }
+    }
     
     // Only accessed from bg thread
     // Keep seperate lists for faster filtering
@@ -197,7 +205,9 @@ class WebOfTrust: ObservableObject {
     
     public func loadLastUpdatedDate() {
         if let date = self.lastUpdatedDate(pubkey) {
-            self.lastUpdated = date
+            DispatchQueue.main.async {
+                self.lastUpdated = date
+            }
         }
     }
     
