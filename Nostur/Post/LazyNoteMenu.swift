@@ -26,7 +26,7 @@ struct LazyNoteMenuButton: View {
 }
 
 struct LazyNoteMenuSheet: View {
-    @ObservedObject var nrPost:NRPost
+    let nrPost:NRPost
     @EnvironmentObject var ns:NosturState
     @Environment(\.dismiss) var dismiss
     let up:Unpublisher = .shared
