@@ -90,13 +90,14 @@ class WebOfTrust: ObservableObject {
     private var pubkey:String
     
     public func loadNormal() { // This is for "normal" mode (follows + follows of follows)
+        self.loadFollowingFollowing()
+        
         if let lastUpdated = lastUpdatedDate(pubkey) {
             L.og.debug("🕸️🕸️ WebOfTrust/WoTFol: lastUpdatedDate: web-of-trust-\(self.pubkey).txt --> \(lastUpdated.description)")
             DispatchQueue.main.async {
                 self.lastUpdated = lastUpdated
             }
         }
-        self.loadFollowingFollowing()
     }
     
     private func loadFollowingFollowing() {
@@ -176,6 +177,16 @@ class WebOfTrust: ObservableObject {
             
             let input = try String(contentsOf: filename)
             let pubkeys = Set(input.components(separatedBy: "\n"))
+            if pubkeys.count < 2 {
+                // Something wrong, delete corrupt file
+                do {
+                    try FileManager.default.removeItem(at: filename)
+                    L.og.error("🕸️🕸️ WebOfTrust/WoTFol: Something wrong, deleting corrupt file: web-of-trust-\(pubkey).txt")
+                } catch {
+                    L.og.error("🕸️🕸️ WebOfTrust/WoTFol: Something wrong, but could not delete file: web-of-trust-\(pubkey).txt: \(error)")
+                }
+                return Set<String>()
+            }
             return pubkeys
         }
         catch {
