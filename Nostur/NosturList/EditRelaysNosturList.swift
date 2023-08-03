@@ -15,6 +15,7 @@ struct EditRelaysNosturList: View {
     @State var title = ""
     @State var wotEnabled = true
     @State var selectedRelays:Set<Relay> = []
+    @State var showAsTab = true
     
     @FetchRequest(
         sortDescriptors: [SortDescriptor(\Relay.createdAt, order: .forward)],
@@ -34,6 +35,8 @@ struct EditRelaysNosturList: View {
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
             }
+            
+            Toggle(isOn: $showAsTab, label: { Text("Pin on tab bar", comment: "Toggle to pin/unpin a feed on tab bar")})
             
             Section(header: Text("Relay selection", comment: "Header for a feed setting")) {
                 ForEach(relays, id:\.objectID) { relay in
@@ -68,6 +71,7 @@ struct EditRelaysNosturList: View {
             title = list.name ?? ""
             selectedRelays = list.relays_
             wotEnabled = list.wotEnabled
+            showAsTab = list.showAsTab
         }
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
@@ -78,6 +82,7 @@ struct EditRelaysNosturList: View {
                     list.name = title
                     list.relays = selectedRelays
                     list.wotEnabled = wotEnabled
+                    list.showAsTab = showAsTab
                     DataProvider.shared().save()
                     dismiss()
                     sendNotification(.listRelaysChanged, NewRelaysForList(subscriptionId: list.subscriptionId, relays: selectedRelays, wotEnabled: wotEnabled))

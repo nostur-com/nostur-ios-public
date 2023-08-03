@@ -103,6 +103,7 @@ struct NewListSheet: View {
                     newList = NosturList(context: DataProvider.shared().viewContext)
                     newList?.id = UUID()
                     newList?.name = title
+                    newList?.showAsTab = true
                     
                     if feedType == .relays {
                         newList?.relays = selectedRelays
