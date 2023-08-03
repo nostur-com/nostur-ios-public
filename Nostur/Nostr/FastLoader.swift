@@ -241,6 +241,7 @@ class Backlog {
         self.timeout = timeout
         timer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] timer in
             guard let self = self else { return }
+            guard !self.tasks.isEmpty else { return }
             self.removeOldTasks()
         }
         if (auto) {
