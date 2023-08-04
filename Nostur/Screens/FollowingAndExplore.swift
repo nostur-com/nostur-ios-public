@@ -153,6 +153,9 @@ struct FollowingAndExplore: View {
                     lvm.cleanUp()
                 }
             LVMManager.shared.listVMs.removeAll(where: { $0.pubkey == account.publicKey })
+            
+            
+            LVMManager.shared.followingLVM(forAccount: newAccount).restoreSubscription()
         })
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
