@@ -615,6 +615,13 @@ class LVM: NSObject, ObservableObject {
             selectedListId = (UserDefaults.standard.string(forKey: "selected_listId") ?? "Unknown")
         }
         addSubscriptions()
+        
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            if self.viewIsVisible {
+                self.startInstantFeed()
+            }
+        }
     }
     
     func startInstantFeed() {
@@ -685,7 +692,7 @@ class LVM: NSObject, ObservableObject {
             }
         }
     }
-    
+
     func configureTimer() {
         self.fetchFeedTimer?.invalidate()
         self.fetchFeedTimer = Timer.scheduledTimer(withTimeInterval: FETCH_FEED_INTERVAL, repeats: true) { [weak self] _ in
