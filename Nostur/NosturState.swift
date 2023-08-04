@@ -124,6 +124,7 @@ final class NosturState : ObservableObject {
             if sendActiveAccountChangedNotification {
                 FollowingGuardian.shared.didReceiveContactListThisSession = false
                 sendNotification(.activeAccountChanged, account)
+                NosturState.shared.loadWoT(account)
             }
         }
     }
