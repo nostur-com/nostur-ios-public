@@ -1013,12 +1013,14 @@ extension LVM {
     func showOwnNewPostsImmediately() {
         receiveNotification(.newPostSaved)
             .sink { [weak self] notification in
-                guard self?.id == "Following" else { return }
+                guard let self = self else { return }
+                guard self.id == "Following" else { return }
                 let event = notification.object as! Event
                 
                 let context = DataProvider.shared().bg
                 context.perform { [weak self] in
                     guard let self = self else { return }
+                    guard !self.leafIdsOnScreen.contains(event.id) else { return }
                     EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "LVM.showOwnNewPostsImmediately")
                     let newNRPostLeaf = NRPost(event: event, withParents: true, withRepliesCount: true)
                     DispatchQueue.main.async {

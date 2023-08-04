@@ -244,7 +244,10 @@ class NotificationsManager: ObservableObject {
                                     "created_at > %i " +
                                     "AND pubkey = %@ " +
                                     "AND kind IN {0,1,3,4,5,6,7,9802} " +
-                                    "AND relays = \"\"",
+                                    "AND relays = \"\"" +
+                                    "AND flags != \"nsecbunker_unsigned\"" +
+                                    "AND sig != nil"
+                                    ,
                                     ago,
                                     pubkey)
         r1.fetchLimit = 100 // sanity
