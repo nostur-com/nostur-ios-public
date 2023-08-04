@@ -105,7 +105,20 @@ class Unpublisher {
 //            return
 //        }
         // Always save event first
-        if try! Event.fetchEvent(id: nEvent.id, context: viewContext) == nil {
+        // Save or update event
+        if let dbEvent = try? Event.fetchEvent(id: nEvent.id, context: viewContext) {
+            // We already have it in db
+            Importer.shared.existingIds.insert(nEvent.id)
+            sp.sendMessage(ClientMessage(message: nEvent.wrappedEventJson()))
+            
+            // Just update signature/flag if it was unsigned (nsecbunker)
+            if dbEvent.flags == "nsecbunker_unsigned" && nEvent.signature != "" {
+                dbEvent.flags = ""
+                dbEvent.sig = nEvent.signature
+            }
+        }
+        else {
+            // Event not in db yet
             let bgContext = DataProvider.shared().bg
             
             bgContext.perform {
@@ -127,10 +140,6 @@ class Unpublisher {
                 }
                 self.sp.sendMessage(ClientMessage(message: savedEvent.toNEvent().wrappedEventJson()))
             }
-        }
-        else {
-            Importer.shared.existingIds.insert(nEvent.id)
-            sp.sendMessage(ClientMessage(message: nEvent.wrappedEventJson()))
         }
     }
 }

@@ -56,6 +56,7 @@ public final class NewPostModel: ObservableObject {
     public func sendNow(replyTo:Event? = nil, quotingEvent:Event? = nil, dismiss:DismissAction) {
         guard let account = NosturState.shared.account else { return }
         guard account.privateKey != nil else { NosturState.shared.readOnlyAccountSheetShown = true; return }
+        let publicKey = account.publicKey
         var nEvent = nEvent ?? NEvent(content: "")
         nEvent.createdAt = NTimestamp.init(date: Date())
         if (!pastedImages.isEmpty) {
@@ -94,6 +95,15 @@ public final class NewPostModel: ObservableObject {
                         }
                         
                         if account.isNC {
+                            // Save unsigned event:
+                            DataProvider.shared().bg.perform {
+                                nEvent.publicKey = publicKey
+                                nEvent = nEvent.withId()
+                                let savedEvent = Event.saveEvent(event: nEvent, flags: "nsecbunker_unsigned")
+                                DispatchQueue.main.async {
+                                    sendNotification(.newPostSaved, savedEvent)
+                                }
+                            }
                             NosturState.shared.nsecBunker?.requestSignature(forEvent: nEvent, whenSigned: { signedEvent in
                                 Unpublisher.shared.publishNow(signedEvent)
                             })
@@ -131,6 +141,15 @@ public final class NewPostModel: ObservableObject {
                 nEvent.content = replaceNsecWithHunter2(nEvent.content)
             }
             if account.isNC {
+                // Save unsigned event:
+                DataProvider.shared().bg.perform {
+                    nEvent.publicKey = publicKey
+                    nEvent = nEvent.withId()
+                    let savedEvent = Event.saveEvent(event: nEvent, flags: "nsecbunker_unsigned")
+                    DispatchQueue.main.async {
+                        sendNotification(.newPostSaved, savedEvent)
+                    }
+                }
                 NosturState.shared.nsecBunker?.requestSignature(forEvent: nEvent, whenSigned: { signedEvent in
                     Unpublisher.shared.publishNow(signedEvent)
                 })
