@@ -149,15 +149,15 @@ struct Maintenance {
             
             // CLEAN UP EVENTS WITHOUT SIG (BUG FROM PostPreview)
             let frNoSig = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
-            frNoSig.predicate = NSPredicate(format: "sig == nil")
+            frNoSig.predicate = NSPredicate(format: "sig == nil AND flags != \"nsecbunker_unsigned\"")
             
             let frNoSigbatchDelete = NSBatchDeleteRequest(fetchRequest: frNoSig)
             frNoSigbatchDelete.resultType = .resultTypeCount
             
             do {
                 let result = try context.execute(frNoSigbatchDelete) as! NSBatchDeleteResult
-                if ((result.result as? Int ?? 0) > 0) {
-                    L.maintenance.info("🧹🧹 Deleted \(result.result.debugDescription) events without signature")
+                if let count = result.result as? Int, count > 0 {
+                    L.maintenance.info("🧹🧹 Deleted \(count) events without signature")
                 }
             } catch {
                 L.maintenance.info("🔴🔴 Failed to delete events without signature")
@@ -166,7 +166,7 @@ struct Maintenance {
             
             
             
-            // KIND 1,4,6,9802,30023
+            // KIND 1,4,5,6,9802,30023
             // OLDER THAN X DAYS
             // IS NOT BOOKMARKED
             // IS NOT OWN EVENT
@@ -178,18 +178,18 @@ struct Maintenance {
             let mergedIds = Set(ownAccountBookmarkIds).union(Set(ownAccountPrivateNoteEventIds)).union(postsIdToKeep)
             
             let fr16 = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
-            fr16.predicate = NSPredicate(format: "created_at < %i AND kind IN {1,4,6,9802,30023} AND NOT id IN %@ AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), mergedIds, ownAccountPubkeys, regex)
+            fr16.predicate = NSPredicate(format: "created_at < %i AND kind IN {1,4,5,6,9802,30023} AND NOT id IN %@ AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), mergedIds, ownAccountPubkeys, regex)
             
             let fr16batchDelete = NSBatchDeleteRequest(fetchRequest: fr16)
             fr16batchDelete.resultType = .resultTypeCount
             
             do {
                 let result = try context.execute(fr16batchDelete) as! NSBatchDeleteResult
-                if ((result.result as? Int ?? 0) > 0) {
-                    L.maintenance.info("🧹🧹 Deleted \(result.result.debugDescription) kind {1,4,6,9802,30023} events")
+                if let count = result.result as? Int, count > 0 {
+                    L.maintenance.info("🧹🧹 Deleted \(count) kind {1,4,5,6,9802,30023} events")
                 }
             } catch {
-                L.maintenance.info("🔴🔴 Failed to delete {1,4,6,9802,30023} data")
+                L.maintenance.info("🔴🔴 Failed to delete {1,4,5,6,9802,30023} data")
             }
             
             
@@ -215,8 +215,8 @@ struct Maintenance {
             
             do {
                 let result = try context.execute(fr9734batchDelete) as! NSBatchDeleteResult
-                if ((result.result as? Int ?? 0) > 0) {
-                    L.maintenance.info("🧹🧹 Deleted \(result.result.debugDescription) kind {9734,8,7} events")
+                if let count = result.result as? Int, count > 0 {
+                    L.maintenance.info("🧹🧹 Deleted \(count) kind {9734,8,7} events")
                 }
             } catch {
                 L.maintenance.info("🔴🔴 Failed to delete 9734,8,7 data")
@@ -242,8 +242,8 @@ struct Maintenance {
             
             do {
                 let result = try context.execute(fr9735batchDelete) as! NSBatchDeleteResult
-                if ((result.result as? Int ?? 0) > 0) {
-                    L.maintenance.info("🧹🧹 Deleted \(result.result.debugDescription) kind 9735 events")
+                if let count = result.result as? Int, count > 0 {
+                    L.maintenance.info("🧹🧹 Deleted \(count) kind 9735 events")
                 }
             } catch {
                 L.maintenance.info("🔴🔴 Failed to delete 9735 data")
@@ -270,8 +270,8 @@ struct Maintenance {
             
             do {
                 let result = try context.execute(fr0batchDelete) as! NSBatchDeleteResult
-                if ((result.result as? Int ?? 0) > 0) {
-                    L.maintenance.info("🧹🧹 Deleted \(result.result.debugDescription) kind=0 events")
+                if let count = result.result as? Int, count > 0 {
+                    L.maintenance.info("🧹🧹 Deleted \(count) kind=0 events")
                 }
             } catch {
                 L.maintenance.info("🔴🔴 Failed to delete kind=0 data")
@@ -279,7 +279,7 @@ struct Maintenance {
 
             
             // DELETE OLDER KIND 3 + 10002 EVENTS
-            // BUT NOT OUR OWN OR THOSE WE ARE FOLLOWING
+            // BUT NOT OUR OWN OR THOSE WE ARE FOLLOWING (FOR WoT follows-follows)
             
             var followingPubkeys = Set(ownAccountPubkeys)
             for account in allAccounts {
@@ -308,9 +308,20 @@ struct Maintenance {
                 context.delete(toDelete)
             }
             
+            var olderKind3DeletedCount = 0
+            for remaining in noDuplicates.values {
+                if remaining.created_at < Int64(xDaysAgo.timeIntervalSince1970) {
+                    context.delete(remaining)
+                    olderKind3DeletedCount = olderKind3DeletedCount + 1
+                }
+            }
+            
             do {
                 if !forDeletion.isEmpty {
-                    L.maintenance.info("🧹🧹 Deleted \(forDeletion.count) kind 3,10002 events")
+                    L.maintenance.info("🧹🧹 Deleted \(forDeletion.count) duplicate kind 3,10002 events")
+                }
+                if olderKind3DeletedCount > 0 {
+                    L.maintenance.info("🧹🧹 Deleted \(olderKind3DeletedCount) older kind 3,10002 events")
                 }
                 try context.save()
             }
