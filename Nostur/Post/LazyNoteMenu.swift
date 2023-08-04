@@ -205,9 +205,17 @@ struct LazyNoteMenuSheet: View {
                 
                 Button {
                     dismiss()
-                    guard ns.account != nil else { return }
-                    let nEvent = nrPost.mainEvent.toNEvent()
-                    up.publishNow(nEvent)
+                    guard let account = ns.account else { return }
+                    let nEvent = nrPost.mainEvent.toNEvent()                    
+                    
+                    if nrPost.pubkey == NosturState.shared.activeAccountPublicKey && nrPost.mainEvent.flags == "nsecbunker_unsigned" && account.isNC {
+                        NosturState.shared.nsecBunker?.requestSignature(forEvent: nEvent, whenSigned: { signedEvent in
+                            Unpublisher.shared.publishNow(signedEvent)
+                        })
+                    }
+                    else {
+                        up.publishNow(nEvent)
+                    }
                 } label: {
                     if nrPost.pubkey == NosturState.shared.activeAccountPublicKey {
                         Label(String(localized:"Rebroadcast (again)", comment: "Button to broadcast own post again"), systemImage: "dot.radiowaves.left.and.right")
