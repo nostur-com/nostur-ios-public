@@ -900,7 +900,7 @@ extension Event {
         }
     }
     
-    static func saveEvent(event:NEvent, relays:String? = nil) -> Event {
+    static func saveEvent(event:NEvent, relays:String? = nil, flags:String = "") -> Event {
         let context = DataProvider.shared().bg
         
         let savedEvent = Event(context: context)
@@ -913,6 +913,7 @@ extension Event {
         savedEvent.pubkey = event.publicKey
         savedEvent.likesCount = 0
         savedEvent.isRepost = event.kind == .repost
+        savedEvent.flags = flags
         if let contact = EventRelationsQueue.shared.getAwaitingBgContacts().first(where: { $0.pubkey == event.publicKey }) {
             savedEvent.contact = contact
         }
