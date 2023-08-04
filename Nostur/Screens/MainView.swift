@@ -39,7 +39,14 @@ struct MainView: View {
                     }
                     .sheet(isPresented: $showingNewNote) {
                         NavigationStack {
-                            NewPost(noteCancellationId: $noteCancellationId)
+                            if account.isNC, let nsecBunker = NosturState.shared.nsecBunker {
+                                WithNSecBunkerConnection(nsecBunker: nsecBunker) {
+                                    NewPost(noteCancellationId: $noteCancellationId)
+                                }
+                            }
+                            else {
+                                NewPost(noteCancellationId: $noteCancellationId)
+                            }
                         }
                     }
                     .toolbar {
