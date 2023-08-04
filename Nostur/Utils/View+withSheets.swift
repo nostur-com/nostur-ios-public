@@ -179,25 +179,54 @@ private struct WithSheets: ViewModifier {
         
             .sheet(item: $replyToEvent) { event in
                 NavigationStack {
-                    NewReply(replyTo: event)
-                        .environmentObject(ns)
-                        .environmentObject(dim)
+                    if let account = ns.account, account.isNC, let nsecBunker = ns.nsecBunker {
+                        WithNSecBunkerConnection(nsecBunker: nsecBunker) {
+                            NewReply(replyTo: event)
+                                .environmentObject(ns)
+                                .environmentObject(dim)
+                        }
+                    }
+                    else {
+                        NewReply(replyTo: event)
+                            .environmentObject(ns)
+                            .environmentObject(dim)
+                    }
                 }
             }
         
             .sheet(item: $quoteOrRepostEvent) { event in
-                QuoteOrRepostChoiceSheet(originalEvent:event, quotePostEvent:$quotePostEvent)
-                    .environmentObject(ns)
-                    .environmentObject(dim)
-                    .presentationDetents([.height(200)])
-                    .presentationDragIndicator(.visible)
+                if let account = ns.account, account.isNC, let nsecBunker = ns.nsecBunker {
+                    WithNSecBunkerConnection(nsecBunker: nsecBunker) {
+                        QuoteOrRepostChoiceSheet(originalEvent:event, quotePostEvent:$quotePostEvent)
+                            .environmentObject(ns)
+                            .environmentObject(dim)
+                            .presentationDetents([.height(200)])
+                            .presentationDragIndicator(.visible)
+                    }
+                }
+                else {
+                    QuoteOrRepostChoiceSheet(originalEvent:event, quotePostEvent:$quotePostEvent)
+                        .environmentObject(ns)
+                        .environmentObject(dim)
+                        .presentationDetents([.height(200)])
+                        .presentationDragIndicator(.visible)
+                }
             }
         
             .sheet(item: $quotePostEvent) { quotePostEvent in
                 NavigationStack {
-                    NewQuoteRepost(quotingEvent: quotePostEvent)
-                        .environmentObject(ns)
-                        .environmentObject(dim)
+                    if let account = ns.account, account.isNC, let nsecBunker = ns.nsecBunker {
+                        WithNSecBunkerConnection(nsecBunker: nsecBunker) {
+                            NewQuoteRepost(quotingEvent: quotePostEvent)
+                                .environmentObject(ns)
+                                .environmentObject(dim)
+                        }
+                    }
+                    else {
+                        NewQuoteRepost(quotingEvent: quotePostEvent)
+                            .environmentObject(ns)
+                            .environmentObject(dim)
+                    }
                 }
             }
         

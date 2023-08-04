@@ -106,6 +106,20 @@ class NSecBunkerManager: ObservableObject {
                     }
                 }
                 
+                // DESCRIBE RESPONSE - Using this to check connectivity
+                else if ncResponse.id.prefix(9) == "describe-" {
+                    guard let result = ncResponse.result else {
+                        L.og.error("🏰 ncMessage does not have result, \(event.eventJson()) - \(decrypted)")
+                        return
+                    }
+                    if result.contains("\"describe\"") { // should be something like "[\"connect\",\"sign_event\",\"nip04_encrypt\",\"nip04_decrypt\",\"get_public_key\",\"describe\",\"publish_event\"]"
+                        DispatchQueue.main.async {
+                            self.state = .connected
+                            L.og.info("🏰 NSECBUNKER connection success ")
+                        }
+                    }
+                }
+                
                 // SIGNED EVENT RESPONSE
                 else if ncResponse.id.prefix(11) == "sign-event-" {
                     // SIGNED EVENT RESPONSE
@@ -235,6 +249,44 @@ class NSecBunkerManager: ObservableObject {
         if let whenSigned {
             responseCommmandQueue[commandId] = whenSigned
         }
+        
+        // Make sure "NC" subscription is active
+        reqP(RM.getNCResponses(pubkey: keys.publicKeyHex(), bunkerPubkey: account.publicKey, subscriptionId: "NC"), activeSubscriptionId: "NC")
+        
+        // Send message to nsecBunker, ping first for reliability
+        SocketPool.shared.sendMessageAfterPing(ClientMessage(onlyForNCRelay: true, message: signedReq.wrappedEventJson()))
+    }
+    
+    
+    public func describe() {
+        guard let account = Thread.isMainThread ? account : account?.toBG() else { return }
+        
+        // account does not have a .privateKey, but because isNC=true it will look up in NIP46SecretManager for a session private key and use that instead
+        guard let sessionPrivateKey = account.privateKey else { return }
+        guard let keys = try? NKeys(privateKeyHex: sessionPrivateKey) else { return }
+            
+        let commandId = "describe-\(UUID().uuidString)"
+        let request = NCRequest(id: commandId, method: "describe", params: [])
+        let encoder = JSONEncoder()
+        
+        guard let requestJsonData = try? encoder.encode(request) else { return }
+        
+        guard let requestJsonString = String(data: requestJsonData, encoding: .utf8) else { return }
+        
+        var ncReq = NEvent(content: requestJsonString)
+        ncReq.kind = .ncMessage
+        ncReq.tags.append(NostrTag(["p", account.publicKey]))
+        
+        guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex(), pubkey: account.publicKey, content: ncReq.content) else {
+            L.og.error("🏰🔴🔴 Could not encrypt content")
+            return
+        }
+        
+        ncReq.content = encrypted
+        
+        guard let signedReq = try? ncReq.sign(keys) else { return }
+        
+        L.og.debug("🏰 ncReqSigned (encrypted): \(signedReq.wrappedEventJson())")
         
         // Make sure "NC" subscription is active
         reqP(RM.getNCResponses(pubkey: keys.publicKeyHex(), bunkerPubkey: account.publicKey, subscriptionId: "NC"), activeSubscriptionId: "NC")
