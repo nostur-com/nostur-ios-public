@@ -809,6 +809,13 @@ extension LVM {
         }
     }
     
+    
+    func stopSubscription() {
+        self.fetchFeedTimer?.invalidate()
+        self.fetchFeedTimer = nil
+    }
+    
+    
     func addSubscriptions() {
         keepListStateSaved()
         trackLastAppeared()

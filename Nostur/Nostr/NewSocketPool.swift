@@ -147,6 +147,9 @@ final class SocketPool: ObservableObject {
     }
     
     func disconnectAll() {
+        stayConnectedTimer?.invalidate()
+        stayConnectedTimer = nil
+        
         for socket in sockets {
             if socket.value.isConnecting || socket.value.isConnected {
 //                socket.value.activeSubscriptions.forEach { subscription in

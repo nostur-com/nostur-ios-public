@@ -25,6 +25,15 @@ class LVMManager {
                 }
             }
             .store(in: &subscriptions)
+        
+        stopSubscriptionsSubject
+            .sink { [weak self] _ in
+                guard let self = self else { return }
+                self.listVMs.forEach { lvm in
+                    lvm.stopSubscription()
+                }
+            }
+            .store(in: &subscriptions)
     }
     
     func followingLVM(forAccount account:Account) -> LVM {
@@ -57,8 +66,12 @@ class LVMManager {
     }
     
     var restoreSubscriptionsSubject = PassthroughSubject<Void, Never>()
+    var stopSubscriptionsSubject = PassthroughSubject<Void, Never>()
     
     func restoreSubscriptions() {
         restoreSubscriptionsSubject.send()
+    }
+    func stopSubscriptions() {
+        stopSubscriptionsSubject.send()
     }
 }

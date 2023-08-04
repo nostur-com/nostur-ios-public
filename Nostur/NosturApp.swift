@@ -43,6 +43,7 @@ struct NosturApp: App {
                 sendNotification(.scenePhaseBackground)
                 if !IS_CATALYST {
                     SocketPool.shared.disconnectAll()
+                    lvmManager.stopSubscriptions()
                 }
                 saveState()
                 
