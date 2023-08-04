@@ -168,9 +168,9 @@ public enum NEventKind: Codable, Equatable {
 public struct NostrTag: Codable {
     let tag: [String]
     var type: String { tag.first ?? "" }
-    var id: String { tag[1] }
-    var pubkey: String { tag[1] }
-    var value: String { tag[1] }
+    var id: String { tag[safe: 1] ?? "" }
+    var pubkey: String { tag[safe: 1] ?? "" }
+    var value: String { tag[safe: 1] ?? "" }
     
     public init(_ tag:[String]) {
         self.tag = tag
