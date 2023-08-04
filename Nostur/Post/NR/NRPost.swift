@@ -471,6 +471,13 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable {
                 guard let self = self else { return }
                 self.objectWillChange.send()
                 self.relays = relays
+                
+                // TODO: Need implement better way to update NRPost fields
+                // so we can just do dbEvent.flags = "" instead of hooking into relaysUpdatedListener()
+                // or any other listener
+                if (self.flags == "nsecbunker_unsigned") {
+                    self.flags = ""
+                }
             }
             .store(in: &subscriptions)
     }
