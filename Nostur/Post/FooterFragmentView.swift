@@ -14,6 +14,9 @@ struct FooterFragmentView: View {
     @ObservedObject var nrPost:NRPost
     var isDetail = false
     @State var unpublishLikeId:UUID? = nil
+    var relaysCount:Int {
+        nrPost.relays.split(separator: " ").count
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
@@ -155,8 +158,23 @@ struct FooterFragmentView: View {
                 
             }
             if (nrPost.pubkey == NosturState.shared.activeAccountPublicKey) {
-                Text("Sent to \(nrPost.relays.split(separator: " ").count) relays", comment:"Message shown in footer of sent post")
-                    .padding(.bottom, 5)
+                HStack {
+                    if nrPost.flags == "nsecbunker_unsigned" {
+                        Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.red)
+                    }
+                    else if relaysCount == 0 {
+                        Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.yellow)
+                    }
+                    Text("Sent to \(relaysCount) relays", comment:"Message shown in footer of sent post")
+                    Spacer()
+                }
+                .padding(.bottom, 5)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    if nrPost.flags == "nsecbunker_unsigned" {
+                        
+                    }
+                }
             }
         }
         .foregroundColor(Self.grey)
