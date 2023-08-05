@@ -31,6 +31,15 @@ struct GifSearcher: View {
     var body: some View {
         VStack {
             SearchBox(prompt: String(localized:"Search GIF", comment:"Placeholder in GIF search field"), text: $searchTerm)
+            HStack {
+                Spacer()
+                Image("PoweredByTenor")
+                    .resizable()
+                    .foregroundColor(.gray)
+                    .scaledToFit()
+                    .frame(height: 10.0)
+                    .padding(.bottom, 10)
+            }
             if !autocompleteResults.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     LazyHStack {
