@@ -293,7 +293,7 @@ class LVM: NSObject, ObservableObject {
                 
                 let (danglers, newLeafThreads) = extractDanglingReplies(leafThreads)
                 if !danglers.isEmpty && !self.hideReplies {
-                    L.og.info("🟪🟠🟠 processPostsInBackground: \(danglers.count) replies without replyTo. Fetching...")
+                    L.lvm.info("🟪🟠🟠 processPostsInBackground: \(danglers.count) replies without replyTo. Fetching...")
                     fetchParents(danglers, older:older)
                 }
                                 
@@ -309,7 +309,7 @@ class LVM: NSObject, ObservableObject {
                 let (danglers, newLeafThreads) = extractDanglingReplies(newLeafThreadsWithMissingParents)
 //                self.needsReplyTo.append(contentsOf: danglers)
                 if !danglers.isEmpty && !self.hideReplies {
-                    L.og.info("🟠🟠 processPostsInBackground: \(danglers.count) replies without replyTo. Fetching...")
+                    L.lvm.info("🟠🟠 processPostsInBackground: \(danglers.count) replies without replyTo. Fetching...")
                     fetchParents(danglers, older:older)
                 }
                 putNewThreadsOnScreen(newLeafThreads, leafIdsOnScreen:leafIdsOnScreen, currentNRPostLeafs: currentNRPostLeafs, older:older)
@@ -665,15 +665,15 @@ class LVM: NSObject, ObservableObject {
             }
         }
         if id == "Following", let pubkey {
-            L.og.notice("🟪 instantFeed.start \(self.name) \(self.id)")
+            L.lvm.notice("🟪 instantFeed.start \(self.name) \(self.id)")
             instantFeed.start(pubkey, onComplete: completeInstantFeed)
         }
         else if type == .relays {
-            L.og.notice("🟪 instantFeed.start \(self.name) \(self.id)")
+            L.lvm.notice("🟪 instantFeed.start \(self.name) \(self.id)")
             instantFeed.start(bgRelays, onComplete: completeInstantFeed)
         }
         else {
-            L.og.notice("🟪 instantFeed.start \(self.name) \(self.id)")
+            L.lvm.notice("🟪 instantFeed.start \(self.name) \(self.id)")
             instantFeed.start(pubkeys, onComplete: completeInstantFeed)
         }
     }
@@ -681,7 +681,7 @@ class LVM: NSObject, ObservableObject {
     var instantFinished = false {
         didSet {
             if instantFinished {
-                L.og.notice("🟪 \(self.name) instantFinished")
+                L.lvm.notice("🟪 \(self.name) instantFinished")
                 // if nothing on screen, fetch from local
                 DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
                     if self.nrPostLeafs.isEmpty {
@@ -977,7 +977,7 @@ extension LVM {
                 guard let self = self else { return }
                 let newPubkeyInfo = notification.object as! NewPubkeysForList
                 guard newPubkeyInfo.subscriptionId == self.id else { return }
-                L.og.info("LVM .listPubkeysChanged \(self.pubkeys.count) -> \(newPubkeyInfo.pubkeys.count)")
+                L.lvm.info("LVM .listPubkeysChanged \(self.pubkeys.count) -> \(newPubkeyInfo.pubkeys.count)")
                 self.pubkeys = newPubkeyInfo.pubkeys
                 
                 lvmCounter.count = 0
@@ -995,7 +995,7 @@ extension LVM {
                 guard let self = self else { return }
                 let newRelaysInfo = notification.object as! NewRelaysForList
                 guard newRelaysInfo.subscriptionId == self.id else { return }
-                L.og.info("LVM .listRelaysChanged \(self.relays.count) -> \(newRelaysInfo.relays.count)")
+                L.lvm.info("LVM .listRelaysChanged \(self.relays.count) -> \(newRelaysInfo.relays.count)")
                 
                 self.relays = newRelaysInfo.relays // viewContext relays
                 
@@ -1293,7 +1293,7 @@ extension LVM {
     
     func performLocalOlderFetch() {
         guard !performingLocalOlderFetch else { // Data race in Nostur.LVM.performingLocalOlderFetch.setter : Swift.Bool at 0x114481300
-            L.og.debug("Already performingLocalOlderFetch, cancelled")
+            L.lvm.debug("Already performingLocalOlderFetch, cancelled")
             // reset in 2 seconds just in case
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                 if self.performingLocalOlderFetch {
@@ -1306,7 +1306,7 @@ extension LVM {
         
         // Actual oldest:
         guard let oldestEvent = self.nrPostLeafs.max(by: { $0.createdAt > $1.createdAt })?.event else {
-            L.og.debug("Empty screen, cancelled") ;return
+            L.lvm.debug("Empty screen, cancelled") ;return
         }
         
         performingLocalOlderFetch = true
