@@ -56,9 +56,12 @@ struct BookmarksView: View {
                             .padding(.horizontal, settings.fullWidthImages ? 0 : DIMENSIONS.POST_ROW_HPADDING)
                             .id(vBookmark.id)
                             .onDelete {
-                                vBookmark.mainEvent.bookmarkedBy = []
                                 vBookmarks = vBookmarks.filter { $0.id != vBookmark.id }
-                                DataProvider.shared().save()
+                                
+                                DataProvider.shared().bg.perform {
+                                    vBookmark.event.bookmarkedBy = []
+                                    DataProvider.shared().bgSave()
+                                }
                             }
                     }
                     Spacer()
